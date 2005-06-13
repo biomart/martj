@@ -145,151 +145,155 @@ public class SNPSeqQueryRunner extends BaseSeqQueryRunner {
 
     private final SeqWriter tabulatedWriter = new SeqWriter() {
         void writeSequences(Integer geneID, Connection conn) throws SequenceException {
-            try {
-                for (int j = 0, n = fields.size(); j < n; j++) {
-                    if (j > 0)
-                        osr.print(separator);
-                    
-                    String field = (String) fields.get(j);
-                    if (headerinfo.containsKey(field)) {
-                        ArrayList values = (ArrayList) headerinfo.get(field);
+            if (curLocation != null) {
+                try {
+                    for (int j = 0, n = fields.size(); j < n; j++) {
+                        if (j > 0)
+                            osr.print(separator);
                         
-                        for (int vi = 0; vi < values.size(); vi++) {
-                            if (vi > 0)
-                                osr.print(",");
-                            osr.print((String) values.get(vi));
+                        String field = (String) fields.get(j);
+                        if (headerinfo.containsKey(field)) {
+                            ArrayList values = (ArrayList) headerinfo.get(field);
+                            
+                            for (int vi = 0; vi < values.size(); vi++) {
+                                if (vi > 0)
+                                    osr.print(",");
+                                osr.print((String) values.get(vi));
+                            }
                         }
                     }
-                }
-                
-                osr.print(separator);
-                
-                if (osr.checkError())
-                    throw new IOException();
-                
-                SequenceDescription seqd = query.getSequenceDescription();
-                int start = 0;
-                int end = 0;
-                int leftFlank = 0;
-                int rightFlank = 0;                
-                
-                // modify snp curLocation coordinates depending on flank requested
-                if (seqd.getLeftFlank() > 0)
-                    leftFlank = seqd.getLeftFlank();
-                if (seqd.getRightFlank() > 0)
-                    rightFlank = seqd.getRightFlank();
-                
-                int offset = leftFlank;
-                if (curLocation.getStrand() < 0) {
-                  start = curLocation.getStart() - rightFlank;
-                  if (start < 1)
-                      start = 1;
-                  end = curLocation.getStart() + leftFlank;
-                } else {
-                    start = curLocation.getStart() - leftFlank;
-                    if (start < 1) {
-                        offset = leftFlank + start - 1;
-                        start = 1;
+                    
+                    osr.print(separator);
+                    
+                    if (osr.checkError())
+                        throw new IOException();
+                    
+                    SequenceDescription seqd = query.getSequenceDescription();
+                    int start = 0;
+                    int end = 0;
+                    int leftFlank = 0;
+                    int rightFlank = 0;                
+                    
+                    // modify snp curLocation coordinates depending on flank requested
+                    if (seqd.getLeftFlank() > 0)
+                        leftFlank = seqd.getLeftFlank();
+                    if (seqd.getRightFlank() > 0)
+                        rightFlank = seqd.getRightFlank();
+                    
+                    int offset = leftFlank;
+                    if (curLocation.getStrand() < 0) {
+                        start = curLocation.getStart() - rightFlank;
+                        if (start < 1)
+                            start = 1;
+                        end = curLocation.getStart() + leftFlank;
+                    } else {
+                        start = curLocation.getStart() - leftFlank;
+                        if (start < 1) {
+                            offset = leftFlank + start - 1;
+                            start = 1;
+                        }
+                        end = curLocation.getStart() + rightFlank;                    
                     }
-                    end = curLocation.getStart() + rightFlank;                    
+                    
+                    SequenceLocation thisLocation = new SequenceLocation(curLocation.getChr(), start, end, curLocation.getStrand());                
+                    
+                    byte[] sequence = dna.getSequence(thisLocation.getChr(), thisLocation.getStart(), thisLocation.getEnd());
+                    
+                    osr.write(sequence, 0, offset);
+                    osr.print(" - " + curAllele + " - ");
+                    osr.write(sequence, offset, sequence.length - offset);                
+                    
+                    osr.print("\n");
+                    
+                    if (osr.checkError())
+                        throw new IOException();
+                } catch (SequenceException e) {
+                    if (logger.isLoggable(Level.WARNING))
+                        logger.warning(e.getMessage());
+                    throw e;
+                } catch (IOException e) {
+                    if (logger.isLoggable(Level.WARNING))
+                        logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
+                    throw new SequenceException(e);
                 }
-                
-                SequenceLocation thisLocation = new SequenceLocation(curLocation.getChr(), start, end, curLocation.getStrand());                
-
-                byte[] sequence = dna.getSequence(thisLocation.getChr(), thisLocation.getStart(), thisLocation.getEnd());
-                
-                osr.write(sequence, 0, offset);
-                osr.print(" - " + curAllele + " - ");
-                osr.write(sequence, offset, sequence.length - offset);                
-                
-                osr.print("\n");
-                
-                if (osr.checkError())
-                    throw new IOException();
-            } catch (SequenceException e) {
-                if (logger.isLoggable(Level.WARNING))
-                    logger.warning(e.getMessage());
-                throw e;
-            } catch (IOException e) {
-                if (logger.isLoggable(Level.WARNING))
-                    logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
-                throw new SequenceException(e);
             }
         }
     };
     
     private final SeqWriter fastaWriter = new SeqWriter() {
         void writeSequences(Integer geneID, Connection conn) throws SequenceException {
-            try {
-                osr.print(">");
-                for (int j = 0, n = fields.size(); j < n; j++) {
-                    if (j > 0)
-                        osr.print(separator);
-                    
-                    String field = (String) fields.get(j);
-                    if (headerinfo.containsKey(field)) {
-                        ArrayList values = (ArrayList) headerinfo.get(field);
+            if (curLocation != null) {
+                try {
+                    osr.print(">");
+                    for (int j = 0, n = fields.size(); j < n; j++) {
+                        if (j > 0)
+                            osr.print(separator);
                         
-                        for (int vi = 0; vi < values.size(); vi++) {
-                            if (vi > 0)
-                                osr.print(",");
-                            osr.print((String) values.get(vi));
+                        String field = (String) fields.get(j);
+                        if (headerinfo.containsKey(field)) {
+                            ArrayList values = (ArrayList) headerinfo.get(field);
+                            
+                            for (int vi = 0; vi < values.size(); vi++) {
+                                if (vi > 0)
+                                    osr.print(",");
+                                osr.print((String) values.get(vi));
+                            }
                         }
                     }
-                }
-                
-                osr.print("\n");
-                
-                if (osr.checkError())
-                    throw new IOException();
-                
-                SequenceDescription seqd = query.getSequenceDescription();
-                int start = 0;
-                int end = 0;
-                int leftFlank = 0;
-                int rightFlank = 0;                
-                
-                // modify snp curLocation coordinates depending on flank requested
-                if (seqd.getLeftFlank() > 0)
-                    leftFlank = seqd.getLeftFlank();
-                if (seqd.getRightFlank() > 0)
-                    rightFlank = seqd.getRightFlank();
-                
-                int offset = leftFlank;
-                if (curLocation.getStrand() < 0) {
-                  start = curLocation.getStart() - rightFlank;
-                  if (start < 1)
-                      start = 1;
-                  end = curLocation.getStart() + leftFlank;
-                } else {
-                    start = curLocation.getStart() - leftFlank;
-                    if (start < 1) {
-                        offset = leftFlank + start - 1;
-                        start = 1;
+                    
+                    osr.print("\n");
+                    
+                    if (osr.checkError())
+                        throw new IOException();
+                    
+                    SequenceDescription seqd = query.getSequenceDescription();
+                    int start = 0;
+                    int end = 0;
+                    int leftFlank = 0;
+                    int rightFlank = 0;                
+                    
+                    // modify snp curLocation coordinates depending on flank requested
+                    if (seqd.getLeftFlank() > 0)
+                        leftFlank = seqd.getLeftFlank();
+                    if (seqd.getRightFlank() > 0)
+                        rightFlank = seqd.getRightFlank();
+                    
+                    int offset = leftFlank;
+                    if (curLocation.getStrand() < 0) {
+                        start = curLocation.getStart() - rightFlank;
+                        if (start < 1)
+                            start = 1;
+                        end = curLocation.getStart() + leftFlank;
+                    } else {
+                        start = curLocation.getStart() - leftFlank;
+                        if (start < 1) {
+                            offset = leftFlank + start - 1;
+                            start = 1;
+                        }
+                        end = curLocation.getStart() + rightFlank;                    
                     }
-                    end = curLocation.getStart() + rightFlank;                    
+                    
+                    SequenceLocation thisLocation = new SequenceLocation(curLocation.getChr(), start, end, curLocation.getStrand());                
+                    
+                    byte[] sequence = dna.getSequence(thisLocation.getChr(), thisLocation.getStart(), thisLocation.getEnd());
+                    
+                    osr.write(sequence, 0, offset);
+                    osr.print("\n" + curAllele + "\n");
+                    osr.write(sequence, offset, sequence.length - offset);                
+                    
+                    osr.print("\n");
+                    
+                    if (osr.checkError())
+                        throw new IOException();
+                } catch (SequenceException e) {
+                    if (logger.isLoggable(Level.WARNING))
+                        logger.warning(e.getMessage());
+                    throw e;
+                } catch (IOException e) {
+                    if (logger.isLoggable(Level.WARNING))
+                        logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
+                    throw new SequenceException(e);
                 }
-                
-                SequenceLocation thisLocation = new SequenceLocation(curLocation.getChr(), start, end, curLocation.getStrand());                
-
-                byte[] sequence = dna.getSequence(thisLocation.getChr(), thisLocation.getStart(), thisLocation.getEnd());
-                
-                osr.write(sequence, 0, offset);
-                osr.print("\n" + curAllele + "\n");
-                osr.write(sequence, offset, sequence.length - offset);                
-                
-                osr.print("\n");
-                
-                if (osr.checkError())
-                    throw new IOException();
-            } catch (SequenceException e) {
-                if (logger.isLoggable(Level.WARNING))
-                    logger.warning(e.getMessage());
-                throw e;
-            } catch (IOException e) {
-                if (logger.isLoggable(Level.WARNING))
-                    logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
-                throw new SequenceException(e);
             }
         }
     };
