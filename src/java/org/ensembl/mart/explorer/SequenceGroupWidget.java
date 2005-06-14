@@ -118,7 +118,8 @@ public class SequenceGroupWidget
                                                        "3utr",
                                                        "5utr",
                                                        "cdna", 
-                                                       "coding", 
+                                                       "coding",
+                                                       "coding_transcript_flank",
                                                        "peptide"
                                                        };
   

@@ -62,13 +62,13 @@ public class QueryRunnerFactory {
                 thisQueryRunner = new TranscriptExonSeqQueryRunner(q,f, out);
             } else if (q.getSequenceDescription().getSeqType().matches("transcript_exon_intron")) {
                 thisQueryRunner = new TranscriptEISeqQueryRunner(q,f, out);
-            } else if (q.getSequenceDescription().getSeqType().matches("transcript_flank")) {
+            } else if (q.getSequenceDescription().getSeqType().matches("\\w*transcript_flank")) {
                 thisQueryRunner = new TranscriptFlankSeqQueryRunner(q,f,out);
             } else if (q.getSequenceDescription().getSeqType().matches("gene_exon_intron")) {
                 thisQueryRunner = new GeneEISeqQueryRunner(q,f,out);
             } else if (q.getSequenceDescription().getSeqType().matches("gene_exon")) {
                 thisQueryRunner = new GeneExonSeqQueryRunner(q,f,out);
-            } else if (q.getSequenceDescription().getSeqType().matches("gene_flank")) {
+            } else if (q.getSequenceDescription().getSeqType().matches("\\w*gene_flank")) {
                 thisQueryRunner = new GeneFlankSeqQueryRunner(q,f,out);
             } else if (q.getSequenceDescription().getSeqType().matches("3utr")) {
                 thisQueryRunner = new DownStreamUTRSeqQueryRunner(q,f,out);
@@ -80,7 +80,7 @@ public class QueryRunnerFactory {
                 thisQueryRunner = new UniprotSeqQueryRunner(q,f,out);
             else {
                 //TODO: impliment java ClassLoader system to pull in client SeqQueryRunner object
-                throw new FormatException("Unsuported Query Type\n");							  
+                throw new FormatException("Unsuported Query Type " + q.getSequenceDescription().getSeqType() + "\n");							  
             }
         break;
         
