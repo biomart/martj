@@ -133,6 +133,18 @@ public class AttributesWidget extends InputPage {
                   //skip if the sequence group does not contain a page called "seq_scope_type" (non ensembl)
                   if (seqCol == null)
                       skip = true;
+                  
+                  if (!skip) {
+                      //test for presence of sequence dataset
+                      AttributeDescription seqDesc = (AttributeDescription) seqCol.getAttributeDescriptions().get(0);
+                      String seqDataset = seqDesc.getInternalName().split("\\.")[0];
+                      if (manager.getRootAdaptor().getNumDatasetConfigsByDataset(seqDataset) < 1) {
+                          feedback.info("You must load sequence dataset " 
+                                       + seqDataset 
+                                       + " with this sequence supporting dataset, skipping sequence page.");
+                          skip = true;
+                      }
+                  }
               }
               
               if (!skip) {
