@@ -384,7 +384,7 @@ public class DatabaseDatasetConfigUtils {
 				  if (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
 					  testAD.getField() == null || testAD.getField().equals("") ||
 					  testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
-				      (dsConfig.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals("")))
+				      (dsConfig.getVisible() != null && dsConfig.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals("")))
 					  //testAD.getKey() == null || testAD.getKey().equals("")				  
 				  	  ){
 						brokenString = brokenString + "Attribute " + testAD.getInternalName() + " in dataset " + dsConfig.getDataset() + 
@@ -470,7 +470,7 @@ public class DatabaseDatasetConfigUtils {
 									
 							testAD.getField() == null || testAD.getField().equals("") ||
 							testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
-					        (dsConfig.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals(""))) ||
+					        (dsConfig.getVisible() != null && dsConfig.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals(""))) ||
 							//testAD.getKey() == null || testAD.getKey().equals("") ||	 
 						    testAD.getQualifier() == null || testAD.getQualifier().equals("")				  			  
 							)){
