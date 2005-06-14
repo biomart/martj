@@ -77,7 +77,7 @@ public final class CdnaSeqQueryRunner extends BaseSeqQueryRunner {
 	    //we no longer need to actually update the query, as seqDescription
 	    //has already done that. We just need to find out what the exportable
 	    //is, eg, the key, start, end, and strand
-	    Attribute[] exportable = query.getSequenceDescription().getExportable();
+	    Attribute[] exportable = query.getSequenceDescription().getFinalLink();
 	    
 		queryID = exportable[0].getField();
 		qualifiedQueryID = exportable[0].getTableConstraint()+"."+queryID;

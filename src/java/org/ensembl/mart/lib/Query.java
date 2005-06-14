@@ -320,7 +320,7 @@ public class Query {
 	    	    //must get the attribute, so that the sequenceDescription initializes properly,
 	            //but must then add the exportables before this (first) attribute
 	            Attribute sa = sequenceDescription.getAttribute(oAttributes[i]);
-	    	    Attribute[] eAtts = sequenceDescription.getExportable();
+	    	    Attribute[] eAtts = sequenceDescription.getFinalLink();
                 
                 if (eAtts == null)
                     throw new InvalidQueryException("Sequence type " + sequenceDescription.getSeqType() + " is not supported\n");
@@ -365,10 +365,10 @@ public class Query {
 	    migrateAttributes();
 	    migrateFilters();
         
-	    if (sequenceDescription.getStructDatasetName() != null) {
-	        setDataset(sequenceDescription.getStructDatasetName());
-	        setDatasetConfig(sequenceDescription.getStructDataset());
-	        setDataSource(sequenceDescription.getStructDataSource());
+	    if (sequenceDescription.getFinalDatasetName() != null) {
+	        setDataset(sequenceDescription.getFinalDatasetName());
+	        setDatasetConfig(sequenceDescription.getFinalDataset());
+	        setDataSource(sequenceDescription.getFinalDataSource());
 	        setMainTables(sequenceDescription.getStructureMainTables());
 	        setPrimaryKeys(sequenceDescription.getStructurePrimaryKeys());
 	        //this query is now a structure query with a core subQuery, not the original core query

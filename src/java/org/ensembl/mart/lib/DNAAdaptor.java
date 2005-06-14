@@ -51,9 +51,9 @@ public class DNAAdaptor {
 	 * 
 	 * @param Connection
 	 */
-	public DNAAdaptor(SequenceDescription seqd) throws SequenceException {	    
+	public DNAAdaptor(SequenceDescription seqd) throws SequenceException {
 	    String schema, dnaTable, startField, chrField, seqField;	    
-	    schema = seqd.getSeqDataSource().getSchema();
+	    schema = seqd.getRefDataSource().getSchema();
 	    
 		String[] seqInfo = seqd.getSeqInfo().split("\\,");
 		//table,chr,start,sequence,chunkSize
@@ -64,7 +64,7 @@ public class DNAAdaptor {
         chunkSize = Integer.parseInt( seqInfo[4] );
         
 		try {
-		    conn = seqd.getSeqDataSource().getConnection();
+		    conn = seqd.getRefDataSource().getConnection();
 		    String sqlFull = "select " + seqField + " from " + dnaTable + " where " + startField + " = ? and " + chrField + " = ?";
 			String sqlSub = "select substring(" + seqField + ", ?, ?) from " + dnaTable + " where " + startField + " = ? and " + chrField + " = ?";
 

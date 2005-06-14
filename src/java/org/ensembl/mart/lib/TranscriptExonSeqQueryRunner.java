@@ -77,7 +77,7 @@ public final class TranscriptExonSeqQueryRunner extends BaseSeqQueryRunner {
     qualifiedQueryID = "main.exon_id";
     
     query.addAttribute(new FieldAttribute(queryID, "main", queryID));
-    Attribute[] exportable = query.getSequenceDescription().getExportable();
+    Attribute[] exportable = query.getSequenceDescription().getFinalLink();
     
     chrField = exportable[0].getField();
     coordStart = exportable[1].getField();

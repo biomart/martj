@@ -79,7 +79,7 @@ public final class DownStreamUTRSeqQueryRunner extends BaseSeqQueryRunner {
   }
 
   protected void updateQuery() {
-        Attribute[] exportable = query.getSequenceDescription().getExportable();
+        Attribute[] exportable = query.getSequenceDescription().getFinalLink();
         
         queryID = exportable[0].getField();
         qualifiedQueryID = exportable[0].getTableConstraint()+"."+queryID;

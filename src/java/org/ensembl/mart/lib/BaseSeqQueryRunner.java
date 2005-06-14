@@ -157,7 +157,10 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
     if (isSubQuery)
       throw new SequenceException("SubQuerys cannot return sequences\n");
 
-    dna = new DNAAdaptor(query.getSequenceDescription());
+    //Some implementations do not need DNA adaptors, so they will have null SeqInfo
+    if (query.getSequenceDescription().getSeqInfo() != null 
+     && query.getSequenceDescription().getSeqInfo().length() > 0)
+      dna = new DNAAdaptor(query.getSequenceDescription());
     
     updateQuery();
         
@@ -232,7 +235,9 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
     } else {
       executeQuery(query, hardLimit);
     }
-    dna.close();
+    
+    if (dna != null)
+      dna.close();
   }
 
   protected void executeQuery(Query curQuery, int hardLimit) throws SequenceException, InvalidQueryException {

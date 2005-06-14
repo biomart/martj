@@ -30,18 +30,18 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.util.FormattedSequencePrintStream;
 
-public class SNPSeqQueryRunner extends BaseSeqQueryRunner {
+public class UniprotSeqQueryRunner extends BaseSeqQueryRunner {
 
-    private String alleleField = null;
-    private int alleleIndex = -1;
-    private SequenceLocation curLocation = null;
-    private String curAllele = null;
+    private String seqField = null;
+    private int seqIndex = -1;
+    private String curSequence = null;
     private Hashtable headerinfo = new Hashtable();
     private Logger logger = Logger.getLogger(TranscriptFlankSeqQueryRunner.class.getName());
     
-    public SNPSeqQueryRunner(Query query, FormatSpec format, OutputStream os) {
+    public UniprotSeqQueryRunner(Query query, FormatSpec format, OutputStream os) {
         super(query);
         this.format = format;
         this.osr = new FormattedSequencePrintStream(maxColumnLen, os, true); //autoflush true
@@ -60,16 +60,17 @@ public class SNPSeqQueryRunner extends BaseSeqQueryRunner {
     }
 
     protected void updateQuery() {
-        queryID = "snp_id_key";
-        qualifiedQueryID = "main.snp_id_key";
-        
-        query.addAttribute(new FieldAttribute(queryID, "main", queryID));
         Attribute[] exportable = query.getSequenceDescription().getFinalLink();
         
-        chrField = exportable[0].getField();
-        coordStart = exportable[1].getField();
-        strandField = exportable[2].getField();
-        alleleField = exportable[3].getField();
+        queryID = exportable[0].getField();
+        qualifiedQueryID = exportable[0].getTableConstraint()+"."+queryID;
+        
+        String seqType = query.getSequenceDescription().getSeqType();
+        AttributeDescription seqDesc = query.getSequenceDescription().getRefDataset().getAttributeDescriptionByInternalName(seqType);
+        query.addAttribute(new FieldAttribute(seqDesc.getField(), 
+                                              seqDesc.getTableConstraint(), 
+                                              seqDesc.getKey()));
+        seqField = seqDesc.getField();
     }
 
     protected void processResultSet(Connection conn, ResultSet rs)
@@ -83,30 +84,17 @@ public class SNPSeqQueryRunner extends BaseSeqQueryRunner {
           String column = rmeta.getColumnName(i);
           if (column.equals(queryID) && queryIDindex < 0)
             queryIDindex = i;
-          else if (column.equals(coordStart) && startIndex < 0)
-            startIndex = i;
-          else if (column.equals(alleleField) && alleleIndex < 0)
-            alleleIndex = i;
-          else if (column.equals(chrField) && chromIndex < 0)
-            chromIndex = i;
-          else if (column.equals(strandField) && strandIndex < 0)
-            strandIndex = i;
+          else if (column.equals(seqField) && seqIndex < 0)
+            seqIndex = i;
           else
             otherIndices.add(new Integer(i));
         }
       }
         while (rs.next()) {
           lastID = rs.getInt(queryIDindex);
-          int start = rs.getInt(startIndex);
-
-          if (start > 0) {
-              // if start is not null, create a new SequenceLocation object from the chr, start, end, and strand
-              String chr = rs.getString(chromIndex);
-              curAllele = rs.getString(alleleIndex);
-              int strand = rs.getInt(strandIndex);
-                            
-              curLocation = new SequenceLocation(chr, start, start, strand);
-              
+          curSequence = rs.getString(seqIndex);
+          
+          if (curSequence != null) {
               // Rest can be duplicates, or novel values for a given field, collect lists of values for each field
               // currindex is now the last index of the DisplayIDs.  Increment it, and iterate over the rest of the ResultSet to print the description
               
@@ -133,8 +121,7 @@ public class SNPSeqQueryRunner extends BaseSeqQueryRunner {
               //will only do each exon once
               seqWriter.writeSequences(new Integer(0), conn);
               headerinfo = new Hashtable();
-              curLocation = null;
-              curAllele = null;
+              curSequence = null;
           }
           
           totalRows++;
@@ -145,7 +132,7 @@ public class SNPSeqQueryRunner extends BaseSeqQueryRunner {
 
     private final SeqWriter tabulatedWriter = new SeqWriter() {
         void writeSequences(Integer geneID, Connection conn) throws SequenceException {
-            if (curLocation != null) {
+            if (curSequence != null) {
                 try {
                     for (int j = 0, n = fields.size(); j < n; j++) {
                         if (j > 0)
@@ -168,41 +155,7 @@ public class SNPSeqQueryRunner extends BaseSeqQueryRunner {
                     if (osr.checkError())
                         throw new IOException();
                     
-                    SequenceDescription seqd = query.getSequenceDescription();
-                    int start = 0;
-                    int end = 0;
-                    int leftFlank = 0;
-                    int rightFlank = 0;                
-                    
-                    // modify snp curLocation coordinates depending on flank requested
-                    if (seqd.getLeftFlank() > 0)
-                        leftFlank = seqd.getLeftFlank();
-                    if (seqd.getRightFlank() > 0)
-                        rightFlank = seqd.getRightFlank();
-                    
-                    int offset = leftFlank;
-                    if (curLocation.getStrand() < 0) {
-                        start = curLocation.getStart() - rightFlank;
-                        if (start < 1)
-                            start = 1;
-                        end = curLocation.getStart() + leftFlank;
-                    } else {
-                        start = curLocation.getStart() - leftFlank;
-                        if (start < 1) {
-                            offset = leftFlank + start - 1;
-                            start = 1;
-                        }
-                        end = curLocation.getStart() + rightFlank;                    
-                    }
-                    
-                    SequenceLocation thisLocation = new SequenceLocation(curLocation.getChr(), start, end, curLocation.getStrand());                
-                    
-                    byte[] sequence = dna.getSequence(thisLocation.getChr(), thisLocation.getStart(), thisLocation.getEnd());
-                    
-                    osr.write(sequence, 0, offset);
-                    osr.print(" - " + curAllele + " - ");
-                    osr.write(sequence, offset, sequence.length - offset);                
-                    
+                    osr.print(curSequence); 
                     osr.print("\n");
                     
                     if (osr.checkError())
@@ -222,7 +175,7 @@ public class SNPSeqQueryRunner extends BaseSeqQueryRunner {
     
     private final SeqWriter fastaWriter = new SeqWriter() {
         void writeSequences(Integer geneID, Connection conn) throws SequenceException {
-            if (curLocation != null) {
+            if (curSequence != null) {
                 try {
                     osr.print(">");
                     for (int j = 0, n = fields.size(); j < n; j++) {
@@ -246,41 +199,7 @@ public class SNPSeqQueryRunner extends BaseSeqQueryRunner {
                     if (osr.checkError())
                         throw new IOException();
                     
-                    SequenceDescription seqd = query.getSequenceDescription();
-                    int start = 0;
-                    int end = 0;
-                    int leftFlank = 0;
-                    int rightFlank = 0;                
-                    
-                    // modify snp curLocation coordinates depending on flank requested
-                    if (seqd.getLeftFlank() > 0)
-                        leftFlank = seqd.getLeftFlank();
-                    if (seqd.getRightFlank() > 0)
-                        rightFlank = seqd.getRightFlank();
-                    
-                    int offset = leftFlank;
-                    if (curLocation.getStrand() < 0) {
-                        start = curLocation.getStart() - rightFlank;
-                        if (start < 1)
-                            start = 1;
-                        end = curLocation.getStart() + leftFlank;
-                    } else {
-                        start = curLocation.getStart() - leftFlank;
-                        if (start < 1) {
-                            offset = leftFlank + start - 1;
-                            start = 1;
-                        }
-                        end = curLocation.getStart() + rightFlank;                    
-                    }
-                    
-                    SequenceLocation thisLocation = new SequenceLocation(curLocation.getChr(), start, end, curLocation.getStrand());                
-                    
-                    byte[] sequence = dna.getSequence(thisLocation.getChr(), thisLocation.getStart(), thisLocation.getEnd());
-                    
-                    osr.write(sequence, 0, offset);
-                    osr.print("\n" + curAllele + "\n");
-                    osr.write(sequence, offset, sequence.length - offset);                
-                    
+                    osr.print(curSequence); 
                     osr.print("\n");
                     
                     if (osr.checkError())
