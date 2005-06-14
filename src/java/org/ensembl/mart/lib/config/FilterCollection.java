@@ -404,4 +404,34 @@ public class FilterCollection extends BaseNamedConfigurationObject {
   public boolean isBroken() {
   	return hasBrokenFilters;
   }
+
+  public boolean containsOnlyPointerFilters() {
+      boolean ret = true;
+      
+      List filters = getFilterDescriptions();
+      for (int i = 0, n = filters.size(); i < n; i++) {
+          FilterDescription filt = (FilterDescription) filters.get(i);
+          if (filt.getInternalName().indexOf('.') < 0) {
+              ret = false;
+              break;
+          }
+      }
+      
+      return ret;
+  }
+  
+  public boolean containsOnlyFilterListFilterUploadFilters() {
+      boolean ret = true;
+      
+      List filters = getFilterDescriptions();
+      for (int i = 0, n = filters.size(); i < n; i++) {
+          FilterDescription filt = (FilterDescription) filters.get(i);
+          if (filt.getFilterList() == null || filt.getFilterList().length() < 1) {
+              ret = false;
+              break;
+          }
+      }
+      
+      return ret;
+  }
 }

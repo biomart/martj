@@ -66,6 +66,22 @@ public class FilterGroupWidget extends PageWidget {
 
 	}
 
+    private boolean skipCollection(FilterCollection collection) {
+        boolean skip = false;
+        
+        if (collection.getHidden() != null && collection.getHidden().equals("true"))
+            skip = true;
+        if (!skip && collection.getAttribute("hideDisplay") != null && collection.getAttribute("hideDisplay").equals("true"))
+            skip = true;
+        
+        if (!skip && collection.containsOnlyPointerFilters())
+            skip = true;
+        
+        if (!skip && collection.containsOnlyFilterListFilterUploadFilters())
+            skip = true;
+        
+        return skip;
+    }
 	/**
 	 * @param panel
 	 * @param collections
@@ -78,8 +94,8 @@ public class FilterGroupWidget extends PageWidget {
 
 			FilterCollection collection = collections[i];
 
-            if (collection.getHidden() != null && collection.getHidden().equals("true")) continue;
-            if (collection.getAttribute("hideDisplay") != null && collection.getAttribute("hideDisplay").equals("true")) continue;
+
+            if (skipCollection(collection)) continue;
             
 			if (collection.getFilterDescriptions().size() > 0) {
 				InputPage[] attributes = getFilterWidgets(collection);
