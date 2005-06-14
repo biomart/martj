@@ -82,7 +82,7 @@ public class AttributeGroupWidget extends GroupWidget {
     for (int i = 0; i < collections.length; i++) {
 
         if (group.getInternalName().equals("sequence")) {
-          if (collections[i].getInternalName().matches("\\w*seq_scope\\w*")) {
+          if (collections[i].getInternalName().matches("\\w*seq_scope\\w*")) {              
             SequenceGroupWidget w = new SequenceGroupWidget(collections[i].getDisplayName(), 
                                                             collections[i].getInternalName(), 
                                                             query,

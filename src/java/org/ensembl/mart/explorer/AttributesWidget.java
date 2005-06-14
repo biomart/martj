@@ -18,15 +18,21 @@
 
 package org.ensembl.mart.explorer;
 
+import java.util.Iterator;
+import java.util.List;
+
 import javax.swing.JLabel;
 import javax.swing.JTabbedPane;
 
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.AttributeCollection;
+import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfig;
+import org.ensembl.mart.lib.config.DatasetConfigIterator;
 
 /**
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
@@ -37,6 +43,7 @@ public class AttributesWidget extends InputPage {
   private AdaptorManager manager;
   private JLabel unavailableLabel =
     new JLabel("Unavailable. Choose DatasetConfig first.");
+  private Feedback feedback = null;
   
   
   /**
@@ -47,6 +54,7 @@ public class AttributesWidget extends InputPage {
   public AttributesWidget(Query query, QueryTreeView tree, AdaptorManager manager) {
     super(query, null, tree);
     this.manager = manager;
+    feedback = new Feedback(this);
     clearAttributes();    
   }
 
@@ -102,7 +110,7 @@ public class AttributesWidget extends InputPage {
        )
           skip = true;
       
-      //we only support ensembl sequences
+      //we only support sequences with pointer attributes
       if (!skip) {
           if (page.containsOnlyPointerAttributes()) {
               AttributeGroup seqGroup = (AttributeGroup) page.getAttributeGroupByName("sequence");
@@ -111,11 +119,42 @@ public class AttributesWidget extends InputPage {
               if (seqGroup == null)
                   skip = true;
               else {
-                  AttributeCollection seqCol = seqGroup.getAttributeCollectionByName("seq_scope_type");
+                  AttributeCollection seqCol = null;
+                  
+                  AttributeCollection[] cols = seqGroup.getAttributeCollections();
+                  for (int i = 0, n = cols.length; i < n; i++) {
+                    AttributeCollection collection = cols[i];
+                    if (collection.getInternalName().matches("\\w*seq_scope\\w*")) {
+                        seqCol = collection;
+                        break;
+                    }
+                }
                   
                   //skip if the sequence group does not contain a page called "seq_scope_type" (non ensembl)
                   if (seqCol == null)
                       skip = true;
+              }
+              
+              if (!skip) {
+                  //test for ambiguous links
+                  AttributeGroup nonSeqGroup = null;
+                  List groups = page.getAttributeGroups();
+                  for (int i = 0, n = groups.size(); i < n; i++) {
+                    AttributeGroup element = (AttributeGroup) groups.get(i);
+                    if (!element.getInternalName().equals("sequence")) {
+                        nonSeqGroup = element;
+                        break;
+                    }
+                }
+                  
+                //get the first attribute, and test its dataset to see if it is duplicated
+                AttributeDescription firstAtt = (AttributeDescription) nonSeqGroup.getAttributeCollections()[0].getAttributeDescriptions().get(0);
+                String dataset = firstAtt.getInternalName().split("\\.")[0];
+                
+                if (manager.getRootAdaptor().getNumDatasetConfigsByDataset(dataset) > 1) {
+                    feedback.info("Dataset " + dataset + " with sequence support has been loaded more than once, skipping sequence page\n");
+                    skip = true;
+                }   
               }
           }
       }

@@ -126,7 +126,7 @@ public class SequenceGroupWidget
 
   private JRadioButton[] typeButtons = { transcript, gene,  none };
   
-  private JRadioButton[] snpButtons = { none };
+  private JRadioButton[] genericSeqButtons = { none };
 
   private JRadioButton[] includeButtons;
   
@@ -182,14 +182,13 @@ public class SequenceGroupWidget
   }
 
   private void buildGUI() {
-    if (iname.matches("snp\\w*"))
-      buildGUISnp();
+    if (iname.matches("\\w+seq_scope"))
+      buildGUIGeneric();
     else
       buildGUIEnsembl();
   }
   
-  private void buildGUISnp() {
-
+  private void buildGUIGeneric() {
   Box b = Box.createVerticalBox();
 
   b.add(addAll(Box.createHorizontalBox(), new JComponent[]{clearButton}, true));
@@ -198,10 +197,10 @@ public class SequenceGroupWidget
 
   Box columns = Box.createHorizontalBox();
   
-  //need to get all sequence types from the Registry, and make JRadioButtons for them    
+  //need to get all sequence types from the Registry, and make JRadioButtons for them
   AttributePage seqPage = dsv.getAttributePageByInternalName("sequences");
   AttributeGroup seqGroup = (AttributeGroup) seqPage.getAttributeGroupByName("sequence");
-  AttributeCollection seqCol = seqGroup.getAttributeCollectionByName("snp_seq_scope");
+  AttributeCollection seqCol = seqGroup.getAttributeCollectionByName(iname);
   List seq_atts = seqCol.getAttributeDescriptions();
   includeButtons = new JRadioButton[seq_atts.size()];
   leftColumn = new JComponent[seq_atts.size()];
@@ -224,24 +223,29 @@ public class SequenceGroupWidget
   columns.add(Box.createHorizontalGlue());
   b.add(columns);
 
-  b.add(
-    addAll(
-      Box.createHorizontalBox(),
-      new Component[] {
-        new JLabel("5' Flank (bp)"),
-        flank5,
-        Box.createHorizontalStrut(50),
-        new JLabel("3' Flank (bp)"),
-        flank3 },
-      false));
+  if (iname.matches("snp\\w+")) {
+      b.add(
+              addAll(
+                      Box.createHorizontalBox(),
+                      new Component[] {
+                          new JLabel("5' Flank (bp)"),
+                          flank5,
+                          Box.createHorizontalStrut(50),
+                          new JLabel("3' Flank (bp)"),
+                          flank3 },
+                          false));
+            
+      flank3.addActionListener(this);
+      flank5.addActionListener(this);
+  }
 
   add(b);
-
+  
   none.setSelected(true);
   ButtonGroup bg = new ButtonGroup();
-  for (int i = 0; i < snpButtons.length; i++) {
-    bg.add(snpButtons[i]);
-    snpButtons[i].addActionListener(this);
+  for (int i = 0; i < genericSeqButtons.length; i++) {
+    bg.add(genericSeqButtons[i]);
+    genericSeqButtons[i].addActionListener(this);
   }
 
   clearButton.addActionListener(this);
@@ -257,12 +261,9 @@ public class SequenceGroupWidget
     includeButtons[i].addActionListener(this);
   }
   bg.add(includeNone);
-
-  flank3.addActionListener(this);
-  flank5.addActionListener(this);
   
   //default state
-  setDefaultStateSNP();    
+  setDefaultStateGeneric();    
   }
   
   private void buildGUIEnsembl() {
@@ -376,18 +377,21 @@ public class SequenceGroupWidget
   }
 
   private void setDefaultState() {
-    if (iname.matches("snp\\w+"))
-      setDefaultStateSNP();
+    if (iname.matches("\\w+seq_scope"))
+      setDefaultStateGeneric();
     else
       setDefaultStateEns();
   }
   
-  private void setDefaultStateSNP() {
+  private void setDefaultStateGeneric() {
     lastButton = null;
-    flank3.setText("100");
-    flank5.setText("100");
-    flank3.setEnabled(true);
-    flank5.setEnabled(true);
+    
+    if (iname.matches("snp\\w+")) {
+        flank3.setText("100");
+        flank5.setText("100");
+        flank3.setEnabled(true);
+        flank5.setEnabled(true);
+    }
     setButtonsEnabled(includeButtons, true);    
   }
   

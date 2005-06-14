@@ -60,7 +60,7 @@ public class AttributePageWidget extends PageWidget {
    
       if (element instanceof AttributeGroup) {
    
-        AttributeGroup group = (AttributeGroup) element;
+        AttributeGroup group = (AttributeGroup) element;        
         String groupName = group.getDisplayName();
 
         AttributeGroupWidget w =
