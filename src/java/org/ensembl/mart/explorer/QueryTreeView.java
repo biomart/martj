@@ -575,12 +575,12 @@ public class QueryTreeView extends JTree implements QueryListener {
   public void attributeRemoved(
     Query sourceQuery,
     int index,
-    Attribute attribute) {   
-    attributesNode.remove(index);
-    treeModel.reload(attributesNode);
-    
+    Attribute attribute) {
+      attributesNode.remove(index);
+      treeModel.reload(attributesNode);
+      
     //sequence queries behave differently
-    if (sourceQuery.getSequenceDescription() != null)
+    if (sourceQuery.getSequenceDescription() != null && index > 0)
       index--;
     
     select(attributesNode, index, true);

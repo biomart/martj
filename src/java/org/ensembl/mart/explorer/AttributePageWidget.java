@@ -18,11 +18,14 @@
 
 package org.ensembl.mart.explorer;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.ConfigurationException;
@@ -35,7 +38,8 @@ public class AttributePageWidget extends PageWidget {
 
   private final Logger logger =
     Logger.getLogger(AttributePageWidget.class.getName());
-
+  private Feedback feedback = null;
+  
   private AttributePage page;
   /**
    * @param name
@@ -53,7 +57,7 @@ public class AttributePageWidget extends PageWidget {
     super(query, name, tree);
 
     this.page = page;
-
+    feedback = new Feedback(this);
     List attributeGroups = page.getAttributeGroups();
     for (Iterator iter = attributeGroups.iterator(); iter.hasNext();) {
       Object element = iter.next();
@@ -73,5 +77,39 @@ public class AttributePageWidget extends PageWidget {
       }
     }
   }
-
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.explorer.InputPage#attributeAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
+   */
+  public void attributeAdded(Query sourceQuery, int index, Attribute attribute) {
+      if (this.isShowing()) {
+          ArrayList attsToRemove = new ArrayList();       
+          boolean removeSeq = false;
+          
+          Attribute[] queryAtts = sourceQuery.getAttributes();
+          for (int i = 0, n = queryAtts.length; i < n; i++) {
+              Attribute thisAtt = queryAtts[i];
+              
+              if (page.getAttributeDescriptionByFieldNameTableConstraint(thisAtt.getField(), thisAtt.getTableConstraint()) == null) {
+                  attsToRemove.add(thisAtt);
+              }
+          }
+          
+          if (sourceQuery.getSequenceDescription() != null) {
+              if (!page.getInternalName().equals("sequences"))
+                  removeSeq = true;
+          }
+          
+          if (attsToRemove.size() > 0 || removeSeq) {
+              feedback.info("Removing attributes from pages not compatible with " + page.getDisplayName());
+              
+              for (int i = 0, n = attsToRemove.size(); i < n; i++) {
+                  Attribute attToRemove = (Attribute) attsToRemove.get(i);
+                  sourceQuery.removeAttribute(attToRemove);
+              }
+              
+              if (removeSeq)
+                  sourceQuery.setSequenceDescription(null);
+          }
+      }
+  }
 }
