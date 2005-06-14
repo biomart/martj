@@ -251,11 +251,11 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					insert(new FilterCollection("new"), "FilterCollection:");
 				else if (e.getActionCommand().equals("insert attribute collection"))
 					insert(new AttributeCollection("new"), "AttributeCollection:");
-				else if (e.getActionCommand().equals("insert filter description")) {
+				else if (e.getActionCommand().equals("insert filter")) {
 					FilterDescription fd = new FilterDescription();
 					fd.setAttribute("internalName", "new");
 					insert(fd, "FilterDescription");
-				} else if (e.getActionCommand().equals("insert attribute description")) {
+				} else if (e.getActionCommand().equals("insert attribute")) {
 					AttributeDescription ad = new AttributeDescription();
 					ad.setAttribute("internalName", "new");
 					insert(ad, "AttributeDescription");
@@ -552,9 +552,9 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeGroup"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle",  "hideDisplay toggle","insert attribute collection" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterCollection"))
-			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle",  "hideDisplay toggle","insert filter description" };
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle",  "hideDisplay toggle","insert filter" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeCollection"))
-			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle",  "hideDisplay toggle","insert attribute description" };
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle",  "hideDisplay toggle","insert attribute" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterDescription"))
 			menuItems =
 				new String[] {
