@@ -1266,7 +1266,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 						if (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
 									testAD.getField() == null || testAD.getField().equals("") ||
 									testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
-									(dsv.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals("")))				  
+									(dsv.getVisible() != null && dsv.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals("")))				  
 									){	
 									  brokenFields = brokenFields + "Attribute " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
 																						" and page " + apage.getInternalName() + "\n";	
@@ -1336,7 +1336,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 									testAD.getField() == null || testAD.getField().equals("") ||
 									testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
 									//testAD.getKey() == null || testAD.getKey().equals("") ||	
-								    (dsv.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals(""))) ||  
+								    (dsv.getVisible() != null && dsv.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals(""))) ||  
 									testAD.getQualifier() == null || testAD.getQualifier().equals("")				  			  
 									)){
 									  brokenFields = brokenFields + "Filter " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
