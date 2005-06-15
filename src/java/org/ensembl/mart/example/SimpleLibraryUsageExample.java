@@ -72,7 +72,7 @@ public class SimpleLibraryUsageExample {
             throw new ConfigurationException("Warning, could not load " + DEFAULT_REGISTRY_URL + " file\n");
         }
 
-	    RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(confURL, false, false, false);
+	    RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(confURL, false, false, true);
 		
 		// Initialise an engine encapsualting a specific Mart database.
 		Engine engine = new Engine();
