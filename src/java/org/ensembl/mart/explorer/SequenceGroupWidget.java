@@ -29,6 +29,7 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -420,12 +421,12 @@ public class SequenceGroupWidget
 
   private ImageIcon loadIcon(String filepath) {
     ImageIcon icon = null;
-    try {
-      BufferedImage testImage = ImageIO.read(new File(filepath));
+    URL testImage = getClass().getClassLoader().getResource(filepath);
+
+    if (testImage != null)
       icon = new ImageIcon(testImage);
-    } catch (IOException e) {
+    else {
       System.err.println("Problem loading file: " + filepath);
-      e.printStackTrace();
     }
 
     return icon;
