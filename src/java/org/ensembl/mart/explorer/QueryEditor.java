@@ -617,8 +617,15 @@ public class QueryEditor extends JPanel {
     } catch (Exception e) {
       // if the os is null then it must have been set by doCancel() 
       e.printStackTrace();
-      if (os != null)
+      if (os != null) {
+        try {
+            os.close();
+        } catch (IOException e1) {
+            //ignore, it gets nulled out next
+        }
+        os = null;
         feedback.warning(e);
+      }
     } finally {
       setRunning(false);
     }
