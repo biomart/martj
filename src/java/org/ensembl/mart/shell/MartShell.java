@@ -1986,10 +1986,10 @@ public class MartShell {
   }
 
   private void ExecScriptFromStream(InputStream input) throws InvalidQueryException {
-    try {
+      String line = null;
+      try {
       BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 
-      String line = null;
       while ((line = reader.readLine()) != null) {
         if (!line.startsWith("#")) {
           if (historyOn)
@@ -1999,7 +1999,7 @@ public class MartShell {
         }
       }
     } catch (Exception e) {
-      throw new InvalidQueryException(e.getMessage(), e);
+      throw new InvalidQueryException(e.getMessage() + "\n last Line: " + line + "\n", e);
     }
   }
 
