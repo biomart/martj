@@ -380,6 +380,8 @@
       <copy file="${bin.dir}/martshell.sh" tofile="${dist.dir}/bin/martshell.sh" />
       <copy file="${bin.dir}/martexplorer.bat" tofile="${dist.dir}/bin/martexplorer.bat" />
       <copy file="${bin.dir}/martexplorer.sh" tofile="${dist.dir}/bin/martexplorer.sh" />
+      <copy file="${bin.dir}/simpleLibraryUsageExample.bat" tofile="${dist.dir}/bin/simpleLibraryUsageExample.bat" />
+      <copy file="${bin.dir}/simpleLibraryUsageExample.sh" tofile="${dist.dir}/bin/simpleLibraryUsageExample.sh" />
       <copy file="${bin.dir}/marteditor.bat" tofile="${dist.dir}/bin/marteditor.bat" />
       <copy file="${bin.dir}/marteditor.sh" tofile="${dist.dir}/bin/marteditor.sh" />
       <copy file="${bin.dir}/martregistrydbtool.sh" tofile="${dist.dir}/bin/martregistrydbtool.sh" />
@@ -473,6 +475,8 @@
       <copy file="${bin.dir}/martshell_JRE.sh" tofile="${dist.dir}/bin/martshell.sh" />
       <copy file="${bin.dir}/martexplorer_JRE.bat" tofile="${dist.dir}/bin/martexplorer.bat" />
       <copy file="${bin.dir}/martexplorer_JRE.sh" tofile="${dist.dir}/bin/martexplorer.sh" />
+      <copy file="${bin.dir}/simpleLibraryUsageExample_JRE.bat" tofile="${dist.dir}/bin/simpleLibraryUsageExample.bat" />
+      <copy file="${bin.dir}/simpleLibraryUsageExample_JRE.sh" tofile="${dist.dir}/bin/simpleLibraryUsageExample.sh" />
       <copy file="${bin.dir}/marteditor_JRE.bat" tofile="${dist.dir}/bin/marteditor.bat" />
       <copy file="${bin.dir}/marteditor_JRE.sh" tofile="${dist.dir}/bin/marteditor.sh" />
       <copy file="${bin.dir}/martregistrydbtool_JRE.bat" tofile="${dist.dir}/bin/martregistrydbtool.bat" />
