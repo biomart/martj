@@ -68,6 +68,7 @@ import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.QueryListener;
 import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.AttributeDescription;
+import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
 import org.ensembl.mart.lib.config.CompositeDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfig;
@@ -709,6 +710,17 @@ public class QueryTreeView extends JTree implements QueryListener {
     DatasetConfig oldDatasetConfig,
     DatasetConfig newDatasetConfig) {
 
+  }
+  
+  protected boolean skipConfigurationObject(BaseNamedConfigurationObject obj) {
+      if (obj == null)
+          return false; //let caller handle null objects itself
+      if (obj.getHidden() != null && obj.getHidden().equals("true"))
+          return true;
+      if (obj.getDisplay() != null && obj.getDisplay().equals("true"))
+          return true;
+      
+      return false;
   }
 
 }

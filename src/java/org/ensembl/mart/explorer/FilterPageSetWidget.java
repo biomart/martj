@@ -48,6 +48,7 @@ public class FilterPageSetWidget extends PageSetWidget {
 		FilterPage[] filterPages = dataset.getFilterPages();
 		for (int i = 0, n = filterPages.length; i < n; i++) {
 			FilterPage page = filterPages[i];
+            if (tree.skipConfigurationObject(page)) continue;
 			String name = page.getDisplayName();
 			FilterPageWidget p = new FilterPageWidget(query, name, page, tree);
 			tabbedPane.add(name, p);

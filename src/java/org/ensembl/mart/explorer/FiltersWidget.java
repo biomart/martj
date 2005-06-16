@@ -71,8 +71,7 @@ public class FiltersWidget extends InputPage {
       for (int i = 0; i < fps.length; i++) {
       	// hack for skipping link pages, and other hidden/hideDisplay pages      	
         if (fps[i].getInternalName().equals("link_filters")) continue;
-        if (fps[i].getHidden() != null && fps[i].getHidden().equals("true")) continue;
-        if (fps[i].getAttribute("hideDisplay") != null && fps[i].getAttribute("hideDisplay").equals("true")) continue;
+        if (tree.skipConfigurationObject(fps[i])) continue;
         
         tabbedPane.add(
           new FilterPageWidget(query, fps[i].getDisplayName(), fps[i], tree));

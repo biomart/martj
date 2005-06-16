@@ -81,6 +81,8 @@ public class AttributeGroupWidget extends GroupWidget {
 
     for (int i = 0; i < collections.length; i++) {
 
+        if (tree.skipConfigurationObject(collections[i])) continue;
+        
         if (group.getInternalName().equals("sequence")) {
           if (collections[i].getInternalName().matches("\\w*seq_scope\\w*")) {              
             SequenceGroupWidget w = new SequenceGroupWidget(collections[i].getDisplayName(), 
@@ -118,10 +120,11 @@ public class AttributeGroupWidget extends GroupWidget {
 
     for (Iterator iter = attributeDescriptions.iterator(); iter.hasNext();) {
       Object element = iter.next();
-
+      
       if (element instanceof AttributeDescription) {
 
         AttributeDescription a = (AttributeDescription) element;
+        if (tree.skipConfigurationObject(a)) continue;
         
         if (a.getInternalName().indexOf('.') > 0) {
             a.setDisplayName(manager.getPointerAttribute(a.getInternalName()).getDisplayName());

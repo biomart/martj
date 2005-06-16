@@ -65,6 +65,8 @@ public class AttributePageWidget extends PageWidget {
       if (element instanceof AttributeGroup) {
    
         AttributeGroup group = (AttributeGroup) element;        
+        if (tree.skipConfigurationObject(group)) continue;
+        
         String groupName = group.getDisplayName();
 
         AttributeGroupWidget w =

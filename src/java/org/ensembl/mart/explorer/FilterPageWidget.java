@@ -31,8 +31,7 @@ public class FilterPageWidget extends PageWidget {
 			Object element = iter.next();
 			if (element instanceof FilterGroup) {
 				FilterGroup group = (FilterGroup) element;
-                if (group.getHidden() != null && group.getHidden().equals("true")) continue;
-                if (group.getAttribute("hideDisplay") != null && group.getAttribute("hideDisplay").equals("true")) continue;
+                if (tree.skipConfigurationObject(group)) continue;
                 
 				String groupName = group.getDisplayName();
 

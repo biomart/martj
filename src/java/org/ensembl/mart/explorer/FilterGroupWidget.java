@@ -69,9 +69,7 @@ public class FilterGroupWidget extends PageWidget {
     private boolean skipCollection(FilterCollection collection) {
         boolean skip = false;
         
-        if (collection.getHidden() != null && collection.getHidden().equals("true"))
-            skip = true;
-        if (!skip && collection.getAttribute("hideDisplay") != null && collection.getAttribute("hideDisplay").equals("true"))
+        if (tree.skipConfigurationObject(collection))
             skip = true;
         
         if (!skip && collection.containsOnlyPointerFilters())
@@ -124,8 +122,7 @@ public class FilterGroupWidget extends PageWidget {
                 
 				FilterDescription a = (FilterDescription) element;
 
-                if (a.getHidden() != null && a.getHidden().equals("true")) continue;
-                if (a.getAttribute("hideDisplay") != null && a.getAttribute("hideDisplay").equals("true")) continue;
+                if (tree.skipConfigurationObject(a)) continue;
                 
 				//FilterWidget w = new FilterWidget(query, a);
 				FilterWidget w = createFilterWidget(query, a);

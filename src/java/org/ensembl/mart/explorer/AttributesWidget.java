@@ -81,8 +81,7 @@ public class AttributesWidget extends InputPage {
       tabbedPane.removeAll();
       AttributePage[] aps = newDatasetConfig.getAttributePages();
       for (int i = 0; i < aps.length; i++)
-      { 
-      	// hack for skipping link pages
+      {
       	if (skipPage(aps[i])) continue;
         tabbedPane.add(
           new AttributePageWidget(query, aps[i].getDisplayName(), aps[i], tree, newDatasetConfig, manager));
@@ -93,23 +92,12 @@ public class AttributesWidget extends InputPage {
   }
   
   private boolean skipPage(AttributePage page) {
-      boolean skip = false;
+      boolean skip = tree.skipConfigurationObject(page);
       
       //skip the structure page for now
-      if (page.getInternalName().equals("structure"))
+      if (!skip && page.getInternalName().equals("structure"))
           skip = true;
-      
-      if (!skip 
-       && page.getHidden() != null 
-       && page.getHidden().equals("true"))
-          skip = true;
-      
-      if (!skip 
-       && page.getAttribute("hideDisplay") != null
-       && page.getAttribute("hideDisplay").equals("true")          
-       )
-          skip = true;
-      
+            
       //we only support sequences with pointer attributes
       if (!skip) {
           if (page.containsOnlyPointerAttributes()) {
