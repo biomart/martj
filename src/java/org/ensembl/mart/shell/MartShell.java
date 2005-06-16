@@ -1991,6 +1991,7 @@ public class MartShell {
       BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 
       while ((line = reader.readLine()) != null) {
+        line = line.trim();
         if (!line.startsWith("#")) {
           if (historyOn)
             Readline.addToHistory(line);
