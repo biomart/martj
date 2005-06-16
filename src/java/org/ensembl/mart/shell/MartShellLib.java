@@ -956,7 +956,7 @@ public class MartShellLib {
 
   public void addMart(DetailedDataSource ds) throws InvalidQueryException {
     try {
-      DatabaseDSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(ds, ds.getUser(), false, false, false);
+      DatabaseDSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(ds, ds.getUser(), false, false, true);
       //see notes for adaptorManager for boolean settings
       adaptor.setName(ds.getName());
       adaptorManager.add(adaptor);
