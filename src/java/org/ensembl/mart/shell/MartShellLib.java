@@ -144,7 +144,7 @@ public class MartShellLib {
    */
   public MartShellLib() {
       //dont ignoreCache, dont includeHiddenMembers
-      adaptorManager = new RegistryDSConfigAdaptor(false, false);
+      adaptorManager = new RegistryDSConfigAdaptor(false, true);
   }
   
   /**
@@ -976,7 +976,7 @@ public class MartShellLib {
 
       try {
         URL regURL = InputSourceUtil.getURLForString(source);
-        RegistryDSConfigAdaptor regadaptor = new RegistryDSConfigAdaptor(regURL, false, false, false);
+        RegistryDSConfigAdaptor regadaptor = new RegistryDSConfigAdaptor(regURL, false, false, true);
         // see notes for adaptorManager for boolean settings
 
         harvestAdaptorsFrom(regadaptor);
@@ -1030,7 +1030,7 @@ public class MartShellLib {
 
       try {
         URL dsvURL = InputSourceUtil.getURLForString(source);
-        URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor(dsvURL, false, false);
+        URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor(dsvURL, false, true);
         // see notes for adaptorManager for boolean settings
         //dont ignoreCache, dont includeHiddenMembers
 
