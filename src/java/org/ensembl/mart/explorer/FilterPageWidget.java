@@ -32,6 +32,7 @@ public class FilterPageWidget extends PageWidget {
 			if (element instanceof FilterGroup) {
 				FilterGroup group = (FilterGroup) element;
                 if (tree.skipConfigurationObject(group)) continue;
+                if (group.containsOnlyPointerFilters()) continue;
                 
 				String groupName = group.getDisplayName();
 
