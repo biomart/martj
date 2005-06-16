@@ -368,6 +368,9 @@ public class AttributePage extends BaseNamedConfigurationObject {
 		
 		for (Iterator iter = attributeGroups.iterator(); iter.hasNext();) {
 			Object group = iter.next();
+            if (((BaseNamedConfigurationObject) group).getHidden() != null && ((BaseNamedConfigurationObject) group).getHidden().equals("true")) continue;
+            if (((BaseNamedConfigurationObject) group).getDisplay() != null && ((BaseNamedConfigurationObject) group).getDisplay().equals("true")) continue;
+              
 			if (group instanceof AttributeGroup)
 			  names.addAll( ( (AttributeGroup) group).getCompleterNames() );
 		}

@@ -317,6 +317,8 @@ public class FilterCollection extends BaseNamedConfigurationObject {
 
 		for (Iterator iter = filters.iterator(); iter.hasNext();) {
 			FilterDescription element = (FilterDescription) iter.next();
+            if (element.getHidden() != null && element.getHidden().equals("true")) continue;
+            if (element.getDisplay() != null && element.getDisplay().equals("true")) continue;
 			names.addAll(element.getCompleterNames());
 		}
 
@@ -411,6 +413,9 @@ public class FilterCollection extends BaseNamedConfigurationObject {
       List filters = getFilterDescriptions();
       for (int i = 0, n = filters.size(); i < n; i++) {
           FilterDescription filt = (FilterDescription) filters.get(i);
+          if (filt.getHidden() != null && filt.getHidden().equals("true")) continue;
+          if (filt.getDisplay() != null && filt.getDisplay().equals("true")) continue;
+          
           if (filt.getInternalName().indexOf('.') < 0) {
               ret = false;
               break;

@@ -324,7 +324,9 @@ public final class AttributeGroup extends BaseNamedConfigurationObject {
   	
   	for (Iterator iter = attributeCollections.iterator(); iter.hasNext();) {
 			AttributeCollection acol = (AttributeCollection) iter.next();
-			
+            if (acol.getHidden() != null && acol.getHidden().equals("true")) continue;
+            if (acol.getDisplay() != null && acol.getDisplay().equals("true")) continue;
+              
 //			hacky special case for sequence supported pointers in
 //          sequences.header_info.gene,transcript,exon
 			if (getInternalName().equals("header_info")) {

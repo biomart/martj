@@ -1338,6 +1338,9 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 
     for (Iterator iter = attributePages.iterator(); iter.hasNext();) {
       AttributePage page = (AttributePage) iter.next();
+      if (page.getHidden() != null && page.getHidden().equals("true")) continue;
+      if (page.getDisplay() != null && page.getDisplay().equals("true")) continue;
+      
       List pagenames = page.getCompleterNames();
       for (int i = 0, n = pagenames.size(); i < n; i++) {
         String name = (String) pagenames.get(i);
@@ -1358,6 +1361,9 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 
     for (Iterator iter = filterPages.iterator(); iter.hasNext();) {
       FilterPage page = (FilterPage) iter.next();
+      if (page.getHidden() != null && page.getHidden().equals("true")) continue;
+      if (page.getDisplay() != null && page.getDisplay().equals("true")) continue;
+      
       List pagenames = page.getCompleterNames();
       for (int i = 0, n = pagenames.size(); i < n; i++) {
         String name = (String) pagenames.get(i);

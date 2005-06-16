@@ -629,6 +629,9 @@ public class FilterDescription extends QueryFilterSettings {
 		} else {
 			for (Iterator iter = uiOptions.iterator(); iter.hasNext();) {
 				Option element = (Option) iter.next();
+                if (element.getHidden() != null && element.getHidden().equals("true")) continue;
+                if (element.getDisplay() != null && element.getDisplay().equals("true")) continue;
+                
 				String opfield = element.getField();
 				String optype = element.getType();
 

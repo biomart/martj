@@ -354,6 +354,8 @@ public class FilterGroup extends BaseNamedConfigurationObject {
 
 		for (Iterator iter = filterCollections.iterator(); iter.hasNext();) {
 			FilterCollection element = (FilterCollection) iter.next();
+            if (element.getHidden() != null && element.getHidden().equals("true")) continue;
+            if (element.getDisplay() != null && element.getDisplay().equals("true")) continue;
 			names.addAll(element.getCompleterNames());
 		}
 
@@ -445,4 +447,19 @@ public class FilterGroup extends BaseNamedConfigurationObject {
   public boolean isBroken() {
   	return hasBrokenCollections;
   }
+
+public boolean containsOnlyPointerFilters() {
+   boolean contains = true;
+   FilterCollection[] cols = getFilterCollections();
+   for (int i = 0, n = cols.length; i < n; i++) {
+     if (cols[i].getHidden() != null && cols[i].getHidden().equals("true")) continue;
+     if (cols[i].getDisplay() != null && cols[i].getDisplay().equals("true")) continue;
+     
+     if (!cols[i].containsOnlyPointerFilters()) {
+         contains = false;
+         break;
+     }
+   }
+   return contains;
+}
 }

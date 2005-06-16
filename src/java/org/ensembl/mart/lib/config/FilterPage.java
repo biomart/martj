@@ -392,8 +392,12 @@ public class FilterPage extends BaseNamedConfigurationObject {
 
 		for (Iterator iter = filterGroups.iterator(); iter.hasNext();) {
 			Object group = iter.next();
-
+            if (( (BaseNamedConfigurationObject) group).getHidden() != null && ( (BaseNamedConfigurationObject) group).getHidden().equals("true")) continue;
+            if (( (BaseNamedConfigurationObject) group).getDisplay() != null && ( (BaseNamedConfigurationObject) group).getDisplay().equals("true")) continue;
+            
 			if (group instanceof FilterGroup) {
+                
+                
 				List thisNames = ((FilterGroup) group).getCompleterNames();
 
 				for (int i = 0, n = thisNames.size(); i < n; i++) {
