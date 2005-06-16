@@ -4081,11 +4081,17 @@ public class DatabaseDatasetConfigUtils {
            
     //System.out.println(sql);    
     PreparedStatement ps = conn.prepareStatement(sql);
-    ResultSet rs = ps.executeQuery();
+    ResultSet rs = null;
+    try{
+    	rs = ps.executeQuery();
+    }
+    catch (Exception e){
+    	JOptionPane.showMessageDialog(null,"Problem with SQL: "+sql);
+    }
     String value;
     Option op;
 
-    while (rs.next()) {
+    while (rs != null && rs.next()) {
       value = rs.getString(1);
       op = new Option();
       //System.out.println(value);
