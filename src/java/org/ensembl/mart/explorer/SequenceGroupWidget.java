@@ -53,6 +53,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.Query;
+
+import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeDescription;
@@ -600,7 +602,40 @@ public class SequenceGroupWidget
          && !newAttribute.equals(oldAttribute)) {
 
           query.setSequenceDescription(newAttribute);
+            		
+		  	// try to add remove atts logic here
+		  			
+			AttributePage seqPage = dsv.getAttributePageByInternalName("sequences");
+		  	ArrayList attsToRemove = new ArrayList();       
+			boolean removeSeq = false;
           
+			Attribute[] queryAtts = query.getAttributes();
+			for (int i = 0, n = queryAtts.length; i < n; i++) {
+				Attribute thisAtt = queryAtts[i];
+              
+				if (seqPage.getAttributeDescriptionByFieldNameTableConstraint(thisAtt.getField(), thisAtt.getTableConstraint()) == null) {
+					attsToRemove.add(thisAtt);
+				}
+			}
+          
+			if (query.getSequenceDescription() != null) {
+				if (!seqPage.getInternalName().equals("sequences"))
+							removeSeq = true;
+			}
+          
+			if (attsToRemove.size() > 0 || removeSeq) {
+				feedback.info("Removing attributes from pages not compatible with " + seqPage.getDisplayName());
+              
+				for (int i = 0, n = attsToRemove.size(); i < n; i++) {
+					Attribute attToRemove = (Attribute) attsToRemove.get(i);
+					query.removeAttribute(attToRemove);
+				}
+              
+				if (removeSeq)
+						query.setSequenceDescription(null);
+			}
+          
+     
           //System.out.println(" seq11 descripiton "+query.getSequenceDescription());
           
           sequenceDescritpionChanged(query,oldAttribute,newAttribute);
