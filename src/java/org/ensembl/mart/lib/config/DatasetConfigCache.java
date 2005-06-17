@@ -163,12 +163,14 @@ public class DatasetConfigCache {
     String version = dsc.getVersion();
 
     deleteFile(dataset, iname);
-
+    
     File xmlFile = getFile(dataset, iname);
+    
     dscutils.writeDatasetConfigToFile(dsc, xmlFile);
-
-    //if no exception thrown, store values to preferences for lazy load
-    xmlPrefs.node(dataset).node(iname).put(DNAMEKEY, dname);
+    
+    //hidden datasets may have null display names
+    if (dname != null)
+      xmlPrefs.node(dataset).node(iname).put(DNAMEKEY, dname);
     
     if (desc != null)
       xmlPrefs.node(dataset).node(iname).put(DESCKEY, desc);
