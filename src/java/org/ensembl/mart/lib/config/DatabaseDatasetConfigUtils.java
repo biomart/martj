@@ -93,7 +93,9 @@ public class DatabaseDatasetConfigUtils {
   private final String INSERTCOMPRESSEDXMLA = "insert into "; //append table after user test
   private final String INSERTCOMPRESSEDXMLB =
     " (internalName, displayName, dataset, description, compressed_xml, MessageDigest, type, visible, version) values (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-  
+  private final String INSERTCOMPRESSEDXMLBMYSQL =
+	  " (internalName, displayName, dataset, description, xml, compressed_xml, MessageDigest, type, visible, version) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
   private final String MAINTABLESUFFIX = "main";
   private final String DIMENSIONTABLESUFFIX = "dm";
   private final String LOOKUPTABLESUFFIX = "look";
@@ -821,12 +823,15 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       String metatable = getDSConfigTableFor(user);
-      String insertSQL = INSERTCOMPRESSEDXMLA + getSchema()[0]+"."+metatable + INSERTCOMPRESSEDXMLB;
+      String insertSQL = INSERTCOMPRESSEDXMLA + getSchema()[0]+"."+metatable + INSERTCOMPRESSEDXMLBMYSQL;
+
+	  System.out.println(insertSQL);
 
       if (logger.isLoggable(Level.FINE))
         logger.fine("\ninserting with SQL " + insertSQL + "\n");
 
       conn = dsource.getConnection();
+      
       MessageDigest md5digest = MessageDigest.getInstance(DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM);
       ByteArrayOutputStream bout = new ByteArrayOutputStream();
       GZIPOutputStream gout = new GZIPOutputStream(bout);
@@ -839,6 +844,15 @@ public class DatabaseDatasetConfigUtils {
       gout.finish();
 
       byte[] xml = bout.toByteArray();
+      
+      // recover uncompressed XML as well
+	  ByteArrayOutputStream bout2 = new ByteArrayOutputStream();
+	  DigestOutputStream dout = new DigestOutputStream(bout2, md5digest);
+	  XMLOutputter xout2 = new XMLOutputter(org.jdom.output.Format.getRawFormat());
+	  xout2.output(doc, dout);
+      //bout.finish();
+      byte[] uncompressedXML = bout2.toByteArray();
+      
       byte[] md5 = md5digest.digest();
       bout.close();
       gout.close();
@@ -854,11 +868,12 @@ public class DatabaseDatasetConfigUtils {
       ps.setString(2, displayName);
       ps.setString(3, dataset);
       ps.setString(4, description);
-      ps.setBinaryStream(5, new ByteArrayInputStream(xml), xml.length);
-      ps.setBytes(6, md5);
-	  ps.setString(7, type);
-	  ps.setString(8, visible);
-	  ps.setString(9,version);
+	  ps.setBinaryStream(5, new ByteArrayInputStream(uncompressedXML), uncompressedXML.length);//uncompressed
+      ps.setBinaryStream(6, new ByteArrayInputStream(xml), xml.length);//compressed
+      ps.setBytes(7, md5);
+	  ps.setString(8, type);
+	  ps.setString(9, visible);
+	  ps.setString(10,version);
 
       int ret = ps.executeUpdate();
       ps.close();
