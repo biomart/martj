@@ -21,7 +21,7 @@ public class MetaDataResolverFKSupported extends MetaDataResolver {
 
 	
 	
-	public MetaDataResolverFKSupported(DBAdaptor adaptor){
+	public MetaDataResolverFKSupported(DatabaseAdaptor adaptor){
 			
 		super(adaptor);
 		

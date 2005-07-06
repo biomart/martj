@@ -21,7 +21,7 @@ public class MetaDataResolverFKNotSupported extends MetaDataResolver {
 	
 	
 	
-	public MetaDataResolverFKNotSupported(DBAdaptor adaptor){
+	public MetaDataResolverFKNotSupported(DatabaseAdaptor adaptor){
 		
 		super(adaptor);
 		

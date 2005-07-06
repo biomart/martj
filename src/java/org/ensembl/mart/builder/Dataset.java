@@ -21,7 +21,7 @@ public class Dataset {
 	String name;
 	String targetSchemaName;
 	String datasetKey;
-	DBAdaptor adaptor;
+	DatabaseAdaptor adaptor;
 	
 	
 		

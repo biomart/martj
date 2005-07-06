@@ -18,7 +18,7 @@ import java.util.*;
  * 
  */
 
-public class DBAdaptor {
+public class DatabaseAdaptor {
 	
 	public String username;
 	public String catalog;
@@ -40,7 +40,7 @@ public class DBAdaptor {
 	/**
 	 * 
 	 */
-	public DBAdaptor(String config) {
+	public DatabaseAdaptor(String config) {
 		super();
 		setConfig(config);
 		initialiseConnections();

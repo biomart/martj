@@ -13,7 +13,6 @@ package org.ensembl.mart.builder;
  */
 public class TUnitSingle extends TUnit {
 	
-	public String type;
 	
 	public TUnitSingle(Table ref_table){
 		
@@ -26,43 +25,28 @@ public class TUnitSingle extends TUnit {
 	public String toSQL (){
 		
 		String sql = null;
-		
-		if (type.equals("rename")) sql = renameSQL(); 
+		 
 		if (type.equals("partition")) sql = partitionSQL(); 
-		if (type.equals("notNull")) sql = notNullSQL();
+		else if (type.equals("notNull")) sql = notNullSQL();
 		else System.out.println ("not supported TUnit type");
-		
-		//String sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ tempStart.key+
-		//" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ refTable.key+ " IS NOT NULL;";
-
-		//String sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ tempStart.PK+
-		//" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ refTable.PK+ " IS NOT NULL;";
-		
-		//sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ TSKey+
-		//" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ RFKey+ " IS NOT NULL;";
-		
-		
+	
 		return sql;
 		
-	}
-	
-	
-	private String renameSQL(){
-		
-		String sql = sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ TSKey+
-		" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ RFKey+ " IS NOT NULL;";
-		
-		return sql;
 	}
 	
 	
 	private String partitionSQL(){
 		
-		String sql = sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ TSKey+
-		" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ RFKey+ " IS NOT NULL;";
+		String sql = sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT * FROM "+refTable.getName();
+		
+		if (refTable.hasCentralExtension()){
+			sql= sql+" WHERE "+refTable.getName()+"."+refTable.getCentralExtension()+";";
+		} else sql = sql +";";
 		
 		return sql;
 	}
+	
+	
 	
 	
 	private String notNullSQL(){
@@ -77,22 +61,17 @@ public class TUnitSingle extends TUnit {
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	public void transform (Table temp_start, String temp_end_name){
 		
+		Table temp_end = null;
 		
+		// for central convert ref table
+		if (this.type.equals("notNull")){
 		Table new_ref=convertTable(refTable, temp_start);
-
-		Table temp_end = copyTable(new_ref);
+		temp_end = copyTable(new_ref);
 		temp_end.isFinalTable=false;
+		} else temp_end = copyTable(refTable);
+		
 		this.setTemp_end(temp_end);
 		this.setTemp_start(temp_start);
 		

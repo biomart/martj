@@ -23,8 +23,9 @@ public abstract class TUnit {
 	String TSKey;
 	String RFKey;
 	String targetSchema;
-	DBAdaptor adaptor;
+	DatabaseAdaptor adaptor;
 	boolean single =false;
+	public String type;
 	
 	
 	public TUnit(Table ref_table){

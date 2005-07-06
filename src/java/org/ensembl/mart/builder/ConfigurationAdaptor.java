@@ -22,7 +22,7 @@ import java.util.ArrayList;
  */
 public class ConfigurationAdaptor {
 	
-	public DBAdaptor adaptor;
+	public DatabaseAdaptor adaptor;
 	public MetaDataResolver resolver;
 	public String targetSchemaName;
 	private static ArrayList mart = new ArrayList();
@@ -43,6 +43,7 @@ public class ConfigurationAdaptor {
 			Transformation transformation = null;
 			String datasetName = null;
 			ArrayList linkedList = new ArrayList();
+			Table startTable=null;
 
 			while ((line = in.readLine()) != null) {
 
@@ -117,8 +118,8 @@ public class ConfigurationAdaptor {
 					if (!fileEntries[13].equals("null")) centralColumnNames = fileEntries[13].split(",");
 					if (!fileEntries[14].equals("null")) centralColumnAliases = fileEntries[14].split(",");
 					
-					
-					transformation.startTable = resolver.getCentralTable(fileEntries[2],centralColumnNames,centralColumnAliases);
+					startTable= resolver.getCentralTable(fileEntries[2],centralColumnNames,centralColumnAliases);
+					transformation.startTable = startTable;
 					transformation.type = "linked";
 					transformation.column_operations = "addall";
 
@@ -132,18 +133,34 @@ public class ConfigurationAdaptor {
 				if (!fileEntries[11].equals("null")) columnNames = fileEntries[11].split(",");
 				if (!fileEntries[12].equals("null")) columnAliases = fileEntries[12].split(",");
 				
-				// switched off fileEntries[5].toLowerCase for oracle
-				Table ref_table = resolver.getTable(fileEntries[5], columnNames, columnAliases);
+				
+                
+				TUnit dunit= null;
+				
+				if (!fileEntries[5].equals("null")) {
+					
+//					 switched off fileEntries[5].toLowerCase for oracle
+					Table refTable = resolver.getTable(fileEntries[5], columnNames, columnAliases);
 
-				ref_table.status = fileEntries[3];
-				ref_table.cardinality = fileEntries[6];
-				if (!fileEntries[8].equals("null"))
-					ref_table.extension = fileEntries[8];
-				if (!fileEntries[7].equals("null"))
-					ref_table.central_extension = fileEntries[7];
-
-				TUnit dunit = new TUnitDouble(ref_table);
-
+					refTable.status = fileEntries[3];
+					refTable.cardinality = fileEntries[6];
+					if (!fileEntries[8].equals("null"))
+						refTable.extension = fileEntries[8];
+					if (!fileEntries[7].equals("null"))
+						refTable.central_extension = fileEntries[7];
+					
+					
+					dunit = new TUnitDouble(refTable);
+				}
+                 else {
+                 	
+                 	if (!fileEntries[7].equals("null"))
+						startTable.central_extension = fileEntries[7];
+                 	
+                 	dunit = new TUnitSingle(startTable);
+                 	dunit.type="partition";
+                 }
+				
 				dunit.cardinality = fileEntries[6];
 				dunit.column_operations = "addall";
 				dunit.adaptor = adaptor;

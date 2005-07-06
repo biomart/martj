@@ -35,7 +35,7 @@ public class MartBuilder {
 
 		
 		// Connections
-		DBAdaptor Adaptor = new DBAdaptor(config);
+		DatabaseAdaptor Adaptor = new DatabaseAdaptor(config);
 
 		MetaDataResolver Resolver = null;
 

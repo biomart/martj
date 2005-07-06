@@ -23,10 +23,10 @@ public abstract class MetaDataResolver {
 	protected Connection connection;
 	protected Column [] columns;
 	//protected ArrayList columns;
-	protected DBAdaptor adaptor;
+	protected DatabaseAdaptor adaptor;
 	protected DatabaseMetaData dmd;
 	
-	public MetaDataResolver(DBAdaptor adaptor){
+	public MetaDataResolver(DatabaseAdaptor adaptor){
 		
 		try {		
 			setAdaptor(adaptor);
@@ -255,13 +255,13 @@ public abstract class MetaDataResolver {
 	/**
 	 * @return Returns the adaptor.
 	 */
-	public DBAdaptor getAdaptor() {
+	public DatabaseAdaptor getAdaptor() {
 		return adaptor;
 	}
 	/**
 	 * @param adaptor The adaptor to set.
 	 */
-	public void setAdaptor(DBAdaptor adaptor) {
+	public void setAdaptor(DatabaseAdaptor adaptor) {
 		this.adaptor = adaptor;
 	}
 }

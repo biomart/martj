@@ -26,7 +26,7 @@ public class Transformation {
 	String targetSchemaName;
 	String number;
 	Table startTable;
-	DBAdaptor adaptor;
+	DatabaseAdaptor adaptor;
 	boolean central = false;
 
 	public String userTableName;
