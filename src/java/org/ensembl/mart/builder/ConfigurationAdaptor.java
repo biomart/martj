@@ -142,7 +142,7 @@ public class ConfigurationAdaptor {
 				if (!fileEntries[7].equals("null"))
 					ref_table.central_extension = fileEntries[7];
 
-				TransformationUnit dunit = new TransformationUnitDouble(ref_table);
+				TUnit dunit = new TUnitDouble(ref_table);
 
 				dunit.cardinality = fileEntries[6];
 				dunit.column_operations = "addall";
@@ -202,7 +202,7 @@ public class ConfigurationAdaptor {
 
 			indexNo = 10 + indexNo;
 
-			TransformationUnit[] units = final_transformations[i].getUnits();
+			TUnit[] units = final_transformations[i].getUnits();
 
 			sqlout.write("\n--\n--       TRANSFORMATION NO "
 					+ final_transformations[i].number + "      TARGET TABLE: "
@@ -226,7 +226,7 @@ public class ConfigurationAdaptor {
 
 			indexNo = 10 + indexNo;
 
-			TransformationUnit[] units = final_transformations[i].getUnits();
+			TUnit[] units = final_transformations[i].getUnits();
 
 			for (int j = 0; j < units.length; j++) {
 				if (!(units[j].tempEnd.getName().matches(".*TEMP.*"))) {

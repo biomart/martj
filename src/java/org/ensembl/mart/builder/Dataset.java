@@ -124,20 +124,20 @@ public class Dataset {
 				//System.out.println(" temp end name from central transf "+dmFinalTable.getName());
 				
 				
-			TransformationUnitSingle sunit = 
-				new TransformationUnitSingle(dmFinalTable);
+			TUnitSingle sunit = 
+				new TUnitSingle(dmFinalTable);
 			
 			sunit.single = true;
 			sunit.adaptor = adaptor;
 			sunit.targetSchema = targetSchemaName;
 			sunit.TSKey=dmTransformations[m].getFinalUnit().TSKey;
 			sunit.RFKey=dmTransformations[m].getFinalUnit().RFKey;
-			
+			sunit.type="notNull";
 			transformation.addUnit(sunit);
 			
 			
 
-			TransformationUnitDouble dunit = new TransformationUnitDouble(dmFinalTable);
+			TUnitDouble dunit = new TUnitDouble(dmFinalTable);
 			dunit.cardinality = dmFinalTable.cardinality;
 			dunit.column_operations = "addone";
 			dunit.final_table_name = "MAIN";

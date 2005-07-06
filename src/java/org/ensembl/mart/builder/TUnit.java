@@ -11,7 +11,7 @@ package org.ensembl.mart.builder;
  *
  * 
  */
-public abstract class TransformationUnit {
+public abstract class TUnit {
 	
 	Table tempStart;
 	Table tempEnd;
@@ -27,7 +27,7 @@ public abstract class TransformationUnit {
 	boolean single =false;
 	
 	
-	public TransformationUnit(Table ref_table){
+	public TUnit(Table ref_table){
 		
 		this.refTable=ref_table;
 		

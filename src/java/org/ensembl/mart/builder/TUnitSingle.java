@@ -11,11 +11,11 @@ package org.ensembl.mart.builder;
  *
  * 
  */
-public class TransformationUnitSingle extends TransformationUnit {
+public class TUnitSingle extends TUnit {
 	
+	public String type;
 	
-	
-	public TransformationUnitSingle(Table ref_table){
+	public TUnitSingle(Table ref_table){
 		
 		super(ref_table);
 		this.refTable=ref_table;
@@ -25,19 +25,64 @@ public class TransformationUnitSingle extends TransformationUnit {
 	
 	public String toSQL (){
 		
+		String sql = null;
+		
+		if (type.equals("rename")) sql = renameSQL(); 
+		if (type.equals("partition")) sql = partitionSQL(); 
+		if (type.equals("notNull")) sql = notNullSQL();
+		else System.out.println ("not supported TUnit type");
+		
 		//String sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ tempStart.key+
 		//" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ refTable.key+ " IS NOT NULL;";
 
 		//String sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ tempStart.PK+
 		//" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ refTable.PK+ " IS NOT NULL;";
 		
-		String sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ TSKey+
-		" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ RFKey+ " IS NOT NULL;";
+		//sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ TSKey+
+		//" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ RFKey+ " IS NOT NULL;";
 		
 		
 		return sql;
 		
 	}
+	
+	
+	private String renameSQL(){
+		
+		String sql = sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ TSKey+
+		" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ RFKey+ " IS NOT NULL;";
+		
+		return sql;
+	}
+	
+	
+	private String partitionSQL(){
+		
+		String sql = sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ TSKey+
+		" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ RFKey+ " IS NOT NULL;";
+		
+		return sql;
+	}
+	
+	
+	private String notNullSQL(){
+		
+		String sql = sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ TSKey+
+		" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ RFKey+ " IS NOT NULL;";
+		
+		return sql;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	

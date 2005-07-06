@@ -11,10 +11,10 @@ package org.ensembl.mart.builder;
  *
  * 
  */
-public class TransformationUnitDouble extends TransformationUnit {
+public class TUnitDouble extends TUnit {
 	
 	
-	public TransformationUnitDouble(Table ref_table){
+	public TUnitDouble(Table ref_table){
 		
 		super(ref_table);
 		this.refTable=ref_table;

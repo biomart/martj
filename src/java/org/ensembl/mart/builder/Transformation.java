@@ -33,19 +33,19 @@ public class Transformation {
 	
 
 
-	public TransformationUnit getFinalUnit() {
-		TransformationUnit unit = (TransformationUnit) units.get(units.size() - 1);
+	public TUnit getFinalUnit() {
+		TUnit unit = (TUnit) units.get(units.size() - 1);
 		return unit;
 	}
 	
 	
-	public void addUnit(TransformationUnit unit) {
+	public void addUnit(TUnit unit) {
 		this.units.add(unit);
 	}
 
-	public TransformationUnit[] getUnits() {
-		TransformationUnit[] b = new TransformationUnit[units.size()];
-		return (TransformationUnit[]) units.toArray(b);
+	public TUnit[] getUnits() {
+		TUnit[] b = new TUnit[units.size()];
+		return (TUnit[]) units.toArray(b);
 	}
 	
 	
@@ -66,7 +66,7 @@ public class Transformation {
         // transform
 		for (int i = 0; i < getUnits().length; i++) {
 			
-			TransformationUnit unit = getUnits()[i];
+			TUnit unit = getUnits()[i];
 			Table temp_start = new Table();
 
 			if (i == 0) {
