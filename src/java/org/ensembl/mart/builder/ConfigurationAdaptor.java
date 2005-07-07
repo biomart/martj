@@ -136,12 +136,14 @@ public class ConfigurationAdaptor {
 				
                 
 				TUnit dunit= null;
+				Table refTable = null;
 				
 				if (!fileEntries[5].equals("null")) {
 					
 //					 switched off fileEntries[5].toLowerCase for oracle
-					Table refTable = resolver.getTable(fileEntries[5], columnNames, columnAliases);
-
+					if (!fileEntries[5].equals("interim")) refTable = resolver.getTableColumns(fileEntries[5], columnNames, columnAliases);
+                     else refTable = resolver.getTable(fileEntries[5]);
+					
 					refTable.status = fileEntries[3];
 					refTable.cardinality = fileEntries[6];
 					if (!fileEntries[8].equals("null"))

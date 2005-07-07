@@ -209,7 +209,7 @@ public abstract class MetaDataResolver {
 	
 	
 	
-	public Table getTable (String tableName, String [] columnNames, String [] columnAliases) {
+	public Table getTableColumns (String tableName, String [] columnNames, String [] columnAliases) {
 		
 		Table table = new Table();
 		table.setName(tableName);
@@ -220,6 +220,20 @@ public abstract class MetaDataResolver {
 	
 	
 	
+	public Table getTable (String tableName) {
+		
+		Table table = new Table();
+		table.setName(tableName);
+		
+		Column column = new Column();
+		column.setName("ttt");
+		columns  = new Column[1];
+		columns[0]=column;
+		table.setColumns(columns);
+		//table.setColumns(getReferencedColumns(tableName, columnNames, columnAliases));
+		
+		return table;
+	}
 	
 	
 	
