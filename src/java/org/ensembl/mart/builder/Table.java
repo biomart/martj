@@ -40,6 +40,8 @@ public class Table implements Cloneable {
 
 	private Column[] columns;
 
+	public String type ="";
+
 	public Object clone() throws CloneNotSupportedException {
 		Table copy = null;
 		copy = (Table) super.clone();

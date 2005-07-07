@@ -106,6 +106,8 @@ public class Dataset {
 			 
 			 // get final temp for each main tablev
 			Table main_table=mainTransformations[i].getFinalUnit().getTemp_end();
+			// set this again
+			main_table.type="interim";
 			
 			transformation.finalTableName=main_table.getName();
 			transformation.finalTableType="MAIN";
@@ -152,7 +154,7 @@ public class Dataset {
 		}
 
 			// resetting the name to temp name
-			if (containsCentral) main_table.setName(main_table.temp_name+"_main_interim");
+			if (containsCentral) main_table.setName("main_interim");
 			
 			transformation.transform();
 			addTransformation(transformation);

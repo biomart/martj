@@ -246,14 +246,18 @@ public class TUnitDouble extends TUnit {
 		String start=tempStart.getName();
 		String ref =refTable.getName();
 		
-		// temps are always in the target schema
-	    if (tempStart.getName().matches(".*TEMP.*") ) start=targetSchema+"."+tempStart.getName();
-	    if (refTable.getName().matches(".*TEMP.*")) ref=targetSchema+"."+refTable.getName();
+		// temps and interims are always in the target schema
+	    if (tempStart.getName().matches(".*TEMP.*") ) start=targetSchema+"."+start;
+	    else if (tempStart.type.equals("interim")) start=targetSchema+"."+start;
+	    
+	    if (refTable.getName().matches(".*TEMP.*")) ref=targetSchema+"."+ref;
+	    else if (refTable.type.equals("interim")) ref=targetSchema+"."+ref;
+	    
+	    
+	    //	System.out.println("type: "+tempStart.type+" name "+tempStart.getName());
 	    
 		StringBuffer tempsql = new StringBuffer ("CREATE TABLE "+targetSchema+".");
 		
-		
-	
 		tempsql.append(temp+ "  AS SELECT "+temp_start_col.toString()+ref_table_col.toString()+" FROM "+ 
 				start+ ONE +ref+ TWO +ref+"."+RFKey+" = "+ start+"."+TSKey);
 		

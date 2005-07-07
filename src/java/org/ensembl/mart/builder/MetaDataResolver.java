@@ -220,13 +220,13 @@ public abstract class MetaDataResolver {
 	
 	
 	
-	public Table getTable (String tableName) {
+	public Table getTable (String tableName, String columnName) {
 		
 		Table table = new Table();
 		table.setName(tableName);
 		
 		Column column = new Column();
-		column.setName("ttt");
+		column.setName(columnName);
 		columns  = new Column[1];
 		columns[0]=column;
 		table.setColumns(columns);

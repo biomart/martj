@@ -140,9 +140,17 @@ public class ConfigurationAdaptor {
 				
 				if (!fileEntries[5].equals("null")) {
 					
-//					 switched off fileEntries[5].toLowerCase for oracle
-					if (!fileEntries[5].equals("interim")) refTable = resolver.getTableColumns(fileEntries[5], columnNames, columnAliases);
-                     else refTable = resolver.getTable(fileEntries[5]);
+                     // switched off fileEntries[5].toLowerCase for oracle
+					// "main_interim" name needs to be a centrally settable param
+					// config file, ConfigurationAdaptor and Dataset.
+					if (!fileEntries[5].equals("main_interim")) {
+						refTable = resolver.getTableColumns(fileEntries[5], columnNames, columnAliases);
+					    refTable.type="temp";
+					}
+                     else {
+                     	refTable = resolver.getTable(fileEntries[5], fileEntries[4]);
+                     refTable.type="interim";
+                     }
 					
 					refTable.status = fileEntries[3];
 					refTable.cardinality = fileEntries[6];
