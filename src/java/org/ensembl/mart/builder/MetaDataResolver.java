@@ -67,6 +67,21 @@ public abstract class MetaDataResolver {
 	protected abstract String getPrimaryKeys(String table_name);
 	
 	
+	
+	public String [] getAllTableNames () throws SQLException{
+		
+		String [] types =null;
+		String [] names =null;
+		types[0]="table";
+		
+		//ResultSet resultNames = dmd.getTables(null,getAdaptor().schema,"%",types);
+		
+		return names;
+		
+	}
+	
+	
+	
 	public Column [] getReferencedColumns (String name, String [] columnNames){
 		
 		Column [] col;
