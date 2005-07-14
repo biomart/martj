@@ -64,7 +64,11 @@ public class DatabaseAdaptor {
 			rdbms = "mysql";	
 		else if (driver.indexOf("postgresql") >= 0)
 			rdbms = "postgresql";
-					
+		else{
+			System.out.println("CONNECTION NOT POSSIBLE");
+			return;
+		}
+		
 		System.out.println("RDBMS" + rdbms);			
 		initialiseConnection();			
 					
