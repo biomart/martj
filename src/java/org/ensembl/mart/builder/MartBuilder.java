@@ -1,287 +1,994 @@
 /*
- * Created on Jun 3, 2004
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
+	Copyright (C) 2003 EBI, GRL
+
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public
+	License as published by the Free Software Foundation; either
+	version 2.1 of the License, or (at your option) any later version.
+
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Lesser General Public License for more details.
+
+	You should have received a copy of the GNU Lesser General Public
+	License along with this library; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 package org.ensembl.mart.builder;
 
+import java.awt.BorderLayout;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.prefs.Preferences;
+
+import java.util.Hashtable;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDesktopPane;
+import javax.swing.JFileChooser;
+
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JToolBar;
+import javax.swing.UIManager;
+
+import org.ensembl.mart.explorer.Feedback;
+import org.ensembl.mart.guiutils.DatabaseSettingsDialog;
+import org.ensembl.mart.lib.DetailedDataSource;
+
+import org.ensembl.mart.builder.config.TransformationConfig;
+//import org.ensembl.mart.builder.config.TransformationConfigXMLUtils;
+
+
 /**
- * @author <a href="mailto: arek@ebi.ac.uk">Arek Kasprzyk </a>
- * 
- *  
+ * Class MartBuilder extends JFrame..
+ *
+ * <p>This class contains the main function, it draws the external frame, toolsbar, menus.
+ * </p>
+ *
+ * @author <a href="mailto:katerina@ebi.ac.uk">Katerina Tzouvara</a>
+ * //@see org.ensembl.mart.config.TransformationConfig
  */
 
-import java.io.*;
-//import java.util.*;
+public class MartBuilder extends JFrame implements ClipboardOwner {
 
-public class MartBuilder {
+  private JDesktopPane desktop;
+  static private final String newline = "\n";
+  private static final String data_dir = "data/builder/";
+  
+  private JFileChooser fc;
+  final static String IMAGE_DIR = "data/image/";
+  static final private String NEW = "New";
+  static final private String OPEN = "Open";
+  static final private String SAVE = "Save";
+  static final private String COPY = "Copy";
+  static final private String CUT = "Cut";
+  static final private String PASTE = "Paste";
+  static final private String DELETE = "Delete";
+  static final private String UNDO = "Undo";
+  static final private String REDO = "Redo";
+  static final private String HELP = "Copy";
+  private File file = null;
 
-	private static final String data_dir = "data/builder/";
-	private static String config = data_dir+"connection.properties";
+  static private DetailedDataSource ds;
+  
+  //private static TransformationConfigXMLUtils dscutils = new TransformationConfigXMLUtils(true);
+  
+  //private static DatabaseTransformationConfigUtils dbutils;
+  
+  private static Hashtable dbutilsHash = new Hashtable();
+  
+
+  static private String user;
+  private String database;
+  private String schema;
+  private static String connection;
+  private static MetaDataResolver resolver;  
+
+  /** Persistent preferences object used to hold user history. */
+  private Preferences prefs = Preferences.userNodeForPackage(this.getClass());
+  private DatabaseSettingsDialog databaseDialog = new DatabaseSettingsDialog(prefs);
+  private DatabaseAdaptor adaptor;
+  protected Clipboard clipboardEditor;
+
+  public MartBuilder() {
 	
-	private static MetaDataResolver resolver;
-	//private static DBAdaptor adaptor;
+//	autoconnect on startup
+	super("MartBuilder");
+	
+		 /*String defaultSourceName = databaseDialog.getConnectionName();
+
+				 if (defaultSourceName == null || defaultSourceName.length() < 1)
+				   defaultSourceName =
+					 defaultSourceName =
+					   DetailedDataSource.defaultName(
+						 databaseDialog.getHost(),
+						 databaseDialog.getPort(),
+						 databaseDialog.getDatabase(),
+						 databaseDialog.getSchema(),
+						 databaseDialog.getUser());
+
+				 ds =
+				   new DetailedDataSource(
+					 databaseDialog.getDatabaseType(),
+					 databaseDialog.getHost(),
+					 databaseDialog.getPort(),
+					 databaseDialog.getDatabase(),
+					 databaseDialog.getSchema(),
+					 databaseDialog.getUser(),
+					 databaseDialog.getPassword(),
+					 10,
+					 databaseDialog.getDriver(),
+					 defaultSourceName);
+			     */
+			     
+			     adaptor = new DatabaseAdaptor(databaseDialog.getDriver(),
+	                                                            databaseDialog.getUser(),
+																databaseDialog.getPassword(),
+																databaseDialog.getHost(),
+																databaseDialog.getPort(),
+																databaseDialog.getDatabase(),
+																databaseDialog.getSchema(),
+																""	                                                            
+	                                                	            );
+				 Connection conn = adaptor.getCon();
+				 connection = "MartBuilder (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";
+				   
+				 user = databaseDialog.getUser();
+				 database = databaseDialog.getDatabase();  
+				   
+				 /*try {
+				   conn = ds.getConnection();
+				   //dbutils = new DatabaseTransformationConfigUtils(dscutils, ds);
+					connection = "MartBuilder (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";
+				   //valid = true;
+				   /*String[] schemas = databaseDialog.getSchema().split(";");
+				   for (int i = 0; i < schemas.length; i++){
+				   		DetailedDataSource ds1 = 
+										new DetailedDataSource(
+										 databaseDialog.getDatabaseType(),
+										 databaseDialog.getHost(),
+										 databaseDialog.getPort(),
+										 schemas[i],
+										 databaseDialog.getSchema(),
+										 databaseDialog.getUser(),
+										 databaseDialog.getPassword(),
+										 10,
+										 databaseDialog.getDriver(),
+										 defaultSourceName);
+					    DatabaseTransformationConfigUtils dbutils1 = new DatabaseTransformationConfigUtils(new TransformationConfigXMLUtils(true), ds1);
+				   		dbutilsHash.put(schemas[i],dbutils1);
+				   } 
+				   
+				   
+				   
+				 } catch (SQLException e) {
+				 	ds = null;
+					connection = "MartBuilder (NO DATABASE CONNECTION)";	
+				   //System.out.println(e.toString()); 	
+				   //warning dialog then retry
+				   //Feedback f = new Feedback(this);
+				   //f.warning("Could not connect to Database\nwith the given Connection Settings.\nPlease try again!");
+				   //valid = false;
+				 } finally {
+				   DetailedDataSource.close(conn);
+				 }*/
+    JFrame.setDefaultLookAndFeelDecorated(true);
+    fc = new JFileChooser();
+
+    //Create the toolbar.
+    //JToolBar toolBar = new JToolBar("Still draggable");
+    //addButtons(toolBar);// buttons don't work at the moment
+
+    //Make the big window be indented 50 pixels from each edge
+    //of the screen.
+    int inset = 100;
+    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+    setBounds(inset, inset, screenSize.width - inset * 2, screenSize.height - inset * 2);
+
+    //Set up the GUI.
+    this.getContentPane().setLayout(new BorderLayout());
+    //this.getContentPane().add(toolBar, BorderLayout.NORTH);
+
+    desktop = new JDesktopPane();
+    
+    this.getContentPane().add(desktop, BorderLayout.CENTER);
+    setJMenuBar(createMenuBar());
+	
+    //Make dragging a little faster but perhaps uglier.
+    desktop.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE);
+
+    clipboardEditor = new Clipboard("editor_clipboard");
 
 	
-	
-	
-	public static void main(String[] args) throws IOException {
 
-		String config_info = "";
-		String file = null;
-		String ddlFile = null;
-		String tSchemaName = null;
 
-		
-		// Connections
-		DatabaseAdaptor Adaptor = new DatabaseAdaptor(config);
+  }
 
-		MetaDataResolver Resolver = null;
+  protected void addButtons(JToolBar toolBar) {
+    JButton button = null;
 
-		if (Adaptor.rdbms.equals("mysql")) {
-			Resolver = new MetaDataResolverFKNotSupported(Adaptor);
-		} else if (Adaptor.rdbms.equals("oracle")) {
-			Resolver = new MetaDataResolverFKSupported(Adaptor);
-		} else if (Adaptor.rdbms.equals("postgresql")) {
-			Resolver = new MetaDataResolverFKSupported(Adaptor);
+    //first button
+    button = makeNavigationButton("new", NEW, "Create a new dataset config", "new");
+    toolBar.add(button);
+
+    //second button
+    button = makeNavigationButton("open", OPEN, "Open a dataset config", "open");
+    toolBar.add(button);
+
+    //third button
+    button = makeNavigationButton("save", SAVE, "Save dataset config", "save");
+    toolBar.add(button);
+
+    button = makeNavigationButton("copy", COPY, "Copy a tree node", "copy");
+    toolBar.add(button);
+
+    button = makeNavigationButton("cut", CUT, "Cut a tree node", "cut");
+    toolBar.add(button);
+
+    button = makeNavigationButton("paste", PASTE, "Paste tree node", "paste");
+    toolBar.add(button);
+
+    button = makeNavigationButton("undo", UNDO, "Undo", "undo");
+    toolBar.add(button);
+
+    button = makeNavigationButton("redo", REDO, "Redo", "redo");
+    toolBar.add(button);
+
+  }
+
+  protected JButton makeNavigationButton(String imageName, String actionCommand, String toolTipText, String altText) {
+    //Look for the image.
+    String imgLocation = IMAGE_DIR + imageName + ".gif";
+    URL imageURL = TransformationConfigTree.class.getClassLoader().getResource(imgLocation);
+
+    //Create and initialize the button.
+    JButton button = new JButton();
+    button.setBorderPainted(false);
+    button.setActionCommand(actionCommand);
+    button.setToolTipText(toolTipText);
+    button.addActionListener(new MenuActionListener());
+
+    if (imageURL != null) { //image found
+      button.setIcon(new ImageIcon(imageURL, altText));
+    } else { //no image found
+      button.setText(altText);
+      System.err.println("Resource not found: " + imgLocation);
+    }
+
+    return button;
+  }
+
+  protected JMenuBar createMenuBar() {
+    JMenuBar menuBar;
+    JMenu menu;
+    JMenuItem menuItem;
+
+    //Create the menu bar.
+    menuBar = new JMenuBar();
+
+    //Build the first menu.
+    menu = new JMenu("File");
+    //menu.setMnemonic(KeyEvent.VK_F);
+    menu.getAccessibleContext().setAccessibleDescription("the file related menu");
+    menuBar.add(menu);
+
+    //a group of JMenuItems
+    ImageIcon icon = createImageIcon(IMAGE_DIR + "new.gif");
+
+    menuItem = new JMenuItem("Database Connection ");
+    MartBuilder.MenuActionListener menuActionListener = new MartBuilder.MenuActionListener();
+    menuItem.addActionListener(menuActionListener);
+    //menuItem.setMnemonic(KeyEvent.VK_D);
+    menu.add(menuItem);
+
+    menu.addSeparator();
+
+    //menuItem = new JMenuItem("Import ");
+    //menuItem.addActionListener(menuActionListener);
+    //menu.add(menuItem);
+
+    //menuItem = new JMenuItem("Export ");
+    //menuItem.addActionListener(menuActionListener);
+    //menu.add(menuItem);
+
+    //menuItem = new JMenuItem("Delete ");
+    //menuItem.addActionListener(menuActionListener);
+    //menu.add(menuItem);
+
+    menuItem = new JMenuItem("Create TransformationConfig");
+    menuItem.addActionListener(menuActionListener);
+    menu.add(menuItem);
+
+    icon = createImageIcon(IMAGE_DIR + "open.gif");
+    menuItem = new JMenuItem("Open", icon);
+    menuItem.addActionListener(menuActionListener);
+    //menuItem.setMnemonic(KeyEvent.VK_O);
+    menu.add(menuItem);
+
+    icon = createImageIcon(IMAGE_DIR + "save.gif");
+    menuItem = new JMenuItem("Save", icon);
+    menuItem.addActionListener(menuActionListener);
+    //menuItem.setMnemonic(KeyEvent.VK_S);
+    menu.add(menuItem);
+
+    menuItem = new JMenuItem("Save as");
+    menuItem.addActionListener(menuActionListener);
+    //menuItem.setMnemonic(KeyEvent.VK_A);
+    menu.add(menuItem);
+
+	menuItem = new JMenuItem("Create DDL");
+	menuItem.addActionListener(menuActionListener);
+	menu.add(menuItem);
+
+    //a group of radio button menu items
+    //menu.addSeparator();
+    //menuItem = new JMenuItem("Print");
+    //menuItem.addActionListener(menuActionListener);
+    //menuItem.setMnemonic(KeyEvent.VK_P);
+    //menu.add(menuItem);
+
+    //a group of check box menu items
+    menu.addSeparator();
+    menuItem = new JMenuItem("Exit");
+    menuItem.addActionListener(menuActionListener);
+    //menuItem.setMnemonic(KeyEvent.VK_X);
+    menu.add(menuItem);
+
+    //Build edit menu in the menu bar.
+    menu = new JMenu("Edit");
+    //menu.setMnemonic(KeyEvent.VK_E);
+    menu.getAccessibleContext().setAccessibleDescription("this is the edit menu");
+    menuBar.add(menu);
+    icon = createImageIcon(IMAGE_DIR + "undo.gif");
+    menuItem = new JMenuItem("Undo", icon);
+    menuItem.addActionListener(menuActionListener);
+    //menuItem.setMnemonic(KeyEvent.VK_U); //used constructor instead
+    menuItem.getAccessibleContext().setAccessibleDescription("undo");
+    //menu.add(menuItem);
+    icon = createImageIcon(IMAGE_DIR + "redo.gif");
+    menuItem = new JMenuItem("Redo", icon);
+    menuItem.addActionListener(menuActionListener);
+    //menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
+    menuItem.getAccessibleContext().setAccessibleDescription("redo");
+    //menu.add(menuItem);
+    menu.addSeparator();
+    icon = createImageIcon(IMAGE_DIR + "cut.gif");
+    menuItem = new JMenuItem("Cut", icon);
+    menuItem.addActionListener(menuActionListener);
+    menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
+    menuItem.getAccessibleContext().setAccessibleDescription("cuts to clipboard");
+    menu.add(menuItem);
+    icon = createImageIcon(IMAGE_DIR + "copy.gif");
+    menuItem = new JMenuItem("Copy", icon);
+    menuItem.addActionListener(menuActionListener);
+    menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
+    menuItem.getAccessibleContext().setAccessibleDescription("copies to clipboard");
+    menu.add(menuItem);
+    icon = createImageIcon(IMAGE_DIR + "paste.gif");
+    menuItem = new JMenuItem("Paste", icon);
+    menuItem.addActionListener(menuActionListener);
+    menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
+    menuItem.getAccessibleContext().setAccessibleDescription("pastes from clipboard");
+    menu.add(menuItem);
+
+    menu.addSeparator();
+    icon = createImageIcon(IMAGE_DIR + "remove.gif");
+    menuItem = new JMenuItem("Delete", icon);
+    menuItem.addActionListener(menuActionListener);
+    menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
+    menuItem.getAccessibleContext().setAccessibleDescription("deletes");
+    menu.add(menuItem);
+    // insert does nothing at moment
+    //icon = createImageIcon(IMAGE_DIR + "add.gif");
+    //menuItem = new JMenuItem("Insert", icon);
+    //menuItem.addActionListener(menuActionListener);
+    //menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
+    //menuItem.getAccessibleContext().setAccessibleDescription("inserts");
+    //menu.add(menuItem);
+
+    /**
+    menu = new JMenu("Settings");
+    JMenuItem clear = new JMenuItem("Clear Cache");
+    clear.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+
+
+
+      }
+    });
+    menu.add(clear);
+    menuBar.add(menu);
+*/
+    //Build help menu in the menu bar.
+    icon = createImageIcon(IMAGE_DIR + "help.gif");
+    menu = new JMenu("Help");
+    //menu.setMnemonic(KeyEvent.VK_H);
+    menu.getAccessibleContext().setAccessibleDescription("this is the help menu");
+    menuBar.add(menu);
+    menuItem = new JMenuItem("Documentation", icon);
+    menuItem.addActionListener(menuActionListener);
+    //menuItem.setMnemonic(KeyEvent.VK_M); //used constructor instead
+    menuItem.getAccessibleContext().setAccessibleDescription("documentation");
+    menu.add(menuItem);
+    menuItem = new JMenuItem("About...");
+    menuItem.addActionListener(menuActionListener);
+    //menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
+    menuItem.getAccessibleContext().setAccessibleDescription("inserts");
+    menu.add(menuItem);
+
+    return menuBar;
+  }
+
+  //Create a new internal frame.
+  protected void createFrame(File file) {
+
+    TransformationConfigTreeWidget frame = new TransformationConfigTreeWidget(file, this, null, null, null, null, null);
+    frame.setVisible(true);
+    desktop.add(frame);
+    try {
+      frame.setSelected(true);
+    } catch (java.beans.PropertyVetoException e) {
+    }
+
+  }
+
+  //Quit the application.
+  protected void quit() {
+    System.exit(0);
+  }
+
+  /**
+   * Create the GUI and show it.  For thread safety,
+   * this method should be invoked from the
+   * event-dispatching thread.
+   */
+  private static void createAndShowGUI() {
+    //Make sure we have nice window decorations.
+    JFrame.setDefaultLookAndFeelDecorated(true);
+    //Create and set up the window.
+    MartBuilder frame = new MartBuilder();
+    frame.setTitle(connection);
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    frame.setVisible(true);
+  }
+
+  /** Returns an ImageIcon, or null if the path was invalid. */
+  protected static ImageIcon createImageIcon(String path) {
+    java.net.URL imgURL = TransformationConfigTreeWidget.class.getClassLoader().getResource(path);
+    if (imgURL != null) {
+      return new ImageIcon(imgURL);
+    } else {
+      System.err.println("Couldn't find file: " + path);
+      return null;
+    }
+  }
+
+  public static void main(String[] args) {
+    //Schedule a job for the event-dispatching thread:
+    //creating and showing this application's GUI.
+    javax.swing.SwingUtilities.invokeLater(new Runnable() {
+      public void run() {
+        try {
+          UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+        } catch (Exception e) {
+        }
+        createAndShowGUI();
+      }
+    });
+  }
+
+  // Inner class that handles Menu Action Events
+  protected class MenuActionListener implements ActionListener{
+    public void actionPerformed(ActionEvent e){
+      if (e.getActionCommand().equals("Cut"))
+        cut();
+      else if (e.getActionCommand().equals("Copy"))
+        copy();
+      else if (e.getActionCommand().equals("Paste"))
+        paste();
+      else if (e.getActionCommand().equals("Insert"))
+        insert();
+      else if (e.getActionCommand().equals("Delete"))
+        delete();
+      else if (e.getActionCommand().startsWith("New"))
+        newTransformationConfig();
+      else if (e.getActionCommand().startsWith("Open"))
+        openTransformationConfig();
+      else if (e.getActionCommand().equals("Exit"))
+        exit();
+      else if (e.getActionCommand().equals("Save"))
+        save();
+      else if (e.getActionCommand().equals("Save as"))
+        save_as();
+      else if (e.getActionCommand().startsWith("Undo"))
+        undo();
+      else if (e.getActionCommand().startsWith("Redo"))
+        redo();
+      else if (e.getActionCommand().startsWith("Database"))
+        databaseConnection();
+      else if (e.getActionCommand().startsWith("Import")){
+        //importTransformationConfig();
+      }
+      else if (e.getActionCommand().startsWith("Export")){
+        //exportTransformationConfig();
+      }
+      else if (e.getActionCommand().startsWith("Create TransformationConfig")){
+        //naiveTransformationConfig();
+      }
+	  else if (e.getActionCommand().startsWith("Create DDL")){
+		createDDL();
+	  }
+      else if (e.getActionCommand().startsWith("Update")){
+        //updateTransformationConfig();
+      }
+      else if (e.getActionCommand().startsWith("Delete")){
+        //deleteTransformationConfig();
+      }
+      
+
+    }
+  }
+
+  public void cut() {
+    ((TransformationConfigTreeWidget) desktop.getSelectedFrame()).cut();
+  }
+
+  public void copy() {
+    ((TransformationConfigTreeWidget) desktop.getSelectedFrame()).copy();
+  }
+
+  public void paste() {
+    ((TransformationConfigTreeWidget) desktop.getSelectedFrame()).paste();
+  }
+
+
+  public void insert() {
+    //((TransformationConfigTreeWidget)desktop.getSelectedFrame()).insert();
+  }
+
+  public void delete() {
+    ((TransformationConfigTreeWidget) desktop.getSelectedFrame()).delete();
+  }
+
+  public void newTransformationConfig() {
+    createFrame(null);
+  }
+
+  public void setFileChooserPath(File file) {
+    this.file = file;
+  }
+
+  public File getFileChooserPath() {
+    return file;
+  }
+
+  public void lostOwnership(Clipboard c, Transferable t) {
+
+  }
+
+  public static DetailedDataSource getDetailedDataSource() {
+    return ds;
+  }
+
+  public static String getUser() {
+    return user;
+  }
+
+  public void databaseConnection() {
+
+    boolean valid = false;
+
+    try {
+      disableCursor();
+      while (!valid) {
+        if (!databaseDialog.showDialog(this))
+          break;
+
+        try {
+			adaptor = new DatabaseAdaptor(databaseDialog.getDriver(),
+													   databaseDialog.getUser(),
+													   databaseDialog.getPassword(),
+													   databaseDialog.getHost(),
+													   databaseDialog.getPort(),
+													   databaseDialog.getDatabase(),
+													   databaseDialog.getSchema(),
+													   ""	                                                            
+														   );
+			Connection conn = adaptor.getCon();
+			connection = "MartBuilder (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";
+            valid = true;	
+			user = databaseDialog.getUser();
+	    	database = databaseDialog.getDatabase();
+
+	  	} catch (Exception e) {
+				adaptor = null;	
+				connection = "MartBuilder (NO DATABASE CONNECTION)";	
+				//warning dialog then retry
+				Feedback f = new Feedback(this);
+				f.warning("Could not connect to Database\nwith the given Connection Settings.\nPlease try again!");
+				valid = false;
 		}
 
-		resolver = Resolver;
-		//adaptor = Adaptor;
 
-	
+        /*String defaultSourceName = databaseDialog.getConnectionName();
 
-		while (tSchemaName == null || tSchemaName.equals("")) {
-			tSchemaName = getUserInput("TARGET SCHEMA: ");
-		}
-		//targetSchemaName = tSchemaName;
+        if (defaultSourceName == null || defaultSourceName.length() < 1)
+          defaultSourceName =
+            defaultSourceName =
+              DetailedDataSource.defaultName(
+                databaseDialog.getHost(),
+                databaseDialog.getPort(),
+                databaseDialog.getDatabase(),
+				databaseDialog.getSchema(),
+                databaseDialog.getUser());
 
-		while (!(config_info.toUpperCase().equals("C") || config_info
-				.toUpperCase().equals("R"))) {
-			config_info = getUserInput("Configuration Create [C] Read [R]: ");
-		}
+        ds =
+          new DetailedDataSource(
+            databaseDialog.getDatabaseType(),
+            databaseDialog.getHost(),
+            databaseDialog.getPort(),
+            databaseDialog.getDatabase(),
+			databaseDialog.getSchema(),
+            databaseDialog.getUser(),
+            databaseDialog.getPassword(),
+            10,
+            databaseDialog.getDriver(),
+            defaultSourceName);
+        user = databaseDialog.getUser();
+        database = databaseDialog.getDatabase();
+        
+        Connection conn = null;
+        try {
+          conn = ds.getConnection();
+          //dbutils = new DatabaseTransformationConfigUtils(dscutils, ds);
+          valid = true;
+          connection = "MartBuilder (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";		  
+        
+		  String[] schemas = databaseDialog.getSchema().split(";");
+		  for (int i = 0; i < schemas.length; i++){
+				DetailedDataSource ds1 = new DetailedDataSource(
+												   databaseDialog.getDatabaseType(),
+												   databaseDialog.getHost(),
+												   databaseDialog.getPort(),
+												   schemas[i],
+												   databaseDialog.getSchema(),
+												   databaseDialog.getUser(),
+												   databaseDialog.getPassword(),
+												   10,
+												   databaseDialog.getDriver(),
+												   defaultSourceName);
+				//DatabaseTransformationConfigUtils dbutils1 = new DatabaseTransformationConfigUtils(new TransformationConfigXMLUtils(true), ds1);
+				//dbutilsHash.put(schemas[i],dbutils1);
+		  }
+        
+        
+        } catch (SQLException e) {
+          ds = null;	
+          connection = "MartBuilder (NO DATABASE CONNECTION)";	
+          //warning dialog then retry
+          Feedback f = new Feedback(this);
+          f.warning("Could not connect to Database\nwith the given Connection Settings.\nPlease try again!");
+          valid = false;
+        } finally {
+          DetailedDataSource.close(conn);
+        }*/
+      }
+    } finally {
+      setTitle(connection);
+      enableCursor();
+    }
+  }
 
-		if (config_info.toUpperCase().equals("C")) {
-			file = getUserInput("OUTPUT CONFIG FILE: ");
-			file = data_dir + file;
 
-			File f = new File(file);
-			f.delete();
-			String user_dataset = getUserInput("NEW DATASET: ");
 
-			while (!(user_dataset == null || user_dataset.equals(""))) {
-				
-				
-                  //	needs new dataset here
-				// Dataset dataset = new Dataset();
-				
-				createConfiguration(user_dataset, file);
-				user_dataset = getUserInput("NEW DATASET: ");
-			}
-		} else {
-			file = getUserInput("INPUT CONFIG FILE: ");
-			file = data_dir + file;
-		}
+  public void openTransformationConfig() {
 
-		ddlFile = getUserInput("OUTPUT DDL» FILE: ");
-		
-		File sFile = new File(ddlFile);
-		sFile.delete();
-		
-		System.out.println();
-		
-		ConfigurationAdaptor configAdaptor = new ConfigurationAdaptor();
-		configAdaptor.adaptor=Adaptor;
-		configAdaptor.resolver=Resolver;
-		configAdaptor.targetSchemaName=tSchemaName;
-		
-		
-		configAdaptor.readConfiguration(file);
-		configAdaptor.writeDDL(ddlFile);
-		
-		System.out.println ("\nWritten DDLs to: "+ddlFile);
+    XMLFileFilter filter = new XMLFileFilter();
+    fc.addChoosableFileFilter(filter);
+    int returnVal = fc.showOpenDialog(this.getContentPane());
+
+    if (returnVal == JFileChooser.APPROVE_OPTION) {
+      file = fc.getSelectedFile();
+      createFrame(file);
+      //This is where a real application would open the file.
+      System.out.println("Opening: " + file.getName() + "." + newline);
+    } else {
+      System.out.println("Open command cancelled by user." + newline);
+    }
+
+  }
+
+  public void createDDL(){
+  	
+  	try{
+	String config_info = "";
+	TransformationConfig tConfig = null;
+	String ddlFile = null;
+	String tSchemaName = null;    
+	//MetaDataResolver Resolver = null;
+
+	if (adaptor.rdbms.equals("mysql")) {
+		resolver = new MetaDataResolverFKNotSupported(adaptor);
+	} else if (adaptor.rdbms.equals("oracle")) {
+		resolver = new MetaDataResolverFKSupported(adaptor);
+	} else if (adaptor.rdbms.equals("postgresql")) {
+		resolver = new MetaDataResolverFKSupported(adaptor);
 	}
 
+	//resolver = Resolver;
+	tSchemaName = databaseDialog.getSchema();
 
+	//String file = JOptionPane.showInputDialog(null,"INPUT CONFIG FILE:");
+	//file = data_dir + file;
+	
+	// read the XML from the open frame rather than inputing a file
+	disableCursor();
+    Object selectedFrame = desktop.getSelectedFrame();
+
+	if (selectedFrame == null) {
+		JOptionPane.showMessageDialog(this, "Nothing to read, please import a TransformationConfig", "ERROR", 0);
+		return;
+	}
+
+	tConfig = ((TransformationConfigTreeWidget) selectedFrame).getTransformationConfig();
+
+	
+	ddlFile = JOptionPane.showInputDialog(null,"OUTPUT DDL>> FILE:");
+	File sFile = new File(ddlFile);
+	sFile.delete();
 		
+		
+	ConfigurationAdaptor configAdaptor = new ConfigurationAdaptor();
+	configAdaptor.adaptor=adaptor;
+	configAdaptor.resolver=resolver;
+	configAdaptor.targetSchemaName=tSchemaName;
 	
-	private static void createConfiguration(String user_dataset,
-			String output_file) {
+	//configAdaptor.readConfiguration("data/builder/ensembl.config");		
+	configAdaptor.readXMLConfiguration(tConfig);
+	configAdaptor.writeDDL(ddlFile);
+		
+	System.out.println ("\nWritten DDLs to: "+ddlFile);
+  	}
+  	catch(IOException e){
+  		System.out.println("IO Exception:" + e.toString());
+  	}
+  }
 
-		String prompt = "TYPE MAIN [M] DIMENSION [D] EXIT [E]: ";
-		String table_type;
-		int transformationCount = 0;
 
-		do
-			table_type = getUserInput(prompt);
-		while (!(table_type.toUpperCase().equals("M")
-				|| table_type.toUpperCase().equals("D") || table_type
-				.toUpperCase().equals("E")));
+/*
+  public void importTransformationConfig() {
+    try {
+      if (ds == null) {
+        JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+        return;
+      }
 
-		while (table_type.toUpperCase().equals("M")
-				|| table_type.toUpperCase().equals("D")) {
-			String table_name = getUserInput("TABLE NAME: ");
-			String extension = getUserInput("Extension: ");
+      disableCursor();
 
-			transformationCount++;
-			
-			// needs new transformation here
-			// Transformation transformation = new Transformation();
-			
-			writeConfigFile(output_file, user_dataset, table_name, table_type,
-					extension, transformationCount);
-			table_type = getUserInput(prompt);
-		}
-	}
+      String[] datasets = dbutils.getAllDatasetNames(user);
+      if (datasets.length == 0){
+		JOptionPane.showMessageDialog(this, "No datasets in this database", "ERROR", 0);
+				return;
+      }
+         String dataset =
+        (String) JOptionPane.showInputDialog(
+          null,
+          "Choose one",
+          "DatasetCode config",
+          JOptionPane.INFORMATION_MESSAGE,
+          null,
+          datasets,
+          datasets[0]);
 
+      if (dataset == null)
+        return;
+
+      String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
+      String intName;
+      if (internalNames.length == 1)
+        intName = internalNames[0];
+      else {
+        intName =
+          (String) JOptionPane.showInputDialog(
+            null,
+            "Choose one",
+            "Internal name",
+            JOptionPane.INFORMATION_MESSAGE,
+            null,
+            internalNames,
+            internalNames[0]);
+      }
+
+      if (intName == null)
+        return;
+
+      TransformationConfigTreeWidget frame = new TransformationConfigTreeWidget(null, this, null, user, dataset, intName, databaseDialog.getSchema());
+      frame.setVisible(true);
+      desktop.add(frame);
+      try {
+        frame.setSelected(true);
+      } catch (java.beans.PropertyVetoException e) {
+      }
+    } catch (ConfigurationException e) {
+      JOptionPane.showMessageDialog(this, "No datasets available for import - is this a BioMart compatible schema? Absent or empty meta_configuration table?", "ERROR", 0);
+    } finally {
+      enableCursor();
+    }
+  }
+
+  public void exportTransformationConfig() {
+    if (ds == null) {
+      JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+      return;
+    }
+
+    try {
+      disableCursor();
+      TransformationConfig dsConfig = ((TransformationConfigTreeWidget) desktop.getSelectedFrame()).getTransformationConfig();
+	  
+      if (dsConfig.getAdaptor() != null && dsConfig.getAdaptor().getDataSource() != null && !dsConfig.getAdaptor().getDataSource().getSchema().equals(databaseDialog.getSchema())){
+      	// NM the widget still has its adaptor - could switch connection
+		int choice = JOptionPane.showConfirmDialog(this,"You are exporting this XML to a new schema: " + databaseDialog.getSchema() +"\nChange connection?", "", JOptionPane.YES_NO_OPTION);
+      	if (choice == 0){databaseConnection();}
+      }
 	
-	
-	private static String getUserInput(String prompt) {
+      ((TransformationConfigTreeWidget) desktop.getSelectedFrame()).export();
+    } catch (ConfigurationException e) {
+      JOptionPane.showMessageDialog(this, "Problems exporting requested dataset. Check that you have write permission " +
+      		"and the meta_configuration table is in required format", "ERROR", 0);
+      e.printStackTrace();
+    } finally {
+      enableCursor();
+    }
+  }
 
-		BufferedReader console = new BufferedReader(new InputStreamReader(
-				System.in));
+  public void naiveTransformationConfig() {
+    if (ds == null) {
+      JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+      return;
+    }
 
-		System.out.print(prompt);
-		String cardinality = null;
+    
+    String dbtype = databaseDialog.getDatabaseType();
+    String schema = null;
+    
+    if(dbtype.equals("oracle")) schema = databaseDialog.getSchema().toUpperCase();
+    else schema = databaseDialog.getSchema();
+     
+    
+    try {
+      disableCursor();
+      String[] datasets = dbutils.getNaiveDatasetNamesFor(schema);
+      if(datasets.length==0){
+        JOptionPane.showMessageDialog(this, "No datasets available - Is this a BioMart comptatible schema?", "ERROR", 0);
+        return;
+      }
+      
+      String dataset =
+        (String) JOptionPane.showInputDialog(
+          null,
+          "Choose one",
+          "DatasetCode",
+          JOptionPane.INFORMATION_MESSAGE,
+          null,
+          datasets,
+          datasets[0]);
+      if (dataset == null)
+        return;
 
-		try {
-			cardinality = console.readLine();
-		} catch (IOException e) {
-			System.err.println("error: " + e);
-		}
-		;
+      disableCursor();
+     
+    
+      TransformationConfigTreeWidget frame = new TransformationConfigTreeWidget(null, this, null, null, dataset, null, schema);
 
-		return cardinality;
+      frame.setVisible(true);
+      desktop.add(frame);
+      try {
+        frame.setSelected(true);
+      } catch (java.beans.PropertyVetoException e) {
+      }
+    } catch (SQLException e) {
+    } finally {
+      enableCursor();
+    }
+  }
 
-	}
-	
-	
-	
-	
-	
-	
-	
-	// need to create here transformation units
-	
-	private static void writeConfigFile(String output_file, String dataset,
-			String table_name, String table_type, String extension,
-			int transformationCount) {
+*/
+/*  
+  public void deleteTransformationConfig() {
 
-		BufferedWriter out = null;
-		try {
-			out = new BufferedWriter(new FileWriter(output_file, true));
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
+    try {
+      if (ds == null) {
+        JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+        return;
+      }
 
-		String[] columnNames = null;
-		columnNames[0] = "%";
+      try {
+        disableCursor();
+        String[] datasets = dbutils.getAllDatasetNames(user);
+        String dataset =
+          (String) JOptionPane.showInputDialog(
+            null,
+            "Choose one",
+            "DatasetCode Config",
+            JOptionPane.INFORMATION_MESSAGE,
+            null,
+            datasets,
+            datasets[0]);
+        if (dataset == null)
+          return;
+        String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
+        String intName;
+        if (internalNames.length == 1)
+          intName = internalNames[0];
+        else {
+          intName =
+            (String) JOptionPane.showInputDialog(
+              null,
+              "Choose one",
+              "Internal name",
+              JOptionPane.INFORMATION_MESSAGE,
+              null,
+              internalNames,
+              internalNames[0]);
+        }
+        if (intName == null)
+          return;
+        dbutils.deleteTransformationConfigsForDatasetIntName(dataset, intName, user);
 
-		Table[] exp_tables = resolver.getExportedKeyTables(table_name,
-				columnNames);
-		write(out, exp_tables, table_name, table_type, dataset, extension,
-				transformationCount);
+      } catch (ConfigurationException e) {
+      }
+    } finally {
+      enableCursor();
+    }
+  }
+*/
+  
+  public void save() {
+    ((TransformationConfigTreeWidget) desktop.getSelectedFrame()).save();
+  }
 
-		Table[] imp_tables = resolver.getImportedKeyTables(table_name,
-				columnNames);
-		write(out, imp_tables, table_name, table_type, dataset, extension,
-				transformationCount);
+  public void save_as() {
+    ((TransformationConfigTreeWidget) desktop.getSelectedFrame()).save_as();
+  }
 
-		try {
-			out.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+  public void exit() {
+    System.exit(0);
+  }
 
-	
+  public void undo() {
 
-	private static void write(BufferedWriter out, Table[] referenced_tables,
-			String table_name, String table_type, String dataset,
-			String centralExtension, int transfromationCount) {
+  }
 
-		String card_string = " cardinality [11] [n1] [n1r] [0n] [1n] [skip s]: ";
-		String extension = null;
+  public void redo() {
 
-		for (int i = 0; i < referenced_tables.length; i++) {
+  }
 
-			String cardinality = "";
-			Table ref_tab = referenced_tables[i];
-			if (centralExtension == null || centralExtension.equals(""))
-				centralExtension = "null";
+  private void enableCursor() {
+    setCursor(Cursor.getDefaultCursor());
+    getGlassPane().setVisible(false);
+  }
 
-			while (!(cardinality.equals("11") || cardinality.equals("n1")
-					|| cardinality.equals("0n") || cardinality.equals("1n")
-					|| cardinality.equals("n1r") || cardinality.equals("s")))
-
-			{
-
-				cardinality = getUserInput(table_name + ": " + ref_tab.status
-						+ " " + ref_tab.PK + " " + ref_tab.FK + " "
-						+ ref_tab.getName().toUpperCase() + card_string);
-				extension = "null";
-				if (!cardinality.equals("s") & !cardinality.equals("1n"))
-					extension = getUserInput("Extension: ");
-
-				if (extension == null || extension.equals(""))
-					extension = "null";
-
-			}
-
-			if (cardinality.equals("s") || cardinality.equals("1n"))
-				continue;
-
-			
-			
-			// this needs to create TransformationUnits
-			// TransformationUnit unit = new TransforamtionUnit();
-			
-			try {
-				out.write(dataset + "\t" + table_type + "\t" + table_name
-						+ "\t" + ref_tab.status + "\t" + ref_tab.PK + "\t"
-						+ ref_tab.getName().toUpperCase() + "\t" + cardinality
-						+ "\t" + centralExtension + "\t" + extension + "\t"
-						+ transfromationCount + "\t" + ref_tab.FK + "\n");
-
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
-	}
-
+  private void disableCursor() {
+    getGlassPane().setVisible(true);
+    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+  }
 }
-
-
-
-//the below need to become a part of an interactive GUI
-// switched off for now
-
-/**
- * for (int i = 0; i < transformations.length; i++) {
- * 
- * String newname = getUserInput("CHANGE FINAL TABLE NAME: "
- * +transformations[i].number+" "+ transformations[i].finalTableName + "
- * TO: "); if (newname != null && !newname.equals("\n") &&
- * !newname.equals("")) transformations[i].setFinalName(newname); }
- *  
- */
-
-/**
- * // Add central filters Transformation[] tran =
- * dataset.getTransformationsByFinalTableType("DM");
- * 
- * for (int i = 0; i < tran.length; i++) { String input =
- * getUserInput("INCLUDE CENTRAL FILTER FOR: " +
- * tran[i].userTableName + " [Y|N] [Y default] "); if
- * (!(input.equals("N") || input.equals("n"))) { tran[i].central =
- * true;
- *  }
- *  }
- *  
- */
-
-
-
-

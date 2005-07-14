@@ -14,7 +14,7 @@ package org.ensembl.mart.builder;
 
 import java.util.*;
 
-public class Transformation {
+public class TransformationCode {
 	
 	ArrayList units = new ArrayList();
 	

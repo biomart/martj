@@ -15,7 +15,7 @@ import java.util.*;
  */
 
 
-public class Dataset {
+public class DatasetCode {
 	
 	ArrayList transformations = new ArrayList();
 	String name;
@@ -25,7 +25,7 @@ public class Dataset {
 	
 	
 		
-		public Dataset(){
+		public DatasetCode(){
 		
 	}
 	
@@ -38,7 +38,7 @@ public class Dataset {
 	
 	public void createTransformationsForMains(){
 		
-		Transformation [] trans = getTransformations();
+		TransformationCode [] trans = getTransformations();
 		ArrayList mains = new ArrayList();
 		
 		for (int i=0;i<trans.length;i++){
@@ -67,7 +67,7 @@ public class Dataset {
             Table [] tables = (Table []) ref_tables.toArray(b);
             
             
-            Transformation transformation = new Transformation();
+            TransformationCode transformation = new TransformationCode();
             transformation.adaptor=adaptor;
             transformation.datasetName=name;
             transformation.targetSchemaName=targetSchemaName;
@@ -92,12 +92,12 @@ public class Dataset {
 	
 	public void createTransformationsForCentralFilters(){
 		
-		Transformation [] dmTransformations = getDMTranformationsForCentral();	
-		Transformation [] mainTransformations =   getMainTranformationForCentral();
+		TransformationCode [] dmTransformations = getDMTranformationsForCentral();	
+		TransformationCode [] mainTransformations =   getMainTranformationForCentral();
 		
 		for (int i=0; i<mainTransformations.length;i++){
 			
-			Transformation transformation = new Transformation();
+			TransformationCode transformation = new TransformationCode();
 			
 			transformation.adaptor=adaptor;
 			transformation.datasetName=name;
@@ -167,7 +167,7 @@ public class Dataset {
 	public void addTransformationUnit(String final_table_name,String new_table_name,String final_table_key,String final_table_extension,
 									  String new_table_key, String new_table_extension, String new_table_cardinality){
 		
-		Transformation trans = getTransformationByFinalName(final_table_name);
+		TransformationCode trans = getTransformationByFinalName(final_table_name);
 		Column [] columns = sourceSchema.getTableColumns(new_table_name);
 		
 		Table reftable = new Table();
@@ -190,7 +190,7 @@ public class Dataset {
 	/**
 	private void transform(){
 		
-		Transformation [] trans = getTransformations();
+		TransformationCode [] trans = getTransformations();
 		
 		for (int i=0;i<trans.length;i++){
 			trans[i].transform();
@@ -199,21 +199,21 @@ public class Dataset {
 	*/
 	
 		
-	public Transformation [] getTransformations() {
+	public TransformationCode [] getTransformations() {
 		
-		Transformation [] b = new Transformation[transformations.size()];
+		TransformationCode [] b = new TransformationCode[transformations.size()];
 	
 		//setFinalNames();
 		//return transforms;
-		return (Transformation []) transformations.toArray(b);	
+		return (TransformationCode []) transformations.toArray(b);	
 		
 	}
 	
 	
 	public void setUserTableNames(){
 		
-		Transformation [] b = new Transformation[transformations.size()];
-        Transformation [] transforms = (Transformation []) transformations.toArray(b);
+		TransformationCode [] b = new TransformationCode[transformations.size()];
+        TransformationCode [] transforms = (TransformationCode []) transformations.toArray(b);
 		
 		for (int i = 0; i < transforms.length; i++) { 
 			transforms[i].getFinalUnit().getTemp_end().setName(transforms[i].userTableName);
@@ -227,18 +227,18 @@ public class Dataset {
 	
 	
 	
-	public void addTransformation(Transformation transformation){
+	public void addTransformation(TransformationCode transformation){
 		this.transformations.add(transformation);
 			
 	}
 	
 	
-	private Transformation getTransformationByFinalName(String name){
+	private TransformationCode getTransformationByFinalName(String name){
 		
-		Transformation trans = new Transformation();
+		TransformationCode trans = new TransformationCode();
 		
 		for (int i=0;i<transformations.size();i++){
-			trans = (Transformation) transformations.get(i);
+			trans = (TransformationCode) transformations.get(i);
 			if (trans.finalTableName.equals(name)){
 			break;
 			}
@@ -248,11 +248,11 @@ public class Dataset {
 	}
 	
 
-	public Transformation [] getTransformationsByFinalTableType(String type){
+	public TransformationCode [] getTransformationsByFinalTableType(String type){
 		
 		ArrayList trans_list = new ArrayList();
 		
-		Transformation [] trans = getTransformations();
+		TransformationCode [] trans = getTransformations();
 		
 		for (int i=0;i<trans.length;i++){
 			
@@ -263,31 +263,31 @@ public class Dataset {
 			}
 		}
 		
-		Transformation [] b = new Transformation[trans_list.size()];
-		return (Transformation []) trans_list.toArray(b);	
+		TransformationCode [] b = new TransformationCode[trans_list.size()];
+		return (TransformationCode []) trans_list.toArray(b);	
 		
 	}	
 	
 	
-	private Transformation [] getDMTranformationsForCentral (){
+	private TransformationCode [] getDMTranformationsForCentral (){
 		
 		ArrayList list = new ArrayList();
 		
-		Transformation [] trans= getTransformationsByFinalTableType("DM");
+		TransformationCode [] trans= getTransformationsByFinalTableType("DM");
 		for (int i=0; i<trans.length;i++){
 			
 			if (trans[i].central){
 				list.add(trans[i]);			
 			}
 		}
-		Transformation [] b = new Transformation[list.size()];
-		return (Transformation []) list.toArray(b);	
+		TransformationCode [] b = new TransformationCode[list.size()];
+		return (TransformationCode []) list.toArray(b);	
 		
 	}
 	
-	private Transformation [] getMainTranformationForCentral(){
+	private TransformationCode [] getMainTranformationForCentral(){
 		
-		Transformation [] mains = getTransformationsByFinalTableType("MAIN");
+		TransformationCode [] mains = getTransformationsByFinalTableType("MAIN");
 		
 		ArrayList list = new ArrayList();
 		String name = "";
@@ -302,8 +302,8 @@ public class Dataset {
 			}
 		}
 		
-		Transformation [] b = new Transformation[list.size()];
-		return (Transformation []) list.toArray(b);		
+		TransformationCode [] b = new TransformationCode[list.size()];
+		return (TransformationCode []) list.toArray(b);		
 	}
 	
 	

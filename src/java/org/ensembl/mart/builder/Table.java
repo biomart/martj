@@ -50,6 +50,7 @@ public class Table implements Cloneable {
 		for (int n = 0; n < this.getColumns().length; n++) {
 			
 			try {
+				System.out.println(n+":"+this.getColumns()+":"+this.getColumns()[n]);
 				Column col = (Column) this.getColumns()[n].clone();
 				new_ref_col[n] = col;
 			} catch (CloneNotSupportedException e) {
