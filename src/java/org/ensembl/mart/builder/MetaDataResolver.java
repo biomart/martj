@@ -151,8 +151,8 @@ public abstract class MetaDataResolver {
 		}
 		}
 		Column [] b = new Column[cols.size()];
-		assert cols.size() != 0 : "no columns for your table, please check the table/column name " +
-				" for table: "+name+" in your config file and name/capitalisation for your schema: "+getAdaptor().schema+" in the db connection window";
+		assert cols.size() != 0 : "no columns for your table, please check name/capitalisation for your schema: "+getAdaptor().schema+ 
+				" table: "+name+" and user defined columns in your transformation config file and db connection window";
 		return (Column []) cols.toArray(b);
 	}
 	
