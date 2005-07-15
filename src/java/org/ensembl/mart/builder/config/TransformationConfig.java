@@ -34,7 +34,7 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
 
   //private int[] reqFields = {0,3,4,5};// rendered red in AttributeTable
   
-  private DSConfigAdaptor adaptor = null;
+  //private DSConfigAdaptor adaptor = null;
   private byte[] digest = null;
 
   private List datasets = new ArrayList();
@@ -69,22 +69,22 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
     //all DSConfigAdaptor implementing objects either implement a lazyLoad method and insert themselves into every
     //TransformationConfig that they manage, or, in the absence of a sensible lazyLoad method, ensure that all content is
     //is loaded, and __NOT__ insert themselves into the TransformationConfig that they manage.
-    if (ds.getAdaptor() == null || propogateExistingElements) {
+    //if (ds.getAdaptor() == null || propogateExistingElements) {
 
       Dataset[] fpages = ds.getDatasets();
       for (int i = 0, n = fpages.length; i < n; i++) {
         addDataset(new Dataset(fpages[i]));
       }
-    }
-    else
-      setDSConfigAdaptor(ds.getAdaptor());
+    //}
+    //else
+      //setDSConfigAdaptor(ds.getAdaptor());
 
      // try to replace lazyloading system with explicit call
 	  
 
 
-    if (preLazyLoad)
-      lazyLoad();
+    //if (preLazyLoad)
+      //lazyLoad();
   }
 
   /**
@@ -123,7 +123,7 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
    * @param f -- FilterPage to be removed.
    */
   public void removeDataset(Dataset f) {
-    lazyLoad();
+    //lazyLoad();
     datasetNameMap.remove(f.getInternalName());
     for (int i = 0; i < datasets.size(); i++){
     	Dataset fp = (Dataset) datasets.get(i);
@@ -138,36 +138,11 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
    * @param f -- FilterPage to insert.
    */
   public void insertDataset(int position, Dataset f) {
-    lazyLoad();
+    //lazyLoad();
     datasets.add(position, f);
     datasetNameMap.put(f.getInternalName(), f);
   }
 
-  /**
-   * Insert a FilterPage before a specified FilterPage, named by internalName.
-   * @param internalName -- name of the FilterPage before which the given FilterPage should be inserted.
-   * @param f -- FilterPage to be inserted.
-   * @throws ConfigurationException when the TransformationConfig does not contain a FilterPage named by internalName.
-   */
-  public void insertDatasetBeforeDataset(String internalName, Dataset f) throws ConfigurationException {
-    lazyLoad();
-    if (!datasetNameMap.containsKey(internalName))
-      throw new ConfigurationException("TransformationConfig does not contain DatasetUnit " + internalName + "\n");
-     insertDataset(datasets.indexOf(datasetNameMap.get(internalName)), f);
-  }
-
-  /**
-   * Insert a FilterPage after a specified FilterPage, named by internalName.
-   * @param internalName -- name of the FilterPage after which the given FilterPage should be inserted.
-   * @param f -- FilterPage to be inserted.
-   * @throws ConfigurationException when the TransformationConfig does not contain a FilterPage named by internalName.
-   */
-  public void insertDatasetAfterDataset(String internalName, Dataset f) throws ConfigurationException {
-    lazyLoad();
-    if (!datasetNameMap.containsKey(internalName))
-      throw new ConfigurationException("TransformationConfig does not contain DatasetUnit " + internalName + "\n");
-    insertDataset(datasets.indexOf(datasetNameMap.get(internalName)) + 1, f);
-  }
 
   /**
    * Add a group of FilterPage objects in one call.
@@ -188,7 +163,7 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
    * @return FilterPage[]
    */
   public Dataset[] getDatasets() {
-    lazyLoad();
+    //lazyLoad();
     Dataset[] fs = new Dataset[datasets.size()];
     datasets.toArray(fs);
     return fs;
@@ -218,6 +193,8 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
    * set the DSConfigAdaptor used to instantiate a particular TransformationConfig object.
    * @param dsva -- DSConfigAdaptor implimenting object.
    */
+
+/*
   public void setDSConfigAdaptor(DSConfigAdaptor dsva) {
     adaptor = dsva;
   }
@@ -226,6 +203,8 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
    * Get the DSConfigAdaptor implimenting object used to instantiate this TransformationConfig object.
    * @return DSConfigAdaptor used to instantiate this TransformationConfig
    */
+  
+/*  
   public DSConfigAdaptor getDSConfigAdaptor() {
     return adaptor;
   }
@@ -250,7 +229,7 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
       }
     }
   }
-
+*/
   /**
    * Provides output useful for debugging purposes.
    */
@@ -288,16 +267,16 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
     int tmp = super.hashCode();
     
     //use the adaptor instead of the actual values, if it has a valid adaptor
-    if (adaptor != null && !(adaptor instanceof SimpleDSConfigAdaptor)) {
-      tmp = (31 * tmp) + adaptor.hashCode();
-    } else {
+    //if (adaptor != null && !(adaptor instanceof SimpleDSConfigAdaptor)) {
+      //tmp = (31 * tmp) + adaptor.hashCode();
+    //} else {
       
       for (Iterator iter = datasets.iterator(); iter.hasNext();) {
         Dataset element = (Dataset) iter.next();
         tmp = (31 * tmp) + element.hashCode();
       }
 
-    }
+    //}
     return tmp;
   }
 
@@ -305,8 +284,8 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
   /**
    * @return adaptor that created this instance, can be null.
    */
-  public DSConfigAdaptor getAdaptor() {
-    return adaptor;
+//  public DSConfigAdaptor getAdaptor() {
+//    return adaptor;
 
-  }
+//  }
 }

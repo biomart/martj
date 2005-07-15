@@ -231,16 +231,14 @@ public class TransformationConfigXMLUtils {
   private Transformation getTransformation(Element thisElement) throws ConfigurationException {
 	Transformation a = new Transformation();
 	loadAttributesFromElement(thisElement, a);
-	System.out.println("ADDING " + a);
 	
-	for (Iterator iter = thisElement.getDescendants(new MartTransformationUnitFilter()); iter.hasNext();) {
-		System.out.println("HERE 2");
-	  Element element = (Element) iter.next();
-	  if (element.getName().equals(TRANSFORMATIONUNIT))
-		a.addTransformationUnit(getTransformationUnit(element));
-      
-	}
-	
+	List tunitElements = thisElement.getChildren();		
+	for (int i = 0; i < tunitElements.size(); i++){
+		Element e = (Element) tunitElements.get(i);
+		if (e.getName().equals(TRANSFORMATIONUNIT))
+			a.addTransformationUnit(getTransformationUnit(e));
+				
+	}	
 	return a;
   }
 
