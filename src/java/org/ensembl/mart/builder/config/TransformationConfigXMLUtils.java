@@ -204,28 +204,27 @@ public class TransformationConfigXMLUtils {
   public void loadTransformationConfigWithDocument(TransformationConfig dsv, Document doc) throws ConfigurationException {
     Element thisElement = doc.getRootElement();
     String intName = thisElement.getAttributeValue(INTERNALNAME, "");
-    
-    for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, DATASET));
-      iter.hasNext();
-      ) {
-      Element element = (Element) iter.next();
-      System.out.println("FOUND DATASET");
-      dsv.addDataset(getDataset(element));// like getAttributePage in old code
-    }
+	List transformationElements = thisElement.getChildren();		
+	for (int i = 0; i < transformationElements.size(); i++){
+		Element e = (Element) transformationElements.get(i);
+		if (e.getName().equals(DATASET))
+			dsv.addDataset(getDataset(e));
+				
+	}	
   }
 
 
   private Dataset getDataset(Element thisElement) throws ConfigurationException {
 	Dataset ap = new Dataset();
 	loadAttributesFromElement(thisElement, ap);
-	System.out.println("HERE 1");
-	for (Iterator iter = thisElement.getDescendants(new MartTransformationFilter()); iter.hasNext();) {
-		System.out.println("HERE 2");
-	  Element element = (Element) iter.next();
-	  if (element.getName().equals(TRANSFORMATION))
-		ap.addTransformation(getTransformation(element));
-      
-	}
+
+	List transformationElements = thisElement.getChildren();		
+	for (int i = 0; i < transformationElements.size(); i++){
+		Element e = (Element) transformationElements.get(i);
+		if (e.getName().equals(TRANSFORMATION))
+			ap.addTransformation(getTransformation(e));
+				
+	}	
 	return ap;
   }
 
