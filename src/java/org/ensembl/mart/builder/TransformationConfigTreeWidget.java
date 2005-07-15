@@ -81,7 +81,7 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
             	  if (schema == null){	
                     config = new TransformationConfig("new");
                     //config.setDSConfigAdaptor(new SimpleDSConfigAdaptor(config)); //prevents lazyLoading
-                    config.addDataset(new Dataset("new"));
+                    config.addDataset(new Dataset("new","mainTable"));
             	  }
             	  
             	  //else{  NAIVE CREATION	

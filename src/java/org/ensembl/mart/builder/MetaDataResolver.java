@@ -129,7 +129,9 @@ public abstract class MetaDataResolver {
 			//columns.beforeFirst();
 			
 			while (columns.next()){	
-			
+				
+				//System.out.println("got column: "+columns.getString(4));
+				
 				Column column = new Column();
 				column.setName(columns.getString(4));
 				column.original_name=columns.getString(4);

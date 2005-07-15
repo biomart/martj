@@ -33,12 +33,14 @@ public class Dataset extends BaseNamedConfigurationObject {
 
   private List transformations = new ArrayList();
   private Hashtable transformationNameMap = new Hashtable();
+  private final String mainTableNameKey = "mainTable";
 
   /**
    * Empty constructor.  Should really only be used by the MartBuilder
    */
   public Dataset() {
     super();
+    setAttribute(mainTableNameKey, null);
   }
 
   /**
@@ -48,11 +50,23 @@ public class Dataset extends BaseNamedConfigurationObject {
    * 
    * @param internalName String name to represent this Dataset
    */
-  public Dataset(String internalName) throws ConfigurationException {
+  public Dataset(String internalName, String mainTable) throws ConfigurationException {
     super(internalName);
+    
+    setAttribute(mainTableNameKey, mainTable);
   }
   
 
+  
+
+  public String getMainTable() {
+	return getAttribute(mainTableNameKey);
+  }
+
+  
+  
+  
+  
   /**
    * Copy constructor. Constructs an exact copy of an existing Dataset.
    * @param dataset Dataset to copy.

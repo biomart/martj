@@ -252,14 +252,22 @@ public class ConfigurationAdaptor {
 				datasetCode.name = datasetCodeName;
 				datasetCode.adaptor = adaptor;
 				datasetCode.targetSchemaName = targetSchemaName;
+				
+				//System.out.println("********************* MAIN TABLE "+dataset.getMainTable());
+				
+				// needs to set it per dataset not per transformation
+				datasetCode.datasetKey = resolver.getPrimaryKeys(dataset.getMainTable());
+				
 				//datasetCode.datasetKey = resolver.getPrimaryKeys(fileEntries[2]);
 				
 				Transformation[] transformations = dataset.getTransformations();
 				for (int j = 0; j < transformations.length; j++){
 					Transformation transformation = transformations[j];
 					
-					datasetCode.datasetKey = resolver.getPrimaryKeys(transformation.getCentralTable());
+					//datasetCode.datasetKey = resolver.getPrimaryKeys(transformation.getCentralTable());
 
+					System.out.println("central table "+transformation.getCentralTable()+" key "+datasetCode.datasetKey);
+					
 					// new transformation
 					if (j > 0 && dataset.getInternalName().equals(lastDatasetName)) transformationCode.transform();
 				
