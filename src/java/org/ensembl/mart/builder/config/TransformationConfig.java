@@ -60,9 +60,9 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
     if (propogateExistingElements && preLazyLoad)
       throw new ConfigurationException("You can not copy an existing TransformationConfig using both propogateExistingElements and lazyLoad\n");
 	
-    byte[] digest = ds.getMessageDigest();
-    if (digest != null)
-      setMessageDigest(digest);
+    //byte[] digest = ds.getMessageDigest();
+    //if (digest != null)
+     // setMessageDigest(digest);
 
     //if the TransformationConfig has an underlying DSConfigAdaptor implementing Object, this can be substituted for the
     //actual element content, and defer the loading of this content to the lazyLoad system.  This requires that
@@ -78,6 +78,10 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
     }
     else
       setDSConfigAdaptor(ds.getAdaptor());
+
+     // try to replace lazyloading system with explicit call
+	  
+
 
     if (preLazyLoad)
       lazyLoad();
@@ -196,7 +200,7 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
    * of the XML underlying this TransformationConfig. 
    * @return byte[] digest
    */
-  public byte[] getMessageDigest() {
+    public byte[] getMessageDigest() {
     return digest;
   }
 
