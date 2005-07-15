@@ -176,8 +176,8 @@ public class TransformationConfigXMLUtils {
     if (loadFully)
       loadTransformationConfigWithDocument(d, doc);
 
-    if (digest != null)
-      d.setMessageDigest(digest);
+    //if (digest != null)
+     // d.setMessageDigest(digest);
 
     return d;
   }

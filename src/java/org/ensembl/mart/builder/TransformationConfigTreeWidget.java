@@ -80,7 +80,7 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
             	if (user == null){
             	  if (schema == null){	
                     config = new TransformationConfig("new");
-                    config.setDSConfigAdaptor(new SimpleDSConfigAdaptor(config)); //prevents lazyLoading
+                    //config.setDSConfigAdaptor(new SimpleDSConfigAdaptor(config)); //prevents lazyLoading
                     config.addDataset(new Dataset("new"));
             	  }
             	  
@@ -104,14 +104,28 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
             } else {// OPEN FROM FILE
                 URL url = file.toURL();
 //            ignore cache, include hidden members
+                
+                // old code
+                /*
                 DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
 
                 // only config one in the file so get that one
                 config = (TransformationConfig) adaptor.getTransformationConfigs().next();
+				*/
+				
+				// new code without using adaptor
+				TransformationConfigXMLUtils xmlUtils = new TransformationConfigXMLUtils(true);
+				config = xmlUtils.getTransformationConfigForXMLStream(InputSourceUtil.getStreamForURL(url));
+				xmlUtils.loadTransformationConfigWithDocument( config, xmlUtils.getDocumentForXMLStream( InputSourceUtil.getStreamForURL( url ) ) );
+				
+				
+                
             }
           }
           else{
-          	config = new TransformationConfig(dsv, true, false);
+          	//config = new TransformationConfig(dsv, true, false);
+			config = new TransformationConfig(dsv);
+        	     
           }
             //this.setTitle(config.getInternalName());
              

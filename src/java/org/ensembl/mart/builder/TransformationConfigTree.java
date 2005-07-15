@@ -626,7 +626,8 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 		int returnVal = fc.showSaveDialog(frame.getContentPane());
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			try {
-				URLDSConfigAdaptor.StoreTransformationConfig(dsConfig, fc.getSelectedFile());
+				//find a non-adaptor way
+				//URLDSConfigAdaptor.StoreTransformationConfig(dsConfig, fc.getSelectedFile());
 				frame.setFileChooserPath(fc.getSelectedFile());
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -637,8 +638,10 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 	public void save() {
 		dsConfig = (TransformationConfig) ((TransformationConfigTreeNode) this.getModel().getRoot()).getUserObject();
 		try {
-			if (frame.getFileChooserPath() != null)
-				URLDSConfigAdaptor.StoreTransformationConfig(dsConfig, frame.getFileChooserPath());
+			if (frame.getFileChooserPath() != null){
+				// find a non-adaptor way
+				//URLDSConfigAdaptor.StoreTransformationConfig(dsConfig, frame.getFileChooserPath());
+			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
