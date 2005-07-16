@@ -18,21 +18,14 @@
 
 package org.ensembl.mart.builder.config;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.DigestOutputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.jdom.Attribute;
 import org.jdom.DocType;
@@ -46,15 +39,9 @@ import org.ensembl.mart.lib.config.ConfigurationException;
  * Utility class containing all necessary XML parsing logic for converting
  * between XML and Object.  Uses JDOM as its XML parsing engine.
  * 
- * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
- * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+ * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
  */
 public class TransformationConfigXMLUtils {
-
-  private Logger logger = Logger.getLogger(TransformationConfigXMLUtils.class.getName());
-
-  //this is the only digest algorithm we support
-  public static String DEFAULTDIGESTALGORITHM = "MD5";
 
   // element names
   private final String TRANSFORMATIONCONFIG = "TransformationConfig";
@@ -64,64 +51,9 @@ public class TransformationConfigXMLUtils {
 
   // attribute names needed by code
   private final String INTERNALNAME = "internalName";
-  private final String OPTPARAM = "optional_parameters";
-  private final String DEFAULTDATASET = "defaultDataset";
-  private final String HIDDEN = "hidden";
-
-  private boolean loadFully = false;
-  protected boolean includeHiddenMembers = false;
-
-  public TransformationConfigXMLUtils(boolean includeHiddenMembers) {
-    this.includeHiddenMembers = includeHiddenMembers;
-  }
-
-  /**
-   * Set the load behavior of the getTransformationConfigXXX methods. If set to true, all TransformationConfig objects are
-   * fully loaded, if false, this is deferred to the lazyLoad system. This is primarily for the TransformationConfigCache
-   * object. 
-   * @param loadFully -- boolean, if true instructs all subsequent getTransformationConfigXXX calls to fully load the TransformationConfig
-   * object before loading it, if false defers this to the lazyLoad system
-   */
-  protected void setFullyLoadMode(boolean loadFully) {
-    this.loadFully = loadFully;
-  }
-
-  public TransformationConfig getTransformationConfigForByteArray(byte[] b) throws ConfigurationException {
-    return getTransformationConfigForByteArray(b, null);
-  }
-
-  /**
-   * Returns a TransformationConfig from an XML stored as a byte[], allowing the system to specify whether to
-   * load all Elements, or defer this to the lazyLoad system. Also allows system
-   * to supply a md5sum digest byte[] array to store into the resulting TransformationConfig.
-   *  
-   * @param b - byte[] holding XML
-   * @param digest -- byte[] containing the digest
-   * @return TransformationConfig for xml in byte[]
-   * @throws ConfigurationException
-   */
-  public TransformationConfig getTransformationConfigForByteArray(byte[] b, byte[] digest) throws ConfigurationException {
-    ByteArrayInputStream bin = new ByteArrayInputStream(b);
-    return getTransformationConfigForXMLStream(bin, digest);
-  }
-
+ 
   public TransformationConfig getTransformationConfigForXMLStream(InputStream xmlinput) throws ConfigurationException {
-    return getTransformationConfigForXMLStream(xmlinput, null);
-  }
-
-  /**
-   * Takes an InputStream containing XML, and creates a TransformationConfig object.
-   * If a MessageDigest is supplied, this will be added to the TransformationConfig object
-   * before returning it.
-   *  
-   * @param xmlinput -- InputStream containing TransformationConfig.dtd compliant XML
-   * @param digest -- byte[] containing the digest
-   * @return TransformationConfig
-   * @throws ConfigurationException for all underlying Exceptions
-   * @see java.security.MessageDigest
-   */
-  public TransformationConfig getTransformationConfigForXMLStream(InputStream xmlinput, byte[] digest) throws ConfigurationException {
-    return getTransformationConfigForDocument(getDocumentForXMLStream(xmlinput), digest);
+    return getTransformationConfigForDocument(getDocumentForXMLStream(xmlinput),null);
   }
 
   /**
@@ -149,17 +81,6 @@ public class TransformationConfigXMLUtils {
 
   /**
    * Takes a org.jdom.Document Object representing a TransformationConfig.dtd compliant
-   * XML document, and returns a TransformationConfig object.
-   * @param doc -- Document representing a TransformationConfig.dtd compliant XML document
-   * @return TransformationConfig object
-   * @throws ConfigurationException for non compliant Objects, and all underlying Exceptions.
-   */
-  public TransformationConfig getTransformationConfigForDocument(Document doc) throws ConfigurationException {
-    return getTransformationConfigForDocument(doc, null);
-  }
-
-  /**
-   * Takes a org.jdom.Document Object representing a TransformationConfig.dtd compliant
    * XML document, and returns a TransformationConfig object.  If a MD5SUM Message Digest is
    * supplied, this is added to the TransformationConfig.
    * @param doc -- Document representing a TransformationConfig.dtd compliant XML document
@@ -172,13 +93,6 @@ public class TransformationConfigXMLUtils {
 
     TransformationConfig d = new TransformationConfig();
     loadAttributesFromElement(thisElement, d);
-
-    if (loadFully)
-      loadTransformationConfigWithDocument(d, doc);
-
-    //if (digest != null)
-     // d.setMessageDigest(digest);
-
     return d;
   }
 
@@ -366,81 +280,8 @@ public class TransformationConfigXMLUtils {
     loadElementAttributesFromObject(attribute, att);
     return att;
   }
-
   
   private boolean validString(String test) {
     return (test != null && test.length() > 0);
-  }
-
-  /**
-   * Given a Document object, converts the given document to an TransformationConfigXMLUtils.DEFAULTDIGESTALGORITHM digest using the 
-   * JDOM XMLOutputter writing to a java.security.DigestOutputStream.  This is the default method for calculating the MessageDigest 
-   * of a TransformationConfig Object used in various places in the MartJ system.
-   * @param doc -- Document object representing a TransformationConfig.dtd compliant XML document. 
-   * @return byte[] digest algorithm
-   * @throws ConfigurationException for NoSuchAlgorithmException, and IOExceptions.
-   * @see java.security.DigestOutputStream
-   */
-  public byte[] getMessageDigestForDocument(Document doc) throws ConfigurationException {
-    try {
-      MessageDigest mdigest = MessageDigest.getInstance(DEFAULTDIGESTALGORITHM);
-      ByteArrayOutputStream bout = new ByteArrayOutputStream();
-      DigestOutputStream dout = new DigestOutputStream(bout, mdigest);
-      XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
-
-      xout.output(doc, dout);
-
-      byte[] digest = mdigest.digest();
-
-      bout.close();
-      dout.close();
-
-      return digest;
-    } catch (NoSuchAlgorithmException e) {
-      throw new ConfigurationException(
-        "Digest Algorithm " + DEFAULTDIGESTALGORITHM + " does not exist, possibly a problem with the Java Installation\n",
-        e);
-    } catch (IOException e) {
-      throw new ConfigurationException("Caught IOException converting Docuement to Digest\n", e);
-    }
-  }
-
-  /**
-   * Returns a MessageDigest digest for a TransformationConfig by first creating a JDOM Document object, and then
-   * calculuating its digest using TransformationConfigXMLUtils.DEFAULTDIGESTALGORITHM. 
-   * @param dsv -- A TransformationConfig object
-   * @return byte[] digest
-   * @throws ConfigurationException for all underlying Exceptions
-   */
-  public byte[] getMessageDigestForTransformationConfig(TransformationConfig dsv) throws ConfigurationException {
-    return getMessageDigestForDocument(getDocumentForTransformationConfig(dsv));
-  }
-
-  /**
-   * This method does not convert the raw bytes of a given InputStream into a Message Digest.  It is intended to calculate a Message Digest
-   * that is comparable between multiple XML representations of the same TransformationConfig Object (despite one representation having an Element with
-   * an Attribute specified with an empty string, and the other having the same Element with that Attribute specification missing entirely, or each
-   * containing the same Element with the same attribute specifications, but occuring in a different order within the XML string defining the Element).  
-   * It does this by first converting the InputStream into a TransformationConfig Object (using XMLStreamToTransformationConfig(is)), and then calculating the 
-   * digest on the resulting TransformationConfig Object (using TransformationConfigToMessageDigest(dsv, TransformationConfigXMLUtils.DEFAULTDIGESTALGORITHM)).
-   * @param xmlinput -- InputStream containing TransformationConfig.dtd compliant XML.
-   * @return byte[] digest
-   * @throws ConfigurationException for all underlying Exceptions
-   */
-  public byte[] getMessageDigestForXMLStream(InputStream is) throws ConfigurationException {
-    return getMessageDigestForDocument(getDocumentForXMLStream(is));
-  }
-
-  /**
-   * Returns a byte[] of XML for the given TransformationConfig object.
-   * @param dsv - TransformationConfig object to be parsed into a byte[]
-   * @return byte[] representing XML for TransformationConfig
-   * @throws ConfigurationException for underlying exceptions
-   */
-  public byte[] getByteArrayForTransformationConfig(TransformationConfig dsv) throws ConfigurationException {
-    ByteArrayOutputStream bout = new ByteArrayOutputStream();
-    writeTransformationConfigToOutputStream(dsv, bout);
-    return bout.toByteArray();
-  }
-
+  } 
 }
