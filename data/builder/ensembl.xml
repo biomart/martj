@@ -2,7 +2,8 @@
 <!DOCTYPE TransformationConfig>
 
 <TransformationConfig internalName="ensembl">
- <Dataset internalName = "hsapiens_gene_ensembl">  
+ <Dataset internalName = "hsapiens_gene_ensembl"
+          mainTable    = "TRANSCRIPT">  
   <Transformation     internalName         = "1" 
                       tableType            = "m"
                       centralTable         = "TRANSCRIPT"
