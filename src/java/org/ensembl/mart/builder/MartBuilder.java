@@ -734,8 +734,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	}
 
 	//resolver = Resolver;
-	tSchemaName = databaseDialog.getSchema();
-
+	//tSchemaName = databaseDialog.getSchema();
+	System.out.println("TARG SCHEMA");
+	tSchemaName = JOptionPane.showInputDialog(null,"INPUT TARGET SCHEMA");
 	//String file = JOptionPane.showInputDialog(null,"INPUT CONFIG FILE:");
 	//file = data_dir + file;
 	
