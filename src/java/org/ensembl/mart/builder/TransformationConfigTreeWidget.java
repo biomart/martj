@@ -114,7 +114,7 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
 				*/
 				
 				// new code without using adaptor
-				TransformationConfigXMLUtils xmlUtils = new TransformationConfigXMLUtils(true);
+				TransformationConfigXMLUtils xmlUtils = new TransformationConfigXMLUtils();
 				config = xmlUtils.getTransformationConfigForXMLStream(InputSourceUtil.getStreamForURL(url));
 				xmlUtils.loadTransformationConfigWithDocument( config, xmlUtils.getDocumentForXMLStream( InputSourceUtil.getStreamForURL( url ) ) );
 				
