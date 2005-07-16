@@ -74,7 +74,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import org.ensembl.mart.builder.config.*;
-
+import org.ensembl.mart.lib.config.ConfigurationException;
 /**
  * Class TransformationConfigTree extends JTree.
  *

@@ -41,7 +41,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 //import org.ensembl.mart.lib.config.AttributePage;
 
 import org.ensembl.mart.builder.config.*;
-
+import org.ensembl.mart.lib.config.ConfigurationException;
 /**
  * TransformationConfigTreeWidget extends internal frame.
  *

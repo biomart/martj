@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-
+import org.ensembl.mart.lib.config.ConfigurationException;
 /**
  * 
  * Contains all of the information required by a UI to display a transformation,

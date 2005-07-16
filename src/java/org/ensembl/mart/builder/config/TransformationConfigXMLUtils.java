@@ -41,7 +41,7 @@ import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
 import org.jdom.output.XMLOutputter;
 import org.xml.sax.InputSource;
-
+import org.ensembl.mart.lib.config.ConfigurationException;
 /**
  * Utility class containing all necessary XML parsing logic for converting
  * between XML and Object.  Uses JDOM as its XML parsing engine.

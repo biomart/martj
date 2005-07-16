@@ -17,7 +17,7 @@
  */
 
 package org.ensembl.mart.builder.config;
-
+import org.ensembl.mart.lib.config.ConfigurationException;
 /**
  * Basic Object from which all named Configuration Objects inherit.
  * 

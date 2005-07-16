@@ -17,7 +17,7 @@
  */
 
 package org.ensembl.mart.builder.config;
-
+import org.ensembl.mart.lib.config.ConfigurationException;
 /**
  * Contains all of the information for the UI to display a TransformationUnit
  * 
