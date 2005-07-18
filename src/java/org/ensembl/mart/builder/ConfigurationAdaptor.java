@@ -219,13 +219,9 @@ public class ConfigurationAdaptor {
 
 	public void readXMLConfiguration(TransformationConfig tConfig) {
 
-		//try {
-			//BufferedReader in = new BufferedReader(new FileReader(input_file));
-			//String line;
+		
 			String lastDatasetName = null;
-			//String lastTrans = null;
-			//int lines = 0;
-			//int datasetCode_counter = 0;
+			
 			TransformationCode transformationCode = null;
 			String datasetCodeName = null;
 			ArrayList linkedList = new ArrayList();
@@ -235,16 +231,8 @@ public class ConfigurationAdaptor {
 			Dataset[] datasets = tConfig.getDatasets();
 			for (int i = 0; i < datasets.length; i++){
 				Dataset dataset = datasets[i];
-				System.out.println("CALLED A");
-				//	finish the old datasetCode
-				if (i > 0) {
-					System.out.println("CALLED B");
-					transformationCode.transform();
-					datasetCode.setUserTableNames();
-			   	    datasetCode.createTransformationsForCentralFilters();	
-					mart.add(datasetCode);
-
-				}
+	            
+				if (i > 0) mart.add(datasetCode);
 				
 				//	new datasetCode
 				datasetCode = new DatasetCode();
@@ -252,25 +240,13 @@ public class ConfigurationAdaptor {
 				datasetCode.name = datasetCodeName;
 				datasetCode.adaptor = adaptor;
 				datasetCode.targetSchemaName = targetSchemaName;
-				
-				//System.out.println("********************* MAIN TABLE "+dataset.getMainTable());
-				
-				// needs to set it per dataset not per transformation
 				datasetCode.datasetKey = resolver.getPrimaryKeys(dataset.getMainTable());
 				
-				//datasetCode.datasetKey = resolver.getPrimaryKeys(fileEntries[2]);
 				
 				Transformation[] transformations = dataset.getTransformations();
 				for (int j = 0; j < transformations.length; j++){
 					Transformation transformation = transformations[j];
-					
-					//datasetCode.datasetKey = resolver.getPrimaryKeys(transformation.getCentralTable());
-
-					System.out.println("central table "+transformation.getCentralTable()+" key "+datasetCode.datasetKey);
-					
-					// new transformation
-					if (j > 0 && dataset.getInternalName().equals(lastDatasetName)) transformationCode.transform();
-				
+						
 					transformationCode = new TransformationCode();
 					transformationCode.adaptor = adaptor;
 					transformationCode.datasetName = datasetCodeName;
@@ -295,13 +271,6 @@ public class ConfigurationAdaptor {
 
 					String [] centralColumnNames = { "%" };
 					String [] centralColumnAliases=null;
-					
-					// moved to TUnit
-					//if (!fileEntries[13].equals("null")) centralColumnNames = fileEntries[13].split(",");
-					//if (!fileEntries[14].equals("null")) centralColumnAliases = fileEntries[14].split(",");
-					
-					//startTable= resolver.getCentralTable(fileEntries[2],centralColumnNames,centralColumnAliases);
-					//transformationCode.startTable = startTable;
 					
 					transformationCode.type = "linked";
 					transformationCode.column_operations = "addall";
@@ -385,31 +354,14 @@ public class ConfigurationAdaptor {
 
 						 transformationCode.addUnit(dunit);
 
-						 //lastTrans = transformation.getInternalName();
 						 lastDatasetName = datasetCodeName;
-						 //lines++;						
 								
 					}
 				}
 				
 			}
-
-		
-			transformationCode.transform();			
-			datasetCode.setUserTableNames();
-			datasetCode.createTransformationsForCentralFilters();	
+			
 			mart.add(datasetCode);
-		//}
-		
-		 //catch (FileNotFoundException e) {
-			//e.printStackTrace();
-		//} catch (IOException e) {
-		//	e.printStackTrace();
-		//}
-	
-		
-	//}
-
 	}
 
 
@@ -446,6 +398,9 @@ public class ConfigurationAdaptor {
 		int indexNo = 0;
 		for (int m = 0; m < mart.size(); m++) {
 			datasetCode = (DatasetCode) mart.get(m);	
+			
+			datasetCode.transform();
+			
 		    indexNo++;
 			TransformationCode[] final_transformations = datasetCode.getTransformations();		
 		

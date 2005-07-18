@@ -105,6 +105,9 @@ public class DatasetCode {
 			transformation.userTableName=mainTransformations[i].userTableName;
 			 
 			 // get final temp for each main tablev
+			
+			//System.out.println(" transfromation form central "+mainTransformations[i].finalTableName);
+			
 			Table main_table=mainTransformations[i].getFinalUnit().getTemp_end();
 			// set this again
 			main_table.type="interim";
@@ -198,6 +201,25 @@ public class DatasetCode {
 	}
 	*/
 	
+	
+	
+	public void transform(){
+		
+		
+		TransformationCode[] transformations = getTransformations();
+		
+		for (int i = 0; i < transformations.length; i++) {
+				
+		transformations[i].transform();
+			
+		}
+		
+		setUserTableNames();
+	    createTransformationsForCentralFilters();
+		
+	}
+	
+	
 		
 	public TransformationCode [] getTransformations() {
 		
@@ -216,8 +238,13 @@ public class DatasetCode {
         TransformationCode [] transforms = (TransformationCode []) transformations.toArray(b);
 		
 		for (int i = 0; i < transforms.length; i++) { 
+			
+			
+			// temp comment out.
+			
 			transforms[i].getFinalUnit().getTemp_end().setName(transforms[i].userTableName);
 		
+			
 		//System.out.println(" setting name "+transforms[i].number+ " to "+transforms[i].userTableName);
 		
 		}
