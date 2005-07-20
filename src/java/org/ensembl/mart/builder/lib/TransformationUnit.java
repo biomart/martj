@@ -4,14 +4,15 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package org.ensembl.mart.builder;
+package org.ensembl.mart.builder.lib;
+
 
 /**
  * @author <a href="mailto: arek@ebi.ac.uk">Arek Kasprzyk</a>
  *
  * 
  */
-public abstract class TUnit {
+public abstract class TransformationUnit extends TransformationUnitBase {
 	
 	Table tempStart;
 	Table tempEnd;
@@ -28,7 +29,7 @@ public abstract class TUnit {
 	public String type;
 	
 	
-	public TUnit(Table ref_table){
+	public TransformationUnit(Table ref_table){
 		
 		this.refTable=ref_table;
 		

@@ -4,9 +4,10 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package org.ensembl.mart.builder;
+package org.ensembl.mart.builder.lib;
 
 import java.util.*;
+
 
 /**
  * @author <a href="mailto: arek@ebi.ac.uk">Arek Kasprzyk</a>
@@ -15,7 +16,7 @@ import java.util.*;
  */
 
 
-public class DatasetCode {
+public class Dataset extends DatasetBase{
 	
 	ArrayList transformations = new ArrayList();
 	String name;
@@ -25,7 +26,7 @@ public class DatasetCode {
 	
 	
 		
-		public DatasetCode(){
+		public Dataset(){
 		
 	}
 	
@@ -92,12 +93,12 @@ public class DatasetCode {
 	
 	public void createTransformationsForCentralFilters(){
 		
-		TransformationCode [] dmTransformations = getDMTranformationsForCentral();	
-		TransformationCode [] mainTransformations =   getMainTranformationForCentral();
+		Transformation [] dmTransformations = getDMTranformationsForCentral();	
+		Transformation [] mainTransformations =   getMainTranformationForCentral();
 		
 		for (int i=0; i<mainTransformations.length;i++){
 			
-			TransformationCode transformation = new TransformationCode();
+			Transformation transformation = new Transformation();
 			
 			transformation.adaptor=adaptor;
 			transformation.datasetName=name;
@@ -129,8 +130,8 @@ public class DatasetCode {
 				//System.out.println(" temp end name from central transf "+dmFinalTable.getName());
 				
 				
-			TUnitSingle sunit = 
-				new TUnitSingle(dmFinalTable);
+			TransformationUnitSingle sunit = 
+				new TransformationUnitSingle(dmFinalTable);
 			
 			sunit.single = true;
 			sunit.adaptor = adaptor;
@@ -142,7 +143,7 @@ public class DatasetCode {
 			
 			
 
-			TUnitDouble dunit = new TUnitDouble(dmFinalTable);
+			TransformationUnitDouble dunit = new TransformationUnitDouble(dmFinalTable);
 			dunit.cardinality = dmFinalTable.cardinality;
 			dunit.column_operations = "addone";
 			dunit.final_table_name = "MAIN";
@@ -206,7 +207,7 @@ public class DatasetCode {
 	public void transform(){
 		
 		
-		TransformationCode[] transformations = getTransformations();
+		Transformation[] transformations = getAllTransformations();
 		
 		for (int i = 0; i < transformations.length; i++) {
 				
@@ -221,21 +222,21 @@ public class DatasetCode {
 	
 	
 		
-	public TransformationCode [] getTransformations() {
+	public Transformation [] getAllTransformations() {
 		
-		TransformationCode [] b = new TransformationCode[transformations.size()];
+		Transformation [] b = new Transformation[transformations.size()];
 	
 		//setFinalNames();
 		//return transforms;
-		return (TransformationCode []) transformations.toArray(b);	
+		return (Transformation []) transformations.toArray(b);	
 		
 	}
 	
 	
 	public void setUserTableNames(){
 		
-		TransformationCode [] b = new TransformationCode[transformations.size()];
-        TransformationCode [] transforms = (TransformationCode []) transformations.toArray(b);
+		Transformation [] b = new Transformation[transformations.size()];
+        Transformation [] transforms = (Transformation []) transformations.toArray(b);
 		
 		for (int i = 0; i < transforms.length; i++) { 
 			
@@ -254,18 +255,18 @@ public class DatasetCode {
 	
 	
 	
-	public void addTransformation(TransformationCode transformation){
+	public void addTransformation(Transformation transformation){
 		this.transformations.add(transformation);
 			
 	}
 	
 	
-	private TransformationCode getTransformationByFinalName(String name){
+	private Transformation getTransformationByFinalName(String name){
 		
-		TransformationCode trans = new TransformationCode();
+		Transformation trans = new Transformation();
 		
 		for (int i=0;i<transformations.size();i++){
-			trans = (TransformationCode) transformations.get(i);
+			trans = (Transformation) transformations.get(i);
 			if (trans.finalTableName.equals(name)){
 			break;
 			}
@@ -275,11 +276,11 @@ public class DatasetCode {
 	}
 	
 
-	public TransformationCode [] getTransformationsByFinalTableType(String type){
+	public Transformation [] getTransformationsByFinalTableType(String type){
 		
 		ArrayList trans_list = new ArrayList();
 		
-		TransformationCode [] trans = getTransformations();
+		Transformation [] trans = getAllTransformations();
 		
 		for (int i=0;i<trans.length;i++){
 			
@@ -290,31 +291,31 @@ public class DatasetCode {
 			}
 		}
 		
-		TransformationCode [] b = new TransformationCode[trans_list.size()];
-		return (TransformationCode []) trans_list.toArray(b);	
+		Transformation [] b = new Transformation[trans_list.size()];
+		return (Transformation []) trans_list.toArray(b);	
 		
 	}	
 	
 	
-	private TransformationCode [] getDMTranformationsForCentral (){
+	private Transformation [] getDMTranformationsForCentral (){
 		
 		ArrayList list = new ArrayList();
 		
-		TransformationCode [] trans= getTransformationsByFinalTableType("DM");
+		Transformation [] trans= getTransformationsByFinalTableType("DM");
 		for (int i=0; i<trans.length;i++){
 			
 			if (trans[i].central){
 				list.add(trans[i]);			
 			}
 		}
-		TransformationCode [] b = new TransformationCode[list.size()];
-		return (TransformationCode []) list.toArray(b);	
+		Transformation [] b = new Transformation[list.size()];
+		return (Transformation []) list.toArray(b);	
 		
 	}
 	
-	private TransformationCode [] getMainTranformationForCentral(){
+	private Transformation [] getMainTranformationForCentral(){
 		
-		TransformationCode [] mains = getTransformationsByFinalTableType("MAIN");
+		Transformation [] mains = getTransformationsByFinalTableType("MAIN");
 		
 		ArrayList list = new ArrayList();
 		String name = "";
@@ -329,8 +330,8 @@ public class DatasetCode {
 			}
 		}
 		
-		TransformationCode [] b = new TransformationCode[list.size()];
-		return (TransformationCode []) list.toArray(b);		
+		Transformation [] b = new Transformation[list.size()];
+		return (Transformation []) list.toArray(b);		
 	}
 	
 	

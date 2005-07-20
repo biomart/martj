@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package org.ensembl.mart.builder;
+package org.ensembl.mart.builder.lib;
 
 /**
  * @author <a href="mailto: arek@ebi.ac.uk">Arek Kasprzyk </a>
@@ -14,7 +14,8 @@ package org.ensembl.mart.builder;
 
 import java.util.*;
 
-public class TransformationCode {
+
+public class Transformation extends TransformationBase {
 	
 	ArrayList units = new ArrayList();
 	
@@ -33,19 +34,19 @@ public class TransformationCode {
 	
 
 
-	public TUnit getFinalUnit() {
-		TUnit unit = (TUnit) units.get(units.size() - 1);
+	public TransformationUnit getFinalUnit() {
+		TransformationUnit unit = (TransformationUnit) units.get(units.size() - 1);
 		return unit;
 	}
 	
 	
-	public void addUnit(TUnit unit) {
+	public void addUnit(TransformationUnit unit) {
 		this.units.add(unit);
 	}
 
-	public TUnit[] getUnits() {
-		TUnit[] b = new TUnit[units.size()];
-		return (TUnit[]) units.toArray(b);
+	public TransformationUnit[] getUnits() {
+		TransformationUnit[] b = new TransformationUnit[units.size()];
+		return (TransformationUnit[]) units.toArray(b);
 	}
 	
 	
@@ -66,7 +67,7 @@ public class TransformationCode {
         // transform
 		for (int i = 0; i < getUnits().length; i++) {
 			
-			TUnit unit = getUnits()[i];
+			TransformationUnit unit = getUnits()[i];
 			Table temp_start = new Table();
 
 			if (i == 0) {

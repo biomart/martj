@@ -25,7 +25,11 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
-import org.ensembl.mart.builder.config.*;
+import org.ensembl.mart.builder.lib.BaseConfigurationObject;
+import org.ensembl.mart.builder.lib.DatasetBase;
+import org.ensembl.mart.builder.lib.TransformationBase;
+import org.ensembl.mart.builder.lib.TransformationConfig;
+import org.ensembl.mart.builder.lib.TransformationUnitBase;
 
 
 /**
@@ -123,41 +127,41 @@ public class TransformationConfigAttributeTableModel implements TableModel {
 		
 		if (columnIndex == 1) {
 			//child may be a TransformationConfig, in which case dont try to remove/add the child to a null parent
-			if (child instanceof org.ensembl.mart.builder.config.TransformationConfig) {
+			if (child instanceof org.ensembl.mart.builder.lib.TransformationConfig) {
 				obj.setAttribute(firstColumnData[rowIndex], (String) aValue);
 			} else {
 				Object parent = ((TransformationConfigTreeNode) node.getParent()).getUserObject();
 				int index = node.getParent().getIndex(node) - TransformationConfigTreeNode.getHeterogenousOffset(parent, child);
 
-				if (parent instanceof org.ensembl.mart.builder.config.TransformationConfig) {
+				if (parent instanceof org.ensembl.mart.builder.lib.TransformationConfig) {
 					TransformationConfig config = (TransformationConfig) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof org.ensembl.mart.builder.config.Dataset)
-						config.removeDataset((Dataset) node.getUserObject());
+					if (child instanceof org.ensembl.mart.builder.lib.DatasetBase)
+						config.removeDataset((DatasetBase) node.getUserObject());
 				}
-				else if (parent instanceof org.ensembl.mart.builder.config.Dataset) {
-					Dataset fp = (Dataset) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof org.ensembl.mart.builder.config.Transformation)
-						fp.removeTransformation((Transformation) node.getUserObject());
+				else if (parent instanceof org.ensembl.mart.builder.lib.DatasetBase) {
+					DatasetBase fp = (DatasetBase) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
+					if (child instanceof org.ensembl.mart.builder.lib.TransformationBase)
+						fp.removeTransformation((TransformationBase) node.getUserObject());
 				} 
-				else if (parent instanceof org.ensembl.mart.builder.config.Transformation) {
-					Transformation fp = (Transformation) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof org.ensembl.mart.builder.config.TransformationUnit)
-						fp.removeTransformationUnit((TransformationUnit) node.getUserObject());
+				else if (parent instanceof org.ensembl.mart.builder.lib.TransformationBase) {
+					TransformationBase fp = (TransformationBase) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
+					if (child instanceof org.ensembl.mart.builder.lib.TransformationUnitBase)
+						fp.removeTransformationUnit((TransformationUnitBase) node.getUserObject());
 				} 
 				obj.setAttribute(firstColumnData[rowIndex], (String) aValue);
 
-				if (parent instanceof org.ensembl.mart.builder.config.TransformationConfig) {
+				if (parent instanceof org.ensembl.mart.builder.lib.TransformationConfig) {
 					TransformationConfig config = (TransformationConfig) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof org.ensembl.mart.builder.config.Dataset)
-						config.insertDataset(index, (Dataset) obj);        
-				} else if (parent instanceof org.ensembl.mart.builder.config.Dataset) {
-					Dataset fp = (Dataset) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof org.ensembl.mart.builder.config.Transformation)
-						fp.insertTransformation(index, (Transformation) obj);
-				} else if (parent instanceof org.ensembl.mart.builder.config.Transformation) {
-					Transformation fp = (Transformation) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof org.ensembl.mart.builder.config.TransformationUnit)
-						fp.insertTransformationUnit(index, (TransformationUnit) obj);
+					if (child instanceof org.ensembl.mart.builder.lib.DatasetBase)
+						config.insertDataset(index, (DatasetBase) obj);        
+				} else if (parent instanceof org.ensembl.mart.builder.lib.DatasetBase) {
+					DatasetBase fp = (DatasetBase) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
+					if (child instanceof org.ensembl.mart.builder.lib.TransformationBase)
+						fp.insertTransformation(index, (TransformationBase) obj);
+				} else if (parent instanceof org.ensembl.mart.builder.lib.TransformationBase) {
+					TransformationBase fp = (TransformationBase) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
+					if (child instanceof org.ensembl.mart.builder.lib.TransformationUnitBase)
+						fp.insertTransformationUnit(index, (TransformationUnitBase) obj);
 				} 
 			}
 			

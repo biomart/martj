@@ -16,7 +16,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
 
-package org.ensembl.mart.builder.config;
+package org.ensembl.mart.builder.lib;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -30,7 +30,7 @@ import org.ensembl.mart.lib.config.ConfigurationException;
  *   
  * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
  */
-public class Dataset extends BaseNamedConfigurationObject {
+public class DatasetBase extends BaseNamedConfigurationObject {
 
   private List transformations = new ArrayList();
   private Hashtable transformationNameMap = new Hashtable();
@@ -39,7 +39,7 @@ public class Dataset extends BaseNamedConfigurationObject {
   /**
    * Empty constructor.  Should really only be used by the MartBuilder
    */
-  public Dataset() {
+  public DatasetBase() {
     super();
     setAttribute(mainTableNameKey, null);
   }
@@ -51,7 +51,7 @@ public class Dataset extends BaseNamedConfigurationObject {
    * 
    * @param internalName String name to represent this Dataset
    */
-  public Dataset(String internalName, String mainTable) throws ConfigurationException {
+  public DatasetBase(String internalName, String mainTable) throws ConfigurationException {
     super(internalName);
     
     setAttribute(mainTableNameKey, mainTable);
@@ -72,13 +72,13 @@ public class Dataset extends BaseNamedConfigurationObject {
    * Copy constructor. Constructs an exact copy of an existing Dataset.
    * @param dataset Dataset to copy.
    */
-  public Dataset(Dataset dataset) {
+  public DatasetBase(DatasetBase dataset) {
 	super (dataset);
   	
-	Transformation[] transformations = dataset.getTransformations();
+	TransformationBase[] transformations = dataset.getTransformations();
 	for (int i = 0, n = transformations.length; i < n; i++) {
 	  Object transformation = transformations[i];
-	  addTransformation( new Transformation( (Transformation) transformation));     
+	  addTransformation( new TransformationBase( (TransformationBase) transformation));     
 	}
   }
 
@@ -86,7 +86,7 @@ public class Dataset extends BaseNamedConfigurationObject {
    * Add a Transformation to the Dataset.
    * @param transformation Transformation object.
    */
-  public void addTransformation(Transformation transformation) {
+  public void addTransformation(TransformationBase transformation) {
     transformations.add(transformation);
     transformationNameMap.put(transformation.getInternalName(), transformation);
   }
@@ -95,7 +95,7 @@ public class Dataset extends BaseNamedConfigurationObject {
    * Remove a Transformation from the Dataset.
    * @param transformation -- Transformation to be removed.
    */
-  public void removeTransformation(Transformation transformation) {
+  public void removeTransformation(TransformationBase transformation) {
     transformationNameMap.remove(transformation.getInternalName());
     transformations.remove(transformation);
   }
@@ -106,7 +106,7 @@ public class Dataset extends BaseNamedConfigurationObject {
    * @param position -- Position to insert the Transformation
    * @param f -- Transformation to insert.
    */
-  public void insertTransformation(int position, Transformation transformation) {
+  public void insertTransformation(int position, TransformationBase transformation) {
     transformations.add(position, transformation);
     transformationNameMap.put(transformation.getInternalName(), transformation);
   }
@@ -118,7 +118,7 @@ public class Dataset extends BaseNamedConfigurationObject {
    * 
    * @param transformation Transformation[] array of Transformation objects.
    */
-  public void addTransformations(Transformation[] transformation) {
+  public void addTransformations(TransformationBase[] transformation) {
     for (int i = 0, n = transformation.length; i < n; i++) {
       transformations.add(transformation[i]);
       transformationNameMap.put(transformation[i].getInternalName(), transformation);
@@ -129,8 +129,8 @@ public class Dataset extends BaseNamedConfigurationObject {
    * Returns a list of all Transformation objects contained within the Dataset, in the order they were added.
    * @return Transformation[]
    */
-  public Transformation[] getTransformations() {
-    Transformation[] fs = new Transformation[transformations.size()];
+  public TransformationBase[] getTransformations() {
+    TransformationBase[] fs = new TransformationBase[transformations.size()];
     transformations.toArray(fs);
     return fs;
   }
@@ -154,7 +154,7 @@ public class Dataset extends BaseNamedConfigurationObject {
    * Also, If the lazy load fails, a RuntimeException is thrown.
    */
   public boolean equals(Object o) {
-    return o instanceof Dataset && hashCode() == ((Dataset) o).hashCode();
+    return o instanceof DatasetBase && hashCode() == ((DatasetBase) o).hashCode();
   }
 
 }

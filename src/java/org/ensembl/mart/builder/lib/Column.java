@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package org.ensembl.mart.builder;
+package org.ensembl.mart.builder.lib;
 
 /**
  * @author <a href="mailto: arek@ebi.ac.uk">Arek Kasprzyk</a>

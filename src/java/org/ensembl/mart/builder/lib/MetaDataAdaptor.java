@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package org.ensembl.mart.builder;
+package org.ensembl.mart.builder.lib;
 
 
 
@@ -17,7 +17,8 @@ package org.ensembl.mart.builder;
 import java.sql.*;
 import java.util.*;
 
-public abstract class MetaDataResolver {
+
+public abstract class MetaDataAdaptor {
 	
 	protected Table [] tabs;
 	protected Connection connection;
@@ -26,7 +27,7 @@ public abstract class MetaDataResolver {
 	protected DatabaseAdaptor adaptor;
 	protected DatabaseMetaData dmd;
 	
-	public MetaDataResolver(DatabaseAdaptor adaptor){
+	public MetaDataAdaptor(DatabaseAdaptor adaptor){
 		
 		try {		
 			setAdaptor(adaptor);

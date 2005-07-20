@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package org.ensembl.mart.builder;
+package org.ensembl.mart.builder.lib;
 
 
 
@@ -17,11 +17,12 @@ package org.ensembl.mart.builder;
 import java.sql.*;
 import java.util.*;
 
-public class MetaDataResolverFKSupported extends MetaDataResolver {
+
+public class MetaDataAdaptorFKSupported extends MetaDataAdaptor {
 
 	
 	
-	public MetaDataResolverFKSupported(DatabaseAdaptor adaptor){
+	public MetaDataAdaptorFKSupported(DatabaseAdaptor adaptor){
 			
 		super(adaptor);
 		

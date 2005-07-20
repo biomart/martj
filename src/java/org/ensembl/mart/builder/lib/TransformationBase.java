@@ -16,7 +16,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
 
-package org.ensembl.mart.builder.config;
+package org.ensembl.mart.builder.lib;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -31,7 +31,7 @@ import org.ensembl.mart.lib.config.ConfigurationException;
  *   
  * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
  */
-public class Transformation extends BaseNamedConfigurationObject {
+public class TransformationBase extends BaseNamedConfigurationObject {
 
   private List transformationUnits = new ArrayList();
   private Hashtable transUnitNameMap = new Hashtable();
@@ -47,20 +47,20 @@ public class Transformation extends BaseNamedConfigurationObject {
    * Copy constructor. Constructs an exact copy of an existing Transformation.
    * @param transformation Transformation to copy.
    */
-  public Transformation(Transformation transformation) {
+  public TransformationBase(TransformationBase transformation) {
   	super (transformation);
   	
   	List transformationUnits = transformation.getTransformationUnits();
   	for (int i = 0, n = transformationUnits.size(); i < n; i++) {
       Object transformationUnit = transformationUnits.get(i);
-      addTransformationUnit( new TransformationUnit( (TransformationUnit) transformationUnit ));     
+      addTransformationUnit( new TransformationUnitBase( (TransformationUnitBase) transformationUnit ));     
     }
   }
    
 /**
  * Empty Constructor should really only be used by the MartBuilder
  */
-	public Transformation() {
+	public TransformationBase() {
 		super();
 		setAttribute(includeCentralFilterKey, null);
 		setAttribute(tableTypeKey, null);
@@ -74,7 +74,7 @@ public class Transformation extends BaseNamedConfigurationObject {
 	 * 
 	 * @param internalName String name to internally represent the Transformation
 	 */
-	public Transformation(String internalName) throws ConfigurationException {
+	public TransformationBase(String internalName) throws ConfigurationException {
 		this(internalName, "","","","");
 	}
 
@@ -88,7 +88,7 @@ public class Transformation extends BaseNamedConfigurationObject {
 	 * @param userTableName
 	 * @throws ConfigurationException when the internalName is null or empty
 	 */
-	public Transformation(String internalName, String includeCentralFilter, String tableType, String centralTable, String userTableName) throws ConfigurationException {
+	public TransformationBase(String internalName, String includeCentralFilter, String tableType, String centralTable, String userTableName) throws ConfigurationException {
 		super(internalName);
 		setAttribute(includeCentralFilterKey, includeCentralFilter);	
 		setAttribute(tableTypeKey, tableType);
@@ -102,7 +102,7 @@ public class Transformation extends BaseNamedConfigurationObject {
 	 * 
 	 * @param a TransformationUnit object
 	 */
-	public void addTransformationUnit(TransformationUnit transformationUnit) {
+	public void addTransformationUnit(TransformationUnitBase transformationUnit) {
 		transformationUnits.add(transformationUnit);
 		transUnitNameMap.put(transformationUnit.getInternalName(), transformationUnit);
 	}
@@ -111,7 +111,7 @@ public class Transformation extends BaseNamedConfigurationObject {
    * Remove an TransformationUnit from the Transformation
    * @param transformationUnit -- TransformationUnit to be removed.
    */
-  public void removeTransformationUnit(TransformationUnit transformationUnit) {
+  public void removeTransformationUnit(TransformationUnitBase transformationUnit) {
     transUnitNameMap.remove(transformationUnit.getInternalName());
     transformationUnits.remove(transformationUnit); 
   }
@@ -122,7 +122,7 @@ public class Transformation extends BaseNamedConfigurationObject {
    * @param position -- position to insert the given TransformationUnit
    * @param transformationUnit -- TransformationUnit to insert.
    */
-  public void insertTransformationUnit(int position, TransformationUnit transformationUnit) {
+  public void insertTransformationUnit(int position, TransformationUnitBase transformationUnit) {
     transformationUnits.add(position, transformationUnit);
     transUnitNameMap.put(transformationUnit.getInternalName(), transformationUnit);
   }
@@ -133,7 +133,7 @@ public class Transformation extends BaseNamedConfigurationObject {
 	 * 
 	 * @param transformationUnit an array of TransformationUnit objects
 	 */
-	public void addTransformationUnits(TransformationUnit[] tUnits) {
+	public void addTransformationUnits(TransformationUnitBase[] tUnits) {
 		for (int i = 0, n = tUnits.length; i < n; i++) {
 			transformationUnits.add(tUnits[i]);
 			transUnitNameMap.put(tUnits[i].getInternalName(), tUnits[i]);
@@ -170,7 +170,7 @@ public class Transformation extends BaseNamedConfigurationObject {
 	 * Allows Equality Comparisons manipulation of Transformation objects
 	 */
 	public boolean equals(Object o) {
-		return o instanceof Transformation && hashCode() == ((Transformation) o).hashCode();
+		return o instanceof TransformationBase && hashCode() == ((TransformationBase) o).hashCode();
 	}
 
 	public int hashCode() {
@@ -178,7 +178,7 @@ public class Transformation extends BaseNamedConfigurationObject {
 
 		for (Iterator iter = transformationUnits.iterator(); iter.hasNext();) {
 			Object element = iter.next();
-		    tmp = (31 * tmp) + ((TransformationUnit) element).hashCode();
+		    tmp = (31 * tmp) + ((TransformationUnitBase) element).hashCode();
 			
 		}
 

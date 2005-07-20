@@ -34,7 +34,7 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.DefaultTableCellRenderer;
 
 
-import org.ensembl.mart.builder.config.TransformationConfig;
+import org.ensembl.mart.builder.lib.TransformationConfig;
 
 /**
  * Class DatasetConfigAttributesTable extending JTable.

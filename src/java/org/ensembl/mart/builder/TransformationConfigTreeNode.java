@@ -21,7 +21,11 @@ package org.ensembl.mart.builder;
 import java.util.List;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import org.ensembl.mart.builder.config.*;
+import org.ensembl.mart.builder.lib.BaseNamedConfigurationObject;
+import org.ensembl.mart.builder.lib.DatasetBase;
+import org.ensembl.mart.builder.lib.TransformationBase;
+import org.ensembl.mart.builder.lib.TransformationConfig;
+import org.ensembl.mart.builder.lib.TransformationUnitBase;
 
 
  
@@ -81,14 +85,14 @@ public class TransformationConfigTreeNode extends DefaultMutableTreeNode {
 		super.setUserObject(obj);
 
 		String nodeObjectClass = obj.getClass().getName();
-		if (nodeObjectClass.equals("org.ensembl.mart.builder.config.TransformationConfig")) {
+		if (nodeObjectClass.equals("org.ensembl.mart.builder.lib.TransformationConfig")) {
 			setName("TransformationConfig: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 			TransformationConfig dsv = (TransformationConfig) obj;
 			System.out.println("NODE: 1");
-			Dataset[] fpages = dsv.getDatasets();
+			DatasetBase[] fpages = dsv.getDatasets();
 			for (int i = 0; i < fpages.length; i++) {
-				if (fpages[i].getClass().getName().equals("org.ensembl.mart.builder.config.Dataset")) {
-					Dataset fp = fpages[i];
+				if (fpages[i].getClass().getName().equals("org.ensembl.mart.builder.lib.DatasetBase")) {
+					DatasetBase fp = fpages[i];
 					System.out.println("DATASET -> " + fp.toString());
 					String fpName = fp.getInternalName();
 					System.out.println("NODE: 2");
@@ -96,18 +100,18 @@ public class TransformationConfigTreeNode extends DefaultMutableTreeNode {
 					fpNode.setUserObject(fp);
 
 					this.add(fpNode);
-					Transformation[] groups = fp.getTransformations();
+					TransformationBase[] groups = fp.getTransformations();
 					for (int j = 0; j < groups.length; j++) {
-						if (groups[j].getClass().getName().equals("org.ensembl.mart.builder.config.Transformation")) {
-							Transformation fiGroup = (Transformation) groups[j];
+						if (groups[j].getClass().getName().equals("org.ensembl.mart.builder.lib.TransformationBase")) {
+							TransformationBase fiGroup = (TransformationBase) groups[j];
 							String grName = fiGroup.getInternalName();
 							TransformationConfigTreeNode grNode = new TransformationConfigTreeNode("Transformation:" + grName);
 							grNode.setUserObject(fiGroup);
 							//this.add(grNode);
 							List tunits = fiGroup.getTransformationUnits();
 							for (int k = 0; k < tunits.size(); k++) {
-								if (tunits.get(k).getClass().getName().equals("org.ensembl.mart.builder.config.TransformationUnit")) {
-									TransformationUnit tunit = (TransformationUnit) tunits.get(k);
+								if (tunits.get(k).getClass().getName().equals("org.ensembl.mart.builder.lib.TransformationUnitBase")) {
+									TransformationUnitBase tunit = (TransformationUnitBase) tunits.get(k);
 									String tuName = tunit.getInternalName();
 									TransformationConfigTreeNode tuNode = new TransformationConfigTreeNode("TransformationUnit:" + tuName);
 									tuNode.setUserObject(tunit);							
@@ -119,21 +123,21 @@ public class TransformationConfigTreeNode extends DefaultMutableTreeNode {
 				}
 			}
 							
-		} else if (nodeObjectClass.equals("org.ensembl.mart.builder.config.Dataset")) {
+		} else if (nodeObjectClass.equals("org.ensembl.mart.builder.lib.DatasetBase")) {
 			setName("Dataset: " + ((BaseNamedConfigurationObject) obj).getInternalName());
-			Dataset fp = (Dataset) obj;
-			Transformation[] groups = fp.getTransformations();
+			DatasetBase fp = (DatasetBase) obj;
+			TransformationBase[] groups = fp.getTransformations();
 			for (int j = 0; j < groups.length; j++) {
-				if (groups[j].getClass().getName().equals("org.ensembl.mart.builder.config.Transformation")) {
-					Transformation fiGroup = (Transformation) groups[j];
+				if (groups[j].getClass().getName().equals("org.ensembl.mart.builder.lib.TransformationBase")) {
+					TransformationBase fiGroup = (TransformationBase) groups[j];
 					String grName = fiGroup.getInternalName();
 					TransformationConfigTreeNode grNode = new TransformationConfigTreeNode("Transformation:" + grName);
 					grNode.setUserObject(fiGroup);
 					this.add(grNode);
 					List tunits = fiGroup.getTransformationUnits();
 					for (int k = 0; k < tunits.size(); k++) {
-						if (tunits.get(k).getClass().getName().equals("org.ensembl.mart.builder.config.TransformationUnit")) {
-							TransformationUnit tunit = (TransformationUnit) tunits.get(k);
+						if (tunits.get(k).getClass().getName().equals("org.ensembl.mart.builder.lib.TransformationUnitBase")) {
+							TransformationUnitBase tunit = (TransformationUnitBase) tunits.get(k);
 							String tuName = tunit.getInternalName();
 							TransformationConfigTreeNode tuNode = new TransformationConfigTreeNode("TransformationUnit:" + tuName);
 							tuNode.setUserObject(tunit);							
@@ -144,13 +148,13 @@ public class TransformationConfigTreeNode extends DefaultMutableTreeNode {
 				}
 			}
 
-		} else if (nodeObjectClass.equals("org.ensembl.mart.builder.config.Transformation")) {
+		} else if (nodeObjectClass.equals("org.ensembl.mart.builder.lib.TransformationBase")) {
 			setName("Transformation: " + ((BaseNamedConfigurationObject) obj).getInternalName());
-			Transformation fp = (Transformation) obj;
+			TransformationBase fp = (TransformationBase) obj;
 			List groups = fp.getTransformationUnits();
 			for (int j = 0; j < groups.size(); j++) {
-				if (groups.get(j).getClass().getName().equals("org.ensembl.mart.builder.config.TransformationUnit")) {
-					TransformationUnit fiGroup = (TransformationUnit) groups.get(j);
+				if (groups.get(j).getClass().getName().equals("org.ensembl.mart.builder.lib.TransformationUnitBase")) {
+					TransformationUnitBase fiGroup = (TransformationUnitBase) groups.get(j);
 					String grName = fiGroup.getInternalName();
 					TransformationConfigTreeNode grNode = new TransformationConfigTreeNode("TransformationUnit:" + grName);
 					grNode.setUserObject(fiGroup);
@@ -158,7 +162,7 @@ public class TransformationConfigTreeNode extends DefaultMutableTreeNode {
 				}
 			}	
 
-		} else if (nodeObjectClass.equals("org.ensembl.mart.builder.config.TransformationUnit")) {
+		} else if (nodeObjectClass.equals("org.ensembl.mart.builder.lib.TransformationUnitBase")) {
 			setName("TransformationUnit: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 		} 
 

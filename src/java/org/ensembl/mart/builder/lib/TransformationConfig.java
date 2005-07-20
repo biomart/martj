@@ -16,7 +16,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
 
-package org.ensembl.mart.builder.config;
+package org.ensembl.mart.builder.lib;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -41,9 +41,9 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
    */
   public TransformationConfig(TransformationConfig ds) throws ConfigurationException {
     super(ds);
-    Dataset[] datasets = ds.getDatasets();
+    DatasetBase[] datasets = ds.getDatasets();
     for (int i = 0, n = datasets.length; i < n; i++) {
-       addDataset(new Dataset(datasets[i]));
+       addDataset(new DatasetBase(datasets[i]));
     }
   }
 
@@ -73,7 +73,7 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
    * 
    * @param f FiterPage object.
    */
-  public void addDataset(Dataset f) {
+  public void addDataset(DatasetBase f) {
     datasets.add(f);
     datasetNameMap.put(f.getInternalName(), f);
   }
@@ -82,10 +82,10 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
    * Remove a Dataset from the TransformationConfig.
    * @param f -- Dataset to be removed.
    */
-  public void removeDataset(Dataset f) {
+  public void removeDataset(DatasetBase f) {
     datasetNameMap.remove(f.getInternalName());
     for (int i = 0; i < datasets.size(); i++){
-    	Dataset fp = (Dataset) datasets.get(i);
+    	DatasetBase fp = (DatasetBase) datasets.get(i);
     }
     datasets.remove(f);
   }
@@ -96,7 +96,7 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
    * @param position -- Position to insert the Dataset
    * @param f -- Dataset to insert.
    */
-  public void insertDataset(int position, Dataset f) {
+  public void insertDataset(int position, DatasetBase f) {
     datasets.add(position, f);
     datasetNameMap.put(f.getInternalName(), f);
   }
@@ -109,7 +109,7 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
    * 
    * @param f Dataset[] array of Dataset objects.
    */
-  public void addDatasets(Dataset[] f) {
+  public void addDatasets(DatasetBase[] f) {
     for (int i = 0, n = f.length; i < n; i++) {
       datasets.add(f[i]);
       datasetNameMap.put(f[i].getInternalName(), f);
@@ -120,8 +120,8 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
    * Returns a list of all Dataset objects contained within the TransformationConfig, in the order they were added.
    * @return Dataset[]
    */
-  public Dataset[] getDatasets() {
-    Dataset[] fs = new Dataset[datasets.size()];
+  public DatasetBase[] getDatasets() {
+    DatasetBase[] fs = new DatasetBase[datasets.size()];
     datasets.toArray(fs);
     return fs;
   }
@@ -163,7 +163,7 @@ public class TransformationConfig extends BaseNamedConfigurationObject {
     int tmp = super.hashCode();
 
     for (Iterator iter = datasets.iterator(); iter.hasNext();) {
-        Dataset element = (Dataset) iter.next();
+        DatasetBase element = (DatasetBase) iter.next();
         tmp = (31 * tmp) + element.hashCode();
     }
     return tmp;

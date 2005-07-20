@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package org.ensembl.mart.builder;
+package org.ensembl.mart.builder.lib;
 
 /**
  * @author <a href="mailto: arek@ebi.ac.uk">Arek Kasprzyk </a>
@@ -15,6 +15,7 @@ package org.ensembl.mart.builder;
 import java.io.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
+
 //import java.util.*;
 
 public class MartBuilderOrig {
@@ -22,7 +23,7 @@ public class MartBuilderOrig {
 	private static final String data_dir = "data/builder/";
 	private static String config = data_dir+"connection.properties";
 	
-	private static MetaDataResolver resolver;
+	private static MetaDataAdaptor resolver;
 	//private static DBAdaptor adaptor;
 
 	//private File file = null;
@@ -39,14 +40,14 @@ public class MartBuilderOrig {
 		// Connections
 		DatabaseAdaptor Adaptor = new DatabaseAdaptor(config);
 
-		MetaDataResolver Resolver = null;
+		MetaDataAdaptor Resolver = null;
 
 		if (Adaptor.rdbms.equals("mysql")) {
-			Resolver = new MetaDataResolverFKNotSupported(Adaptor);
+			Resolver = new MetaDataAdaptorFKNotSupported(Adaptor);
 		} else if (Adaptor.rdbms.equals("oracle")) {
-			Resolver = new MetaDataResolverFKSupported(Adaptor);
+			Resolver = new MetaDataAdaptorFKSupported(Adaptor);
 		} else if (Adaptor.rdbms.equals("postgresql")) {
-			Resolver = new MetaDataResolverFKSupported(Adaptor);
+			Resolver = new MetaDataAdaptorFKSupported(Adaptor);
 		}
 
 		resolver = Resolver;

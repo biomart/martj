@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package org.ensembl.mart.builder;
+package org.ensembl.mart.builder.lib;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -17,7 +17,6 @@ import java.util.List;
 
 
 
-import org.ensembl.mart.builder.config.*;
 
 /**
  * @author arek
@@ -28,10 +27,10 @@ import org.ensembl.mart.builder.config.*;
 public class ConfigurationAdaptor {
 	
 	public DatabaseAdaptor adaptor;
-	public MetaDataResolver resolver;
+	public MetaDataAdaptor resolver;
 	public String targetSchemaName;
 	private static ArrayList mart = new ArrayList();
-	private static DatasetCode datasetCode = null;
+	private static Dataset datasetCode = null;
 	
 	
 	public void readConfiguration(String input_file) {
@@ -45,7 +44,7 @@ public class ConfigurationAdaptor {
 			String lastTrans = null;
 			int lines = 0;
 			int datasetCode_counter = 0;
-			TransformationCode transformation = null;
+			Transformation transformation = null;
 			String datasetCodeName = null;
 			ArrayList linkedList = new ArrayList();
 			Table startTable=null;
@@ -80,7 +79,7 @@ public class ConfigurationAdaptor {
 					}
 		
 					// new datasetCode
-					datasetCode = new DatasetCode();
+					datasetCode = new Dataset();
 					datasetCodeName = fileEntries[0];
 					datasetCode.name = datasetCodeName;
 					datasetCode.adaptor = adaptor;
@@ -96,7 +95,7 @@ public class ConfigurationAdaptor {
 					
 					if (lines > 0 && fileEntries[0].equals(lastDatasetName)) transformation.transform();
 				
-					transformation = new TransformationCode();
+					transformation = new Transformation();
 					transformation.adaptor = adaptor;
 					transformation.datasetName = datasetCodeName;
 					transformation.targetSchemaName = targetSchemaName;
@@ -141,7 +140,7 @@ public class ConfigurationAdaptor {
 				
 				
                 
-				TUnit dunit= null;
+				TransformationUnit dunit= null;
 				Table refTable = null;
 				
 				if (!fileEntries[5].equals("null")) {
@@ -166,14 +165,14 @@ public class ConfigurationAdaptor {
 						refTable.central_extension = fileEntries[7];
 					
 					
-					dunit = new TUnitDouble(refTable);
+					dunit = new TransformationUnitDouble(refTable);
 				}
                  else {
                  	
                  	if (!fileEntries[7].equals("null"))
 						startTable.central_extension = fileEntries[7];
                  	
-                 	dunit = new TUnitSingle(startTable);
+                 	dunit = new TransformationUnitSingle(startTable);
                  	dunit.type="partition";
                  }
 				
@@ -222,32 +221,34 @@ public class ConfigurationAdaptor {
 		
 			String lastDatasetName = null;
 			
-			TransformationCode transformationCode = null;
+			Transformation transformationCode = null;
 			String datasetCodeName = null;
 			ArrayList linkedList = new ArrayList();
 			Table startTable=null;
 
 
-			Dataset[] datasets = tConfig.getDatasets();
+			DatasetBase[] datasets = tConfig.getDatasets();
 			for (int i = 0; i < datasets.length; i++){
-				Dataset dataset = datasets[i];
+				DatasetBase dataset = datasets[i];
 	            
 				if (i > 0) mart.add(datasetCode);
 				
 				//	new datasetCode
-				datasetCode = new DatasetCode();
+				datasetCode = new Dataset();
 				datasetCodeName = dataset.getInternalName();
 				datasetCode.name = datasetCodeName;
 				datasetCode.adaptor = adaptor;
 				datasetCode.targetSchemaName = targetSchemaName;
+				
+				// db interaction
 				datasetCode.datasetKey = resolver.getPrimaryKeys(dataset.getMainTable());
 				
 				
-				Transformation[] transformations = dataset.getTransformations();
+				TransformationBase[] transformations = dataset.getTransformations();
 				for (int j = 0; j < transformations.length; j++){
-					Transformation transformation = transformations[j];
+					TransformationBase transformation = transformations[j];
 						
-					transformationCode = new TransformationCode();
+					transformationCode = new Transformation();
 					transformationCode.adaptor = adaptor;
 					transformationCode.datasetName = datasetCodeName;
 					transformationCode.targetSchemaName = targetSchemaName;
@@ -279,11 +280,13 @@ public class ConfigurationAdaptor {
 					
 					List transformationUnits = transformation.getTransformationUnits();
 					for (int k = 0; k < transformationUnits.size(); k++){
-						TransformationUnit transformationUnit = (TransformationUnit) transformationUnits.get(k);
+						TransformationUnitBase transformationUnit = (TransformationUnitBase) transformationUnits.get(k);
 					
 						if (!transformationUnit.getCentralColumnNames().equals("")) centralColumnNames = transformationUnit.getCentralColumnNames().split(",");
 						if (!transformationUnit.getCentralColumnAliases().equals("")) centralColumnAliases = transformationUnit.getCentralColumnAliases().split(",");
 					
+						
+						//db interaction
 						startTable= resolver.getCentralTable(transformation.getCentralTable(),centralColumnNames,centralColumnAliases);
 						transformationCode.startTable = startTable;
 					
@@ -302,7 +305,7 @@ public class ConfigurationAdaptor {
 				
 				
                 
-						TUnit dunit= null;
+						TransformationUnit dunit= null;
 						Table refTable = null;
 				
 						if (!transformationUnit.getReferencedTable().equals("")) {
@@ -310,6 +313,9 @@ public class ConfigurationAdaptor {
 							 // switched off fileEntries[5].toLowerCase for oracle
 							// "main_interim" name needs to be a centrally settable param
 							// config file, ConfigurationAdaptor and DatasetCode.
+							
+							// db interaction
+							
 							if (!transformationUnit.getReferencedTable().equals("main_interim")) {
 								refTable = resolver.getTableColumns(transformationUnit.getReferencedTable(), columnNames, columnAliases);
 								refTable.type="temp";
@@ -327,14 +333,14 @@ public class ConfigurationAdaptor {
 								refTable.central_extension = transformationUnit.getCentralProjection();
 					
 					
-							dunit = new TUnitDouble(refTable);
+							dunit = new TransformationUnitDouble(refTable);
 						}
 						 else {
                  	
 							if (!transformationUnit.getCentralProjection().equals(""))
 								startTable.central_extension = transformationUnit.getCentralProjection();
                  	
-							dunit = new TUnitSingle(startTable);
+							dunit = new TransformationUnitSingle(startTable);
 							dunit.type="partition";
 						 }
 				
@@ -397,19 +403,19 @@ public class ConfigurationAdaptor {
 
 		int indexNo = 0;
 		for (int m = 0; m < mart.size(); m++) {
-			datasetCode = (DatasetCode) mart.get(m);	
+			datasetCode = (Dataset) mart.get(m);	
 			
 			datasetCode.transform();
 			
 		    indexNo++;
-			TransformationCode[] final_transformations = datasetCode.getTransformations();		
+			Transformation[] final_transformations = datasetCode.getAllTransformations();		
 		
 		// Dump to SQL
 		for (int i = 0; i < final_transformations.length; i++) {
 
 			indexNo = 10 + indexNo;
 
-			TUnit[] units = final_transformations[i].getUnits();
+			TransformationUnit[] units = final_transformations[i].getUnits();
 
 			sqlout.write("\n--\n--       TRANSFORMATION NO "
 					+ final_transformations[i].number + "      TARGET TABLE: "
@@ -435,7 +441,7 @@ public class ConfigurationAdaptor {
 
 			indexNo = 10 + indexNo;
 
-			TUnit[] units = final_transformations[i].getUnits();
+			TransformationUnit[] units = final_transformations[i].getUnits();
 
 			for (int j = 0; j < units.length; j++) {
 				if (!(units[j].tempEnd.getName().matches(".*TEMP.*"))) {

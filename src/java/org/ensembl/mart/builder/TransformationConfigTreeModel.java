@@ -21,7 +21,11 @@ package org.ensembl.mart.builder;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
-import org.ensembl.mart.builder.config.*;
+import org.ensembl.mart.builder.lib.BaseConfigurationObject;
+import org.ensembl.mart.builder.lib.DatasetBase;
+import org.ensembl.mart.builder.lib.TransformationBase;
+import org.ensembl.mart.builder.lib.TransformationConfig;
+import org.ensembl.mart.builder.lib.TransformationUnitBase;
 
 /**
  * Class TransformationConfigTreeModel extends DefaultTreeModel.
@@ -61,26 +65,29 @@ public class TransformationConfigTreeModel extends DefaultTreeModel {
 		start = childClassName.lastIndexOf(".") + 1;
 		finish = childClassName.length();
 		String childName = childClassName.substring(start, finish);
+		
+		System.out.println("from reload");
+		
 
-		if (parentClassName.equals("org.ensembl.mart.builder.config.TransformationConfig")) {
-			if (childClassName.equals("org.ensembl.mart.builder.config.Dataset")) {
+		if (parentClassName.equals("org.ensembl.mart.builder.lib.TransformationConfig")) {
+			if (childClassName.equals("org.ensembl.mart.builder.lib.DatasetBase")) {
 				config = (TransformationConfig) parentNode.getUserObject();
 				System.out.println("MODEL: ADDING DATASET");
-				config.addDataset((Dataset) editingNode.getUserObject());
+				config.addDataset((DatasetBase) editingNode.getUserObject());
 				//config.removeAttributePage();
 
 			} 
-		} else if (parentClassName.equals("org.ensembl.mart.builder.config.Dataset")) {
-			if (childClassName.equals("org.ensembl.mart.builder.config.Transformation")) {
-				Dataset fp = (Dataset) parentNode.getUserObject();
+		} else if (parentClassName.equals("org.ensembl.mart.builder.lib.DatasetBase")) {
+			if (childClassName.equals("org.ensembl.mart.builder.lib.TransformationBase")) {
+				DatasetBase fp = (DatasetBase) parentNode.getUserObject();
 				System.out.println("MODEL: ADDING TRANSFORMATION");
-				fp.addTransformation((Transformation) editingNode.getUserObject());
+				fp.addTransformation((TransformationBase) editingNode.getUserObject());
 			}
-		} else if (parentClassName.equals("org.ensembl.mart.builder.config.Transformation")) {
-			if (childClassName.equals("org.ensembl.mart.builder.config.TransformationUnit")) {
-				Transformation fp = (Transformation) parentNode.getUserObject();
+		} else if (parentClassName.equals("org.ensembl.mart.builder.lib.TransformationBase")) {
+			if (childClassName.equals("org.ensembl.mart.builder.lib.TransformationUnitBase")) {
+				TransformationBase fp = (TransformationBase) parentNode.getUserObject();
 				System.out.println("MODEL: ADDING TUNIT");
-				fp.addTransformationUnit((TransformationUnit) editingNode.getUserObject());
+				fp.addTransformationUnit((TransformationUnitBase) editingNode.getUserObject());
 			}
 		} 
 		super.reload(parentNode);
@@ -98,34 +105,34 @@ public class TransformationConfigTreeModel extends DefaultTreeModel {
 
 		//index is a Node index. objectIndex may be different
 		int objIndex = index - TransformationConfigTreeNode.getHeterogenousOffset(parent, child);
-		if (parent instanceof org.ensembl.mart.builder.config.TransformationConfig) {
-			if (child instanceof org.ensembl.mart.builder.config.Dataset) {
+		if (parent instanceof org.ensembl.mart.builder.lib.TransformationConfig) {
+			if (child instanceof org.ensembl.mart.builder.lib.DatasetBase) {
 				config = (TransformationConfig) parentNode.getUserObject();
 				System.out.println("MODEL: INSERTING DATASET");
-				config.insertDataset(objIndex, (Dataset) editingNode.getUserObject());
+				config.insertDataset(objIndex, (DatasetBase) editingNode.getUserObject());
 
 			} else {
 				String error_string = "Error: " + childName + " cannot be inserted in a TransformationConfig.";
 				return error_string;
 			}
-		} else if (parent instanceof org.ensembl.mart.builder.config.Dataset) {
-			if (child instanceof org.ensembl.mart.builder.config.Transformation) {
-				Dataset fp = (Dataset) parentNode.getUserObject();
-				fp.insertTransformation(objIndex, (Transformation) editingNode.getUserObject());
+		} else if (parent instanceof org.ensembl.mart.builder.lib.DatasetBase) {
+			if (child instanceof org.ensembl.mart.builder.lib.TransformationBase) {
+				DatasetBase fp = (DatasetBase) parentNode.getUserObject();
+				fp.insertTransformation(objIndex, (TransformationBase) editingNode.getUserObject());
 			} else {
 				String error_string = "Error: " + childName + " cannot be inserted in a Transformation.";
 				return error_string;
 			}
-		}  else if (parent instanceof org.ensembl.mart.builder.config.Transformation) {
-			if (child instanceof org.ensembl.mart.builder.config.TransformationUnit) {
-				Transformation fp = (Transformation) parentNode.getUserObject();
-				fp.insertTransformationUnit(objIndex, (TransformationUnit) editingNode.getUserObject());
+		}  else if (parent instanceof org.ensembl.mart.builder.lib.TransformationBase) {
+			if (child instanceof org.ensembl.mart.builder.lib.TransformationUnitBase) {
+				TransformationBase fp = (TransformationBase) parentNode.getUserObject();
+				fp.insertTransformationUnit(objIndex, (TransformationUnitBase) editingNode.getUserObject());
 			} else {
 				String error_string = "Error: " + childName + " cannot be inserted in a Transformation.";
 				return error_string;
 			}
 		} 
-		else if (parent instanceof org.ensembl.mart.builder.config.TransformationUnit) {
+		else if (parent instanceof org.ensembl.mart.builder.lib.TransformationUnitBase) {
 			String error_string = "Error: TransformationUnit is a leaf node, no insertions are allowed.";
 			return error_string;
 		}
@@ -136,20 +143,20 @@ public class TransformationConfigTreeModel extends DefaultTreeModel {
 	public void removeNodeFromParent(TransformationConfigTreeNode node) {
 		Object child = node.getUserObject();
 		Object parent = ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-		if (parent instanceof org.ensembl.mart.builder.config.TransformationConfig) {
-			if (child instanceof org.ensembl.mart.builder.config.Dataset) {
+		if (parent instanceof org.ensembl.mart.builder.lib.TransformationConfig) {
+			if (child instanceof org.ensembl.mart.builder.lib.DatasetBase) {
 				config = (TransformationConfig) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-				config.removeDataset((Dataset) node.getUserObject());
+				config.removeDataset((DatasetBase) node.getUserObject());
 			} 
-		}  else if (parent instanceof org.ensembl.mart.builder.config.Dataset) {
-			if (child instanceof org.ensembl.mart.builder.config.Transformation) {
-				Dataset fp = (Dataset) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-				fp.removeTransformation((Transformation) node.getUserObject());
+		}  else if (parent instanceof org.ensembl.mart.builder.lib.DatasetBase) {
+			if (child instanceof org.ensembl.mart.builder.lib.TransformationBase) {
+				DatasetBase fp = (DatasetBase) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
+				fp.removeTransformation((TransformationBase) node.getUserObject());
 			}
-		} else if (parent instanceof org.ensembl.mart.builder.config.Transformation) {
-			if (child instanceof org.ensembl.mart.builder.config.TransformationUnit) {
-				Transformation fp = (Transformation) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-				fp.removeTransformationUnit((TransformationUnit) node.getUserObject());
+		} else if (parent instanceof org.ensembl.mart.builder.lib.TransformationBase) {
+			if (child instanceof org.ensembl.mart.builder.lib.TransformationUnitBase) {
+				TransformationBase fp = (TransformationBase) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
+				fp.removeTransformationUnit((TransformationUnitBase) node.getUserObject());
 			}
 		} 
 		super.removeNodeFromParent(node);

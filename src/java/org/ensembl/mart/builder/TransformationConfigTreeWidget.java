@@ -40,7 +40,11 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 
 //import org.ensembl.mart.lib.config.AttributePage;
 
-import org.ensembl.mart.builder.config.*;
+import org.ensembl.mart.builder.lib.BaseConfigurationObject;
+import org.ensembl.mart.builder.lib.DatasetBase;
+import org.ensembl.mart.builder.lib.InputSourceUtil;
+import org.ensembl.mart.builder.lib.TransformationConfig;
+import org.ensembl.mart.builder.lib.TransformationConfigXMLUtils;
 import org.ensembl.mart.lib.config.ConfigurationException;
 /**
  * TransformationConfigTreeWidget extends internal frame.
@@ -81,7 +85,7 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
             	  if (schema == null){	
                     config = new TransformationConfig("new");
                     //config.setDSConfigAdaptor(new SimpleDSConfigAdaptor(config)); //prevents lazyLoading
-                    config.addDataset(new Dataset("new","mainTable"));
+                    config.addDataset(new DatasetBase("new","mainTable"));
             	  }
             	  
             	  //else{  NAIVE CREATION	
@@ -116,6 +120,9 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
 				// new code without using adaptor
 				TransformationConfigXMLUtils xmlUtils = new TransformationConfigXMLUtils();
 				config = xmlUtils.getTransformationConfigForXMLStream(InputSourceUtil.getStreamForURL(url));
+				
+				System.out.println("config "+config.getInternalName());
+				
 				xmlUtils.loadTransformationConfigWithDocument( config, xmlUtils.getDocumentForXMLStream( InputSourceUtil.getStreamForURL( url ) ) );
 				
 				

@@ -53,7 +53,12 @@ import org.ensembl.mart.explorer.Feedback;
 import org.ensembl.mart.guiutils.DatabaseSettingsDialog;
 import org.ensembl.mart.lib.DetailedDataSource;
 
-import org.ensembl.mart.builder.config.TransformationConfig;
+import org.ensembl.mart.builder.lib.ConfigurationAdaptor;
+import org.ensembl.mart.builder.lib.DatabaseAdaptor;
+import org.ensembl.mart.builder.lib.MetaDataAdaptor;
+import org.ensembl.mart.builder.lib.MetaDataAdaptorFKNotSupported;
+import org.ensembl.mart.builder.lib.MetaDataAdaptorFKSupported;
+import org.ensembl.mart.builder.lib.TransformationConfig;
 //import org.ensembl.mart.builder.config.TransformationConfigXMLUtils;
 
 
@@ -100,7 +105,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
   private String database;
   private String schema;
   private static String connection;
-  private static MetaDataResolver resolver;  
+  private static MetaDataAdaptor resolver;  
 
   /** Persistent preferences object used to hold user history. */
   private Preferences prefs = Preferences.userNodeForPackage(this.getClass());
@@ -726,11 +731,11 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	//MetaDataResolver Resolver = null;
 
 	if (adaptor.rdbms.equals("mysql")) {
-		resolver = new MetaDataResolverFKNotSupported(adaptor);
+		resolver = new MetaDataAdaptorFKNotSupported(adaptor);
 	} else if (adaptor.rdbms.equals("oracle")) {
-		resolver = new MetaDataResolverFKSupported(adaptor);
+		resolver = new MetaDataAdaptorFKSupported(adaptor);
 	} else if (adaptor.rdbms.equals("postgresql")) {
-		resolver = new MetaDataResolverFKSupported(adaptor);
+		resolver = new MetaDataAdaptorFKSupported(adaptor);
 	}
 
 	//resolver = Resolver;

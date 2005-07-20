@@ -16,14 +16,14 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
 
-package org.ensembl.mart.builder.config;
+package org.ensembl.mart.builder.lib;
 import org.ensembl.mart.lib.config.ConfigurationException;
 /**
  * Contains all of the information for the UI to display a TransformationUnit
  * 
  * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
  */
-public class TransformationUnit extends BaseNamedConfigurationObject {
+public class TransformationUnitBase extends BaseNamedConfigurationObject {
 
   private final String referencingTypeKey        = "referencingType";
   private final String primaryKeyKey             = "primaryKey";
@@ -43,7 +43,7 @@ public class TransformationUnit extends BaseNamedConfigurationObject {
    * Copy constructor. Constructs an exact copy of an existing TransformationUnit.
    * @param a TransformationUnit to copy.
    */
-  public TransformationUnit(TransformationUnit a) {
+  public TransformationUnitBase(TransformationUnitBase a) {
     super(a);
   }
 
@@ -51,7 +51,7 @@ public class TransformationUnit extends BaseNamedConfigurationObject {
    * Empty Constructor should only be used by MartBuilder
    *
    */
-  public TransformationUnit() {
+  public TransformationUnitBase() {
     super();
 	setAttribute(referencingTypeKey, null);
     setAttribute(primaryKeyKey, null);
@@ -72,7 +72,7 @@ public class TransformationUnit extends BaseNamedConfigurationObject {
    * @param internalName String name to internally represent the TransformationUnit. Must not be null or empty
    * @throws ConfigurationException when values are null or empty.
    */
-  public TransformationUnit(String internalName)
+  public TransformationUnitBase(String internalName)
     throws ConfigurationException {
     this(internalName, "", "", "", "", "", "", "","","","","");
   }
@@ -93,7 +93,7 @@ public class TransformationUnit extends BaseNamedConfigurationObject {
    * @param central column aliases
    * @throws ConfigurationException when required parameters are null or empty
    */
-  public TransformationUnit(
+  public TransformationUnitBase(
     String internalName,
 	String referencingType,
 	String primaryKey,
@@ -226,8 +226,8 @@ public class TransformationUnit extends BaseNamedConfigurationObject {
    * Allows Equality Comparisons of TransformationUnit objects
    */
   public boolean equals(Object o) {
-    return o instanceof TransformationUnit
-      && hashCode() == ((TransformationUnit) o).hashCode();
+    return o instanceof TransformationUnitBase
+      && hashCode() == ((TransformationUnitBase) o).hashCode();
   }
 
 }

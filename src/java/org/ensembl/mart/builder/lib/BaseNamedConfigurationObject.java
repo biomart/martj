@@ -16,7 +16,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
 
-package org.ensembl.mart.builder.config;
+package org.ensembl.mart.builder.lib;
 import org.ensembl.mart.lib.config.ConfigurationException;
 /**
  * Basic Object from which all named Configuration Objects inherit.

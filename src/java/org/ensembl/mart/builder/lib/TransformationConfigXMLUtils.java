@@ -16,7 +16,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
 
-package org.ensembl.mart.builder.config;
+package org.ensembl.mart.builder.lib;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -121,29 +121,37 @@ public class TransformationConfigXMLUtils {
 	List transformationElements = thisElement.getChildren();		
 	for (int i = 0; i < transformationElements.size(); i++){
 		Element e = (Element) transformationElements.get(i);
-		if (e.getName().equals(DATASET))
+		if (e.getName().equals(DATASET)){
 			dsv.addDataset(getDataset(e));
+		System.out.println("adding dataset "+e.getName());	
+		}
 				
 	}	
   }
 
 
-  private Dataset getDataset(Element thisElement) throws ConfigurationException {
-	Dataset ap = new Dataset();
+  private DatasetBase getDataset(Element thisElement) throws ConfigurationException {
+	DatasetBase ap = new DatasetBase();
 	loadAttributesFromElement(thisElement, ap);
 
 	List transformationElements = thisElement.getChildren();		
 	for (int i = 0; i < transformationElements.size(); i++){
+		
+		System.out.println("getting childern");
+		
 		Element e = (Element) transformationElements.get(i);
-		if (e.getName().equals(TRANSFORMATION))
+		if (e.getName().equals(TRANSFORMATION)){
 			ap.addTransformation(getTransformation(e));
+			
+		System.out.println("matching names");	
+		}
 				
 	}	
 	return ap;
   }
 
-  private Transformation getTransformation(Element thisElement) throws ConfigurationException {
-	Transformation a = new Transformation();
+  private TransformationBase getTransformation(Element thisElement) throws ConfigurationException {
+	TransformationBase a = new TransformationBase();
 	loadAttributesFromElement(thisElement, a);
 	
 	List tunitElements = thisElement.getChildren();		
@@ -157,8 +165,8 @@ public class TransformationConfigXMLUtils {
   }
 
 
-  private TransformationUnit getTransformationUnit(Element thisElement) throws ConfigurationException {
-	TransformationUnit a = new TransformationUnit();
+  private TransformationUnitBase getTransformationUnit(Element thisElement) throws ConfigurationException {
+	TransformationUnitBase a = new TransformationUnitBase();
 	loadAttributesFromElement(thisElement, a);
 	return a;
   }
@@ -250,7 +258,7 @@ public class TransformationConfigXMLUtils {
     Element root = new Element(TRANSFORMATIONCONFIG);
     loadElementAttributesFromObject(dsconfig, root);
 
-    Dataset[] apages = dsconfig.getDatasets();
+    DatasetBase[] apages = dsconfig.getDatasets();
     for (int i = 0, n = apages.length; i < n; i++)
       root.addContent(getDatasetElement(apages[i]));
 
@@ -260,22 +268,22 @@ public class TransformationConfigXMLUtils {
     return thisDoc;
   }
 
-  private Element getDatasetElement(Dataset apage) {
+  private Element getDatasetElement(DatasetBase apage) {
     Element page = new Element(DATASET);
     loadElementAttributesFromObject(apage, page);
 
-    Transformation[] groups = apage.getTransformations();
+    TransformationBase[] groups = apage.getTransformations();
     for (int i = 0; i < groups.length;i++) {
       Object group = groups[i];
-      if (group instanceof Transformation)
-        page.addContent(getTransformationElement((Transformation) group));
+      if (group instanceof TransformationBase)
+        page.addContent(getTransformationElement((TransformationBase) group));
       
     }
 
     return page;
   }
 
-  private Element getTransformationElement(Transformation attribute) {
+  private Element getTransformationElement(TransformationBase attribute) {
     Element att = new Element(TRANSFORMATION);
     loadElementAttributesFromObject(attribute, att);
     return att;
