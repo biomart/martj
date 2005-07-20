@@ -45,6 +45,16 @@ public class DatasetBase extends BaseNamedConfigurationObject {
   }
 
   /**
+   * Constructor for an Transformation represented by internalName internally.
+   * 
+   * @param internalName String name to internally represent the Transformation
+   */
+  public DatasetBase(String internalName) throws ConfigurationException {
+	  this(internalName,"");
+  }
+
+
+  /**
    * Constructs a Dataset named by internalName.
    * internalName is a single word that references this dataset, 
    * used to get the dataset from the TransformationConfiguration by name.
