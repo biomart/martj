@@ -42,7 +42,7 @@ import org.ensembl.mart.builder.lib.TransformationConfig;
  * <p>This class is written for the attributes table to implement auscroll
  * </p>
  *
- * @author <a href="mailto:katerina@ebi.ac.uk">Katerina Tzouvara</a>
+ * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
  * //@see org.ensembl.mart.config.DatasetConfig
  */
 
@@ -55,7 +55,6 @@ public class TransformationConfigAttributesTable extends JTable implements Autos
      protected TransformationConfig dsConfig = null;
 
      public TransformationConfigAttributesTable(TransformationConfig dsConfig, JInternalFrame frame) {
-        //super(new DatasetConfigAttributeTableModel());
         super(null);
         this.dsConfig = dsConfig;
         this.frame = frame;
@@ -66,8 +65,7 @@ public class TransformationConfigAttributesTable extends JTable implements Autos
 		
 		TransformationConfigAttributeTableModel model = (TransformationConfigAttributeTableModel) this.getModel();
 		int[] requiredFields = model.getRequiredFields();
-				
-				
+						
 		for (int i = 0; i < requiredFields.length; i++){
 			if (row == requiredFields[i]){
 				DefaultTableCellRenderer newCellR = new DefaultTableCellRenderer();
@@ -77,7 +75,6 @@ public class TransformationConfigAttributesTable extends JTable implements Autos
 		}
 		return getDefaultRenderer(getColumnClass(column));	
 	}
-
 
      // Autoscrolling support
     public void setScrollInsets(Insets insets) {

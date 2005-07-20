@@ -25,7 +25,6 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.io.File;
 import java.net.URL;
-import javax.swing.JOptionPane;
 import javax.swing.ImageIcon;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
@@ -246,10 +245,6 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
            tree.save_as();
        }
 
-	//public void export() throws ConfigurationException{
-	//    tree.export();
-	//}
-
     public void cut(){
         tree.cut();
     }
@@ -309,22 +304,7 @@ class CloseListener implements InternalFrameListener {
 	public void internalFrameDeactivated(InternalFrameEvent e) {
 	}
 	public void internalFrameClosing(InternalFrameEvent e){
-		//try{
-		//	TransformationConfigTreeWidget dw = (TransformationConfigTreeWidget) e.getInternalFrame();
-		//	if (!MartEditor.getDatabaseDatasetConfigUtils().isDatasetConfigChanged(null,dw.getDatasetConfig())){// current and db out of synch
-		//		int returnType = JOptionPane.showConfirmDialog(null,"Close?","Changes not exported",JOptionPane.OK_CANCEL_OPTION);
-		//		if (returnType == 0){
-		//			e.getInternalFrame().dispose();
-		//		}
-		//	}
-		//	else{
-		//		e.getInternalFrame().dispose();
-		//	}
-		//}
-		//catch(Exception exc){
-			// connection changed already
-		//	e.getInternalFrame().dispose();
-		//}
+		e.getInternalFrame().dispose();
 	}
 }
 

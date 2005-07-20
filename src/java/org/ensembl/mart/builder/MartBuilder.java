@@ -21,6 +21,7 @@ package org.ensembl.mart.builder;
 import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Color;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
@@ -32,7 +33,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.prefs.Preferences;
 
 import java.util.Hashtable;
@@ -59,7 +59,6 @@ import org.ensembl.mart.builder.lib.MetaDataAdaptor;
 import org.ensembl.mart.builder.lib.MetaDataAdaptorFKNotSupported;
 import org.ensembl.mart.builder.lib.MetaDataAdaptorFKSupported;
 import org.ensembl.mart.builder.lib.TransformationConfig;
-//import org.ensembl.mart.builder.config.TransformationConfigXMLUtils;
 
 
 /**
@@ -68,15 +67,14 @@ import org.ensembl.mart.builder.lib.TransformationConfig;
  * <p>This class contains the main function, it draws the external frame, toolsbar, menus.
  * </p>
  *
- * @author <a href="mailto:katerina@ebi.ac.uk">Katerina Tzouvara</a>
- * //@see org.ensembl.mart.config.TransformationConfig
+ * @author <a href="mailto:katerina@ebi.ac.uk">Damian Smedley</a>
+ * //@see org.ensembl.mart.builder.lib.TransformationConfig
  */
 
 public class MartBuilder extends JFrame implements ClipboardOwner {
 
   private JDesktopPane desktop;
-  static private final String newline = "\n";
-  private static final String data_dir = "data/builder/";
+  static final private String data_dir = "data/builder/";
   
   private JFileChooser fc;
   final static String IMAGE_DIR = "data/image/";
@@ -91,14 +89,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
   static final private String REDO = "Redo";
   static final private String HELP = "Copy";
   private File file = null;
-
-  static private DetailedDataSource ds;
-  
-  //private static TransformationConfigXMLUtils dscutils = new TransformationConfigXMLUtils(true);
-  
-  //private static DatabaseTransformationConfigUtils dbutils;
-  
-  private static Hashtable dbutilsHash = new Hashtable();
+ 
+  //private static Hashtable dbutilsHash = new Hashtable();
   
 
   static private String user;
@@ -115,92 +107,25 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 
   public MartBuilder() {
 	
-//	autoconnect on startup
-	super("MartBuilder");
-	
-		 /*String defaultSourceName = databaseDialog.getConnectionName();
-
-				 if (defaultSourceName == null || defaultSourceName.length() < 1)
-				   defaultSourceName =
-					 defaultSourceName =
-					   DetailedDataSource.defaultName(
-						 databaseDialog.getHost(),
-						 databaseDialog.getPort(),
-						 databaseDialog.getDatabase(),
-						 databaseDialog.getSchema(),
-						 databaseDialog.getUser());
-
-				 ds =
-				   new DetailedDataSource(
-					 databaseDialog.getDatabaseType(),
-					 databaseDialog.getHost(),
-					 databaseDialog.getPort(),
-					 databaseDialog.getDatabase(),
-					 databaseDialog.getSchema(),
-					 databaseDialog.getUser(),
-					 databaseDialog.getPassword(),
-					 10,
-					 databaseDialog.getDriver(),
-					 defaultSourceName);
-			     */
+  	//	autoconnect on startup
+  	super("MartBuilder");
 			     
-			     adaptor = new DatabaseAdaptor(databaseDialog.getDriver(),
-	                                                            databaseDialog.getUser(),
-																databaseDialog.getPassword(),
-																databaseDialog.getHost(),
-																databaseDialog.getPort(),
-																databaseDialog.getDatabase(),
-																databaseDialog.getSchema(),
-																""	                                                            
-	                                                	            );
-				 Connection conn = adaptor.getCon();
-				 connection = "MartBuilder (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";
+  	adaptor = new DatabaseAdaptor(databaseDialog.getDriver(),
+	                              databaseDialog.getUser(),
+							      databaseDialog.getPassword(),
+								  databaseDialog.getHost(),
+								  databaseDialog.getPort(),
+								  databaseDialog.getDatabase(),
+								  databaseDialog.getSchema(),
+							      "");
+    Connection conn = adaptor.getCon();
+	connection = "MartBuilder (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";
 				   
-				 user = databaseDialog.getUser();
-				 database = databaseDialog.getDatabase();  
+	user = databaseDialog.getUser();
+	database = databaseDialog.getDatabase();  
 				   
-				 /*try {
-				   conn = ds.getConnection();
-				   //dbutils = new DatabaseTransformationConfigUtils(dscutils, ds);
-					connection = "MartBuilder (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";
-				   //valid = true;
-				   /*String[] schemas = databaseDialog.getSchema().split(";");
-				   for (int i = 0; i < schemas.length; i++){
-				   		DetailedDataSource ds1 = 
-										new DetailedDataSource(
-										 databaseDialog.getDatabaseType(),
-										 databaseDialog.getHost(),
-										 databaseDialog.getPort(),
-										 schemas[i],
-										 databaseDialog.getSchema(),
-										 databaseDialog.getUser(),
-										 databaseDialog.getPassword(),
-										 10,
-										 databaseDialog.getDriver(),
-										 defaultSourceName);
-					    DatabaseTransformationConfigUtils dbutils1 = new DatabaseTransformationConfigUtils(new TransformationConfigXMLUtils(true), ds1);
-				   		dbutilsHash.put(schemas[i],dbutils1);
-				   } 
-				   
-				   
-				   
-				 } catch (SQLException e) {
-				 	ds = null;
-					connection = "MartBuilder (NO DATABASE CONNECTION)";	
-				   //System.out.println(e.toString()); 	
-				   //warning dialog then retry
-				   //Feedback f = new Feedback(this);
-				   //f.warning("Could not connect to Database\nwith the given Connection Settings.\nPlease try again!");
-				   //valid = false;
-				 } finally {
-				   DetailedDataSource.close(conn);
-				 }*/
     JFrame.setDefaultLookAndFeelDecorated(true);
     fc = new JFileChooser();
-
-    //Create the toolbar.
-    //JToolBar toolBar = new JToolBar("Still draggable");
-    //addButtons(toolBar);// buttons don't work at the moment
 
     //Make the big window be indented 50 pixels from each edge
     //of the screen.
@@ -210,7 +135,6 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 
     //Set up the GUI.
     this.getContentPane().setLayout(new BorderLayout());
-    //this.getContentPane().add(toolBar, BorderLayout.NORTH);
 
     desktop = new JDesktopPane();
     
@@ -219,66 +143,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	
     //Make dragging a little faster but perhaps uglier.
     desktop.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE);
-
+    
     clipboardEditor = new Clipboard("editor_clipboard");
-
-	
-
-
-  }
-
-  protected void addButtons(JToolBar toolBar) {
-    JButton button = null;
-
-    //first button
-    button = makeNavigationButton("new", NEW, "Create a new dataset config", "new");
-    toolBar.add(button);
-
-    //second button
-    button = makeNavigationButton("open", OPEN, "Open a dataset config", "open");
-    toolBar.add(button);
-
-    //third button
-    button = makeNavigationButton("save", SAVE, "Save dataset config", "save");
-    toolBar.add(button);
-
-    button = makeNavigationButton("copy", COPY, "Copy a tree node", "copy");
-    toolBar.add(button);
-
-    button = makeNavigationButton("cut", CUT, "Cut a tree node", "cut");
-    toolBar.add(button);
-
-    button = makeNavigationButton("paste", PASTE, "Paste tree node", "paste");
-    toolBar.add(button);
-
-    button = makeNavigationButton("undo", UNDO, "Undo", "undo");
-    toolBar.add(button);
-
-    button = makeNavigationButton("redo", REDO, "Redo", "redo");
-    toolBar.add(button);
-
-  }
-
-  protected JButton makeNavigationButton(String imageName, String actionCommand, String toolTipText, String altText) {
-    //Look for the image.
-    String imgLocation = IMAGE_DIR + imageName + ".gif";
-    URL imageURL = TransformationConfigTree.class.getClassLoader().getResource(imgLocation);
-
-    //Create and initialize the button.
-    JButton button = new JButton();
-    button.setBorderPainted(false);
-    button.setActionCommand(actionCommand);
-    button.setToolTipText(toolTipText);
-    button.addActionListener(new MenuActionListener());
-
-    if (imageURL != null) { //image found
-      button.setIcon(new ImageIcon(imageURL, altText));
-    } else { //no image found
-      button.setText(altText);
-      System.err.println("Resource not found: " + imgLocation);
-    }
-
-    return button;
   }
 
   protected JMenuBar createMenuBar() {
@@ -291,7 +157,6 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 
     //Build the first menu.
     menu = new JMenu("File");
-    //menu.setMnemonic(KeyEvent.VK_F);
     menu.getAccessibleContext().setAccessibleDescription("the file related menu");
     menuBar.add(menu);
 
@@ -301,22 +166,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
     menuItem = new JMenuItem("Database Connection ");
     MartBuilder.MenuActionListener menuActionListener = new MartBuilder.MenuActionListener();
     menuItem.addActionListener(menuActionListener);
-    //menuItem.setMnemonic(KeyEvent.VK_D);
     menu.add(menuItem);
 
     menu.addSeparator();
-
-    //menuItem = new JMenuItem("Import ");
-    //menuItem.addActionListener(menuActionListener);
-    //menu.add(menuItem);
-
-    //menuItem = new JMenuItem("Export ");
-    //menuItem.addActionListener(menuActionListener);
-    //menu.add(menuItem);
-
-    //menuItem = new JMenuItem("Delete ");
-    //menuItem.addActionListener(menuActionListener);
-    //menu.add(menuItem);
 
     menuItem = new JMenuItem("Create TransformationConfig");
     menuItem.addActionListener(menuActionListener);
@@ -325,30 +177,20 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
     icon = createImageIcon(IMAGE_DIR + "open.gif");
     menuItem = new JMenuItem("Open", icon);
     menuItem.addActionListener(menuActionListener);
-    //menuItem.setMnemonic(KeyEvent.VK_O);
     menu.add(menuItem);
 
     icon = createImageIcon(IMAGE_DIR + "save.gif");
     menuItem = new JMenuItem("Save", icon);
     menuItem.addActionListener(menuActionListener);
-    //menuItem.setMnemonic(KeyEvent.VK_S);
     menu.add(menuItem);
 
     menuItem = new JMenuItem("Save as");
     menuItem.addActionListener(menuActionListener);
-    //menuItem.setMnemonic(KeyEvent.VK_A);
     menu.add(menuItem);
 
 	menuItem = new JMenuItem("Create DDL");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);
-
-    //a group of radio button menu items
-    //menu.addSeparator();
-    //menuItem = new JMenuItem("Print");
-    //menuItem.addActionListener(menuActionListener);
-    //menuItem.setMnemonic(KeyEvent.VK_P);
-    //menu.add(menuItem);
 
     //a group of check box menu items
     menu.addSeparator();
@@ -401,27 +243,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
     menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
     menuItem.getAccessibleContext().setAccessibleDescription("deletes");
     menu.add(menuItem);
-    // insert does nothing at moment
-    //icon = createImageIcon(IMAGE_DIR + "add.gif");
-    //menuItem = new JMenuItem("Insert", icon);
-    //menuItem.addActionListener(menuActionListener);
-    //menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
-    //menuItem.getAccessibleContext().setAccessibleDescription("inserts");
-    //menu.add(menuItem);
 
-    /**
-    menu = new JMenu("Settings");
-    JMenuItem clear = new JMenuItem("Clear Cache");
-    clear.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-
-
-
-      }
-    });
-    menu.add(clear);
-    menuBar.add(menu);
-*/
     //Build help menu in the menu bar.
     icon = createImageIcon(IMAGE_DIR + "help.gif");
     menu = new JMenu("Help");
@@ -430,12 +252,10 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
     menuBar.add(menu);
     menuItem = new JMenuItem("Documentation", icon);
     menuItem.addActionListener(menuActionListener);
-    //menuItem.setMnemonic(KeyEvent.VK_M); //used constructor instead
     menuItem.getAccessibleContext().setAccessibleDescription("documentation");
     menu.add(menuItem);
     menuItem = new JMenuItem("About...");
     menuItem.addActionListener(menuActionListener);
-    //menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
     menuItem.getAccessibleContext().setAccessibleDescription("inserts");
     menu.add(menuItem);
 
@@ -513,8 +333,6 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
         insert();
       else if (e.getActionCommand().equals("Delete"))
         delete();
-      else if (e.getActionCommand().startsWith("New"))
-        newTransformationConfig();
       else if (e.getActionCommand().startsWith("Open"))
         openTransformationConfig();
       else if (e.getActionCommand().equals("Exit"))
@@ -529,26 +347,12 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
         redo();
       else if (e.getActionCommand().startsWith("Database"))
         databaseConnection();
-      else if (e.getActionCommand().startsWith("Import")){
-        //importTransformationConfig();
-      }
-      else if (e.getActionCommand().startsWith("Export")){
-        //exportTransformationConfig();
-      }
       else if (e.getActionCommand().startsWith("Create TransformationConfig")){
         //naiveTransformationConfig();
       }
 	  else if (e.getActionCommand().startsWith("Create DDL")){
 		createDDL();
-	  }
-      else if (e.getActionCommand().startsWith("Update")){
-        //updateTransformationConfig();
-      }
-      else if (e.getActionCommand().startsWith("Delete")){
-        //deleteTransformationConfig();
-      }
-      
-
+	  }     
     }
   }
 
@@ -573,10 +377,6 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
     ((TransformationConfigTreeWidget) desktop.getSelectedFrame()).delete();
   }
 
-  public void newTransformationConfig() {
-    createFrame(null);
-  }
-
   public void setFileChooserPath(File file) {
     this.file = file;
   }
@@ -587,14 +387,6 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 
   public void lostOwnership(Clipboard c, Transferable t) {
 
-  }
-
-  public static DetailedDataSource getDetailedDataSource() {
-    return ds;
-  }
-
-  public static String getUser() {
-    return user;
   }
 
   public void databaseConnection() {
@@ -609,14 +401,14 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 
         try {
 			adaptor = new DatabaseAdaptor(databaseDialog.getDriver(),
-													   databaseDialog.getUser(),
-													   databaseDialog.getPassword(),
-													   databaseDialog.getHost(),
-													   databaseDialog.getPort(),
-													   databaseDialog.getDatabase(),
-													   databaseDialog.getSchema(),
-													   ""	                                                            
-														   );
+										  databaseDialog.getUser(),
+									      databaseDialog.getPassword(),
+								          databaseDialog.getHost(),
+										  databaseDialog.getPort(),
+										  databaseDialog.getDatabase(),
+										  databaseDialog.getSchema(),
+										  ""	                                                            
+										  );
 			Connection conn = adaptor.getCon();
 			connection = "MartBuilder (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";
             valid = true;	
@@ -632,69 +424,6 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				valid = false;
 		}
 
-
-        /*String defaultSourceName = databaseDialog.getConnectionName();
-
-        if (defaultSourceName == null || defaultSourceName.length() < 1)
-          defaultSourceName =
-            defaultSourceName =
-              DetailedDataSource.defaultName(
-                databaseDialog.getHost(),
-                databaseDialog.getPort(),
-                databaseDialog.getDatabase(),
-				databaseDialog.getSchema(),
-                databaseDialog.getUser());
-
-        ds =
-          new DetailedDataSource(
-            databaseDialog.getDatabaseType(),
-            databaseDialog.getHost(),
-            databaseDialog.getPort(),
-            databaseDialog.getDatabase(),
-			databaseDialog.getSchema(),
-            databaseDialog.getUser(),
-            databaseDialog.getPassword(),
-            10,
-            databaseDialog.getDriver(),
-            defaultSourceName);
-        user = databaseDialog.getUser();
-        database = databaseDialog.getDatabase();
-        
-        Connection conn = null;
-        try {
-          conn = ds.getConnection();
-          //dbutils = new DatabaseTransformationConfigUtils(dscutils, ds);
-          valid = true;
-          connection = "MartBuilder (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";		  
-        
-		  String[] schemas = databaseDialog.getSchema().split(";");
-		  for (int i = 0; i < schemas.length; i++){
-				DetailedDataSource ds1 = new DetailedDataSource(
-												   databaseDialog.getDatabaseType(),
-												   databaseDialog.getHost(),
-												   databaseDialog.getPort(),
-												   schemas[i],
-												   databaseDialog.getSchema(),
-												   databaseDialog.getUser(),
-												   databaseDialog.getPassword(),
-												   10,
-												   databaseDialog.getDriver(),
-												   defaultSourceName);
-				//DatabaseTransformationConfigUtils dbutils1 = new DatabaseTransformationConfigUtils(new TransformationConfigXMLUtils(true), ds1);
-				//dbutilsHash.put(schemas[i],dbutils1);
-		  }
-        
-        
-        } catch (SQLException e) {
-          ds = null;	
-          connection = "MartBuilder (NO DATABASE CONNECTION)";	
-          //warning dialog then retry
-          Feedback f = new Feedback(this);
-          f.warning("Could not connect to Database\nwith the given Connection Settings.\nPlease try again!");
-          valid = false;
-        } finally {
-          DetailedDataSource.close(conn);
-        }*/
       }
     } finally {
       setTitle(connection);
@@ -714,21 +443,20 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
       file = fc.getSelectedFile();
       createFrame(file);
       //This is where a real application would open the file.
-      System.out.println("Opening: " + file.getName() + "." + newline);
+      System.out.println("Opening: " + file.getName() + ".\n");
     } else {
-      System.out.println("Open command cancelled by user." + newline);
+      System.out.println("Open command cancelled by user.\n");
     }
 
   }
 
   public void createDDL(){
   	
-  	try{
+   try{
 	String config_info = "";
 	TransformationConfig tConfig = null;
 	String ddlFile = null;
 	String tSchemaName = null;    
-	//MetaDataResolver Resolver = null;
 
 	if (adaptor.rdbms.equals("mysql")) {
 		resolver = new MetaDataAdaptorFKNotSupported(adaptor);
@@ -738,12 +466,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		resolver = new MetaDataAdaptorFKSupported(adaptor);
 	}
 
-	//resolver = Resolver;
-	//tSchemaName = databaseDialog.getSchema();
 	System.out.println("TARG SCHEMA");
 	tSchemaName = JOptionPane.showInputDialog(null,"INPUT TARGET SCHEMA");
-	//String file = JOptionPane.showInputDialog(null,"INPUT CONFIG FILE:");
-	//file = data_dir + file;
 	
 	// read the XML from the open frame rather than inputing a file
 	disableCursor();
@@ -755,19 +479,15 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	}
 
 	tConfig = ((TransformationConfigTreeWidget) selectedFrame).getTransformationConfig();
-
 	
 	ddlFile = JOptionPane.showInputDialog(null,"OUTPUT DDL>> FILE:");
 	File sFile = new File(ddlFile);
-	sFile.delete();
-		
+	sFile.delete();// does not seem to be working
 		
 	ConfigurationAdaptor configAdaptor = new ConfigurationAdaptor();
 	configAdaptor.adaptor=adaptor;
 	configAdaptor.resolver=resolver;
-	configAdaptor.targetSchemaName=tSchemaName;
-	
-	//configAdaptor.readConfiguration("data/builder/ensembl.config");		
+	configAdaptor.targetSchemaName=tSchemaName;	
 	configAdaptor.readXMLConfiguration(tConfig);
 	configAdaptor.writeDDL(ddlFile);
 		
@@ -777,196 +497,6 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
   		System.out.println("IO Exception:" + e.toString());
   	}
   }
-
-
-/*
-  public void importTransformationConfig() {
-    try {
-      if (ds == null) {
-        JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
-        return;
-      }
-
-      disableCursor();
-
-      String[] datasets = dbutils.getAllDatasetNames(user);
-      if (datasets.length == 0){
-		JOptionPane.showMessageDialog(this, "No datasets in this database", "ERROR", 0);
-				return;
-      }
-         String dataset =
-        (String) JOptionPane.showInputDialog(
-          null,
-          "Choose one",
-          "DatasetCode config",
-          JOptionPane.INFORMATION_MESSAGE,
-          null,
-          datasets,
-          datasets[0]);
-
-      if (dataset == null)
-        return;
-
-      String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
-      String intName;
-      if (internalNames.length == 1)
-        intName = internalNames[0];
-      else {
-        intName =
-          (String) JOptionPane.showInputDialog(
-            null,
-            "Choose one",
-            "Internal name",
-            JOptionPane.INFORMATION_MESSAGE,
-            null,
-            internalNames,
-            internalNames[0]);
-      }
-
-      if (intName == null)
-        return;
-
-      TransformationConfigTreeWidget frame = new TransformationConfigTreeWidget(null, this, null, user, dataset, intName, databaseDialog.getSchema());
-      frame.setVisible(true);
-      desktop.add(frame);
-      try {
-        frame.setSelected(true);
-      } catch (java.beans.PropertyVetoException e) {
-      }
-    } catch (ConfigurationException e) {
-      JOptionPane.showMessageDialog(this, "No datasets available for import - is this a BioMart compatible schema? Absent or empty meta_configuration table?", "ERROR", 0);
-    } finally {
-      enableCursor();
-    }
-  }
-
-  public void exportTransformationConfig() {
-    if (ds == null) {
-      JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
-      return;
-    }
-
-    try {
-      disableCursor();
-      TransformationConfig dsConfig = ((TransformationConfigTreeWidget) desktop.getSelectedFrame()).getTransformationConfig();
-	  
-      if (dsConfig.getAdaptor() != null && dsConfig.getAdaptor().getDataSource() != null && !dsConfig.getAdaptor().getDataSource().getSchema().equals(databaseDialog.getSchema())){
-      	// NM the widget still has its adaptor - could switch connection
-		int choice = JOptionPane.showConfirmDialog(this,"You are exporting this XML to a new schema: " + databaseDialog.getSchema() +"\nChange connection?", "", JOptionPane.YES_NO_OPTION);
-      	if (choice == 0){databaseConnection();}
-      }
-	
-      ((TransformationConfigTreeWidget) desktop.getSelectedFrame()).export();
-    } catch (ConfigurationException e) {
-      JOptionPane.showMessageDialog(this, "Problems exporting requested dataset. Check that you have write permission " +
-      		"and the meta_configuration table is in required format", "ERROR", 0);
-      e.printStackTrace();
-    } finally {
-      enableCursor();
-    }
-  }
-
-  public void naiveTransformationConfig() {
-    if (ds == null) {
-      JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
-      return;
-    }
-
-    
-    String dbtype = databaseDialog.getDatabaseType();
-    String schema = null;
-    
-    if(dbtype.equals("oracle")) schema = databaseDialog.getSchema().toUpperCase();
-    else schema = databaseDialog.getSchema();
-     
-    
-    try {
-      disableCursor();
-      String[] datasets = dbutils.getNaiveDatasetNamesFor(schema);
-      if(datasets.length==0){
-        JOptionPane.showMessageDialog(this, "No datasets available - Is this a BioMart comptatible schema?", "ERROR", 0);
-        return;
-      }
-      
-      String dataset =
-        (String) JOptionPane.showInputDialog(
-          null,
-          "Choose one",
-          "DatasetCode",
-          JOptionPane.INFORMATION_MESSAGE,
-          null,
-          datasets,
-          datasets[0]);
-      if (dataset == null)
-        return;
-
-      disableCursor();
-     
-    
-      TransformationConfigTreeWidget frame = new TransformationConfigTreeWidget(null, this, null, null, dataset, null, schema);
-
-      frame.setVisible(true);
-      desktop.add(frame);
-      try {
-        frame.setSelected(true);
-      } catch (java.beans.PropertyVetoException e) {
-      }
-    } catch (SQLException e) {
-    } finally {
-      enableCursor();
-    }
-  }
-
-*/
-/*  
-  public void deleteTransformationConfig() {
-
-    try {
-      if (ds == null) {
-        JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
-        return;
-      }
-
-      try {
-        disableCursor();
-        String[] datasets = dbutils.getAllDatasetNames(user);
-        String dataset =
-          (String) JOptionPane.showInputDialog(
-            null,
-            "Choose one",
-            "DatasetCode Config",
-            JOptionPane.INFORMATION_MESSAGE,
-            null,
-            datasets,
-            datasets[0]);
-        if (dataset == null)
-          return;
-        String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
-        String intName;
-        if (internalNames.length == 1)
-          intName = internalNames[0];
-        else {
-          intName =
-            (String) JOptionPane.showInputDialog(
-              null,
-              "Choose one",
-              "Internal name",
-              JOptionPane.INFORMATION_MESSAGE,
-              null,
-              internalNames,
-              internalNames[0]);
-        }
-        if (intName == null)
-          return;
-        dbutils.deleteTransformationConfigsForDatasetIntName(dataset, intName, user);
-
-      } catch (ConfigurationException e) {
-      }
-    } finally {
-      enableCursor();
-    }
-  }
-*/
   
   public void save() {
     ((TransformationConfigTreeWidget) desktop.getSelectedFrame()).save();

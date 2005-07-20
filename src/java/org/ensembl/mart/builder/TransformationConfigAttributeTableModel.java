@@ -38,7 +38,7 @@ import org.ensembl.mart.builder.lib.TransformationUnitBase;
  * <p>This class is written for the attributes table to implement autoscroll
  * </p>
  *
- * @author <a href="mailto:katerina@ebi.ac.uk">Katerina Tzouvara</a>
+ * @author <a href="mailto:katerina@ebi.ac.uk">Damian Smedley</a>
  * //@see org.ensembl.mart.config.DatasetConfig
  */
 

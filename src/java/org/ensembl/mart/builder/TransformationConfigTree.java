@@ -22,7 +22,6 @@ import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
-//import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
@@ -48,9 +47,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Enumeration;
-import java.awt.Color;
 
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
@@ -69,7 +66,6 @@ import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.TableCellEditor;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
@@ -86,7 +82,7 @@ import org.ensembl.mart.lib.config.ConfigurationException;
  * <p>This is the main class of the builder that creates and populates the tree etc
  * </p>
  *
- * @author <a href="mailto:katerina@ebi.ac.uk">Damian Smedley</a>
+ * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
  * //@see org.ensembl.mart.config.TransformationConfig
  */
 
@@ -130,8 +126,6 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 		setModel(treemodel);
 		this.setSelectionInterval(0, 0);
 		TransformationConfigTreeDnDListener dndListener = new TransformationConfigTreeDnDListener(this);
-		//clipboard = new Clipboard("tree_clipboard");
-
 	}
 
 	public TransformationConfig getTransformationConfig() {
@@ -229,10 +223,12 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 					copy();
 				else if (e.getActionCommand().equals("paste"))
 					paste();
+				else if (e.getActionCommand().equals("insert dataset"))
+					insert(new DatasetBase("new"), "Dataset:");	
 				else if (e.getActionCommand().equals("insert transformation"))
 					insert(new TransformationBase("new"), "Transformation:");
-				else if (e.getActionCommand().equals("insert transformation line"))
-					insert(new TransformationUnitBase("new"), "TransformationLine:");					
+				else if (e.getActionCommand().equals("insert transformation unit"))
+					insert(new TransformationUnitBase("new"), "TransformationUnit:");					
 				else if (e.getActionCommand().equals("delete"))
 					delete();
 				else if (e.getActionCommand().equals("save"))
@@ -411,11 +407,6 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 
 	protected class TransformationConfigTreeMouseListener implements MouseListener {
 		public void mousePressed(MouseEvent e) {
-//			if (attrTable != null)
-//				if (attrTable.getEditorComponent() != null) {
-//					TableCellEditor attrTableEditor = attrTable.getCellEditor();
-//					attrTableEditor.stopCellEditing();
-//				}
 			//need to evaluate here as well as mouseReleased, for cross platform portability
 			if (e.isPopupTrigger()) {
 				//Create the popup menu.
@@ -437,10 +428,6 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 		}
 
 		public void mouseClicked(MouseEvent e) {
-//			if (e.isPopupTrigger()) {
-//				//Create the popup menu.
-//				loungePopupMenu(e);
-//			}
 		}
 	}
 
@@ -451,12 +438,14 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 		setSelectionPath(clickedPath);
 		String[] menuItems = null;
 		String clickedNodeClass = editingNode.getUserObject().getClass().getName();
-		if (clickedNodeClass.equals("org.ensembl.mart.lib.TransformationConfig"))
-			menuItems = new String[] { "copy", "cut", "paste", "delete", "insert transformation"};
-		else if ((clickedNodeClass).equals("org.ensembl.mart.builder.lib.TransformationUnitBase"))
+		if (clickedNodeClass.equals("org.ensembl.mart.builder.lib.TransformationConfig"))
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "insert dataset"};
+		else if ((clickedNodeClass).equals("org.ensembl.mart.builder.lib.DatasetBase"))
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "insert transformation" };	
+		else if ((clickedNodeClass).equals("org.ensembl.mart.builder.lib.TransformationBase"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "insert transformation unit" };
-		else if (clickedNodeClass.equals("org.ensembl.mart.builder.lib.TransformationUnit"))
-			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle"};
+		else if (clickedNodeClass.equals("org.ensembl.mart.builder.lib.TransformationUnitBase"))
+			menuItems = new String[] { "copy", "cut", "paste", "delete"};
 
 		for (int i = 0; i < menuItems.length; i++) {
 			JMenuItem menuItem = new JMenuItem(menuItems[i]);
@@ -559,11 +548,13 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 					String selnodeName = selnode.getUserObject().getClass().getName();
 					
 					BaseNamedConfigurationObject newSel = null;// no copy constructor for abstract class
-					if (selnodeName.equals("org.ensembl.mart.builder.lib.TransformationUnitBase"))
+					if (selnodeName.equals("org.ensembl.mart.builder.lib.TransformationBase"))
 						newSel = new TransformationBase((TransformationBase)sel);
 					else if (selnodeName.equals("org.ensembl.mart.lib.TransformationUnitBase"))
 						newSel = new TransformationUnitBase((TransformationUnitBase)sel);
-					
+					else if (selnodeName.equals("org.ensembl.mart.lib.DatasetBase"))
+						newSel = new DatasetBase((DatasetBase)sel);
+						
 					newSel.setInternalName(sel.getInternalName() + "_copy");
 					// need to make sure refers to a different object for multiple pastes
 					selnode = new TransformationConfigTreeNode(selnode.name + "_copy",newSel);
@@ -653,21 +644,5 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 		}
 	}
 
-/*	public void export() throws ConfigurationException {
-		dsConfig = (TransformationConfig) ((TransformationConfigTreeNode) this.getModel().getRoot()).getUserObject();
-		
-		MartEditor.getDatabaseTransformationConfigUtils().storeTransformationConfiguration(
-			MartEditor.getUser(),
-			dsConfig.getInternalName(),
-			dsConfig.getDisplayName(),
-			dsConfig.getDataset(),
-			dsConfig.getDescription(),
-			MartEditor.getTransformationConfigXMLUtils().getDocumentForTransformationConfig(dsConfig),
-			true,
-			dsConfig.getType(),
-			dsConfig.getVisible(),
-			dsConfig.getVersion(),
-			dsConfig);
-	}*/
 
 }
