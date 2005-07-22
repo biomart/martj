@@ -843,17 +843,17 @@ public class DatabaseDatasetConfigUtils {
       xout.output(doc, out);
       gout.finish();
 
-      byte[] xml = bout.toByteArray();
-      
+      byte[] xml = bout.toByteArray();// ? SHOULD IT NOT BE gout
+	  byte[] md5 = md5digest.digest();
       // recover uncompressed XML as well
 	  ByteArrayOutputStream bout2 = new ByteArrayOutputStream();
 	  DigestOutputStream dout = new DigestOutputStream(bout2, md5digest);
 	  XMLOutputter xout2 = new XMLOutputter(org.jdom.output.Format.getRawFormat());
 	  xout2.output(doc, dout);
-      //bout.finish();
+      
       byte[] uncompressedXML = bout2.toByteArray();
       
-      byte[] md5 = md5digest.digest();
+      
       bout.close();
       gout.close();
       out.close();
@@ -1438,12 +1438,11 @@ public class DatabaseDatasetConfigUtils {
    */
   public boolean isDatasetConfigChanged(String user, DatasetConfig dsc) throws ConfigurationException{
       byte[] thisDigest = dscutils.getMessageDigestForDatasetConfig(dsc);
-      
       //byte[] thisDigest = dsc.getMessageDigest();
       byte[] dbDigest = getDSConfigMessageDigestByDatasetInternalName(user, dsc.getDataset(), dsc.getInternalName());
       
-      //System.out.println("this digest " + thisDigest.toString());
-	  //System.out.println("dbDigest digest " + dbDigest.toString());
+      System.out.println("this digest " + thisDigest);
+	  System.out.println("dbDigest digest " + dbDigest);
 	
       return MessageDigest.isEqual(thisDigest, dbDigest);
   }
