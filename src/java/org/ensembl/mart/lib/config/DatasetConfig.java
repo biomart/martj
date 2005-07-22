@@ -52,6 +52,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   private final String datasetKey = "dataset";
   private final String typeKey = "type";
   private final String visibleKey = "visible";
+  private final String visibleFilterPageKey = "visibleFilterPage";
   private final String versionKey = "version";
   private final String optParameterKey = "optional_parameters";
   private final String defaultKey = "defaultDataset";
@@ -189,6 +190,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     setAttribute(datasetKey, null);
     setAttribute(typeKey,null);
     setAttribute(visibleKey,null);
+	setAttribute(visibleFilterPageKey,null);
     setAttribute(optParameterKey, null);
 	setAttribute(versionKey,null);
 	setAttribute(defaultKey,null);
@@ -224,7 +226,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     //super(internalName, displayName, description);
     
     
-	this(internalName, displayName, dataset, description, "", "0", "", "", "");
+	this(internalName, displayName, dataset, description, "", "0", "", "", "", "");
 
     //if (dataset == null)
     //  throw new ConfigurationException("DatasetConfig objects must contain a dataset\n");
@@ -243,9 +245,9 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @param pub String flag showing whether DatasetConfig is public or not.
    * @throws ConfigurationException if required values are null.
    */
-  public DatasetConfig(String internalName, String displayName, String dataset, String description, String type, String pub, String version, String optParam)
+  public DatasetConfig(String internalName, String displayName, String dataset, String description, String type, String pub, String visibleFilterPage, String version, String optParam)
   throws ConfigurationException {
-    this(internalName, displayName, dataset, description, type, pub, version, null, null);
+    this(internalName, displayName, dataset, description, type, pub, visibleFilterPage, version, null, null);
   }
   
   
@@ -263,7 +265,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    *        implementation specific manipulation.
    * @throws ConfigurationException if required values are null.
    */
-  public DatasetConfig(String internalName, String displayName, String dataset, String description, String type, String pub, String version, String optParameters, String defaultDataset)
+  public DatasetConfig(String internalName, String displayName, String dataset, String description, String type, String pub, String visibleFilterPage, String version, String optParameters, String defaultDataset)
 	throws ConfigurationException {
 		
 	super(internalName, displayName, description);
@@ -272,6 +274,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(datasetKey, dataset);
 	setAttribute(typeKey, type);
 	setAttribute(visibleKey, pub);
+	setAttribute(visibleFilterPageKey, visibleFilterPage);
 	setAttribute(versionKey, version);
     setAttribute(optParameterKey, optParameters);
 	setAttribute(defaultKey, defaultDataset);
@@ -303,6 +306,14 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   }
 
   /**
+   * Sets the visibleFilterPage flag for this DatasetConfig object
+   * @param visibleFilterPage - visbleFilterPage flag for this dataset.
+   */
+  public void setVisibleFilterPage(String visible) {
+	setAttribute(visibleFilterPageKey, visible);
+  }
+
+  /**
    * @return the prefix for the mart database tables in this Dataset
    */
   public String getDataset() {
@@ -323,6 +334,12 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	return attributes.getProperty(visibleKey);
   }
   
+  /**
+   * @return the prefix for the mart database tables in this Dataset
+   */
+  public String getVisibleFilterPage() {
+	return attributes.getProperty(visibleFilterPageKey);
+  }
   /**
    * @return the prefix for the mart database tables in this Dataset
    */

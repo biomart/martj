@@ -79,6 +79,7 @@ public class DatasetConfigXMLUtils {
   // attribute names needed by code
   private final String INTERNALNAME = "internalName";
   private final String OPTPARAM = "optional_parameters";
+  private final String VISIBLEFILTERPAGEPARAM = "visibleFilterPage";
   private final String DEFAULTDATASET = "defaultDataset";
   private final String HIDDEN = "hidden";
 
@@ -220,6 +221,10 @@ public class DatasetConfigXMLUtils {
     String intName = thisElement.getAttributeValue(INTERNALNAME, "");
     String optParam = thisElement.getAttributeValue(OPTPARAM, "");
 	String defParam = thisElement.getAttributeValue(DEFAULTDATASET, "");
+	String visibleFilterPageParam = thisElement.getAttributeValue(VISIBLEFILTERPAGEPARAM, "");
+    
+    if (visibleFilterPageParam.length() > 0)
+    	dsv.setVisibleFilterPage(visibleFilterPageParam);
     
     if (optParam.length() > 0)
       dsv.setOptionalParameter(optParam);
@@ -779,6 +784,8 @@ public class DatasetConfigXMLUtils {
 
       bout.close();
       dout.close();
+
+      System.out.println("DIGEST FOR DOC " + doc.toString() + " IS " + digest.toString());
 
       return digest;
     } catch (NoSuchAlgorithmException e) {

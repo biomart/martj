@@ -1024,7 +1024,7 @@ public class DatabaseDatasetConfigUtils {
         String visible = rs.getString(7);
 		String version = rs.getString(8);
         byte[] digest = rs.getBytes(5);
-        DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description, type, visible,version,"","");
+        DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description, type, visible,"",version,"","");
         dsv.setMessageDigest(digest);
         
         HashMap userMap = (HashMap) configInfo.get(user);
@@ -1438,8 +1438,13 @@ public class DatabaseDatasetConfigUtils {
    */
   public boolean isDatasetConfigChanged(String user, DatasetConfig dsc) throws ConfigurationException{
       byte[] thisDigest = dscutils.getMessageDigestForDatasetConfig(dsc);
+      
+      //byte[] thisDigest = dsc.getMessageDigest();
       byte[] dbDigest = getDSConfigMessageDigestByDatasetInternalName(user, dsc.getDataset(), dsc.getInternalName());
       
+      //System.out.println("this digest " + thisDigest.toString());
+	  //System.out.println("dbDigest digest " + dbDigest.toString());
+	
       return MessageDigest.isEqual(thisDigest, dbDigest);
   }
   
@@ -3173,7 +3178,7 @@ public class DatabaseDatasetConfigUtils {
    */
   public DatasetConfig getNaiveDatasetConfigFor(String schema, String datasetName)
     throws ConfigurationException, SQLException {
-    DatasetConfig dsv = new DatasetConfig("default",datasetName + " ( " + schema + " )",datasetName,"","TableSet","1","","","");
+    DatasetConfig dsv = new DatasetConfig("default",datasetName + " ( " + schema + " )",datasetName,"","TableSet","1","","","","");
     
     //dsv.setInternalName(datasetName);
     //dsv.setInternalName("default");
@@ -3658,7 +3663,7 @@ public class DatabaseDatasetConfigUtils {
             if (dsv.getAttributeDescriptionByFieldNameTableConstraint(cname, tableName) == null) {
               ac.addAttributeDescription(ad);
             }
-            if (cname.endsWith("_list")) {
+            if (cname.endsWith("_list") || cname.equals("dbprimary_id")) {
 				if (filtMap.containsKey(cname)){
 					duplicated = 1;		
 				}

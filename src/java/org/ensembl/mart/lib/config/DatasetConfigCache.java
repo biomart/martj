@@ -47,6 +47,7 @@ public class DatasetConfigCache {
   private final String DESCKEY = "description";
   private final String TYPEKEY = "type";
   private final String VISIBLEKEY = "visible";
+  private final String VISIBLEFILTERPAGEKEY = "visibleFilterPage";
   private final String VERSIONKEY = "version";
   private final String DIGESTKEY = "MD5";
   private final String XMLKEY = "XML";
@@ -250,8 +251,9 @@ public class DatasetConfigCache {
             String type = xmlPrefs.node(dataset).node(iname).get(TYPEKEY, null);
             String visible = xmlPrefs.node(dataset).node(iname).get(VISIBLEKEY, null);
             String version = xmlPrefs.node(dataset).node(iname).get(VERSIONKEY, null);
-
-            dsv = new DatasetConfig(iname, displayName, dataset, description, type, visible,version,"","");
+			String visibleFilterPage = xmlPrefs.node(dataset).node(iname).get(VISIBLEFILTERPAGEKEY, null);
+			
+            dsv = new DatasetConfig(iname, displayName, dataset, description, type, visible,visibleFilterPage,version,"","");
             
             dsv.setDSConfigAdaptor(adaptor);
           }
