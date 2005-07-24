@@ -14,8 +14,19 @@ package org.ensembl.mart.builder.lib;
 
 import java.util.*;
 
+import org.jdom.Element;
 
-public class Transformation extends TransformationBase {
+
+public class Transformation extends ConfigurationBase {
+	
+	public Transformation (Element element){
+	super(element);
+	}
+	
+	public Transformation (){
+		super();
+		}
+	
 	
 	ArrayList units = new ArrayList();
 	

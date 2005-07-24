@@ -25,6 +25,7 @@ import org.jdom.Attribute;
 import org.jdom.DocType;
 import org.jdom.Document;
 import org.jdom.Element;
+import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 import org.jdom.output.XMLOutputter;
 import org.xml.sax.InputSource;
@@ -50,9 +51,107 @@ public class ConfigurationAdaptor {
 	
 	
 	
-	// Configuration Adaptor to be cleaned up, now an eclectic fusion of old ConfigurationAdaptor and XMLUtils
+	
+
+	public NewTransformationConfig getTransformationConfig(
+			String file) {
+
+		SAXBuilder parser = new SAXBuilder();
+		Document doc = null;
+		try {
+			doc = parser.build(file);
+		} catch (JDOMException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		
+		Element root = doc.getRootElement();
+
+		NewTransformationConfig tc = new NewTransformationConfig(root);
+
+		List datasetElements = tc.element.getChildren();
+
+		for (int i = 0; i < datasetElements.size(); i++) {
+			Dataset ds = new Dataset((Element) datasetElements.get(i));
+			tc.addChildObject(ds);
+
+			List transformationElements = ds.element.getChildren();
+
+			for (int m = 0; m < transformationElements.size(); m++) {
+				Transformation ts = new Transformation(
+						(Element) transformationElements.get(m));
+				ds.addChildObject(ts);
+
+				List transformationUnitElements = ts.element.getChildren();
+
+				for (int j = 0; j < transformationUnitElements.size(); j++) {
+					TransformationUnit tu = new TransformationUnit(
+							(Element) transformationUnitElements.get(j));
+					ts.addChildObject(tu);
+				}
+			}
+		}
+
+		return tc;
+
+	}
 	
 	
+	
+	
+
+	 public void writeDocument(
+			NewTransformationConfig trans, String xmlFile) {
+
+		Document newDoc = new Document();
+
+		BufferedWriter sqlout = null;
+		try {
+			sqlout = new BufferedWriter(new FileWriter(xmlFile));
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+
+		newDoc.setContent((Element) trans.element.clone());
+		
+	
+		
+
+		XMLOutputter outputter = new XMLOutputter();
+		try {
+			outputter.output(newDoc, sqlout);
+		} catch (IOException e) {
+			System.err.println(e);
+		}
+
+	}
+
+
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	// THE 18 METHODS BELOW SHOULD DISAPPEAR 
+	// STARTING FROM HERE .... UNTIL ...
 	
 	  // element names
 	  private final String TRANSFORMATIONCONFIG = "TransformationConfig";
@@ -491,6 +590,12 @@ public class ConfigurationAdaptor {
 	}
 
 
+	
+	
+	// UNTIL HERE
+	// THE TWO METHODS SHOULD BE MODIFIED AND MOST OF READXML SHOULD ALSO DISAPPEAR
+	
+	
 
 	public void readXMLConfiguration(TransformationConfig tConfig) {
 

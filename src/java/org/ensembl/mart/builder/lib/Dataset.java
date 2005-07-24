@@ -8,6 +8,8 @@ package org.ensembl.mart.builder.lib;
 
 import java.util.*;
 
+import org.jdom.Element;
+
 
 /**
  * @author <a href="mailto: arek@ebi.ac.uk">Arek Kasprzyk</a>
@@ -16,7 +18,7 @@ import java.util.*;
  */
 
 
-public class Dataset extends DatasetBase{
+public class Dataset extends ConfigurationBase {
 	
 	ArrayList transformations = new ArrayList();
 	String name;
@@ -25,10 +27,22 @@ public class Dataset extends DatasetBase{
 	DatabaseAdaptor adaptor;
 	
 	
+	
+	public Dataset (Element element){
+		super(element);
+		}
 		
-		public Dataset(){
+		public Dataset (){
+			super();
+			}
+	
+	
+	
+	
 		
-	}
+	//	public Dataset(){
+		
+	//}
 	
 		
 		// the below is needed to make sure that 

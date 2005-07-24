@@ -6,13 +6,15 @@
  */
 package org.ensembl.mart.builder.lib;
 
+import org.jdom.Element;
+
 
 /**
  * @author <a href="mailto: arek@ebi.ac.uk">Arek Kasprzyk</a>
  *
  * 
  */
-public abstract class TransformationUnit extends TransformationUnitBase {
+public  class TransformationUnit extends ConfigurationBase {
 	
 	Table tempStart;
 	Table tempEnd;
@@ -29,6 +31,21 @@ public abstract class TransformationUnit extends TransformationUnitBase {
 	public String type;
 	
 	
+	
+	public TransformationUnit (Element element){
+		super(element);
+		}
+		
+		public TransformationUnit (){
+			super();
+			}
+	
+	
+	
+	
+	
+	
+	
 	public TransformationUnit(Table ref_table){
 		
 		this.refTable=ref_table;
@@ -36,8 +53,17 @@ public abstract class TransformationUnit extends TransformationUnitBase {
 	}
 	
 
-	public abstract String toSQL ();
-	public abstract void transform (Table temp_start, String temp_end_name);
+	public  String toSQL (){
+		
+		String sql="override this method";
+		
+		return sql;
+		
+	}
+	public  void transform (Table temp_start, String temp_end_name){
+		
+		
+	}
 	
 	public String dropTempTable (){
 		

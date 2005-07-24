@@ -13,60 +13,60 @@ package org.ensembl.mart.builder.lib;
  * Window - Preferences - Java - Code Style - Code Templates
  */
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.filter.ElementFilter;
-import org.jdom.input.SAXBuilder;
-
 
 
 public class ParsingTester {
 
-	public static void main(String[] args) throws JDOMException, IOException {
+	private static String inputConfigFile="/Users/arek/fly.xml";
+	private static String outputConfigFile="/Users/arek/myxml.xml";
 
 	
-		SAXBuilder parser = new SAXBuilder();
-        Document doc = parser.build("/Users/arek/fly.xml");
-
-        Dataset ds = new Dataset();
-        
-       
-        
-        Element root =doc.getRootElement();
-        
-        System.out.println(root.getChild("Dataset").getAttributeValue("internalName"));
-        
-        //System.out.println(root.getAttribute("TransformationUnit").getName());
-        
-        while (root.getChildren().iterator().hasNext()) {
-        	
-        	//String name = root
-        	//Element child = root.getChild();
-        	
-        	
-        }
-        
-        System.out.println("to string "+root.getChild("Dataset").toString());
-        
-        ElementFilter filter= new ElementFilter();
-        
-        
-        //System.out.println(" filter "+ root.getChild("Dataset").getContent(filter));
-        
-        Iterator iter = root.getChild("Dataset").getContent(filter).iterator();
-        
-        for (int i=0;i<root.getChild("Dataset").getContent(filter).size();i++)System.out.println(iter.next());
-        
-        System.out.println(root.getAttributeValue("Dataset"));
-        
-        
-        //root.
-        
 	
+	public static void main(String[] args) {
+
+		ConfigurationAdaptor cad = new ConfigurationAdaptor();
+		
+		
+		// get config
+		NewTransformationConfig nts = cad.getTransformationConfig(inputConfigFile);
+
+		
+		/**
+		 * traversing the object tree, getting/setting attributes
+		 */
+
+        // removing objects
+		nts.removeChildObject("fly");
+
+		
+		ConfigurationBase[] nbso = nts.getChildObjects();
+		for (int i = 0; i < nbso.length; i++) {
+			Dataset ds = (Dataset) nbso[i];
+
+			
+			// getting attributes
+			System.out.println(ds.datasetKey + " internalName: "+ ds.element.getAttributeValue("internalName"));
+
+			// copy object
+			Dataset newDS = (Dataset) ds.copy();
+			System.out.println(newDS.element.getAttributeValue("internalName"));
+			
+			ConfigurationBase[] trso = ds.getChildObjects();
+			for (int j = 0; j < trso.length; j++) {
+				Transformation ts = (Transformation) trso[j];
+
+				
+				// setting attributes
+				ts.element.setAttribute("internalName", "mm");
+				System.out.println(ts.column_operations + " internalName "+ ts.element.getAttributeValue("internalName"));
+
+			}
+		}
+
+		
+		
+		// writing document
+		cad.writeDocument(nts,outputConfigFile);
+
 	}
 }
