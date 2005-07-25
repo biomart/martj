@@ -57,6 +57,10 @@ public class ConfigurationBase implements Cloneable {
 		return super.clone();
 	}
 
+	public Element getElement() {
+		return element;
+	}
+
 	public void setRequiredFields(int[] reqFields) {
 		requiredFields = reqFields;
 	}
@@ -71,6 +75,10 @@ public class ConfigurationBase implements Cloneable {
 
 	public void addChildObject(ConfigurationBase base) {
 		this.children.add(base);
+	}
+	
+	public void insertChildObject(int position, ConfigurationBase base) {
+		this.children.add(position,base);
 	}
 
 	public ConfigurationBase[] getChildObjects() {

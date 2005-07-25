@@ -24,7 +24,6 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.io.File;
-import java.net.URL;
 import javax.swing.ImageIcon;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
@@ -39,11 +38,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 
 //import org.ensembl.mart.lib.config.AttributePage;
 
-import org.ensembl.mart.builder.lib.BaseConfigurationObject;
-import org.ensembl.mart.builder.lib.ConfigurationAdaptor;
-import org.ensembl.mart.builder.lib.DatasetBase;
-import org.ensembl.mart.builder.lib.InputSourceUtil;
-import org.ensembl.mart.builder.lib.TransformationConfig;
+import org.ensembl.mart.builder.lib.*;
 import org.ensembl.mart.lib.config.ConfigurationException;
 /**
  * TransformationConfigTreeWidget extends internal frame.
@@ -64,7 +59,7 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
     private MartBuilder builder;
 
 	
-    public TransformationConfigTreeWidget(File file, MartBuilder builder, TransformationConfig dsv, String user, String dataset, String internalName, String schema){
+    public TransformationConfigTreeWidget(String file, MartBuilder builder, TransformationConfig dsv, String user, String dataset, String internalName, String schema){
 
         super("Dataset Tree " + (++openFrameCount),
                 true, //resizable
@@ -81,10 +76,10 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
             
             if (file == null) {
             	if (user == null){
-            	  if (schema == null){	
-                    config = new TransformationConfig("new");
+            	  if (schema == null){	// NEW CONFIG
+                    //config = new TransformationConfig("new");
                     //config.setDSConfigAdaptor(new SimpleDSConfigAdaptor(config)); //prevents lazyLoading
-                    config.addDataset(new DatasetBase("new","mainTable"));
+                    //config.addDataset(new DatasetBase("new","mainTable"));
             	  }
             	  
             	  //else{  NAIVE CREATION	
@@ -105,7 +100,7 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
 					
             	}
             } else {// OPEN FROM FILE
-                URL url = file.toURL();
+                //URL url = file.toURL();
 //            ignore cache, include hidden members
                 
                 // old code
@@ -119,13 +114,10 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
 				// new code without using adaptor
 				//TransformationConfigXMLUtils xmlUtils = new TransformationConfigXMLUtils();
 				
-                ConfigurationAdaptor configAdaptor = new ConfigurationAdaptor();
-				
-				config = configAdaptor.getTransformationConfigForXMLStream(InputSourceUtil.getStreamForURL(url));
-				
-				System.out.println("config "+config.getInternalName());
-				
-				configAdaptor.loadTransformationConfigWithDocument( config, configAdaptor.getDocumentForXMLStream( InputSourceUtil.getStreamForURL( url ) ) );
+                ConfigurationAdaptor configAdaptor = new ConfigurationAdaptor();			
+				config = configAdaptor.getTransformationConfig(file);
+								
+				//configAdaptor.loadTransformationConfigWithDocument( config, configAdaptor.getDocumentForXMLStream( InputSourceUtil.getStreamForURL( url ) ) );
 				
 				
                 
@@ -133,7 +125,8 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
           }
           else{
           	//config = new TransformationConfig(dsv, true, false);
-			config = new TransformationConfig(dsv);
+			//config = new TransformationConfig(dsv);
+			config = (TransformationConfig) dsv.copy();
         	     
           }
             //this.setTitle(config.getInternalName());
@@ -325,13 +318,8 @@ class MyRenderer extends DefaultTreeCellRenderer {
 						int row,
 						boolean hasFocus) {
 
-		if (isHidden(value)){
-			setTextNonSelectionColor(Color.lightGray);
-			setTextSelectionColor(Color.lightGray);
-		} else{
-		    setTextNonSelectionColor(Color.black);
-			setTextSelectionColor(Color.black);
-		}
+		setTextNonSelectionColor(Color.black);
+		setTextSelectionColor(Color.black);
 		super.getTreeCellRendererComponent(
 						tree, value, sel,
 						expanded, leaf, row,
@@ -340,14 +328,4 @@ class MyRenderer extends DefaultTreeCellRenderer {
 		return this;
 	}
 
-	protected boolean isHidden(Object value) {
-		TransformationConfigTreeNode node =
-				(TransformationConfigTreeNode)value;
-		BaseConfigurationObject nodeObject = (BaseConfigurationObject) node.getUserObject();		
-		if (nodeObject.getAttribute("hidden") != null && nodeObject.getAttribute("hidden").equals("true")){
-			return true;
-		}
-
-		return false;
-	}
 }

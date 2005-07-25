@@ -21,11 +21,7 @@ package org.ensembl.mart.builder;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
-import org.ensembl.mart.builder.lib.BaseConfigurationObject;
-import org.ensembl.mart.builder.lib.DatasetBase;
-import org.ensembl.mart.builder.lib.TransformationBase;
-import org.ensembl.mart.builder.lib.TransformationConfig;
-import org.ensembl.mart.builder.lib.TransformationUnitBase;
+import org.ensembl.mart.builder.lib.*;
 
 /**
  * Class TransformationConfigTreeModel extends DefaultTreeModel.
@@ -54,42 +50,31 @@ public class TransformationConfigTreeModel extends DefaultTreeModel {
 		String value = (String) newValue;
 		System.out.println("in model valueForPathChanged");
 		current_node.setName(value);
-		BaseConfigurationObject nodeInfo = (BaseConfigurationObject) current_node.getUserObject();
+		ConfigurationBase nodeInfo = (ConfigurationBase) current_node.getUserObject();
 		nodeChanged(current_node);
 	}
 
 	public void reload(TransformationConfigTreeNode editingNode, TransformationConfigTreeNode parentNode) {
-		int start, finish;
-		String parentClassName = (parentNode.getUserObject().getClass()).getName();
-		String childClassName = (editingNode.getUserObject().getClass()).getName();
-		start = childClassName.lastIndexOf(".") + 1;
-		finish = childClassName.length();
-		String childName = childClassName.substring(start, finish);
+		Object parentObject = parentNode.getUserObject();
+		Object editingObject = editingNode.getUserObject();
 		
-		System.out.println("from reload");
-		
-
-		if (parentClassName.equals("org.ensembl.mart.builder.lib.TransformationConfig")) {
-			if (childClassName.equals("org.ensembl.mart.builder.lib.DatasetBase")) {
-				config = (TransformationConfig) parentNode.getUserObject();
-				System.out.println("MODEL: ADDING DATASET");
-				config.addDataset((DatasetBase) editingNode.getUserObject());
-				//config.removeAttributePage();
-
+		if (parentObject instanceof org.ensembl.mart.builder.lib.TransformationConfig) {
+			if (editingObject instanceof org.ensembl.mart.builder.lib.Dataset) {
+				config = (TransformationConfig) parentObject;
+				config.addChildObject((Dataset) editingObject);
 			} 
-		} else if (parentClassName.equals("org.ensembl.mart.builder.lib.DatasetBase")) {
-			if (childClassName.equals("org.ensembl.mart.builder.lib.TransformationBase")) {
-				DatasetBase fp = (DatasetBase) parentNode.getUserObject();
-				System.out.println("MODEL: ADDING TRANSFORMATION");
-				fp.addTransformation((TransformationBase) editingNode.getUserObject());
+		} else if (parentObject instanceof org.ensembl.mart.builder.lib.Dataset) {
+			if (editingObject instanceof org.ensembl.mart.builder.lib.Transformation) {
+				Dataset dset = (Dataset) parentObject;
+				dset.addChildObject((Transformation) editingObject);
 			}
-		} else if (parentClassName.equals("org.ensembl.mart.builder.lib.TransformationBase")) {
-			if (childClassName.equals("org.ensembl.mart.builder.lib.TransformationUnitBase")) {
-				TransformationBase fp = (TransformationBase) parentNode.getUserObject();
-				System.out.println("MODEL: ADDING TUNIT");
-				fp.addTransformationUnit((TransformationUnitBase) editingNode.getUserObject());
+		} else if (parentObject instanceof org.ensembl.mart.builder.lib.Transformation) {
+			if (editingObject instanceof org.ensembl.mart.builder.lib.TransformationUnit) {
+				Transformation trans = (Transformation) parentObject;
+				trans.addChildObject((TransformationUnit) editingObject);
 			}
 		} 
+		
 		super.reload(parentNode);
 
 	}
@@ -106,33 +91,31 @@ public class TransformationConfigTreeModel extends DefaultTreeModel {
 		//index is a Node index. objectIndex may be different
 		int objIndex = index - TransformationConfigTreeNode.getHeterogenousOffset(parent, child);
 		if (parent instanceof org.ensembl.mart.builder.lib.TransformationConfig) {
-			if (child instanceof org.ensembl.mart.builder.lib.DatasetBase) {
+			if (child instanceof org.ensembl.mart.builder.lib.Dataset) {
 				config = (TransformationConfig) parentNode.getUserObject();
-				System.out.println("MODEL: INSERTING DATASET");
-				config.insertDataset(objIndex, (DatasetBase) editingNode.getUserObject());
-
+				config.insertChildObject(objIndex, (Dataset) editingNode.getUserObject());
 			} else {
 				String error_string = "Error: " + childName + " cannot be inserted in a TransformationConfig.";
 				return error_string;
 			}
-		} else if (parent instanceof org.ensembl.mart.builder.lib.DatasetBase) {
-			if (child instanceof org.ensembl.mart.builder.lib.TransformationBase) {
-				DatasetBase fp = (DatasetBase) parentNode.getUserObject();
-				fp.insertTransformation(objIndex, (TransformationBase) editingNode.getUserObject());
+		} else if (parent instanceof org.ensembl.mart.builder.lib.Dataset) {
+			if (child instanceof org.ensembl.mart.builder.lib.Transformation) {
+				Dataset fp = (Dataset) parentNode.getUserObject();
+				fp.insertChildObject(objIndex, (Transformation) editingNode.getUserObject());
 			} else {
 				String error_string = "Error: " + childName + " cannot be inserted in a Transformation.";
 				return error_string;
 			}
-		}  else if (parent instanceof org.ensembl.mart.builder.lib.TransformationBase) {
-			if (child instanceof org.ensembl.mart.builder.lib.TransformationUnitBase) {
-				TransformationBase fp = (TransformationBase) parentNode.getUserObject();
-				fp.insertTransformationUnit(objIndex, (TransformationUnitBase) editingNode.getUserObject());
+		}  else if (parent instanceof org.ensembl.mart.builder.lib.Transformation) {
+			if (child instanceof org.ensembl.mart.builder.lib.TransformationUnit) {
+				Transformation fp = (Transformation) parentNode.getUserObject();
+				fp.insertChildObject(objIndex, (TransformationUnit) editingNode.getUserObject());
 			} else {
 				String error_string = "Error: " + childName + " cannot be inserted in a Transformation.";
 				return error_string;
 			}
 		} 
-		else if (parent instanceof org.ensembl.mart.builder.lib.TransformationUnitBase) {
+		else if (parent instanceof org.ensembl.mart.builder.lib.TransformationUnit) {
 			String error_string = "Error: TransformationUnit is a leaf node, no insertions are allowed.";
 			return error_string;
 		}
@@ -144,19 +127,19 @@ public class TransformationConfigTreeModel extends DefaultTreeModel {
 		Object child = node.getUserObject();
 		Object parent = ((TransformationConfigTreeNode) node.getParent()).getUserObject();
 		if (parent instanceof org.ensembl.mart.builder.lib.TransformationConfig) {
-			if (child instanceof org.ensembl.mart.builder.lib.DatasetBase) {
+			if (child instanceof org.ensembl.mart.builder.lib.Dataset) {
 				config = (TransformationConfig) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-				config.removeDataset((DatasetBase) node.getUserObject());
+				config.removeChildObject(((Dataset) node.getUserObject()).getElement().getAttributeValue("internalName"));
 			} 
-		}  else if (parent instanceof org.ensembl.mart.builder.lib.DatasetBase) {
-			if (child instanceof org.ensembl.mart.builder.lib.TransformationBase) {
-				DatasetBase fp = (DatasetBase) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-				fp.removeTransformation((TransformationBase) node.getUserObject());
+		}  else if (parent instanceof org.ensembl.mart.builder.lib.Dataset) {
+			if (child instanceof org.ensembl.mart.builder.lib.Transformation) {
+				Dataset fp = (Dataset) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
+				fp.removeChildObject(((Transformation) node.getUserObject()).getElement().getAttributeValue("internalName"));
 			}
-		} else if (parent instanceof org.ensembl.mart.builder.lib.TransformationBase) {
-			if (child instanceof org.ensembl.mart.builder.lib.TransformationUnitBase) {
-				TransformationBase fp = (TransformationBase) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-				fp.removeTransformationUnit((TransformationUnitBase) node.getUserObject());
+		} else if (parent instanceof org.ensembl.mart.builder.lib.Transformation) {
+			if (child instanceof org.ensembl.mart.builder.lib.TransformationUnit) {
+				Transformation fp = (Transformation) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
+				fp.removeChildObject(((TransformationUnit) node.getUserObject()).getElement().getAttributeValue("internalName"));
 			}
 		} 
 		super.removeNodeFromParent(node);

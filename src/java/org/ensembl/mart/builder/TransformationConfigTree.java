@@ -69,12 +69,7 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
-import org.ensembl.mart.builder.lib.BaseConfigurationObject;
-import org.ensembl.mart.builder.lib.BaseNamedConfigurationObject;
-import org.ensembl.mart.builder.lib.DatasetBase;
-import org.ensembl.mart.builder.lib.TransformationBase;
-import org.ensembl.mart.builder.lib.TransformationConfig;
-import org.ensembl.mart.builder.lib.TransformationUnitBase;
+import org.ensembl.mart.builder.lib.*;
 import org.ensembl.mart.lib.config.ConfigurationException;
 /**
  * Class TransformationConfigTree extends JTree.
@@ -223,12 +218,21 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 					copy();
 				else if (e.getActionCommand().equals("paste"))
 					paste();
-				else if (e.getActionCommand().equals("insert dataset"))
-					insert(new DatasetBase("new"), "Dataset:");	
-				else if (e.getActionCommand().equals("insert transformation"))
-					insert(new TransformationBase("new"), "Transformation:");
-				else if (e.getActionCommand().equals("insert transformation unit"))
-					insert(new TransformationUnitBase("new"), "TransformationUnit:");					
+				else if (e.getActionCommand().equals("insert dataset")) {
+					Dataset ds = new Dataset();
+					ds.getElement().setAttribute("internalName","new");				
+					insert(ds, "Dataset:");	
+				}
+				else if (e.getActionCommand().equals("insert transformation")) {
+					Transformation trans = new Transformation();
+					trans.getElement().setAttribute("internalName","new");				
+					insert(trans, "Transformation:");	
+				}
+				else if (e.getActionCommand().equals("insert transformation unit")) {
+					TransformationUnit tunit = new TransformationUnit();
+					tunit.getElement().setAttribute("internalName","new");				
+					insert(tunit, "TransformationUnit:");					
+				}
 				else if (e.getActionCommand().equals("delete"))
 					delete();
 				else if (e.getActionCommand().equals("save"))
@@ -257,9 +261,11 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 		
 		if (lastSelectedNode == null)
 			return;
-		BaseConfigurationObject nodeObject = (BaseConfigurationObject) lastSelectedNode.getUserObject();
+		ConfigurationBase nodeObject = (ConfigurationBase) lastSelectedNode.getUserObject();
 		String nodeObjectClass = nodeObject.getClass().getName();
-		String[] data = nodeObject.getXmlAttributeTitles();
+		//String[] data = nodeObject.getXmlAttributeTitles();
+		String[] data = null;// = nodeObject.getXmlAttributeTitles();
+
 
 		attrTableModel =
 			new TransformationConfigAttributeTableModel(
@@ -478,30 +484,27 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 
 	public void copy() {
 
-		//TreePath path = getSelectionPath();
-		//if (path==null) return;
-		//editingNode= ((TransformationConfigTreeNode)path.getLastPathComponent());     
-
 		if (!cut)
 			editingNode = setEditingNode();
 
 		if (editingNode == null)
 			return;
-		String editingNodeClass = editingNode.getUserObject().getClass().getName();
+			
 		TransformationConfigTreeNode copiedNode = new TransformationConfigTreeNode("");
 
-		if ((editingNodeClass).equals("org.ensembl.mart.builder.lib.TransformationBase"))
+		if (editingNode.getUserObject() instanceof org.ensembl.mart.builder.lib.Transformation)
 			copiedNode =
-				new TransformationConfigTreeNode(editingNode.toString(), new TransformationBase((TransformationBase) editingNode.getUserObject()));
-		else if (editingNodeClass.equals("org.ensembl.mart.builder.lib.TransformationUnitBase"))
+				new TransformationConfigTreeNode(editingNode.toString(), ((Transformation) editingNode.getUserObject()).copy());
+		else if (editingNode.getUserObject() instanceof org.ensembl.mart.builder.lib.TransformationUnit)
 			copiedNode =
-				new TransformationConfigTreeNode(editingNode.toString(), new TransformationUnitBase((TransformationUnitBase) editingNode.getUserObject()));
-		else if (editingNodeClass.equals("org.ensembl.mart.builder.lib.DatasetBase"))
+				new TransformationConfigTreeNode(editingNode.toString(), ((TransformationUnit) editingNode.getUserObject()).copy());
+		else if (editingNode.getUserObject() instanceof org.ensembl.mart.builder.lib.Dataset)
 			copiedNode =
-				new TransformationConfigTreeNode(editingNode.toString(), new DatasetBase((DatasetBase) editingNode.getUserObject()));
+				new TransformationConfigTreeNode(editingNode.toString(), ((Dataset) editingNode.getUserObject()).copy());
+		
+
 
 		TransformationConfigTreeNodeSelection ss = new TransformationConfigTreeNodeSelection(copiedNode);
-		//clipboard.setContents(ss, this);
 		//try to set owner as the MartEditor object so can copy and paste between trees
 		frame.getBuilder().clipboardEditor.setContents(ss, (ClipboardOwner) frame.getBuilder());
 	}
@@ -520,7 +523,7 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 					new DataFlavor(Class.forName("org.ensembl.mart.builder.TransformationConfigTreeNode"), "treeNode"));				
 			
 			
-			BaseNamedConfigurationObject test = (BaseNamedConfigurationObject) selnode.getUserObject();
+			ConfigurationBase test = (ConfigurationBase) selnode.getUserObject();
 			TransformationConfigTreeNode dropnode = setEditingNode();
 			if (dropnode == null)
 				return;
@@ -538,30 +541,25 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 			Enumeration children = dropnode.children();
 			while (children.hasMoreElements()) {
 				childNode = (TransformationConfigTreeNode) children.nextElement();
-				BaseNamedConfigurationObject ch = (BaseNamedConfigurationObject) childNode.getUserObject();
-
-				BaseNamedConfigurationObject sel = (BaseNamedConfigurationObject) selnode.getUserObject();
-				if (sel.getInternalName().equals(ch.getInternalName())) {
-					
-					//sel.setInternalName(sel.getInternalName() + "_copy");
-					
-					String selnodeName = selnode.getUserObject().getClass().getName();
-					
-					BaseNamedConfigurationObject newSel = null;// no copy constructor for abstract class
-					if (selnodeName.equals("org.ensembl.mart.builder.lib.TransformationBase"))
-						newSel = new TransformationBase((TransformationBase)sel);
-					else if (selnodeName.equals("org.ensembl.mart.lib.TransformationUnitBase"))
-						newSel = new TransformationUnitBase((TransformationUnitBase)sel);
-					else if (selnodeName.equals("org.ensembl.mart.lib.DatasetBase"))
-						newSel = new DatasetBase((DatasetBase)sel);
+				ConfigurationBase ch = (ConfigurationBase) childNode.getUserObject();
+				ConfigurationBase sel = (ConfigurationBase) selnode.getUserObject();
+				if (sel.getElement().getAttributeValue("internalName").equals(ch.getElement().getAttributeValue("internalName"))) {
+					//String selnodeName = selnode.getUserObject().getClass().getName();
+					ConfigurationBase newSel = null;// no copy constructor for abstract class
 						
-					newSel.setInternalName(sel.getInternalName() + "_copy");
+					if (selnode.getUserObject() instanceof org.ensembl.mart.builder.lib.Transformation)
+						newSel = (Transformation) sel.copy();
+					else if (selnode.getUserObject() instanceof org.ensembl.mart.builder.lib.TransformationUnit)
+						newSel = (TransformationUnit) sel.copy();
+					else if (selnode.getUserObject() instanceof org.ensembl.mart.builder.lib.Dataset)
+						newSel = (Dataset) sel.copy();
+					
+						
+					newSel.getElement().setAttribute("internalName",sel.getElement().getAttributeValue("internalName") + "_copy");
 					// need to make sure refers to a different object for multiple pastes
 					selnode = new TransformationConfigTreeNode(selnode.name + "_copy",newSel);
 					TransformationConfigTreeNodeSelection ss = new TransformationConfigTreeNodeSelection(selnode);
-					frame.getBuilder().clipboardEditor.setContents(ss, (ClipboardOwner) frame.getBuilder());
-					
-					
+					frame.getBuilder().clipboardEditor.setContents(ss, (ClipboardOwner) frame.getBuilder());					
 					break;
 				}
 			}
@@ -580,7 +578,7 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 
 	}
 
-	public void insert(BaseConfigurationObject obj, String name) throws ConfigurationException{
+	public void insert(ConfigurationBase obj, String name) throws ConfigurationException{
 
 		TransformationConfigTreeNode parentNode = (TransformationConfigTreeNode) clickedPath.getLastPathComponent();
 		TransformationConfigTreeNode newNode = new TransformationConfigTreeNode(name + "newNode", obj);

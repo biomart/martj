@@ -21,7 +21,6 @@ package org.ensembl.mart.builder;
 import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Color;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
@@ -31,13 +30,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.sql.Connection;
 import java.util.prefs.Preferences;
 
-import java.util.Hashtable;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JDesktopPane;
 import javax.swing.JFileChooser;
 
@@ -46,12 +42,10 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JToolBar;
 import javax.swing.UIManager;
 
 import org.ensembl.mart.explorer.Feedback;
 import org.ensembl.mart.guiutils.DatabaseSettingsDialog;
-import org.ensembl.mart.lib.DetailedDataSource;
 
 import org.ensembl.mart.builder.lib.ConfigurationAdaptor;
 import org.ensembl.mart.builder.lib.DatabaseAdaptor;
@@ -263,7 +257,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
   }
 
   //Create a new internal frame.
-  protected void createFrame(File file) {
+  protected void createFrame(String file) {
 
     TransformationConfigTreeWidget frame = new TransformationConfigTreeWidget(file, this, null, null, null, null, null);
     frame.setVisible(true);
@@ -441,7 +435,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 
     if (returnVal == JFileChooser.APPROVE_OPTION) {
       file = fc.getSelectedFile();
-      createFrame(file);
+      createFrame(file.toString());
       //This is where a real application would open the file.
       System.out.println("Opening: " + file.getName() + ".\n");
     } else {

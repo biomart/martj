@@ -25,12 +25,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
-import org.ensembl.mart.builder.lib.BaseConfigurationObject;
-import org.ensembl.mart.builder.lib.DatasetBase;
-import org.ensembl.mart.builder.lib.TransformationBase;
-import org.ensembl.mart.builder.lib.TransformationConfig;
-import org.ensembl.mart.builder.lib.TransformationUnitBase;
-
+import org.ensembl.mart.builder.lib.*;
 
 /**
  * Class DatasetConfigAttributeTableModel implementing TableModel.
@@ -38,7 +33,7 @@ import org.ensembl.mart.builder.lib.TransformationUnitBase;
  * <p>This class is written for the attributes table to implement autoscroll
  * </p>
  *
- * @author <a href="mailto:katerina@ebi.ac.uk">Damian Smedley</a>
+ * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
  * //@see org.ensembl.mart.config.DatasetConfig
  */
 
@@ -47,7 +42,7 @@ public class TransformationConfigAttributeTableModel implements TableModel {
 	protected String[] columnNames = { "Attribute", "Value" };
 	protected Vector tableModelListenerList;
 	protected static final int COLUMN_COUNT = 2;
-	protected BaseConfigurationObject obj;
+	protected ConfigurationBase obj;
 	protected String objClass;
 	protected String[] firstColumnData;
 	protected TransformationConfigTreeNode node;
@@ -56,7 +51,7 @@ public class TransformationConfigAttributeTableModel implements TableModel {
 
 	public TransformationConfigAttributeTableModel(TransformationConfigTreeNode node, String[] firstColumnData, String objClass) {
 		this.node = node;
-		this.obj = (BaseConfigurationObject) node.getUserObject();
+		this.obj = (ConfigurationBase) node.getUserObject();
 		this.firstColumnData = firstColumnData;
 		this.objClass = objClass;
 		tableModelListenerList = new Vector();
@@ -103,7 +98,7 @@ public class TransformationConfigAttributeTableModel implements TableModel {
 		if (columnIndex == 0) {
 			return firstColumnData[rowIndex];
 		} else {
-			return obj.getAttribute(firstColumnData[rowIndex]);
+			return obj.getElement().getAttributeValue(firstColumnData[rowIndex]);
 		}
 	}
 
@@ -121,51 +116,17 @@ public class TransformationConfigAttributeTableModel implements TableModel {
 
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {		
 		//Sets the value in the cell at columnIndex and rowIndex to aValue.
-		Object child = node.getUserObject();
-		TransformationConfigTreeNode rootNode = (TransformationConfigTreeNode) node.getRoot();
-		TransformationConfig dsConfig = (TransformationConfig) rootNode.getUserObject();		
-		
+		Object child = node.getUserObject();	
 		if (columnIndex == 1) {
 			//child may be a TransformationConfig, in which case dont try to remove/add the child to a null parent
-			if (child instanceof org.ensembl.mart.builder.lib.TransformationConfig) {
-				obj.setAttribute(firstColumnData[rowIndex], (String) aValue);
-			} else {
+			if (!(child instanceof org.ensembl.mart.builder.lib.TransformationConfig)) {
 				Object parent = ((TransformationConfigTreeNode) node.getParent()).getUserObject();
 				int index = node.getParent().getIndex(node) - TransformationConfigTreeNode.getHeterogenousOffset(parent, child);
-
-				if (parent instanceof org.ensembl.mart.builder.lib.TransformationConfig) {
-					TransformationConfig config = (TransformationConfig) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof org.ensembl.mart.builder.lib.DatasetBase)
-						config.removeDataset((DatasetBase) node.getUserObject());
-				}
-				else if (parent instanceof org.ensembl.mart.builder.lib.DatasetBase) {
-					DatasetBase fp = (DatasetBase) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof org.ensembl.mart.builder.lib.TransformationBase)
-						fp.removeTransformation((TransformationBase) node.getUserObject());
-				} 
-				else if (parent instanceof org.ensembl.mart.builder.lib.TransformationBase) {
-					TransformationBase fp = (TransformationBase) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof org.ensembl.mart.builder.lib.TransformationUnitBase)
-						fp.removeTransformationUnit((TransformationUnitBase) node.getUserObject());
-				} 
-				obj.setAttribute(firstColumnData[rowIndex], (String) aValue);
-
-				if (parent instanceof org.ensembl.mart.builder.lib.TransformationConfig) {
-					TransformationConfig config = (TransformationConfig) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof org.ensembl.mart.builder.lib.DatasetBase)
-						config.insertDataset(index, (DatasetBase) obj);        
-				} else if (parent instanceof org.ensembl.mart.builder.lib.DatasetBase) {
-					DatasetBase fp = (DatasetBase) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof org.ensembl.mart.builder.lib.TransformationBase)
-						fp.insertTransformation(index, (TransformationBase) obj);
-				} else if (parent instanceof org.ensembl.mart.builder.lib.TransformationBase) {
-					TransformationBase fp = (TransformationBase) ((TransformationConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof org.ensembl.mart.builder.lib.TransformationUnitBase)
-						fp.insertTransformationUnit(index, (TransformationUnitBase) obj);
-				} 
+				ConfigurationBase parentConf = (ConfigurationBase) parent;
+				parentConf.removeChildObject(((ConfigurationBase) child).getElement().getAttributeValue("internalName"));
 			}
-			
-			TransformationConfigTreeNode newNode = new TransformationConfigTreeNode(obj.getAttribute("internalName"), obj);
+			obj.getElement().setAttribute(firstColumnData[rowIndex], (String) aValue);
+			TransformationConfigTreeNode newNode = new TransformationConfigTreeNode(obj.getElement().getAttributeValue("internalName"), obj);
 
 			if (parent != null) {
 				int index = parent.getIndex(node);
@@ -179,7 +140,7 @@ public class TransformationConfigAttributeTableModel implements TableModel {
 	}
 	
 
-	public void setObject(BaseConfigurationObject obj) {
+	public void setObject(ConfigurationBase obj) {
 		this.obj = obj;
 	}
 

@@ -17,8 +17,8 @@ package org.ensembl.mart.builder.lib;
 
 public class ParsingTester {
 
-	private static String inputConfigFile="/Users/arek/fly.xml";
-	private static String outputConfigFile="/Users/arek/myxml.xml";
+	private static String inputConfigFile="data/builder/fly.xml";
+	private static String outputConfigFile="data/builder/myxml.xml";
 
 	
 	
@@ -28,14 +28,14 @@ public class ParsingTester {
 		
 		
 		// get config
-		NewTransformationConfig nts = cad.getTransformationConfig(inputConfigFile);
+		TransformationConfig nts = cad.getTransformationConfig(inputConfigFile);
 
 		
 		/**
 		 * traversing the object tree, getting/setting attributes
 		 */
 
-        // removing objects
+        // removing objects - fly.xml has fly and flystructure datasets
 		nts.removeChildObject("fly");
 
 		
@@ -43,9 +43,9 @@ public class ParsingTester {
 		for (int i = 0; i < nbso.length; i++) {
 			Dataset ds = (Dataset) nbso[i];
 
-			
 			// getting attributes
-			System.out.println(ds.datasetKey + " internalName: "+ ds.element.getAttributeValue("internalName"));
+			//System.out.println(ds.datasetKey + " internalName: "+ ds.element.getAttributeValue("internalName"));
+			System.out.println(ds.element.getAttributeValue("mainTable") + " internalName: "+ ds.element.getAttributeValue("internalName"));
 
 			// copy object
 			Dataset newDS = (Dataset) ds.copy();
