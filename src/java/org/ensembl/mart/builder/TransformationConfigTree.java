@@ -69,6 +69,10 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
+import java.util.List;
+import org.jdom.Attribute;
+
+
 import org.ensembl.mart.builder.lib.*;
 import org.ensembl.mart.lib.config.ConfigurationException;
 /**
@@ -263,9 +267,14 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 			return;
 		ConfigurationBase nodeObject = (ConfigurationBase) lastSelectedNode.getUserObject();
 		String nodeObjectClass = nodeObject.getClass().getName();
-		//String[] data = nodeObject.getXmlAttributeTitles();
-		String[] data = null;// = nodeObject.getXmlAttributeTitles();
-
+		
+		// maybe change below to a method on ConfigurationBase
+		List atts = nodeObject.getElement().getAttributes();
+		String[] data = new String[atts.size()];
+		for (int i=0; i < atts.size(); i++){
+			Attribute att = (Attribute) atts.get(i);
+			data[i] = att.getName();
+		}
 
 		attrTableModel =
 			new TransformationConfigAttributeTableModel(
