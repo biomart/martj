@@ -26,6 +26,8 @@ public class Dataset extends ConfigurationBase {
 	
 	public Dataset (Element element){
 		super(element);
+		int[] requiredFields = {0,1};
+		setRequiredFields(requiredFields);
 	}
 		
 	public Dataset (){

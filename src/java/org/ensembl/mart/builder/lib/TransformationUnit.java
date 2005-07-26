@@ -34,6 +34,8 @@ public  class TransformationUnit extends ConfigurationBase {
 	
 	public TransformationUnit (Element element){
 		super(element);
+		int[] requiredFields = {0,1,2,3,4,7};
+		setRequiredFields(requiredFields);
 	}
 		
 	public TransformationUnit (){
