@@ -13,97 +13,25 @@ import org.jdom.Element;
 
 /**
  * @author <a href="mailto: arek@ebi.ac.uk">Arek Kasprzyk</a>
- *
+ * @author <a href="mailto: damian@ebi.ac.uk">Damian Smedley</a>
  * 
  */
 
 
 public class Dataset extends ConfigurationBase {
 	
-	//ArrayList transformations = new ArrayList();
-	String name;
 	String targetSchemaName;
 	String datasetKey;
 	DatabaseAdaptor adaptor;
 	
-	
-	
 	public Dataset (Element element){
 		super(element);
-		}
+	}
 		
-		public Dataset (){
-			super();
-			}
-	
-	
-	
-	
-		
-	//	public Dataset(){
-		
-	//}
-	
-		
-		// the below is needed to make sure that 
-		// every main table has the same columns
-		// needs more thinking for independent mains
-				
-	/**
-	
-	public void createTransformationsForMains(){
-		
-		TransformationCode [] trans = getTransformations();
-		ArrayList mains = new ArrayList();
-		
-		for (int i=0;i<trans.length;i++){
-			if (trans[i].finalTableType.equals("MAIN")){
-				Table main = trans[i].getFinalUnit().getTemp_end();
-				
-				System.out.println ("transformation number frm dataset "+trans[i].number);
-				
-				//transformationKey=trans[i].getFinalUnit().getTemp_end().key;
-				//System.out.println(trans[i].getFinalUnit().getTemp_end());
-				datasetKey=trans[i].getFinalUnit().getTemp_end().PK;
-				
-				
-				mains.add(main);
-			}
-		}
-		
-		
-		ArrayList ref_tables = new ArrayList();
-		for (int i=1;i<mains.size();i++){
-			
-            Table main = (Table) mains.get(i);
-            Table ref = (Table) mains.get(i);
-            ref_tables.add(ref);
-            Table [] b = new Table [ref_tables.size()];
-            Table [] tables = (Table []) ref_tables.toArray(b);
-            
-            
-            TransformationCode transformation = new TransformationCode();
-            transformation.adaptor=adaptor;
-            transformation.datasetName=name;
-            transformation.targetSchemaName=targetSchemaName;
-            transformation.finalTableName =ref.getName();
-            
-            ref.setName(ref.temp_name);
-            transformation.startTable=main;
-		    transformation.type="main";
-		    transformation.finalTableType = "MAIN";
-		    
-		    transformation.column_operations="append";
-            transformation.createUnits(tables);
-            
-            transformation.transform();
-            addTransformation(transformation);
-		
-		}		
+	public Dataset (){
+		super();
 	}
 	
-	
-	*/
 	
 	public void createTransformationsForCentralFilters(){
 		
@@ -115,14 +43,11 @@ public class Dataset extends ConfigurationBase {
 			Transformation transformation = new Transformation();
 			
 			transformation.adaptor=adaptor;
-			transformation.datasetName=name;
+			transformation.datasetName=getElement().getAttributeValue("internalName");
 			transformation.targetSchemaName=targetSchemaName;
-			transformation.userTableName=mainTransformations[i].userTableName;
-			 
-			 // get final temp for each main tablev
-			
-			//System.out.println(" transfromation form central "+mainTransformations[i].finalTableName);
-			
+			transformation.getElement().setAttribute("userTableName",
+				mainTransformations[i].getElement().getAttributeValue("userTableName"));
+		
 			Table main_table=mainTransformations[i].getFinalUnit().getTemp_end();
 			// set this again
 			main_table.type="interim";
@@ -137,86 +62,45 @@ public class Dataset extends ConfigurationBase {
 			boolean containsCentral=false;
 			for (int m = 0; m < dmTransformations.length; m++) {
 				
-				if(dmTransformations[m].central) containsCentral=true; 
+			    if(dmTransformations[m].central) containsCentral=true; 
 				
 				Table dmFinalTable=dmTransformations[m].getFinalUnit().getTemp_end();
 				
-				//System.out.println(" temp end name from central transf "+dmFinalTable.getName());
-				
-				
-			TransformationUnitSingle sunit = 
-				new TransformationUnitSingle(dmFinalTable);
+				TransformationUnitSingle sunit = 
+					new TransformationUnitSingle(dmFinalTable);
 			
-			sunit.single = true;
-			sunit.adaptor = adaptor;
-			sunit.targetSchema = targetSchemaName;
-			sunit.TSKey=dmTransformations[m].getFinalUnit().TSKey;
-			sunit.RFKey=dmTransformations[m].getFinalUnit().RFKey;
-			sunit.type="notNull";
-			transformation.addChildObject(sunit);
+				sunit.single = true;
+				sunit.adaptor = adaptor;
+				sunit.targetSchema = targetSchemaName;
+				sunit.TSKey=dmTransformations[m].getFinalUnit().TSKey;
+				sunit.RFKey=dmTransformations[m].getFinalUnit().RFKey;
+				sunit.type="notNull";
+				transformation.addChildObject(sunit);
 			
 			
 
-			TransformationUnitDouble dunit = new TransformationUnitDouble(dmFinalTable);
-			dunit.cardinality = dmFinalTable.cardinality;
-			dunit.column_operations = "addone";
-			dunit.final_table_name = "MAIN";
-			dunit.adaptor = adaptor;
-			dunit.TSKey=dmTransformations[m].getFinalUnit().RFKey;
-			dunit.RFKey=dmTransformations[m].getFinalUnit().TSKey;
+				TransformationUnitDouble dunit = new TransformationUnitDouble(dmFinalTable);
+				dunit.getElement().setAttribute("cardinality",dmFinalTable.getCardinality());
+				dunit.column_operations = "addone";
+				dunit.final_table_name = "MAIN";
+				dunit.adaptor = adaptor;
+				dunit.TSKey=dmTransformations[m].getFinalUnit().RFKey;
+				dunit.RFKey=dmTransformations[m].getFinalUnit().TSKey;
 			
 			
-			dunit.targetSchema = targetSchemaName;
-			transformation.addChildObject(dunit);
+				dunit.targetSchema = targetSchemaName;
+				transformation.addChildObject(dunit);
 				
-		}
+			}
 
 			// resetting the name to temp name
 			if (containsCentral) main_table.setName("main_interim");
 			
 			transformation.transform();
-			//addTransformation(transformation);
 			addChildObject(transformation);
 		}
 			
 	}
-	
-	
-	/**
-	public void addTransformationUnit(String final_table_name,String new_table_name,String final_table_key,String final_table_extension,
-									  String new_table_key, String new_table_extension, String new_table_cardinality){
-		
-		TransformationCode trans = getTransformationByFinalName(final_table_name);
-		Column [] columns = sourceSchema.getTableColumns(new_table_name);
-		
-		Table reftable = new Table();
-		reftable.setName(new_table_name);
-		reftable.setColumns(columns);
-		reftable.setName(new_table_name);	
-		reftable.setKey(new_table_key);
-		reftable.setExtension(new_table_extension);
-		reftable.setCardinality(new_table_cardinality);	
-		
-		trans.addAdditionalUnit(reftable,final_table_key,final_table_extension);
-		// redo the transformation
-		trans.transform();
-		
-	}
-	
-	*/
-	
-	
-	/**
-	private void transform(){
-		
-		TransformationCode [] trans = getTransformations();
-		
-		for (int i=0;i<trans.length;i++){
-			trans[i].transform();
-		}
-	}
-	*/
-	
 	
 	
 	public void transform(){
@@ -236,61 +120,17 @@ public class Dataset extends ConfigurationBase {
 	}
 	
 	
-		
-	/*public Transformation [] getAllTransformations() {
-		
-		Transformation [] b = new Transformation[transformations.size()];
-	
-		//setFinalNames();
-		//return transforms;
-		return (Transformation []) transformations.toArray(b);	
-		
-	}*/
-	
-	
 	public void setUserTableNames(){
-		
-		//Transformation [] b = new Transformation[transformations.size()];
-        //Transformation [] transforms = (Transformation []) transformations.toArray(b);
 		
 		ConfigurationBase[] transforms = getChildObjects();
 		
 		for (int i = 0; i < transforms.length; i++) { 
 			
 			Transformation trans = (Transformation) transforms[i];
-			// temp comment out.
-			
-			trans.getFinalUnit().getTemp_end().setName(trans.userTableName);
-		
-			
-		//System.out.println(" setting name "+transforms[i].number+ " to "+transforms[i].userTableName);
-		
+			trans.getFinalUnit().getTemp_end().setName(trans.getElement().getAttributeValue("userTableName"));
 		}
 		
 	}
-	
-	
-	
-	
-	/*public void addTransformation(Transformation transformation){
-		this.transformations.add(transformation);
-			
-	}*/
-	
-	
-	/*private Transformation getTransformationByFinalName(String name){
-		
-		Transformation trans = new Transformation();
-		
-		for (int i=0;i<transformations.size();i++){
-			trans = (Transformation) transformations.get(i);
-			if (trans.finalTableName.equals(name)){
-			break;
-			}
-		}
-		
-		return trans;
-	}*/
 	
 
 	public Transformation [] getTransformationsByFinalTableType(String type){
@@ -300,8 +140,6 @@ public class Dataset extends ConfigurationBase {
 		ConfigurationBase [] trans = getChildObjects();
 		
 		for (int i=0;i<trans.length;i++){
-			
-			//System.out.println("gettintg tpe "+type);
 			
 			if (((Transformation)trans[i]).finalTableType.equals(type)){
 				trans_list.add(trans[i]);

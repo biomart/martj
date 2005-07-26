@@ -114,7 +114,6 @@ public class ConfigurationAdaptor {
 				
 				Dataset dataset = (Dataset) datasets[i];
 				datasetCodeName = dataset.getElement().getAttributeValue("internalName");
-				dataset.name = datasetCodeName;
 				dataset.adaptor = adaptor;
 				dataset.targetSchemaName = targetSchemaName;
 				
@@ -129,13 +128,13 @@ public class ConfigurationAdaptor {
 					transformation.adaptor = adaptor;
 					transformation.datasetName = datasetCodeName;
 					transformation.targetSchemaName = targetSchemaName;
-					transformation.number = transformation.getElement().getAttributeValue("internalName");
+					//transformation.number = transformation.getElement().getAttributeValue("internalName");
 					transformation.finalTableName = transformation.getElement().getAttributeValue("userTableName");
-					transformation.userTableName = transformation.getElement().getAttributeValue("userTableName");
+					//transformation.userTableName = transformation.getElement().getAttributeValue("userTableName");
 									
 					if (transformation.getElement().getAttributeValue("includeCentralFilter").toUpperCase().equals("Y")) transformation.central = true;
 
-					System.out.println ("transforming ... "+transformation.number+" user table "+transformation.userTableName);
+					System.out.println ("transforming ... "+transformation.getElement().getAttributeValue("internalName")+" user table "+transformation.getElement().getAttributeValue("userTableName"));
 					
 					StringBuffer final_table = new StringBuffer(datasetCodeName
 							+ "__" + transformation.getElement().getAttributeValue("centralTable") + "__");
@@ -214,7 +213,7 @@ public class ConfigurationAdaptor {
 							dunit.type="partition";
 						 }
 				
-						 dunit.cardinality = transformationUnit.getElement().getAttributeValue("cardinality");
+						 //dunit.cardinality = transformationUnit.getElement().getAttributeValue("cardinality");
 						 dunit.column_operations = "addall";
 						 dunit.adaptor = adaptor;
 						 dunit.targetSchema = targetSchemaName;
@@ -257,8 +256,8 @@ public class ConfigurationAdaptor {
 			ConfigurationBase[] units = finalTransformation.getChildObjects();
 			
 			sqlout.write("\n--\n--       TRANSFORMATION NO "
-					+ finalTransformation.number + "      TARGET TABLE: "
-					+ finalTransformation.userTableName.toUpperCase()
+					+ finalTransformation.getElement().getAttributeValue("internalName") + "      TARGET TABLE: "
+					+ finalTransformation.getElement().getAttributeValue("userTableName").toUpperCase()
 					+ "\n--\n");
 
 			for (int j = 0; j < units.length; j++) {

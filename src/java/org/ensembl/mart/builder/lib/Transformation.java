@@ -8,6 +8,7 @@ package org.ensembl.mart.builder.lib;
 
 /**
  * @author <a href="mailto: arek@ebi.ac.uk">Arek Kasprzyk </a>
+ * @author <a href="mailto: damian@ebi.ac.uk">Damian Smedley </a>
  * 
  *  
  */
@@ -17,48 +18,29 @@ import org.jdom.Element;
 
 public class Transformation extends ConfigurationBase {
 	
-	public Transformation (Element element){
-	super(element);
-	}
-	
-	public Transformation (){
-		super();
-		}
-	
-	
-	//ArrayList units = new ArrayList();
-	
 	String finalTableName;
 	String finalTableType; // DM MAIN
 	String type; // central, linked
 	String column_operations;
 	String datasetName;
 	String targetSchemaName;
-	String number;
 	Table startTable;
 	DatabaseAdaptor adaptor;
 	boolean central = false;
-
-	public String userTableName;
 	
-
-
+	
+	public Transformation (Element element){
+		super(element);
+	}
+	
+	public Transformation (){
+		super();
+	}
+		
 	public TransformationUnit getFinalUnit() {
 		TransformationUnit unit = (TransformationUnit) getChildObjects()[getChildObjects().length - 1];
 		return unit;
 	}
-	
-	
-	/*public void addUnit(TransformationUnit unit) {
-		this.units.add(unit);
-	}*/
-
-	/*public TransformationUnit[] getUnits() {
-		TransformationUnit[] b = new TransformationUnit[units.size()];
-		return (TransformationUnit[]) units.toArray(b);
-	}*/
-	
-	
 
 	public void transform() {
 
@@ -92,11 +74,10 @@ public class Transformation extends ConfigurationBase {
 				
 			if (single) {
 				unit.refTable = converted_ref;
-				unit.cardinality = "n1standard"; // needed for left join with central table (boolean filters)
+				unit.getElement().setAttribute("cardinality","n1standard"); // needed for left join with central table (boolean filters)
 				single = false;
 			}
 			
-			//System.out.println("from tranfromation");
 			unit.transform(temp_start, temp_end_name);
 
 			if (unit.single) {
@@ -123,10 +104,7 @@ public class Transformation extends ConfigurationBase {
 			}
 		}
 	
-		//getFinalUnit().getTemp_end().setName(myName);
-	
 	}
 
-	
 	
 }

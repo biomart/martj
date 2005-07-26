@@ -21,7 +21,7 @@ public  class TransformationUnit extends ConfigurationBase {
 	Table refTable;
 	String temp_end_name;
 	String column_operations;
-	String cardinality;
+	//String cardinality;
 	String final_table_name;
 	String TSKey;
 	String RFKey;
@@ -34,22 +34,14 @@ public  class TransformationUnit extends ConfigurationBase {
 	
 	public TransformationUnit (Element element){
 		super(element);
-		}
+	}
 		
-		public TransformationUnit (){
-			super();
-			}
+	public TransformationUnit (){
+		super();
+	}
 	
-	
-	
-	
-	
-	
-	
-	public TransformationUnit(Table ref_table){
-		
+	public TransformationUnit(Table ref_table){	
 		this.refTable=ref_table;
-		
 	}
 	
 
@@ -61,20 +53,15 @@ public  class TransformationUnit extends ConfigurationBase {
 		
 	}
 	public  void transform (Table temp_start, String temp_end_name){
-		
-		
 	}
 	
-	public String dropTempTable (){
-		
+	public String dropTempTable (){		
 		String sql="";
 		if (!tempEnd.isFinalTable == true)
 			sql = "DROP TABLE "+ targetSchema+"."+tempEnd.getName()+";";
 		return sql;	
 	}
 		
-	
-	
 	public String addIndex(int i){
 		
 		String sql = "";
@@ -104,8 +91,6 @@ public  class TransformationUnit extends ConfigurationBase {
 		return sql;
 		
 	}
-	
-	
 	
 	
 	public String renameKeyColumn(String key){
