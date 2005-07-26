@@ -153,7 +153,7 @@ public class Dataset extends ConfigurationBase {
 			sunit.TSKey=dmTransformations[m].getFinalUnit().TSKey;
 			sunit.RFKey=dmTransformations[m].getFinalUnit().RFKey;
 			sunit.type="notNull";
-			transformation.addUnit(sunit);
+			transformation.addChildObject(sunit);
 			
 			
 
@@ -167,7 +167,7 @@ public class Dataset extends ConfigurationBase {
 			
 			
 			dunit.targetSchema = targetSchemaName;
-			transformation.addUnit(dunit);
+			transformation.addChildObject(dunit);
 				
 		}
 

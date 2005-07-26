@@ -12,8 +12,6 @@ package org.ensembl.mart.builder.lib;
  *  
  */
 
-import java.util.*;
-
 import org.jdom.Element;
 
 
@@ -28,7 +26,7 @@ public class Transformation extends ConfigurationBase {
 		}
 	
 	
-	ArrayList units = new ArrayList();
+	//ArrayList units = new ArrayList();
 	
 	String finalTableName;
 	String finalTableType; // DM MAIN
@@ -46,19 +44,19 @@ public class Transformation extends ConfigurationBase {
 
 
 	public TransformationUnit getFinalUnit() {
-		TransformationUnit unit = (TransformationUnit) units.get(units.size() - 1);
+		TransformationUnit unit = (TransformationUnit) getChildObjects()[getChildObjects().length - 1];
 		return unit;
 	}
 	
 	
-	public void addUnit(TransformationUnit unit) {
+	/*public void addUnit(TransformationUnit unit) {
 		this.units.add(unit);
-	}
+	}*/
 
-	public TransformationUnit[] getUnits() {
+	/*public TransformationUnit[] getUnits() {
 		TransformationUnit[] b = new TransformationUnit[units.size()];
 		return (TransformationUnit[]) units.toArray(b);
-	}
+	}*/
 	
 	
 
@@ -76,9 +74,9 @@ public class Transformation extends ConfigurationBase {
 		
 		
         // transform
-		for (int i = 0; i < getUnits().length; i++) {
+		for (int i = 0; i < getChildObjects().length; i++) {
 			
-			TransformationUnit unit = getUnits()[i];
+			TransformationUnit unit = (TransformationUnit) getChildObjects()[i];
 			Table temp_start = new Table();
 
 			if (i == 0) {
@@ -106,7 +104,7 @@ public class Transformation extends ConfigurationBase {
 				converted_ref = unit.tempEnd;
 			}
 
-			if (i == getUnits().length - 1) {
+			if (i == getChildObjects().length - 1) {
 				unit.tempEnd.setName(finalTableName);
 				final_table = true;
 			}

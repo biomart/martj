@@ -57,7 +57,7 @@ public class DatabaseAdaptor {
 		instance = instanceString;
 		schema = schemaString;
 		catalog= catalogString;
-		System.out.println("DRIVER" + driver);
+
 		if (driver.indexOf("oracle") >= 0)
 			rdbms = "oracle";
 		else if (driver.indexOf("mysql") >= 0)
@@ -69,7 +69,6 @@ public class DatabaseAdaptor {
 			return;
 		}
 		
-		System.out.println("RDBMS" + rdbms);			
 		initialiseConnection();			
 					
 	}

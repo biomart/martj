@@ -31,13 +31,7 @@ public class ConfigurationAdaptor {
 	public DatabaseAdaptor adaptor;
 	public MetaDataAdaptor resolver;
 	public String targetSchemaName;
-	private static ArrayList mart = new ArrayList();
-	private static Dataset dataset = null;
 	
-	
-	
-	
-
 	public TransformationConfig getTransformationConfig(
 			String file) {
 
@@ -84,9 +78,6 @@ public class ConfigurationAdaptor {
 	}
 	
 	
-	
-	
-
 	 public void writeDocument(
 			TransformationConfig trans, String xmlFile) {
 
@@ -99,10 +90,7 @@ public class ConfigurationAdaptor {
 			e1.printStackTrace();
 		}
 
-		newDoc.setContent((Element) trans.element.clone());
-		
-	
-		
+		newDoc.setContent((Element) trans.element.clone());	
 
 		XMLOutputter outputter = new XMLOutputter();
 		try {
@@ -113,14 +101,8 @@ public class ConfigurationAdaptor {
 
 	}
 
-
+	public void transformationPreparation(TransformationConfig tConfig) {
 	
-
-	public void readXMLConfiguration(TransformationConfig tConfig) {
-
-		
-			//String lastDatasetName = null;
-			
 			Transformation transformation = null;
 			String datasetCodeName = null;
 			ArrayList linkedList = new ArrayList();
@@ -130,12 +112,7 @@ public class ConfigurationAdaptor {
 			ConfigurationBase[] datasets = tConfig.getChildObjects();
 			for (int i = 0; i < datasets.length; i++){
 				
-				if (i > 0) mart.add(dataset);
-				
-				dataset = (Dataset) datasets[i];
-	            
-				//	new datasetCode
-				//datasetCode = new Dataset();
+				Dataset dataset = (Dataset) datasets[i];
 				datasetCodeName = dataset.getElement().getAttributeValue("internalName");
 				dataset.name = datasetCodeName;
 				dataset.adaptor = adaptor;
@@ -149,7 +126,6 @@ public class ConfigurationAdaptor {
 				for (int j = 0; j < transformations.length; j++){
 					transformation = (Transformation) transformations[j];
 						
-					//transformationCode = new Transformation();
 					transformation.adaptor = adaptor;
 					transformation.datasetName = datasetCodeName;
 					transformation.targetSchemaName = targetSchemaName;
@@ -177,8 +153,6 @@ public class ConfigurationAdaptor {
 					
 					transformation.type = "linked";
 					transformation.column_operations = "addall";
-
-					//dataset.addTransformation(transformation);
 					
 					ConfigurationBase[] transformationUnits = transformation.getChildObjects();
 					for (int k = 0; k < transformationUnits.length; k++){
@@ -186,8 +160,7 @@ public class ConfigurationAdaptor {
 					
 						if (!transformationUnit.getElement().getAttributeValue("centralColumnNames").equals("")) centralColumnNames = transformationUnit.getElement().getAttributeValue("centralColumnNames").split(",");
 						if (!transformationUnit.getElement().getAttributeValue("centralColumnAliases").equals("")) centralColumnAliases = transformationUnit.getElement().getAttributeValue("centralColumnAliases").split(",");
-					
-						
+											
 						//db interaction
 						startTable= resolver.getCentralTable(transformation.getElement().getAttributeValue("centralTable"),centralColumnNames,centralColumnAliases);
 						transformation.startTable = startTable;
@@ -230,14 +203,14 @@ public class ConfigurationAdaptor {
 								refTable.central_extension = transformationUnit.getElement().getAttributeValue("centralProjection");
 					
 							
-							dunit = new TransformationUnitDouble(refTable);
+							dunit = new TransformationUnitDouble(transformationUnit.getElement(),refTable);
 						 }	
 						 else {
                  	
 							if (!transformationUnit.getElement().getAttributeValue("centralProjection").equals(""))
 								startTable.central_extension = transformationUnit.getElement().getAttributeValue("centralProjection");
                  	
-							dunit = new TransformationUnitSingle(startTable);
+							dunit = new TransformationUnitSingle(transformationUnit.getElement(),startTable);
 							dunit.type="partition";
 						 }
 				
@@ -255,63 +228,49 @@ public class ConfigurationAdaptor {
 						 else
 							dunit.RFKey = transformationUnit.getElement().getAttributeValue("primaryKey");
 
-						 transformation.addUnit(dunit);
-
-						 //lastDatasetName = datasetCodeName;
-								
+						 // replace transformationUnit with the newly created dunit
+						 transformation.removeChildObject(transformationUnit.getElement().getAttributeValue("internalName"));
+						 transformation.insertChildObject(k,dunit);		
 					}
 				}
 				
 			}
 			
-			mart.add(dataset);
+			//mart.add(dataset);
 	}
 	
-	public void writeDDL(
-			String sqlFile) throws IOException {
+	public void writeDDL(String sqlFile, TransformationConfig tConfig) throws IOException {
 
 		BufferedWriter sqlout = null;
 		sqlout = new BufferedWriter(new FileWriter(sqlFile, true));
-		
-		//f.delete();
-
 		int indexNo = 0;
-		for (int m = 0; m < mart.size(); m++) {
-			dataset = (Dataset) mart.get(m);	
-			System.out.println("WRITING FOR DATASET "+dataset.name);
+		for (int m = 0; m < tConfig.getChildObjects().length; m++) {
+			Dataset dataset = (Dataset) tConfig.getChildObjects()[m];	
 			dataset.transform();
 		    indexNo++;
-			//Transformation[] final_transformations = dataset.getAllTransformations();		
 			ConfigurationBase[] final_transformations = dataset.getChildObjects();	
-		// Dump to SQL
-		for (int i = 0; i < final_transformations.length; i++) {
+		  // Dump to SQL
+		  for (int i = 0; i < final_transformations.length; i++) {
 			Transformation finalTransformation = (Transformation) final_transformations[i];
-			System.out.println("FINAL " + finalTransformation.userTableName);
 			indexNo = 10 + indexNo;
 
-			//ConfigurationBase[] units = finalTransformation.getChildObjects();
-			TransformationUnit[] units = finalTransformation.getUnits();
-
+			ConfigurationBase[] units = finalTransformation.getChildObjects();
+			
 			sqlout.write("\n--\n--       TRANSFORMATION NO "
 					+ finalTransformation.number + "      TARGET TABLE: "
 					+ finalTransformation.userTableName.toUpperCase()
 					+ "\n--\n");
 
 			for (int j = 0; j < units.length; j++) {
-				
-				// ? if need to tell if a TunitSingle or Double
-				
-				//TransformationUnit unit = (TransformationUnit) units[j];
+					
 				// don't want indexes before 'select distinct'
-				if (!units[j].single & j > 0)
-					sqlout.write(units[j].addIndex(indexNo + j) + "\n");
+				if (!((TransformationUnit)units[j]).single & j > 0)
+					sqlout.write(((TransformationUnit)units[j]).addIndex(indexNo + j) + "\n");
 				
-				System.out.println("UNIT:"+j);
-				sqlout.write(units[j].toSQL() + "\n");
+				sqlout.write(((TransformationUnit)units[j]).toSQL() + "\n");
 			}
 			for (int j = 0; j < units.length; j++) {
-				//TransformationUnit unit = (TransformationUnit) units[j];
-				sqlout.write(units[j].dropTempTable() + "\n");
+				sqlout.write(((TransformationUnit)units[j]).dropTempTable() + "\n");
 			}
 		}
 
@@ -320,22 +279,20 @@ public class ConfigurationAdaptor {
 			Transformation finalTransformation = (Transformation) final_transformations[i];
 			indexNo = 10 + indexNo;
 
-			//ConfigurationBase[] units = finalTransformation.getChildObjects();
-			TransformationUnit[] units = finalTransformation.getUnits();
+			ConfigurationBase[] units = finalTransformation.getChildObjects();
 			
 			for (int j = 0; j < units.length; j++) {
-				//TransformationUnit unit = (TransformationUnit) units[j];
-				if (!(units[j].tempEnd.getName().matches(".*TEMP.*"))) {
+				if (!(((TransformationUnit)units[j]).tempEnd.getName().matches(".*TEMP.*"))) {
 
-					sqlout.write(units[j].renameKeyColumn(dataset.datasetKey)+ "\n");
-					sqlout.write(units[j].addFinalIndex(indexNo + j,dataset.datasetKey + "_key")+ "\n");
+					sqlout.write(((TransformationUnit)units[j]).renameKeyColumn(dataset.datasetKey)+ "\n");
+					sqlout.write(((TransformationUnit)units[j]).addFinalIndex(indexNo + j,dataset.datasetKey + "_key")+ "\n");
 
 				}
 			}
 		}
 
-	}
-		sqlout.close();
+	  }
+	  sqlout.close();
 	}
 
 	

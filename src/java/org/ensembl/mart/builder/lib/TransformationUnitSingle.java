@@ -6,6 +6,7 @@
  */
 package org.ensembl.mart.builder.lib;
 
+import org.jdom.Element;
 
 /**
  * @author <a href="mailto: arek@ebi.ac.uk">Arek Kasprzyk</a>
@@ -21,6 +22,12 @@ public class TransformationUnitSingle extends TransformationUnit {
 		this.refTable=ref_table;
 	}
 	
+	public TransformationUnitSingle(Element element, Table ref_table){
+		
+		super(ref_table);
+		this.element = element;
+		this.refTable=ref_table;
+	}
 	
 	
 	public String toSQL (){
