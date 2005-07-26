@@ -20,7 +20,7 @@ import org.jdom.Element;
 
 public class Dataset extends ConfigurationBase {
 	
-	ArrayList transformations = new ArrayList();
+	//ArrayList transformations = new ArrayList();
 	String name;
 	String targetSchemaName;
 	String datasetKey;
@@ -175,7 +175,8 @@ public class Dataset extends ConfigurationBase {
 			if (containsCentral) main_table.setName("main_interim");
 			
 			transformation.transform();
-			addTransformation(transformation);
+			//addTransformation(transformation);
+			addChildObject(transformation);
 		}
 			
 	}
@@ -221,11 +222,11 @@ public class Dataset extends ConfigurationBase {
 	public void transform(){
 		
 		
-		Transformation[] transformations = getAllTransformations();
+		ConfigurationBase[] transformations = getChildObjects();
 		
 		for (int i = 0; i < transformations.length; i++) {
 				
-		transformations[i].transform();
+			((Transformation) transformations[i]).transform();
 			
 		}
 		
@@ -236,7 +237,7 @@ public class Dataset extends ConfigurationBase {
 	
 	
 		
-	public Transformation [] getAllTransformations() {
+	/*public Transformation [] getAllTransformations() {
 		
 		Transformation [] b = new Transformation[transformations.size()];
 	
@@ -244,20 +245,22 @@ public class Dataset extends ConfigurationBase {
 		//return transforms;
 		return (Transformation []) transformations.toArray(b);	
 		
-	}
+	}*/
 	
 	
 	public void setUserTableNames(){
 		
-		Transformation [] b = new Transformation[transformations.size()];
-        Transformation [] transforms = (Transformation []) transformations.toArray(b);
+		//Transformation [] b = new Transformation[transformations.size()];
+        //Transformation [] transforms = (Transformation []) transformations.toArray(b);
+		
+		ConfigurationBase[] transforms = getChildObjects();
 		
 		for (int i = 0; i < transforms.length; i++) { 
 			
-			
+			Transformation trans = (Transformation) transforms[i];
 			// temp comment out.
 			
-			transforms[i].getFinalUnit().getTemp_end().setName(transforms[i].userTableName);
+			trans.getFinalUnit().getTemp_end().setName(trans.userTableName);
 		
 			
 		//System.out.println(" setting name "+transforms[i].number+ " to "+transforms[i].userTableName);
@@ -269,13 +272,13 @@ public class Dataset extends ConfigurationBase {
 	
 	
 	
-	public void addTransformation(Transformation transformation){
+	/*public void addTransformation(Transformation transformation){
 		this.transformations.add(transformation);
 			
-	}
+	}*/
 	
 	
-	private Transformation getTransformationByFinalName(String name){
+	/*private Transformation getTransformationByFinalName(String name){
 		
 		Transformation trans = new Transformation();
 		
@@ -287,20 +290,20 @@ public class Dataset extends ConfigurationBase {
 		}
 		
 		return trans;
-	}
+	}*/
 	
 
 	public Transformation [] getTransformationsByFinalTableType(String type){
 		
 		ArrayList trans_list = new ArrayList();
 		
-		Transformation [] trans = getAllTransformations();
+		ConfigurationBase [] trans = getChildObjects();
 		
 		for (int i=0;i<trans.length;i++){
 			
 			//System.out.println("gettintg tpe "+type);
 			
-			if (trans[i].finalTableType.equals(type)){
+			if (((Transformation)trans[i]).finalTableType.equals(type)){
 				trans_list.add(trans[i]);
 			}
 		}

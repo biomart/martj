@@ -119,7 +119,7 @@ public class ConfigurationAdaptor {
 	public void readXMLConfiguration(TransformationConfig tConfig) {
 
 		
-			String lastDatasetName = null;
+			//String lastDatasetName = null;
 			
 			Transformation transformation = null;
 			String datasetCodeName = null;
@@ -229,7 +229,7 @@ public class ConfigurationAdaptor {
 							if (!transformationUnit.getElement().getAttributeValue("centralProjection").equals(""))
 								refTable.central_extension = transformationUnit.getElement().getAttributeValue("centralProjection");
 					
-					
+							
 							dunit = new TransformationUnitDouble(refTable);
 						 }	
 						 else {
@@ -257,7 +257,7 @@ public class ConfigurationAdaptor {
 
 						 transformation.addUnit(dunit);
 
-						 lastDatasetName = datasetCodeName;
+						 //lastDatasetName = datasetCodeName;
 								
 					}
 				}
@@ -278,26 +278,30 @@ public class ConfigurationAdaptor {
 		int indexNo = 0;
 		for (int m = 0; m < mart.size(); m++) {
 			dataset = (Dataset) mart.get(m);	
-			System.out.println("WRITING FOR DATASET "+dataset.name);	
+			System.out.println("WRITING FOR DATASET "+dataset.name);
 			dataset.transform();
-			
 		    indexNo++;
-			Transformation[] final_transformations = dataset.getAllTransformations();		
-		
+			//Transformation[] final_transformations = dataset.getAllTransformations();		
+			ConfigurationBase[] final_transformations = dataset.getChildObjects();	
 		// Dump to SQL
 		for (int i = 0; i < final_transformations.length; i++) {
-			System.out.println("FINAL " + final_transformations[i].userTableName);
+			Transformation finalTransformation = (Transformation) final_transformations[i];
+			System.out.println("FINAL " + finalTransformation.userTableName);
 			indexNo = 10 + indexNo;
 
-			TransformationUnit[] units = final_transformations[i].getUnits();
+			//ConfigurationBase[] units = finalTransformation.getChildObjects();
+			TransformationUnit[] units = finalTransformation.getUnits();
 
 			sqlout.write("\n--\n--       TRANSFORMATION NO "
-					+ final_transformations[i].number + "      TARGET TABLE: "
-					+ final_transformations[i].userTableName.toUpperCase()
+					+ finalTransformation.number + "      TARGET TABLE: "
+					+ finalTransformation.userTableName.toUpperCase()
 					+ "\n--\n");
 
 			for (int j = 0; j < units.length; j++) {
-
+				
+				// ? if need to tell if a TunitSingle or Double
+				
+				//TransformationUnit unit = (TransformationUnit) units[j];
 				// don't want indexes before 'select distinct'
 				if (!units[j].single & j > 0)
 					sqlout.write(units[j].addIndex(indexNo + j) + "\n");
@@ -306,18 +310,21 @@ public class ConfigurationAdaptor {
 				sqlout.write(units[j].toSQL() + "\n");
 			}
 			for (int j = 0; j < units.length; j++) {
+				//TransformationUnit unit = (TransformationUnit) units[j];
 				sqlout.write(units[j].dropTempTable() + "\n");
 			}
 		}
 
 		// now renaming to _key and final indexes
 		for (int i = 0; i < final_transformations.length; i++) {
-
+			Transformation finalTransformation = (Transformation) final_transformations[i];
 			indexNo = 10 + indexNo;
 
-			TransformationUnit[] units = final_transformations[i].getUnits();
-
+			//ConfigurationBase[] units = finalTransformation.getChildObjects();
+			TransformationUnit[] units = finalTransformation.getUnits();
+			
 			for (int j = 0; j < units.length; j++) {
+				//TransformationUnit unit = (TransformationUnit) units[j];
 				if (!(units[j].tempEnd.getName().matches(".*TEMP.*"))) {
 
 					sqlout.write(units[j].renameKeyColumn(dataset.datasetKey)+ "\n");
