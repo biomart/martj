@@ -104,7 +104,7 @@ public class ConfigurationAdaptor {
 	public void transformationPreparation(TransformationConfig tConfig) {
 	
 			Transformation transformation = null;
-			String datasetCodeName = null;
+			String datasetName = null;
 			ArrayList linkedList = new ArrayList();
 			Table startTable=null;
 
@@ -113,7 +113,7 @@ public class ConfigurationAdaptor {
 			for (int i = 0; i < datasets.length; i++){
 				
 				Dataset dataset = (Dataset) datasets[i];
-				datasetCodeName = dataset.getElement().getAttributeValue("internalName");
+				datasetName = dataset.getElement().getAttributeValue("internalName");
 				dataset.adaptor = adaptor;
 				dataset.targetSchemaName = targetSchemaName;
 				
@@ -126,17 +126,15 @@ public class ConfigurationAdaptor {
 					transformation = (Transformation) transformations[j];
 						
 					transformation.adaptor = adaptor;
-					transformation.datasetName = datasetCodeName;
+					transformation.datasetName = datasetName;
 					transformation.targetSchemaName = targetSchemaName;
-					//transformation.number = transformation.getElement().getAttributeValue("internalName");
 					transformation.finalTableName = transformation.getElement().getAttributeValue("userTableName");
-					//transformation.userTableName = transformation.getElement().getAttributeValue("userTableName");
 									
 					if (transformation.getElement().getAttributeValue("includeCentralFilter").toUpperCase().equals("Y")) transformation.central = true;
 
 					System.out.println ("transforming ... "+transformation.getElement().getAttributeValue("internalName")+" user table "+transformation.getElement().getAttributeValue("userTableName"));
 					
-					StringBuffer final_table = new StringBuffer(datasetCodeName
+					StringBuffer final_table = new StringBuffer(datasetName
 							+ "__" + transformation.getElement().getAttributeValue("centralTable") + "__");
 					if (transformation.getElement().getAttributeValue("tableType").toUpperCase().equals("M")) {
 
@@ -213,7 +211,6 @@ public class ConfigurationAdaptor {
 							dunit.type="partition";
 						 }
 				
-						 //dunit.cardinality = transformationUnit.getElement().getAttributeValue("cardinality");
 						 dunit.column_operations = "addall";
 						 dunit.adaptor = adaptor;
 						 dunit.targetSchema = targetSchemaName;
