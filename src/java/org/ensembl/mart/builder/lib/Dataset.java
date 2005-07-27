@@ -20,9 +20,9 @@ import org.jdom.Element;
 
 public class Dataset extends ConfigurationBase {
 	
-	String targetSchemaName;
-	String datasetKey;
-	DatabaseAdaptor adaptor;
+	private String targetSchemaName;
+	private String datasetKey;
+	private DatabaseAdaptor adaptor;
 	
 	public Dataset (Element element){
 		super(element);
@@ -34,6 +34,29 @@ public class Dataset extends ConfigurationBase {
 		super();
 	}
 	
+	void setTargetSchemaName(String targetSchemaName) {
+	  this.targetSchemaName = targetSchemaName;
+	}
+
+	String getTargetSchemaName() {
+	  return targetSchemaName;
+	}
+	
+	void setDatasetKey(String datasetKey) {
+	  this.datasetKey = datasetKey;
+	}
+
+	String getDatasetKey() {
+	  return datasetKey;
+	}
+	
+	void setAdaptor(DatabaseAdaptor adaptor) {
+	  this.adaptor = adaptor;
+	}
+
+	DatabaseAdaptor getAdaptor() {
+	  return adaptor;
+	}
 	
 	public void createTransformationsForCentralFilters(){
 		
@@ -44,9 +67,9 @@ public class Dataset extends ConfigurationBase {
 			
 			Transformation transformation = new Transformation();
 			
-			transformation.adaptor=adaptor;
-			transformation.datasetName=getElement().getAttributeValue("internalName");
-			transformation.targetSchemaName=targetSchemaName;
+			transformation.setAdaptor(adaptor);
+			transformation.setDatasetName(getElement().getAttributeValue("internalName"));
+			transformation.setTargetSchemaName(targetSchemaName);
 			transformation.getElement().setAttribute("userTableName",
 				mainTransformations[i].getElement().getAttributeValue("userTableName"));
 		
@@ -54,12 +77,12 @@ public class Dataset extends ConfigurationBase {
 			// set this again
 			main_table.type="interim";
 			
-			transformation.finalTableName=main_table.getName();
-			transformation.finalTableType="MAIN";
+			transformation.setFinalTableName(main_table.getName());
+			transformation.setFinalTableType("MAIN");
 			
 			
-			transformation.startTable=main_table;
-			transformation.type="central";
+			transformation.setStartTable(main_table);
+			transformation.setType("central");
 			
 			boolean containsCentral=false;
 			for (int m = 0; m < dmTransformations.length; m++) {
@@ -83,8 +106,8 @@ public class Dataset extends ConfigurationBase {
 
 				TransformationUnitDouble dunit = new TransformationUnitDouble(dmFinalTable);
 				dunit.getElement().setAttribute("cardinality",dmFinalTable.getCardinality());
-				dunit.column_operations = "addone";
-				dunit.final_table_name = "MAIN";
+				dunit.setColumnOperations("addone");
+				dunit.setfinalTableName("MAIN");
 				dunit.adaptor = adaptor;
 				dunit.TSKey=dmTransformations[m].getFinalUnit().RFKey;
 				dunit.RFKey=dmTransformations[m].getFinalUnit().TSKey;
@@ -143,7 +166,7 @@ public class Dataset extends ConfigurationBase {
 		
 		for (int i=0;i<trans.length;i++){
 			
-			if (((Transformation)trans[i]).finalTableType.equals(type)){
+			if (((Transformation)trans[i]).getFinalTableType().equals(type)){
 				trans_list.add(trans[i]);
 			}
 		}
@@ -179,10 +202,10 @@ public class Dataset extends ConfigurationBase {
 		
 		for (int i=0;i<mains.length;i++){
 			
-			if(name.equals(mains[i].finalTableName)){
+			if(name.equals(mains[i].getFinalTableName())){
 				list.set(i-1,mains[i]);		
 			} else {
-				name = mains[i].finalTableName;
+				name = mains[i].getFinalTableName();
 				list.add(mains[i]);
 			}
 		}
@@ -190,6 +213,7 @@ public class Dataset extends ConfigurationBase {
 		Transformation [] b = new Transformation[list.size()];
 		return (Transformation []) list.toArray(b);		
 	}
+	
 	
 	
 	

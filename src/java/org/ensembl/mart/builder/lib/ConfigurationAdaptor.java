@@ -114,21 +114,21 @@ public class ConfigurationAdaptor {
 				
 				Dataset dataset = (Dataset) datasets[i];
 				datasetName = dataset.getElement().getAttributeValue("internalName");
-				dataset.adaptor = adaptor;
-				dataset.targetSchemaName = targetSchemaName;
+				dataset.setAdaptor(adaptor);
+				dataset.setTargetSchemaName(targetSchemaName);
 				
 				// db interaction
-				dataset.datasetKey = resolver.getPrimaryKeys(dataset.getElement().getAttributeValue("mainTable"));
+				dataset.setDatasetKey(resolver.getPrimaryKeys(dataset.getElement().getAttributeValue("mainTable")));
 				
 				
 				ConfigurationBase[] transformations = dataset.getChildObjects();
 				for (int j = 0; j < transformations.length; j++){
 					transformation = (Transformation) transformations[j];
 						
-					transformation.adaptor = adaptor;
-					transformation.datasetName = datasetName;
-					transformation.targetSchemaName = targetSchemaName;
-					transformation.finalTableName = transformation.getElement().getAttributeValue("userTableName");
+					transformation.setAdaptor(adaptor);
+					transformation.setDatasetName(datasetName);
+					transformation.setTargetSchemaName(targetSchemaName);
+					transformation.setFinalTableName(transformation.getElement().getAttributeValue("userTableName"));
 									
 					if (transformation.getElement().getAttributeValue("includeCentralFilter").toUpperCase().equals("Y")) transformation.central = true;
 
@@ -138,18 +138,18 @@ public class ConfigurationAdaptor {
 							+ "__" + transformation.getElement().getAttributeValue("centralTable") + "__");
 					if (transformation.getElement().getAttributeValue("tableType").toUpperCase().equals("M")) {
 
-						transformation.finalTableType = "MAIN";
-						transformation.finalTableName = final_table.append("main").toString();
+						transformation.setFinalTableType("MAIN");
+						transformation.setFinalTableName(final_table.append("main").toString());
 					} else {
-						transformation.finalTableType = "DM";
-						transformation.finalTableName = final_table.append("dm").toString();
+						transformation.setFinalTableType("DM");
+						transformation.setFinalTableName(final_table.append("dm").toString());
 					}
 
 					String [] centralColumnNames = { "%" };
 					String [] centralColumnAliases=null;
 					
-					transformation.type = "linked";
-					transformation.column_operations = "addall";
+					transformation.setType("linked");
+					transformation.setColumnOperations("addall");
 					
 					ConfigurationBase[] transformationUnits = transformation.getChildObjects();
 					for (int k = 0; k < transformationUnits.length; k++){
@@ -160,7 +160,7 @@ public class ConfigurationAdaptor {
 											
 						//db interaction
 						startTable= resolver.getCentralTable(transformation.getElement().getAttributeValue("centralTable"),centralColumnNames,centralColumnAliases);
-						transformation.startTable = startTable;
+						transformation.setStartTable(startTable);
 					
 						
 						String [] columnNames = { "%" };
@@ -208,21 +208,21 @@ public class ConfigurationAdaptor {
 								startTable.central_extension = transformationUnit.getElement().getAttributeValue("centralProjection");
                  	
 							dunit = new TransformationUnitSingle(transformationUnit.getElement(),startTable);
-							dunit.type="partition";
+							dunit.setType("partition");
 						 }
 				
-						 dunit.column_operations = "addall";
-						 dunit.adaptor = adaptor;
-						 dunit.targetSchema = targetSchemaName;
+						 dunit.setColumnOperations("addall");
+						 dunit.setAdaptor(adaptor);
+						 dunit.setTargetSchema(targetSchemaName);
 
 						 if (transformationUnit.getElement().getAttributeValue("referencingType").equals("exported"))
-							dunit.TSKey = transformationUnit.getElement().getAttributeValue("primaryKey");
+							dunit.setTSKey(transformationUnit.getElement().getAttributeValue("primaryKey"));
 						 else
-							dunit.TSKey = transformationUnit.getElement().getAttributeValue("foreignKey");
+							dunit.setTSKey(transformationUnit.getElement().getAttributeValue("foreignKey"));
 						 if (transformationUnit.getElement().getAttributeValue("referencingType").equals("exported"))
-							dunit.RFKey = transformationUnit.getElement().getAttributeValue("foreignKey");
+							dunit.setRFKey(transformationUnit.getElement().getAttributeValue("foreignKey"));
 						 else
-							dunit.RFKey = transformationUnit.getElement().getAttributeValue("primaryKey");
+							dunit.setRFKey(transformationUnit.getElement().getAttributeValue("primaryKey"));
 
 						 // replace transformationUnit with the newly created dunit
 						 transformation.removeChildObject(transformationUnit.getElement().getAttributeValue("internalName"));
@@ -280,8 +280,8 @@ public class ConfigurationAdaptor {
 			for (int j = 0; j < units.length; j++) {
 				if (!(((TransformationUnit)units[j]).tempEnd.getName().matches(".*TEMP.*"))) {
 
-					sqlout.write(((TransformationUnit)units[j]).renameKeyColumn(dataset.datasetKey)+ "\n");
-					sqlout.write(((TransformationUnit)units[j]).addFinalIndex(indexNo + j,dataset.datasetKey + "_key")+ "\n");
+					sqlout.write(((TransformationUnit)units[j]).renameKeyColumn(dataset.getDatasetKey())+ "\n");
+					sqlout.write(((TransformationUnit)units[j]).addFinalIndex(indexNo + j,dataset.getDatasetKey() + "_key")+ "\n");
 
 				}
 			}

@@ -16,21 +16,21 @@ import org.jdom.Element;
  */
 public  class TransformationUnit extends ConfigurationBase {
 	
-	Table tempStart;
-	Table tempEnd;
-	Table refTable;
-	String temp_end_name;
-	String column_operations;
-	//String cardinality;
-	String final_table_name;
-	String TSKey;
-	String RFKey;
-	String targetSchema;
-	DatabaseAdaptor adaptor;
+	protected String tempEndName;
+	protected String columnOperations;
+	protected String finalTableName;
+	protected String TSKey;
+	protected String RFKey;
+	protected String targetSchema;
+	protected String type;
+	
+	protected DatabaseAdaptor adaptor;
+	
+	protected Table tempStart;
+	protected Table tempEnd;
+	protected Table refTable;
+	
 	boolean single =false;
-	public String type;
-	
-	
 	
 	public TransformationUnit (Element element){
 		super(element);
@@ -45,7 +45,95 @@ public  class TransformationUnit extends ConfigurationBase {
 	public TransformationUnit(Table ref_table){	
 		this.refTable=ref_table;
 	}
+
+	void setTempStart(Table tempStart) {
+	  this.tempStart = tempStart;
+	}
+
+	Table getTempStart() {
+	  return tempStart;
+	}
 	
+	void setTempEnd(Table tempEnd) {
+	  this.tempEnd = tempEnd;
+	}
+
+	Table getTempEnd() {
+	  return tempEnd;
+	}
+
+	void setRefTable(Table refTable) {
+	  this.refTable = refTable;
+	}
+
+	Table getRefTable() {
+	  return refTable;
+	}
+
+	void setTargetSchema(String targetSchema) {
+	  this.targetSchema = targetSchema;
+	}
+
+	String getTargetSchema() {
+	  return targetSchema;
+	}
+	
+	void setType(String type) {
+	  this.type = type;
+	}
+
+	String getType() {
+	  return type;
+	}
+	
+	void setColumnOperations(String columnOperations) {
+	  this.columnOperations = columnOperations;
+	}
+
+	String getColumnOperations() {
+	  return columnOperations;
+	}
+	
+	void setTempEndName(String tempEndName) {
+	  this.tempEndName = tempEndName;
+	}
+
+	String getTempEndName() {
+	  return tempEndName;
+	}
+	
+	void setfinalTableName(String finalTableName) {
+	  this.finalTableName = finalTableName;
+	}
+
+	String getFinalTableName() {
+	  return finalTableName;
+	}
+	
+	void setTSKey(String TSKey) {
+	  this.TSKey = TSKey;
+	}
+
+	String getTSKey() {
+	  return TSKey;
+	}
+	
+	void setRFKey(String RFKey) {
+	  this.RFKey = RFKey;
+	}
+
+	String getRFKey() {
+	  return RFKey;
+	}
+	
+	void setAdaptor(DatabaseAdaptor adaptor) {
+	  this.adaptor = adaptor;
+	}
+
+	DatabaseAdaptor getAdaptor() {
+	  return adaptor;
+	}
+
 
 	public  String toSQL (){
 		

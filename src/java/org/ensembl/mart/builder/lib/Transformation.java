@@ -18,14 +18,14 @@ import org.jdom.Element;
 
 public class Transformation extends ConfigurationBase {
 	
-	String finalTableName;
-	String finalTableType; // DM MAIN
-	String type; // central, linked
-	String column_operations;
-	String datasetName;
-	String targetSchemaName;
-	Table startTable;
-	DatabaseAdaptor adaptor;
+	private String finalTableName;
+	private String finalTableType; // DM MAIN
+	private String type; // central, linked
+	private String columnOperations;
+	private String datasetName;
+	private String targetSchemaName;
+	private Table startTable;
+	private DatabaseAdaptor adaptor;
 	boolean central = false;
 	
 	
@@ -38,6 +38,70 @@ public class Transformation extends ConfigurationBase {
 	public Transformation (){
 		super();
 	}
+
+	void setStartTable(Table startTable) {
+	  this.startTable = startTable;
+	}
+
+	Table getStartTable() {
+	  return startTable;
+	}
+	
+	void setDatasetName(String datasetName) {
+	  this.datasetName = datasetName;
+	}
+
+	String getDatasetName() {
+	  return datasetName;
+	}
+		
+	void setTargetSchemaName(String targetSchemaName) {
+	  this.targetSchemaName = targetSchemaName;
+	}
+
+	String getTargetSchemaName() {
+	  return targetSchemaName;
+	}
+	
+	void setFinalTableName(String finalTableName) {
+	  this.finalTableName = finalTableName;
+	}
+
+	String getFinalTableName() {
+	  return finalTableName;
+	}
+	
+	void setFinalTableType(String finalTableType) {
+	  this.finalTableType = finalTableType;
+	}
+
+	String getFinalTableType() {
+	  return finalTableType;
+	}
+	
+	void setType(String type) {
+	  this.type = type;
+	}
+
+	String getType() {
+	  return type;
+	}
+	
+	void setColumnOperations(String columnOperations) {
+	  this.columnOperations = columnOperations;
+	}
+
+	String getColumnOperations() {
+	  return columnOperations;
+	}
+	void setAdaptor(DatabaseAdaptor adaptor) {
+	  this.adaptor = adaptor;
+	}
+
+	DatabaseAdaptor getAdaptor() {
+	  return adaptor;
+	}	
+		
 		
 	public TransformationUnit getFinalUnit() {
 		TransformationUnit unit = (TransformationUnit) getChildObjects()[getChildObjects().length - 1];

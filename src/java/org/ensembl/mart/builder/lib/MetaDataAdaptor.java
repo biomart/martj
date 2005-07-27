@@ -106,8 +106,15 @@ public abstract class MetaDataAdaptor {
 		}
 		}
 		Column [] b = new Column[cols.size()];
+		
 		assert cols.size() != 0 : "no columns for your table, please check the table/column name " +
 				" for "+name.toUpperCase()+" in your config file";
+						
+		if (cols.size() != 0){
+			System.out.println("no columns for your table, please check the table/column name " +
+			" for "+name.toUpperCase()+" in your config file");		
+		}
+				
 		return (Column []) cols.toArray(b);
 	}
 	

@@ -111,11 +111,11 @@ public class TransformationUnitDouble extends TransformationUnit {
 		
 		Column [] columns = null;
 		
-		if (column_operations.equals("addall")){
+		if (columnOperations.equals("addall")){
 			columns = addAllColumns(temp_end,new_ref);
-		} else if (column_operations.equals("append")){
+		} else if (columnOperations.equals("append")){
 			columns = appendColumns(temp_end,new_ref);
-		} else if (column_operations.equals("addone")){
+		} else if (columnOperations.equals("addone")){
 			columns = addOneColumn(temp_end,new_ref);
 		}
 		
