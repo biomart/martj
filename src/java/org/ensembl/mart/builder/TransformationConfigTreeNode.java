@@ -89,7 +89,7 @@ public class TransformationConfigTreeNode extends DefaultMutableTreeNode {
 					ConfigurationBase[] groups = fp.getChildObjects();
 					for (int j = 0; j < groups.length; j++) {
 							Transformation fiGroup = (Transformation) groups[j];
-							String grName = fiGroup.getElement().getAttributeValue("internalName");
+							String grName = fiGroup.getElement().getAttributeValue("userTableName");
 							TransformationConfigTreeNode grNode = new TransformationConfigTreeNode("Transformation:" + grName);
 							grNode.setUserObject(fiGroup);
 							ConfigurationBase[] tunits = fiGroup.getChildObjects();
@@ -108,7 +108,7 @@ public class TransformationConfigTreeNode extends DefaultMutableTreeNode {
 			ConfigurationBase[] groups = fp.getChildObjects();
 			for (int j = 0; j < groups.length; j++) {
 					Transformation fiGroup = (Transformation) groups[j];
-					String grName = fiGroup.getElement().getAttributeValue("internalName");
+					String grName = fiGroup.getElement().getAttributeValue("userTableName");
 					TransformationConfigTreeNode grNode = new TransformationConfigTreeNode("Transformation:" + grName);
 					grNode.setUserObject(fiGroup);
 					this.add(grNode);
@@ -122,12 +122,12 @@ public class TransformationConfigTreeNode extends DefaultMutableTreeNode {
 			}
 
 		} else if (obj instanceof org.ensembl.mart.builder.lib.Transformation) {
-			setName("Transformation: " + ((ConfigurationBase) obj).getElement().getAttributeValue("internalName"));
+			setName("Transformation: " + ((ConfigurationBase) obj).getElement().getAttributeValue("userTableName"));
 			Transformation fp = (Transformation) obj;
 			ConfigurationBase[] groups = fp.getChildObjects();
 			for (int j = 0; j < groups.length; j++) {
 					TransformationUnit fiGroup = (TransformationUnit) groups[j];
-					String grName = fiGroup.getElement().getAttributeValue("internalName");
+					String grName = fiGroup.getElement().getAttributeValue("userTableName");
 					TransformationConfigTreeNode grNode = new TransformationConfigTreeNode("TransformationUnit:" + grName);
 					grNode.setUserObject(fiGroup);
 					this.add(grNode);	
