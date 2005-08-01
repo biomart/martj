@@ -24,7 +24,6 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.io.File;
-import javax.swing.ImageIcon;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
@@ -36,17 +35,16 @@ import javax.swing.JTable;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
-//import org.ensembl.mart.lib.config.AttributePage;
-
 import org.ensembl.mart.builder.lib.*;
-import org.ensembl.mart.lib.config.ConfigurationException;
+
 /**
  * TransformationConfigTreeWidget extends internal frame.
  *
  *
  * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
- * //@see org.ensembl.mart.config.DatasetConfig
+ * //@see org.ensembl.mart.config.TransformationConfig
  */
+
 public class TransformationConfigTreeWidget extends JInternalFrame{
 
     private TransformationConfig transformationConfig = null;
@@ -70,81 +68,22 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
         this.setDefaultCloseOperation(JInternalFrame.DO_NOTHING_ON_CLOSE);
         this.addInternalFrameListener(new CloseListener());
         try {
-		  TransformationConfig config = null;	
-          if (dsv == null){	
-	   //  this.setFrameIcon(createImageIcon(MartEditor.IMAGE_DIR+"MartConfig_cube.gif"));
-            
-            if (file == null) {
-            	if (user == null){
-            	  if (schema == null){	// NEW CONFIG
-                    //config = new TransformationConfig("new");
-                    //config.setDSConfigAdaptor(new SimpleDSConfigAdaptor(config)); //prevents lazyLoading
-                    //config.addDataset(new DatasetBase("new","mainTable"));
-            	  }
-            	  
-            	  //else{  NAIVE CREATION	
-            	  //	config = MartEditor.getDatabaseTransformationConfigUtils().getNaiveTransformationConfigFor(schema,dataset);
-            	  //}
+		  	TransformationConfig config = null;	
+          	if (dsv == null){	
+            	if (file != null) { // OPEN FROM FILE				
+                	ConfigurationAdaptor configAdaptor = new ConfigurationAdaptor();			
+					config = configAdaptor.getTransformationConfig(file);
             	}
-            	else{//Importing config
-//              ignore cache, do not loadFully, include hidden members
-					//DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartBuilder.getDetailedDataSource(),user, true, false, true);
-					//TransformationConfigIterator configs = adaptor.getTransformationConfigs();
-					//while (configs.hasNext()){
-            //TransformationConfig lconfig = (TransformationConfig) configs.next();
-					  //if (lconfig.getDataset().equals(dataset) && lconfig.getInternalName().equals(internalName)){
-					    //config = lconfig;
-					    //break;
-					  //}
-					//}
-					
-            	}
-            } else {// OPEN FROM FILE
-                //URL url = file.toURL();
-//            ignore cache, include hidden members
-                
-                // old code
-                /*
-                DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
-
-                // only config one in the file so get that one
-                config = (TransformationConfig) adaptor.getTransformationConfigs().next();
-				*/
-				
-				// new code without using adaptor
-				//TransformationConfigXMLUtils xmlUtils = new TransformationConfigXMLUtils();
-				
-                ConfigurationAdaptor configAdaptor = new ConfigurationAdaptor();			
-				config = configAdaptor.getTransformationConfig(file);
-								
-				//configAdaptor.loadTransformationConfigWithDocument( config, configAdaptor.getDocumentForXMLStream( InputSourceUtil.getStreamForURL( url ) ) );
-				
-				
-                
-            }
-          }
-          else{
-          	//config = new TransformationConfig(dsv, true, false);
-			//config = new TransformationConfig(dsv);
-			config = (TransformationConfig) dsv.copy();
-        	     
-          }
-            //this.setTitle(config.getInternalName());
-             
-            //config.getDataset();
-            //config.getAdaptor().getDataSource();
-          
-			//this.setTitle(schema + "." + config.getDataset());
+          	}
+          	else{
+				config = (TransformationConfig) dsv.copy();  
+          	}
             JFrame.setDefaultLookAndFeelDecorated(true);
 
             TransformationConfigAttributesTable attrTable = new TransformationConfigAttributesTable(
                     config, this);
             tree = new TransformationConfigTree(config,
                     this, attrTable);
-                    
-			//DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
-			//renderer.setTextNonSelectionColor(Color.red);
-			//tree.setCellRenderer(renderer);        
 			tree.setCellRenderer(new MyRenderer());        
             // for update         
             setTransformationConfig(config);
@@ -174,20 +113,6 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
         }
     }
 
-    /**
-     * Test purposes only. Creates a frame with a JTree containing
-     * a presepecified TransformationConfig.dtd compatible configuration file.
-     * @param args
-     * @throws ConfigurationException
-     */
-    public static void main(String[] args) throws ConfigurationException {
-
-
-    }
-
-    /**
-     * @return
-     */
     public TransformationConfig getTransformationConfig() {
         return transformationConfig;
     }
@@ -208,29 +133,10 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
         cont.add(component, constraints);
     }
 
-    /**
-     * @param config
-     */
     public void setTransformationConfig(TransformationConfig config) {
-        clearTransformationConfig();
+        //clearTransformationConfig();
         transformationConfig = config;
-        loadTransformationConfig();
-    }
-
-    /**
-     * Loads the transformationConfig by creating a tree to represent it
-     * and displaying it.
-     */
-    private void loadTransformationConfig() {
-
-
-    }
-
-    /**
-     * Removes current dataset config if one is loaded, otherwise does nothing.
-     */
-    private void clearTransformationConfig() {
-
+        //loadTransformationConfig();
     }
 
     public void save(){
@@ -253,15 +159,9 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
         tree.paste();
     }
 
-
-    public void insert(){
-       // tree.insert();
-    }
-
     public void delete(){
         tree.delete();
     }
-
 
     public void setFileChooserPath(File file){
         this.file = file;
@@ -270,18 +170,6 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
 
     public File getFileChooserPath(){
         return builder.getFileChooserPath();
-    }
-
-
-    /** Returns an ImageIcon, or null if the path was invalid. */
-    protected static ImageIcon createImageIcon(String path) {
-        java.net.URL imgURL = TransformationConfigTreeWidget.class.getClassLoader().getResource(path);
-        if (imgURL != null) {
-            return new ImageIcon(imgURL);
-        } else {
-            System.err.println("Couldn't find file: " + path);
-            return null;
-        }
     }
 
 }
