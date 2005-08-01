@@ -119,7 +119,11 @@ public class TransformationUnitSingle extends TransformationUnit {
 				break;
 			}	
 		}
-		assert foundKey: "CAN'T FIND MATCHING TRANSROMATION KEY:    "+TSKey;		
+		
+		if (foundKey){
+			System.out.println("CAN'T FIND MATCHING TRANSROMATION KEY:    "+TSKey);
+		}
+				
 		new_ref.setColumns(newcol);
 		return new_ref;
 	}
