@@ -639,7 +639,7 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 	}
 
 	public void save() {
-		dsConfig = (TransformationConfig) ((TransformationConfigTreeNode) this.getModel().getRoot()).getUserObject();
+		dsConfig = (TransformationConfig) ((TransformationConfigTreeNode) this.getModel().getRoot()).getUserObject();		
 		try {
 			if (frame.getFileChooserPath() != null){
 				ConfigurationAdaptor configAdaptor = new ConfigurationAdaptor();			

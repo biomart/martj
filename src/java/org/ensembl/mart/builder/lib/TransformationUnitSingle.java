@@ -120,7 +120,7 @@ public class TransformationUnitSingle extends TransformationUnit {
 			}	
 		}
 		
-		if (foundKey){
+		if (!foundKey){
 			System.out.println("CAN'T FIND MATCHING TRANSROMATION KEY:    "+TSKey);
 		}
 				

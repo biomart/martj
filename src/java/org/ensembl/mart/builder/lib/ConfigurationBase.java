@@ -79,6 +79,9 @@ public class ConfigurationBase implements Cloneable {
 	
 	public void insertChildObject(int position, ConfigurationBase base) {
 		this.children.add(position,base);
+		// this method should only be used for manual editing
+		// of the config - hence need to update element
+		this.element.addContent(position,base.element);
 	}
 
 	public ConfigurationBase[] getChildObjects() {
@@ -87,7 +90,6 @@ public class ConfigurationBase implements Cloneable {
 	}
 
 	public void removeChildObject(String internalName) {
-
 		int i = 0;
 
 		for (i = 0; i < children.size(); i++) {
