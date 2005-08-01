@@ -455,11 +455,11 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 		String clickedNodeClass = editingNode.getUserObject().getClass().getName();
 		if (clickedNodeClass.equals("org.ensembl.mart.builder.lib.TransformationConfig"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "insert dataset"};
-		else if ((clickedNodeClass).equals("org.ensembl.mart.builder.lib.DatasetBase"))
+		else if ((clickedNodeClass).equals("org.ensembl.mart.builder.lib.Dataset"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "insert transformation" };	
-		else if ((clickedNodeClass).equals("org.ensembl.mart.builder.lib.TransformationBase"))
+		else if ((clickedNodeClass).equals("org.ensembl.mart.builder.lib.Transformation"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "insert transformation unit" };
-		else if (clickedNodeClass.equals("org.ensembl.mart.builder.lib.TransformationUnitBase"))
+		else if (clickedNodeClass.equals("org.ensembl.mart.builder.lib.TransformationUnit"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete"};
 
 		for (int i = 0; i < menuItems.length; i++) {
@@ -629,8 +629,8 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 		int returnVal = fc.showSaveDialog(frame.getContentPane());
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			try {
-				//find a non-adaptor way
-				//URLDSConfigAdaptor.StoreTransformationConfig(dsConfig, fc.getSelectedFile());
+				ConfigurationAdaptor configAdaptor = new ConfigurationAdaptor();			
+				configAdaptor.writeDocument(dsConfig,fc.getSelectedFile().toString());
 				frame.setFileChooserPath(fc.getSelectedFile());
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -642,8 +642,8 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 		dsConfig = (TransformationConfig) ((TransformationConfigTreeNode) this.getModel().getRoot()).getUserObject();
 		try {
 			if (frame.getFileChooserPath() != null){
-				// find a non-adaptor way
-				//URLDSConfigAdaptor.StoreTransformationConfig(dsConfig, frame.getFileChooserPath());
+				ConfigurationAdaptor configAdaptor = new ConfigurationAdaptor();			
+				configAdaptor.writeDocument(dsConfig,frame.getFileChooserPath().toString());
 			}
 
 		} catch (Exception e) {
