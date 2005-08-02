@@ -38,6 +38,13 @@ public class ConfigurationBase implements Cloneable {
 		this.element = element;
 
 	}
+	
+	public ConfigurationBase(String elementName) {
+
+		Element element = new Element(elementName);
+		this.element = element;
+
+	}
 
 	public ConfigurationBase copy() {
 

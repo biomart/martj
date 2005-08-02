@@ -31,6 +31,7 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.prefs.Preferences;
 
 import javax.swing.ImageIcon;
@@ -38,6 +39,7 @@ import javax.swing.JDesktopPane;
 import javax.swing.JFileChooser;
 
 import javax.swing.JFrame;
+import javax.swing.JInternalFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -47,12 +49,7 @@ import javax.swing.UIManager;
 import org.ensembl.mart.explorer.Feedback;
 import org.ensembl.mart.guiutils.DatabaseSettingsDialog;
 
-import org.ensembl.mart.builder.lib.ConfigurationAdaptor;
-import org.ensembl.mart.builder.lib.DatabaseAdaptor;
-import org.ensembl.mart.builder.lib.MetaDataAdaptor;
-import org.ensembl.mart.builder.lib.MetaDataAdaptorFKNotSupported;
-import org.ensembl.mart.builder.lib.MetaDataAdaptorFKSupported;
-import org.ensembl.mart.builder.lib.TransformationConfig;
+import org.ensembl.mart.builder.lib.*;
 
 
 /**
@@ -91,7 +88,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
   private String database;
   private String schema;
   private static String connection;
-  private static MetaDataAdaptor resolver;  
+  private static MetaDataAdaptor resolver; 
+  
+  private ArrayList tableList; 
 
   /** Persistent preferences object used to hold user history. */
   private Preferences prefs = Preferences.userNodeForPackage(this.getClass());
@@ -164,10 +163,6 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 
     menu.addSeparator();
 
-    menuItem = new JMenuItem("Create TransformationConfig");
-    menuItem.addActionListener(menuActionListener);
-    menu.add(menuItem);
-
     icon = createImageIcon(IMAGE_DIR + "open.gif");
     menuItem = new JMenuItem("Open", icon);
     menuItem.addActionListener(menuActionListener);
@@ -181,6 +176,12 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
     menuItem = new JMenuItem("Save as");
     menuItem.addActionListener(menuActionListener);
     menu.add(menuItem);
+
+	menu.addSeparator();
+
+	menuItem = new JMenuItem("Create TransformationConfig");
+	menuItem.addActionListener(menuActionListener);
+	menu.add(menuItem);
 
 	menuItem = new JMenuItem("Create DDL");
 	menuItem.addActionListener(menuActionListener);
@@ -342,7 +343,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
       else if (e.getActionCommand().startsWith("Database"))
         databaseConnection();
       else if (e.getActionCommand().startsWith("Create TransformationConfig")){
-        //naiveTransformationConfig();
+        createConfig();
       }
 	  else if (e.getActionCommand().startsWith("Create DDL")){
 		createDDL();
@@ -444,7 +445,216 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 
   }
 
-  public void createDDL(){
+  private void createConfig(){
+  	try{
+		if (adaptor.rdbms.equals("mysql")) {
+			resolver = new MetaDataAdaptorFKNotSupported(adaptor);
+		} else if (adaptor.rdbms.equals("oracle")) {
+			resolver = new MetaDataAdaptorFKSupported(adaptor);
+		} else if (adaptor.rdbms.equals("postgresql")) {
+			resolver = new MetaDataAdaptorFKSupported(adaptor);
+		}
+		System.out.println(resolver+":"+adaptor.rdbms);
+		// create the config
+		TransformationConfig tConfig = new TransformationConfig();
+		String tConfigName = JOptionPane.showInputDialog(null,"NEW TRANSFORMATION CONFIG NAME:");
+		tConfig.getElement().setAttribute("internalName",tConfigName);		
+		// add the dataset - ? more than one
+		Dataset dataset = new Dataset();
+		String datasetName = JOptionPane.showInputDialog(null,"NEW DATASET NAME:");
+		dataset.getElement().setAttribute("internalName",datasetName);
+		
+		
+		// go through the tables 
+		
+		int transformationCount = 0;
+		
+		String[] potentialTables = resolver.getAllTableNames();
+		tableList = new ArrayList();
+		
+		for (int i = 0; i < potentialTables.length; i++){
+			tableList.add(potentialTables[i]);
+		}
+	
+		
+		// do main first
+		String tableName =
+	   (String) JOptionPane.showInputDialog(
+		 null,
+		 "Choose one",
+		 "Main table",
+		 JOptionPane.INFORMATION_MESSAGE,
+		 null,
+		 potentialTables,
+		 potentialTables[0]);
+		 
+		 
+		tableList.remove(tableName);
+		 
+		String tableType = "m"; 
+	    dataset.getElement().setAttribute("mainTable",tableName);
+		
+		String extension = JOptionPane.showInputDialog(null,"EXTENSION FOR THIS TABLE:");
+
+		String includeCentralFilters = JOptionPane.showInputDialog(null,"Include Central Filters: ","N");
+		 
+		Integer tCount = new Integer(transformationCount+1);
+
+		Transformation transformation = new Transformation();
+		transformation.getElement().setAttribute("internalName",tCount.toString());
+		transformation.getElement().setAttribute("tableType",tableType);
+		transformation.getElement().setAttribute("centralTable",tableName);
+		transformation.getElement().setAttribute("userTableName",tableName);
+		transformation.getElement().setAttribute("includeCentralFilters",includeCentralFilters);
+
+		
+		String[] columnNames = {"%"};
+		//Table[] exp_tables = resolver.getExportedKeyTables(tableName,columnNames);
+		Table[] referencedTables = resolver.getReferencedTables(tableName);
+		transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension, transformationCount,transformation);
+		//Table[] imp_tables = resolver.getImportedKeyTables(tableName,columnNames);
+		//transformation = getCardinalities(imp_tables, tableName, tableType, datasetName, extension, transformationCount,transformation);
+        
+		dataset.insertChildObject(transformationCount,transformation);	
+		transformationCount++;
+
+		// now do the other dm tables
+		
+		do {
+		  potentialTables = new String[tableList.size()];	
+		  tableList.toArray(potentialTables);	
+		  tableName = (String) JOptionPane.showInputDialog(
+						null,
+						"Choose one or hit cancel to finish",
+						"Central table",
+						JOptionPane.INFORMATION_MESSAGE,
+						null,
+						potentialTables,
+						potentialTables[0]);
+
+		  tableList.remove(tableName);
+
+		  if (tableName != null){
+			tableType = "d"; 	
+		    extension = JOptionPane.showInputDialog(null,"EXTENSION FOR THIS TABLE:");
+		    
+			includeCentralFilters = JOptionPane.showInputDialog(null,"Include Central Filters: ","N");
+		 	tCount = new Integer(transformationCount+1);
+			transformation = new Transformation();
+			transformation.getElement().setAttribute("internalName",tCount.toString());
+			transformation.getElement().setAttribute("tableType",tableType);
+			transformation.getElement().setAttribute("centralTable",tableName);
+			transformation.getElement().setAttribute("userTableName",tableName);
+			transformation.getElement().setAttribute("includeCentralFilters",includeCentralFilters);
+
+			referencedTables = resolver.getReferencedTables(tableName);
+			transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension, transformationCount,transformation);
+
+
+			dataset.insertChildObject(transformationCount,transformation);	
+			transformationCount++;	
+		  }		
+		}
+	    while (tableName != null);
+		
+		// add dataset to transformationConfig
+		tConfig.insertChildObject(0,dataset);
+
+		// save to file
+		String xmlFile = JOptionPane.showInputDialog(null,"OUTPUT XML FILE:");
+		
+		ConfigurationAdaptor configAdaptor = new ConfigurationAdaptor();
+		configAdaptor.adaptor=adaptor;
+		configAdaptor.resolver=resolver;
+		configAdaptor.writeDocument(tConfig,xmlFile);
+		
+		System.out.println ("\nWritten XML to: "+xmlFile);
+		
+		// open it in a new frame
+		
+		TransformationConfigTreeWidget frame = new TransformationConfigTreeWidget(null, this, tConfig, null, null, null, null);
+		frame.setVisible(true);
+		desktop.add(frame);
+		try {
+		  frame.setSelected(true);
+		} catch (java.beans.PropertyVetoException e) {
+		}
+
+		
+  	}
+	catch(Exception e){
+		System.out.println("Exception:" + e.toString());
+	}
+  }
+
+  private Transformation getCardinalities(Table[] referencedTables,
+                                String tableName,
+                                String tableType,
+                                String datasetName,
+                                String centralExtension,
+                                int transformationCount,
+                                Transformation transformation){
+                                	
+  	 String cardString = " cardinality [11] [n1] [n1r] [0n] [1n] [skip s]: ";
+  	 String extension = null;                              	
+
+	 //Integer tCount = new Integer(transformationCount+1);	 
+     
+     for (int i = 0; i < referencedTables.length; i++){
+     	int unitCount = 0;
+     	String cardinality = "";
+     	Table refTab = referencedTables[i];
+     	if (refTab.getName().equals(tableName))
+     		continue;
+     	//if (centralExtension == null || centralExtension.equals(""))
+     	//	centralExtension = "null";
+     		
+     	while (!(cardinality.equals("11") || cardinality.equals("n1") || cardinality.equals("0n") ||
+		         cardinality.equals("1n") || cardinality.equals("n1r") || cardinality.equals("s"))){
+		         	
+		         	cardinality = JOptionPane.showInputDialog(null,tableName+":"+refTab.status+" "+refTab.PK
+		         		+" "+refTab.FK+" "+refTab.getName().toUpperCase()+cardString);
+		         	
+		         	//extension = "null";
+		         	if (!cardinality.equals("s") & !cardinality.equals("1n"))
+		         		extension = JOptionPane.showInputDialog(null,"Extension: ");
+		         		
+		         	//if (extension == null || extension.equals(""))
+		         	//	extension = "null";	
+		 }
+		 if (cardinality.equals("s") || cardinality.equals("1n"))
+		 	continue;
+		 	
+		 // add the Transformation and TransformationUnit to the dataset	
+		 
+		 tableList.remove(refTab.getName());
+	
+		 Integer tunitCount = new Integer(unitCount+1);
+		 
+		 TransformationUnit transformationUnit = new TransformationUnit();
+		 transformationUnit.getElement().setAttribute("internalName",tunitCount.toString());	
+		 transformationUnit.getElement().setAttribute("referencingType",refTab.status);	
+		 transformationUnit.getElement().setAttribute("primaryKey",refTab.PK);	
+		 transformationUnit.getElement().setAttribute("referencedTable",refTab.getName().toUpperCase());
+		 transformationUnit.getElement().setAttribute("cardinality",cardinality);
+		 transformationUnit.getElement().setAttribute("centralProjection",centralExtension);			
+		 transformationUnit.getElement().setAttribute("referencedProjection",extension);
+		 transformationUnit.getElement().setAttribute("foreignKey",refTab.FK);		
+		 transformationUnit.getElement().setAttribute("referenceColumnNames","");	
+		 transformationUnit.getElement().setAttribute("referenceColumnAliases","");	
+		 transformationUnit.getElement().setAttribute("centralColumnNames","");	
+		 transformationUnit.getElement().setAttribute("centralColumnAliases","");	
+     	 
+     	 transformation.insertChildObject(unitCount,transformationUnit);// ? should be a proper index
+     	 unitCount++;                           	
+     }
+	 
+     return transformation;
+                                	
+  }
+
+
+  private void createDDL(){
   	
    try{
 	String config_info = "";

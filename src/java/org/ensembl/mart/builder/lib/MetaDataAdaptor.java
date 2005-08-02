@@ -47,8 +47,8 @@ public abstract class MetaDataAdaptor {
 		Table [] exp_key_tables;
 		Table [] imp_key_tables;
 		
-		String [] columnNames=null;
-		columnNames[0]="%";
+		String [] columnNames={"%"};
+		//columnNames[0]="%";
 		
 		exp_key_tables = getExportedKeyTables(table_name, columnNames);
 		imp_key_tables = getImportedKeyTables(table_name, columnNames);
@@ -71,11 +71,18 @@ public abstract class MetaDataAdaptor {
 	
 	public String [] getAllTableNames () throws SQLException{
 		
-		String [] types =null;
-		String [] names =null;
-		types[0]="table";
+		//String [] types = {"table"};
+		ArrayList nameList = new ArrayList();
 		
-		//ResultSet resultNames = dmd.getTables(null,getAdaptor().schema,"%",types);
+		int i = 0;
+		// types filter doesn't work
+		ResultSet resultNames = dmd.getTables(getAdaptor().getCon().getCatalog(),getAdaptor().schema,"%",null);
+		while (resultNames.next()){
+			nameList.add(resultNames.getString(3));
+			i++;
+		}
+		String[] names = new String[nameList.size()];
+		nameList.toArray(names);
 		
 		return names;
 		

@@ -35,8 +35,7 @@ public class MetaDataAdaptorFKSupported extends MetaDataAdaptor {
 		Table [] exp_key_tables;
 		Table [] imp_key_tables;
 		
-		String [] columnNames=null;
-		columnNames[0]="%";
+		String [] columnNames={"%"};
 		
 		exp_key_tables = getExportedKeyTables(table_name, columnNames);
 		imp_key_tables = getImportedKeyTables(table_name, columnNames);

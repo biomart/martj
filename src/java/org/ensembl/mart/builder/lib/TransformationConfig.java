@@ -23,5 +23,9 @@ public class TransformationConfig extends ConfigurationBase {
 		
 	}
 	
+	public TransformationConfig (){
+		super("TransformationConfig");
+	}
+	
 	
 }
