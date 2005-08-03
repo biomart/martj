@@ -71,6 +71,9 @@ public class MetaDataAdaptorFKSupported extends MetaDataAdaptor {
 				table.PK=keys.getString(4);
 				table.FK=keys.getString(8);
 				
+				System.out.println("EXP--FOR CENTRAL TABLE "+centralTableName+" GOT ref TABLE "+keys.getString(7)+
+				                   " WITH PK "+keys.getString(4)+" AND FK "+keys.getString(8) );
+				
 				//table.setKey(keys.getString(8));
 				table.status="exported";
 				table.setColumns(getReferencedColumns(table.getName(), columnNames));
@@ -114,6 +117,8 @@ public class MetaDataAdaptorFKSupported extends MetaDataAdaptor {
 				table.PK=keys.getString(4);
 				table.FK=keys.getString(8);
 				
+				System.out.println("IMP--FOR CENTRAL TABLE "+centralTableName+" GOT ref TABLE "+keys.getString(3)+
+												   " WITH PK "+keys.getString(4)+" AND FK "+keys.getString(8) );
 				//table.setKey(keys.getString(4));
 				table.status="imported";
 				table.setColumns(getReferencedColumns(table.getName(), columnNames));
