@@ -21,6 +21,7 @@ package org.ensembl.mart.builder;
 import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
@@ -38,6 +39,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JDesktopPane;
 import javax.swing.JFileChooser;
 
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -46,6 +48,7 @@ import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JComboBox;
@@ -463,19 +466,29 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		String[] dialogOptions = new String[] {"Ok","Cancel"};
 		String[] includeCentralFilterOptions = new String[] {"N","Y"};
 		
-		Box initialSettings = new Box(BoxLayout.Y_AXIS);		
-		JLabel label1 = new JLabel("Transformation Config Name");
-		initialSettings.add( label1);	
-		JTextField tConfigNameField = new JTextField();
-		initialSettings.add( tConfigNameField );
-		JLabel label2 = new JLabel("Dataset Name");
-		initialSettings.add( label2);	
-		JTextField datasetNameField = new JTextField();
-		initialSettings.add( datasetNameField );
+		
+		
+		Box initialSettings = new Box(BoxLayout.Y_AXIS);
+		initialSettings.add(Box.createRigidArea(new Dimension(400,1)));		
+		Box box1 = new Box(BoxLayout.X_AXIS);
+		Box box2 = new Box(BoxLayout.X_AXIS);
+		Box box3 = new Box(BoxLayout.X_AXIS);
+		
+		JLabel label1 = new JLabel("Transformation config name");		
+		box1.add(label1);	
+		JTextField tConfigNameField = new JTextField(10);
+		box1.add(tConfigNameField);
+		initialSettings.add(box1);
+		JLabel label2 = new JLabel("Dataset name");
+		box2.add(label2);
+		JTextField datasetNameField = new JTextField(10);
+		box2.add(datasetNameField);
+		initialSettings.add(box2);
 		JLabel label3 = new JLabel("Output file");
-		initialSettings.add( label3);	
-		JTextField outputFileField = new JTextField();
-		initialSettings.add( outputFileField );
+		box3.add(label3);
+		JTextField outputFileField = new JTextField(10);
+		box3.add(outputFileField);
+		initialSettings.add(box3);
 		
 		int option = JOptionPane.showOptionDialog(
 				this,
@@ -504,28 +517,33 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		int transformationCount = 0;
 		
 		String[] potentialTables = resolver.getAllTableNames();
-
-		//centralTableDialog = new CentralTableSettingsDialog(potentialTables);
-		//centralTableDialog.showDialog(this);
 		
-		Box centralSettings = new Box(BoxLayout.Y_AXIS);		
-		label1 = new JLabel("Central Table Name");
-		centralSettings.add( label1);	
+		Box centralSettings = new Box(BoxLayout.Y_AXIS);
+		centralSettings.add(Box.createRigidArea(new Dimension(400,1)));		
+		box1 = new Box(BoxLayout.X_AXIS);
+		box2 = new Box(BoxLayout.X_AXIS);
+		box3 = new Box(BoxLayout.X_AXIS);
+				
+		label1 = new JLabel("Main table name");
+		box1.add(label1);
 		JComboBox tableNameBox = new JComboBox(potentialTables);
-		centralSettings.add( tableNameBox );
-		label2 = new JLabel("Central Projection (optional)");
-		centralSettings.add( label2);	
+		box1.add(tableNameBox);
+		centralSettings.add(box1);
+		label2 = new JLabel("Central projection/restriction (optional)");
+		box2.add( label2);	
 		JTextField extensionField = new JTextField();
-		centralSettings.add( extensionField );
-		label3 = new JLabel("Include Central Filters?");
-		centralSettings.add( label3);	
+		box2.add( extensionField );
+		centralSettings.add(box2);
+		label3 = new JLabel("Include central filters?");
+		box3.add( label3);	
 		JComboBox includeCentralBox = new JComboBox(includeCentralFilterOptions);
-		centralSettings.add( includeCentralBox );
+		box3.add( includeCentralBox );
+		centralSettings.add(box3);
 		
 		int option2 = JOptionPane.showOptionDialog(
 				this,
 				centralSettings,
-				"Central Table Settings",
+				"Main Table Settings",
 				JOptionPane.DEFAULT_OPTION,
 				JOptionPane.INFORMATION_MESSAGE,
 				null,
@@ -549,12 +567,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 
 		
 		String[] columnNames = {"%"};
-		//Table[] exp_tables = resolver.getExportedKeyTables(tableName,columnNames);
 		Table[] referencedTables = resolver.getReferencedTables(tableName);
 		transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension, transformationCount,transformation);
-		//Table[] imp_tables = resolver.getImportedKeyTables(tableName,columnNames);
-		//transformation = getCardinalities(imp_tables, tableName, tableType, datasetName, extension, transformationCount,transformation);
-        
+     
 		dataset.insertChildObject(transformationCount,transformation);	
 		transformationCount++;
 
@@ -563,20 +578,28 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		  potentialTables = new String[tableList.size()];	
 		  tableList.toArray(potentialTables);
 		  		  
-		  centralSettings = new Box(BoxLayout.Y_AXIS);		
-		  label1 = new JLabel("Central Table Name");
-		  centralSettings.add( label1);	
+		  centralSettings = new Box(BoxLayout.Y_AXIS);
+		  centralSettings.add(Box.createRigidArea(new Dimension(400,1)));		
+		  box1 = new Box(BoxLayout.X_AXIS);
+		  box2 = new Box(BoxLayout.X_AXIS);
+		  box3 = new Box(BoxLayout.X_AXIS);
+		  		
+		  label1 = new JLabel("Central table name");
+		  box1.add( label1);	
 		  tableNameBox = new JComboBox(potentialTables);
-		  centralSettings.add( tableNameBox );
-		  label2 = new JLabel("Central Projection (optional)");
-		  centralSettings.add( label2);	
+		  box1.add( tableNameBox );
+		  centralSettings.add(box1);
+		  label2 = new JLabel("Central projection/restriction (optional)");
+		  box2.add( label2);	
 		  extensionField = new JTextField();
-		  centralSettings.add( extensionField );
-		  label3 = new JLabel("Include Central Filters?");
-		  centralSettings.add( label3);	
+		  box2.add( extensionField );
+		  centralSettings.add(box2);
+		  label3 = new JLabel("Include central filters?");
+		  box3.add( label3);	
 		  includeCentralBox = new JComboBox(includeCentralFilterOptions);
-		  centralSettings.add( includeCentralBox );
-		
+		  box3.add( includeCentralBox );
+		  centralSettings.add(box3);
+		  
 		  int option3 = JOptionPane.showOptionDialog(
 				  this,
 				  centralSettings,
@@ -648,44 +671,71 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
                                 String centralExtension,
                                 int transformationCount,
                                 Transformation transformation){
-                                	
-  	 String cardString = " cardinality [11] [n1] [n1r] [0n] [1n] [skip s]: ";
-  	 String extension = null;                              	
+                                	                            	
 	 int unitCount = 0;
-	 //Integer tCount = new Integer(transformationCount+1);	 
-     
+    
      if (tableType.equals("m"))
      	tableList = new ArrayList();//create a new list of candidates for next central table selection
      
+	 Box cardinalitySettings = new Box(BoxLayout.Y_AXIS);	
+	 cardinalitySettings.add(Box.createRigidArea(new Dimension(400,1)));		
+	 
+	 JCheckBox[] checkboxs = new JCheckBox[referencedTables.length];
+	 JComboBox[] comboBoxs = new JComboBox[referencedTables.length];
+	 JTextField[] textFields = new JTextField[referencedTables.length];
+     
+	 String[] cardinalityOptions = new String[] {"11","1n","n1","0n","n1r"};
+     
+	 for (int i = 0; i < referencedTables.length; i++){
+		if (referencedTables[i].getName().equals(tableName))
+			continue;
+
+		Box box2 = new Box(BoxLayout.X_AXIS);
+		Box box3 = new Box(BoxLayout.X_AXIS);				
+		checkboxs[i] = new JCheckBox("Include "+referencedTables[i].getName());
+		checkboxs[i].setSelected(true);
+		JLabel label1 = new JLabel("Cardinality for "+tableName+"."+referencedTables[i].PK+
+									" => "+referencedTables[i].getName()+"."+referencedTables[i].FK);
+		comboBoxs[i] = new JComboBox(cardinalityOptions);
+		JLabel label2 = new JLabel("Referenced projection/restriction (optional)");
+		textFields[i] = new JTextField();
+		
+		cardinalitySettings.add(checkboxs[i]);
+		box2.add(label1);
+		box2.add(comboBoxs[i]);
+		cardinalitySettings.add(box2);
+		box3.add(label2);
+		box3.add(textFields[i]);
+		cardinalitySettings.add(box3);
+		
+		cardinalitySettings.add(Box.createVerticalStrut(20));
+     }
+	 String[] dialogOptions = new String[] {"Ok","Cancel"};
+	 int option = JOptionPane.showOptionDialog(
+					 this,
+					 cardinalitySettings,
+					 "Cardinality settings for tables referenced from "+tableName,
+					 JOptionPane.DEFAULT_OPTION,
+					 JOptionPane.INFORMATION_MESSAGE,
+					 null,
+					 dialogOptions,
+					 null);
+     
+     
      for (int i = 0; i < referencedTables.length; i++){
-     	String cardinality = "";
-     	Table refTab = referencedTables[i];
-     	if (refTab.getName().equals(tableName))
-     		continue;
-     	//if (centralExtension == null || centralExtension.equals(""))
-     	//	centralExtension = "null";
-     		
-     	while (!(cardinality.equals("11") || cardinality.equals("n1") || cardinality.equals("0n") ||
-		         cardinality.equals("1n") || cardinality.equals("n1r") || cardinality.equals("s"))){
-		         	
-		         	cardinality = JOptionPane.showInputDialog(null,tableName+":"+refTab.status+" "+refTab.PK
-		         		+" "+refTab.FK+" "+refTab.getName().toUpperCase()+cardString);
-		         	
-		         	//extension = "null";
-		         	if (!cardinality.equals("s") & !cardinality.equals("1n"))
-		         		extension = JOptionPane.showInputDialog(null,"Extension: ");
-		         		
-		         	//if (extension == null || extension.equals(""))
-		         	//	extension = "null";	
-		 }
-		 if (cardinality.equals("s") || cardinality.equals("1n")){
+		 Table refTab = referencedTables[i];
+	  	 if (refTab.getName().equals(tableName))
+			continue;
+     	 String cardinality = comboBoxs[i].getSelectedItem().toString();
+  		 String extension = textFields[i].getText();
+  		
+		 if (checkboxs[i].getSelectedObjects() == null  || cardinality.equals("1n")){
 			if (tableType.equals("m"))
 		 		tableList.add(refTab.getName());
 		 	
 		 	continue;
 		 }
 		 	
-	 
 		 if (!tableType.equals("m"))
 		 	tableList.remove(tableName);
 	
@@ -730,7 +780,6 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		resolver = new MetaDataAdaptorFKSupported(adaptor);
 	}
 
-	System.out.println("TARG SCHEMA");
 	tSchemaName = JOptionPane.showInputDialog(null,"INPUT TARGET SCHEMA");
 	
 	// read the XML from the open frame rather than inputing a file
