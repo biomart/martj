@@ -32,6 +32,8 @@ public class Dataset extends ConfigurationBase {
 		
 	public Dataset(){
 		super("Dataset");
+		int[] requiredFields = {0,1};
+		setRequiredFields(requiredFields);
 	}
 	
 	void setTargetSchemaName(String targetSchemaName) {

@@ -37,6 +37,8 @@ public class Transformation extends ConfigurationBase {
 	
 	public Transformation (){
 		super();
+		int[] requiredFields = {0,1,2,3,4};
+		setRequiredFields(requiredFields);
 	}
 
 	void setStartTable(Table startTable) {

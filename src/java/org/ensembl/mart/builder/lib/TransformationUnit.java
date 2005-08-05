@@ -40,6 +40,8 @@ public  class TransformationUnit extends ConfigurationBase {
 		
 	public TransformationUnit (){
 		super();
+		int[] requiredFields = {0,1,2,3,4,7};
+		setRequiredFields(requiredFields);
 	}
 	
 	public TransformationUnit(Table ref_table){	

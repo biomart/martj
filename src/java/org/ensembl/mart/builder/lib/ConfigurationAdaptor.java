@@ -111,8 +111,8 @@ public class ConfigurationAdaptor {
 
 			ConfigurationBase[] datasets = tConfig.getChildObjects();
 			for (int i = 0; i < datasets.length; i++){
-				
 				Dataset dataset = (Dataset) datasets[i];
+				//System.out.println("DATASET:"+dataset.getElement().getAttributeValue("internalName"));
 				datasetName = dataset.getElement().getAttributeValue("internalName");
 				dataset.setAdaptor(adaptor);
 				dataset.setTargetSchemaName(targetSchemaName);
@@ -124,7 +124,7 @@ public class ConfigurationAdaptor {
 				ConfigurationBase[] transformations = dataset.getChildObjects();
 				for (int j = 0; j < transformations.length; j++){
 					transformation = (Transformation) transformations[j];
-						
+					//System.out.println("TRANSFORMATION:"+transformation.getElement().getAttributeValue("internalName"));	
 					transformation.setAdaptor(adaptor);
 					transformation.setDatasetName(datasetName);
 					transformation.setTargetSchemaName(targetSchemaName);
@@ -154,6 +154,7 @@ public class ConfigurationAdaptor {
 					ConfigurationBase[] transformationUnits = transformation.getChildObjects();
 					for (int k = 0; k < transformationUnits.length; k++){
 						TransformationUnit transformationUnit = (TransformationUnit) transformationUnits[k];
+						//System.out.println("TRANSFORMATION UNIT:"+transformationUnit.getElement().getAttributeValue("internalName"));	
 					
 						if (!transformationUnit.getElement().getAttributeValue("centralColumnNames").equals("")) centralColumnNames = transformationUnit.getElement().getAttributeValue("centralColumnNames").split(",");
 						if (!transformationUnit.getElement().getAttributeValue("centralColumnAliases").equals("")) centralColumnAliases = transformationUnit.getElement().getAttributeValue("centralColumnAliases").split(",");

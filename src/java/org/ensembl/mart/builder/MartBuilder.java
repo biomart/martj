@@ -21,7 +21,6 @@ package org.ensembl.mart.builder;
 import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
@@ -33,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.prefs.Preferences;
 
 import javax.swing.ImageIcon;
@@ -50,7 +50,6 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
 
@@ -99,6 +98,13 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
   private static MetaDataAdaptor resolver; 
   
   private ArrayList tableList; 
+
+  private HashMap refColNames = new HashMap();
+  private HashMap refColAliases = new HashMap();
+  //private HashMap cenColNames = new HashMap();
+  //private HashMap cenColAliases = new HashMap();
+  private String cenColName;
+  private String cenColAlias;	
 
   /** Persistent preferences object used to hold user history. */
   private Preferences prefs = Preferences.userNodeForPackage(this.getClass());
@@ -462,11 +468,13 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		} else if (adaptor.rdbms.equals("postgresql")) {
 			resolver = new MetaDataAdaptorFKSupported(adaptor);
 		}
-		
-		String[] dialogOptions = new String[] {"Ok","Cancel"};
+	
+		String[] dialogOptions = new String[] {"Continue","Select columns","Cancel"};
+		String[] standardOptions = new String[] {"OK","Cancel"};
 		String[] includeCentralFilterOptions = new String[] {"N","Y"};
 		
-		
+		cenColName = "";
+		cenColAlias = "";
 		
 		Box initialSettings = new Box(BoxLayout.Y_AXIS);
 		initialSettings.add(Box.createRigidArea(new Dimension(400,1)));		
@@ -495,9 +503,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				initialSettings,
 				"Initial Settings",
 				JOptionPane.DEFAULT_OPTION,
-				JOptionPane.INFORMATION_MESSAGE,
+				JOptionPane.PLAIN_MESSAGE,
 				null,
-				dialogOptions,
+				standardOptions,
 				null);
 		
 		String tConfigName = tConfigNameField.getText();
@@ -515,7 +523,6 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		// go through the tables 
 		
 		int transformationCount = 0;
-		
 		String[] potentialTables = resolver.getAllTableNames();
 		
 		Box centralSettings = new Box(BoxLayout.Y_AXIS);
@@ -538,19 +545,68 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		box3.add( label3);	
 		JComboBox includeCentralBox = new JComboBox(includeCentralFilterOptions);
 		box3.add( includeCentralBox );
-		centralSettings.add(box3);
-		
+	
 		int option2 = JOptionPane.showOptionDialog(
 				this,
 				centralSettings,
 				"Main Table Settings",
 				JOptionPane.DEFAULT_OPTION,
-				JOptionPane.INFORMATION_MESSAGE,
+				JOptionPane.PLAIN_MESSAGE,
 				null,
 				dialogOptions,
 				null);
-				
-		String tableName = tableNameBox.getSelectedItem().toString();
+		
+		String tableName = tableNameBox.getSelectedItem().toString();		
+		
+		if (option2 == 1){// choose central table cols
+			 Box columnsBox = new Box(BoxLayout.Y_AXIS);
+
+			 Table centralTable = resolver.getCentralTable(tableName);
+			 Column[] cols = centralTable.getColumns();	
+			 
+			 JCheckBox[] colChecks = new JCheckBox[cols.length];	
+			 String[] colNames = new String[cols.length];
+			 JTextField[] colAliases = new JTextField[cols.length];
+			  
+			 for (int j=0;j<cols.length;j++){
+				Box horizBox = new Box(BoxLayout.X_AXIS);
+				JCheckBox check1 = new JCheckBox(cols[j].getName());
+				check1.setSelected(true);
+				horizBox.add(check1);
+				colChecks[j] = check1;
+				JTextField field1 = new JTextField(cols[j].getName());
+				horizBox.add(field1);
+				colNames[j] = cols[j].getName();
+				colAliases[j] = field1;		 
+				columnsBox.add(horizBox);
+			 } 	
+			 String[] newOptions = new String[] {"Ok","Cancel"}; 
+			 int colsOption = JOptionPane.showOptionDialog(
+									this,
+									columnsBox,
+									"Select columns for the final dataset ",
+									JOptionPane.DEFAULT_OPTION,
+									JOptionPane.PLAIN_MESSAGE,
+									null,
+									newOptions,
+									null);
+			 
+			 String comma = "";	
+			 if (colsOption == 0){// recover the aliases and names into cenColAliases and celColNames
+				for (int i = 0; i < colChecks.length; i++){
+					if (colChecks[i].getSelectedObjects() == null)
+						continue;
+					
+					cenColName = cenColName+comma+colNames[i];
+					cenColAlias = cenColAlias+comma+colAliases[i].getText();
+					comma = ",";			
+				}										
+			 }
+		}
+		
+		String userTableName = (datasetName+"__"+tableName+"__"+"main").toLowerCase();
+		userTableName = JOptionPane.showInputDialog(null,"User Table Name:",userTableName);
+			
 		String extension = extensionField.getText();
 		String includeCentralFilters = includeCentralBox.getSelectedItem().toString();
 		String tableType = "m"; 
@@ -562,8 +618,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		transformation.getElement().setAttribute("internalName",tCount.toString());
 		transformation.getElement().setAttribute("tableType",tableType);
 		transformation.getElement().setAttribute("centralTable",tableName);
-		transformation.getElement().setAttribute("userTableName",tableName);
-		transformation.getElement().setAttribute("includeCentralFilters",includeCentralFilters);
+		transformation.getElement().setAttribute("userTableName",userTableName);
+		transformation.getElement().setAttribute("includeCentralFilter",includeCentralFilters);
 
 		
 		String[] columnNames = {"%"};
@@ -605,12 +661,63 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				  centralSettings,
 				  "Central Table Settings",
 				  JOptionPane.DEFAULT_OPTION,
-				  JOptionPane.INFORMATION_MESSAGE,
+				  JOptionPane.PLAIN_MESSAGE,
 				  null,
 				  dialogOptions,
 				  null);
 				
 		  tableName = tableNameBox.getSelectedItem().toString();
+		 
+		  if (option3 == 1){// choose central table cols
+			   Box columnsBox = new Box(BoxLayout.Y_AXIS);
+		
+			   Table centralTable = resolver.getCentralTable(tableName);
+			   Column[] cols = centralTable.getColumns();	
+			 
+			   JCheckBox[] colChecks = new JCheckBox[cols.length];	
+			   String[] colNames = new String[cols.length];
+			   JTextField[] colAliases = new JTextField[cols.length];
+			  
+			   for (int j=0;j<cols.length;j++){
+				  Box horizBox = new Box(BoxLayout.X_AXIS);
+				  JCheckBox check1 = new JCheckBox(cols[j].getName());
+				  check1.setSelected(true);
+				  horizBox.add(check1);
+				  colChecks[j] = check1;
+				  JTextField field1 = new JTextField(cols[j].getName());
+				  horizBox.add(field1);
+				  colNames[j] = cols[j].getName();
+				  colAliases[j] = field1;		 
+				  columnsBox.add(horizBox);
+			   } 	
+			   String[] newOptions = new String[] {"Ok","Cancel"}; 
+			   int colsOption = JOptionPane.showOptionDialog(
+									  this,
+									  columnsBox,
+									  "Select columns for the final dataset ",
+									  JOptionPane.DEFAULT_OPTION,
+									  JOptionPane.PLAIN_MESSAGE,
+									  null,
+									  newOptions,
+									  null);
+			 
+			   cenColName = "";
+			   cenColAlias = "";
+			   String comma = "";	
+			   if (colsOption == 0){// recover the aliases and names into cenColAliases and celColNames
+				  for (int i = 0; i < colChecks.length; i++){
+					  if (colChecks[i].getSelectedObjects() == null)
+						  continue;
+					
+					  cenColName = cenColName+comma+colNames[i];
+					  cenColAlias = cenColAlias+comma+colAliases[i].getText();
+					  comma = ",";			
+				  }										
+			   }
+		  }
+		 	  
+		  userTableName = (datasetName+"__"+tableName+"__"+"dm").toLowerCase();
+		  userTableName = JOptionPane.showInputDialog(null,"User Table Name:",userTableName);
 		  extension = extensionField.getText();
 		  includeCentralFilters = includeCentralBox.getSelectedItem().toString();	
 
@@ -623,8 +730,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			transformation.getElement().setAttribute("internalName",tCount.toString());
 			transformation.getElement().setAttribute("tableType",tableType);
 			transformation.getElement().setAttribute("centralTable",tableName);
-			transformation.getElement().setAttribute("userTableName",tableName);
-			transformation.getElement().setAttribute("includeCentralFilters",includeCentralFilters);
+			transformation.getElement().setAttribute("userTableName",userTableName);
+			transformation.getElement().setAttribute("includeCentralFilter",includeCentralFilters);
 
 			referencedTables = resolver.getReferencedTables(tableName);
 			transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension, transformationCount,transformation);
@@ -663,6 +770,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		System.out.println("Exception:" + e.toString());
 	}
   }
+  
+  
 
   private Transformation getCardinalities(Table[] referencedTables,
                                 String tableName,
@@ -671,7 +780,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
                                 String centralExtension,
                                 int transformationCount,
                                 Transformation transformation){
-                                	                            	
+                               	                            	 
 	 int unitCount = 0;
     
      if (tableType.equals("m"))
@@ -699,7 +808,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		comboBoxs[i] = new JComboBox(cardinalityOptions);
 		JLabel label2 = new JLabel("Referenced projection/restriction (optional)");
 		textFields[i] = new JTextField();
-		
+				
 		cardinalitySettings.add(checkboxs[i]);
 		box2.add(label1);
 		box2.add(comboBoxs[i]);
@@ -710,17 +819,86 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		
 		cardinalitySettings.add(Box.createVerticalStrut(20));
      }
-	 String[] dialogOptions = new String[] {"Ok","Cancel"};
+	 String[] dialogOptions = new String[] {"Continue","Select columns","Cancel"};
 	 int option = JOptionPane.showOptionDialog(
 					 this,
 					 cardinalitySettings,
 					 "Cardinality settings for tables referenced from "+tableName,
 					 JOptionPane.DEFAULT_OPTION,
-					 JOptionPane.INFORMATION_MESSAGE,
+					 JOptionPane.PLAIN_MESSAGE,
 					 null,
 					 dialogOptions,
 					 null);
      
+     if (option == 2)
+     	return transformation;
+     else if (option == 1){// choose columns you want
+     	Box columnsBox = new Box(BoxLayout.Y_AXIS);
+		
+		ArrayList colChecks = new ArrayList(); 
+		ArrayList colAliases = new ArrayList();
+		ArrayList colNames = new ArrayList();
+		ArrayList colTable = new ArrayList();
+		
+		for (int i = 0; i < referencedTables.length; i++){
+			Table refTab = referencedTables[i];
+			if (refTab.getName().equals(tableName))
+			   continue;
+			String cardinality = comboBoxs[i].getSelectedItem().toString();
+  		
+			if (checkboxs[i].getSelectedObjects() == null  || cardinality.equals("1n"))
+			   continue;
+			 
+			JLabel label1 = new JLabel(refTab.getName());
+			columnsBox.add(label1);   
+			Column[] cols = refTab.getColumns();
+			
+			for (int j=0;j<cols.length;j++){
+				 Box horizBox = new Box(BoxLayout.X_AXIS);
+				 JCheckBox check1 = new JCheckBox(cols[j].getName());
+				 check1.setSelected(true);
+				 horizBox.add(check1);
+				 colChecks.add(check1);
+				 JTextField field1 = new JTextField(cols[j].getName());
+				 horizBox.add(field1);
+				 colNames.add(cols[j].getName());
+				 colAliases.add(field1);
+				 colTable.add(refTab.getName());
+				 columnsBox.add(horizBox);
+			}
+		}
+     	
+     	dialogOptions = new String[] {"Ok","Cancel"}; 
+		int colsOption = JOptionPane.showOptionDialog(
+						this,
+						columnsBox,
+						"Select columns for the final dataset ",
+						JOptionPane.DEFAULT_OPTION,
+						JOptionPane.PLAIN_MESSAGE,
+						null,
+						dialogOptions,
+						null);
+						
+		if (colsOption == 0){// recover the aliases and names
+			for (int i = 0; i < colChecks.size(); i++){
+				if (((JCheckBox) colChecks.get(i)).getSelectedObjects() == null)
+					continue;
+							
+				if (refColNames.get(colTable.get(i)) == null)		
+					refColNames.put(colTable.get(i),colNames.get(i));
+				else
+					refColNames.put(colTable.get(i),refColNames.get(colTable.get(i))+","+colNames.get(i));
+					
+				if (refColAliases.get(colTable.get(i)) == null)		
+					refColAliases.put(colTable.get(i),((JTextField) colAliases.get(i)).getText());
+				else
+					refColAliases.put(colTable.get(i),refColAliases.get(colTable.get(i))+","+((JTextField) colAliases.get(i)).getText());
+												
+			}
+			
+		}
+			
+     }
      
      for (int i = 0; i < referencedTables.length; i++){
 		 Table refTab = referencedTables[i];
@@ -741,6 +919,14 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	
 		 Integer tunitCount = new Integer(unitCount+1);
 		 
+		 String refColName = "";
+		 String refColAlias = "";
+		 
+		 if (refColNames.get(refTab.getName()) != null)
+			refColName = (String) refColNames.get(refTab.getName());
+		 if (refColAliases.get(refTab.getName()) != null)
+			refColAlias = (String) refColAliases.get(refTab.getName());
+		 
 		 TransformationUnit transformationUnit = new TransformationUnit();
 		 transformationUnit.getElement().setAttribute("internalName",tunitCount.toString());	
 		 transformationUnit.getElement().setAttribute("referencingType",refTab.status);	
@@ -750,10 +936,10 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		 transformationUnit.getElement().setAttribute("centralProjection",centralExtension);			
 		 transformationUnit.getElement().setAttribute("referencedProjection",extension);
 		 transformationUnit.getElement().setAttribute("foreignKey",refTab.FK);		
-		 transformationUnit.getElement().setAttribute("referenceColumnNames","");	
-		 transformationUnit.getElement().setAttribute("referenceColumnAliases","");	
-		 transformationUnit.getElement().setAttribute("centralColumnNames","");	
-		 transformationUnit.getElement().setAttribute("centralColumnAliases","");	
+		 transformationUnit.getElement().setAttribute("referenceColumnNames",refColName);	
+		 transformationUnit.getElement().setAttribute("referenceColumnAliases",refColAlias);	
+		 transformationUnit.getElement().setAttribute("centralColumnNames",cenColName);	
+		 transformationUnit.getElement().setAttribute("centralColumnAliases",cenColAlias);	
      	 
      	 transformation.insertChildObject(unitCount,transformationUnit);
      	 unitCount++;                           	
