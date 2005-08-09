@@ -514,6 +514,11 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			return;				
 
 		String xmlFile     = outputFileField.getText();
+		if (xmlFile.equals("")){
+			JOptionPane.showMessageDialog(null,"Output file required");
+			return;
+		}
+		
 		String tConfigName = tConfigNameField.getText();		
 		// create the config
 		TransformationConfig tConfig = new TransformationConfig();		
@@ -523,6 +528,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	    while (datasetContinueOption != 1){	
 	    	
 			String datasetName = JOptionPane.showInputDialog(null,"Dataset name");
+			if (datasetName == null)
+				return;
 			// add the dataset
 			Dataset dataset = new Dataset();
 			dataset.getElement().setAttribute("internalName",datasetName);
@@ -565,6 +572,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		
 			String tableName = tableNameBox.getSelectedItem().toString();		
 		
+			if (option2 == 2)
+				return;
+		
 			if (option2 == 1){// choose central table cols
 				 Box columnsBox = new Box(BoxLayout.Y_AXIS);
 
@@ -587,7 +597,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 					colAliases[j] = field1;		 
 					columnsBox.add(horizBox);
 				 } 	
-				 String[] newOptions = new String[] {"Ok","Cancel"}; 
+				 
 				 int colsOption = JOptionPane.showOptionDialog(
 									this,
 									columnsBox,
@@ -595,7 +605,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 									JOptionPane.DEFAULT_OPTION,
 									JOptionPane.PLAIN_MESSAGE,
 									null,
-									newOptions,
+									standardOptions,
 									null);
 			 
 				 String comma = "";	
@@ -609,10 +619,14 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 						comma = ",";			
 					}										
 			 	}
+			 	else
+			 		return;
 			}
 		
 			String userTableName = (datasetName+"__"+tableName+"__"+"main").toLowerCase();
 			userTableName = JOptionPane.showInputDialog(null,"User Table Name:",userTableName);
+			if (userTableName == null)
+				return;
 			
 			String extension = extensionField.getText();
 			String includeCentralFilters = includeCentralBox.getSelectedItem().toString();
@@ -674,6 +688,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				
 			  tableName = tableNameBox.getSelectedItem().toString();
 		 
+			  if (option3 == 2)
+				  return;	
+		 
 			  if (option3 == 1){// choose central table cols
 				   Box columnsBox = new Box(BoxLayout.Y_AXIS);
 		
@@ -695,8 +712,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				  	  colNames[j] = cols[j].getName();
 				  	  colAliases[j] = field1;		 
 				      columnsBox.add(horizBox);
-			   		} 	
-				    String[] newOptions = new String[] {"Ok","Cancel"}; 
+			   		} 
 				    int colsOption = JOptionPane.showOptionDialog(
 									  this,
 									  columnsBox,
@@ -704,7 +720,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 									  JOptionPane.DEFAULT_OPTION,
 									  JOptionPane.PLAIN_MESSAGE,
 									  null,
-									  newOptions,
+									  standardOptions,
 									  null);
 			 
 				   cenColName = "";
@@ -720,6 +736,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 						  comma = ",";			
 					  }										
 			 	  }
+			 	  else
+			 	  	return;
 		 	 }
 		 	  
 			 userTableName = (datasetName+"__"+tableName+"__"+"dm").toLowerCase();
