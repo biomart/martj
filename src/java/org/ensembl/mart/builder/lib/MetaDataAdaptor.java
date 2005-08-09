@@ -71,12 +71,12 @@ public abstract class MetaDataAdaptor {
 	
 	public String [] getAllTableNames () throws SQLException{
 		
-		//String [] types = {"table"};
+		String [] types = {"TABLE"};
 		ArrayList nameList = new ArrayList();
 		
 		int i = 0;
 		// types filter doesn't work
-		ResultSet resultNames = dmd.getTables(getAdaptor().getCon().getCatalog(),getAdaptor().schema,"%",null);
+		ResultSet resultNames = dmd.getTables(getAdaptor().getCon().getCatalog(),getAdaptor().schema,"%",types);
 		while (resultNames.next()){
 			nameList.add(resultNames.getString(3));
 			i++;
