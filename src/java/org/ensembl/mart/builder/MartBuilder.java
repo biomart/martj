@@ -32,19 +32,27 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.prefs.Preferences;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 import javax.swing.ImageIcon;
 import javax.swing.JDesktopPane;
 import javax.swing.JFileChooser;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JRadioButton;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JScrollPane;
 import javax.swing.UIManager;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -491,6 +499,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				
 		Box tConfigSettings = new Box (BoxLayout.Y_AXIS);
 		tConfigSettings.add(Box.createRigidArea(new Dimension(400,1)));		
+		
 		JLabel label1 = new JLabel("Transformation config name");		
 		box1.add(label1);	
 		JTextField tConfigNameField = new JTextField(10);
@@ -554,11 +563,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			JTextField extensionField = new JTextField();
 			box2.add( extensionField );
 			centralSettings.add(box2);
-			label3 = new JLabel("Include central filters?");
-			box3.add( label3);	
-			JComboBox includeCentralBox = new JComboBox(includeCentralFilterOptions);
-			box3.add( includeCentralBox );
-			centralSettings.add(box3);
+			
+			JCheckBox partitionBox = new JCheckBox("Use partitioning");
+			centralSettings.add(partitionBox);
 	
 			int option2 = JOptionPane.showOptionDialog(
 				this,
@@ -571,6 +578,11 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				null);
 		
 			String tableName = tableNameBox.getSelectedItem().toString();		
+			String userTableName = (datasetName+"__"+tableName+"__"+"main").toLowerCase();
+			userTableName = JOptionPane.showInputDialog(null,"User Table Name:",userTableName);
+			if (userTableName == null)
+				return;
+			String extension = extensionField.getText();
 		
 			if (option2 == 2)
 				return;
@@ -623,32 +635,105 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			 		return;
 			}
 		
-			String userTableName = (datasetName+"__"+tableName+"__"+"main").toLowerCase();
-			userTableName = JOptionPane.showInputDialog(null,"User Table Name:",userTableName);
-			if (userTableName == null)
-				return;
+
+
+
+			if (partitionBox.getSelectedObjects() != null && tableName != null){// use partitioning
+			   ArrayList allCols = new ArrayList();
+			   Table[] referencedTables = resolver.getReferencedTables(tableName);
+			   for (int k = 0; k < referencedTables.length; k++){
+				  Column[] tableCols = referencedTables[k].getColumns();
+				  for (int l = 0; l < tableCols.length; l++){
+					  String entry = referencedTables[k].getName()+"."+tableCols[l].getName();
+					  allCols.add(entry);
+				  }
+			   }
+			   String[] cols = new String[allCols.size()];
+			   allCols.toArray(cols);
+			   String colsOption = (String) JOptionPane.showInputDialog(null,"Choose column to partition on",
+					  "",JOptionPane.PLAIN_MESSAGE,null,cols,"");			 
+			   String[] chosenOptions = colsOption.split("\\.+");
+			   String chosenTable = chosenOptions[0];
+			   String chosenColumn = chosenOptions[1];
+		       
+		         
+			  Connection conn = adaptor.getCon();
+			  String sql =
+				"SELECT DISTINCT "
+				  + chosenColumn
+				  + " FROM "
+				  + databaseDialog.getSchema()
+				  +"."
+				  + chosenTable
+				  + " WHERE "
+				  + chosenColumn
+				  + " IS NOT NULL";
+        
+			  System.out.println(sql);    
+			  PreparedStatement ps = conn.prepareStatement(sql);
+			  ResultSet rs = ps.executeQuery();
+				
+			  while (rs.next()) {// loop through each partition type creating a transformation
+				  String value = rs.getString(1);
+				  String refExtension = chosenColumn+"="+value;
+				  System.out.println("VAL IS "+value);
+				  
+				  if (chosenTable.equals(tableName)){
+					 // set centralExtension
+				  	 extension = refExtension;
+				  }	
+		
+				  String tableType = "m";
+				  dataset.getElement().setAttribute("mainTable",tableName); 	
+				  
+				  Integer tCount = new Integer(transformationCount+1);
+				  
+				  Transformation transformation = new Transformation();
+				  transformation.getElement().setAttribute("internalName",tCount.toString());
+				  transformation.getElement().setAttribute("tableType",tableType);
+				  transformation.getElement().setAttribute("centralTable",tableName);
+				  transformation.getElement().setAttribute("userTableName",userTableName);
+				  //transformation.getElement().setAttribute("includeCentralFilter",includeCentralFilters);
+				  String[] columnNames = {"%"};	
+				  referencedTables = resolver.getReferencedTables(tableName);
+				  transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension, transformationCount, chosenTable, refExtension, transformation);
+
+				  dataset.insertChildObject(transformationCount,transformation);	
+				  transformationCount++;
 			
-			String extension = extensionField.getText();
-			String includeCentralFilters = includeCentralBox.getSelectedItem().toString();
-			String tableType = "m"; 
-			dataset.getElement().setAttribute("mainTable",tableName);
+				  tableList.remove(tableName);
+
+				  potentialTables = new String[tableList.size()];	
+				  tableList.keySet().toArray(potentialTables);
+			   } // end of loop
 				 
-			Integer tCount = new Integer(transformationCount+1);
+			   //continue;	
+			 }
 
-			Transformation transformation = new Transformation();
-			transformation.getElement().setAttribute("internalName",tCount.toString());
-			transformation.getElement().setAttribute("tableType",tableType);
-			transformation.getElement().setAttribute("centralTable",tableName);
-			transformation.getElement().setAttribute("userTableName",userTableName);
-			transformation.getElement().setAttribute("includeCentralFilter",includeCentralFilters);
 
-			String[] columnNames = {"%"};
-			Table[] referencedTables = resolver.getReferencedTables(tableName);
-			transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension, transformationCount, transformation);
+			else{
+				String tableType = "m"; 
+				dataset.getElement().setAttribute("mainTable",tableName);
+				 
+				Integer tCount = new Integer(transformationCount+1);
+
+				Transformation transformation = new Transformation();
+				transformation.getElement().setAttribute("internalName",tCount.toString());
+				transformation.getElement().setAttribute("tableType",tableType);
+				transformation.getElement().setAttribute("centralTable",tableName);
+				transformation.getElement().setAttribute("userTableName",userTableName);
+				transformation.getElement().setAttribute("includeCentralFilter","N");//not for main table transformation
+
+				String[] columnNames = {"%"};
+				Table[] referencedTables = resolver.getReferencedTables(tableName);
+				transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension, 
+								transformationCount, "", "", transformation);
      
-			dataset.insertChildObject(transformationCount,transformation);	
-			transformationCount++;
-
+				dataset.insertChildObject(transformationCount,transformation);	
+				transformationCount++;
+			}
+			
+			
 			// now do the transformations for the dm tables
 			potentialTables = new String[tableList.size()];	
 			//tableList.toArray(potentialTables);
@@ -672,10 +757,13 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			  centralSettings.add(box2);
 			  label3 = new JLabel("Include central filters?");
 			  box3.add( label3);	
-			  includeCentralBox = new JComboBox(includeCentralFilterOptions);
+			  JComboBox includeCentralBox = new JComboBox(includeCentralFilterOptions);
 			  box3.add( includeCentralBox );
 			  centralSettings.add(box3);
-		  
+		  	  
+		  	  partitionBox = new JCheckBox("Use partitioning");
+		  	  centralSettings.add(partitionBox);
+		  	  	
 			  int option3 = JOptionPane.showOptionDialog(
 				  this,
 				  centralSettings,
@@ -687,6 +775,79 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				  null);
 				
 			  tableName = tableNameBox.getSelectedItem().toString();
+			  userTableName = (datasetName+"__"+tableName+"__"+"dm").toLowerCase();
+			  userTableName = JOptionPane.showInputDialog(null,"User Table Name:",userTableName);
+			  extension = extensionField.getText();
+			  String includeCentralFilters = includeCentralBox.getSelectedItem().toString();	
+			
+			  if (partitionBox.getSelectedObjects() != null && tableName != null){// use partitioning
+				 ArrayList allCols = new ArrayList();
+				 Table[] referencedTables = resolver.getReferencedTables(tableName);
+				 for (int k = 0; k < referencedTables.length; k++){
+				 	Column[] tableCols = referencedTables[k].getColumns();
+					for (int l = 0; l < tableCols.length; l++){
+						String entry = referencedTables[k].getName()+"."+tableCols[l].getName();
+						allCols.add(entry);
+					}
+				 }
+				 String[] cols = new String[allCols.size()];
+				 allCols.toArray(cols);
+				 String colsOption = (String) JOptionPane.showInputDialog(null,"Choose column to partition on",
+						"",JOptionPane.PLAIN_MESSAGE,null,cols,"");			 
+				 String[] chosenOptions = colsOption.split("\\.+");
+				 String chosenTable = chosenOptions[0];
+				 String chosenColumn = chosenOptions[1];
+		         
+				Connection conn = adaptor.getCon();
+				String sql =
+				  "SELECT DISTINCT "
+					+ chosenColumn
+					+ " FROM "
+					+ databaseDialog.getSchema()
+					+"."
+					+ chosenTable
+					+ " WHERE "
+					+ chosenColumn
+					+ " IS NOT NULL";
+        
+    			System.out.println(sql);    
+				PreparedStatement ps = conn.prepareStatement(sql);
+				ResultSet rs = ps.executeQuery();
+				
+				while (rs.next()) {// loop through each partition type creating a transformation
+					String value = rs.getString(1);
+					String refExtension = chosenColumn+"="+value;
+					System.out.println("VAL IS "+value);
+		
+					if (chosenTable.equals(tableName)){
+					   // set centralExtension
+					   extension = refExtension;
+					}	
+		
+				 	String tableType = "d"; 	
+				 	Integer tCount = new Integer(transformationCount+1);
+				 	Transformation transformation = new Transformation();
+				 	transformation.getElement().setAttribute("internalName",tCount.toString());
+				 	transformation.getElement().setAttribute("tableType",tableType);
+				 	transformation.getElement().setAttribute("centralTable",tableName);
+				 	transformation.getElement().setAttribute("userTableName",userTableName);
+				 	transformation.getElement().setAttribute("includeCentralFilter",includeCentralFilters);
+
+				 	referencedTables = resolver.getReferencedTables(tableName);
+				 	transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension, transformationCount, chosenTable, refExtension, transformation);
+
+				 	dataset.insertChildObject(transformationCount,transformation);	
+				 	transformationCount++;
+			
+				 	tableList.remove(tableName);
+
+				 	potentialTables = new String[tableList.size()];	
+				 	tableList.keySet().toArray(potentialTables);
+				 } // end of loop
+				 
+				 continue;	
+			   }
+
 		 
 			  if (option3 == 2)
 				  return;	
@@ -740,24 +901,25 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			 	  	return;
 		 	 }
 		 	  
-			 userTableName = (datasetName+"__"+tableName+"__"+"dm").toLowerCase();
-		  	 userTableName = JOptionPane.showInputDialog(null,"User Table Name:",userTableName);
-		  	 extension = extensionField.getText();
-		  	 includeCentralFilters = includeCentralBox.getSelectedItem().toString();	
+			 //userTableName = (datasetName+"__"+tableName+"__"+"dm").toLowerCase();
+		  	 //userTableName = JOptionPane.showInputDialog(null,"User Table Name:",userTableName);
+		  	 //extension = extensionField.getText();
+		  	 //String includeCentralFilters = includeCentralBox.getSelectedItem().toString();	
 			
 			 //tableList.remove(tableName); 
 		  	 if (tableName != null){
-				tableType = "d"; 	
-		 		tCount = new Integer(transformationCount+1);
-				transformation = new Transformation();
+				String tableType = "d"; 	
+		 		Integer tCount = new Integer(transformationCount+1);
+				Transformation transformation = new Transformation();
 				transformation.getElement().setAttribute("internalName",tCount.toString());
 				transformation.getElement().setAttribute("tableType",tableType);
 				transformation.getElement().setAttribute("centralTable",tableName);
 				transformation.getElement().setAttribute("userTableName",userTableName);
 				transformation.getElement().setAttribute("includeCentralFilter",includeCentralFilters);
 
-				referencedTables = resolver.getReferencedTables(tableName);
-				transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension, transformationCount,transformation);
+				Table[] referencedTables = resolver.getReferencedTables(tableName);
+				transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, 
+									extension, transformationCount, "", "", transformation);
 
 				dataset.insertChildObject(transformationCount,transformation);	
 				transformationCount++;
@@ -766,8 +928,15 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 
 				potentialTables = new String[tableList.size()];	
 				tableList.keySet().toArray(potentialTables);	
-		  	 }		
-	    	}		
+		  	  }
+		  	  
+		  	  
+		  	  
+		  	  
+		  	  
+		  	  		
+			}// end of while loop over all dm candidates
+					
 			// add dataset to transformationConfig
 			tConfig.insertChildObject(0,dataset);
 
@@ -806,6 +975,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
                                 String datasetName,
                                 String centralExtension,
                                 int transformationCount,
+								String chosenTable,
+                                String refExtension,         
                                 Transformation transformation){
                                	                            	 
 	 int unitCount = 0;
@@ -814,8 +985,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
      	tableList = new HashMap();//create a new list of candidates for next central table selection
      
 	 Box cardinalitySettings = new Box(BoxLayout.Y_AXIS);	
-	 cardinalitySettings.add(Box.createRigidArea(new Dimension(400,1)));		
-	 
+	 	 
 	 JCheckBox[] checkboxs = new JCheckBox[referencedTables.length];
 	 JComboBox[] comboBoxs = new JComboBox[referencedTables.length];
 	 JTextField[] textFields = new JTextField[referencedTables.length];
@@ -825,7 +995,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	 for (int i = 0; i < referencedTables.length; i++){
 		if (referencedTables[i].getName().equals(tableName))
 			continue;
-
+		
+		Box box1 = new Box(BoxLayout.X_AXIS);
 		Box box2 = new Box(BoxLayout.X_AXIS);
 		Box box3 = new Box(BoxLayout.X_AXIS);				
 		checkboxs[i] = new JCheckBox("Include "+referencedTables[i].getName());
@@ -852,9 +1023,19 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		}
 		
 		JLabel label2 = new JLabel("Referenced projection/restriction (optional)");
-		textFields[i] = new JTextField();
-				
-		cardinalitySettings.add(checkboxs[i]);
+		
+		System.out.println("REF EXTENSION:"+refExtension);
+		System.out.println("CHOSEN TABLE"+chosenTable+" REF TABLE:"+referencedTables[i].getName());
+		
+		if (referencedTables[i].getName().equals(chosenTable))
+			textFields[i] = new JTextField(refExtension);
+		else{
+			textFields[i] = new JTextField();		
+		}
+		//cardinalitySettings.add(checkboxs[i]);
+		box1.add(checkboxs[i]);
+		box1.add(new JLabel(""));
+		cardinalitySettings.add(box1);
 		box2.add(label1);
 		box2.add(comboBoxs[i]);
 		cardinalitySettings.add(box2);
@@ -869,11 +1050,15 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	 if (!tableType.equals("m") && tableList.get(tableName) != null && !tableList.get(tableName).equals("deepReference")){
      	cardinalitySettings.add(depthSetting);
      }
-     
+	 
+	 JScrollPane scrollPane = new JScrollPane(cardinalitySettings);
+	 Dimension minimumSize = new Dimension(700, 100);
+	 scrollPane.setPreferredSize(minimumSize);
+	 
 	 String[] dialogOptions = new String[] {"Continue","Select columns","Cancel"};
 	 int option = JOptionPane.showOptionDialog(
 					 this,
-					 cardinalitySettings,
+					 scrollPane,
 					 "Cardinality settings for tables referenced from "+tableName,
 					 JOptionPane.DEFAULT_OPTION,
 					 JOptionPane.PLAIN_MESSAGE,
