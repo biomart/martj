@@ -1035,9 +1035,11 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		cardinalitySettings.add(box1);
 		box2.add(label1);
 		box2.add(comboBoxs[i]);
+		box2.setMaximumSize(new Dimension(700,30));
 		cardinalitySettings.add(box2);
 		box3.add(label2);
 		box3.add(textFields[i]);
+		box3.setMaximumSize(new Dimension(700,30));
 		cardinalitySettings.add(box3);
 		
 		cardinalitySettings.add(Box.createVerticalStrut(20));
@@ -1050,8 +1052,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	 
 	 JScrollPane scrollPane = new JScrollPane(cardinalitySettings);
 	 Dimension minimumSize = new Dimension(700, 500);
-	 //scrollPane.setPreferredSize(minimumSize);//forces it to be 500 whatever
-	 scrollPane.setMaximumSize(minimumSize);
+	 scrollPane.setPreferredSize(minimumSize);//forces it to be 500 whatever
+	 //scrollPane.setMaximumSize(minimumSize);// do not get a scrollpane 
 	 
 	 String[] dialogOptions = new String[] {"Continue","Select columns","Cancel"};
 	 int option = JOptionPane.showOptionDialog(
