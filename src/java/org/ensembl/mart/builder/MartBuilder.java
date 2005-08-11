@@ -626,12 +626,17 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			   // MAIN TABLE - DO PARTITIONING
 			   ArrayList allCols = new ArrayList();
 			   Table[] referencedTables = resolver.getReferencedTables(tableName);
+			   int centralSeen = 0;
 			   for (int k = 0; k < referencedTables.length; k++){
+			   	  if (centralSeen > 0 && referencedTables[k].getName().equals(tableName))
+			   	  	continue;// stops repetition of central Table cols
 				  Column[] tableCols = referencedTables[k].getColumns();
 				  for (int l = 0; l < tableCols.length; l++){
 					  String entry = referencedTables[k].getName()+"."+tableCols[l].getName();
 					  allCols.add(entry);
 				  }
+				  if (referencedTables[k].getName().equals(tableName))
+					centralSeen++;
 			   }
 			   String[] cols = new String[allCols.size()];
 			   allCols.toArray(cols);
@@ -767,12 +772,17 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				 // DIMENSION TABLE - DO PARTITIONING
 				 ArrayList allCols = new ArrayList();
 				 Table[] referencedTables = resolver.getReferencedTables(tableName);
+				 int centralSeen = 0;
 				 for (int k = 0; k < referencedTables.length; k++){
+				 	if (centralSeen > 0 && referencedTables[k].getName().equals(tableName))
+				 		continue;
 				 	Column[] tableCols = referencedTables[k].getColumns();
 					for (int l = 0; l < tableCols.length; l++){
 						String entry = referencedTables[k].getName()+"."+tableCols[l].getName();
 						allCols.add(entry);
 					}
+					if (referencedTables[k].getName().equals(tableName))
+						centralSeen++;
 				 }
 				 String[] cols = new String[allCols.size()];
 				 allCols.toArray(cols);
@@ -1001,8 +1011,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	 scrollPane.setPreferredSize(minimumSize);
 	 
 	 String[] dialogOptions = new String[] {"Continue","Select columns","Cancel"};
-	 int option = JOptionPane.showOptionDialog(this,scrollPane,"Cardinality settings for tables referenced from "+tableName,
-					 JOptionPane.DEFAULT_OPTION,JOptionPane.PLAIN_MESSAGE,null,dialogOptions,null);
+	 int option = JOptionPane.showOptionDialog(this,scrollPane,"Cardinality settings for tables referenced from "
+	 		+tableName+"("+refExtension+")",JOptionPane.DEFAULT_OPTION,JOptionPane.PLAIN_MESSAGE,null,
+	 		dialogOptions,null);
      if (option == 2)
      	return transformation;
      else if (option == 1){
