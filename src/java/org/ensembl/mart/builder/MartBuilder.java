@@ -1126,7 +1126,22 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
      	 transformation.insertChildObject(unitCount,transformationUnit);
      	 unitCount++;                           	
      }
-	 
+	 if (transformation.getChildObjects().length == 0){// no ref tables for this transformation
+		TransformationUnit transformationUnit = new TransformationUnit();
+		transformationUnit.getElement().setAttribute("internalName","1");
+		transformationUnit.getElement().setAttribute("referencingType","");	
+		transformationUnit.getElement().setAttribute("primaryKey","");	
+		transformationUnit.getElement().setAttribute("referencedTable","");
+		transformationUnit.getElement().setAttribute("cardinality","");
+		transformationUnit.getElement().setAttribute("centralProjection",centralExtension);	
+		transformationUnit.getElement().setAttribute("referencedProjection","");
+		transformationUnit.getElement().setAttribute("foreignKey","");		
+		transformationUnit.getElement().setAttribute("referenceColumnNames","");	
+		transformationUnit.getElement().setAttribute("referenceColumnAliases","");				
+		transformationUnit.getElement().setAttribute("centralColumnNames",cenColName);	
+		transformationUnit.getElement().setAttribute("centralColumnAliases",cenColAlias);
+		transformation.insertChildObject(unitCount,transformationUnit);	
+	 }	 
      return transformation;
   }
 
