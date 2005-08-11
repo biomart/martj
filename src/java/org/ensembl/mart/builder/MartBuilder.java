@@ -1023,10 +1023,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		}
 		
 		JLabel label2 = new JLabel("Referenced projection/restriction (optional)");
-		
-		System.out.println("REF EXTENSION:"+refExtension);
-		System.out.println("CHOSEN TABLE"+chosenTable+" REF TABLE:"+referencedTables[i].getName());
-		
+			
 		if (referencedTables[i].getName().equals(chosenTable))
 			textFields[i] = new JTextField(refExtension);
 		else{
@@ -1052,8 +1049,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
      }
 	 
 	 JScrollPane scrollPane = new JScrollPane(cardinalitySettings);
-	 Dimension minimumSize = new Dimension(700, 100);
-	 scrollPane.setPreferredSize(minimumSize);
+	 Dimension minimumSize = new Dimension(700, 500);
+	 //scrollPane.setPreferredSize(minimumSize);//forces it to be 500 whatever
+	 scrollPane.setMaximumSize(minimumSize);
 	 
 	 String[] dialogOptions = new String[] {"Continue","Select columns","Cancel"};
 	 int option = JOptionPane.showOptionDialog(
