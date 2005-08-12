@@ -689,6 +689,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			   }
 			   String mainTablePartition = (String) JOptionPane.showInputDialog(null,"Partition value to use for the main table","",
 			   		JOptionPane.PLAIN_MESSAGE,null,values,null);
+			   		
+			   int autoOption = JOptionPane.showConfirmDialog(null,"Autogenerate each transformation");
+			   		
 			   for (int i = 0; i < values.length;i++){// loop through each partition type creating a transformation	  
 				  String refExtension = values[i];	
 				  if (chosenTable.equals(tableName)){
@@ -714,8 +717,12 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				  transformation.getElement().setAttribute("userTableName",userTableName);
 				  String[] columnNames = {"%"};	
 				  referencedTables = resolver.getReferencedTables(tableName);
-				  transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension,
-				  	transformationCount, chosenTable, refExtension, transformation);
+				  if (i == 0)
+					transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension,
+						transformationCount, chosenTable, refExtension, 1, transformation);
+				  else
+				  	transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension,
+				  		transformationCount, chosenTable, refExtension, autoOption, transformation);
 
 				  dataset.insertChildObject(transformationCount,transformation);	
 				  transformationCount++;
@@ -742,7 +749,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				String[] columnNames = {"%"};
 				Table[] referencedTables = resolver.getReferencedTables(tableName);
 				transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension, 
-								transformationCount, "", "", transformation);
+								transformationCount, "", "", 1, transformation);
      
 				dataset.insertChildObject(transformationCount,transformation);	
 				transformationCount++;
@@ -875,6 +882,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 					 values = new String[valueList.size()];
 					 valueList.toArray(values);
 				}
+				int autoOption = JOptionPane.showConfirmDialog(null,"Autogenerate each transformation");
+	
 				for (int i = 0; i < values.length;i++){// loop through each partition type creating a transformation	  
 				   String refExtension = values[i];	
 		
@@ -895,8 +904,12 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				 	transformation.getElement().setAttribute("includeCentralFilter",includeCentralFilters);
 
 				 	referencedTables = resolver.getReferencedTables(tableName);
-				 	transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension,
-				 		transformationCount, chosenTable, refExtension, transformation);
+				 	if (i == 0)
+					  transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension,
+						  transformationCount, chosenTable, refExtension, 1, transformation);
+					else
+					  transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension,
+						  transformationCount, chosenTable, refExtension, autoOption, transformation);
 
 				 	dataset.insertChildObject(transformationCount,transformation);	
 				 	transformationCount++;
@@ -965,7 +978,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 
 				Table[] referencedTables = resolver.getReferencedTables(tableName);
 				transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, 
-									extension, transformationCount, "", "", transformation);
+									extension, transformationCount, "", "", 1, transformation);
 
 				dataset.insertChildObject(transformationCount,transformation);	
 				transformationCount++;
@@ -1011,22 +1024,26 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
                                 String centralExtension,
                                 int transformationCount,
 								String chosenTable,
-                                String refExtension,         
+                                String refExtension,
+                                int autoOption,            
                                 Transformation transformation){
-	 int unitCount = 0;
+    
+    int unitCount = 0;
+	JCheckBox[] checkboxs = new JCheckBox[referencedTables.length];
+	JComboBox[] comboBoxs = new JComboBox[referencedTables.length];
+	JComboBox[] columnOptions = new JComboBox[referencedTables.length];
+	JTextField[] textFields = new JTextField[referencedTables.length];
+	String refTableType = "reference";
+	
+	if (autoOption != 0){
 
      if (tableType.equals("m"))
      	tableList = new HashMap();//create a new list of candidates for next central table selection
      
 	 Box cardinalitySettings = new Box(BoxLayout.Y_AXIS);	
-	 	 
-	 JCheckBox[] checkboxs = new JCheckBox[referencedTables.length];
-	 JComboBox[] comboBoxs = new JComboBox[referencedTables.length];
-	 JComboBox[] columnOptions = new JComboBox[referencedTables.length];
-	 JTextField[] textFields = new JTextField[referencedTables.length];
      
-	 String[] cardinalityOptions = new String[] {"11","1n","n1","0n","n1r"};
-     
+	 String[] cardinalityOptions = new String[] {"11","1n","n1","0n","n1r"};;
+    
 	 for (int i = 0; i < referencedTables.length; i++){
 		// GENERATE INCLUDE, CARDINALITY AND PROJECTION FOR EACH CANDIDATE REF TABLE
 		if (referencedTables[i].getName().equals(tableName))
@@ -1089,8 +1106,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	 JScrollPane scrollPane = new JScrollPane(cardinalitySettings);
 	 Dimension minimumSize = new Dimension(700, 500);
 	 scrollPane.setPreferredSize(minimumSize);
-	 
+
 	 String[] dialogOptions = new String[] {"Continue","Select columns","Cancel"};
+	 
 	 int option = JOptionPane.showOptionDialog(this,scrollPane,"Cardinality settings for tables referenced from "
 	 		+tableName+"("+refExtension+")",JOptionPane.DEFAULT_OPTION,JOptionPane.PLAIN_MESSAGE,null,
 	 		dialogOptions,null);
@@ -1149,20 +1167,28 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		}
      }
      
-     String refTableType = "reference";
      if (depthSetting.getSelectedObjects() != null){
      	refTableType = "deepReference";
      }
-     
+   }// end of autoOPtion != 0
+    
      for (int i = 0; i < referencedTables.length; i++){
 		 Table refTab = referencedTables[i];
 	  	 if (refTab.getName().equals(tableName))
-			continue;
-     	 String cardinality = comboBoxs[i].getSelectedItem().toString();
+			continue;	
+     	 String cardinality;
+     	 if (autoOption != 0){
+     	 	cardinality = comboBoxs[i].getSelectedItem().toString();
+     	 }
+		 else{
+			HashMap cards = (HashMap) cardinalityFirst.get(tableName);
+			cardinality = (String) cards.get(referencedTables[i].getName());		 	
+		 }
 		 String extension;
+		 
 		 if (referencedTables[i].getName().equals(chosenTable))
 			extension = refExtension;
-		 else if (!textFields[i].getText().equals(""))
+		 else if (autoOption != 0 && !textFields[i].getText().equals(""))
 			 extension = ((String) columnOptions[i].getSelectedItem())+textFields[i].getText();	
 		 else
 			extension = "";
@@ -1170,8 +1196,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		 cardinalitySecond.put(refTab.getName(),cardinality);
 		 cardinalityFirst.put(tableName,cardinalitySecond);
   		
-		 if (checkboxs[i].getSelectedObjects() == null  || cardinality.equals("1n")){
-			if (tableType.equals("m") || depthSetting.getSelectedObjects() != null){
+		 if (autoOption != 0 && checkboxs[i].getSelectedObjects() == null  || cardinality.equals("1n")){
+			if (tableType.equals("m") || refTableType.equals("deepReference")){
 		 		tableList.put(refTab.getName(),refTableType);
 			}
 		 	continue;
