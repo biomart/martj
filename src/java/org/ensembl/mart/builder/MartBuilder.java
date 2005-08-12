@@ -691,6 +691,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			   		JOptionPane.PLAIN_MESSAGE,null,values,null);
 			   		
 			   int autoOption = JOptionPane.showConfirmDialog(null,"Autogenerate each transformation");
+			   
+			   String includeCentral = (String) JOptionPane.showInputDialog(null,"Include central filters for dm tables?","",
+								   JOptionPane.PLAIN_MESSAGE,null,includeCentralFilterOptions,null);
 			   		
 			   for (int i = 0; i < values.length;i++){// loop through each partition type creating a transformation	  
 				  String refExtension = values[i];	
@@ -698,15 +701,17 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				  	 // set centralExtension
 				  	 extension = refExtension;
 				  }	
-				  String tableType;
+				  String tableType,includeCentralFilter;
 				  if (refExtension.equals(mainTablePartition)){	
 				  	userTableName = (datasetName+"__"+refExtension.split("=")[1]+"__"+"main").toLowerCase();	
 				  	tableType = "m";
+				  	includeCentralFilter = "N";
 				  	dataset.getElement().setAttribute("mainTable",tableName); 	
 				  }
 				  else{
 					userTableName = (datasetName+"__"+refExtension.split("=")[1]+"__"+"dm").toLowerCase();	
 					tableType = "dm";
+					includeCentralFilter = includeCentral;
 				  }
 				  Integer tCount = new Integer(transformationCount+1);
 				  
@@ -715,6 +720,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				  transformation.getElement().setAttribute("tableType",tableType);
 				  transformation.getElement().setAttribute("centralTable",tableName);
 				  transformation.getElement().setAttribute("userTableName",userTableName);
+				  transformation.getElement().setAttribute("includeCentralFilter",includeCentralFilter);//not for main table T
+				  
 				  String[] columnNames = {"%"};	
 				  referencedTables = resolver.getReferencedTables(tableName);
 				  if (i == 0)
