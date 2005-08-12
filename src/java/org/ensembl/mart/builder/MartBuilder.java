@@ -573,7 +573,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			box2.add(columnOptions);	
 			JTextField extensionField = new JTextField();
 			box2.add( extensionField );
-			extensionSettings.add(box2);
+			if (partitionBox.getSelectedObjects() == null)
+				extensionSettings.add(box2);
 			int extensionOption = JOptionPane.showOptionDialog(this,extensionSettings,"Main Table Settings",
 				JOptionPane.DEFAULT_OPTION,JOptionPane.PLAIN_MESSAGE,null,standardOptions,null);
 			
@@ -650,11 +651,31 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				  +" WHERE "+chosenColumn+" IS NOT NULL";
 			   PreparedStatement ps = conn.prepareStatement(sql);
 			   ResultSet rs = ps.executeQuery();
-				
-			   while (rs.next()) {// loop through each partition type creating a transformation
-				  String value = rs.getString(1);
-				  String refExtension = chosenColumn+"="+value;
-				  System.out.println("VAL IS "+value);	  
+			   
+			   ArrayList allValList = new ArrayList();
+			   while (rs.next()){
+			   		allValList.add(rs.getString(1));
+			   }
+			   Box colOps = new Box(BoxLayout.Y_AXIS);
+			   JCheckBox[] checks = new JCheckBox[allValList.size()];
+			   for (int i = 0; i < allValList.size(); i++){
+				  checks[i] = new JCheckBox((String) allValList.get(i));
+				  checks[i].setSelected(true);
+				  colOps.add(checks[i]);	  
+			   }
+			   int valsOption = JOptionPane.showOptionDialog(this,colOps,"Select values for partitioning ",
+								 JOptionPane.DEFAULT_OPTION,JOptionPane.PLAIN_MESSAGE,null,standardOptions,null);	
+			   ArrayList valueList = new ArrayList();	
+			   for (int i = 0; i < allValList.size(); i++){
+			   		if (checks[i].getSelectedObjects() == null)
+			   			continue;	
+			   		String refExtension = chosenColumn+"="+checks[i].getText();
+			   		valueList.add(refExtension);
+			   }
+			   String[] values = new String[valueList.size()];
+			   valueList.toArray(values);
+			   for (int i = 0; i < values.length;i++){// loop through each partition type creating a transformation	  
+				  String refExtension = values[i];	
 				  if (chosenTable.equals(tableName)){
 				  	 // set centralExtension
 				  	 extension = refExtension;
@@ -997,7 +1018,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		box3.add(columnOptions[i]);
 		box3.add(textFields[i]);
 		box3.setMaximumSize(new Dimension(700,30));
-		cardinalitySettings.add(box3);
+		if (refExtension.equals(""))
+			cardinalitySettings.add(box3);
 		cardinalitySettings.add(Box.createVerticalStrut(20));		
      }
      
