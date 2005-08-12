@@ -687,18 +687,24 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			   		values = new String[valueList.size()];
 			   		valueList.toArray(values);
 			   }
+			   String mainTablePartition = (String) JOptionPane.showInputDialog(null,"Partition value to use for the main table","",
+			   		JOptionPane.PLAIN_MESSAGE,null,values,null);
 			   for (int i = 0; i < values.length;i++){// loop through each partition type creating a transformation	  
 				  String refExtension = values[i];	
 				  if (chosenTable.equals(tableName)){
 				  	 // set centralExtension
 				  	 extension = refExtension;
 				  }	
-				  	
-				  userTableName = (datasetName+"__"+refExtension.split("=")[1]+"__"+"main").toLowerCase();	
-		
-				  String tableType = "m";
-				  dataset.getElement().setAttribute("mainTable",tableName); 	
-				  
+				  String tableType;
+				  if (refExtension.equals(mainTablePartition)){	
+				  	userTableName = (datasetName+"__"+refExtension.split("=")[1]+"__"+"main").toLowerCase();	
+				  	tableType = "m";
+				  	dataset.getElement().setAttribute("mainTable",tableName); 	
+				  }
+				  else{
+					userTableName = (datasetName+"__"+refExtension.split("=")[1]+"__"+"dm").toLowerCase();	
+					tableType = "dm";
+				  }
 				  Integer tCount = new Integer(transformationCount+1);
 				  
 				  Transformation transformation = new Transformation();
