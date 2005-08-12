@@ -7,7 +7,7 @@
 	version 2.1 of the License, or (at your option) any later version.
 
 	This library is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	but WITHOUT ANY WARRANTY; without even the itmplied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 	Lesser General Public License for more details.
 
@@ -1230,8 +1230,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		 TransformationUnit transformationUnit = new TransformationUnit();
 		 transformationUnit.getElement().setAttribute("internalName",tunitCount.toString());	
 		 transformationUnit.getElement().setAttribute("referencingType",refTab.status);	
-		 transformationUnit.getElement().setAttribute("primaryKey",refTab.PK);	
-		 transformationUnit.getElement().setAttribute("referencedTable",refTab.getName().toUpperCase());
+		 transformationUnit.getElement().setAttribute("primaryKey",refTab.PK);
+		 transformationUnit.getElement().setAttribute("referencedTable",refTab.getName());
 		 transformationUnit.getElement().setAttribute("cardinality",cardinality);
 		 transformationUnit.getElement().setAttribute("centralProjection",centralExtension);			
 		 transformationUnit.getElement().setAttribute("referencedProjection",extension);
