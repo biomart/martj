@@ -550,41 +550,42 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			String tableName = tableNameBox.getSelectedItem().toString();
 			if (option2 == 2)
 				break;
-						
+				
+			String extension = "";
+			String userTableName = "";			
 			// MAIN TABLE - USER TABLE AND PROJECTION/RESTRICTION SETTINGS
-			Box extensionSettings = new Box(BoxLayout.Y_AXIS);
-			extensionSettings.add(Box.createRigidArea(new Dimension(700,1)));		
-			box1 = new Box(BoxLayout.X_AXIS);
-			box2 = new Box(BoxLayout.X_AXIS);
-			label1 = new JLabel("User table name");
-			box1.add(label1);
-			String userTableName = (datasetName+"__"+tableName+"__"+"main").toLowerCase();
-			JTextField userTableNameField = new JTextField(userTableName);
-			box1.add( userTableNameField );
-			extensionSettings.add(box1);
-			JLabel label2 = new JLabel("Central projection/restriction (optional)");
-			box2.add( label2);
-			Column[] centralTableCols = resolver.getCentralTable(tableName).getColumns();
-			String[] colNames = new String[centralTableCols.length];
-			for (int i = 0;i < centralTableCols.length; i++){
-				colNames[i] = centralTableCols[i].getName();
-			}
-			JComboBox columnOptions = new JComboBox(colNames);
-			box2.add(columnOptions);	
-			JTextField extensionField = new JTextField();
-			box2.add( extensionField );
-			if (partitionBox.getSelectedObjects() == null)
+			if (partitionBox.getSelectedObjects() == null){
+				Box extensionSettings = new Box(BoxLayout.Y_AXIS);
+				extensionSettings.add(Box.createRigidArea(new Dimension(700,1)));		
+				box1 = new Box(BoxLayout.X_AXIS);
+				box2 = new Box(BoxLayout.X_AXIS);
+				label1 = new JLabel("User table name");
+				box1.add(label1);
+				userTableName = (datasetName+"__"+tableName+"__"+"main").toLowerCase();
+				JTextField userTableNameField = new JTextField(userTableName);
+				box1.add( userTableNameField );
+				extensionSettings.add(box1);
+				JLabel label2 = new JLabel("Central projection/restriction (optional)");
+				box2.add( label2);
+				Column[] centralTableCols = resolver.getCentralTable(tableName).getColumns();
+				String[] colNames = new String[centralTableCols.length];
+				for (int i = 0;i < centralTableCols.length; i++){
+					colNames[i] = centralTableCols[i].getName();
+				}	
+				JComboBox columnOptions = new JComboBox(colNames);
+				box2.add(columnOptions);	
+				JTextField extensionField = new JTextField();
+				box2.add( extensionField );
 				extensionSettings.add(box2);
-			int extensionOption = JOptionPane.showOptionDialog(this,extensionSettings,"Main Table Settings",
-				JOptionPane.DEFAULT_OPTION,JOptionPane.PLAIN_MESSAGE,null,standardOptions,null);
 			
-			userTableName = userTableNameField.getText();
-			String extension;
-			if (!extensionField.getText().equals("")){
-				extension = ((String) columnOptions.getSelectedItem())+extensionField.getText();	
-			}
-			else{
-				extension = "";
+				int extensionOption = JOptionPane.showOptionDialog(this,extensionSettings,"Main Table Settings",
+					JOptionPane.DEFAULT_OPTION,JOptionPane.PLAIN_MESSAGE,null,standardOptions,null);
+			
+				userTableName = userTableNameField.getText();
+				
+				if (!extensionField.getText().equals("")){
+					extension = ((String) columnOptions.getSelectedItem())+extensionField.getText();	
+				}
 			}
 			
 			if (option2 == 1){// MAIN TABLE - CHOOSE COLS
@@ -592,7 +593,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			 	Table centralTable = resolver.getCentralTable(tableName);
 			 	Column[] cols = centralTable.getColumns();	
 			 	JCheckBox[] colChecks = new JCheckBox[cols.length];	
-			 	colNames = new String[cols.length];
+			 	String[] colNames = new String[cols.length];
 				JTextField[] colAliases = new JTextField[cols.length];
 			 	for (int j=0;j<cols.length;j++){
 					Box horizBox = new Box(BoxLayout.X_AXIS);
@@ -656,30 +657,44 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			   while (rs.next()){
 			   		allValList.add(rs.getString(1));
 			   }
-			   Box colOps = new Box(BoxLayout.Y_AXIS);
-			   JCheckBox[] checks = new JCheckBox[allValList.size()];
-			   for (int i = 0; i < allValList.size(); i++){
-				  checks[i] = new JCheckBox((String) allValList.get(i));
-				  checks[i].setSelected(true);
-				  colOps.add(checks[i]);	  
+			   
+			   String[] values;
+			   if (allValList.size() > 20){
+			   		String userValues = JOptionPane.showInputDialog(null,"Too many values to display - " +			   			"enter comma separated list");
+			   		String[] indValues = userValues.split(",");
+			   		values = new String[indValues.length];
+			   		for (int i = 0; i < indValues.length; i++){
+			   			values[i] = chosenColumn+"="+indValues[i];	
+			   		}
 			   }
-			   int valsOption = JOptionPane.showOptionDialog(this,colOps,"Select values for partitioning ",
+			   else{
+			   		Box colOps = new Box(BoxLayout.Y_AXIS);
+			   		JCheckBox[] checks = new JCheckBox[allValList.size()];
+			   		for (int i = 0; i < allValList.size(); i++){
+				  		checks[i] = new JCheckBox((String) allValList.get(i));
+				  		checks[i].setSelected(true);
+				  		colOps.add(checks[i]);	  
+			   		}
+			   		int valsOption = JOptionPane.showOptionDialog(this,colOps,"Select values for partitioning ",
 								 JOptionPane.DEFAULT_OPTION,JOptionPane.PLAIN_MESSAGE,null,standardOptions,null);	
-			   ArrayList valueList = new ArrayList();	
-			   for (int i = 0; i < allValList.size(); i++){
-			   		if (checks[i].getSelectedObjects() == null)
-			   			continue;	
-			   		String refExtension = chosenColumn+"="+checks[i].getText();
-			   		valueList.add(refExtension);
+			   		ArrayList valueList = new ArrayList();	
+			   		for (int i = 0; i < allValList.size(); i++){
+			   			if (checks[i].getSelectedObjects() == null)
+			   				continue;	
+			   				String refExtension = chosenColumn+"="+checks[i].getText();
+			   				valueList.add(refExtension);
+			   		}
+			   		values = new String[valueList.size()];
+			   		valueList.toArray(values);
 			   }
-			   String[] values = new String[valueList.size()];
-			   valueList.toArray(values);
 			   for (int i = 0; i < values.length;i++){// loop through each partition type creating a transformation	  
 				  String refExtension = values[i];	
 				  if (chosenTable.equals(tableName)){
 				  	 // set centralExtension
 				  	 extension = refExtension;
 				  }	
+				  	
+				  userTableName = (datasetName+"__"+refExtension.split("=")[1]+"__"+"main").toLowerCase();	
 		
 				  String tableType = "m";
 				  dataset.getElement().setAttribute("mainTable",tableName); 	
@@ -756,39 +771,40 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				  break;
 				  	
 			  // DIMENSION TABLE - USER TABLE AND PROJECTION/RESTRICTION SETTINGS
-			  extensionSettings = new Box(BoxLayout.Y_AXIS);
-			  extensionSettings.add(Box.createRigidArea(new Dimension(700,1)));		
-			  box1 = new Box(BoxLayout.X_AXIS);
-			  box2 = new Box(BoxLayout.X_AXIS);
-			  label1 = new JLabel("User table name");
-			  box1.add(label1);
-			  userTableName = (datasetName+"__"+tableName+"__"+"dm").toLowerCase();
-			  userTableNameField = new JTextField(userTableName);
-			  box1.add( userTableNameField );
-			  extensionSettings.add(box1);
-			  label2 = new JLabel("Central projection/restriction (optional)");
-			  box2.add( label2);
-			  centralTableCols = resolver.getCentralTable(tableName).getColumns();
-			  colNames = new String[centralTableCols.length];
-			  for (int i = 0;i < centralTableCols.length; i++){
+			  if (partitionBox.getSelectedObjects() == null){
+			  	Box extensionSettings = new Box(BoxLayout.Y_AXIS);
+			  	extensionSettings.add(Box.createRigidArea(new Dimension(700,1)));		
+			  	box1 = new Box(BoxLayout.X_AXIS);
+			  	box2 = new Box(BoxLayout.X_AXIS);
+			  	label1 = new JLabel("User table name");
+			  	box1.add(label1);
+			  	userTableName = (datasetName+"__"+tableName+"__"+"dm").toLowerCase();
+			  	JTextField userTableNameField = new JTextField(userTableName);
+			  	box1.add( userTableNameField );
+			  	extensionSettings.add(box1);
+			  	JLabel label2 = new JLabel("Central projection/restriction (optional)");
+			  	box2.add( label2);
+			  	Column[] centralTableCols = resolver.getCentralTable(tableName).getColumns();
+			  	String[] colNames = new String[centralTableCols.length];
+			  	for (int i = 0;i < centralTableCols.length; i++){
 				  colNames[i] = centralTableCols[i].getName();
-			  }
-			  columnOptions = new JComboBox(colNames);
-			  box2.add(columnOptions);	
-			  extensionField = new JTextField();
-			  box2.add( extensionField );
-			  extensionSettings.add(box2);
-			  int dmExtensionOption = JOptionPane.showOptionDialog(this,extensionSettings,"Main Table Settings",
+			  	}
+			  	JComboBox columnOptions = new JComboBox(colNames);
+			  	box2.add(columnOptions);	
+			  	JTextField extensionField = new JTextField();
+			  	box2.add( extensionField );
+			  	extensionSettings.add(box2);
+			  	int dmExtensionOption = JOptionPane.showOptionDialog(this,extensionSettings,"Main Table Settings",
 				  JOptionPane.DEFAULT_OPTION,JOptionPane.PLAIN_MESSAGE,null,standardOptions,null);
 			
-			  userTableName = userTableNameField.getText();
-			  if (!extensionField.getText().equals("")){
+			  	userTableName = userTableNameField.getText();
+			  	if (!extensionField.getText().equals("")){
 				  extension = ((String) columnOptions.getSelectedItem())+extensionField.getText();	
+			  	}
+			  	else{
+			  	 extension = "";
+			  	}
 			  }
-			  else{
-				  extension = "";
-			  }
-			
 			  if (partitionBox.getSelectedObjects() != null && tableName != null){
 				 // DIMENSION TABLE - DO PARTITIONING
 				 ArrayList allCols = new ArrayList();
@@ -818,15 +834,51 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				PreparedStatement ps = conn.prepareStatement(sql);
 				ResultSet rs = ps.executeQuery();
 				
-				while (rs.next()) {// loop through each partition type creating a transformation
-					String value = rs.getString(1);
-					String refExtension = chosenColumn+"="+value;
-					System.out.println("VAL IS "+value);
+				ArrayList allValList = new ArrayList();
+				while (rs.next()){
+					 allValList.add(rs.getString(1));
+				}
+			   
+				String[] values;
+				if (allValList.size() > 20){
+					 String userValues = JOptionPane.showInputDialog(null,"Too many values to display - " +
+						 "enter comma separated list");
+					 String[] indValues = userValues.split(",");
+					 values = new String[indValues.length];
+					 for (int i = 0; i < indValues.length; i++){
+						 values[i] = chosenColumn+"="+indValues[i];	
+					 }
+				}
+				else{
+					 Box colOps = new Box(BoxLayout.Y_AXIS);
+					 JCheckBox[] checks = new JCheckBox[allValList.size()];
+					 for (int i = 0; i < allValList.size(); i++){
+						 checks[i] = new JCheckBox((String) allValList.get(i));
+						 checks[i].setSelected(true);
+						 colOps.add(checks[i]);	  
+					 }
+					 int valsOption = JOptionPane.showOptionDialog(this,colOps,"Select values for partitioning ",
+								  JOptionPane.DEFAULT_OPTION,JOptionPane.PLAIN_MESSAGE,null,standardOptions,null);	
+					 ArrayList valueList = new ArrayList();	
+					 for (int i = 0; i < allValList.size(); i++){
+						 if (checks[i].getSelectedObjects() == null)
+							 continue;	
+							 String refExtension = chosenColumn+"="+checks[i].getText();
+							 valueList.add(refExtension);
+					 }
+					 values = new String[valueList.size()];
+					 valueList.toArray(values);
+				}
+				for (int i = 0; i < values.length;i++){// loop through each partition type creating a transformation	  
+				   String refExtension = values[i];	
 		
 					if (chosenTable.equals(tableName)){
 					   // set centralExtension
 					   extension = refExtension;
 					}	
+					
+					userTableName = (datasetName+"__"+refExtension.split("=")[1]+"__"+"dm").toLowerCase();	
+					
 				 	String tableType = "d"; 	
 				 	Integer tCount = new Integer(transformationCount+1);
 				 	Transformation transformation = new Transformation();
@@ -859,7 +911,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				   Column[] cols = centralTable.getColumns();	
 				 
 				   JCheckBox[] colChecks = new JCheckBox[cols.length];	
-				   colNames = new String[cols.length];
+				   String[] colNames = new String[cols.length];
 				   JTextField[] colAliases = new JTextField[cols.length];
 				  
 				   for (int j=0;j<cols.length;j++){
