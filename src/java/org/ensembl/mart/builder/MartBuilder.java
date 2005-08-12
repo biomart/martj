@@ -714,7 +714,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 					includeCentralFilter = includeCentral;
 				  }
 				  Integer tCount = new Integer(transformationCount+1);
-				  
+				  //cenColName = "";
+				  //cenColAlias = "";
 				  Transformation transformation = new Transformation();
 				  transformation.getElement().setAttribute("internalName",tCount.toString());
 				  transformation.getElement().setAttribute("tableType",tableType);
@@ -745,7 +746,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				dataset.getElement().setAttribute("mainTable",tableName);
 				 
 				Integer tCount = new Integer(transformationCount+1);
-
+				//cenColName = "";
+				//cenColAlias = "";
 				Transformation transformation = new Transformation();
 				transformation.getElement().setAttribute("internalName",tCount.toString());
 				transformation.getElement().setAttribute("tableType",tableType);
@@ -762,6 +764,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				transformationCount++;
 			}
 			// DIMENSION TABLE TRANSFORMATIONS
+			
+			cenColName = "";
+			cenColAlias = "";
 			potentialTables = new String[tableList.size()];	
 			tableList.keySet().toArray(potentialTables);
 			while (tableName != null && tableList.size() > 0){// loop thro while still got candidates
