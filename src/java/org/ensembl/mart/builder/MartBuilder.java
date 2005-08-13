@@ -1062,11 +1062,14 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	 for (int i = 0; i < referencedTables.length; i++){
 		// GENERATE INCLUDE, CARDINALITY AND PROJECTION FOR EACH CANDIDATE REF TABLE
 		
+	 	//System.out.println("getting before "+referencedTables[i].getName());
+	 	
+	 	
 	 	// we need to see central table for recursive transformations
-	 	if (seenTable) continue;
+	 	if (referencedTables[i].getName().equals(tableName) && seenTable) continue;
 	 	if (referencedTables[i].getName().equals(tableName)) seenTable = true;
 	 	
-	 	
+	 	//System.out.println("getting after "+referencedTables[i].getName());
 		
 	 	
 	 	Box box1 = new Box(BoxLayout.X_AXIS);
