@@ -1054,13 +1054,22 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
      
 	 Box cardinalitySettings = new Box(BoxLayout.Y_AXIS);	
      
-	 String[] cardinalityOptions = new String[] {"11","1n","n1","0n","n1r"};;
+	 String[] cardinalityOptions = new String[] {"11","1n","n1","0n","n1r"};
+	 
+	 
+	 boolean seenTable=false;
     
 	 for (int i = 0; i < referencedTables.length; i++){
 		// GENERATE INCLUDE, CARDINALITY AND PROJECTION FOR EACH CANDIDATE REF TABLE
-		if (referencedTables[i].getName().equals(tableName))
-			continue;
-		Box box1 = new Box(BoxLayout.X_AXIS);
+		
+	 	// we need to see central table for recursive transformations
+	 	if (seenTable) continue;
+	 	if (referencedTables[i].getName().equals(tableName)) seenTable = true;
+	 	
+	 	
+		
+	 	
+	 	Box box1 = new Box(BoxLayout.X_AXIS);
 		Box box2 = new Box(BoxLayout.X_AXIS);
 		Box box3 = new Box(BoxLayout.X_AXIS);				
 		checkboxs[i] = new JCheckBox("Include "+referencedTables[i].getName());

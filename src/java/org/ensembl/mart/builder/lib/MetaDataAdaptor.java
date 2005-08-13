@@ -48,14 +48,16 @@ public abstract class MetaDataAdaptor {
 		Table [] imp_key_tables;
 		
 		String [] columnNames={"%"};
-		//columnNames[0]="%";
 		
 		exp_key_tables = getExportedKeyTables(table_name, columnNames);
 		imp_key_tables = getImportedKeyTables(table_name, columnNames);
 		
-		Table [] join_tables = new Table [exp_key_tables.length+imp_key_tables.length]; 
+		Table [] join_tables = new Table [exp_key_tables.length+imp_key_tables.length+1]; 
 		System.arraycopy(exp_key_tables,0,join_tables,0,exp_key_tables.length);
 		System.arraycopy(imp_key_tables,0,join_tables,exp_key_tables.length,imp_key_tables.length);
+		
+		// adds central table for recursive transformations
+		join_tables[join_tables.length-1]=getCentralTable(table_name);
 		
 		return join_tables;
 	}
