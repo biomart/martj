@@ -1198,11 +1198,19 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
      }
    }// end of autoOPtion != 0
     
+	
+	boolean seenCentralTable=false;
+	
      for (int i = 0; i < referencedTables.length; i++){
 		 Table refTab = referencedTables[i];
-	  	 if (refTab.getName().equals(tableName))
-			continue;	
-     	 String cardinality;
+	  	 
+		 
+		 // we need to keep central table for recursive transformations
+		 if (refTab.getName().equals(tableName) && seenCentralTable) continue;	
+		 if (refTab.getName().equals(tableName)) seenCentralTable=true;
+		 
+		 
+		 String cardinality;
      	 if (autoOption != 0){
      	 	cardinality = comboBoxs[i].getSelectedItem().toString();
      	 }
