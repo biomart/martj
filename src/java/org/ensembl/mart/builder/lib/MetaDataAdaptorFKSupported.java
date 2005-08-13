@@ -28,27 +28,6 @@ public class MetaDataAdaptorFKSupported extends MetaDataAdaptor {
 		
 	}
 	
-
-	
-	public Table [] getReferencedTables (String table_name){
-		
-		Table [] exp_key_tables;
-		Table [] imp_key_tables;
-		
-		String [] columnNames={"%"};
-		
-		exp_key_tables = getExportedKeyTables(table_name, columnNames);
-		imp_key_tables = getImportedKeyTables(table_name, columnNames);
-		
-		Table [] join_tables = new Table [exp_key_tables.length+imp_key_tables.length]; 
-		System.arraycopy(exp_key_tables,0,join_tables,0,exp_key_tables.length);
-		System.arraycopy(imp_key_tables,0,join_tables,exp_key_tables.length,imp_key_tables.length);
-		
-		return join_tables;
-	}
-	
-	
-	
 	
 	public Table [] getExportedKeyTables (String centralTableName, String [] columnNames){
 		
