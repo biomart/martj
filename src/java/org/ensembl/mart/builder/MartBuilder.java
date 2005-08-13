@@ -66,7 +66,7 @@ import org.ensembl.mart.builder.lib.*;
  * <p>This class contains the main function, it draws the external frame, toolsbar, menus.
  * </p>
  *
- * @author <a href="mailto:katerina@ebi.ac.uk">Damian Smedley</a>
+ * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
  * //@see org.ensembl.mart.builder.lib.TransformationConfig
  */
 
@@ -1067,6 +1067,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		checkboxs[i].setSelected(true);
 		JLabel label1 = new JLabel("Cardinality for "+tableName+"."+referencedTables[i].PK+
 									" => "+referencedTables[i].getName()+"."+referencedTables[i].FK);
+		
+		
 		comboBoxs[i] = new JComboBox(cardinalityOptions);
 		
 		HashMap cards = (HashMap) cardinalityFirst.get(referencedTables[i].getName());

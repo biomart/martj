@@ -96,6 +96,7 @@ public class TransformationConfigTreeNode extends DefaultMutableTreeNode {
 							for (int k = 0; k < tunits.length; k++) {
 									TransformationUnit tunit = (TransformationUnit) tunits[k];
 									String tuName = tunit.getElement().getAttributeValue("internalName");
+									
 									TransformationConfigTreeNode tuNode = new TransformationConfigTreeNode("TransformationUnit:" + tuName);
 									tuNode.setUserObject(tunit);							
 							}
@@ -134,7 +135,12 @@ public class TransformationConfigTreeNode extends DefaultMutableTreeNode {
 			}	
 
 		} else if (obj instanceof org.ensembl.mart.builder.lib.TransformationUnit) {
-			setName("TransformationUnit: " + ((ConfigurationBase) obj).getElement().getAttributeValue("internalName"));
+			
+			String refTabName="ll";
+			//if (tunit.getRef_table() != null){refTabName=tunit.getRef_table().getName();}
+			
+			
+			setName("TransformationUnit: " + ((ConfigurationBase) obj).getElement().getAttributeValue("internalName")+" : "+((ConfigurationBase) obj).getElement().getAttributeValue("referencedTable"));
 		} 
 
 	}
