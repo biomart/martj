@@ -140,7 +140,7 @@ public class TransformationConfigTreeNode extends DefaultMutableTreeNode {
 			//if (tunit.getRef_table() != null){refTabName=tunit.getRef_table().getName();}
 			
 			
-			setName("TransformationUnit: " + ((ConfigurationBase) obj).getElement().getAttributeValue("internalName")+" : "+((ConfigurationBase) obj).getElement().getAttributeValue("referencedTable"));
+			setName("TransformationUnit: " + ((ConfigurationBase) obj).getElement().getAttributeValue("referencedTable"));
 		} 
 
 	}
