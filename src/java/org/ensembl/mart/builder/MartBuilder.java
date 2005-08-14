@@ -1089,7 +1089,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	 	
 	 	
 	 	// we need to see central table for recursive transformations
-	 	if (referencedTables[i].getName().equals(tableName) && seenTable) continue;
+	     if (referencedTables[i].getName().equals(tableName) && seenTable) continue;
 	 	if (referencedTables[i].getName().equals(tableName)) seenTable = true;
 	 	
 	 	//System.out.println("getting after "+referencedTables[i].getName());
@@ -1098,7 +1098,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	 	Box box1 = new Box(BoxLayout.X_AXIS);
 		Box box2 = new Box(BoxLayout.X_AXIS);
 		Box box3 = new Box(BoxLayout.X_AXIS);				
-		checkboxs[i] = new JCheckBox("Include "+referencedTables[i].getName());
+		checkboxs[i] = new JCheckBox("Include "+referencedTables[i].getName().toUpperCase());
 		checkboxs[i].setSelected(true);
 		JLabel label1 = new JLabel("Cardinality for "+tableName+"."+referencedTables[i].PK+
 									" => "+referencedTables[i].getName()+"."+referencedTables[i].FK);
