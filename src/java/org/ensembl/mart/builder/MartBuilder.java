@@ -67,7 +67,7 @@ import org.ensembl.mart.builder.lib.*;
  * </p>
  *
  * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
- * //@see org.ensembl.mart.builder.lib.TransformationConfig
+ * 
  */
 
 public class MartBuilder extends JFrame implements ClipboardOwner {
@@ -150,7 +150,10 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
     int inset = 100;
     Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     setBounds(inset, inset, screenSize.width - inset * 2, screenSize.height - inset * 2);
-
+    //setBounds(screenSize.width/4, screenSize.height/4, screenSize.width/2, screenSize.height/2);
+    
+    
+    
     //Set up the GUI.
     this.getContentPane().setLayout(new BorderLayout());
 
@@ -501,20 +504,35 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		JTextField tConfigNameField = new JTextField(10);
 		box1.add(tConfigNameField);
 		tConfigSettings.add(box1);
+		
+		
+		
 		JLabel label3 = new JLabel("Output file");
 		box3.add(label3);
+		
+		// commented out xml output file for now
+		// seems to be redundant
+		
+		/**
 		JTextField outputFileField = new JTextField(10);
 		box3.add(outputFileField);
 		tConfigSettings.add(box3);		
+		
+		*/
+		
 		int option = JOptionPane.showOptionDialog(this,tConfigSettings,"Initial Settings",JOptionPane.DEFAULT_OPTION,
 						JOptionPane.PLAIN_MESSAGE,null,standardOptions,null);
 		if (option == 1)
 			return;				
+		
+		/**
 		String xmlFile = outputFileField.getText();
 		if (xmlFile.equals("")){
 			JOptionPane.showMessageDialog(null,"Output file required");
 			return;
 		}
+		
+		*/
 		
 		String tConfigName = tConfigNameField.getText();		
 		// create the config
@@ -1006,13 +1024,18 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
         	datasetContinueOption = JOptionPane.showConfirmDialog(null,"Create another dataset","",JOptionPane.YES_NO_OPTION); 
 	    }
 	    
-		// save to file
-		ConfigurationAdaptor configAdaptor = new ConfigurationAdaptor();
+		// commented out saving to xml output file
+	    // seems to be redundant
+		
+	    /**
+	    ConfigurationAdaptor configAdaptor = new ConfigurationAdaptor();
 		configAdaptor.adaptor=adaptor;
 		configAdaptor.resolver=resolver;
 		configAdaptor.writeDocument(tConfig,xmlFile);
 		System.out.println ("\nWritten XML to: "+xmlFile);
-		// open it in a new frame		
+		*/ 
+		 
+		//open it in a new frame		
 		TransformationConfigTreeWidget frame = new TransformationConfigTreeWidget(null, this, tConfig, null, null,
 			null, null);
 		frame.setVisible(true);
