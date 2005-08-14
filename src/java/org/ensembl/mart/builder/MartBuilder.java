@@ -132,11 +132,11 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		+databaseDialog.getUser()+")";
 	
 	if (adaptor.rdbms.equals("mysql")) {
-		resolver = new MetaDataAdaptorFKNotSupported(adaptor);
+		resolver = new MetaDataAdaptorNoDMDPlatform(adaptor);
 	} else if (adaptor.rdbms.equals("oracle")) {
-		resolver = new MetaDataAdaptorFKSupported(adaptor);
+		resolver = new MetaDataAdaptorDMDPlatform(adaptor);
 	} else if (adaptor.rdbms.equals("postgresql")) {
-		resolver = new MetaDataAdaptorFKSupported(adaptor);
+		resolver = new MetaDataAdaptorDMDPlatform(adaptor);
 	}
 				   
 	user = databaseDialog.getUser();
@@ -441,11 +441,11 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	    	database = databaseDialog.getDatabase();
 	    	
 			if (adaptor.rdbms.equals("mysql")) {
-				resolver = new MetaDataAdaptorFKNotSupported(adaptor);
+				resolver = new MetaDataAdaptorNoDMDPlatform(adaptor);
 			} else if (adaptor.rdbms.equals("oracle")) {
-				resolver = new MetaDataAdaptorFKSupported(adaptor);
+				resolver = new MetaDataAdaptorDMDPlatform(adaptor);
 			} else if (adaptor.rdbms.equals("postgresql")) {
-				resolver = new MetaDataAdaptorFKSupported(adaptor);
+				resolver = new MetaDataAdaptorDMDPlatform(adaptor);
 			}
 
 	  	} catch (Exception e) {

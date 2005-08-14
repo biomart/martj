@@ -18,11 +18,11 @@ import java.sql.*;
 import java.util.*;
 
 
-public class MetaDataAdaptorFKNotSupported extends MetaDataAdaptor {
+public class MetaDataAdaptorNoDMDPlatform extends MetaDataAdaptor {
 	
 	
 	
-	public MetaDataAdaptorFKNotSupported(DatabaseAdaptor adaptor){
+	public MetaDataAdaptorNoDMDPlatform(DatabaseAdaptor adaptor){
 		
 		super(adaptor);
 		

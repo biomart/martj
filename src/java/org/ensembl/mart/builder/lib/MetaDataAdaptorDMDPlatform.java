@@ -18,11 +18,11 @@ import java.sql.*;
 import java.util.*;
 
 
-public class MetaDataAdaptorFKSupported extends MetaDataAdaptor {
+public class MetaDataAdaptorDMDPlatform extends MetaDataAdaptor {
 
 	
 	
-	public MetaDataAdaptorFKSupported(DatabaseAdaptor adaptor){
+	public MetaDataAdaptorDMDPlatform(DatabaseAdaptor adaptor){
 			
 		super(adaptor);
 		
