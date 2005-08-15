@@ -501,7 +501,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		tConfigSettings.add(Box.createRigidArea(new Dimension(400,1)));		
 		JLabel label1 = new JLabel("Transformation config name");		
 		box1.add(label1);	
-		JTextField tConfigNameField = new JTextField(10);
+		JTextField tConfigNameField = new JTextField("test",10);
 		box1.add(tConfigNameField);
 		tConfigSettings.add(box1);
 		
@@ -544,7 +544,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	    while (datasetContinueOption != 1){	
 			int transformationCount = 0;
 	    	// DATASET SETTINGS
-			String datasetName = JOptionPane.showInputDialog(null,"Dataset name");
+			String datasetName = JOptionPane.showInputDialog("Dataset name","test");
 			if (datasetName == null)
 				return;
 			// add the dataset
