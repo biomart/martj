@@ -59,7 +59,7 @@ public class TransformationConfigTreeWidget extends JInternalFrame{
 	
     public TransformationConfigTreeWidget(String file, MartBuilder builder, TransformationConfig dsv, String user, String dataset, String internalName, String schema){
 
-        super("Dataset Tree " + (++openFrameCount),
+        super("Transformation Config " + (++openFrameCount),
                 true, //resizable
                 true, //closable
                 true, //maximizable
