@@ -18,7 +18,7 @@ import java.sql.*;
 import java.util.*;
 
 
-public abstract class MetaDataAdaptor {
+public abstract class MetaDataResolver {
 	
 	protected Table [] tabs;
 	protected Connection connection;
@@ -27,7 +27,7 @@ public abstract class MetaDataAdaptor {
 	protected DatabaseAdaptor adaptor;
 	protected DatabaseMetaData dmd;
 	
-	public MetaDataAdaptor(DatabaseAdaptor adaptor){
+	public MetaDataResolver(DatabaseAdaptor adaptor){
 		
 		try {		
 			setAdaptor(adaptor);
@@ -78,7 +78,7 @@ public abstract class MetaDataAdaptor {
 		
 		int i = 0;
 		// types filter doesn't work
-		ResultSet resultNames = dmd.getTables(getAdaptor().getCon().getCatalog(),getAdaptor().schema,"%",types);
+		ResultSet resultNames = dmd.getTables(getAdaptor().getCon().getCatalog(),getAdaptor().getSchema(),"%",types);
 		while (resultNames.next()){
 			nameList.add(resultNames.getString(3));
 			i++;
@@ -99,7 +99,7 @@ public abstract class MetaDataAdaptor {
 		
 		for (int i=0;i<columnNames.length;i++){
 		try {
-			ResultSet columns=dmd.getColumns(getAdaptor().catalog,getAdaptor().schema,name,columnNames[i]);
+			ResultSet columns=dmd.getColumns(getAdaptor().getCatalog(),getAdaptor().getSchema(),name,columnNames[i]);
 			int z=0;
 			while (columns.next()){	
 				
@@ -134,7 +134,7 @@ public abstract class MetaDataAdaptor {
 		for (int i=0;i<columnNames.length;i++){
 			
 			try {
-			ResultSet columns=dmd.getColumns(getAdaptor().catalog,getAdaptor().schema,name,columnNames[i]);
+			ResultSet columns=dmd.getColumns(getAdaptor().getCatalog(),getAdaptor().getSchema(),name,columnNames[i]);
 			
 			
 			//System.out.println("cat "+getAdaptor().catalog+" schema "+getAdaptor().schema+" name "+name+" column "+columnNames[i]);
@@ -169,7 +169,7 @@ public abstract class MetaDataAdaptor {
 		Column [] b = new Column[cols.size()];
 				
 		if (cols.size() == 0){
-			System.out.println("no columns for your table, please check name/capitalisation for your schema: "+getAdaptor().schema+ 
+			System.out.println("no columns for your table, please check name/capitalisation for your schema: "+getAdaptor().getSchema()+ 
 				" table: "+name+" and user defined columns in your transformation config file and db connection window");		
 		}
 		
@@ -185,7 +185,7 @@ public abstract class MetaDataAdaptor {
 		ArrayList cols = new ArrayList();
 		
 		try {
-			ResultSet columns=dmd.getColumns(getAdaptor().catalog,getAdaptor().username,name,"%");
+			ResultSet columns=dmd.getColumns(getAdaptor().getCatalog(),getAdaptor().getUsername(),name,"%");
 			int z=0;
 			while (columns.next()){	
 				cols.add(columns.getString(4));

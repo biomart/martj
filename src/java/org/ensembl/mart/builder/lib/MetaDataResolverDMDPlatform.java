@@ -18,11 +18,11 @@ import java.sql.*;
 import java.util.*;
 
 
-public class MetaDataAdaptorDMDPlatform extends MetaDataAdaptor {
+public class MetaDataResolverDMDPlatform extends MetaDataResolver {
 
 	
 	
-	public MetaDataAdaptorDMDPlatform(DatabaseAdaptor adaptor){
+	public MetaDataResolverDMDPlatform(DatabaseAdaptor adaptor){
 			
 		super(adaptor);
 		
@@ -37,7 +37,7 @@ public class MetaDataAdaptorDMDPlatform extends MetaDataAdaptor {
 		
 		try {
 			int i = 0;
-			ResultSet keys = dmd.getExportedKeys(getAdaptor().catalog,getAdaptor().schema,centralTableName);
+			ResultSet keys = dmd.getExportedKeys(getAdaptor().getCatalog(),getAdaptor().getSchema(),centralTableName);
 			while (keys.next()){
 			
 				//to avoid multiple table when the same table is referenced by multiple keys
@@ -82,7 +82,7 @@ public class MetaDataAdaptorDMDPlatform extends MetaDataAdaptor {
 		
 		try {
 			int i = 0;
-			ResultSet keys = dmd.getImportedKeys(getAdaptor().catalog,getAdaptor().schema,centralTableName);
+			ResultSet keys = dmd.getImportedKeys(getAdaptor().getCatalog(),getAdaptor().getSchema(),centralTableName);
 			while (keys.next()){
 				
 				// to avoid multiple table when the same table is referenced by multiple keys
@@ -122,7 +122,7 @@ public class MetaDataAdaptorDMDPlatform extends MetaDataAdaptor {
  	
  	try {
  		DatabaseMetaData dmd = getConnection().getMetaData();
- 		ResultSet keys = dmd.getPrimaryKeys(adaptor.catalog,adaptor.schema,table);
+ 		ResultSet keys = dmd.getPrimaryKeys(adaptor.getCatalog(),adaptor.getSchema(),table);
  		while (keys.next()){
  	    // This needs to be user specifed as it is not going to work properly with composite keys
  		pk=keys.getString(4);

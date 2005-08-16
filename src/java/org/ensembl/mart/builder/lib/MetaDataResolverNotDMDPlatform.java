@@ -18,11 +18,11 @@ import java.sql.*;
 import java.util.*;
 
 
-public class MetaDataAdaptorNoDMDPlatform extends MetaDataAdaptor {
+public class MetaDataResolverNotDMDPlatform extends MetaDataResolver {
 	
 	
 	
-	public MetaDataAdaptorNoDMDPlatform(DatabaseAdaptor adaptor){
+	public MetaDataResolverNotDMDPlatform(DatabaseAdaptor adaptor){
 		
 		super(adaptor);
 		
@@ -170,7 +170,7 @@ public class MetaDataAdaptorNoDMDPlatform extends MetaDataAdaptor {
 		
 		try {
 			int i = 0;
-			ResultSet keys = dmd.getTables(getAdaptor().catalog,getAdaptor().schema,"%",null);
+			ResultSet keys = dmd.getTables(getAdaptor().getCatalog(),getAdaptor().getSchema(),"%",null);
 			while (keys.next()){
 				
 				String table = keys.getString(3);

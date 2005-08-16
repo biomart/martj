@@ -20,10 +20,10 @@ import java.util.*;
 
 public class DatabaseAdaptor {
 	
-	public String username;
-	public String catalog;
-	public String rdbms;
-	public String schema;
+	private String username;
+	private String catalog;
+	private String rdbms;
+	private String schema;
 	
 	private String host;
 	private String port;
@@ -168,6 +168,114 @@ public class DatabaseAdaptor {
 
 
 
+	/**
+	 * @return Returns the driver.
+	 */
+	public String getDriver() {
+		return driver;
+	}
+	/**
+	 * @param driver The driver to set.
+	 */
+	public void setDriver(String driver) {
+		this.driver = driver;
+	}
+	/**
+	 * @return Returns the host.
+	 */
+	public String getHost() {
+		return host;
+	}
+	/**
+	 * @param host The host to set.
+	 */
+	public void setHost(String host) {
+		this.host = host;
+	}
+	/**
+	 * @return Returns the instance.
+	 */
+	public String getInstance() {
+		return instance;
+	}
+	/**
+	 * @param instance The instance to set.
+	 */
+	public void setInstance(String instance) {
+		this.instance = instance;
+	}
+	/**
+	 * @return Returns the password.
+	 */
+	public String getPassword() {
+		return password;
+	}
+	/**
+	 * @param password The password to set.
+	 */
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	/**
+	 * @return Returns the port.
+	 */
+	public String getPort() {
+		return port;
+	}
+	/**
+	 * @param port The port to set.
+	 */
+	public void setPort(String port) {
+		this.port = port;
+	}
+	/**
+	 * @return Returns the rdbms.
+	 */
+	public String getRdbms() {
+		return rdbms;
+	}
+	/**
+	 * @param rdbms The rdbms to set.
+	 */
+	public void setRdbms(String rdbms) {
+		this.rdbms = rdbms;
+	}
+	/**
+	 * @return Returns the schema.
+	 */
+	public String getSchema() {
+		return schema;
+	}
+	/**
+	 * @param schema The schema to set.
+	 */
+	public void setSchema(String schema) {
+		this.schema = schema;
+	}
+	/**
+	 * @return Returns the username.
+	 */
+	public String getUsername() {
+		return username;
+	}
+	/**
+	 * @param username The username to set.
+	 */
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	/**
+	 * @return Returns the catalog.
+	 */
+	public String getCatalog() {
+		return catalog;
+	}
+	/**
+	 * @param catalog The catalog to set.
+	 */
+	public void setCatalog(String catalog) {
+		this.catalog = catalog;
+	}
 }
 
 

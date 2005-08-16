@@ -96,7 +96,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
   private String database;
   private String schema;
   private static String connection;
-  private static MetaDataAdaptor resolver; 
+  private static MetaDataResolver resolver; 
   
   //private ArrayList tableList; 
   private HashMap tableList = new HashMap();
@@ -131,12 +131,12 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	connection = "MartBuilder (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "
 		+databaseDialog.getUser()+")";
 	
-	if (adaptor.rdbms.equals("mysql")) {
-		resolver = new MetaDataAdaptorNoDMDPlatform(adaptor);
-	} else if (adaptor.rdbms.equals("oracle")) {
-		resolver = new MetaDataAdaptorDMDPlatform(adaptor);
-	} else if (adaptor.rdbms.equals("postgresql")) {
-		resolver = new MetaDataAdaptorDMDPlatform(adaptor);
+	if (adaptor.getRdbms().equals("mysql")) {
+		resolver = new MetaDataResolverNotDMDPlatform(adaptor);
+	} else if (adaptor.getRdbms().equals("oracle")) {
+		resolver = new MetaDataResolverDMDPlatform(adaptor);
+	} else if (adaptor.getRdbms().equals("postgresql")) {
+		resolver = new MetaDataResolverDMDPlatform(adaptor);
 	}
 				   
 	user = databaseDialog.getUser();
@@ -440,12 +440,12 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			user = databaseDialog.getUser();
 	    	database = databaseDialog.getDatabase();
 	    	
-			if (adaptor.rdbms.equals("mysql")) {
-				resolver = new MetaDataAdaptorNoDMDPlatform(adaptor);
-			} else if (adaptor.rdbms.equals("oracle")) {
-				resolver = new MetaDataAdaptorDMDPlatform(adaptor);
-			} else if (adaptor.rdbms.equals("postgresql")) {
-				resolver = new MetaDataAdaptorDMDPlatform(adaptor);
+			if (adaptor.getRdbms().equals("mysql")) {
+				resolver = new MetaDataResolverNotDMDPlatform(adaptor);
+			} else if (adaptor.getRdbms().equals("oracle")) {
+				resolver = new MetaDataResolverDMDPlatform(adaptor);
+			} else if (adaptor.getRdbms().equals("postgresql")) {
+				resolver = new MetaDataResolverDMDPlatform(adaptor);
 			}
 
 	  	} catch (Exception e) {
