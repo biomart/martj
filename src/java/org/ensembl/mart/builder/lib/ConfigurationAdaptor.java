@@ -114,7 +114,7 @@ public class ConfigurationAdaptor {
 				Dataset dataset = (Dataset) datasets[i];
 				//System.out.println("DATASET:"+dataset.getElement().getAttributeValue("internalName"));
 				datasetName = dataset.getElement().getAttributeValue("internalName");
-				dataset.setAdaptor(adaptor);
+				dataset.setRDBMS(adaptor.rdbms);
 				dataset.setTargetSchemaName(targetSchemaName);
 				
 				dataset.setDatasetKey(resolver.getPrimaryKeys(dataset.getElement().getAttributeValue("mainTable")));
@@ -213,7 +213,7 @@ public class ConfigurationAdaptor {
 						 }
 				
 						 dunit.setColumnOperations("addall");
-						 dunit.setAdaptor(adaptor);
+						 dunit.setRDBMS(adaptor.rdbms);
 						 dunit.setTargetSchema(targetSchemaName);
 
 						 if (transformationUnit.getElement().getAttributeValue("referencingType").equals("exported"))

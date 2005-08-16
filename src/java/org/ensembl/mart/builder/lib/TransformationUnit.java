@@ -23,8 +23,7 @@ public  class TransformationUnit extends ConfigurationBase {
 	protected String RFKey;
 	protected String targetSchema;
 	protected String type;
-	
-	protected DatabaseAdaptor adaptor;
+	protected String RDBMS;
 	
 	protected Table tempStart;
 	protected Table tempEnd;
@@ -128,14 +127,6 @@ public  class TransformationUnit extends ConfigurationBase {
 	  return RFKey;
 	}
 	
-	void setAdaptor(DatabaseAdaptor adaptor) {
-	  this.adaptor = adaptor;
-	}
-
-	DatabaseAdaptor getAdaptor() {
-	  return adaptor;
-	}
-
 
 	public  String toSQL (){
 		
@@ -158,11 +149,11 @@ public  class TransformationUnit extends ConfigurationBase {
 		
 		String sql = "";
 		
-		if (adaptor.rdbms.equals("postgresql"))
+		if (getRDBMS().equals("postgresql"))
 			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+tempStart.getName()+" ("+TSKey+");";
-		else if 	(adaptor.rdbms.equals("mysql"))
+		else if 	(getRDBMS().equals("mysql"))
 		sql = "ALTER TABLE "+targetSchema+"."+tempStart.getName()+" ADD INDEX ("+TSKey+");";
-		else if (adaptor.rdbms.equals("oracle"))
+		else if (getRDBMS().equals("oracle"))
 			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+tempStart.getName()+" ("+TSKey+");";
 		
 		return sql;
@@ -173,11 +164,11 @@ public  class TransformationUnit extends ConfigurationBase {
 		
 		String sql = "";
 		
-		if (adaptor.rdbms.equals("postgresql"))
+		if (getRDBMS().equals("postgresql"))
 			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+tempEnd.getName()+" ("+key+");";
-		else if 	(adaptor.rdbms.equals("mysql"))
+		else if 	(getRDBMS().equals("mysql"))
 		sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+key+");";
-		else if (adaptor.rdbms.equals("oracle"))
+		else if (getRDBMS().equals("oracle"))
 			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+tempEnd.getName()+" ("+key+");";
 		
 		return sql;
@@ -189,11 +180,11 @@ public  class TransformationUnit extends ConfigurationBase {
 		
 		String sql = "";
 		
-		if (adaptor.rdbms.equals("postgresql"))
+		if (getRDBMS().equals("postgresql"))
 			sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" RENAME "+TSKey+ " TO "+ key+"_key;";
-		else if 	(adaptor.rdbms.equals("mysql"))
+		else if 	(getRDBMS().equals("mysql"))
 		sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" CHANGE "+TSKey+ " "+ key+"_key INT;";
-		else if (adaptor.rdbms.equals("oracle"))
+		else if (getRDBMS().equals("oracle"))
 			sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" RENAME COLUMN "+TSKey+ " TO "+ key+"_key;";
 		
 		return sql;
@@ -255,9 +246,16 @@ public  class TransformationUnit extends ConfigurationBase {
 	}
 	
 	
-	
-	
-	
-	
-	
+	/**
+	 * @return Returns the rDBMS.
+	 */
+	public String getRDBMS() {
+		return RDBMS;
+	}
+	/**
+	 * @param rdbms The rDBMS to set.
+	 */
+	public void setRDBMS(String rdbms) {
+		RDBMS = rdbms;
+	}
 }

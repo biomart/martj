@@ -22,8 +22,20 @@ public class Dataset extends ConfigurationBase {
 	
 	private String targetSchemaName;
 	private String datasetKey;
-	private DatabaseAdaptor adaptor;
+	private String RDBMS;
 	
+	/**
+	 * @return Returns the rDBMS.
+	 */
+	public String getRDBMS() {
+		return RDBMS;
+	}
+	/**
+	 * @param rdbms The rDBMS to set.
+	 */
+	public void setRDBMS(String rdbms) {
+		RDBMS = rdbms;
+	}
 	public Dataset (Element element){
 		super(element);
 		int[] requiredFields = {0,1};
@@ -52,17 +64,6 @@ public class Dataset extends ConfigurationBase {
 	  return datasetKey;
 	}
 	
-	
-	void setAdaptor(DatabaseAdaptor adaptor) {
-	  this.adaptor = adaptor;
-	}
-
-	
-	DatabaseAdaptor getAdaptor() {
-	  return adaptor;
-	}
-	
-
 	
 	
 	public void createTransformationsForCentralFilters(){
@@ -100,7 +101,7 @@ public class Dataset extends ConfigurationBase {
 					new TransformationUnitSingle(dmFinalTable);
 			
 				sunit.single = true;
-				sunit.setAdaptor(getAdaptor());
+				sunit.setRDBMS(getRDBMS());
 				sunit.targetSchema = targetSchemaName;
 				sunit.TSKey=dmTransformations[m].getFinalUnit().TSKey;
 				sunit.RFKey=dmTransformations[m].getFinalUnit().RFKey;
@@ -113,7 +114,7 @@ public class Dataset extends ConfigurationBase {
 				dunit.getElement().setAttribute("cardinality",dmFinalTable.getCardinality());
 				dunit.setColumnOperations("addone");
 				dunit.setfinalTableName("MAIN");
-				dunit.setAdaptor(getAdaptor());
+				dunit.setRDBMS(getRDBMS());
 				dunit.TSKey=dmTransformations[m].getFinalUnit().RFKey;
 				dunit.RFKey=dmTransformations[m].getFinalUnit().TSKey;
 			
