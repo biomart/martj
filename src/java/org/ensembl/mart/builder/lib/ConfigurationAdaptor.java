@@ -101,7 +101,7 @@ public class ConfigurationAdaptor {
 
 	}
 
-	public void prepareTransformation(TransformationConfig tConfig) {
+	private void prepareTransformation(TransformationConfig tConfig) {
 	
 			Transformation transformation = null;
 			String datasetName = null;
@@ -237,6 +237,8 @@ public class ConfigurationAdaptor {
 	}
 	
 	public void writeDDL(String sqlFile, TransformationConfig tConfig) throws IOException {
+		
+		prepareTransformation(tConfig);
 
 		BufferedWriter sqlout = null;
 		sqlout = new BufferedWriter(new FileWriter(sqlFile, true));
