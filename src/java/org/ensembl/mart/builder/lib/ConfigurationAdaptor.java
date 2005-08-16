@@ -28,9 +28,8 @@ import org.jdom.output.XMLOutputter;
  */
 public class ConfigurationAdaptor {
 	
-	public DatabaseAdaptor adaptor;
-	public MetaDataAdaptor resolver;
-	public String targetSchemaName;
+	private MetaDataAdaptor resolver;
+	private String targetSchemaName;
 	
 	public TransformationConfig getTransformationConfig(
 			String file) {
@@ -114,7 +113,7 @@ public class ConfigurationAdaptor {
 				Dataset dataset = (Dataset) datasets[i];
 				//System.out.println("DATASET:"+dataset.getElement().getAttributeValue("internalName"));
 				datasetName = dataset.getElement().getAttributeValue("internalName");
-				dataset.setRDBMS(adaptor.rdbms);
+				dataset.setRDBMS(resolver.getAdaptor().rdbms);
 				dataset.setTargetSchemaName(targetSchemaName);
 				
 				dataset.setDatasetKey(resolver.getPrimaryKeys(dataset.getElement().getAttributeValue("mainTable")));
@@ -213,7 +212,7 @@ public class ConfigurationAdaptor {
 						 }
 				
 						 dunit.setColumnOperations("addall");
-						 dunit.setRDBMS(adaptor.rdbms);
+						 dunit.setRDBMS(resolver.getAdaptor().rdbms);
 						 dunit.setTargetSchema(targetSchemaName);
 
 						 if (transformationUnit.getElement().getAttributeValue("referencingType").equals("exported"))
@@ -294,4 +293,28 @@ public class ConfigurationAdaptor {
 
 	
 
+	/**
+	 * @return Returns the resolver.
+	 */
+	public MetaDataAdaptor getResolver() {
+		return resolver;
+	}
+	/**
+	 * @param resolver The resolver to set.
+	 */
+	public void setResolver(MetaDataAdaptor resolver) {
+		this.resolver = resolver;
+	}
+	/**
+	 * @return Returns the targetSchemaName.
+	 */
+	public String getTargetSchemaName() {
+		return targetSchemaName;
+	}
+	/**
+	 * @param targetSchemaName The targetSchemaName to set.
+	 */
+	public void setTargetSchemaName(String targetSchemaName) {
+		this.targetSchemaName = targetSchemaName;
+	}
 }

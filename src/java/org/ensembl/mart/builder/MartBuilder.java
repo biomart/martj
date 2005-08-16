@@ -1335,9 +1335,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	sFile.delete();// does not seem to be working
 		
 	ConfigurationAdaptor configAdaptor = new ConfigurationAdaptor();
-	configAdaptor.adaptor=adaptor;
-	configAdaptor.resolver=resolver;
-	configAdaptor.targetSchemaName=tSchemaName;	
+	configAdaptor.setResolver(resolver);
+	configAdaptor.setTargetSchemaName(tSchemaName);	
 	configAdaptor.writeDDL(ddlFile,tConfig);
 		
 	System.out.println ("\nWritten DDLs to: "+ddlFile);
