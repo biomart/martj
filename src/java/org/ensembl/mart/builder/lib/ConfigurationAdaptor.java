@@ -20,8 +20,8 @@ import org.jdom.output.XMLOutputter;
 
 /**
  * 
- * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
  * @author <a href="mailto:arek@ebi.ac.uk">Arek Kasprzyk</a>
+ * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
  *
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Style - Code Templates
@@ -35,10 +35,10 @@ public class ConfigurationAdaptor {
 	public TransformationConfig getTransformationConfig(
 			String file) {
 
-		SAXBuilder parser = new SAXBuilder();
+		SAXBuilder builder = new SAXBuilder();
 		Document doc = null;
 		try {
-			doc = parser.build(file);
+			doc = builder.build(file);
 		} catch (JDOMException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -101,7 +101,7 @@ public class ConfigurationAdaptor {
 
 	}
 
-	public void transformationPreparation(TransformationConfig tConfig) {
+	public void prepareTransformation(TransformationConfig tConfig) {
 	
 			Transformation transformation = null;
 			String datasetName = null;

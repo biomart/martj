@@ -1338,7 +1338,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	configAdaptor.adaptor=adaptor;
 	configAdaptor.resolver=resolver;
 	configAdaptor.targetSchemaName=tSchemaName;	
-	configAdaptor.transformationPreparation(tConfig);
+	configAdaptor.prepareTransformation(tConfig);
 	configAdaptor.writeDDL(ddlFile,tConfig);
 		
 	System.out.println ("\nWritten DDLs to: "+ddlFile);
