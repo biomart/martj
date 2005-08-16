@@ -57,12 +57,12 @@ public class Dataset extends ConfigurationBase {
 	  this.adaptor = adaptor;
 	}
 
-	/**
-	//DatabaseAdaptor getAdaptor() {
-	 // return adaptor;
-	//}
 	
-	*/
+	DatabaseAdaptor getAdaptor() {
+	  return adaptor;
+	}
+	
+
 	
 	
 	public void createTransformationsForCentralFilters(){
@@ -100,7 +100,7 @@ public class Dataset extends ConfigurationBase {
 					new TransformationUnitSingle(dmFinalTable);
 			
 				sunit.single = true;
-				sunit.adaptor = adaptor;
+				sunit.setAdaptor(getAdaptor());
 				sunit.targetSchema = targetSchemaName;
 				sunit.TSKey=dmTransformations[m].getFinalUnit().TSKey;
 				sunit.RFKey=dmTransformations[m].getFinalUnit().RFKey;
@@ -113,7 +113,7 @@ public class Dataset extends ConfigurationBase {
 				dunit.getElement().setAttribute("cardinality",dmFinalTable.getCardinality());
 				dunit.setColumnOperations("addone");
 				dunit.setfinalTableName("MAIN");
-				dunit.adaptor = adaptor;
+				dunit.setAdaptor(getAdaptor());
 				dunit.TSKey=dmTransformations[m].getFinalUnit().RFKey;
 				dunit.RFKey=dmTransformations[m].getFinalUnit().TSKey;
 			

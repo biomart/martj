@@ -101,7 +101,7 @@ public class ConfigurationAdaptor {
 
 	}
 
-	private void prepareTransformation(TransformationConfig tConfig) {
+	private void createTransformations(TransformationConfig tConfig) {
 	
 			Transformation transformation = null;
 			String datasetName = null;
@@ -117,7 +117,6 @@ public class ConfigurationAdaptor {
 				dataset.setAdaptor(adaptor);
 				dataset.setTargetSchemaName(targetSchemaName);
 				
-				// db interaction
 				dataset.setDatasetKey(resolver.getPrimaryKeys(dataset.getElement().getAttributeValue("mainTable")));
 				
 				
@@ -233,13 +232,11 @@ public class ConfigurationAdaptor {
 				}
 				
 			}
-			
-			//mart.add(dataset);
 	}
 	
 	public void writeDDL(String sqlFile, TransformationConfig tConfig) throws IOException {
 		
-		prepareTransformation(tConfig);
+		createTransformations(tConfig);
 
 		BufferedWriter sqlout = null;
 		sqlout = new BufferedWriter(new FileWriter(sqlFile, true));
