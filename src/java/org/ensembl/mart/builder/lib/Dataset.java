@@ -52,13 +52,18 @@ public class Dataset extends ConfigurationBase {
 	  return datasetKey;
 	}
 	
+	
 	void setAdaptor(DatabaseAdaptor adaptor) {
 	  this.adaptor = adaptor;
 	}
 
-	DatabaseAdaptor getAdaptor() {
-	  return adaptor;
-	}
+	/**
+	//DatabaseAdaptor getAdaptor() {
+	 // return adaptor;
+	//}
+	
+	*/
+	
 	
 	public void createTransformationsForCentralFilters(){
 		
@@ -68,8 +73,6 @@ public class Dataset extends ConfigurationBase {
 		for (int i=0; i<mainTransformations.length;i++){
 			
 			Transformation transformation = new Transformation();
-			
-			transformation.setAdaptor(adaptor);
 			transformation.setDatasetName(getElement().getAttributeValue("internalName"));
 			transformation.setTargetSchemaName(targetSchemaName);
 			transformation.getElement().setAttribute("userTableName",

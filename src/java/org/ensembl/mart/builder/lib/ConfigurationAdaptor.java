@@ -124,8 +124,9 @@ public class ConfigurationAdaptor {
 				ConfigurationBase[] transformations = dataset.getChildObjects();
 				for (int j = 0; j < transformations.length; j++){
 					transformation = (Transformation) transformations[j];
+					
 					//System.out.println("TRANSFORMATION:"+transformation.getElement().getAttributeValue("internalName"));	
-					transformation.setAdaptor(adaptor);
+					
 					transformation.setDatasetName(datasetName);
 					transformation.setTargetSchemaName(targetSchemaName);
 					transformation.setFinalTableName(transformation.getElement().getAttributeValue("userTableName"));

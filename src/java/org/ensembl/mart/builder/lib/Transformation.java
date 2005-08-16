@@ -25,7 +25,6 @@ public class Transformation extends ConfigurationBase {
 	private String datasetName;
 	private String targetSchemaName;
 	private Table startTable;
-	private DatabaseAdaptor adaptor;
 	boolean central = false;
 	
 	
@@ -96,14 +95,8 @@ public class Transformation extends ConfigurationBase {
 	String getColumnOperations() {
 	  return columnOperations;
 	}
-	void setAdaptor(DatabaseAdaptor adaptor) {
-	  this.adaptor = adaptor;
-	}
-
-	DatabaseAdaptor getAdaptor() {
-	  return adaptor;
-	}	
-		
+	
+	
 		
 	public TransformationUnit getFinalUnit() {
 		TransformationUnit unit = (TransformationUnit) getChildObjects()[getChildObjects().length - 1];
