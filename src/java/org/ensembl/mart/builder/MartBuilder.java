@@ -1317,7 +1317,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	String ddlFile = null;
 	String tSchemaName = null;    
 
-	tSchemaName = JOptionPane.showInputDialog(null,"INPUT TARGET SCHEMA");
+	tSchemaName = JOptionPane.showInputDialog("INPUT TARGET SCHEMA","test");
 	
 	// read the XML from the open frame rather than inputing a file
 	disableCursor();
@@ -1330,7 +1330,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 
 	tConfig = ((TransformationConfigTreeWidget) selectedFrame).getTransformationConfig();
 	
-	ddlFile = JOptionPane.showInputDialog(null,"OUTPUT DDL>> FILE:");
+	ddlFile = JOptionPane.showInputDialog("OUTPUT DDL>> FILE:","myfile");
 	File sFile = new File(ddlFile);
 	sFile.delete();// does not seem to be working
 		
