@@ -667,7 +667,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			   String chosenColumn = chosenOptions[1];
 			  
 			  // moved sql to resolver 
-			   ArrayList allValList=resolver.getDistinctValuesForPartitioning(chosenColumn,chosenTable,databaseDialog.getSchema());
+			   ArrayList allValList=resolver.getDistinctValuesForPartitioning(chosenColumn,chosenTable);
 			   
 			   
 			   

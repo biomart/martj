@@ -241,11 +241,14 @@ public abstract class MetaDataResolver {
 	}
 	
 	
-	public ArrayList getDistinctValuesForPartitioning (String chosenColumn, String chosenTable, String schema){
+	public ArrayList getDistinctValuesForPartitioning (String chosenColumn, String chosenTable){
+		
+		
+		
 		
 		ArrayList allValList = new ArrayList();
 		 
-		   String sql = "SELECT DISTINCT "+chosenColumn+" FROM "+schema+"."+chosenTable
+		   String sql = "SELECT DISTINCT "+chosenColumn+" FROM "+getAdaptor().getSchema()+"."+chosenTable
 			  +" WHERE "+chosenColumn+" IS NOT NULL";
 		   PreparedStatement ps;
 		try {
