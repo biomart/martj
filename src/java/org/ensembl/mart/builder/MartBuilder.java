@@ -665,16 +665,11 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			   String[] chosenOptions = colsOption.split("\\.+");
 			   String chosenTable = chosenOptions[0];
 			   String chosenColumn = chosenOptions[1];
-			   Connection conn = adaptor.getCon();
-			   String sql = "SELECT DISTINCT "+chosenColumn+" FROM "+databaseDialog.getSchema()+"."+chosenTable
-				  +" WHERE "+chosenColumn+" IS NOT NULL";
-			   PreparedStatement ps = conn.prepareStatement(sql);
-			   ResultSet rs = ps.executeQuery();
+			  
+			  // moved sql to resolver 
+			   ArrayList allValList=resolver.getDistinctValuesForPartitioning(chosenColumn,chosenTable,databaseDialog.getSchema());
 			   
-			   ArrayList allValList = new ArrayList();
-			   while (rs.next()){
-			   		allValList.add(rs.getString(1));
-			   }
+			   
 			   
 			   String[] values;
 			   if (allValList.size() > 20){

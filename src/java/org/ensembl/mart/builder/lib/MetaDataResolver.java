@@ -241,6 +241,29 @@ public abstract class MetaDataResolver {
 	}
 	
 	
+	public ArrayList getDistinctValuesForPartitioning (String chosenColumn, String chosenTable, String schema){
+		
+		ArrayList allValList = new ArrayList();
+		 
+		   String sql = "SELECT DISTINCT "+chosenColumn+" FROM "+schema+"."+chosenTable
+			  +" WHERE "+chosenColumn+" IS NOT NULL";
+		   PreparedStatement ps;
+		try {
+			ps = getConnection().prepareStatement(sql);
+		
+		ResultSet rs = ps.executeQuery();
+		   
+		   
+		   while (rs.next()){
+		   		allValList.add(rs.getString(1));
+		   }
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return allValList;
+	}
 	
 	
 	
