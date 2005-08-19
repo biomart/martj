@@ -119,7 +119,6 @@ ActionListener {
 	protected Clipboard clipboardEditor;
 	private static TextField textField1;
 	private static Button button;
-	//private TextField text;
 	private JPanel pane;
 	private Document doc;
 	
@@ -214,8 +213,6 @@ ActionListener {
 		MartSubmitter frame = new MartSubmitter();
 		frame.setTitle(connection);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		// setContentPane(frame);
-
 		frame.setVisible(true);
 	}
 
@@ -279,14 +276,11 @@ ActionListener {
 			database = databaseDialog.getDatabase();
 
 		} catch (Exception e) {
-			// ds = null;
 			connection = "MartSubmitter (NO DATABASE CONNECTION)";
 			// warning dialog then retry
 			Feedback f = new Feedback(this);
-			f
-					.warning("Could not connect to Database\nwith the given Connection Settings.\nPlease try again!");
-			// valid = false;
-
+			f.warning("Could not connect to Database\nwith the given Connection Settings.\nPlease try again!");
+			
 		} finally {
 			setTitle(connection);
 			enableCursor();
@@ -295,12 +289,6 @@ ActionListener {
 
 	public void importDatasetConfig() {
 		try {
-			// if (ds == null) {
-			// JOptionPane.showMessageDialog(this, "Connect to database first",
-			// "ERROR", 0);
-			// return;
-			// }
-
 			disableCursor();
 
 			String[] datasets = getDatasets();
@@ -323,14 +311,6 @@ ActionListener {
 
 			createCheckBoxes(doc);
 
-			// DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null,
-			// this, null, user, dataset, intName, databaseDialog.getSchema());
-			// frame.setVisible(true);
-			// desktop.add(frame);
-			// try {
-			// frame.setSelected(true);
-			// } catch (java.beans.PropertyVetoException e) {
-			// }
 		} catch (Exception e) {
 			JOptionPane
 					.showMessageDialog(
@@ -354,7 +334,6 @@ ActionListener {
 		Element root = doc.getRootElement();
 		JPanel pane = new JPanel();
 		setPane(pane);
-		//setText(text);
 		setDoc(doc);
 		
 		JPanel buttonpanel = new JPanel();
@@ -385,12 +364,7 @@ ActionListener {
 					+ pge.getAttributeValue("internalName"));
 			List AttributePageElements = ((Element) PGElements.get(i))
 					.getChildren();
-			//JTabbedPane tabbedPane = new JTabbedPane();
-			//JPanel panel1 = new JPanel();
-			//tabbedPane.addTab()
-			//tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
-			//frame.getContentPane().add(tabbedPane);
-
+			
 			for (int j = 0; j < AttributePageElements.size(); j++) {
 				
 				Element ape = (Element) AttributePageElements.get(j);
@@ -427,9 +401,7 @@ ActionListener {
 						text.setName(ace
 								.getAttributeValue("internalName"));
 						pane.add(text);
-						//pane.addBorder(BorderFactory.createLineBorder(Color.black));
-						//Border blackline = BorderFactory.createLineBorder(Color.black);
-						
+												
 						ace.setName(ace.getAttributeValue("internalName"));
 						
 						}
@@ -440,12 +412,6 @@ ActionListener {
 		
 		
 		System.out.println("before");
-		
-		
-		
-	
-		
-		
 	}
 
 	private void getXML(String dataset) {
@@ -454,18 +420,13 @@ ActionListener {
 		String sql = "select compressed_xml from meta_configuration where dataset='"
 				+ dataset + "'";
 
-		// Connection conn = initialiseConnection(driver, host, port,
-		// instance, user,password);
-
 		java.sql.PreparedStatement ps;
 		try {
 			ps = getDbConnection().prepareStatement(sql);
 			ResultSet rs = ps.executeQuery();
 
 			if (!rs.next()) {
-				// will only get one result
-				// rs.close();
-				// getDbConnection().close();
+				
 			}
 
 			byte[] cstream = rs.getBytes(1);
@@ -507,7 +468,6 @@ ActionListener {
 			}
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -551,14 +511,9 @@ ActionListener {
 		Connection con = null;
 		Statement sts = null;
 
-		//String sqls = "INSERT INTO vs__customer__dm VALUES('" + customerIdS + "', '" + firstNameS
-			//	+ "', '" + surnameS + "', '" + dateOfBirthS + "', '12', '"
-			//	+ genderS + "')";
 		System.out.println("second sql");
 		System.out.println(sql);
 		
-		//String sqls2 = "INSERT INTO vs__video__main VALUES('13', " + titleS + "', " + ageCertS +"')";
- 
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
 			String url = "jdbc:mysql://localhost.localdomain:3306/video_store";
@@ -566,8 +521,7 @@ ActionListener {
 
 			sts = con.createStatement();
 			int rss = sts.executeUpdate(sql);
-			//int rss2 = sts.executeUpdate(sqls2);
-		}
+			}
 
 		catch (Exception es) {
 			System.err.println("Exception: " + es.getMessage());
@@ -587,14 +541,6 @@ ActionListener {
 		}
 	}
 	
-	
-		
-		
-		
-		
-	
-
-
 	public void actionPerformed(ActionEvent e) {
 				
 		Element root = doc.getRootElement();
@@ -670,69 +616,29 @@ ActionListener {
 							System.out.println("FOUND: " + text.getName());
 							
 							valid.add(ace);
-							
 							}
-							
-						
 						}
-						
-						
 					}	
 				}
-					
 			}
 			
-				
-			
-		
-		
-		
-				
 		System.out.println("after");
 		String sql = ("INSERT INTO vs__customer__dm VALUES('"); 
-		
-		
+				
 		for (int z = 0; z < valid.size(); z++) {
-	        //tf[i] = i;
-	    Element ace = (Element) valid.get(z);
-	    System.out.println(ace.getAttributeValue("buttontext"));
-	    System.out.println();
-	    sql = sql + ace.getAttributeValue("buttontext");
-	    
-		}
-	    
-	    
-		System.out.println(sql);
+	        Element ace = (Element) valid.get(z);
+	        System.out.println(ace.getAttributeValue("buttontext"));
+	        System.out.println();
+	        sql = sql + ace.getAttributeValue("buttontext") + "', '";
+	    	}
+		
+		int l = sql.lastIndexOf(", '");
+		sql = sql.substring(0, l) + ")";
+	    System.out.println(sql);
 		}
 		
 	}
-		/*
-			TextField txt = (TextField) tf[i];
 			
-			System.out.print(txt.getText());
-	        System.out.println();
-	        sql = sql + txt.getName() + "', '";
-	      */ 
-		
-					/*
-		int l = sql.length();
-		l = l - 3;
-		sql = sql.substring(0, l) + ")";
-		System.out.println(sql);}}}}
-		//submitDatabase(sql);
-		
-		/*
-		String titleS = text.getText();
-		String ageCertS = text.getText();
-		String customerIdS = text.getText();
-		String genderS = text.getText();
-		String firstNameS = text.getText();
-		String surnameS = text.getText();
-		String dateOfBirthS = text.getText();
-		submitDatabase(titleS, ageCertS, customerIdS, genderS, firstNameS, surnameS, dateOfBirthS);
-	*/
-	
-
 	public JPanel getPane() {
 		return pane;
 	}
@@ -748,15 +654,4 @@ ActionListener {
 	public void setDoc(Document doc) {
 		this.doc = doc;
 	}
-/*
-	public TextField getText() {
-		return text;
-	}
-
-	public void setText(TextField text) {
-		this.text = text;
-	}	
-*/
-		
-		
 }
