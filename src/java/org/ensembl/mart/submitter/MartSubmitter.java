@@ -99,12 +99,11 @@ import com.mysql.jdbc.PreparedStatement;
  * menus.
  * </p>
  * 
- * @author <a href="mailto:kasprzo3@man.ac.uk">Olga Kasprzyk</a> 
- *         
+ * @author <a href="mailto:kasprzo3@man.ac.uk">Olga Kasprzyk</a>
+ * 
  */
 
-public class MartSubmitter extends JFrame implements 
-ActionListener { 
+public class MartSubmitter extends JFrame implements ActionListener {
 
 	private JDesktopPane desktop;
 	static private String user;
@@ -121,15 +120,13 @@ ActionListener {
 	private static Button button;
 	private JPanel pane;
 	private Document doc;
-	
-	
 	public MartSubmitter() {
 
 		// autoconnect on startup
 		super("MartSubmitter");
 
 		JFrame.setDefaultLookAndFeelDecorated(true);
-		
+
 		// Make the big window be indented 50 pixels from each edge
 		// of the screen.
 		int inset = 100;
@@ -196,7 +193,7 @@ ActionListener {
 			frame.setSelected(true);
 		} catch (java.beans.PropertyVetoException e) {
 		}
-		
+
 		return frame;
 	}
 
@@ -250,8 +247,6 @@ ActionListener {
 
 	public void databaseConnection() {
 
-		// boolean valid = false;
-
 		try {
 			disableCursor();
 
@@ -279,8 +274,9 @@ ActionListener {
 			connection = "MartSubmitter (NO DATABASE CONNECTION)";
 			// warning dialog then retry
 			Feedback f = new Feedback(this);
-			f.warning("Could not connect to Database\nwith the given Connection Settings.\nPlease try again!");
-			
+			f
+					.warning("Could not connect to Database\nwith the given Connection Settings.\nPlease try again!");
+
 		} finally {
 			setTitle(connection);
 			enableCursor();
@@ -335,21 +331,21 @@ ActionListener {
 		JPanel pane = new JPanel();
 		setPane(pane);
 		setDoc(doc);
-		
+
 		JPanel buttonpanel = new JPanel();
-		
+
 		button = new Button("SUBMIT");
 		buttonpanel.add(button);
 		frame.getContentPane().add(buttonpanel, BorderLayout.PAGE_END);
 		pane.setLayout(new FlowLayout());
 		button.addActionListener(this);
-		
+
 		List PGElements = root.getChildren();
-		
+
 		for (int i = 0; i < PGElements.size(); i++) {
-			
+
 			Element pge = (Element) PGElements.get(i);
-			
+
 			if (pge.getName().equals("MainTable")
 					|| pge.getName().equals("Key")
 					|| pge.getName().equals("FilterPage")
@@ -364,9 +360,9 @@ ActionListener {
 					+ pge.getAttributeValue("internalName"));
 			List AttributePageElements = ((Element) PGElements.get(i))
 					.getChildren();
-			
+
 			for (int j = 0; j < AttributePageElements.size(); j++) {
-				
+
 				Element ape = (Element) AttributePageElements.get(j);
 
 				System.out.println("Attribute Group: "
@@ -376,7 +372,7 @@ ActionListener {
 						.get(j)).getChildren();
 
 				for (int k = 0; k < AttributGroupElements.size(); k++) {
-					
+
 					Element age = (Element) AttributGroupElements.get(k);
 
 					System.out.println("Attribute Collection: "
@@ -386,31 +382,29 @@ ActionListener {
 							.get(k)).getChildren();
 					pane.setBorder(BorderFactory.createLineBorder(Color.black));
 					for (int m = 0; m < AttributeCollectionElements.size(); m++) {
-						
+
 						Element ace = (Element) AttributeCollectionElements
 								.get(m);
-						
+
 						System.out.println("Attribute: "
 								+ ace.getAttributeValue("internalName"));
-						
+
 						List Attribute = ((Element) AttributeCollectionElements
 								.get(m)).getChildren();
 
 						TextField text = new TextField(ace
 								.getAttributeValue("internalName"), 10);
-						text.setName(ace
-								.getAttributeValue("internalName"));
+						text.setName(ace.getAttributeValue("internalName"));
 						pane.add(text);
-												
+
 						ace.setName(ace.getAttributeValue("internalName"));
-						
-						}
+
+					}
 				}
 			}
 		}
 		frame.getContentPane().add(pane);
-		
-		
+
 		System.out.println("before");
 	}
 
@@ -426,7 +420,7 @@ ActionListener {
 			ResultSet rs = ps.executeQuery();
 
 			if (!rs.next()) {
-				
+
 			}
 
 			byte[] cstream = rs.getBytes(1);
@@ -499,29 +493,23 @@ ActionListener {
 	public void setDbConnection(Connection dbConnection) {
 		this.dbConnection = dbConnection;
 	}
-	/*
-	 * public MyInternalFrame() { super("Document #" + (++openFrameCount), true,
-	 * //resizable true, //closable true, //maximizable true);//iconifiable
-	 * //...Create the GUI and put it in the window... //...Then set the window
-	 * size or call pack... //Set the window's location.
-	 * setLocation(xOffset*openFrameCount, yOffset*openFrameCount); }
-	 */
 
-	public static void submitDatabase(String sql) {
+	public static void submitDatabase(String sqql, String sqqls) {
 		Connection con = null;
 		Statement sts = null;
 
-		System.out.println("second sql");
-		System.out.println(sql);
-		
+		//System.out.println(sqql);
+		//System.out.println(sqqls);
+
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
 			String url = "jdbc:mysql://localhost.localdomain:3306/video_store";
 			con = DriverManager.getConnection(url, "root", "Monika222");
 
 			sts = con.createStatement();
-			int rss = sts.executeUpdate(sql);
-			}
+			int rss = sts.executeUpdate(sqql);
+			int rss2 = sts.executeUpdate(sqqls);
+		}
 
 		catch (Exception es) {
 			System.err.println("Exception: " + es.getMessage());
@@ -530,8 +518,8 @@ ActionListener {
 		finally {
 			try {
 				if (sts != null)
-				if (sts != null)
-					sts.close();
+					if (sts != null)
+						sts.close();
 				if (con != null)
 					con.close();
 			}
@@ -540,22 +528,24 @@ ActionListener {
 			}
 		}
 	}
-	
+
 	public void actionPerformed(ActionEvent e) {
-				
+
 		Element root = doc.getRootElement();
 		setDoc(doc);
-		
+
 		Component[] cp = pane.getComponents();
 		ArrayList valid = new ArrayList();
-		
-		
+
+		String sqql = null;
+		String sqqls = null;
+
 		List PGElements = root.getChildren();
-		
+
 		for (int i = 0; i < PGElements.size(); i++) {
-			
+
 			Element pge = (Element) PGElements.get(i);
-			
+
 			if (pge.getName().equals("MainTable")
 					|| pge.getName().equals("Key")
 					|| pge.getName().equals("FilterPage")
@@ -563,16 +553,16 @@ ActionListener {
 					|| pge.getName().equals("Exportable"))
 				continue;
 
-			System.out.println("printing counting " + i + " name "
-					+ pge.getName());
+			// System.out.println("printing counting " + i + " name "
+			// + pge.getName());
 
 			System.out.println("Page: *******"
 					+ pge.getAttributeValue("internalName"));
 			List AttributePageElements = ((Element) PGElements.get(i))
 					.getChildren();
-			
+
 			for (int j = 0; j < AttributePageElements.size(); j++) {
-				
+
 				Element ape = (Element) AttributePageElements.get(j);
 
 				System.out.println("Attribute Group: "
@@ -582,7 +572,7 @@ ActionListener {
 						.get(j)).getChildren();
 
 				for (int k = 0; k < AttributGroupElements.size(); k++) {
-					
+
 					Element age = (Element) AttributGroupElements.get(k);
 
 					System.out.println("Attribute Collection: "
@@ -592,53 +582,71 @@ ActionListener {
 							.get(k)).getChildren();
 					pane.setBorder(BorderFactory.createLineBorder(Color.black));
 					for (int m = 0; m < AttributeCollectionElements.size(); m++) {
-						
+
 						Element ace = (Element) AttributeCollectionElements
 								.get(m);
-						
+
 						System.out.println("Attribute: "
 								+ ace.getAttributeValue("internalName"));
-						
+
 						List Attribute = ((Element) AttributeCollectionElements
 								.get(m)).getChildren();
 
-						System.out.println("ACE NAME: " + ace.getName());
-						
-						
+						//System.out.println("ACE NAME: " + ace.getName());
+						//System.out.println("TABLE___: "
+							//	+ ace.getAttributeValue("tableConstraint"));
+
 						for (int x = 0; x < cp.length; x++) {
 
 							TextField text = (TextField) cp[x];
-							
-	
-							if (ace.getName().equals(text.getName()))
-							{ ace.setAttribute("buttontext", text.getText()); 
-							
-							System.out.println("FOUND: " + text.getName());
-							
-							valid.add(ace);
+
+							if (ace.getName().equals(text.getName())) {
+								ace.setAttribute("buttontext", text.getText());
+
+								//System.out.println("FOUND: " + text.getName());
+								//System.out.println("after");
+								valid.add(ace);
 							}
 						}
-					}	
+					}
 				}
 			}
-			
-		System.out.println("after");
-		String sql = ("INSERT INTO vs__customer__dm VALUES('"); 
+
+			//System.out.println("HERE______________");
+			sqql = "INSERT INTO vs__customer__dm (customer_id, first_name, surname, date_of_birth, gender_bool) VALUES('";
+			sqqls = "INSERT INTO vs__video__main (title, age_cert) VALUES('";
+
+			for (int z = 0; z < valid.size(); z++) {
+				Element ace = (Element) valid.get(z);
 				
-		for (int z = 0; z < valid.size(); z++) {
-	        Element ace = (Element) valid.get(z);
-	        System.out.println(ace.getAttributeValue("buttontext"));
-	        System.out.println();
-	        sql = sql + ace.getAttributeValue("buttontext") + "', '";
-	    	}
-		
-		int l = sql.lastIndexOf(", '");
-		sql = sql.substring(0, l) + ")";
-	    System.out.println(sql);
+				if (ace.getAttributeValue("tableConstraint").equals("main")) {
+					System.out.println(ace.getAttributeValue("buttontext"));
+					sqqls = sqqls + ace.getAttributeValue("buttontext")
+							+ "', '";
+				} else {
+					System.out.println(ace.getAttributeValue("buttontext"));
+					sqql = sqql + ace.getAttributeValue("buttontext") + "', '";
+				}
+
+			}
+
 		}
-		
+
+		int s = sqql.lastIndexOf(", '");
+		//System.out.println("SQQL: " + sqql);
+		//System.out.println("LAST INDEX SQQL1:" + s);
+		sqql = sqql.substring(0,s) + ")";
+		System.out.println("SQL: " + sqql);
+		//System.out.println("SQQL: " + sqql);
+
+		int q = sqqls.lastIndexOf(", '");
+		//System.out.println("LAST INDEX SQQLS2:" + q);
+		sqqls = sqqls.substring(0,q) + ")";
+		System.out.println("SQL2: " + sqqls);
+
+		submitDatabase(sqql, sqqls);
 	}
-			
+
 	public JPanel getPane() {
 		return pane;
 	}
