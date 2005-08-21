@@ -106,20 +106,34 @@ import com.mysql.jdbc.PreparedStatement;
 public class MartSubmitter extends JFrame implements ActionListener {
 
 	private JDesktopPane desktop;
+
 	static private String user;
+
 	private String database;
+
 	private String schema;
+
 	private static String connection;
+
 	private DatabaseAdaptor adaptor;
+
 	private Preferences prefs = Preferences.userNodeForPackage(this.getClass());
+
 	private DatabaseSettingsDialog databaseDialog = new DatabaseSettingsDialog(
 			prefs);
+
 	private Connection dbConnection;
+
 	protected Clipboard clipboardEditor;
+
 	private static TextField textField1;
+
 	private static Button button;
+
 	private JPanel pane;
+
 	private Document doc;
+
 	public MartSubmitter() {
 
 		// autoconnect on startup
@@ -498,8 +512,8 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		Connection con = null;
 		Statement sts = null;
 
-		//System.out.println(sqql);
-		//System.out.println(sqqls);
+		// System.out.println(sqql);
+		// System.out.println(sqqls);
 
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
@@ -529,13 +543,120 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		}
 	}
 
-	public void actionPerformed(ActionEvent e) {
+	public void createTable() {
+		Element root = doc.getRootElement();
+		setDoc(doc);
+
+		Component[] cp = pane.getComponents();
+		ArrayList valid = new ArrayList();
+		ArrayList tableNames = new ArrayList();
+
+		String sqql = null;
+		String sqqls = null;
+		String tableName = new String();
+		tableName = "";
+		String t = new String();
+		// String tableName2 = new String();
+		int count = 0;
+
+		List PGElements = root.getChildren();
+
+		for (int i = 0; i < PGElements.size(); i++) {
+
+			Element pge = (Element) PGElements.get(i);
+
+			if // (pge.getName().equals("MainTable")
+			(pge.getName().equals("Key") || pge.getName().equals("FilterPage")
+					|| pge.getName().equals("Importable")
+					|| pge.getName().equals("Exportable"))
+				continue;
+
+			if (pge.getName().equals("MainTable")) {
+				tableNames.add(pge.getText());
+				System.out.println("HERE: " + tableNames);
+				System.out.println("addding ..... name " + pge.getName()
+						+ " text " + pge.getText());
+			}
+
+			System.out.println("Page: *******"
+					+ pge.getAttributeValue("internalName"));
+			List AttributePageElements = ((Element) PGElements.get(i))
+					.getChildren();
+
+			for (int j = 0; j < AttributePageElements.size(); j++) {
+
+				Element ape = (Element) AttributePageElements.get(j);
+
+				System.out.println("Attribute Group: "
+						+ ape.getAttributeValue("internalName"));
+
+				List AttributGroupElements = ((Element) AttributePageElements
+						.get(j)).getChildren();
+
+				for (int k = 0; k < AttributGroupElements.size(); k++) {
+
+					Element age = (Element) AttributGroupElements.get(k);
+
+					System.out.println("Attribute Collection: "
+							+ age.getAttributeValue("internalName"));
+
+					List AttributeCollectionElements = ((Element) AttributGroupElements
+							.get(k)).getChildren();
+					pane.setBorder(BorderFactory.createLineBorder(Color.black));
+					for (int m = 0; m < AttributeCollectionElements.size(); m++) {
+
+						Element ace = (Element) AttributeCollectionElements
+								.get(m);
+
+						System.out.println("Attribute: "
+								+ ace.getAttributeValue("internalName"));
+						// System.out.println("ARRAY LIST!!!!!!!!!!: " +
+						// tableNames);
+						if (ace.getAttributeValue("tableConstraint").equals(
+								"main"))
+							// ||
+							// ace.getAttributeValue("tableConstraint").equals("
+							// "))
+
+							continue;
+
+						int c = tableName.compareTo(ace
+								.getAttributeValue("tableConstraint"));
+						System.out.println("COMPARE!!!!!!!" + c);
+						System.out.println("111111: " + tableName);
+						System.out.println("222222: "
+								+ ace.getAttributeValue("tableConstraint"));
+						if (c == 0)
+							// if
+							// (tableName.equals(ace.getAttributeValue("tableConstraint")))
+							System.out.println("IF");
+						else
+							tableNames.add(ace
+									.getAttributeValue("tableConstraint"));
+						tableName = (ace.getAttributeValue("tableConstraint"));
+						System.out.println("after");
+						tableName = ace.getAttributeValue("tableConstraint");
+						System.out.println("after");
+						System.out.println(tableNames);
+						System.out.println(tableName);
+					}
+				}
+			}
+			System.out.println(tableNames);
+		}
+
+	}
+
+	public void createSql() {
+
+		createTable();
 
 		Element root = doc.getRootElement();
 		setDoc(doc);
 
 		Component[] cp = pane.getComponents();
 		ArrayList valid = new ArrayList();
+		ArrayList tableNames = new ArrayList();
 
 		String sqql = null;
 		String sqqls = null;
@@ -554,7 +675,6 @@ public class MartSubmitter extends JFrame implements ActionListener {
 				continue;
 
 			// System.out.println("printing counting " + i + " name "
-			// + pge.getName());
 
 			System.out.println("Page: *******"
 					+ pge.getAttributeValue("internalName"));
@@ -592,10 +712,6 @@ public class MartSubmitter extends JFrame implements ActionListener {
 						List Attribute = ((Element) AttributeCollectionElements
 								.get(m)).getChildren();
 
-						//System.out.println("ACE NAME: " + ace.getName());
-						//System.out.println("TABLE___: "
-							//	+ ace.getAttributeValue("tableConstraint"));
-
 						for (int x = 0; x < cp.length; x++) {
 
 							TextField text = (TextField) cp[x];
@@ -603,22 +719,23 @@ public class MartSubmitter extends JFrame implements ActionListener {
 							if (ace.getName().equals(text.getName())) {
 								ace.setAttribute("buttontext", text.getText());
 
-								//System.out.println("FOUND: " + text.getName());
-								//System.out.println("after");
+								// System.out.println("FOUND: " +
+								// text.getName());
+								// System.out.println("after");
 								valid.add(ace);
 							}
 						}
 					}
 				}
 			}
-
-			//System.out.println("HERE______________");
+			System.out.println(tableNames);
+			// System.out.println("HERE______________");
 			sqql = "INSERT INTO vs__customer__dm (customer_id, first_name, surname, date_of_birth, gender_bool) VALUES('";
 			sqqls = "INSERT INTO vs__video__main (title, age_cert) VALUES('";
 
 			for (int z = 0; z < valid.size(); z++) {
 				Element ace = (Element) valid.get(z);
-				
+
 				if (ace.getAttributeValue("tableConstraint").equals("main")) {
 					System.out.println(ace.getAttributeValue("buttontext"));
 					sqqls = sqqls + ace.getAttributeValue("buttontext")
@@ -633,18 +750,22 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		}
 
 		int s = sqql.lastIndexOf(", '");
-		//System.out.println("SQQL: " + sqql);
-		//System.out.println("LAST INDEX SQQL1:" + s);
-		sqql = sqql.substring(0,s) + ")";
+		// System.out.println("SQQL: " + sqql);
+		// System.out.println("LAST INDEX SQQL1:" + s);
+		sqql = sqql.substring(0, s) + ")";
 		System.out.println("SQL: " + sqql);
-		//System.out.println("SQQL: " + sqql);
+		// System.out.println("SQQL: " + sqql);
 
 		int q = sqqls.lastIndexOf(", '");
-		//System.out.println("LAST INDEX SQQLS2:" + q);
-		sqqls = sqqls.substring(0,q) + ")";
+		// System.out.println("LAST INDEX SQQLS2:" + q);
+		sqqls = sqqls.substring(0, q) + ")";
 		System.out.println("SQL2: " + sqqls);
 
 		submitDatabase(sqql, sqqls);
+	}
+
+	public void actionPerformed(ActionEvent e) {
+		createSql();
 	}
 
 	public JPanel getPane() {
