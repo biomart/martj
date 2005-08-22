@@ -22,74 +22,48 @@ import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.ComponentOrientation;
-import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.TextField;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.ClipboardOwner;
-import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.prefs.Preferences;
 import java.util.zip.GZIPInputStream;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JComponent;
 import javax.swing.JDesktopPane;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
-import javax.swing.SpringLayout;
 import javax.swing.UIManager;
-import javax.swing.border.Border;
-import javax.swing.event.InternalFrameEvent;
-import javax.swing.event.InternalFrameListener;
 
 import org.ensembl.mart.builder.lib.DatabaseAdaptor;
-import org.ensembl.mart.builder.lib.Dataset;
-import org.ensembl.mart.builder.lib.Transformation;
-import org.ensembl.mart.builder.lib.TransformationConfig;
-import org.ensembl.mart.builder.lib.TransformationUnit;
-import org.ensembl.mart.editor.DatasetConfigTreeWidget;
 import org.ensembl.mart.explorer.Feedback;
 import org.ensembl.mart.guiutils.DatabaseSettingsDialog;
-import org.ensembl.mart.lib.DetailedDataSource;
-import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DatabaseDatasetConfigUtils;
-import org.ensembl.mart.lib.config.DatasetConfigXMLUtils;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 import org.xml.sax.InputSource;
 
-import com.mysql.jdbc.PreparedStatement;
+//import com.mysql.jdbc.PreparedStatement;
 
 /**
  * Class MartSubmitter extends JFrame..
@@ -122,7 +96,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 	private DatabaseSettingsDialog databaseDialog = new DatabaseSettingsDialog(
 			prefs);
 
-	private Connection dbConnection;
+	private static Connection dbConnection;
 
 	protected Clipboard clipboardEditor;
 
@@ -133,6 +107,8 @@ public class MartSubmitter extends JFrame implements ActionListener {
 	private JPanel pane;
 
 	private Document doc;
+	
+	
 
 	public MartSubmitter() {
 
@@ -298,10 +274,23 @@ public class MartSubmitter extends JFrame implements ActionListener {
 	}
 
 	public void importDatasetConfig() {
+		
+		
+		
+		String[] datasets = getDatasets();
+		
+		
+		for (int i=0;i<datasets.length; i++){
+			
+			System.out.println("printing "+datasets[i]);
+		}
+		
+		
+		
 		try {
 			disableCursor();
 
-			String[] datasets = getDatasets();
+			
 
 			if (datasets.length == 0) {
 				JOptionPane.showMessageDialog(this,
@@ -425,7 +414,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 	private void getXML(String dataset) {
 		Document doc = null;
 
-		String sql = "select compressed_xml from meta_configuration where dataset='"
+		String sql = "select compressed_xml from "+getAdaptor().getSchema()+".meta_configuration where dataset='"
 				+ dataset + "'";
 
 		java.sql.PreparedStatement ps;
@@ -459,13 +448,14 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 	private String[] getDatasets() {
 
-		String sql = "SELECT dataset from meta_configuration";
+		String sql = "SELECT dataset from "+getAdaptor().getSchema()+".meta_configuration";
 
+		System.out.println("sql = "+sql);		
+		
 		ArrayList datasets = new ArrayList();
 
 		try {
-			PreparedStatement ps = (PreparedStatement) getDbConnection()
-					.prepareStatement(sql);
+			PreparedStatement ps = getDbConnection().prepareStatement(sql);
 
 			ResultSet rs = ps.executeQuery();
 
@@ -500,27 +490,28 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 	}
 
-	public Connection getDbConnection() {
+	private  static Connection getDbConnection() {
 		return dbConnection;
 	}
 
 	public void setDbConnection(Connection dbConnection) {
 		this.dbConnection = dbConnection;
 	}
+	
+	
+	
+	
+	
 
 	public static void submitDatabase(String sqql, String sqqls) {
 		Connection con = null;
 		Statement sts = null;
 
-		// System.out.println(sqql);
-		// System.out.println(sqqls);
+		
 
 		try {
-			Class.forName("com.mysql.jdbc.Driver").newInstance();
-			String url = "jdbc:mysql://localhost.localdomain:3306/video_store";
-			con = DriverManager.getConnection(url, "root", "Monika222");
 
-			sts = con.createStatement();
+			sts = getDbConnection().createStatement();
 			int rss = sts.executeUpdate(sqql);
 			int rss2 = sts.executeUpdate(sqqls);
 		}
@@ -782,5 +773,17 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 	public void setDoc(Document doc) {
 		this.doc = doc;
+	}
+	/**
+	 * @return Returns the adaptor.
+	 */
+	public DatabaseAdaptor getAdaptor() {
+		return adaptor;
+	}
+	/**
+	 * @param adaptor The adaptor to set.
+	 */
+	public void setAdaptor(DatabaseAdaptor adaptor) {
+		this.adaptor = adaptor;
 	}
 }
