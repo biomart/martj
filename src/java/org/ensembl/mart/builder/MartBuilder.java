@@ -570,6 +570,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				break;
 				
 			String extension = "";
+			String extensionTable = "";
+			String extensionCondition = "";
 			String userTableName = "";			
 			// MAIN TABLE - USER TABLE AND PROJECTION/RESTRICTION SETTINGS
 			if (partitionBox.getSelectedObjects() == null){
@@ -602,7 +604,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				userTableName = userTableNameField.getText();
 				
 				if (!extensionField.getText().equals("")){
-					extension = ((String) columnOptions.getSelectedItem())+extensionField.getText();	
+					extension = ((String) columnOptions.getSelectedItem())+extensionField.getText();
+					extensionTable = (String) columnOptions.getSelectedItem();
+					extensionCondition = extensionField.getText();	
 				}
 			}
 			
@@ -740,10 +744,10 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				  referencedTables = resolver.getReferencedTables(tableName);
 				  if (i == 0)
 					transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension,
-						transformationCount, chosenTable, refExtension, 1, transformation);
+						extensionTable, extensionCondition, transformationCount, chosenTable, refExtension, 1, transformation);
 				  else
 				  	transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension,
-				  		transformationCount, chosenTable, refExtension, autoOption, transformation);
+				        extensionTable, extensionCondition,transformationCount, chosenTable, refExtension, autoOption, transformation);
 
 				  dataset.insertChildObject(transformationCount,transformation);	
 				  transformationCount++;
@@ -771,7 +775,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				String[] columnNames = {"%"};
 				Table[] referencedTables = resolver.getReferencedTables(tableName);
 				transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension, 
-								transformationCount, "", "", 1, transformation);
+					extensionTable, extensionCondition,transformationCount, "", "", 1, transformation);
      
 				dataset.insertChildObject(transformationCount,transformation);	
 				transformationCount++;
@@ -837,7 +841,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			
 			  	userTableName = userTableNameField.getText();
 			  	if (!extensionField.getText().equals("")){
-				  extension = ((String) columnOptions.getSelectedItem())+extensionField.getText();	
+				  extension = ((String) columnOptions.getSelectedItem())+extensionField.getText();
+				  extensionTable = (String) columnOptions.getSelectedItem();
+				  extensionCondition = extensionField.getText();	
 			  	}
 			  	else{
 			  	 extension = "";
@@ -931,10 +937,10 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				 	referencedTables = resolver.getReferencedTables(tableName);
 				 	if (i == 0)
 					  transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension,
-						  transformationCount, chosenTable, refExtension, 1, transformation);
+					extensionTable, extensionCondition,transformationCount, chosenTable, refExtension, 1, transformation);
 					else
 					  transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension,
-						  transformationCount, chosenTable, refExtension, autoOption, transformation);
+					extensionTable, extensionCondition,transformationCount, chosenTable, refExtension, autoOption, transformation);
 
 				 	dataset.insertChildObject(transformationCount,transformation);	
 				 	transformationCount++;
@@ -1003,7 +1009,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 
 				Table[] referencedTables = resolver.getReferencedTables(tableName);
 				transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, 
-									extension, transformationCount, "", "", 1, transformation);
+									extension, extensionTable, extensionCondition,transformationCount, "", "", 1, transformation);
 
 				dataset.insertChildObject(transformationCount,transformation);	
 				transformationCount++;
@@ -1052,6 +1058,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
                                 String tableType,
                                 String datasetName,
                                 String centralExtension,
+                                String centralExtensionTable,
+                                String centralExtensionCondition,
                                 int transformationCount,
 								String chosenTable,
                                 String refExtension,
@@ -1063,6 +1071,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	JComboBox[] comboBoxs = new JComboBox[referencedTables.length];
 	JComboBox[] columnOptions = new JComboBox[referencedTables.length];
 	JTextField[] textFields = new JTextField[referencedTables.length];
+	JComboBox[] cenColumnOptions = new JComboBox[referencedTables.length];
+	JTextField[] cenTextFields = new JTextField[referencedTables.length];
 	String refTableType = "reference";
 	
 	if (autoOption != 0){
@@ -1092,7 +1102,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	 	
 	 	Box box1 = new Box(BoxLayout.X_AXIS);
 		Box box2 = new Box(BoxLayout.X_AXIS);
-		Box box3 = new Box(BoxLayout.X_AXIS);				
+		Box box3 = new Box(BoxLayout.X_AXIS);	
+		Box box4 = new Box(BoxLayout.X_AXIS);				
 		checkboxs[i] = new JCheckBox("Include "+referencedTables[i].getName().toUpperCase());
 		checkboxs[i].setSelected(true);
 		JLabel label1 = new JLabel("Cardinality for "+tableName+"."+referencedTables[i].PK+
@@ -1117,6 +1128,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				comboBoxs[i].setSelectedItem(cards.get(referencedTables[i].getName()));
 			}
 		}
+		
 		JLabel label2 = new JLabel("Referenced projection/restriction (optional)");
 		String [] columnNames = {"%"};
 		Column[] refTableCols = resolver.getReferencedColumns(referencedTables[i].getName(),columnNames);
@@ -1126,6 +1138,19 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		}
 		columnOptions[i] = new JComboBox(colNames);	
 		textFields[i] = new JTextField();
+		
+		JLabel label3 = new JLabel("Central projection/restriction (optional)");
+		Column[] centralTableCols = resolver.getCentralTable(tableName).getColumns();
+		String[] cenColNames = new String[centralTableCols.length];
+		for (int j = 0;j < centralTableCols.length; j++){
+			cenColNames[j] = centralTableCols[j].getName();
+		}	
+		cenColumnOptions[i] = new JComboBox(cenColNames);
+		cenTextFields[i] = new JTextField();
+		if (!centralExtensionTable.equals(""))
+			cenColumnOptions[i].setSelectedItem(centralExtensionTable);
+		if (!centralExtensionCondition.equals(""))
+			cenTextFields[i].setText(centralExtensionCondition);	
 		box1.add(checkboxs[i]);
 		box1.add(new JLabel(""));
 		cardinalitySettings.add(box1);
@@ -1137,8 +1162,15 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		box3.add(columnOptions[i]);
 		box3.add(textFields[i]);
 		box3.setMaximumSize(new Dimension(700,30));
+
 		if (refExtension.equals(""))
 			cardinalitySettings.add(box3);
+			
+		box4.add(label3);
+		box4.add(cenColumnOptions[i]);
+		box4.add(cenTextFields[i]);
+		box4.setMaximumSize(new Dimension(700,30));
+		cardinalitySettings.add(box4);	
 		cardinalitySettings.add(Box.createVerticalStrut(20));		
      }
      
@@ -1244,6 +1276,12 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			 extension = ((String) columnOptions[i].getSelectedItem())+textFields[i].getText();	
 		 else
 			extension = "";
+			
+		 if (!cenTextFields[i].getText().equals(""))
+		 	centralExtension = ((String) cenColumnOptions[i].getSelectedItem())+cenTextFields[i].getText();
+		 else
+		 	centralExtension = "";
+		 	
 		 // store cardinalities
 		 cardinalitySecond.put(refTab.getName(),cardinality);
 		 cardinalityFirst.put(tableName,cardinalitySecond);
