@@ -1096,7 +1096,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		checkboxs[i] = new JCheckBox("Include "+referencedTables[i].getName().toUpperCase());
 		checkboxs[i].setSelected(true);
 		JLabel label1 = new JLabel("Cardinality for "+tableName+"."+referencedTables[i].PK+
-									" => "+referencedTables[i].getName()+"."+referencedTables[i].FK);
+									" => "+referencedTables[i].getName()+"."+referencedTables[i].FK+" ("+referencedTables[i].status+")");
 		
 		
 		comboBoxs[i] = new JComboBox(cardinalityOptions);
