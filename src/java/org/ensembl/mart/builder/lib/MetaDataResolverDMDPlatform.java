@@ -34,16 +34,16 @@ public class MetaDataResolverDMDPlatform extends MetaDataResolver {
 		ArrayList exportedTabs= new ArrayList();
 		
 		String currentTable = "";
+		String currentKey = "";
 		
 		try {
 			int i = 0;
 			ResultSet keys = dmd.getExportedKeys(getAdaptor().getCatalog(),getAdaptor().getSchema(),centralTableName);
 			while (keys.next()){
 			
-				//to avoid multiple table when the same table is referenced by multiple keys
-				// may cause some problems when the key is chosen.
-				
-				//if (currentTable.equals(keys.getString(7))) continue;
+				// avoid duplications when table referenced by multiple keys	
+				if (currentTable.equals(keys.getString(7))
+					&& currentKey.equals(keys.getString(4))) continue;
 				
 				Table table = new Table();
 				table.setName(keys.getString(7));
@@ -56,6 +56,7 @@ public class MetaDataResolverDMDPlatform extends MetaDataResolver {
 				table.setColumns(getReferencedColumns(table.getName(), columnNames));
 				exportedTabs.add(table);
 				currentTable=keys.getString(7);
+				currentKey=keys.getString(4);		
 				i++;
 			}
 		} catch (SQLException e) {
