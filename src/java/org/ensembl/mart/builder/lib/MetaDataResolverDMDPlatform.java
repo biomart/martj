@@ -34,7 +34,8 @@ public class MetaDataResolverDMDPlatform extends MetaDataResolver {
 		ArrayList exportedTabs= new ArrayList();
 		
 		String currentTable = "";
-		String currentKey = "";
+		String currentPK = "";
+		String currentFK = "";
 		
 		try {
 			int i = 0;
@@ -43,7 +44,8 @@ public class MetaDataResolverDMDPlatform extends MetaDataResolver {
 			
 				// avoid duplications when table referenced by multiple keys	
 				if (currentTable.equals(keys.getString(7))
-					&& currentKey.equals(keys.getString(4))) continue;
+					&& currentPK.equals(keys.getString(4))
+					&& currentFK.equals(keys.getString(8))) continue;
 				
 				Table table = new Table();
 				table.setName(keys.getString(7));
@@ -56,7 +58,8 @@ public class MetaDataResolverDMDPlatform extends MetaDataResolver {
 				table.setColumns(getReferencedColumns(table.getName(), columnNames));
 				exportedTabs.add(table);
 				currentTable=keys.getString(7);
-				currentKey=keys.getString(4);		
+				currentPK=keys.getString(4);
+				currentFK=keys.getString(8);		
 				i++;
 			}
 		} catch (SQLException e) {
@@ -79,7 +82,8 @@ public class MetaDataResolverDMDPlatform extends MetaDataResolver {
 		ArrayList importedTabs= new ArrayList();
 		
 		String currentTable = "";
-		String currentKey="";
+		String currentPK="";
+		String currentFK="";
 		
 		try {
 			int i = 0;
@@ -88,7 +92,12 @@ public class MetaDataResolverDMDPlatform extends MetaDataResolver {
 				
 				// to avoid multiple table when the same table is referenced by multiple keys
 				// may cause some problems when the key is chosen.
-				if (currentTable.equals(keys.getString(3)) & currentKey.equals(keys.getString(4))) continue;
+				//if (currentTable.equals(keys.getString(3)) & currentKey.equals(keys.getString(4))) continue;
+				
+//				avoid duplications when table referenced by multiple keys	
+							 if (currentTable.equals(keys.getString(7))
+								 && currentPK.equals(keys.getString(4))
+								 && currentFK.equals(keys.getString(8))) continue;
 				
 				Table table = new Table();
 				table.setName(keys.getString(3));
@@ -100,7 +109,8 @@ public class MetaDataResolverDMDPlatform extends MetaDataResolver {
 				table.setColumns(getReferencedColumns(table.getName(), columnNames));
 				importedTabs.add(table);
 				currentTable=keys.getString(3);
-				currentKey=keys.getString(4);
+				currentPK=keys.getString(4);
+				currentFK=keys.getString(8);
 				i++;
 			}
 		} catch (SQLException e) {
