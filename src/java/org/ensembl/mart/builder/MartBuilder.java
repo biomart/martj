@@ -561,7 +561,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			JComboBox tableNameBox = new JComboBox(potentialTables);
 			box1.add(tableNameBox);
 			centralSettings.add(box1);
-			JCheckBox partitionBox = new JCheckBox("Use partitioning");
+			JCheckBox partitionBox = new JCheckBox("Partition into datasets");
 			centralSettings.add(partitionBox);
 			int option2 = JOptionPane.showOptionDialog(this,centralSettings,"Main Table Settings",
 				JOptionPane.DEFAULT_OPTION,JOptionPane.PLAIN_MESSAGE,null,dialogOptions,null);		
@@ -647,8 +647,11 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			}
 					
 			if (partitionBox.getSelectedObjects() != null && tableName != null){
-			   // MAIN TABLE - DO PARTITIONING
-			   ArrayList allCols = new ArrayList();
+			   // MAIN TABLE - DO DATASET PARTITIONING
+			   
+			   // NOT IMPLEMENTED YET
+			   
+			   /*ArrayList allCols = new ArrayList();
 			   Table[] referencedTables = resolver.getReferencedTables(tableName);
 			   int centralSeen = 0;
 			   for (int k = 0; k < referencedTables.length; k++){
@@ -672,8 +675,6 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			  
 			  // moved sql to resolver 
 			   ArrayList allValList=resolver.getDistinctValuesForPartitioning(chosenColumn,chosenTable);
-			   
-			   
 			   
 			   String[] values;
 			   if (allValList.size() > 20){
@@ -704,8 +705,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			   		values = new String[valueList.size()];
 			   		valueList.toArray(values);
 			   }
-			   String mainTablePartition = (String) JOptionPane.showInputDialog(null,"Partition value to use for the main table","",
-			   		JOptionPane.PLAIN_MESSAGE,null,values,null);
+			   //String mainTablePartition = (String) JOptionPane.showInputDialog(null,"Partition value to use for the main table","",
+			   //		JOptionPane.PLAIN_MESSAGE,null,values,null);
 			   		
 			   int autoOption = JOptionPane.showConfirmDialog(null,"Autogenerate each transformation");
 			   
@@ -717,19 +718,21 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				  if (chosenTable.equals(tableName)){
 				  	 // set centralExtension
 				  	 extension = refExtension;
+				  	 extensionTable = extension.split("=")[0];
+				  	 extensionCondition = "="+extension.split("=")[1];		  	 
 				  }	
 				  String tableType,includeCentralFilter;
-				  if (refExtension.equals(mainTablePartition)){	
+				  //if (refExtension.equals(mainTablePartition)){	
 				  	userTableName = (datasetName+"__"+refExtension.split("=")[1]+"__"+"main").toLowerCase();	
 				  	tableType = "m";
 				  	includeCentralFilter = "N";
 				  	dataset.getElement().setAttribute("mainTable",tableName); 	
-				  }
-				  else{
-					userTableName = (datasetName+"__"+refExtension.split("=")[1]+"__"+"dm").toLowerCase();	
-					tableType = "dm";
-					includeCentralFilter = includeCentral;
-				  }
+				  //}
+				  //else{
+				//	userTableName = (datasetName+"__"+refExtension.split("=")[1]+"__"+"dm").toLowerCase();	
+				//	tableType = "dm";
+				//	includeCentralFilter = includeCentral;
+				  //}
 				  Integer tCount = new Integer(transformationCount+1);
 				  //cenColName = "";
 				  //cenColAlias = "";
@@ -742,6 +745,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				  
 				  String[] columnNames = {"%"};	
 				  referencedTables = resolver.getReferencedTables(tableName);
+				  
+				  System.out.println(extension+":"+extensionTable+":"+extensionCondition);
+				  
 				  if (i == 0)
 					transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension,
 						extensionTable, extensionCondition, transformationCount, chosenTable, refExtension, 1, transformation);
@@ -756,7 +762,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 
 				  potentialTables = new String[tableList.size()];	
 				  tableList.keySet().toArray(potentialTables);
-			    } // end of loop
+			    } // end of loop */
 			}
 			else{// MAIN TABLE - NOT PARTITIONED
 				String tableType = "m"; 
@@ -1305,6 +1311,10 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		 if (refColAliases.get(refTab.getName()) != null)
 			refColAlias = (String) refColAliases.get(refTab.getName());
 		 
+		 // if potentially partitioning the central table then include as a candidate in next list
+		 if (!centralExtension.equals("") && refTab.getName().equals(tableName))
+		 	tableList.put(tableName,"m");
+		 	
 		 TransformationUnit transformationUnit = new TransformationUnit();
 		 transformationUnit.getElement().setAttribute("internalName",tunitCount.toString());	
 		 transformationUnit.getElement().setAttribute("referencingType",refTab.status);	
