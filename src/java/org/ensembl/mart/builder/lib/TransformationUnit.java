@@ -28,23 +28,41 @@ public  class TransformationUnit extends ConfigurationBase {
 	protected Table tempStart;
 	protected Table tempEnd;
 	protected Table refTable;
-	
+	private int[] requiredFields = {0,1,2,3,4,7};
 	boolean single =false;
 	
 	public TransformationUnit (Element element){
 		super(element);
-		int[] requiredFields = {0,1,2,3,4,7};
 		setRequiredFields(requiredFields);
 	}
 		
 	public TransformationUnit (){
 		super();
-		int[] requiredFields = {0,1,2,3,4,7};
 		setRequiredFields(requiredFields);
 	}
 	
 	public TransformationUnit(Table ref_table){	
 		this.refTable=ref_table;
+	}
+
+	public TransformationUnit(String internalName,String referencingType,String primaryKey,String referencedTable,
+		String cardinality,String centralProjection,String referencedProjection,String foreignKey,
+		String referenceColumnNames, String referenceColumnAliases,String centralColumnNames, String centralColumnAliases){
+		super();
+		element.setAttribute("internalName",internalName);
+		element.setAttribute("referencingType",referencingType);
+		element.setAttribute("primaryKey",primaryKey);
+		element.setAttribute("referencedTable",referencedTable);
+		element.setAttribute("cardinality",cardinality);
+		element.setAttribute("centralProjection",centralProjection);
+		element.setAttribute("referencedProjection",referencedProjection);
+		element.setAttribute("foreignKey",foreignKey);
+		element.setAttribute("referenceColumnNames",referenceColumnNames);
+		element.setAttribute("referenceColumnAliases",referenceColumnAliases);
+		element.setAttribute("centralColumnNames",centralColumnNames);
+		element.setAttribute("centralColumnAliases",centralColumnAliases);
+			
+		setRequiredFields(requiredFields);
 	}
 
 	void setTempStart(Table tempStart) {

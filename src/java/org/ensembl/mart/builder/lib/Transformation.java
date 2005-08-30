@@ -26,17 +26,26 @@ public class Transformation extends ConfigurationBase {
 	private String targetSchemaName;
 	private Table startTable;
 	boolean central = false;
-	
+	private int[] requiredFields = {0,1,2,3,4};
 	
 	public Transformation (Element element){
 		super(element);
-		int[] requiredFields = {0,1,2,3,4};
 		setRequiredFields(requiredFields);
 	}
 	
 	public Transformation (){
 		super();
-		int[] requiredFields = {0,1,2,3,4};
+		setRequiredFields(requiredFields);
+	}
+
+	public Transformation(String internalName,String tableType,String centralTable,String userTableName,
+		String includeCentralFilter){
+		super();
+		element.setAttribute("internalName",internalName);
+		element.setAttribute("tableType",tableType);
+		element.setAttribute("centralTable",centralTable);
+		element.setAttribute("userTableName",userTableName);
+		element.setAttribute("includeCentralFilter",includeCentralFilter);
 		setRequiredFields(requiredFields);
 	}
 

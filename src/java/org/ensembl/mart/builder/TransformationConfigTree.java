@@ -223,18 +223,15 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 				else if (e.getActionCommand().equals("paste"))
 					paste();
 				else if (e.getActionCommand().equals("insert dataset")) {
-					Dataset ds = new Dataset();
-					ds.getElement().setAttribute("internalName","new");				
+					Dataset ds = new Dataset("new","");			
 					insert(ds, "Dataset:");	
 				}
 				else if (e.getActionCommand().equals("insert transformation")) {
-					Transformation trans = new Transformation();
-					trans.getElement().setAttribute("internalName","new");				
+					Transformation trans = new Transformation("new","","","","");			
 					insert(trans, "Transformation:");	
 				}
 				else if (e.getActionCommand().equals("insert transformation unit")) {
-					TransformationUnit tunit = new TransformationUnit();
-					tunit.getElement().setAttribute("internalName","new");				
+					TransformationUnit tunit = new TransformationUnit("new","","","","","","","","","","","");		
 					insert(tunit, "TransformationUnit:");					
 				}
 				else if (e.getActionCommand().equals("delete"))

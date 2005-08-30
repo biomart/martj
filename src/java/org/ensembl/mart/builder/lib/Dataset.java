@@ -24,6 +24,7 @@ public class Dataset extends ConfigurationBase {
 	private String datasetKey;
 	private String RDBMS;
 	
+	private int[] requiredFields = {0,1}; 
 	/**
 	 * @return Returns the rDBMS.
 	 */
@@ -38,13 +39,18 @@ public class Dataset extends ConfigurationBase {
 	}
 	public Dataset (Element element){
 		super(element);
-		int[] requiredFields = {0,1};
 		setRequiredFields(requiredFields);
 	}
 		
 	public Dataset(){
 		super("Dataset");
-		int[] requiredFields = {0,1};
+		setRequiredFields(requiredFields);
+	}
+	
+	public Dataset(String internalName, String mainTable){
+		super("Dataset");
+		element.setAttribute("internalName",internalName);
+		element.setAttribute("mainTable",mainTable);
 		setRequiredFields(requiredFields);
 	}
 	
