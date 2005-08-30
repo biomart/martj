@@ -553,15 +553,20 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 					//String selnodeName = selnode.getUserObject().getClass().getName();
 					ConfigurationBase newSel = null;// no copy constructor for abstract class
 						
-					if (selnode.getUserObject() instanceof org.ensembl.mart.builder.lib.Transformation)
+					if (selnode.getUserObject() instanceof org.ensembl.mart.builder.lib.Transformation){
 						newSel = (Transformation) sel.copy();
-					else if (selnode.getUserObject() instanceof org.ensembl.mart.builder.lib.TransformationUnit)
+						newSel.getElement().setAttribute("userTableName",sel.getElement().getAttributeValue("userTableName") + "_copy");
+					}else if (selnode.getUserObject() instanceof org.ensembl.mart.builder.lib.TransformationUnit){
 						newSel = (TransformationUnit) sel.copy();
+						newSel.getElement().setAttribute("referencedTable",sel.getElement().getAttributeValue("referencedTable") + "_copy");
+					}
 					else if (selnode.getUserObject() instanceof org.ensembl.mart.builder.lib.Dataset)
 						newSel = (Dataset) sel.copy();
 					
 						
 					newSel.getElement().setAttribute("internalName",sel.getElement().getAttributeValue("internalName") + "_copy");
+					
+					
 					// need to make sure refers to a different object for multiple pastes
 					selnode = new TransformationConfigTreeNode(selnode.name + "_copy",newSel);
 					TransformationConfigTreeNodeSelection ss = new TransformationConfigTreeNodeSelection(selnode);
