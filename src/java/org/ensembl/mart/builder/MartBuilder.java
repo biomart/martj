@@ -491,7 +491,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		
 		cenColName = "";
 		cenColAlias = "";
-
+		int leftJoin = 0;
+		
 		Box box1 = new Box(BoxLayout.X_AXIS);
 		Box box2 = new Box(BoxLayout.X_AXIS);
 		Box box3 = new Box(BoxLayout.X_AXIS);
@@ -781,23 +782,23 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				String[] columnNames = {"%"};
 				Table[] referencedTables = resolver.getReferencedTables(tableName);
 				transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension, 
-					extensionTable, extensionCondition,transformationCount, "", "", 1, transformation);
+					extensionTable, extensionCondition,transformationCount, "", "", 1, leftJoin, transformation);
      
 				dataset.insertChildObject(transformationCount,transformation);	
 				transformationCount++;
 			}
-			// DIMENSION TABLE TRANSFORMATIONS
-			
-			cenColName = "";
-			cenColAlias = "";
-			extension = "";
-			extensionTable = "";
-			extensionCondition = "";
-			
+			// DIMENSION TABLE TRANSFORMATIONS			
 			potentialTables = new String[tableList.size()];	
 			tableList.keySet().toArray(potentialTables);
 			while (tableName != null && tableList.size() > 0){// loop thro while still got candidates
 			  // DIMENSION TABLE - NAME, INCLUDE CENTRAL AND PARTITIOING SETTINGS	
+			  leftJoin = 0;
+			  extension = "";
+			  extensionTable = "";
+			  extensionCondition = "";
+			  cenColName = "";
+			  cenColAlias = "";
+
 			  centralSettings = new Box(BoxLayout.Y_AXIS);
 			  centralSettings.add(Box.createRigidArea(new Dimension(400,1)));		
 			  box1 = new Box(BoxLayout.X_AXIS);
@@ -813,15 +814,19 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			  JComboBox includeCentralBox = new JComboBox(includeCentralFilterOptions);
 			  box3.add( includeCentralBox );
 			  centralSettings.add(box3);
-		  	  partitionBox = new JCheckBox("Use partitioning");
+		  	  partitionBox = new JCheckBox("Use partitioning?");
 		  	  centralSettings.add(partitionBox);
+		  	  JCheckBox leftJoinBox = new JCheckBox("Use left join?");
+		  	  centralSettings.add(leftJoinBox);
 			  int option3 = JOptionPane.showOptionDialog(this,centralSettings,"Central Table Settings",
 				  JOptionPane.DEFAULT_OPTION,JOptionPane.PLAIN_MESSAGE,null,dialogOptions,null);
 			  tableName = tableNameBox.getSelectedItem().toString();
 			  String includeCentralFilters = includeCentralBox.getSelectedItem().toString();
 			  if (option3 == 2)
 				  break;
-				  	
+			  
+			  if (leftJoinBox.getSelectedObjects() != null)
+			  	  	leftJoin = 1;
 			  // DIMENSION TABLE - USER TABLE AND PROJECTION/RESTRICTION SETTINGS
 			  if (partitionBox.getSelectedObjects() == null){
 			  	Box extensionSettings = new Box(BoxLayout.Y_AXIS);
@@ -949,10 +954,10 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 				 	referencedTables = resolver.getReferencedTables(tableName);
 				 	if (i == 0)
 					  transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension,
-					extensionTable, extensionCondition,transformationCount, chosenTable, refExtension, 1, transformation);
+					extensionTable, extensionCondition,transformationCount, chosenTable, refExtension, 1, leftJoin, transformation);
 					else
 					  transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, extension,
-					extensionTable, extensionCondition,transformationCount, chosenTable, refExtension, autoOption, transformation);
+					extensionTable, extensionCondition,transformationCount, chosenTable, refExtension, autoOption, leftJoin, transformation);
 
 				 	dataset.insertChildObject(transformationCount,transformation);	
 				 	transformationCount++;
@@ -1021,8 +1026,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 
 				Table[] referencedTables = resolver.getReferencedTables(tableName);
 				transformation = getCardinalities(referencedTables, tableName, tableType, datasetName, 
-									extension, extensionTable, extensionCondition,transformationCount, "", "", 1, transformation);
+									extension, extensionTable, extensionCondition,transformationCount, "", "", 1, leftJoin, transformation);
 
+	
 				dataset.insertChildObject(transformationCount,transformation);	
 				transformationCount++;
 			
@@ -1075,7 +1081,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
                                 int transformationCount,
 								String chosenTable,
                                 String refExtension,
-                                int autoOption,            
+                                int autoOption,
+                                int leftJoin,            
                                 Transformation transformation){
     
     int unitCount = 0;
@@ -1087,7 +1094,6 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	JTextField[] cenTextFields = new JTextField[referencedTables.length];
 	String refTableType = "reference";
 	
-	System.out.println("AUTO OPTION:"+autoOption);
 	
 	if (autoOption != 0){
 
@@ -1336,10 +1342,30 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		 transformationUnit.getElement().setAttribute("centralColumnNames",cenColName);	
 		 transformationUnit.getElement().setAttribute("centralColumnAliases",cenColAlias);	
 		
-     	 transformation.insertChildObject(unitCount,transformationUnit);
-		
-     	 unitCount++;                           	
+     	 transformation.insertChildObject(unitCount,transformationUnit);	 
+     	 unitCount++;
+     	                          	
      }
+     
+	 //	 if left join chosen
+	 if (leftJoin == 1){
+	 	TransformationUnit extraUnit = new TransformationUnit();
+	 	Integer tunitCount = new Integer(unitCount+1);
+ 	 	extraUnit.getElement().setAttribute("internalName",tunitCount.toString());	
+	 	extraUnit.getElement().setAttribute("referencingType","exported");	
+	 	extraUnit.getElement().setAttribute("primaryKey",resolver.getCentralTable(tableName).PK);
+	 	extraUnit.getElement().setAttribute("referencedTable","main_interim");
+	 	extraUnit.getElement().setAttribute("cardinality","n1r");
+	 	extraUnit.getElement().setAttribute("centralProjection","");			
+	 	extraUnit.getElement().setAttribute("referencedProjection","");
+    	extraUnit.getElement().setAttribute("foreignKey",resolver.getCentralTable(tableName).PK);		
+		extraUnit.getElement().setAttribute("referenceColumnNames",resolver.getCentralTable(tableName).PK);	
+	 	extraUnit.getElement().setAttribute("referenceColumnAliases","");	
+	 	extraUnit.getElement().setAttribute("centralColumnNames","");	
+	 	extraUnit.getElement().setAttribute("centralColumnAliases","");	
+	 	transformation.insertChildObject(unitCount,extraUnit);
+	 } // end of left join
+     
 	 if (transformation.getChildObjects().length == 0){// no ref tables for this transformation
 		TransformationUnit transformationUnit = new TransformationUnit();
 		transformationUnit.getElement().setAttribute("internalName","1");
