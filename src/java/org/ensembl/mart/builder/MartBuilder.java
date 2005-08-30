@@ -790,6 +790,10 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			
 			cenColName = "";
 			cenColAlias = "";
+			extension = "";
+			extensionTable = "";
+			extensionCondition = "";
+			
 			potentialTables = new String[tableList.size()];	
 			tableList.keySet().toArray(potentialTables);
 			while (tableName != null && tableList.size() > 0){// loop thro while still got candidates
@@ -927,6 +931,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 					if (chosenTable.equals(tableName)){
 					   // set centralExtension
 					   extension = refExtension;
+					   extensionTable = refExtension.split("=")[0];
+					   extensionCondition = refExtension.split("=")[1];
 					}	
 					
 					userTableName = (datasetName+"__"+refExtension.split("=")[1]+"__"+"dm").toLowerCase();	
@@ -1080,6 +1086,8 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	JComboBox[] cenColumnOptions = new JComboBox[referencedTables.length];
 	JTextField[] cenTextFields = new JTextField[referencedTables.length];
 	String refTableType = "reference";
+	
+	System.out.println("AUTO OPTION:"+autoOption);
 	
 	if (autoOption != 0){
 
@@ -1259,8 +1267,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 	
      for (int i = 0; i < referencedTables.length; i++){
 		 Table refTab = referencedTables[i];
-	  	 
-		 
+	  	 		 
 		 // we need to keep central table for recursive transformations
 		 if (refTab.getName().equals(tableName) && seenCentralTable) continue;	
 		 if (refTab.getName().equals(tableName)) seenCentralTable=true;
@@ -1271,34 +1278,34 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
      	 	cardinality = comboBoxs[i].getSelectedItem().toString();
      	 }
 		 else{
-			HashMap cards = (HashMap) cardinalityFirst.get(tableName);
+		 	HashMap cards = (HashMap) cardinalityFirst.get(tableName);
 			cardinality = (String) cards.get(referencedTables[i].getName());		 	
 		 }
 		 String extension;
-		 
 		 if (referencedTables[i].getName().equals(chosenTable))
 			extension = refExtension;
 		 else if (autoOption != 0 && !textFields[i].getText().equals(""))
 			 extension = ((String) columnOptions[i].getSelectedItem())+textFields[i].getText();	
 		 else
 			extension = "";
-			
-		 if (!cenTextFields[i].getText().equals(""))
+		 	
+		 if (cenTextFields[i] != null && !cenTextFields[i].getText().equals(""))
 		 	centralExtension = ((String) cenColumnOptions[i].getSelectedItem())+cenTextFields[i].getText();
 		 else
 		 	centralExtension = "";
-		 	
+		 
 		 // store cardinalities
 		 cardinalitySecond.put(refTab.getName(),cardinality);
 		 cardinalityFirst.put(tableName,cardinalitySecond);
-  		
-		 if (autoOption != 0 && checkboxs[i].getSelectedObjects() == null  || cardinality.equals("1n")){
+		
+		 if (autoOption != 0 && 
+		 		((checkboxs[i].getSelectedObjects() == null && !refTab.getName().equals(tableName)) || cardinality.equals("1n"))){
 			if (tableType.equals("m") || refTableType.equals("deepReference")){
 		 		tableList.put(refTab.getName(),refTableType);
 			}
 		 	continue;
 		 }
-		 	
+			
 		 if (!tableType.equals("m"))
 		 	tableList.remove(tableName);
 	
@@ -1310,11 +1317,11 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 			refColName = (String) refColNames.get(refTab.getName());
 		 if (refColAliases.get(refTab.getName()) != null)
 			refColAlias = (String) refColAliases.get(refTab.getName());
-		 
+		
 		 // if potentially partitioning the central table then include as a candidate in next list
 		 if (!centralExtension.equals("") && refTab.getName().equals(tableName))
 		 	tableList.put(tableName,"m");
-		 	
+			
 		 TransformationUnit transformationUnit = new TransformationUnit();
 		 transformationUnit.getElement().setAttribute("internalName",tunitCount.toString());	
 		 transformationUnit.getElement().setAttribute("referencingType",refTab.status);	
@@ -1328,8 +1335,9 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 		 transformationUnit.getElement().setAttribute("referenceColumnAliases",refColAlias);	
 		 transformationUnit.getElement().setAttribute("centralColumnNames",cenColName);	
 		 transformationUnit.getElement().setAttribute("centralColumnAliases",cenColAlias);	
-     	 
+		
      	 transformation.insertChildObject(unitCount,transformationUnit);
+		
      	 unitCount++;                           	
      }
 	 if (transformation.getChildObjects().length == 0){// no ref tables for this transformation
