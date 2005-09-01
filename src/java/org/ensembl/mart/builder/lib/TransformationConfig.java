@@ -27,5 +27,9 @@ public class TransformationConfig extends ConfigurationBase {
 		super("TransformationConfig");
 	}
 	
-	
+	public TransformationConfig(String internalName){
+		super("TransformationConfig");
+		element.setAttribute("internalName",internalName);
+	}
+
 }
