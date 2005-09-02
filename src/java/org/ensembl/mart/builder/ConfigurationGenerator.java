@@ -549,7 +549,7 @@ public class ConfigurationGenerator {
      
 	   Box cardinalitySettings = new Box(BoxLayout.Y_AXIS);	
      
-	   String[] cardinalityOptions = new String[] {"1n","11","n1","0n","n1r"};
+	   String[] cardinalityOptions = new String[] {"11","n1","1n","0n","n1r"};
 	 
 	 
 	   boolean seenTable=false;
@@ -565,7 +565,7 @@ public class ConfigurationGenerator {
 		  Box box3 = new Box(BoxLayout.X_AXIS);	
 		  Box box4 = new Box(BoxLayout.X_AXIS);				
 		  checkboxs[i] = new JCheckBox("Include "+referencedTables[i].getName().toUpperCase());
-		  checkboxs[i].setSelected(true);
+		  checkboxs[i].setSelected(false);
 		  JLabel label1 = new JLabel("Cardinality for "+tableName+"."+referencedTables[i].PK+
 									  " => "+referencedTables[i].getName()+"."+referencedTables[i].FK+" ("+referencedTables[i].status+")");
 		
