@@ -549,7 +549,7 @@ public class ConfigurationGenerator {
      
 	   Box cardinalitySettings = new Box(BoxLayout.Y_AXIS);	
      
-	   String[] cardinalityOptions = new String[] {"11","1n","n1","0n","n1r"};
+	   String[] cardinalityOptions = new String[] {"1n","11","n1","0n","n1r"};
 	 
 	 
 	   boolean seenTable=false;
