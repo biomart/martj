@@ -4,7 +4,7 @@
  * To change the template for this generated file go to
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-package org.ensembl.mart.builder.lib;
+package org.ensembl.mart.builder;
 
 import java.awt.Dimension;
 import java.util.ArrayList;
@@ -19,7 +19,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
-import org.ensembl.mart.builder.MartBuilder;
+import org.ensembl.mart.builder.lib.Column;
+import org.ensembl.mart.builder.lib.DatabaseAdaptor;
+import org.ensembl.mart.builder.lib.Dataset;
+import org.ensembl.mart.builder.lib.MetaDataResolver;
+import org.ensembl.mart.builder.lib.Table;
+import org.ensembl.mart.builder.lib.Transformation;
+import org.ensembl.mart.builder.lib.TransformationConfig;
+import org.ensembl.mart.builder.lib.TransformationUnit;
 
 import java.sql.Connection;
 
