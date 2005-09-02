@@ -49,7 +49,9 @@ public class ConfigurationGenerator {
 	private String partitionExtension;
 	private int leftJoin = 0;
 	private String[] dialogOptions =
-		new String[] { "Continue", "Select columns", "Finish" };
+		new String[] { "Continue", "Select columns", "Finish"};
+	private String[] extendedDialogOptions = new String[] { "Continue", "Select columns", "Finish","Skip"};
+	
 	private String[] standardOptions = new String[] { "OK", "Cancel" };
 	private String[] includeCentralFilterOptions = new String[] { "N", "Y" };
 
@@ -305,21 +307,31 @@ public class ConfigurationGenerator {
 					JOptionPane.showOptionDialog(
 						null,
 						centralSettings,
-						"Central Table Settings",
+						"Dimension Table Settings",
 						JOptionPane.DEFAULT_OPTION,
 						JOptionPane.PLAIN_MESSAGE,
 						null,
-						dialogOptions,
+						extendedDialogOptions,
 						null);
 
 				centralTableName = tableNameBox.getSelectedItem().toString();
 				String includeCentralFilters =
 					includeCentralBox.getSelectedItem().toString();
 
+				if (option3 == 3 ){
+					
+					// you can skip candidates here
+					tableList.remove(centralTableName);
+					potentialTables = new String[tableList.size()];
+					tableList.keySet().toArray(potentialTables);
+					continue; // next dimension table candidate	
+					
+				}
 				if (option3 == 2)
 					break;
 				if (option3 == 1)
 					chooseColumns(centralTableName);
+				
 
 				if (leftJoinBox.getSelectedObjects() != null)
 					leftJoin = 1;
@@ -646,7 +658,7 @@ public class ConfigurationGenerator {
 			Box cardinalitySettings = new Box(BoxLayout.Y_AXIS);
 
 			String[] cardinalityOptions =
-				new String[] { "11", "n1", "1n", "0n", "n1r" };
+				new String[] { "1n", "11", "n1", "0n", "n1r" };
 
 			boolean seenTable = false;
 			
@@ -667,7 +679,7 @@ public class ConfigurationGenerator {
 					new JCheckBox(
 						"Include "
 							+ referencedTables[i].getName().toUpperCase());
-				checkboxs[i].setSelected(false);
+				checkboxs[i].setSelected(true);
 				JLabel label1 =
 					new JLabel(
 						"Cardinality for "
@@ -764,7 +776,7 @@ public class ConfigurationGenerator {
 			scrollPane.setPreferredSize(minimumSize);
 
 			String[] dialogOptions =
-				new String[] { "Continue", "Select columns", "Cancel" };
+				new String[] { "Continue", "Select columns", "Cancel"};
 
 			int option =
 				JOptionPane.showOptionDialog(
