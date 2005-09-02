@@ -28,11 +28,10 @@ import org.ensembl.mart.builder.lib.Transformation;
 import org.ensembl.mart.builder.lib.TransformationConfig;
 import org.ensembl.mart.builder.lib.TransformationUnit;
 
-import java.sql.Connection;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+//import java.sql.Connection;
+//import java.sql.PreparedStatement;
+//import java.sql.ResultSet;
+//import java.sql.SQLException;
 
 /**
  * @author damian@ebi.ac.uk
@@ -68,7 +67,7 @@ public class ConfigurationGenerator {
   		adaptor = MartBuilder.getAdaptor();
   	}
 
-	public TransformationConfig createConfig() throws SQLException{
+	public TransformationConfig createConfig() {
 		  // TRANSFORMATION CONFIG SETTINGS		
 		  String tConfigName = JOptionPane.showInputDialog("Transformation config name","test");
 		  if (tConfigName == null)
@@ -337,17 +336,23 @@ public class ConfigurationGenerator {
 					  String[] chosenOptions = colsOption.split("\\.+");
 					  String chosenTable = chosenOptions[0];
 					  String chosenColumn = chosenOptions[1];
-					  Connection conn = adaptor.getCon();
-					  String sql = "SELECT DISTINCT "+chosenColumn+" FROM "+adaptor.getSchema()+"."+chosenTable
-						  +" WHERE "+chosenColumn+" IS NOT NULL";
-					  ArrayList allValList = new ArrayList();
 					  
-					  PreparedStatement ps = conn.prepareStatement(sql);
-					  ResultSet rs = ps.executeQuery();
+					  
+					  // now re-using getDistinct call from resolver
+					  
+					  //Connection conn = adaptor.getCon();
+					  //String sql = "SELECT DISTINCT "+chosenColumn+" FROM "+adaptor.getSchema()+"."+chosenTable
+						//  +" WHERE "+chosenColumn+" IS NOT NULL";
+					  //ArrayList allValList = new ArrayList();
+					  
+					  ArrayList allValList=resolver.getDistinctValuesForPartitioning(chosenColumn,chosenTable);
+					  
+					  //PreparedStatement ps = conn.prepareStatement(sql);
+					  //ResultSet rs = ps.executeQuery();
 				
-					  while (rs.next()){
-						allValList.add(rs.getString(1));
-					  }
+					  //while (rs.next()){
+						//allValList.add(rs.getString(1));
+					  //}
 					  
 					  String[] values;
 					  if (allValList.size() > 20){

@@ -71,18 +71,29 @@ public abstract class MetaDataResolver {
 	
 	
 	
-	public String [] getAllTableNames () throws SQLException{
+	public String [] getAllTableNames () {
 		
 		String [] types = {"TABLE"};
 		ArrayList nameList = new ArrayList();
 		
 		int i = 0;
 		// types filter doesn't work
-		ResultSet resultNames = dmd.getTables(getAdaptor().getCon().getCatalog(),getAdaptor().getSchema(),"%",types);
+		ResultSet resultNames;
+		try {
+			resultNames = dmd.getTables(getAdaptor().getCon().getCatalog(),getAdaptor().getSchema(),"%",types);
+		
 		while (resultNames.next()){
 			nameList.add(resultNames.getString(3));
 			i++;
 		}
+		
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
 		String[] names = new String[nameList.size()];
 		nameList.toArray(names);
 		

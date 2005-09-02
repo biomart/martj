@@ -466,17 +466,17 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
   }
   
   private void createConfig(){
-  	try{
+  	//try{
   		ConfigurationGenerator configGenerator = new ConfigurationGenerator();
   		TransformationConfig tConfig = configGenerator.createConfig();
 		TransformationConfigTreeWidget frame = new TransformationConfigTreeWidget(null, this, tConfig, null, null,
 				null, null);
 		frame.setVisible(true);
 		desktop.add(frame);
-  	}
-  	catch(SQLException e){
-  		System.out.println("SQL Exception "+e.toString());
-  	}
+  	//}
+  	//catch(SQLException e){
+  	//	System.out.println("SQL Exception "+e.toString());
+  	//}
   }
   
   private void createDDL(){
