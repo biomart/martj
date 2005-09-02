@@ -288,7 +288,7 @@ public class ConfigurationGenerator {
 				box1 = new Box(BoxLayout.X_AXIS);
 				Box box2 = new Box(BoxLayout.X_AXIS);
 				Box box3 = new Box(BoxLayout.X_AXIS);
-				label1 = new JLabel("Central table name");
+				label1 = new JLabel("Dimension table candidate ");
 				box1.add(label1);
 				tableNameBox = new JComboBox(potentialTables);
 				box1.add(tableNameBox);
