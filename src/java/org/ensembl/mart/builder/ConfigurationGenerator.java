@@ -88,7 +88,7 @@ public class ConfigurationGenerator {
 			Box centralSettings = new Box(BoxLayout.Y_AXIS);
 			centralSettings.add(Box.createRigidArea(new Dimension(400, 1)));
 			Box box1 = new Box(BoxLayout.X_AXIS);
-			JLabel label1 = new JLabel("Main table name");
+			JLabel label1 = new JLabel("Name  ");
 			box1.add(label1);
 			JComboBox tableNameBox = new JComboBox(potentialTables);
 			box1.add(tableNameBox);
@@ -288,7 +288,7 @@ public class ConfigurationGenerator {
 				box1 = new Box(BoxLayout.X_AXIS);
 				Box box2 = new Box(BoxLayout.X_AXIS);
 				Box box3 = new Box(BoxLayout.X_AXIS);
-				label1 = new JLabel("Dimension table candidate ");
+				label1 = new JLabel("Name  ");
 				box1.add(label1);
 				tableNameBox = new JComboBox(potentialTables);
 				box1.add(tableNameBox);
@@ -882,8 +882,12 @@ public class ConfigurationGenerator {
 			if (refTab.getName().equals(centralTableName))
 				seenCentralTable = true;
 			
-			if (checkboxs[i].getSelectedObjects() == null)
-				continue;
+			//System.out.println("table "+i+" "+refTab.getName());
+			
+			// switched this off for now as it breaks
+			
+			//if (checkboxs[i].getSelectedObjects() == null)
+			//	continue;
 			
 			String cardinality;
 			if (manualChoose != 0) {
