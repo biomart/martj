@@ -32,7 +32,6 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.util.prefs.Preferences;
-import java.sql.SQLException;
 
 import javax.swing.ImageIcon;
 import javax.swing.JDesktopPane;
