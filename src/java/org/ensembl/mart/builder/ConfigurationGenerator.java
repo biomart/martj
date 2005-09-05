@@ -648,7 +648,8 @@ public class ConfigurationGenerator {
 		JComboBox[] cenColumnOptions = new JComboBox[referencedTables.length];
 		JTextField[] cenTextFields = new JTextField[referencedTables.length];
 		String refTableType = "reference";
-
+		JCheckBox mainKeepSetting = new JCheckBox("Allow main table to be used for dimension transformations");
+		
 		if (manualChoose != 0) {
 
 			if (tableType.equals("m"))
@@ -770,6 +771,9 @@ public class ConfigurationGenerator {
 				&& !tableList.get(centralTableName).equals("deepReference")) {
 				cardinalitySettings.add(depthSetting);
 			}
+
+			if (tableType.equals("m"))
+				cardinalitySettings.add(mainKeepSetting);
 
 			JScrollPane scrollPane = new JScrollPane(cardinalitySettings);
 			Dimension minimumSize = new Dimension(700, 500);
@@ -895,7 +899,6 @@ public class ConfigurationGenerator {
 			} else {
 				HashMap cards = (HashMap) cardinalityFirst.get(centralTableName);
 				cardinality = (String) cards.get(referencedTables[i].getName());
-				System.out.println("AUTOMATED cardinality for "+refTab.getName()+":"+cardinality);
 				// if cardinality null means this table was not checked - hence skip
 				if (cardinality == null)
 					continue;	
@@ -919,10 +922,6 @@ public class ConfigurationGenerator {
 			cardinalitySecond.put(refTab.getName(), cardinality);
 			cardinalityFirst.put(centralTableName, cardinalitySecond);
 
-			//if (manualChoose != 0
-			//	&& ((checkboxs[i].getSelectedObjects() == null
-			//		&& !refTab.getName().equals(centralTableName))
-			//		|| cardinality.equals("1n"))) {
 			if (manualChoose != 0 && cardinality.equals("1n")){
 				if (tableType.equals("m")
 					|| refTableType.equals("deepReference")) {
@@ -943,9 +942,7 @@ public class ConfigurationGenerator {
 			if (refColAliases.get(refTab.getName()) != null)
 				refColAlias = (String) refColAliases.get(refTab.getName());
 
-			// if potentially partitioning the central table then include as a candidate in next list
-			if ((!centralExtension.equals("") || !referencedExtension.equals(""))
-				&& refTab.getName().equals(centralTableName))
+			if (refTab.getName().equals(centralTableName) && mainKeepSetting.getSelectedObjects() != null)
 				tableList.put(centralTableName, "m");
 
 			TransformationUnit transformationUnit =
