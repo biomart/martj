@@ -882,12 +882,12 @@ public class ConfigurationGenerator {
 			if (refTab.getName().equals(centralTableName))
 				seenCentralTable = true;
 			
-			//System.out.println("table "+i+" "+refTab.getName());
-			
-			// switched this off for now as it breaks
-			
-			//if (checkboxs[i].getSelectedObjects() == null)
-			//	continue;
+			if (manualChoose != 0 && checkboxs[i].getSelectedObjects() == null){
+				tableList.remove(refTab.getName());// remove from the candidate list if present
+				HashMap cards = (HashMap) cardinalityFirst.get(centralTableName);
+				cards.remove(referencedTables[i].getName());
+				continue;
+			}
 			
 			String cardinality;
 			if (manualChoose != 0) {
@@ -895,7 +895,11 @@ public class ConfigurationGenerator {
 			} else {
 				HashMap cards = (HashMap) cardinalityFirst.get(centralTableName);
 				cardinality = (String) cards.get(referencedTables[i].getName());
-			}
+				System.out.println("AUTOMATED cardinality for "+refTab.getName()+":"+cardinality);
+				// if cardinality null means this table was not checked - hence skip
+				if (cardinality == null)
+					continue;	
+			}		
 			
 			String referencedExtension = "";
 			if (refTab.getName().equals(chosenTable))
