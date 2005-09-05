@@ -45,7 +45,9 @@ public class ConfigurationGenerator {
 	private String cenColAlias = "";
 	private String userTableName;
 	private String centralExtensionColumn;
-	private String centralExtensionCondition;
+	//private String centralExtensionCondition;
+	private String centralExtensionOperator;
+	private String centralExtensionValue;
 	private String partitionExtension;
 	private int leftJoin = 0;
 	private String[] dialogOptions =
@@ -54,7 +56,7 @@ public class ConfigurationGenerator {
 	
 	private String[] standardOptions = new String[] { "OK", "Cancel" };
 	private String[] includeCentralFilterOptions = new String[] { "N", "Y" };
-
+	private String[] opOptions = new String [] {"=",">","<",">=","<=","like"};
 	private MetaDataResolver resolver;
 	private String schema;
 	private DatabaseAdaptor adaptor;
@@ -114,7 +116,10 @@ public class ConfigurationGenerator {
 
 			partitionExtension = "";
 			centralExtensionColumn = "";
-			centralExtensionCondition = "";
+			//centralExtensionCondition = "";
+			centralExtensionOperator = "";
+			centralExtensionValue = "";
+			
 			userTableName = "";
 
 			if (partitionBox.getSelectedObjects() == null) {
@@ -279,7 +284,9 @@ public class ConfigurationGenerator {
 				leftJoin = 0;
 				partitionExtension = "";
 				centralExtensionColumn = "";
-				centralExtensionCondition = "";
+				//centralExtensionCondition = "";
+				centralExtensionOperator = "";
+				centralExtensionValue = "";
 				cenColName = "";
 				cenColAlias = "";
 
@@ -469,8 +476,14 @@ public class ConfigurationGenerator {
 
 						if (chosenTable.equals(centralTableName)) {
 							centralExtensionColumn = partitionExtension.split("=")[0];
-							centralExtensionCondition = "=" + partitionExtension.split("=")[1];
+							//centralExtensionCondition = "=" + partitionExtension.split("=")[1];
+							centralExtensionValue = partitionExtension.split("=")[1];
+							centralExtensionOperator = "=";
 							partitionExtension = "";
+						}
+						else{
+							partitionExtension = partitionExtension.split("=")[0]
+								+ "='" + partitionExtension.split("=")[1] + "'";
 						}
 
 						String tableType = "d";
@@ -606,6 +619,10 @@ public class ConfigurationGenerator {
 		}
 		JComboBox columnOptions = new JComboBox(colNames);
 		box2.add(columnOptions);
+		
+		JComboBox operatorOptions = new JComboBox(opOptions);
+		box2.add(operatorOptions);
+		
 		JTextField extensionField = new JTextField();
 		box2.add(extensionField);
 		extensionSettings.add(box2);
@@ -626,7 +643,9 @@ public class ConfigurationGenerator {
 				//((String) columnOptions.getSelectedItem())
 					//+ extensionField.getText();
 			centralExtensionColumn = (String) columnOptions.getSelectedItem();
-			centralExtensionCondition = extensionField.getText();
+			//centralExtensionCondition = extensionField.getText();
+			centralExtensionOperator = (String) operatorOptions.getSelectedItem();
+			centralExtensionValue = extensionField.getText();
 		}
 	}
 
@@ -644,8 +663,10 @@ public class ConfigurationGenerator {
 		JCheckBox[] checkboxs = new JCheckBox[referencedTables.length];
 		JComboBox[] comboBoxs = new JComboBox[referencedTables.length];
 		JComboBox[] columnOptions = new JComboBox[referencedTables.length];
+		JComboBox[] operatorOptions = new JComboBox[referencedTables.length];
 		JTextField[] textFields = new JTextField[referencedTables.length];
 		JComboBox[] cenColumnOptions = new JComboBox[referencedTables.length];
+		JComboBox[] cenOperatorOptions = new JComboBox[referencedTables.length];
 		JTextField[] cenTextFields = new JTextField[referencedTables.length];
 		String refTableType = "reference";
 		JCheckBox mainKeepSetting = new JCheckBox("Allow main table to be used for dimension transformations");
@@ -700,7 +721,7 @@ public class ConfigurationGenerator {
 				HashMap cards =
 					(HashMap) cardinalityFirst.get(
 						referencedTables[i].getName());
-				if (cards != null) {
+				if (cards != null && cards.get(centralTableName) != null) {
 					String cardSetting = (String) cards.get(centralTableName);
 					if (cardSetting.equals("1n"))
 						cardSetting = "n1";
@@ -727,6 +748,7 @@ public class ConfigurationGenerator {
 					colNames[j] = refTableCols[j].getName();
 				}
 				columnOptions[i] = new JComboBox(colNames);
+				operatorOptions[i] = new JComboBox(opOptions);
 				textFields[i] = new JTextField();
 
 				JLabel label3 =
@@ -738,11 +760,14 @@ public class ConfigurationGenerator {
 					cenColNames[j] = centralTableCols[j].getName();
 				}
 				cenColumnOptions[i] = new JComboBox(cenColNames);
+				cenOperatorOptions[i] = new JComboBox(opOptions);
 				cenTextFields[i] = new JTextField();
 				if (!centralExtensionColumn.equals(""))
 					cenColumnOptions[i].setSelectedItem(centralExtensionColumn);
-				if (!centralExtensionCondition.equals(""))
-					cenTextFields[i].setText(centralExtensionCondition);
+				if (!centralExtensionOperator.equals(""))
+					cenOperatorOptions[i].setSelectedItem(centralExtensionOperator);	
+				if (!centralExtensionValue.equals(""))
+					cenTextFields[i].setText(centralExtensionValue);
 				box1.add(checkboxs[i]);
 				box1.add(new JLabel(""));
 				cardinalitySettings.add(box1);
@@ -752,12 +777,14 @@ public class ConfigurationGenerator {
 				cardinalitySettings.add(box2);
 				box3.add(label2);
 				box3.add(columnOptions[i]);
+				box3.add(operatorOptions[i]);
 				box3.add(textFields[i]);
 				box3.setMaximumSize(new Dimension(700, 30));
 				if (partitionExtension.equals(""))
 					cardinalitySettings.add(box3);
 				box4.add(label3);
 				box4.add(cenColumnOptions[i]);
+				box4.add(cenOperatorOptions[i]);
 				box4.add(cenTextFields[i]);
 				box4.setMaximumSize(new Dimension(700, 30));
 				cardinalitySettings.add(box4);
@@ -910,14 +937,16 @@ public class ConfigurationGenerator {
 			else if (manualChoose != 0 && !textFields[i].getText().equals(""))
 				referencedExtension =
 					((String) columnOptions[i].getSelectedItem())
-						+ textFields[i].getText();
+					+ ((String) operatorOptions[i].getSelectedItem())
+					+ "'" + textFields[i].getText() + "'";
 
 			String centralExtension = "";
 			if (cenTextFields[i] != null
 				&& !cenTextFields[i].getText().equals(""))
 				centralExtension =
 					((String) cenColumnOptions[i].getSelectedItem())
-						+ cenTextFields[i].getText();
+					 + ((String) cenOperatorOptions[i].getSelectedItem())
+					 + "'"+cenTextFields[i].getText()+"'";
 			
 			cardinalitySecond.put(refTab.getName(), cardinality);
 			cardinalityFirst.put(centralTableName, cardinalitySecond);
@@ -994,7 +1023,7 @@ public class ConfigurationGenerator {
 								"",
 								"",
 								"",
-								centralExtensionColumn+centralExtensionCondition,
+								centralExtensionColumn+centralExtensionOperator+"'"+centralExtensionValue+"'",
 								"",
 								"",
 								"",
