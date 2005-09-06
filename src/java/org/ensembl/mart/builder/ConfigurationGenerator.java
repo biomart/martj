@@ -951,7 +951,7 @@ public class ConfigurationGenerator {
 			cardinalitySecond.put(refTab.getName(), cardinality);
 			cardinalityFirst.put(centralTableName, cardinalitySecond);
 
-			if (manualChoose != 0 && cardinality.equals("1n")){
+			if (cardinality.equals("1n")){	
 				if (tableType.equals("m")
 					|| refTableType.equals("deepReference")) {
 					tableList.put(refTab.getName(), refTableType);
