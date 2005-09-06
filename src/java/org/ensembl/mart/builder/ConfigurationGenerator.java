@@ -528,7 +528,12 @@ public class ConfigurationGenerator {
 						transformationCount++;
 
 					} // end of loop
-					tableList.remove(centralTableName);
+					
+					int keep = JOptionPane.showConfirmDialog(null,"Keep "+centralTableName+ 
+						" for further partitioning?");
+					if (keep == 0)
+						tableList.put(centralTableName,"reference");
+					
 					potentialTables = new String[tableList.size()];
 					tableList.keySet().toArray(potentialTables);
 					continue; // next dimension table candidate	
