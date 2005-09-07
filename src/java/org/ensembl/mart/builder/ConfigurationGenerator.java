@@ -63,7 +63,7 @@ public class ConfigurationGenerator implements ItemListener{
 	private String schema;
 	private DatabaseAdaptor adaptor;
 	
-	private JComboBox tableOptions, pK, fK, extSchema;
+	private JComboBox tableOptions, pK, fK, extSchema, dmTableNameBox, partitionColsOption;
 
 	public ConfigurationGenerator() {
 		resolver = MartBuilder.getResolver();
@@ -82,22 +82,21 @@ public class ConfigurationGenerator implements ItemListener{
 		int datasetContinueOption = 0;
 		while (datasetContinueOption != 1) {
 			int transformationCount = 0;
-			// DATASET SETTINGS
-			String datasetName =
-				JOptionPane.showInputDialog("Dataset name", "test");
-			if (datasetName == null)
-				return tConfig;
-			Dataset dataset = new Dataset(datasetName, "");
-
-			// MAIN TABLE - NAME AND PARTITIONING SETTINGS 
+			// MAIN TABLE - DATASET, MAIN TABLE NAME AND PARTITIONING SETTINGS 
 			String[] potentialTables = resolver.getAllTableNames();
 			Box centralSettings = new Box(BoxLayout.Y_AXIS);
 			centralSettings.add(Box.createRigidArea(new Dimension(400, 1)));
+			Box box2 = new Box(BoxLayout.X_AXIS);
+			JLabel label2 = new JLabel("Dataset name");
+			JTextField datasetField = new JTextField("test");
+			box2.add(label2);
+			box2.add(datasetField);
 			Box box1 = new Box(BoxLayout.X_AXIS);
 			JLabel label1 = new JLabel("Name  ");
 			box1.add(label1);
 			JComboBox tableNameBox = new JComboBox(potentialTables);
 			box1.add(tableNameBox);
+			centralSettings.add(box2);
 			centralSettings.add(box1);
 			JCheckBox partitionBox = new JCheckBox("Partition into datasets");
 			centralSettings.add(partitionBox);
@@ -111,6 +110,11 @@ public class ConfigurationGenerator implements ItemListener{
 					null,
 					dialogOptions,
 					null);
+					
+			String datasetName = datasetField.getText();							
+			if (datasetName == null)
+				return tConfig;
+			Dataset dataset = new Dataset(datasetName, "");
 
 			String centralTableName = tableNameBox.getSelectedItem().toString();
 			if (option2 == 2)
@@ -297,12 +301,13 @@ public class ConfigurationGenerator implements ItemListener{
 				centralSettings = new Box(BoxLayout.Y_AXIS);
 				centralSettings.add(Box.createRigidArea(new Dimension(400, 1)));
 				box1 = new Box(BoxLayout.X_AXIS);
-				Box box2 = new Box(BoxLayout.X_AXIS);
+				box2 = new Box(BoxLayout.X_AXIS);
 				Box box3 = new Box(BoxLayout.X_AXIS);
 				label1 = new JLabel("Name  ");
 				box1.add(label1);
-				tableNameBox = new JComboBox(potentialTables);
-				box1.add(tableNameBox);
+				dmTableNameBox = new JComboBox(potentialTables);
+				dmTableNameBox.addItemListener(this);
+				box1.add(dmTableNameBox);
 				centralSettings.add(box1);
 				JLabel label3 = new JLabel("Include central filters?");
 				box3.add(label3);
@@ -310,8 +315,29 @@ public class ConfigurationGenerator implements ItemListener{
 					new JComboBox(includeCentralFilterOptions);
 				box3.add(includeCentralBox);
 				centralSettings.add(box3);
-				partitionBox = new JCheckBox("Use partitioning?");
-				centralSettings.add(partitionBox);
+				Box box4 = new Box(BoxLayout.X_AXIS);
+				partitionBox = new JCheckBox("Partitioning on");
+				box4.add(partitionBox);				
+				ArrayList allCols = new ArrayList();
+				Table[] referencedTables =
+					resolver.getReferencedTables((String) dmTableNameBox.getSelectedItem());
+				int centralSeen = 0;
+				for (int k = 0; k < referencedTables.length; k++) {
+					if (centralSeen > 0 && referencedTables[k].getName().equals((String) dmTableNameBox.getSelectedItem()))
+						continue;
+					Column[] tableCols = referencedTables[k].getColumns();
+					for (int l = 0; l < tableCols.length; l++) {
+						String entry = referencedTables[k].getName()+"."+ tableCols[l].getName();
+						allCols.add(entry);
+					}
+					if (referencedTables[k].getName().equals((String) dmTableNameBox.getSelectedItem()))
+						centralSeen++;
+				}
+				String[] cols = new String[allCols.size()];	
+				allCols.toArray(cols);		
+				partitionColsOption = new JComboBox(cols);
+				box4.add(partitionColsOption);
+				centralSettings.add(box4);
 				JCheckBox leftJoinBox = new JCheckBox("Use left join?");
 				centralSettings.add(leftJoinBox);
 				int option3 =
@@ -325,7 +351,7 @@ public class ConfigurationGenerator implements ItemListener{
 						extendedDialogOptions,
 						null);
 
-				centralTableName = tableNameBox.getSelectedItem().toString();
+				centralTableName = dmTableNameBox.getSelectedItem().toString();
 				String includeCentralFilters =
 					includeCentralBox.getSelectedItem().toString();
 
@@ -364,7 +390,7 @@ public class ConfigurationGenerator implements ItemListener{
 							userTableName,
 							includeCentralFilters);
 
-					Table[] referencedTables =
+					referencedTables =
 						resolver.getReferencedTables(centralTableName);
 					transformation =
 						generateTransformation(
@@ -387,37 +413,7 @@ public class ConfigurationGenerator implements ItemListener{
 					tableList.keySet().toArray(potentialTables);
 				} else {
 					// DIMENSION TABLE - DO PARTITIONING
-					ArrayList allCols = new ArrayList();
-					Table[] referencedTables =
-						resolver.getReferencedTables(centralTableName);
-					int centralSeen = 0;
-					for (int k = 0; k < referencedTables.length; k++) {
-						if (centralSeen > 0
-							&& referencedTables[k].getName().equals(centralTableName))
-							continue;
-						Column[] tableCols = referencedTables[k].getColumns();
-						for (int l = 0; l < tableCols.length; l++) {
-							String entry =
-								referencedTables[k].getName()
-									+ "."
-									+ tableCols[l].getName();
-							allCols.add(entry);
-						}
-						if (referencedTables[k].getName().equals(centralTableName))
-							centralSeen++;
-					}
-					String[] cols = new String[allCols.size()];
-					allCols.toArray(cols);
-					String colsOption =
-						(String) JOptionPane.showInputDialog(
-							null,
-							"Choose column to partition on",
-							"",
-							JOptionPane.PLAIN_MESSAGE,
-							null,
-							cols,
-							"");
-					String[] chosenOptions = colsOption.split("\\.+");
+					String[] chosenOptions = ((String) partitionColsOption.getSelectedItem()).split("\\.+");
 					String chosenTable = chosenOptions[0];
 					String chosenColumn = chosenOptions[1];
 
@@ -427,14 +423,25 @@ public class ConfigurationGenerator implements ItemListener{
 							chosenTable);
 
 					String[] values;
-												
-					if (allValList.size() > 20 || allValList.size() == 0) {// hack for empty tables during dev
-						String userValues =
-							JOptionPane.showInputDialog(
+					String[] manualOptions = new String[] {"Autogenerate","Manually choose"};							
+					int manualChoose;
+					if (allValList.size() > 20 || allValList.size() == 0) {// hack for empty tables during dev			
+						Box colOps = new Box(BoxLayout.Y_AXIS);
+					    label1 = new JLabel("Too many values to display - enter comma separated list");
+						colOps.add(label1);
+						JTextField userValues = new JTextField();
+						colOps.add(userValues);
+						manualChoose =
+							JOptionPane.showOptionDialog(
 								null,
-								"Too many values to display - "
-									+ "enter comma separated list");
-						String[] indValues = userValues.split(",");
+								colOps,
+								"Select values for partitioning ",
+								JOptionPane.DEFAULT_OPTION,
+								JOptionPane.PLAIN_MESSAGE,
+								null,
+								manualOptions,
+								null);
+						String[] indValues = userValues.getText().split(",");
 						values = new String[indValues.length];
 						for (int i = 0; i < indValues.length; i++) {
 							values[i] = chosenColumn + "=" + indValues[i];
@@ -448,7 +455,7 @@ public class ConfigurationGenerator implements ItemListener{
 							checks[i].setSelected(true);
 							colOps.add(checks[i]);
 						}
-						int valsOption =
+						manualChoose =
 							JOptionPane.showOptionDialog(
 								null,
 								colOps,
@@ -456,7 +463,7 @@ public class ConfigurationGenerator implements ItemListener{
 								JOptionPane.DEFAULT_OPTION,
 								JOptionPane.PLAIN_MESSAGE,
 								null,
-								standardOptions,
+								manualOptions,
 								null);
 						ArrayList valueList = new ArrayList();
 						for (int i = 0; i < allValList.size(); i++) {
@@ -469,18 +476,13 @@ public class ConfigurationGenerator implements ItemListener{
 						values = new String[valueList.size()];
 						valueList.toArray(values);
 					}
-					int manualChoose =
-						JOptionPane.showConfirmDialog(
-							null,
-							"Autogenerate each transformation");
-
+					
 					for (int i = 0;i < values.length;i++) { // loop through each partition type 	 
 						partitionExtension = values[i];
 						userTableName = (datasetName+"__"+partitionExtension.split("=")[1]+"__"+"dm").toLowerCase();
 
 						if (chosenTable.equals(centralTableName)) {
 							centralExtensionColumn = partitionExtension.split("=")[0];
-							//centralExtensionCondition = "=" + partitionExtension.split("=")[1];
 							centralExtensionValue = partitionExtension.split("=")[1];
 							centralExtensionOperator = "=";
 							partitionExtension = "";
@@ -598,35 +600,6 @@ public class ConfigurationGenerator implements ItemListener{
 		}
 	}
 
-	public void itemStateChanged(ItemEvent e){
-		if (e.getSource().equals(tableOptions)) {
-			pK.removeAllItems();
-			fK.removeAllItems();
-			String addedTableName = (String) tableOptions.getSelectedItem();
-			Column[] tableCols = resolver.getCentralTable(addedTableName).getColumns();
-			for (int j = 0; j < tableCols.length; j++) {
-				pK.addItem(tableCols[j].getName());
-				fK.addItem(tableCols[j].getName());
-			}
-		}
-		else if (e.getSource().equals(extSchema)){
-			tableOptions.removeAllItems();
-			String[] tableNames = resolver.getAllTableNamesBySchema((String) extSchema.getSelectedItem());
-			for (int j = 0; j < tableNames.length; j++) {
-				tableOptions.addItem(tableNames[j]);
-			}
-			pK.removeAllItems();
-			fK.removeAllItems();
-			String addedTableName = (String) tableOptions.getSelectedItem();
-			Column[] tableCols = resolver.getCentralTable(addedTableName).getColumns();
-			for (int j = 0; j < tableCols.length; j++) {
-				pK.addItem(tableCols[j].getName());
-				fK.addItem(tableCols[j].getName());
-			}
-		}
-		
-	}
-
 	private void chooseCentralTableSettings(
 		String centralTableName,
 		String datasetName,
@@ -698,10 +671,12 @@ public class ConfigurationGenerator implements ItemListener{
 		Transformation transformation) {
 
 		String externalSchema = "";
-		int addTable = JOptionPane.showConfirmDialog(null,"Add user defined table?","",JOptionPane.YES_NO_OPTION);
+		int addTable = 1;
+		if (manualChoose != 0 ) 
+			addTable = JOptionPane.showConfirmDialog(null,"Add user defined table?","",JOptionPane.YES_NO_OPTION);
 		if (addTable == 0){			
 			Box addSettings = new Box(BoxLayout.Y_AXIS);
-			addSettings.add(Box.createRigidArea(new Dimension(700, 1)));
+			addSettings.add(Box.createRigidArea(new Dimension(750, 1)));
 			Box box1 = new Box(BoxLayout.X_AXIS);
 			Box box2 = new Box(BoxLayout.X_AXIS);
 			Box box3 = new Box(BoxLayout.X_AXIS);
@@ -772,6 +747,8 @@ public class ConfigurationGenerator implements ItemListener{
 			if (!((String) extSchema.getSelectedItem()).equals(adaptor.getSchema()))
 				externalSchema = (String) extSchema.getSelectedItem();
 		}
+
+
 
 		int unitCount = 0;
 		JCheckBox[] checkboxs = new JCheckBox[referencedTables.length];
@@ -887,20 +864,20 @@ public class ConfigurationGenerator implements ItemListener{
 				cardinalitySettings.add(box1);
 				box2.add(label1);
 				box2.add(comboBoxs[i]);
-				box2.setMaximumSize(new Dimension(700, 30));
+				box2.setMaximumSize(new Dimension(750, 30));
 				cardinalitySettings.add(box2);
 				box3.add(label2);
 				box3.add(columnOptions[i]);
 				box3.add(operatorOptions[i]);
 				box3.add(textFields[i]);
-				box3.setMaximumSize(new Dimension(700, 30));
+				box3.setMaximumSize(new Dimension(750, 30));
 				if (partitionExtension.equals(""))
 					cardinalitySettings.add(box3);
 				box4.add(label3);
 				box4.add(cenColumnOptions[i]);
 				box4.add(cenOperatorOptions[i]);
 				box4.add(cenTextFields[i]);
-				box4.setMaximumSize(new Dimension(700, 30));
+				box4.setMaximumSize(new Dimension(750, 30));
 				cardinalitySettings.add(box4);
 				cardinalitySettings.add(Box.createVerticalStrut(20));
 			}
@@ -917,7 +894,7 @@ public class ConfigurationGenerator implements ItemListener{
 				cardinalitySettings.add(mainKeepSetting);
 
 			JScrollPane scrollPane = new JScrollPane(cardinalitySettings);
-			Dimension minimumSize = new Dimension(700, 500);
+			Dimension minimumSize = new Dimension(750, 500);
 			scrollPane.setPreferredSize(minimumSize);
 
 			String[] dialogOptions =
@@ -1154,6 +1131,59 @@ public class ConfigurationGenerator implements ItemListener{
 			transformation.insertChildObject(unitCount, transformationUnit);
 		}
 		return transformation;
+	}
+	
+	public void itemStateChanged(ItemEvent e){
+		if (e.getSource().equals(tableOptions)) {
+			pK.removeAllItems();
+			fK.removeAllItems();
+			String addedTableName = (String) tableOptions.getSelectedItem();
+			Column[] tableCols = resolver.getCentralTable(addedTableName).getColumns();
+			for (int j = 0; j < tableCols.length; j++) {
+				pK.addItem(tableCols[j].getName());
+				fK.addItem(tableCols[j].getName());
+			}
+		}
+		else if (e.getSource().equals(extSchema)){
+			tableOptions.removeAllItems();
+			String[] tableNames = resolver.getAllTableNamesBySchema((String) extSchema.getSelectedItem());
+			for (int j = 0; j < tableNames.length; j++) {
+				tableOptions.addItem(tableNames[j]);
+			}
+			pK.removeAllItems();
+			fK.removeAllItems();
+			String addedTableName = (String) tableOptions.getSelectedItem();
+			Column[] tableCols = resolver.getCentralTable(addedTableName).getColumns();
+			for (int j = 0; j < tableCols.length; j++) {
+				pK.addItem(tableCols[j].getName());
+				fK.addItem(tableCols[j].getName());
+			}
+		}
+		else if (e.getSource().equals(dmTableNameBox)){
+			ArrayList allCols = new ArrayList();
+			Table[] referencedTables =
+				resolver.getReferencedTables((String) dmTableNameBox.getSelectedItem());
+			int centralSeen = 0;
+			for (int k = 0; k < referencedTables.length; k++) {
+				if (centralSeen > 0 && referencedTables[k].getName().equals((String) dmTableNameBox.getSelectedItem()))
+					continue;
+				Column[] tableCols = referencedTables[k].getColumns();
+				for (int l = 0; l < tableCols.length; l++) {
+					String entry = referencedTables[k].getName()+"."+ tableCols[l].getName();
+					allCols.add(entry);
+				}
+				if (referencedTables[k].getName().equals((String) dmTableNameBox.getSelectedItem()))
+					centralSeen++;
+			}
+			String[] cols = new String[allCols.size()];	
+			allCols.toArray(cols);
+			partitionColsOption.removeAllItems();
+			for (int j = 0; j < cols.length; j++){
+				partitionColsOption.addItem(cols[j]);
+			}
+			
+		}
+		
 	}
 			
 }
