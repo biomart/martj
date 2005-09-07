@@ -11,7 +11,7 @@ import org.jdom.Element;
 
 /**
  * @author <a href="mailto: arek@ebi.ac.uk">Arek Kasprzyk</a>
- *
+ * @author <a href="mailto: arek@ebi.ac.uk">Damian Smedley</a>
  * 
  */
 public  class TransformationUnit extends ConfigurationBase {
@@ -47,7 +47,8 @@ public  class TransformationUnit extends ConfigurationBase {
 
 	public TransformationUnit(String internalName,String referencingType,String primaryKey,String referencedTable,
 		String cardinality,String centralProjection,String referencedProjection,String foreignKey,
-		String referenceColumnNames, String referenceColumnAliases,String centralColumnNames, String centralColumnAliases){
+		String referenceColumnNames, String referenceColumnAliases,String centralColumnNames, String centralColumnAliases,
+		String externalSchema){
 		super();
 		element.setAttribute("internalName",internalName);
 		element.setAttribute("referencingType",referencingType);
@@ -61,6 +62,7 @@ public  class TransformationUnit extends ConfigurationBase {
 		element.setAttribute("referenceColumnAliases",referenceColumnAliases);
 		element.setAttribute("centralColumnNames",centralColumnNames);
 		element.setAttribute("centralColumnAliases",centralColumnAliases);
+		element.setAttribute("externalSchema",externalSchema);
 			
 		setRequiredFields(requiredFields);
 	}

@@ -101,7 +101,60 @@ public abstract class MetaDataResolver {
 		
 	}
 	
+	public String [] getAllTableNamesBySchema (String schema) {
+		
+		String [] types = {"TABLE"};
+		ArrayList nameList = new ArrayList();
+		
+		int i = 0;
+		// types filter doesn't work
+		ResultSet resultNames;
+		try {
+			resultNames = dmd.getTables(getAdaptor().getCon().getCatalog(),schema,"%",types);
+		
+		while (resultNames.next()){
+			nameList.add(resultNames.getString(3));
+			i++;
+		}
+		
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
+		String[] names = new String[nameList.size()];
+		nameList.toArray(names);
+		
+		return names;
+		
+	}
 	
+	public String [] getAllSchemas () {
+		
+		ArrayList nameList = new ArrayList();
+		
+		ResultSet resultNames;
+		try {
+			resultNames = dmd.getSchemas();
+		
+		while (resultNames.next()){
+			nameList.add(resultNames.getString(1));
+		}
+		
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		String[] names = new String[nameList.size()];
+		nameList.toArray(names);
+		
+		return names;
+		
+	}
 	
 	public Column [] getReferencedColumns (String name, String [] columnNames){
 		

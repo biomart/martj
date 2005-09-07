@@ -7,6 +7,8 @@
 package org.ensembl.mart.builder;
 
 import java.awt.Dimension;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -34,7 +36,7 @@ import org.ensembl.mart.builder.lib.TransformationUnit;
  * To change the template for this generated type comment go to
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-public class ConfigurationGenerator {
+public class ConfigurationGenerator implements ItemListener{
 
 	private HashMap tableList = new HashMap();
 	private HashMap refColNames = new HashMap();
@@ -60,6 +62,8 @@ public class ConfigurationGenerator {
 	private MetaDataResolver resolver;
 	private String schema;
 	private DatabaseAdaptor adaptor;
+	
+	private JComboBox tableOptions, pK, fK, extSchema;
 
 	public ConfigurationGenerator() {
 		resolver = MartBuilder.getResolver();
@@ -594,6 +598,35 @@ public class ConfigurationGenerator {
 		}
 	}
 
+	public void itemStateChanged(ItemEvent e){
+		if (e.getSource().equals(tableOptions)) {
+			pK.removeAllItems();
+			fK.removeAllItems();
+			String addedTableName = (String) tableOptions.getSelectedItem();
+			Column[] tableCols = resolver.getCentralTable(addedTableName).getColumns();
+			for (int j = 0; j < tableCols.length; j++) {
+				pK.addItem(tableCols[j].getName());
+				fK.addItem(tableCols[j].getName());
+			}
+		}
+		else if (e.getSource().equals(extSchema)){
+			tableOptions.removeAllItems();
+			String[] tableNames = resolver.getAllTableNamesBySchema((String) extSchema.getSelectedItem());
+			for (int j = 0; j < tableNames.length; j++) {
+				tableOptions.addItem(tableNames[j]);
+			}
+			pK.removeAllItems();
+			fK.removeAllItems();
+			String addedTableName = (String) tableOptions.getSelectedItem();
+			Column[] tableCols = resolver.getCentralTable(addedTableName).getColumns();
+			for (int j = 0; j < tableCols.length; j++) {
+				pK.addItem(tableCols[j].getName());
+				fK.addItem(tableCols[j].getName());
+			}
+		}
+		
+	}
+
 	private void chooseCentralTableSettings(
 		String centralTableName,
 		String datasetName,
@@ -663,6 +696,82 @@ public class ConfigurationGenerator {
 		int manualChoose,
 		int leftJoin,
 		Transformation transformation) {
+
+		String externalSchema = "";
+		int addTable = JOptionPane.showConfirmDialog(null,"Add user defined table?","",JOptionPane.YES_NO_OPTION);
+		if (addTable == 0){			
+			Box addSettings = new Box(BoxLayout.Y_AXIS);
+			addSettings.add(Box.createRigidArea(new Dimension(700, 1)));
+			Box box1 = new Box(BoxLayout.X_AXIS);
+			Box box2 = new Box(BoxLayout.X_AXIS);
+			Box box3 = new Box(BoxLayout.X_AXIS);
+			Box box4 = new Box(BoxLayout.X_AXIS);
+			Box box5 = new Box(BoxLayout.X_AXIS);
+			JLabel label1 = new JLabel("External schema");
+			extSchema = new JComboBox(resolver.getAllSchemas());
+			extSchema.setSelectedItem(adaptor.getSchema());
+			extSchema.addItemListener(this);
+			box1.add(label1);
+			box1.add(extSchema);
+			JLabel label2 = new JLabel("Table");
+			// needs to be done on the chosen schema
+			String[] tableNames = resolver.getAllTableNames();
+			tableOptions = new JComboBox(tableNames);			
+			tableOptions.addItemListener(this);
+			box2.add(label2);
+			box2.add(tableOptions);
+			JLabel label3 = new JLabel("Primary Key");
+			String addedTableName = (String) tableOptions.getSelectedItem();
+			Column[] tableCols =
+				resolver.getCentralTable(addedTableName).getColumns();
+			String[] colNames = new String[tableCols.length];
+			for (int j = 0; j < tableCols.length; j++) {
+				colNames[j] = tableCols[j].getName();
+			}
+			pK = new JComboBox(colNames);
+			box3.add(label3);
+			box3.add(pK);			
+			JLabel label4 = new JLabel("Foreign Key");
+			fK = new JComboBox(colNames);
+			box4.add(label4);
+			box4.add(fK);	
+			JLabel label5 = new JLabel("Status");
+			// replace with a drop down
+			String[] statusOptions = new String[] {"exported","imported"};
+			JComboBox status = new JComboBox(statusOptions);
+			box5.add(label5);
+			box5.add(status);
+			addSettings.add(box1);
+			addSettings.add(box2);
+			addSettings.add(box3);
+			addSettings.add(box4);
+			addSettings.add(box5);	
+			JOptionPane.showOptionDialog(
+							null,
+							addSettings,
+							"Main Table Settings",
+							JOptionPane.DEFAULT_OPTION,
+							JOptionPane.PLAIN_MESSAGE,
+							null,
+							standardOptions,
+							null);		
+								
+			// create table and add to referencedTables	
+			Table addedTable = new Table();
+			addedTable.setName(((String) tableOptions.getSelectedItem()));
+			addedTable.PK = (String) pK.getSelectedItem();
+			addedTable.FK = (String) fK.getSelectedItem();
+			addedTable.status = (String) status.getSelectedItem();
+			Table[] newReferencedTables = new Table[referencedTables.length+1];
+			newReferencedTables[0] = addedTable;
+			for (int i = 0; i < referencedTables.length; i++){
+				newReferencedTables[i+1] = referencedTables[i];
+			}
+			referencedTables = newReferencedTables;
+			
+			if (!((String) extSchema.getSelectedItem()).equals(adaptor.getSchema()))
+				externalSchema = (String) extSchema.getSelectedItem();
+		}
 
 		int unitCount = 0;
 		JCheckBox[] checkboxs = new JCheckBox[referencedTables.length];
@@ -979,6 +1088,10 @@ public class ConfigurationGenerator {
 			if (refTab.getName().equals(centralTableName) && mainKeepSetting.getSelectedObjects() != null)
 				tableList.put(centralTableName, "m");
 
+			if (i != 0){// externalSchema only applies for user defined tables which are always first in the array
+				externalSchema= "";	
+			}
+			
 			TransformationUnit transformationUnit =
 							new TransformationUnit(
 								tunitCount.toString(),
@@ -992,7 +1105,8 @@ public class ConfigurationGenerator {
 								refColName,
 								refColAlias,
 								cenColName,
-								cenColAlias);
+								cenColAlias,
+								externalSchema);
 
 			transformation.insertChildObject(unitCount, transformationUnit);
 			unitCount++;
@@ -1012,6 +1126,7 @@ public class ConfigurationGenerator {
 					"",
 					resolver.getCentralTable(centralTableName).PK,
 					resolver.getCentralTable(centralTableName).PK,
+					"",
 					"",
 					"",
 					"");
@@ -1034,7 +1149,8 @@ public class ConfigurationGenerator {
 								"",
 								"",
 								cenColName,
-								cenColAlias);
+								cenColAlias,
+								"");
 			transformation.insertChildObject(unitCount, transformationUnit);
 		}
 		return transformation;
