@@ -760,7 +760,7 @@ public class ConfigurationGenerator implements ItemListener{
 		JComboBox[] cenOperatorOptions = new JComboBox[referencedTables.length];
 		JTextField[] cenTextFields = new JTextField[referencedTables.length];
 		String refTableType = "reference";
-		JCheckBox mainKeepSetting = new JCheckBox("Allow main table to be used for dimension transformations");
+		JCheckBox mainKeepSetting = new JCheckBox("Allow table to be used for dimension transformations");
 		
 		if (manualChoose != 0) {
 
@@ -890,7 +890,7 @@ public class ConfigurationGenerator implements ItemListener{
 				cardinalitySettings.add(depthSetting);
 			}
 
-			if (tableType.equals("m"))
+			//if (tableType.equals("m"))
 				cardinalitySettings.add(mainKeepSetting);
 
 			JScrollPane scrollPane = new JScrollPane(cardinalitySettings);
@@ -1063,7 +1063,7 @@ public class ConfigurationGenerator implements ItemListener{
 				refColAlias = (String) refColAliases.get(refTab.getName());
 
 			if (refTab.getName().equals(centralTableName) && mainKeepSetting.getSelectedObjects() != null)
-				tableList.put(centralTableName, "m");
+				tableList.put(centralTableName, tableType);
 
 			if (i != 0){// externalSchema only applies for user defined tables which are always first in the array
 				externalSchema= "";	
