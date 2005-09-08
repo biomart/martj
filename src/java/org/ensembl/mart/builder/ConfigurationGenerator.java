@@ -63,6 +63,8 @@ public class ConfigurationGenerator implements ItemListener{
 	private String schema;
 	private DatabaseAdaptor adaptor;
 	
+	private int centralTableKeep;
+	
 	private JComboBox tableOptions, pK, fK, extSchema, dmTableNameBox, partitionColsOption;
 
 	public ConfigurationGenerator() {
@@ -408,7 +410,6 @@ public class ConfigurationGenerator implements ItemListener{
 						transformation);
 					transformationCount++;
 
-					tableList.remove(centralTableName);
 					potentialTables = new String[tableList.size()];
 					tableList.keySet().toArray(potentialTables);
 				} else {
@@ -535,10 +536,10 @@ public class ConfigurationGenerator implements ItemListener{
 
 					} // end of loop
 					
-					int keep = JOptionPane.showConfirmDialog(null,"Keep "+centralTableName+ 
-						" for further partitioning?");
-					if (keep == 0)
-						tableList.put(centralTableName,"reference");
+					//int keep = JOptionPane.showConfirmDialog(null,"Keep "+centralTableName+ 
+					//	" for further partitioning?");
+					//if (keep == 0)
+					//	tableList.put(centralTableName,"reference");
 					
 					potentialTables = new String[tableList.size()];
 					tableList.keySet().toArray(potentialTables);
@@ -760,10 +761,10 @@ public class ConfigurationGenerator implements ItemListener{
 		JComboBox[] cenOperatorOptions = new JComboBox[referencedTables.length];
 		JTextField[] cenTextFields = new JTextField[referencedTables.length];
 		String refTableType = "reference";
-		JCheckBox mainKeepSetting = new JCheckBox("Allow table to be used for dimension transformations");
+		JCheckBox mainKeepSetting = new JCheckBox("Allow central table to be used for dimension transformations");
 		
 		if (manualChoose != 0) {
-
+			centralTableKeep = 0;
 			if (tableType.equals("m"))
 				tableList = new HashMap();
 			//create a new list of candidates for next central table selection
@@ -989,6 +990,10 @@ public class ConfigurationGenerator implements ItemListener{
 				}
 			}
 
+			if (mainKeepSetting.getSelectedObjects() != null){
+				centralTableKeep = 1;
+			}
+
 			if (depthSetting.getSelectedObjects() != null) {
 				refTableType = "deepReference";
 			}
@@ -1049,9 +1054,11 @@ public class ConfigurationGenerator implements ItemListener{
 				}
 				continue;
 			}
-
-			if (!tableType.equals("m"))
+			
+			if (centralTableKeep == 0)
 				tableList.remove(centralTableName);
+			else
+				tableList.put(centralTableName, tableType);	
 
 			Integer tunitCount = new Integer(unitCount + 1);
 			
@@ -1062,8 +1069,7 @@ public class ConfigurationGenerator implements ItemListener{
 			if (refColAliases.get(refTab.getName()) != null)
 				refColAlias = (String) refColAliases.get(refTab.getName());
 
-			if (refTab.getName().equals(centralTableName) && mainKeepSetting.getSelectedObjects() != null)
-				tableList.put(centralTableName, tableType);
+			
 
 			if (i != 0){// externalSchema only applies for user defined tables which are always first in the array
 				externalSchema= "";	
