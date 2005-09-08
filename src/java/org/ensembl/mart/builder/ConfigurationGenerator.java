@@ -1031,15 +1031,21 @@ public class ConfigurationGenerator implements ItemListener{
 			pK.removeAllItems();
 			fK.removeAllItems();
 			String addedTableName = (String) tableOptions.getSelectedItem();
+			
+			
+			if(addedTableName !=null){
+			
 			Column[] tableCols = resolver.getCentralTable(addedTableName).getColumns();
 			for (int j = 0; j < tableCols.length; j++) {
 				pK.addItem(tableCols[j].getName());
 				fK.addItem(tableCols[j].getName());
 			}
 		}
+			
+		}
 		else if (e.getSource().equals(extSchema)){
-			// commented this out for now as throws makes dialog hang ...
-			//tableOptions.removeAllItems();
+			
+			tableOptions.removeAllItems();
 			String[] tableNames = resolver.getAllTableNamesBySchema((String) extSchema.getSelectedItem());
 			for (int j = 0; j < tableNames.length; j++) {
 				tableOptions.addItem(tableNames[j]);
