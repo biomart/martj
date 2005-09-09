@@ -22,6 +22,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
 import org.ensembl.mart.builder.lib.Column;
+import org.ensembl.mart.builder.lib.ConfigurationBase;
 import org.ensembl.mart.builder.lib.DatabaseAdaptor;
 import org.ensembl.mart.builder.lib.Dataset;
 import org.ensembl.mart.builder.lib.MetaDataResolver;
@@ -63,7 +64,7 @@ public class ConfigurationGenerator implements ItemListener{
 	private String schema;
 	private DatabaseAdaptor adaptor;
 	
-	private JComboBox tableOptions, pK, fK, extSchema, dmTableNameBox, partitionColsOption;
+	private JComboBox tableOptions, pK, fK, extSchema, tableNameBox, dmTableNameBox, partitionColsOption;
 
 	public ConfigurationGenerator() {
 		resolver = MartBuilder.getResolver();
@@ -77,7 +78,7 @@ public class ConfigurationGenerator implements ItemListener{
 		if (tConfigName == null)
 			return new TransformationConfig("");
 		TransformationConfig tConfig = new TransformationConfig(tConfigName);
-
+		String[] datasetPartitionValues = null;
 		// cycle through adding datasets to this transformation config
 		int datasetContinueOption = 0;
 		while (datasetContinueOption != 1) {
@@ -94,12 +95,35 @@ public class ConfigurationGenerator implements ItemListener{
 			Box box1 = new Box(BoxLayout.X_AXIS);
 			JLabel label1 = new JLabel("Name  ");
 			box1.add(label1);
-			JComboBox tableNameBox = new JComboBox(potentialTables);
+			tableNameBox = new JComboBox(potentialTables);
+			tableNameBox.addItemListener(this);
 			box1.add(tableNameBox);
 			centralSettings.add(box2);
 			centralSettings.add(box1);
-			JCheckBox partitionBox = new JCheckBox("Partition into datasets");
-			centralSettings.add(partitionBox);
+			Box box4 = new Box(BoxLayout.X_AXIS);
+			JCheckBox partitionBox = new JCheckBox("Dataset partitioning on");
+			box4.add(partitionBox);				
+			ArrayList allCols = new ArrayList();
+			Table[] referencedTables =
+				resolver.getReferencedTables((String) tableNameBox.getSelectedItem());
+			int centralSeen = 0;
+			for (int k = 0; k < referencedTables.length; k++) {
+				if (centralSeen > 0 && referencedTables[k].getName().equals((String)tableNameBox.getSelectedItem()))
+					continue;
+				Column[] tableCols = referencedTables[k].getColumns();
+				for (int l = 0; l < tableCols.length; l++) {
+					String entry = referencedTables[k].getName()+"."+ tableCols[l].getName();
+					allCols.add(entry);
+				}
+				if (referencedTables[k].getName().equals((String) tableNameBox.getSelectedItem()))
+					centralSeen++;
+			}
+			String[] cols = new String[allCols.size()];	
+			allCols.toArray(cols);		
+			partitionColsOption = new JComboBox(cols);
+			box4.add(partitionColsOption);
+			centralSettings.add(box4);
+			
 			int option2 =
 				JOptionPane.showOptionDialog(
 					null,
@@ -144,7 +168,7 @@ public class ConfigurationGenerator implements ItemListener{
 						centralTableName,
 						userTableName,
 						"N");
-				Table[] referencedTables =
+				referencedTables =
 					resolver.getReferencedTables(centralTableName);
 				transformation =
 					generateTransformation(
@@ -160,11 +184,92 @@ public class ConfigurationGenerator implements ItemListener{
 				transformationCount++;
 			} else {
 				// MAIN TABLE - DO DATASET PARTITIONING
+					
+				String[] chosenOptions = ((String) partitionColsOption.getSelectedItem()).split("\\.+");
+				String chosenTable = chosenOptions[0];
+				String chosenColumn = chosenOptions[1];
+
+				ArrayList allValList = 	resolver.getDistinctValuesForPartitioning(
+											chosenColumn,
+											chosenTable);
+					
+				int manualChoose;
+				if (allValList.size() > 20 || allValList.size() == 0) {// hack for empty tables during dev			
+					Box colOps = new Box(BoxLayout.Y_AXIS);
+					label1 = new JLabel("Too many values to display - enter comma separated list");
+					colOps.add(label1);
+					JTextField userValues = new JTextField();
+					colOps.add(userValues);
+					manualChoose =
+						JOptionPane.showOptionDialog(
+												null,
+												colOps,
+												"Select values for partitioning ",
+												JOptionPane.DEFAULT_OPTION,
+												JOptionPane.PLAIN_MESSAGE,
+												null,
+												standardOptions,
+												null);
+					String[] indValues = userValues.getText().split(",");
+					datasetPartitionValues = new String[indValues.length];
+					for (int i = 0; i < indValues.length; i++) {
+						datasetPartitionValues[i] = chosenColumn + "=" + indValues[i];
+					}
+				} 
+				else {
+					Box colOps = new Box(BoxLayout.Y_AXIS);
+					JCheckBox[] checks = new JCheckBox[allValList.size()];
+					for (int i = 0; i < allValList.size(); i++) {
+						checks[i] = new JCheckBox((String) allValList.get(i));
+						checks[i].setSelected(true);
+						colOps.add(checks[i]);
+					}
+					manualChoose =
+						JOptionPane.showOptionDialog(
+												null,
+												colOps,
+												"Select values for partitioning ",
+												JOptionPane.DEFAULT_OPTION,
+												JOptionPane.PLAIN_MESSAGE,
+												null,
+												standardOptions,
+												null);
+					ArrayList valueList = new ArrayList();
+					for (int i = 0; i < allValList.size(); i++) {
+						if (checks[i].getSelectedObjects() == null)
+							continue;
+						partitionExtension =
+							chosenColumn + "=" + checks[i].getText();
+						valueList.add(partitionExtension);
+					}
+					datasetPartitionValues = new String[valueList.size()];
+					valueList.toArray(datasetPartitionValues);
+				}
 				
-				
-				
-				
-				
+				String tableType = "m";
+				chooseCentralTableSettings(centralTableName, datasetName, tableType);
+				// CREATE THE TRANSFORMATION
+				dataset.getElement().setAttribute("mainTable", centralTableName);
+				Integer tCount = new Integer(transformationCount + 1);
+				Transformation transformation =
+					new Transformation(
+							tCount.toString(),
+							tableType,
+							centralTableName,
+							userTableName,
+							"N");
+				referencedTables = resolver.getReferencedTables(centralTableName);
+				transformation = generateTransformation(
+										referencedTables,
+										centralTableName,
+										tableType,
+										datasetName,
+										"",
+										1,
+										leftJoin,
+										transformation);
+				dataset.insertChildObject(transformationCount, transformation);
+				transformationCount++;
 			}
 
 			// DIMENSION TABLE TRANSFORMATIONS			
@@ -199,13 +304,13 @@ public class ConfigurationGenerator implements ItemListener{
 					new JComboBox(includeCentralFilterOptions);
 				box3.add(includeCentralBox);
 				centralSettings.add(box3);
-				Box box4 = new Box(BoxLayout.X_AXIS);
+				box4 = new Box(BoxLayout.X_AXIS);
 				partitionBox = new JCheckBox("Partitioning on");
 				box4.add(partitionBox);				
-				ArrayList allCols = new ArrayList();
-				Table[] referencedTables =
+				allCols = new ArrayList();
+				referencedTables =
 					resolver.getReferencedTables((String) dmTableNameBox.getSelectedItem());
-				int centralSeen = 0;
+				centralSeen = 0;
 				for (int k = 0; k < referencedTables.length; k++) {
 					if (centralSeen > 0 && referencedTables[k].getName().equals((String) 
 							dmTableNameBox.getSelectedItem()))
@@ -218,7 +323,7 @@ public class ConfigurationGenerator implements ItemListener{
 					if (referencedTables[k].getName().equals((String) dmTableNameBox.getSelectedItem()))
 						centralSeen++;
 				}
-				String[] cols = new String[allCols.size()];	
+				cols = new String[allCols.size()];	
 				allCols.toArray(cols);		
 				partitionColsOption = new JComboBox(cols);
 				box4.add(partitionColsOption);
@@ -419,18 +524,43 @@ public class ConfigurationGenerator implements ItemListener{
 
 					} // end of loop
 					
-					//int keep = JOptionPane.showConfirmDialog(null,"Keep "+centralTableName+ 
-					//	" for further partitioning?");
-					//if (keep == 0)
-					//	tableList.put(centralTableName,"reference");
-					
 					potentialTables = new String[tableList.size()];
 					tableList.keySet().toArray(potentialTables);
 					continue; // next dimension table candidate	
 				}
 			} // end of while loop over all dm candidates
 			// add dataset to transformationConfig
-			tConfig.insertChildObject(0, dataset);
+			if (datasetPartitionValues != null){
+				Dataset[] partitionedDatasets = new Dataset[datasetPartitionValues.length];
+				Transformation[] mainTransformation = new Transformation[datasetPartitionValues.length];
+				for (int i = 0; i < datasetPartitionValues.length; i++){
+					// note copy method didn't work for dataset and transformation
+					partitionedDatasets[i] = new Dataset(dataset.getElement().getAttributeValue("internalName")+"_"+
+						datasetPartitionValues[i].split("=")[1],dataset.getElement().getAttributeValue("mainTable"));	
+					ConfigurationBase[] transformations = dataset.getChildObjects();
+					mainTransformation[i] = new Transformation(
+						transformations[0].getElement().getAttributeValue("internalName"),
+						transformations[0].getElement().getAttributeValue("tableType"),
+						transformations[0].getElement().getAttributeValue("centralTable"),
+						transformations[0].getElement().getAttributeValue("userTableName"),
+						transformations[0].getElement().getAttributeValue("includeCentralFilter"));
+					ConfigurationBase[] transformationUnits = transformations[0].getChildObjects();
+					for (int k = 0; k < transformationUnits.length; k++){
+						TransformationUnit tUnit = (TransformationUnit) transformationUnits[k].copy();
+						tUnit.getElement().setAttribute("centralProjection",datasetPartitionValues[i]);
+						mainTransformation[i].addChildObject(tUnit);	
+					}
+					partitionedDatasets[i].addChildObject(mainTransformation[i]);
+					for (int k = 1;k < transformations.length;k++){
+						partitionedDatasets[i].addChildObject(transformations[k]);
+					}
+					tConfig.insertChildObject(i, partitionedDatasets[i]);
+				}
+			}
+			else{
+				tConfig.insertChildObject(0, dataset);
+			}
+			
 			datasetContinueOption =
 				JOptionPane.showConfirmDialog(
 					null,
@@ -534,11 +664,7 @@ public class ConfigurationGenerator implements ItemListener{
 
 		userTableName = userTableNameField.getText();
 		if (!extensionField.getText().equals("")) {
-			//centralExtension =
-				//((String) columnOptions.getSelectedItem())
-					//+ extensionField.getText();
 			centralExtensionColumn = (String) columnOptions.getSelectedItem();
-			//centralExtensionCondition = extensionField.getText();
 			centralExtensionOperator = (String) operatorOptions.getSelectedItem();
 			centralExtensionValue = extensionField.getText();
 		}
@@ -1084,7 +1210,29 @@ public class ConfigurationGenerator implements ItemListener{
 			}
 			
 		}
-		
+		else if (e.getSource().equals(tableNameBox)){
+			ArrayList allCols = new ArrayList();
+			Table[] referencedTables =
+						resolver.getReferencedTables((String) tableNameBox.getSelectedItem());
+			int centralSeen = 0;
+			for (int k = 0; k < referencedTables.length; k++) {
+			if (centralSeen > 0 && referencedTables[k].getName().equals((String)tableNameBox.getSelectedItem()))
+					continue;
+			Column[] tableCols = referencedTables[k].getColumns();
+			for (int l = 0; l < tableCols.length; l++) {
+				String entry = referencedTables[k].getName()+"."+ tableCols[l].getName();
+				allCols.add(entry);
+			}
+			if (referencedTables[k].getName().equals((String) tableNameBox.getSelectedItem()))
+				centralSeen++;
+			}
+			String[] cols = new String[allCols.size()];	
+			allCols.toArray(cols);
+			partitionColsOption.removeAllItems();
+			for (int j = 0; j < cols.length; j++){
+				partitionColsOption.addItem(cols[j]);
+			}
+		}
 	}
 			
 }
