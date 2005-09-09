@@ -304,6 +304,12 @@ public class ConfigurationGenerator implements ItemListener{
 					new JComboBox(includeCentralFilterOptions);
 				box3.add(includeCentralBox);
 				centralSettings.add(box3);
+				Box box5 = new Box(BoxLayout.X_AXIS);
+				JLabel label4 = new JLabel("Use left join?");
+				box5.add(label4);
+				JComboBox leftJoinBox = new JComboBox(includeCentralFilterOptions);
+				box5.add(leftJoinBox);
+				centralSettings.add(box5);
 				box4 = new Box(BoxLayout.X_AXIS);
 				partitionBox = new JCheckBox("Partitioning on");
 				box4.add(partitionBox);				
@@ -328,8 +334,7 @@ public class ConfigurationGenerator implements ItemListener{
 				partitionColsOption = new JComboBox(cols);
 				box4.add(partitionColsOption);
 				centralSettings.add(box4);
-				JCheckBox leftJoinBox = new JCheckBox("Use left join?");
-				centralSettings.add(leftJoinBox);
+				
 				int option3 =
 					JOptionPane.showOptionDialog(
 						null,
@@ -360,7 +365,7 @@ public class ConfigurationGenerator implements ItemListener{
 					chooseColumns(centralTableName);
 				
 
-				if (leftJoinBox.getSelectedObjects() != null)
+				if (leftJoinBox.getSelectedItem().toString().equals("Y"))
 					leftJoin = 1;
 
 				if (partitionBox.getSelectedObjects() == null) {
@@ -771,7 +776,7 @@ public class ConfigurationGenerator implements ItemListener{
 		JTextField[] cenTextFields = new JTextField[referencedTables.length];
 		JCheckBox[] keepCheckBoxs = new JCheckBox[referencedTables.length];
 		
-		String refTableType = "reference";
+		//String refTableType = "reference";
 				
 		if (manualChoose != 0) {
 			if (tableType.equals("m"))
@@ -898,13 +903,13 @@ public class ConfigurationGenerator implements ItemListener{
 				cardinalitySettings.add(Box.createVerticalStrut(20));
 			}
 
-			JCheckBox depthSetting =
-				new JCheckBox("Go one level deeper for this central table");
-			if (!tableType.equals("m")
-				&& tableList.get(centralTableName) != null
-				&& !tableList.get(centralTableName).equals("deepReference")) {
-				cardinalitySettings.add(depthSetting);
-			}
+			//JCheckBox depthSetting =
+			//	new JCheckBox("Go one level deeper for this central table");
+			//if (!tableType.equals("m")
+			//	&& tableList.get(centralTableName) != null
+			//	&& !tableList.get(centralTableName).equals("deepReference")) {
+			//	cardinalitySettings.add(depthSetting);
+			//}
 
 			//if (tableType.equals("m"))
 				//cardinalitySettings.add(mainKeepSetting);
@@ -1005,9 +1010,9 @@ public class ConfigurationGenerator implements ItemListener{
 				}
 			}
 
-			if (depthSetting.getSelectedObjects() != null) {
-				refTableType = "deepReference";
-			}
+			//if (depthSetting.getSelectedObjects() != null) {
+			//	refTableType = "deepReference";
+			//}
 		} // end of GUI BOX generation
 
 		// loop through all the referenced tables to create the Transformation for the central table
@@ -1059,12 +1064,11 @@ public class ConfigurationGenerator implements ItemListener{
 			cardinalityFirst.put(centralTableName, cardinalitySecond);
 
 			if (manualChoose != 0 && keepCheckBoxs[i].getSelectedObjects() != null)
-				tableList.put(refTab.getName(), refTableType);
+				tableList.put(refTab.getName(), "reference");
 
 			if (cardinality.equals("1n")){	
-				if (tableType.equals("m")
-					|| refTableType.equals("deepReference")) {
-					tableList.put(refTab.getName(), refTableType);
+				if (tableType.equals("m")) {
+					tableList.put(refTab.getName(), "reference");
 				}
 				continue;
 			}
