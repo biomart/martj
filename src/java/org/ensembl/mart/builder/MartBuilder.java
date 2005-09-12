@@ -103,6 +103,10 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
 								  databaseDialog.getSchema(),
 							      "");
     Connection conn = adaptor.getCon();
+    
+    if (conn == null) connection ="NOT CONNECTED";
+    
+    else
 	connection = "MartBuilder (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "
 		+databaseDialog.getUser()+")";
 	

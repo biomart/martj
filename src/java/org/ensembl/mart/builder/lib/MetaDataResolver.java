@@ -32,7 +32,8 @@ public abstract class MetaDataResolver {
 		try {		
 			setAdaptor(adaptor);
 			setConnection(adaptor.getCon());
-			dmd = adaptor.getCon().getMetaData();
+			
+			if (adaptor.getCon() != null) dmd = adaptor.getCon().getMetaData();
 			
 		}
 		catch(SQLException ex) {
