@@ -1054,7 +1054,8 @@ public class ConfigurationGenerator implements ItemListener{
 			if (manualChoose != 0 && checkboxs[i].getSelectedObjects() == null){
 				tableList.remove(refTab.getName());// remove from the candidate list if present
 				HashMap cards = (HashMap) cardinalityFirst.get(centralTableName);
-				cards.remove(referencedTables[i].getName());
+				if (cards != null)
+					cards.remove(referencedTables[i].getName());
 				continue;
 			}
 			
