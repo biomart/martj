@@ -48,24 +48,36 @@ public class ConfigurationGenerator implements ItemListener{
 	private String cenColAlias = "";
 	private String userTableName;
 	private String centralExtensionColumn;
-	//private String centralExtensionCondition;
 	private String centralExtensionOperator;
 	private String centralExtensionValue;
 	private String partitionExtension;
 	private int leftJoin = 0;
-	private String[] dialogOptions =
-		new String[] { "Continue", "Select columns", "Finish"};
+	private String[] dialogOptions = new String[] { "Continue", "Select columns", "Finish"};
 	private String[] extendedDialogOptions = new String[] { "Continue", "Select columns", "Finish","Skip"};
-	
 	private String[] standardOptions = new String[] { "OK", "Cancel" };
 	private String[] includeCentralFilterOptions = new String[] { "N", "Y" };
 	private String[] opOptions = new String [] {"=",">","<",">=","<=","like"};
+	private String[] cardinalityOptions = new String[] { "1n", "11", "n1", "0n", "n1r" };
 	private MetaDataResolver resolver;
-	private String schema;
+	private String schema, externalSchema;
+	private Table[] referencedTables;
 	private DatabaseAdaptor adaptor;
 	
-	private JComboBox tableOptions, pK, fK, extSchema, tableNameBox, dmTableNameBox, partitionColsOption;
-
+	private JComboBox tableOptions, pK, fK, extSchema, tableNameBox, dmTableNameBox, partitionColsOption, status,
+		userCardinality, userRefCol, userRefOperator, userCenCol, userCenOperator;
+	private JCheckBox includeUserDefined, userKeep;
+	private JTextField userRefText, userCenText;
+	
+	private JCheckBox[] checkboxs;
+	private JComboBox[] comboBoxs;
+	private JComboBox[] columnOptions;
+	private JComboBox[] operatorOptions;
+	private JTextField[] textFields;
+	private JComboBox[] cenColumnOptions;
+	private JComboBox[] cenOperatorOptions;
+	private JTextField[] cenTextFields;
+	private JCheckBox[] keepCheckBoxs;
+	
 	public ConfigurationGenerator() {
 		resolver = MartBuilder.getResolver();
 		adaptor = MartBuilder.getAdaptor();
@@ -104,7 +116,7 @@ public class ConfigurationGenerator implements ItemListener{
 			JCheckBox partitionBox = new JCheckBox("Dataset partitioning on");
 			box4.add(partitionBox);				
 			ArrayList allCols = new ArrayList();
-			Table[] referencedTables =
+			referencedTables =
 				resolver.getReferencedTables((String) tableNameBox.getSelectedItem());
 			int centralSeen = 0;
 			for (int k = 0; k < referencedTables.length; k++) {
@@ -172,7 +184,7 @@ public class ConfigurationGenerator implements ItemListener{
 					resolver.getReferencedTables(centralTableName);
 				transformation =
 					generateTransformation(
-						referencedTables,
+						//referencedTables,
 						centralTableName,
 						tableType,
 						datasetName,
@@ -260,7 +272,7 @@ public class ConfigurationGenerator implements ItemListener{
 							"N");
 				referencedTables = resolver.getReferencedTables(centralTableName);
 				transformation = generateTransformation(
-										referencedTables,
+										//referencedTables,
 										centralTableName,
 										tableType,
 										datasetName,
@@ -389,7 +401,7 @@ public class ConfigurationGenerator implements ItemListener{
 						resolver.getReferencedTables(centralTableName);
 					transformation =
 						generateTransformation(
-							referencedTables,
+							//referencedTables,
 							centralTableName,
 							tableType,
 							datasetName,
@@ -502,7 +514,7 @@ public class ConfigurationGenerator implements ItemListener{
 						if (i == 0)
 							transformation =
 								generateTransformation(
-									referencedTables,
+									//referencedTables,
 									centralTableName,
 									tableType,
 									datasetName,
@@ -513,7 +525,7 @@ public class ConfigurationGenerator implements ItemListener{
 						else
 							transformation =
 								generateTransformation(
-									referencedTables,
+									//referencedTables,
 									centralTableName,
 									tableType,
 									datasetName,
@@ -676,7 +688,6 @@ public class ConfigurationGenerator implements ItemListener{
 	}
 
 	private Transformation generateTransformation(
-		Table[] referencedTables,
 		String centralTableName,
 		String tableType,
 		String datasetName,
@@ -686,111 +697,26 @@ public class ConfigurationGenerator implements ItemListener{
 		Transformation transformation) {
 
 		String externalSchema = "";
-		int addTable = 1;
-		if (manualChoose != 0 ) 
-			addTable = JOptionPane.showConfirmDialog(null,"Add user defined table?","",JOptionPane.YES_NO_OPTION);
-		if (addTable == 0){			
-			Box addSettings = new Box(BoxLayout.Y_AXIS);
-			addSettings.add(Box.createRigidArea(new Dimension(750, 1)));
-			Box box1 = new Box(BoxLayout.X_AXIS);
-			Box box2 = new Box(BoxLayout.X_AXIS);
-			Box box3 = new Box(BoxLayout.X_AXIS);
-			Box box4 = new Box(BoxLayout.X_AXIS);
-			Box box5 = new Box(BoxLayout.X_AXIS);
-			JLabel label1 = new JLabel("External schema");
-			extSchema = new JComboBox(resolver.getAllSchemas());
-			extSchema.setSelectedItem(adaptor.getSchema());
-			extSchema.addItemListener(this);
-			box1.add(label1);
-			box1.add(extSchema);
-			JLabel label2 = new JLabel("Table");
-			// needs to be done on the chosen schema
-			String[] tableNames = resolver.getAllTableNames();
-			tableOptions = new JComboBox(tableNames);			
-			tableOptions.addItemListener(this);
-			box2.add(label2);
-			box2.add(tableOptions);
-			JLabel label3 = new JLabel("Primary Key");
-			String addedTableName = (String) tableOptions.getSelectedItem();
-			Column[] tableCols =
-				resolver.getCentralTable(addedTableName).getColumns();
-			String[] colNames = new String[tableCols.length];
-			for (int j = 0; j < tableCols.length; j++) {
-				colNames[j] = tableCols[j].getName();
-			}
-			pK = new JComboBox(colNames);
-			box3.add(label3);
-			box3.add(pK);			
-			JLabel label4 = new JLabel("Foreign Key");
-			fK = new JComboBox(colNames);
-			box4.add(label4);
-			box4.add(fK);	
-			JLabel label5 = new JLabel("Status");
-			// replace with a drop down
-			String[] statusOptions = new String[] {"exported","imported"};
-			JComboBox status = new JComboBox(statusOptions);
-			box5.add(label5);
-			box5.add(status);
-			addSettings.add(box1);
-			addSettings.add(box2);
-			addSettings.add(box3);
-			addSettings.add(box4);
-			addSettings.add(box5);	
-			JOptionPane.showOptionDialog(
-							null,
-							addSettings,
-							"Main Table Settings",
-							JOptionPane.DEFAULT_OPTION,
-							JOptionPane.PLAIN_MESSAGE,
-							null,
-							standardOptions,
-							null);		
-								
-			// create table and add to referencedTables	
-			Table addedTable = new Table();
-			addedTable.setName(((String) tableOptions.getSelectedItem()));
-			addedTable.PK = (String) pK.getSelectedItem();
-			addedTable.FK = (String) fK.getSelectedItem();
-			addedTable.status = (String) status.getSelectedItem();
-			Table[] newReferencedTables = new Table[referencedTables.length+1];
-			newReferencedTables[0] = addedTable;
-			for (int i = 0; i < referencedTables.length; i++){
-				newReferencedTables[i+1] = referencedTables[i];
-			}
-			referencedTables = newReferencedTables;
-			
-			if (!((String) extSchema.getSelectedItem()).equals(adaptor.getSchema()))
-				externalSchema = (String) extSchema.getSelectedItem();
-		}
-
-
-
 		int unitCount = 0;
-		JCheckBox[] checkboxs = new JCheckBox[referencedTables.length];
-		JComboBox[] comboBoxs = new JComboBox[referencedTables.length];
-		JComboBox[] columnOptions = new JComboBox[referencedTables.length];
-		JComboBox[] operatorOptions = new JComboBox[referencedTables.length];
-		JTextField[] textFields = new JTextField[referencedTables.length];
-		JComboBox[] cenColumnOptions = new JComboBox[referencedTables.length];
-		JComboBox[] cenOperatorOptions = new JComboBox[referencedTables.length];
-		JTextField[] cenTextFields = new JTextField[referencedTables.length];
-		JCheckBox[] keepCheckBoxs = new JCheckBox[referencedTables.length];
 		
-		//String refTableType = "reference";
+		checkboxs = new JCheckBox[referencedTables.length+1];//incase user defined table added
+		comboBoxs = new JComboBox[referencedTables.length+1];
+		columnOptions = new JComboBox[referencedTables.length+1];
+		operatorOptions = new JComboBox[referencedTables.length+1];
+		textFields = new JTextField[referencedTables.length+1];
+		cenColumnOptions = new JComboBox[referencedTables.length+1];
+		cenOperatorOptions = new JComboBox[referencedTables.length+1];
+		cenTextFields = new JTextField[referencedTables.length+1];
+		keepCheckBoxs = new JCheckBox[referencedTables.length+1];
 				
 		if (manualChoose != 0) {
 			if (tableType.equals("m"))
 				tableList = new HashMap();
 			//create a new list of candidates for next central table selection
-
 			Box cardinalitySettings = new Box(BoxLayout.Y_AXIS);
-
-			String[] cardinalityOptions =
-				new String[] { "1n", "11", "n1", "0n", "n1r" };
-
 			boolean seenTable = false;
 			
-			// GENERATE THE GUI BOX
+			// GENERATE THE GUI BOX			
 			for (int i = 0; i < referencedTables.length; i++) {
 				// we need to see central table for recursive transformations
 				if (referencedTables[i].getName().equals(centralTableName)
@@ -804,26 +730,15 @@ public class ConfigurationGenerator implements ItemListener{
 				Box box3 = new Box(BoxLayout.X_AXIS);
 				Box box4 = new Box(BoxLayout.X_AXIS);
 				Box box5 = new Box(BoxLayout.X_AXIS);
-				
+	
 				checkboxs[i] =
 					new JCheckBox(
 						"Include "
 							+ referencedTables[i].getName().toUpperCase());
 				checkboxs[i].setSelected(true);
-				JLabel label1 =
-					new JLabel(
-						"Cardinality for "
-							+ centralTableName
-							+ "."
-							+ referencedTables[i].PK
-							+ " => "
-							+ referencedTables[i].getName()
-							+ "."
-							+ referencedTables[i].FK
-							+ " ("
-							+ referencedTables[i].status
-							+ ")");
-
+				JLabel label1 =	new JLabel("Cardinality for "+centralTableName+"."+referencedTables[i].PK
+							+" => "+ referencedTables[i].getName()+"."+referencedTables[i].FK
+							+" ("+ referencedTables[i].status+ ")");
 				comboBoxs[i] = new JComboBox(cardinalityOptions);
 
 				HashMap cards =
@@ -859,10 +774,8 @@ public class ConfigurationGenerator implements ItemListener{
 				operatorOptions[i] = new JComboBox(opOptions);
 				textFields[i] = new JTextField();
 
-				JLabel label3 =
-					new JLabel("Central projection/restriction (optional)");
-				Column[] centralTableCols =
-					resolver.getCentralTable(centralTableName).getColumns();
+				JLabel label3 = new JLabel("Central projection/restriction (optional)");
+				Column[] centralTableCols = resolver.getCentralTable(centralTableName).getColumns();
 				String[] cenColNames = new String[centralTableCols.length];
 				for (int j = 0; j < centralTableCols.length; j++) {
 					cenColNames[j] = centralTableCols[j].getName();
@@ -903,16 +816,100 @@ public class ConfigurationGenerator implements ItemListener{
 				cardinalitySettings.add(Box.createVerticalStrut(20));
 			}
 
-			//JCheckBox depthSetting =
-			//	new JCheckBox("Go one level deeper for this central table");
-			//if (!tableType.equals("m")
-			//	&& tableList.get(centralTableName) != null
-			//	&& !tableList.get(centralTableName).equals("deepReference")) {
-			//	cardinalitySettings.add(depthSetting);
-			//}
-
-			//if (tableType.equals("m"))
-				//cardinalitySettings.add(mainKeepSetting);
+//			new code start
+			Box box6 = new Box(BoxLayout.X_AXIS);
+			Box box7 = new Box(BoxLayout.X_AXIS);
+			Box box8 = new Box(BoxLayout.X_AXIS);
+			Box box9 = new Box(BoxLayout.X_AXIS);
+			Box box10 = new Box(BoxLayout.X_AXIS);
+			Box box11 = new Box(BoxLayout.X_AXIS);
+			Box box12 = new Box(BoxLayout.X_AXIS);
+			Box box13 = new Box(BoxLayout.X_AXIS);
+			Box box14 = new Box(BoxLayout.X_AXIS);
+									 
+			includeUserDefined = new JCheckBox("Include user defined table");
+			cardinalitySettings.add(includeUserDefined);
+			includeUserDefined.addItemListener(this);
+			JLabel label1 = new JLabel("External schema");
+			extSchema = new JComboBox(resolver.getAllSchemas());
+			extSchema.setSelectedItem(adaptor.getSchema());
+			extSchema.addItemListener(this);
+			box6.add(label1);
+			box6.add(extSchema);
+			JLabel label2 = new JLabel("Table");
+			String[] tableNames = resolver.getAllTableNames();
+			tableOptions = new JComboBox(tableNames);			
+			tableOptions.addItemListener(this);
+			box7.add(label2);
+			box7.add(tableOptions);
+			JLabel label3 = new JLabel("Primary Key");
+			String addedTableName = (String) tableOptions.getSelectedItem();
+			Column[] tableCols = resolver.getCentralTable(addedTableName).getColumns();
+			String[] userColNames = new String[tableCols.length];
+			for (int j = 0; j < tableCols.length; j++) {
+				 userColNames[j] = tableCols[j].getName();
+			}
+			pK = new JComboBox(userColNames);
+			box8.add(label3);
+			box8.add(pK);			
+			JLabel label4 = new JLabel("Foreign Key");
+			fK = new JComboBox(userColNames);
+			box9.add(label4);
+			box9.add(fK);	
+			JLabel label5 = new JLabel("Status");
+			String[] statusOptions = new String[] {"exported","imported"};
+			status = new JComboBox(statusOptions);
+			box10.add(label5);
+			box10.add(status);
+			
+			label1 = new JLabel("Cardinality");
+			userCardinality = new JComboBox(cardinalityOptions);
+			box11.add(label1);
+			box11.add(userCardinality);
+			
+			label2 = new JLabel("Referenced projection/restriction (optional)");
+			userRefCol = new JComboBox(userColNames);
+			userRefOperator = new JComboBox(opOptions);
+			userRefText = new JTextField();
+			box12.add(label2);
+			box12.add(userRefCol);
+			box12.add(userRefOperator);
+			box12.add(userRefText);
+			
+			label3 = new JLabel("Central projection/restriction (optional)");
+			Column[] centralTableCols =
+				resolver.getCentralTable(centralTableName).getColumns();
+			String[] cenColNames = new String[centralTableCols.length];
+			for (int j = 0; j < centralTableCols.length; j++) {
+				cenColNames[j] = centralTableCols[j].getName();
+			}
+			userCenCol = new JComboBox(cenColNames);
+			userCenOperator = new JComboBox(opOptions);
+			userCenText = new JTextField();
+			if (!centralExtensionColumn.equals(""))
+				userCenCol.setSelectedItem(centralExtensionColumn);
+			if (!centralExtensionOperator.equals(""))
+				userCenOperator.setSelectedItem(centralExtensionOperator);	
+			if (!centralExtensionValue.equals(""))
+				userCenText.setText(centralExtensionValue);
+			box13.add(label3);
+			box13.add(userCenCol);
+			box13.add(userCenOperator);
+			box13.add(userCenText);
+					
+			userKeep = new JCheckBox("Always keep for subsequent transformations");	
+			box14.add(userKeep);
+	
+			cardinalitySettings.add(box6);
+			cardinalitySettings.add(box7);
+			cardinalitySettings.add(box8);
+			cardinalitySettings.add(box9);
+			cardinalitySettings.add(box10);	
+			cardinalitySettings.add(box11);
+			cardinalitySettings.add(box12);
+			cardinalitySettings.add(box13);
+			cardinalitySettings.add(box14);			 
+			// end of new code
 
 			JScrollPane scrollPane = new JScrollPane(cardinalitySettings);
 			Dimension minimumSize = new Dimension(750, 500);
@@ -953,7 +950,7 @@ public class ConfigurationGenerator implements ItemListener{
 					if (checkboxs[i].getSelectedObjects() == null
 						|| cardinality.equals("1n"))
 						continue;
-					JLabel label1 = new JLabel(refTab.getName());
+					label1 = new JLabel(refTab.getName());
 					columnsBox.add(label1);
 					Column[] cols = refTab.getColumns();
 					for (int j = 0; j < cols.length; j++) {
@@ -1009,15 +1006,44 @@ public class ConfigurationGenerator implements ItemListener{
 					}
 				}
 			}
-
-			//if (depthSetting.getSelectedObjects() != null) {
-			//	refTableType = "deepReference";
-			//}
 		} // end of GUI BOX generation
-
+	
+		// deal with user defined table
+		if (includeUserDefined.getSelectedObjects() != null){
+			 // create table and add to referencedTables	
+			 Table addedTable = new Table();
+			 addedTable.setName(((String) tableOptions.getSelectedItem()));
+			 addedTable.PK = (String) pK.getSelectedItem();
+			 addedTable.FK = (String) fK.getSelectedItem();
+			 addedTable.status = (String) status.getSelectedItem();
+			 Table[] newReferencedTables = new Table[referencedTables.length+1];
+		 
+			 for (int i = 0; i < referencedTables.length; i++){
+				 newReferencedTables[i] = referencedTables[i];
+			 }
+			 newReferencedTables[newReferencedTables.length-1] = addedTable;
+			 referencedTables = newReferencedTables;
+	
+			 if (!((String) extSchema.getSelectedItem()).equals(adaptor.getSchema()))
+				 externalSchema = (String) extSchema.getSelectedItem();
+					 
+			 // need to add checkbox and cardinality settings etc for processing of tables
+			 checkboxs[referencedTables.length-1] = new JCheckBox();
+			 checkboxs[referencedTables.length-1].setSelected(true);
+			 comboBoxs[referencedTables.length-1] = userCardinality;
+			 columnOptions[referencedTables.length-1] = userRefCol;
+			 operatorOptions[referencedTables.length-1] = userRefOperator;
+			 cenColumnOptions[referencedTables.length-1] = userCenCol;
+			 cenOperatorOptions[referencedTables.length-1] = userCenOperator;
+			 textFields[referencedTables.length-1] = userRefText;
+			 cenTextFields[referencedTables.length-1] = userCenText;
+			 keepCheckBoxs[referencedTables.length-1] = userKeep;	 
+		}
+			
 		// loop through all the referenced tables to create the Transformation for the central table
 		boolean seenCentralTable = false;
 		for (int i = 0; i < referencedTables.length; i++) {
+			int a = referencedTables.length - 1;
 			Table refTab = referencedTables[i];
 			//	we need to keep central table for recursive transformations
 			if (refTab.getName().equals(centralTableName) && seenCentralTable)
@@ -1160,6 +1186,7 @@ public class ConfigurationGenerator implements ItemListener{
 		if (e.getSource().equals(tableOptions)) {
 			pK.removeAllItems();
 			fK.removeAllItems();
+			userRefCol.removeAllItems();
 			String addedTableName = (String) tableOptions.getSelectedItem();
 			
 			
@@ -1169,6 +1196,7 @@ public class ConfigurationGenerator implements ItemListener{
 			for (int j = 0; j < tableCols.length; j++) {
 				pK.addItem(tableCols[j].getName());
 				fK.addItem(tableCols[j].getName());
+				userRefCol.addItem(tableCols[j].getName());
 			}
 		}
 			
@@ -1182,11 +1210,13 @@ public class ConfigurationGenerator implements ItemListener{
 			}
 			pK.removeAllItems();
 			fK.removeAllItems();
+			userRefCol.removeAllItems();
 			String addedTableName = (String) tableOptions.getSelectedItem();
 			Column[] tableCols = resolver.getCentralTable(addedTableName).getColumns();
 			for (int j = 0; j < tableCols.length; j++) {
 				pK.addItem(tableCols[j].getName());
 				fK.addItem(tableCols[j].getName());
+				userRefCol.addItem(tableCols[j].getName());
 			}
 		}
 		else if (e.getSource().equals(dmTableNameBox)){
@@ -1238,5 +1268,5 @@ public class ConfigurationGenerator implements ItemListener{
 			}
 		}
 	}
-			
+		
 }
