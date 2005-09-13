@@ -555,10 +555,10 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 						
 					if (selnode.getUserObject() instanceof org.ensembl.mart.builder.lib.Transformation){
 						newSel = (Transformation) sel.copy();
-						newSel.getElement().setAttribute("userTableName",sel.getElement().getAttributeValue("userTableName") + "_copy");
+						//newSel.getElement().setAttribute("userTableName",sel.getElement().getAttributeValue("userTableName") + "_copy");
 					}else if (selnode.getUserObject() instanceof org.ensembl.mart.builder.lib.TransformationUnit){
 						newSel = (TransformationUnit) sel.copy();
-						newSel.getElement().setAttribute("referencedTable",sel.getElement().getAttributeValue("referencedTable") + "_copy");
+						//newSel.getElement().setAttribute("referencedTable",sel.getElement().getAttributeValue("referencedTable") + "_copy");
 					}
 					else if (selnode.getUserObject() instanceof org.ensembl.mart.builder.lib.Dataset)
 						newSel = (Dataset) sel.copy();
@@ -568,7 +568,8 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 					
 					
 					// need to make sure refers to a different object for multiple pastes
-					selnode = new TransformationConfigTreeNode(selnode.name + "_copy",newSel);
+					//selnode = new TransformationConfigTreeNode(selnode.name+"_copy",newSel);
+					selnode = new TransformationConfigTreeNode(selnode.name,newSel);
 					TransformationConfigTreeNodeSelection ss = new TransformationConfigTreeNodeSelection(selnode);
 					frame.getBuilder().clipboardEditor.setContents(ss, (ClipboardOwner) frame.getBuilder());					
 					break;
