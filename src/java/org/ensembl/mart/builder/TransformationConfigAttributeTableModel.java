@@ -119,19 +119,20 @@ public class TransformationConfigAttributeTableModel implements TableModel {
 		Object child = node.getUserObject();	
 		if (columnIndex == 1) {
 			//child may be a TransformationConfig, in which case dont try to remove/add the child to a null parent
+			obj.getElement().setAttribute(firstColumnData[rowIndex], (String) aValue);
 			if (!(child instanceof org.ensembl.mart.builder.lib.TransformationConfig)) {
 				Object parent = ((TransformationConfigTreeNode) node.getParent()).getUserObject();
 				int index = node.getParent().getIndex(node) - TransformationConfigTreeNode.getHeterogenousOffset(parent, child);
 				ConfigurationBase parentConf = (ConfigurationBase) parent;
 				parentConf.removeChildObject(((ConfigurationBase) child).getElement().getAttributeValue("internalName"));
+				parentConf.insertChildObject(index,obj);
 			}
-			obj.getElement().setAttribute(firstColumnData[rowIndex], (String) aValue);
 			TransformationConfigTreeNode newNode = new TransformationConfigTreeNode(obj.getElement().getAttributeValue("internalName"), obj);
-
 			if (parent != null) {
 				int index = parent.getIndex(node);
 				node.removeFromParent();
 				parent.insert(newNode, index);
+				// need to add a configuration base object
 				node = newNode;
 			}
 			TableModelEvent tme = new TableModelEvent(this, rowIndex);
