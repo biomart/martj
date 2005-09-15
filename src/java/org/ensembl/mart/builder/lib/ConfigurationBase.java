@@ -81,7 +81,9 @@ public class ConfigurationBase implements Cloneable {
 	}
 
 	public void addChildObject(ConfigurationBase base) {
-		this.children.add(base);
+		// beware using this for manual editing as will need element updating as well
+		// use insert instead
+		this.children.add(base);	
 	}
 	
 	public void insertChildObject(int position, ConfigurationBase base) {
