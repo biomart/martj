@@ -71,6 +71,7 @@ import javax.swing.tree.TreePath;
 
 import java.util.List;
 import org.jdom.Attribute;
+import org.jdom.Element;
 
 
 import org.ensembl.mart.builder.lib.*;
@@ -509,7 +510,6 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 				new TransformationConfigTreeNode(editingNode.toString(), ((Dataset) editingNode.getUserObject()).copy());
 		
 
-
 		TransformationConfigTreeNodeSelection ss = new TransformationConfigTreeNodeSelection(copiedNode);
 		//try to set owner as the MartEditor object so can copy and paste between trees
 		frame.getBuilder().clipboardEditor.setContents(ss, (ClipboardOwner) frame.getBuilder());
@@ -550,15 +550,20 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 				ConfigurationBase ch = (ConfigurationBase) childNode.getUserObject();
 				ConfigurationBase sel = (ConfigurationBase) selnode.getUserObject();
 				if (sel.getElement().getAttributeValue("internalName").equals(ch.getElement().getAttributeValue("internalName"))) {
-					//String selnodeName = selnode.getUserObject().getClass().getName();
 					ConfigurationBase newSel = null;// no copy constructor for abstract class
 					if (selnode.getUserObject() instanceof org.ensembl.mart.builder.lib.Dataset){
-						//newSel = (Dataset) sel.copy();
-						newSel = new Dataset(sel.getElement().getAttributeValue("internalName")+"_copy",
+						
+						// BROKEN CODE
+						newSel = (Dataset) sel.copy();// fails as child object copies are references
+						//newSel = sel;// copy already called during the copy() call above - no need to copy again
+						
+						
+						// WORKING CODE
+						/*newSel = new Dataset(sel.getElement().getAttributeValue("internalName"),
 											 sel.getElement().getAttributeValue("mainTable"));				 
 						ConfigurationBase[] transformations = sel.getChildObjects();
 						for (int i = 0; i < transformations.length; i++){
-							Transformation trans = new Transformation(transformations[i].getElement().getAttributeValue("internalName")+"_copy",
+							Transformation trans = new Transformation(transformations[i].getElement().getAttributeValue("internalName"),
 							   		transformations[i].getElement().getAttributeValue("tableType"),
 									transformations[i].getElement().getAttributeValue("centralTable"),
 									transformations[i].getElement().getAttributeValue("userTableName"),
@@ -567,7 +572,7 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 							TransformationUnit tUnit = null;
 							for (int j = 0; j < transformationUnits.length; j++){
 								tUnit = new TransformationUnit(
-									transformationUnits[j].getElement().getAttributeValue("internalName")+"_copy",
+									transformationUnits[j].getElement().getAttributeValue("internalName"),
 									transformationUnits[j].getElement().getAttributeValue("referencingType"),
 									transformationUnits[j].getElement().getAttributeValue("primaryKey"),
 									transformationUnits[j].getElement().getAttributeValue("referencedTable"),
@@ -581,16 +586,18 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 									transformationUnits[j].getElement().getAttributeValue("centralColumnAliases"),
 									transformationUnits[j].getElement().getAttributeValue("externalSchema")
 								);
-								//trans.addChildObject(tUnit);
 								trans.insertChildObject(j,tUnit);
 							}
-							//newSel.addChildObject(trans);
 							newSel.insertChildObject(i,trans);
-						}
+						}*/
 					}
 					else if (selnode.getUserObject() instanceof org.ensembl.mart.builder.lib.Transformation){
-						//newSel = (Transformation) sel.copy();
-						newSel = new Transformation(sel.getElement().getAttributeValue("internalName")+"_copy",
+						
+						// BROKEN CODE
+						newSel = (Transformation) sel.copy();
+						
+						// WORKING CODE
+						/*newSel = new Transformation(sel.getElement().getAttributeValue("internalName"),
 										sel.getElement().getAttributeValue("tableType"),
 										sel.getElement().getAttributeValue("centralTable"),
 										sel.getElement().getAttributeValue("userTableName"),
@@ -599,7 +606,7 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 						TransformationUnit tUnit = null;
 						for (int j = 0; j < transformationUnits.length; j++){
 							tUnit = new TransformationUnit(
-								transformationUnits[j].getElement().getAttributeValue("internalName")+"_copy",
+								transformationUnits[j].getElement().getAttributeValue("internalName"),
 								transformationUnits[j].getElement().getAttributeValue("referencingType"),
 								transformationUnits[j].getElement().getAttributeValue("primaryKey"),
 								transformationUnits[j].getElement().getAttributeValue("referencedTable"),
@@ -613,21 +620,12 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 								transformationUnits[j].getElement().getAttributeValue("centralColumnAliases"),
 								transformationUnits[j].getElement().getAttributeValue("externalSchema")
 							);
-							//newSel.addChildObject(tUnit);
 							newSel.insertChildObject(j,tUnit);
-						}
-						//newSel.getElement().setAttribute("userTableName",sel.getElement().getAttributeValue("userTableName") + "_copy");
+						}*/
 					}else if (selnode.getUserObject() instanceof org.ensembl.mart.builder.lib.TransformationUnit){
 						newSel = (TransformationUnit) sel.copy();
-						//newSel.getElement().setAttribute("referencedTable",sel.getElement().getAttributeValue("referencedTable") + "_copy");
 					}
 					
-						
-					//newSel.getElement().setAttribute("internalName",sel.getElement().getAttributeValue("internalName") + "_copy");
-					
-					
-					// need to make sure refers to a different object for multiple pastes
-					//selnode = new TransformationConfigTreeNode(selnode.name+"_copy",newSel);
 					selnode = new TransformationConfigTreeNode(selnode.name,newSel);
 					
 					TransformationConfigTreeNode firstChildNode = (TransformationConfigTreeNode) selnode.getFirstChild();
@@ -680,6 +678,13 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 
 	public void save_as() {
 		dsConfig = (TransformationConfig) ((TransformationConfigTreeNode) this.getModel().getRoot()).getUserObject();
+		
+		ConfigurationBase[] datasets = dsConfig.getChildObjects();
+		ConfigurationBase[] transformations = datasets[0].getChildObjects();
+		for (int i = 0; i < transformations.length; i++){
+			System.out.println(transformations[i].getElement().getAttributeValue("internalName"));
+		}
+		
 		JFileChooser fc;
 		if (frame.getFileChooserPath() != null) {
 			fc = new JFileChooser(frame.getFileChooserPath());
