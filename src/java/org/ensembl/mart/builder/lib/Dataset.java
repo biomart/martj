@@ -53,6 +53,42 @@ public class Dataset extends ConfigurationBase {
 		element.setAttribute("mainTable",mainTable);
 		setRequiredFields(requiredFields);
 	}
+	// to be removed once/if copy is working
+	public Dataset(Dataset dataset){		
+		//this((Element) dataset.element.clone()); clone to element constructorsstill seems to break			 
+		this(dataset.getElement().getAttributeValue("internalName"),
+			 dataset.getElement().getAttributeValue("mainTable"));
+		ConfigurationBase[] transformations = dataset.getChildObjects();
+		for (int i = 0; i < transformations.length; i++){
+			// replace with copy constructor
+			//Transformation trans = new Transformation((Element) transformations[i].element.clone());
+			Transformation trans = new Transformation(transformations[i].getElement().getAttributeValue("internalName"),//+"_copy",
+					transformations[i].getElement().getAttributeValue("tableType"),
+					transformations[i].getElement().getAttributeValue("centralTable"),
+					transformations[i].getElement().getAttributeValue("userTableName"),
+					transformations[i].getElement().getAttributeValue("includeCentralFilter"));
+			ConfigurationBase[] transformationUnits = transformations[i].getChildObjects();
+			for (int j = 0; j < transformationUnits.length; j++){
+				//TransformationUnit tUnit = new TransformationUnit((Element) transformationUnits[j].element.clone());
+				TransformationUnit tUnit = new TransformationUnit(
+					transformationUnits[j].getElement().getAttributeValue("internalName"),
+					transformationUnits[j].getElement().getAttributeValue("referencingType"),
+					transformationUnits[j].getElement().getAttributeValue("primaryKey"),
+					transformationUnits[j].getElement().getAttributeValue("referencedTable"),
+					transformationUnits[j].getElement().getAttributeValue("cardinality"),
+					transformationUnits[j].getElement().getAttributeValue("centralProjection"),
+					transformationUnits[j].getElement().getAttributeValue("referencedProjection"),
+					transformationUnits[j].getElement().getAttributeValue("foreignKey"),
+					transformationUnits[j].getElement().getAttributeValue("referenceColumnNames"),
+					transformationUnits[j].getElement().getAttributeValue("referenceColumnAliases"),
+					transformationUnits[j].getElement().getAttributeValue("centralColumnNames"),
+					transformationUnits[j].getElement().getAttributeValue("centralColumnAliases"),
+					transformationUnits[j].getElement().getAttributeValue("externalSchema"));
+				trans.insertChildObject(j,tUnit);
+			}
+			insertChildObject(i,trans);
+		}		
+	}
 	
 	void setTargetSchemaName(String targetSchemaName) {
 	  this.targetSchemaName = targetSchemaName;

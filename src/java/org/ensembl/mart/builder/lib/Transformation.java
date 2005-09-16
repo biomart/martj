@@ -48,6 +48,36 @@ public class Transformation extends ConfigurationBase {
 		element.setAttribute("includeCentralFilter",includeCentralFilter);
 		setRequiredFields(requiredFields);
 	}
+	
+	// test copy constructor - to be removed if we can get copy() working
+	public Transformation(Transformation transformation){		 
+			this(transformation.getElement().getAttributeValue("internalName"),//+"_copy",
+					transformation.getElement().getAttributeValue("tableType"),
+					transformation.getElement().getAttributeValue("centralTable"),
+					transformation.getElement().getAttributeValue("userTableName"),
+					transformation.getElement().getAttributeValue("includeCentralFilter"));
+			ConfigurationBase[] transformationUnits = transformation.getChildObjects();
+			for (int j = 0; j < transformationUnits.length; j++){
+				//TransformationUnit tUnit = new TransformationUnit((Element) transformationUnits[j].element.clone());
+				TransformationUnit tUnit = new TransformationUnit(
+					transformationUnits[j].getElement().getAttributeValue("internalName"),
+					transformationUnits[j].getElement().getAttributeValue("referencingType"),
+					transformationUnits[j].getElement().getAttributeValue("primaryKey"),
+					transformationUnits[j].getElement().getAttributeValue("referencedTable"),
+					transformationUnits[j].getElement().getAttributeValue("cardinality"),
+					transformationUnits[j].getElement().getAttributeValue("centralProjection"),
+					transformationUnits[j].getElement().getAttributeValue("referencedProjection"),
+					transformationUnits[j].getElement().getAttributeValue("foreignKey"),
+					transformationUnits[j].getElement().getAttributeValue("referenceColumnNames"),
+					transformationUnits[j].getElement().getAttributeValue("referenceColumnAliases"),
+					transformationUnits[j].getElement().getAttributeValue("centralColumnNames"),
+					transformationUnits[j].getElement().getAttributeValue("centralColumnAliases"),
+					transformationUnits[j].getElement().getAttributeValue("externalSchema"));
+				insertChildObject(j,tUnit);
+			}
+	}
+	
+	
 
 	void setStartTable(Table startTable) {
 	  this.startTable = startTable;
