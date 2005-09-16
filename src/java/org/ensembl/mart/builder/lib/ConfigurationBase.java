@@ -7,6 +7,7 @@
 package org.ensembl.mart.builder.lib;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.jdom.Element;
 
@@ -46,20 +47,31 @@ public class ConfigurationBase implements Cloneable {
 
 	}
 
+	
 	public ConfigurationBase copy() {
 
 		ConfigurationBase obj = null;
 		try {
 			obj = (ConfigurationBase) this.clone();
+			
+			// make sure child objects are new as well							
+			ArrayList childObjs = new ArrayList(this.getChildObjects().length);
+						
+			for (int i = 0; i < this.getChildObjects().length; i++){
+				childObjs.add(this.getChildObjects()[i].copy());
+			}
+			obj.children = childObjs;
+			
 			Element newElement = (Element) this.element.clone();
 			obj.element = newElement;
+			
 		} catch (CloneNotSupportedException e) {
 			e.printStackTrace();
 		}
 		return obj;
 
 	}
-
+	
 	protected Object clone() throws CloneNotSupportedException {
 		return super.clone();
 	}
@@ -67,7 +79,7 @@ public class ConfigurationBase implements Cloneable {
 	public Element getElement() {
 		return element;
 	}
-
+	
 	public void setRequiredFields(int[] reqFields) {
 		requiredFields = reqFields;
 	}
@@ -100,15 +112,19 @@ public class ConfigurationBase implements Cloneable {
 
 	public void removeChildObject(String internalName) {
 		int i = 0;
-
+		
 		for (i = 0; i < children.size(); i++) {
 
 			ConfigurationBase cb = (ConfigurationBase) children.get(i);
-
+		
 			if (cb.element.getAttributeValue("internalName").equals(
 					internalName)) {
-
-				cb.element.detach();
+				//cb.element.detach();// not working with objects created using copy
+				
+				//this.getElement().removeContent((Element) cb.element);
+				List els = this.getElement().getChildren();
+				this.getElement().removeContent((Element) els.get(i));
+				
 				children.remove(i);
 				continue;
 
