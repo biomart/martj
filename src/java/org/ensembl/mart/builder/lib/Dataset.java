@@ -53,7 +53,9 @@ public class Dataset extends ConfigurationBase {
 		element.setAttribute("mainTable",mainTable);
 		setRequiredFields(requiredFields);
 	}
-	// to be removed once/if copy is working
+	
+	
+	/**
 	public Dataset(Dataset dataset){		
 		//this((Element) dataset.element.clone()); clone to element constructorsstill seems to break			 
 		this(dataset.getElement().getAttributeValue("internalName"),
@@ -89,6 +91,8 @@ public class Dataset extends ConfigurationBase {
 			insertChildObject(i,trans);
 		}		
 	}
+	
+	*/
 	
 	void setTargetSchemaName(String targetSchemaName) {
 	  this.targetSchemaName = targetSchemaName;

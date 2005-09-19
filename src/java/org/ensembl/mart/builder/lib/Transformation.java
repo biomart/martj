@@ -49,7 +49,9 @@ public class Transformation extends ConfigurationBase {
 		setRequiredFields(requiredFields);
 	}
 	
-	// test copy constructor - to be removed if we can get copy() working
+	
+	
+	/**
 	public Transformation(Transformation transformation){		 
 			this(transformation.getElement().getAttributeValue("internalName"),//+"_copy",
 					transformation.getElement().getAttributeValue("tableType"),
@@ -76,6 +78,11 @@ public class Transformation extends ConfigurationBase {
 				insertChildObject(j,tUnit);
 			}
 	}
+	
+	*/
+	
+	
+	
 	
 	
 
