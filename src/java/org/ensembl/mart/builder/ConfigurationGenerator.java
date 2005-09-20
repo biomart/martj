@@ -430,7 +430,8 @@ public class ConfigurationGenerator implements ItemListener{
 
 					String[] values;
 					String[] manualOptions = new String[] {"Autogenerate","Manually choose"};							
-					int manualChoose;
+					int manualChoose;			
+								
 					if (allValList.size() > 20 || allValList.size() == 0) {// hack for empty tables during dev			
 						Box colOps = new Box(BoxLayout.Y_AXIS);
 					    label1 = new JLabel("Too many values to display - enter comma separated list");
@@ -736,8 +737,8 @@ public class ConfigurationGenerator implements ItemListener{
 						"Include "
 							+ referencedTables[i].getName().toUpperCase());
 				checkboxs[i].setSelected(true);
-				JLabel label1 =	new JLabel("Cardinality for "+centralTableName+"."+referencedTables[i].PK
-							+" => "+ referencedTables[i].getName()+"."+referencedTables[i].FK
+				JLabel label1 =	new JLabel("Cardinality for "+centralTableName+"."+referencedTables[i].FK
+							+" => "+ referencedTables[i].getName()+"."+referencedTables[i].PK
 							+" ("+ referencedTables[i].status+ ")");
 				comboBoxs[i] = new JComboBox(cardinalityOptions);
 
