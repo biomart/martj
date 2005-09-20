@@ -65,7 +65,7 @@ public class ConfigurationGenerator implements ItemListener{
 	
 	private JComboBox tableOptions, pK, fK, extSchema, tableNameBox, dmTableNameBox, partitionColsOption, status,
 		userCardinality, userRefCol, userRefOperator, userCenCol, userCenOperator;
-	private JCheckBox includeUserDefined, userKeep;
+	private JCheckBox includeUserDefined, userKeep, goDeeper;
 	private JTextField userRefText, userCenText;
 	
 	private JCheckBox[] checkboxs;
@@ -77,6 +77,7 @@ public class ConfigurationGenerator implements ItemListener{
 	private JComboBox[] cenOperatorOptions;
 	private JTextField[] cenTextFields;
 	private JCheckBox[] keepCheckBoxs;
+	private JCheckBox[] goDeeperCheckBoxs;
 	
 	public ConfigurationGenerator() {
 		resolver = MartBuilder.getResolver();
@@ -709,6 +710,7 @@ public class ConfigurationGenerator implements ItemListener{
 		cenOperatorOptions = new JComboBox[referencedTables.length+1];
 		cenTextFields = new JTextField[referencedTables.length+1];
 		keepCheckBoxs = new JCheckBox[referencedTables.length+1];
+		goDeeperCheckBoxs = new JCheckBox[referencedTables.length+1];
 				
 		if (manualChoose != 0) {
 			if (tableType.equals("m"))
@@ -731,6 +733,7 @@ public class ConfigurationGenerator implements ItemListener{
 				Box box3 = new Box(BoxLayout.X_AXIS);
 				Box box4 = new Box(BoxLayout.X_AXIS);
 				Box box5 = new Box(BoxLayout.X_AXIS);
+				Box box6 = new Box(BoxLayout.X_AXIS);
 	
 				checkboxs[i] =
 					new JCheckBox(
@@ -792,6 +795,8 @@ public class ConfigurationGenerator implements ItemListener{
 					cenTextFields[i].setText(centralExtensionValue);
 					
 				keepCheckBoxs[i] = new JCheckBox("Always keep for subsequent transformations");	
+				goDeeperCheckBoxs[i] = new JCheckBox("Go deeper if 11 or n1");	
+				
 				box1.add(checkboxs[i]);
 				box1.add(new JLabel(""));
 				cardinalitySettings.add(box1);
@@ -814,6 +819,17 @@ public class ConfigurationGenerator implements ItemListener{
 				cardinalitySettings.add(box4);
 				box5.add(keepCheckBoxs[i]);
 				cardinalitySettings.add(box5);
+				
+				Table[] downstreamTables = resolver.getReferencedTables(referencedTables[i].getName());
+				for (int k = 0; k < downstreamTables.length ;k++){
+					if (downstreamTables[k].getName().equals(referencedTables[i].getName())
+						|| downstreamTables[k].getName().equals(centralTableName))
+							continue;
+					 			
+					box6.add(goDeeperCheckBoxs[i]);
+					cardinalitySettings.add(box6);
+					break;
+				}		
 				cardinalitySettings.add(Box.createVerticalStrut(20));
 			}
 
@@ -827,6 +843,7 @@ public class ConfigurationGenerator implements ItemListener{
 			Box box12 = new Box(BoxLayout.X_AXIS);
 			Box box13 = new Box(BoxLayout.X_AXIS);
 			Box box14 = new Box(BoxLayout.X_AXIS);
+			Box box15 = new Box(BoxLayout.X_AXIS);
 									 
 			includeUserDefined = new JCheckBox("Include user defined table");
 			cardinalitySettings.add(includeUserDefined);
@@ -900,6 +917,9 @@ public class ConfigurationGenerator implements ItemListener{
 					
 			userKeep = new JCheckBox("Always keep for subsequent transformations");	
 			box14.add(userKeep);
+			
+			goDeeper = new JCheckBox("Go deeper if 11 or n1");	
+			box15.add(goDeeper);
 	
 			cardinalitySettings.add(box6);
 			cardinalitySettings.add(box7);
@@ -909,7 +929,8 @@ public class ConfigurationGenerator implements ItemListener{
 			cardinalitySettings.add(box11);
 			cardinalitySettings.add(box12);
 			cardinalitySettings.add(box13);
-			cardinalitySettings.add(box14);			 
+			cardinalitySettings.add(box14);	
+			cardinalitySettings.add(box15);			 
 			// end of new code
 
 			JScrollPane scrollPane = new JScrollPane(cardinalitySettings);
@@ -1039,6 +1060,7 @@ public class ConfigurationGenerator implements ItemListener{
 			 textFields[referencedTables.length-1] = userRefText;
 			 cenTextFields[referencedTables.length-1] = userCenText;
 			 keepCheckBoxs[referencedTables.length-1] = userKeep;	 
+			 goDeeperCheckBoxs[referencedTables.length-1] = goDeeper;	 
 		}
 			
 		// loop through all the referenced tables to create the Transformation for the central table
@@ -1138,7 +1160,15 @@ public class ConfigurationGenerator implements ItemListener{
 
 			transformation.insertChildObject(unitCount, transformationUnit);
 			unitCount++;
-
+			
+			if (goDeeperCheckBoxs[i].getSelectedObjects() != null){
+				TransformationUnit[] deeperUnits = getDeeperUnits(refTab.getName(), centralTableName, unitCount);
+				for (int k = 0; k < deeperUnits.length; k++){
+					transformation.insertChildObject(unitCount,deeperUnits[k]);
+					unitCount++;
+				}
+			}
+			
 		}
 
 		if (leftJoin == 1) {
@@ -1182,6 +1212,272 @@ public class ConfigurationGenerator implements ItemListener{
 			transformation.insertChildObject(unitCount, transformationUnit);
 		}
 		return transformation;
+	}
+	
+	private TransformationUnit[] getDeeperUnits(String refTableName, String centralTableName, int unitCount){
+	
+		// LAUNCH THE GUI WINDOW
+		Table[] potentialDeeperTables = resolver.getReferencedTables(refTableName);
+		
+		JCheckBox[] includeCheckBoxs = new JCheckBox[potentialDeeperTables.length];
+		JComboBox[] cardinalityComboBoxs = new JComboBox[potentialDeeperTables.length];
+		String[] deepCardinalityOptions = new String[] { "11", "n1" };
+		JComboBox[] deepColumnOptions = new JComboBox[potentialDeeperTables.length];
+		JComboBox[] deepOperatorOptions = new JComboBox[potentialDeeperTables.length];
+		JTextField[] deepTextFields = new JTextField[potentialDeeperTables.length];
+		JComboBox[] deepCenColumnOptions = new JComboBox[potentialDeeperTables.length];
+		JComboBox[] deepCenOperatorOptions = new JComboBox[potentialDeeperTables.length];
+		JTextField[] deepCenTextFields = new JTextField[potentialDeeperTables.length];
+		JCheckBox[] deepGoDeeperCheckBoxs = new JCheckBox[potentialDeeperTables.length];
+		
+		Box cardinalitySettings = new Box(BoxLayout.Y_AXIS);
+							
+		for (int i = 0; i < potentialDeeperTables.length; i++) {
+			if (potentialDeeperTables[i].getName().equals(refTableName)
+					|| potentialDeeperTables[i].getName().equals(centralTableName))
+					 continue;
+				
+			Box box1 = new Box(BoxLayout.X_AXIS);
+			Box box2 = new Box(BoxLayout.X_AXIS);
+			Box box3 = new Box(BoxLayout.X_AXIS);
+			Box box4 = new Box(BoxLayout.X_AXIS);
+			Box box5 = new Box(BoxLayout.X_AXIS);
+			Box box6 = new Box(BoxLayout.X_AXIS);
+	
+			includeCheckBoxs[i] = new JCheckBox("Include "+ potentialDeeperTables[i].getName().toUpperCase());
+			JLabel label1 =	new JLabel("Cardinality for "+refTableName+"."+potentialDeeperTables[i].FK
+					 +" => "+ potentialDeeperTables[i].getName()+"."+potentialDeeperTables[i].PK
+					 +" ("+ potentialDeeperTables[i].status+ ")");
+			cardinalityComboBoxs[i] = new JComboBox(deepCardinalityOptions);
+					 					 
+			JLabel label2 =	new JLabel("Referenced projection/restriction (optional)");
+			String[] columnNames = { "%" };
+			Column[] refTableCols = resolver.getReferencedColumns(potentialDeeperTables[i].getName(),columnNames);
+			String[] colNames = new String[refTableCols.length];
+			for (int j = 0; j < refTableCols.length; j++) {
+				 colNames[j] = refTableCols[j].getName();
+			}
+					 
+			deepColumnOptions[i] = new JComboBox(colNames);
+			deepOperatorOptions[i] = new JComboBox(opOptions);
+			deepTextFields[i] = new JTextField();
+					 
+			// ? IF SHOULD BE CENTRAL OR REF TABLE
+			JLabel label3 = new JLabel("Central projection/restriction (optional)");
+			Column[] centralTableCols = resolver.getCentralTable(refTableName).getColumns();
+			String[] cenColNames = new String[centralTableCols.length];
+			for (int j = 0; j < centralTableCols.length; j++) {
+				 cenColNames[j] = centralTableCols[j].getName();
+			}
+					 
+			deepCenColumnOptions[i] = new JComboBox(cenColNames);
+			deepCenOperatorOptions[i] = new JComboBox(opOptions);
+			deepCenTextFields[i] = new JTextField();
+					 
+			// ? IF SHOULD USE			 
+			if (!centralExtensionColumn.equals(""))
+				 cenColumnOptions[i].setSelectedItem(centralExtensionColumn);
+			if (!centralExtensionOperator.equals(""))
+				 cenOperatorOptions[i].setSelectedItem(centralExtensionOperator);	
+			if (!centralExtensionValue.equals(""))
+				 cenTextFields[i].setText(centralExtensionValue);
+					
+			deepGoDeeperCheckBoxs[i] = new JCheckBox("Go deeper if 11 or n1");	
+				
+			box1.add(includeCheckBoxs[i]);
+			box1.add(new JLabel(""));
+			cardinalitySettings.add(box1);
+			box2.add(label1);
+			box2.add(cardinalityComboBoxs[i]);
+			box2.setMaximumSize(new Dimension(750, 30));
+			cardinalitySettings.add(box2);
+			box3.add(label2);
+			box3.add(columnOptions[i]);
+			box3.add(operatorOptions[i]);
+			box3.add(textFields[i]);
+			box3.setMaximumSize(new Dimension(750, 30));
+			if (partitionExtension.equals(""))
+				 cardinalitySettings.add(box3);
+			box4.add(label3);
+			box4.add(cenColumnOptions[i]);
+			box4.add(cenOperatorOptions[i]);
+			box4.add(cenTextFields[i]);
+			box4.setMaximumSize(new Dimension(750, 30));
+			cardinalitySettings.add(box4);
+			
+			Table[] downstreamTables = resolver.getReferencedTables(potentialDeeperTables[i].getName());
+			for (int k = 0; k < downstreamTables.length ;k++){
+			 	if (downstreamTables[k].getName().equals(potentialDeeperTables[i].getName())
+			 		|| downstreamTables[k].getName().equals(refTableName))
+			 			continue;
+					 			
+			 	box6.add(deepGoDeeperCheckBoxs[i]);
+			 	cardinalitySettings.add(box6);
+			 	break;
+			}				
+			cardinalitySettings.add(Box.createVerticalStrut(20));
+		}
+		
+		JScrollPane scrollPane = new JScrollPane(cardinalitySettings);
+		Dimension minimumSize = new Dimension(750, 500);
+		scrollPane.setPreferredSize(minimumSize);
+
+		String[] dialogOptions = new String[] { "Continue", "Select columns", "Cancel"};
+
+		int option = JOptionPane.showOptionDialog(
+							null,
+							scrollPane,
+							"Select any 11 or n1 tables you want to include downstream of "+refTableName,
+							JOptionPane.DEFAULT_OPTION,
+							JOptionPane.PLAIN_MESSAGE,
+							null,
+							dialogOptions,
+							null);
+		
+		
+		
+		if (option == 2){
+			//return transformation;
+		}
+		else if (option == 1) {
+			// REFERENCE TABLE - CHOOSE COLS
+			Box columnsBox = new Box(BoxLayout.Y_AXIS);
+			ArrayList colChecks = new ArrayList();
+			ArrayList colAliases = new ArrayList();
+			ArrayList colNames = new ArrayList();
+			ArrayList colTable = new ArrayList();
+			for (int i = 0; i < potentialDeeperTables.length; i++) {
+				Table refTab = potentialDeeperTables[i];
+				if (refTab.getName().equals(refTableName)
+					|| refTab.getName().equals(centralTableName))
+						continue;
+											
+				String cardinality = cardinalityComboBoxs[i].getSelectedItem().toString();
+				if (includeCheckBoxs[i].getSelectedObjects() == null || cardinality.equals("1n"))
+					continue;
+				JLabel label1 = new JLabel(refTab.getName());
+				columnsBox.add(label1);
+				Column[] cols = refTab.getColumns();
+				for (int j = 0; j < cols.length; j++) {
+								Box horizBox = new Box(BoxLayout.X_AXIS);
+								JCheckBox check1 = new JCheckBox(cols[j].getName());
+								check1.setSelected(true);
+								horizBox.add(check1);
+								colChecks.add(check1);
+								JTextField field1 = new JTextField(cols[j].getName());
+								horizBox.add(field1);
+								colNames.add(cols[j].getName());
+								colAliases.add(field1);
+								colTable.add(refTab.getName());
+								columnsBox.add(horizBox);
+				}
+			}
+			dialogOptions = new String[] { "Ok", "Cancel" };
+			int colsOption =
+							JOptionPane.showOptionDialog(
+								null,
+								columnsBox,
+								"Select columns for the final dataset ",
+								JOptionPane.DEFAULT_OPTION,
+								JOptionPane.PLAIN_MESSAGE,
+								null,
+								dialogOptions,
+								null);
+			if (colsOption == 0) { // recover the aliases and names
+			for (int i = 0; i < colChecks.size(); i++) {
+				if (((JCheckBox) colChecks.get(i)).getSelectedObjects()	== null)
+					continue;
+
+				if (refColNames.get(colTable.get(i)) == null)
+					refColNames.put(colTable.get(i), colNames.get(i));
+				else
+					refColNames.put(
+										colTable.get(i),
+										refColNames.get(colTable.get(i))
+											+ ","
+											+ colNames.get(i));
+
+				if (refColAliases.get(colTable.get(i)) == null)
+					refColAliases.put(
+						colTable.get(i),
+						((JTextField) colAliases.get(i)).getText());
+				else
+					refColAliases.put(
+						colTable.get(i),
+						refColAliases.get(colTable.get(i))
+						+ ","
+						+ ((JTextField) colAliases.get(i)).getText());
+						}
+				}
+		}
+		
+		ArrayList tUnits = new ArrayList();
+		// CYCLE THRO THE CHOSEN TABLES
+		for (int i = 0; i < potentialDeeperTables.length; i++){
+				if (potentialDeeperTables[i].getName().equals(refTableName)
+					|| potentialDeeperTables[i].getName().equals(centralTableName))
+					continue;
+				// IF NOT CHECKED CONTINUE
+				if (includeCheckBoxs[i].getSelectedObjects() == null)
+					continue;
+							
+				String thisTableName = potentialDeeperTables[i].getName();
+		
+				// CREATE A TUNIT FOR THE EXTRA TABLE
+				Integer tunitCount = new Integer(unitCount + 1);
+				Table refTab = potentialDeeperTables[i];
+				String cardinality = cardinalityComboBoxs[i].getSelectedItem().toString();
+				String centralExtension = "";
+				if (!deepCenTextFields[i].getText().equals(""))
+					centralExtension = deepCenColumnOptions[i].getSelectedItem().toString() + 
+						deepCenOperatorOptions[i].getSelectedItem().toString() +
+						deepCenTextFields[i].getText();
+				String referencedExtension = "";
+				if (!deepTextFields[i].getText().equals(""))	
+					referencedExtension = deepColumnOptions[i].getSelectedItem().toString() + 
+								deepOperatorOptions[i].getSelectedItem().toString() +
+								deepTextFields[i].getText();
+				
+				String refColName = "";
+				String refColAlias = "";
+				if (refColNames.get(refTab.getName()) != null)
+					refColName = (String) refColNames.get(refTab.getName());
+				if (refColAliases.get(refTab.getName()) != null)
+					refColAlias = (String) refColAliases.get(refTab.getName());
+				
+							
+				TransformationUnit deeperUnit =
+							new TransformationUnit(
+								tunitCount.toString(),
+								refTab.status,
+								refTab.PK,
+								//refTab.getName(),
+								centralTableName,// call by central table name ?
+								cardinality,
+								centralExtension,
+								referencedExtension,
+								refTab.FK,
+								refColName,
+								refColAlias,
+								cenColName,
+								cenColAlias,
+								"");
+				
+				tUnits.add(deeperUnit);
+				unitCount++;
+				// IF GO DEEPER SET ON THIS RECURSIVELY CALL
+				if (deepGoDeeperCheckBoxs[i].getSelectedObjects() != null){
+						TransformationUnit[] recursiveUnits = getDeeperUnits(thisTableName, refTableName, unitCount);
+						for (int k = 0; k < recursiveUnits.length; k++){
+							tUnits.add(recursiveUnits[k]);
+							unitCount++;
+						}
+				}
+		}
+		// return the final array
+		TransformationUnit[] deeperUnits = new TransformationUnit[tUnits.size()];
+		tUnits.toArray(deeperUnits);		
+		return deeperUnits;
 	}
 	
 	public void itemStateChanged(ItemEvent e){
