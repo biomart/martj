@@ -1298,16 +1298,16 @@ public class ConfigurationGenerator implements ItemListener{
 			box2.setMaximumSize(new Dimension(750, 30));
 			cardinalitySettings.add(box2);
 			box3.add(label2);
-			box3.add(columnOptions[i]);
-			box3.add(operatorOptions[i]);
-			box3.add(textFields[i]);
+			box3.add(deepColumnOptions[i]);
+			box3.add(deepOperatorOptions[i]);
+			box3.add(deepTextFields[i]);
 			box3.setMaximumSize(new Dimension(750, 30));
 			if (partitionExtension.equals(""))
 				 cardinalitySettings.add(box3);
 			box4.add(label3);
-			box4.add(cenColumnOptions[i]);
-			box4.add(cenOperatorOptions[i]);
-			box4.add(cenTextFields[i]);
+			box4.add(deepCenColumnOptions[i]);
+			box4.add(deepCenOperatorOptions[i]);
+			box4.add(deepCenTextFields[i]);
 			box4.setMaximumSize(new Dimension(750, 30));
 			cardinalitySettings.add(box4);
 			// want to allow recursive central choice so remove
