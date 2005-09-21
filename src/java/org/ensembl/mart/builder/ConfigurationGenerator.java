@@ -822,8 +822,9 @@ public class ConfigurationGenerator implements ItemListener{
 				
 				Table[] downstreamTables = resolver.getReferencedTables(referencedTables[i].getName());
 				for (int k = 0; k < downstreamTables.length ;k++){
-					if (downstreamTables[k].getName().equals(referencedTables[i].getName())
-						|| downstreamTables[k].getName().equals(centralTableName))
+					if (downstreamTables[k].getName().equals(referencedTables[i].getName()))
+						
+							//|| downstreamTables[k].getName().equals(centralTableName))
 							continue;
 					 			
 					box6.add(goDeeperCheckBoxs[i]);
@@ -1233,8 +1234,9 @@ public class ConfigurationGenerator implements ItemListener{
 		Box cardinalitySettings = new Box(BoxLayout.Y_AXIS);
 							
 		for (int i = 0; i < potentialDeeperTables.length; i++) {
-			if (potentialDeeperTables[i].getName().equals(refTableName)
-					|| potentialDeeperTables[i].getName().equals(centralTableName))
+			if (potentialDeeperTables[i].getName().equals(refTableName))
+					
+					//|| potentialDeeperTables[i].getName().equals(centralTableName))
 					 continue;
 				
 			Box box1 = new Box(BoxLayout.X_AXIS);
