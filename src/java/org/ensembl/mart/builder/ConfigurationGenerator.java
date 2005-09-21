@@ -1238,8 +1238,8 @@ public class ConfigurationGenerator implements ItemListener{
 				(potentialDeeperTables[i].getName().equals(centralTableName) && seenTable))
 					 continue;
 			
-			if (potentialDeeperTables[i].getName().equals(centralTableName))
-					seenTable = true;
+			//if (potentialDeeperTables[i].getName().equals(centralTableName))
+			//		seenTable = true;
 			
 			
 				
@@ -1363,8 +1363,8 @@ public class ConfigurationGenerator implements ItemListener{
 						(potentialDeeperTables[i].getName().equals(centralTableName) && seenTable))
 							 continue;
 			
-				if (potentialDeeperTables[i].getName().equals(centralTableName))
-						seenTable = true;		
+				//if (potentialDeeperTables[i].getName().equals(centralTableName))
+						//seenTable = true;		
 						
 						
 											
@@ -1436,8 +1436,8 @@ public class ConfigurationGenerator implements ItemListener{
 					(potentialDeeperTables[i].getName().equals(centralTableName) && seenTable))
 						 continue;
 			
-				if (potentialDeeperTables[i].getName().equals(centralTableName))
-					seenTable = true;		
+				//if (potentialDeeperTables[i].getName().equals(centralTableName))
+				//	seenTable = true;		
 
 
 
