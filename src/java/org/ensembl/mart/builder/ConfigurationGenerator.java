@@ -1474,13 +1474,13 @@ public class ConfigurationGenerator implements ItemListener{
 							new TransformationUnit(
 								tunitCount.toString(),
 								refTab.status,
-								refTab.PK,
-								//refTab.getName(),
-								centralTableName,// call by central table name ?
+								refTab.PK,//?
+								refTab.getName(),
+								//centralTableName,// call by central table name ?
 								cardinality,
 								centralExtension,
 								referencedExtension,
-								refTab.FK,
+								refTab.FK,//?
 								refColName,
 								refColAlias,
 								cenColName,
