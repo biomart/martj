@@ -29,6 +29,62 @@ public class MetaDataResolverDMDPlatform extends MetaDataResolver {
 	}
 	
 	
+	public String [] getAllKeys (String tableName){
+		
+		// gets all PK and FKs for a table
+		HashMap allKeys= new HashMap();
+		
+		String currentTable = "";
+		String currentPK = "";
+		String currentFK = "";
+		
+		try {
+			ResultSet keys = dmd.getExportedKeys(getAdaptor().getCatalog(),getAdaptor().getSchema(),tableName);
+			while (keys.next()){
+			
+				// avoid duplications when table referenced by multiple keys	
+				if (currentTable.equals(keys.getString(7))
+					&& currentPK.equals(keys.getString(4))
+					&& currentFK.equals(keys.getString(8))) continue;
+				
+				allKeys.put(keys.getString(4),"1");
+				currentTable=keys.getString(7);
+				currentPK=keys.getString(4);
+				currentFK=keys.getString(8);		
+			}
+			currentTable = "";
+			currentPK = "";
+			currentFK = "";
+			
+			keys = dmd.getImportedKeys(getAdaptor().getCatalog(),getAdaptor().getSchema(),tableName);
+			while (keys.next()){
+			
+							// avoid duplications when table referenced by multiple keys	
+							if (currentTable.equals(keys.getString(7))
+								&& currentPK.equals(keys.getString(4))
+								&& currentFK.equals(keys.getString(8))) continue;
+				
+				allKeys.put(keys.getString(8),"");
+							currentTable=keys.getString(7);
+							currentPK=keys.getString(4);
+							currentFK=keys.getString(8);
+			}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 
+		
+		String[] b = new String[allKeys.size()];
+		int i = 0;
+		for (Iterator iter = allKeys.keySet().iterator(); iter.hasNext();) {
+		   b[i] = (String) iter.next();
+		   i++;
+		}
+		return b;
+	
+	}
+	
+	
 	public Table [] getExportedKeyTables (String centralTableName, String [] columnNames){
 		
 		ArrayList exportedTabs= new ArrayList();

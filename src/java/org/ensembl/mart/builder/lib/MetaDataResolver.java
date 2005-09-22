@@ -69,7 +69,7 @@ public abstract class MetaDataResolver {
 	public abstract Table [] getExportedKeyTables (String table_name, String [] columnNames);
 	public abstract Table [] getImportedKeyTables (String table_name, String [] columnNames);
 	protected abstract String getPrimaryKeys(String table_name);
-	
+	protected abstract String[] getAllKeys(String table_name);
 	
 	
 	public String [] getAllTableNames () {
@@ -191,11 +191,11 @@ public abstract class MetaDataResolver {
 	}
 	
 	
-	public Column [] getReferencedColumns (String name, String [] columnNames, String [] columnAliases){
+	public Column [] getReferencedColumns (String name, String [] columnNames, String [] columnAliases, Column[] centralCols){
 		
 		Column [] col;
 		ArrayList cols = new ArrayList();
-		
+				
 		for (int i=0;i<columnNames.length;i++){
 			
 			try {
@@ -231,6 +231,34 @@ public abstract class MetaDataResolver {
 			e.printStackTrace();
 		}
 		}
+		
+		// get a list of essential keys to add incase aliased or removed
+		String[] essentialKeys = getAllKeys(name);
+		OUTER:for (int i = 0; i < essentialKeys.length; i++){
+			for (int j = 0; j < cols.size(); j++){
+				if (((Column) cols.get(j)).getName().toLowerCase().equals(essentialKeys[i].toLowerCase())
+						&& (!((Column) cols.get(j)).hasAlias()) || (((Column) cols.get(j)).hasAlias() && ((Column) cols.get(j)).getAlias().toLowerCase().equals(essentialKeys[i].toLowerCase()))){
+					continue OUTER;
+				}
+			}
+			
+			//	checking this column doesn't already exist in the current central/temp table
+			if (centralCols != null){
+				for(int k = 0; k < centralCols.length; k++){
+					if (centralCols[k].getName().toLowerCase().equals(essentialKeys[i].toLowerCase()))
+						continue OUTER;		
+				}
+			}
+			
+			//System.out.println("ADDING "+essentialKeys[i]+" TO "+name);
+			Column column = new Column();
+			column.setName(essentialKeys[i]);
+			column.original_name=essentialKeys[i];
+			column.original_table=name;
+			
+			cols.add(column);
+		}
+		
 		Column [] b = new Column[cols.size()];
 				
 		if (cols.size() == 0){
@@ -293,7 +321,7 @@ public abstract class MetaDataResolver {
 		table.setName(centralTableName);
 		//String [] columnNames = {"%"};
 		
-		table.setColumns(getReferencedColumns(table.getName(),columnNames,columnAliases));
+		table.setColumns(getReferencedColumns(table.getName(),columnNames,columnAliases,null));
 		table.PK =getPrimaryKeys(centralTableName);
 		
 		// this table needs to behave like a ref table for recursive joins
@@ -335,11 +363,11 @@ public abstract class MetaDataResolver {
 	
 	
 	
-	public Table getTableColumns (String tableName, String [] columnNames, String [] columnAliases) {
+	public Table getTableColumns (String tableName, String [] columnNames, String [] columnAliases, Column[] centralCols) {
 		
 		Table table = new Table();
 		table.setName(tableName);
-		table.setColumns(getReferencedColumns(tableName, columnNames, columnAliases));
+		table.setColumns(getReferencedColumns(tableName, columnNames, columnAliases, centralCols));
 		
 		return table;
 	}

@@ -28,7 +28,10 @@ public class MetaDataResolverNotDMDPlatform extends MetaDataResolver {
 		
 	}
 	
-	
+	public String [] getAllKeys (String tableName){
+		// to be implemented
+		return new String[0];
+	}
 	
 	public Table [] getExportedKeyTables (String maintable, String [] columnNames){
 		

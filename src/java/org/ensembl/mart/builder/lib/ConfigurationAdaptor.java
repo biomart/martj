@@ -184,7 +184,8 @@ public class ConfigurationAdaptor {
 							// db interaction
 							
 							if (!transformationUnit.getElement().getAttributeValue("referencedTable").equals("main_interim")) {
-								refTable = resolver.getTableColumns(transformationUnit.getElement().getAttributeValue("referencedTable"), columnNames, columnAliases);
+								refTable = resolver.getTableColumns(transformationUnit.getElement().getAttributeValue("referencedTable"), 
+									columnNames, columnAliases,startTable.getColumns());
 								refTable.type="temp";
 							}
 							 else {
