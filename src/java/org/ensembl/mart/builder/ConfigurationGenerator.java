@@ -79,6 +79,8 @@ public class ConfigurationGenerator implements ItemListener{
 	private JCheckBox[] keepCheckBoxs;
 	private JCheckBox[] goDeeperCheckBoxs;
 	
+	private TransformationUnit[] deeperUnits;
+	
 	public ConfigurationGenerator() {
 		resolver = MartBuilder.getResolver();
 		adaptor = MartBuilder.getAdaptor();
@@ -326,7 +328,9 @@ public class ConfigurationGenerator implements ItemListener{
 				box4 = new Box(BoxLayout.X_AXIS);
 				partitionBox = new JCheckBox("Partitioning on");
 				box4.add(partitionBox);				
+				
 				allCols = new ArrayList();
+				HashMap tableMap = new HashMap();
 				referencedTables =
 					resolver.getReferencedTables((String) dmTableNameBox.getSelectedItem());
 				centralSeen = 0;
@@ -334,16 +338,37 @@ public class ConfigurationGenerator implements ItemListener{
 					if (centralSeen > 0 && referencedTables[k].getName().equals((String) 
 							dmTableNameBox.getSelectedItem()))
 						continue;
-					Column[] tableCols = referencedTables[k].getColumns();
-					for (int l = 0; l < tableCols.length; l++) {
-						String entry = referencedTables[k].getName()+"."+ tableCols[l].getName();
-						allCols.add(entry);
-					}
+					tableMap.put(referencedTables[k].getName(),"1");
+					// want to call again recursively from here - for now just go one level deeper
+					int nestedCentralSeen = 0;
+					Table[] nestedReferencedTables = resolver.getReferencedTables(referencedTables[k].getName());
+					for (int m = 0; m < nestedReferencedTables.length; m++) {
+							if (nestedCentralSeen > 0 && nestedReferencedTables[m].getName().equals(referencedTables[k].getName()))
+								continue;
+							tableMap.put(nestedReferencedTables[m].getName(),"1");	
+							if (nestedReferencedTables[m].getName().equals(referencedTables[k]))
+								nestedCentralSeen++;
+				    }
+										
 					if (referencedTables[k].getName().equals((String) dmTableNameBox.getSelectedItem()))
 						centralSeen++;
 				}
+				String[] tableArray = new String[tableMap.size()];
+				tableMap.keySet().toArray(tableArray);
+				for (int k = 0; k < tableArray.length; k++){
+					    Column[] tableCols = resolver.getCentralTable(tableArray[k]).getColumns();
+						for (int l = 0; l < tableCols.length; l++) {
+							String entry = tableArray[k]+"."+ tableCols[l].getName();
+							allCols.add(entry);
+						}
+				}
 				cols = new String[allCols.size()];	
-				allCols.toArray(cols);		
+				allCols.toArray(cols);
+				
+				
+				
+						
+				
 				partitionColsOption = new JComboBox(cols);
 				box4.add(partitionColsOption);
 				centralSettings.add(box4);
@@ -825,7 +850,7 @@ public class ConfigurationGenerator implements ItemListener{
 				cardinalitySettings.add(Box.createVerticalStrut(20));
 			}
 
-//			new code start
+			// used defined table GUI code
 			Box box6 = new Box(BoxLayout.X_AXIS);
 			Box box7 = new Box(BoxLayout.X_AXIS);
 			Box box8 = new Box(BoxLayout.X_AXIS);
@@ -910,8 +935,8 @@ public class ConfigurationGenerator implements ItemListener{
 			userKeep = new JCheckBox("Always keep for subsequent transformations");	
 			box14.add(userKeep);
 			
-			goDeeper = new JCheckBox("Go deeper if 11 or n1");	
-			box15.add(goDeeper);
+			//goDeeper = new JCheckBox("Go deeper if 11 or n1");	
+			//box15.add(goDeeper);
 	
 			cardinalitySettings.add(box6);
 			cardinalitySettings.add(box7);
@@ -922,7 +947,7 @@ public class ConfigurationGenerator implements ItemListener{
 			cardinalitySettings.add(box12);
 			cardinalitySettings.add(box13);
 			cardinalitySettings.add(box14);	
-			cardinalitySettings.add(box15);			 
+			//cardinalitySettings.add(box15);			 
 			// end of new code
 
 			JScrollPane scrollPane = new JScrollPane(cardinalitySettings);
@@ -1091,16 +1116,16 @@ public class ConfigurationGenerator implements ItemListener{
 			else if (manualChoose != 0 && !textFields[i].getText().equals(""))
 				referencedExtension =
 					((String) columnOptions[i].getSelectedItem())
-					+ ((String) operatorOptions[i].getSelectedItem())
-					+ "'" + textFields[i].getText() + "'";
+					+ " " + ((String) operatorOptions[i].getSelectedItem())
+					+ " '" + textFields[i].getText() + "'";
 
 			String centralExtension = "";
 			if (cenTextFields[i] != null
 				&& !cenTextFields[i].getText().equals(""))
 				centralExtension =
 					((String) cenColumnOptions[i].getSelectedItem())
-					 + ((String) cenOperatorOptions[i].getSelectedItem())
-					 + "'"+cenTextFields[i].getText()+"'";
+					 + " "+ ((String) cenOperatorOptions[i].getSelectedItem())
+					 + " '"+cenTextFields[i].getText()+"'";
 			
 			cardinalitySecond.put(refTab.getName(), cardinality);
 			cardinalityFirst.put(centralTableName, cardinalitySecond);
@@ -1134,19 +1159,6 @@ public class ConfigurationGenerator implements ItemListener{
 				externalSchema= "";	
 			}
 			
-			// make sure this added 11 or n1 table is not in tableList anymore
-			//tableList.remove(refTab.getName());
-			// add any referenced tables as potential dimension candidates ? if user shouldn't choose just 1n ones
-			//Table[] downstreamTables = resolver.getReferencedTables(refTab.getName());
-			//for (int k = 0; k < downstreamTables.length ;k++){
-			//	if (downstreamTables[k].getName().equals(refTab) ||
-			//		downstreamTables[k].getName().equals(centralTableName))
-			//			continue;
-			//	tableList.put(downstreamTables[k].getName(),"reference");
-			//	
-			//}
-			
-			
 			TransformationUnit transformationUnit =
 							new TransformationUnit(
 								tunitCount.toString(),
@@ -1167,11 +1179,18 @@ public class ConfigurationGenerator implements ItemListener{
 			unitCount++;
 			
 			//if (goDeeperCheckBoxs[i].getSelectedObjects() != null){ - NOW COMPULSORY
-				TransformationUnit[] deeperUnits = getDeeperUnits(refTab.getName(), centralTableName, unitCount);
-				for (int k = 0; k < deeperUnits.length; k++){
-					transformation.insertChildObject(unitCount,deeperUnits[k]);
-					unitCount++;
+			
+			if (manualChoose != 0){
+				deeperUnits = getDeeperUnits(refTab.getName(), centralTableName, unitCount);
+			}
+			
+			for (int k = 0; k < deeperUnits.length; k++){
+				if (deeperUnits[k].getElement().getAttributeValue("referencedTable").equals(chosenTable)){
+						deeperUnits[k].getElement().setAttribute("referencedProjection",partitionExtension);	
 				}
+				transformation.insertChildObject(unitCount,deeperUnits[k].copy());// bug
+				unitCount++;
+			}
 			//}
 			
 		}
@@ -1206,7 +1225,7 @@ public class ConfigurationGenerator implements ItemListener{
 								"",
 								"",
 								"",
-								centralExtensionColumn+centralExtensionOperator+"'"+centralExtensionValue+"'",
+								centralExtensionColumn+" "+centralExtensionOperator+" '"+centralExtensionValue+"'",
 								"",
 								"",
 								"",
@@ -1236,17 +1255,11 @@ public class ConfigurationGenerator implements ItemListener{
 		JCheckBox[] deepGoDeeperCheckBoxs = new JCheckBox[potentialDeeperTables.length];
 		
 		Box cardinalitySettings = new Box(BoxLayout.Y_AXIS);
-		boolean seenTable = false;					
+							
 		for (int i = 0; i < potentialDeeperTables.length; i++) {
-			if (potentialDeeperTables[i].getName().equals(refTableName) || 
-				(potentialDeeperTables[i].getName().equals(centralTableName) && seenTable))
+			if (potentialDeeperTables[i].getName().equals(refTableName))
 					 continue;
-			
-			//if (potentialDeeperTables[i].getName().equals(centralTableName))
-			//		seenTable = true;
-			
-			
-				
+					
 			Box box1 = new Box(BoxLayout.X_AXIS);
 			Box box2 = new Box(BoxLayout.X_AXIS);
 			Box box3 = new Box(BoxLayout.X_AXIS);
@@ -1313,18 +1326,7 @@ public class ConfigurationGenerator implements ItemListener{
 			box4.add(deepCenOperatorOptions[i]);
 			box4.add(deepCenTextFields[i]);
 			box4.setMaximumSize(new Dimension(750, 30));
-			cardinalitySettings.add(box4);
-			// want to allow recursive central choice so remove
-			//Table[] downstreamTables = resolver.getReferencedTables(potentialDeeperTables[i].getName());
-			//for (int k = 0; k < downstreamTables.length ;k++){
-			 //	if (downstreamTables[k].getName().equals(potentialDeeperTables[i].getName())
-			 	//	|| downstreamTables[k].getName().equals(refTableName))
-			 	//		continue;
-					 			
-			 	//box6.add(deepGoDeeperCheckBoxs[i]);
-			 	//cardinalitySettings.add(box6);
-			 	//break;
-			//}				
+			cardinalitySettings.add(box4);		
 			cardinalitySettings.add(Box.createVerticalStrut(20));
 		}
 		
@@ -1356,22 +1358,12 @@ public class ConfigurationGenerator implements ItemListener{
 			ArrayList colAliases = new ArrayList();
 			ArrayList colNames = new ArrayList();
 			ArrayList colTable = new ArrayList();
-			seenTable = false;
 			for (int i = 0; i < potentialDeeperTables.length; i++) {
 				Table refTab = potentialDeeperTables[i];
-				//if (refTab.getName().equals(refTableName)
-				//	|| refTab.getName().equals(centralTableName))
-				//		continue;
-						
-				if (potentialDeeperTables[i].getName().equals(refTableName) || 
-						(potentialDeeperTables[i].getName().equals(centralTableName) && seenTable))
+								
+				if (potentialDeeperTables[i].getName().equals(refTableName))
 							 continue;
-			
-				//if (potentialDeeperTables[i].getName().equals(centralTableName))
-						//seenTable = true;		
-						
-						
-											
+									
 				String cardinality = cardinalityComboBoxs[i].getSelectedItem().toString();
 				if (includeCheckBoxs[i].getSelectedObjects() == null || cardinality.equals("1n"))
 					continue;
@@ -1433,18 +1425,10 @@ public class ConfigurationGenerator implements ItemListener{
 		
 		ArrayList tUnits = new ArrayList();
 		// CYCLE THRO THE CHOSEN TABLES
-		seenTable = false;
 		for (int i = 0; i < potentialDeeperTables.length; i++){
 				
-				if (potentialDeeperTables[i].getName().equals(refTableName) || 
-					(potentialDeeperTables[i].getName().equals(centralTableName) && seenTable))
+				if (potentialDeeperTables[i].getName().equals(refTableName))
 						 continue;
-			
-				//if (potentialDeeperTables[i].getName().equals(centralTableName))
-				//	seenTable = true;		
-
-
-
 				// IF NOT CHECKED CONTINUE
 				if (includeCheckBoxs[i].getSelectedObjects() == null)
 					continue;
@@ -1463,14 +1447,16 @@ public class ConfigurationGenerator implements ItemListener{
 				
 				String centralExtension = "";
 				if (!deepCenTextFields[i].getText().equals(""))
-					centralExtension = deepCenColumnOptions[i].getSelectedItem().toString() + 
-						deepCenOperatorOptions[i].getSelectedItem().toString() +
-						deepCenTextFields[i].getText();
+					centralExtension = deepCenColumnOptions[i].getSelectedItem().toString() + " " +
+						deepCenOperatorOptions[i].getSelectedItem().toString() + " '" + 
+						deepCenTextFields[i].getText() + "'";
 				String referencedExtension = "";
+				
+				
 				if (!deepTextFields[i].getText().equals(""))	
-					referencedExtension = deepColumnOptions[i].getSelectedItem().toString() + 
-								deepOperatorOptions[i].getSelectedItem().toString() +
-								deepTextFields[i].getText();
+					referencedExtension = deepColumnOptions[i].getSelectedItem().toString() + " " + 
+								deepOperatorOptions[i].getSelectedItem().toString() + " '" + 
+								deepTextFields[i].getText() + "'";
 				
 				String refColName = "";
 				String refColAlias = "";
@@ -1478,18 +1464,7 @@ public class ConfigurationGenerator implements ItemListener{
 					refColName = (String) refColNames.get(refTab.getName());
 				if (refColAliases.get(refTab.getName()) != null)
 					refColAlias = (String) refColAliases.get(refTab.getName());
-				
-				// remove any 11 or n1 from tableList just in case
-				//tableList.remove(potentialDeeperTables[i].getName());
-				// add any referenced tables as potential dimension candidates ? if user shouldn't choose just 1n ones
-				//Table[] downstreamTables = resolver.getReferencedTables(potentialDeeperTables[i].getName());
-				//for (int k = 0; k < downstreamTables.length ;k++){
-				//	if (downstreamTables[k].getName().equals(potentialDeeperTables[i]) ||
-				//		downstreamTables[k].getName().equals(refTableName))
-				//			continue;
-				//	tableList.put(downstreamTables[k].getName(),"reference");
-				
-				//}			
+					
 				TransformationUnit deeperUnit =
 							new TransformationUnit(
 								tunitCount.toString(),
@@ -1563,24 +1538,43 @@ public class ConfigurationGenerator implements ItemListener{
 			}
 		}
 		else if (e.getSource().equals(dmTableNameBox)){
+			
 			ArrayList allCols = new ArrayList();
-			Table[] referencedTables =
+			HashMap tableMap = new HashMap();
+			referencedTables =
 				resolver.getReferencedTables((String) dmTableNameBox.getSelectedItem());
 			int centralSeen = 0;
 			for (int k = 0; k < referencedTables.length; k++) {
 				if (centralSeen > 0 && referencedTables[k].getName().equals((String) 
 						dmTableNameBox.getSelectedItem()))
 					continue;
-				Column[] tableCols = referencedTables[k].getColumns();
-				for (int l = 0; l < tableCols.length; l++) {
-					String entry = referencedTables[k].getName()+"."+ tableCols[l].getName();
-					allCols.add(entry);
+				tableMap.put(referencedTables[k],"1");
+				// want to call again recursively from here - for now just go one level deeper
+				int nestedCentralSeen = 0;
+				Table[] nestedReferencedTables = resolver.getReferencedTables(referencedTables[k].getName());
+				for (int m = 0; m < nestedReferencedTables.length; m++) {
+						if (nestedCentralSeen > 0 && nestedReferencedTables[m].getName().equals(referencedTables[k].getName()))
+							continue;
+						tableMap.put(nestedReferencedTables[m],"1");	
+						if (nestedReferencedTables[m].getName().equals(referencedTables[k]))
+							nestedCentralSeen++;
 				}
+										
 				if (referencedTables[k].getName().equals((String) dmTableNameBox.getSelectedItem()))
 					centralSeen++;
 			}
+			Table[] tableArray = new Table[tableMap.size()];
+			tableMap.keySet().toArray(tableArray);
+			for (int k = 0; k < tableArray.length; k++){
+					Column[] tableCols = tableArray[k].getColumns();
+					for (int l = 0; l < tableCols.length; l++) {
+						String entry = tableArray[k].getName()+"."+ tableCols[l].getName();
+						allCols.add(entry);
+					}
+			}
 			String[] cols = new String[allCols.size()];	
 			allCols.toArray(cols);
+	
 			partitionColsOption.removeAllItems();
 			for (int j = 0; j < cols.length; j++){
 				partitionColsOption.addItem(cols[j]);
@@ -1605,6 +1599,7 @@ public class ConfigurationGenerator implements ItemListener{
 			}
 			String[] cols = new String[allCols.size()];	
 			allCols.toArray(cols);
+			
 			partitionColsOption.removeAllItems();
 			for (int j = 0; j < cols.length; j++){
 				partitionColsOption.addItem(cols[j]);
