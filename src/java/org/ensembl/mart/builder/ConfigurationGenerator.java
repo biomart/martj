@@ -819,18 +819,9 @@ public class ConfigurationGenerator implements ItemListener{
 				cardinalitySettings.add(box4);
 				box5.add(keepCheckBoxs[i]);
 				cardinalitySettings.add(box5);
-				// want to allow central recursive joins so remove
-				//Table[] downstreamTables = resolver.getReferencedTables(referencedTables[i].getName());
-				//for (int k = 0; k < downstreamTables.length ;k++){
-				//	if (downstreamTables[k].getName().equals(referencedTables[i].getName())
-				//		|| downstreamTables[k].getName().equals(centralTableName))
-				//			continue;
-					 			
-					box6.add(goDeeperCheckBoxs[i]);
-					cardinalitySettings.add(box6);
-				//	break;
-				//}		
-
+				
+				//box6.add(goDeeperCheckBoxs[i]);
+				//cardinalitySettings.add(box6);
 				cardinalitySettings.add(Box.createVerticalStrut(20));
 			}
 
@@ -1143,6 +1134,19 @@ public class ConfigurationGenerator implements ItemListener{
 				externalSchema= "";	
 			}
 			
+			// make sure this added 11 or n1 table is not in tableList anymore
+			//tableList.remove(refTab.getName());
+			// add any referenced tables as potential dimension candidates ? if user shouldn't choose just 1n ones
+			//Table[] downstreamTables = resolver.getReferencedTables(refTab.getName());
+			//for (int k = 0; k < downstreamTables.length ;k++){
+			//	if (downstreamTables[k].getName().equals(refTab) ||
+			//		downstreamTables[k].getName().equals(centralTableName))
+			//			continue;
+			//	tableList.put(downstreamTables[k].getName(),"reference");
+			//	
+			//}
+			
+			
 			TransformationUnit transformationUnit =
 							new TransformationUnit(
 								tunitCount.toString(),
@@ -1162,13 +1166,13 @@ public class ConfigurationGenerator implements ItemListener{
 			transformation.insertChildObject(unitCount, transformationUnit);
 			unitCount++;
 			
-			if (goDeeperCheckBoxs[i].getSelectedObjects() != null){
+			//if (goDeeperCheckBoxs[i].getSelectedObjects() != null){ - NOW COMPULSORY
 				TransformationUnit[] deeperUnits = getDeeperUnits(refTab.getName(), centralTableName, unitCount);
 				for (int k = 0; k < deeperUnits.length; k++){
 					transformation.insertChildObject(unitCount,deeperUnits[k]);
 					unitCount++;
 				}
-			}
+			//}
 			
 		}
 
@@ -1222,7 +1226,7 @@ public class ConfigurationGenerator implements ItemListener{
 		
 		JCheckBox[] includeCheckBoxs = new JCheckBox[potentialDeeperTables.length];
 		JComboBox[] cardinalityComboBoxs = new JComboBox[potentialDeeperTables.length];
-		String[] deepCardinalityOptions = new String[] { "11", "n1" };
+		//String[] deepCardinalityOptions = new String[] { "11", "n1" };
 		JComboBox[] deepColumnOptions = new JComboBox[potentialDeeperTables.length];
 		JComboBox[] deepOperatorOptions = new JComboBox[potentialDeeperTables.length];
 		JTextField[] deepTextFields = new JTextField[potentialDeeperTables.length];
@@ -1254,7 +1258,7 @@ public class ConfigurationGenerator implements ItemListener{
 			JLabel label1 =	new JLabel("Cardinality for "+refTableName+"."+potentialDeeperTables[i].FK
 					 +" => "+ potentialDeeperTables[i].getName()+"."+potentialDeeperTables[i].PK
 					 +" ("+ potentialDeeperTables[i].status+ ")");
-			cardinalityComboBoxs[i] = new JComboBox(deepCardinalityOptions);
+			cardinalityComboBoxs[i] = new JComboBox(cardinalityOptions);
 					 					 
 			JLabel label2 =	new JLabel("Referenced projection/restriction (optional)");
 			String[] columnNames = { "%" };
@@ -1288,7 +1292,7 @@ public class ConfigurationGenerator implements ItemListener{
 			if (!centralExtensionValue.equals(""))
 				 cenTextFields[i].setText(centralExtensionValue);
 					
-			deepGoDeeperCheckBoxs[i] = new JCheckBox("Go deeper if 11 or n1");	
+			//deepGoDeeperCheckBoxs[i] = new JCheckBox("Go deeper if 11 or n1");	
 				
 			box1.add(includeCheckBoxs[i]);
 			box1.add(new JLabel(""));
@@ -1317,8 +1321,8 @@ public class ConfigurationGenerator implements ItemListener{
 			 	//	|| downstreamTables[k].getName().equals(refTableName))
 			 	//		continue;
 					 			
-			 	box6.add(deepGoDeeperCheckBoxs[i]);
-			 	cardinalitySettings.add(box6);
+			 	//box6.add(deepGoDeeperCheckBoxs[i]);
+			 	//cardinalitySettings.add(box6);
 			 	//break;
 			//}				
 			cardinalitySettings.add(Box.createVerticalStrut(20));
@@ -1333,7 +1337,7 @@ public class ConfigurationGenerator implements ItemListener{
 		int option = JOptionPane.showOptionDialog(
 							null,
 							scrollPane,
-							"Select any 11 or n1 tables you want to include downstream of "+refTableName,
+							"Select any downstream tables you want to include for "+refTableName,
 							JOptionPane.DEFAULT_OPTION,
 							JOptionPane.PLAIN_MESSAGE,
 							null,
@@ -1446,11 +1450,17 @@ public class ConfigurationGenerator implements ItemListener{
 					continue;
 							
 				String thisTableName = potentialDeeperTables[i].getName();
+				String cardinality = cardinalityComboBoxs[i].getSelectedItem().toString();
+		
+				if (cardinality.equals("1n")){
+					tableList.put(thisTableName,"reference");
+					continue;
+				}
 		
 				// CREATE A TUNIT FOR THE EXTRA TABLE
 				Integer tunitCount = new Integer(unitCount + 1);
 				Table refTab = potentialDeeperTables[i];
-				String cardinality = cardinalityComboBoxs[i].getSelectedItem().toString();
+				
 				String centralExtension = "";
 				if (!deepCenTextFields[i].getText().equals(""))
 					centralExtension = deepCenColumnOptions[i].getSelectedItem().toString() + 
@@ -1469,7 +1479,17 @@ public class ConfigurationGenerator implements ItemListener{
 				if (refColAliases.get(refTab.getName()) != null)
 					refColAlias = (String) refColAliases.get(refTab.getName());
 				
-							
+				// remove any 11 or n1 from tableList just in case
+				//tableList.remove(potentialDeeperTables[i].getName());
+				// add any referenced tables as potential dimension candidates ? if user shouldn't choose just 1n ones
+				//Table[] downstreamTables = resolver.getReferencedTables(potentialDeeperTables[i].getName());
+				//for (int k = 0; k < downstreamTables.length ;k++){
+				//	if (downstreamTables[k].getName().equals(potentialDeeperTables[i]) ||
+				//		downstreamTables[k].getName().equals(refTableName))
+				//			continue;
+				//	tableList.put(downstreamTables[k].getName(),"reference");
+				
+				//}			
 				TransformationUnit deeperUnit =
 							new TransformationUnit(
 								tunitCount.toString(),
@@ -1489,14 +1509,14 @@ public class ConfigurationGenerator implements ItemListener{
 				
 				tUnits.add(deeperUnit);
 				unitCount++;
-				// IF GO DEEPER SET ON THIS RECURSIVELY CALL
-				if (deepGoDeeperCheckBoxs[i].getSelectedObjects() != null){
-						TransformationUnit[] recursiveUnits = getDeeperUnits(thisTableName, refTableName, unitCount);
-						for (int k = 0; k < recursiveUnits.length; k++){
-							tUnits.add(recursiveUnits[k]);
+				// IF GO DEEPER SET ON THIS - CALL getDeeperUnits RECURSIVELY
+				//if (deepGoDeeperCheckBoxs[i].getSelectedObjects() != null){ - NOW COMPULSORY
+						TransformationUnit[] deeperUnits = getDeeperUnits(thisTableName, refTableName, unitCount);
+						for (int k = 0; k < deeperUnits.length; k++){
+							tUnits.add(deeperUnits[k]);
 							unitCount++;
 						}
-				}
+				//}
 		}
 		// return the final array
 		TransformationUnit[] deeperUnits = new TransformationUnit[tUnits.size()];
