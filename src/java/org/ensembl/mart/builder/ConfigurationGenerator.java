@@ -52,8 +52,8 @@ public class ConfigurationGenerator implements ItemListener{
 	private String centralExtensionValue;
 	private String partitionExtension;
 	private int leftJoin = 0;
-	private String[] dialogOptions = new String[] { "Continue", "Select columns", "Finish"};
-	private String[] extendedDialogOptions = new String[] { "Continue", "Select columns", "Finish","Skip"};
+	private String[] dialogOptions = new String[] { "Continue", "Finish"};
+	private String[] extendedDialogOptions = new String[] { "Continue", "Finish","Skip"};
 	private String[] standardOptions = new String[] { "OK", "Cancel" };
 	private String[] includeCentralFilterOptions = new String[] { "N", "Y" };
 	private String[] opOptions = new String [] {"=",">","<",">=","<=","like"};
@@ -156,9 +156,9 @@ public class ConfigurationGenerator implements ItemListener{
 			Dataset dataset = new Dataset(datasetName, "");
 
 			String centralTableName = tableNameBox.getSelectedItem().toString();
-			if (option2 == 2)
+			if (option2 == 1)
 				break;
-			else if (option2 == 1)
+			//else if (option2 == 1)
 				chooseColumns(centralTableName);
 
 			partitionExtension = "";
@@ -388,7 +388,7 @@ public class ConfigurationGenerator implements ItemListener{
 				String includeCentralFilters =
 					includeCentralBox.getSelectedItem().toString();
 
-				if (option3 == 3 ){
+				if (option3 == 2 ){
 					
 					// you can skip candidates here
 					tableList.remove(centralTableName);
@@ -397,9 +397,9 @@ public class ConfigurationGenerator implements ItemListener{
 					continue; // next dimension table candidate	
 					
 				}
-				if (option3 == 2)
-					break;
 				if (option3 == 1)
+					break;
+				//if (option3 == 1)
 					chooseColumns(centralTableName);
 				
 
@@ -955,7 +955,7 @@ public class ConfigurationGenerator implements ItemListener{
 			scrollPane.setPreferredSize(minimumSize);
 
 			String[] dialogOptions =
-				new String[] { "Continue", "Select columns", "Cancel"};
+				new String[] { "Continue", "Cancel"};
 
 			int option =
 				JOptionPane.showOptionDialog(
@@ -973,7 +973,7 @@ public class ConfigurationGenerator implements ItemListener{
 					null);
 			if (option == 2)
 				return transformation;
-			else if (option == 1) {
+			//else if (option == 1) {
 				// REFERENCE TABLE - CHOOSE COLS
 				Box columnsBox = new Box(BoxLayout.Y_AXIS);
 				ArrayList colChecks = new ArrayList();
@@ -1007,8 +1007,10 @@ public class ConfigurationGenerator implements ItemListener{
 					}
 				}
 				dialogOptions = new String[] { "Ok", "Cancel" };
-				int colsOption =
-					JOptionPane.showOptionDialog(
+				int colsOption = 1;
+				if (columnsBox.getComponents().length != 0){
+					colsOption =
+						JOptionPane.showOptionDialog(
 						null,
 						columnsBox,
 						"Select columns for the final dataset ",
@@ -1017,6 +1019,7 @@ public class ConfigurationGenerator implements ItemListener{
 						null,
 						dialogOptions,
 						null);
+				}
 				if (colsOption == 0) { // recover the aliases and names
 					for (int i = 0; i < colChecks.size(); i++) {
 						if (((JCheckBox) colChecks.get(i)).getSelectedObjects()
@@ -1044,7 +1047,7 @@ public class ConfigurationGenerator implements ItemListener{
 									+ ((JTextField) colAliases.get(i)).getText());
 					}
 				}
-			}
+			//}
 		} // end of GUI BOX generation
 	
 		// deal with user defined table
@@ -1334,7 +1337,7 @@ public class ConfigurationGenerator implements ItemListener{
 		Dimension minimumSize = new Dimension(750, 500);
 		scrollPane.setPreferredSize(minimumSize);
 
-		String[] dialogOptions = new String[] { "Continue", "Select columns", "Cancel"};
+		String[] dialogOptions = new String[] { "Continue", "Cancel"};
 
 		int option = JOptionPane.showOptionDialog(
 							null,
@@ -1348,10 +1351,10 @@ public class ConfigurationGenerator implements ItemListener{
 		
 		
 		
-		if (option == 2){
+		if (option == 1){
 			//return transformation;
 		}
-		else if (option == 1) {
+		//else if (option == 1) {
 			// REFERENCE TABLE - CHOOSE COLS
 			Box columnsBox = new Box(BoxLayout.Y_AXIS);
 			ArrayList colChecks = new ArrayList();
@@ -1385,7 +1388,9 @@ public class ConfigurationGenerator implements ItemListener{
 				}
 			}
 			dialogOptions = new String[] { "Ok", "Cancel" };
-			int colsOption =
+			int colsOption = 1;
+			if (columnsBox.getComponents().length != 0){
+				colsOption =
 							JOptionPane.showOptionDialog(
 								null,
 								columnsBox,
@@ -1395,6 +1400,8 @@ public class ConfigurationGenerator implements ItemListener{
 								null,
 								dialogOptions,
 								null);
+			}
+			
 			if (colsOption == 0) { // recover the aliases and names
 			for (int i = 0; i < colChecks.size(); i++) {
 				if (((JCheckBox) colChecks.get(i)).getSelectedObjects()	== null)
@@ -1421,7 +1428,7 @@ public class ConfigurationGenerator implements ItemListener{
 						+ ((JTextField) colAliases.get(i)).getText());
 						}
 				}
-		}
+		//}
 		
 		ArrayList tUnits = new ArrayList();
 		// CYCLE THRO THE CHOSEN TABLES
