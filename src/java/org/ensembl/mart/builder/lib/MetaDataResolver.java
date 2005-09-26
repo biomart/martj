@@ -228,13 +228,13 @@ public abstract class MetaDataResolver {
 				column.original_name=columns.getString(4);
 				column.original_table=name;
 				if (columnAliases != null){
-				if (!columnAliases[i].equals("null")) {
-					column.setAlias(columnAliases[i]);
-				    column.userAlias=true;
-				
-				//System.out.println("setting alias "+column.original_table+" colmn name "+column.name+" alias "+column.alias);
+					if (!columnAliases[i].equals("null")) {
+						if (!columnAliases[i].equals(columns.getString(4))){
+							column.setAlias(columnAliases[i]);
+				    		column.userAlias=true;
+						}
+					}
 				}
-			}
 			
 				cols.add(column);
 				

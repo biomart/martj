@@ -241,9 +241,9 @@ public class TransformationUnitDouble extends TransformationUnit {
 				ref_table_col.append(ref_table.getName()+"."+ref_table.getColumns()[j].getName()+",");
 			}
 		}
-		
-		ref_table_col.delete(ref_table_col.length()-1,ref_table_col.length());
-	
+		if (ref_table_col.length() > 0){
+			ref_table_col.delete(ref_table_col.length()-1,ref_table_col.length());
+		}
 		return ref_table_col;
 	
 	}
@@ -265,6 +265,10 @@ public class TransformationUnitDouble extends TransformationUnit {
 	    //	System.out.println("type: "+tempStart.type+" name "+tempStart.getName());
 	    
 		StringBuffer tempsql = new StringBuffer ("CREATE TABLE "+targetSchema+".");
+		
+		if (ref_table_col.length() <= 0){// if no ref cols then delete the extra comma
+			temp_start_col.delete(temp_start_col.length()-1,temp_start_col.length());
+		}
 		
 		tempsql.append(temp+ "  AS SELECT "+temp_start_col.toString()+ref_table_col.toString()+" FROM "+ 
 				start+ ONE +ref+ TWO +ref+"."+RFKey+" = "+ start+"."+TSKey);

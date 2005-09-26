@@ -155,8 +155,14 @@ public class ConfigurationAdaptor {
 						TransformationUnit transformationUnit = (TransformationUnit) transformationUnits[k];
 						//System.out.println("TRANSFORMATION UNIT:"+transformationUnit.getElement().getAttributeValue("internalName"));	
 					
-						if (!transformationUnit.getElement().getAttributeValue("centralColumnNames").equals("")) centralColumnNames = transformationUnit.getElement().getAttributeValue("centralColumnNames").split(",");
-						if (!transformationUnit.getElement().getAttributeValue("centralColumnAliases").equals("")) centralColumnAliases = transformationUnit.getElement().getAttributeValue("centralColumnAliases").split(",");
+						//if (transformationUnit.getElement().getAttributeValue("centralColumnNames").equals("")){
+						//	System.out.println("NO CENTRAL COL NAMES SET - FIX - FOR:"+transformationUnit.getElement().getAttributeValue("internalName"));
+						//}
+						centralColumnNames = transformationUnit.getElement().getAttributeValue("centralColumnNames").split(",");
+						//if (transformationUnit.getElement().getAttributeValue("centralColumnAliases").equals("")){
+						//	System.out.println("NO CENTRAL COL ALIASES SET - FIX - FOR:"+transformationUnit.getElement().getAttributeValue("internalName"));
+						//}
+						centralColumnAliases = transformationUnit.getElement().getAttributeValue("centralColumnAliases").split(",");
 											
 						//db interaction
 						startTable= resolver.getCentralTable(transformation.getElement().getAttributeValue("centralTable"),centralColumnNames,centralColumnAliases);
@@ -166,12 +172,18 @@ public class ConfigurationAdaptor {
 						String [] columnNames = { "%" };
 						String [] columnAliases=null;
 											
-						if (!transformationUnit.getElement().getAttributeValue("referenceColumnNames").equals(""))
-							 columnNames = transformationUnit.getElement().getAttributeValue("referenceColumnNames").split(","); 
-						if (!transformationUnit.getElement().getAttributeValue("referenceColumnAliases").equals(""))
-							columnAliases = transformationUnit.getElement().getAttributeValue("referenceColumnAliases").split(","); 
+						//if (transformationUnit.getElement().getAttributeValue("referenceColumnNames").equals("")){
+						//	System.out.println("NO REF COL NAMES SET - FIX - FOR:"+transformationUnit.getElement().getAttributeValue("internalName"));
+						
+						//}
+						columnNames = transformationUnit.getElement().getAttributeValue("referenceColumnNames").split(","); 
+						
+						//if (transformationUnit.getElement().getAttributeValue("referenceColumnAliases").equals("")){
+						//	System.out.println("NO CENTRAL REF COL ALIASES SET - FIX - FOR:"+transformationUnit.getElement().getAttributeValue("internalName"));
+						
+						//}
+						columnAliases = transformationUnit.getElement().getAttributeValue("referenceColumnAliases").split(","); 
 			
-                
 						TransformationUnit dunit= null;
 						Table refTable = null;
 				
