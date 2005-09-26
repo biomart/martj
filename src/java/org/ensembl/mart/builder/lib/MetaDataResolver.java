@@ -162,6 +162,11 @@ public abstract class MetaDataResolver {
 		Column [] col;
 		ArrayList cols = new ArrayList();
 		
+		// for reading oracle created config in mysql
+		if (adaptor.getRdbms().equals("mysql")) name =name.toLowerCase();
+		
+		
+		
 		for (int i=0;i<columnNames.length;i++){
 		try {
 			ResultSet columns=dmd.getColumns(getAdaptor().getCatalog(),getAdaptor().getSchema(),name,columnNames[i]);
@@ -183,8 +188,8 @@ public abstract class MetaDataResolver {
 		
 						
 		if (cols.size() == 0){
-			System.out.println("no columns for your table, please check the table/column name " +
-			" for "+name.toUpperCase()+" in your config file");		
+			System.out.println("Message from DMDREsolver: No columns for your table, please check name/capitalisation for your schema: "+getAdaptor().getSchema()+ 
+					" table: "+name+" and user defined columns in your transformation config file and db connection window");		
 		}
 				
 		return (Column []) cols.toArray(b);
@@ -195,6 +200,13 @@ public abstract class MetaDataResolver {
 		
 		Column [] col;
 		ArrayList cols = new ArrayList();
+		
+		
+
+		// for reading oracle created config in mysql
+		if (adaptor.getRdbms().equals("mysql")) name =name.toLowerCase();
+		
+		
 				
 		for (int i=0;i<columnNames.length;i++){
 			
@@ -262,7 +274,7 @@ public abstract class MetaDataResolver {
 		Column [] b = new Column[cols.size()];
 				
 		if (cols.size() == 0){
-			System.out.println("no columns for your table, please check name/capitalisation for your schema: "+getAdaptor().getSchema()+ 
+			System.out.println("Message from DMDREsolver: No columns for your table, please check name/capitalisation for your schema: "+getAdaptor().getSchema()+ 
 				" table: "+name+" and user defined columns in your transformation config file and db connection window");		
 		}
 		

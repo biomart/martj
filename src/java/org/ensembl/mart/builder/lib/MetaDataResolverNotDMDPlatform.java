@@ -118,16 +118,23 @@ public class MetaDataResolverNotDMDPlatform extends MetaDataResolver {
 	
 	
 	
-	protected String getPrimaryKeys (String maintable){
+	protected String getPrimaryKeys (String mainTable){
 		
 		String pk = null;
+		
+		if(adaptor.getRdbms().equals("mysql")) mainTable =mainTable.toLowerCase();
+		
 		
 		try {
 			
 			// DMD does not understand mysql composite key, need to get them 'hard way'.
 			//ResultSet keys = dmd.getPrimaryKeys(getAdaptor().catalog,getAdaptor().username,maintable);
 
-			String sql = "describe " + maintable;
+			
+			
+			String sql = "describe " + mainTable;
+			
+			
 			PreparedStatement ds = connection.prepareStatement(sql);
             ResultSet rs= ds.executeQuery();
 			
