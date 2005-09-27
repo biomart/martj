@@ -505,7 +505,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 	
 	
 
-	public static void submitDatabase(String sqql, String sqqls) {
+	public static void submitDatabase(String sql) {
 		Connection con = null;
 		Statement sts = null;
 
@@ -514,8 +514,8 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		try {
 
 			sts = getDbConnection().createStatement();
-			int rss = sts.executeUpdate(sqql);
-			int rss2 = sts.executeUpdate(sqqls);
+			int rss = sts.executeUpdate(sql);
+			//int rss2 = sts.executeUpdate(sqqls);
 		}
 
 		catch (Exception es) {
@@ -645,6 +645,7 @@ public void createTable() {
 		
 		int p=0;
 		String array = new String();
+		String array2 = new String();
 		int li;
 		
 		for (p=0; p<tableNames.size(); p++){
@@ -654,25 +655,31 @@ public void createTable() {
 			}
 			//System.out.println("CurrentTable: "+currentTable);
 			ArrayList attributeArray = new ArrayList();
+			ArrayList attributeArray2 = new ArrayList();
 			
 			for (int z = 0; z < selectedAttributes.size(); z++) {
 				Element ace = (Element) selectedAttributes.get(z);
 				
 				if (ace.getAttributeValue("tableConstraint").equals(currentTable)) {
 				
-					attributeArray.add(ace.getAttributeValue("buttontext"));	
-					//System.out.println("Attribute: " + ace.getAttributeValue("buttontext"));
-				
+					attributeArray.add(ace.getAttributeValue("buttontext"));
+					attributeArray2.add(ace.getName());
 				}
 			}
 			
 			String sql = new String();
 			array = attributeArray.toString();
+			array2 = attributeArray2.toString();
 			li = array.lastIndexOf("]");
 			array = array.substring(1,li);
-			array = array.replaceAll(",","\",\"");
-			sql = "INSERT INTO " + tableNames.get(p) + " VALUES " + array;
+			array = array.replaceAll(", ","\",\"");
+			li = array2.lastIndexOf("]");
+			array2 = array2.substring(1,li);
+			
+			sql = "INSERT INTO " + tableNames.get(p) +" (" + array2 + ") " + "VALUES (\"" + array + "\")";
 			System.out.println(sql);
+			
+			submitDatabase(sql); 
 			
 		}
 }
