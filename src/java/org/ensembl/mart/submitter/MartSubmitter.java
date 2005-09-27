@@ -148,9 +148,9 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 		// Build the first menu.
 		menu = new JMenu("File");
+		
 		// menu.setMnemonic(KeyEvent.VK_F);
-		menu.getAccessibleContext().setAccessibleDescription(
-				"the file related menu");
+		menu.getAccessibleContext().setAccessibleDescription("the file related menu");
 		menuBar.add(menu);
 
 		menuItem = new JMenuItem("Database Connection ");
@@ -221,7 +221,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 			}
 		});
 	}
-
+	
 	// Inner class that handles Menu Action Events
 	protected class MenuActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
@@ -276,23 +276,10 @@ public class MartSubmitter extends JFrame implements ActionListener {
 	}
 
 	public void importDatasetConfig() {
-		
-		
-		
 		String[] datasets = getDatasets();
-		
-		
-		//for (int i=0;i<datasets.length; i++){
-			
-			//System.out.println("printing "+datasets[i]);
-		//}
-		
-		
 		
 		try {
 			disableCursor();
-
-			
 
 			if (datasets.length == 0) {
 				JOptionPane.showMessageDialog(this,
@@ -310,7 +297,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 			getXML(dataset);
 
-			createCheckBoxes(doc);
+			addTextBoxes(doc);
 
 		} catch (Exception e) {
 			JOptionPane
@@ -325,13 +312,9 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 	}
 
-	private void createCheckBoxes(Document doc) {
-
+	private void addTextBoxes(Document doc) {
 		SubmitFrame frame = createFrame();
-
-		//System.out.println("getting xml"
-			//	+ doc.getRootElement().getAttributeValue("dataset"));
-		//System.out.println("FRAME DONE");
+		
 		Element root = doc.getRootElement();
 		JPanel pane = new JPanel();
 		setPane(pane);
@@ -358,41 +341,26 @@ public class MartSubmitter extends JFrame implements ActionListener {
 					|| pge.getName().equals("Exportable"))
 				continue;
 
-			//System.out.println("printing counting " + i + " name "
-				//	+ pge.getName());
-
-			//System.out.println("Page: *******"
-					//+ pge.getAttributeValue("internalName"));
+			
 			List AttributePageElements = ((Element) PGElements.get(i))
 					.getChildren();
 
 			for (int j = 0; j < AttributePageElements.size(); j++) {
-
 				Element ape = (Element) AttributePageElements.get(j);
-
-		//		System.out.println("Attribute Group: "
-					//	+ ape.getAttributeValue("internalName"));
 
 				List AttributGroupElements = ((Element) AttributePageElements
 						.get(j)).getChildren();
 
 				for (int k = 0; k < AttributGroupElements.size(); k++) {
-
 					Element age = (Element) AttributGroupElements.get(k);
-
-	//				System.out.println("Attribute Collection: "
-							//+ age.getAttributeValue("internalName"));
 
 					List AttributeCollectionElements = ((Element) AttributGroupElements
 							.get(k)).getChildren();
 					pane.setBorder(BorderFactory.createLineBorder(Color.black));
-					for (int m = 0; m < AttributeCollectionElements.size(); m++) {
 
+					for (int m = 0; m < AttributeCollectionElements.size(); m++) {
 						Element ace = (Element) AttributeCollectionElements
 								.get(m);
-
-//						System.out.println("Attribute: "
-								//+ ace.getAttributeValue("internalName"));
 
 						List Attribute = ((Element) AttributeCollectionElements
 								.get(m)).getChildren();
@@ -403,14 +371,11 @@ public class MartSubmitter extends JFrame implements ActionListener {
 						pane.add(text);
 
 						ace.setName(ace.getAttributeValue("internalName"));
-
 					}
 				}
 			}
 		}
 		frame.getContentPane().add(pane);
-
-		//System.out.println("before");
 	}
 
 	private void getXML(String dataset) {
@@ -420,12 +385,12 @@ public class MartSubmitter extends JFrame implements ActionListener {
 				+ dataset + "'";
 
 		java.sql.PreparedStatement ps;
+
 		try {
 			ps = getDbConnection().prepareStatement(sql);
 			ResultSet rs = ps.executeQuery();
 
 			if (!rs.next()) {
-
 			}
 
 			byte[] cstream = rs.getBytes(1);
@@ -449,22 +414,16 @@ public class MartSubmitter extends JFrame implements ActionListener {
 	}
 
 	private String[] getDatasets() {
-
 		String sql = "SELECT dataset from "+getAdaptor().getSchema()+".meta_configuration";
-
-	//	System.out.println("sql = "+sql);		
 		
 		ArrayList datasets = new ArrayList();
 
 		try {
 			PreparedStatement ps = getDbConnection().prepareStatement(sql);
-
 			ResultSet rs = ps.executeQuery();
 
 			while (rs.next()) {
-
 				datasets.add(rs.getString(1));
-
 			}
 
 		} catch (SQLException e) {
@@ -475,7 +434,6 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 		datasets.toArray(ds);
 		return ds;
-
 	}
 
 	public void exit() {
@@ -499,23 +457,15 @@ public class MartSubmitter extends JFrame implements ActionListener {
 	public void setDbConnection(Connection dbConnection) {
 		this.dbConnection = dbConnection;
 	}
-	
-	
-	
-	
-	
 
+	
 	public static void submitDatabase(String sql) {
 		Connection con = null;
 		Statement sts = null;
 
-		
-
 		try {
-
 			sts = getDbConnection().createStatement();
 			int rss = sts.executeUpdate(sql);
-			//int rss2 = sts.executeUpdate(sqqls);
 		}
 
 		catch (Exception es) {
@@ -537,30 +487,22 @@ public class MartSubmitter extends JFrame implements ActionListener {
 	}
 
 	
-
-public void createTable() {
+public void createSql() {
 		Element root = doc.getRootElement();
 		setDoc(doc);
 
 		Component[] cp = pane.getComponents();
 		ArrayList selectedAttributes = new ArrayList();
 		ArrayList tableNames = new ArrayList();
-
-		String sqql = null;
-		String sqqls = null;
 		String tableName = new String();
 		tableName = "";
-		String t = new String();
-		// String tableName2 = new String();
-		int count = 0;
-
+		
 		List PGElements = root.getChildren();
 		
 		for (int i = 0; i < PGElements.size(); i++) {
-
 			Element pge = (Element) PGElements.get(i);
 
-			if // (pge.getName().equals("MainTable")
+			if 
 			(pge.getName().equals("Key") || pge.getName().equals("FilterPage")
 					|| pge.getName().equals("Importable")
 					|| pge.getName().equals("Exportable"))
@@ -568,32 +510,19 @@ public void createTable() {
 
 			if (pge.getName().equals("MainTable")) {
 				tableNames.add(pge.getText());
-				//System.out.println("HERE**************: " + tableNames);
-//				System.out.println("addding ..... name " + pge.getName());
-					//	+ " text " + pge.getText());
 			}
-
-			//System.out.println("Page: *******"
-				//	+ pge.getAttributeValue("internalName"));
+			
 			List AttributePageElements = ((Element) PGElements.get(i))
 					.getChildren();
 
 			for (int j = 0; j < AttributePageElements.size(); j++) {
-
 				Element ape = (Element) AttributePageElements.get(j);
-
-				//System.out.println("Attribute Group: "
-						//+ ape.getAttributeValue("internalName"));
 
 				List AttributGroupElements = ((Element) AttributePageElements
 						.get(j)).getChildren();
 
 				for (int k = 0; k < AttributGroupElements.size(); k++) {
-
 					Element age = (Element) AttributGroupElements.get(k);
-
-					//System.out.println("Attribute Collection: "
-							//+ age.getAttributeValue("internalName"));
 
 					List AttributeCollectionElements = ((Element) AttributGroupElements
 							.get(k)).getChildren();
@@ -602,45 +531,35 @@ public void createTable() {
 
 						Element ace = (Element) AttributeCollectionElements
 								.get(m);
-
-						//System.out.println("Attribute: "
-							//	+ ace.getAttributeValue("internalName"));
-												
-						if (ace.getAttributeValue("tableConstraint").equals("main"))	{
+								
+						if (ace.getAttributeValue("tableConstraint").equals("main")) {
 							mainTable();
 							}
 						
-						else{
+						else {
 							int c = tableName.compareTo(ace
 									.getAttributeValue("tableConstraint"));
-							//System.out.println("COMPARE!!!!!!!" + c);
-							if (c == 0)
-								// if
-								// (tableName.equals(ace.getAttributeValue("tableConstraint")))
-								{}//System.out.println("IF");}
+							
+							if (c == 0) {
+							}								
+							
 							else {
-							//	System.out.println("CORRECT LOOP");
-								tableName = ace.getAttributeValue("tableConstraint");
+							tableName = ace.getAttributeValue("tableConstraint");
 							tableNames.add(ace.getAttributeValue("tableConstraint"));
-						//System.out.println("TABLE LIST: " + tableNames);
 							}
 						}
-						
-					
+											
 				for (int x = 0; x < cp.length; x++) {
-
 					TextField text = (TextField) cp[x];
 
 					if (ace.getName().equals(text.getName())) {
 						ace.setAttribute("buttontext", text.getText());
 						selectedAttributes.add(ace);
-						//System.out.println("VALID" + selectedAttributes);
-				}
-		
-				}
+					}
 				}
 					}
 				}
+			}
 		}
 		
 		int p=0;
@@ -648,20 +567,22 @@ public void createTable() {
 		String array2 = new String();
 		int li;
 		
+		//loop through each individual table and create attributeArray
 		for (p=0; p<tableNames.size(); p++){
 			String currentTable = (String) tableNames.get(p);
+		
 			if (tableNames.get(p).toString().endsWith("main")) {
 				currentTable = "main";
 			}
-			//System.out.println("CurrentTable: "+currentTable);
+			
 			ArrayList attributeArray = new ArrayList();
 			ArrayList attributeArray2 = new ArrayList();
 			
+			//go through all attributes and pick out the relevant to each table
 			for (int z = 0; z < selectedAttributes.size(); z++) {
 				Element ace = (Element) selectedAttributes.get(z);
 				
 				if (ace.getAttributeValue("tableConstraint").equals(currentTable)) {
-				
 					attributeArray.add(ace.getAttributeValue("buttontext"));
 					attributeArray2.add(ace.getName());
 				}
@@ -676,117 +597,35 @@ public void createTable() {
 			li = array2.lastIndexOf("]");
 			array2 = array2.substring(1,li);
 			
+			//create Sql
 			sql = "INSERT INTO " + tableNames.get(p) +" (" + array2 + ") " + "VALUES (\"" + array + "\")";
 			System.out.println(sql);
 			
 			submitDatabase(sql); 
 			
 		}
-}
+	}
 
 		
-		
-		
-		
-		
-		
-		
-		
-		//good version
-		/*System.out.println("LIST OF TABLES" + tableNames);
-		int p=0;
-		ArrayList attributes = new ArrayList();
-		ArrayList attributes2 = new ArrayList();
-		ArrayList attributes3 = new ArrayList();
-		ArrayList attributest = new ArrayList();
-		int k=0;
-		
-		for (p=0; p<tableNames.size(); p++){
-			String currentTable = (String) tableNames.get(p);
-			System.out.println("CurrentTable: "+currentTable + " POSITION: " + p);
-			
-			for (int z = 0; z < selectedAttributes.size(); z++) {
-				Element ace = (Element) selectedAttributes.get(z);
-				
-				/*if (ace.getAttributeValue("tableConstraint").equals("main")){
-					
-					//if (tableNames.get(p).toString().endsWith("main")) {
-						//System.out.println("main table: " + tableNames.get(p));}
-					if (attributes.contains(ace.getAttributeValue("buttontext")))
-						continue;
-					
-					boolean test = attributes.contains(ace.getAttributeValue("buttontext"));
-					attributes.add(ace.getAttributeValue("buttontext"));
-					System.out.println("MAIN: " + attributes);
-					System.out.println("HERE 2!!!!!!!!!!!" + attributes2);
-					System.out.println("TEST: "+test + ace.getAttributeValue("buttontext"));
-					
-					k=k+1;
-					System.out.println("ATTRIBUTE: " +ace.getAttributeValue("buttontext")+ " NO: " +k);
-					//attributes3=attributes;
-					attributes2.add(attributes);
-					System.out.println("ATTRIBUTE2: " +attributes2+ " NO: " +k);
-										
-					System.out.println("MAIN££££££££" + attributes2);
-					//attributes.clear();
-				}				
-					//attributes2.clear();
-					//attributes.clear();
-				
-				
-				if (ace.getAttributeValue("tableConstraint").equals(tableNames.get(p))){
-					attributes.add(ace.getAttributeValue("buttontext"));	
-					//attributes2.add(ace.getAttributeValue("buttontext"));
-					System.out.println("CurrentTable"+currentTable + "POSITION" + p);
-					System.out.println("SECOND LIST ARRAY: " + attributes);
-					//attributes2.add(attributes);
-					//System.out.println("!!!!!!!!11" + attributes2);
-					//attributes2.clear();
-				//System.out.println("TABLE" + tableNames.get(p));
-				}
-				attributes2.add(attributes);
-				
-			}
-			//attributes2.add(attributes);
-			//attributes3.add(attributes2);
-			//attributes.clear();
-			System.out.print("FINAL: "+ attributes2);
-			attributes.clear();
-			//attributes3.add(attributes2);
-			//attributes2.clear();
-		}
-		
-}*/
-		
-		
-	
-					
 	public void mainTable(){
 	Element root = doc.getRootElement();
 	setDoc(doc);
 
-	//Component[] cp = pane.getComponents();
-	//ArrayList selectedAttributes = new ArrayList();
 	ArrayList tableNames = new ArrayList();
-//ring tableName = "";
 
 	List PGElements = root.getChildren();
 	
 	for (int i = 0; i < PGElements.size(); i++) {
-
 		Element pge = (Element) PGElements.get(i);
 
 		if (pge.getName().equals("MainTable")) {
 			tableNames.add(pge.getText());
-			//System.out.println("HERE**************: " + tableNames);
-			//System.out.println("addding 'LO!!!!! ..... name " + pge.getName()
-			//	/	+ " text " + pge.getText());
-		}}
-
-}
+		}
+	}
+	}
 
 	public void actionPerformed(ActionEvent e) {
-		createTable();
+		createSql();
 	}
 
 	public JPanel getPane() {
