@@ -69,8 +69,7 @@ public abstract class MetaDataResolver {
 	public abstract Table [] getExportedKeyTables (String table_name, String [] columnNames);
 	public abstract Table [] getImportedKeyTables (String table_name, String [] columnNames);
 	protected abstract String getPrimaryKeys(String table_name);
-	protected abstract String[] getAllKeys(String table_name);
-	
+	//protected abstract String[] getAllKeys(String table_name);
 	
 	public String [] getAllTableNames () {
 		
@@ -196,7 +195,7 @@ public abstract class MetaDataResolver {
 	}
 	
 	
-	public Column [] getReferencedColumns (String name, String [] columnNames, String [] columnAliases, Column[] centralCols){
+	public Column [] getReferencedColumns (String name, String [] columnNames, String [] columnAliases){//, Column[] centralCols){
 		
 		Column [] col;
 		ArrayList cols = new ArrayList();
@@ -244,6 +243,7 @@ public abstract class MetaDataResolver {
 		}
 		}
 		
+		/*
 		// get a list of essential keys to add incase aliased or removed
 		String[] essentialKeys = getAllKeys(name);
 		OUTER:for (int i = 0; i < essentialKeys.length; i++){
@@ -269,7 +269,7 @@ public abstract class MetaDataResolver {
 			column.original_table=name;
 			
 			cols.add(column);
-		}
+		}*/
 		
 		Column [] b = new Column[cols.size()];
 				
@@ -333,7 +333,7 @@ public abstract class MetaDataResolver {
 		table.setName(centralTableName);
 		//String [] columnNames = {"%"};
 		
-		table.setColumns(getReferencedColumns(table.getName(),columnNames,columnAliases,null));
+		table.setColumns(getReferencedColumns(table.getName(),columnNames,columnAliases));
 		table.PK =getPrimaryKeys(centralTableName);
 		
 		// this table needs to behave like a ref table for recursive joins
@@ -375,11 +375,11 @@ public abstract class MetaDataResolver {
 	
 	
 	
-	public Table getTableColumns (String tableName, String [] columnNames, String [] columnAliases, Column[] centralCols) {
+	public Table getTableColumns (String tableName, String [] columnNames, String [] columnAliases){//, Column[] centralCols) {
 		
 		Table table = new Table();
 		table.setName(tableName);
-		table.setColumns(getReferencedColumns(tableName, columnNames, columnAliases, centralCols));
+		table.setColumns(getReferencedColumns(tableName, columnNames, columnAliases));
 		
 		return table;
 	}

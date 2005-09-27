@@ -29,7 +29,7 @@ public class MetaDataResolverDMDPlatform extends MetaDataResolver {
 	}
 	
 	
-	public String [] getAllKeys (String tableName){
+	/*public String [] getAllKeys (String tableName){
 		
 		// gets all PK and FKs for a table
 		HashMap allKeys= new HashMap();
@@ -82,7 +82,7 @@ public class MetaDataResolverDMDPlatform extends MetaDataResolver {
 		}
 		return b;
 	
-	}
+	}*/
 	
 	
 	public Table [] getExportedKeyTables (String centralTableName, String [] columnNames){

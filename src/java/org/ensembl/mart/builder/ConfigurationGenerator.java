@@ -79,6 +79,8 @@ public class ConfigurationGenerator implements ItemListener{
 	private JCheckBox[] keepCheckBoxs;
 	private JCheckBox[] goDeeperCheckBoxs;
 	
+	private Transformation transformation;
+	
 	private TransformationUnit[] deeperUnits;
 	
 	public ConfigurationGenerator() {
@@ -176,7 +178,7 @@ public class ConfigurationGenerator implements ItemListener{
 				// CREATE THE TRANSFORMATION
 				dataset.getElement().setAttribute("mainTable", centralTableName);
 				Integer tCount = new Integer(transformationCount + 1);
-				Transformation transformation =
+				transformation =
 					new Transformation(
 						tCount.toString(),
 						tableType,
@@ -185,7 +187,7 @@ public class ConfigurationGenerator implements ItemListener{
 						"N");
 				referencedTables =
 					resolver.getReferencedTables(centralTableName);
-				transformation =
+				//transformation =
 					generateTransformation(
 						//referencedTables,
 						centralTableName,
@@ -193,8 +195,7 @@ public class ConfigurationGenerator implements ItemListener{
 						datasetName,
 						"",
 						1,
-						leftJoin,
-						transformation);
+						leftJoin);//,transformation);
 				dataset.insertChildObject(transformationCount, transformation);
 				transformationCount++;
 			} else {
@@ -266,7 +267,7 @@ public class ConfigurationGenerator implements ItemListener{
 				// CREATE THE TRANSFORMATION
 				dataset.getElement().setAttribute("mainTable", centralTableName);
 				Integer tCount = new Integer(transformationCount + 1);
-				Transformation transformation =
+				transformation =
 					new Transformation(
 							tCount.toString(),
 							tableType,
@@ -274,15 +275,15 @@ public class ConfigurationGenerator implements ItemListener{
 							userTableName,
 							"N");
 				referencedTables = resolver.getReferencedTables(centralTableName);
-				transformation = generateTransformation(
+				//transformation = 
+				generateTransformation(
 										//referencedTables,
 										centralTableName,
 										tableType,
 										datasetName,
 										"",
 										1,
-										leftJoin,
-										transformation);
+										leftJoin);//,transformation);
 				dataset.insertChildObject(transformationCount, transformation);
 				transformationCount++;
 			}
@@ -415,7 +416,7 @@ public class ConfigurationGenerator implements ItemListener{
 						tableType);
 					//	CREATE THE TRANSFORMATION 		  
 					Integer tCount = new Integer(transformationCount + 1);
-					Transformation transformation =
+					transformation =
 						new Transformation(
 							tCount.toString(),
 							tableType,
@@ -425,7 +426,7 @@ public class ConfigurationGenerator implements ItemListener{
 
 					referencedTables =
 						resolver.getReferencedTables(centralTableName);
-					transformation =
+					//transformation =
 						generateTransformation(
 							//referencedTables,
 							centralTableName,
@@ -433,8 +434,7 @@ public class ConfigurationGenerator implements ItemListener{
 							datasetName,
 							"",
 							1,
-							leftJoin,
-							transformation);
+							leftJoin);//,transformation);
 
 					dataset.insertChildObject(
 						transformationCount,
@@ -528,7 +528,7 @@ public class ConfigurationGenerator implements ItemListener{
 						String tableType = "d";
 						Integer tCount = new Integer(transformationCount + 1);
 
-						Transformation transformation =
+						transformation =
 							new Transformation(
 								tCount.toString(),
 								tableType,
@@ -539,7 +539,7 @@ public class ConfigurationGenerator implements ItemListener{
 						referencedTables =
 							resolver.getReferencedTables(centralTableName);
 						if (i == 0)
-							transformation =
+							//transformation =
 								generateTransformation(
 									//referencedTables,
 									centralTableName,
@@ -547,10 +547,9 @@ public class ConfigurationGenerator implements ItemListener{
 									datasetName,
 									chosenTable,
 									1,
-									leftJoin,
-									transformation);
+									leftJoin);//,transformation);
 						else
-							transformation =
+							//transformation =
 								generateTransformation(
 									//referencedTables,
 									centralTableName,
@@ -558,8 +557,7 @@ public class ConfigurationGenerator implements ItemListener{
 									datasetName,
 									chosenTable,
 									manualChoose,
-									leftJoin,
-									transformation);
+									leftJoin);//	transformation);
 
 						dataset.insertChildObject(
 							transformationCount,
@@ -714,14 +712,14 @@ public class ConfigurationGenerator implements ItemListener{
 		}
 	}
 
-	private Transformation generateTransformation(
+	private void generateTransformation(
 		String centralTableName,
 		String tableType,
 		String datasetName,
 		String chosenTable,
 		int manualChoose,
-		int leftJoin,
-		Transformation transformation) {
+		int leftJoin){//,
+		//Transformation transformation) {
 
 		String externalSchema = "";
 		int unitCount = 0;
@@ -971,8 +969,9 @@ public class ConfigurationGenerator implements ItemListener{
 					null,
 					dialogOptions,
 					null);
-			if (option == 2)
-				return transformation;
+			if (option == 2){
+				//return transformation;
+			}
 			//else if (option == 1) {
 				// REFERENCE TABLE - CHOOSE COLS
 				Box columnsBox = new Box(BoxLayout.Y_AXIS);
@@ -1184,7 +1183,7 @@ public class ConfigurationGenerator implements ItemListener{
 			//if (goDeeperCheckBoxs[i].getSelectedObjects() != null){ - NOW COMPULSORY
 			
 			if (manualChoose != 0){
-				deeperUnits = getDeeperUnits(refTab.getName(), centralTableName, unitCount);
+				deeperUnits = getDeeperUnits(refTab.getName(), centralTableName, unitCount, null);
 			}
 			
 			for (int k = 0; k < deeperUnits.length; k++){
@@ -1238,10 +1237,11 @@ public class ConfigurationGenerator implements ItemListener{
 								"");
 			transformation.insertChildObject(unitCount, transformationUnit);
 		}
-		return transformation;
+		//return transformation;
 	}
 	
-	private TransformationUnit[] getDeeperUnits(String refTableName, String centralTableName, int unitCount){
+	private TransformationUnit[] getDeeperUnits(String refTableName, String centralTableName, int unitCount,
+				TransformationUnit lastUnit){
 	
 		// LAUNCH THE GUI WINDOW
 		Table[] potentialDeeperTables = resolver.getReferencedTables(refTableName);
@@ -1448,6 +1448,26 @@ public class ConfigurationGenerator implements ItemListener{
 					continue;
 				}
 		
+				// need to make sure the join key for this new table is added to the previous transformation unit's
+				// list of reference columns
+				// IF NESTED lastUnit SHOULD COME FROM PREVIOUS CALLS tUnit, else get from transformation
+				if (lastUnit == null)	
+					lastUnit = ((TransformationUnit) transformation.getChildObjects()[transformation.getChildObjects().length - 1]);
+				
+				String lastRefCols = lastUnit.getElement().getAttributeValue("referenceColumnNames");
+			    String lastRefAliases = lastUnit.getElement().getAttributeValue("referenceColumnAliases");
+			    
+			    // 1 - CHECK FOR DUPLICATE COLS 
+				if (!lastRefAliases.matches(".*"+potentialDeeperTables[i].FK+".*")){
+					lastRefCols = potentialDeeperTables[i].FK + "," + lastRefCols;	
+					lastRefAliases = potentialDeeperTables[i].FK + "," + lastRefAliases;	
+				}
+				lastUnit.getElement().setAttribute("referenceColumnNames",lastRefCols);
+				lastUnit.getElement().setAttribute("referenceColumnAliases",lastRefAliases);
+		
+		
+		
+		
 				// CREATE A TUNIT FOR THE EXTRA TABLE
 				Integer tunitCount = new Integer(unitCount + 1);
 				Table refTab = potentialDeeperTables[i];
@@ -1493,7 +1513,7 @@ public class ConfigurationGenerator implements ItemListener{
 				unitCount++;
 				// IF GO DEEPER SET ON THIS - CALL getDeeperUnits RECURSIVELY
 				//if (deepGoDeeperCheckBoxs[i].getSelectedObjects() != null){ - NOW COMPULSORY
-						TransformationUnit[] deeperUnits = getDeeperUnits(thisTableName, refTableName, unitCount);
+						TransformationUnit[] deeperUnits = getDeeperUnits(thisTableName, refTableName, unitCount, deeperUnit);
 						for (int k = 0; k < deeperUnits.length; k++){
 							tUnits.add(deeperUnits[k]);
 							unitCount++;
