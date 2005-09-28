@@ -35,6 +35,9 @@ public final class AttributeGroup extends BaseNamedConfigurationObject {
   private List attributeCollections = new ArrayList();
   private Hashtable attributeCollectionNameMap = new Hashtable();
 
+  public final int DEFAULTMAXSELECT = 0;
+  private final String maxSelectKey = "maxSelect";
+
   //cache one AttributeDescription for call to containsUIAttributeDescription or getAttributeDescriptionByName
   private AttributeDescription lastAtt = null;
   //cache one AttributeCollecton for call to getCollectionForAttribute
@@ -60,6 +63,7 @@ public final class AttributeGroup extends BaseNamedConfigurationObject {
   */
 	public AttributeGroup() {
 		super();
+		setAttribute(maxSelectKey, null);
 	}
 
 	/**
@@ -69,7 +73,7 @@ public final class AttributeGroup extends BaseNamedConfigurationObject {
 	 * @throws ConfigurationException when internalName is null or empty
 	 */
 	public AttributeGroup(String internalName) throws ConfigurationException {
-		this(internalName, "", "");
+		this(internalName, "", "","");
 	}
 
 	/**
@@ -81,9 +85,38 @@ public final class AttributeGroup extends BaseNamedConfigurationObject {
 	 * @throws ConfigurationException when required parameters are null or empty
 	 */
 	public AttributeGroup(String internalName, String displayName, String description) throws ConfigurationException {
-		super( internalName, displayName, description);
-    
+		this(internalName, displayName, description,"");
 	}
+
+	public AttributeGroup(String internalName, String displayName, String description, String maxSelect) throws ConfigurationException {
+		super( internalName, displayName, description);
+		setAttribute(maxSelectKey, maxSelect);
+	}
+	
+	/**
+	 * Set the maxSelect value for this AttributeCollection
+	 * @param maxSelect -- String value to limit selections of Attributes in groups. 0 means no limit.
+	 */
+	public void setMaxSelect(String maxSelect){
+	  setAttribute(maxSelectKey, maxSelect);
+	}
+  
+	  /**
+	   * Returns the maxSelect value for attributes in this AttributeCollection.
+	   * If the value for maxSelect provided is not a valid int (eg.
+	   * Integer.parseInt( maxSelect) throws a NumberFormatException)
+	   * this method returns DEFAULTMAXSELECT.
+	   * 
+	   * @return int maxSelect value
+	   */
+	  public int getMaxSelect()  {
+		  try {
+			   return Integer.parseInt( getAttribute(maxSelectKey) );
+		  } catch (NumberFormatException e) {
+			  return DEFAULTMAXSELECT;
+		  }
+	  }
+
 
 	/**
 	 * Add an AttributeColllection the the AttributeGroup.
