@@ -786,6 +786,11 @@ public class ConfigurationGenerator implements ItemListener{
 							cards.get(referencedTables[i].getName()));
 					}
 				}
+				if (comboBoxs[i].getSelectedItem() == null){
+					// make sure something selected
+					comboBoxs[i].setSelectedItem(("11"));
+				}
+				
 				JLabel label2 =
 					new JLabel("Referenced projection/restriction (optional)");
 				String[] columnNames = { "%" };

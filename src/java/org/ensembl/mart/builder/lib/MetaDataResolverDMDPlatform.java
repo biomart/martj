@@ -103,19 +103,28 @@ public class MetaDataResolverDMDPlatform extends MetaDataResolver {
 					&& currentPK.equals(keys.getString(4))
 					&& currentFK.equals(keys.getString(8))) continue;
 				
-				Table table = new Table();
-				table.setName(keys.getString(7));
-				table.PK=keys.getString(4);
-				table.FK=keys.getString(8);
+				//Table table = new Table();
+				Table table;
+				if (tableStore.get(keys.getString(7)) != null){
+					table = (Table) tableStore.get(keys.getString(7));
+			
+				}
+				else{
+					table = new Table();
+					table.setName(keys.getString(7));
+					table.PK=keys.getString(4);
+					table.FK=keys.getString(8);
 				
 				
-				//table.setKey(keys.getString(8));
-				table.status="exported";
-				table.setColumns(getReferencedColumns(table.getName(), columnNames));
+					//table.setKey(keys.getString(8));
+					table.status="exported";
+					table.setColumns(getReferencedColumns(table.getName(), columnNames));
+					tableStore.put(keys.getString(7),table);
+				}
 				exportedTabs.add(table);
 				currentTable=keys.getString(7);
 				currentPK=keys.getString(4);
-				currentFK=keys.getString(8);		
+				currentFK=keys.getString(8);			
 				i++;
 			}
 		} catch (SQLException e) {
@@ -155,14 +164,23 @@ public class MetaDataResolverDMDPlatform extends MetaDataResolver {
 								 && currentPK.equals(keys.getString(4))
 								 && currentFK.equals(keys.getString(8))) continue;
 				
-				Table table = new Table();
-				table.setName(keys.getString(3));
-				table.PK=keys.getString(4);
-				table.FK=keys.getString(8);
+//				Table table = new Table();
+				Table table;
+				if (tableStore.get(keys.getString(3)) != null){
+					table = (Table) tableStore.get(keys.getString(3));
+			
+				}
+				else{
+					table = new Table();
+					table.setName(keys.getString(3));
+					table.PK=keys.getString(4);
+					table.FK=keys.getString(8);
 				
-				//table.setKey(keys.getString(4));
-				table.status="imported";
-				table.setColumns(getReferencedColumns(table.getName(), columnNames));
+					//table.setKey(keys.getString(4));
+					table.status="imported";
+					table.setColumns(getReferencedColumns(table.getName(), columnNames));
+					tableStore.put(keys.getString(3),table);
+				}
 				importedTabs.add(table);
 				currentTable=keys.getString(3);
 				currentPK=keys.getString(4);

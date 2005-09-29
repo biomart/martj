@@ -26,13 +26,13 @@ public abstract class MetaDataResolver {
 	//protected ArrayList columns;
 	protected DatabaseAdaptor adaptor;
 	protected DatabaseMetaData dmd;
+	protected HashMap tableStore = new HashMap();
 	
 	public MetaDataResolver(DatabaseAdaptor adaptor){
 		
 		try {		
 			setAdaptor(adaptor);
 			setConnection(adaptor.getCon());
-			
 			if (adaptor.getCon() != null) dmd = adaptor.getCon().getMetaData();
 			
 		}
@@ -309,39 +309,52 @@ public abstract class MetaDataResolver {
 	
 	
 	public Table getCentralTable (String main_name){
+		//Table table = new Table();
 		
-		Table table = new Table();
-		table.setName(main_name);
-		String [] columnNames = {"%"};
-		
-		table.setColumns(getReferencedColumns(table.getName(),columnNames));
-		table.PK =getPrimaryKeys(main_name);
-		
-		// this table needs to behave like a ref table for recursive joins
-		table.PK=getPrimaryKeys(main_name);
-		table.FK=getPrimaryKeys(main_name);
-		// for weired recursive joins
-		table.status="exported";
-		
+		Table table;
+		if (tableStore.get(main_name) != null){
+			table = (Table) tableStore.get(main_name);
+			
+		}
+		else{
+			table = new Table();
+			table.setName(main_name);
+			String [] columnNames = {"%"};
+			table.setColumns(getReferencedColumns(table.getName(),columnNames));
+			table.PK =getPrimaryKeys(main_name);
+			// this table needs to behave like a ref table for recursive joins
+			table.PK=getPrimaryKeys(main_name);
+			table.FK=getPrimaryKeys(main_name);
+			// for weired recursive joins
+			table.status="exported";
+			tableStore.put(main_name,table);
+		}
 		return table;
 	}
 	
 	
 	public Table getCentralTable (String centralTableName,String [] columnNames, String [] columnAliases){
+
+		Table table;
+		if (tableStore.get(centralTableName) != null){
+			table = (Table) tableStore.get(centralTableName);
+			
+		}
+		else{
+			table = new Table();		
+			table.setName(centralTableName);
+			//String [] columnNames = {"%"};
 		
-		Table table = new Table();
-		table.setName(centralTableName);
-		//String [] columnNames = {"%"};
+			table.setColumns(getReferencedColumns(table.getName(),columnNames,columnAliases));
+			table.PK =getPrimaryKeys(centralTableName);
 		
-		table.setColumns(getReferencedColumns(table.getName(),columnNames,columnAliases));
-		table.PK =getPrimaryKeys(centralTableName);
-		
-		// this table needs to behave like a ref table for recursive joins
-		table.PK=getPrimaryKeys(centralTableName);
-		table.FK=getPrimaryKeys(centralTableName);
-		// for weired recursive joins
-		table.status="exported";
-		
+			// this table needs to behave like a ref table for recursive joins
+			table.PK=getPrimaryKeys(centralTableName);
+			table.FK=getPrimaryKeys(centralTableName);
+			// for weired recursive joins
+			table.status="exported";
+			tableStore.put(centralTableName,table);
+		}
 		return table;
 	}
 	
@@ -377,10 +390,18 @@ public abstract class MetaDataResolver {
 	
 	public Table getTableColumns (String tableName, String [] columnNames, String [] columnAliases){//, Column[] centralCols) {
 		
-		Table table = new Table();
-		table.setName(tableName);
-		table.setColumns(getReferencedColumns(tableName, columnNames, columnAliases));
-		
+		//Table table = new Table();
+		Table table;
+		if (tableStore.get(tableName) != null){
+			table = (Table) tableStore.get(tableName);
+			
+		}
+		else{
+			table = new Table();
+			table.setName(tableName);
+			table.setColumns(getReferencedColumns(tableName, columnNames, columnAliases));
+			tableStore.put(tableName,table);
+		}
 		return table;
 	}
 	
@@ -388,16 +409,24 @@ public abstract class MetaDataResolver {
 	
 	public Table getTable (String tableName, String columnName) {
 		
-		Table table = new Table();
-		table.setName(tableName);
+		//Table table = new Table();
+		Table table;
+		if (tableStore.get(tableName) != null){
+			table = (Table) tableStore.get(tableName);
+			
+		}
+		else{
+			table = new Table();
+			table.setName(tableName);
 		
-		Column column = new Column();
-		column.setName(columnName);
-		columns  = new Column[1];
-		columns[0]=column;
-		table.setColumns(columns);
-		//table.setColumns(getReferencedColumns(tableName, columnNames, columnAliases));
-		
+			Column column = new Column();
+			column.setName(columnName);
+			columns  = new Column[1];
+			columns[0]=column;
+			table.setColumns(columns);
+			//table.setColumns(getReferencedColumns(tableName, columnNames, columnAliases));
+			tableStore.put(tableName,table);
+		}
 		return table;
 	}
 	
