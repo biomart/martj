@@ -165,7 +165,15 @@ public class ConfigurationAdaptor {
 						centralColumnAliases = transformationUnit.getElement().getAttributeValue("centralColumnAliases").split(",");
 											
 						//db interaction
-						startTable= resolver.getCentralTable(transformation.getElement().getAttributeValue("centralTable"),centralColumnNames,centralColumnAliases);
+						
+						try{
+							startTable= ((Table) (resolver.getCentralTable(transformation.getElement().
+								getAttributeValue("centralTable"),centralColumnNames,centralColumnAliases)).clone());
+						
+						}
+						catch(Exception e){
+						}
+						
 						transformation.setStartTable(startTable);
 					
 						
@@ -196,12 +204,22 @@ public class ConfigurationAdaptor {
 							// db interaction
 							
 							if (!transformationUnit.getElement().getAttributeValue("referencedTable").equals("main_interim")) {
-								refTable = resolver.getTableColumns(transformationUnit.getElement().getAttributeValue("referencedTable"), 
-									columnNames, columnAliases);//,startTable.getColumns());
+								try{
+									refTable = ((Table) (resolver.getTableColumns(transformationUnit.getElement().getAttributeValue("referencedTable"), 
+									columnNames, columnAliases)).clone());//,startTable.getColumns());
+								}
+								catch(Exception e){
+								}
 								refTable.type="temp";
 							}
 							 else {
-								refTable = resolver.getTable(transformationUnit.getElement().getAttributeValue("referencedTable"), transformationUnit.getElement().getAttributeValue("primaryKey"));
+								try{
+									refTable = ((Table) (resolver.getTable(transformationUnit.getElement().
+										getAttributeValue("referencedTable"), 
+										transformationUnit.getElement().getAttributeValue("primaryKey"))).clone());
+								}
+								catch(Exception e){
+								}
 							 	refTable.type="interim";
 							 }
 					
@@ -246,7 +264,7 @@ public class ConfigurationAdaptor {
 			}
 	}
 	
-	public void writeDDL(String sqlFile, TransformationConfig tConfig) throws IOException {
+	public void writeDDL(String sqlFile, TransformationConfig tConfig) throws IOException{
 		
 		createTransformations(tConfig);
 
