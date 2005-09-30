@@ -107,7 +107,10 @@ public class MetaDataResolverDMDPlatform extends MetaDataResolver {
 				Table table;
 				if (tableStore.get(keys.getString(7)) != null){
 					table = (Table) tableStore.get(keys.getString(7));
-			
+					table.PK=keys.getString(4);// update incase changed
+					table.FK=keys.getString(8);
+					table.status="exported";
+					table.setColumns(getReferencedColumns(table.getName(), columnNames));			
 				}
 				else{
 					table = new Table();
@@ -168,7 +171,10 @@ public class MetaDataResolverDMDPlatform extends MetaDataResolver {
 				Table table;
 				if (tableStore.get(keys.getString(3)) != null){
 					table = (Table) tableStore.get(keys.getString(3));
-			
+					table.PK=keys.getString(4);//update incase changed
+					table.FK=keys.getString(8);
+					table.status="imported";
+					table.setColumns(getReferencedColumns(table.getName(), columnNames));			
 				}
 				else{
 					table = new Table();

@@ -394,7 +394,7 @@ public abstract class MetaDataResolver {
 		Table table;
 		if (tableStore.get(tableName) != null){
 			table = (Table) tableStore.get(tableName);
-			
+			table.setColumns(getReferencedColumns(tableName, columnNames, columnAliases));//incase changed				
 		}
 		else{
 			table = new Table();
@@ -413,7 +413,11 @@ public abstract class MetaDataResolver {
 		Table table;
 		if (tableStore.get(tableName) != null){
 			table = (Table) tableStore.get(tableName);
-			
+			Column column = new Column();// incase changed
+			column.setName(columnName);
+			columns  = new Column[1];
+			columns[0]=column;
+			table.setColumns(columns);
 		}
 		else{
 			table = new Table();

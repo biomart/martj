@@ -21,6 +21,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
+import oracle.jdbc.ttc7.RefTTCItem;
+
 import org.ensembl.mart.builder.lib.Column;
 import org.ensembl.mart.builder.lib.ConfigurationBase;
 import org.ensembl.mart.builder.lib.DatabaseAdaptor;
@@ -42,6 +44,8 @@ public class ConfigurationGenerator implements ItemListener{
 	private HashMap tableList = new HashMap();
 	private HashMap refColNames = new HashMap();
 	private HashMap refColAliases = new HashMap();
+	private HashMap deepRefColNames = new HashMap();
+	private HashMap deepRefColAliases = new HashMap();
 	private HashMap cardinalityFirst = new HashMap();
 	private HashMap cardinalitySecond = new HashMap();
 	private String cenColName = "";
@@ -51,6 +55,7 @@ public class ConfigurationGenerator implements ItemListener{
 	private String centralExtensionOperator;
 	private String centralExtensionValue;
 	private String partitionExtension;
+	private String mainTableName;
 	private int leftJoin = 0;
 	private String[] dialogOptions = new String[] { "Continue", "Finish"};
 	private String[] extendedDialogOptions = new String[] { "Continue", "Finish","Skip"};
@@ -158,6 +163,7 @@ public class ConfigurationGenerator implements ItemListener{
 			Dataset dataset = new Dataset(datasetName, "");
 
 			String centralTableName = tableNameBox.getSelectedItem().toString();
+			mainTableName = centralTableName;
 			if (option2 == 1)
 				break;
 			//else if (option2 == 1)
@@ -384,7 +390,10 @@ public class ConfigurationGenerator implements ItemListener{
 						null,
 						extendedDialogOptions,
 						null);
-
+				
+				refColNames = new HashMap();
+				refColAliases = new HashMap();
+				
 				centralTableName = dmTableNameBox.getSelectedItem().toString();
 				String includeCentralFilters =
 					includeCentralBox.getSelectedItem().toString();
@@ -427,6 +436,7 @@ public class ConfigurationGenerator implements ItemListener{
 					referencedTables =
 						resolver.getReferencedTables(centralTableName);
 					//transformation =
+						
 						generateTransformation(
 							//referencedTables,
 							centralTableName,
@@ -1204,17 +1214,19 @@ public class ConfigurationGenerator implements ItemListener{
 
 		if (leftJoin == 1) {
 			Integer tunitCount = new Integer(unitCount + 1);
+			//System.out.println("ADDING main_interim for central "+centralTableName+" with PK "+
+			//	resolver.getCentralTable(centralTableName).PK);
 			TransformationUnit extraUnit =
 				new TransformationUnit(
 					tunitCount.toString(),
 					"exported",
-					resolver.getCentralTable(centralTableName).PK,
+					resolver.getCentralTable(mainTableName).PK,
 					"main_interim",
 					"n1r",
 					"",
 					"",
-					resolver.getCentralTable(centralTableName).PK,
-					resolver.getCentralTable(centralTableName).PK,
+					resolver.getCentralTable(mainTableName).PK,
+					resolver.getCentralTable(mainTableName).PK,
 					"",
 					"",
 					"",
@@ -1412,23 +1424,23 @@ public class ConfigurationGenerator implements ItemListener{
 				if (((JCheckBox) colChecks.get(i)).getSelectedObjects()	== null)
 					continue;
 
-				if (refColNames.get(colTable.get(i)) == null)
-					refColNames.put(colTable.get(i), colNames.get(i));
+				if (deepRefColNames.get(colTable.get(i)) == null)
+					deepRefColNames.put(colTable.get(i), colNames.get(i));
 				else
-					refColNames.put(
+					deepRefColNames.put(
 										colTable.get(i),
-										refColNames.get(colTable.get(i))
+										deepRefColNames.get(colTable.get(i))
 											+ ","
 											+ colNames.get(i));
 
-				if (refColAliases.get(colTable.get(i)) == null)
-					refColAliases.put(
+				if (deepRefColAliases.get(colTable.get(i)) == null)
+					deepRefColAliases.put(
 						colTable.get(i),
 						((JTextField) colAliases.get(i)).getText());
 				else
-					refColAliases.put(
+					deepRefColAliases.put(
 						colTable.get(i),
-						refColAliases.get(colTable.get(i))
+						deepRefColAliases.get(colTable.get(i))
 						+ ","
 						+ ((JTextField) colAliases.get(i)).getText());
 						}
@@ -1446,6 +1458,9 @@ public class ConfigurationGenerator implements ItemListener{
 					continue;
 							
 				String thisTableName = potentialDeeperTables[i].getName();
+				
+				System.out.println(thisTableName + " chosen");
+				
 				String cardinality = cardinalityComboBoxs[i].getSelectedItem().toString();
 		
 				if (cardinality.equals("1n")){
@@ -1492,10 +1507,10 @@ public class ConfigurationGenerator implements ItemListener{
 				
 				String refColName = "";
 				String refColAlias = "";
-				if (refColNames.get(refTab.getName()) != null)
-					refColName = (String) refColNames.get(refTab.getName());
-				if (refColAliases.get(refTab.getName()) != null)
-					refColAlias = (String) refColAliases.get(refTab.getName());
+				if (deepRefColNames.get(refTab.getName()) != null)
+					refColName = (String) deepRefColNames.get(refTab.getName());
+				if (deepRefColAliases.get(refTab.getName()) != null)
+					refColAlias = (String) deepRefColAliases.get(refTab.getName());
 					
 				TransformationUnit deeperUnit =
 							new TransformationUnit(
