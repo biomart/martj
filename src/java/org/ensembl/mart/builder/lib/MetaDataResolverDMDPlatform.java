@@ -221,7 +221,6 @@ public class MetaDataResolverDMDPlatform extends MetaDataResolver {
  	} catch (SQLException e) {
  		e.printStackTrace();
  	}
- 	
  	return pk;
  }
 

@@ -146,6 +146,13 @@ public class ConfigurationGenerator implements ItemListener{
 			box4.add(partitionColsOption);
 			centralSettings.add(box4);
 			
+			Box box5 = new Box(BoxLayout.Y_AXIS);
+			JLabel label3 = new JLabel("Other (lower cardinality) main tables");
+			JTextField otherMainsField = new JTextField("");
+			box5.add(label3);
+			box5.add(otherMainsField);
+			centralSettings.add(box5);
+			
 			int option2 =
 				JOptionPane.showOptionDialog(
 					null,
@@ -160,7 +167,7 @@ public class ConfigurationGenerator implements ItemListener{
 			String datasetName = datasetField.getText();							
 			if (datasetName == null)
 				return tConfig;
-			Dataset dataset = new Dataset(datasetName, "");
+			Dataset dataset = new Dataset(datasetName, "", otherMainsField.getText());
 
 			String centralTableName = tableNameBox.getSelectedItem().toString();
 			mainTableName = centralTableName;
@@ -320,13 +327,13 @@ public class ConfigurationGenerator implements ItemListener{
 				dmTableNameBox.addItemListener(this);
 				box1.add(dmTableNameBox);
 				centralSettings.add(box1);
-				JLabel label3 = new JLabel("Include central filters?");
+				label3 = new JLabel("Include central filters?");
 				box3.add(label3);
 				JComboBox includeCentralBox =
 					new JComboBox(includeCentralFilterOptions);
 				box3.add(includeCentralBox);
 				centralSettings.add(box3);
-				Box box5 = new Box(BoxLayout.X_AXIS);
+				box5 = new Box(BoxLayout.X_AXIS);
 				JLabel label4 = new JLabel("Use left join?");
 				box5.add(label4);
 				JComboBox leftJoinBox = new JComboBox(includeCentralFilterOptions);
@@ -588,7 +595,7 @@ public class ConfigurationGenerator implements ItemListener{
 				for (int i = 0; i < datasetPartitionValues.length; i++){
 					// note copy method didn't work for dataset and transformation
 					partitionedDatasets[i] = new Dataset(dataset.getElement().getAttributeValue("internalName")+"_"+
-						datasetPartitionValues[i].split("=")[1],dataset.getElement().getAttributeValue("mainTable"));	
+						datasetPartitionValues[i].split("=")[1],dataset.getElement().getAttributeValue("mainTable"),"");	
 					ConfigurationBase[] transformations = dataset.getChildObjects();
 					mainTransformation[i] = new Transformation(
 						transformations[0].getElement().getAttributeValue("internalName"),

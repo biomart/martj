@@ -299,10 +299,10 @@ public class ConfigurationAdaptor {
 			for (int j = 0; j < units.length; j++) {
 				sqlout.write(((TransformationUnit)units[j]).dropTempTable() + "\n");
 			}
-		}
+		  }
 
-		// now renaming to _key and final indexes
-		for (int i = 0; i < final_transformations.length; i++) {
+		  // now renaming to _key and final indexes
+		  for (int i = 0; i < final_transformations.length; i++) {
 			Transformation finalTransformation = (Transformation) final_transformations[i];
 			indexNo = 10 + indexNo;
 
@@ -316,9 +316,21 @@ public class ConfigurationAdaptor {
 
 				}
 			}
-		}
-
-	  }
+		  }
+		
+		  // create any further main tables
+		  indexNo = 50 + indexNo;
+		  //String extraMain = "GENE";// to be set in XML eventually
+		  String[] otherMains = dataset.getElement().getAttributeValue("otherMainTables").split(",");
+		  for (int i = 0; i < otherMains.length; i++){
+		 	String extraMain = otherMains[i];
+		 	System.out.println("Creating extra main for "+extraMain);
+		  	sqlout.write(((Transformation) final_transformations[0]).createNewMain(extraMain));
+		  	Table newMain = resolver.getCentralTable(extraMain);
+		  	sqlout.write(((Transformation) final_transformations[final_transformations.length - 1]).
+			createNewMainBools(extraMain,newMain.PK,indexNo));		
+		  }
+	  }// dataset loop
 	  sqlout.close();
 	}
 

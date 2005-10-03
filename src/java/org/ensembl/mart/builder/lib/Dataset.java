@@ -39,18 +39,21 @@ public class Dataset extends ConfigurationBase {
 	}
 	public Dataset (Element element){
 		super(element);
+		//element.setAttribute("otherMainTables", "");//hack to fix old XML
 		setRequiredFields(requiredFields);
 	}
 		
 	public Dataset(){
 		super("Dataset");
+		//element.setAttribute("otherMainTables", "");// hack to fix old XML
 		setRequiredFields(requiredFields);
 	}
 	
-	public Dataset(String internalName, String mainTable){
+	public Dataset(String internalName, String mainTable, String otherMainTables){
 		super("Dataset");
 		element.setAttribute("internalName",internalName);
 		element.setAttribute("mainTable",mainTable);
+		element.setAttribute("otherMainTables", otherMainTables);
 		setRequiredFields(requiredFields);
 	}
 	

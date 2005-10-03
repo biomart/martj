@@ -310,18 +310,20 @@ public abstract class MetaDataResolver {
 	
 	public Table getCentralTable (String main_name){
 		//Table table = new Table();
-		
 		Table table;
 		if (tableStore.get(main_name) != null){
 			table = (Table) tableStore.get(main_name);
-			
+			// should recache cols but breaks things
+			table.PK=getPrimaryKeys(main_name);
+			table.FK=getPrimaryKeys(main_name);
+			// for weired recursive joins
+			table.status="exported";
 		}
 		else{
 			table = new Table();
 			table.setName(main_name);
 			String [] columnNames = {"%"};
 			table.setColumns(getReferencedColumns(table.getName(),columnNames));
-			table.PK =getPrimaryKeys(main_name);
 			// this table needs to behave like a ref table for recursive joins
 			table.PK=getPrimaryKeys(main_name);
 			table.FK=getPrimaryKeys(main_name);
@@ -338,7 +340,13 @@ public abstract class MetaDataResolver {
 		Table table;
 		if (tableStore.get(centralTableName) != null){
 			table = (Table) tableStore.get(centralTableName);
-			
+			// should cache cols again but breaks things
+			//table.setColumns(getReferencedColumns(table.getName(),columnNames,columnAliases));
+			// this table needs to behave like a ref table for recursive joins
+			table.PK=getPrimaryKeys(centralTableName);
+			table.FK=getPrimaryKeys(centralTableName);
+			// for weired recursive joins
+			table.status="exported";			
 		}
 		else{
 			table = new Table();		
@@ -346,8 +354,6 @@ public abstract class MetaDataResolver {
 			//String [] columnNames = {"%"};
 		
 			table.setColumns(getReferencedColumns(table.getName(),columnNames,columnAliases));
-			table.PK =getPrimaryKeys(centralTableName);
-		
 			// this table needs to behave like a ref table for recursive joins
 			table.PK=getPrimaryKeys(centralTableName);
 			table.FK=getPrimaryKeys(centralTableName);

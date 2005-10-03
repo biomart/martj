@@ -13,6 +13,9 @@ package org.ensembl.mart.builder.lib;
  *  
  */
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import org.jdom.Element;
 
 
@@ -148,6 +151,89 @@ public class Transformation extends ConfigurationBase {
 		TransformationUnit unit = (TransformationUnit) getChildObjects()[getChildObjects().length - 1];
 		return unit;
 	}
+
+	public String createNewMain (String extraMain){
+		String[] tableParts = finalTableName.split("__");
+		String newTableName = tableParts[0]+"__"+extraMain+"__main";
+		
+		ConfigurationBase[] trUnits = getChildObjects();
+		boolean seenUnit = false;
+		HashMap selectNames = new HashMap();
+		String targetSchema = "";
+		for (int i = 0; i < trUnits.length; i++){
+			TransformationUnit trUnit = (TransformationUnit) trUnits[i];
+			targetSchema = trUnit.getTargetSchema();
+			if (trUnit.getRefTable().getName().toLowerCase().equals(extraMain.toLowerCase())){
+				seenUnit = true;
+				selectNames.put(trUnit.RFKey,"1");
+			}	
+			
+			if (!seenUnit) continue;
+			
+			Column[] cols = trUnit.getRefTable().getColumns();
+			for (int j = 0; j < cols.length; j++){
+				if (cols[j].hasAlias()){
+					selectNames.put(cols[j].getAlias(),"1");
+				}
+				else{
+					selectNames.put(cols[j].getName(),"1");
+				}
+			}
+		}
+		
+		StringBuffer tempsql = new StringBuffer ("CREATE TABLE "+targetSchema+"."+newTableName);		
+		
+		String[] selectCols = new String[selectNames.size()];
+		selectNames.keySet().toArray(selectCols);
+		
+		StringBuffer selectClauseBuffer = new StringBuffer("");
+		for (int i = 0; i < selectCols.length; i++){
+			selectClauseBuffer = selectClauseBuffer.append(selectCols[i] + ",");
+		}
+		if (selectClauseBuffer.length() > 0)	
+			selectClauseBuffer.delete(selectClauseBuffer.length()-1,selectClauseBuffer.length());
+		//TransformationUnitDouble finalUnit = ((TransformationUnitDouble) getChildObjects()[getChildObjects().length - 1]);
+		tempsql.append("  AS SELECT "+selectClauseBuffer+" FROM "+targetSchema+"."+finalTableName+" GROUP BY ("+selectClauseBuffer+");\n");
+		
+		return tempsql.toString();
+		
+	}
+	
+	public String createNewMainBools (String extraMain,String PK, int index){
+		
+		String[] tableParts = finalTableName.split("__");
+		String newTableName = tableParts[0]+"__"+extraMain+"__main";//gene__gene__main
+		String targetSchema = "";
+		StringBuffer tempsql = new StringBuffer("");	
+		ConfigurationBase[] trUnits = getChildObjects();
+		for (int i = 0; i < trUnits.length; i++){
+			TransformationUnit trUnit = (TransformationUnit) trUnits[i];
+			if (!trUnit.getRefTable().getName().matches(".*__dm")){
+				continue;
+			}	
+			targetSchema = trUnit.getTargetSchema();
+			String[] dmTableParts = trUnit.getRefTable().getName().split("__");
+			String boolColumn = dmTableParts[1]+"_bool";
+			//System.out.println("BOOL COL "+boolColumn);
+			tempsql.append("CREATE INDEX index"+index+" ON "+targetSchema+"."+newTableName+"("+PK+");\n");		
+			index++;
+			tempsql.append("CREATE TABLE "+targetSchema+".BOOL_TEMP AS SELECT DISTINCT "+PK+",1 AS "+
+				boolColumn+" FROM "+targetSchema+"."+finalTableName+" WHERE "+boolColumn+" IS NOT NULL;\n");
+			tempsql.append("CREATE INDEX index"+index+" ON "+targetSchema+".BOOL_TEMP ("+PK+");\n");
+			tempsql.append("CREATE TABLE "+targetSchema+".MAIN_TEMP AS SELECT m.*, t."+boolColumn+" FROM "+targetSchema+"."+newTableName+
+				" m LEFT JOIN "+targetSchema+".BOOL_TEMP t ON m."+PK+"=t."+PK+";\n");
+			index++;
+			tempsql.append("DROP TABLE "+targetSchema+".BOOL_TEMP;\n");
+			tempsql.append("DROP TABLE "+targetSchema+"."+newTableName+";\n");
+			//tempsql.append("ALTER TABLE "+targetSchema+".MAIN_TEMP RENAME AS "+targetSchema+"."+newTableName+";\n");
+			tempsql.append("RENAME MAIN_TEMP TO "+newTableName+";\n");
+			//tempsql.append("CREATE INDEX"+index+" ON "+targetSchema+"."+newTableName+"("+PK+");\n");	
+		}
+		tempsql.append("ALTER TABLE "+targetSchema+"."+newTableName+" RENAME COLUMN "+PK+" TO "+PK+"_key;\n");
+		tempsql.append("CREATE INDEX index"+index+" ON "+targetSchema+"."+newTableName+"("+PK+"_key);\n");
+		return tempsql.toString();
+	}
+	
 
 	public void transform() {
 
