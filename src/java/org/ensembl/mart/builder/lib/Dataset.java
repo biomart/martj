@@ -153,7 +153,13 @@ public class Dataset extends ConfigurationBase {
 				sunit.setRDBMS(getRDBMS());
 				sunit.targetSchema = targetSchemaName;
 				sunit.TSKey=dmTransformations[m].getFinalUnit().TSKey;
-				sunit.RFKey=dmTransformations[m].getFinalUnit().RFKey;
+				
+//				this is used for the is not null part of the central bool col generation first stage
+				//sunit.RFKey=dmTransformations[m].getFinalUnit().RFKey;
+				TransformationUnit firstUnit = (TransformationUnit) dmTransformations[m].getChildObjects()[0];
+				String[] centralCs = firstUnit.getElement().getAttributeValue("centralColumnAliases").split(",");
+				sunit.RFKey = centralCs[0];
+				
 				sunit.type="notNull";
 				transformation.addChildObject(sunit);
 			
