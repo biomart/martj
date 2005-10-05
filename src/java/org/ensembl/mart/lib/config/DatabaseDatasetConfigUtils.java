@@ -2134,13 +2134,14 @@ public class DatabaseDatasetConfigUtils {
 			validatedFilter.setType("list");
 			validatedFilter.setQualifier("=");
 			validatedFilter.setLegalQualifiers("=");
-		
+			String colForDisplay = validatedFilter.getColForDisplay();
+			
 			Option[] ops;
 			if (otherDataset != null){
-				ops = getOptions(field, tableName, joinKey, otherDataset);
+				ops = getOptions(field, tableName, joinKey, otherDataset, colForDisplay);
 			}
 			else{
-				ops = getOptions(field, tableName, joinKey, dsv);
+				ops = getOptions(field, tableName, joinKey, dsv, colForDisplay);
 			}
 			
 			// add back any options
@@ -3788,8 +3789,9 @@ public class DatabaseDatasetConfigUtils {
     fd1.setType("list");
     fd1.setQualifier("=");
     fd1.setLegalQualifiers("=");
+    String colForDisplay = fd1.getColForDisplay();
 
-    Option[] options = getOptions(field, tableName, joinKey, dsConfig);
+    Option[] options = getOptions(field, tableName, joinKey, dsConfig, colForDisplay);
 
     fd1.addOptions(options);
 
@@ -3956,7 +3958,7 @@ public class DatabaseDatasetConfigUtils {
         filt.setType("list");
         filt.setQualifier("=");
         filt.setLegalQualifiers("=");
-        Option[] options = getOptions(columnName, tableName, null, dsv);
+        Option[] options = getOptions(columnName, tableName, null, dsv,"");
         filt.addOptions(options);
       }
     }
@@ -4010,7 +4012,7 @@ public class DatabaseDatasetConfigUtils {
     return filt;
   }
 
-  public Option[] getOptions(String columnName, String tableName, String joinKey, DatasetConfig dsConfig)
+  public Option[] getOptions(String columnName, String tableName, String joinKey, DatasetConfig dsConfig, String colForDisplay)
     throws SQLException, ConfigurationException {
 
     List options = new ArrayList();
@@ -4026,7 +4028,22 @@ public class DatabaseDatasetConfigUtils {
     }
 
     Connection conn = dsource.getConnection();
-    String sql =
+    String sql;
+    if (colForDisplay != null && !colForDisplay.equals("")){
+	     sql =
+				"SELECT DISTINCT "
+				+ columnName + "," + colForDisplay
+				+ " FROM "
+				+ getSchema()[0]
+				+"."
+				+ tableName
+				+ " WHERE "
+				+ columnName
+				+ " IS NOT NULL ORDER BY "
+				+ columnName;
+    }
+    else{
+    	sql =
       "SELECT DISTINCT "
         + columnName
         + " FROM "
@@ -4037,7 +4054,7 @@ public class DatabaseDatasetConfigUtils {
         + columnName
         + " IS NOT NULL ORDER BY "
         + columnName;
-        
+    }
     
     //System.out.println(sql);    
     PreparedStatement ps = conn.prepareStatement(sql);
@@ -4054,8 +4071,16 @@ public class DatabaseDatasetConfigUtils {
       continue;
       }  
       
-      	op = new Option();
-      op.setDisplayName(value);
+      op = new Option();
+      
+//      if (!colForDisplay.equals("")){
+		if (colForDisplay != null && !colForDisplay.equals("")){
+
+      	op.setDisplayName(rs.getString(2));		
+      }
+      else{
+      	op.setDisplayName(value);
+      }
       String intName = value.replaceAll(" ", "_");
       op.setInternalName(intName.toLowerCase());
       //NN

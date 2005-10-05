@@ -40,6 +40,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	protected final String defaultValueKey = "defaultValue";
 	protected final String filterListKey = "filterList";
 	protected final String attributePageKey = "setAttributePage";
+	protected final String colForDisplayKey = "colForDisplay";
 	
     //protected final String hiddenKey = "hidden";
 	private int[] reqFields = {0,5,7,8,10};// rendered red in AttributeTable
@@ -56,7 +57,8 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
                                                  regexpKey,
                                                  defaultValueKey,
                                                  filterListKey,
-                                                 attributePageKey
+                                                 attributePageKey,
+                                                 colForDisplayKey
   };
 
 	/**
@@ -96,10 +98,13 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	 */
 	public QueryFilterSettings(String internalName, String displayName, String description)
 		throws ConfigurationException {
-			this(internalName, displayName, description, "", "", null, "", "", "", "", "", "", "", "", "", "");
+			this(internalName, displayName, description, "", "", null, "", "", "", "", "", "", "", "", "", "", "");
 	}
 
-  public QueryFilterSettings(String internalName, String displayName, String description, String field, String value, String tableConstraint, String key, String type, String qualifier, String legalQualifiers, String otherFilters, String buttonURL, String regexp, String defaultValue, String filterList, String attributePage) throws ConfigurationException {
+  public QueryFilterSettings(String internalName, String displayName, String description, String field, 
+  	String value, String tableConstraint, String key, String type, String qualifier, String legalQualifiers, 
+  	String otherFilters, String buttonURL, String regexp, String defaultValue, String filterList, 
+  	String attributePage, String colForDisplay) throws ConfigurationException {
 		super(internalName, displayName, description);
 		
     	setAttribute(fieldKey, field);
@@ -115,6 +120,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 		setAttribute(defaultValueKey, defaultValue);
 		setAttribute(filterListKey, filterList);
 		setAttribute(attributePageKey,attributePage);
+		setAttribute(colForDisplayKey,colForDisplay);
 	    setRequiredFields(reqFields);
   }
   
@@ -164,6 +170,14 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	
 	public String getAttributePage() {
 		return getAttribute(attributePageKey);
+	}
+	
+	public void setColForDisplay(String colForDisplay) {
+		setAttribute(colForDisplayKey, colForDisplay);
+	}
+	
+	public String getColForDisplay() {
+		return getAttribute(colForDisplayKey);
 	}
 
 	public abstract String getFieldFromContext();

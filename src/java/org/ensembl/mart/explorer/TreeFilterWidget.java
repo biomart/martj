@@ -79,7 +79,7 @@ public class TreeFilterWidget extends FilterWidget {
         "someKey",
         "someDescription",
         "",
-        "","","","","");
+        "","","","","","");
 
     TreeFilterWidget tfw = new TreeFilterWidget(fgw, q, fd, null);
 

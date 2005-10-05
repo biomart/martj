@@ -1003,8 +1003,12 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		fd1.setType("list");
 		fd1.setQualifier("=");
 		fd1.setLegalQualifiers("=");
-
-		Option[] options = MartEditor.getDatabaseDatasetConfigUtils().getOptions(field, tableName, joinKey, dsConfig);
+		String colForDisplay = "";
+		if (fd1.getColForDisplay() != null){
+			colForDisplay = fd1.getColForDisplay();
+		}
+		System.out.println("COL FOR DISPLAY:"+colForDisplay);
+		Option[] options = MartEditor.getDatabaseDatasetConfigUtils().getOptions(field, tableName, joinKey, dsConfig, colForDisplay);
 
 		for (int k = options.length - 1; k > -1; k--) {
 
