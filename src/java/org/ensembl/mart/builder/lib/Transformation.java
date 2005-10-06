@@ -13,7 +13,6 @@ package org.ensembl.mart.builder.lib;
  *  
  */
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.jdom.Element;
@@ -193,7 +192,7 @@ public class Transformation extends ConfigurationBase {
 		if (selectClauseBuffer.length() > 0)	
 			selectClauseBuffer.delete(selectClauseBuffer.length()-1,selectClauseBuffer.length());
 		//TransformationUnitDouble finalUnit = ((TransformationUnitDouble) getChildObjects()[getChildObjects().length - 1]);
-		tempsql.append("  AS SELECT "+selectClauseBuffer+" FROM "+targetSchema+"."+finalTableName+" GROUP BY ("+selectClauseBuffer+");\n");
+		tempsql.append("  AS SELECT "+selectClauseBuffer+" FROM "+targetSchema+"."+finalTableName+" GROUP BY "+selectClauseBuffer+";\n");
 		
 		return tempsql.toString();
 		
@@ -226,7 +225,7 @@ public class Transformation extends ConfigurationBase {
 			tempsql.append("DROP TABLE "+targetSchema+".BOOL_TEMP;\n");
 			tempsql.append("DROP TABLE "+targetSchema+"."+newTableName+";\n");
 			//tempsql.append("ALTER TABLE "+targetSchema+".MAIN_TEMP RENAME AS "+targetSchema+"."+newTableName+";\n");
-			tempsql.append("RENAME MAIN_TEMP TO "+newTableName+";\n");
+			tempsql.append("RENAME "+targetSchema+".MAIN_TEMP TO "+targetSchema+"."+newTableName+";\n");
 			//tempsql.append("CREATE INDEX"+index+" ON "+targetSchema+"."+newTableName+"("+PK+");\n");	
 		}
 		tempsql.append("ALTER TABLE "+targetSchema+"."+newTableName+" RENAME COLUMN "+PK+" TO "+PK+"_key;\n");

@@ -295,6 +295,9 @@ public class ConfigurationAdaptor {
 					sqlout.write(((TransformationUnit)units[j]).addIndex(indexNo + j) + "\n");
 				
 				sqlout.write(((TransformationUnit)units[j]).toSQL() + "\n");
+				
+				if (((TransformationUnit)units[j]).single)
+					sqlout.write(((TransformationUnit)units[j]).addFinalIndex(indexNo + j,((TransformationUnit)units[j]).TSKey) + "\n");
 			}
 			for (int j = 0; j < units.length; j++) {
 				sqlout.write(((TransformationUnit)units[j]).dropTempTable() + "\n");

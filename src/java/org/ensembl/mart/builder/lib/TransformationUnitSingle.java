@@ -45,7 +45,7 @@ public class TransformationUnitSingle extends TransformationUnit {
 	
 	private String partitionSQL(){
 		
-		String sql = sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT * FROM "+refTable.getName();
+		String sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT * FROM "+refTable.getName();
 		
 		if (refTable.hasCentralExtension()){
 			sql= sql+" WHERE "+refTable.getName()+"."+refTable.getCentralExtension()+";";
@@ -59,9 +59,8 @@ public class TransformationUnitSingle extends TransformationUnit {
 	
 	private String notNullSQL(){
 		
-		String sql = sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ TSKey+
+		String sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ TSKey+
 		" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ RFKey+ " IS NOT NULL;";
-		
 		return sql;
 	}
 	
