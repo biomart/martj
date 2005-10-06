@@ -182,9 +182,9 @@ public class TransformationUnitDouble extends TransformationUnit {
 		
 		// needed for left join with central fiters (boolean)
 		if (getElement().getAttributeValue("cardinality").equals("n1standard")
-		    || getElement().getAttributeValue("cardinality").equals("n1r")){//?
+		    || (getElement().getAttributeValue("cardinality").equals("n1r") && !refTable.type.equals("interim"))){
 		
-		sql = getSQL(" LEFT JOIN ", " ON ", temp, temp_start_col, ref_table_col);
+			sql = getSQL(" LEFT JOIN ", " ON ", temp, temp_start_col, ref_table_col);
 		
 		} 
 		else {
