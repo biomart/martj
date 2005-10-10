@@ -66,7 +66,7 @@ public class ConfigurationAdaptor {
 
 				for (int j = 0; j < transformationUnitElements.size(); j++) {
 					TransformationUnit tu = new TransformationUnit(
-							(Element) transformationUnitElements.get(j));
+							(Element) transformationUnitElements.get(j));	
 					ts.addChildObject(tu);
 				}
 			}

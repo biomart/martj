@@ -48,7 +48,7 @@ public  class TransformationUnit extends ConfigurationBase {
 	public TransformationUnit(String internalName,String referencingType,String primaryKey,String referencedTable,
 		String cardinality,String centralProjection,String referencedProjection,String foreignKey,
 		String referenceColumnNames, String referenceColumnAliases,String centralColumnNames, String centralColumnAliases,
-		String externalSchema){
+		String externalSchema, String distinct){
 		super();
 		element.setAttribute("internalName",internalName);
 		element.setAttribute("referencingType",referencingType);
@@ -63,6 +63,7 @@ public  class TransformationUnit extends ConfigurationBase {
 		element.setAttribute("centralColumnNames",centralColumnNames);
 		element.setAttribute("centralColumnAliases",centralColumnAliases);
 		element.setAttribute("externalSchema",externalSchema);
+		element.setAttribute("distinct",distinct);
 			
 		setRequiredFields(requiredFields);
 	}

@@ -232,7 +232,7 @@ public class TransformationConfigTree extends JTree implements Autoscroll { //, 
 					insert(trans, "Transformation:");	
 				}
 				else if (e.getActionCommand().equals("insert transformation unit")) {
-					TransformationUnit tunit = new TransformationUnit("new","","","","","","","","","","","","");		
+					TransformationUnit tunit = new TransformationUnit("new","","","","","","","","","","","","","");		
 					insert(tunit, "TransformationUnit:");					
 				}
 				else if (e.getActionCommand().equals("delete"))

@@ -273,7 +273,8 @@ public class TransformationUnitDouble extends TransformationUnit {
 		}
 		
 		tempsql.append(temp+ "  AS SELECT "+temp_start_col.toString()+ref_table_col.toString()+" FROM "+ 
-				start+ ONE +ref+ TWO +ref+"."+RFKey+" = "+ start+"."+TSKey);
+							start+ ONE +ref+ TWO +ref+"."+RFKey+" = "+ start+"."+TSKey);	
+		
 		
 		
 		if (refTable.hasExtension()){
@@ -282,6 +283,13 @@ public class TransformationUnitDouble extends TransformationUnit {
 		if (refTable.hasCentralExtension()){
 			tempsql.append(" AND "+start+"."+refTable.getCentralExtension());
 		} 
+		
+		if (this.getElement().getAttributeValue("distinct") != null && 
+				this.getElement().getAttributeValue("distinct").equals("1")){
+			tempsql.append(" GROUP BY "+temp_start_col.toString()+ref_table_col.toString());
+			System.out.println(tempsql);
+		}
+		
 		tempsql.append(";");
 		
 		return tempsql.toString();

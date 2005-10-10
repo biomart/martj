@@ -21,8 +21,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
-import oracle.jdbc.ttc7.RefTTCItem;
-
 import org.ensembl.mart.builder.lib.Column;
 import org.ensembl.mart.builder.lib.ConfigurationBase;
 import org.ensembl.mart.builder.lib.DatabaseAdaptor;
@@ -82,6 +80,7 @@ public class ConfigurationGenerator implements ItemListener{
 	private JComboBox[] cenOperatorOptions;
 	private JTextField[] cenTextFields;
 	private JCheckBox[] keepCheckBoxs;
+	private JCheckBox[] distinctCheckBoxs;
 	private JCheckBox[] goDeeperCheckBoxs;
 	
 	private Transformation transformation;
@@ -750,6 +749,7 @@ public class ConfigurationGenerator implements ItemListener{
 		cenOperatorOptions = new JComboBox[referencedTables.length+1];
 		cenTextFields = new JTextField[referencedTables.length+1];
 		keepCheckBoxs = new JCheckBox[referencedTables.length+1];
+		distinctCheckBoxs = new JCheckBox[referencedTables.length+1];
 		goDeeperCheckBoxs = new JCheckBox[referencedTables.length+1];
 				
 		if (manualChoose != 0) {
@@ -840,7 +840,9 @@ public class ConfigurationGenerator implements ItemListener{
 					cenTextFields[i].setText(centralExtensionValue);
 					
 				keepCheckBoxs[i] = new JCheckBox("Always keep for subsequent transformations");	
-				goDeeperCheckBoxs[i] = new JCheckBox("Go deeper if 11 or n1");	
+				//goDeeperCheckBoxs[i] = new JCheckBox("Go deeper if 11 or n1");	
+				
+				distinctCheckBoxs[i] = new JCheckBox("Use DISTINCT clause in transformation");	
 				
 				box1.add(checkboxs[i]);
 				box1.add(new JLabel(""));
@@ -865,8 +867,8 @@ public class ConfigurationGenerator implements ItemListener{
 				box5.add(keepCheckBoxs[i]);
 				cardinalitySettings.add(box5);
 				
-				//box6.add(goDeeperCheckBoxs[i]);
-				//cardinalitySettings.add(box6);
+				box6.add(distinctCheckBoxs[i]);
+				cardinalitySettings.add(box6);
 				cardinalitySettings.add(Box.createVerticalStrut(20));
 			}
 
@@ -1183,6 +1185,10 @@ public class ConfigurationGenerator implements ItemListener{
 				externalSchema= "";	
 			}
 			
+			String distinct = "";
+			if (distinctCheckBoxs[i].getSelectedObjects() != null)
+				distinct = "1";
+				
 			TransformationUnit transformationUnit =
 							new TransformationUnit(
 								tunitCount.toString(),
@@ -1197,7 +1203,7 @@ public class ConfigurationGenerator implements ItemListener{
 								refColAlias,
 								cenColName,
 								cenColAlias,
-								externalSchema);
+								externalSchema,distinct);
 
 			transformation.insertChildObject(unitCount, transformationUnit);
 			unitCount++;
@@ -1237,6 +1243,7 @@ public class ConfigurationGenerator implements ItemListener{
 					"",
 					"",
 					"",
+					"",
 					"");
 
 			transformation.insertChildObject(unitCount, extraUnit);
@@ -1258,6 +1265,7 @@ public class ConfigurationGenerator implements ItemListener{
 								"",
 								cenColName,
 								cenColAlias,
+								"",
 								"");
 			transformation.insertChildObject(unitCount, transformationUnit);
 		}
@@ -1534,7 +1542,7 @@ public class ConfigurationGenerator implements ItemListener{
 								refColAlias,
 								cenColName,
 								cenColAlias,
-								"");
+								"","");
 				
 				tUnits.add(deeperUnit);
 				unitCount++;
