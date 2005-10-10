@@ -140,7 +140,15 @@ public class TransformationUnitDouble extends TransformationUnit {
 				&& !  new_ref.getColumns()[m].bool  // not sure what that is for 
 				&& ! new_ref.getColumns()[m].userAlias // user overrides
 				){
-					new_ref.getColumns()[m].setAlias(new_ref.getColumns()[m].getName()+"_"+temp);
+					if (new_ref.type.equals("interim")){
+						temp_start.getColumns()[j].setAlias(temp_start.getColumns()[j].getName()+"_"+temp);
+						//System.out.println("adding alias for interim:"+temp_start.getColumns()[m].getName()+"_"+temp);
+					}
+					else{
+						new_ref.getColumns()[m].setAlias(new_ref.getColumns()[m].getName()+"_"+temp);
+						//System.out.println("adding alias:"+temp_start.getColumns()[m].getName()+"_"+temp);	
+					}
+					
 				}
 			}
 		}		
@@ -195,9 +203,7 @@ public class TransformationUnitDouble extends TransformationUnit {
 			
 			tempStart=new_ref;
 			refTable=new_start;
-			
-			
-			
+					
 			sql = getSQL(" LEFT JOIN ", " ON ", temp, temp_start_col, ref_table_col);
 			
 		}
@@ -235,8 +241,9 @@ public class TransformationUnitDouble extends TransformationUnit {
 		StringBuffer ref_table_col = new StringBuffer("");
 		
 		for (int j=0; j<ref_table.getColumns().length;j++){
-				
+			//System.out.println("REF TABLE " + ref_table.getName() + " HAS COL " + ref_table.getColumns()[j].getName());
 			if (ref_table.getColumns()[j].hasAlias()){		
+				//System.out.println("HAS ALIAS");
 				ref_table_col.append(ref_table.getName()+"."+ref_table.getColumns()[j].getName()+
 						" AS "+ ref_table.getColumns()[j].getAlias()+",");
 			} else {
