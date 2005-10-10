@@ -230,6 +230,10 @@ public class Transformation extends ConfigurationBase {
 		}
 		tempsql.append("ALTER TABLE "+targetSchema+"."+newTableName+" RENAME COLUMN "+PK+" TO "+PK+"_key;\n");
 		tempsql.append("CREATE INDEX index"+index+" ON "+targetSchema+"."+newTableName+"("+PK+"_key);\n");
+		index++;
+		tempsql.append("ALTER TABLE "+targetSchema+"."+finalTableName+" RENAME COLUMN "+PK+" TO "+PK+"_key;\n");
+		tempsql.append("CREATE INDEX index"+index+" ON "+targetSchema+"."+finalTableName+"("+PK+"_key);\n");
+		
 		return tempsql.toString();
 	}
 	
