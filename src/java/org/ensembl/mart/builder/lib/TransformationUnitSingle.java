@@ -58,7 +58,9 @@ public class TransformationUnitSingle extends TransformationUnit {
 	
 	
 	private String notNullSQL(){
-		
+		if (RFKey.equals(""))
+			RFKey = TSKey;
+			
 		String sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ TSKey+
 		" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ RFKey+ " IS NOT NULL;";
 		return sql;

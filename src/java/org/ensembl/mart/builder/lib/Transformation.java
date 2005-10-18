@@ -225,7 +225,7 @@ public class Transformation extends ConfigurationBase {
 			tempsql.append("DROP TABLE "+targetSchema+".BOOL_TEMP;\n");
 			tempsql.append("DROP TABLE "+targetSchema+"."+newTableName+";\n");
 			//tempsql.append("ALTER TABLE "+targetSchema+".MAIN_TEMP RENAME AS "+targetSchema+"."+newTableName+";\n");
-			tempsql.append("RENAME "+targetSchema+".MAIN_TEMP TO "+targetSchema+"."+newTableName+";\n");
+			tempsql.append("RENAME MAIN_TEMP TO "+newTableName+";\n");
 			//tempsql.append("CREATE INDEX"+index+" ON "+targetSchema+"."+newTableName+"("+PK+");\n");	
 		}
 		tempsql.append("ALTER TABLE "+targetSchema+"."+newTableName+" RENAME COLUMN "+PK+" TO "+PK+"_key;\n");
