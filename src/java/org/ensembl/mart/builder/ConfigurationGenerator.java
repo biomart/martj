@@ -1186,7 +1186,7 @@ public class ConfigurationGenerator implements ItemListener{
 			}
 			
 			String distinct = "";
-			if (distinctCheckBoxs[i].getSelectedObjects() != null)
+			if (distinctCheckBoxs[i] != null && distinctCheckBoxs[i].getSelectedObjects() != null)
 				distinct = "1";
 				
 			TransformationUnit transformationUnit =
