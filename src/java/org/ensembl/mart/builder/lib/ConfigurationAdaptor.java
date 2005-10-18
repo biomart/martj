@@ -327,6 +327,8 @@ public class ConfigurationAdaptor {
 		  String[] otherMains = dataset.getElement().getAttributeValue("otherMainTables").split(",");
 		  for (int i = 0; i < otherMains.length; i++){
 		 	String extraMain = otherMains[i];
+		 	if (extraMain.equals(""))
+		 		continue;
 		  	sqlout.write(((Transformation) final_transformations[0]).createNewMain(extraMain));
 		  	Table newMain = resolver.getCentralTable(extraMain);
 		  	sqlout.write(((Transformation) final_transformations[final_transformations.length - 1]).
