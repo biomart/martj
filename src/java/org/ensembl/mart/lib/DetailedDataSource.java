@@ -420,7 +420,7 @@ public class DetailedDataSource implements DataSource {
       try {
         // load driver
         
-        //System.out.println ("lodading ..."+jdbcDriverClassName);
+        System.out.println ("lodading ..."+jdbcDriverClassName);
         Class.forName(jdbcDriverClassName).newInstance();
 
         dataSource =

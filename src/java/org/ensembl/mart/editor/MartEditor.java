@@ -133,6 +133,15 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 	
 		 String defaultSourceName = databaseDialog.getConnectionName();
 
+// prevents MEditor from moaning on the first start without prefs set
+String driver = null;
+if (databaseDialog.getDriver().equals("")) driver ="com.mysql.jdbc.Driver";
+else driver=databaseDialog.getDriver();
+
+
+
+System.out.println ("getting driver "+ driver);
+
 				 if (defaultSourceName == null || defaultSourceName.length() < 1)
 				   defaultSourceName =
 					 defaultSourceName =
@@ -142,6 +151,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 						 databaseDialog.getDatabase(),
 						 databaseDialog.getSchema(),
 						 databaseDialog.getUser());
+
 
 				 ds =
 				   new DetailedDataSource(
@@ -153,7 +163,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 					 databaseDialog.getUser(),
 					 databaseDialog.getPassword(),
 					 10,
-					 databaseDialog.getDriver(),
+					 driver,
 					 defaultSourceName);
 			
 				 user = databaseDialog.getUser();
@@ -177,7 +187,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 										 databaseDialog.getUser(),
 										 databaseDialog.getPassword(),
 										 10,
-										 databaseDialog.getDriver(),
+										 driver,
 										 defaultSourceName);
 					    DatabaseDatasetConfigUtils dbutils1 = new DatabaseDatasetConfigUtils(new DatasetConfigXMLUtils(true), ds1);
 				   		dbutilsHash.put(schemas[i],dbutils1);
