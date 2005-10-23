@@ -49,11 +49,14 @@ import java.util.zip.GZIPInputStream;
 import javax.swing.BorderFactory;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SpringLayout;
 import javax.swing.UIManager;
 
 import org.ensembl.mart.builder.lib.DatabaseAdaptor;
@@ -65,7 +68,7 @@ import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 import org.xml.sax.InputSource;
 
-//import com.mysql.jdbc.PreparedStatement;
+// import com.mysql.jdbc.PreparedStatement;
 
 /**
  * Class MartSubmitter extends JFrame..
@@ -104,13 +107,13 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 	private static TextField textField1;
 
+	private static JLabel l;
+
 	private static Button button;
 
 	private JPanel pane;
 
 	private Document doc;
-	
-	
 
 	public MartSubmitter() {
 
@@ -148,9 +151,10 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 		// Build the first menu.
 		menu = new JMenu("File");
-		
+
 		// menu.setMnemonic(KeyEvent.VK_F);
-		menu.getAccessibleContext().setAccessibleDescription("the file related menu");
+		menu.getAccessibleContext().setAccessibleDescription(
+				"the file related menu");
 		menuBar.add(menu);
 
 		menuItem = new JMenuItem("Database Connection ");
@@ -221,7 +225,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 			}
 		});
 	}
-	
+
 	// Inner class that handles Menu Action Events
 	protected class MenuActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
@@ -277,7 +281,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 	public void importDatasetConfig() {
 		String[] datasets = getDatasets();
-		
+
 		try {
 			disableCursor();
 
@@ -297,7 +301,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 			getXML(dataset);
 
-			addTextBoxes(doc);
+			addComponents(doc);
 
 		} catch (Exception e) {
 			JOptionPane
@@ -312,20 +316,23 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 	}
 
-	private void addTextBoxes(Document doc) {
+	private void addComponents(Document doc) {
 		SubmitFrame frame = createFrame();
-		
+
 		Element root = doc.getRootElement();
 		JPanel pane = new JPanel();
 		setPane(pane);
 		setDoc(doc);
 
 		JPanel buttonpanel = new JPanel();
+		int attribute_counter = 0;
+		JPanel p = new JPanel(new SpringLayout());
 
 		button = new Button("SUBMIT");
 		buttonpanel.add(button);
 		frame.getContentPane().add(buttonpanel, BorderLayout.PAGE_END);
-		pane.setLayout(new FlowLayout());
+		frame.getContentPane().add(p);
+
 		button.addActionListener(this);
 
 		List PGElements = root.getChildren();
@@ -341,7 +348,6 @@ public class MartSubmitter extends JFrame implements ActionListener {
 					|| pge.getName().equals("Exportable"))
 				continue;
 
-			
 			List AttributePageElements = ((Element) PGElements.get(i))
 					.getChildren();
 
@@ -365,24 +371,45 @@ public class MartSubmitter extends JFrame implements ActionListener {
 						List Attribute = ((Element) AttributeCollectionElements
 								.get(m)).getChildren();
 
-						TextField text = new TextField(ace
-								.getAttributeValue("internalName"), 10);
+						String labelname = new String();
+						labelname = ace.getAttributeValue("internalName");
+
+						JLabel l = new JLabel(ace
+								.getAttributeValue("internalName"));
+
+						p.add(l);
+
+						TextField text = new TextField(10);
 						text.setName(ace.getAttributeValue("internalName"));
-						pane.add(text);
 
 						ace.setName(ace.getAttributeValue("internalName"));
+						attribute_counter++;
+
+						//l.setLabelFor(text);
+
+						p.add(text);
+
 					}
+
 				}
 			}
 		}
-		frame.getContentPane().add(pane);
+
+		SpringUtilities.makeCompactGrid(p, attribute_counter, 2, // rows,
+																	// cols
+				6, 6, // initX, initY
+				6, 6); // xPad, yPad
+
+		frame.getContentPane().add(p);
+		frame.pack();
+
 	}
 
 	private void getXML(String dataset) {
 		Document doc = null;
 
-		String sql = "select compressed_xml from "+getAdaptor().getSchema()+".meta_configuration where dataset='"
-				+ dataset + "'";
+		String sql = "select compressed_xml from " + getAdaptor().getSchema()
+				+ ".meta_configuration where dataset='" + dataset + "'";
 
 		java.sql.PreparedStatement ps;
 
@@ -414,8 +441,9 @@ public class MartSubmitter extends JFrame implements ActionListener {
 	}
 
 	private String[] getDatasets() {
-		String sql = "SELECT dataset from "+getAdaptor().getSchema()+".meta_configuration";
-		
+		String sql = "SELECT dataset from " + getAdaptor().getSchema()
+				+ ".meta_configuration";
+
 		ArrayList datasets = new ArrayList();
 
 		try {
@@ -450,7 +478,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 	}
 
-	private  static Connection getDbConnection() {
+	private static Connection getDbConnection() {
 		return dbConnection;
 	}
 
@@ -458,7 +486,6 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		this.dbConnection = dbConnection;
 	}
 
-	
 	public static void submitDatabase(String sql) {
 		Connection con = null;
 		Statement sts = null;
@@ -486,8 +513,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		}
 	}
 
-	
-public void createSql() {
+	public void createSql() {
 		Element root = doc.getRootElement();
 		setDoc(doc);
 
@@ -496,14 +522,14 @@ public void createSql() {
 		ArrayList tableNames = new ArrayList();
 		String tableName = new String();
 		tableName = "";
-		
+
 		List PGElements = root.getChildren();
-		
+
 		for (int i = 0; i < PGElements.size(); i++) {
 			Element pge = (Element) PGElements.get(i);
 
-			if 
-			(pge.getName().equals("Key") || pge.getName().equals("FilterPage")
+			if (pge.getName().equals("Key")
+					|| pge.getName().equals("FilterPage")
 					|| pge.getName().equals("Importable")
 					|| pge.getName().equals("Exportable"))
 				continue;
@@ -511,7 +537,7 @@ public void createSql() {
 			if (pge.getName().equals("MainTable")) {
 				tableNames.add(pge.getText());
 			}
-			
+
 			List AttributePageElements = ((Element) PGElements.get(i))
 					.getChildren();
 
@@ -531,97 +557,103 @@ public void createSql() {
 
 						Element ace = (Element) AttributeCollectionElements
 								.get(m);
-								
-						if (ace.getAttributeValue("tableConstraint").equals("main")) {
+
+						if (ace.getAttributeValue("tableConstraint").equals(
+								"main")) {
 							mainTable();
-							}
-						
+						}
+
 						else {
 							int c = tableName.compareTo(ace
 									.getAttributeValue("tableConstraint"));
-							
+
 							if (c == 0) {
-							}								
-							
+							}
+
 							else {
-							tableName = ace.getAttributeValue("tableConstraint");
-							tableNames.add(ace.getAttributeValue("tableConstraint"));
+								tableName = ace
+										.getAttributeValue("tableConstraint");
+								tableNames.add(ace
+										.getAttributeValue("tableConstraint"));
 							}
 						}
-											
-				for (int x = 0; x < cp.length; x++) {
-					TextField text = (TextField) cp[x];
 
-					if (ace.getName().equals(text.getName())) {
-						ace.setAttribute("buttontext", text.getText());
-						selectedAttributes.add(ace);
-					}
-				}
+						for (int x = 0; x < cp.length; x++) {
+							TextField text = (TextField) cp[x];
+							
+							System.out.println("here: " + text.getName());
+
+							if (ace.getName().equals(text.getName())) {
+								ace.setAttribute("buttontext", text.getText());
+								selectedAttributes.add(ace);
+							}
+						}
 					}
 				}
 			}
 		}
-		
-		int p=0;
+
+		int p = 0;
 		String array = new String();
 		String array2 = new String();
 		int li;
-		
-		//loop through each individual table and create attributeArray
-		for (p=0; p<tableNames.size(); p++){
+
+		// loop through each individual table and create attributeArray
+		for (p = 0; p < tableNames.size(); p++) {
 			String currentTable = (String) tableNames.get(p);
-		
+
 			if (tableNames.get(p).toString().endsWith("main")) {
 				currentTable = "main";
 			}
-			
+
 			ArrayList attributeArray = new ArrayList();
 			ArrayList attributeArray2 = new ArrayList();
-			
-			//go through all attributes and pick out the relevant to each table
+
+			// go through all attributes and pick out the relevant to each table
 			for (int z = 0; z < selectedAttributes.size(); z++) {
 				Element ace = (Element) selectedAttributes.get(z);
-				
-				if (ace.getAttributeValue("tableConstraint").equals(currentTable)) {
+
+				if (ace.getAttributeValue("tableConstraint").equals(
+						currentTable)) {
 					attributeArray.add(ace.getAttributeValue("buttontext"));
 					attributeArray2.add(ace.getName());
 				}
 			}
-			
+
 			String sql = new String();
 			array = attributeArray.toString();
 			array2 = attributeArray2.toString();
 			li = array.lastIndexOf("]");
-			array = array.substring(1,li);
-			array = array.replaceAll(", ","\",\"");
+			array = array.substring(1, li);
+			array = array.replaceAll(", ", "\",\"");
 			li = array2.lastIndexOf("]");
-			array2 = array2.substring(1,li);
-			
-			//create Sql
-			sql = "INSERT INTO " + tableNames.get(p) +" (" + array2 + ") " + "VALUES (\"" + array + "\")";
+			array2 = array2.substring(1, li);
+
+			// create Sql
+			sql = "INSERT INTO " + tableNames.get(p) + " (" + array2 + ") "
+					+ "VALUES (\"" + array + "\")";
 			System.out.println(sql);
-			
-			submitDatabase(sql); 
-			
+
+			submitDatabase(sql);
+
 		}
 	}
 
-		
-	public void mainTable(){
-	Element root = doc.getRootElement();
-	setDoc(doc);
+	public void mainTable() {
+		Element root = doc.getRootElement();
+		setDoc(doc);
 
-	ArrayList tableNames = new ArrayList();
+		ArrayList tableNames = new ArrayList();
 
-	List PGElements = root.getChildren();
-	
-	for (int i = 0; i < PGElements.size(); i++) {
-		Element pge = (Element) PGElements.get(i);
+		List PGElements = root.getChildren();
 
-		if (pge.getName().equals("MainTable")) {
-			tableNames.add(pge.getText());
+		for (int i = 0; i < PGElements.size(); i++) {
+			Element pge = (Element) PGElements.get(i);
+
+			if (pge.getName().equals("MainTable")) {
+				tableNames.add(pge.getText());
+			}
 		}
-	}
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -643,14 +675,17 @@ public void createSql() {
 	public void setDoc(Document doc) {
 		this.doc = doc;
 	}
+
 	/**
 	 * @return Returns the adaptor.
 	 */
 	public DatabaseAdaptor getAdaptor() {
 		return adaptor;
 	}
+
 	/**
-	 * @param adaptor The adaptor to set.
+	 * @param adaptor
+	 *            The adaptor to set.
 	 */
 	public void setAdaptor(DatabaseAdaptor adaptor) {
 		this.adaptor = adaptor;
