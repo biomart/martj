@@ -22,6 +22,7 @@ import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -47,6 +48,8 @@ import java.util.prefs.Preferences;
 import java.util.zip.GZIPInputStream;
 
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -55,6 +58,8 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.UIManager;
@@ -141,6 +146,10 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 	}
 
+	final static String BUTTONPANEL = "JPanel with JButtons";
+
+	final static String TEXTPANEL = "JPanel with JTextField";
+
 	protected JMenuBar createMenuBar() {
 		JMenuBar menuBar;
 		JMenu menu;
@@ -207,6 +216,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		frame.setTitle(connection);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);
+
 	}
 
 	public static void main(String[] args) {
@@ -316,24 +326,32 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 	}
 
+	
 	private void addComponents(Document doc) {
 		SubmitFrame frame = createFrame();
 
 		Element root = doc.getRootElement();
 		JPanel pane = new JPanel();
+		JTabbedPane tabbedPane = new JTabbedPane();
 		setPane(pane);
 		setDoc(doc);
 
+		ArrayList tableNames = new ArrayList();
+		String tableName = new String();
+		tableName = "";
+
 		JPanel buttonpanel = new JPanel();
 		int attribute_counter = 0;
-		JPanel p = new JPanel(new SpringLayout());
-
+		JPanel panel_main = new JPanel();
+		
 		button = new Button("SUBMIT");
 		buttonpanel.add(button);
 		frame.getContentPane().add(buttonpanel, BorderLayout.PAGE_END);
-		frame.getContentPane().add(p);
-
+	
 		button.addActionListener(this);
+
+		Component[] cp = pane.getComponents();
+		ArrayList selectedAttributes = new ArrayList();
 
 		List PGElements = root.getChildren();
 
@@ -341,12 +359,15 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 			Element pge = (Element) PGElements.get(i);
 
-			if (pge.getName().equals("MainTable")
-					|| pge.getName().equals("Key")
-					|| pge.getName().equals("FilterPage")
+			if // (pge.getName().equals("MainTable")
+			(pge.getName().equals("Key") || pge.getName().equals("FilterPage")
 					|| pge.getName().equals("Importable")
 					|| pge.getName().equals("Exportable"))
 				continue;
+
+			if (pge.getName().equals("MainTable")) {
+				tableNames.add(pge.getText());
+			}
 
 			List AttributePageElements = ((Element) PGElements.get(i))
 					.getChildren();
@@ -371,37 +392,73 @@ public class MartSubmitter extends JFrame implements ActionListener {
 						List Attribute = ((Element) AttributeCollectionElements
 								.get(m)).getChildren();
 
-						String labelname = new String();
-						labelname = ace.getAttributeValue("internalName");
+						if (ace.getAttributeValue("tableConstraint").equals(
+								"main")) {
+							mainTable();
+						}
 
-						JLabel l = new JLabel(ace
-								.getAttributeValue("internalName"));
+						else {
+							int c = tableName.compareTo(ace
+									.getAttributeValue("tableConstraint"));
 
-						p.add(l);
+							if (c == 0) {
+							}
 
-						TextField text = new TextField(10);
-						text.setName(ace.getAttributeValue("internalName"));
+							else {
+								tableName = ace
+										.getAttributeValue("tableConstraint");
+								tableNames.add(ace
+										.getAttributeValue("tableConstraint"));
 
-						ace.setName(ace.getAttributeValue("internalName"));
+							}
+						}
 						attribute_counter++;
-
-						//l.setLabelFor(text);
-
-						p.add(text);
-
+						selectedAttributes.add(ace);
+						ace.setName(ace.getAttributeValue("internalName"));
+	
 					}
 
 				}
 			}
 		}
 
-		SpringUtilities.makeCompactGrid(p, attribute_counter, 2, // rows,
-																	// cols
-				6, 6, // initX, initY
-				6, 6); // xPad, yPad
+	
+		int r = 0;
 
-		frame.getContentPane().add(p);
-		frame.pack();
+		for (r = 0; r < tableNames.size(); r++) {
+			String currentTable = (String) tableNames.get(r);
+			int att_count = 0;
+			if (tableNames.get(r).toString().endsWith("main")) {
+				currentTable = "main";
+			}
+
+			JPanel tab_pane = new JPanel(new SpringLayout());
+			
+			for (int z = 0; z < attribute_counter; z++) {
+				Element ace = (Element) selectedAttributes.get(z);
+
+				if (ace.getAttributeValue("tableConstraint").equals(
+						currentTable)) {
+					JLabel l = new JLabel(ace.getAttributeValue("internalName"));
+					tab_pane.add(l);
+					TextField text = new TextField(10);
+					text.setName(ace.getAttributeValue("internalName"));
+					tab_pane.add(text);
+					att_count++;
+				}
+
+			}
+			
+			tabbedPane.addTab(currentTable, tab_pane);
+			panel_main.add(tabbedPane, BorderLayout.CENTER);
+
+			LayoutUtilities.makeCompactGrid(tab_pane, 
+					att_count, 2, // rows, cols
+					6, 6, // initX, initY
+					6, 6); // xPad, yPad
+			frame.getContentPane().add(panel_main);
+			frame.pack();
+		}
 
 	}
 
@@ -513,7 +570,8 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		}
 	}
 
-	public void createSql() {
+	
+	public void getTableNames() {
 		Element root = doc.getRootElement();
 		setDoc(doc);
 
@@ -580,7 +638,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 						for (int x = 0; x < cp.length; x++) {
 							TextField text = (TextField) cp[x];
-							
+
 							System.out.println("here: " + text.getName());
 
 							if (ace.getName().equals(text.getName())) {
@@ -598,7 +656,6 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		String array2 = new String();
 		int li;
 
-		// loop through each individual table and create attributeArray
 		for (p = 0; p < tableNames.size(); p++) {
 			String currentTable = (String) tableNames.get(p);
 
@@ -657,7 +714,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		createSql();
+		getTableNames();
 	}
 
 	public JPanel getPane() {
@@ -690,4 +747,5 @@ public class MartSubmitter extends JFrame implements ActionListener {
 	public void setAdaptor(DatabaseAdaptor adaptor) {
 		this.adaptor = adaptor;
 	}
+
 }
