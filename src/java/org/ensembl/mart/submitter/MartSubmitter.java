@@ -58,6 +58,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -396,23 +397,19 @@ public class MartSubmitter extends JFrame implements ActionListener {
 								"main")) {
 							mainTable();
 						}
-
+						
 						else {
-							int c = tableName.compareTo(ace
-									.getAttributeValue("tableConstraint"));
-
-							if (c == 0) {
-							}
-
+							if (tableNames.contains(ace.getAttributeValue("tableConstraint")))
+							{}
 							else {
-								tableName = ace
-										.getAttributeValue("tableConstraint");
-								tableNames.add(ace
-										.getAttributeValue("tableConstraint"));
-
+								tableNames.add(ace.getAttributeValue("tableConstraint"));
 							}
+							
+							
 						}
+						
 						attribute_counter++;
+						
 						selectedAttributes.add(ace);
 						ace.setName(ace.getAttributeValue("internalName"));
 	
@@ -422,17 +419,24 @@ public class MartSubmitter extends JFrame implements ActionListener {
 			}
 		}
 
-	
+		System.out.println("ATTMAIN" + attribute_counter);
 		int r = 0;
-
+		
+		//int att_count = attribute_counter;
+		System.out.println("NO: " + tableNames.size());
+		
 		for (r = 0; r < tableNames.size(); r++) {
 			String currentTable = (String) tableNames.get(r);
 			int att_count = 0;
+		System.out.println("CURRENT TABLE: " + currentTable);
+			
 			if (tableNames.get(r).toString().endsWith("main")) {
 				currentTable = "main";
 			}
 
 			JPanel tab_pane = new JPanel(new SpringLayout());
+			//JScrollPane scrollPane = new JScrollPane(tab_pane);
+			
 			
 			for (int z = 0; z < attribute_counter; z++) {
 				Element ace = (Element) selectedAttributes.get(z);
@@ -443,19 +447,28 @@ public class MartSubmitter extends JFrame implements ActionListener {
 					tab_pane.add(l);
 					TextField text = new TextField(10);
 					text.setName(ace.getAttributeValue("internalName"));
+					l.setLabelFor(text);
 					tab_pane.add(text);
+					
 					att_count++;
+					System.out.println("ATT: " + ace.getAttributeValue("internalName"));
 				}
 
 			}
 			
+			
 			tabbedPane.addTab(currentTable, tab_pane);
-			panel_main.add(tabbedPane, BorderLayout.CENTER);
-
+			
+			System.out.println("NO ATT: " + att_count);
+			//att_count = att_count/2 + att_count%2;
+			System.out.println("NO ATT DIV: " + att_count);
 			LayoutUtilities.makeCompactGrid(tab_pane, 
 					att_count, 2, // rows, cols
 					6, 6, // initX, initY
 					6, 6); // xPad, yPad
+			
+			panel_main.add(tabbedPane, BorderLayout.CENTER);
+			//panel_main.setPreferredSize(new Dimension(450, 110));
 			frame.getContentPane().add(panel_main);
 			frame.pack();
 		}
@@ -622,20 +635,15 @@ public class MartSubmitter extends JFrame implements ActionListener {
 						}
 
 						else {
-							int c = tableName.compareTo(ace
-									.getAttributeValue("tableConstraint"));
-
-							if (c == 0) {
-							}
-
+							if (tableNames.contains(ace.getAttributeValue("tableConstraint")))
+							{}
 							else {
-								tableName = ace
-										.getAttributeValue("tableConstraint");
-								tableNames.add(ace
-										.getAttributeValue("tableConstraint"));
+								tableNames.add(ace.getAttributeValue("tableConstraint"));
 							}
+							
+							
 						}
-
+						
 						for (int x = 0; x < cp.length; x++) {
 							TextField text = (TextField) cp[x];
 
