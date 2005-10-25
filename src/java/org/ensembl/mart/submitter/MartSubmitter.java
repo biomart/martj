@@ -345,6 +345,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		int attribute_counter = 0;
 		JPanel panel_main = new JPanel();
 		
+		
 		button = new Button("SUBMIT");
 		buttonpanel.add(button);
 		frame.getContentPane().add(buttonpanel, BorderLayout.PAGE_END);
@@ -419,17 +420,13 @@ public class MartSubmitter extends JFrame implements ActionListener {
 			}
 		}
 
-		System.out.println("ATTMAIN" + attribute_counter);
+	
 		int r = 0;
-		
-		//int att_count = attribute_counter;
-		System.out.println("NO: " + tableNames.size());
 		
 		for (r = 0; r < tableNames.size(); r++) {
 			String currentTable = (String) tableNames.get(r);
 			int att_count = 0;
-		System.out.println("CURRENT TABLE: " + currentTable);
-			
+					
 			if (tableNames.get(r).toString().endsWith("main")) {
 				currentTable = "main";
 			}
@@ -451,7 +448,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 					tab_pane.add(text);
 					
 					att_count++;
-					System.out.println("ATT: " + ace.getAttributeValue("internalName"));
+					
 				}
 
 			}
@@ -459,15 +456,22 @@ public class MartSubmitter extends JFrame implements ActionListener {
 			
 			tabbedPane.addTab(currentTable, tab_pane);
 			
-			System.out.println("NO ATT: " + att_count);
-			//att_count = att_count/2 + att_count%2;
-			System.out.println("NO ATT DIV: " + att_count);
 			LayoutUtilities.makeCompactGrid(tab_pane, 
 					att_count, 2, // rows, cols
 					6, 6, // initX, initY
 					6, 6); // xPad, yPad
 			
+			
 			panel_main.add(tabbedPane, BorderLayout.CENTER);
+			int rows = tabbedPane.getTabRunCount();
+		    
+			// int policy = tabbedPane.getTabLayoutPolicy(); // WRAP_TAB_LAYOUT
+		    
+		    // Configure the tabs to scroll
+		    tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+		    tab_pane.setAutoscrolls(true);
+			JScrollPane scrollPane = new JScrollPane();
+			 
 			//panel_main.setPreferredSize(new Dimension(450, 110));
 			frame.getContentPane().add(panel_main);
 			frame.pack();
@@ -647,7 +651,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 						for (int x = 0; x < cp.length; x++) {
 							TextField text = (TextField) cp[x];
 
-							System.out.println("here: " + text.getName());
+						//	System.out.println("here: " + text.getName());
 
 							if (ace.getName().equals(text.getName())) {
 								ace.setAttribute("buttontext", text.getText());
