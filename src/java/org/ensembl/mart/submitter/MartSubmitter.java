@@ -111,7 +111,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 	protected Clipboard clipboardEditor;
 
-	private static TextField textField1;
+	private static JTextField text;
 
 	private static JLabel l;
 
@@ -431,7 +431,10 @@ public class MartSubmitter extends JFrame implements ActionListener {
 				currentTable = "main";
 			}
 
-			JPanel tab_pane = new JPanel(new SpringLayout());
+			//JPanel tab_pane = new JPanel(new SpringLayout());
+			
+			JPanel tab_pane = new JPanel(null);
+			
 			//JScrollPane scrollPane = new JScrollPane(tab_pane);
 			
 			
@@ -442,7 +445,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 						currentTable)) {
 					JLabel l = new JLabel(ace.getAttributeValue("internalName"));
 					tab_pane.add(l);
-					TextField text = new TextField(10);
+					JTextField text = new JTextField(10);
 					text.setName(ace.getAttributeValue("internalName"));
 					l.setLabelFor(text);
 					tab_pane.add(text);
@@ -452,15 +455,51 @@ public class MartSubmitter extends JFrame implements ActionListener {
 				}
 
 			}
-			
-			
+			//tab_pane.setPreferredSize(new Dimension( 300, 220 ));
 			tabbedPane.addTab(currentTable, tab_pane);
+			//tabbedPane.setPreferredSize(new Dimension( 300,220));
 			
+//HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			/*
+			JScrollPane scrollPane = new JScrollPane();
+			JPanel scrollP = new JPanel();
+			scrollP.setLayout(null);
+			
+			scrollPane.setPreferredSize( new Dimension( 15, 220 ) );
+			//scrollPane.setBounds(23, 9, 502, 346);
+			scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+			
+			tab_pane.add(scrollPane);
+			*/
+			
+//TO HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+			//tab_pane.add(scrollPane, BorderLayout.CENTER);
+			//scrollPane.add(tab_pane);
+			
+			
+			/*
+			if (att_count%2==1){
+				//System.out.println("ODD " + att_count);
+				JLabel ls = new JLabel("£");
+				tab_pane.add(ls);
+				tab_pane.add(ls);
+				//att_count++;
+				att_count=att_count/2 + att_count%2;
+				//System.out.println(att_count);
+			}
+			else {
+			att_count=att_count/2;
+			}
+			*/
+			//tab_pane.setPreferredSize(new Dimension (300,200));
+			tab_pane.setLayout(new SpringLayout());
+//HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 			LayoutUtilities.makeCompactGrid(tab_pane, 
 					att_count, 2, // rows, cols
 					6, 6, // initX, initY
 					6, 6); // xPad, yPad
 			
+//TO HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 			
 			panel_main.add(tabbedPane, BorderLayout.CENTER);
 			int rows = tabbedPane.getTabRunCount();
@@ -470,9 +509,13 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		    // Configure the tabs to scroll
 		    tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 		    tab_pane.setAutoscrolls(true);
-			JScrollPane scrollPane = new JScrollPane();
-			 
+		    
+			 //scrollPane.add(panel_main);
 			//panel_main.setPreferredSize(new Dimension(450, 110));
+			//frame.getContentPane().add(scrollPane);
+			//getContentPane().add(scrollPane);
+			//scrollPane.add(panel_main);
+			//panel_main.add(scrollPane);
 			frame.getContentPane().add(panel_main);
 			frame.pack();
 		}
