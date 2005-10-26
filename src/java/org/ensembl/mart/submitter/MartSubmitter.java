@@ -333,7 +333,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 		Element root = doc.getRootElement();
 		JPanel pane = new JPanel();
-		JTabbedPane tabbedPane = new JTabbedPane();
+		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.LEFT);
 		setPane(pane);
 		setDoc(doc);
 
@@ -453,8 +453,8 @@ public class MartSubmitter extends JFrame implements ActionListener {
 			JScrollPane scrollPane = new JScrollPane(tab_pane);
 			scrollPane.setPreferredSize( new Dimension( 400, 300 ) );
 			scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-			int bottom = scrollPane.getVerticalScrollBar().getMaximum();
-			scrollPane.getVerticalScrollBar().setValue(bottom);
+			//int bottom = scrollPane.getVerticalScrollBar().getMaximum();
+			//scrollPane.getVerticalScrollBar().setValue(bottom);
 			tabbedPane.add(currentTable, scrollPane);
 			
 			tab_pane.setLayout(new SpringLayout());
@@ -465,13 +465,12 @@ public class MartSubmitter extends JFrame implements ActionListener {
 					6, 6); // xPad, yPad
 			
 			panel_main.add(tabbedPane, BorderLayout.CENTER);
-			int rows = tabbedPane.getTabRunCount();
-		    
-			// int policy = tabbedPane.getTabLayoutPolicy(); // WRAP_TAB_LAYOUT
-		    
+					    
 		    // Configure the tabs to scroll
 		    tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
-		    tab_pane.setAutoscrolls(true);
+		    //tab_pane.setAutoscrolls(true);
+		    
+		    
 		    frame.getContentPane().add(panel_main);
 			frame.pack();
 		}
