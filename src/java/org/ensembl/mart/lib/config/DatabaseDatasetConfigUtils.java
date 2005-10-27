@@ -1655,7 +1655,7 @@ public class DatabaseDatasetConfigUtils {
     //want to copy existing Elements to the new Object as is
     String dset = validatedDatasetConfig.getDataset();
     boolean hasBrokenStars = false;
-    String[] starbases = dsv.getStarBases();
+    String[] starbases = validatedDatasetConfig.getStarBases();
     String[] validatedStars = new String[starbases.length];
 
     for (int i = 0, n = starbases.length; i < n; i++) {
@@ -1677,7 +1677,7 @@ public class DatabaseDatasetConfigUtils {
     }
 
     boolean hasBrokenPKeys = false;
-    String[] pkeys = dsv.getPrimaryKeys();
+    String[] pkeys = validatedDatasetConfig.getPrimaryKeys();
     String[] validatedKeys = new String[pkeys.length];
 
     for (int i = 0, n = pkeys.length; i < n; i++) {
@@ -1703,7 +1703,7 @@ public class DatabaseDatasetConfigUtils {
     List brokenFilters = new ArrayList();   
 
     boolean hasBrokenOptions = false;
-    Option[] options = dsv.getOptions();
+    Option[] options = validatedDatasetConfig.getOptions();
     HashMap brokenOptions = new HashMap();
 
     for (int i = 0, n = options.length; i < n; i++) {
@@ -1728,7 +1728,7 @@ public class DatabaseDatasetConfigUtils {
     }
 
     boolean hasBrokenAttributePages = false;
-    AttributePage[] apages = dsv.getAttributePages();
+    AttributePage[] apages = validatedDatasetConfig.getAttributePages();
     HashMap brokenAPages = new HashMap();
 
     for (int i = 0, n = apages.length; i < n; i++) {
@@ -1754,11 +1754,10 @@ public class DatabaseDatasetConfigUtils {
 
     boolean hasBrokenFilterPages = false;
     HashMap brokenFPages = new HashMap();
-    FilterPage[] allPages = dsv.getFilterPages();
-    for (int i = 0, n = allPages.length; i < n; i++) {
+    FilterPage[] allPages = validatedDatasetConfig.getFilterPages();
+    for (int i = 0, n = allPages.length; i < n; i++) {	
       FilterPage validatedPage = getValidatedFilterPage(allPages[i], dset,validatedDatasetConfig, conn);
-
-      if (validatedPage.isBroken()) {
+	  if (validatedPage.isBroken()) {
         hasBrokenFilterPages = true;
         brokenFPages.put(new Integer(i), validatedPage);
       }
@@ -1771,7 +1770,7 @@ public class DatabaseDatasetConfigUtils {
         Integer position = (Integer) iter.next();
         FilterPage brokenPage = (FilterPage) brokenFPages.get(position);
         validatedDatasetConfig.removeFilterPage(allPages[position.intValue()]);
-        validatedDatasetConfig.insertFilterPage(position.intValue(), brokenPage);
+		validatedDatasetConfig.insertFilterPage(position.intValue(), brokenPage);
       }
     }
 	DetailedDataSource.close(conn);

@@ -684,9 +684,6 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   public void removeFilterPage(FilterPage f) {
     lazyLoad();
     filterPageNameMap.remove(f.getInternalName());
-    for (int i = 0; i < filterPages.size(); i++){
-    	FilterPage fp = (FilterPage) filterPages.get(i);
-    }
     filterPages.remove(f);
   }
 
@@ -875,7 +872,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @return FilterPage[]
    */
   public FilterPage[] getFilterPages() {
-    lazyLoad();
+    lazyLoad();    
     FilterPage[] fs = new FilterPage[filterPages.size()];
     filterPages.toArray(fs);
     return fs;
