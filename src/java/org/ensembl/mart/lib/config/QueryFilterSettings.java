@@ -41,6 +41,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	protected final String defaultOnKey = "defaultOn";
 	protected final String filterListKey = "filterList";
 	protected final String attributePageKey = "setAttributePage";
+	protected final String attributeKey = "setAttribute";
 	protected final String colForDisplayKey = "colForDisplay";
 	
     //protected final String hiddenKey = "hidden";
@@ -60,6 +61,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
                                                  defaultOnKey,
                                                  filterListKey,
                                                  attributePageKey,
+                                                 attributeKey,
                                                  colForDisplayKey
   };
 
@@ -100,13 +102,13 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	 */
 	public QueryFilterSettings(String internalName, String displayName, String description)
 		throws ConfigurationException {
-			this(internalName, displayName, description, "", "", null, "", "", "", "", "", "", "", "", "", "", "", "");
+			this(internalName, displayName, description, "", "", null, "", "", "", "", "", "", "", "", "", "", "", "", "");
 	}
 
   public QueryFilterSettings(String internalName, String displayName, String description, String field, 
   	String value, String tableConstraint, String key, String type, String qualifier, String legalQualifiers, 
   	String otherFilters, String buttonURL, String regexp, String defaultValue, String defaultOn, String filterList, 
-  	String attributePage, String colForDisplay) throws ConfigurationException {
+  	String attributePage, String attribute, String colForDisplay) throws ConfigurationException {
 		super(internalName, displayName, description);
 		
     	setAttribute(fieldKey, field);
@@ -123,6 +125,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 		setAttribute(defaultOnKey, defaultOn);
 		setAttribute(filterListKey, filterList);
 		setAttribute(attributePageKey,attributePage);
+		setAttribute(attributeKey,attribute);
 		setAttribute(colForDisplayKey,colForDisplay);
 	    setRequiredFields(reqFields);
   }
@@ -181,6 +184,14 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	
 	public String getAttributePage() {
 		return getAttribute(attributePageKey);
+	}
+	
+	public void setAttribute(String attribute) {
+		setAttribute(attributeKey, attribute);
+	}
+	
+	public String getAttribute() {
+		return getAttribute(attributeKey);
 	}
 	
 	public void setColForDisplay(String colForDisplay) {
