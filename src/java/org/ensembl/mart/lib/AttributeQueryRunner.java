@@ -221,7 +221,7 @@ public final class AttributeQueryRunner implements QueryRunner {
         }
         //else          
         //batchLimit += linearIncrease;
-
+        ps.close();
         rs.close();
       }
     } catch (IOException e) {
