@@ -63,7 +63,7 @@ public class TreeFilterWidget extends FilterWidget {
     // switch on logging for test purposes.
     LoggingUtil.setAllRootHandlerLevelsToFinest();
     Logger.getLogger(Query.class.getName()).setLevel(Level.FINE);
-
+/*
     Query q = new Query();
     FilterGroup fg = new FilterGroup();
     FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg, null);
@@ -87,7 +87,7 @@ public class TreeFilterWidget extends FilterWidget {
     f.getContentPane().add(tfw);
     f.pack();
     f.setVisible(true);
-
+*/
   }
 
   private Feedback feedback = new Feedback(this);

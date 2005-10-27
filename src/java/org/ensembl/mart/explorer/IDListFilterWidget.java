@@ -361,7 +361,7 @@ public class IDListFilterWidget
     // enable logging messages
     LoggingUtil.setAllRootHandlerLevelsToFinest();
     Logger.getLogger(Query.class.getName()).setLevel(Level.FINEST);
-
+/*
     Query q = new Query();
     FilterGroup fg = new FilterGroup();
     FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg, null);
@@ -393,6 +393,7 @@ public class IDListFilterWidget
     new QuickFrame(
       IDListFilterWidget.class.getName(),
       new IDListFilterWidget(null, q, fd, null));
+  */
   }
 
   protected boolean equivalentFilter(Object otherFilter) {

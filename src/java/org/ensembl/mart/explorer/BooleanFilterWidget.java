@@ -276,7 +276,7 @@ public class BooleanFilterWidget
     // switch on logging for test purposes.
     LoggingUtil.setAllRootHandlerLevelsToFinest();
     Logger.getLogger(Query.class.getName()).setLevel(Level.FINE);
-
+/*
     Query q = new Query();
     FilterGroup fg = new FilterGroup();
     FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg, null);
@@ -341,7 +341,7 @@ public class BooleanFilterWidget
     p.add(bfw3);
 
     new QuickFrame("BooleanFilterWidget test", p);
-
+*/
   }
 
   protected boolean equivalentFilter(Object otherFilter) {
