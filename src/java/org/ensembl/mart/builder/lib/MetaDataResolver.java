@@ -340,8 +340,27 @@ public abstract class MetaDataResolver {
 		Table table;
 		if (tableStore.get(centralTableName) != null){
 			table = (Table) tableStore.get(centralTableName);
-			// should cache cols again but breaks things
-			//table.setColumns(getReferencedColumns(table.getName(),columnNames,columnAliases));
+			// should cache cols again
+			
+			//System.out.println("USING CACHED COPY FOR "+centralTableName);
+			//System.out.println("SHOULD SET TO FOLLOWING ONLY:");
+			for (int i = 0; i < columnNames.length; i++){
+				//System.out.println(columnNames[i]);
+			}
+			//System.out.println("CACHED TABLE HAS:");
+			Column[] cols = table.getColumns();
+			for (int i = 0; i < cols.length; i++){
+				//System.out.println(cols[i].getName());
+			}
+			
+			table.setColumns(getReferencedColumns(table.getName(),columnNames,columnAliases));
+			//System.out.println("CACHED TABLE NOW HAS:");
+			cols = table.getColumns();
+			for (int i = 0; i < cols.length; i++){
+				//System.out.println(cols[i].getName());
+			}
+			
+			
 			// this table needs to behave like a ref table for recursive joins
 			table.PK=getPrimaryKeys(centralTableName);
 			table.FK=getPrimaryKeys(centralTableName);

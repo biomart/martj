@@ -275,7 +275,7 @@ public class TransformationUnitDouble extends TransformationUnit {
 	    
 		StringBuffer tempsql = new StringBuffer ("CREATE TABLE "+targetSchema+".");
 		
-		if (ref_table_col.length() <= 0){// if no ref cols then delete the extra comma
+		if (ref_table_col.length() <= 0 && temp_start_col.length() > 0){// if no ref cols then delete the extra comma
 			temp_start_col.delete(temp_start_col.length()-1,temp_start_col.length());
 		}
 		
@@ -294,7 +294,7 @@ public class TransformationUnitDouble extends TransformationUnit {
 		if (this.getElement().getAttributeValue("distinct") != null && 
 				this.getElement().getAttributeValue("distinct").equals("1")){
 			tempsql.append(" GROUP BY "+temp_start_col.toString()+ref_table_col.toString());
-			System.out.println(tempsql);
+			//System.out.println(tempsql);
 		}
 		
 		tempsql.append(";");

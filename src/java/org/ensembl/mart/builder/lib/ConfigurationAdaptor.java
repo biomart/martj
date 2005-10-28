@@ -173,9 +173,10 @@ public class ConfigurationAdaptor {
 						}
 						catch(Exception e){
 						}
-						
-						transformation.setStartTable(startTable);
-					
+						//if (!transformationUnit.getElement().getAttributeValue("referencedTable").equals("main_interim")) {
+						if (k == 0){// should only be set once per start table - ? move out of loop
+							transformation.setStartTable(startTable);
+						}
 						
 						String [] columnNames = { "%" };
 						String [] columnAliases=null;
