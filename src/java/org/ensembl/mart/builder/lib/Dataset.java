@@ -128,7 +128,7 @@ public class Dataset extends ConfigurationBase {
 			transformation.getElement().setAttribute("userTableName",
 				mainTransformations[i].getElement().getAttributeValue("userTableName"));
 		
-			Table main_table=mainTransformations[i].getFinalUnit().getTemp_end();
+			Table main_table=mainTransformations[i].getFinalUnit().getTempEnd();
 			// set this again
 			main_table.type="interim";
 			
@@ -144,7 +144,7 @@ public class Dataset extends ConfigurationBase {
 				
 			    if(dmTransformations[m].central) containsCentral=true; 
 				
-				Table dmFinalTable=dmTransformations[m].getFinalUnit().getTemp_end();
+				Table dmFinalTable=dmTransformations[m].getFinalUnit().getTempEnd();
 				
 				TransformationUnitSingle sunit = 
 					new TransformationUnitSingle(dmFinalTable);
@@ -170,7 +170,7 @@ public class Dataset extends ConfigurationBase {
 				TransformationUnitDouble dunit = new TransformationUnitDouble(dmFinalTable);
 				dunit.getElement().setAttribute("cardinality",dmFinalTable.getCardinality());
 				dunit.setColumnOperations("addone");
-				dunit.setfinalTableName("MAIN");
+				//dunit.setfinalTableName("MAIN");
 				dunit.setRDBMS(getRDBMS());
 				dunit.TSKey=dmTransformations[m].getFinalUnit().RFKey;
 				dunit.RFKey=dmTransformations[m].getFinalUnit().TSKey;
@@ -215,7 +215,7 @@ public class Dataset extends ConfigurationBase {
 		for (int i = 0; i < transforms.length; i++) { 
 			
 			Transformation trans = (Transformation) transforms[i];
-			trans.getFinalUnit().getTemp_end().setName(trans.getElement().getAttributeValue("userTableName"));
+			trans.getFinalUnit().getTempEnd().setName(trans.getElement().getAttributeValue("userTableName"));
 		}
 		
 	}

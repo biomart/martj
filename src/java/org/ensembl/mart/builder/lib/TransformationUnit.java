@@ -17,17 +17,16 @@ import org.jdom.Element;
 public  class TransformationUnit extends ConfigurationBase {
 	
 	protected String tempEndName;
-	protected String columnOperations;
-	protected String finalTableName;
+	protected Table tempStart;
+	protected Table tempEnd;
+	protected Table refTable;
 	protected String TSKey;
 	protected String RFKey;
 	protected String targetSchema;
 	protected String type;
 	protected String RDBMS;
-	
-	protected Table tempStart;
-	protected Table tempEnd;
-	protected Table refTable;
+	protected String columnOperations;
+
 	private int[] requiredFields = {0,1,2,3,4,7};
 	boolean single =false;
 	
@@ -108,14 +107,6 @@ public  class TransformationUnit extends ConfigurationBase {
 	  return type;
 	}
 	
-	void setColumnOperations(String columnOperations) {
-	  this.columnOperations = columnOperations;
-	}
-
-	String getColumnOperations() {
-	  return columnOperations;
-	}
-	
 	void setTempEndName(String tempEndName) {
 	  this.tempEndName = tempEndName;
 	}
@@ -124,14 +115,14 @@ public  class TransformationUnit extends ConfigurationBase {
 	  return tempEndName;
 	}
 	
-	void setfinalTableName(String finalTableName) {
-	  this.finalTableName = finalTableName;
+	void setColumnOperations(String columnOperations) {
+	  this.columnOperations = columnOperations;
 	}
 
-	String getFinalTableName() {
-	  return finalTableName;
+	String getColumnOperations() {
+	  return columnOperations;
 	}
-	
+		
 	void setTSKey(String TSKey) {
 	  this.TSKey = TSKey;
 	}
@@ -147,15 +138,21 @@ public  class TransformationUnit extends ConfigurationBase {
 	String getRFKey() {
 	  return RFKey;
 	}
-	
 
+	String getRDBMS() {
+		return RDBMS;
+	}
+
+	void setRDBMS(String rdbms) {
+		RDBMS = rdbms;
+	}
+	
 	public  String toSQL (){
-		
 		String sql="override this method";
-		
 		return sql;
 		
 	}
+	
 	public  void transform (Table temp_start, String temp_end_name){
 	}
 	
@@ -227,56 +224,4 @@ public  class TransformationUnit extends ConfigurationBase {
 		return new_table;
 	}
 	
-	
-	
-	/**
-	 * @return Returns the ref.
-	 */
-	public Table getRef_table() {
-		return refTable;
-	}
-	/**
-	 * @param ref The ref to set.
-	 */
-	public void setRef_table(Table ref) {
-		this.refTable = ref;
-	}
-	/**
-	 * @return Returns the temp_end.
-	 */
-	public Table getTemp_end() {
-		return tempEnd;
-	}
-	/**
-	 * @param temp_end The temp_end to set.
-	 */
-	public void setTemp_end(Table temp_end) {
-		this.tempEnd = temp_end;
-	}
-	/**
-	 * @return Returns the temp_start.
-	 */
-	public Table getTemp_start() {
-		return tempStart;
-	}
-	/**
-	 * @param temp_start The temp_start to set.
-	 */
-	public void setTemp_start(Table temp_start) {
-		this.tempStart = temp_start;
-	}
-	
-	
-	/**
-	 * @return Returns the rDBMS.
-	 */
-	public String getRDBMS() {
-		return RDBMS;
-	}
-	/**
-	 * @param rdbms The rDBMS to set.
-	 */
-	public void setRDBMS(String rdbms) {
-		RDBMS = rdbms;
-	}
 }

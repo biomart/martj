@@ -81,8 +81,8 @@ public class TransformationUnitSingle extends TransformationUnit {
 		temp_end.isFinalTable=false;
 		} else temp_end = copyTable(refTable);
 		
-		this.setTemp_end(temp_end);
-		this.setTemp_start(temp_start);
+		this.setTempEnd(temp_end);
+		this.setTempStart(temp_start);
 		
 	}
 

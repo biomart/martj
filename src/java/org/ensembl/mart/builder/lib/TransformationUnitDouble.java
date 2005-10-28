@@ -123,9 +123,9 @@ public class TransformationUnitDouble extends TransformationUnit {
 		
 		setNamesToAliases(temp_end);
 		
-		this.setTemp_start(temp_start);
-		this.setTemp_end(temp_end);
-		this.setRef_table(refTable);
+		this.setTempStart(temp_start);
+		this.setTempEnd(temp_end);
+		this.setRefTable(refTable);
 		
 	}
 	

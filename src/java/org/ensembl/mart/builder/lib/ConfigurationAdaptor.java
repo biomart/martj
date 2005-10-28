@@ -111,23 +111,18 @@ public class ConfigurationAdaptor {
 			ConfigurationBase[] datasets = tConfig.getChildObjects();
 			for (int i = 0; i < datasets.length; i++){
 				Dataset dataset = (Dataset) datasets[i];
-				//System.out.println("DATASET:"+dataset.getElement().getAttributeValue("internalName"));
 				datasetName = dataset.getElement().getAttributeValue("internalName");
 				dataset.setRDBMS(resolver.getAdaptor().getRdbms());
 				dataset.setTargetSchemaName(targetSchemaName);
-				
 				dataset.setDatasetKey(resolver.getPrimaryKeys(dataset.getElement().getAttributeValue("mainTable")));
-				
 				
 				ConfigurationBase[] transformations = dataset.getChildObjects();
 				for (int j = 0; j < transformations.length; j++){
 					transformation = (Transformation) transformations[j];
-					
-					//System.out.println("TRANSFORMATION:"+transformation.getElement().getAttributeValue("internalName"));	
-					
+									
 					transformation.setDatasetName(datasetName);
 					transformation.setTargetSchemaName(targetSchemaName);
-					transformation.setFinalTableName(transformation.getElement().getAttributeValue("userTableName"));
+					//transformation.setFinalTableName(transformation.getElement().getAttributeValue("userTableName"));
 									
 					if (transformation.getElement().getAttributeValue("includeCentralFilter").toUpperCase().equals("Y")) transformation.central = true;
 
@@ -153,61 +148,33 @@ public class ConfigurationAdaptor {
 					ConfigurationBase[] transformationUnits = transformation.getChildObjects();
 					for (int k = 0; k < transformationUnits.length; k++){
 						TransformationUnit transformationUnit = (TransformationUnit) transformationUnits[k];
-						//System.out.println("TRANSFORMATION UNIT:"+transformationUnit.getElement().getAttributeValue("internalName"));	
-					
-						//if (transformationUnit.getElement().getAttributeValue("centralColumnNames").equals("")){
-						//	System.out.println("NO CENTRAL COL NAMES SET - FIX - FOR:"+transformationUnit.getElement().getAttributeValue("internalName"));
-						//}
 						centralColumnNames = transformationUnit.getElement().getAttributeValue("centralColumnNames").split(",");
-						//if (transformationUnit.getElement().getAttributeValue("centralColumnAliases").equals("")){
-						//	System.out.println("NO CENTRAL COL ALIASES SET - FIX - FOR:"+transformationUnit.getElement().getAttributeValue("internalName"));
-						//}
 						centralColumnAliases = transformationUnit.getElement().getAttributeValue("centralColumnAliases").split(",");
 											
 						//db interaction
-						
 						try{
 							startTable= ((Table) (resolver.getCentralTable(transformation.getElement().
 								getAttributeValue("centralTable"),centralColumnNames,centralColumnAliases)).clone());
-						
 						}
 						catch(Exception e){
 						}
-						//if (!transformationUnit.getElement().getAttributeValue("referencedTable").equals("main_interim")) {
 						if (k == 0){// should only be set once per start table - ? move out of loop
 							transformation.setStartTable(startTable);
 						}
 						
-						String [] columnNames = { "%" };
-						String [] columnAliases=null;
-											
-						//if (transformationUnit.getElement().getAttributeValue("referenceColumnNames").equals("")){
-						//	System.out.println("NO REF COL NAMES SET - FIX - FOR:"+transformationUnit.getElement().getAttributeValue("internalName"));
-						
-						//}
-						columnNames = transformationUnit.getElement().getAttributeValue("referenceColumnNames").split(","); 
-						
-						//if (transformationUnit.getElement().getAttributeValue("referenceColumnAliases").equals("")){
-						//	System.out.println("NO CENTRAL REF COL ALIASES SET - FIX - FOR:"+transformationUnit.getElement().getAttributeValue("internalName"));
-						
-						//}
-						columnAliases = transformationUnit.getElement().getAttributeValue("referenceColumnAliases").split(","); 
+						String [] referenceColumnNames = { "%" };
+						String [] referenceColumnAliases=null;
+						referenceColumnNames = transformationUnit.getElement().getAttributeValue("referenceColumnNames").split(","); 
+						referenceColumnAliases = transformationUnit.getElement().getAttributeValue("referenceColumnAliases").split(","); 
 			
 						TransformationUnit dunit= null;
 						Table refTable = null;
 				
 						if (!transformationUnit.getElement().getAttributeValue("referencedTable").equals("")) {
-					
-							 // switched off fileEntries[5].toLowerCase for oracle
-							// "main_interim" name needs to be a centrally settable param
-							// config file, ConfigurationAdaptor and DatasetCode.
-							
-							// db interaction
-							
 							if (!transformationUnit.getElement().getAttributeValue("referencedTable").equals("main_interim")) {
 								try{
 									refTable = ((Table) (resolver.getTableColumns(transformationUnit.getElement().getAttributeValue("referencedTable"), 
-									columnNames, columnAliases)).clone());//,startTable.getColumns());
+									referenceColumnNames, referenceColumnAliases)).clone());//,startTable.getColumns());
 								}
 								catch(Exception e){
 								}
@@ -230,8 +197,7 @@ public class ConfigurationAdaptor {
 								refTable.extension = transformationUnit.getElement().getAttributeValue("referencedProjection");
 							if (!transformationUnit.getElement().getAttributeValue("centralProjection").equals(""))
 								refTable.central_extension = transformationUnit.getElement().getAttributeValue("centralProjection");
-					
-							
+											
 							dunit = new TransformationUnitDouble(transformationUnit.getElement(),refTable);
 						 }	
 						 else {
@@ -314,17 +280,14 @@ public class ConfigurationAdaptor {
 			
 			for (int j = 0; j < units.length; j++) {
 				if (!(((TransformationUnit)units[j]).tempEnd.getName().matches(".*TEMP.*"))) {
-
 					sqlout.write(((TransformationUnit)units[j]).renameKeyColumn(dataset.getDatasetKey())+ "\n");
 					sqlout.write(((TransformationUnit)units[j]).addFinalIndex(indexNo + j,dataset.getDatasetKey() + "_key")+ "\n");
-
 				}
 			}
 		  }
 		
 		  // create any further main tables
 		  indexNo = 50 + indexNo;
-		  //String extraMain = "GENE";// to be set in XML eventually
 		  String[] otherMains = dataset.getElement().getAttributeValue("otherMainTables").split(",");
 		  for (int i = 0; i < otherMains.length; i++){
 		 	String extraMain = otherMains[i];
