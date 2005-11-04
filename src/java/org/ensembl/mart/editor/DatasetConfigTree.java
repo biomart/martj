@@ -1135,6 +1135,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			dsConfig.getType(),
 			dsConfig.getVisible(),
 			dsConfig.getVersion(),
+			dsConfig.getDatasetID(),
 			dsConfig);
 	}
 

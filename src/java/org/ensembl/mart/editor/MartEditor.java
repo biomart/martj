@@ -1004,6 +1004,7 @@ System.out.println ("getting driver "+ driver);
 									odsv.getType(),
 									odsv.getVisible(),
 									odsv.getVersion(),
+									odsv.getDatasetID(),
 									odsv);
 				   } catch (Exception e) {
 							e.printStackTrace();
@@ -1062,6 +1063,7 @@ System.out.println ("getting driver "+ driver);
 										dsv.getType(),
 										dsv.getVisible(),
 										dsv.getVersion(),
+										dsv.getDatasetID(),
 										dsv);						   		
 			  }	
 			} 
@@ -1132,6 +1134,7 @@ System.out.println ("getting driver "+ driver);
 							dsv.getType(),
 							dsv.getVisible(),
 							dsv.getVersion(),
+							dsv.getDatasetID(),
 							dsv);
 					
 				// display it if new atts or filts for further editing	
@@ -1453,6 +1456,7 @@ System.out.println ("getting driver "+ driver);
 															dsv.getType(),
 															dsv.getVisible(),
 															dsv.getVersion(),
+															dsv.getDatasetID(),
 															dsv);	
 			    }
 			  }
