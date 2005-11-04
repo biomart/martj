@@ -71,7 +71,7 @@ public class DatabaseDatasetConfigUtils {
   private HashMap configInfo = new HashMap();
   
   private final String VISIBLESQL = " where visible = 1";
-  private final String GETALLNAMESQL = "select internalname, displayName, dataset, description, MessageDigest, type, visible, version from ";
+  private final String GETALLNAMESQL = "select internalname, displayName, dataset, description, MessageDigest, type, visible, version, datasetID from ";
   private final String GETDATASETVERSION = "select version from meta_release where dataset = ?";
   private final String GETLINKVERSION = "select link_version from meta_release where dataset = ?";   
   private final String GETANYNAMESWHERINAME = " where internalName = ? and dataset = ?";
@@ -92,9 +92,9 @@ public class DatabaseDatasetConfigUtils {
   private final String SELECTCOMPRESSEDXMLFORUPDATE = "select compressed_xml from ";
   private final String INSERTCOMPRESSEDXMLA = "insert into "; //append table after user test
   private final String INSERTCOMPRESSEDXMLB =
-    " (internalName, displayName, dataset, description, compressed_xml, MessageDigest, type, visible, version) values (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    " (internalName, displayName, dataset, description, compressed_xml, MessageDigest, type, visible, version, datasetID) values (?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
   private final String INSERTCOMPRESSEDXMLBMYSQL =
-	  " (internalName, displayName, dataset, description, xml, compressed_xml, MessageDigest, type, visible, version) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	  " (internalName, displayName, dataset, description, xml, compressed_xml, MessageDigest, type, visible, version,datasetID) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
 
   private final String MAINTABLESUFFIX = "main";
   private final String DIMENSIONTABLESUFFIX = "dm";
@@ -321,6 +321,7 @@ public class DatabaseDatasetConfigUtils {
     String type,
     String visible,
     String version,
+	String datasetID,
     DatasetConfig dsConfig)
     throws ConfigurationException {
 	
@@ -646,7 +647,7 @@ public class DatabaseDatasetConfigUtils {
     int rowsupdated = 0;
 
     if (compress)
-      rowsupdated = storeCompressedXML(user, internalName, displayName, dataset, description, doc, type, visible, version);
+      rowsupdated = storeCompressedXML(user, internalName, displayName, dataset, description, doc, type, visible, version, datasetID);
     else
       rowsupdated = storeUncompressedXML(user, internalName, displayName, dataset, description, doc);
 
@@ -815,7 +816,8 @@ public class DatabaseDatasetConfigUtils {
     Document doc,
     String type,
     String visible,
-    String version)
+    String version,
+	String datasetID)
     throws ConfigurationException {
     if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
       return storeCompressedXMLOracle(user, internalName, displayName, dataset, description, doc, type, visible, version);
@@ -874,6 +876,7 @@ public class DatabaseDatasetConfigUtils {
 	  ps.setString(8, type);
 	  ps.setString(9, visible);
 	  ps.setString(10,version);
+	  ps.setString(11,datasetID);
 
       int ret = ps.executeUpdate();
       ps.close();
@@ -1023,8 +1026,9 @@ public class DatabaseDatasetConfigUtils {
         String type = rs.getString(6);
         String visible = rs.getString(7);
 		String version = rs.getString(8);
+		String datasetID =rs.getString(9);
         byte[] digest = rs.getBytes(5);
-        DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description, type, visible,"",version,"","");
+        DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description, type, visible,"",version,"","",datasetID);
         dsv.setMessageDigest(digest);
         
         HashMap userMap = (HashMap) configInfo.get(user);
@@ -1604,9 +1608,13 @@ public class DatabaseDatasetConfigUtils {
     String metatable = BASEMETATABLE;
     
     String CREATETABLE= "create table " +getSchema()[0]+".meta_configuration";
-    String MYSQL_META    = CREATETABLE+"(internalName varchar(100), displayName varchar(100), dataset varchar(100), description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, type varchar(20), visible int(1) unsigned, version varchar(25))";
+    String MYSQL_META    = CREATETABLE+"(internalName varchar(100), displayName varchar(100), dataset varchar(100), " +
+    		"description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, " +
+    		"type varchar(20), visible int(1) unsigned, version varchar(25),datasetID int not null, PRIMARY KEY(datasetID))";
+    String MYSQL_USER="CREATE TABLE meta_user ( datasetID int, user varchar(100))";
     String ORACLE_META   = CREATETABLE+" (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25))";
     String POSTGRES_META = CREATETABLE+"(internalname varchar(100), displayname varchar(100), dataset varchar(100), description varchar(200), xml text, compressed_xml bytea, MessageDigest bytea, type varchar(20), visible integer, version varchar(25))";
+    
     
     
     //override if user not null
@@ -1621,13 +1629,17 @@ public class DatabaseDatasetConfigUtils {
 			try {
 			  conn = dsource.getConnection();
 			  String CREATE_SQL = new String();
+			  String CREATE_USER =new String();
 			  if(dsource.getDatabaseType().equals("oracle")) {CREATE_SQL=ORACLE_META;}
 			  if(dsource.getDatabaseType().equals("postgres")) {CREATE_SQL=POSTGRES_META;}
-			  if(dsource.getDatabaseType().equals("mysql")) {CREATE_SQL = MYSQL_META;}
+			  if(dsource.getDatabaseType().equals("mysql")) {CREATE_SQL = MYSQL_META;CREATE_USER=MYSQL_USER;}
 			  
 			  PreparedStatement ps = conn.prepareStatement(CREATE_SQL);
+			  ps.executeUpdate();
 			  
-			  ps.executeUpdate();	
+			  PreparedStatement ps1=conn.prepareStatement(CREATE_USER);
+			  ps1.executeUpdate();
+			  
 			  conn.close();
 			} catch (SQLException e) {
 			  throw new ConfigurationException("Caught SQLException during create meta_configuration table\n" +e);
