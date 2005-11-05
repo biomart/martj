@@ -839,7 +839,8 @@ System.out.println ("getting driver "+ driver);
 	
       ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).export();
     } catch (ConfigurationException e) {
-      JOptionPane.showMessageDialog(this, "Problems exporting requested dataset. Check that you have write permission " +
+      JOptionPane.showMessageDialog(this, "Problems with exporting requested dataset. " +
+      		"Check that dataset name and dataset id is unique, you have write permissions " +
       		"and the meta_configuration table is in required format", "ERROR", 0);
       e.printStackTrace();
     } finally {
