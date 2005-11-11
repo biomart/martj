@@ -4109,6 +4109,54 @@ public class DatabaseDatasetConfigUtils {
     return retOptions;
   }
 
+  public Option[] getOntologyOptions(String ontologyTable, String ontology, String vocabTable, String nodeTable)
+	throws SQLException, ConfigurationException {
+	
+	Connection conn = dsource.getConnection();
+	String sql = "SELECT id FROM " + ontologyTable + " WHERE name = '" + ontology+"'"; 
+	PreparedStatement ps = conn.prepareStatement(sql);
+	ResultSet rs = ps.executeQuery();
+	rs.next();
+	String ontologyId = rs.getString(1);
+	
+	//String[] tableParts = ontologyTable.split("evoc");
+	//String vocabTable = tableParts[0]+"evoc_vocabulary__evoc_vocabulary__main";
+	//String nodeTable = tableParts[0]+"evoc_node__evoc_node__main";
+
+	Option[] retOptions = recurseOntology(ontologyId,"0",vocabTable,nodeTable,conn);
+	DetailedDataSource.close(conn);
+	return retOptions;
+  }
+
+  private Option[] recurseOntology(String ontologyId, String parentId, String vocabTable, String nodeTable, Connection conn)
+  	throws SQLException{
+
+	List options = new ArrayList();
+	
+	String sql = "SELECT ct.term, c.id, c.parent_id, c.ontology_id FROM "+vocabTable+" ct, "+nodeTable+
+			" c WHERE c.parent_id = "+parentId+" AND c.ontology_id = "+ontologyId+" AND c.id = ct.node_id"; 
+	PreparedStatement ps = conn.prepareStatement(sql);
+	ResultSet rs = ps.executeQuery();
+	String value;
+	Option op;
+	while (rs.next()) {
+		  value = rs.getString(1);     
+		  op = new Option();
+		  op.setDisplayName(value);
+		  String intName = value.replaceAll(" ", "_");
+		  op.setInternalName(intName.toLowerCase());
+		  op.setValue(value);
+		  op.setSelectable("true");
+		  // recurse here to add in suboptions
+		  Option[] subOps = recurseOntology(ontologyId,rs.getString(2),vocabTable,nodeTable,conn);
+		  op.addOptions(subOps);
+		  options.add(op);
+	}
+	Option[] retOptions = new Option[options.size()];
+	options.toArray(retOptions);
+	return retOptions;
+  }
+
   public Option[] getLookupOptions(String columnName, String tableName, String whereName, String whereValue, String orderSQL, String schema)
     throws SQLException, ConfigurationException {
 

@@ -50,14 +50,20 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.awt.Color;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.event.TableModelEvent;
@@ -271,6 +277,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					addPushAction();
 				} else if (e.getActionCommand().equals("make drop down")) {
 					makeDropDown();
+				} else if (e.getActionCommand().equals("add ontology")) {
+					addOntology();		
 				} else if (e.getActionCommand().equals("delete"))
 					delete();
 			      else if (e.getActionCommand().equals("delete options"))
@@ -567,6 +575,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					"hideDisplay toggle",
 					"insert option",
 					"make drop down",
+					"add ontology",
 					"automate push action" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.PushAction"))
 			menuItems =
@@ -1018,6 +1027,77 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 	  catch (Exception e){
 		 System.out.println("PROBLEM MAKING DROP DOWN");	
       }
+	}
+	
+	public void addOntology() throws ConfigurationException, SQLException {
+	 try{
+		DatasetConfigTreeNode node = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
+		FilterDescription fd1 = (FilterDescription) node.getUserObject();
+		dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
+		Box ontologySettings = new Box(BoxLayout.Y_AXIS);
+		ontologySettings.add(Box.createRigidArea(new Dimension(600, 1)));
+		
+		Box box2 = new Box(BoxLayout.X_AXIS);
+		JLabel label2 = new JLabel("Ontology name");
+		JTextField ontologyNameField = new JTextField("Anatomical System");
+		box2.add(label2);
+		box2.add(ontologyNameField);
+		
+		Box box3 = new Box(BoxLayout.X_AXIS);
+		JLabel label3 = new JLabel("Ontology table");
+		JTextField ontologyTableField = new JTextField("hsapiens_gene_ensembl_evoc_ontology__evoc_ontology__main");
+		box3.add(label3);
+		box3.add(ontologyTableField);
+		
+		Box box4 = new Box(BoxLayout.X_AXIS);
+		JLabel label4 = new JLabel("Vocabulary table");
+		JTextField vocabTableField = new JTextField("hsapiens_gene_ensembl_evoc_vocabulary__evoc_vocabulary__main");
+		box4.add(label4);
+		box4.add(vocabTableField);
+		
+		Box box5 = new Box(BoxLayout.X_AXIS);
+		JLabel label5 = new JLabel("Node table");
+		JTextField nodeTableField = new JTextField("hsapiens_gene_ensembl_evoc_node__evoc_node__main");
+		box5.add(label5);
+		box5.add(nodeTableField);
+		
+		ontologySettings.add(box2);
+		ontologySettings.add(box3);
+		ontologySettings.add(box4);
+		ontologySettings.add(box5);
+		
+		String[] standardOptions = new String[] { "OK", "Cancel" };	
+		int option2 =
+			JOptionPane.showOptionDialog(
+				null,
+				ontologySettings,
+				"Ontology Settings",
+				JOptionPane.DEFAULT_OPTION,
+				JOptionPane.PLAIN_MESSAGE,
+				null,
+				standardOptions,
+				null);
+					
+		String ontologyName = ontologyNameField.getText();							
+		String ontologyTable = ontologyTableField.getText();
+		String vocabTable = vocabTableField.getText();
+		String nodeTable = nodeTableField.getText();
+		
+		//String ontologyTable = JOptionPane.showInputDialog(this,"Ontology table name:","hsapiens_gene_ensembl_evoc_ontology__evoc_ontology__main");
+		//String ontologyName = JOptionPane.showInputDialog(this,"Ontology name:","Anatomical System");		
+		fd1.setType("list");
+		fd1.setQualifier("=");
+		fd1.setLegalQualifiers("=");
+		
+		Option[] options = MartEditor.getDatabaseDatasetConfigUtils().getOntologyOptions(ontologyTable,ontologyName,
+			vocabTable,nodeTable);
+		for (int k = options.length - 1; k > -1; k--) {
+			insert(options[k], "Option");
+		}
+	  }	
+	  catch (Exception e){
+		 System.out.println("PROBLEM ADDING ONTOLOGY");	
+	  }
 	}
 
 	public void editMains() {
