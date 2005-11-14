@@ -4109,7 +4109,7 @@ public class DatabaseDatasetConfigUtils {
     return retOptions;
   }
 
-  public Option[] getOntologyOptions(String ontologyTable, String ontology, String vocabTable, String nodeTable)
+  /*public Option[] getOntologyOptions(String ontologyTable, String ontology, String vocabTable, String nodeTable)
 	throws SQLException, ConfigurationException {
 	
 	Connection conn = dsource.getConnection();
@@ -4126,9 +4126,55 @@ public class DatabaseDatasetConfigUtils {
 	Option[] retOptions = recurseOntology(ontologyId,"0",vocabTable,nodeTable,conn);
 	DetailedDataSource.close(conn);
 	return retOptions;
+  }*/
+
+  public Option[] getOntologyOptions(String childTermCol, String childIdCol, String childTable, 
+  	String parentIdCol)
+	  throws SQLException, ConfigurationException {
+	
+	  Connection conn = dsource.getConnection();
+	  String sql = "SELECT min("+parentIdCol+") FROM "+childTable; 
+	  PreparedStatement ps = conn.prepareStatement(sql);
+	  ResultSet rs = ps.executeQuery();
+	  rs.next();
+	  String rootId = rs.getString(1);
+
+	  Option[] retOptions = recurseOntology(childTermCol,childIdCol,childTable,parentIdCol,rootId,conn);
+	  DetailedDataSource.close(conn);
+	  return retOptions;
+	}
+
+  private Option[] recurseOntology(String childTermCol, String childIdCol, String childTable, String parentIdCol, 
+  		String parentId, Connection conn)
+	throws SQLException{
+	//Connection conn = dsource.getConnection();	
+	List options = new ArrayList();
+	
+	String sql = "SELECT "+childTermCol+","+childIdCol+" FROM "+childTable+
+			" WHERE "+parentIdCol+" = "+parentId; 
+	PreparedStatement ps = conn.prepareStatement(sql);
+	ResultSet rs = ps.executeQuery();
+	String value;
+	Option op;
+	while (rs.next()) {
+		  value = rs.getString(1);     
+		  op = new Option();
+		  op.setDisplayName(value);
+		  String intName = value.replaceAll(" ", "_");
+		  op.setInternalName(intName.toLowerCase());
+		  op.setValue(value);
+		  op.setSelectable("true");
+		  // recurse here to add in suboptions
+		  Option[] subOps = recurseOntology(childTermCol,childIdCol,childTable,parentIdCol,rs.getString(2),conn);
+		  op.addOptions(subOps);
+		  options.add(op);
+	}
+	Option[] retOptions = new Option[options.size()];
+	options.toArray(retOptions);
+	return retOptions;
   }
 
-  private Option[] recurseOntology(String ontologyId, String parentId, String vocabTable, String nodeTable, Connection conn)
+  /*private Option[] recurseOntology(String ontologyId, String parentId, String vocabTable, String nodeTable, Connection conn)
   	throws SQLException{
 
 	List options = new ArrayList();
@@ -4155,7 +4201,7 @@ public class DatabaseDatasetConfigUtils {
 	Option[] retOptions = new Option[options.size()];
 	options.toArray(retOptions);
 	return retOptions;
-  }
+  }*/
 
   public Option[] getLookupOptions(String columnName, String tableName, String whereName, String whereValue, String orderSQL, String schema)
     throws SQLException, ConfigurationException {

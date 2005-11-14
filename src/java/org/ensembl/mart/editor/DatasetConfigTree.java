@@ -1038,28 +1038,28 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		ontologySettings.add(Box.createRigidArea(new Dimension(600, 1)));
 		
 		Box box2 = new Box(BoxLayout.X_AXIS);
-		JLabel label2 = new JLabel("Ontology name");
-		JTextField ontologyNameField = new JTextField("Anatomical System");
+		JLabel label2 = new JLabel("Parent child table");
+		JTextField childTableField = new JTextField();
 		box2.add(label2);
-		box2.add(ontologyNameField);
+		box2.add(childTableField);
 		
 		Box box3 = new Box(BoxLayout.X_AXIS);
-		JLabel label3 = new JLabel("Ontology table");
-		JTextField ontologyTableField = new JTextField("hsapiens_gene_ensembl_evoc_ontology__evoc_ontology__main");
+		JLabel label3 = new JLabel("Parent ID column");
+		JTextField parentIdColField = new JTextField();
 		box3.add(label3);
-		box3.add(ontologyTableField);
+		box3.add(parentIdColField);
 		
 		Box box4 = new Box(BoxLayout.X_AXIS);
-		JLabel label4 = new JLabel("Vocabulary table");
-		JTextField vocabTableField = new JTextField("hsapiens_gene_ensembl_evoc_vocabulary__evoc_vocabulary__main");
+		JLabel label4 = new JLabel("Child ID column");
+		JTextField childIdColField = new JTextField();
 		box4.add(label4);
-		box4.add(vocabTableField);
+		box4.add(childIdColField);
 		
 		Box box5 = new Box(BoxLayout.X_AXIS);
-		JLabel label5 = new JLabel("Node table");
-		JTextField nodeTableField = new JTextField("hsapiens_gene_ensembl_evoc_node__evoc_node__main");
+		JLabel label5 = new JLabel("Text term column");
+		JTextField childTermColField = new JTextField();
 		box5.add(label5);
-		box5.add(nodeTableField);
+		box5.add(childTermColField);
 		
 		ontologySettings.add(box2);
 		ontologySettings.add(box3);
@@ -1078,10 +1078,10 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				standardOptions,
 				null);
 					
-		String ontologyName = ontologyNameField.getText();							
-		String ontologyTable = ontologyTableField.getText();
-		String vocabTable = vocabTableField.getText();
-		String nodeTable = nodeTableField.getText();
+		String childTable = childTableField.getText();							
+		String childIdCol = childIdColField.getText();
+		String childTermCol = childTermColField.getText();
+		String parentIdCol = parentIdColField.getText();
 		
 		//String ontologyTable = JOptionPane.showInputDialog(this,"Ontology table name:","hsapiens_gene_ensembl_evoc_ontology__evoc_ontology__main");
 		//String ontologyName = JOptionPane.showInputDialog(this,"Ontology name:","Anatomical System");		
@@ -1089,8 +1089,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		fd1.setQualifier("=");
 		fd1.setLegalQualifiers("=");
 		
-		Option[] options = MartEditor.getDatabaseDatasetConfigUtils().getOntologyOptions(ontologyTable,ontologyName,
-			vocabTable,nodeTable);
+		Option[] options = MartEditor.getDatabaseDatasetConfigUtils().getOntologyOptions(childTermCol,childIdCol,childTable,parentIdCol);
 		for (int k = options.length - 1; k > -1; k--) {
 			insert(options[k], "Option");
 		}
