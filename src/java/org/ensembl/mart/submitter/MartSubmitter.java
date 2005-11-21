@@ -353,8 +353,11 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		button.addActionListener(this);
 
 		Component[] cp = pane.getComponents();
+		ArrayList tempAttributes = new ArrayList();
+		//Array tempAttributes;
 		ArrayList selectedAttributes = new ArrayList();
-
+		ArrayList checkAtt = new ArrayList();
+		
 		List PGElements = root.getChildren();
 
 		for (int i = 0; i < PGElements.size(); i++) {
@@ -411,8 +414,18 @@ public class MartSubmitter extends JFrame implements ActionListener {
 						
 						attribute_counter++;
 						
-						selectedAttributes.add(ace);
-						ace.setName(ace.getAttributeValue("internalName"));
+						tempAttributes.add(ace.getAttributeValue("tableConstraint"));
+						tempAttributes.add(ace.getAttributeValue("field"));
+						
+					    if (checkAtt.containsAll(tempAttributes))
+					    {}
+					    else// {
+					    	checkAtt.addAll(tempAttributes);
+					    	tempAttributes.clear();
+							selectedAttributes.add(ace);
+							ace.setName(ace.getAttributeValue("internalName"));
+					    //}
+						
 	
 					}
 
@@ -420,7 +433,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 			}
 		}
 
-	
+			
 		int r = 0;
 		
 		for (r = 0; r < tableNames.size(); r++) {
@@ -591,7 +604,9 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		setDoc(doc);
 
 		Component[] cp = pane.getComponents();
+		ArrayList tempAttributes = new ArrayList();
 		ArrayList selectedAttributes = new ArrayList();
+		ArrayList checkAtt = new ArrayList();
 		ArrayList tableNames = new ArrayList();
 		String tableName = new String();
 		tableName = "";
@@ -653,6 +668,17 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 							if (ace.getName().equals(text.getName())) {
 								ace.setAttribute("buttontext", text.getText());
+								
+								tempAttributes.add(ace.getAttributeValue("tableConstraint"));
+								tempAttributes.add(ace.getAttributeValue("field"));
+								
+							    if (checkAtt.containsAll(tempAttributes))
+							    {}
+							    else// {
+							    	checkAtt.addAll(tempAttributes);
+							    	tempAttributes.clear();
+									selectedAttributes.add(ace);
+									ace.setName(ace.getAttributeValue("internalName"));
 								selectedAttributes.add(ace);
 							}
 						}
