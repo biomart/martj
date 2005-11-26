@@ -413,14 +413,24 @@ public class MartSubmitter extends JFrame implements ActionListener {
 							
 						}
 						
-						attribute_counter++;
+						
 						String tableConstraint = ace.getAttributeValue("tableConstraint");
 						String field = ace.getAttributeValue("field");
 						tempAttributes = tableConstraint.concat(field);
+						String checkAttCurrent = new String();
+						checkAttCurrent = ace.getAttributeValue("internalName");
 						
 					    if (checkAtt.contains(tempAttributes))
 					    {}
+					    
+					    if (checkAttCurrent.indexOf(".")!=-1 || 
+								checkAttCurrent.startsWith("5") || 
+								checkAttCurrent.startsWith("3")) {
+					    	continue;
+					    }
+					    
 					    else// {
+					    	attribute_counter++;
 					    	checkAtt.add(tempAttributes);
 					    	tempAttributes = "";
 					    	selectedAttributes.add(ace);
@@ -680,6 +690,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 							    	checkAtt.add(tempAttributes);
 							    	tempAttributes = "";
 							    	selectedAttributes.add(ace);
+							    	//System.out.println(checkAtt);
 							    	
 									ace.setName(ace.getAttributeValue("internalName"));
 							}
