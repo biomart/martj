@@ -105,7 +105,7 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 	    port.setPreferenceKey( "port" );
 	    add( port );
 	    
-	    database = new LabelledComboBox("Database");
+	    database = new LabelledComboBox("Instance");
 	    database.setPreferenceKey("database");
 	    add( database );
 	    
