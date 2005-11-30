@@ -87,7 +87,7 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 	    	    	    
 	    add( connectionName );
 	    
-	    databaseType = new LabelledComboBox("Database type");
+	    databaseType = new LabelledComboBox("Database Type");
 	    databaseType.setPreferenceKey("database_type");
 	    //databaseType.setEditable( false );
 	    add( databaseType );
