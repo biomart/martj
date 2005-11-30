@@ -82,7 +82,7 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 	    
 	    super( BoxLayout.Y_AXIS );
 	 
-	    connectionName = new LabelledComboBox("Connection Name");
+	    connectionName = new LabelledComboBox("Display Name");
 	    connectionName.setPreferenceKey("connection_name");
 	    	    	    
 	    add( connectionName );
@@ -105,7 +105,7 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 	    port.setPreferenceKey( "port" );
 	    add( port );
 	    
-	    database = new LabelledComboBox("Instance");
+	    database = new LabelledComboBox("Database");
 	    database.setPreferenceKey("database");
 	    add( database );
 	    
