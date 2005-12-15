@@ -18,6 +18,8 @@
 
 package org.ensembl.mart.editor;
 
+import java.util.Enumeration;
+
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
@@ -143,6 +145,20 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 		int start, finish;
 		Object child = editingNode.getUserObject();
 		Object parent = parentNode.getUserObject();
+		
+		BaseNamedConfigurationObject parentObj = (BaseNamedConfigurationObject) parent;
+		BaseNamedConfigurationObject childObj = (BaseNamedConfigurationObject) child;
+		if (parentObj.getHidden() != null && parentObj.getHidden().equals("true")){
+			childObj.setHidden("true");
+			Enumeration children = editingNode.breadthFirstEnumeration();
+			DatasetConfigTreeNode childNode = null;
+			while (children.hasMoreElements()) {
+				childNode = (DatasetConfigTreeNode) children.nextElement();
+				BaseNamedConfigurationObject ch = (BaseNamedConfigurationObject) childNode.getUserObject();
+				ch.setHidden("true");
+			}
+		}
+		
 		String childClassName = (editingNode.getUserObject().getClass()).getName();
 		start = childClassName.lastIndexOf(".") + 1;
 		finish = childClassName.length();
