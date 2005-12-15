@@ -341,6 +341,11 @@ System.out.println ("getting driver "+ driver);
     menuItem.addActionListener(menuActionListener);
     //menuItem.setMnemonic(KeyEvent.VK_I);
     menu.add(menuItem);
+    
+	menuItem = new JMenuItem("Validate ");
+	menuItem.addActionListener(menuActionListener);
+	//menuItem.setMnemonic(KeyEvent.VK_I);
+	menu.add(menuItem);
 
     menu.addSeparator();
 	menuItem = new JMenuItem("Update All");
@@ -595,6 +600,8 @@ System.out.println ("getting driver "+ driver);
 			uploadAll();			  	
       else if (e.getActionCommand().startsWith("Update"))
         updateDatasetConfig();
+	  else if (e.getActionCommand().startsWith("Validate"))
+		  validateDatasetConfig();  
       else if (e.getActionCommand().startsWith("Delete"))
         deleteDatasetConfig();
       else if (e.getActionCommand().startsWith("hide"))
@@ -1201,7 +1208,11 @@ System.out.println ("getting driver "+ driver);
 							break;
 					}
 				}
-			
+				
+				
+				// GOT DATASET CONFIG DSV
+				
+				
 				newVersion = 0;
 				// test if version need updating and newVersion++ if so
 				String datasetVersion = dsv.getVersion();
@@ -1283,8 +1294,8 @@ System.out.println ("getting driver "+ driver);
 									testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
 									(dsv.getVisible() != null && dsv.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals("")))				  
 									){	
-									  brokenFields = brokenFields + "Attribute " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
-																						" and page " + apage.getInternalName() + "\n";	
+										brokenFields = brokenFields + "Attribute " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
+												", page "+apage.getInternalName()+", group "+testGroup.getInternalName()+", collection "+testColl.getInternalName() + "\n";
 						}
 						  
 					 }
@@ -1354,8 +1365,8 @@ System.out.println ("getting driver "+ driver);
 								    (dsv.getVisible() != null && dsv.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals(""))) ||  
 									testAD.getQualifier() == null || testAD.getQualifier().equals("")				  			  
 									)){
-									  brokenFields = brokenFields + "Filter " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
-																						" and page " + fpage.getInternalName() + "\n";	
+										brokenFields = brokenFields + "Filter " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
+												", page "+fpage.getInternalName()+", group "+testGroup.getInternalName()+", collection "+testColl.getInternalName() + "\n";		  
 								}	
 								
 					  
@@ -1397,7 +1408,7 @@ System.out.println ("getting driver "+ driver);
 				//System.out.println("!!" + dsv.getDataset()+"\nSPACE:"+spaceErrors+"\nBROKEN FIELDS:"+brokenFields+"\nBROKEN STRING"+brokenString);
 				
 			}
-		  }
+		  }// end of dataset loop
 		  
 		    if (spaceErrors != "")
 			 	JOptionPane.showMessageDialog(null, "The following internal names contain spaces:\n"
@@ -1532,6 +1543,328 @@ System.out.println ("getting driver "+ driver);
       enableCursor();
     }
   }
+
+
+  public void validateDatasetConfig() {
+	try {
+	  if (ds == null) {
+		JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+		return;
+	  }
+
+	  try {
+		disableCursor();
+		// check whether existing filters and atts are still in database
+		Object selectedFrame = desktop.getSelectedFrame();
+
+		if (selectedFrame == null) {
+		  JOptionPane.showMessageDialog(this, "Nothing to Update, please Import a DatasetConfig", "ERROR", 0);
+		  return;
+		}
+
+		DatasetConfig dsv = ((DatasetConfigTreeWidget) selectedFrame).getDatasetConfig();
+
+		if (dsv == null) {
+		  JOptionPane.showMessageDialog(this, "Nothing to Update, please Import a DatasetConfig", "ERROR", 0);
+		  return;
+		}
+
+		
+		// DO VALIDATION HERE
+		
+		String duplicationString = "";
+		String filterDuplicationString = "";
+		String brokenString = "";
+		String spaceErrors = "";
+		String brokenFields = "";
+		  
+		Set brokenDatasets = new HashSet();
+		Hashtable attributeDuplicationMap = new Hashtable();
+		Hashtable filterDuplicationMap = new Hashtable();
+		int newVersion = 0;
+		DSConfigAdaptor adaptor;
+		
+		// test if version need updating and newVersion++ if so
+		String datasetVersion = dsv.getVersion();
+		String newDatasetVersion = dbutils.getNewVersion(dsv.getDataset());
+		if (newDatasetVersion != null && datasetVersion != null && datasetVersion != "" && !datasetVersion.equals(newDatasetVersion)){
+			dsv.setVersion(newDatasetVersion);
+			newVersion++;
+		}
+		// repeat logic for linkVersions updating any not null or '' or equal to newLinkVersion
+		if (dbutils.updateLinkVersions(dsv))					
+			newVersion++;
+				
+		if (dbutils.getBrokenElements(dsv) != "") 
+			brokenString = brokenString + dbutils.getBrokenElements(dsv);
+		
+		String schema = null;
+		if(databaseDialog.getDatabaseType().equals("oracle")) schema = databaseDialog.getSchema().toUpperCase();
+		else schema = databaseDialog.getSchema();
+		dsv = dbutils.getNewFiltsAtts(schema, dsv);		
+				
+		// check uniqueness of internal names per page	  
+		AttributePage[] apages = dsv.getAttributePages();
+		AttributePage apage;
+		String testInternalName;
+				
+	  
+		for (int k = 0; k < apages.length; k++){
+		 apage = apages[k];
+		 Hashtable descriptionsMap = new Hashtable();
+		 if ((apage.getHidden() != null) && (apage.getHidden().equals("true"))){
+			continue;
+		 }
+		    
+				
+		 List testGroups = new ArrayList();				
+		 testGroups = apage.getAttributeGroups();
+		 for (Iterator groupIter = testGroups.iterator(); groupIter.hasNext();) {
+		   AttributeGroup testGroup = (AttributeGroup) groupIter.next();
+		   //List testColls = new ArrayList();				
+		   AttributeCollection[] testColls = testGroup.getAttributeCollections();
+		   for (int col = 0; col < testColls.length; col++) {
+			 AttributeCollection testColl = testColls[col];
+				     
+			 if (testColl.getInternalName().matches("\\w+\\s+\\w+")){
+			   spaceErrors = spaceErrors + "AttributeCollection " + testColl.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+			 }					  			
+			 List testAtts = new ArrayList();
+			 testAtts = testColl.getAttributeDescriptions();
+					  
+			 for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+				  Object testAtt = iter.next();
+				  AttributeDescription testAD = (AttributeDescription) testAtt;
+				  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
+					  continue;
+				  }
+				  if (testAD.getInternalName().matches("\\w+\\.\\w+") ||
+					  testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+					  continue;//placeholder atts can be duplicated	
+				  }
+						  
+				  if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
+					 spaceErrors = spaceErrors + "AttributeDescription " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+				  }					
+				  if (descriptionsMap.containsKey(testAD.getInternalName())){
+					  //duplicationString = duplicationString + "Attribute " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
+					  //" and page " + apage.getInternalName() + "\n";
+					  attributeDuplicationMap.put(testAD.getInternalName(),dsv.getDataset());   
+					  brokenDatasets.add(dsv.getDataset());							  
+				  }
+				  descriptionsMap.put(testAD.getInternalName(),"1");
+						  
+				  if (dsv.getType().equals("GenomicSequence"))
+					continue;//no point in checking fields
+						  
+						  
+				// test has all its fields defined - if not add a message to brokenString
+				if (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
+							testAD.getField() == null || testAD.getField().equals("") ||
+							testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
+							(dsv.getVisible() != null && dsv.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals("")))				  
+							){	
+							  brokenFields = brokenFields + "Attribute " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
+							  	", page "+apage.getInternalName()+", group "+testGroup.getInternalName()+", collection "+testColl.getInternalName() + "\n";
+																				//" and page " + apage.getInternalName() + "\n";	
+				}
+						  
+			 }
+		   }
+		 }
+		}
+		// repeat for filter pages
+		FilterPage[] fpages = dsv.getFilterPages();
+		FilterPage fpage;
+		for (int k = 0; k < fpages.length; k++){
+					fpage = fpages[k];
+					Hashtable descriptionsMap = new Hashtable();
+					if ((fpage.getHidden() != null) && (fpage.getHidden().equals("true"))){
+						continue;
+					}
+					       
+					       
+			List testGroups = new ArrayList();				
+			testGroups = fpage.getFilterGroups();
+			for (Iterator groupIter = testGroups.iterator(); groupIter.hasNext();) {
+			  FilterGroup testGroup = (FilterGroup) groupIter.next();
+			  //List testColls = new ArrayList();				
+			  FilterCollection[] testColls = testGroup.getFilterCollections();
+			  for (int col = 0; col < testColls.length; col++) {
+				FilterCollection testColl = testColls[col];
+				     
+				if (testColl.getInternalName().matches("\\w+\\s+\\w+")){
+				  spaceErrors = spaceErrors + "FilterCollection " + testColl.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+				}					 
+					List testAtts = new ArrayList();
+					testAtts = testColl.getFilterDescriptions();// ? OPTIONS
+				  
+					for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+						Object testAtt = iter.next();
+						FilterDescription testAD = (FilterDescription) testAtt;
+						if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
+							  continue;
+						}
+						if (testAD.getInternalName().matches("\\w+\\.\\w+") ||
+							testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+							continue;		
+						}
+								
+						if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
+							 spaceErrors = spaceErrors + "FilterDescription " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+						}	
+						if (descriptionsMap.containsKey(testAD.getInternalName())){
+							//duplicationString = duplicationString + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+							//filterDuplicationString = filterDuplicationString + "Filter " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
+							//							  " and page " + fpage.getInternalName() + "\n";
+							filterDuplicationMap.put(testAD.getInternalName(),dsv.getDataset()); 
+							brokenDatasets.add(dsv.getDataset());							  
+							continue;//to stop options also being assessed
+						}
+								
+						descriptionsMap.put(testAD.getInternalName(),"1");
+								
+						if (dsv.getType().equals("GenomicSequence"))
+						  continue;//no point in checking fields
+								
+						// test has all its fields defined - if not add a message to brokenString
+						// only do for non-filter option filters
+						if ((testAD.getFilterList() == null || testAD.getFilterList().equals("")) && (testAD.getOptions().length == 0 || testAD.getOptions()[0].getField() == null) && (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
+							testAD.getField() == null || testAD.getField().equals("") ||
+							testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
+							//testAD.getKey() == null || testAD.getKey().equals("") ||	
+							(dsv.getVisible() != null && dsv.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals(""))) ||  
+							testAD.getQualifier() == null || testAD.getQualifier().equals("")				  			  
+							)){
+							  //brokenFields = brokenFields + "Filter " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
+								//												" and page " + fpage.getInternalName() + "\n";
+							  brokenFields = brokenFields + "Filter " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
+																", page "+fpage.getInternalName()+", group "+testGroup.getInternalName()+", collection "+testColl.getInternalName() + "\n";														
+						}	
+								
+					  
+						// do options as well
+						Option[] ops = testAD.getOptions();
+						if (ops.length > 0 && ops[0].getType()!= null && !ops[0].getType().equals("")){
+						  for (int l = 0; l < ops.length; l++){
+							  Option op = ops[l];
+							  if ((op.getHidden() != null) && (op.getHidden().equals("true"))){
+									  continue;
+							  }
+							  if (descriptionsMap.containsKey(op.getInternalName())){
+								  //filterDuplicationString = filterDuplicationString + op.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+								filterDuplicationMap.put(testAD.getInternalName(),dsv.getDataset()); 
+								brokenDatasets.add(dsv.getDataset());	
+							  }
+							  descriptionsMap.put(op.getInternalName(),"1");
+						  }
+						}
+					}
+			  }
+			}
+		}
+	  
+				
+		// display it if new atts or filts for further editing	
+		if (newVersion != 0 || (dsv.getAttributePageByInternalName("new_attributes") != null && (dsv.getAttributePageByInternalName("new_attributes").getHidden() == null || dsv.getAttributePageByInternalName("new_attributes").getHidden().equals("false"))) ||
+			(dsv.getFilterPageByName("new_filters") != null && (dsv.getFilterPageByName("new_filters").getHidden() == null || dsv.getFilterPageByName("new_filters").getHidden().equals("false")))){
+				
+			DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
+			frame.setVisible(true);
+			desktop.add(frame);
+			try {
+				frame.setSelected(true);
+			} catch (java.beans.PropertyVetoException e) {
+			}
+		}
+				
+	// end of previous dataset loop
+		  
+	if (spaceErrors != "")
+		JOptionPane.showMessageDialog(null, "The following internal names contain spaces:\n"
+							  + spaceErrors, "ERROR", 0);
+			
+	if (brokenFields != "")
+		  JOptionPane.showMessageDialog(null, "The following may not contain the required fields:\n"
+									+ brokenFields, "ERROR", 0);
+
+	if (brokenString != "")
+			JOptionPane.showMessageDialog(this, "The following are no longer defined in the database\n"
+									  + brokenString, "ERROR", 0);
+
+	if (spaceErrors != "" || brokenFields != "" || brokenString != "")
+		return;//no export performed
+
+
+	if (attributeDuplicationMap.size() > 0){
+		duplicationString = "The following attribute internal names are duplicated and will cause client problems:\n";
+		Enumeration enum = attributeDuplicationMap.keys();
+		while (enum.hasMoreElements()){
+			String intName = (String) enum.nextElement();
+			duplicationString = duplicationString+"Attribute "+intName+" in dataset "+attributeDuplicationMap.get(intName)+"\n";	
+		}
+	}
+	else if (filterDuplicationMap.size() > 0){
+		duplicationString = duplicationString + "The following filter/option internal names are duplicated and will cause client problems:\n";
+		Enumeration enum = filterDuplicationMap.keys();
+		while (enum.hasMoreElements()){
+			String intName = (String) enum.nextElement();
+			duplicationString = duplicationString+"Filter "+intName+" in dataset "+filterDuplicationMap.get(intName)+"\n";	
+		}
+	} 	
+
+	if (duplicationString != ""){	
+	  int choice = JOptionPane.showConfirmDialog(null, duplicationString, "Make Unique?", JOptionPane.YES_NO_OPTION);							  
+
+	  // make unique code
+	  if (choice == 0){
+		System.out.println("MAKING UNIQUE");	
+		String testName, datasetName;
+		int i;
+		adaptor= new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
+				
+		String[] dsList = new String[brokenDatasets.size()];
+		brokenDatasets.toArray(dsList);
+										
+		for (i = 0; i < dsList.length; i++){
+				dsv = adaptor.getDatasetConfigByDatasetInternalName(dsList[i],"default");
+				dbutils.storeDatasetConfiguration(
+													user,
+													dsv.getInternalName(),
+													dsv.getDisplayName(),
+													dsv.getDataset(),
+													dsv.getDescription(),
+													MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsv),
+													true,
+													dsv.getType(),
+													dsv.getVisible(),
+													dsv.getVersion(),
+													dsv.getDatasetID(),
+													dsv);	
+		}
+	  }
+	  else{
+		JOptionPane.showMessageDialog(null, "No Export performed",
+									  "ERROR", 0);					  
+		return;//no export performed
+	  }
+	}			
+		
+	  } catch (Exception e) {
+		e.printStackTrace();
+	  }
+	} finally {
+	  enableCursor();
+	}
+  }
+
+
+
+
+
+
+
+
 
   public void deleteDatasetConfig() {
 

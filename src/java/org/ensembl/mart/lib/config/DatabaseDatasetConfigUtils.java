@@ -1802,32 +1802,74 @@ public class DatabaseDatasetConfigUtils {
 	//DatasetConfig validatedDatasetConfig = new DatasetConfig(dsv, true, false);
 	//want to copy existing Elements to the new Object as is
 	
-	//boolean hasBrokenAttributePages = false;
-	List ads = dsv.getAllAttributeDescriptions();
-	for (int i = 0, n = ads.size(); i < n; i++) {
-	  AttributeDescription testAD = (AttributeDescription) ads.get(i);	
-	  if (testAD.getHidden() != null && testAD.getHidden().equals("true"))
-		  continue;		
-	  AttributeDescription validatedAD = getValidatedAttributeDescription(schema, catalog, testAD, dsv.getDataset(), conn);
-	  //if (validatedAD.isBroken()) {
-	  if (validatedAD.hasBrokenField() || validatedAD.hasBrokenTableConstraint()) {
-	  	brokenElements = brokenElements + "Attribute " + validatedAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
-	  }
+	//List ads = dsv.getAllAttributeDescriptions();
+	
+	AttributePage[] apages = dsv.getAttributePages();
+	for (int j = 0; j < apages.length; j++){
+		AttributePage apage = apages[j];
+		List agroups = apage.getAttributeGroups();
+		for (int k = 0; k < agroups.size(); k++) {
+			AttributeGroup agroup = (AttributeGroup) agroups.get(k);
+			AttributeCollection[] acolls = agroup.getAttributeCollections();
+			for (int l = 0; l < acolls.length; l++){
+				AttributeCollection acollection = acolls[l];
+				List ads = acollection.getAttributeDescriptions();
+				for (int i = 0, n = ads.size(); i < n; i++) {
+				  AttributeDescription testAD = (AttributeDescription) ads.get(i);	
+				  if (testAD.getHidden() != null && testAD.getHidden().equals("true"))
+					  continue;		
+				  AttributeDescription validatedAD = getValidatedAttributeDescription(schema, catalog, testAD, dsv.getDataset(), conn);
+				  //if (validatedAD.isBroken()) {
+				  if (validatedAD.hasBrokenField() || validatedAD.hasBrokenTableConstraint()) {
+	  	
+					brokenElements = brokenElements + "Attribute " + validatedAD.getInternalName() + " in dataset " + dsv.getDataset() + 
+						", page "+apage.getInternalName()+", group "+agroup.getInternalName()+", collection "+acollection.getInternalName() + "\n";
+				  }
+				}				
+			}
+		}
 	}
 
-	//boolean hasBrokenFilterPages = false;
-	ads = dsv.getAllFilterDescriptions();
-	for (int i = 0, n = ads.size(); i < n; i++) {
-	  FilterDescription testAD = (FilterDescription) ads.get(i);	
-	  if (testAD.getHidden() != null && testAD.getHidden().equals("true"))
-		continue;	
-	  
-	  FilterDescription validatedAD = getValidatedFilterDescription(schema, catalog, testAD, dsv.getDataset(), dsv, conn);
-	  if (validatedAD.hasBrokenField() || validatedAD.hasBrokenTableConstraint()) {	// don't use isBroken() as options always set to broken
-		brokenElements = brokenElements + "Filter " + validatedAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
-	  }
+	FilterPage[] fpages = dsv.getFilterPages();
+	for (int j = 0; j < fpages.length; j++){
+		FilterPage apage = fpages[j];
+		List agroups = apage.getFilterGroups();
+		for (int k = 0; k < agroups.size(); k++) {
+			FilterGroup agroup = (FilterGroup) agroups.get(k);
+			FilterCollection[] acolls = agroup.getFilterCollections();
+			for (int l = 0; l < acolls.length; l++){
+				FilterCollection acollection = acolls[l];
+				List ads = acollection.getFilterDescriptions();
+				for (int i = 0, n = ads.size(); i < n; i++) {
+				  FilterDescription testAD = (FilterDescription) ads.get(i);	
+				  if (testAD.getHidden() != null && testAD.getHidden().equals("true"))
+					  continue;		
+				  FilterDescription validatedAD = getValidatedFilterDescription(schema, catalog, testAD, dsv.getDataset(), dsv,conn);
+				  //if (validatedAD.isBroken()) {
+				  if (validatedAD.hasBrokenField() || validatedAD.hasBrokenTableConstraint()) {
+	  	
+					brokenElements = brokenElements + "Filter " + validatedAD.getInternalName() + " in dataset " + dsv.getDataset() + 
+						", page "+apage.getInternalName()+", group "+agroup.getInternalName()+", collection "+acollection.getInternalName() + "\n";
+				  }
+				}				
+			}
+		}
 	}
-	//System.out.println("BROKEN ELEMENTS " + brokenElements);
+
+
+	
+	//List ads = dsv.getAllFilterDescriptions();
+	//for (int i = 0, n = ads.size(); i < n; i++) {
+	 // FilterDescription testAD = (FilterDescription) ads.get(i);	
+	  //if (testAD.getHidden() != null && testAD.getHidden().equals("true"))
+		//continue;	
+	  
+	  //FilterDescription validatedAD = getValidatedFilterDescription(schema, catalog, testAD, dsv.getDataset(), dsv, conn);
+	  //if (validatedAD.hasBrokenField() || validatedAD.hasBrokenTableConstraint()) {	// don't use isBroken() as options always set to broken
+		//brokenElements = brokenElements + "Filter " + validatedAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+	  //}
+	//}
+	
 	DetailedDataSource.close(conn);
 	return brokenElements;
   }  
