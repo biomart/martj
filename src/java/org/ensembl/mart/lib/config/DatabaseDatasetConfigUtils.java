@@ -1614,8 +1614,8 @@ public class DatabaseDatasetConfigUtils {
     		"description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, " +
     		"type varchar(20), visible int(1) unsigned, version varchar(25),datasetID int not null, modified DATETIME NOT NULL,UNIQUE (dataset),PRIMARY KEY(datasetID))";
     String MYSQL_USER="CREATE TABLE meta_user ( datasetID int, user varchar(100))";
-    String ORACLE_META   = CREATETABLE+" (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25), datasetid number(1))";
-    String ORACLE_USER = "CREATE TABLE meta_user (datasetid number(1), mart_user varchar2(100))";
+    String ORACLE_META   = CREATETABLE+" (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25), datasetid number(1), modified DATE , UNIQUE (dataset))";
+    String ORACLE_USER = "CREATE TABLE meta_user (datasetid number(1), martuser varchar2(100))";
     String POSTGRES_META = CREATETABLE+"(internalname varchar(100), displayname varchar(100), dataset varchar(100), description varchar(200), xml text, compressed_xml bytea, MessageDigest bytea, type varchar(20), visible integer, version varchar(25))";
     
     
