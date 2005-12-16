@@ -820,7 +820,7 @@ public class DatabaseDatasetConfigUtils {
 	String datasetID)
     throws ConfigurationException {
     if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
-      return storeCompressedXMLOracle(user, internalName, displayName, dataset, description, doc, type, visible, version);
+      return storeCompressedXMLOracle(user, internalName, displayName, dataset, description, doc, type, visible, version, datasetID);
 
     Connection conn = null;
     try {
@@ -905,7 +905,8 @@ public class DatabaseDatasetConfigUtils {
     Document doc,
     String type,
     String visible,
-	String version)
+	String version,
+	String datasetID)
     throws ConfigurationException {
 
     Connection conn = null;
@@ -956,6 +957,7 @@ public class DatabaseDatasetConfigUtils {
 	  ps.setString(7,type);
 	  ps.setString(8,visible);
 	  ps.setString(9,version);
+	  ps.setString(10,datasetID);
 	  
       int ret = ps.executeUpdate();
 
@@ -1612,7 +1614,8 @@ public class DatabaseDatasetConfigUtils {
     		"description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, " +
     		"type varchar(20), visible int(1) unsigned, version varchar(25),datasetID int not null, modified DATETIME NOT NULL,UNIQUE (dataset),PRIMARY KEY(datasetID))";
     String MYSQL_USER="CREATE TABLE meta_user ( datasetID int, user varchar(100))";
-    String ORACLE_META   = CREATETABLE+" (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25))";
+    String ORACLE_META   = CREATETABLE+" (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25), datasetid number(1))";
+    String ORACLE_USER = "CREATE TABLE meta_user (datasetid number(1), mart_user varchar2(100))";
     String POSTGRES_META = CREATETABLE+"(internalname varchar(100), displayname varchar(100), dataset varchar(100), description varchar(200), xml text, compressed_xml bytea, MessageDigest bytea, type varchar(20), visible integer, version varchar(25))";
     
     
@@ -1630,9 +1633,12 @@ public class DatabaseDatasetConfigUtils {
 			  conn = dsource.getConnection();
 			  String CREATE_SQL = new String();
 			  String CREATE_USER =new String();
-			  if(dsource.getDatabaseType().equals("oracle")) {CREATE_SQL=ORACLE_META;}
+			  if(dsource.getDatabaseType().equals("oracle")) {CREATE_SQL=ORACLE_META; CREATE_USER=ORACLE_USER;}
 			  if(dsource.getDatabaseType().equals("postgres")) {CREATE_SQL=POSTGRES_META;}
 			  if(dsource.getDatabaseType().equals("mysql")) {CREATE_SQL = MYSQL_META;CREATE_USER=MYSQL_USER;}
+			  
+			  System.out.println("CREATE_SQL: "+CREATE_SQL+" CREATE_USER: "+CREATE_USER);
+			  
 			  
 			  PreparedStatement ps = conn.prepareStatement(CREATE_SQL);
 			  ps.executeUpdate();
