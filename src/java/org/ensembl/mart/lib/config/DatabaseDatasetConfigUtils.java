@@ -28,9 +28,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -94,9 +96,9 @@ public class DatabaseDatasetConfigUtils {
   private final String SELECTCOMPRESSEDXMLFORUPDATE = "select compressed_xml from ";
   private final String INSERTCOMPRESSEDXMLA = "insert into "; //append table after user test
   private final String INSERTCOMPRESSEDXMLB =
-    " (internalName, displayName, dataset, description, compressed_xml, MessageDigest, type, visible, version, datasetID) values (?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
+    " (internalName, displayName, dataset, description, compressed_xml, MessageDigest, type, visible, version, datasetID, modified) values (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
   private final String INSERTCOMPRESSEDXMLBMYSQL =
-	  " (internalName, displayName, dataset, description, xml, compressed_xml, MessageDigest, type, visible, version,datasetID) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
+	  " (internalName, displayName, dataset, description, xml, compressed_xml, MessageDigest, type, visible, version,datasetID,modified) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
 
   private final String MAINTABLESUFFIX = "main";
   private final String DIMENSIONTABLESUFFIX = "dm";
@@ -879,7 +881,10 @@ public class DatabaseDatasetConfigUtils {
 	  ps.setString(9, visible);
 	  ps.setString(10,version);
 	  ps.setString(11,datasetID);
-
+  
+  	  Timestamp tstamp = new Timestamp(System.currentTimeMillis());
+	  ps.setTimestamp(12,tstamp);
+	  
       int ret = ps.executeUpdate();
       ps.close();
 
@@ -961,6 +966,9 @@ public class DatabaseDatasetConfigUtils {
 	  ps.setString(9,version);
 	  ps.setString(10,datasetID);
 	  
+	  Timestamp tstamp = new Timestamp(System.currentTimeMillis());
+	  ps.setTimestamp(11,tstamp);	
+	  	  
       int ret = ps.executeUpdate();
 
       ResultSet rs = ohack.executeQuery();
@@ -1626,9 +1634,9 @@ public class DatabaseDatasetConfigUtils {
     String CREATETABLE= "create table " +getSchema()[0]+".meta_configuration";
     String MYSQL_META    = CREATETABLE+"(internalName varchar(100), displayName varchar(100), dataset varchar(100), " +
     		"description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, " +
-    		"type varchar(20), visible int(1) unsigned, version varchar(25),datasetID int not null, modified DATETIME NOT NULL,UNIQUE (dataset),PRIMARY KEY(datasetID))";
+    		"type varchar(20), visible int(1) unsigned, version varchar(25),datasetID int not null, modified TIMESTAMP NOT NULL,UNIQUE (dataset),PRIMARY KEY(datasetID))";
     String MYSQL_USER="CREATE TABLE meta_user ( datasetID int, user varchar(100))";
-    String ORACLE_META   = CREATETABLE+" (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25), datasetid number(1), modified DATE , UNIQUE (dataset))";
+    String ORACLE_META   = CREATETABLE+" (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25), datasetid number(1), modified timestamp , UNIQUE (dataset))";
     String ORACLE_USER = "CREATE TABLE meta_user (datasetid number(1), martuser varchar2(100))";
     String POSTGRES_META = CREATETABLE+"(internalname varchar(100), displayname varchar(100), dataset varchar(100), description varchar(200), xml text, compressed_xml bytea, MessageDigest bytea, type varchar(20), visible integer, version varchar(25))";
     
