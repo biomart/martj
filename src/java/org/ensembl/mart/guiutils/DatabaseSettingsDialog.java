@@ -52,6 +52,7 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 	private LabelledComboBox database;
 	private LabelledComboBox schema;
 	private LabelledComboBox user;
+	private LabelledComboBox martUser;
   private LabelledComboBox connectionName;
   
 	private JPasswordField password;
@@ -120,6 +121,10 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 	    
 	    
 	    add( createPasswordPanel() );
+	    
+		martUser = new LabelledComboBox("MartUser (optional)");
+		martUser.setPreferenceKey("martUser");
+		add( martUser );	
 	    
 	    if ( preferences!=null ) setPrefs(preferences);
 	    
@@ -272,6 +277,7 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
           port.load(newPrefs);
           database.load(newPrefs);
           user.load(newPrefs);
+		  martUser.load(newPrefs);
           schema.load(newPrefs);
     
           rememberPassword.setSelected( newPrefs.getBoolean( rememberPasswordKey, false) );
@@ -287,6 +293,7 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 		  database.store(newPrefs, 10);
 		  schema.store(newPrefs, 10);
 	      user.store(newPrefs, 10);
+		  martUser.store(newPrefs, 10);	
 		    
 		  newPrefs.putBoolean( rememberPasswordKey, rememberPassword.isSelected() );
 
@@ -334,6 +341,10 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 	public String getHost() {
 		return host.getText();
 	}
+	
+	public String getMartUser() {
+		return martUser.getText();
+	}	
 
   public String getDatabaseType() {
     return databaseType.getText();

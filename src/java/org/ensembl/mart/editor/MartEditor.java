@@ -115,6 +115,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
   
 
   static private String user;
+  static private String martUser;
   private String database;
   private String schema;
   private static String connection;
@@ -167,6 +168,7 @@ System.out.println ("getting driver "+ driver);
 					 defaultSourceName);
 			
 				 user = databaseDialog.getUser();
+				 martUser = databaseDialog.getMartUser();
 				 database = databaseDialog.getDatabase();
 				 //schema = databaseDialog.getSchema();	
 				 Connection conn = null;
@@ -705,6 +707,7 @@ System.out.println ("getting driver "+ driver);
             databaseDialog.getDriver(),
             defaultSourceName);
         user = databaseDialog.getUser();
+		martUser = databaseDialog.getMartUser();
         database = databaseDialog.getDatabase();
         
         Connection conn = null;
@@ -777,7 +780,7 @@ System.out.println ("getting driver "+ driver);
 
       disableCursor();
 
-      String[] datasets = dbutils.getAllDatasetNames(user);
+      String[] datasets = dbutils.getAllDatasetNames(user,martUser);
       if (datasets.length == 0){
 		JOptionPane.showMessageDialog(this, "No datasets in this database", "ERROR", 0);
 				return;
@@ -927,7 +930,7 @@ System.out.println ("getting driver "+ driver);
 			  fc.showSaveDialog(getContentPane());
 		  
 			  // cycle through all datasets for the database
-			  String[] datasets = dbutils.getAllDatasetNames(user);
+			  String[] datasets = dbutils.getAllDatasetNames(user,martUser);
 			  for (int i = 0; i < datasets.length; i++){
 				String dataset = datasets[i];
 				String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
@@ -1095,7 +1098,7 @@ System.out.println ("getting driver "+ driver);
 		  disableCursor();
 		  
 		  // cycle through all datasets for the database
-		  String[] datasets = dbutils.getAllDatasetNames(user);
+		  String[] datasets = dbutils.getAllDatasetNames(user,martUser);
 		  for (int i = 0; i < datasets.length; i++){
 		  	String dataset = datasets[i];
 			String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
@@ -1188,7 +1191,7 @@ System.out.println ("getting driver "+ driver);
 		  
 		  int newVersion;
 		  // cycle through all datasets for the database
-		  String[] datasets = dbutils.getAllDatasetNames(user);
+		  String[] datasets = dbutils.getAllDatasetNames(user,martUser);
 		  DSConfigAdaptor adaptor;
 		  DatasetConfig dsv, odsv, adsv;
 		  for (int i = 0; i < datasets.length; i++){
@@ -1876,7 +1879,7 @@ System.out.println ("getting driver "+ driver);
 
       try {
         disableCursor();
-        String[] datasets = dbutils.getAllDatasetNames(user);
+        String[] datasets = dbutils.getAllDatasetNames(user,martUser);
         String dataset =
           (String) JOptionPane.showInputDialog(
             null,

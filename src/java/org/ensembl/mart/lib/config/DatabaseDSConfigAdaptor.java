@@ -652,7 +652,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
    */
   public void run() {
     try {
-      String[] datasets = dbutils.getAllDatasetNames(user);
+      String[] datasets = dbutils.getAllDatasetNames(user,"");
       for (int i = 0, n = datasets.length; i < n; i++) {
         String dataset = datasets[i];
         String[] inms = dbutils.getAllInternalNamesForDataset(user, dataset);

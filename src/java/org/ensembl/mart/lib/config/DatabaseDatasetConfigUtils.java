@@ -70,7 +70,9 @@ public class DatabaseDatasetConfigUtils {
  
   private HashMap configInfo = new HashMap();
   
-  private final String VISIBLESQL = " where visible = 1";
+  private final String MARTUSERTABLE = "meta_user";
+  private final String MARTUSERRESTRICTION = ".datasetID = meta_user.datasetID AND meta_user.user=";
+  private final String VISIBLESQL = "visible = 1";
   private final String GETALLNAMESQL = "select internalname, displayName, dataset, description, MessageDigest, type, visible, version, datasetID from ";
   private final String GETDATASETVERSION = "select version from meta_release where dataset = ?";
   private final String GETLINKVERSION = "select link_version from meta_release where dataset = ?";   
@@ -994,10 +996,10 @@ public class DatabaseDatasetConfigUtils {
 
   private void updateMartConfigForUser(String user, String schema) throws ConfigurationException {
 	configInfo = new HashMap();
-	initMartConfigForUser(user,schema);
+	initMartConfigForUser(user,schema,"");
   }
   
-  private void initMartConfigForUser(String user,String schema) throws ConfigurationException {
+  private void initMartConfigForUser(String user,String schema,String martUser) throws ConfigurationException {
     if (!configInfo.containsKey(user)) {
       HashMap userMap = new HashMap();
       configInfo.put(user, userMap);
@@ -1008,8 +1010,17 @@ public class DatabaseDatasetConfigUtils {
       String metatable = getDSConfigTableFor(user);
       String sql = GETALLNAMESQL + schema +"."+metatable;
       
-      if (!dscutils.includeHiddenMembers) {
-        sql += VISIBLESQL;
+      
+      if (!martUser.equals("")){
+      	sql += ", " + MARTUSERTABLE + " WHERE " + metatable + MARTUSERRESTRICTION + martUser;
+		if (!dscutils.includeHiddenMembers) {
+		  sql += " AND " + VISIBLESQL;
+		}
+      }
+      else{
+		if (!dscutils.includeHiddenMembers) {
+		  sql += " WHERE " + VISIBLESQL;
+		}	
       }
       
       if (logger.isLoggable(Level.FINE))
@@ -1018,6 +1029,9 @@ public class DatabaseDatasetConfigUtils {
 
       conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
+	
+	  //System.out.println("MARTUSER " + martUser);
+	  //System.out.println("SQL USED IS " + sql);
 
       ResultSet rs = ps.executeQuery();
       while (rs.next()) {
@@ -1058,9 +1072,9 @@ public class DatabaseDatasetConfigUtils {
    * @return String[] dataset names
    * @throws ConfigurationException when valid meta_configuration table does not exist, and for all underlying SQL Exceptions
    */
-  public String[] getAllDatasetNames(String user) throws ConfigurationException {
+  public String[] getAllDatasetNames(String user, String martUser) throws ConfigurationException {
     if (!configInfo.containsKey(user))
-      initMartConfigForUser(user,getSchema()[0]);
+      initMartConfigForUser(user,getSchema()[0],martUser);
     
     HashMap userMap = (HashMap) configInfo.get(user);
     
@@ -1082,12 +1096,12 @@ public class DatabaseDatasetConfigUtils {
    */
   public String[] getAllInternalNamesForDataset(String user, String dataset) throws ConfigurationException {
     if (!configInfo.containsKey(user))
-      initMartConfigForUser(user,getSchema()[0]);
+      initMartConfigForUser(user,getSchema()[0],"");
     
     HashMap userMap = (HashMap) configInfo.get(user);
     
     if (!userMap.containsKey(dataset))
-      initMartConfigForUser(user,getSchema()[0]);
+      initMartConfigForUser(user,getSchema()[0],"");
     
     if (!userMap.containsKey(dataset))
       return new String[0];
@@ -1115,12 +1129,12 @@ public class DatabaseDatasetConfigUtils {
     throws ConfigurationException {
 
     if (!configInfo.containsKey(user))
-      initMartConfigForUser(user,schema);
+      initMartConfigForUser(user,schema,"");
     
     HashMap userMap = (HashMap) configInfo.get(user);
     
     if (!userMap.containsKey(dataset))
-      initMartConfigForUser(user,schema);
+      initMartConfigForUser(user,schema,"");
     
     if (!userMap.containsKey(dataset))
       return null;
@@ -1128,7 +1142,7 @@ public class DatabaseDatasetConfigUtils {
     HashMap dsetMap = (HashMap) userMap.get(dataset);
     
     if (!dsetMap.containsKey(internalName))
-      initMartConfigForUser(user,schema);
+      initMartConfigForUser(user,schema,"");
     if (!dsetMap.containsKey(internalName))
       return null;
     
