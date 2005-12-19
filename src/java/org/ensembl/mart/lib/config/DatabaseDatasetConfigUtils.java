@@ -73,9 +73,9 @@ public class DatabaseDatasetConfigUtils {
   private HashMap configInfo = new HashMap();
   
   private final String MARTUSERTABLE = "meta_user";
-  private final String MARTUSERRESTRICTION = ".datasetID = meta_user.datasetID AND meta_user.user=";
+  private final String MARTUSERRESTRICTION = ".datasetID = meta_user.datasetID AND meta_user.martUser=";
   private final String VISIBLESQL = "visible = 1";
-  private final String GETALLNAMESQL = "select internalname, displayName, dataset, description, MessageDigest, type, visible, version, datasetID from ";
+  private final String GETALLNAMESQL = "select internalname, displayName, dataset, description, MessageDigest, type, visible, version, meta_configuration.datasetID from ";
   private final String GETDATASETVERSION = "select version from meta_release where dataset = ?";
   private final String GETLINKVERSION = "select link_version from meta_release where dataset = ?";   
   private final String GETANYNAMESWHERINAME = " where internalName = ? and dataset = ?";
@@ -1020,7 +1020,7 @@ public class DatabaseDatasetConfigUtils {
       
       
       if (!martUser.equals("")){
-      	sql += ", " + MARTUSERTABLE + " WHERE " + metatable + MARTUSERRESTRICTION + martUser;
+      	sql += ", " + schema + "." + MARTUSERTABLE + " WHERE " + schema+"." + metatable + MARTUSERRESTRICTION + "'" + martUser + "'";
 		if (!dscutils.includeHiddenMembers) {
 		  sql += " AND " + VISIBLESQL;
 		}
@@ -1035,11 +1035,15 @@ public class DatabaseDatasetConfigUtils {
         logger.fine(
           "Using " + sql + " to get unloaded DatasetConfigs for user " + user + "\n");
 
+	  
+	  //System.out.println("SQL USED IS " + sql);
+
+
       conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
 	
 	  //System.out.println("MARTUSER " + martUser);
-	  //System.out.println("SQL USED IS " + sql);
+	  
 
       ResultSet rs = ps.executeQuery();
       while (rs.next()) {
@@ -1635,9 +1639,9 @@ public class DatabaseDatasetConfigUtils {
     String MYSQL_META    = CREATETABLE+"(internalName varchar(100), displayName varchar(100), dataset varchar(100), " +
     		"description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, " +
     		"type varchar(20), visible int(1) unsigned, version varchar(25),datasetID int not null, modified TIMESTAMP NOT NULL,UNIQUE (dataset),PRIMARY KEY(datasetID))";
-    String MYSQL_USER="CREATE TABLE meta_user ( datasetID int, user varchar(100))";
+    String MYSQL_USER="CREATE TABLE meta_user ( datasetID int, martUser varchar(100))";
     String ORACLE_META   = CREATETABLE+" (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25), datasetid number(1), modified timestamp , UNIQUE (dataset))";
-    String ORACLE_USER = "CREATE TABLE meta_user (datasetid number(1), martuser varchar2(100))";
+    String ORACLE_USER = "CREATE TABLE meta_user (datasetid number(1), martUser varchar2(100))";
     String POSTGRES_META = CREATETABLE+"(internalname varchar(100), displayname varchar(100), dataset varchar(100), description varchar(200), xml text, compressed_xml bytea, MessageDigest bytea, type varchar(20), visible integer, version varchar(25))";
     
     
