@@ -288,7 +288,11 @@ public class ConfigurationAdaptor {
 		
 		  // create any further main tables
 		  indexNo = 50 + indexNo;
-		  String[] otherMains = dataset.getElement().getAttributeValue("otherMainTables").split(",");
+		  String [] otherMains = null;
+		  
+		  if (dataset.getElement().getAttributeValue("otherMainTables") != null)
+		  {
+		  	otherMains = dataset.getElement().getAttributeValue("otherMainTables").split(",");
 		  for (int i = 0; i < otherMains.length; i++){
 		 	String extraMain = otherMains[i];
 		 	if (extraMain.equals(""))
@@ -298,6 +302,10 @@ public class ConfigurationAdaptor {
 		  	sqlout.write(((Transformation) final_transformations[final_transformations.length - 1]).
 			createNewMainBools(extraMain,newMain.PK,indexNo));		
 		  }
+		  
+		}
+		  
+		  
 	  }// dataset loop
 	  sqlout.close();
 	}
