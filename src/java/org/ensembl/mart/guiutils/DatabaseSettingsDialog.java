@@ -115,16 +115,19 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 	    add( schema );
 	    
 	    
-	    user = new LabelledComboBox("User");
+	    user = new LabelledComboBox("Database User");
 	    user.setPreferenceKey("user");
 	    add( user );	
 	    
 	    
 	    add( createPasswordPanel() );
 	    
-		martUser = new LabelledComboBox("MartUser (optional)");
+	    
+	    martUser = new LabelledComboBox("Mart User");
 		martUser.setPreferenceKey("martUser");
 		add( martUser );	
+	    
+		
 	    
 	    if ( preferences!=null ) setPrefs(preferences);
 	    
