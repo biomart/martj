@@ -35,9 +35,10 @@ public class DatabaseLocation extends MartLocationBase {
 	private final String HOST_KEY = "host";
 	private final String PORT_KEY = "port";
 	private final String DATABASE_TYPE_KEY = "databaseType";
-	private final String INSTANCE_NAME_KEY = "instanceName";
+	private final String INSTANCE_NAME_KEY = "database";
 	private final String SCHEMA_KEY = "schema";
 	private final String USER_KEY = "user";
+	private final String MARTUSER_KEY = "martUser";
 	private final String PASSWORD_KEY = "password";
 
 	public DatabaseLocation() {
@@ -53,6 +54,7 @@ public class DatabaseLocation extends MartLocationBase {
 		String instanceName,
 		String schema,
 		String user,
+		String martUser,
 		String password,
 		String name,
 		String visibleString)
@@ -66,6 +68,7 @@ public class DatabaseLocation extends MartLocationBase {
 		setAttribute(INSTANCE_NAME_KEY, instanceName);
 		setAttribute(SCHEMA_KEY, schema);
 		setAttribute(USER_KEY, user);
+		setAttribute(MARTUSER_KEY,martUser);
 		setAttribute(DATABASE_TYPE_KEY, databaseType);
 		setAttribute(PORT_KEY, port);
 		setAttribute(PASSWORD_KEY, password);
@@ -151,6 +154,10 @@ public class DatabaseLocation extends MartLocationBase {
 	 */
 	public String getUser() {
 		return getAttribute(USER_KEY);
+	}
+	
+	public String getMartUser() {
+		return getAttribute(MARTUSER_KEY);
 	}
 
 	public void setUser(String user) {

@@ -348,6 +348,7 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 
 						String host = dbloc.getHost();
 						String user = dbloc.getUser();
+						String martUser = dbloc.getMartUser();
 						String instanceName = dbloc.getInstanceName();
 						String schema = dbloc.getSchema();
 						String port = dbloc.getPort();
@@ -377,13 +378,14 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 								schema,
 								connectionString,
 								user,
+								martUser,
 								password,
 								DetailedDataSource.DEFAULTPOOLSIZE,
 								jdbcDriverClassName,
 								name);
 
 						DatabaseDSConfigAdaptor adaptor =
-							new DatabaseDSConfigAdaptor(dsource, user, ignoreCache, loadFully, includeHiddenMembers);
+							new DatabaseDSConfigAdaptor(dsource, user, martUser, ignoreCache, loadFully, includeHiddenMembers);
 						adaptor.setName(location.getName());
 						add(adaptor);
 

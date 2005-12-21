@@ -37,8 +37,8 @@ public class RegistryDBLocation extends MartLocationBase {
 	private final String HOST_KEY = "host";
 	private final String PORT_KEY = "port";
 	private final String DATABASE_TYPE_KEY = "databaseType";
-	private final String INSTANCE_NAME_KEY = "instanceName";
-	private final String SCHEMA_KEY = "Schema";
+	private final String INSTANCE_NAME_KEY = "database";
+	private final String SCHEMA_KEY = "schema";
 	private final String USER_KEY = "user";
 	private final String PASSWORD_KEY = "password";
 

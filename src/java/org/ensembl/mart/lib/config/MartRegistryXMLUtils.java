@@ -64,10 +64,10 @@ public class MartRegistryXMLUtils {
 	//element names
 	private static final String VSCHEMA = "virtualSchema";
 	private static final String MARTREGISTRY = "MartRegistry";
-	private static final String URLLOCATION = "URLLocation";
-	private static final String DATABASELOCATION = "DatabaseLocation";
-	private static final String REGISTRYLOCATION = "RegistryLocation";
-	private static final String REGISTRYDBLOCATION = "RegistryDBLocation";
+	private static final String URLLOCATION = "MartURLLocation";
+	private static final String DATABASELOCATION = "MartDBLocation";
+	private static final String REGISTRYLOCATION = "RegistryURLPointer";
+	private static final String REGISTRYDBLOCATION = "RegistryDBPointer";
 
 	/*
 	 * meta_registry

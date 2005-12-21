@@ -938,7 +938,7 @@ System.out.println ("getting driver "+ driver);
 					String internalName = internalNames[j];
 				
 					DatasetConfig odsv = null;
-					DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
+					DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true);
 					DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 					while (configs.hasNext()){
 						DatasetConfig lconfig = (DatasetConfig) configs.next();
@@ -1041,7 +1041,7 @@ System.out.println ("getting driver "+ driver);
 			try {
 			  disableCursor();
 			  
-			  DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
+			  DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true);
 			  DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 						   
 			  
@@ -1106,7 +1106,7 @@ System.out.println ("getting driver "+ driver);
 				String internalName = internalNames[j];
 				
 				DatasetConfig odsv = null;
-				DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
+				DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true);
 				DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 				while (configs.hasNext()){
 					DatasetConfig lconfig = (DatasetConfig) configs.next();
@@ -1202,7 +1202,7 @@ System.out.println ("getting driver "+ driver);
 				String internalName = internalNames[j];
 				
 				dsv = null;
-				adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
+				adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true);
 				DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 				while (configs.hasNext()){
 					DatasetConfig lconfig = (DatasetConfig) configs.next();
@@ -1454,7 +1454,7 @@ System.out.println ("getting driver "+ driver);
 				System.out.println("MAKING UNIQUE");	
 				String testName, datasetName;
 				int i;
-				adaptor= new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
+				adaptor= new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true);
 				
 				String[] dsList = new String[brokenDatasets.size()];
 				brokenDatasets.toArray(dsList);
@@ -1824,7 +1824,7 @@ System.out.println ("getting driver "+ driver);
 		System.out.println("MAKING UNIQUE");	
 		String testName, datasetName;
 		int i;
-		adaptor= new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
+		adaptor= new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true);
 				
 		String[] dsList = new String[brokenDatasets.size()];
 		brokenDatasets.toArray(dsList);

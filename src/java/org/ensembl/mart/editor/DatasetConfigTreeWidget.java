@@ -102,7 +102,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             	}
             	else{//Importing config
 //              ignore cache, do not loadFully, include hidden members
-					DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
+					DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, "", true, false, true);
 					DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 					while (configs.hasNext()){
             DatasetConfig lconfig = (DatasetConfig) configs.next();

@@ -100,6 +100,7 @@ public class DetailedDataSource implements DataSource {
   private int maxPoolSize;
   private String password;
   private String user;
+  private String martUser;
   private String jdbcDriverClassName;
   private String name;
   private DataSource dataSource;
@@ -128,6 +129,7 @@ public class DetailedDataSource implements DataSource {
 	String schema,
     String connectionString,
     String user,
+    String martUser,
     String password,
     int maxPoolSize,
     String jdbcDriverClassName,
@@ -154,6 +156,7 @@ public class DetailedDataSource implements DataSource {
     this.schema = schema;
     this.connectionString = connectionString;
     this.user = user;
+    this.martUser = martUser;
     this.password = password;
     this.maxPoolSize = maxPoolSize;
     this.jdbcDriverClassName = jdbcDriverClassName;
@@ -188,7 +191,7 @@ public class DetailedDataSource implements DataSource {
     String password,
     int maxPoolSize,
     String jdbcDriverClassName) {
-  	this(dbType, host,port, databaseName, schema,connectionString, user, password, maxPoolSize, jdbcDriverClassName, null);
+  	this(dbType, host,port, databaseName, schema,connectionString, user, "", password, maxPoolSize, jdbcDriverClassName, null);
   
   }
   
@@ -285,6 +288,7 @@ public class DetailedDataSource implements DataSource {
 	  schema,
       connectionURL(databaseType, host, port, database),
       user,
+      "",
       password,
       maxPoolSize,
       jdbcDriverClassName, 
@@ -549,6 +553,13 @@ public class DetailedDataSource implements DataSource {
    */
   public String getUser() {
     return user;
+  }
+  
+  /**
+   * @return String user
+   */
+  public String getMartUser() {
+	return martUser;
   }
 
   /**

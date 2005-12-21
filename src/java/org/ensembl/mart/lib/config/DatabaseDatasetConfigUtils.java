@@ -1036,13 +1036,13 @@ public class DatabaseDatasetConfigUtils {
           "Using " + sql + " to get unloaded DatasetConfigs for user " + user + "\n");
 
 	  
-	  //System.out.println("SQL USED IS " + sql);
+	  System.out.println("SQL USED IS " + sql);
 
 
       conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
 	
-	  //System.out.println("MARTUSER " + martUser);
+	  System.out.println("MARTUSER " + martUser);
 	  
 
       ResultSet rs = ps.executeQuery();

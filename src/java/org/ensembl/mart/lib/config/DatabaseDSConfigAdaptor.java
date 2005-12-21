@@ -53,6 +53,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
   private final DatabaseDatasetConfigUtils dbutils;
 
   private final String user;
+  private final String martUser;
   private final int hashcode;
   private String adaptorName = null;
 
@@ -80,6 +81,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
   public DatabaseDSConfigAdaptor(
     DetailedDataSource ds,
     String user,
+    String martUser,
     boolean ignoreCache,
     boolean loadFully,
     boolean includeHiddenMembers)
@@ -88,6 +90,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
       throw new ConfigurationException("DatabaseDSConfigAdaptor Objects must be instantiated with a DataSource and User\n");
 
     this.user = user;
+    this.martUser = martUser;
     dataSource = ds;
     this.ignoreCache = ignoreCache;
     this.loadFully = loadFully;
@@ -258,7 +261,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
   private void loadFromDatabase(String dataset, String iname) throws ConfigurationException {
     if (logger.isLoggable(Level.FINE))
       logger.fine("Dataset " + dataset + " internalName " + iname + " Not in cache, loading from database\n");
-
+	System.out.println("Dataset " + dataset + " internalName " + iname + " Not in cache, loading from database\n");
     DatasetConfig newDSV = dbutils.getDatasetConfigByDatasetInternalName(user, dataset, iname,dbutils.getSchema()[0]);
     
     if (loadFully)
@@ -336,6 +339,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
         dataSource.getDatabaseName(),
 		dataSource.getSchema(),
         user,
+        martUser,
         dbpassword,
         adaptorName, "true");
     return new MartLocation[] { dbloc };
@@ -652,7 +656,8 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
    */
   public void run() {
     try {
-      String[] datasets = dbutils.getAllDatasetNames(user,"");
+    System.out.println("CALLING RUN WITH MARTUSER " + martUser);	
+      String[] datasets = dbutils.getAllDatasetNames(user,martUser);
       for (int i = 0, n = datasets.length; i < n; i++) {
         String dataset = datasets[i];
         String[] inms = dbutils.getAllInternalNamesForDataset(user, dataset);
