@@ -58,6 +58,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   private final String defaultKey = "defaultDataset";
   private final String datasetIDKey="datasetID";
   private final String modifiedKey="modified";
+  private final String martUsersKey="martUsers";
+  private final String interfacesKey="interfaces";
   
   private int[] reqFields = {0,3,4,5};// rendered red in AttributeTable
   
@@ -198,6 +200,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(defaultKey,null);
 	setAttribute(datasetIDKey, null);
 	setAttribute(modifiedKey, null);
+	setAttribute(martUsersKey, null);
+	setAttribute(interfacesKey, null);
 	setRequiredFields(reqFields);
   }
 
@@ -230,7 +234,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     //super(internalName, displayName, description);
     
     
-	this(internalName, displayName, dataset, description, "", "0", "", "", "", "","");
+	this(internalName, displayName, dataset, description, "", "0", "", "", "", "","","","");
 
     //if (dataset == null)
     //  throw new ConfigurationException("DatasetConfig objects must contain a dataset\n");
@@ -251,10 +255,10 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public DatasetConfig(String internalName, String displayName, String dataset, String description, 
   		String type, String pub, String visibleFilterPage, String version, String optParam, String datasetID, 
-  		String modified)
+  		String modified, String martUsers, String interfaces)
   throws ConfigurationException {
     this(internalName, displayName, dataset, description, type, pub, visibleFilterPage, version, null, null, 
-    	datasetID,modified);
+    	datasetID,modified,martUsers,interfaces);
   }
   
   
@@ -274,7 +278,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public DatasetConfig(String internalName, String displayName, String dataset, String description, 
   		String type, String pub, String visibleFilterPage, String version, String optParameters, 
-  		String defaultDataset,String datasetID,String modified)
+  		String defaultDataset,String datasetID,String modified, String martUsers,String interfaces)
 		throws ConfigurationException {
 		
 	super(internalName, displayName, description);
@@ -289,6 +293,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(defaultKey, defaultDataset);
 	setAttribute(datasetIDKey,datasetID);
 	setAttribute(modifiedKey,modified);
+	setAttribute(martUsersKey,martUsers);
+	setAttribute(interfacesKey,interfaces);
 	setRequiredFields(reqFields);
   }
 
@@ -338,9 +344,24 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(modifiedKey, modified);
   }
   
-  
   public String getModified (){
 	return attributes.getProperty(modifiedKey);
+  }
+  
+  public void setMartUsers(String martUsers) {
+	setAttribute(martUsersKey, martUsers);
+  }
+  
+  public String getMartUsers (){
+	return attributes.getProperty(martUsersKey);
+  }
+  
+  public void setInterfaces(String interfaces) {
+	setAttribute(interfacesKey, interfaces);
+  }
+  
+  public String getInterfaces (){
+	return attributes.getProperty(interfacesKey);
   }
   
   /**

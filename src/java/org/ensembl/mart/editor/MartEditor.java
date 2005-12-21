@@ -1017,6 +1017,8 @@ System.out.println ("getting driver "+ driver);
 									odsv.getVisible(),
 									odsv.getVersion(),
 									odsv.getDatasetID(),
+									odsv.getMartUsers(),
+									odsv.getInterfaces(),
 									odsv);
 				   } catch (Exception e) {
 							e.printStackTrace();
@@ -1076,6 +1078,8 @@ System.out.println ("getting driver "+ driver);
 										dsv.getVisible(),
 										dsv.getVersion(),
 										dsv.getDatasetID(),
+										dsv.getMartUsers(),
+										dsv.getInterfaces(),
 										dsv);						   		
 			  }	
 			} 
@@ -1147,6 +1151,8 @@ System.out.println ("getting driver "+ driver);
 							dsv.getVisible(),
 							dsv.getVersion(),
 							dsv.getDatasetID(),
+							dsv.getMartUsers(),
+							dsv.getInterfaces(),
 							dsv);
 					
 				// display it if new atts or filts for further editing	
@@ -1473,6 +1479,8 @@ System.out.println ("getting driver "+ driver);
 															dsv.getVisible(),
 															dsv.getVersion(),
 															dsv.getDatasetID(),
+															dsv.getMartUsers(),
+															dsv.getInterfaces(),
 															dsv);	
 			    }
 			  }
@@ -1843,6 +1851,8 @@ System.out.println ("getting driver "+ driver);
 													dsv.getVisible(),
 													dsv.getVersion(),
 													dsv.getDatasetID(),
+													dsv.getMartUsers(),
+													dsv.getInterfaces(),
 													dsv);	
 		}
 	  }
