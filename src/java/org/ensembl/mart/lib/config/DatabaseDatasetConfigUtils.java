@@ -28,7 +28,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -75,7 +74,7 @@ public class DatabaseDatasetConfigUtils {
   private final String MARTUSERTABLE = "meta_user";
   private final String MARTUSERRESTRICTION = ".datasetID = meta_user.datasetID AND meta_user.martUser=";
   private final String VISIBLESQL = "visible = 1";
-  private final String GETALLNAMESQL = "select internalname, displayName, dataset, description, MessageDigest, type, visible, version, meta_configuration.datasetID from ";
+  private final String GETALLNAMESQL = "select internalname, displayName, dataset, description, MessageDigest, type, visible, version, meta_configuration.datasetID, modified from ";
   private final String GETDATASETVERSION = "select version from meta_release where dataset = ?";
   private final String GETLINKVERSION = "select link_version from meta_release where dataset = ?";   
   private final String GETANYNAMESWHERINAME = " where internalName = ? and dataset = ?";
@@ -1056,7 +1055,8 @@ public class DatabaseDatasetConfigUtils {
 		String version = rs.getString(8);
 		String datasetID =rs.getString(9);
         byte[] digest = rs.getBytes(5);
-        DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description, type, visible,"",version,"","",datasetID);
+        String modified = rs.getString(10);
+        DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description, type, visible,"",version,"",datasetID,modified);
         dsv.setMessageDigest(digest);
         
         HashMap userMap = (HashMap) configInfo.get(user);
@@ -3265,7 +3265,9 @@ public class DatabaseDatasetConfigUtils {
    */
   public DatasetConfig getNaiveDatasetConfigFor(String schema, String datasetName)
     throws ConfigurationException, SQLException {
-    DatasetConfig dsv = new DatasetConfig("default",datasetName + " ( " + schema + " )",datasetName,"","TableSet","1","","","","1");
+    	
+	Timestamp tstamp = new Timestamp(System.currentTimeMillis());	
+    DatasetConfig dsv = new DatasetConfig("default",datasetName + " ( " + schema + " )",datasetName,"","TableSet","1","","","","1",tstamp.toString());
     
     //dsv.setInternalName(datasetName);
     //dsv.setInternalName("default");

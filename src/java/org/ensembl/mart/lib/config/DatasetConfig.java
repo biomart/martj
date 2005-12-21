@@ -57,6 +57,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   private final String optParameterKey = "optional_parameters";
   private final String defaultKey = "defaultDataset";
   private final String datasetIDKey="datasetID";
+  private final String modifiedKey="modified";
   
   private int[] reqFields = {0,3,4,5};// rendered red in AttributeTable
   
@@ -196,6 +197,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(versionKey,null);
 	setAttribute(defaultKey,null);
 	setAttribute(datasetIDKey, null);
+	setAttribute(modifiedKey, null);
 	setRequiredFields(reqFields);
   }
 
@@ -228,7 +230,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     //super(internalName, displayName, description);
     
     
-	this(internalName, displayName, dataset, description, "", "0", "", "", "", "");
+	this(internalName, displayName, dataset, description, "", "0", "", "", "", "","");
 
     //if (dataset == null)
     //  throw new ConfigurationException("DatasetConfig objects must contain a dataset\n");
@@ -247,9 +249,12 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @param pub String flag showing whether DatasetConfig is public or not.
    * @throws ConfigurationException if required values are null.
    */
-  public DatasetConfig(String internalName, String displayName, String dataset, String description, String type, String pub, String visibleFilterPage, String version, String optParam, String datasetID)
+  public DatasetConfig(String internalName, String displayName, String dataset, String description, 
+  		String type, String pub, String visibleFilterPage, String version, String optParam, String datasetID, 
+  		String modified)
   throws ConfigurationException {
-    this(internalName, displayName, dataset, description, type, pub, visibleFilterPage, version, null, null, datasetID);
+    this(internalName, displayName, dataset, description, type, pub, visibleFilterPage, version, null, null, 
+    	datasetID,modified);
   }
   
   
@@ -267,8 +272,10 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    *        implementation specific manipulation.
    * @throws ConfigurationException if required values are null.
    */
-  public DatasetConfig(String internalName, String displayName, String dataset, String description, String type, String pub, String visibleFilterPage, String version, String optParameters, String defaultDataset,String datasetID)
-	throws ConfigurationException {
+  public DatasetConfig(String internalName, String displayName, String dataset, String description, 
+  		String type, String pub, String visibleFilterPage, String version, String optParameters, 
+  		String defaultDataset,String datasetID,String modified)
+		throws ConfigurationException {
 		
 	super(internalName, displayName, description);
 	if (dataset == null)
@@ -281,6 +288,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     setAttribute(optParameterKey, optParameters);
 	setAttribute(defaultKey, defaultDataset);
 	setAttribute(datasetIDKey,datasetID);
+	setAttribute(modifiedKey,modified);
 	setRequiredFields(reqFields);
   }
 
@@ -324,6 +332,15 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   
   public String getDatasetID (){
     return attributes.getProperty(datasetIDKey);
+  }
+  
+  public void setModified(String modified) {
+	setAttribute(modifiedKey, modified);
+  }
+  
+  
+  public String getModified (){
+	return attributes.getProperty(modifiedKey);
   }
   
   /**
