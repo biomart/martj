@@ -226,8 +226,15 @@ public abstract class MetaDataResolver {
 				column.setName(columns.getString(4));
 				column.original_name=columns.getString(4);
 				column.original_table=name;
+				
+				
+				
 				if (columnAliases != null){
-					if (!columnAliases[i].equals("null")) {
+				
+					//System.out.println("column "+column.getName()+" columnAliasses from here "+columnAliases[0]);
+					
+					if (!columnAliases[i].equals("null") && ! columnAliases[i].equals("")) {
+						
 						if (!columnAliases[i].equals(columns.getString(4))){
 							column.setAlias(columnAliases[i]);
 				    		column.userAlias=true;

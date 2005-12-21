@@ -175,6 +175,7 @@ public class ConfigurationAdaptor {
 								try{
 									refTable = ((Table) (resolver.getTableColumns(transformationUnit.getElement().getAttributeValue("referencedTable"), 
 									referenceColumnNames, referenceColumnAliases)).clone());//,startTable.getColumns());
+									
 								}
 								catch(Exception e){
 								}
