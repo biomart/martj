@@ -158,9 +158,10 @@ public class ConfigurationAdaptor {
 						}
 						catch(Exception e){
 						}
-						if (k == 0){// should only be set once per start table - ? move out of loop
+						// if moved out breaks ddl for some reason. Needs to be fixed.
+						//if (k == 0){// should only be set once per start table - ? move out of loop
 							transformation.setStartTable(startTable);
-						}
+						//}
 						
 						String [] referenceColumnNames = { "%" };
 						String [] referenceColumnAliases=null;
