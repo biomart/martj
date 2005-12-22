@@ -159,7 +159,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
 
       HashMap inameMap = new HashMap();
 
-      inameMap.put(dsv.getInternalName(), dsv);
+      inameMap.put(dsv.getDatasetID(), dsv);
 
       Vector maps = new Vector();
       maps.add(INAME_INDEX, inameMap);
@@ -169,11 +169,11 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
       Vector maps = (Vector) datasetNameMap.get(dsv.getDataset());
       HashMap inameMap = (HashMap) maps.get(INAME_INDEX);
 
-      if (!inameMap.containsKey(dsv.getInternalName())) {
+      if (!inameMap.containsKey(dsv.getDatasetID())) {
         dsv.setDSConfigAdaptor(this);
         dsviews.add(dsv); //add to the global dsviews list
 
-        inameMap.put(dsv.getInternalName(), dsv);
+        inameMap.put(dsv.getDatasetID(), dsv);
 
         maps.remove(INAME_INDEX);
         maps.add(INAME_INDEX, inameMap);
@@ -192,9 +192,9 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
       Vector maps = (Vector) datasetNameMap.get(dsv.getDataset());
       HashMap inameMap = (HashMap) maps.get(INAME_INDEX);
 
-      if (inameMap.containsKey(dsv.getInternalName())) {
+      if (inameMap.containsKey(dsv.getDatasetID())) {
         datasetNameMap.remove(dsv.getDataset());
-        inameMap.remove(dsv.getInternalName());
+        inameMap.remove(dsv.getDatasetID());
 
         dsviews.remove(dsv);
 
@@ -215,57 +215,57 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
       return false;
   }
 
-  private void checkMemoryForUpdate(String dataset, HashMap inameMap, String iname) throws ConfigurationException {
+  private void checkMemoryForUpdate(String dataset, HashMap inameMap, String datasetID) throws ConfigurationException {
     if (logger.isLoggable(Level.FINE))
       logger.fine(" Already loaded, check for update\n");
 
-    byte[] nDigest = dbutils.getDSConfigMessageDigestByDatasetInternalName(user, dataset, iname);
-    byte[] oDigest = ((DatasetConfig) inameMap.get(iname)).getMessageDigest();
+    byte[] nDigest = dbutils.getDSConfigMessageDigestByDatasetID(user, dataset, datasetID);
+    byte[] oDigest = ((DatasetConfig) inameMap.get(datasetID)).getMessageDigest();
 
     if (!MessageDigest.isEqual(oDigest, nDigest)) {
 
       if (logger.isLoggable(Level.FINE))
         logger.fine("Needs update\n");
 
-      removeDatasetConfig((DatasetConfig) inameMap.get(iname));
-      loadFromDatabase(dataset, iname);
+      removeDatasetConfig((DatasetConfig) inameMap.get(datasetID));
+      loadFromDatabase(dataset, datasetID);
     }
   }
 
-  private boolean cacheUpToDate(String dataset, String iname) throws ConfigurationException {
-    byte[] sourceDigest = dbutils.getDSConfigMessageDigestByDatasetInternalName(user, dataset, iname);
+  private boolean cacheUpToDate(String dataset, String datasetID) throws ConfigurationException {
+    byte[] sourceDigest = dbutils.getDSConfigMessageDigestByDatasetID(user, dataset, datasetID);
 
-    return cache.cacheUpToDate(sourceDigest, dataset, iname);
+    return cache.cacheUpToDate(sourceDigest, dataset, datasetID);
   }
 
-  private void loadCacheOrUpdate(String dataset, String iname) throws ConfigurationException {
-    if (cacheUpToDate(dataset, iname)) {
+  private void loadCacheOrUpdate(String dataset, String datasetID) throws ConfigurationException {
+    if (cacheUpToDate(dataset, datasetID)) {
       if (logger.isLoggable(Level.FINE))
         logger.fine("Attempting to load from cache\n");
 
       DatasetConfig newDSV = null;
       try {
-        newDSV = cache.getDatasetConfig(dataset, iname, this);
+        newDSV = cache.getDatasetConfig(dataset, datasetID, this);
       } catch (ConfigurationException e) {
         if (logger.isLoggable(Level.FINE))
           logger.fine(
-            "Could not load " + dataset + " " + iname + " from cache: " + e.getMessage() + "\nloading from database!\n");
-        loadFromDatabase(dataset, iname);
+            "Could not load " + dataset + " " + datasetID + " from cache: " + e.getMessage() + "\nloading from database!\n");
+        loadFromDatabase(dataset, datasetID);
       }
       addDatasetConfig(newDSV);
     } else if (logger.isLoggable(Level.FINE))
-      logger.fine("Cache is not up to date for " + dataset + " " + iname + "\n loading from Database!\n");
-    loadFromDatabase(dataset, iname);
+      logger.fine("Cache is not up to date for " + dataset + " " + datasetID + "\n loading from Database!\n");
+    loadFromDatabase(dataset, datasetID);
   }
 
-  private void loadFromDatabase(String dataset, String iname) throws ConfigurationException {
+  private void loadFromDatabase(String dataset, String datasetID) throws ConfigurationException {
     if (logger.isLoggable(Level.FINE))
-      logger.fine("Dataset " + dataset + " internalName " + iname + " Not in cache, loading from database\n");
-	System.out.println("Dataset " + dataset + " internalName " + iname + " Not in cache, loading from database\n");
-    DatasetConfig newDSV = dbutils.getDatasetConfigByDatasetInternalName(user, dataset, iname,dbutils.getSchema()[0]);
+      logger.fine("Dataset " + dataset + " internalName " + datasetID + " Not in cache, loading from database\n");
+	System.out.println("Dataset " + dataset + " internalName " + datasetID + " Not in cache, loading from database\n");
+    DatasetConfig newDSV = dbutils.getDatasetConfigByDatasetID(user, dataset, datasetID,dbutils.getSchema()[0]);
     
     if (loadFully)
-        dscutils.loadDatasetConfigWithDocument(newDSV, dbutils.getDatasetConfigDocumentByDatasetInternalName(user, dataset, iname,dbutils.getSchema()[0]));
+        dscutils.loadDatasetConfigWithDocument(newDSV, dbutils.getDatasetConfigDocumentByDatasetID(user, dataset, datasetID,dbutils.getSchema()[0]));
     
     addDatasetConfig(newDSV);
   }
@@ -285,7 +285,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
 
     dscutils.loadDatasetConfigWithDocument(
       dsv,
-      dbutils.getDatasetConfigDocumentByDatasetInternalName(user, dsv.getDataset(), dsv.getInternalName(),dbutils.getSchema()[0]));
+      dbutils.getDatasetConfigDocumentByDatasetID(user, dsv.getDataset(), dsv.getDatasetID(),dbutils.getSchema()[0]));
 
     if (!ignoreCache) {
       //cache this DatasetConfig, as, for some reason, it is needing to be cached
@@ -310,9 +310,10 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
    */
   public void lazyLoad(DatasetConfig dsv) throws ConfigurationException {
     String dataset = dsv.getDataset();
-    String iname = dsv.getInternalName();
-
-    if (!ignoreCache && cacheUpToDate(dataset, iname))
+    //String iname = dsv.getInternalName();
+	String datasetID = dsv.getDatasetID();
+	
+    if (!ignoreCache && cacheUpToDate(dataset, datasetID))
       lazyLoadWithCache(dsv);
     else
       lazyLoadWithDatabase(dsv);
@@ -656,11 +657,12 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
    */
   public void run() {
     try {
-    System.out.println("CALLING RUN WITH MARTUSER " + martUser);	
       String[] datasets = dbutils.getAllDatasetNames(user,martUser);
       for (int i = 0, n = datasets.length; i < n; i++) {
         String dataset = datasets[i];
-        String[] inms = dbutils.getAllInternalNamesForDataset(user, dataset);
+        
+        // note all keying is on datasetID rather than internalName now
+        String[] inms = dbutils.getAllDatasetIDsForDataset(user, dataset);
 
         if (datasetNameMap.containsKey(dataset)) {
           //dataset is loaded, check for update of its datasetview

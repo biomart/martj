@@ -899,8 +899,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				String[] otherFilters = fd1.getOtherFilters().split(";");
 				fd2 = null;
 				for (int p = 0; p < otherFilters.length; p++){
-					otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default",MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);  
-					MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigDocumentByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default",MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]));
+					otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(null,otherFilters[p].split("\\.")[0],"",MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);  
+					MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigDocumentByDatasetID(null,otherFilters[p].split("\\.")[0],otherDataset.getDatasetID(),MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]));
 					if (otherDataset.containsFilterDescription(filter2))
 							fd2 = otherDataset.getFilterDescriptionByInternalName(filter2);
 					if (fd2 != null){
@@ -938,8 +938,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					String[] otherFilters = referredFilter.getOtherFilters().split(";");
 					fd2 = null;
 					for (int p = 0; p < otherFilters.length; p++){
-						otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default",MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);  
-						MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigDocumentByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default",MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]));
+						otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(null,otherFilters[p].split("\\.")[0],"",MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);  
+						MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigDocumentByDatasetID(null,otherFilters[p].split("\\.")[0],otherDataset.getDatasetID(),MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]));
 						if (otherDataset.containsFilterDescription(filter2))
 								fd2 = otherDataset.getFilterDescriptionByInternalName(filter2);
 						if (fd2 != null){

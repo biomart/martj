@@ -79,15 +79,15 @@ public class DatabaseDatasetConfigUtils {
   private final String GETLINKVERSION = "select link_version from meta_release where dataset = ?";   
   private final String GETANYNAMESWHERINAME = " where internalName = ? and dataset = ?";
   private final String GETDOCBYINAMESELECT = "select xml, compressed_xml from "; //append table after user test
-  private final String GETDOCBYINAMEWHERE = " where internalName = ? and dataset = ?";
+  private final String GETDOCBYINAMEWHERE = " where datasetID = ? and dataset = ?";
   private final String EXISTSELECT = "select count(*) from "; //append table after user test
-  private final String EXISTWHERE = " where internalName = ? and dataset = ?";// and displayName = ?";
+  private final String EXISTWHERE = " where internalName = ? and datasetID = ?";// and displayName = ?";
   //private final String ALTEXISTWHERE = " where internalName = ? and dataset = ? and displayName is null";
   private final String DELETEOLDXML = "delete from "; //append table after user test
-  private final String DELETEOLDXMLWHERE = " where internalName = ? and dataset = ?";// and displayName = ?";
+  private final String DELETEOLDXMLWHERE = " where internalName = ? and datasetID = ?";// and displayName = ?";
   //private final String ALTDELETEOLDXMLWHERE = " where internalName = ? and dataset = ? and displayName is null";
   private final String DELETEDATASETCONFIG = " where dataset = ?";
-  private final String DELETEINTERNALNAME = " and internalName = ?";
+  private final String DELETEINTERNALNAME = " and datasetID = ?";
   private final String INSERTXMLSQLA = "insert into "; //append table after user test
   private final String INSERTXMLSQLB =
     " (internalName, displayName, dataset, description, xml, MessageDigest,type, visible, version) values (?, ?, ?, ?, ?, ?,?,?,?)";
@@ -329,7 +329,7 @@ public class DatabaseDatasetConfigUtils {
 	String interfaces,
     DatasetConfig dsConfig)
     throws ConfigurationException {
-	
+    	
 	    // Before storing check attribute and filter names are unique per dataset (attribute and filter names
 	    // are allowed to be the same
 	    // Also check the importable and exportable filters and attributes are defined
@@ -655,7 +655,7 @@ public class DatabaseDatasetConfigUtils {
       rowsupdated = storeCompressedXML(user, internalName, displayName, dataset, description, doc, 
       	type, visible, version, datasetID, martUsers, interfaces);
     else
-      rowsupdated = storeUncompressedXML(user, internalName, displayName, dataset, description, doc);
+      rowsupdated = storeUncompressedXML(user, internalName, displayName, dataset, description, datasetID, doc);
 
 	
     updateMartConfigForUser(user,getSchema()[0]);
@@ -670,10 +670,11 @@ public class DatabaseDatasetConfigUtils {
     String displayName,
     String dataset,
     String description,
+    String datasetID,
     Document doc)
     throws ConfigurationException {
     if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
-      return storeUncompressedXMLOracle(user, internalName, displayName, dataset, description, doc);
+      return storeUncompressedXMLOracle(user, internalName, displayName, dataset, description, datasetID, doc);
 
     Connection conn = null;
     try {
@@ -697,10 +698,10 @@ public class DatabaseDatasetConfigUtils {
       bout.close();
       dout.close();
 
-      int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName);
+      int rowstodelete = getDSConfigEntryCountFor(metatable, datasetID, internalName);
 
       if (rowstodelete > 0)
-        deleteOldDSConfigEntriesFor(metatable, dataset, internalName);
+        deleteOldDSConfigEntriesFor(metatable, datasetID, internalName);
 
       PreparedStatement ps = conn.prepareStatement(insertSQL);
       ps.setString(1, internalName);
@@ -735,6 +736,7 @@ public class DatabaseDatasetConfigUtils {
     String displayName,
     String dataset,
     String description,
+    String datasetID,
     Document doc)
     throws ConfigurationException {
 
@@ -763,10 +765,10 @@ public class DatabaseDatasetConfigUtils {
       bout.close();
       dout.close();
 
-      int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName);
+      int rowstodelete = getDSConfigEntryCountFor(metatable, datasetID, internalName);
 
       if (rowstodelete > 0)
-        deleteOldDSConfigEntriesFor(metatable, dataset, internalName);
+        deleteOldDSConfigEntriesFor(metatable, datasetID, internalName);
 
       PreparedStatement ps = conn.prepareStatement(insertSQL);
       PreparedStatement ohack = conn.prepareStatement(oraclehackSQL);
@@ -828,7 +830,7 @@ public class DatabaseDatasetConfigUtils {
 	String interfaces)
     throws ConfigurationException {
     if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
-      return storeCompressedXMLOracle(user, internalName, displayName, dataset, description, doc, type, visible, version, datasetID);
+      return storeCompressedXMLOracle(user, internalName, displayName, dataset, description, doc, type, visible, version, datasetID, martUsers, interfaces);
 
     Connection conn = null;
     try {
@@ -896,12 +898,13 @@ public class DatabaseDatasetConfigUtils {
       bout.close();
       gout.close();
       out.close();
-
-      int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName);
-
+	  System.out.println("ABOUT TO DEL");
+      int rowstodelete = getDSConfigEntryCountFor(metatable, datasetID, internalName);
+		System.out.println("ROWS "+rowstodelete);
       if (rowstodelete > 0)
-        deleteOldDSConfigEntriesFor(metatable, dataset, internalName);
+        deleteOldDSConfigEntriesFor(metatable, datasetID, internalName);
 
+      System.out.println("DELETED");
       ps = conn.prepareStatement(insertSQL);
       ps.setString(1, internalName);
       ps.setString(2, displayName);
@@ -917,7 +920,7 @@ public class DatabaseDatasetConfigUtils {
   
   	  Timestamp tstamp = new Timestamp(System.currentTimeMillis());
 	  ps.setTimestamp(12,tstamp);
-	  
+	  System.out.println("SQL IS "+sql);
       int ret = ps.executeUpdate();
       ps.close();
 
@@ -946,12 +949,41 @@ public class DatabaseDatasetConfigUtils {
     String type,
     String visible,
 	String version,
-	String datasetID)
+	String datasetID,
+	String martUsers,
+	String interfaces)
     throws ConfigurationException {
 
     Connection conn = null;
     try {
-      String metatable = createMetaTables(user);
+      //String metatable = getDSConfigTableFor(user);
+	  String metatable = createMetaTables(user);
+      
+	  // sort out meta_users and meta_interfaces tables first
+	  String sql = "DELETE FROM "+getSchema()[0]+".meta_user WHERE datasetID="+datasetID;
+	  System.out.println(sql);
+	  PreparedStatement ps = conn.prepareStatement(sql);
+	  ps.executeUpdate();
+	  String[] martUserEntries = martUsers.split(",");
+	  for (int i = 0; i < martUserEntries.length; i++){
+			sql = "INSERT INTO "+getSchema()[0]+".meta_user VALUES ("+datasetID+",'"+martUserEntries[i]+"')";
+			System.out.println(sql);
+			ps = conn.prepareStatement(sql);
+			ps.executeUpdate();	
+	  }
+	  
+	  sql = "DELETE FROM "+getSchema()[0]+".meta_interface WHERE datasetID="+datasetID;
+	  System.out.println(sql);
+	  ps = conn.prepareStatement(sql);
+	  ps.executeUpdate();
+	  String[] interfaceEntries = interfaces.split(",");
+	  for (int i = 0; i < interfaceEntries.length; i++){
+		System.out.println(sql);
+				ps = conn.prepareStatement("INSERT INTO "+getSchema()[0]+".meta_interface VALUES ("+datasetID+",'"
+					+interfaceEntries[i]+"')");
+				ps.executeUpdate();	
+	  }
+      
       String insertSQL = INSERTCOMPRESSEDXMLA + metatable + INSERTCOMPRESSEDXMLB;
       String oraclehackSQL = SELECTCOMPRESSEDXMLFORUPDATE + metatable + GETANYNAMESWHERINAME + " FOR UPDATE";
 
@@ -978,12 +1010,12 @@ public class DatabaseDatasetConfigUtils {
       gout.close();
       out.close();
 
-      int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName);
+      int rowstodelete = getDSConfigEntryCountFor(metatable, datasetID, internalName);
 
       if (rowstodelete > 0)
-        deleteOldDSConfigEntriesFor(metatable, dataset, internalName);
+        deleteOldDSConfigEntriesFor(metatable, datasetID, internalName);
 
-      PreparedStatement ps = conn.prepareStatement(insertSQL);
+      ps = conn.prepareStatement(insertSQL);
       PreparedStatement ohack = conn.prepareStatement(oraclehackSQL);
 
       ps.setString(1, internalName);
@@ -1124,7 +1156,8 @@ public class DatabaseDatasetConfigUtils {
         }
         
         HashMap dsetMap = (HashMap) userMap.get(dset);
-        dsetMap.put(iname, dsv);
+        //dsetMap.put(iname, dsv);
+		dsetMap.put(datasetID, dsv);
       }
       rs.close();
       
@@ -1155,6 +1188,7 @@ public class DatabaseDatasetConfigUtils {
     return ret;
   }
 
+
   /**
    * Returns all of the internalNames for the given dataset, as stored in the meta_configuration table for
    * the Mart Database for the given user.
@@ -1163,6 +1197,7 @@ public class DatabaseDatasetConfigUtils {
    * @return String[] containing all of the internalNames for the requested dataset.
    * @throws ConfigurationException when valid meta_configuration tables do not exist, and for all underlying Exceptons.
    */
+/*
   public String[] getAllInternalNamesForDataset(String user, String dataset) throws ConfigurationException {
     if (!configInfo.containsKey(user))
       initMartConfigForUser(user,getSchema()[0],"");
@@ -1184,6 +1219,38 @@ public class DatabaseDatasetConfigUtils {
     names.toArray(ret);
     return ret;
   }
+  */
+  
+  /**
+   * Returns all of the datsetIDs for the given dataset, as stored in the meta_configuration table for
+   * the Mart Database.
+   * @param dataset -- dataset for which datasetIDs are requested
+   * @return String[] containing all of the datasetIDs for the requested dataset.
+   * @throws ConfigurationException when valid meta_configuration tables do not exist, and for all underlying 
+   * Exceptions.
+   */
+  public String[] getAllDatasetIDsForDataset(String user, String dataset) throws ConfigurationException {
+	if (!configInfo.containsKey(user))
+	  initMartConfigForUser(user,getSchema()[0],"");
+    
+	HashMap userMap = (HashMap) configInfo.get(user);
+    
+	if (!userMap.containsKey(dataset))
+	  initMartConfigForUser(user,getSchema()[0],"");
+    
+	if (!userMap.containsKey(dataset))
+	  return new String[0];
+    
+	HashMap dsetMap = (HashMap) userMap.get(dataset);
+      
+	//sorted alphabetically  
+	SortedSet names = new TreeSet(dsetMap.keySet());
+
+	String[] ret = new String[names.size()];
+	names.toArray(ret);
+	return ret;
+  }
+  
 
   /**
    * Returns a DatasetConfig object from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
@@ -1194,7 +1261,7 @@ public class DatabaseDatasetConfigUtils {
    * @return DatasetConfig defined by given internalName
    * @throws ConfigurationException when valid meta_configuration tables are absent, and for all underlying Exceptions
    */
-  public DatasetConfig getDatasetConfigByDatasetInternalName(String user, String dataset, String internalName, String schema)
+  public DatasetConfig getDatasetConfigByDatasetID(String user, String dataset, String datasetID, String schema)
     throws ConfigurationException {
 
     if (!configInfo.containsKey(user))
@@ -1210,12 +1277,19 @@ public class DatabaseDatasetConfigUtils {
       
     HashMap dsetMap = (HashMap) userMap.get(dataset);
     
-    if (!dsetMap.containsKey(internalName))
+    if (!dsetMap.containsKey(datasetID))
       initMartConfigForUser(user,schema,"");
-    if (!dsetMap.containsKey(internalName))
+      
+	// hack for push action handling - only the dataset is known in the current model - just return the first dataset
+    if (datasetID.equals("")){
+		System.out.println("FIX FOR PUSH ACTIONS");
+    	return (DatasetConfig) (dsetMap.values().toArray())[0];		
+	}  
+      
+    if (!dsetMap.containsKey(datasetID))
       return null;
     
-    DatasetConfig dsv = (DatasetConfig) dsetMap.get(internalName);
+    DatasetConfig dsv = (DatasetConfig) dsetMap.get(datasetID);
     return dsv;      
   }
 
@@ -1228,10 +1302,10 @@ public class DatabaseDatasetConfigUtils {
    * @return DatasetConfig JDOM Document defined by given displayName and dataset
    * @throws ConfigurationException when valid meta_configuration tables are absent, and for all underlying Exceptions
    */
-  public Document getDatasetConfigDocumentByDatasetInternalName(String user, String dataset, String internalName, String schema)
+  public Document getDatasetConfigDocumentByDatasetID(String user, String dataset, String datasetID, String schema)
     throws ConfigurationException {
     if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
-      return getDatasetConfigDocumentByDatasetInternalNameOracle(user, dataset, internalName);
+      return getDatasetConfigDocumentByDatasetIDOracle(user, dataset, datasetID);
 
     Connection conn = null;
     try {
@@ -1240,11 +1314,11 @@ public class DatabaseDatasetConfigUtils {
 		
       if (logger.isLoggable(Level.FINE))
         logger.fine(
-          "Using " + sql + " to get DatasetConfig for internalName " + internalName + "and dataset " + dataset + "\n");
+          "Using " + sql + " to get DatasetConfig for datasetID " +datasetID + "and dataset " + dataset + "\n");
 
       conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
-      ps.setString(1, internalName);
+      ps.setString(1, datasetID);
       ps.setString(2, dataset);
 
       ResultSet rs = ps.executeQuery();
@@ -1280,7 +1354,7 @@ public class DatabaseDatasetConfigUtils {
     }
   }
 
-  private Document getDatasetConfigDocumentByDatasetInternalNameOracle(String user, String dataset, String internalName)
+  private Document getDatasetConfigDocumentByDatasetIDOracle(String user, String dataset, String datasetID)
     throws ConfigurationException {
     Connection conn = null;
     try {
@@ -1289,11 +1363,11 @@ public class DatabaseDatasetConfigUtils {
 
       if (logger.isLoggable(Level.FINE))
         logger.fine(
-          "Using " + sql + " to get DatasetConfig for internalName " + internalName + "and dataset " + dataset + "\n");
+          "Using " + sql + " to get DatasetConfig for datasetID " + datasetID + "and dataset " + dataset + "\n");
 
       conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
-      ps.setString(1, internalName);
+      ps.setString(1, datasetID);
       ps.setString(2, dataset);
 
       ResultSet rs = ps.executeQuery();
@@ -1507,10 +1581,10 @@ public class DatabaseDatasetConfigUtils {
    * @return byte[] digest for given dataset and displayName
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public byte[] getDSConfigMessageDigestByDatasetInternalName(String user, String dataset, String internalName)
+  public byte[] getDSConfigMessageDigestByDatasetID(String user, String dataset, String datasetID)
     throws ConfigurationException {
       
-      DatasetConfig dsv = getDatasetConfigByDatasetInternalName(user, dataset, internalName, getSchema()[0]);
+      DatasetConfig dsv = getDatasetConfigByDatasetID(user, dataset, datasetID, getSchema()[0]);
       if (dsv == null)
         return null;
       
@@ -1528,7 +1602,7 @@ public class DatabaseDatasetConfigUtils {
   public boolean isDatasetConfigChanged(String user, DatasetConfig dsc) throws ConfigurationException{
       byte[] thisDigest = dscutils.getMessageDigestForDatasetConfig(dsc);
       //byte[] thisDigest = dsc.getMessageDigest();
-      byte[] dbDigest = getDSConfigMessageDigestByDatasetInternalName(user, dsc.getDataset(), dsc.getInternalName());
+      byte[] dbDigest = getDSConfigMessageDigestByDatasetID(user, dsc.getDataset(), dsc.getDatasetID());
       
       System.out.println("this digest " + thisDigest);
 	  System.out.println("dbDigest digest " + dbDigest);
@@ -1536,7 +1610,7 @@ public class DatabaseDatasetConfigUtils {
       return MessageDigest.isEqual(thisDigest, dbDigest);
   }
   
-  private int getDSConfigEntryCountFor(String metatable, String dataset, String internalName)
+  private int getDSConfigEntryCountFor(String metatable, String datasetID, String internalName)
     throws ConfigurationException {
   	
   	// fully qualify for 'non-public' postgres schemas
@@ -1559,7 +1633,7 @@ public class DatabaseDatasetConfigUtils {
       ps.setString(1, internalName);
       //if (displayName != null)
       	//ps.setString(3, displayName);
-      ps.setString(2, dataset);
+      ps.setString(2, datasetID);
 
       ResultSet rs = ps.executeQuery();
       rs.next();
@@ -1588,7 +1662,7 @@ public class DatabaseDatasetConfigUtils {
    * @param displayName - displayName of DatasetConfig entries to delete from metatable
    * @throws ConfigurationException if number of rows to delete doesnt match number returned by getDSConfigEntryCountFor()
    */
-  public void deleteOldDSConfigEntriesFor(String metatable, String dataset, String internalName)
+  public void deleteOldDSConfigEntriesFor(String metatable, String datasetID, String internalName)
     throws ConfigurationException {
 
     String deleteSQL;
@@ -1597,7 +1671,7 @@ public class DatabaseDatasetConfigUtils {
 	//else
 	 //   deleteSQL= DELETEOLDXML + getSchema()[0]+"."+metatable + ALTDELETEOLDXMLWHERE;	
 	    
-    int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName);
+    int rowstodelete = getDSConfigEntryCountFor(metatable, datasetID, internalName);
     if (logger.isLoggable(Level.FINE))
       logger.fine("Deleting old DSConfigEntries with SQL " + deleteSQL + "\n");
 
@@ -1610,7 +1684,7 @@ public class DatabaseDatasetConfigUtils {
       ds.setString(1, internalName);
 	  //if (displayName != null) 
 	  	//ds.setString(3, displayName);
-      ds.setString(2, dataset);
+      ds.setString(2, datasetID);
 
       rowsdeleted = ds.executeUpdate();
       ds.close();
@@ -1627,7 +1701,7 @@ public class DatabaseDatasetConfigUtils {
 
     if (!(rowsdeleted == rowstodelete))
       throw new ConfigurationException(
-        "Did not delete old XML data rows for " + internalName + ", " + dataset + "\n");
+        "Did not delete old XML data rows for " + internalName + ", " + datasetID + "\n");
   }
 
   /**
@@ -1660,7 +1734,7 @@ public class DatabaseDatasetConfigUtils {
 	* @throws ConfigurationException if number of rows to delete doesnt match number returned by getDSConfigEntryCountFor()
 	*/
 
-  public void deleteDatasetConfigsForDatasetIntName(String dataset, String internalName, String user) throws ConfigurationException {
+  public void deleteDatasetConfigsForDatasetID(String dataset, String datasetID, String user) throws ConfigurationException {
 	String deleteSQL = "delete from " + getSchema()[0] + "." + BASEMETATABLE + DELETEDATASETCONFIG + DELETEINTERNALNAME;
 
 	Connection conn = null;
@@ -1668,7 +1742,7 @@ public class DatabaseDatasetConfigUtils {
 	  conn = dsource.getConnection();
 	  PreparedStatement ds = conn.prepareStatement(deleteSQL);
 	  ds.setString(1, dataset);
-	  ds.setString(2,internalName);
+	  ds.setString(2,datasetID);
 	  ds.executeUpdate();
 	  ds.close();
 
@@ -1695,17 +1769,17 @@ public class DatabaseDatasetConfigUtils {
     String CREATETABLE= "create table " +getSchema()[0];
     String MYSQL_META    = CREATETABLE+".meta_configuration"+"(internalName varchar(100), displayName varchar(100), dataset varchar(100), " +
     		"description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, " +
-    		"type varchar(20), visible int(1) unsigned, version varchar(25),datasetID int not null, modified TIMESTAMP NOT NULL,UNIQUE (dataset, internalName))";
+    		"type varchar(20), visible int(1) unsigned, version varchar(25),datasetID int not null, modified TIMESTAMP NOT NULL,UNIQUE (datasetID))";
     String MYSQL_USER=CREATETABLE+".meta_user ( datasetID int, martUser varchar(100),UNIQUE(datasetID,martUser))";
 	String MYSQL_INTERFACE=CREATETABLE+".meta_interface ( datasetID int, interface varchar(100),UNIQUE(datasetID,interface))";    
-    String ORACLE_META   = CREATETABLE+".meta_configuration"+" (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25), datasetid number(1), modified timestamp , UNIQUE (dataset,internalname))";
+    String ORACLE_META   = CREATETABLE+".meta_configuration (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25), datasetid number(1), modified timestamp , UNIQUE (datasetID))";
     String ORACLE_USER = CREATETABLE+".meta_user (datasetid number(1), martuser varchar2(100), UNIQUE(datasetid,martuser))";
 	String ORACLE_INTERFACE = CREATETABLE+".meta_interface (datasetid number(1), interface varchar2(100), UNIQUE(datasetid,interface))";
     
-    String POSTGRES_META = CREATETABLE+".meta_configuration"+"(internalname varchar(100), displayname varchar(100), dataset varchar(100), description varchar(200), xml text, compressed_xml bytea, MessageDigest bytea, type varchar(20), visible integer, version varchar(25), datasetID integer, modified timestamp, UNIQUE (dataset, internalName))";
+    String POSTGRES_META = CREATETABLE+".meta_configuration(internalname varchar(100), displayname varchar(100), dataset varchar(100), description varchar(200), xml text, compressed_xml bytea, MessageDigest bytea, type varchar(20), visible integer, version varchar(25), datasetID integer, modified timestamp, UNIQUE (datasetID))";
     String POSTGRES_USER = CREATETABLE+".meta_user (datasetID integer, martUser varchar(100), UNIQUE(datasetID,martUser))";
 	String POSTGRES_INTERFACE = CREATETABLE+".meta_interface (datasetID integer, interface varchar(100), UNIQUE(datasetID,interface))";
-    
+
     
     //override if user not null
     if (datasetConfigUserTableExists(user))
@@ -2335,12 +2409,12 @@ public class DatabaseDatasetConfigUtils {
 					  	DatabaseDatasetConfigUtils newUtils = MartEditor.getDatabaseDatasetConfigUtilsBySchema(schemas[q]);
 						//System.out.println("NEW ONE HAS DSOURCE " + newUtils.getAllDatasetNames(null)[0]);
 						//System.out.println(schemas[q] + " TEST " + otherFilters[p]);
-						otherDataset = MartEditor.getDatabaseDatasetConfigUtilsBySchema(schemas[q]).getDatasetConfigByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default",schemas[q]);  
+						otherDataset = MartEditor.getDatabaseDatasetConfigUtilsBySchema(schemas[q]).getDatasetConfigByDatasetID(null,otherFilters[p].split("\\.")[0],"",schemas[q]);//TODO - FIX THIS METHOD
 	
 						if (otherDataset == null){
 							continue;
 						}
-						dscutils.loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtilsBySchema(schemas[q]).getDatasetConfigDocumentByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default",schemas[q]));
+						dscutils.loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtilsBySchema(schemas[q]).getDatasetConfigDocumentByDatasetID(null,otherFilters[p].split("\\.")[0],otherDataset.getDatasetID(),schemas[q]));
 						if (otherDataset.containsFilterDescription(filter2)){
 							fd2 = otherDataset.getFilterDescriptionByInternalName(filter2);
 						}
@@ -2393,8 +2467,8 @@ public class DatabaseDatasetConfigUtils {
 								FilterDescription fd3 = null;
 								String[] secOtherFilters = referredFilter.getOtherFilters().split(";");
 								for (int q = 0; q < secOtherFilters.length; q++){
-									secOtherDataset = getDatasetConfigByDatasetInternalName(null,secOtherFilters[q].split("\\.")[0],"default",getSchema()[0]);  
-									dscutils.loadDatasetConfigWithDocument(secOtherDataset, getDatasetConfigDocumentByDatasetInternalName(null,secOtherFilters[p].split("\\.")[0],"default",getSchema()[0]));
+									secOtherDataset = getDatasetConfigByDatasetID(null,secOtherFilters[q].split("\\.")[0],"",getSchema()[0]);  
+									dscutils.loadDatasetConfigWithDocument(secOtherDataset, getDatasetConfigDocumentByDatasetID(null,secOtherFilters[p].split("\\.")[0],secOtherDataset.getDatasetID(),getSchema()[0]));
 									if (secOtherDataset.containsFilterDescription(secFilter2))
 										fd3 = secOtherDataset.getFilterDescriptionByInternalName(secFilter2);
 									if (fd3 != null){
@@ -2463,8 +2537,8 @@ public class DatabaseDatasetConfigUtils {
 								FilterDescription fd3 = null;
 								String[] secOtherFilters = referredFilter.getOtherFilters().split(";");
 								for (int q = 0; q < secOtherFilters.length; q++){
-									secOtherDataset = getDatasetConfigByDatasetInternalName(null,secOtherFilters[q].split("\\.")[0],"default",getSchema()[0]);  
-									dscutils.loadDatasetConfigWithDocument(secOtherDataset, getDatasetConfigDocumentByDatasetInternalName(null,secOtherFilters[p].split("\\.")[0],"default",getSchema()[0]));
+									secOtherDataset = getDatasetConfigByDatasetID(null,secOtherFilters[q].split("\\.")[0],"",getSchema()[0]);  
+									dscutils.loadDatasetConfigWithDocument(secOtherDataset, getDatasetConfigDocumentByDatasetID(null,secOtherFilters[p].split("\\.")[0],secOtherDataset.getDatasetID(),getSchema()[0]));
 									if (secOtherDataset.containsFilterDescription(secFilter2))
 										fd3 = secOtherDataset.getFilterDescriptionByInternalName(secFilter2);
 									if (fd3 != null){

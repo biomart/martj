@@ -798,7 +798,7 @@ System.out.println ("getting driver "+ driver);
       if (dataset == null)
         return;
 
-      String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
+  /*   String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
       String intName;
       if (internalNames.length == 1)
         intName = internalNames[0];
@@ -816,8 +816,29 @@ System.out.println ("getting driver "+ driver);
 
       if (intName == null)
         return;
+*/
 
-      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, dataset, intName, databaseDialog.getSchema());
+	String[] datasetIDs = dbutils.getAllDatasetIDsForDataset(user,dataset);
+	  String datasetID;
+	  if (datasetIDs.length == 1)
+		datasetID = datasetIDs[0];
+	  else {
+		datasetID =
+		  (String) JOptionPane.showInputDialog(
+			null,
+			"Choose one",
+			"Dataset ID",
+			JOptionPane.INFORMATION_MESSAGE,
+			null,
+			datasetIDs,
+			datasetIDs[0]);
+	  }
+
+	  if (datasetID == null)
+		return;
+	
+
+      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, dataset, datasetID, databaseDialog.getSchema());
       frame.setVisible(true);
       desktop.add(frame);
       try {
@@ -851,7 +872,7 @@ System.out.println ("getting driver "+ driver);
       ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).export();
     } catch (ConfigurationException e) {
       JOptionPane.showMessageDialog(this, "Problems with exporting requested dataset. " +
-      		"Check that dataset name and dataset id is unique, you have write permissions " +
+      		"Check that dataset id is unique, you have write permissions " +
       		"and the meta_configuration table is in required format", "ERROR", 0);
       e.printStackTrace();
     } finally {
@@ -933,7 +954,7 @@ System.out.println ("getting driver "+ driver);
 			  String[] datasets = dbutils.getAllDatasetNames(user,martUser);
 			  for (int i = 0; i < datasets.length; i++){
 				String dataset = datasets[i];
-				String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
+				String[] internalNames = dbutils.getAllDatasetIDsForDataset(user, dataset);
 				for (int j = 0; j < internalNames.length; j++){
 					String internalName = internalNames[j];
 				
@@ -942,7 +963,7 @@ System.out.println ("getting driver "+ driver);
 					DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 					while (configs.hasNext()){
 						DatasetConfig lconfig = (DatasetConfig) configs.next();
-						if (lconfig.getDataset().equals(dataset) && lconfig.getInternalName().equals(internalName)){
+						if (lconfig.getDataset().equals(dataset) && lconfig.getDatasetID().equals(internalName)){
 								odsv = lconfig;
 								break;
 						}
@@ -1105,7 +1126,7 @@ System.out.println ("getting driver "+ driver);
 		  String[] datasets = dbutils.getAllDatasetNames(user,martUser);
 		  for (int i = 0; i < datasets.length; i++){
 		  	String dataset = datasets[i];
-			String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
+			String[] internalNames = dbutils.getAllDatasetIDsForDataset(user, dataset);
 			for (int j = 0; j < internalNames.length; j++){
 				String internalName = internalNames[j];
 				
@@ -1114,7 +1135,7 @@ System.out.println ("getting driver "+ driver);
 				DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 				while (configs.hasNext()){
 					DatasetConfig lconfig = (DatasetConfig) configs.next();
-					if (lconfig.getDataset().equals(dataset) && lconfig.getInternalName().equals(internalName)){
+					if (lconfig.getDataset().equals(dataset) && lconfig.getDatasetID().equals(internalName)){
 							odsv = lconfig;
 							break;
 					}
@@ -1203,7 +1224,7 @@ System.out.println ("getting driver "+ driver);
 		  for (int i = 0; i < datasets.length; i++){
 			String dataset = datasets[i];
 			System.out.println("VALIDATING " + dataset);
-			String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
+			String[] internalNames = dbutils.getAllDatasetIDsForDataset(user, dataset);
 			for (int j = 0; j < internalNames.length; j++){
 				String internalName = internalNames[j];
 				
@@ -1212,7 +1233,7 @@ System.out.println ("getting driver "+ driver);
 				DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 				while (configs.hasNext()){
 					DatasetConfig lconfig = (DatasetConfig) configs.next();
-					if (lconfig.getDataset().equals(dataset) && lconfig.getInternalName().equals(internalName)){
+					if (lconfig.getDataset().equals(dataset) && lconfig.getDatasetID().equals(internalName)){
 							dsv = lconfig;
 							break;
 					}
@@ -1901,7 +1922,7 @@ System.out.println ("getting driver "+ driver);
             datasets[0]);
         if (dataset == null)
           return;
-        String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
+        String[] internalNames = dbutils.getAllDatasetIDsForDataset(user, dataset);
         String intName;
         if (internalNames.length == 1)
           intName = internalNames[0];
@@ -1910,7 +1931,7 @@ System.out.println ("getting driver "+ driver);
             (String) JOptionPane.showInputDialog(
               null,
               "Choose one",
-              "Internal name",
+              "Dataset ID",
               JOptionPane.INFORMATION_MESSAGE,
               null,
               internalNames,
@@ -1918,7 +1939,7 @@ System.out.println ("getting driver "+ driver);
         }
         if (intName == null)
           return;
-        dbutils.deleteDatasetConfigsForDatasetIntName(dataset, intName, user);
+        dbutils.deleteDatasetConfigsForDatasetID(dataset, intName, user);
 
       } catch (ConfigurationException e) {
       }
