@@ -677,7 +677,7 @@ public class DatabaseDatasetConfigUtils {
 
     Connection conn = null;
     try {
-      String metatable = getDSConfigTableFor(user);
+      String metatable = createMetaTables(user);
       String insertSQL = INSERTXMLSQLA + metatable + INSERTXMLSQLB;
 
       if (logger.isLoggable(Level.FINE))
@@ -740,7 +740,7 @@ public class DatabaseDatasetConfigUtils {
 
     Connection conn = null;
     try {
-      String metatable = getDSConfigTableFor(user);
+      String metatable = createMetaTables(user);
       String insertSQL = INSERTXMLSQLA + metatable + INSERTXMLSQLB;
       String oraclehackSQL = SELECTXMLFORUPDATE + metatable + GETANYNAMESWHERINAME + " FOR UPDATE";
 
@@ -835,7 +835,7 @@ public class DatabaseDatasetConfigUtils {
 
 	  conn = dsource.getConnection();	
 			
-      String metatable = getDSConfigTableFor(user);
+      String metatable = createMetaTables(user);
 
 	  // sort out meta_users and meta_interfaces tables first
 	  String sql = "DELETE FROM "+getSchema()[0]+".meta_user WHERE datasetID="+datasetID;
@@ -951,7 +951,7 @@ public class DatabaseDatasetConfigUtils {
 
     Connection conn = null;
     try {
-      String metatable = getDSConfigTableFor(user);
+      String metatable = createMetaTables(user);
       String insertSQL = INSERTCOMPRESSEDXMLA + metatable + INSERTCOMPRESSEDXMLB;
       String oraclehackSQL = SELECTCOMPRESSEDXMLFORUPDATE + metatable + GETANYNAMESWHERINAME + " FOR UPDATE";
 
@@ -1048,7 +1048,7 @@ public class DatabaseDatasetConfigUtils {
     
     Connection conn = null;
     try {
-      String metatable = getDSConfigTableFor(user);
+      String metatable = createMetaTables(user);
       String sql = GETALLNAMESQL + schema +"."+metatable;
       
       
@@ -1235,7 +1235,7 @@ public class DatabaseDatasetConfigUtils {
 
     Connection conn = null;
     try {
-      String metatable = getDSConfigTableFor(user);
+      String metatable = createMetaTables(user);
       String sql = GETDOCBYINAMESELECT + schema +"."+metatable + GETDOCBYINAMEWHERE;
 		
       if (logger.isLoggable(Level.FINE))
@@ -1284,7 +1284,7 @@ public class DatabaseDatasetConfigUtils {
     throws ConfigurationException {
     Connection conn = null;
     try {
-      String metatable = getDSConfigTableFor(user);
+      String metatable = createMetaTables(user);
       String sql = GETDOCBYINAMESELECT + metatable + GETDOCBYINAMEWHERE;
 
       if (logger.isLoggable(Level.FINE))
@@ -1689,22 +1689,22 @@ public class DatabaseDatasetConfigUtils {
    * @return String meta table name
    * @throws ConfigurationException if both meta_configuration_[user] and DatabaseDatasetConfigUtils.BASEMETATABLE are absent, and for all underlying exceptions.
    */
-  public String getDSConfigTableFor(String user) throws ConfigurationException {
+  public String createMetaTables(String user) throws ConfigurationException {
     String metatable = BASEMETATABLE;
     
-    String CREATETABLE= "create table " +getSchema()[0]+".meta_configuration";
-    String MYSQL_META    = CREATETABLE+"(internalName varchar(100), displayName varchar(100), dataset varchar(100), " +
+    String CREATETABLE= "create table " +getSchema()[0];
+    String MYSQL_META    = CREATETABLE+".meta_configuration"+"(internalName varchar(100), displayName varchar(100), dataset varchar(100), " +
     		"description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, " +
     		"type varchar(20), visible int(1) unsigned, version varchar(25),datasetID int not null, modified TIMESTAMP NOT NULL,UNIQUE (dataset, internalName))";
-    String MYSQL_USER="CREATE TABLE meta_user ( datasetID int, martUser varchar(100),UNIQUE(datasetID,martUser))";
-	String MYSQL_INTERFACE="CREATE TABLE meta_interface ( datasetID int, interface varchar(100),UNIQUE(datasetID,interface))";    
-    String ORACLE_META   = CREATETABLE+" (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25), datasetid number(1), modified timestamp , UNIQUE (dataset,internalname))";
-    String ORACLE_USER = "CREATE TABLE meta_user (datasetid number(1), martuser varchar2(100), UNIQUE(datasetid,martuser))";
-	String ORACLE_INTERFACE = "CREATE TABLE meta_interface (datasetid number(1), interface varchar2(100), UNIQUE(datasetid,interface))";
+    String MYSQL_USER=CREATETABLE+".meta_user ( datasetID int, martUser varchar(100),UNIQUE(datasetID,martUser))";
+	String MYSQL_INTERFACE=CREATETABLE+".meta_interface ( datasetID int, interface varchar(100),UNIQUE(datasetID,interface))";    
+    String ORACLE_META   = CREATETABLE+".meta_configuration"+" (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25), datasetid number(1), modified timestamp , UNIQUE (dataset,internalname))";
+    String ORACLE_USER = CREATETABLE+".meta_user (datasetid number(1), martuser varchar2(100), UNIQUE(datasetid,martuser))";
+	String ORACLE_INTERFACE = CREATETABLE+".meta_interface (datasetid number(1), interface varchar2(100), UNIQUE(datasetid,interface))";
     
-    String POSTGRES_META = CREATETABLE+"(internalname varchar(100), displayname varchar(100), dataset varchar(100), description varchar(200), xml text, compressed_xml bytea, MessageDigest bytea, type varchar(20), visible integer, version varchar(25), datasetID integer, modified timestamp, UNIQUE (dataset, internalName))";
-    String POSTGRES_USER = "CREATE TABLE meta_user (datasetID integer, martUser varchar(100), UNIQUE(datasetID,martUser))";
-	String POSTGRES_INTERFACE = "CREATE TABLE meta_interface (datasetID integer, interface varchar(100), UNIQUE(datasetID,interface))";
+    String POSTGRES_META = CREATETABLE+".meta_configuration"+"(internalname varchar(100), displayname varchar(100), dataset varchar(100), description varchar(200), xml text, compressed_xml bytea, MessageDigest bytea, type varchar(20), visible integer, version varchar(25), datasetID integer, modified timestamp, UNIQUE (dataset, internalName))";
+    String POSTGRES_USER = CREATETABLE+".meta_user (datasetID integer, martUser varchar(100), UNIQUE(datasetID,martUser))";
+	String POSTGRES_INTERFACE = CREATETABLE+".meta_interface (datasetID integer, interface varchar(100), UNIQUE(datasetID,interface))";
     
     
     //override if user not null
@@ -1741,7 +1741,7 @@ public class DatabaseDatasetConfigUtils {
 			  
 			  conn.close();
 			} catch (SQLException e) {
-			  throw new ConfigurationException("Caught SQLException during create meta_configuration table\n" +e);
+			  throw new ConfigurationException("Caught SQLException during create meta tables\n" +e);
 			}
       	
       }
