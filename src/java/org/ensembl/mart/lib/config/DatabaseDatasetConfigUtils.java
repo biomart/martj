@@ -1727,6 +1727,28 @@ public class DatabaseDatasetConfigUtils {
     }
   }
 
+	public int checkDatasetID(String datasetID) throws ConfigurationException{
+		
+		String sql = "select count(*) from " + getSchema()[0] + ".meta_configuration where datasetID = '" + datasetID+"'";
+		System.out.println(sql);
+		Connection conn = null;
+		try {
+		  conn = dsource.getConnection();
+		  PreparedStatement ps = conn.prepareStatement(sql);
+		  ResultSet rs = ps.executeQuery();
+		  rs.next();
+	  	  int result = rs.getInt(1);
+		  return result;
+		} 
+		catch (SQLException e) {
+		  	throw new ConfigurationException("Caught SQLException during delete\n");
+		} 
+		finally {
+		  	DetailedDataSource.close(conn);
+		}
+	}
+
+
   /**
 	* Removes all records in a given metatable for the given dataset and internal name
 	* @param dataset - dataset for DatasetConfig entries to delete from metatable
@@ -1799,7 +1821,7 @@ public class DatabaseDatasetConfigUtils {
 			  if(dsource.getDatabaseType().equals("postgres")) {CREATE_SQL=POSTGRES_META;CREATE_USER=POSTGRES_USER; CREATE_INTERFACE=POSTGRES_INTERFACE;}
 			  if(dsource.getDatabaseType().equals("mysql")) {CREATE_SQL = MYSQL_META;CREATE_USER=MYSQL_USER; CREATE_INTERFACE=MYSQL_INTERFACE;}
 			  
-			  System.out.println("CREATE_SQL: "+CREATE_SQL+" CREATE_USER: "+CREATE_USER);
+			  //System.out.println("CREATE_SQL: "+CREATE_SQL+" CREATE_USER: "+CREATE_USER);
 			  
 			  
 			  PreparedStatement ps = conn.prepareStatement(CREATE_SQL);

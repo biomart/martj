@@ -863,6 +863,13 @@ System.out.println ("getting driver "+ driver);
       disableCursor();
       DatasetConfig dsConfig = ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig();
 	  
+	  if (dbutils.checkDatasetID(dsConfig.getDatasetID()) >= 1){
+		int choice = JOptionPane.showConfirmDialog(null, "datasetID already exists in database", "Export anyway?", JOptionPane.YES_NO_OPTION);							  
+		if (choice != 0){
+			return;
+		}
+	  }
+	  
       if (dsConfig.getAdaptor() != null && dsConfig.getAdaptor().getDataSource() != null && !dsConfig.getAdaptor().getDataSource().getSchema().equals(databaseDialog.getSchema())){
       	// NM the widget still has its adaptor - could switch connection
 		int choice = JOptionPane.showConfirmDialog(this,"You are exporting this XML to a new schema: " + databaseDialog.getSchema() +"\nChange connection?", "", JOptionPane.YES_NO_OPTION);
