@@ -1758,7 +1758,9 @@ public class DatabaseDatasetConfigUtils {
 
   public void deleteDatasetConfigsForDatasetID(String dataset, String datasetID, String user) throws ConfigurationException {
 	String deleteSQL = "delete from " + getSchema()[0] + "." + BASEMETATABLE + DELETEDATASETCONFIG + DELETEINTERNALNAME;
-
+	String deleteUserSQL = "delete from " + getSchema()[0] + ".meta_user where datasetID = '"+datasetID+"'" ;
+	String deleteInterfaceSQL = "delete from " + getSchema()[0] + ".meta_interface where datasetID = '"+datasetID+"'" ;
+	
 	Connection conn = null;
 	try {
 	  conn = dsource.getConnection();
@@ -1766,6 +1768,13 @@ public class DatabaseDatasetConfigUtils {
 	  ds.setString(1, dataset);
 	  ds.setString(2,datasetID);
 	  ds.executeUpdate();
+	  
+	  ds = conn.prepareStatement(deleteUserSQL);
+	  ds.executeUpdate();
+	  
+	  ds = conn.prepareStatement(deleteInterfaceSQL);
+	  ds.executeUpdate();
+	  
 	  ds.close();
 
       updateMartConfigForUser(user, getSchema()[0]);
