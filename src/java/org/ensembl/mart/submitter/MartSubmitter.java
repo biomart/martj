@@ -364,6 +364,11 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		for (int i = 0; i < PGElements.size(); i++) {
 
 			Element pge = (Element) PGElements.get(i);
+			
+			if (pge.getName().equals("Key")) {
+				System.out.println("key: " + pge.getText());
+				String key = pge.getText();
+			}
 
 			if // (pge.getName().equals("MainTable")
 			(pge.getName().equals("Key") || pge.getName().equals("FilterPage")
@@ -403,6 +408,11 @@ public class MartSubmitter extends JFrame implements ActionListener {
 							mainTable();
 						}
 						
+						//if (ace.getAttributeValue("internalName").equals("cintestinalis_gene_ensembl_structure.exon_cds_end")) {
+							//System.out.println("WWWWWWWWWWWwwww " + ace.getAttributeValue("internalName"));
+							//continue;
+						//}
+						
 						else {
 							if (tableNames.contains(ace.getAttributeValue("tableConstraint")))
 							{}
@@ -423,11 +433,19 @@ public class MartSubmitter extends JFrame implements ActionListener {
 					    if (checkAtt.contains(tempAttributes))
 					    {}
 					    
-					    if (checkAttCurrent.indexOf(".")!=-1 || 
-								checkAttCurrent.startsWith("5") || 
-								checkAttCurrent.startsWith("3")) {
+					    if (checkAttCurrent.indexOf("_cds_")!=-1) {
+					    	System.out.println("HHHH " + checkAttCurrent);
 					    	continue;
 					    }
+					    
+					    if (checkAttCurrent.indexOf(".")!=-1 || 
+								checkAttCurrent.startsWith("5") || 
+								checkAttCurrent.startsWith("3") 
+					    		) {
+					    	continue;
+					    }
+					    
+					    
 					    
 					    else// {
 					    	attribute_counter++;
@@ -581,6 +599,43 @@ public class MartSubmitter extends JFrame implements ActionListener {
 	public void setDbConnection(Connection dbConnection) {
 		this.dbConnection = dbConnection;
 	}
+	
+	public static void getKeyValue(String key, String keyQ) {
+		Connection con = null;
+		Statement sts = null;
+
+		try {
+			sts = getDbConnection().createStatement();
+			ResultSet rs = sts.executeQuery(keyQ);
+			
+			//System.out.println("Q : " + keyQ);
+			
+			while (rs.next()) {
+			    
+			int keyVa = rs.getInt(key);
+			    System.out.println("Max Key Value: " + keyVa);
+			}
+			
+			System.out.println();
+		}
+
+		catch (Exception es) {
+			System.err.println("Exception: " + es.getMessage());
+		}
+
+		finally {
+			try {
+				if (sts != null)
+					if (sts != null)
+						sts.close();
+				if (con != null)
+					con.close();
+			}
+
+			catch (SQLException es) {
+			}
+		}
+	}
 
 	public static void submitDatabase(String sql) {
 		Connection con = null;
@@ -621,11 +676,20 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		ArrayList tableNames = new ArrayList();
 		String tableName = new String();
 		tableName = "";
+		String key = new String();
+		String keyQ = new String();
 
 		List PGElements = root.getChildren();
 
 		for (int i = 0; i < PGElements.size(); i++) {
 			Element pge = (Element) PGElements.get(i);
+			
+			if (pge.getName().equals("Key")) {
+				System.out.println("key: " + pge.getText());
+				key = pge.getText();
+				keyQ = "SELECT MAX(" + key + ") as " + key + " FROM vs__video__main";
+				getKeyValue(key, keyQ);
+			}
 
 			if (pge.getName().equals("Key")
 					|| pge.getName().equals("FilterPage")
@@ -647,6 +711,10 @@ public class MartSubmitter extends JFrame implements ActionListener {
 						.get(j)).getChildren();
 
 				for (int k = 0; k < AttributGroupElements.size(); k++) {
+					
+					//String = "" + key.toString();
+					//System.out.println("!!: " + key + ":" + pge.getAttribute();
+					
 					Element age = (Element) AttributGroupElements.get(k);
 
 					List AttributeCollectionElements = ((Element) AttributGroupElements
@@ -657,6 +725,8 @@ public class MartSubmitter extends JFrame implements ActionListener {
 						Element ace = (Element) AttributeCollectionElements
 								.get(m);
 
+						
+						
 						if (ace.getAttributeValue("tableConstraint").equals(
 								"main")) {
 							mainTable();
@@ -693,11 +763,14 @@ public class MartSubmitter extends JFrame implements ActionListener {
 							    	//System.out.println(checkAtt);
 							    	
 									ace.setName(ace.getAttributeValue("internalName"));
+									
 							}
 						}
 					}
 				}
+				 
 			}
+			
 		}
 
 		int p = 0;
@@ -734,13 +807,15 @@ public class MartSubmitter extends JFrame implements ActionListener {
 			array = array.replaceAll(", ", "\",\"");
 			li = array2.lastIndexOf("]");
 			array2 = array2.substring(1, li);
+			
+			
 
 			// create Sql
 			sql = "INSERT INTO " + tableNames.get(p) + " (" + array2 + ") "
 					+ "VALUES (\"" + array + "\")";
 			System.out.println(sql);
 
-			submitDatabase(sql);
+			//submitDatabase(sql);
 
 		}
 	}
