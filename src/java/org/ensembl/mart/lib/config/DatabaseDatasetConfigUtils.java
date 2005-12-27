@@ -1729,6 +1729,11 @@ public class DatabaseDatasetConfigUtils {
 
 	public int checkDatasetID(String datasetID) throws ConfigurationException{
 		
+		
+		// needs to create meta tables in do not exist (eg. xml from file)
+		 if (!baseDSConfigTableExists()) createMetaTables(dsource.getUser());
+		
+		
 		String sql = "select count(*) from " + getSchema()[0] + ".meta_configuration where datasetID = '" + datasetID+"'";
 		System.out.println(sql);
 		Connection conn = null;
@@ -1741,7 +1746,7 @@ public class DatabaseDatasetConfigUtils {
 		  return result;
 		} 
 		catch (SQLException e) {
-		  	throw new ConfigurationException("Caught SQLException during delete\n");
+		  	throw new ConfigurationException("Caught SQLException during ps.execule: \n"+e.getMessage());
 		} 
 		finally {
 		  	DetailedDataSource.close(conn);

@@ -862,6 +862,13 @@ System.out.println ("getting driver "+ driver);
     try {
       disableCursor();
       DatasetConfig dsConfig = ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig();
+      
+      
+      // these were added for upgrading xml without those settings
+      // the datasetID needs to be made incremental for multiple datasets
+      if(dsConfig.getDatasetID() == null) dsConfig.setDatasetID("0");
+      if(dsConfig.getMartUsers() == null) dsConfig.setMartUsers("default");
+      if(dsConfig.getInterfaces() == null)dsConfig.setInterfaces("default");
 	  
 	  if (dbutils.checkDatasetID(dsConfig.getDatasetID()) >= 1){
 		int choice = JOptionPane.showConfirmDialog(null, "datasetID already exists in database", "Export anyway?", JOptionPane.YES_NO_OPTION);							  
