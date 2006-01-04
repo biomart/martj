@@ -870,8 +870,8 @@ System.out.println ("getting driver "+ driver);
       if(dsConfig.getMartUsers() == null) dsConfig.setMartUsers("default");
       if(dsConfig.getInterfaces() == null)dsConfig.setInterfaces("default");
 	  
-	  if (dbutils.checkDatasetID(dsConfig.getDatasetID()) >= 1){
-		int choice = JOptionPane.showConfirmDialog(null, "datasetID already exists in database", "Export anyway?", JOptionPane.YES_NO_OPTION);							  
+	  if (dbutils.checkDatasetID(dsConfig.getDatasetID(),dsConfig.getDataset()) >= 1){
+		int choice = JOptionPane.showConfirmDialog(null, "Dataset ID already exists for a different dataset", "Export anyway?", JOptionPane.YES_NO_OPTION);							  
 		if (choice != 0){
 			return;
 		}

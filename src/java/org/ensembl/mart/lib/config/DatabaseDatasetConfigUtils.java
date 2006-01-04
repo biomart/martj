@@ -1727,15 +1727,14 @@ public class DatabaseDatasetConfigUtils {
     }
   }
 
-	public int checkDatasetID(String datasetID) throws ConfigurationException{
+	public int checkDatasetID(String datasetID, String datasetName) throws ConfigurationException{
 		
 		
 		// needs to create meta tables in do not exist (eg. xml from file)
 		 if (!baseDSConfigTableExists()) createMetaTables(dsource.getUser());
 		
 		
-		String sql = "select count(*) from " + getSchema()[0] + ".meta_configuration where datasetID = '" + datasetID+"'";
-		System.out.println(sql);
+		String sql = "select count(*) from " + getSchema()[0] + ".meta_configuration where datasetID = '" + datasetID+"' " +			"and dataset != '" + datasetName + "'";
 		Connection conn = null;
 		try {
 		  conn = dsource.getConnection();
