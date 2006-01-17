@@ -1039,6 +1039,15 @@ System.out.println ("getting driver "+ driver);
 				  DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
 				  
 				  // export osdv
+				  
+				  String martUsers = odsv.getMartUsers();
+				  String interfaces = odsv.getInterfaces();
+				  if (martUsers == null)
+					martUsers = "default";
+	  
+				  if (interfaces == null)
+					interfaces = "default";
+				  
 				  try {
 						dbutils.storeDatasetConfiguration(
 									MartEditor.getUser(),
@@ -1052,8 +1061,8 @@ System.out.println ("getting driver "+ driver);
 									odsv.getVisible(),
 									odsv.getVersion(),
 									odsv.getDatasetID(),
-									odsv.getMartUsers(),
-									odsv.getInterfaces(),
+									martUsers,
+									interfaces,
 									odsv);
 				   } catch (Exception e) {
 							e.printStackTrace();

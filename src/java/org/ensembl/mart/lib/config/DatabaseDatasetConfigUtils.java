@@ -59,6 +59,8 @@ import org.ensembl.mart.util.TableDescription;
 import org.jdom.Document;
 import org.jdom.output.XMLOutputter;
 
+import com.sun.rsasign.d;
+
 
 
 /**
@@ -329,6 +331,7 @@ public class DatabaseDatasetConfigUtils {
 	String interfaces,
     DatasetConfig dsConfig)
     throws ConfigurationException {
+    		
     	
 	    // Before storing check attribute and filter names are unique per dataset (attribute and filter names
 	    // are allowed to be the same
@@ -834,44 +837,55 @@ public class DatabaseDatasetConfigUtils {
 
     Connection conn = null;
     try {
-
-	  conn = dsource.getConnection();	
+		conn = dsource.getConnection();	
+	  
+	  if (datasetID == null){
+		String sql = "SELECT MAX(datasetID) FROM "+getSchema()[0]+".meta_configuration";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ResultSet rs = ps.executeQuery();
+		rs.next();
+		int result = rs.getInt(1);
+		result++;
+		Integer datasetNo = new Integer(result);
+		datasetID = datasetNo.toString();
+	  }
+	  
 			
       String metatable = createMetaTables(user);
 
 	  // sort out meta_users and meta_interfaces tables first
 	  String sql = "DELETE FROM "+getSchema()[0]+".meta_user WHERE datasetID="+datasetID;
-	  System.out.println(sql);
+	  //System.out.println(sql);
 	  PreparedStatement ps = conn.prepareStatement(sql);
 	  ps.executeUpdate();
-	  String[] martUserEntries = martUsers.split(",");
-	  for (int i = 0; i < martUserEntries.length; i++){
-			sql = "INSERT INTO "+getSchema()[0]+".meta_user VALUES ("+datasetID+",'"+martUserEntries[i]+"')";
-			System.out.println(sql);
-			ps = conn.prepareStatement(sql);
-			ps.executeUpdate();	
+	  if (martUsers != ""){
+		  String[] martUserEntries = martUsers.split(",");
+		  for (int i = 0; i < martUserEntries.length; i++){
+				sql = "INSERT INTO "+getSchema()[0]+".meta_user VALUES ("+datasetID+",'"+martUserEntries[i]+"')";
+				//System.out.println(sql);
+				ps = conn.prepareStatement(sql);
+				ps.executeUpdate();	
+	  	}
 	  }
-	  
 	  sql = "DELETE FROM "+getSchema()[0]+".meta_interface WHERE datasetID="+datasetID;
-	  System.out.println(sql);
+	  //System.out.println(sql);
 	  ps = conn.prepareStatement(sql);
 	  ps.executeUpdate();
-	  String[] interfaceEntries = interfaces.split(",");
-	  for (int i = 0; i < interfaceEntries.length; i++){
-		System.out.println(sql);
+	  if (interfaces != ""){
+		  String[] interfaceEntries = interfaces.split(",");
+		  for (int i = 0; i < interfaceEntries.length; i++){
+			//System.out.println(sql);
 				ps = conn.prepareStatement("INSERT INTO "+getSchema()[0]+".meta_interface VALUES ("+datasetID+",'"
 					+interfaceEntries[i]+"')");
 				ps.executeUpdate();	
+	  	}
 	  }
-
+      
+      
       String insertSQL = INSERTCOMPRESSEDXMLA + getSchema()[0]+"."+metatable + INSERTCOMPRESSEDXMLBMYSQL;
-
-	  
-
       if (logger.isLoggable(Level.FINE))
         logger.fine("\ninserting with SQL " + insertSQL + "\n");
 
-      
       
       MessageDigest md5digest = MessageDigest.getInstance(DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM);
       ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -898,13 +912,13 @@ public class DatabaseDatasetConfigUtils {
       bout.close();
       gout.close();
       out.close();
-	  System.out.println("ABOUT TO DEL");
+	  //System.out.println("ABOUT TO DEL");
       int rowstodelete = getDSConfigEntryCountFor(metatable, datasetID, internalName);
-		System.out.println("ROWS "+rowstodelete);
+		//System.out.println("ROWS "+rowstodelete);
       if (rowstodelete > 0)
         deleteOldDSConfigEntriesFor(metatable, datasetID, internalName);
 
-      System.out.println("DELETED");
+      //System.out.println("DELETED");
       ps = conn.prepareStatement(insertSQL);
       ps.setString(1, internalName);
       ps.setString(2, displayName);
@@ -920,7 +934,7 @@ public class DatabaseDatasetConfigUtils {
   
   	  Timestamp tstamp = new Timestamp(System.currentTimeMillis());
 	  ps.setTimestamp(12,tstamp);
-	  System.out.println("SQL IS "+sql);
+	  //System.out.println("SQL IS "+sql);
       int ret = ps.executeUpdate();
       ps.close();
 
