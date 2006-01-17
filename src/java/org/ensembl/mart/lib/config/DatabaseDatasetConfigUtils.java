@@ -1084,7 +1084,7 @@ public class DatabaseDatasetConfigUtils {
       String sql = GETALLNAMESQL + schema +"."+metatable;
       
       
-      if (!martUser.equals("")){
+      if (martUser != null && !martUser.equals("")){
       	sql += ", " + schema + "." + MARTUSERTABLE + " WHERE " + schema+"." + metatable + MARTUSERRESTRICTION + "'" + martUser + "'";
 		if (!dscutils.includeHiddenMembers) {
 		  sql += " AND " + VISIBLESQL;
@@ -1122,28 +1122,34 @@ public class DatabaseDatasetConfigUtils {
 		String datasetID =rs.getString(9);
         byte[] digest = rs.getBytes(5);
         String modified = rs.getString(10);
-        
         String martUsers = "";
         String comma= "";
-        PreparedStatement martUserStatement = conn.prepareStatement("SELECT martUser FROM "+schema+"."+MARTUSERTABLE
-        	+" WHERE datasetID="+datasetID);
-        ResultSet martUserResultSet = martUserStatement.executeQuery();
-        while (martUserResultSet.next()){
-        	martUsers += comma + martUserResultSet.getString(1);
-        	comma = ","; 	
+        try {
+        	PreparedStatement martUserStatement = conn.prepareStatement("SELECT martUser FROM "+schema+"."+MARTUSERTABLE
+        	+" WHERE datasetID="+datasetID);	
+        	ResultSet martUserResultSet = martUserStatement.executeQuery();
+        	while (martUserResultSet.next()){
+        		martUsers += comma + martUserResultSet.getString(1);
+        		comma = ","; 	
+        	}
         }
-        
+        catch(SQLException e){
+        	System.out.println("PROBLEM QUERYING meta_user TABLE "+e.toString());
+        }
 		String interfaces = "";
 		comma = "";
-		PreparedStatement interfacesStatement = conn.prepareStatement("SELECT interface FROM "+schema+".meta_interface"
-			+" WHERE datasetID="+datasetID);
-		ResultSet interfaceResultSet = interfacesStatement.executeQuery();
-		while (interfaceResultSet.next()){
-			interfaces += comma + interfaceResultSet.getString(1);
-			comma = ","; 	
+		try{
+			PreparedStatement interfacesStatement = conn.prepareStatement("SELECT interface FROM "+schema+".meta_interface"
+				+" WHERE datasetID="+datasetID);
+			ResultSet interfaceResultSet = interfacesStatement.executeQuery();
+			while (interfaceResultSet.next()){
+				interfaces += comma + interfaceResultSet.getString(1);
+				comma = ","; 	
+			}
 		}
-        
-        
+		catch(SQLException e){
+			System.out.println("PROBLEM QUERYING meta_interface TABLE "+e.toString());
+		}
         DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description, type, visible,"",version,"",
         	datasetID,modified,martUsers,interfaces);
         dsv.setMessageDigest(digest);
