@@ -1828,16 +1828,33 @@ public class DatabaseDatasetConfigUtils {
     String metatable = BASEMETATABLE;
     
     String CREATETABLE= "create table " +getSchema()[0];
-    String MYSQL_META    = CREATETABLE+".meta_configuration"+"(internalName varchar(100), displayName varchar(100), dataset varchar(100), " +
-    		"description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, " +
-    		"type varchar(20), visible int(1) unsigned, version varchar(25),datasetID int not null, modified TIMESTAMP NOT NULL,UNIQUE (datasetID))";
+    //String MYSQL_META    = CREATETABLE+".meta_configuration"+"(internalName varchar(100), displayName varchar(100), dataset varchar(100), " +
+    	//	"description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, " +
+    	//	"type varchar(20), visible int(1) unsigned, version varchar(25),datasetID int not null, modified TIMESTAMP NOT NULL,UNIQUE (datasetID))";
+    
+    String MYSQL_META    = CREATETABLE+".meta_configuration"+"" +
+    		"(datasetID int not null,dataset varchar(100),displayName varchar(100),description varchar(200),type varchar(20), " +
+    		"visible int(1) unsigned, version varchar(25), modified TIMESTAMP NOT NULL,internalName varchar(100),  " +
+	" xml longblob, compressed_xml longblob, MessageDigest blob,UNIQUE (datasetID))";
+    
+    
+    
+    
     String MYSQL_USER=CREATETABLE+".meta_user ( datasetID int, martUser varchar(100),UNIQUE(datasetID,martUser))";
-	String MYSQL_INTERFACE=CREATETABLE+".meta_interface ( datasetID int, interface varchar(100),UNIQUE(datasetID,interface))";    
-    String ORACLE_META   = CREATETABLE+".meta_configuration (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25), datasetid number(1), modified timestamp , UNIQUE (datasetID))";
-    String ORACLE_USER = CREATETABLE+".meta_user (datasetid number(1), martuser varchar2(100), UNIQUE(datasetid,martuser))";
+	String MYSQL_INTERFACE=CREATETABLE+".meta_interface ( datasetID int, interface varchar(100),UNIQUE(datasetID,interface))"; 
+	
+	
+     //String ORACLE_META   = CREATETABLE+".meta_configuration (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25), datasetid number(1), modified timestamp , UNIQUE (datasetID))";
+     String ORACLE_META   = CREATETABLE+".meta_configuration (datasetid number(1),dataset varchar2(100), displayname varchar2(100),  description varchar2(200),  type varchar2(100), visible number(1), version varchar2(25),  modified timestamp , internalname varchar2(100),xml clob, compressed_xml blob, messagedigest blob,UNIQUE (datasetID))";
+     
+     
+     String ORACLE_USER = CREATETABLE+".meta_user (datasetid number(1), martuser varchar2(100), UNIQUE(datasetid,martuser))";
 	String ORACLE_INTERFACE = CREATETABLE+".meta_interface (datasetid number(1), interface varchar2(100), UNIQUE(datasetid,interface))";
     
-    String POSTGRES_META = CREATETABLE+".meta_configuration(internalname varchar(100), displayname varchar(100), dataset varchar(100), description varchar(200), xml text, compressed_xml bytea, MessageDigest bytea, type varchar(20), visible integer, version varchar(25), datasetID integer, modified timestamp, UNIQUE (datasetID))";
+    //String POSTGRES_META = CREATETABLE+".meta_configuration(internalname varchar(100), displayname varchar(100), dataset varchar(100), description varchar(200), xml text, compressed_xml bytea, MessageDigest bytea, type varchar(20), visible integer, version varchar(25), datasetID integer, modified timestamp, UNIQUE (datasetID))";
+    String POSTGRES_META = CREATETABLE+".meta_configuration(datasetID integer,dataset varchar(100), displayname varchar(100),  description varchar(200),  type varchar(20), visible integer, version varchar(25),  modified timestamp, internalname varchar(100),xml text, compressed_xml bytea, MessageDigest bytea,UNIQUE (datasetID))";
+    
+    
     String POSTGRES_USER = CREATETABLE+".meta_user (datasetID integer, martUser varchar(100), UNIQUE(datasetID,martUser))";
 	String POSTGRES_INTERFACE = CREATETABLE+".meta_interface (datasetID integer, interface varchar(100), UNIQUE(datasetID,interface))";
 
