@@ -260,8 +260,8 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
 
   private void loadFromDatabase(String dataset, String datasetID) throws ConfigurationException {
     if (logger.isLoggable(Level.FINE))
-      logger.fine("Dataset " + dataset + " internalName " + datasetID + " Not in cache, loading from database\n");
-	System.out.println("Dataset " + dataset + " internalName " + datasetID + " Not in cache, loading from database\n");
+      logger.fine("Dataset " + dataset + " datasetID " + datasetID + " Not in cache, loading from database\n");
+	System.out.println("Dataset " + dataset + " datasetID " + datasetID + " Not in cache, loading from database\n");
     DatasetConfig newDSV = dbutils.getDatasetConfigByDatasetID(user, dataset, datasetID,dbutils.getSchema()[0]);
     
     if (loadFully)
