@@ -59,9 +59,6 @@ import org.ensembl.mart.util.TableDescription;
 import org.jdom.Document;
 import org.jdom.output.XMLOutputter;
 
-import com.sun.rsasign.d;
-
-
 
 /**
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
@@ -69,57 +66,31 @@ import com.sun.rsasign.d;
  */
 public class DatabaseDatasetConfigUtils {
 
-  private final String BASEMETATABLE = "meta_configuration"; // append user if necessary
- 
-  private HashMap configInfo = new HashMap();
+  private final String SOFTWAREVERSION = "0.4";
   
-  private final String MARTUSERTABLE = "meta_user";
-  private final String MARTUSERRESTRICTION = ".datasetID = meta_user.datasetID AND meta_user.martUser=";
-  private final String VISIBLESQL = "visible = 1";
-  private final String GETALLNAMESQL = "select internalname, displayName, dataset, description, MessageDigest, type, visible, version, meta_configuration.datasetID, modified from ";
-  private final String GETDATASETVERSION = "select version from meta_release where dataset = ?";
-  private final String GETLINKVERSION = "select link_version from meta_release where dataset = ?";   
-  private final String GETANYNAMESWHERINAME = " where internalName = ? and dataset = ?";
-  private final String GETDOCBYINAMESELECT = "select xml, compressed_xml from "; //append table after user test
-  private final String GETDOCBYINAMEWHERE = " where datasetID = ? and dataset = ?";
-  private final String EXISTSELECT = "select count(*) from "; //append table after user test
-  private final String EXISTWHERE = " where internalName = ? and datasetID = ?";// and displayName = ?";
-  //private final String ALTEXISTWHERE = " where internalName = ? and dataset = ? and displayName is null";
-  private final String DELETEOLDXML = "delete from "; //append table after user test
-  private final String DELETEOLDXMLWHERE = " where internalName = ? and datasetID = ?";// and displayName = ?";
-  //private final String ALTDELETEOLDXMLWHERE = " where internalName = ? and dataset = ? and displayName is null";
-  private final String DELETEDATASETCONFIG = " where dataset = ?";
-  private final String DELETEINTERNALNAME = " and datasetID = ?";
-  private final String INSERTXMLSQLA = "insert into "; //append table after user test
-  private final String INSERTXMLSQLB =
-    " (internalName, displayName, dataset, description, xml, MessageDigest,type, visible, version) values (?, ?, ?, ?, ?, ?,?,?,?)";
-  private final String SELECTXMLFORUPDATE = "select xml from ";
-  private final String SELECTCOMPRESSEDXMLFORUPDATE = "select compressed_xml from ";
-  private final String INSERTCOMPRESSEDXMLA = "insert into "; //append table after user test
-  private final String INSERTCOMPRESSEDXMLB =
-    " (internalName, displayName, dataset, description, compressed_xml, MessageDigest, type, visible, version, datasetID, modified) values (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
-  private final String INSERTCOMPRESSEDXMLBMYSQL =
-	  " (internalName, displayName, dataset, description, xml, compressed_xml, MessageDigest, type, visible, version,datasetID,modified) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)";
+  private final String BASEMETATABLE = "meta_configuration__dataset__main";
+  private final String MARTUSERTABLE = "meta_configuration__user__dm";
+  private final String MARTINTERFACETABLE = "meta_configuration__interface__dm";
+  private final String MARTXMLTABLE = "meta_configuration__xml__dm";
+  private final String MARTRELEASETABLE = "meta_release__release__main";	
+  private final String MARTVERSIONTABLE = "meta_version__version__main";	
 
   private final String MAINTABLESUFFIX = "main";
   private final String DIMENSIONTABLESUFFIX = "dm";
   private final String LOOKUPTABLESUFFIX = "look";
-  //private final String POSTGRESDBNAME=null;
-
+  
   private final String DOESNTEXISTSUFFIX = "**DOES_NOT_EXIST**";
 
-  //private String DEFAULTLEGALQUALIFIERS = "in,=,>,<,>=,<=";
-  //private String DEFAULTQUALIFIER = "in";
-  //private String DEFAULTTYPE = "list";
   private String DEFAULTLEGALQUALIFIERS = "=";
   private String DEFAULTQUALIFIER = "=";
   private String DEFAULTTYPE = "text";
 
   private Logger logger = Logger.getLogger(DatabaseDatasetConfigUtils.class.getName());
 
+  private HashMap configInfo = new HashMap();
+  
   private DatasetConfigXMLUtils dscutils = null;
   private DetailedDataSource dsource = null;
-  //private Connection connection = null;
 
   /**
    * Constructor for a DatabaseDatasetConfigUtils object to obtain DatasetConfig related information
@@ -209,7 +180,7 @@ public class DatabaseDatasetConfigUtils {
 	String version = null;
 	try {
 	  conn = dsource.getConnection();
-	  PreparedStatement ps = conn.prepareStatement(GETDATASETVERSION);
+	  PreparedStatement ps = conn.prepareStatement("select version from "+MARTRELEASETABLE+" where dataset = ?");
 	  ps.setString(1, dataset);
 	  ResultSet rs = ps.executeQuery();
 	  rs.next();
@@ -217,7 +188,7 @@ public class DatabaseDatasetConfigUtils {
 	  rs.close();
 	} catch (SQLException e) {
 	  
-		System.out.println("Include a meta_release table entry for dataset " +
+		System.out.println("Include a "+MARTRELEASETABLE+" table entry for dataset " +
 		dataset + " if you want auto version updating");
 	} 	   
 	finally {
@@ -234,7 +205,7 @@ public class DatabaseDatasetConfigUtils {
 	String linkVersion = null;
 	try {
 	  conn = dsource.getConnection();
-	  PreparedStatement ps = conn.prepareStatement(GETLINKVERSION);
+	  PreparedStatement ps = conn.prepareStatement("select link_version from "+MARTRELEASETABLE+" where dataset = ?");
 	  ps.setString(1, dsv.getDataset());
 	  ResultSet rs = ps.executeQuery();
 	  rs.next();
@@ -263,7 +234,7 @@ public class DatabaseDatasetConfigUtils {
 	  	
 	  }	  
 	} catch (SQLException e) {
-			  System.out.println("Include a meta_release table entry for dataset " +
+			  System.out.println("Include a "+MARTRELEASETABLE+" table entry for dataset " +
 			  dsv.getDataset() + " if you want auto link version updating");
 	} 	   
 	finally {
@@ -688,10 +659,12 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       String metatable = createMetaTables(user);
-      String insertSQL = INSERTXMLSQLA + metatable + INSERTXMLSQLB;
+      
+      String insertSQL1 = "INSERT INTO " + metatable + " (display_name, dataset, description, type, visible, version) " +      	"values (?,?,?,?,?,?)";
+	  String insertSQL2 = "INSERT INTO "+MARTXMLTABLE+" (dataset_id_key,xml, message_digest) values (?,?,?)";
 
       if (logger.isLoggable(Level.FINE))
-        logger.fine("\ninserting with SQL " + insertSQL + "\n");
+        logger.fine("\ninserting with SQL " + insertSQL1 + "\n");
 
       conn = dsource.getConnection();
       MessageDigest md5digest = MessageDigest.getInstance(DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM);
@@ -712,17 +685,21 @@ public class DatabaseDatasetConfigUtils {
       if (rowstodelete > 0)
         deleteOldDSConfigEntriesFor(metatable, datasetID, internalName);
 
-      PreparedStatement ps = conn.prepareStatement(insertSQL);
-      ps.setString(1, internalName);
-      ps.setString(2, displayName);
-      ps.setString(3, dataset);
-      ps.setString(4, description);
-      ps.setBinaryStream(5, new ByteArrayInputStream(xml), xml.length);
-      ps.setBytes(6, md5);
+      PreparedStatement ps1 = conn.prepareStatement(insertSQL1);
+	  PreparedStatement ps2 = conn.prepareStatement(insertSQL2);
+      //ps.setString(1, internalName);
+      ps1.setString(1, displayName);
+      ps1.setString(2, dataset);
+      ps1.setString(3, description);
+      ps2.setString(1, datasetID);
+      ps2.setBinaryStream(2, new ByteArrayInputStream(xml), xml.length);
+      ps2.setBytes(3, md5);
 
-      int ret = ps.executeUpdate();
-      ps.close();
-
+      int ret = ps1.executeUpdate();
+      ps1.close();
+	  ret = ps2.executeUpdate();
+	  ps2.close();
+	  
       return ret;
     } catch (IOException e) {
       throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage(), e);
@@ -752,11 +729,13 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       String metatable = createMetaTables(user);
-      String insertSQL = INSERTXMLSQLA + metatable + INSERTXMLSQLB;
-      String oraclehackSQL = SELECTXMLFORUPDATE + metatable + GETANYNAMESWHERINAME + " FOR UPDATE";
+	  String insertSQL1 = "INSERT INTO " + metatable + " (display_name, dataset, description, type, visible, version) " +
+		"values (?,?,?,?,?,?)";
+	  String insertSQL2 = "INSERT INTO "+MARTXMLTABLE+" (dataset_id_key,xml, message_digest) values (?,?,?)";
+      String oraclehackSQL = "SELECT xml FROM " + metatable + " WHERE dataset_id_key = ? FOR UPDATE";
 
       if (logger.isLoggable(Level.FINE))
-        logger.fine("\ninserting with SQL " + insertSQL + "\n");
+        logger.fine("\ninserting with SQL " + insertSQL1 + "\n");
 
       conn = dsource.getConnection();
       conn.setAutoCommit(false);
@@ -779,20 +758,23 @@ public class DatabaseDatasetConfigUtils {
       if (rowstodelete > 0)
         deleteOldDSConfigEntriesFor(metatable, datasetID, internalName);
 
-      PreparedStatement ps = conn.prepareStatement(insertSQL);
+      PreparedStatement ps1 = conn.prepareStatement(insertSQL1);
+	  PreparedStatement ps2 = conn.prepareStatement(insertSQL2);
       PreparedStatement ohack = conn.prepareStatement(oraclehackSQL);
 
-      ps.setString(1, internalName);
-      ohack.setString(1, internalName);
-      ps.setString(2, displayName);
-      ps.setString(3, dataset);
-      ohack.setString(2, dataset);
-      ps.setString(4, description);
-      ps.setClob(5, CLOB.empty_lob());
-      ps.setBytes(6, md5);
+      //ps.setString(1, internalName);
+      ohack.setString(1, datasetID);
+      ps1.setString(1, displayName);
+      ps1.setString(2, dataset);
+      //ohack.setString(2, dataset);
+      ps1.setString(3, description);
+      ps2.setString(1, datasetID);
+      ps2.setClob(2, CLOB.empty_lob());
+      ps2.setBytes(3, md5);
 
-      int ret = ps.executeUpdate();
-
+      int ret = ps1.executeUpdate();
+	  ret = ps2.executeUpdate();
+	  
       ResultSet rs = ohack.executeQuery();
 
       if (rs.next()) {
@@ -806,8 +788,8 @@ public class DatabaseDatasetConfigUtils {
       conn.commit();
       rs.close();
       ohack.close();
-      ps.close();
-
+      ps1.close();
+	  ps2.close();
       return ret;
     } catch (IOException e) {
       throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage(), e);
@@ -845,8 +827,10 @@ public class DatabaseDatasetConfigUtils {
     try {
 		conn = dsource.getConnection();	
 	  
+	  String metatable = createMetaTables(user);	
+	  
 	  if (datasetID == null){
-		String sql = "SELECT MAX(datasetID) FROM "+getSchema()[0]+".meta_configuration";
+		String sql = "SELECT MAX(dataset_id_key) FROM "+getSchema()[0]+"."+BASEMETATABLE;
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ResultSet rs = ps.executeQuery();
 		rs.next();
@@ -855,25 +839,22 @@ public class DatabaseDatasetConfigUtils {
 		Integer datasetNo = new Integer(result);
 		datasetID = datasetNo.toString();
 	  }
-	  
-			
-      String metatable = createMetaTables(user);
 
 	  // sort out meta_users and meta_interfaces tables first
-	  String sql = "DELETE FROM "+getSchema()[0]+".meta_user WHERE datasetID="+datasetID;
+	  String sql = "DELETE FROM "+getSchema()[0]+"."+MARTUSERTABLE+" WHERE dataset_id_key="+datasetID;
 	  //System.out.println(sql);
 	  PreparedStatement ps = conn.prepareStatement(sql);
 	  ps.executeUpdate();
 	  if (martUsers != ""){
 		  String[] martUserEntries = martUsers.split(",");
 		  for (int i = 0; i < martUserEntries.length; i++){
-				sql = "INSERT INTO "+getSchema()[0]+".meta_user VALUES ("+datasetID+",'"+martUserEntries[i]+"')";
+				sql = "INSERT INTO "+getSchema()[0]+"."+MARTUSERTABLE+" VALUES ("+datasetID+",'"+martUserEntries[i]+"')";
 				//System.out.println(sql);
 				ps = conn.prepareStatement(sql);
 				ps.executeUpdate();	
 	  	}
 	  }
-	  sql = "DELETE FROM "+getSchema()[0]+".meta_interface WHERE datasetID="+datasetID;
+	  sql = "DELETE FROM "+getSchema()[0]+"."+MARTINTERFACETABLE+" WHERE dataset_id_key="+datasetID;
 	  //System.out.println(sql);
 	  ps = conn.prepareStatement(sql);
 	  ps.executeUpdate();
@@ -881,16 +862,19 @@ public class DatabaseDatasetConfigUtils {
 		  String[] interfaceEntries = interfaces.split(",");
 		  for (int i = 0; i < interfaceEntries.length; i++){
 			//System.out.println(sql);
-				ps = conn.prepareStatement("INSERT INTO "+getSchema()[0]+".meta_interface VALUES ("+datasetID+",'"
+				ps = conn.prepareStatement("INSERT INTO "+getSchema()[0]+"."+MARTINTERFACETABLE+" VALUES ("+datasetID+",'"
 					+interfaceEntries[i]+"')");
 				ps.executeUpdate();	
 	  	}
 	  }
       
       
-      String insertSQL = INSERTCOMPRESSEDXMLA + getSchema()[0]+"."+metatable + INSERTCOMPRESSEDXMLBMYSQL;
+      //String insertSQL = INSERTCOMPRESSEDXMLA + getSchema()[0]+"."+metatable + INSERTCOMPRESSEDXMLBMYSQL;
+	  String insertSQL1 = "INSERT INTO " + getSchema()[0]+"." + metatable + " (display_name, dataset, description, " +	  	"type, visible, version,dataset_id_key,modified) values (?, ?, ?, ?, ?, ?,?,?)";
+      String insertSQL2 = "INSERT INTO " + getSchema()[0]+"."+MARTXMLTABLE+" (dataset_id_key, xml, compressed_xml, " +      	"message_digest) values (?, ?, ?, ?)";
+
       if (logger.isLoggable(Level.FINE))
-        logger.fine("\ninserting with SQL " + insertSQL + "\n");
+        logger.fine("\ninserting with SQL " + insertSQL1 + "\n");
 
       
       MessageDigest md5digest = MessageDigest.getInstance(DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM);
@@ -924,26 +908,32 @@ public class DatabaseDatasetConfigUtils {
       if (rowstodelete > 0)
         deleteOldDSConfigEntriesFor(metatable, datasetID, internalName);
 
-      //System.out.println("DELETED");
-      ps = conn.prepareStatement(insertSQL);
-      ps.setString(1, internalName);
-      ps.setString(2, displayName);
-      ps.setString(3, dataset);
-      ps.setString(4, description);
-	  ps.setBinaryStream(5, new ByteArrayInputStream(uncompressedXML), uncompressedXML.length);//uncompressed
-      ps.setBinaryStream(6, new ByteArrayInputStream(xml), xml.length);//compressed
-      ps.setBytes(7, md5);
-	  ps.setString(8, type);
-	  ps.setString(9, visible);
-	  ps.setString(10,version);
-	  ps.setString(11,datasetID);
+      PreparedStatement ps1 = conn.prepareStatement(insertSQL1);
+	  PreparedStatement ps2 = conn.prepareStatement(insertSQL2);
+	  
+      //ps.setString(1, internalName);
+      ps1.setString(1, displayName);
+      ps1.setString(2, dataset);
+      ps1.setString(3, description);
+	  ps2.setString(1,datasetID);
+	  ps2.setBinaryStream(2, new ByteArrayInputStream(uncompressedXML), uncompressedXML.length);//uncompressed
+      ps2.setBinaryStream(3, new ByteArrayInputStream(xml), xml.length);//compressed
+      ps2.setBytes(4, md5);
+	  ps1.setString(4, type);
+	  ps1.setString(5, visible);
+	  ps1.setString(6,version);
+	  ps1.setString(7,datasetID);
   
   	  Timestamp tstamp = new Timestamp(System.currentTimeMillis());
-	  ps.setTimestamp(12,tstamp);
-	  //System.out.println("SQL IS "+sql);
-      int ret = ps.executeUpdate();
+	  ps1.setTimestamp(8,tstamp);
+	  
+      int ret = ps1.executeUpdate();
+	  ret = ps2.executeUpdate();
+	  
       ps.close();
-
+	  ps1.close();
+	  ps2.close();
+	  	
       return ret;
     } catch (IOException e) {
       throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage());
@@ -979,36 +969,54 @@ public class DatabaseDatasetConfigUtils {
       //String metatable = getDSConfigTableFor(user);
 	  String metatable = createMetaTables(user);
       
+	  if (datasetID == null){
+		String sql = "SELECT MAX(dataset_id_key) FROM "+getSchema()[0]+"."+BASEMETATABLE;
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ResultSet rs = ps.executeQuery();
+		rs.next();
+		int result = rs.getInt(1);
+		result++;
+		Integer datasetNo = new Integer(result);
+		datasetID = datasetNo.toString();
+	  }
+      
 	  // sort out meta_users and meta_interfaces tables first
-	  String sql = "DELETE FROM "+getSchema()[0]+".meta_user WHERE datasetID="+datasetID;
+	  String sql = "DELETE FROM "+getSchema()[0]+"."+MARTUSERTABLE+" WHERE dataset_id_key="+datasetID;
 	  System.out.println(sql);
 	  PreparedStatement ps = conn.prepareStatement(sql);
 	  ps.executeUpdate();
 	  String[] martUserEntries = martUsers.split(",");
 	  for (int i = 0; i < martUserEntries.length; i++){
-			sql = "INSERT INTO "+getSchema()[0]+".meta_user VALUES ("+datasetID+",'"+martUserEntries[i]+"')";
+			sql = "INSERT INTO "+getSchema()[0]+"."+MARTUSERTABLE+" VALUES ("+datasetID+",'"+martUserEntries[i]+"')";
 			System.out.println(sql);
 			ps = conn.prepareStatement(sql);
 			ps.executeUpdate();	
 	  }
 	  
-	  sql = "DELETE FROM "+getSchema()[0]+".meta_interface WHERE datasetID="+datasetID;
+	  sql = "DELETE FROM "+getSchema()[0]+"."+MARTINTERFACETABLE+" WHERE dataset_id_key="+datasetID;
 	  System.out.println(sql);
 	  ps = conn.prepareStatement(sql);
 	  ps.executeUpdate();
 	  String[] interfaceEntries = interfaces.split(",");
 	  for (int i = 0; i < interfaceEntries.length; i++){
 		System.out.println(sql);
-				ps = conn.prepareStatement("INSERT INTO "+getSchema()[0]+".meta_interface VALUES ("+datasetID+",'"
+				ps = conn.prepareStatement("INSERT INTO "+getSchema()[0]+"."+MARTINTERFACETABLE+" VALUES ("+datasetID+",'"
 					+interfaceEntries[i]+"')");
 				ps.executeUpdate();	
 	  }
       
-      String insertSQL = INSERTCOMPRESSEDXMLA + metatable + INSERTCOMPRESSEDXMLB;
-      String oraclehackSQL = SELECTCOMPRESSEDXMLFORUPDATE + metatable + GETANYNAMESWHERINAME + " FOR UPDATE";
+      //String insertSQL = INSERTCOMPRESSEDXMLA + metatable + INSERTCOMPRESSEDXMLB;
+	  String insertSQL1 = "INSERT INTO " + getSchema()[0]+"." + metatable + " (display_name, dataset, description, " +
+		"type, visible, version,dataset_id_key,modified) values (?, ?, ?, ?, ?, ?,?,?)";
+	  String insertSQL2 = "INSERT INTO " + getSchema()[0]+"."+MARTXMLTABLE+" (dataset_id_key, compressed_xml, " +
+		"message_digest) values (?, ?, ?)";
+
+      
+      //String oraclehackSQL = SELECTCOMPRESSEDXMLFORUPDATE + metatable + GETANYNAMESWHERINAME + " FOR UPDATE";
+	  String oraclehackSQL = "SELECT compressed_xml FROM " + metatable + " WHERE dataset_id_key = ? FOR UPDATE";
 
       if (logger.isLoggable(Level.FINE))
-        logger.fine("\ninserting with SQL " + insertSQL + "\nOracle: " + oraclehackSQL + "\n");
+        logger.fine("\ninserting with SQL " + insertSQL1 + "\nOracle: " + oraclehackSQL + "\n");
 
       conn = dsource.getConnection();
       conn.setAutoCommit(false);
@@ -1035,26 +1043,29 @@ public class DatabaseDatasetConfigUtils {
       if (rowstodelete > 0)
         deleteOldDSConfigEntriesFor(metatable, datasetID, internalName);
 
-      ps = conn.prepareStatement(insertSQL);
+      PreparedStatement ps1 = conn.prepareStatement(insertSQL1);
+	  PreparedStatement ps2 = conn.prepareStatement(insertSQL2);
       PreparedStatement ohack = conn.prepareStatement(oraclehackSQL);
 
-      ps.setString(1, internalName);
-      ohack.setString(1, internalName);
-      ps.setString(2, displayName);
-      ps.setString(3, dataset);
-      ohack.setString(2, dataset);
-      ps.setString(4, description);
-      ps.setBlob(5, BLOB.empty_lob());
-      ps.setBytes(6, md5);
-	  ps.setString(7,type);
-	  ps.setString(8,visible);
-	  ps.setString(9,version);
-	  ps.setString(10,datasetID);
+      //ps.setString(1, internalName);
+      //ohack.setString(1, internalName);
+      ps1.setString(1, displayName);
+      ps1.setString(2, dataset);
+      ohack.setString(1, datasetID);
+      ps1.setString(3, description);
+	  ps2.setString(1,datasetID);
+      ps2.setBlob(2, BLOB.empty_lob());
+      ps2.setBytes(3, md5);
+	  ps1.setString(4,type);
+	  ps1.setString(5,visible);
+	  ps1.setString(6,version);
+	  ps1.setString(7,datasetID);
 	  
 	  Timestamp tstamp = new Timestamp(System.currentTimeMillis());
-	  ps.setTimestamp(11,tstamp);	
+	  ps1.setTimestamp(8,tstamp);	
 	  	  
-      int ret = ps.executeUpdate();
+      int ret = ps1.executeUpdate();
+	  ret = ps2.executeUpdate();
 
       ResultSet rs = ohack.executeQuery();
 
@@ -1069,6 +1080,8 @@ public class DatabaseDatasetConfigUtils {
       conn.commit();
       rs.close();
       ohack.close();
+	  ps1.close();
+	  ps2.close();
       ps.close();
 
       return ret;
@@ -1101,34 +1114,44 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       String metatable = createMetaTables(user);
-      String sql = GETALLNAMESQL + schema +"."+metatable;
-      
-      
-      if (martUser != null && !martUser.equals("")){
-      	sql += ", " + schema + "." + MARTUSERTABLE + " WHERE " + schema+"." + metatable + MARTUSERRESTRICTION + "'" + martUser + "'";
+      String sql;
+	  if (martUser != null && !martUser.equals("")){
 		if (!dscutils.includeHiddenMembers) {
-		  sql += " AND " + VISIBLESQL;
+			sql = "SELECT interface, display_name, dataset, description, message_digest, type, visible, version," +
+				"md.dataset_id_key, modified " +
+				"FROM "+schema+"."+MARTINTERFACETABLE+" mi, "+schema+"."+BASEMETATABLE+" md, "+schema+"."+MARTXMLTABLE+" mx, "+
+				schema+"."+MARTUSERTABLE+" mu " +
+				"WHERE mu.dataset_id_key=md.dataset_id_key  AND md.dataset_id_key=mx.dataset_id_key AND md.dataset_id_key=mi.dataset_id_key AND mart_user = '" + martUser + "' " +				" AND visible = 1";
 		}
-      }
-      else{
+		else{
+			sql = "SELECT interface, display_name, dataset, description, message_digest, type, visible, version," +
+				"md.dataset_id_key, modified " +
+				"FROM "+schema+"."+MARTINTERFACETABLE+" mi, "+schema+"."+BASEMETATABLE+" md, "+schema+"."+MARTXMLTABLE+" mx, "+
+				schema+"."+MARTUSERTABLE+" mu " +
+				"WHERE mu.dataset_id_key=md.dataset_id_key  AND md.dataset_id_key=mx.dataset_id_key AND md.dataset_id_key=mi.dataset_id_key AND mart_user = '" + martUser + "'";
+		}
+	  }
+	  else{
 		if (!dscutils.includeHiddenMembers) {
-		  sql += " WHERE " + VISIBLESQL;
-		}	
-      }
+			sql = "SELECT interface, display_name, dataset, description, message_digest, type, visible, version," +
+				"md.dataset_id_key, modified " +
+				"FROM "+schema+"."+MARTINTERFACETABLE+" mi, "+schema+"."+BASEMETATABLE+" md "+schema+"."+MARTXMLTABLE+" mx "+
+				"WHERE md.dataset_id_key=mi.dataset_id_key  AND md.dataset_id_key=mx.dataset_id_key AND visible = 1";
+			}
+			else{
+				sql = "SELECT interface, display_name, dataset, description, message_digest, type, visible, version," +
+				"md.dataset_id_key, modified " +
+				"FROM "+schema+"."+MARTINTERFACETABLE+" mi, "+schema+"."+BASEMETATABLE+" md, "+schema+"."+MARTXMLTABLE+" mx "+
+				"WHERE md.dataset_id_key=mi.dataset_id_key AND md.dataset_id_key=mx.dataset_id_key";
+			}
+	  }
       
       if (logger.isLoggable(Level.FINE))
         logger.fine(
           "Using " + sql + " to get unloaded DatasetConfigs for user " + user + "\n");
 
-	  
-	  //System.out.println("SQL USED IS " + sql);
-
-
       conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
-	
-	  //System.out.println("MARTUSER " + martUser);
-	  
 
       ResultSet rs = ps.executeQuery();
       while (rs.next()) {
@@ -1145,8 +1168,8 @@ public class DatabaseDatasetConfigUtils {
         String martUsers = "";
         String comma= "";
         try {
-        	PreparedStatement martUserStatement = conn.prepareStatement("SELECT martUser FROM "+schema+"."+MARTUSERTABLE
-        	+" WHERE datasetID="+datasetID);	
+        	PreparedStatement martUserStatement = conn.prepareStatement("SELECT mart_user FROM "+schema+"."+MARTUSERTABLE
+        	+" WHERE dataset_id_key="+datasetID);	
         	ResultSet martUserResultSet = martUserStatement.executeQuery();
         	while (martUserResultSet.next()){
         		martUsers += comma + martUserResultSet.getString(1);
@@ -1154,13 +1177,13 @@ public class DatabaseDatasetConfigUtils {
         	}
         }
         catch(SQLException e){
-        	System.out.println("PROBLEM QUERYING meta_user TABLE "+e.toString());
+        	System.out.println("PROBLEM QUERYING "+MARTUSERTABLE+" TABLE "+e.toString());
         }
 		String interfaces = "";
 		comma = "";
 		try{
-			PreparedStatement interfacesStatement = conn.prepareStatement("SELECT interface FROM "+schema+".meta_interface"
-				+" WHERE datasetID="+datasetID);
+			PreparedStatement interfacesStatement = conn.prepareStatement("SELECT interface FROM "+schema+"."+MARTINTERFACETABLE+""
+				+" WHERE dataset_id_key="+datasetID);
 			ResultSet interfaceResultSet = interfacesStatement.executeQuery();
 			while (interfaceResultSet.next()){
 				interfaces += comma + interfaceResultSet.getString(1);
@@ -1168,9 +1191,11 @@ public class DatabaseDatasetConfigUtils {
 			}
 		}
 		catch(SQLException e){
-			System.out.println("PROBLEM QUERYING meta_interface TABLE "+e.toString());
+			System.out.println("PROBLEM QUERYING "+MARTINTERFACETABLE+" TABLE "+e.toString());
 		}
-        DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description, type, visible,"",version,"",
+		// always set internalName of dataset to default - not really used anywhere now
+		// internalName can probably be safely removed from DatasetConfig or at least from constructor
+        DatasetConfig dsv = new DatasetConfig("default", dname, dset, description, type, visible,"",version,"",
         	datasetID,modified,martUsers,interfaces);
         dsv.setMessageDigest(digest);
         
@@ -1308,7 +1333,6 @@ public class DatabaseDatasetConfigUtils {
       
 	// hack for push action handling - only the dataset is known in the current model - just return the first dataset
     if (datasetID.equals("")){
-		System.out.println("FIX FOR PUSH ACTIONS");
     	return (DatasetConfig) (dsetMap.values().toArray())[0];		
 	}  
       
@@ -1336,12 +1360,13 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       String metatable = createMetaTables(user);
-      String sql = GETDOCBYINAMESELECT + schema +"."+metatable + GETDOCBYINAMEWHERE;
+      String sql = "select xml, compressed_xml from "+schema+"."+MARTXMLTABLE+" mx, "
+      	+schema+"."+metatable+" md where md.dataset_id_key=mx.dataset_id_key and md.dataset_id_key = ? and md.dataset = ?";
 		
       if (logger.isLoggable(Level.FINE))
         logger.fine(
           "Using " + sql + " to get DatasetConfig for datasetID " +datasetID + "and dataset " + dataset + "\n");
-
+	
       conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
       ps.setString(1, datasetID);
@@ -1359,13 +1384,12 @@ public class DatabaseDatasetConfigUtils {
       byte[] cstream = rs.getBytes(2);
 
       rs.close();
-
+		
       InputStream rstream = null;
       if (cstream != null)
         rstream = new GZIPInputStream(new ByteArrayInputStream(cstream));
       else
         rstream = new ByteArrayInputStream(stream);
-
       return dscutils.getDocumentForXMLStream(rstream);
     } catch (SQLException e) {
       throw new ConfigurationException(
@@ -1385,7 +1409,7 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       String metatable = createMetaTables(user);
-      String sql = GETDOCBYINAMESELECT + metatable + GETDOCBYINAMEWHERE;
+      String sql = "select xml, compressed_xml from " + metatable + " where dataset_id_key = ? and dataset = ?";
 
       if (logger.isLoggable(Level.FINE))
         logger.fine(
@@ -1643,9 +1667,9 @@ public class DatabaseDatasetConfigUtils {
     //System.out.println("DISPLAY NAME" + displayName);
     String existSQL;
     //if (displayName != null)
-    	existSQL = EXISTSELECT + getSchema()[0]+"."+metatable + EXISTWHERE;
+    	existSQL = "select count(*) from " + getSchema()[0]+"."+metatable + " where dataset_id_key = ?";
     //else
-	//	existSQL = EXISTSELECT + getSchema()[0]+"."+metatable + ALTEXISTWHERE;
+	//	existSQL = "select count(*) from " + getSchema()[0]+"."+metatable + ALT" where dataset_id_key = ?";
 	
     if (logger.isLoggable(Level.FINE))
       logger.fine("Getting DSConfigEntryCount with SQL " + existSQL + "\n");
@@ -1656,10 +1680,10 @@ public class DatabaseDatasetConfigUtils {
     try {
       conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(existSQL);
-      ps.setString(1, internalName);
+      //ps.setString(1, internalName);
       //if (displayName != null)
       	//ps.setString(3, displayName);
-      ps.setString(2, datasetID);
+      ps.setString(1, datasetID);
 
       ResultSet rs = ps.executeQuery();
       rs.next();
@@ -1691,28 +1715,24 @@ public class DatabaseDatasetConfigUtils {
   public void deleteOldDSConfigEntriesFor(String metatable, String datasetID, String internalName)
     throws ConfigurationException {
 
-    String deleteSQL;
-    //if (displayName != null) 
-    	deleteSQL= DELETEOLDXML + getSchema()[0]+"."+metatable + DELETEOLDXMLWHERE;
-	//else
-	 //   deleteSQL= DELETEOLDXML + getSchema()[0]+"."+metatable + ALTDELETEOLDXMLWHERE;	
-	    
+    String deleteSQL1 = "delete from " + getSchema()[0]+"."+metatable + " where dataset_id_key = ?";
+	String deleteSQL2 = "delete from " + getSchema()[0]+"."+MARTXMLTABLE + " where dataset_id_key = ?";
+	 
     int rowstodelete = getDSConfigEntryCountFor(metatable, datasetID, internalName);
     if (logger.isLoggable(Level.FINE))
-      logger.fine("Deleting old DSConfigEntries with SQL " + deleteSQL + "\n");
+      logger.fine("Deleting old DSConfigEntries with SQL " + deleteSQL1 + "\n");
 
     int rowsdeleted;
 
     Connection conn = null;
     try {
       conn = dsource.getConnection();
-      PreparedStatement ds = conn.prepareStatement(deleteSQL);
-      ds.setString(1, internalName);
-	  //if (displayName != null) 
-	  	//ds.setString(3, displayName);
-      ds.setString(2, datasetID);
-
+      PreparedStatement ds = conn.prepareStatement(deleteSQL1);
+      ds.setString(1, datasetID);
       rowsdeleted = ds.executeUpdate();
+	  ds = conn.prepareStatement(deleteSQL2);
+	  ds.setString(1, datasetID);
+	  ds.executeUpdate();
       ds.close();
     } catch (SQLException e) {
       throw new ConfigurationException(
@@ -1735,24 +1755,29 @@ public class DatabaseDatasetConfigUtils {
     * @param dataset - dataset for DatasetConfig entries to delete from metatable
     * @throws ConfigurationException if number of rows to delete doesnt match number returned by getDSConfigEntryCountFor()
     */
-
+/*
   public void deleteDatasetConfigsForDataset(String dataset) throws ConfigurationException {
-    String deleteSQL = "delete from " + BASEMETATABLE + DELETEDATASETCONFIG;
-
+    String deleteSQL1 = "delete from " + BASEMETATABLE + DELETEDATASETCONFIG;
+	String deleteSQL2 = "delete from " + getSchema()[0] + "."+MARTXMLTABLE+" " + DELETEDATASETCONFIG;
+	
     Connection conn = null;
     try {
       conn = dsource.getConnection();
-      PreparedStatement ds = conn.prepareStatement(deleteSQL);
+      PreparedStatement ds = conn.prepareStatement(deleteSQL1);
       ds.setString(1, dataset);
       ds.executeUpdate();
       ds.close();
+	  ds = conn.prepareStatement(deleteSQL2);
+	  ds.setString(1, dataset);
+	  ds.executeUpdate();
+	  ds.close();
     } catch (SQLException e) {
       throw new ConfigurationException("Caught SQLException during delete\n");
     } finally {
       DetailedDataSource.close(conn);
     }
   }
-
+*/
 	public int checkDatasetID(String datasetID, String datasetName) throws ConfigurationException{
 		
 		
@@ -1760,7 +1785,8 @@ public class DatabaseDatasetConfigUtils {
 		 if (!baseDSConfigTableExists()) createMetaTables(dsource.getUser());
 		
 		
-		String sql = "select count(*) from " + getSchema()[0] + ".meta_configuration where datasetID = '" + datasetID+"' " +			"and dataset != '" + datasetName + "'";
+		String sql = "select count(*) from " + getSchema()[0] + "."+BASEMETATABLE+" where dataset_id_key = '" 
+			+ datasetID+"' and dataset != '" + datasetName + "'";
 		Connection conn = null;
 		try {
 		  conn = dsource.getConnection();
@@ -1787,22 +1813,30 @@ public class DatabaseDatasetConfigUtils {
 	*/
 
   public void deleteDatasetConfigsForDatasetID(String dataset, String datasetID, String user) throws ConfigurationException {
-	String deleteSQL = "delete from " + getSchema()[0] + "." + BASEMETATABLE + DELETEDATASETCONFIG + DELETEINTERNALNAME;
-	String deleteUserSQL = "delete from " + getSchema()[0] + ".meta_user where datasetID = '"+datasetID+"'" ;
-	String deleteInterfaceSQL = "delete from " + getSchema()[0] + ".meta_interface where datasetID = '"+datasetID+"'" ;
+	String deleteSQL1 = "delete from " + getSchema()[0] + "." + BASEMETATABLE + " where dataset = ?" + 
+		" and dataset_id_key = ?";
+	String deleteSQL2         = "delete from "+getSchema()[0]+"."+MARTXMLTABLE+" where dataset_id_key = ?";	
+	String deleteUserSQL      = "delete from "+getSchema()[0]+"."+MARTUSERTABLE+" where dataset_id_key = ?";
+	String deleteInterfaceSQL = "delete from "+getSchema()[0]+"."+MARTINTERFACETABLE+" where dataset_id_key = ?";
 	
 	Connection conn = null;
 	try {
 	  conn = dsource.getConnection();
-	  PreparedStatement ds = conn.prepareStatement(deleteSQL);
+	  PreparedStatement ds = conn.prepareStatement(deleteSQL1);
 	  ds.setString(1, dataset);
 	  ds.setString(2,datasetID);
 	  ds.executeUpdate();
 	  
+	  ds = conn.prepareStatement(deleteSQL2);
+	  ds.setString(1,datasetID);
+	  ds.executeUpdate();
+	  
 	  ds = conn.prepareStatement(deleteUserSQL);
+	  ds.setString(1,datasetID);
 	  ds.executeUpdate();
 	  
 	  ds = conn.prepareStatement(deleteInterfaceSQL);
+	  ds.setString(1,datasetID);
 	  ds.executeUpdate();
 	  
 	  ds.close();
@@ -1825,62 +1859,57 @@ public class DatabaseDatasetConfigUtils {
    * @throws ConfigurationException if both meta_configuration_[user] and DatabaseDatasetConfigUtils.BASEMETATABLE are absent, and for all underlying exceptions.
    */
   public String createMetaTables(String user) throws ConfigurationException {
-    String metatable = BASEMETATABLE;
     
-    String CREATETABLE= "create table " +getSchema()[0];
-    //String MYSQL_META    = CREATETABLE+".meta_configuration"+"(internalName varchar(100), displayName varchar(100), dataset varchar(100), " +
-    	//	"description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, " +
-    	//	"type varchar(20), visible int(1) unsigned, version varchar(25),datasetID int not null, modified TIMESTAMP NOT NULL,UNIQUE (datasetID))";
+    	String metatable = BASEMETATABLE;
     
-    String MYSQL_META    = CREATETABLE+".meta_configuration"+"" +
-    		"(datasetID int not null,dataset varchar(100),displayName varchar(100),description varchar(200),type varchar(20), " +
-    		"visible int(1) unsigned, version varchar(25), modified TIMESTAMP NOT NULL,internalName varchar(100),  " +
-	" xml longblob, compressed_xml longblob, MessageDigest blob,UNIQUE (datasetID))";
-    
-    
-    
-    
-    String MYSQL_USER=CREATETABLE+".meta_user ( datasetID int, martUser varchar(100),UNIQUE(datasetID,martUser))";
-	String MYSQL_INTERFACE=CREATETABLE+".meta_interface ( datasetID int, interface varchar(100),UNIQUE(datasetID,interface))"; 
+    	String CREATETABLE= "create table " +getSchema()[0];
+  
+    	String MYSQL_META1    = CREATETABLE+"."+BASEMETATABLE+
+    		"(dataset_id_key int not null,dataset varchar(100),display_name varchar(100),description varchar(200),type varchar(20), " +
+    		"visible int(1) unsigned, version varchar(25), modified TIMESTAMP NOT NULL,UNIQUE (dataset_id_key))"; 
+		String MYSQL_META2    = CREATETABLE+"."+MARTXMLTABLE+" ( dataset_id_key int not null, xml longblob, " +			"compressed_xml longblob, message_digest blob, UNIQUE (dataset_id_key))";
+    	String MYSQL_USER=CREATETABLE+"."+MARTUSERTABLE+" ( dataset_id_key int, mart_user varchar(100),UNIQUE(dataset_id_key,mart_user))";
+		String MYSQL_INTERFACE=CREATETABLE+"."+MARTINTERFACETABLE+" ( dataset_id_key int, interface varchar(100),UNIQUE(dataset_id_key,interface))"; 
+		String MYSQL_VERSION = CREATETABLE+"."+MARTVERSIONTABLE+" ( version varchar(10))";
 	
-	
-     //String ORACLE_META   = CREATETABLE+".meta_configuration (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25), datasetid number(1), modified timestamp , UNIQUE (datasetID))";
-     String ORACLE_META   = CREATETABLE+".meta_configuration (datasetid number(1),dataset varchar2(100), displayname varchar2(100),  description varchar2(200),  type varchar2(100), visible number(1), version varchar2(25),  modified timestamp , internalname varchar2(100),xml clob, compressed_xml blob, messagedigest blob,UNIQUE (datasetID))";
-     
-     
-     String ORACLE_USER = CREATETABLE+".meta_user (datasetid number(1), martuser varchar2(100), UNIQUE(datasetid,martuser))";
-	String ORACLE_INTERFACE = CREATETABLE+".meta_interface (datasetid number(1), interface varchar2(100), UNIQUE(datasetid,interface))";
+     	String ORACLE_META1   = CREATETABLE+"."+BASEMETATABLE+" (datasetid number(1),dataset varchar2(100), " +     		"displayname varchar2(100),  description varchar2(200),  type varchar2(100), visible number(1), " +     		"version varchar2(25),  modified timestamp , internalname varchar2(100),UNIQUE (dataset_id_key))";
+		String ORACLE_META2   = CREATETABLE+"."+MARTXMLTABLE+" (datasetid number(1), xml clob, compressed_xml blob, message_digest blob,UNIQUE (dataset_id_key))";
+     	String ORACLE_USER = CREATETABLE+"."+MARTUSERTABLE+" (datasetid number(1), martuser varchar2(100), UNIQUE(datasetid,martuser))";
+		String ORACLE_INTERFACE = CREATETABLE+"."+MARTINTERFACETABLE+" (datasetid number(1), interface varchar2(100), UNIQUE(datasetid,interface))";
+	    String ORACLE_VERSION = CREATETABLE+"."+MARTVERSIONTABLE+" ( version varchar2(10))";
     
-    //String POSTGRES_META = CREATETABLE+".meta_configuration(internalname varchar(100), displayname varchar(100), dataset varchar(100), description varchar(200), xml text, compressed_xml bytea, MessageDigest bytea, type varchar(20), visible integer, version varchar(25), datasetID integer, modified timestamp, UNIQUE (datasetID))";
-    String POSTGRES_META = CREATETABLE+".meta_configuration(datasetID integer,dataset varchar(100), displayname varchar(100),  description varchar(200),  type varchar(20), visible integer, version varchar(25),  modified timestamp, internalname varchar(100),xml text, compressed_xml bytea, MessageDigest bytea,UNIQUE (datasetID))";
+    	String POSTGRES_META1 = CREATETABLE+"."+BASEMETATABLE+" (dataset_id_key integer," +    		"dataset varchar(100), displayname varchar(100),  description varchar(200),  type varchar(20), " +    		"visible integer, version varchar(25),  modified timestamp, internalname varchar(100), UNIQUE (dataset_id_key))";
+		String POSTGRES_META2 = CREATETABLE+"."+MARTXMLTABLE+"(dataset_id_key integer," +			"xml text, compressed_xml bytea, message_digest bytea,UNIQUE (dataset_id_key))";
+    	String POSTGRES_USER = CREATETABLE+"."+MARTUSERTABLE+" (dataset_id_key integer, mart_user varchar(100), UNIQUE(dataset_id_key,mart_user))";
+		String POSTGRES_INTERFACE = CREATETABLE+"."+MARTINTERFACETABLE+" (dataset_id_key integer, interface varchar(100), UNIQUE(dataset_id_key,interface))";
+	    String POSTGRES_VERSION = CREATETABLE+"."+MARTVERSIONTABLE+" ( version varchar(10))";
     
-    
-    String POSTGRES_USER = CREATETABLE+".meta_user (datasetID integer, martUser varchar(100), UNIQUE(datasetID,martUser))";
-	String POSTGRES_INTERFACE = CREATETABLE+".meta_interface (datasetID integer, interface varchar(100), UNIQUE(datasetID,interface))";
-
-    
-    //override if user not null
-    if (datasetConfigUserTableExists(user))
-      metatable += "_" + user;
-    else {
-      //if BASEMETATABLE doesnt exist, throw an exception
+    	//override if user not null
+    	if (datasetConfigUserTableExists(user))
+      		metatable += "_" + user;
+    	else {
+      		//if BASEMETATABLE doesnt exist, throw an exception
     	
-    	
-      if (!baseDSConfigTableExists()){
-		Connection conn = null;
+      	  if (!baseDSConfigTableExists()){
+			Connection conn = null;
 			try {
 			  conn = dsource.getConnection();
-			  String CREATE_SQL = new String();
+			  String CREATE_SQL1 = new String();
+			  String CREATE_SQL2 = new String();
 			  String CREATE_USER =new String();
 			  String CREATE_INTERFACE = new String();
-			  if(dsource.getDatabaseType().equals("oracle")) {CREATE_SQL=ORACLE_META; CREATE_USER=ORACLE_USER; CREATE_INTERFACE=ORACLE_INTERFACE;}
-			  if(dsource.getDatabaseType().equals("postgres")) {CREATE_SQL=POSTGRES_META;CREATE_USER=POSTGRES_USER; CREATE_INTERFACE=POSTGRES_INTERFACE;}
-			  if(dsource.getDatabaseType().equals("mysql")) {CREATE_SQL = MYSQL_META;CREATE_USER=MYSQL_USER; CREATE_INTERFACE=MYSQL_INTERFACE;}
+			  String CREATE_VERSION = new String();
+			  String INSERT_VERSION = "INSERT INTO "+MARTVERSIONTABLE+" VALUES ('"+SOFTWAREVERSION+"')";
+			  if(dsource.getDatabaseType().equals("oracle")) {CREATE_SQL1=ORACLE_META1; CREATE_SQL2=ORACLE_META2; CREATE_USER=ORACLE_USER; CREATE_INTERFACE=ORACLE_INTERFACE; CREATE_VERSION=ORACLE_VERSION;}
+			  if(dsource.getDatabaseType().equals("postgres")) {CREATE_SQL1=POSTGRES_META1;CREATE_SQL2=POSTGRES_META2;CREATE_USER=POSTGRES_USER; CREATE_INTERFACE=POSTGRES_INTERFACE; CREATE_VERSION=POSTGRES_VERSION;}
+			  if(dsource.getDatabaseType().equals("mysql")) {CREATE_SQL1 = MYSQL_META1;CREATE_SQL2 = MYSQL_META2;CREATE_USER=MYSQL_USER; CREATE_INTERFACE=MYSQL_INTERFACE; CREATE_VERSION=MYSQL_VERSION;}
 			  
 			  //System.out.println("CREATE_SQL: "+CREATE_SQL+" CREATE_USER: "+CREATE_USER);
 			  
 			  
-			  PreparedStatement ps = conn.prepareStatement(CREATE_SQL);
+			  PreparedStatement ps = conn.prepareStatement(CREATE_SQL1);
+			  ps.executeUpdate();
+			  ps = conn.prepareStatement(CREATE_SQL2);
 			  ps.executeUpdate();
 			  
 			  PreparedStatement ps1=conn.prepareStatement(CREATE_USER);
@@ -1888,6 +1917,11 @@ public class DatabaseDatasetConfigUtils {
 			  
 			  PreparedStatement ps2=conn.prepareStatement(CREATE_INTERFACE);
 			  ps2.executeUpdate();
+			  
+			  PreparedStatement ps3=conn.prepareStatement(CREATE_VERSION);
+			  ps3.executeUpdate();
+			  ps3=conn.prepareStatement(INSERT_VERSION);
+			  ps3.executeUpdate();
 			  
 			  System.out.println("created meta tables");
 			  
@@ -3100,7 +3134,9 @@ public class DatabaseDatasetConfigUtils {
 
     for (int i = 0, n = potentials.length; i < n; i++) {
       String curval = potentials[i];
-
+	  if (curval.startsWith("meta"))
+	  	continue;
+	  	
       retSet.add(curval.replaceFirst("__.+__[Mm][Aa][Ii][Nn]", ""));
     }
 

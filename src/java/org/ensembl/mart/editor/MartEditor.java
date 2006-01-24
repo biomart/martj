@@ -798,26 +798,6 @@ System.out.println ("getting driver "+ driver);
       if (dataset == null)
         return;
 
-  /*   String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
-      String intName;
-      if (internalNames.length == 1)
-        intName = internalNames[0];
-      else {
-        intName =
-          (String) JOptionPane.showInputDialog(
-            null,
-            "Choose one",
-            "Internal name",
-            JOptionPane.INFORMATION_MESSAGE,
-            null,
-            internalNames,
-            internalNames[0]);
-      }
-
-      if (intName == null)
-        return;
-*/
-
 	String[] datasetIDs = dbutils.getAllDatasetIDsForDataset(user,dataset);
 	  String datasetID;
 	  if (datasetIDs.length == 1)
@@ -846,8 +826,8 @@ System.out.println ("getting driver "+ driver);
       } catch (java.beans.PropertyVetoException e) {
       }
     } catch (ConfigurationException e) {
-      JOptionPane.showMessageDialog(this, "No datasets available for import - is this a BioMart compatible schema? Missing  meta_configuration or meta_user table?" +
-      		" Empty meta_configuration table?", "ERROR", 0);
+      JOptionPane.showMessageDialog(this, "No datasets available for import - is this a BioMart compatible schema? Missing  meta_configuration tables?" +
+      		" Empty meta_configuration tables?", "ERROR", 0);
     } finally {
       enableCursor();
     }
@@ -887,7 +867,7 @@ System.out.println ("getting driver "+ driver);
     } catch (ConfigurationException e) {
       JOptionPane.showMessageDialog(this, "Problems with exporting requested dataset. " +
       		"Check that dataset id is unique, you have write permissions " +
-      		"and the meta_configuration table is in required format", "ERROR", 0);
+      		"and the meta_configuration tables are in required format", "ERROR", 0);
       e.printStackTrace();
     } finally {
       enableCursor();

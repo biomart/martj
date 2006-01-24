@@ -234,8 +234,11 @@ public class DatasetConfigXMLUtils {
 
     // a DatasetConfig object must have been constructed with an internalName
     // test that the internalNames match , throw an exception if they are not
-    if (!intName.equals(dsv.getInternalName()))
-      throw new ConfigurationException("Document internalName does not match input dsv reference internalName, they may not represent the same data\n");
+    
+       
+    // internalName of document doesn't have to match now
+    //if (!intName.equals(dsv.getInternalName()))
+    //  throw new ConfigurationException("Document internalName does not match input dsv reference internalName, they may not represent the same data\n");
 
     for (Iterator iter = thisElement.getChildren(OPTION).iterator(); iter.hasNext();) {
       Element option = (Element) iter.next();
