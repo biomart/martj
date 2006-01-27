@@ -2,12 +2,12 @@
 <!DOCTYPE MartRegistry>
 <MartRegistry>
 
-<RegistryDBLocation 
-		    name         = "pointer"
-                    databaseType = "mysql"
-                    host         = "martdb.ebi.ac.uk"
-                    port         = "3306"
-                    instanceName = "central_registry"
+
+<RegistryDBPointer 
+		    databaseType = "mysql"
+                    host         = "martdb.ebi.ac.uk" 
+                    port         = "3306" 
+                    database     = "central_registry" 
                     user         = "anonymous"
                     password     = ""
 />
@@ -15,8 +15,4 @@
 
 
 </MartRegistry>
-
-
-
-
 
