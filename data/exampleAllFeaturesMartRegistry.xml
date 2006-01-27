@@ -2,56 +2,67 @@
 <!DOCTYPE MartRegistry>
 <MartRegistry>
 
-<RegistryDBLocation 
+<RegistryDBPointer 
 		    name         = "pointer" 
                     databaseType = "mysql"
                     host         = "martdb.ebi.ac.uk" 
                     port         = "3306" 
-                    instanceName = "central_registry" 
+                    database     = "central_registry" 
                     user         = "anonymous"
                     password     = ""
 />
 
-<DatabaseLocation   
+<MartDBLocation   
 		    name         = "MyBioMart"
+                    displayName  = "My BioMart Database"
                     databaseType = "mysql"
                     host         = "localhost"
                     port         = "3306"
-                    instanceName = "test"
-                    schema       = "test"
-                    user         = "user"
-                    password     = "pass"
-                    visible      ="1"                  
-/>
-
-
-<DatabaseLocation
-                    name             = "MyBioMart"
-                    databaseType     = "mysql"
-                    host             = "localhost"
-                    port             = "3306"
-                    instanceName     = "test2"
-                    schema           = "test2"
-                    includeDatasets  ="a,b,c"
-                    user             = "user"
-                    password         = "pass"
-                    visible          ="1"
-                    default          ="1"
-/>
-
-<virtualSchema name="new version">
-
-<DatabaseLocation
-                    name         = "MyBioMart"
-                    databaseType = "mysql"
-                    host         = "localhost"
-                    port         = "3306"
-                    instanceName = "test"
+                    database    = "test"
                     schema       = "test"
                     user         = "user"
                     password     = "pass"
                     visible      ="1"
+                    includeDatasets = ""
+                    default       = ""
+                    martUser      = ""                  
 />
+
+
+<MartDBLocation   
+		    name         = "MyBioMart"
+                    displayName  = "My BioMart Database"
+                    databaseType = "mysql"
+                    host         = "localhost"
+                    port         = "3306"
+                    database    = "test"
+                    schema       = "test"
+                    user         = "user"
+                    password     = "pass"
+                    visible      ="1"
+                    includeDatasets = "a,b,c"
+                    default       = "1"
+                    martUser      = "default"                  
+/>
+
+<virtualSchema name="new version">
+
+<MartDBLocation   
+		    name         = "MyBioMart"
+                    displayName  = "My BioMart Database"
+                    databaseType = "mysql"
+                    host         = "localhost"
+                    port         = "3306"
+                    database    = "test"
+                    schema       = "test"
+                    user         = "user"
+                    password     = "pass"
+                    visible      ="1"
+                    includeDatasets = ""
+                    default       = ""
+                    martUser      = ""                  
+/>
+
 
 </virtualSchema>
 

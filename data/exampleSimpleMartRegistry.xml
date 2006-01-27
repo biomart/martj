@@ -2,16 +2,20 @@
 <!DOCTYPE MartRegistry>
 <MartRegistry>
 
-<DatabaseLocation   
+<MartDBLocation   
 		    name         = "MyBioMart"
+                    displayName  = "My BioMart Database"
                     databaseType = "mysql"
                     host         = "localhost"
                     port         = "3306"
-                    instanceName = "test"
+                    database    = "test"
                     schema       = "test"
                     user         = "user"
                     password     = "pass"
-                    visible      ="1"                  
+                    visible      ="1"
+                    includeDatasets = ""
+                    default       = ""
+                    martUser      = ""                  
 />
 
 </MartRegistry>
