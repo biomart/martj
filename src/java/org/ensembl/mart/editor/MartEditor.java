@@ -925,7 +925,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 								break;
 						}
 					}
-					adaptor.lazyload(odsv);
+					adaptor.lazyLoad(odsv);
 					// save osdv each one to a separate file <internalname>.xml
 					try {
 						File newFile = new File(fc.getSelectedFile().getPath() + "/" + odsv.getDataset() + ".xml");
