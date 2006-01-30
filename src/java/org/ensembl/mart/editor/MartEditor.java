@@ -962,7 +962,7 @@ System.out.println ("getting driver "+ driver);
 								break;
 						}
 					}
-				
+					adaptor.lazyLoad(odsv);// makes sure nothing is lost such as optional_parameterrs
 					// save osdv each one to a separate file <internalname>.xml
 					try {
 						File newFile = new File(fc.getSelectedFile().getPath() + "/" + odsv.getDataset() + ".xml");
