@@ -68,12 +68,12 @@ public class DatabaseDatasetConfigUtils {
 
   private final String SOFTWAREVERSION = "0.4";
   
-  private final String BASEMETATABLE = "meta_configuration__dataset__main";
-  private final String MARTUSERTABLE = "meta_configuration__user__dm";
-  private final String MARTINTERFACETABLE = "meta_configuration__interface__dm";
-  private final String MARTXMLTABLE = "meta_configuration__xml__dm";
-  private final String MARTRELEASETABLE = "meta_release__release__main";	
-  private final String MARTVERSIONTABLE = "meta_version__version__main";	
+  private final String BASEMETATABLE =      "meta_conf__dataset__main";
+  private final String MARTUSERTABLE =      "meta_conf__user__dm";
+  private final String MARTINTERFACETABLE = "meta_conf__interface__dm";
+  private final String MARTXMLTABLE =       "meta_conf__xml__dm";
+  private final String MARTRELEASETABLE =   "meta_release__release__main";	
+  private final String MARTVERSIONTABLE =   "meta_version__version__main";	
 
   private final String MAINTABLESUFFIX = "main";
   private final String DIMENSIONTABLESUFFIX = "dm";
@@ -969,6 +969,8 @@ public class DatabaseDatasetConfigUtils {
       //String metatable = getDSConfigTableFor(user);
 	  String metatable = createMetaTables(user);
       
+	  conn = dsource.getConnection();
+	  conn.setAutoCommit(false);	
 	  if (datasetID == null){
 		String sql = "SELECT MAX(dataset_id_key) FROM "+getSchema()[0]+"."+BASEMETATABLE;
 		PreparedStatement ps = conn.prepareStatement(sql);
@@ -1013,13 +1015,12 @@ public class DatabaseDatasetConfigUtils {
 
       
       //String oraclehackSQL = SELECTCOMPRESSEDXMLFORUPDATE + metatable + GETANYNAMESWHERINAME + " FOR UPDATE";
-	  String oraclehackSQL = "SELECT compressed_xml FROM " + metatable + " WHERE dataset_id_key = ? FOR UPDATE";
+	  String oraclehackSQL = "SELECT compressed_xml FROM " + MARTXMLTABLE + " WHERE dataset_id_key = ? FOR UPDATE";
 
       if (logger.isLoggable(Level.FINE))
         logger.fine("\ninserting with SQL " + insertSQL1 + "\nOracle: " + oraclehackSQL + "\n");
 
-      conn = dsource.getConnection();
-      conn.setAutoCommit(false);
+      
 
       MessageDigest md5digest = MessageDigest.getInstance(DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM);
       ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -1409,7 +1410,7 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       String metatable = createMetaTables(user);
-      String sql = "select xml, compressed_xml from " + metatable + " where dataset_id_key = ? and dataset = ?";
+      String sql = "select xml, compressed_xml from " + MARTXMLTABLE + " where dataset_id_key = ?";
 
       if (logger.isLoggable(Level.FINE))
         logger.fine(
@@ -1418,7 +1419,7 @@ public class DatabaseDatasetConfigUtils {
       conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
       ps.setString(1, datasetID);
-      ps.setString(2, dataset);
+      //ps.setString(2, dataset);
 
       ResultSet rs = ps.executeQuery();
       if (!rs.next()) {
@@ -1872,13 +1873,14 @@ public class DatabaseDatasetConfigUtils {
 		String MYSQL_INTERFACE=CREATETABLE+"."+MARTINTERFACETABLE+" ( dataset_id_key int, interface varchar(100),UNIQUE(dataset_id_key,interface))"; 
 		String MYSQL_VERSION = CREATETABLE+"."+MARTVERSIONTABLE+" ( version varchar(10))";
 	
-     	String ORACLE_META1   = CREATETABLE+"."+BASEMETATABLE+" (datasetid number(1),dataset varchar2(100), " +     		"displayname varchar2(100),  description varchar2(200),  type varchar2(100), visible number(1), " +     		"version varchar2(25),  modified timestamp , internalname varchar2(100),UNIQUE (dataset_id_key))";
-		String ORACLE_META2   = CREATETABLE+"."+MARTXMLTABLE+" (datasetid number(1), xml clob, compressed_xml blob, message_digest blob,UNIQUE (dataset_id_key))";
-     	String ORACLE_USER = CREATETABLE+"."+MARTUSERTABLE+" (datasetid number(1), martuser varchar2(100), UNIQUE(datasetid,martuser))";
-		String ORACLE_INTERFACE = CREATETABLE+"."+MARTINTERFACETABLE+" (datasetid number(1), interface varchar2(100), UNIQUE(datasetid,interface))";
+     	String ORACLE_META1   = CREATETABLE+"."+BASEMETATABLE+
+	        " (dataset_id_key number(1),dataset varchar2(100),display_name varchar2(100),description varchar2(200),type varchar2(20), " +	        "visible number(1), version varchar2(25),  modified timestamp,UNIQUE (dataset_id_key))";
+		String ORACLE_META2   = CREATETABLE+"."+MARTXMLTABLE+" (dataset_id_key number(1), xml clob, compressed_xml blob, message_digest blob,UNIQUE (dataset_id_key))";
+     	String ORACLE_USER = CREATETABLE+"."+MARTUSERTABLE+" (dataset_id_key number(1), mart_user varchar2(100), UNIQUE(dataset_id_key,mart_user))";
+		String ORACLE_INTERFACE = CREATETABLE+"."+MARTINTERFACETABLE+" (dataset_id_key number(1), interface varchar2(100), UNIQUE(dataset_id_key,interface))";
 	    String ORACLE_VERSION = CREATETABLE+"."+MARTVERSIONTABLE+" ( version varchar2(10))";
     
-    	String POSTGRES_META1 = CREATETABLE+"."+BASEMETATABLE+" (dataset_id_key integer," +    		"dataset varchar(100), displayname varchar(100),  description varchar(200),  type varchar(20), " +    		"visible integer, version varchar(25),  modified timestamp, internalname varchar(100), UNIQUE (dataset_id_key))";
+    	String POSTGRES_META1 = CREATETABLE+"."+BASEMETATABLE+" (dataset_id_key integer," +    		"dataset varchar(100), display_name varchar(100),  description varchar(200),  type varchar(20), " +    		"visible integer, version varchar(25),  modified timestamp, UNIQUE (dataset_id_key))";
 		String POSTGRES_META2 = CREATETABLE+"."+MARTXMLTABLE+"(dataset_id_key integer," +			"xml text, compressed_xml bytea, message_digest bytea,UNIQUE (dataset_id_key))";
     	String POSTGRES_USER = CREATETABLE+"."+MARTUSERTABLE+" (dataset_id_key integer, mart_user varchar(100), UNIQUE(dataset_id_key,mart_user))";
 		String POSTGRES_INTERFACE = CREATETABLE+"."+MARTINTERFACETABLE+" (dataset_id_key integer, interface varchar(100), UNIQUE(dataset_id_key,interface))";
@@ -1905,7 +1907,6 @@ public class DatabaseDatasetConfigUtils {
 			  if(dsource.getDatabaseType().equals("mysql")) {CREATE_SQL1 = MYSQL_META1;CREATE_SQL2 = MYSQL_META2;CREATE_USER=MYSQL_USER; CREATE_INTERFACE=MYSQL_INTERFACE; CREATE_VERSION=MYSQL_VERSION;}
 			  
 			  //System.out.println("CREATE_SQL: "+CREATE_SQL+" CREATE_USER: "+CREATE_USER);
-			  
 			  
 			  PreparedStatement ps = conn.prepareStatement(CREATE_SQL1);
 			  ps.executeUpdate();
