@@ -473,6 +473,19 @@ public class DetailedDataSource implements DataSource {
 	String version = null;
 	try {
 		  conn = dataSource.getConnection();
+		  
+		  ResultSet vr = conn.getMetaData().getTables(conn.getCatalog(), this.schema, "meta_version__version__main", null);
+          //expect at most one result, if no results, tcheck will remain null
+		  String tcheck = null;
+		  if (vr.next())
+			tcheck = vr.getString(3);
+
+		  vr.close();
+
+		  if (tcheck == null) {// don't check databases with no version table yet
+				return conn;
+		  }
+		  
 		  PreparedStatement ps = conn.prepareStatement("select version from meta_version__version__main");
 		  ResultSet rs = ps.executeQuery();
 		  rs.next();
