@@ -486,7 +486,7 @@ public class DetailedDataSource implements DataSource {
 				return conn;
 		  }
 		  
-		  PreparedStatement ps = conn.prepareStatement("select version from meta_version__version__main");
+		  PreparedStatement ps = conn.prepareStatement("select version from "+this.schema+".meta_version__version__main");
 		  ResultSet rs = ps.executeQuery();
 		  rs.next();
 		  version = rs.getString(1);
