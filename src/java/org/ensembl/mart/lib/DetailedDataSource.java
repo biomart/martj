@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -29,7 +30,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
+//import javax.naming.ConfigurationException;
 import javax.sql.DataSource;
+import javax.swing.JOptionPane;
 
 import org.ewin.common.util.Log;
 import org.ewin.javax.sql.DefaultPoolingAlgorithm;
@@ -81,7 +84,7 @@ public class DetailedDataSource implements DataSource {
   public static final String DEFAULTDRIVER = "com.mysql.jdbc.Driver";
   public static final int DEFAULTPOOLSIZE = 10;
   public static final String DEFAULTPORT = "3306";
-
+  public static final String VERSION = "0.4";
   private static final String ORACLEAT = "@";
   public static final String ORACLE = "oracle";
   public static final String POSTGRES = "postgres";
@@ -424,9 +427,8 @@ public class DetailedDataSource implements DataSource {
       try {
         // load driver
         
-        System.out.println ("lodading ..."+jdbcDriverClassName);
+        //System.out.println ("lodading ..."+jdbcDriverClassName);
         Class.forName(jdbcDriverClassName).newInstance();
-
         dataSource =
           new DriverManagerDataSource(
             jdbcDriverClassName,
@@ -467,7 +469,26 @@ public class DetailedDataSource implements DataSource {
       }
 
     }
-    return dataSource.getConnection();
+	Connection conn;
+	String version = null;
+	try {
+		  conn = dataSource.getConnection();
+		  PreparedStatement ps = conn.prepareStatement("select version from meta_version__version__main");
+		  ResultSet rs = ps.executeQuery();
+		  rs.next();
+		  version = rs.getString(1);
+		  rs.close();
+		  if (!version.equals(VERSION)){
+		  	throw new SQLException("Database version "+version+" and software version "+VERSION+" do not match");	
+		  }
+		  return conn;
+	} catch (SQLException e) {
+		System.out.println("Include a correct meta_version__version__main table entry:" + e);
+		JOptionPane.showMessageDialog(null,"Include a correct meta_version__version__main table entry:" + e);
+		return null;
+	} 	   
+    
+    //return dataSource.getConnection();
   }
 
   /**
