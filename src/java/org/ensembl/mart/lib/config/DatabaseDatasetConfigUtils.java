@@ -660,8 +660,8 @@ public class DatabaseDatasetConfigUtils {
     try {
       String metatable = createMetaTables(user);
       
-      String insertSQL1 = "INSERT INTO " + metatable + " (display_name, dataset, description, type, visible, version) " +      	"values (?,?,?,?,?,?)";
-	  String insertSQL2 = "INSERT INTO "+MARTXMLTABLE+" (dataset_id_key,xml, message_digest) values (?,?,?)";
+      String insertSQL1 = "INSERT INTO "+getSchema()[0]+"."+metatable + " (display_name, dataset, description, type, visible, version) " +      	"values (?,?,?,?,?,?)";
+	  String insertSQL2 = "INSERT INTO "+getSchema()[0]+"."+MARTXMLTABLE+" (dataset_id_key,xml, message_digest) values (?,?,?)";
 
       if (logger.isLoggable(Level.FINE))
         logger.fine("\ninserting with SQL " + insertSQL1 + "\n");
@@ -729,9 +729,9 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       String metatable = createMetaTables(user);
-	  String insertSQL1 = "INSERT INTO " + metatable + " (display_name, dataset, description, type, visible, version) " +
+	  String insertSQL1 = "INSERT INTO "+getSchema()[0]+"." + metatable + " (display_name, dataset, description, type, visible, version) " +
 		"values (?,?,?,?,?,?)";
-	  String insertSQL2 = "INSERT INTO "+MARTXMLTABLE+" (dataset_id_key,xml, message_digest) values (?,?,?)";
+	  String insertSQL2 = "INSERT INTO "+getSchema()[0]+"."+MARTXMLTABLE+" (dataset_id_key,xml, message_digest) values (?,?,?)";
       String oraclehackSQL = "SELECT xml FROM " + metatable + " WHERE dataset_id_key = ? FOR UPDATE";
 
       if (logger.isLoggable(Level.FINE))
@@ -1015,7 +1015,7 @@ public class DatabaseDatasetConfigUtils {
 
       
       //String oraclehackSQL = SELECTCOMPRESSEDXMLFORUPDATE + metatable + GETANYNAMESWHERINAME + " FOR UPDATE";
-	  String oraclehackSQL = "SELECT compressed_xml FROM " + MARTXMLTABLE + " WHERE dataset_id_key = ? FOR UPDATE";
+	  String oraclehackSQL = "SELECT compressed_xml FROM "+getSchema()[0]+"." + MARTXMLTABLE + " WHERE dataset_id_key = ? FOR UPDATE";
 
       if (logger.isLoggable(Level.FINE))
         logger.fine("\ninserting with SQL " + insertSQL1 + "\nOracle: " + oraclehackSQL + "\n");
@@ -1410,7 +1410,7 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       String metatable = createMetaTables(user);
-      String sql = "select xml, compressed_xml from " + MARTXMLTABLE + " where dataset_id_key = ?";
+      String sql = "select xml, compressed_xml from "+getSchema()[0]+"." + MARTXMLTABLE + " where dataset_id_key = ?";
 
       if (logger.isLoggable(Level.FINE))
         logger.fine(
