@@ -318,7 +318,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 			JOptionPane
 					.showMessageDialog(
 							this,
-							"No datasets available for import - is this a BioMart compatible schema? Absent or empty meta_configuration tables?",
+							"No datasets available for import - is this a BioMart compatible schema? Absent or empty meta_conf tables?",
 							"ERROR", 0);
 
 		} finally {
@@ -523,8 +523,8 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		Document doc = null;
 
 		String sql = "select compressed_xml from " + getAdaptor().getSchema()
-				+ ".meta_configuration__xml__dm mc, " + getAdaptor().getSchema() 
-				+ ".meta_configuration__dataset__main main where main.dataset_id=mc.dataset_id and dataset='" 
+				+ ".meta_conf__xml__dm mc, " + getAdaptor().getSchema() 
+				+ ".meta_conf__dataset__main main where main.dataset_id=mc.dataset_id and dataset='" 
 				+ dataset + "'";
 
 		java.sql.PreparedStatement ps;
@@ -558,7 +558,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 
 	private String[] getDatasets() {
 		String sql = "SELECT dataset from " + getAdaptor().getSchema()
-				+ ".meta_configuration__dataset__main";
+				+ ".meta_conf__dataset__main";
 
 		ArrayList datasets = new ArrayList();
 
