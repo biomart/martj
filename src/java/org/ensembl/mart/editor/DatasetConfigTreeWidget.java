@@ -111,7 +111,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 					    break;
 					  }
 					}
-					System.out.println("GOT CONFIG "+config.getDatasetID());
+					//System.out.println("GOT CONFIG "+config.getDatasetID());
             	}
             } else {
                 URL url = file.toURL();

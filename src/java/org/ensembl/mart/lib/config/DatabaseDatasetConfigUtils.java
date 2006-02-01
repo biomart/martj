@@ -3520,8 +3520,17 @@ public class DatabaseDatasetConfigUtils {
   public DatasetConfig getNaiveDatasetConfigFor(String schema, String datasetName)
     throws ConfigurationException, SQLException {
     	
-	Timestamp tstamp = new Timestamp(System.currentTimeMillis());	
-    DatasetConfig dsv = new DatasetConfig("default",datasetName + " ( " + schema + " )",datasetName,"","TableSet","1","","","","1",tstamp.toString(),"default","default");
+	Timestamp tstamp = new Timestamp(System.currentTimeMillis());
+	Connection conn = dsource.getConnection();	
+	String sql = "SELECT MAX(dataset_id_key) FROM "+getSchema()[0]+"."+BASEMETATABLE;
+	PreparedStatement ps = conn.prepareStatement(sql);
+	ResultSet rs = ps.executeQuery();
+	rs.next();
+	int result = rs.getInt(1);
+	result++;
+	Integer datasetNo = new Integer(result);
+	String datasetID = datasetNo.toString();	
+    DatasetConfig dsv = new DatasetConfig("default",datasetName + " ( " + schema + " )",datasetName,"","TableSet","1","","","",datasetID,tstamp.toString(),"default","default");
     
     //dsv.setInternalName(datasetName);
     //dsv.setInternalName("default");
