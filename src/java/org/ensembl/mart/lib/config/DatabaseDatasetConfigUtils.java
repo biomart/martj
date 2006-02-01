@@ -1197,7 +1197,7 @@ public class DatabaseDatasetConfigUtils {
 		// always set internalName of dataset to default - not really used anywhere now
 		// internalName can probably be safely removed from DatasetConfig or at least from constructor
         DatasetConfig dsv = new DatasetConfig("default", dname, dset, description, type, visible,"",version,"",
-        	datasetID,modified,martUsers,interfaces);
+        	datasetID,modified,martUsers,interfaces,"");
         dsv.setMessageDigest(digest);
         
         HashMap userMap = (HashMap) configInfo.get(user);
@@ -3530,7 +3530,7 @@ public class DatabaseDatasetConfigUtils {
 	result++;
 	Integer datasetNo = new Integer(result);
 	String datasetID = datasetNo.toString();	
-    DatasetConfig dsv = new DatasetConfig("default",datasetName + " ( " + schema + " )",datasetName,"","TableSet","1","","","",datasetID,tstamp.toString(),"default","default");
+    DatasetConfig dsv = new DatasetConfig("default",datasetName + " ( " + schema + " )",datasetName,"","TableSet","1","","","",datasetID,tstamp.toString(),"default","default","");
     
     //dsv.setInternalName(datasetName);
     //dsv.setInternalName("default");

@@ -79,6 +79,7 @@ public class DatasetConfigXMLUtils {
   // attribute names needed by code
   private final String INTERNALNAME = "internalName";
   private final String OPTPARAM = "optional_parameters";
+  private final String PRIMARYKEYRESTRICTION = "primaryKeyRestriction";
   private final String VISIBLEFILTERPAGEPARAM = "visibleFilterPage";
   private final String DEFAULTDATASET = "defaultDataset";
   private final String HIDDEN = "hidden";
@@ -220,6 +221,7 @@ public class DatasetConfigXMLUtils {
     Element thisElement = doc.getRootElement();
     String intName = thisElement.getAttributeValue(INTERNALNAME, "");
     String optParam = thisElement.getAttributeValue(OPTPARAM, "");
+	String primaryKeyRestriction = thisElement.getAttributeValue(PRIMARYKEYRESTRICTION, "");
 	String defParam = thisElement.getAttributeValue(DEFAULTDATASET, "");
 	String visibleFilterPageParam = thisElement.getAttributeValue(VISIBLEFILTERPAGEPARAM, "");
     
@@ -228,6 +230,9 @@ public class DatasetConfigXMLUtils {
     
     if (optParam.length() > 0)
       dsv.setOptionalParameter(optParam);
+      
+	if (primaryKeyRestriction.length() > 0)
+	   dsv.setPrimaryKeyRestriction(primaryKeyRestriction);  
       
 	if (defParam.length() > 0)
 	  dsv.setDefaultDataset(defParam);      

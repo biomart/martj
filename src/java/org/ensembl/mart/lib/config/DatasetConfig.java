@@ -60,6 +60,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   private final String modifiedKey="modified";
   private final String martUsersKey="martUsers";
   private final String interfacesKey="interfaces";
+  private final String primaryKeyRestrictionKey="primaryKeyRestriction";
   
   private int[] reqFields = {0,3,4,5};// rendered red in AttributeTable
   
@@ -139,6 +140,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     setDataset(ds.getDataset());
     setOptionalParameter(ds.getOptionalParameter());
 	setDefaultDataset(ds.getDefaultDataset());
+	setPrimaryKeyRestriction(ds.getprimaryKeyRestriction());
 	setRequiredFields(reqFields);
 	
     byte[] digest = ds.getMessageDigest();
@@ -202,6 +204,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(modifiedKey, null);
 	setAttribute(martUsersKey, null);
 	setAttribute(interfacesKey, null);
+	setAttribute(primaryKeyRestrictionKey, null);
 	setRequiredFields(reqFields);
   }
 
@@ -234,7 +237,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     //super(internalName, displayName, description);
     
     
-	this(internalName, displayName, dataset, description, "", "0", "", "", "", "","","","");
+	this(internalName, displayName, dataset, description, "", "0", "", "", "", "","","","","");
 
     //if (dataset == null)
     //  throw new ConfigurationException("DatasetConfig objects must contain a dataset\n");
@@ -255,10 +258,10 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public DatasetConfig(String internalName, String displayName, String dataset, String description, 
   		String type, String pub, String visibleFilterPage, String version, String optParam, String datasetID, 
-  		String modified, String martUsers, String interfaces)
+  		String modified, String martUsers, String interfaces,String primaryKeyRestriction)
   throws ConfigurationException {
     this(internalName, displayName, dataset, description, type, pub, visibleFilterPage, version, null, null, 
-    	datasetID,modified,martUsers,interfaces);
+    	datasetID,modified,martUsers,interfaces,primaryKeyRestriction);
   }
   
   
@@ -278,7 +281,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public DatasetConfig(String internalName, String displayName, String dataset, String description, 
   		String type, String pub, String visibleFilterPage, String version, String optParameters, 
-  		String defaultDataset,String datasetID,String modified, String martUsers,String interfaces)
+  		String defaultDataset,String datasetID,String modified, String martUsers,String interfaces,String primaryKeyRestriction)
 		throws ConfigurationException {
 		
 	super(internalName, displayName, description);
@@ -295,6 +298,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(modifiedKey,modified);
 	setAttribute(martUsersKey,martUsers);
 	setAttribute(interfacesKey,interfaces);
+	setAttribute(primaryKeyRestrictionKey,primaryKeyRestriction);
 	setRequiredFields(reqFields);
   }
 
@@ -362,6 +366,14 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   
   public String getInterfaces (){
 	return attributes.getProperty(interfacesKey);
+  }
+  
+  public void setPrimaryKeyRestriction(String primaryKeyRestriction) {
+	setAttribute(primaryKeyRestrictionKey, primaryKeyRestriction);
+  }
+  
+  public String getprimaryKeyRestriction (){
+	return attributes.getProperty(primaryKeyRestrictionKey);
   }
   
   /**
