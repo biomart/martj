@@ -828,8 +828,8 @@ public class DatabaseDatasetConfigUtils {
 		conn = dsource.getConnection();	
 	  
 	  String metatable = createMetaTables(user);	
-	  
-	  if (datasetID == null){
+	  System.out.println("1-DATASET ID:"+datasetID);
+	  if (datasetID == null || datasetID.equals("")){
 		String sql = "SELECT MAX(dataset_id_key) FROM "+getSchema()[0]+"."+BASEMETATABLE;
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ResultSet rs = ps.executeQuery();
@@ -839,7 +839,7 @@ public class DatabaseDatasetConfigUtils {
 		Integer datasetNo = new Integer(result);
 		datasetID = datasetNo.toString();
 	  }
-
+	  System.out.println("2-DATASET ID:"+datasetID);
 	  // sort out meta_users and meta_interfaces tables first
 	  String sql = "DELETE FROM "+getSchema()[0]+"."+MARTUSERTABLE+" WHERE dataset_id_key="+datasetID;
 	  //System.out.println(sql);
