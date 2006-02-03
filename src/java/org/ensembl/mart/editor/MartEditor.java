@@ -999,7 +999,7 @@ System.out.println ("getting driver "+ driver);
 			  // choose folder
 			  JFileChooser fc = new JFileChooser(getFileChooserPath());
 			  fc.setSelectedFile(getFileChooserPath());
-			  fc.setDialogTitle("Choose file(s) to upload to database: WARNING - THIS WILL OVERWRITE EXISTING XMLS IN THE DATABASE");
+			  fc.setDialogTitle("Choose file(s) to upload: WARNING: THIS WILL REMOVE ALL EXISTING XMLS IN THE DATABASE");
 		  	  fc.setMultiSelectionEnabled(true);			  
 			  XMLFileFilter filter = new XMLFileFilter();
 			  fc.addChoosableFileFilter(filter);
@@ -1085,7 +1085,7 @@ System.out.println ("getting driver "+ driver);
 			  DatasetConfig[] dsConfigs = new DatasetConfig[retSet.size()];
 			  retSet.toArray(dsConfigs);
 		      
-		      
+		      JOptionPane.showMessageDialog(null,"WARNING - THIS WILL REMOVE ALL EXISTING XMLS IN THE DATABASE YOU ARE MOVING XML TO");
 			  // connect to database to export to
 	    	  databaseConnection();
 							
