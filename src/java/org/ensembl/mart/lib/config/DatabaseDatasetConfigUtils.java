@@ -631,11 +631,11 @@ public class DatabaseDatasetConfigUtils {
 
     int rowsupdated = 0;
 
-    if (compress)
+    //if (compress)
       rowsupdated = storeCompressedXML(user, internalName, displayName, dataset, description, doc, 
       	type, visible, version, datasetID, martUsers, interfaces);
-    else
-      rowsupdated = storeUncompressedXML(user, internalName, displayName, dataset, description, datasetID, doc);
+    //else
+      //rowsupdated = storeUncompressedXML(user, internalName, displayName, dataset, description, datasetID, doc);
 
 	
     updateMartConfigForUser(user,getSchema()[0]);
@@ -643,7 +643,7 @@ public class DatabaseDatasetConfigUtils {
       if (logger.isLoggable(Level.WARNING))
         logger.warning("Warning, xml for " + internalName + ", " + displayName + " not stored"); //throw an exception?	
   }
-
+/*
   private int storeUncompressedXML(
     String user,
     String internalName,
@@ -805,7 +805,7 @@ public class DatabaseDatasetConfigUtils {
       DetailedDataSource.close(conn);
     }
   }
-
+*/
   private int storeCompressedXML(
     String user,
     String internalName,
@@ -1777,6 +1777,8 @@ public class DatabaseDatasetConfigUtils {
     }
   }
 */
+
+/*
 	public int checkDatasetID(String datasetID, String datasetName) throws ConfigurationException{
 		
 		
@@ -1802,7 +1804,7 @@ public class DatabaseDatasetConfigUtils {
 		  	DetailedDataSource.close(conn);
 		}
 	}
-
+*/
 
   /**
 	* Removes all records in a given metatable for the given dataset and internal name
@@ -1934,6 +1936,44 @@ public class DatabaseDatasetConfigUtils {
 
     return metatable;
   }
+  
+  
+  public void dropMetaTables() throws ConfigurationException {
+    
+		String DROPTABLE= "drop table " +getSchema()[0];
+  
+		String MYSQL_META1     = DROPTABLE+"."+BASEMETATABLE;
+		String MYSQL_META2     = DROPTABLE+"."+MARTXMLTABLE;
+		String MYSQL_USER      = DROPTABLE+"."+MARTUSERTABLE;
+		String MYSQL_INTERFACE = DROPTABLE+"."+MARTINTERFACETABLE;
+		String MYSQL_VERSION   = DROPTABLE+"."+MARTVERSIONTABLE;
+		
+	    if (baseDSConfigTableExists()){
+			Connection conn = null;
+			try {
+			  conn = dsource.getConnection();
+			  
+			  PreparedStatement ps = conn.prepareStatement(MYSQL_META1);
+			  ps.executeUpdate();
+			  ps = conn.prepareStatement(MYSQL_META2);
+			  ps.executeUpdate();
+			  
+			  PreparedStatement ps1=conn.prepareStatement(MYSQL_USER);
+			  ps1.executeUpdate();
+			  
+			  PreparedStatement ps2=conn.prepareStatement(MYSQL_INTERFACE);
+			  ps2.executeUpdate();
+			  
+			  PreparedStatement ps3=conn.prepareStatement(MYSQL_VERSION);
+			  ps3.executeUpdate();	  
+			  conn.close();
+			} catch (SQLException e) {
+			  throw new ConfigurationException("Caught SQLException during drop meta tables\n" +e);
+			}
+	    }
+
+  }
+  
 
   public DatasetConfig getValidatedDatasetConfig(DatasetConfig dsv) throws SQLException, ConfigurationException {
     
@@ -3519,16 +3559,17 @@ public class DatabaseDatasetConfigUtils {
     throws ConfigurationException, SQLException {
     	
 	Timestamp tstamp = new Timestamp(System.currentTimeMillis());
-	Connection conn = dsource.getConnection();	
-	String sql = "SELECT MAX(dataset_id_key) FROM "+getSchema()[0]+"."+BASEMETATABLE;
-	PreparedStatement ps = conn.prepareStatement(sql);
-	ResultSet rs = ps.executeQuery();
-	rs.next();
-	int result = rs.getInt(1);
-	result++;
-	Integer datasetNo = new Integer(result);
-	String datasetID = datasetNo.toString();	
-    DatasetConfig dsv = new DatasetConfig("default",datasetName + " ( " + schema + " )",datasetName,"","TableSet","1","","","",datasetID,tstamp.toString(),"default","default","");
+	Connection conn = dsource.getConnection();
+	// datasetID should be "" so gets sorted out at export stage	
+	//String sql = "SELECT MAX(dataset_id_key) FROM "+getSchema()[0]+"."+BASEMETATABLE;
+	//PreparedStatement ps = conn.prepareStatement(sql);
+	//ResultSet rs = ps.executeQuery();
+	//rs.next();
+	//int result = rs.getInt(1);
+	//result++;
+	//Integer datasetNo = new Integer(result);
+	//String datasetID = datasetNo.toString();	
+    DatasetConfig dsv = new DatasetConfig("default",datasetName + " ( " + schema + " )",datasetName,"","TableSet","1","","","","",tstamp.toString(),"default","default","");
     
     //dsv.setInternalName(datasetName);
     //dsv.setInternalName("default");

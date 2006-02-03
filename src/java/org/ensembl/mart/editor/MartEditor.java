@@ -846,16 +846,17 @@ System.out.println ("getting driver "+ driver);
       
       // these were added for upgrading xml without those settings
       // the datasetID needs to be made incremental for multiple datasets
-      if(dsConfig.getDatasetID() == null) dsConfig.setDatasetID("0");
+      //if(dsConfig.getDatasetID() == null) dsConfig.setDatasetID("0");
       if(dsConfig.getMartUsers() == null) dsConfig.setMartUsers("default");
       if(dsConfig.getInterfaces() == null)dsConfig.setInterfaces("default");
 	  
-	  if (dbutils.checkDatasetID(dsConfig.getDatasetID(),dsConfig.getDataset()) >= 1){
-		int choice = JOptionPane.showConfirmDialog(null, "Dataset ID already exists for a different dataset", "Export anyway?", JOptionPane.YES_NO_OPTION);							  
-		if (choice != 0){
-			return;
-		}
-	  }
+	  // don't need this check anymore - should not be possible to get to this position
+	  //if (dbutils.checkDatasetID(dsConfig.getDatasetID(),dsConfig.getDataset()) >= 1){
+		//int choice = JOptionPane.showConfirmDialog(null, "Dataset ID already exists for a different dataset", "Export anyway?", JOptionPane.YES_NO_OPTION);							  
+		//if (choice != 0){
+		//	return;
+		//}
+	  //}
 	  
       if (dsConfig.getAdaptor() != null && dsConfig.getAdaptor().getDataSource() != null && !dsConfig.getAdaptor().getDataSource().getSchema().equals(databaseDialog.getSchema())){
       	// NM the widget still has its adaptor - could switch connection
@@ -1009,7 +1010,7 @@ System.out.println ("getting driver "+ driver);
 				 	
 			     // cycle through all dataset files	
 			     File[] files = fc.getSelectedFiles();
-			  
+				 dbutils.dropMetaTables(); 
 			     for (int i = 0; i < files.length; i++){
 				  file = files[i];
 				  			  
@@ -1017,7 +1018,7 @@ System.out.println ("getting driver "+ driver);
 				  //ignoreCache, includeHiddenMembers
 				  DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
 				  DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
-				  
+				  odsv.setDatasetID("");
 				  // export osdv
 				  
 				  String martUsers = odsv.getMartUsers();
@@ -1029,7 +1030,7 @@ System.out.println ("getting driver "+ driver);
 					interfaces = "default";
 				  
 				  try {
-						dbutils.storeDatasetConfiguration(
+				  	    dbutils.storeDatasetConfiguration(
 									MartEditor.getUser(),
 									odsv.getInternalName(),
 									odsv.getDisplayName(),
@@ -1077,6 +1078,8 @@ System.out.println ("getting driver "+ driver);
 			  //int k = 0;
 			  while (configs.hasNext()){
 					DatasetConfig lconfig = (DatasetConfig) configs.next();
+					adaptor.lazyLoad(lconfig);
+					lconfig.setDatasetID("");
 					retSet.add(lconfig);
 		      }
 			  DatasetConfig[] dsConfigs = new DatasetConfig[retSet.size()];
@@ -1087,6 +1090,7 @@ System.out.println ("getting driver "+ driver);
 	    	  databaseConnection();
 							
 			  DatasetConfig dsv = null;
+			  dbutils.dropMetaTables();
 			  for (int k = 0; k < dsConfigs.length;k++){
 					dsv = dsConfigs[k];
 					// export it to new database	

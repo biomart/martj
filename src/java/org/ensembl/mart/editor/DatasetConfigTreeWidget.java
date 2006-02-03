@@ -113,13 +113,14 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 					}
 					//System.out.println("GOT CONFIG "+config.getDatasetID());
             	}
-            } else {
+            } else {// open from file
                 URL url = file.toURL();
 //            ignore cache, include hidden members
                 DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
 
                 // only config one in the file so get that one
                 config = (DatasetConfig) adaptor.getDatasetConfigs().next();
+                config.setDatasetID("");//always blank from file so gets sorted out by database during export
             }
           }
           else{
