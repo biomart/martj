@@ -999,8 +999,13 @@ System.out.println ("getting driver "+ driver);
 			  // choose folder
 			  JFileChooser fc = new JFileChooser(getFileChooserPath());
 			  fc.setSelectedFile(getFileChooserPath());
-			  fc.setDialogTitle("Choose file(s) to upload: WARNING: THIS WILL REMOVE ALL EXISTING XMLS IN THE DATABASE");
-		  	  fc.setMultiSelectionEnabled(true);			  
+			  
+			  // changed to JOptionPane as not readable on the file chooser
+			  JOptionPane.showMessageDialog(null,"WARNING - THIS WILL REMOVE ALL EXISTING CONFIGURATION IN THE DATABASE YOU ARE UPLOADING YOUR CONFIGURATION TO");
+			  //fc.setDialogTitle("Choose file(s) to upload: WARNING: THIS WILL REMOVE ALL EXISTING XMLS IN THE DATABASE");
+		  	  
+			  
+			  fc.setMultiSelectionEnabled(true);			  
 			  XMLFileFilter filter = new XMLFileFilter();
 			  fc.addChoosableFileFilter(filter);
 			  int returnVal = fc.showOpenDialog(getContentPane());
@@ -1085,7 +1090,7 @@ System.out.println ("getting driver "+ driver);
 			  DatasetConfig[] dsConfigs = new DatasetConfig[retSet.size()];
 			  retSet.toArray(dsConfigs);
 		      
-		      JOptionPane.showMessageDialog(null,"WARNING - THIS WILL REMOVE ALL EXISTING XMLS IN THE DATABASE YOU ARE MOVING XML TO");
+		      JOptionPane.showMessageDialog(null,"WARNING - THIS WILL REMOVE ALL EXISTING CONFIGURATION IN THE DATABASE YOU ARE MOVING YOUR CONFIGURATION TO");
 			  // connect to database to export to
 	    	  databaseConnection("Move to this database:");
 							
