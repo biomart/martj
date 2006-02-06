@@ -131,13 +131,14 @@ public class MartRegistryDBTool {
 	private static String port; //-P
 	private static String type; //-T
 	private static String instance; //-I
+	private static String schema; //-S
 	private static String user; //-U
 	private static String password; //-p
 	private static String registryName = null; //
 	private static boolean compress = true; //-X means do NOT compress
 	private static boolean help = false; //-h
 
-	private static String COMMAND_LINE_SWITCHES = "hXl:f:H:P:T:I:U:p:";
+	private static String COMMAND_LINE_SWITCHES = "hXl:f:H:P:T:I:S:U:p:";
 
 	private static String usage() {
 		return "\nusage: MartRegistryDBTool "
@@ -148,6 +149,7 @@ public class MartRegistryDBTool {
 			+ "\n -P DB Port. OPTIONAL"
 			+ "\n -T Database Type (OPTIONAL, defaults to mysql, also supports oracle:thin)"
 			+ "\n -I name of Database Instance to load to or fetch from. REQUIRED"
+		    + "\n -S name of schema to load to or fetch from. REQUIRED"
 			+ "\n -U DB User REQUIRED"
 			+ "\n -p DB Password OPTIONAL"
 			+ "\n -X if loading (-l) do not compress the XML in the Database (default is to compress)"
@@ -206,6 +208,10 @@ public class MartRegistryDBTool {
 					case 'I' :
 						instance = g.getOptarg();
 						break;
+						
+					case 'S' :
+						schema = g.getOptarg();
+						break;	
 
 					case 'U' :
 						user = g.getOptarg();
@@ -256,6 +262,12 @@ public class MartRegistryDBTool {
           System.exit(1);
         }
         
+		if (schema == null) {
+			System.err.println("No schema specified with -S switch.\n");
+			System.err.println(usage());
+			System.exit(1);
+		}
+        
         if (user == null) {
           System.err.println("No user specified with -U switch.\n");
           System.err.println(usage());
@@ -282,7 +294,7 @@ public class MartRegistryDBTool {
 				host,
 				port,
 				instance,
-				connectionString,
+				schema,
 				user,
 				password,
 				DetailedDataSource.DEFAULTPOOLSIZE,
