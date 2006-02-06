@@ -52,6 +52,7 @@ public class RegistryDBLocation extends MartLocationBase {
 		String port,
 		String databaseType,
 		String instanceName,
+		String schema,
 		String user,
 		String password,
 		String name,
@@ -59,11 +60,12 @@ public class RegistryDBLocation extends MartLocationBase {
 		throws ConfigurationException {
 		super(name, visibleString, MartLocationBase.DATABASE);
 
-		if (host == null || instanceName == null || user == null)
-			throw new ConfigurationException("RegistryDBLocation Objects must contain a host, user and instanceName\n");
+		if (host == null || instanceName == null || user == null || schema == null)
+			throw new ConfigurationException("RegistryDBLocation Objects must contain a host, user, schema and database\n");
 
 		setAttribute(HOST_KEY, host);
 		setAttribute(INSTANCE_NAME_KEY, instanceName);
+		setAttribute(SCHEMA_KEY, schema);
 		setAttribute(USER_KEY, user);
 		setAttribute(DATABASE_TYPE_KEY, databaseType);
 		setAttribute(PORT_KEY, port);
@@ -169,6 +171,7 @@ public class RegistryDBLocation extends MartLocationBase {
 		String host = getHost();
 		String user = getUser();
 		String instanceName = getInstanceName();
+		String schema = getSchema();
 		String port = getPort();
 		String password = getPassword();
 		String databaseType = getDatabaseType();
@@ -193,7 +196,8 @@ public class RegistryDBLocation extends MartLocationBase {
 				host,
 				port,
 				instanceName,
-				connectionString,
+				//connectionString,
+				schema,
 				user,
 				password,
 				DetailedDataSource.DEFAULTPOOLSIZE,
