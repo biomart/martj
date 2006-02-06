@@ -77,12 +77,18 @@ public class MartRegistryXMLUtils {
 	 */
 
 	//TODO maybe make a user registry?
-	private static final String SELECTXMLFORUPDATE = "select xml from meta_registry FOR UPDATE";
-	private static final String SELECTCOMPRESSEDXMLFORUPDATE = "select compressed_xml from meta_registry FOR UPDATE";
-	private static final String UPDATECOMPRESSEDREGISTRYXML = "insert into meta_registry(compressed_xml) values(?)";
-	private static final String UPDATEREGISTRYXML = "insert into meta_registry(xml) values(?)";
-	private static final String CLEANREGISTRYTABLE = "delete from meta_registry";
-	private static final String GETREGISTRYSQL = "select xml, compressed_xml from meta_registry limit 1";
+	private static final String SELECTXMLFORUPDATE1 = "select xml from ";
+	private static final String SELECTXMLFORUPDATE2 = ".meta_registry FOR UPDATE";
+	private static final String SELECTCOMPRESSEDXMLFORUPDATE1 = "select compressed_xml from ";
+	private static final String SELECTCOMPRESSEDXMLFORUPDATE2 = ".meta_registry FOR UPDATE";
+	private static final String UPDATECOMPRESSEDREGISTRYXML1 = "insert into ";
+	private static final String UPDATECOMPRESSEDREGISTRYXML2= ".meta_registry(compressed_xml) values(?)";
+	private static final String UPDATEREGISTRYXML1 = "insert into ";
+	private static final String UPDATEREGISTRYXML2 = ".meta_registry(xml) values(?)";
+	private static final String CLEANREGISTRYTABLE1 = "delete from ";
+	private static final String CLEANREGISTRYTABLE2 = ".meta_registry";
+	private static final String GETREGISTRYSQL1 = "select xml, compressed_xml from ";
+	private static final String GETREGISTRYSQL2 = ".meta_registry limit 1";
 
 	/**
 	 * @param dsource
@@ -98,12 +104,14 @@ public class MartRegistryXMLUtils {
 
 		Connection conn = null;
 		try {
+			String getRegistrySQL = GETREGISTRYSQL1 + dsource.getSchema() + GETREGISTRYSQL2;
+			
 			if (logger.isLoggable(Level.FINE))
-				logger.fine("Using " + GETREGISTRYSQL + " to get Registry\n");
+				logger.fine("Using " + getRegistrySQL + " to get Registry\n");
 
 			conn = dsource.getConnection();
-			PreparedStatement ps = conn.prepareStatement(GETREGISTRYSQL);
-
+			PreparedStatement ps = conn.prepareStatement(getRegistrySQL);
+			System.out.println(getRegistrySQL);
 			ResultSet rs = ps.executeQuery();
 			if (!rs.next()) {
 				// will only get one result
@@ -137,11 +145,13 @@ public class MartRegistryXMLUtils {
 		throws ConfigurationException {
 		Connection conn = null;
 		try {
+			String getRegistrySQL = GETREGISTRYSQL1 + dsource.getSchema() + GETREGISTRYSQL2;
+			
 			if (logger.isLoggable(Level.FINE))
-				logger.fine("Using " + GETREGISTRYSQL + " to get Registry\n");
+				logger.fine("Using " + getRegistrySQL + " to get Registry\n");
 
 			conn = dsource.getConnection();
-			PreparedStatement ps = conn.prepareStatement(GETREGISTRYSQL);
+			PreparedStatement ps = conn.prepareStatement(getRegistrySQL);
 
 			ResultSet rs = ps.executeQuery();
 			if (!rs.next()) {
@@ -181,6 +191,7 @@ public class MartRegistryXMLUtils {
 		Connection conn = null;
 
 		try {
+			String CLEANREGISTRYTABLE = CLEANREGISTRYTABLE1 + dsource.getSchema() + CLEANREGISTRYTABLE2;
 			conn = dsource.getConnection();
 			PreparedStatement ps = conn.prepareStatement(CLEANREGISTRYTABLE);
 
@@ -215,6 +226,7 @@ public class MartRegistryXMLUtils {
 			return storeCompressedRegistryXMLOracle(dsource, doc);
 		Connection conn = null;
 		try {
+			String UPDATECOMPRESSEDREGISTRYXML = UPDATECOMPRESSEDREGISTRYXML1 + dsource.getSchema() + UPDATECOMPRESSEDREGISTRYXML2;
 			conn = dsource.getConnection();
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 
@@ -248,6 +260,9 @@ public class MartRegistryXMLUtils {
 		throws ConfigurationException {
 		Connection conn = null;
 		try {
+			String UPDATECOMPRESSEDREGISTRYXML = UPDATECOMPRESSEDREGISTRYXML1 + dsource.getSchema() + UPDATECOMPRESSEDREGISTRYXML2;
+			String SELECTCOMPRESSEDXMLFORUPDATE = SELECTCOMPRESSEDXMLFORUPDATE1 + dsource.getSchema() + SELECTCOMPRESSEDXMLFORUPDATE2;
+			
 			if (logger.isLoggable(Level.FINE))
 				logger.fine("\ninserting with SQL " + UPDATECOMPRESSEDREGISTRYXML + "\n");
 
@@ -303,6 +318,7 @@ public class MartRegistryXMLUtils {
 
 		Connection conn = null;
 		try {
+			String UPDATEREGISTRYXML = UPDATEREGISTRYXML1 + dsource.getSchema() + UPDATEREGISTRYXML2;
 			if (logger.isLoggable(Level.FINE))
 				logger.fine("\ninserting with SQL " + UPDATEREGISTRYXML + "\n");
 
@@ -335,6 +351,8 @@ public class MartRegistryXMLUtils {
 		throws ConfigurationException {
 		Connection conn = null;
 		try {
+			String UPDATEREGISTRYXML = UPDATEREGISTRYXML1 + dsource.getSchema() + UPDATEREGISTRYXML2;
+			String SELECTXMLFORUPDATE = SELECTXMLFORUPDATE1 + dsource.getSchema() + SELECTXMLFORUPDATE2;
 			if (logger.isLoggable(Level.FINE))
 				logger.fine("\ninserting with SQL " + UPDATEREGISTRYXML + "\n");
 
