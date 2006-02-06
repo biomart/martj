@@ -180,7 +180,7 @@ public class DatabaseDatasetConfigUtils {
 	String version = null;
 	try {
 	  conn = dsource.getConnection();
-	  PreparedStatement ps = conn.prepareStatement("select version from "+MARTRELEASETABLE+" where dataset = ?");
+	  PreparedStatement ps = conn.prepareStatement("select release_version from "+MARTRELEASETABLE+" where dataset = ?");
 	  ps.setString(1, dataset);
 	  ResultSet rs = ps.executeQuery();
 	  rs.next();
