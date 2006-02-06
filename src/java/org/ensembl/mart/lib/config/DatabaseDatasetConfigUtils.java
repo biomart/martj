@@ -303,6 +303,10 @@ public class DatabaseDatasetConfigUtils {
     DatasetConfig dsConfig)
     throws ConfigurationException {
     		
+		if (dsConfig.getPrimaryKeys().length == 0 || !dsConfig.getPrimaryKeys()[0].endsWith("_key")){
+			JOptionPane.showMessageDialog(null,"Your dataset must contain a primary key per main table, each ending _key. Fix table(s) and/or primaryKeys configuration");
+			return;
+		}
     	
     	if (martUsers.equals(""))	
     		martUsers = "default";
