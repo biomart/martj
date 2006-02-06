@@ -8,6 +8,7 @@
                     host         = "martdb.ebi.ac.uk" 
                     port         = "3306" 
                     database     = "central_registry" 
+                    schema       = "central_registry" 
                     user         = "anonymous"
                     password     = ""
 />
