@@ -184,13 +184,15 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 	                                                      "Delete"
 	};
 	
-	public boolean showDialog(Component parent) {
+	public boolean showDialog(Component parent,String title) {
 	    
+	    if (title.equals(""))
+	    	title = "Database Connection Settings";
 		int option =
 			JOptionPane.showOptionDialog(
 				parent,
 				this,
-				"Database Connection Settings",
+				title,
 				JOptionPane.DEFAULT_OPTION,
 				JOptionPane.INFORMATION_MESSAGE,
 				null,
@@ -331,7 +333,7 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 		
 		DatabaseSettingsDialog d = new DatabaseSettingsDialog( );
 		d.setPrefs( Preferences.userNodeForPackage( d.getClass() ) );
-		d.showDialog( null );
+		d.showDialog( null,"" );
 		System.exit(0);
 	}
 

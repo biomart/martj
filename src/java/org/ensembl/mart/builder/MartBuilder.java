@@ -399,7 +399,7 @@ public class MartBuilder extends JFrame implements ClipboardOwner {
     try {
       disableCursor();
       while (!valid) {
-        if (!databaseDialog.showDialog(this))
+        if (!databaseDialog.showDialog(this,""))
           break;
 
         try {

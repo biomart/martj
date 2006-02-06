@@ -583,7 +583,7 @@ System.out.println ("getting driver "+ driver);
       else if (e.getActionCommand().startsWith("Redo"))
         redo();
       else if (e.getActionCommand().startsWith("Database"))
-        databaseConnection();
+        databaseConnection("");
       else if (e.getActionCommand().startsWith("Import"))
         importDatasetConfig();
       else if (e.getActionCommand().startsWith("Export"))
@@ -672,14 +672,14 @@ System.out.println ("getting driver "+ driver);
 	return (DatabaseDatasetConfigUtils) dbutilsHash.get(schema);
   }
 
-  public void databaseConnection() {
+  public void databaseConnection(String title) {
 
     boolean valid = false;
 
     try {
       disableCursor();
       while (!valid) {
-        if (!databaseDialog.showDialog(this))
+        if (!databaseDialog.showDialog(this,title))
           break;
 
         String defaultSourceName = databaseDialog.getConnectionName();
@@ -861,7 +861,7 @@ System.out.println ("getting driver "+ driver);
       if (dsConfig.getAdaptor() != null && dsConfig.getAdaptor().getDataSource() != null && !dsConfig.getAdaptor().getDataSource().getSchema().equals(databaseDialog.getSchema())){
       	// NM the widget still has its adaptor - could switch connection
 		int choice = JOptionPane.showConfirmDialog(this,"You are exporting this XML to a new schema: " + databaseDialog.getSchema() +"\nChange connection?", "", JOptionPane.YES_NO_OPTION);
-      	if (choice == 0){databaseConnection();}
+      	if (choice == 0){databaseConnection("");}
       }
 	
       ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).export();
@@ -1087,7 +1087,7 @@ System.out.println ("getting driver "+ driver);
 		      
 		      JOptionPane.showMessageDialog(null,"WARNING - THIS WILL REMOVE ALL EXISTING XMLS IN THE DATABASE YOU ARE MOVING XML TO");
 			  // connect to database to export to
-	    	  databaseConnection();
+	    	  databaseConnection("Move to this database:");
 							
 			  DatasetConfig dsv = null;
 			  dbutils.dropMetaTables();

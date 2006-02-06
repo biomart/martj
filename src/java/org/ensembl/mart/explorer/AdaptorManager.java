@@ -232,7 +232,7 @@ public class AdaptorManager extends Box {
     
     while (!valid) {
 
-      if (!databaseDialog.showDialog(this))
+      if (!databaseDialog.showDialog(this,""))
         break;
 
       String defaultSourceName = databaseDialog.getConnectionName();

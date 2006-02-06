@@ -257,7 +257,7 @@ public class MartSubmitter extends JFrame implements ActionListener {
 		try {
 			disableCursor();
 
-			databaseDialog.showDialog(this);
+			databaseDialog.showDialog(this,"");
 
 			adaptor = new DatabaseAdaptor(databaseDialog.getDriver(),
 					databaseDialog.getUser(), databaseDialog.getPassword(),
