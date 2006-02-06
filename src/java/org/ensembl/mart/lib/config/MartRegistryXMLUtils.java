@@ -111,7 +111,7 @@ public class MartRegistryXMLUtils {
 
 			conn = dsource.getConnection();
 			PreparedStatement ps = conn.prepareStatement(getRegistrySQL);
-			System.out.println(getRegistrySQL);
+			//System.out.println(getRegistrySQL);
 			ResultSet rs = ps.executeQuery();
 			if (!rs.next()) {
 				// will only get one result
