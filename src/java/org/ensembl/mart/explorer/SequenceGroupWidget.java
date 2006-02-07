@@ -289,6 +289,8 @@ public class SequenceGroupWidget
     
     //need to get all sequence types from the Registry, and make JRadioButtons for them    
     AttributePage seqPage = dsv.getAttributePageByInternalName("sequences");
+    // another hack this time for wormart
+    if (seqPage == null) seqPage = dsv.getAttributePageByInternalName("sequence");
     AttributeGroup seqGroup = (AttributeGroup) seqPage.getAttributeGroupByName("sequence");
     AttributeCollection seqCol = seqGroup.getAttributeCollectionByName("seq_scope_type");
     List seq_atts = seqCol.getAttributeDescriptions();
