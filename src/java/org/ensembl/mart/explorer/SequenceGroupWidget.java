@@ -608,6 +608,8 @@ public class SequenceGroupWidget
 		  	// try to add remove atts logic here
 		  			
 			AttributePage seqPage = dsv.getAttributePageByInternalName("sequences");
+			// for wormmart
+			if (seqPage == null) seqPage = dsv.getAttributePageByInternalName("sequence");
 		  	ArrayList attsToRemove = new ArrayList();       
 			boolean removeSeq = false;
           
