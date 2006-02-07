@@ -203,6 +203,7 @@ public class SequenceGroupWidget
   
   //need to get all sequence types from the Registry, and make JRadioButtons for them
   AttributePage seqPage = dsv.getAttributePageByInternalName("sequences");
+  if (seqPage == null ) seqPage = dsv.getAttributePageByInternalName("sequence");
   AttributeGroup seqGroup = (AttributeGroup) seqPage.getAttributeGroupByName("sequence");
   AttributeCollection seqCol = seqGroup.getAttributeCollectionByName(iname);
   List seq_atts = seqCol.getAttributeDescriptions();
@@ -623,7 +624,7 @@ public class SequenceGroupWidget
 			}
           
 			if (query.getSequenceDescription() != null) {
-				if (!seqPage.getInternalName().equals("sequences"))
+				if (!seqPage.getInternalName().equals("sequences") && !seqPage.getInternalName().equals("sequence") )
 							removeSeq = true;
 			}
           
@@ -632,6 +633,9 @@ public class SequenceGroupWidget
               
 				for (int i = 0, n = attsToRemove.size(); i < n; i++) {
 					Attribute attToRemove = (Attribute) attsToRemove.get(i);
+					
+					System.out.println("revmoving "+attToRemove.getField());
+					
 					query.removeAttribute(attToRemove);
 				}
               
