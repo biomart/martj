@@ -3574,7 +3574,7 @@ public class DatabaseDatasetConfigUtils {
 	//result++;
 	//Integer datasetNo = new Integer(result);
 	//String datasetID = datasetNo.toString();	
-    DatasetConfig dsv = new DatasetConfig("default",datasetName + " ( " + schema + " )",datasetName,"","TableSet","1","","","","",tstamp.toString(),"default","default","");
+    DatasetConfig dsv = new DatasetConfig("default",datasetName,datasetName,"","TableSet","1","","","","",tstamp.toString(),"default","default","");
     
     //dsv.setInternalName(datasetName);
     //dsv.setInternalName("default");
