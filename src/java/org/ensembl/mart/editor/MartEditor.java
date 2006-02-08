@@ -1168,6 +1168,7 @@ System.out.println ("getting driver "+ driver);
 						dsv.setDisplayName(newDisplayName);
 					}
 				}
+				dsv.setOptionalParameter(odsv.getOptionalParameter());// so don't lose
 				// repeat logic for linkVersions updating any not null or '' or equal to newLinkVersion
 				dbutils.updateLinkVersions(dsv);					
 				
