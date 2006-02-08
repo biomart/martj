@@ -999,12 +999,12 @@ System.out.println ("getting driver "+ driver);
 			  // choose folder
 			  JFileChooser fc = new JFileChooser(getFileChooserPath());
 			  fc.setSelectedFile(getFileChooserPath());
+
 			  
 			  // changed to JOptionPane as not readable on the file chooser
 			  JOptionPane.showMessageDialog(null,"WARNING - THIS WILL REMOVE ALL EXISTING CONFIGURATION IN THE DATABASE YOU ARE UPLOADING YOUR CONFIGURATION TO");
 			  //fc.setDialogTitle("Choose file(s) to upload: WARNING: THIS WILL REMOVE ALL EXISTING XMLS IN THE DATABASE");
 		  	  
-			  
 			  fc.setMultiSelectionEnabled(true);			  
 			  XMLFileFilter filter = new XMLFileFilter();
 			  fc.addChoosableFileFilter(filter);
@@ -1090,6 +1090,7 @@ System.out.println ("getting driver "+ driver);
 			  DatasetConfig[] dsConfigs = new DatasetConfig[retSet.size()];
 			  retSet.toArray(dsConfigs);
 		      
+
 		      JOptionPane.showMessageDialog(null,"WARNING - THIS WILL REMOVE ALL EXISTING CONFIGURATION IN THE DATABASE YOU ARE MOVING YOUR CONFIGURATION TO");
 			  // connect to database to export to
 	    	  databaseConnection("Move to this database:");
@@ -1162,6 +1163,10 @@ System.out.println ("getting driver "+ driver);
 				String newDatasetVersion = dbutils.getNewVersion(dsv.getDataset());
 				if (datasetVersion != null && datasetVersion != "" && !datasetVersion.equals(newDatasetVersion)){
 					dsv.setVersion(newDatasetVersion);
+					if (dsv.getDisplayName().indexOf("(") > 0){
+						String newDisplayName = dsv.getDisplayName().split("\\(")[0]+"("+newDatasetVersion+")";
+						dsv.setDisplayName(newDisplayName);
+					}
 				}
 				// repeat logic for linkVersions updating any not null or '' or equal to newLinkVersion
 				dbutils.updateLinkVersions(dsv);					
@@ -1261,6 +1266,10 @@ System.out.println ("getting driver "+ driver);
 				String newDatasetVersion = dbutils.getNewVersion(dsv.getDataset());
 				if (newDatasetVersion != null && datasetVersion != null && datasetVersion != "" && !datasetVersion.equals(newDatasetVersion)){
 					dsv.setVersion(newDatasetVersion);
+					if (dsv.getDisplayName().indexOf("(") > 0){
+						String newDisplayName = dsv.getDisplayName().split("\\(")[0]+"("+newDatasetVersion+")";
+						dsv.setDisplayName(newDisplayName);
+					}
 					newVersion++;
 				}
 				// repeat logic for linkVersions updating any not null or '' or equal to newLinkVersion
@@ -1567,9 +1576,13 @@ System.out.println ("getting driver "+ driver);
 		// test if version need updating
 		String datasetVersion = dsv.getVersion();
 		String newDatasetVersion = dbutils.getNewVersion(dsv.getDataset());
-		if (datasetVersion != null && datasetVersion != "" && !datasetVersion.equals(newDatasetVersion))
+		if (datasetVersion != null && datasetVersion != "" && !datasetVersion.equals(newDatasetVersion)){
 			dsv.setVersion(newDatasetVersion);
-							
+			if (dsv.getDisplayName().indexOf("(") > 0){
+				String newDisplayName = dsv.getDisplayName().split("\\(")[0]+"("+newDatasetVersion+")";
+				dsv.setDisplayName(newDisplayName);
+			}
+		}
 		dbutils.updateLinkVersions(dsv);
 		
 		
@@ -1633,6 +1646,10 @@ System.out.println ("getting driver "+ driver);
 		String newDatasetVersion = dbutils.getNewVersion(dsv.getDataset());
 		if (newDatasetVersion != null && datasetVersion != null && datasetVersion != "" && !datasetVersion.equals(newDatasetVersion)){
 			dsv.setVersion(newDatasetVersion);
+			if (dsv.getDisplayName().indexOf("(") > 0){
+				String newDisplayName = dsv.getDisplayName().split("\\(")[0]+"("+newDatasetVersion+")";
+				dsv.setDisplayName(newDisplayName);
+			}
 			newVersion++;
 		}
 		// repeat logic for linkVersions updating any not null or '' or equal to newLinkVersion
