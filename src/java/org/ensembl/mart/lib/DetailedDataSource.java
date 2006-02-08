@@ -485,8 +485,11 @@ public class DetailedDataSource implements DataSource {
 		  if (tcheck == null) {// don't check databases with no version table yet
 				return conn;
 		  }
+		  String[] schemas = null;
+		  if(getDatabaseType().equals("oracle")) schemas = getSchema().toUpperCase().split(";");
+		  else schemas = getSchema().split(";");
 		  
-		  PreparedStatement ps = conn.prepareStatement("select version from "+this.schema+".meta_version__version__main");
+		  PreparedStatement ps = conn.prepareStatement("select version from "+schemas[0]+".meta_version__version__main");
 		  ResultSet rs = ps.executeQuery();
 		  rs.next();
 		  version = rs.getString(1);
