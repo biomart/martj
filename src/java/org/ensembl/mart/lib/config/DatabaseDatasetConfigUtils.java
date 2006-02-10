@@ -2592,6 +2592,7 @@ public class DatabaseDatasetConfigUtils {
 					
 					fd2.setType("drop_down_basic_filter");
 					String pushField = fd2.getField();
+					String pushColForDisplay = fd2.getColForDisplay();
 					String pushInternalName = fd2.getInternalName();
 					String pushTableName = fd2.getTableConstraint();
 
@@ -2610,7 +2611,7 @@ public class DatabaseDatasetConfigUtils {
 						String opName = op.getDisplayName();
 						PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderSQL);
 						//System.out.println("1A"+pushField+"\t"+pushTableName+"\t"+field+"\t"+opName+"\t"+orderSQL);
-						pa.addOptions(getLookupOptions(pushField, pushTableName, pafield, opName, orderSQL,schema));
+						pa.addOptions(getLookupOptions(pushField, pushTableName, pafield, opName, orderSQL,schema,pushColForDisplay));
 						
 						// ADD ANY SECONDARY PUSH ACTIONS
 						for (int p = 0; p < secondaryPushActions.length; p++){
@@ -2634,6 +2635,7 @@ public class DatabaseDatasetConfigUtils {
 								}
 								fd3.setType("drop_down_basic_filter");
 								String secPushField = fd3.getField();
+								String secColForDisplay = fd3.getColForDisplay();
 								String secPushInternalName = fd3.getInternalName();
 								String secPushTableName = fd3.getTableConstraint();
 								if (secPushTableName.equals("main")) {
@@ -2647,7 +2649,7 @@ public class DatabaseDatasetConfigUtils {
 									String secOpName = op3.getDisplayName();
 									PushAction secondaryPA = new PushAction(secPushInternalName + "_push_" + secOpName, null, null, secPushInternalName, secOrderSQL);
 									//System.out.println("1B"+pushField+"\t"+pushTableName+"\t"+field+"\t"+opName+"\t"+orderSQL);
-									secondaryPA.addOptions(getLookupOptions(secPushField, secPushTableName, secPafield, secOpName, secOrderSQL,schema));
+									secondaryPA.addOptions(getLookupOptions(secPushField, secPushTableName, secPafield, secOpName, secOrderSQL,schema,secColForDisplay));
 									options3[r].addPushAction(secondaryPA); 
 								}
 							}
@@ -2663,6 +2665,7 @@ public class DatabaseDatasetConfigUtils {
 					 FilterDescription fd2 = dsv.getFilterDescriptionByInternalName(filter2);//doesn't work for placeholder  
 				 	fd2.setType("drop_down_basic_filter");
 				 	String pushField = fd2.getField();
+					String pushColForDisplay = fd2.getColForDisplay();
 					 String pushInternalName = fd2.getInternalName();
 				 	String pushTableName = fd2.getTableConstraint();
 
@@ -2681,7 +2684,7 @@ public class DatabaseDatasetConfigUtils {
 						PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderSQL);
 						
 						//System.out.println("2A"+pushField+"\t"+pushTableName+"\t"+field+"\t"+opName+"\t"+orderSQL);
-						pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderSQL,schema));
+						pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderSQL,schema,pushColForDisplay));
 						// ADD ANY SECONDARY PUSH ACTION
 						for (int p = 0; p < secondaryPushActions.length; p++){
 							String secFilter2 = secondaryPushActions[p];
@@ -2704,6 +2707,7 @@ public class DatabaseDatasetConfigUtils {
 								}
 								fd3.setType("drop_down_basic_filter");
 								String secPushField = fd3.getField();
+								String secColForDisplay = fd3.getColForDisplay();
 								String secPushInternalName = fd3.getInternalName();
 								String secPushTableName = fd3.getTableConstraint();
 								if (secPushTableName.equals("main")) {
@@ -2717,7 +2721,7 @@ public class DatabaseDatasetConfigUtils {
 									String secOpName = op3.getDisplayName();
 									PushAction secondaryPA = new PushAction(secPushInternalName + "_push_" + secOpName, null, null, secPushInternalName, secOrderSQL);
 									//System.out.println("2B"+secPushField+"\t"+secPushTableName+"\t"+secPafield+"\t"+secOpName+"\t"+secOrderSQL);
-									secondaryPA.addOptions(getLookupOptions(secPushField, secPushTableName, secPafield, secOpName, secOrderSQL,schema));
+									secondaryPA.addOptions(getLookupOptions(secPushField, secPushTableName, secPafield, secOpName, secOrderSQL,schema,secColForDisplay));
 									options3[r].addPushAction(secondaryPA); 
 								}
 							}
@@ -4238,6 +4242,7 @@ public class DatabaseDatasetConfigUtils {
     fd2.setType("drop_down_basic_filter");
 
     String pushField = fd2.getField();
+	String pushColForDisplay = fd2.getColForDisplay();
     String pushInternalName = fd2.getInternalName();
     String pushTableName = fd2.getTableConstraint();
 
@@ -4275,7 +4280,7 @@ public class DatabaseDatasetConfigUtils {
       String opName = op.getInternalName();
       PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderBy);
 
-      pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderBy,getSchema()[0]));
+      pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderBy,getSchema()[0],pushColForDisplay));
 
       if (pa.getOptions().length > 0) {
         //System.out.println("ADDING PA\t" + op.getInternalName());
@@ -4588,7 +4593,7 @@ public class DatabaseDatasetConfigUtils {
 	return retOptions;
   }*/
 
-  public Option[] getLookupOptions(String columnName, String tableName, String whereName, String whereValue, String orderSQL, String schema)
+  public Option[] getLookupOptions(String columnName, String tableName, String whereName, String whereValue, String orderSQL, String schema, String colForDisplay)
     throws SQLException, ConfigurationException {
 
     List options = new ArrayList();
@@ -4597,8 +4602,25 @@ public class DatabaseDatasetConfigUtils {
       orderSQL = "ORDER BY " + columnName;
     else
       orderSQL = " ORDER BY " + orderSQL;
-        
-    String sql =
+    
+    String sql;    
+	if (colForDisplay != null && !colForDisplay.equals("")){
+		   sql =
+				  "SELECT DISTINCT "
+				  + columnName + "," + colForDisplay
+				+ " FROM "
+				+ schema + "." + tableName
+				+ " WHERE "
+				+ whereName
+				+ "=\'"
+				+ whereValue
+				+ "\' AND "
+				+ columnName
+				+ " IS NOT NULL "
+				+ orderSQL;
+	}    
+    else{    
+      sql =
       "SELECT DISTINCT "
         + columnName
         + " FROM "
@@ -4611,9 +4633,9 @@ public class DatabaseDatasetConfigUtils {
         + columnName
         + " IS NOT NULL "
         + orderSQL;
-        
+    }  
            
-    //System.out.println(sql);    
+    System.out.println(sql);    
     PreparedStatement ps = conn.prepareStatement(sql);
     ResultSet rs = null;
     try{
@@ -4629,7 +4651,12 @@ public class DatabaseDatasetConfigUtils {
       value = rs.getString(1);
       op = new Option();
       //System.out.println(value);
-      op.setDisplayName(value);
+	  if (colForDisplay != null && !colForDisplay.equals("")){
+	  	op.setDisplayName(rs.getString(2));	
+	  }
+	  else{
+      	op.setDisplayName(value);
+	  }
       op.setInternalName(value);
       op.setValue(value);
       op.setSelectable("true");

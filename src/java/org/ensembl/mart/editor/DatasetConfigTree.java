@@ -873,6 +873,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		DatasetConfigTreeNode node = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
 
 		String pushField = fd2.getField();
+		String pushColForDisplay = fd2.getColForDisplay();
 		String pushInternalName = fd2.getInternalName();
 		String pushTableName = fd2.getTableConstraint();
 
@@ -910,6 +911,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				}
 				fd2.setType("drop_down_basic_filter");
 				pushField = fd2.getField();
+				pushColForDisplay = fd2.getColForDisplay();
 				pushInternalName = fd2.getInternalName();
 				pushTableName = fd2.getTableConstraint();
 
@@ -951,6 +953,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					pushField = fd2.getField();
 					pushInternalName = fd2.getInternalName();
 					pushTableName = fd2.getTableConstraint();
+					pushColForDisplay = fd2.getColForDisplay();
 
 					if (pushTableName.equals("main")) {
 					String[] mains = otherDataset.getStarBases();
@@ -966,11 +969,11 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		for (int i = 0; i < options.length; i++) {			
 			
 			Option op = options[i];
-			//String opName = op.getInternalName();
-			String opName = op.getDisplayName();
+			String opName = op.getValue();
+			//String opName = op.getDisplayName();// incase displayName comes from another co
 			PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderSQL);
 			pa.addOptions(
-				MartEditor.getDatabaseDatasetConfigUtils().getLookupOptions(pushField, pushTableName, field, opName, orderSQL,MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]));
+				MartEditor.getDatabaseDatasetConfigUtils().getLookupOptions(pushField, pushTableName, field, opName, orderSQL,MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0],pushColForDisplay));
 
 			if (pa.getOptions().length > 0) {
 				Enumeration children = parentNode.children();
