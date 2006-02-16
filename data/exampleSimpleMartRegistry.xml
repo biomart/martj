@@ -2,21 +2,21 @@
 <!DOCTYPE MartRegistry>
 <MartRegistry>
 
-<MartDBLocation   
-		    name         = "MyBioMart"
+<MartDBLocation
+                    name         = "msd_mart_4"
                     displayName  = "My BioMart Database"
                     databaseType = "mysql"
-                    host         = "localhost"
+                    host         = "martdb.ebi.ac.uk"
                     port         = "3306"
-                    database    = "test"
-                    schema       = "test"
-                    user         = "user"
-                    password     = "pass"
-                    visible      ="1"
+                    database     = "msd_mart_4"
+                    schema       = "msd_mart_4"
+                    user         = "anonymous"
+                    password     = ""
+                    visible      = "1"
+                    default      = ""
                     includeDatasets = ""
-                    default       = ""
-                    martUser      = ""                  
+                    martUser     = ""
 />
-
 </MartRegistry>
+
 
