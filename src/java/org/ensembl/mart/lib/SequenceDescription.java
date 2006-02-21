@@ -422,7 +422,8 @@ public final class SequenceDescription {
 		tmp = (31 * tmp) + refDataSource.hashCode();
 		tmp = (31 * tmp) + leftFlank;
 		tmp = (31 * tmp) + rightFlank;
-		tmp = (31 * tmp) + seqInfo.hashCode();
+		if (seqInfo != null)
+			tmp = (31 * tmp) + seqInfo.hashCode();
 	  return tmp;	
 	}
 
