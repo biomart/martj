@@ -499,9 +499,10 @@ public class DetailedDataSource implements DataSource {
 		  }
 		  return conn;
 	} catch (SQLException e) {
-		System.out.println("Include a correct meta_version__version__main table entry:" + e);
 		JOptionPane.showMessageDialog(null,"Include a correct meta_version__version__main table entry:" + e);
-		return null;
+		//return null;
+	     //e.printStackTrace();
+		throw new SQLException("");
 	} 	   
     
     //return dataSource.getConnection();
