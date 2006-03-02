@@ -109,7 +109,7 @@ public class MartRegistryXMLUtils {
 			if (logger.isLoggable(Level.FINE))
 				logger.fine("Using " + getRegistrySQL + " to get Registry\n");
 
-			conn = dsource.getConnection();
+			conn = dsource.getConnectionNoVersionCheck();
 			PreparedStatement ps = conn.prepareStatement(getRegistrySQL);
 			//System.out.println(getRegistrySQL);
 			ResultSet rs = ps.executeQuery();
@@ -150,7 +150,7 @@ public class MartRegistryXMLUtils {
 			if (logger.isLoggable(Level.FINE))
 				logger.fine("Using " + getRegistrySQL + " to get Registry\n");
 
-			conn = dsource.getConnection();
+			conn = dsource.getConnectionNoVersionCheck();
 			PreparedStatement ps = conn.prepareStatement(getRegistrySQL);
 
 			ResultSet rs = ps.executeQuery();
@@ -192,7 +192,7 @@ public class MartRegistryXMLUtils {
 
 		try {
 			String CLEANREGISTRYTABLE = CLEANREGISTRYTABLE1 + dsource.getSchema() + CLEANREGISTRYTABLE2;
-			conn = dsource.getConnection();
+			conn = dsource.getConnectionNoVersionCheck();
 			PreparedStatement ps = conn.prepareStatement(CLEANREGISTRYTABLE);
 
 			ps.executeUpdate();
@@ -227,7 +227,7 @@ public class MartRegistryXMLUtils {
 		Connection conn = null;
 		try {
 			String UPDATECOMPRESSEDREGISTRYXML = UPDATECOMPRESSEDREGISTRYXML1 + dsource.getSchema() + UPDATECOMPRESSEDREGISTRYXML2;
-			conn = dsource.getConnection();
+			conn = dsource.getConnectionNoVersionCheck();
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 
 			XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
@@ -266,7 +266,7 @@ public class MartRegistryXMLUtils {
 			if (logger.isLoggable(Level.FINE))
 				logger.fine("\ninserting with SQL " + UPDATECOMPRESSEDREGISTRYXML + "\n");
 
-			conn = dsource.getConnection();
+			conn = dsource.getConnectionNoVersionCheck();
 			conn.setAutoCommit(false);
 
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -322,7 +322,7 @@ public class MartRegistryXMLUtils {
 			if (logger.isLoggable(Level.FINE))
 				logger.fine("\ninserting with SQL " + UPDATEREGISTRYXML + "\n");
 
-			conn = dsource.getConnection();
+			conn = dsource.getConnectionNoVersionCheck();
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 			XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
 
@@ -356,7 +356,7 @@ public class MartRegistryXMLUtils {
 			if (logger.isLoggable(Level.FINE))
 				logger.fine("\ninserting with SQL " + UPDATEREGISTRYXML + "\n");
 
-			conn = dsource.getConnection();
+			conn = dsource.getConnectionNoVersionCheck();
 			conn.setAutoCommit(false);
 
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
