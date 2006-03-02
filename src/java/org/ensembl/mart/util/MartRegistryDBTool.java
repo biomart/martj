@@ -331,8 +331,8 @@ public class MartRegistryDBTool {
 				  new File(registryPath)
 				);
 			} catch (ConfigurationException e) {
-				System.err.println("Could not fetch Registry from " + dsource.getName() + ": " + e.getMessage() + "\n");
-				e.printStackTrace();
+				System.err.println("Could not fetch Registry from " + dsource.getName() + ". Check your connection params\n");
+				//e.printStackTrace();
 			}
 		} // else not needed
 

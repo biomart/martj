@@ -421,7 +421,7 @@ public class DetailedDataSource implements DataSource {
    * @return Connection to the database specified.
    * @throws java.sql.SQLException if any problem occurs making the connection.
    */
-  public Connection getConnection() throws SQLException {
+  public Connection getConnectionNoVersionCheck() throws SQLException {
 
     if (dataSource == null) {
       try {
@@ -469,13 +469,74 @@ public class DetailedDataSource implements DataSource {
       }
 
     }
+    
+
+    	return dataSource.getConnection();	
+  }
+  
+  /**
+   * A connection pool is created when this merthod is first called
+   * and then connections are returned from it.
+   * 
+   * @return Connection to the database specified.
+   * @throws java.sql.SQLException if any problem occurs making the connection.
+   */
+  public Connection getConnection() throws SQLException {
+
+	if (dataSource == null) {
+	  try {
+		// load driver
+        
+		//System.out.println ("lodading ..."+jdbcDriverClassName);
+		Class.forName(jdbcDriverClassName).newInstance();
+		dataSource =
+		  new DriverManagerDataSource(
+			jdbcDriverClassName,
+			connectionString,
+			user,
+			password);
+
+		// Wrap data source in connection pool
+		PoolingAlgorithmDataSource tmp =
+		  new PoolingAlgorithmDataSource(dataSource);
+		DefaultPoolingAlgorithm poolAlgorithm = new DefaultPoolingAlgorithm();
+		poolAlgorithm.setPoolMax(maxPoolSize);
+		tmp.setPoolingAlgorithm(poolAlgorithm);
+
+		dataSource = tmp;
+
+	  } catch (InstantiationException e) {
+		e.printStackTrace();
+		throw new SQLException(
+		  "Failed to initialise database connection pool "
+			+ "(is the connection pool jar available?) : ");
+	  } catch (ClassNotFoundException e) {
+		e.printStackTrace();
+		throw new SQLException(
+		  "Failed to initialise database connection pool for "
+			+ jdbcDriverClassName
+			+ " (is the connection pool jar available?) : ");
+	  } catch (IllegalAccessException e) {
+		e.printStackTrace();
+		throw new SQLException(
+		  "Failed to initialise database connection pool "
+			+ "(is the connection pool jar available?) : ");
+	  } catch (NoClassDefFoundError e) {
+		e.printStackTrace();
+		throw new SQLException(
+		  "Failed to initialise database connection pool "
+			+ "(is the connection pool jar available?) : ");
+	  }
+
+	}
+    
 	Connection conn;
 	String version = null;
 	try {
 		  conn = dataSource.getConnection();
 		  
 		  ResultSet vr = conn.getMetaData().getTables(conn.getCatalog(), this.schema, "meta_version__version__main", null);
-          //expect at most one result, if no results, tcheck will remain null
+		  //expect at most one result, if no results, tcheck will remain null
 		  String tcheck = null;
 		  if (vr.next())
 			tcheck = vr.getString(3);
@@ -495,18 +556,19 @@ public class DetailedDataSource implements DataSource {
 		  version = rs.getString(1);
 		  rs.close();
 		  if (!version.equals(VERSION)){
-		  	throw new SQLException("Database version "+version+" and software version "+VERSION+" do not match");	
+			throw new SQLException("Database version "+version+" and software version "+VERSION+" do not match");	
 		  }
 		  return conn;
 	} catch (SQLException e) {
 		JOptionPane.showMessageDialog(null,"Include a correct meta_version__version__main table entry:" + e);
 		//return null;
-	     //e.printStackTrace();
+		 //e.printStackTrace();
 		throw new SQLException("");
 	} 	   
     
-    //return dataSource.getConnection();
+	//return dataSource.getConnection();
   }
+  
 
   /**
    * @param username
