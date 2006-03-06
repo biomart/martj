@@ -1222,6 +1222,12 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			dsConfig.getInterfaces(),
 			dsConfig);
 	}
+	
+	public void exportTemplate() throws ConfigurationException {
+		dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
+		
+		MartEditor.getDatabaseDatasetConfigUtils().storeTemplateXML(dsConfig,dsConfig.getTemplate());
+	}
 
 	//public void lostOwnership(Clipboard c, Transferable t) {
 

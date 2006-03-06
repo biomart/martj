@@ -70,7 +70,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
     private MartEditor editor;
 
 	
-    public DatasetConfigTreeWidget(File file, MartEditor editor, DatasetConfig dsv, String user, String dataset, String datasetID, String schema){
+    public DatasetConfigTreeWidget(File file, MartEditor editor, DatasetConfig dsv, String user, String dataset, String datasetID, String schema, String template){
 
         super("Dataset Tree " + (++openFrameCount),
                 true, //resizable
@@ -103,17 +103,25 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             	  }
             	}
             	else{//Importing config
-//              ignore cache, do not loadFully, include hidden members
-					DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, "", true, false, true);
-					DatasetConfigIterator configs = adaptor.getDatasetConfigs();
-					while (configs.hasNext()){
-            DatasetConfig lconfig = (DatasetConfig) configs.next();
-					  if (lconfig.getDataset().equals(dataset) && lconfig.getDatasetID().equals(datasetID)){
-					    config = lconfig;
-					    break;
-					  }
-					}
-					//System.out.println("GOT CONFIG "+config.getDatasetID());
+            		if (template != null){
+            			// import template
+            			//config = MartEditor.getDatabaseDatasetConfigUtils().getTemplateConfig(template);
+            			config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template);
+            			MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(config,
+            				MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template));
+            		}
+            		else{
+      //              ignore cache, do not loadFully, include hidden members
+					  DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, "", true, false, true);
+					  DatasetConfigIterator configs = adaptor.getDatasetConfigs();
+					  while (configs.hasNext()){
+            			DatasetConfig lconfig = (DatasetConfig) configs.next();
+					  	if (lconfig.getDataset().equals(dataset) && lconfig.getDatasetID().equals(datasetID)){
+					    	config = lconfig;
+					    	break;
+					  		}
+						}
+            		}
             	}
             } else {// open from file
                 URL url = file.toURL();
@@ -242,6 +250,10 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 
 	public void export() throws ConfigurationException{
 		tree.export();
+	}
+	
+	public void exportTemplate() throws ConfigurationException{
+		tree.exportTemplate();
 	}
 
     public void cut(){

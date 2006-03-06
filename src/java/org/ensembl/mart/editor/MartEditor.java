@@ -349,6 +349,18 @@ System.out.println ("getting driver "+ driver);
 	//menuItem.setMnemonic(KeyEvent.VK_I);
 	menu.add(menuItem);
 
+	menu.addSeparator();
+
+	menuItem = new JMenuItem("Import Template");
+	menuItem.addActionListener(menuActionListener);
+	//menuItem.setMnemonic(KeyEvent.VK_I);
+	menu.add(menuItem);
+
+	menuItem = new JMenuItem("Export Template");
+	menuItem.addActionListener(menuActionListener);
+	//menuItem.setMnemonic(KeyEvent.VK_I);
+	menu.add(menuItem);
+
     menu.addSeparator();
 	menuItem = new JMenuItem("Update All");
 	menuItem.addActionListener(menuActionListener);
@@ -495,7 +507,7 @@ System.out.println ("getting driver "+ driver);
   //Create a new internal frame.
   protected void createFrame(File file) {
 
-    DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(file, this, null, null, null, null, null);
+    DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(file, this, null, null, null, null, null,null);
     frame.setVisible(true);
     desktop.add(frame);
     try {
@@ -584,8 +596,12 @@ System.out.println ("getting driver "+ driver);
         redo();
       else if (e.getActionCommand().startsWith("Database"))
         databaseConnection("");
+	  else if (e.getActionCommand().startsWith("Import Template"))
+		importTemplate(); 
       else if (e.getActionCommand().startsWith("Import"))
         importDatasetConfig();
+	  else if (e.getActionCommand().startsWith("Export Template"))
+		exportTemplate();  
       else if (e.getActionCommand().startsWith("Export"))
         exportDatasetConfig();
       else if (e.getActionCommand().startsWith("Naive"))
@@ -771,6 +787,53 @@ System.out.println ("getting driver "+ driver);
 
   }
 
+
+  public void importTemplate() {
+	try {
+	  if (ds == null) {
+		JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+		return;
+	  }
+
+	  disableCursor();
+
+	  String[] templates = dbutils.getAllTemplateNames();
+	  if (templates.length == 0){
+		JOptionPane.showMessageDialog(this, "No templates in this database", "ERROR", 0);
+				return;
+	  }
+		 String template =
+		(String) JOptionPane.showInputDialog(
+		  null,
+		  "Choose one",
+		  "Dataset config",
+		  JOptionPane.INFORMATION_MESSAGE,
+		  null,
+		  templates,
+		  templates[0]);
+
+	  if (template == null)
+		return;
+
+	
+
+	  DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, null, null, databaseDialog.getSchema(), template);
+	  frame.setVisible(true);
+	  desktop.add(frame);
+	  try {
+		frame.setSelected(true);
+	  } catch (java.beans.PropertyVetoException e) {
+	  }
+	} catch (ConfigurationException e) {
+	  JOptionPane.showMessageDialog(this, "No datasets available for import - is this a BioMart compatible schema? Missing  meta_configuration tables?" +
+			" Empty meta_configuration tables?", "ERROR", 0);
+	} finally {
+	  enableCursor();
+	}
+  }
+
+
+
   public void importDatasetConfig() {
     try {
       if (ds == null) {
@@ -818,7 +881,8 @@ System.out.println ("getting driver "+ driver);
 		return;
 	
 
-      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, dataset, datasetID, databaseDialog.getSchema());
+      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, dataset, datasetID, 
+      	databaseDialog.getSchema(),null);
       frame.setVisible(true);
       desktop.add(frame);
       try {
@@ -832,6 +896,27 @@ System.out.println ("getting driver "+ driver);
       enableCursor();
     }
   }
+
+  public void exportTemplate() {
+	if (ds == null) {
+	  JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+	  return;
+	}
+
+	try {
+	  disableCursor();
+	  DatasetConfig dsConfig = ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig();	
+	  ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).exportTemplate();
+	} catch (ConfigurationException e) {
+	  JOptionPane.showMessageDialog(this, "Problems with exporting requested dataset. " +
+			"Check that dataset id is unique, you have write permissions " +
+			"and the meta_configuration tables are in required format", "ERROR", 0);
+	  e.printStackTrace();
+	} finally {
+	  enableCursor();
+	}
+  }
+
 
   public void exportDatasetConfig() {
     if (ds == null) {
@@ -912,7 +997,7 @@ System.out.println ("getting driver "+ driver);
       disableCursor();
      
     
-      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, null, schema);
+      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, null, schema,null);
 
       frame.setVisible(true);
       desktop.add(frame);
@@ -1197,7 +1282,8 @@ System.out.println ("getting driver "+ driver);
 				// display it if new atts or filts for further editing	
 				if ((dsv.getAttributePageByInternalName("new_attributes") != null) ||
 				    (dsv.getFilterPageByName("new_filters") != null)){
-					DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
+					DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, 
+						database,null);
 					frame.setVisible(true);
 					desktop.add(frame);
 					try {
@@ -1448,7 +1534,8 @@ System.out.println ("getting driver "+ driver);
 				if (newVersion != 0 || (dsv.getAttributePageByInternalName("new_attributes") != null && (dsv.getAttributePageByInternalName("new_attributes").getHidden() == null || dsv.getAttributePageByInternalName("new_attributes").getHidden().equals("false"))) ||
 					(dsv.getFilterPageByName("new_filters") != null && (dsv.getFilterPageByName("new_filters").getHidden() == null || dsv.getFilterPageByName("new_filters").getHidden().equals("false")))){
 				
-					DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
+					DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, 
+						database,null);
 					frame.setVisible(true);
 					desktop.add(frame);
 					try {
@@ -1587,7 +1674,7 @@ System.out.println ("getting driver "+ driver);
 		dbutils.updateLinkVersions(dsv);
 		
 		
-        DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, schema);
+        DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, schema,null);
         frame.setVisible(true);
         desktop.add(frame);
         try {
@@ -1831,7 +1918,7 @@ System.out.println ("getting driver "+ driver);
 		if (newVersion != 0 || (dsv.getAttributePageByInternalName("new_attributes") != null && (dsv.getAttributePageByInternalName("new_attributes").getHidden() == null || dsv.getAttributePageByInternalName("new_attributes").getHidden().equals("false"))) ||
 			(dsv.getFilterPageByName("new_filters") != null && (dsv.getFilterPageByName("new_filters").getHidden() == null || dsv.getFilterPageByName("new_filters").getHidden().equals("false")))){
 				
-			DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
+			DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database,null);
 			frame.setVisible(true);
 			desktop.add(frame);
 			try {

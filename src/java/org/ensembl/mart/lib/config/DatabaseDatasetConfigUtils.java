@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -73,7 +74,9 @@ public class DatabaseDatasetConfigUtils {
   private final String MARTINTERFACETABLE = "meta_conf__interface__dm";
   private final String MARTXMLTABLE =       "meta_conf__xml__dm";
   private final String MARTRELEASETABLE =   "meta_release__release__main";	
-  private final String MARTVERSIONTABLE =   "meta_version__version__main";	
+  private final String MARTVERSIONTABLE =   "meta_version__version__main";
+  private final String MARTTEMPLATEMAINTABLE =   "meta_template__template__main";
+  private final String MARTTEMPLATEDMTABLE =   "meta_template__xml__dm";	
 
   private final String MAINTABLESUFFIX = "main";
   private final String DIMENSIONTABLESUFFIX = "dm";
@@ -272,6 +275,35 @@ public class DatabaseDatasetConfigUtils {
           + e.getMessage()
           + "\n");
     }
+  }
+  
+  /**
+   * Determine if meta_template__template__main exists in a Mart Database defined by the given DetailedDataSource.
+   * @return true if meta_template__template__main exists, false if it does not exist
+   * @throws ConfigurationException for all underlying Exceptions
+   */
+  public boolean templateTableExists() throws ConfigurationException {
+	String table = MARTTEMPLATEMAINTABLE;
+	try {
+	  boolean exists = true;
+
+	  exists = tableExists(table);
+	  if (!exists)
+		exists = tableExists(table.toUpperCase());
+	  if (!exists)
+		exists = tableExists(table.toLowerCase());
+
+	  return exists;
+	} catch (SQLException e) {
+	  throw new ConfigurationException(
+		"Could not find base Configuration table "
+		  + table
+		  + " in DataSource: "
+		  + dsource
+		  + "\nRecieved SQL Exception: "
+		  + e.getMessage()
+		  + "\n");
+	}
   }
 
   /**
@@ -638,7 +670,7 @@ public class DatabaseDatasetConfigUtils {
 
     //if (compress)
       rowsupdated = storeCompressedXML(user, internalName, displayName, dataset, description, doc, 
-      	type, visible, version, datasetID, martUsers, interfaces);
+      	type, visible, version, datasetID, martUsers, interfaces, dsConfig);
     //else
       //rowsupdated = storeUncompressedXML(user, internalName, displayName, dataset, description, datasetID, doc);
 
@@ -648,169 +680,111 @@ public class DatabaseDatasetConfigUtils {
       if (logger.isLoggable(Level.WARNING))
         logger.warning("Warning, xml for " + internalName + ", " + displayName + " not stored"); //throw an exception?	
   }
-/*
-  private int storeUncompressedXML(
-    String user,
-    String internalName,
-    String displayName,
-    String dataset,
-    String description,
-    String datasetID,
-    Document doc)
-    throws ConfigurationException {
-    if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
-      return storeUncompressedXMLOracle(user, internalName, displayName, dataset, description, datasetID, doc);
 
-    Connection conn = null;
-    try {
-      String metatable = createMetaTables(user);
-      
-      String insertSQL1 = "INSERT INTO "+getSchema()[0]+"."+metatable + " (display_name, dataset, description, type, visible, version) " +      	"values (?,?,?,?,?,?)";
-	  String insertSQL2 = "INSERT INTO "+getSchema()[0]+"."+MARTXMLTABLE+" (dataset_id_key,xml, message_digest) values (?,?,?)";
 
-      if (logger.isLoggable(Level.FINE))
-        logger.fine("\ninserting with SQL " + insertSQL1 + "\n");
+  private void generateTemplateXML(DatasetConfig dsConfig) throws ConfigurationException{
+	//Connection conn = null;
+	//try {
+		DatasetConfig templateConfig = dsConfig;
+		String template = dsConfig.getTemplate();
+		
+		// NEED TO BLANK RELEVANT BITS IN templateConfig
+		List filterDescriptions = templateConfig.getAllFilterDescriptions();
+		for (int i = 0; i < filterDescriptions.size(); i++){
+			// ? using diff objects for template to remove these completely
+			FilterDescription fd = (FilterDescription) filterDescriptions.get(i);
+			fd.setTableConstraint("");
+			fd.setField("");
+			fd.setOtherFilters("");		
+			// should remove value options and pas as wel
+		}
+		List attributeDescriptions = templateConfig.getAllAttributeDescriptions();
+		for (int i = 0; i < attributeDescriptions.size(); i++){
+		// ? using diff objects for template to remove these completely
+			AttributeDescription ad = (AttributeDescription) attributeDescriptions.get(i);
+			ad.setTableConstraint("");
+			ad.setField("");
+			ad.setLinkoutURL("");		
+		}
+		Exportable[] exps = templateConfig.getExportables();
+		for (int i = 0; i < exps.length; i++){
+			Exportable exp = exps[i];
+			exp.setLinkVersion("");
+		}
+		Importable[] imps = templateConfig.getImportables();
+		for (int i = 0; i < imps.length; i++){
+			Importable imp = imps[i];
+			imp.setLinkVersion("");
+		}	
+		
+		storeTemplateXML(templateConfig,template);
 
-      conn = dsource.getConnection();
-      MessageDigest md5digest = MessageDigest.getInstance(DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM);
-      ByteArrayOutputStream bout = new ByteArrayOutputStream();
-      DigestOutputStream dout = new DigestOutputStream(bout, md5digest);
-      XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
-
-      xout.output(doc, dout);
-
-      byte[] xml = bout.toByteArray();
-      byte[] md5 = md5digest.digest();
-
-      bout.close();
-      dout.close();
-
-      int rowstodelete = getDSConfigEntryCountFor(metatable, datasetID, internalName);
-
-      if (rowstodelete > 0)
-        deleteOldDSConfigEntriesFor(metatable, datasetID, internalName);
-
-      PreparedStatement ps1 = conn.prepareStatement(insertSQL1);
-	  PreparedStatement ps2 = conn.prepareStatement(insertSQL2);
-      //ps.setString(1, internalName);
-      ps1.setString(1, displayName);
-      ps1.setString(2, dataset);
-      ps1.setString(3, description);
-      ps2.setString(1, datasetID);
-      ps2.setBinaryStream(2, new ByteArrayInputStream(xml), xml.length);
-      ps2.setBytes(3, md5);
-
-      int ret = ps1.executeUpdate();
-      ps1.close();
-	  ret = ps2.executeUpdate();
-	  ps2.close();
-	  
-      return ret;
-    } catch (IOException e) {
-      throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage(), e);
-    } catch (SQLException e) {
-      throw new ConfigurationException(
-        "Caught SQLException updating xml for " + internalName + ", " + displayName + ": " + e.getMessage(),
-        e);
-    } catch (NoSuchAlgorithmException e) {
-      throw new ConfigurationException(
-        "Caught NoSuchAlgorithmException updating xml for " + internalName + ", " + displayName + ": " + e.getMessage(),
-        e);
-    } finally {
-      DetailedDataSource.close(conn);
-    }
   }
 
-  private int storeUncompressedXMLOracle(
-    String user,
-    String internalName,
-    String displayName,
-    String dataset,
-    String description,
-    String datasetID,
-    Document doc)
-    throws ConfigurationException {
+  public void storeTemplateXML(DatasetConfig templateConfig, String template) throws ConfigurationException{
+  		Connection conn = null;
+  		try{
+			conn = dsource.getConnection();	
+ 				
+			String sql = "DELETE FROM "+getSchema()[0]+"."+MARTTEMPLATEDMTABLE+" WHERE template='"+template+"'";
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.executeUpdate();
+			
+			Document doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(templateConfig);
+		
+			MessageDigest md5digest = MessageDigest.getInstance(DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM);    
+			ByteArrayOutputStream bout = new ByteArrayOutputStream();
+			GZIPOutputStream gout = new GZIPOutputStream(bout);
+			DigestOutputStream out = new DigestOutputStream(gout, md5digest);
+			XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
+			xout.output(doc, out);
+			gout.finish();
+			byte[] xml = bout.toByteArray();
+		
+			sql = "INSERT INTO " + getSchema()[0]+"."+MARTTEMPLATEDMTABLE+" (template, compressed_xml) values (?, ?)";
+			ps = conn.prepareStatement(sql);
+			ps.setString(1,template);
+			if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
+				ps.setBlob(2,BLOB.empty_lob());// oracle hack
+			else
+				ps.setBinaryStream(2, new ByteArrayInputStream(xml), xml.length);
+			ps.executeUpdate();
+			
+			
+			if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0){
+				// oracle hack
+				String oraclehackSQL = "SELECT compressed_xml FROM "+getSchema()[0]+"." + MARTXMLTABLE + " WHERE dataset_id_key = ? FOR UPDATE";
+				PreparedStatement ohack = conn.prepareStatement(oraclehackSQL);
+				ResultSet rs = ohack.executeQuery();
 
-    Connection conn = null;
-    try {
-      String metatable = createMetaTables(user);
-	  String insertSQL1 = "INSERT INTO "+getSchema()[0]+"." + metatable + " (display_name, dataset, description, type, visible, version) " +
-		"values (?,?,?,?,?,?)";
-	  String insertSQL2 = "INSERT INTO "+getSchema()[0]+"."+MARTXMLTABLE+" (dataset_id_key,xml, message_digest) values (?,?,?)";
-      String oraclehackSQL = "SELECT xml FROM " + metatable + " WHERE dataset_id_key = ? FOR UPDATE";
-
-      if (logger.isLoggable(Level.FINE))
-        logger.fine("\ninserting with SQL " + insertSQL1 + "\n");
-
-      conn = dsource.getConnection();
-      conn.setAutoCommit(false);
-
-      MessageDigest md5digest = MessageDigest.getInstance(DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM);
-      ByteArrayOutputStream bout = new ByteArrayOutputStream();
-      DigestOutputStream dout = new DigestOutputStream(bout, md5digest);
-      XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
-
-      xout.output(doc, dout);
-
-      byte[] xml = bout.toByteArray();
-      byte[] md5 = md5digest.digest();
-
-      bout.close();
-      dout.close();
-
-      int rowstodelete = getDSConfigEntryCountFor(metatable, datasetID, internalName);
-
-      if (rowstodelete > 0)
-        deleteOldDSConfigEntriesFor(metatable, datasetID, internalName);
-
-      PreparedStatement ps1 = conn.prepareStatement(insertSQL1);
-	  PreparedStatement ps2 = conn.prepareStatement(insertSQL2);
-      PreparedStatement ohack = conn.prepareStatement(oraclehackSQL);
-
-      //ps.setString(1, internalName);
-      ohack.setString(1, datasetID);
-      ps1.setString(1, displayName);
-      ps1.setString(2, dataset);
-      //ohack.setString(2, dataset);
-      ps1.setString(3, description);
-      ps2.setString(1, datasetID);
-      ps2.setClob(2, CLOB.empty_lob());
-      ps2.setBytes(3, md5);
-
-      int ret = ps1.executeUpdate();
-	  ret = ps2.executeUpdate();
-	  
-      ResultSet rs = ohack.executeQuery();
-
-      if (rs.next()) {
-        CLOB clob = (CLOB) rs.getClob(1);
-
-        OutputStream clobout = clob.getAsciiOutputStream();
-        clobout.write(xml);
-        clobout.close();
-      }
-
-      conn.commit();
-      rs.close();
-      ohack.close();
-      ps1.close();
-	  ps2.close();
-      return ret;
-    } catch (IOException e) {
-      throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage(), e);
-    } catch (SQLException e) {
-      throw new ConfigurationException(
-        "Caught SQLException updating xml for " + internalName + ", " + displayName + ": " + e.getMessage(),
-        e);
-    } catch (NoSuchAlgorithmException e) {
-      throw new ConfigurationException(
-        "Caught NoSuchAlgorithmException updating xml for " + internalName + ", " + displayName + ": " + e.getMessage(),
-        e);
-    } finally {
-      DetailedDataSource.close(conn);
-    }
+				if (rs.next()) {
+					BLOB blob = (BLOB) rs.getBlob(1);
+					OutputStream blobout = blob.getBinaryOutputStream();
+					blobout.write(xml);
+					blobout.close();
+				}
+			}
+			
+			ps.close();	
+  		}
+		catch (IOException e) {
+			throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage());
+		} 
+		catch (SQLException e) {
+			throw new ConfigurationException(
+			"Caught SQLException updating xml for " + e.getMessage());
+		} 
+		catch (NoSuchAlgorithmException e) {
+			throw new ConfigurationException(
+			"Caught NoSuchAlgorithmException updating xml for " + ": " + e.getMessage(),
+			e);
+		} 
+  	
+		finally {
+			DetailedDataSource.close(conn);
+		}
   }
-*/
+
   private int storeCompressedXML(
     String user,
     String internalName,
@@ -823,10 +797,11 @@ public class DatabaseDatasetConfigUtils {
     String version,
 	String datasetID,
 	String martUsers,
-	String interfaces)
+	String interfaces,
+	DatasetConfig dsConfig)
     throws ConfigurationException {
     if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
-      return storeCompressedXMLOracle(user, internalName, displayName, dataset, description, doc, type, visible, version, datasetID, martUsers, interfaces);
+      return storeCompressedXMLOracle(user, internalName, displayName, dataset, description, doc, type, visible, version, datasetID, martUsers, interfaces,dsConfig);
 
     Connection conn = null;
     try {
@@ -871,10 +846,49 @@ public class DatabaseDatasetConfigUtils {
 	  	}
 	  }
       
+      // add new template setting
+      String template = dsConfig.getTemplate();
+      if (template.equals("")){
+      	template = dataset;
+      	dsConfig.setTemplate(template);	
+      }
+	  sql = "DELETE FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE dataset_id_key="+datasetID;
+	  ps = conn.prepareStatement(sql);
+	  ps.executeUpdate();
+	  
+	  ps = conn.prepareStatement("INSERT INTO "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" VALUES ("+datasetID+",'"
+					+template+"')");
+	  ps.executeUpdate();	
       
-      //String insertSQL = INSERTCOMPRESSEDXMLA + getSchema()[0]+"."+metatable + INSERTCOMPRESSEDXMLBMYSQL;
-	  String insertSQL1 = "INSERT INTO " + getSchema()[0]+"." + metatable + " (display_name, dataset, description, " +	  	"type, visible, version,dataset_id_key,modified) values (?, ?, ?, ?, ?, ?,?,?)";
+      
+      sql = "SELECT count(*) FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE template='"+template+"'";
+	  ps = conn.prepareStatement(sql);
+	  ResultSet rs = ps.executeQuery();
+	  rs.next();
+	  int result = rs.getInt(1);
+      if (result > 1){//usual 1:1 dataset:template do not get template merging 
+      	System.out.println("SHOULD MERGE CONFIG AND TEMPLATE TOGETHER NOW");
+	    /*
+	  	  Merge dsConfig and existing template:
+		   - completely new filters and atts get added to template
+		   - existing ones get fitted to template layout in dsConfig
+		   - method should store template XML once done and return edited dsConfig
+		   
+		   dsConfig = updateConfigToTemplate(dsConfig);
+		   doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
+		  */
+      }
+      else{
+      	System.out.println("OVERWRITE TEMPLATE WITH THIS LAYOUT");
+	  	generateTemplateXML(dsConfig);
+      }
+      
+      
+      
+ 
+      String insertSQL1 = "INSERT INTO " + getSchema()[0]+"." + metatable + " (display_name, dataset, description, " +	  	"type, visible, version,dataset_id_key,modified) values (?, ?, ?, ?, ?, ?,?,?)";
       String insertSQL2 = "INSERT INTO " + getSchema()[0]+"."+MARTXMLTABLE+" (dataset_id_key, xml, compressed_xml, " +      	"message_digest) values (?, ?, ?, ?)";
+	  
 
       if (logger.isLoggable(Level.FINE))
         logger.fine("\ninserting with SQL " + insertSQL1 + "\n");
@@ -891,7 +905,8 @@ public class DatabaseDatasetConfigUtils {
       xout.output(doc, out);
       gout.finish();
 
-      byte[] xml = bout.toByteArray();// ? SHOULD IT NOT BE gout
+      byte[] xml = bout.toByteArray();
+            
 	  byte[] md5 = md5digest.digest();
       // recover uncompressed XML as well
 	  ByteArrayOutputStream bout2 = new ByteArrayOutputStream();
@@ -914,6 +929,7 @@ public class DatabaseDatasetConfigUtils {
       PreparedStatement ps1 = conn.prepareStatement(insertSQL1);
 	  PreparedStatement ps2 = conn.prepareStatement(insertSQL2);
 	  
+	  
       //ps.setString(1, internalName);
       ps1.setString(1, displayName);
       ps1.setString(2, dataset);
@@ -930,12 +946,16 @@ public class DatabaseDatasetConfigUtils {
   	  Timestamp tstamp = new Timestamp(System.currentTimeMillis());
 	  ps1.setTimestamp(8,tstamp);
 	  
+
+	  
       int ret = ps1.executeUpdate();
 	  ret = ps2.executeUpdate();
+	  //ret = ps3.executeUpdate();
 	  
       ps.close();
 	  ps1.close();
 	  ps2.close();
+	  //ps3.close();
 	  	
       return ret;
     } catch (IOException e) {
@@ -964,7 +984,8 @@ public class DatabaseDatasetConfigUtils {
 	String version,
 	String datasetID,
 	String martUsers,
-	String interfaces)
+	String interfaces,
+	DatasetConfig dsConfig)
     throws ConfigurationException {
 
     Connection conn = null;
@@ -1008,6 +1029,43 @@ public class DatabaseDatasetConfigUtils {
 				ps = conn.prepareStatement("INSERT INTO "+getSchema()[0]+"."+MARTINTERFACETABLE+" VALUES ("+datasetID+",'"
 					+interfaceEntries[i]+"')");
 				ps.executeUpdate();	
+	  }
+      
+	  // add new template setting
+	  String template = dsConfig.getTemplate();
+	  if (template.equals("")){
+		template = dataset;
+		dsConfig.setTemplate(template);	
+	  }
+	  sql = "DELETE FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE dataset_id_key="+datasetID;
+	  ps = conn.prepareStatement(sql);
+	  ps.executeUpdate();
+	  
+	  ps = conn.prepareStatement("INSERT INTO "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" VALUES ("+datasetID+",'"
+					+template+"')");
+	  ps.executeUpdate();	
+      
+      
+	  sql = "SELECT count(*) FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE template='"+template+"'";
+	  ps = conn.prepareStatement(sql);
+	  ResultSet rs = ps.executeQuery();
+	  rs.next();
+	  int result = rs.getInt(1);
+	  if (result > 1){//usual 1:1 dataset:template do not get template merging 
+		System.out.println("SHOULD MERGE CONFIG AND TEMPLATE TOGETHER NOW");
+		/*
+		  Merge dsConfig and existing template:
+		   - completely new filters and atts get added to template
+		   - existing ones get fitted to template layout in dsConfig
+		   - method should store template XML once done and return edited dsConfig
+		   
+		   dsConfig = updateConfigToTemplate(dsConfig);
+		   doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
+		  */
+	  }
+	  else{
+		System.out.println("OVERWRITE TEMPLATE WITH THIS LAYOUT");
+		generateTemplateXML(dsConfig);
 	  }
       
       //String insertSQL = INSERTCOMPRESSEDXMLA + metatable + INSERTCOMPRESSEDXMLB;
@@ -1071,7 +1129,7 @@ public class DatabaseDatasetConfigUtils {
       int ret = ps1.executeUpdate();
 	  ret = ps2.executeUpdate();
 
-      ResultSet rs = ohack.executeQuery();
+      rs = ohack.executeQuery();
 
       if (rs.next()) {
         BLOB blob = (BLOB) rs.getBlob(1);
@@ -1200,7 +1258,7 @@ public class DatabaseDatasetConfigUtils {
 		// always set internalName of dataset to default - not really used anywhere now
 		// internalName can probably be safely removed from DatasetConfig or at least from constructor
         DatasetConfig dsv = new DatasetConfig("default", dname, dset, description, type, visible,"",version,"",
-        	datasetID,modified,martUsers,interfaces,"");
+        	datasetID,modified,martUsers,interfaces,"","");
         dsv.setMessageDigest(digest);
         
         HashMap userMap = (HashMap) configInfo.get(user);
@@ -1222,6 +1280,38 @@ public class DatabaseDatasetConfigUtils {
       DetailedDataSource.close(conn);
     }
   }
+  
+  /**
+   * Returns all template names from the meta_template__xml__dm table for the given user.
+   * @param user -- user for meta_configuration table, if meta_configuration_user does not exist, meta_configuration is attempted.
+   * @return String[] dataset names
+   * @throws ConfigurationException when valid meta_configuration table does not exist, and for all underlying SQL Exceptions
+   */
+  public String[] getAllTemplateNames() throws ConfigurationException {
+	      
+	Connection conn;
+	
+	try {
+		  String sql = "SELECT template FROM "+getSchema()[0]+"."+MARTTEMPLATEDMTABLE;
+		  conn = dsource.getConnection();
+		  PreparedStatement ps = conn.prepareStatement(sql);
+		  ResultSet rs = ps.executeQuery();
+		  List results = new ArrayList();
+		  while (rs.next()) {
+		  	results.add(rs.getString(1));
+		  }
+		  String[] templateNames = new String[results.size()];
+		  results.toArray(templateNames);
+		  return templateNames;
+	}
+	catch(SQLException e){
+		System.out.println("PROBLEM QUERYING "+MARTTEMPLATEDMTABLE+" TABLE "+e.toString());
+		return null;
+	}
+	
+  }
+	
+	
   
   /**
    * Returns all dataset names from the meta_configuration table for the given user.
@@ -1407,6 +1497,61 @@ public class DatabaseDatasetConfigUtils {
       DetailedDataSource.close(conn);
     }
   }
+
+  /**
+   * Returns a DatasetConfig JDOM Document from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
+   * given internalName and dataset.
+   * @param user -- Specific User to look for meta_configuration_[user] table, if null, or non-existent, uses meta_configuration
+   * @param dataset -- dataset for which DatasetConfig document is requested
+   * @param internalName -- internalName of desired DatasetConfig document
+   * @return DatasetConfig JDOM Document defined by given displayName and dataset
+   * @throws ConfigurationException when valid meta_configuration tables are absent, and for all underlying Exceptions
+   */
+  public Document getTemplateDocument(String template)
+	throws ConfigurationException {
+	//if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
+	//  return getTemplateDocumentOracle(template);
+
+	Connection conn = null;
+	try {
+	  String sql = "select compressed_xml from "+getSchema()[0]+"."+MARTTEMPLATEDMTABLE+" where template = ?";
+		
+	  conn = dsource.getConnection();
+	  PreparedStatement ps = conn.prepareStatement(sql);
+	  ps.setString(1, template);
+
+	  ResultSet rs = ps.executeQuery();
+	  if (!rs.next()) {
+		// will only get one result
+		rs.close();
+		conn.close();
+		return null;
+	  }
+	  
+	  InputStream rstream;
+	  if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0){
+	  	BLOB cstream = (BLOB) rs.getBlob(1);
+	  	rstream = new GZIPInputStream(cstream.getBinaryStream());
+	  }
+	  else{
+	  	byte[] cstream = rs.getBytes(1);	
+	  	rstream =  new GZIPInputStream(new ByteArrayInputStream(cstream));
+	  }
+	  return dscutils.getDocumentForXMLStream(rstream);
+	  
+	} catch (SQLException e) {
+	  throw new ConfigurationException(
+		"Caught SQL Exception during fetch of requested DatasetConfig: " + e.getMessage(),
+		e);
+	} catch (IOException e) {
+	  throw new ConfigurationException(
+		"Caught IOException during fetch of requested DatasetConfig: " + e.getMessage(),
+		e);
+	} finally {
+	  DetailedDataSource.close(conn);
+	}
+  }
+
 
   private Document getDatasetConfigDocumentByDatasetIDOracle(String user, String dataset, String datasetID)
     throws ConfigurationException {
@@ -1877,26 +2022,58 @@ public class DatabaseDatasetConfigUtils {
     	String MYSQL_USER=CREATETABLE+"."+MARTUSERTABLE+" ( dataset_id_key int, mart_user varchar(100),UNIQUE(dataset_id_key,mart_user))";
 		String MYSQL_INTERFACE=CREATETABLE+"."+MARTINTERFACETABLE+" ( dataset_id_key int, interface varchar(100),UNIQUE(dataset_id_key,interface))"; 
 		String MYSQL_VERSION = CREATETABLE+"."+MARTVERSIONTABLE+" ( version varchar(10))";
-	
+	    String MYSQL_TEMPLATE_MAIN = CREATETABLE+"."+MARTTEMPLATEMAINTABLE+" ( dataset_id_key int not null, template varchar(100) not null)";
+	    String MYSQL_TEMPLATE_DM = CREATETABLE+"."+MARTTEMPLATEDMTABLE+" ( template varchar(100), compressed_xml longblob, UNIQUE(template))";
+		
      	String ORACLE_META1   = CREATETABLE+"."+BASEMETATABLE+
 	        " (dataset_id_key number(1),dataset varchar2(100),display_name varchar2(100),description varchar2(200),type varchar2(20), " +	        "visible number(1), version varchar2(25),  modified timestamp,UNIQUE (dataset_id_key))";
 		String ORACLE_META2   = CREATETABLE+"."+MARTXMLTABLE+" (dataset_id_key number(1), xml clob, compressed_xml blob, message_digest blob,UNIQUE (dataset_id_key))";
      	String ORACLE_USER = CREATETABLE+"."+MARTUSERTABLE+" (dataset_id_key number(1), mart_user varchar2(100), UNIQUE(dataset_id_key,mart_user))";
 		String ORACLE_INTERFACE = CREATETABLE+"."+MARTINTERFACETABLE+" (dataset_id_key number(1), interface varchar2(100), UNIQUE(dataset_id_key,interface))";
 	    String ORACLE_VERSION = CREATETABLE+"."+MARTVERSIONTABLE+" ( version varchar2(10))";
+		String ORACLE_TEMPLATE_MAIN = CREATETABLE+"."+MARTTEMPLATEMAINTABLE+" ( dataset_id_key number(1), template varchar2(100))";
+		String ORACLE_TEMPLATE_DM = CREATETABLE+"."+MARTTEMPLATEDMTABLE+" ( template varchar2(100), compressed_xml blob, UNIQUE(template))";
+
     
     	String POSTGRES_META1 = CREATETABLE+"."+BASEMETATABLE+" (dataset_id_key integer," +    		"dataset varchar(100), display_name varchar(100),  description varchar(200),  type varchar(20), " +    		"visible integer, version varchar(25),  modified timestamp, UNIQUE (dataset_id_key))";
 		String POSTGRES_META2 = CREATETABLE+"."+MARTXMLTABLE+"(dataset_id_key integer," +			"xml text, compressed_xml bytea, message_digest bytea,UNIQUE (dataset_id_key))";
     	String POSTGRES_USER = CREATETABLE+"."+MARTUSERTABLE+" (dataset_id_key integer, mart_user varchar(100), UNIQUE(dataset_id_key,mart_user))";
 		String POSTGRES_INTERFACE = CREATETABLE+"."+MARTINTERFACETABLE+" (dataset_id_key integer, interface varchar(100), UNIQUE(dataset_id_key,interface))";
 	    String POSTGRES_VERSION = CREATETABLE+"."+MARTVERSIONTABLE+" ( version varchar(10))";
+		String POSTGRES_TEMPLATE_MAIN = CREATETABLE+"."+MARTTEMPLATEMAINTABLE+" ( dataset_id_key integer, template varchar(100))";
+		String POSTGRES_TEMPLATE_DM = CREATETABLE+"."+MARTTEMPLATEDMTABLE+" ( template varchar(100), compressed_xml bytea, UNIQUE(template))";
     
     	//override if user not null
     	if (datasetConfigUserTableExists(user))
       		metatable += "_" + user;
     	else {
-      		//if BASEMETATABLE doesnt exist, throw an exception
-    	
+
+		  if (!templateTableExists()){
+			  Connection conn = null;
+			  try {
+				conn = dsource.getConnection();
+				String CREATE_SQL1 = new String();
+				String CREATE_SQL2 = new String();
+				if(dsource.getDatabaseType().equals("oracle")) {CREATE_SQL1=ORACLE_TEMPLATE_MAIN; CREATE_SQL2=ORACLE_TEMPLATE_DM;}
+				if(dsource.getDatabaseType().equals("postgres")) {CREATE_SQL1=POSTGRES_TEMPLATE_MAIN;CREATE_SQL2=POSTGRES_TEMPLATE_DM;}
+				if(dsource.getDatabaseType().equals("mysql")) {CREATE_SQL1 = MYSQL_TEMPLATE_MAIN;CREATE_SQL2 = MYSQL_TEMPLATE_DM;}
+			  
+				//System.out.println("CREATE_SQL: "+CREATE_SQL+" CREATE_USER: "+CREATE_USER);
+			  
+				PreparedStatement ps = conn.prepareStatement(CREATE_SQL1);
+				ps.executeUpdate();
+				ps = conn.prepareStatement(CREATE_SQL2);
+				ps.executeUpdate();
+			  
+				System.out.println("created template tables");
+			  
+				conn.close();
+			  } catch (SQLException e) {
+				throw new ConfigurationException("Caught SQLException during create meta tables\n" +e);
+			  }
+      	
+		  }
+      	
       	  if (!baseDSConfigTableExists()){
 			Connection conn = null;
 			try {
@@ -3578,7 +3755,7 @@ public class DatabaseDatasetConfigUtils {
 	//result++;
 	//Integer datasetNo = new Integer(result);
 	//String datasetID = datasetNo.toString();	
-    DatasetConfig dsv = new DatasetConfig("default",datasetName,datasetName,"","TableSet","1","","","","",tstamp.toString(),"default","default","");
+    DatasetConfig dsv = new DatasetConfig("default",datasetName,datasetName,"","TableSet","1","","","","",tstamp.toString(),"default","default","",datasetName);
     
     //dsv.setInternalName(datasetName);
     //dsv.setInternalName("default");
