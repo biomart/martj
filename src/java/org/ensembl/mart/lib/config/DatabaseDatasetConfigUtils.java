@@ -806,13 +806,110 @@ public class DatabaseDatasetConfigUtils {
     List attributes = dsConfig.getAllAttributeDescriptions();
 	for (int i = 0; i < attributes.size(); i++){
 		AttributeDescription att = (AttributeDescription) attributes.get(i);
-		if (templateConfig.containsAttributeDescription(att.getInternalName())){
-			// make sure dsConfig has same structure as templateConfig for this attribute
+		String attName = att.getInternalName(); 
+		
+		AttributeDescription templateAtt = new AttributeDescription(att);
+		templateAtt.setTableConstraint("");
+		templateAtt.setField("");
+		templateAtt.setLinkoutURL("");
+		
+		if (templateConfig.containsAttributeDescription(attName)){
 			System.out.println("1 - make sure dsConfig has same structure as templateConfig for this attribute:"+att.getInternalName());
+			// remove att from old hierarchy in dsConfig
+			AttributePage configPage = dsConfig.getPageForAttribute(attName);
+			AttributeGroup configGroup = dsConfig.getGroupForAttribute(attName);
+			AttributeCollection configCollection = dsConfig.getCollectionForAttribute(attName);
+			configCollection.removeAttributeDescription(att);
+			if (!(configCollection.getAttributeDescriptions().size() > 0)){
+				configGroup.removeAttributeCollection(configCollection);
+			}
+			if (!(configGroup.getAttributeCollections().length > 0)){
+				configPage.removeAttributeGroup(configGroup);
+			}
+			if (!(configPage.getAttributeGroups().size() > 0)){
+				dsConfig.removeAttributePage(configPage);
+			}
+			// add correct hierarchy from template	
+			AttributePage templatePage = templateConfig.getPageForAttribute(attName);
+			AttributeGroup templateGroup = templateConfig.getGroupForAttribute(attName);
+			AttributeCollection templateCollection = templateConfig.getCollectionForAttribute(attName);
+			AttributeDescription templateAttribute = templateConfig.getAttributeDescriptionByInternalName(attName);
+			AttributeDescription attToAdd = new AttributeDescription(templateAttribute);
+			attToAdd.setTableConstraint(att.getTableConstraint());
+			attToAdd.setField(att.getField());
+			attToAdd.setLinkoutURL(att.getLinkoutURL());
+			
+			AttributePage dsConfigPage = dsConfig.getAttributePageByInternalName(templatePage.getInternalName());
+			if (dsConfigPage == null){
+				dsConfigPage = new AttributePage(templatePage.getInternalName(),templatePage.getDisplayName(),
+					templatePage.getDescription(), templatePage.getOutFormats());
+				AttributeGroup dsConfigGroup = new AttributeGroup(templateGroup.getInternalName(),
+					templateGroup.getDisplayName(), templateGroup.getDescription(),"");
+				AttributeCollection dsConfigCollection = new AttributeCollection(templateCollection.getInternalName(),
+					"", templateCollection.getDisplayName(),templateCollection.getDescription());
+				dsConfigPage.addAttributeGroup(dsConfigGroup);
+				dsConfigGroup.addAttributeCollection(dsConfigCollection);
+				dsConfigCollection.addAttributeDescription(attToAdd);			
+			}
+			else{
+				AttributeGroup dsConfigGroup = (AttributeGroup) dsConfigPage.getAttributeGroupByName(templateGroup.getInternalName());
+				if (dsConfigGroup == null){
+					dsConfigGroup = new AttributeGroup(templateGroup.getInternalName(),templateGroup.getDisplayName(),
+						templateGroup.getDescription(), "");
+					AttributeCollection dsConfigCollection = new AttributeCollection(templateCollection.getInternalName(),
+						"", templateCollection.getDisplayName(),templateCollection.getDescription());
+					dsConfigGroup.addAttributeCollection(dsConfigCollection);
+					dsConfigCollection.addAttributeDescription(attToAdd);	
+				}
+				else{
+					AttributeCollection dsConfigCollection = (AttributeCollection) dsConfigGroup.getAttributeCollectionByName(templateCollection.getInternalName());
+					if (dsConfigCollection == null){
+						dsConfigCollection = new AttributeCollection(templateCollection.getInternalName(),"",
+							templateCollection.getDisplayName(),templateCollection.getDescription());
+						dsConfigCollection.addAttributeDescription(attToAdd);	
+					}
+					else{
+						dsConfigCollection.addAttributeDescription(attToAdd);
+					}
+				}
+			}
 		}
+		
+		
 		else{
-			// make sure templateConfig has same structure as dsConfig for this attribute
-			System.out.println("2 - make sure templateConfig has same structure as dsConfig for this attribute"+att.getInternalName());
+			System.out.println("2 - make sure templateConfig has same structure as dsConfig for this attribute:"+att.getInternalName());
+			AttributePage apage = dsConfig.getPageForAttribute(attName);
+			String attPageName = apage.getInternalName();
+			AttributePage templatePage = templateConfig.getAttributePageByInternalName(attPageName);
+			if (templatePage == null){
+				 templatePage = new AttributePage(apage.getInternalName(),
+				 								  apage.getDisplayName(),
+												  apage.getDescription(),
+									              apage.getOutFormats());
+				 templateConfig.addAttributePage(templatePage);				
+			}
+			// repeat process for groups and collections before adding att
+			AttributeGroup agroup = dsConfig.getGroupForAttribute(attName);
+			String attGroupName = agroup.getInternalName();
+			AttributeGroup templateGroup = (AttributeGroup) templatePage.getAttributeGroupByName(attGroupName);
+			if (templateGroup == null){
+				 templateGroup = new AttributeGroup(agroup.getInternalName(),
+												  agroup.getDisplayName(),
+												  agroup.getDescription());
+				 templatePage.addAttributeGroup(templateGroup);				
+			}
+			// repeat process for collections before adding att
+			AttributeCollection acoll = dsConfig.getCollectionForAttribute(attName);
+			String attCollName = acoll.getInternalName();
+			AttributeCollection templateCollection = (AttributeCollection) templateGroup.getAttributeCollectionByName(attCollName);
+			if (templateCollection == null){
+				 templateCollection = new AttributeCollection(acoll.getInternalName(),
+					 								  "",
+													  acoll.getDisplayName(),
+													  acoll.getDescription());
+				 templateGroup.addAttributeCollection(templateCollection);				
+			}
+			templateCollection.addAttributeDescription(templateAtt);					
 		}
 	}
 	
@@ -923,15 +1020,8 @@ public class DatabaseDatasetConfigUtils {
 	  int result = rs.getInt(1);
       if (result > 1){//usual 1:1 dataset:template do not get template merging 
       	System.out.println("SHOULD MERGE CONFIG AND TEMPLATE TOGETHER NOW");
-	    /*
-	  	  Merge dsConfig and existing template:
-		   - completely new filters and atts get added to template
-		   - existing ones get fitted to template layout in dsConfig
-		   - method should store template XML once done and return edited dsConfig
-		   
 		   dsConfig = updateConfigToTemplate(dsConfig);
 		   doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
-		  */
       }
       else{
       	System.out.println("OVERWRITE TEMPLATE WITH THIS LAYOUT");

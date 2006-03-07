@@ -1381,7 +1381,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public AttributeGroup getGroupForAttribute(String internalName) {
     lazyLoad();
-    if (!containsFilterDescription(internalName))
+    if (!containsAttributeDescription(internalName))
       return null;
     else if (lastAttGroup == null) {
       lastAttGroup = getPageForAttribute(internalName).getGroupForAttributeDescription(internalName);
