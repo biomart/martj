@@ -695,7 +695,14 @@ public class DatabaseDatasetConfigUtils {
 			FilterDescription fd = (FilterDescription) filterDescriptions.get(i);
 			fd.setTableConstraint("");
 			fd.setField("");
-			fd.setOtherFilters("");		
+			fd.setOtherFilters("");
+			Option[] ops = fd.getOptions();
+			for (int j = 0; j < ops.length; j++){
+				Option op = ops[j];
+				if (op.getTableConstraint() == null){
+					fd.removeOption(op);		
+				}
+			}
 			// should remove value options and pas as wel
 		}
 		List attributeDescriptions = templateConfig.getAllAttributeDescriptions();
@@ -783,6 +790,27 @@ public class DatabaseDatasetConfigUtils {
 		finally {
 			DetailedDataSource.close(conn);
 		}
+  }
+
+  public int templateTest(String template) throws ConfigurationException{
+	Connection conn = null;
+	try {
+		conn = dsource.getConnection();
+		String sql = "SELECT count(*) FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE template='"+template+"'";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ResultSet rs = ps.executeQuery();
+		rs.next();
+		System.out.println(sql);
+		int result = rs.getInt(1);
+		return result;	
+	}
+	catch (SQLException e) {
+		  throw new ConfigurationException(
+			"Caught SQLException performing template count: " + e.getMessage());
+	} 
+	finally {
+		 DetailedDataSource.close(conn);
+	}
   }
 
   private int storeCompressedXML(

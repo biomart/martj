@@ -119,8 +119,8 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 					  	if (lconfig.getDataset().equals(dataset) && lconfig.getDatasetID().equals(datasetID)){
 					    	config = lconfig;
 					    	break;
-					  		}
 						}
+					  }
             		}
             	}
             } else {// open from file
@@ -172,7 +172,11 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 
             //...Then set the window size or call pack...
             setSize(800, 400);
-
+            
+			int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateTest(config.getTemplate());
+			if (templateCount > 1){
+				config.setTemplateDrivenFlag(1);	
+			}				
             //Set the window's location.
             setLocation(xOffset * openFrameCount, yOffset * openFrameCount);
 

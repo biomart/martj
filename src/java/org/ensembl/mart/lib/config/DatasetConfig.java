@@ -63,6 +63,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   private final String primaryKeyRestrictionKey="primaryKeyRestriction";
   private final String templateKey="template";
   
+  private int templateDrivenFlag;
+  
   private int[] reqFields = {0,3,4,5};// rendered red in AttributeTable
   
   private DSConfigAdaptor adaptor = null;
@@ -309,6 +311,22 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setRequiredFields(reqFields);
   }
 
+  
+  /**
+	 * Sets the templateDriven flag for this DatasetConfig object
+	 * @param flag -- 1 means the dataset config is template driven for all atts except table, field etc.
+	 */
+	public void setTemplateDrivenFlag(int flag) {
+	  templateDrivenFlag = flag;
+	}
+	
+	/**
+	   * gets the templateDriven flag for this DatasetConfig object
+	  */
+	public int getTemplateDrivenFlag() {
+		return templateDrivenFlag;
+	}
+  
   
 /**
    * Sets the dataset for this DatasetConfig object
