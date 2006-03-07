@@ -792,6 +792,34 @@ public class DatabaseDatasetConfigUtils {
 		}
   }
 
+  private DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig) throws ConfigurationException{
+	String template = dsConfig.getTemplate();
+	DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template);
+	dscutils.loadDatasetConfigWithDocument(templateConfig,getTemplateDocument(template));
+	// merge template and dataset config
+	
+	// imps/exps
+	
+	// filters
+	
+	// attributes
+    List attributes = dsConfig.getAllAttributeDescriptions();
+	for (int i = 0; i < attributes.size(); i++){
+		AttributeDescription att = (AttributeDescription) attributes.get(i);
+		if (templateConfig.containsAttributeDescription(att.getInternalName())){
+			// make sure dsConfig has same structure as templateConfig for this attribute
+			System.out.println("1 - make sure dsConfig has same structure as templateConfig for this attribute:"+att.getInternalName());
+		}
+		else{
+			// make sure templateConfig has same structure as dsConfig for this attribute
+			System.out.println("2 - make sure templateConfig has same structure as dsConfig for this attribute"+att.getInternalName());
+		}
+	}
+	
+	storeTemplateXML(templateConfig,template);
+	return dsConfig;
+  }
+
   public int templateTest(String template) throws ConfigurationException{
 	Connection conn = null;
 	try {
@@ -800,7 +828,6 @@ public class DatabaseDatasetConfigUtils {
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ResultSet rs = ps.executeQuery();
 		rs.next();
-		System.out.println(sql);
 		int result = rs.getInt(1);
 		return result;	
 	}

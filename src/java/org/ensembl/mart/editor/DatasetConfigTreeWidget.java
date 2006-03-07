@@ -25,6 +25,8 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.io.File;
 import java.net.URL;
+import java.util.List;
+
 import javax.swing.JOptionPane;
 import javax.swing.ImageIcon;
 import javax.swing.JDesktopPane;
@@ -38,6 +40,9 @@ import javax.swing.JTable;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
+import org.ensembl.mart.lib.config.AttributeCollection;
+import org.ensembl.mart.lib.config.AttributeDescription;
+import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.BaseConfigurationObject;
 import org.ensembl.mart.lib.config.ConfigurationException;
@@ -45,7 +50,13 @@ import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.DatasetConfigIterator;
+import org.ensembl.mart.lib.config.Exportable;
+import org.ensembl.mart.lib.config.FilterCollection;
+import org.ensembl.mart.lib.config.FilterDescription;
+import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.FilterPage;
+import org.ensembl.mart.lib.config.Importable;
+import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.SimpleDSConfigAdaptor;
 import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 
@@ -175,7 +186,63 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             
 			int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateTest(config.getTemplate());
 			if (templateCount > 1){
-				config.setTemplateDrivenFlag(1);	
+				
+				Importable[] imps = config.getImportables();
+				for (int i = 0; i < imps.length; i++){
+					imps[i].setTemplateDrivenFlag(1);
+				}
+				Exportable[] exps = config.getExportables();
+				for (int i = 0; i < exps.length; i++){
+					exps[i].setTemplateDrivenFlag(1);
+				}
+				
+				FilterPage[] fpages = config.getFilterPages();	
+				for (int i = 0; i < fpages.length; i++){
+					FilterPage fpage = fpages[i];
+					fpage.setTemplateDrivenFlag(1);
+					List fgroups = fpage.getFilterGroups();	
+					for (int j = 0; j < fgroups.size(); j++){
+						FilterGroup fgroup = (FilterGroup) fgroups.get(j);
+						fgroup.setTemplateDrivenFlag(1);
+						FilterCollection[] fcolls = fgroup.getFilterCollections();	
+						for (int k = 0; k < fcolls.length; k++){
+							FilterCollection fcoll = fcolls[k];
+							fcoll.setTemplateDrivenFlag(1);
+							List fds = fcoll.getFilterDescriptions();
+							for (int l = 0; l < fds.size(); l++){
+								FilterDescription fd = (FilterDescription) fds.get(l);
+								fd.setTemplateDrivenFlag(1);
+								Option[] ops = fd.getOptions();
+								for (int m = 0; m < ops.length; m++){
+									Option op = ops[m];
+									if (op.getTableConstraint() != null)
+										op.setTemplateDrivenFlag(1);
+								}
+							}
+						}
+					}		
+				}
+				AttributePage[] apages = config.getAttributePages();	
+				for (int i = 0; i < apages.length; i++){
+					AttributePage apage = apages[i];
+					apage.setTemplateDrivenFlag(1);
+					List agroups = apage.getAttributeGroups();	
+					for (int j = 0; j < agroups.size(); j++){
+						AttributeGroup agroup = (AttributeGroup) agroups.get(j);
+						agroup.setTemplateDrivenFlag(1);
+						AttributeCollection[] acolls = agroup.getAttributeCollections();	
+						for (int k = 0; k < acolls.length; k++){
+							AttributeCollection acoll = acolls[k];
+							acoll.setTemplateDrivenFlag(1);
+							List ads = acoll.getAttributeDescriptions();
+							for (int l = 0; l < ads.size(); l++){
+								AttributeDescription ad = (AttributeDescription) ads.get(l);
+								ad.setTemplateDrivenFlag(1);
+							}
+						}
+					}		
+				}
+					
 			}				
             //Set the window's location.
             setLocation(xOffset * openFrameCount, yOffset * openFrameCount);
