@@ -696,7 +696,7 @@ System.out.println ("getting driver "+ driver);
 
     boolean valid = false;
 
-    try {
+    //try {
       disableCursor();
       while (!valid) {
         if (!databaseDialog.showDialog(this,title))
@@ -755,21 +755,26 @@ System.out.println ("getting driver "+ driver);
 		  }
         
         
-        } catch (SQLException e) {
+        } 
+        catch (SQLException e) {
           ds = null;	
           connection = "MartEditor (NO DATABASE CONNECTION)";	
           //warning dialog then retry
           Feedback f = new Feedback(this);
           f.warning("Could not connect to Database\nwith the given Connection Settings.\nPlease try again!");
           valid = false;
-        } finally {
+        } 
+        finally {
           DetailedDataSource.close(conn);
+		  setTitle(connection);
+		  enableCursor();
         }
       }
-    } finally {
-      setTitle(connection);
-      enableCursor();
-    }
+    //} 
+    //finally {
+      //setTitle(connection);
+      //enableCursor();
+    //}
   }
 
 
