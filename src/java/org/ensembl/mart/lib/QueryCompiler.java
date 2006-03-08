@@ -214,7 +214,8 @@ public class QueryCompiler {
         throw new InvalidQueryException("Failed to compile query :" + query);
         
       StringBuffer sbuf = new StringBuffer(SELECT);
-      sbuf.append(" count(distinct ").append(query.getPrimaryKeys()[0]).append(")").append(buf);
+      //sbuf.append(" count(distinct ").append(query.getPrimaryKeys()[0]).append(")").append(buf);
+      sbuf.append(" count(distinct ").append("main").append(".").append(query.getPrimaryKeys()[0]).append(")").append(buf);
       fcountSQL = sbuf.toString();
     }
 
