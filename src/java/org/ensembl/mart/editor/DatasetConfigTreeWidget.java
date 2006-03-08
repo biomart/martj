@@ -111,6 +111,8 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             	  		JOptionPane.showMessageDialog(null,"Your main table must contain a primary key ending _key");
             	  		return;
             	  	}
+            	  	config.setTemplate(template);
+					config = MartEditor.getDatabaseDatasetConfigUtils().updateConfigToTemplate(config);
             	  }
             	}
             	else{//Importing config
@@ -185,7 +187,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             setSize(800, 400);
             
 			int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateTest(config.getTemplate());
-			if (templateCount > 1){
+			if (template == null && templateCount > 1){// flag non-template XMLs with a template origin
 				
 				Importable[] imps = config.getImportables();
 				for (int i = 0; i < imps.length; i++){

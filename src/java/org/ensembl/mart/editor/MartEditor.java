@@ -675,6 +675,10 @@ System.out.println ("getting driver "+ driver);
   public static String getUser() {
     return user;
   }
+  
+  public static String getMartUser() {
+	return martUser;
+  }
 
   public static DatasetConfigXMLUtils getDatasetConfigXMLUtils() {
     return dscutils;
@@ -960,7 +964,7 @@ System.out.println ("getting driver "+ driver);
     }
   }
 
-  public void naiveDatasetConfig() {
+  public void naiveDatasetConfig(){
     if (ds == null) {
       JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
       return;
@@ -996,8 +1000,26 @@ System.out.println ("getting driver "+ driver);
 
       disableCursor();
      
-    
-      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, null, schema,null);
+      String template = dataset;
+	  String[] templates = dbutils.getAllTemplateNames();
+	  if(templates.length!=0){
+		//JOptionPane.showMessageDialog(this, "No datasets available - Is this a BioMart comptatible schema?", "ERROR", 0);
+		//return;
+      
+	   template =
+		(String) JOptionPane.showInputDialog(
+		  null,
+		  "Choose one",
+		  "Template",
+		  JOptionPane.INFORMATION_MESSAGE,
+		  null,
+		  templates,
+		  templates[0]);
+	  if (template == null)
+		return;
+	  }
+      	
+      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, null, schema,template);
 
       frame.setVisible(true);
       desktop.add(frame);
@@ -1006,6 +1028,7 @@ System.out.println ("getting driver "+ driver);
       } catch (java.beans.PropertyVetoException e) {
       }
     } catch (SQLException e) {
+    } catch (ConfigurationException e) {
     } finally {
       enableCursor();
     }
@@ -1674,6 +1697,8 @@ System.out.println ("getting driver "+ driver);
 		dbutils.updateLinkVersions(dsv);
 		
 		
+		dsv = dbutils.updateConfigToTemplate(dsv);
+				
         DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, schema,null);
         frame.setVisible(true);
         desktop.add(frame);

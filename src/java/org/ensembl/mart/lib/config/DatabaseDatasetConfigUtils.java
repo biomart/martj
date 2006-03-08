@@ -792,7 +792,53 @@ public class DatabaseDatasetConfigUtils {
 		}
   }
 
-  private DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig) throws ConfigurationException{
+  public void updateConfigsToTemplate(String template) throws ConfigurationException{
+  	// extract all the dataset configs matching template and call updateConfigToTemplate storing each one as returned
+	Connection conn = null;
+	try {
+		conn = dsource.getConnection();
+		String sql = "SELECT dataset_id_key FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE template='"+template+"'";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ResultSet rs = ps.executeQuery();
+		while(rs.next()){		
+			String datasetID = rs.getString(1);	
+			DatasetConfig dsv = null;
+			DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),MartEditor.getUser(), MartEditor.getMartUser(), true, false, true);
+			DatasetConfigIterator configs = adaptor.getDatasetConfigs();
+			while (configs.hasNext()){
+				DatasetConfig lconfig = (DatasetConfig) configs.next();
+				if (lconfig.getDatasetID().equals(datasetID)){
+						dsv = lconfig;
+						break;
+				}
+			}
+			storeDatasetConfiguration(
+										MartEditor.getUser(),
+										dsv.getInternalName(),
+										dsv.getDisplayName(),
+										dsv.getDataset(),
+										dsv.getDescription(),
+										MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsv),
+										true,
+										dsv.getType(),
+										dsv.getVisible(),
+										dsv.getVersion(),
+										dsv.getDatasetID(),
+										dsv.getMartUsers(),
+										dsv.getInterfaces(),
+										dsv);
+		}
+	}
+	catch (SQLException e) {
+		  throw new ConfigurationException(
+			"Caught SQLException performing updating configs to template: " + e.getMessage());
+	} 
+	finally {
+		 DetailedDataSource.close(conn);
+	}
+  }
+
+  public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig) throws ConfigurationException{
 	String template = dsConfig.getTemplate();
 	DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template);
 	dscutils.loadDatasetConfigWithDocument(templateConfig,getTemplateDocument(template));
@@ -814,7 +860,7 @@ public class DatabaseDatasetConfigUtils {
 		templateAtt.setLinkoutURL("");
 		
 		if (templateConfig.containsAttributeDescription(attName)){
-			System.out.println("1 - make sure dsConfig has same structure as templateConfig for this attribute:"+att.getInternalName());
+			//System.out.println("1 - make sure dsConfig has same structure as templateConfig for this attribute:"+att.getInternalName());
 			// remove att from old hierarchy in dsConfig
 			AttributePage configPage = dsConfig.getPageForAttribute(attName);
 			AttributeGroup configGroup = dsConfig.getGroupForAttribute(attName);
@@ -877,7 +923,7 @@ public class DatabaseDatasetConfigUtils {
 		
 		
 		else{
-			System.out.println("2 - make sure templateConfig has same structure as dsConfig for this attribute:"+att.getInternalName());
+			//System.out.println("2 - make sure templateConfig has same structure as dsConfig for this attribute:"+att.getInternalName());
 			AttributePage apage = dsConfig.getPageForAttribute(attName);
 			String attPageName = apage.getInternalName();
 			AttributePage templatePage = templateConfig.getAttributePageByInternalName(attPageName);
