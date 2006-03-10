@@ -113,7 +113,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             	  	}
             	  	config.setTemplate(template);
 					config = MartEditor.getDatabaseDatasetConfigUtils().updateConfigToTemplate(config);
-            	  }
+            	  	}
             	}
             	else{//Importing config
             		if (template != null){
@@ -185,10 +185,8 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 
             //...Then set the window size or call pack...
             setSize(800, 400);
-            
 			int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateTest(config.getTemplate());
 			if (template == null && templateCount > 1){// flag non-template XMLs with a template origin
-				
 				Importable[] imps = config.getImportables();
 				for (int i = 0; i < imps.length; i++){
 					imps[i].setTemplateDrivenFlag(1);

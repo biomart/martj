@@ -1028,7 +1028,6 @@ public class DatabaseDatasetConfigUtils {
 			templateCollection.addAttributeDescription(templateAttToAdd);					
 		}
 	}
-	
 	storeTemplateXML(templateConfig,template);
 	return dsConfig;
   }

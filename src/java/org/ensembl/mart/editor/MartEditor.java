@@ -1025,7 +1025,6 @@ System.out.println ("getting driver "+ driver);
 	  }
       	
       DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, null, schema,template);
-
       frame.setVisible(true);
       desktop.add(frame);
       try {
