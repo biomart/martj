@@ -1006,7 +1006,13 @@ System.out.println ("getting driver "+ driver);
       disableCursor();
      
       String template = dataset;
-	  String[] templates = dbutils.getAllTemplateNames();
+      
+      String[] templates = new String[dbutils.getAllTemplateNames().length + 1];
+      templates[0] = dataset;	
+	  String[] tNames = dbutils.getAllTemplateNames();
+	  for (int i = 0; i < tNames.length; i++){
+	  	templates[i+1] = tNames[i];
+	  }
 	  if(templates.length!=0){
 		//JOptionPane.showMessageDialog(this, "No datasets available - Is this a BioMart comptatible schema?", "ERROR", 0);
 		//return;
@@ -1701,7 +1707,7 @@ System.out.println ("getting driver "+ driver);
 		dbutils.updateLinkVersions(dsv);
 		
 		
-		dsv = dbutils.updateConfigToTemplate(dsv);
+		dsv = dbutils.updateConfigToTemplate(dsv,0);
 				
         DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, schema,null);
         frame.setVisible(true);

@@ -702,31 +702,31 @@ public class DatabaseDatasetConfigUtils {
 			FilterPage configPage = dsConfig.getPageForFilter(fd.getInternalName());
 			if (configPage == null)
 				continue;
-			if (configPage.getHidden() != null && configPage.getHidden().equals("true")){
-				templateConfig.removeFilterPage(configPage);
-				continue;
-			}
+			//if (configPage.getHidden() != null && configPage.getHidden().equals("true")){
+			//	templateConfig.removeFilterPage(configPage);
+			//	continue;
+			//}
 			
 			FilterGroup configGroup = dsConfig.getGroupForFilter(fd.getInternalName());
 			if (configGroup == null)
 				continue;
-			if (configGroup.getHidden() != null && configGroup.getHidden().equals("true")){
-				configPage.removeFilterGroup(configGroup);
-				continue;
-			}			
+			//if (configGroup.getHidden() != null && configGroup.getHidden().equals("true")){
+			//	configPage.removeFilterGroup(configGroup);
+			//	continue;
+			//}			
 			
 			FilterCollection configCollection = dsConfig.getCollectionForFilter(fd.getInternalName());
 			if (configCollection == null)
 				continue;
-			if (configCollection.getHidden() != null && configCollection.getHidden().equals("true")){
-				configGroup.removeFilterCollection(configCollection);
-				continue;
-			}			
+			//if (configCollection.getHidden() != null && configCollection.getHidden().equals("true")){
+			//	configGroup.removeFilterCollection(configCollection);
+			//	continue;
+			//}			
 			
-			if (fd.getHidden() != null && fd.getHidden().equals("true")){
-				configCollection.removeFilterDescription(fd);
-				continue;
-			}
+			//if (fd.getHidden() != null && fd.getHidden().equals("true")){
+			//	configCollection.removeFilterDescription(fd);
+			//	continue;
+			//}
 			// remove dataset part from tableConstraint if present
 			if (fd.getTableConstraint() != null && !fd.getTableConstraint().equals("main"))			
 				fd.setTableConstraint(fd.getTableConstraint().split("__")[1]+"__"+fd.getTableConstraint().split("__")[2]);
@@ -756,31 +756,31 @@ public class DatabaseDatasetConfigUtils {
 			AttributePage configPage = dsConfig.getPageForAttribute(ad.getInternalName());
 			if (configPage == null)
 				continue;
-			if (configPage.getHidden() != null && configPage.getHidden().equals("true")){
-				templateConfig.removeAttributePage(configPage);
-				continue;
-			}
+			//if (configPage.getHidden() != null && configPage.getHidden().equals("true")){
+			//	templateConfig.removeAttributePage(configPage);
+			//	continue;
+			//}
 			
 			AttributeGroup configGroup = dsConfig.getGroupForAttribute(ad.getInternalName());
 			if (configGroup == null)
 				continue;
-			if (configGroup.getHidden() != null && configGroup.getHidden().equals("true")){
-				configPage.removeAttributeGroup(configGroup);
-				continue;
-			}			
+			//if (configGroup.getHidden() != null && configGroup.getHidden().equals("true")){
+			//	configPage.removeAttributeGroup(configGroup);
+			//	continue;
+			//}			
 			
 			AttributeCollection configCollection = dsConfig.getCollectionForAttribute(ad.getInternalName());
 			if (configCollection == null)
 				continue;
-			if (configCollection.getHidden() != null && configCollection.getHidden().equals("true")){
-				configGroup.removeAttributeCollection(configCollection);
-				continue;
-			}			
+			//if (configCollection.getHidden() != null && configCollection.getHidden().equals("true")){
+			//	configGroup.removeAttributeCollection(configCollection);
+			//	continue;
+			//}			
 			
-			if (ad.getHidden() != null && ad.getHidden().equals("true")){
-				configCollection.removeAttributeDescription(ad);
-				continue;
-			}			
+			//if (ad.getHidden() != null && ad.getHidden().equals("true")){
+			//	configCollection.removeAttributeDescription(ad);
+			//	continue;
+			//}			
 			if (ad.getTableConstraint() != null && !ad.getTableConstraint().equals("main"))
 				ad.setTableConstraint(ad.getTableConstraint().split("__")[1]+"__"+ad.getTableConstraint().split("__")[2]);		
 			ad.setLinkoutURL("");		
@@ -910,7 +910,7 @@ public class DatabaseDatasetConfigUtils {
 	}
   }
 
-  public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig) throws ConfigurationException{
+  public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig, int storeFlag) throws ConfigurationException{
 	String template = dsConfig.getTemplate();
 	DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template);
 	dscutils.loadDatasetConfigWithDocument(templateConfig,getTemplateDocument(template));
@@ -947,17 +947,19 @@ public class DatabaseDatasetConfigUtils {
 		AttributeCollection configCollection = dsConfig.getCollectionForAttribute(configAttName);
 		String configCollectionName = configCollection.getInternalName();
 		
-		if (configAtt.getHidden() != null && configAtt.getHidden().equals("true") || 
-			(configPage.getHidden() != null && configPage.getHidden().equals("true")) ||
-			(configGroup.getHidden() != null && configGroup.getHidden().equals("true")) ||
-			(configCollection.getHidden() != null && configCollection.getHidden().equals("true"))){
-			continue;// want to skip any hidden atts (if parents hidden then att should be hidden as well
-		}
+		// don't do skipping - just make sure anything that gets added to either config maintains its hidden status 
+		//if (configAtt.getHidden() != null && configAtt.getHidden().equals("true") || 
+		//	(configPage.getHidden() != null && configPage.getHidden().equals("true")) ||
+		//	(configGroup.getHidden() != null && configGroup.getHidden().equals("true")) ||
+		//	(configCollection.getHidden() != null && configCollection.getHidden().equals("true"))){
+		//	continue;// want to skip any hidden atts (if parents hidden then att should be hidden as well
+		//}
 		
 		//if (templateConfig.containsAttributeDescription(configAttName)){
 		if (templateConfig.supportsAttributeDescription(configAttField,configAttTC)){
-			System.out.println("1 - make sure dsConfig has same structure as templateConfig for this attribute:"
-				+configAtt.getInternalName()+":"+configAtt.getDisplayName()+":"+dsConfig.getDataset());
+			//System.out.println("1 - make sure dsConfig has same structure as templateConfig for this attribute:"
+			//	+configAtt.getInternalName()+":"+configAtt.getDisplayName()+":"+dsConfig.getDataset());
+			
 			// remove att from old hierarchy in dsConfig
 			configCollection.removeAttributeDescription(configAtt);
 			if (!(configCollection.getAttributeDescriptions().size() > 0)){
@@ -988,38 +990,77 @@ public class DatabaseDatasetConfigUtils {
 					templateGroup.getDisplayName(), templateGroup.getDescription(),"");
 				AttributeCollection dsConfigCollection = new AttributeCollection(templateCollection.getInternalName(),
 					"", templateCollection.getDisplayName(),templateCollection.getDescription());
+				
+				if (templatePage.getHidden() != null) dsConfigPage.setHidden(templatePage.getHidden());
+				if (templatePage.getDisplay() != null) {
+					System.out.println(templatePage.getInternalName()+":"+templatePage.getDisplay());
+					dsConfigPage.setDisplay(templatePage.getDisplay());
+				} 
+				if (templateGroup.getHidden() != null) dsConfigGroup.setHidden(templateGroup.getHidden());
+				if (templateGroup.getMaxSelectString() != null) dsConfigGroup.setMaxSelect(templateGroup.getMaxSelectString());
+				if (templateCollection.getMaxSelectString() != null) dsConfigCollection.setMaxSelect(templateCollection.getMaxSelectString());
+				if (templateCollection.getHidden() != null) dsConfigCollection.setHidden(templateCollection.getHidden());
+				if (templateAttribute.getHidden() != null) configAttToAdd.setHidden(templateAttribute.getHidden());
+				
 				dsConfig.addAttributePage(dsConfigPage);
 				dsConfigPage.addAttributeGroup(dsConfigGroup);
 				dsConfigGroup.addAttributeCollection(dsConfigCollection);
 				dsConfigCollection.addAttributeDescription(configAttToAdd);			
 			}
 			else{
+				
+				// make sure dsConfigPage has correct displayName etc 
+				if (templatePage.getDisplayName() != null) dsConfigPage.setDisplayName(templatePage.getDisplayName());
+				if (templatePage.getDescription() != null) dsConfigPage.setDescription(templatePage.getDescription());
+				if (templatePage.getOutFormats() != null) dsConfigPage.setOutFormats(templatePage.getOutFormats());
+				
 				AttributeGroup dsConfigGroup = (AttributeGroup) dsConfigPage.getAttributeGroupByName(templateGroup.getInternalName());
 				if (dsConfigGroup == null){
 					dsConfigGroup = new AttributeGroup(templateGroup.getInternalName(),templateGroup.getDisplayName(),
 						templateGroup.getDescription(), "");
 					AttributeCollection dsConfigCollection = new AttributeCollection(templateCollection.getInternalName(),
 						"", templateCollection.getDisplayName(),templateCollection.getDescription());
+
+					if (templateGroup.getHidden() != null) dsConfigGroup.setHidden(templateGroup.getHidden());
+					if (templateCollection.getHidden() != null) dsConfigCollection.setHidden(templateCollection.getHidden());
+					if (templateAttribute.getHidden() != null) configAttToAdd.setHidden(templateAttribute.getHidden());
+					if (templateGroup.getMaxSelectString() != null) dsConfigGroup.setMaxSelect(templateGroup.getMaxSelectString());
+					if (templateCollection.getMaxSelectString() != null) dsConfigCollection.setMaxSelect(templateCollection.getMaxSelectString());	
+	
 					dsConfigPage.addAttributeGroup(dsConfigGroup);
 					dsConfigGroup.addAttributeCollection(dsConfigCollection);
 					dsConfigCollection.addAttributeDescription(configAttToAdd);	
 				}
 				else{
+					if (templateGroup.getDisplayName() != null) dsConfigGroup.setDisplayName(templateGroup.getDisplayName());
+					if (templateGroup.getDescription() != null) dsConfigGroup.setDescription(templateGroup.getDescription());
+					if (templateGroup.getMaxSelectString() != null) dsConfigGroup.setMaxSelect(templateGroup.getMaxSelectString());
 					AttributeCollection dsConfigCollection = (AttributeCollection) dsConfigGroup.getAttributeCollectionByName(templateCollection.getInternalName());
 					if (dsConfigCollection == null){
 						dsConfigCollection = new AttributeCollection(templateCollection.getInternalName(),"",
 							templateCollection.getDisplayName(),templateCollection.getDescription());
+
+						if (templateCollection.getHidden() != null) dsConfigCollection.setHidden(templateCollection.getHidden());
+						if (templateAttribute.getHidden() != null) configAttToAdd.setHidden(templateAttribute.getHidden());
+
+						if (templateCollection.getMaxSelectString() != null) dsConfigCollection.setMaxSelect(templateCollection.getMaxSelectString());
+
 						dsConfigGroup.addAttributeCollection(dsConfigCollection);
 						dsConfigCollection.addAttributeDescription(configAttToAdd);	
 					}
 					else{
+						if (templateCollection.getDisplayName() != null) dsConfigCollection.setDisplayName(templateCollection.getDisplayName());
+						if (templateCollection.getDescription() != null) dsConfigCollection.setDescription(templateCollection.getDescription());
+						if (templateCollection.getMaxSelectString() != null) dsConfigCollection.setMaxSelect(templateCollection.getMaxSelectString());
+						if (templateAttribute.getHidden() != null) configAttToAdd.setHidden(templateAttribute.getHidden());
+	
 						dsConfigCollection.addAttributeDescription(configAttToAdd);
 					}
 				}
 			}
 		}
 		else{
-			System.out.println("2 - make sure templateConfig has same structure as dsConfig for this attribute:"+configAtt.getInternalName());
+			//System.out.println("2 - make sure templateConfig has same structure as dsConfig for this attribute:"+configAtt.getInternalName());
 			
 			AttributePage templatePage = templateConfig.getAttributePageByInternalName(configPageName);
 			if (templatePage == null){
@@ -1027,6 +1068,7 @@ public class DatabaseDatasetConfigUtils {
 				 								  configPage.getDisplayName(),
 												  configPage.getDescription(),
 									              configPage.getOutFormats());
+				 if (configPage.getHidden() != null) templatePage.setHidden(configPage.getHidden());
 				 templateConfig.addAttributePage(templatePage);				
 			}
 			
@@ -1035,6 +1077,8 @@ public class DatabaseDatasetConfigUtils {
 				 templateGroup = new AttributeGroup(configGroup.getInternalName(),
 												  configGroup.getDisplayName(),
 												  configGroup.getDescription());
+				 if (configGroup.getHidden() != null) templateGroup.setHidden(configGroup.getHidden());
+				 if (configGroup.getMaxSelectString() != null) templateGroup.setMaxSelect(configGroup.getMaxSelectString());								  
 				 templatePage.addAttributeGroup(templateGroup);				
 			}
 			
@@ -1044,33 +1088,48 @@ public class DatabaseDatasetConfigUtils {
 					 								  "",
 													  configCollection.getDisplayName(),
 													  configCollection.getDescription());
+				 if (configCollection.getHidden() != null) templateCollection.setHidden(configCollection.getHidden());
+				 if (configCollection.getMaxSelectString() != null) templateCollection.setMaxSelect(configCollection.getMaxSelectString());									  
 				 templateGroup.addAttributeCollection(templateCollection);				
 			}
 			
 			AttributeDescription templateAttToAdd = new AttributeDescription(configAtt);
 			templateAttToAdd.setTableConstraint("");
 			templateAttToAdd.setField("");
-			templateAttToAdd.setLinkoutURL("");			
+			templateAttToAdd.setLinkoutURL("");
+			if (configAtt.getHidden() != null) templateAttToAdd.setHidden(configAtt.getHidden());			
 			templateCollection.addAttributeDescription(templateAttToAdd);					
 		}
 	}
 	
 	// add any missing attribute placeholders from template to the dataset - useful for naive
-	List templateAttributes = templateConfig.getAllAttributeDescriptions();
-	for (int i = 0; i < templateAttributes.size(); i++){
-		AttributeDescription templateAtt = (AttributeDescription) templateAttributes.get(i);
+	
+    AttributePage[] templatePages = templateConfig.getAttributePages();	
+	for (int i = 0; i < templatePages.length; i++){
+	 AttributePage templatePage	= templatePages[i];
+	 List templateGroups = templatePage.getAttributeGroups();
+	 for (int j = 0; j < templateGroups.size(); j++){
+	  AttributeGroup templateGroup = (AttributeGroup) templateGroups.get(j);
+	  AttributeCollection[] templateCollections = templateGroup.getAttributeCollections();
+	  for (int k = 0; k < templateCollections.length; k++){
+	  	AttributeCollection templateCollection = templateCollections[k];
+	  	List templateAttributes = templateCollection.getAttributeDescriptions();
+	  	for (int l = 0; l < templateAttributes.size(); l++){
+	  	 	
+	//List templateAttributes = templateConfig.getAllAttributeDescriptions();
+	//for (int i = 0; i < templateAttributes.size(); i++){
+		AttributeDescription templateAtt = (AttributeDescription) templateAttributes.get(l);
 		String templateAttName = templateAtt.getInternalName();
 		if (!templateAttName.matches(".+\\..+"))
 			continue;
 		String configAttName = templateAttName;	
 		if (templateAttName.matches(".*"+dsConfig.getTemplate()+".+"))
 			configAttName = templateAttName.replaceFirst(dsConfig.getTemplate(),dsConfig.getDataset());			
-		if (dsConfig.containsAttributeDescription(configAttName))
-			continue;
+		
 		// add the missing placeholder to the dsConfig			
-		AttributePage templatePage = templateConfig.getPageForAttribute(templateAttName);
-		AttributeGroup templateGroup = templateConfig.getGroupForAttribute(templateAttName);
-		AttributeCollection templateCollection = templateConfig.getCollectionForAttribute(templateAttName);
+		//AttributePage templatePage = templateConfig.getPageForAttribute(templateAttName);
+		//AttributeGroup templateGroup = templateConfig.getGroupForAttribute(templateAttName);
+		//AttributeCollection templateCollection = templateConfig.getCollectionForAttribute(templateAttName);
 		
 		AttributePage configPage = dsConfig.getAttributePageByInternalName(templatePage.getInternalName());
 		if (configPage == null){
@@ -1100,13 +1159,14 @@ public class DatabaseDatasetConfigUtils {
 			
 		AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
 		configAttToAdd.setInternalName(configAttName);		
-		configCollection.addAttributeDescription(configAttToAdd);				
-		
-		
-		
+		if (!configCollection.containsAttributeDescription(configAttName)) 
+			configCollection.addAttributeDescription(configAttToAdd);					
+	   }
+	  }
+	 }
 	}
 	
-	storeTemplateXML(templateConfig,template);
+	if (storeFlag == 1) storeTemplateXML(templateConfig,template);
 	return dsConfig;
   }
 
@@ -1213,7 +1273,7 @@ public class DatabaseDatasetConfigUtils {
 	  int result = rs.getInt(1);
       if (result > 1){//usual 1:1 dataset:template do not get template merging 
       	   // System.out.println("SHOULD MERGE CONFIG AND TEMPLATE TOGETHER NOW");
-		   dsConfig = updateConfigToTemplate(dsConfig);
+		   dsConfig = updateConfigToTemplate(dsConfig,1);
 		   doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
       }
       else{
@@ -4104,12 +4164,12 @@ public class DatabaseDatasetConfigUtils {
     
 
     AttributePage ap = new AttributePage();
-    ap.setInternalName("feature_page");
+    ap.setInternalName("naive_attributes");
     ap.setDisplayName("ATTRIBUTES");
     ap.setOutFormats("html,txt,csv,tsv,xls");
 
     FilterPage fp = new FilterPage();
-    fp.setInternalName("filters");
+    fp.setInternalName("naive_filters");
     fp.setDisplayName("FILTERS");
 
     AttributeGroup ag = new AttributeGroup();

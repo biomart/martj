@@ -107,6 +107,10 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
   	setAttribute(maxSelectKey, maxSelect);
   }
   
+
+  public String getMaxSelectString()  {
+  	return getAttribute(maxSelectKey);
+  }
 	/**
 	 * Returns the maxSelect value for attributes in this AttributeCollection.
 	 * If the value for maxSelect provided is not a valid int (eg.

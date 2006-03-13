@@ -112,7 +112,10 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             	  		return;
             	  	}
             	  	config.setTemplate(template);
-					config = MartEditor.getDatabaseDatasetConfigUtils().updateConfigToTemplate(config);
+            	  	
+					int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateTest(template);
+					if (templateCount > 0)			            	  	
+						config = MartEditor.getDatabaseDatasetConfigUtils().updateConfigToTemplate(config,0);
             	  	}
             	}
             	else{//Importing config
