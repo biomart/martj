@@ -694,6 +694,11 @@ public class DatabaseDatasetConfigUtils {
 			// ? using diff objects for template to remove these completely
 			FilterDescription fd = (FilterDescription) filterDescriptions.get(i);
 			
+			if (fd.getInternalName().matches(".+\\..+")){
+				if (fd.getInternalName().matches(".*"+dsConfig.getDataset()+".+"))
+					fd.setInternalName(fd.getInternalName().replaceFirst(dsConfig.getDataset(),template));
+			}
+			
 			FilterPage configPage = dsConfig.getPageForFilter(fd.getInternalName());
 			if (configPage == null)
 				continue;
@@ -722,23 +727,31 @@ public class DatabaseDatasetConfigUtils {
 				configCollection.removeFilterDescription(fd);
 				continue;
 			}
-						
-			fd.setTableConstraint("");
-			fd.setField("");
+			// remove dataset part from tableConstraint if present
+			if (fd.getTableConstraint() != null && !fd.getTableConstraint().equals("main"))			
+				fd.setTableConstraint(fd.getTableConstraint().split("__")[1]+"__"+fd.getTableConstraint().split("__")[2]);
 			fd.setOtherFilters("");
 			Option[] ops = fd.getOptions();
 			for (int j = 0; j < ops.length; j++){
 				Option op = ops[j];
 				if (op.getTableConstraint() == null){
-					fd.removeOption(op);		
+					fd.removeOption(op);
+					continue;		
 				}
+				if (!op.getTableConstraint().equals("main"))
+					op.setTableConstraint(op.getTableConstraint().split("__")[1]+"__"+op.getTableConstraint().split("__")[2]);
+				op.setOtherFilters("");
 			}
-			// should remove value options and pas as wel
 		}
 		List attributeDescriptions = templateConfig.getAllAttributeDescriptions();
 		for (int i = 0; i < attributeDescriptions.size(); i++){
 		// ? using diff objects for template to remove these completely
 			AttributeDescription ad = (AttributeDescription) attributeDescriptions.get(i);
+			
+			if (ad.getInternalName().matches(".+\\..+")){
+				if (ad.getInternalName().matches(".*"+dsConfig.getDataset()+".+"))
+					ad.setInternalName(ad.getInternalName().replaceFirst(dsConfig.getDataset(),template));
+			}
 			
 			AttributePage configPage = dsConfig.getPageForAttribute(ad.getInternalName());
 			if (configPage == null)
@@ -768,9 +781,8 @@ public class DatabaseDatasetConfigUtils {
 				configCollection.removeAttributeDescription(ad);
 				continue;
 			}			
-			
-			ad.setTableConstraint("");
-			ad.setField("");
+			if (ad.getTableConstraint() != null && !ad.getTableConstraint().equals("main"))
+				ad.setTableConstraint(ad.getTableConstraint().split("__")[1]+"__"+ad.getTableConstraint().split("__")[2]);		
 			ad.setLinkoutURL("");		
 		}
 		Exportable[] exps = templateConfig.getExportables();
@@ -912,7 +924,22 @@ public class DatabaseDatasetConfigUtils {
     List attributes = dsConfig.getAllAttributeDescriptions();
 	for (int i = 0; i < attributes.size(); i++){
 		AttributeDescription configAtt = (AttributeDescription) attributes.get(i);
-		String configAttName = configAtt.getInternalName(); 
+		String configAttName = configAtt.getInternalName();
+		
+		if (configAttName.matches(".+\\..+")){
+			//System.out.println(configAttName + " is a placeholder");
+			// implement placeholder handling - maybe just on internalName?
+			continue;
+		}
+		
+		String configAttTC;
+		if (configAtt.getTableConstraint().equals("main"))
+			configAttTC = "main";
+		else	
+			configAttTC = configAtt.getTableConstraint().split("__")[1]+"__"+configAtt.getTableConstraint().split("__")[2];// template stores w/o the dataset part
+		
+		String configAttField = configAtt.getField(); 
+		
 		AttributePage configPage = dsConfig.getPageForAttribute(configAttName);
 		String configPageName = configPage.getInternalName();
 		AttributeGroup configGroup = dsConfig.getGroupForAttribute(configAttName);
@@ -927,13 +954,8 @@ public class DatabaseDatasetConfigUtils {
 			continue;// want to skip any hidden atts (if parents hidden then att should be hidden as well
 		}
 		
-		
-		AttributeDescription templateAttToAdd = new AttributeDescription(configAtt);
-		templateAttToAdd.setTableConstraint("");
-		templateAttToAdd.setField("");
-		templateAttToAdd.setLinkoutURL("");
-		
-		if (templateConfig.containsAttributeDescription(configAttName)){
+		//if (templateConfig.containsAttributeDescription(configAttName)){
+		if (templateConfig.supportsAttributeDescription(configAttField,configAttTC)){
 			System.out.println("1 - make sure dsConfig has same structure as templateConfig for this attribute:"
 				+configAtt.getInternalName()+":"+configAtt.getDisplayName()+":"+dsConfig.getDataset());
 			// remove att from old hierarchy in dsConfig
@@ -948,11 +970,11 @@ public class DatabaseDatasetConfigUtils {
 				}
 			}
 
-			// add correct hierarchy from template	
-			AttributePage templatePage = templateConfig.getPageForAttribute(configAttName);
-			AttributeGroup templateGroup = templateConfig.getGroupForAttribute(configAttName);
-			AttributeCollection templateCollection = templateConfig.getCollectionForAttribute(configAttName);
-			AttributeDescription templateAttribute = templateConfig.getAttributeDescriptionByInternalName(configAttName);
+			AttributeDescription templateAttribute = templateConfig.getAttributeDescriptionByFieldNameTableConstraint(configAttField,configAttTC);	
+			AttributePage templatePage = templateConfig.getPageForAttribute(templateAttribute.getInternalName());
+			AttributeGroup templateGroup = templateConfig.getGroupForAttribute(templateAttribute.getInternalName());
+			AttributeCollection templateCollection = templateConfig.getCollectionForAttribute(templateAttribute.getInternalName());			
+					
 			AttributeDescription configAttToAdd = new AttributeDescription(templateAttribute);
 			configAttToAdd.setTableConstraint(configAtt.getTableConstraint());
 			configAttToAdd.setField(configAtt.getField());
@@ -1025,9 +1047,65 @@ public class DatabaseDatasetConfigUtils {
 				 templateGroup.addAttributeCollection(templateCollection);				
 			}
 			
+			AttributeDescription templateAttToAdd = new AttributeDescription(configAtt);
+			templateAttToAdd.setTableConstraint("");
+			templateAttToAdd.setField("");
+			templateAttToAdd.setLinkoutURL("");			
 			templateCollection.addAttributeDescription(templateAttToAdd);					
 		}
 	}
+	
+	// add any missing attribute placeholders from template to the dataset - useful for naive
+	List templateAttributes = templateConfig.getAllAttributeDescriptions();
+	for (int i = 0; i < templateAttributes.size(); i++){
+		AttributeDescription templateAtt = (AttributeDescription) templateAttributes.get(i);
+		String templateAttName = templateAtt.getInternalName();
+		if (!templateAttName.matches(".+\\..+"))
+			continue;
+		String configAttName = templateAttName;	
+		if (templateAttName.matches(".*"+dsConfig.getTemplate()+".+"))
+			configAttName = templateAttName.replaceFirst(dsConfig.getTemplate(),dsConfig.getDataset());			
+		if (dsConfig.containsAttributeDescription(configAttName))
+			continue;
+		// add the missing placeholder to the dsConfig			
+		AttributePage templatePage = templateConfig.getPageForAttribute(templateAttName);
+		AttributeGroup templateGroup = templateConfig.getGroupForAttribute(templateAttName);
+		AttributeCollection templateCollection = templateConfig.getCollectionForAttribute(templateAttName);
+		
+		AttributePage configPage = dsConfig.getAttributePageByInternalName(templatePage.getInternalName());
+		if (configPage == null){
+			 configPage = new AttributePage(templatePage.getInternalName(),
+											  templatePage.getDisplayName(),
+											  templatePage.getDescription(),
+											  templatePage.getOutFormats());
+			 dsConfig.addAttributePage(configPage);				
+		}
+			
+		AttributeGroup configGroup = (AttributeGroup) configPage.getAttributeGroupByName(templateGroup.getInternalName());
+		if (configGroup == null){
+			 configGroup = new AttributeGroup(templateGroup.getInternalName(),
+											  templateGroup.getDisplayName(),
+											  templateGroup.getDescription());
+			 configPage.addAttributeGroup(configGroup);				
+		}
+			
+		AttributeCollection configCollection = (AttributeCollection) configGroup.getAttributeCollectionByName(templateCollection.getInternalName());
+		if (configCollection == null){
+			 configCollection = new AttributeCollection(templateCollection.getInternalName(),
+												  "",
+												  templateCollection.getDisplayName(),
+												  templateCollection.getDescription());
+			 configGroup.addAttributeCollection(configCollection);				
+		}
+			
+		AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
+		configAttToAdd.setInternalName(configAttName);		
+		configCollection.addAttributeDescription(configAttToAdd);				
+		
+		
+		
+	}
+	
 	storeTemplateXML(templateConfig,template);
 	return dsConfig;
   }
