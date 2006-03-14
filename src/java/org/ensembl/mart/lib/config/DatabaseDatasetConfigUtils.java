@@ -992,15 +992,13 @@ public class DatabaseDatasetConfigUtils {
 					"", templateCollection.getDisplayName(),templateCollection.getDescription());
 				
 				if (templatePage.getHidden() != null) dsConfigPage.setHidden(templatePage.getHidden());
-				if (templatePage.getDisplay() != null) {
-					System.out.println(templatePage.getInternalName()+":"+templatePage.getDisplay());
-					dsConfigPage.setDisplay(templatePage.getDisplay());
-				} 
+				if (templatePage.getDisplay() != null) dsConfigPage.setDisplay(templatePage.getDisplay());
 				if (templateGroup.getHidden() != null) dsConfigGroup.setHidden(templateGroup.getHidden());
 				if (templateGroup.getMaxSelectString() != null) dsConfigGroup.setMaxSelect(templateGroup.getMaxSelectString());
 				if (templateCollection.getMaxSelectString() != null) dsConfigCollection.setMaxSelect(templateCollection.getMaxSelectString());
 				if (templateCollection.getHidden() != null) dsConfigCollection.setHidden(templateCollection.getHidden());
 				if (templateAttribute.getHidden() != null) configAttToAdd.setHidden(templateAttribute.getHidden());
+				
 				
 				dsConfig.addAttributePage(dsConfigPage);
 				dsConfigPage.addAttributeGroup(dsConfigGroup);
@@ -1115,9 +1113,7 @@ public class DatabaseDatasetConfigUtils {
 	  	AttributeCollection templateCollection = templateCollections[k];
 	  	List templateAttributes = templateCollection.getAttributeDescriptions();
 	  	for (int l = 0; l < templateAttributes.size(); l++){
-	  	 	
-	//List templateAttributes = templateConfig.getAllAttributeDescriptions();
-	//for (int i = 0; i < templateAttributes.size(); i++){
+
 		AttributeDescription templateAtt = (AttributeDescription) templateAttributes.get(l);
 		String templateAttName = templateAtt.getInternalName();
 		if (!templateAttName.matches(".+\\..+"))
@@ -1127,10 +1123,7 @@ public class DatabaseDatasetConfigUtils {
 			configAttName = templateAttName.replaceFirst(dsConfig.getTemplate(),dsConfig.getDataset());			
 		
 		// add the missing placeholder to the dsConfig			
-		//AttributePage templatePage = templateConfig.getPageForAttribute(templateAttName);
-		//AttributeGroup templateGroup = templateConfig.getGroupForAttribute(templateAttName);
-		//AttributeCollection templateCollection = templateConfig.getCollectionForAttribute(templateAttName);
-		
+	
 		AttributePage configPage = dsConfig.getAttributePageByInternalName(templatePage.getInternalName());
 		if (configPage == null){
 			 configPage = new AttributePage(templatePage.getInternalName(),
@@ -1165,6 +1158,59 @@ public class DatabaseDatasetConfigUtils {
 	  }
 	 }
 	}
+
+	// put dsConfig back in same order as templateConfig
+	int pageCounter = 0;
+	int groupCounter = 0;
+	int collectionCounter = 0;
+	int descriptionCounter = 0;
+	templatePages = templateConfig.getAttributePages();
+	for (int i = 0; i < templatePages.length; i++){
+		if (dsConfig.containsAttributePage(templatePages[i].getInternalName())){
+			AttributePage dsConfigPage = dsConfig.getAttributePageByInternalName(templatePages[i].getInternalName());
+			dsConfig.removeAttributePage(dsConfigPage);
+			dsConfig.insertAttributePage(pageCounter,dsConfigPage);
+			pageCounter++;
+			groupCounter = 0;
+			List templateGroups = templatePages[i].getAttributeGroups();
+			for (int j =0; j < templateGroups.size(); j++){
+				AttributeGroup templateGroup = (AttributeGroup) templateGroups.get(j);
+				if (dsConfigPage.containsAttributeGroup(templateGroup.getInternalName())){
+					AttributeGroup dsConfigGroup = (AttributeGroup) dsConfigPage.getAttributeGroupByName(templateGroup.getInternalName());
+					if (groupCounter >= dsConfigPage.getAttributeGroups().size()) continue;//array problems because of duplicate internalNames in unwanted pages usually
+					dsConfigPage.removeAttributeGroup(dsConfigGroup);
+					dsConfigPage.insertAttributeGroup(groupCounter,dsConfigGroup);
+					groupCounter++;
+					collectionCounter = 0;				
+					AttributeCollection[] templateCollections = templateGroup.getAttributeCollections();
+					for (int k =0; k < templateCollections.length; k++){
+						AttributeCollection templateCollection = templateCollections[k];
+						if (dsConfigGroup.containsAttributeCollection(templateCollection.getInternalName())){
+							AttributeCollection dsConfigCollection = dsConfigGroup.getAttributeCollectionByName(templateCollection.getInternalName());
+							if (collectionCounter >= dsConfigGroup.getAttributeCollections().length) continue;//array problems because of duplicate internalNames in unwanted pages usually
+							dsConfigGroup.removeAttributeCollection(dsConfigCollection);
+							dsConfigGroup.insertAttributeCollection(collectionCounter,dsConfigCollection);
+							collectionCounter++;
+							descriptionCounter = 0;
+							List templateDescriptions = templateCollection.getAttributeDescriptions();
+							for (int l =0; l < templateDescriptions.size(); l++){
+								AttributeDescription templateDescription = (AttributeDescription) templateDescriptions.get(l);
+								if (dsConfigCollection.containsAttributeDescription(templateDescription.getInternalName())){
+									AttributeDescription dsConfigDescription = dsConfigCollection.getAttributeDescriptionByInternalName(templateDescription.getInternalName());
+									if (descriptionCounter >= dsConfigCollection.getAttributeDescriptions().size()) continue;//array problems because of duplicate internalNames in unwanted pages usually
+									dsConfigCollection.removeAttributeDescription(dsConfigDescription);
+									dsConfigCollection.insertAttributeDescription(descriptionCounter,dsConfigDescription);
+									descriptionCounter++;
+								}			
+							}			
+						}			
+					}										
+				}			
+			}
+		}
+	}
+
+
 	
 	if (storeFlag == 1) storeTemplateXML(templateConfig,template);
 	return dsConfig;
