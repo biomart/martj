@@ -279,10 +279,10 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 					if (tableConstraint != null || tableConstraintK != null) {
 						supports = tableConstraintK != null && tableConstraint != null && tableConstraintK.equals(tableConstraint);
             
-            if (qualifier!=null && supports) {
-              String qualifierK = getAttribute(qualifierKey); 
-              supports = qualifierK!=null && qualifierK.equals(qualifier);
-            }
+            			if (qualifier!=null && supports) {
+              				String qualifierK = getAttribute(qualifierKey); 
+              				supports = qualifierK!=null && qualifierK.equals(qualifier);
+            			}
 					}
 				}
 		}
