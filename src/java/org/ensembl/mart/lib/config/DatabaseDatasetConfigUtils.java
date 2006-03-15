@@ -1078,7 +1078,7 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 
 
 
-private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig dsConfig, DatasetConfig templateConfig)
+private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig dsConfig, DatasetConfig templateConfig, String upstreamFilterName)
 	throws ConfigurationException{
 
   String configAttName = configAtt.getInternalName();
@@ -1098,10 +1098,21 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
   FilterCollection configCollection = dsConfig.getCollectionForFilter(configAttName);
   String configCollectionName = configCollection.getInternalName();
   if (templateConfig.supportsFilterDescription(configAttField,configAttTC,null)){// will find option filters as well
-  //  System.out.println("1 - make sure dsConfig has same structure as templateConfig for this filter:"
+    //System.out.println("1 - make sure dsConfig has same structure as templateConfig for this filter:"
 	//	  +configAtt.getInternalName()+":"+configAtt.getDisplayName()+":"+dsConfig.getDataset());		
 	  // remove att from old hierarchy in dsConfig
-	  configCollection.removeFilterDescription(configAtt);
+	  
+	  if (upstreamFilterName != null){
+	  	FilterDescription upstreamFilter = configCollection.getFilterDescriptionByInternalName(upstreamFilterName);
+	  	Option opToRemove = new Option(configAtt);
+	  	upstreamFilter.removeOption(opToRemove);
+	  	if (!(upstreamFilter.getOptions().length > 0))
+	  		configCollection.removeFilterDescription(upstreamFilter);	
+	  }
+	  else{
+	  	configCollection.removeFilterDescription(configAtt);
+	  }
+	  
 	  if (!(configCollection.getFilterDescriptions().size() > 0)){
 		  configGroup.removeFilterCollection(configCollection);
 		  if (!(configGroup.getFilterCollections().length > 0)){
@@ -1119,6 +1130,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	  FilterCollection templateCollection = templateConfig.getCollectionForFilter(templateFilter.getInternalName());			
 					
 	  FilterDescription configAttToAdd = null;
+	  
 	  if (templateFilter.getTableConstraint() == null){
 		  // have recovered a filter container for filter options
 		  // need to make sure a new filter option is added to configAttToAdd
@@ -1149,7 +1161,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		    
 	  FilterPage dsConfigPage = dsConfig.getFilterPageByName(templatePage.getInternalName());
 	  if (dsConfigPage == null){
-		  dsConfigPage = new FilterPage(templatePage.getInternalName(),templatePage.getDisplayName(),
+	  	  dsConfigPage = new FilterPage(templatePage.getInternalName(),templatePage.getDisplayName(),
 			  templatePage.getDescription());
 		  FilterGroup dsConfigGroup = new FilterGroup(templateGroup.getInternalName(),
 			  templateGroup.getDisplayName(), templateGroup.getDescription());
@@ -1168,7 +1180,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		  dsConfigCollection.addFilterDescription(configAttToAdd);			
 	  }
 	  else{
-				
 		  // make sure dsConfigPage has correct displayName etc 
 		  if (templatePage.getDisplayName() != null) dsConfigPage.setDisplayName(templatePage.getDisplayName());
 		  if (templatePage.getDescription() != null) dsConfigPage.setDescription(templatePage.getDescription());
@@ -1206,7 +1217,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 				  if (templateCollection.getDisplayName() != null) dsConfigCollection.setDisplayName(templateCollection.getDisplayName());
 				  if (templateCollection.getDescription() != null) dsConfigCollection.setDescription(templateCollection.getDescription());
 				  if (templateFilter.getHidden() != null) configAttToAdd.setHidden(templateFilter.getHidden());
-	
 				  dsConfigCollection.addFilterDescription(configAttToAdd);
 			  }
 		  }
@@ -1256,6 +1266,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template);
 	dscutils.loadDatasetConfigWithDocument(templateConfig,getTemplateDocument(template));
 	
+	
 	// filter merge
 	List filters = dsConfig.getAllFilterDescriptions();
 
@@ -1268,11 +1279,11 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			Option[] ops = configAtt.getOptions();
 			for (int j = 0; j < ops.length; j++){
 				configAtt = new FilterDescription(ops[j]);
-				updateFilterToTemplate(configAtt,dsConfig,templateConfig);
+				updateFilterToTemplate(configAtt,dsConfig,templateConfig,configAttName);
 			}
 		}
 		else{
-			updateFilterToTemplate(configAtt,dsConfig,templateConfig);
+			updateFilterToTemplate(configAtt,dsConfig,templateConfig,null);
 		}		
 	}	
 	
@@ -1336,7 +1347,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		dsConfig.addExportable(newExp);
 	}
 	
-	// add any missing attribute placeholders from template to the dataset - useful for naive
+	// add any missing placeholders from template to the dataset - useful for naive
 	
 	FilterPage[] templatePages = templateConfig.getFilterPages();	
 	for (int i = 0; i < templatePages.length; i++){
@@ -1393,7 +1404,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	}	
 	
 	AttributePage[] templateAttPages = templateConfig.getAttributePages();	
-	for (int i = 0; i < templatePages.length; i++){
+	for (int i = 0; i < templateAttPages.length; i++){
 		AttributePage templatePage	= templateAttPages[i];
 		List templateGroups = templatePage.getAttributeGroups();
 		for (int j = 0; j < templateGroups.size(); j++){
@@ -1406,8 +1417,10 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 
 					AttributeDescription templateAtt = (AttributeDescription) templateAttributes.get(l);
 					String templateAttName = templateAtt.getInternalName();
+					
 					if (!templateAttName.matches(".+\\..+"))
 						continue;
+					
 					String configAttName = templateAttName;	
 					if (templateAttName.matches(".*"+dsConfig.getTemplate()+".+"))
 						configAttName = templateAttName.replaceFirst(dsConfig.getTemplate(),dsConfig.getDataset());			
@@ -1441,7 +1454,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					}
 			
 					AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
-					configAttToAdd.setInternalName(configAttName);		
+					configAttToAdd.setInternalName(configAttName);
 					if (!configCollection.containsAttributeDescription(configAttName)) 
 						configCollection.addAttributeDescription(configAttToAdd);					
 				}
@@ -1459,6 +1472,9 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			AttributePage dsConfigPage = dsConfig.getAttributePageByInternalName(templateAttPages[i].getInternalName());
 			dsConfig.removeAttributePage(dsConfigPage);
 			dsConfig.insertAttributePage(pageCounter,dsConfigPage);
+			
+			dsConfigPage = dsConfig.getAttributePageByInternalName(templateAttPages[i].getInternalName());
+			
 			pageCounter++;
 			groupCounter = 0;
 			List templateGroups = templateAttPages[i].getAttributeGroups();
