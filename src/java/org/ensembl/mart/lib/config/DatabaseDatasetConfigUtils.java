@@ -1079,7 +1079,7 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 
 
 private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig dsConfig, DatasetConfig templateConfig, String upstreamFilterName)
-	throws ConfigurationException{
+	throws ConfigurationException, SQLException{
 
   String configAttName = configAtt.getInternalName();
   String configAttTC;
@@ -1157,6 +1157,17 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		  configAttToAdd = new FilterDescription(templateFilter);
 		  configAttToAdd.setTableConstraint(configAtt.getTableConstraint());
 		  configAttToAdd.setField(configAtt.getField());
+		  if (templateFilter.getType().equals("list")){
+			String colForDisplay = "";
+			if (configAttToAdd.getColForDisplay() != null){
+				colForDisplay = configAttToAdd.getColForDisplay();
+			}
+			Option[] options = getOptions(configAttToAdd.getField(), configAttToAdd.getTableConstraint(), 
+				configAttToAdd.getKey(), dsConfig, colForDisplay);
+			for (int k = 0; k < options.length; k++) {
+				configAttToAdd.insertOption(k,options[k]);
+			}		  			  	
+		  }
 	  }
 		    
 	  FilterPage dsConfigPage = dsConfig.getFilterPageByName(templatePage.getInternalName());
@@ -1261,7 +1272,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 }
 
 
-  public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig, int storeFlag) throws ConfigurationException{
+  public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig, int storeFlag) throws ConfigurationException, SQLException{
 	String template = dsConfig.getTemplate();
 	DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template);
 	dscutils.loadDatasetConfigWithDocument(templateConfig,getTemplateDocument(template));
