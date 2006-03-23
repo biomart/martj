@@ -884,6 +884,7 @@ public class DatabaseDatasetConfigUtils {
 						break;
 				}
 			}
+			dsv.setTemplate(template);//needed otherwise gets set to dataset
 			storeDatasetConfiguration(
 										MartEditor.getUser(),
 										dsv.getInternalName(),
