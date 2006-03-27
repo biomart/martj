@@ -86,6 +86,8 @@ public abstract class BaseNamedConfigurationObject extends BaseConfigurationObje
     setAttribute(internalNameKey, internalName);
     setAttribute(displayNameKey, displayName);
     setAttribute(descriptionKey, description);
+    setAttribute(hiddenKey,null);
+    setAttribute(displayKey,null);
 	}
   
   
