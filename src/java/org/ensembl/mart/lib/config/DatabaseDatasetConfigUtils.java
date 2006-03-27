@@ -4789,7 +4789,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
             AttributeDescription ad = getAttributeDescription(cname, tableName, csize, joinKey, duplicated);
             //ad.setHidden("false");
             ac.addAttributeDescription(ad);
-            if (cname.endsWith("_list")) {
+            if (cname.endsWith("_list") || cname.equals("dbprimary_id")) {
             	duplicated = 0;
 				if (!cname.equals("display_id_list")){
 			  		if (filtMap.containsKey(cname)){
