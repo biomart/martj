@@ -543,12 +543,14 @@ public class DatabaseDatasetConfigUtils {
 		
 		
 		if (spaceErrors != ""){
+		System.out.println("1");	
 		  JOptionPane.showMessageDialog(null, "The following internal names contain spaces:\n"
 									+ spaceErrors, "ERROR", 0);
 		  return;//no export performed
 		}
 
 		if (brokenString != ""){
+			System.out.println("2");
 			int choice = JOptionPane.showConfirmDialog(null,"The following may not contain the required fields:\n"
 		  							+ brokenString, "Export Anyway?", JOptionPane.YES_NO_OPTION);
 		  	if (choice != 0)									
@@ -556,12 +558,14 @@ public class DatabaseDatasetConfigUtils {
 		}		
 
 		if (linkErrors != ""){
+			System.out.println("3");
 		  JOptionPane.showMessageDialog(null, "The following internal names are incorrect in links:\n"
 									+ linkErrors, "ERROR", 0);
 		  return;//no export performed
 		}
 	  	  
 		if (attributeDuplicationMap.size() > 0){
+			System.out.println("4");
 			duplicationString = "The following attribute internal names are duplicated and will cause client problems:\n";
 			Enumeration enum = attributeDuplicationMap.keys();
 			while (enum.hasMoreElements()){
@@ -570,6 +574,7 @@ public class DatabaseDatasetConfigUtils {
 			}
 		}
 		else if (filterDuplicationMap.size() > 0){
+			System.out.println("5");
 			duplicationString = duplicationString + "The following filter/option internal names are duplicated and will cause client problems:\n";
 			Enumeration enum = filterDuplicationMap.keys();
 			while (enum.hasMoreElements()){
@@ -581,6 +586,7 @@ public class DatabaseDatasetConfigUtils {
 
 		
 		if (duplicationString != ""){	
+			System.out.println("6");
 		  int choice = JOptionPane.showConfirmDialog(null, duplicationString, "Make Unique?", JOptionPane.YES_NO_OPTION);							  
 		  // make unique code
 		  if (choice == 0){
@@ -697,6 +703,10 @@ public class DatabaseDatasetConfigUtils {
 			if (fd.getInternalName().matches(".+\\..+")){
 				if (fd.getInternalName().matches(".*"+dsConfig.getDataset()+".+"))
 					fd.setInternalName(fd.getInternalName().replaceFirst(dsConfig.getDataset(),template));
+			}
+			//System.out.println(fd.getType()+":"+fd.getOptions().length);
+			if (fd.getType() != null && fd.getType().equals("list") && !(fd.getOptions().length > 0)){// fixes broken types in existing XML
+				fd.setType("text");
 			}
 			
 			FilterPage configPage = dsConfig.getPageForFilter(fd.getInternalName());
@@ -947,12 +957,18 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 					}					
 				}
 			}
-
-			AttributeDescription templateAttribute = templateConfig.getAttributeDescriptionByFieldNameTableConstraint(configAttField,configAttTC);	
+			// need to make sure get right template attribute: if more than one exists take the one with matching
+			// internalName as well				
+			AttributeDescription templateAttribute = templateConfig.getAttributeDescriptionByFieldNameTableConstraintInternalName(configAttField,configAttTC,configAttName);				
+			//System.out.println("GET FOR "+configAttField+":"+configAttTC+":"+configAttName+":"+templateAttribute.getInternalName());
+			
+			
+			//AttributeDescription templateAttribute = templateConfig.getAttributeDescriptionByFieldNameTableConstraint(configAttField,configAttTC);	
 			AttributePage templatePage = templateConfig.getPageForAttribute(templateAttribute.getInternalName());
 			AttributeGroup templateGroup = templateConfig.getGroupForAttribute(templateAttribute.getInternalName());
 			AttributeCollection templateCollection = templateConfig.getCollectionForAttribute(templateAttribute.getInternalName());			
-					
+
+							
 			AttributeDescription configAttToAdd = new AttributeDescription(templateAttribute);
 			configAttToAdd.setTableConstraint(configAtt.getTableConstraint());
 			configAttToAdd.setField(configAtt.getField());
@@ -1026,8 +1042,8 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 						if (templateCollection.getDescription() != null) dsConfigCollection.setDescription(templateCollection.getDescription());
 						if (templateCollection.getMaxSelectString() != null) dsConfigCollection.setMaxSelect(templateCollection.getMaxSelectString());
 						if (templateAttribute.getHidden() != null) configAttToAdd.setHidden(templateAttribute.getHidden());
-	
 						dsConfigCollection.addAttributeDescription(configAttToAdd);
+						
 					}
 				}
 			}
@@ -1104,11 +1120,13 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	  // remove att from old hierarchy in dsConfig
 	  
 	  if (upstreamFilterName != null){
+	  	
 	  	FilterDescription upstreamFilter = configCollection.getFilterDescriptionByInternalName(upstreamFilterName);
 	  	Option opToRemove = new Option(configAtt);
 	  	upstreamFilter.removeOption(opToRemove);
-	  	if (!(upstreamFilter.getOptions().length > 0))
-	  		configCollection.removeFilterDescription(upstreamFilter);	
+	  	if (!(upstreamFilter.getOptions().length > 0)){
+	  		configCollection.removeFilterDescription(upstreamFilter);
+	  	}	
 	  }
 	  else{
 	  	configCollection.removeFilterDescription(configAtt);
@@ -1123,8 +1141,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			  }					
 		  }
 	  }
-
-	  FilterDescription templateFilter = templateConfig.getFilterDescriptionByFieldNameTableConstraint(configAttField,configAttTC,null);	
+		
+	  FilterDescription templateFilter = templateConfig.getFilterDescriptionByFieldNameTableConstraintInternalName(configAttField,configAttTC,null,configAttName);	
 				
 	  FilterPage templatePage = templateConfig.getPageForFilter(templateFilter.getInternalName());
 	  FilterGroup templateGroup = templateConfig.getGroupForFilter(templateFilter.getInternalName());
@@ -1286,6 +1304,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		FilterDescription configAtt = (FilterDescription) filters.get(i);
 		String configAttName = configAtt.getInternalName();
 		if (configAttName.matches(".+\\..+")) continue;
+		
 		
 		if (configAtt.getTableConstraint() == null || configAtt.getTableConstraint().equals("")){
 			Option[] ops = configAtt.getOptions();
@@ -1503,7 +1522,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					for (int k =0; k < templateCollections.length; k++){
 						AttributeCollection templateCollection = templateCollections[k];
 						if (dsConfigGroup.containsAttributeCollection(templateCollection.getInternalName())){
-							AttributeCollection dsConfigCollection = dsConfigGroup.getAttributeCollectionByName(templateCollection.getInternalName());
+							AttributeCollection dsConfigCollection = dsConfigGroup.getAttributeCollectionByName(templateCollection.getInternalName());		
 							if (collectionCounter >= dsConfigGroup.getAttributeCollections().length) continue;//array problems because of duplicate internalNames in unwanted pages usually
 							dsConfigGroup.removeAttributeCollection(dsConfigCollection);
 							dsConfigGroup.insertAttributeCollection(collectionCounter,dsConfigCollection);

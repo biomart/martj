@@ -107,7 +107,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             	  
             	  else{// naive
             	  	config = MartEditor.getDatabaseDatasetConfigUtils().getNaiveDatasetConfigFor(schema,dataset);
-            	  	if (config.getPrimaryKeys().length == 0 || !config.getPrimaryKeys()[0].endsWith("_key")){
+            	  	if (config.getPrimaryKeys().length == 0 || !config.getPrimaryKeys()[0].toLowerCase().endsWith("_key")){
             	  		JOptionPane.showMessageDialog(null,"Your main table must contain a primary key ending _key");
             	  		return;
             	  	}

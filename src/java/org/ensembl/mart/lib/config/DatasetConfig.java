@@ -1046,6 +1046,50 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   }
 
   /**
+   * Retrieve a specific AttributeDescription that supports a given field and tableConstraint and internalName
+   * if possible - otherwise return one that matches tc and field.
+   * @param field
+   * @param tableConstraint
+   * @param internalName
+   * @return AttributeDescription supporting the field and tableConstraint and optionally internalName, or null
+   */
+  public AttributeDescription getAttributeDescriptionByFieldNameTableConstraintInternalName(String field, String tableConstraint, String internalName) {
+	lazyLoad();
+	if (supportsAttributeDescription(field, tableConstraint, internalName))
+	  return lastSupportingAttribute;
+	else
+	  return null;
+  }
+
+  /**
+   * Determine if this DatasetConfig supports a given field and tableConstraint for an Attribute.  
+   * Caches the first supporting AttributeDescription that it finds that matches internalName as well,
+   *  for subsequent call to getAttributeDescriptionByFieldNameTableConstraint.
+   * @param field
+   * @param tableConstraint
+   * @return boolean, true if an AttributeDescription contained in this AttributePage supports the field and tableConstraint, false otherwise
+   */
+  public boolean supportsAttributeDescription(String field, String tableConstraint, String internalName) {
+	lazyLoad();
+	boolean supports = false;
+
+	for (Iterator iter = attributePages.iterator(); iter.hasNext();) {
+	  AttributePage element = (AttributePage) iter.next();
+
+	  if (element.supports(field, tableConstraint)) {
+		lastSupportingAttribute = element.getAttributeDescriptionByFieldNameTableConstraint(field, tableConstraint);
+		supports = true;
+		if (lastSupportingAttribute.getInternalName().equals(internalName)){
+			break;	
+		}
+		//break;
+	  }
+	}
+	return supports;
+  }
+
+
+  /**
    * Retrieve a specific AttributeDescription that supports a given field and tableConstraint.
    * @param field
    * @param tableConstraint
@@ -1133,6 +1177,62 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     }
     return contains;
   }
+
+
+  /**
+   * Get a FilterDescription object that supports a given field and tableConstraint.  Useful for mapping from a Filter object
+   * added to a Query back to its FilterDescription. Returns the one matching internalName if possible
+   * @param field -- String field of a mart database table
+   * @param tableConstraint -- String tableConstraint of a mart database
+   * @param qualifier -- Filter qualifier
+   * @param internalName
+   * @return FilterDescription object supporting the given field and tableConstraint and optionally internalName, or null.
+   */
+  public FilterDescription getFilterDescriptionByFieldNameTableConstraintInternalName(String field, 
+  	String tableConstraint, String qualifier, String internalName) {
+	lazyLoad();
+	if (supportsFilterDescription(field, tableConstraint, qualifier, internalName))
+	  return lastSupportingFilter;
+	else
+	  return null;
+  }
+
+  /**
+   * Determine if this DatasetConfig contains a FilterDescription that supports a given field and tableConstraint.
+   * Calling this method will cache any FilterDescription that supports the field and tableConstraint, and this will
+   * be returned by a getFilterDescriptionByFieldNameTableConstraint call.
+   * @param field -- String field of a mart database table
+   * @param tableConstraint -- String tableConstraint of a mart database
+   * @param qualifier -- Filter qualifier
+   * @return boolean, true if the DatasetConfig contains a FilterDescription supporting a given field, tableConstraint, false otherwise.
+   */
+  public boolean supportsFilterDescription(String field, String tableConstraint, String qualifier, String internalName) {
+	lazyLoad();
+	boolean supports = false;
+
+	//if (lastSupportingFilter == null) {
+	  for (Iterator iter = filterPages.iterator(); iter.hasNext();) {
+		FilterPage element = (FilterPage) iter.next();
+		if (element.supports(field, tableConstraint, qualifier)) {
+		  lastSupportingFilter = element.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint,qualifier);
+		  supports = true;
+		  if (lastSupportingFilter.getInternalName().equals(internalName)){
+		  	break;
+		  }
+		}
+	  }
+	//} else {
+	//  if (lastSupportingFilter.supports(field, tableConstraint, qualifier))
+	//	supports = true;
+	//  else {
+	//	lastSupportingFilter = null;
+    //		supports = supportsFilterDescription(field, tableConstraint, qualifier, internalName);
+    //	  }
+	//}
+	return supports;
+  }
+
+
 
   /**
    * Get a FilterDescription object that supports a given field and tableConstraint.  Useful for mapping from a Filter object

@@ -914,7 +914,7 @@ System.out.println ("getting driver "+ driver);
 
 	try {
 	  disableCursor();
-	  DatasetConfig dsConfig = ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig();	
+	  //DatasetConfig dsConfig = ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig();	
 	  ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).exportTemplate();
 	} catch (ConfigurationException e) {
 	  JOptionPane.showMessageDialog(this, "Problems with exporting requested dataset. " +
