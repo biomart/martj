@@ -107,6 +107,9 @@ public class FilterCollection extends BaseNamedConfigurationObject {
   public void removeFilterDescription(FilterDescription f) {
     filterNameMap.remove(f.getInternalName());
     filters.remove(f);
+    // fix to stop containsFilterDescription breaking after a remove
+    if (lastFilt != null && f.getInternalName().equals(lastFilt.getInternalName()))
+    	lastFilt = null;
   }
   
   /**
@@ -190,7 +193,6 @@ public class FilterCollection extends BaseNamedConfigurationObject {
 	 */
 	public boolean containsFilterDescription(String internalName) {
 		boolean contains = false;
-
 		if (lastFilt == null) {
 			contains = filterNameMap.containsKey(internalName);
 
@@ -201,11 +203,12 @@ public class FilterCollection extends BaseNamedConfigurationObject {
 				String testRefName = testNames[0]; // x in x.y
 				String testIname = testNames[1]; // y in x.y
 
-        if (filterNameMap.containsKey(testIname)) {
-        	// y is an actual filter, with its values stored in a PushOption in another Filter					
+        		if (filterNameMap.containsKey(testIname)) {
+        			// y is an actual filter, with its values stored in a PushOption in another Filter					
 					lastFilt = (FilterDescription) filterNameMap.get(testIname);
 					contains = true;
-				} else {
+				} 
+				else {
 					// y may be a Filter stored in a PushOption within another Filter
 					for (Iterator iter = filters.iterator(); iter.hasNext();) {
 						FilterDescription element = (FilterDescription) iter.next();
@@ -228,7 +231,8 @@ public class FilterCollection extends BaseNamedConfigurationObject {
 						  break;
 					}
 				}
-			} else {
+			} 
+			else {
 				for (Iterator iter = filters.iterator(); iter.hasNext();) {
 					FilterDescription element = (FilterDescription) iter.next();
 					if (element.containsOption(internalName)) {
@@ -239,7 +243,8 @@ public class FilterCollection extends BaseNamedConfigurationObject {
 					}
 				}
 			}
-		} else {
+		} 
+		else {// lastFilt != null
 			if (lastFilt.getInternalName().equals(internalName))
 				contains = true;
 			else if (lastFilt.containsOption(internalName))
@@ -249,7 +254,7 @@ public class FilterCollection extends BaseNamedConfigurationObject {
 			else if (lastFilt.getInternalName().matches("\\w+\\." + internalName)){
 					contains = true;
 					internalName = lastFilt.getInternalName();  
-				  }	
+			}	
 			else {
 				lastFilt = null;
 				contains = containsFilterDescription(internalName);

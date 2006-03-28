@@ -934,7 +934,6 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 			configAttTC = configAtt.getTableConstraint().split("__")[1]+"__"+configAtt.getTableConstraint().split("__")[2];// template stores w/o the dataset part
 		
 		String configAttField = configAtt.getField(); 
-		
 		AttributePage configPage = dsConfig.getPageForAttribute(configAttName);
 		String configPageName = configPage.getInternalName();
 		AttributeGroup configGroup = dsConfig.getGroupForAttribute(configAttName);
@@ -1042,7 +1041,10 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 						if (templateCollection.getDescription() != null) dsConfigCollection.setDescription(templateCollection.getDescription());
 						if (templateCollection.getMaxSelectString() != null) dsConfigCollection.setMaxSelect(templateCollection.getMaxSelectString());
 						if (templateAttribute.getHidden() != null) configAttToAdd.setHidden(templateAttribute.getHidden());
-						dsConfigCollection.addAttributeDescription(configAttToAdd);
+						// put in a check for this and FILTERS that the same configAtt not already added
+						// this can happen when original config has duplicate filters and atts in terms of TC and Fields
+						if (!dsConfigCollection.containsAttributeDescription(configAttToAdd.getInternalName()))
+							dsConfigCollection.addAttributeDescription(configAttToAdd);
 						
 					}
 				}
@@ -1107,7 +1109,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	  configAttTC = configAtt.getTableConstraint().split("__")[1]+"__"+configAtt.getTableConstraint().split("__")[2];// template stores w/o the dataset part
 		
   String configAttField = configAtt.getField(); 
-		
+  	
   FilterPage configPage = dsConfig.getPageForFilter(configAttName);
   String configPageName = configPage.getInternalName();
   FilterGroup configGroup = dsConfig.getGroupForFilter(configAttName);
@@ -1161,7 +1163,10 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					  opToAdd.setTableConstraint(configAtt.getTableConstraint());
 					  FilterDescription configFilterList = dsConfig.getFilterDescriptionByInternalName(templateFilter.getInternalName());
 					  if (configFilterList != null){
-						  configFilterList.addOption(opToAdd);
+					  	  // check not already there
+					  	  if (!configFilterList.containsOption(opToAdd.getInternalName())){
+						  	configFilterList.addOption(opToAdd);
+					  	  }
 						  return;
 					  }
 					  else{
@@ -1188,7 +1193,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			}		  			  	
 		  }
 	  }
-		    
+	  	    
 	  FilterPage dsConfigPage = dsConfig.getFilterPageByName(templatePage.getInternalName());
 	  if (dsConfigPage == null){
 	  	  dsConfigPage = new FilterPage(templatePage.getInternalName(),templatePage.getDisplayName(),
@@ -1247,7 +1252,12 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 				  if (templateCollection.getDisplayName() != null) dsConfigCollection.setDisplayName(templateCollection.getDisplayName());
 				  if (templateCollection.getDescription() != null) dsConfigCollection.setDescription(templateCollection.getDescription());
 				  if (templateFilter.getHidden() != null) configAttToAdd.setHidden(templateFilter.getHidden());
-				  dsConfigCollection.addFilterDescription(configAttToAdd);
+				  // put in a check for this and FILTERS that the same configAtt not already added
+				  // this can happen when original config has duplicate filters and atts in terms of TC and Fields
+				  
+				  if (!dsConfigCollection.containsFilterDescription(configAttToAdd.getInternalName())){
+					  dsConfigCollection.addFilterDescription(configAttToAdd);
+				  }
 			  }
 		  }
 	  }
@@ -1330,16 +1340,23 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	}
 	
 	// imps/exps merge
+	
+	// first add extra config importables to template
 	Importable[] configImps = dsConfig.getImportables();
 	OUTER:for (int i = 0; i < configImps.length; i++){
 		Importable[] tempImps = templateConfig.getImportables();
 		for (int j = 0; j < tempImps.length; j++){
-			if (tempImps[j].getInternalName().equals(configImps[i].getInternalName())) continue OUTER;
+			if (tempImps[j].getInternalName().equals(configImps[i].getInternalName())) {
+				// make sure list of filters matches template
+				configImps[i].setFilters(tempImps[j].getFilters());
+				continue OUTER;
+			} 
 		}
 		Importable newImp = new Importable(configImps[i]);
 		newImp.setLinkVersion("");
 		templateConfig.addImportable(newImp);
 	}
+	// then add extra template config importables to config if filters exist
 	Importable[] tempImps = templateConfig.getImportables();
 	OUTER:for (int i = 0; i < tempImps.length; i++){
 		configImps = dsConfig.getImportables();
@@ -1358,7 +1375,10 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	OUTER:for (int i = 0; i < configExps.length; i++){
 		Exportable[] tempExps = templateConfig.getExportables();
 		for (int j = 0; j < tempExps.length; j++){
-			if (tempExps[j].getInternalName().equals(configExps[i].getInternalName())) continue OUTER;
+			if (tempExps[j].getInternalName().equals(configExps[i].getInternalName())) {
+				configExps[i].setAttributes(tempExps[j].getAttributes());
+				continue OUTER;
+			} 
 		}
 		Exportable newExp = new Exportable(configExps[i]);
 		newExp.setLinkVersion("");
@@ -1603,7 +1623,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 
 
 
-
+/*
   public int templateTest(String template) throws ConfigurationException{
 	Connection conn = null;
 	try {
@@ -1623,6 +1643,28 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		 DetailedDataSource.close(conn);
 	}
   }
+*/
+
+public int templateCount(String template) throws ConfigurationException{
+  
+  Connection conn = null;
+  try{
+  	conn = dsource.getConnection();
+  	String sql = "SELECT count(*) FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE template='"+template+"'";
+  	PreparedStatement ps = conn.prepareStatement(sql);
+  	ResultSet rs = ps.executeQuery();
+  	rs.next();
+	int result = rs.getInt(1);
+	return result;
+  }
+  catch (SQLException e) {
+	throw new ConfigurationException(
+		 "Caught SQLException updating xml for: " + e.getMessage());
+  }
+  finally {
+	DetailedDataSource.close(conn);
+  }
+}
 
   private int storeCompressedXML(
     String user,
@@ -1700,11 +1742,12 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	  ps.executeUpdate();	
       
       
-      sql = "SELECT count(*) FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE template='"+template+"'";
-	  ps = conn.prepareStatement(sql);
-	  ResultSet rs = ps.executeQuery();
-	  rs.next();
-	  int result = rs.getInt(1);
+      //sql = "SELECT count(*) FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE template='"+template+"'";
+	  //ps = conn.prepareStatement(sql);
+	  //ResultSet rs = ps.executeQuery();
+	  //rs.next();
+	  //int result = rs.getInt(1);
+      int result = templateCount(template);
       if (result > 1){//usual 1:1 dataset:template do not get template merging 
       	   // System.out.println("SHOULD MERGE CONFIG AND TEMPLATE TOGETHER NOW");
 		   dsConfig = updateConfigToTemplate(dsConfig,1);

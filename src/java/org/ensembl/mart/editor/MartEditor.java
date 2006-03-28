@@ -1705,9 +1705,8 @@ System.out.println ("getting driver "+ driver);
 			}
 		}
 		dbutils.updateLinkVersions(dsv);
-		
-		
-		dsv = dbutils.updateConfigToTemplate(dsv,0);
+		if (dbutils.templateCount(dsv.getTemplate()) > 1)
+			dsv = dbutils.updateConfigToTemplate(dsv,0);
 				
         DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, schema,null);
         frame.setVisible(true);
