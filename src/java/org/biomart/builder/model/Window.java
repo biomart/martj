@@ -1,0 +1,397 @@
+/*
+ * Window.java
+ *
+ * Created on 27 March 2006, 13:56
+ */
+
+/*
+        Copyright (C) 2006 EBI
+ 
+        This library is free software; you can redistribute it and/or
+        modify it under the terms of the GNU Lesser General Public
+        License as published by the Free Software Foundation; either
+        version 2.1 of the License, or (at your option) any later version.
+ 
+        This library is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the itmplied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+        Lesser General Public License for more details.
+ 
+        You should have received a copy of the GNU Lesser General Public
+        License along with this library; if not, write to the Free Software
+        Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+package org.biomart.builder.model;
+
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import org.biomart.builder.exceptions.AssociationException;
+import org.biomart.builder.exceptions.BuilderException;
+import org.biomart.builder.model.DataSet.GenericDataSet;
+
+/**
+ * <p>Represents a window onto a {@link Table} in a {@link TableProvider}.
+ * The window allows masking of unwanted {@link Relation}s and {@link Column}s.</p>
+ *
+ * <p>The name of the window is inherited by the {@link Dataset} so take care when
+ * choosing it.</p>
+ * @author Richard Holland <holland@ebi.ac.uk>
+ * @version 0.1.2, 28th March 2006
+ * @since 0.1
+ */
+public class Window implements Comparable {
+    /**
+     * Internal reference to the name of this window.
+     */
+    private final String name;
+    
+    /**
+     * Internal reference to the parent schema.
+     */
+    private final Schema schema;
+    
+    /**
+     * Internal reference to the central table.
+     */
+    private final Table centralTable;
+    
+    /**
+     * Internal reference to the transformation data set.
+     */
+    private final DataSet dataset;
+    
+    /**
+     * Internal reference to masked relations.
+     */
+    private final Set maskedRelations = new HashSet();
+    
+    /**
+     * Internal reference to masked columns.
+     */
+    private final Set maskedColumns = new HashSet();
+    
+    /**
+     * Internal reference to partitioned columns (keys are columns,
+     * values are {@link PartitionedColumnType}s).
+     */
+    private final Map partitionedColumns = new HashMap();
+    
+    /**
+     * Internal reference to relations between subclassed tables.
+     */
+    private final Set subclassedRelations = new HashSet();
+    
+    /**
+     * The constructor creates a {@link Window} around one central {@link Table} and
+     * gives it a name. It also initiates a {@link DataSet} ready to contain the transformed
+     * results.
+     * @param s the {@link Schema} this {@link Window} will belong to.
+     * @param t the {@link Table} to use as the central table.
+     * @param name the name to give this {@link Window}.
+     * @throws NullPointerException if any parameter is null.
+     * @throws AssociationException if the {@link Table} does not belong to any of the
+     * {@link TableProvider} objects in the {@link Schema} this {@link Window} belongs to.
+     */
+    public Window(Schema s, Table t, String name) throws NullPointerException, AssociationException {
+        // Sanity check.
+        if (s==null)
+            throw new NullPointerException("Schema cannot be null.");
+        if (t==null)
+            throw new NullPointerException("Central table cannot be null.");
+        if (name==null)
+            throw new NullPointerException("Window name cannot be null.");
+        if (!s.getTableProviders().contains(t.getTableProvider()))
+            throw new AssociationException("Cannot use table that is not part of the schema supplied.");
+        // Do it.
+        this.schema = s;
+        this.centralTable = t;
+        this.name = name;
+        this.dataset = new GenericDataSet(this);
+    }
+    
+    /**
+     * Returns the name of this {@link Window}. The name will also be used for the
+     * {@link DataSet} generated from this {@link Window}.
+     * @return the name of this {@link Window}.
+     */
+    public String getName() {
+        return this.name;
+    }
+    
+    /**
+     * Returns the {@link Schema} of this {@link Window}.
+     * @return the {@link Schema} of this {@link Window}.
+     */
+    public Schema getSchema() {
+        return this.schema;
+    }
+    
+    /**
+     * Returns the central {@link Table} of this {@link Window}.
+     * @return the central {@link Table} of this {@link Window}.
+     */
+    public Table getTable() {
+        return this.centralTable;
+    }
+    
+    /**
+     * Returns the {@link DataSet} generated by this {@link Window}.
+     * @return the {@link DataSet} generated by this {@link Window}.
+     */
+    public DataSet getDataSet() {
+        return this.dataset;
+    }
+    
+    /**
+     * Mask a {@link Relation}. If it is already masked, ignore it.
+     * An exception will be thrown if it is null.
+     * @param r the {@link Relation} to mask.
+     * @throws NullPointerException if the {@link Relation} is null.
+     */
+    public void maskRelation(Relation r) throws NullPointerException {
+        // Sanity check.
+        if (r==null)
+            throw new NullPointerException("Cannot mask a relation which is null.");
+        // Do it.
+        this.maskedRelations.add(r);
+    }
+    
+    /**
+     * Unmask a {@link Relation}. If it is already unmasked, ignore it.
+     * An exception will be thrown if it is null.
+     * @param r the {@link Relation} to unmask.
+     * @throws NullPointerException if the {@link Relation} is null.
+     */
+    public void unmaskRelation(Relation r) throws NullPointerException {
+        // Sanity check.
+        if (r==null)
+            throw new NullPointerException("Cannot mask a relation which is null.");
+        // Do it.
+        this.maskedRelations.remove(r);
+    }
+    
+    /**
+     * Return the set of masked {@link Relation}s. It may be empty, but never null.
+     * @return the set of masked {@link Relation}s.
+     */
+    public Collection getMaskedRelations() {
+        return this.maskedRelations;
+    }
+    
+    /**
+     * Mask a {@link Column}. If it is already masked, ignore it.
+     * An exception will be thrown if it is null.
+     * @param r the {@link Column} to mask.
+     * @throws NullPointerException if the {@link Column} is null.
+     */
+    public void maskColumn(Column r) throws NullPointerException {
+        // Sanity check.
+        if (r==null)
+            throw new NullPointerException("Cannot mask a column which is null.");
+        // Do it.
+        this.maskedColumns.add(r);
+    }
+    
+    /**
+     * Unmask a {@link Column}. If it is already unmasked, ignore it.
+     * An exception will be thrown if it is null.
+     * @param r the {@link Column} to unmask.
+     * @throws NullPointerException if the {@link Column} is null.
+     */
+    public void unmaskColumn(Column r) throws NullPointerException {
+        // Sanity check.
+        if (r==null)
+            throw new NullPointerException("Cannot mask a column which is null.");
+        // Do it.
+        this.maskedColumns.remove(r);
+    }
+    
+    /**
+     * Return the set of masked {@link Column}s. It may be empty, but never null.
+     * @return the set of masked {@link Column}s.
+     */
+    public Collection getMaskedColumns() {
+        return this.maskedColumns;
+    }
+    
+    /**
+     * Mark a {@link Table} as a subclass of another by marking the {@link Relation} between them.
+     * The {@link PrimaryKey} end of the {@link Relation} is the parent table, and the {@link ForeignKey}
+     * is the subclassed table. If it is already marked, ignore it.
+     * An exception will be thrown if any parameter is null.
+     * @param subclass the {@link Relation} to mark as a subclass relation.
+     * @throws NullPointerException if the {@link Relation} is null.
+     */
+    public void flagSubclassRelation(Relation subclass) throws NullPointerException {
+        // Sanity check.
+        if (subclass==null)
+            throw new NullPointerException("Cannot mark a subclass relation which is null.");
+        // Do it.
+        this.subclassedRelations.add(subclass);
+    }
+    
+    /**
+     * Unmark a {@link Relation} as a subclass relation. If it is already unmarked, ignore it.
+     * An exception will be thrown if it is null.
+     * @param subclass the {@link Relation} to unmark.
+     * @throws NullPointerException if the {@link Relation} is null.
+     */
+    public void unflagSubclassRelation(Relation subclass) throws NullPointerException {
+        // Sanity check.
+        if (subclass==null)
+            throw new NullPointerException("Cannot unmark a relation which is null.");
+        // Do it.
+        this.subclassedRelations.remove(subclass);
+    }
+    
+    /**
+     * Return the set of subclassed {@link Relation}s. It may be empty, but never null.
+     * @return the set of subclassed {@link Relation}s.
+     */
+    public Collection getSubclassedRelations() {
+        return this.subclassedRelations;
+    }
+        
+    /**
+     * Mark a {@link Column} as partitioned. If it is already marked, it updates the partition type.
+     * An exception will be thrown if any parameter is null.
+     * @param c the {@link Column} to mark as partitioned.
+     * @param pct the {@link PartitionedColumnType} to use for the partition.
+     * @throws NullPointerException if either parameter is null.
+     */
+    public void flagPartitionedColumn(Column c, PartitionedColumnType pct) throws NullPointerException {
+        // Sanity check.
+        if (c==null)
+            throw new NullPointerException("Cannot partition a column which is null.");
+        if (pct==null)
+            throw new NullPointerException("Cannot use a partition type which is null.");
+        // Do it (the Map will replace the value with the new value if the key already exists)
+        this.partitionedColumns.put(c, pct);
+    }
+    
+    /**
+     * Unmark a {@link Column} as partitioned. If it is already unmarked, ignore it.
+     * An exception will be thrown if it is null.
+     * @param c the {@link Column} to unmark.
+     * @throws NullPointerException if the {@link Column} is null.
+     */
+    public void unflagPartitionedColumn(Column c) throws NullPointerException {
+        // Sanity check.
+        if (c==null)
+            throw new NullPointerException("Cannot unpartition a column which is null.");
+        // Do it.
+        this.partitionedColumns.remove(c);
+    }
+    
+    /**
+     * Return the set of partitioned {@link Column}s. It may be empty, but never null.
+     * @return the set of partitioned {@link Column}s.
+     */
+    public Collection getPartitionedColumns() {
+        return this.partitionedColumns.keySet();
+    }
+    
+    /**
+     * Return the partition type of partitioned {@link Column} c.
+     * It will return null if there is no such partitioned column.
+     * @return the partition type of the {@link Column}.
+     * @throws NullPointerException if the parameter passed in was null.
+     */
+    public PartitionedColumnType getPartitionedColumnType(Column c) throws NullPointerException {
+        // Sanity check.
+        if (c==null)
+            throw new NullPointerException("Partitioned column cannot be null.");
+        // Do we have it?
+        if (!this.partitionedColumns.containsKey(c)) return null;
+        // Return it.
+        return (PartitionedColumnType)this.partitionedColumns.get(c);
+    }
+    
+    /**
+     * Synchronise this {@link Window} with the {@link TableProvider} that is
+     * providing its tables. Synchronisation means checking the masked {@link Column}
+     * and {@link Relation} objects and removing any that have disappeared.
+     * The associated {@link DataSet}, if one exists yet, is then regenerated.
+     * If one does not exist, it is generated now.
+     *
+     * @throws SQLException if there was a problem connecting to the data source.
+     * @throws BuilderException if there was any other kind of problem.
+     */
+    public void synchronise() throws SQLException, BuilderException {
+        // Start with all-dead.
+        Set deadRelations = new HashSet(this.maskedRelations);
+        deadRelations.addAll(this.subclassedRelations);
+        Set deadColumns = new HashSet(this.maskedColumns);
+        deadColumns.addAll(this.partitionedColumns.keySet());
+        // Iterate through tables in each table provider.
+        // Un-dead all columns and relations in the schema
+        for (Iterator tpi = this.getSchema().getTableProviders().iterator(); tpi.hasNext(); ) {
+            TableProvider tp = (TableProvider)tpi.next();
+            for (Iterator ti = tp.getTables().iterator(); ti.hasNext(); ) {
+                Table t = (Table)ti.next();
+                deadColumns.removeAll(t.getColumns());
+                // Only need primary key as all relations involve primary keys at some point.
+                Key pk = t.getPrimaryKey();
+                deadRelations.removeAll(pk.getRelations());
+            }
+        }
+        // Remove any dead stuff remaining.
+        for (Iterator i = deadRelations.iterator(); i.hasNext(); ) {
+            Relation r = (Relation)i.next();
+            this.maskedRelations.remove(r);
+            this.subclassedRelations.remove(r);
+        }
+        for (Iterator i = deadColumns.iterator(); i.hasNext(); ) {
+            Column c = (Column)i.next();
+            this.maskedColumns.remove(c);
+            this.partitionedColumns.remove(c);
+        }
+        // Regenerate the dataset
+        this.dataset.regenerate();
+    }
+    
+    /**
+     * Displays the name of this {@link Window} object.
+     * @return the name of this {@link Window} object.
+     */
+    public String toString() {
+        return this.getName();
+    }
+    
+    /**
+     * Displays the hashcode of this object.
+     * @return the hashcode of this object.
+     */
+    public int hashCode() {
+        return this.toString().hashCode();
+    }
+    
+    /**
+     * Sorts by comparing the toString() output.
+     * @param o the object to compare to.
+     * @return -1 if we are smaller, +1 if we are larger, 0 if we are equal.
+     * @throws ClassCastException if the object o is not a {@link Window}.
+     */
+    public int compareTo(Object o) throws ClassCastException {
+        Window w = (Window)o;
+        return this.toString().compareTo(w.toString());
+    }
+    
+    /**
+     * Return true if the toString()s are identical.
+     * @param o the object to compare to.
+     * @return true if the toString()s match and both objects are {@link Window}s,
+     * otherwise false.
+     */
+    public boolean equals(Object o) {
+        if (o==null || !(o instanceof Window)) return false;
+        Window w = (Window)o;
+        return w.toString().equals(this.toString());
+    }
+}
