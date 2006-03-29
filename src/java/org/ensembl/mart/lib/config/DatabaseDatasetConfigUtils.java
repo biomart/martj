@@ -689,122 +689,66 @@ public class DatabaseDatasetConfigUtils {
 
 
   private void generateTemplateXML(DatasetConfig dsConfig) throws ConfigurationException{
-	//Connection conn = null;
-	//try {
-		// DatasetConfig templateConfig = dsConfig;
 		DatasetConfig templateConfig = new DatasetConfig(dsConfig,true,false);
 		String template = dsConfig.getTemplate();
 		
-		// NEED TO BLANK RELEVANT BITS IN templateConfig
 		List filterDescriptions = templateConfig.getAllFilterDescriptions();
 		for (int i = 0; i < filterDescriptions.size(); i++){
-			// ? using diff objects for template to remove these completely
 			FilterDescription fd = (FilterDescription) filterDescriptions.get(i);
 			
-			if (fd.getInternalName().matches(".+\\..+")){
-				if (fd.getInternalName().matches(".*"+dsConfig.getDataset()+".+"))
+			//if (fd.getInternalName().matches(".+\\..+")){
+				// change internal placeholders to template.filter
+				if (fd.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
 					fd.setInternalName(fd.getInternalName().replaceFirst(dsConfig.getDataset(),template));
-			}
-			//System.out.println(fd.getType()+":"+fd.getOptions().length);
-			if (fd.getType() != null && fd.getType().equals("list") && !(fd.getOptions().length > 0)){// fixes broken types in existing XML
+			    } 
+			//}
+			// hack to fix broken types in existing XML as updateConfigToTemplate uses list type to specify options	
+			if (fd.getType() != null && fd.getType().equals("list") && !(fd.getOptions().length > 0)){
 				fd.setType("text");
 			}
 			
-			FilterPage configPage = dsConfig.getPageForFilter(fd.getInternalName());
-			if (configPage == null)
-				continue;
-			//if (configPage.getHidden() != null && configPage.getHidden().equals("true")){
-			//	templateConfig.removeFilterPage(configPage);
-			//	continue;
-			//}
-			
-			FilterGroup configGroup = dsConfig.getGroupForFilter(fd.getInternalName());
-			if (configGroup == null)
-				continue;
-			//if (configGroup.getHidden() != null && configGroup.getHidden().equals("true")){
-			//	configPage.removeFilterGroup(configGroup);
-			//	continue;
-			//}			
-			
-			FilterCollection configCollection = dsConfig.getCollectionForFilter(fd.getInternalName());
-			if (configCollection == null)
-				continue;
-			//if (configCollection.getHidden() != null && configCollection.getHidden().equals("true")){
-			//	configGroup.removeFilterCollection(configCollection);
-			//	continue;
-			//}			
-			
-			//if (fd.getHidden() != null && fd.getHidden().equals("true")){
-			//	configCollection.removeFilterDescription(fd);
-			//	continue;
-			//}
 			// remove dataset part from tableConstraint if present
 			if (fd.getTableConstraint() != null && !fd.getTableConstraint().equals("main"))			
 				fd.setTableConstraint(fd.getTableConstraint().split("__")[1]+"__"+fd.getTableConstraint().split("__")[2]);
 			fd.setOtherFilters("");
+			
 			Option[] ops = fd.getOptions();
 			for (int j = 0; j < ops.length; j++){
 				Option op = ops[j];
+				// if a value option remove it
 				if (op.getTableConstraint() == null){
 					fd.removeOption(op);
 					continue;		
 				}
+				// if a filter option remove dataset part from tableConstraint
 				if (!op.getTableConstraint().equals("main"))
 					op.setTableConstraint(op.getTableConstraint().split("__")[1]+"__"+op.getTableConstraint().split("__")[2]);
 				op.setOtherFilters("");
 			}
 		}
+		
 		List attributeDescriptions = templateConfig.getAllAttributeDescriptions();
 		for (int i = 0; i < attributeDescriptions.size(); i++){
-		// ? using diff objects for template to remove these completely
 			AttributeDescription ad = (AttributeDescription) attributeDescriptions.get(i);
-			
-			if (ad.getInternalName().matches(".+\\..+")){
-				if (ad.getInternalName().matches(".*"+dsConfig.getDataset()+".+"))
+			//if (ad.getInternalName().matches(".+\\..+")){
+			//	change internal placeholders to template.filter
+				if (ad.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
 					ad.setInternalName(ad.getInternalName().replaceFirst(dsConfig.getDataset(),template));
-			}
-			
-			AttributePage configPage = dsConfig.getPageForAttribute(ad.getInternalName());
-			if (configPage == null)
-				continue;
-			//if (configPage.getHidden() != null && configPage.getHidden().equals("true")){
-			//	templateConfig.removeAttributePage(configPage);
-			//	continue;
+				}
 			//}
-			
-			AttributeGroup configGroup = dsConfig.getGroupForAttribute(ad.getInternalName());
-			if (configGroup == null)
-				continue;
-			//if (configGroup.getHidden() != null && configGroup.getHidden().equals("true")){
-			//	configPage.removeAttributeGroup(configGroup);
-			//	continue;
-			//}			
-			
-			AttributeCollection configCollection = dsConfig.getCollectionForAttribute(ad.getInternalName());
-			if (configCollection == null)
-				continue;
-			//if (configCollection.getHidden() != null && configCollection.getHidden().equals("true")){
-			//	configGroup.removeAttributeCollection(configCollection);
-			//	continue;
-			//}			
-			
-			//if (ad.getHidden() != null && ad.getHidden().equals("true")){
-			//	configCollection.removeAttributeDescription(ad);
-			//	continue;
-			//}			
 			if (ad.getTableConstraint() != null && !ad.getTableConstraint().equals("main"))
 				ad.setTableConstraint(ad.getTableConstraint().split("__")[1]+"__"+ad.getTableConstraint().split("__")[2]);		
 			ad.setLinkoutURL("");		
 		}
+		
 		Exportable[] exps = templateConfig.getExportables();
 		for (int i = 0; i < exps.length; i++){
-			Exportable exp = exps[i];
-			exp.setLinkVersion("");
+			exps[i].setLinkVersion("");
 		}
+		
 		Importable[] imps = templateConfig.getImportables();
 		for (int i = 0; i < imps.length; i++){
-			Importable imp = imps[i];
-			imp.setLinkVersion("");
+			imps[i].setLinkVersion("");
 		}	
 		
 		storeTemplateXML(templateConfig,template);
@@ -1455,9 +1399,14 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					if (!templateAttName.matches(".+\\..+"))
 						continue;
 					String configAttName = templateAttName;	
-					if (templateAttName.matches(".*"+dsConfig.getTemplate()+".+"))
+					if (templateAttName.matches(dsConfig.getTemplate()+"\\..+")){
 						configAttName = templateAttName.replaceFirst(dsConfig.getTemplate(),dsConfig.getDataset());			
-		
+					}
+					else{
+						// for now just ignore external placeholders
+						// later implement some sort of mapping in template to handle auto replacement of these						
+						continue;
+					}
 					// add the missing placeholder to the dsConfig			
 					FilterPage configPage = dsConfig.getFilterPageByName(templatePage.getInternalName());
 					if (configPage == null){
@@ -1511,11 +1460,15 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						continue;
 					
 					String configAttName = templateAttName;	
-					if (templateAttName.matches(".*"+dsConfig.getTemplate()+".+"))
+					if (templateAttName.matches(".*"+dsConfig.getTemplate()+".+")){
 						configAttName = templateAttName.replaceFirst(dsConfig.getTemplate(),dsConfig.getDataset());			
-		
+					}
+					else{
+						// for now just ignore external placeholders
+						// later implement some sort of mapping in template to handle auto replacement of these
+						continue;
+					}
 					// add the missing placeholder to the dsConfig			
-	
 					AttributePage configPage = dsConfig.getAttributePageByInternalName(templatePage.getInternalName());
 					if (configPage == null){
 						configPage = new AttributePage(templatePage.getInternalName(),
@@ -1541,6 +1494,9 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 												  templateCollection.getDescription());
 						configGroup.addAttributeCollection(configCollection);				
 					}
+			
+					
+			
 			
 					AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
 					configAttToAdd.setInternalName(configAttName);
