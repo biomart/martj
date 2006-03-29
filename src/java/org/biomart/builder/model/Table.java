@@ -165,7 +165,7 @@ public interface Table extends Comparable {
         /**
          * Internal reference to the name of this {@link Table}.
          */
-        private final String name;
+        protected String name;
         
         /**
          * Internal reference to the provider of this {@link Table}.

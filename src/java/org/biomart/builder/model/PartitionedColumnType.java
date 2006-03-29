@@ -24,8 +24,8 @@
 
 package org.biomart.builder.model;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Represents a method of partitioning by column. There are no methods.
@@ -33,88 +33,78 @@ import java.util.Map;
  * to decide by looking at the class used.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 27th March 2006
+ * @version 0.1.2, 29th March 2006
  * @since 0.1
  */
-public class PartitionedColumnType implements Comparable {
+public interface PartitionedColumnType {
     /**
-     * Use this constant to refer to a column partitioned by every unique value in it.
+     * Use this class to refer to a column partitioned by every unique value.
      */
-    public static final PartitionedColumnType UNIQUE = PartitionedColumnType.get("UNIQUE");
-    
-    /**
-     * Internal reference to the name of this {@link PartitionedColumnType}.
-     */
-    private final String name;
-    
-    /**
-     * Internal reference to the set of {@link PartitionedColumnType} singletons.
-     */
-    private static final Map singletons = new HashMap();
-    
-    /**
-     * The static factory method creates and returns a {@link PartitionedColumnType}
-     * with the given name. It ensures the object returned is a singleton.
-     * Note that the names of {@link PartitionedColumnType} objects are case-insensitive.
-     * @param name the name of the {@link PartitionedColumnType} object.
-     * @return the {@link PartitionedColumnType} object.
-     */
-    public static PartitionedColumnType get(String name) {
-        // Convert to upper case.
-        name = name.toUpperCase();
-        // Do we already have this one?
-        // If so, then return it.
-        if (singletons.containsKey(name)) return (PartitionedColumnType)singletons.get(name);
-        // Otherwise, create it, remember it, then return it.
-        PartitionedColumnType pct = new PartitionedColumnType(name);
-        singletons.put(name,pct);
-        return pct;
+    public class UniqueValues implements PartitionedColumnType {
+        /**
+         * Displays the name of this {@link PartitionedColumnType} object.
+         * @return the name of this {@link PartitionedColumnType} object.
+         */
+        public String toString() {
+            return "UniqueValues";
+        }
     }
     
     /**
-     * The private constructor takes a single parameter, which defines the name
-     * this {@link PartitionedColumnType} object will display when printed.
-     * @param name the name of the {@link PartitionedColumnType}.
+     * Use this class to partition on a set of values - ie. only columns with
+     * one of these values will be returned.
      */
-    private PartitionedColumnType(String name) {
-        this.name=name;
+    public class ValueCollection implements PartitionedColumnType {
+        /**
+         * Internal reference to the values to select rows on.
+         */
+        private Collection values;
+        
+        /**
+         * The constructor specifies the value to partition on. If the value is null,
+         * or it is empty, then only rows with null in this column will be selected.
+         * @param values the values to partition on.
+         */
+        public ValueCollection(Collection values) {
+            if (values==null) values = Collections.EMPTY_SET;
+            this.values = values;
+        }
+
+        /**
+         * Displays the name of this {@link PartitionedColumnType} object.
+         * @return the name of this {@link PartitionedColumnType} object.
+         */
+        public String toString() {
+            return "ValueCollection:"+this.values;
+        }
     }
     
     /**
-     * Displays the name of this {@link PartitionedColumnType} object.
-     * @return the name of this {@link PartitionedColumnType} object.
+     * Use this class to partition on a single value - ie. only rows matching this
+     * value will be returned.
      */
-    public String toString() {
-        return this.name;
-    }
-    
-    /**
-     * Displays the hashcode of this object.
-     * @return the hashcode of this object.
-     */
-    public int hashCode() {
-        return this.toString().hashCode();
-    }
-    
-    /**
-     * Sorts by comparing the toString() output.
-     * @param o the object to compare to.
-     * @return -1 if we are smaller, +1 if we are larger, 0 if we are equal.
-     * @throws ClassCastException if the object o is not a {@link PartitionedColumnType}.
-     */
-    public int compareTo(Object o) throws ClassCastException {
-        PartitionedColumnType pct = (PartitionedColumnType)o;
-        return this.toString().compareTo(pct.toString());
-    }
-    
-    /**
-     * Return true if the objects are identical.
-     * @param o the object to compare to.
-     * @return true if the names are the same and both are {@link PartitionedColumnType} instances,
-     * otherwise false.
-     */
-    public boolean equals(Object o) {
-        // We are dealing with singletons so can use == happily.
-        return o==this;
+    public class SingleValue extends ValueCollection {
+        /**
+         * Internal reference to the single value to select rows on.
+         */
+        private String value;
+        
+        /**
+         * The constructor specifies the value to partition on. If the value is null,
+         * then only rows with null in this column will be selected.
+         * @param value the value to partition on.
+         */
+        public SingleValue(String value) {
+            super(Collections.singleton(value));
+            this.value = value;
+        }
+
+        /**
+         * Displays the name of this {@link PartitionedColumnType} object.
+         * @return the name of this {@link PartitionedColumnType} object.
+         */
+        public String toString() {
+            return "SingleValue:"+this.value;
+        }
     }
 }

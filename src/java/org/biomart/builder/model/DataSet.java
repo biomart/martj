@@ -26,18 +26,15 @@ package org.biomart.builder.model;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.model.Column.GenericColumn;
 import org.biomart.builder.model.Table.GenericTable;
+import org.biomart.builder.model.TableProvider.GenericTableProvider;
 
 /**
  * This is the heart of the whole system, and represents a single data set in a mart.
@@ -45,7 +42,7 @@ import org.biomart.builder.model.Table.GenericTable;
  * a set of mart tables based on the contents of a {@link Window}.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 28th March 2006
+ * @version 0.1.3, 29th March 2006
  * @since 0.1
  */
 public interface DataSet extends Comparable {
@@ -56,11 +53,11 @@ public interface DataSet extends Comparable {
     public Window getWindow();
     
     /**
-     * Returns the {@link DataSetTable} representing the central fact table for this {@link DataSet}.
-     * @return the {@link DataSetTable} representing the fact table for this {@link DataSet}.
-     * @throws NullPointerException if it could not muster up a fact table.
+     * Returns the {@link DataSetTable} representing the central main table for this {@link DataSet}.
+     * @return the {@link DataSetTable} representing the main table for this {@link DataSet}.
+     * @throws NullPointerException if it could not muster up a main table.
      */
-    public DataSetTable getFactTable() throws NullPointerException;
+    public DataSetTable getMainTable() throws NullPointerException;
     
     /**
      * Rebuild this {@link DataSet} based on the contents of its parent {@link Window}.
@@ -81,9 +78,9 @@ public interface DataSet extends Comparable {
         private Window window;
         
         /**
-         * Internal reference to the generated fact table.
+         * Internal reference to the generated main table.
          */
-        private DataSetTable factTable;
+        private DataSetTable mainTable;
         
         /**
          * The constructor links this {@link DataSet} with a specific {@link Window}.
@@ -106,23 +103,23 @@ public interface DataSet extends Comparable {
         }
         
         /**
-         * Returns the {@link DataSetTable} representing the central fact table for this {@link DataSet}.
-         * @return the {@link DataSetTable} representing the fact table for this {@link DataSet}.
-         * @throws NullPointerException if it could not muster up a fact table.
+         * Returns the {@link DataSetTable} representing the central main table for this {@link DataSet}.
+         * @return the {@link DataSetTable} representing the main table for this {@link DataSet}.
+         * @throws NullPointerException if it could not muster up a main table.
          */
-        public DataSetTable getFactTable() throws NullPointerException {
+        public DataSetTable getMainTable() throws NullPointerException {
             // Sanity check.
             try {
-                if (this.factTable==null) this.regenerate();
+                if (this.mainTable==null) this.regenerate();
             } catch (Exception e) {
                 NullPointerException npe = new NullPointerException("Unable to regenerate DataSet.");
                 npe.initCause(e);
                 throw npe;
             }
-            if (this.factTable==null)
-                throw new NullPointerException("Unable to construct a fact table. Does the parent Window have a central table?");
+            if (this.mainTable==null)
+                throw new NullPointerException("Unable to construct a main table. Does the parent Window have a central table?");
             // Do it.
-            return this.factTable;
+            return this.mainTable;
         }
         
         /**
@@ -134,6 +131,9 @@ public interface DataSet extends Comparable {
          */
         public void regenerate() throws SQLException, BuilderException {
             // TODO: do the flattening work here!
+            // Don't forget to include the 'hasXYZDimension' columns in the main table and subclassed main tables.
+            // Plus, check partitionOnTableProvider when dealing with PartitionedTableProviders.
+            // Check for masked columns, masked relations, concat only relations, and subclass relations.
         }
         
         /**
@@ -194,9 +194,9 @@ public interface DataSet extends Comparable {
         private final DataSetTableType type;
         
         /**
-         * The constructor calls the parent {@link GenericTable} constructor. It uses the default
-         * TableProvider.DATASET {@link TableProvider} as a dummy parent for itself. You must
-         * also supply a type that describes this as a fact table, dimension table, etc.
+         * The constructor calls the parent {@link GenericTable} constructor. It uses a
+         * {@link TableProvider} (named '__DATASET__xyz' where 'xyz' is its own name) as a dummy parent for 
+         * itself. You must also supply a type that describes this as a main table, dimension table, etc.
          * @param name the table name.
          * @param type the {@link DataSetTableType} that best describes this table.
          * @throws NullPointerException if the name or type are null.
@@ -205,7 +205,7 @@ public interface DataSet extends Comparable {
          */
         public DataSetTable(String name, DataSetTableType type) throws AlreadyExistsException, NullPointerException {
             // Super call first.
-            super(name,TableProvider.DATASET);
+            super(name, new GenericTableProvider("__DATASET__"+name));
             // Sanity check.
             if (type==null)
                 throw new NullPointerException("Table type cannot be null.");
@@ -271,16 +271,23 @@ public interface DataSet extends Comparable {
         }
         
         /**
-         * Convenience method that returns all column names already used by this table.
-         * @return a set of names, never null but maybe empty.
+         * {@link DataSetTable}s can be renamed by the user if the names don't make
+         * any sense to them. Use this method to do just that. It will check first to see if the proposed
+         * name has already been used in the data set {@link TableProvider}. If it has, an AlreadyExistsException
+         * will be thrown, otherwise the change will be made. The new name must not be null.
+         * @param name the new name for the table.
+         * @throws AlreadyExistsException if a {@link DataSetTable} already exists with
+         * that name.
+         * @throws NullPointerException if the new name is null.
          */
-        public Collection getUsedColumnNames() {
-            Set names = new HashSet();
-            for (Iterator i = this.getColumns().iterator(); i.hasNext(); ) {
-                Column c = (Column)i.next();
-                names.add(c.getName());
-            }
-            return names;
+        public void setName(String name) throws NullPointerException, AlreadyExistsException {
+            // Sanity check.
+            if (name==null)
+                throw new NullPointerException("New name cannot be null.");
+            if (this.getTableProvider().getTableByName(name)!=null)
+                throw new AlreadyExistsException("A table with that name already exists in this dataset.", name);
+            // Do it.
+            this.name = name;
         }
     }
     
@@ -315,8 +322,7 @@ public interface DataSet extends Comparable {
             // Work out the alias if name used already, otherwise use name as-is.
             this.name = c.getName();
             int aliasNumber = 2;
-            Collection usedColumnNames = t.getUsedColumnNames();
-            while (usedColumnNames.contains(this.name)) {
+            while (t.getColumnByName(this.name)!=null) {
                 // Alias is original name appended with _2, _3, _4 etc.
                 this.name = c.getName()+"_"+(aliasNumber++);
             }
@@ -329,6 +335,26 @@ public interface DataSet extends Comparable {
                 throw new AssertionError("Table does not report duplicate column names correctly.");
             }
         }
+        
+        /**
+         * Columns in {@link DataSetTable}s can be renamed by the user if the names don't make
+         * any sense to them. Use this method to do just that. It will check first to see if the proposed
+         * name has already been used on this {@link DataSetTable}. If it has, an AlreadyExistsException
+         * will be thrown, otherwise the change will be made. The new name must not be null.
+         * @param name the new name for the column.
+         * @throws AlreadyExistsException if the {@link DataSetTable} already has a column with
+         * that name.
+         * @throws NullPointerException if the new name is null.
+         */
+        public void setName(String name) throws NullPointerException, AlreadyExistsException {
+            // Sanity check.
+            if (name==null)
+                throw new NullPointerException("New name cannot be null.");
+            if (t.getColumnByName(name)!=null)
+                throw new AlreadyExistsException("A column with that name already exists on this table.", name);
+            // Do it.
+            this.name = name;
+        }
     }
     
     /**
@@ -336,14 +362,14 @@ public interface DataSet extends Comparable {
      */
     public class DataSetTableType implements Comparable {
         /**
-         * Use this constant to refer to a fact table.
+         * Use this constant to refer to a main table.
          */
-        public static final DataSetTableType FACT = DataSetTableType.get("FACT");
+        public static final DataSetTableType MAIN = DataSetTableType.get("MAIN");
         
         /**
-         * Use this constant to refer to a subclass of a fact table.
+         * Use this constant to refer to a subclass of a main table.
          */
-        public static final DataSetTableType FACT_SUBCLASS = DataSetTableType.get("FACT_SUBCLASS");
+        public static final DataSetTableType MAIN_SUBCLASS = DataSetTableType.get("MAIN_SUBCLASS");
         
         /**
          * Use this constant to refer to a dimension table.

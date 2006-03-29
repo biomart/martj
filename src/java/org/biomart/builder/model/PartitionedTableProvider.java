@@ -28,8 +28,10 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
@@ -39,7 +41,7 @@ import org.biomart.builder.exceptions.BuilderException;
  * which all have exactly the same table names and column names. It assigns each of them
  * a name by which they can be referred to later.</p>
  *
- * <p>When generating a mart from this later, the mart will act as though the fact table has an
+ * <p>When generating a mart from this later, the mart will act as though the main table has an
  * extra column containing the names of these partitions, and has been set to partition itself on
  * those values.</p>
  *
@@ -48,7 +50,7 @@ import org.biomart.builder.exceptions.BuilderException;
  * objects in turn.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 27th March 2006
+ * @version 0.1.2, 29th March 2006
  * @since 0.1
  */
 public interface PartitionedTableProvider extends TableProvider {
@@ -73,13 +75,15 @@ public interface PartitionedTableProvider extends TableProvider {
     /**
      * Adds a {@link TableProvider} to this partition with the given label. If it is already here,
      * it throws an exception to say so. No check is made to see if the new {@link TableProvider}
-     * is actually identical to the base one in terms of structure.
+     * is actually identical to the base one in terms of structure. An exception will be thrown if
+     * you try to nest {@link PartitionedTableProvider}s inside other ones.
      * @param label the label for the partition this {@link TableProvider} represents.
      * @param tp the {@link TableProvider} to add as a new partition.
      * @throws NullPointerException if the label or the provider are null.
      * @throws AlreadyExistsException if the provider has already been set as a partition here.
+     * @throws AssociationException if the provider to be added is a {@link PartitionedTableProvider}.
      */
-    public void addTableProvider(String label, TableProvider tp) throws AlreadyExistsException, NullPointerException;
+    public void addTableProvider(String label, TableProvider tp) throws AlreadyExistsException, NullPointerException, AssociationException;
     
     /**
      * Removes the {@link TableProvider} with the given label from this partition. If it is not recognised,
@@ -202,6 +206,34 @@ public interface PartitionedTableProvider extends TableProvider {
         }
         
         /**
+         * <p>Returns a set of unique values in a given column, which may include null. The
+     * set returned will never be null itself.</p>
+         *
+         * <p>This implementation returns the combination of unique values resulting from
+         * delegating the call to all its subordinates.</p>
+         *
+         * @param c the {@link Column} to get unique values for.
+         * @return a set of unique values in a given column.
+         * @throws SQLException if there was any problem loading the values.
+         * @throws NullPointerException if the column was null.
+         */
+        public Collection getUniqueValues(Column c) throws NullPointerException, SQLException {
+            // Sanity check.
+            if (c==null)
+                throw new NullPointerException("Column cannot be null.");
+            // Do it.
+            Set values = new HashSet();
+            for (Iterator i = this.getTableProviders().values().iterator(); i.hasNext(); ) {
+                TableProvider tp = (TableProvider)i.next();
+                // Associate the column directly with the table when asking subordinate.
+                Table t = tp.getTableByName(c.getTable().getName());
+                // Look up the values with the disassociated column.
+                values.addAll(tp.getUniqueValues(t.getColumnByName(c.getName())));
+            }
+            return values;
+        }
+        
+        /**
          * Internal function that returns the first member partition {@link TableProvider}.
          * @return the first partition's provider.
          */
@@ -240,13 +272,15 @@ public interface PartitionedTableProvider extends TableProvider {
         /**
          * Adds a {@link TableProvider} to this partition with the given label. If it is already here,
          * it throws an exception to say so. No check is made to see if the new {@link TableProvider}
-         * is actually identical to the base one in terms of structure.
+         * is actually identical to the base one in terms of structure. An exception will be thrown if
+         * you try to nest {@link PartitionedTableProvider}s inside other ones.
          * @param label the label for the partition this {@link TableProvider} represents.
          * @param tp the {@link TableProvider} to add as a new partition.
          * @throws NullPointerException if the label or the provider are null.
          * @throws AlreadyExistsException if the provider has already been set as a partition here.
+         * @throws AssociationException if the provider to be added is a {@link PartitionedTableProvider}.
          */
-        public void addTableProvider(String label, TableProvider tp) throws AlreadyExistsException, NullPointerException {
+        public void addTableProvider(String label, TableProvider tp) throws AlreadyExistsException, NullPointerException, AssociationException {
             // Sanity check.
             if (label==null)
                 throw new NullPointerException("Label cannot be null.");
@@ -254,6 +288,8 @@ public interface PartitionedTableProvider extends TableProvider {
                 throw new NullPointerException("Table provider cannot be null.");
             if (this.members.containsKey(label))
                 throw new AlreadyExistsException("A provider has already been registered with that label.", label);
+            if (tp instanceof PartitionedTableProvider)
+                throw new AssociationException("You cannot nest partitioned table providers within other ones.");
             // Do it.
             this.members.put(label,tp);
         }

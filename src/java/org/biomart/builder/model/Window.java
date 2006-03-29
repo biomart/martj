@@ -34,15 +34,21 @@ import java.util.Set;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.model.DataSet.GenericDataSet;
+import org.biomart.builder.model.Key.ForeignKey;
+import org.biomart.builder.model.Relation.OneToMany;
 
 /**
  * <p>Represents a window onto a {@link Table} in a {@link TableProvider}.
- * The window allows masking of unwanted {@link Relation}s and {@link Column}s.</p>
+ * The window allows masking of unwanted {@link Relation}s and {@link Column}s.
+ * It will automatically mask out permanently any {@link Relation}s forming more than
+ * two levels of 1:m from the central table, and will flag any forming more than one such
+ * level as 'Concat only'. 'Concat only' means that the remote primary key will be merged
+ * as a single column with all unique values concatenated.</p>
  *
  * <p>The name of the window is inherited by the {@link Dataset} so take care when
  * choosing it.</p>
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 28th March 2006
+ * @version 0.1.3, 29th March 2006
  * @since 0.1
  */
 public class Window implements Comparable {
@@ -88,6 +94,22 @@ public class Window implements Comparable {
     private final Set subclassedRelations = new HashSet();
     
     /**
+     * Internal reference to disabled relations.
+     */
+    private final Set disabledRelations = new HashSet();
+    
+    /**
+     * Internal reference to concat-only relations. The keys of
+     * the map are relations, the values are concat types.
+     */
+    private final Map concatOnlyRelations = new HashMap();
+    
+    /**
+     * Internal reference to whether or not to partition by the {@link PartitionedTableProvider}.
+     */
+    private boolean partitionOnTableProvider = false;
+    
+    /**
      * The constructor creates a {@link Window} around one central {@link Table} and
      * gives it a name. It also initiates a {@link DataSet} ready to contain the transformed
      * results.
@@ -113,6 +135,88 @@ public class Window implements Comparable {
         this.centralTable = t;
         this.name = name;
         this.dataset = new GenericDataSet(this);
+        // Predict some sensible defaults.
+        new WindowRelationStatusPredicter(this).predict();
+    }
+    
+    // COMMENT ME!!!!
+    
+    private class WindowRelationStatusPredicter {
+        private Window window;
+        private Map relationsSeen = new HashMap();
+        public WindowRelationStatusPredicter(Window w) {
+            this.window =w ;
+        }
+        public void predict() {
+            // Identify the main table.
+            Table main = this.window.getTable();
+            // Predict the subclass relations from the existing m:1 relations - simple guesser based
+            // on finding foreign keys in the central table.
+            for (Iterator i = main.getForeignKeys().iterator(); i.hasNext(); ) {
+                Key k = (Key)i.next();
+                for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
+                    Relation r = (Relation)j.next();
+                    // Only flag potential m:1 subclass relations if they don't refer back to ourselves.
+                    try {
+                        if (!r.getPrimaryKey().getTable().equals(main)) window.flagSubclassRelation(r);
+                    } catch (AssociationException e) {
+                        throw new AssertionError();
+                    }
+                }
+            }
+            // Find the shortest 1:m paths (depths) of each relation we have.
+            this.walkRelations(main, 1);
+            // Check on depths of relations.
+            for (Iterator i = this.relationsSeen.keySet().iterator(); i.hasNext(); ) {
+                Relation r = (Relation)i.next();
+                int depth = ((Integer)this.relationsSeen.get(r)).intValue();
+                if (depth>2) {
+                    // Mask all relations that involve more than two levels of 1:m abstraction away
+                    // from the central main table.
+                    this.window.maskRelation(r);
+                } else if (depth>1) {
+                    // Mark as concat-only (default to comma-separation) all 1:m relations that involve
+                    // more than one level of 1:m abstraction away from the central main table.
+                    this.window.flagConcatOnlyRelation(r, ConcatRelationType.COMMA);
+                }
+            }
+        }
+        public void walkRelations(Table current, int currentDepth) {
+            // Find all relations from this table.
+            Set relations = new HashSet();
+            relations.addAll(current.getPrimaryKey().getRelations());
+            for (Iterator i = current.getForeignKeys().iterator(); i.hasNext(); ) {
+                Key k = (Key)i.next();
+                relations.addAll(k.getRelations());
+            }
+            // See if we need to do anything to each one.
+            for (Iterator i = relations.iterator(); i.hasNext(); ) {
+                Relation r = (Relation)i.next();
+                // Seen before?
+                if (this.relationsSeen.containsKey(r)) {
+                    // Have we got there by a shorter path? If not, then we can skip it.
+                    // Otherwise, update it with the new shorter path.
+                    int previousDepth = ((Integer)this.relationsSeen.get(r)).intValue();
+                    if (previousDepth > currentDepth) 
+                        this.relationsSeen.put(r, new Integer(currentDepth));
+                    else 
+                        continue;
+                } else {
+                    this.relationsSeen.put(r, new Integer(currentDepth));
+                }
+                if (r.getPrimaryKey().getTable().equals(current) && (r instanceof OneToMany)) {
+                    // If current is at the one end of a one-to-many relation, then
+                    // up the count and recurse down it.
+                    this.walkRelations(r.getForeignKey().getTable(), currentDepth+1);
+                } else {
+                    // Otherwise, recurse down it anyway but leave the count as-is.
+                    if (r.getPrimaryKey().getTable().equals(current))
+                        this.walkRelations(r.getForeignKey().getTable(), currentDepth);
+                    else
+                        this.walkRelations(r.getPrimaryKey().getTable(), currentDepth);
+                }
+            }
+        }
     }
     
     /**
@@ -186,30 +290,52 @@ public class Window implements Comparable {
     
     /**
      * Mask a {@link Column}. If it is already masked, ignore it.
-     * An exception will be thrown if it is null.
-     * @param r the {@link Column} to mask.
+     * An exception will be thrown if it is null. If the {@link Column} is
+     * part of any {@link Key}, then all {@link Relation}s using that {@link Key}
+     * will be masked as well.
+     * @param c the {@link Column} to mask.
      * @throws NullPointerException if the {@link Column} is null.
      */
-    public void maskColumn(Column r) throws NullPointerException {
+    public void maskColumn(Column c) throws NullPointerException {
         // Sanity check.
-        if (r==null)
+        if (c==null)
             throw new NullPointerException("Cannot mask a column which is null.");
         // Do it.
-        this.maskedColumns.add(r);
+        this.maskedColumns.add(c);
+        // Mask the associated relations.
+        Table t = c.getTable();
+        // Primary key first.
+        Key pk = t.getPrimaryKey();
+        if (pk!=null && pk.getColumns().contains(c)) {
+            for (Iterator j= pk.getRelations().iterator(); j.hasNext(); ) {
+                Relation r = (Relation)j.next();
+                this.maskRelation(r);
+            }
+        }
+        // Then foreign keys.
+        for (Iterator i = t.getForeignKeys().iterator(); i.hasNext(); ) {
+            Key fk = (Key)i.next();
+            if (fk.getColumns().contains(c)) {
+                for (Iterator j= fk.getRelations().iterator(); j.hasNext(); ) {
+                    Relation r = (Relation)j.next();
+                    this.maskRelation(r);
+                }
+            }
+        }
     }
     
     /**
      * Unmask a {@link Column}. If it is already unmasked, ignore it.
      * An exception will be thrown if it is null.
-     * @param r the {@link Column} to unmask.
+     * @param c the {@link Column} to unmask.
      * @throws NullPointerException if the {@link Column} is null.
      */
-    public void unmaskColumn(Column r) throws NullPointerException {
+    public void unmaskColumn(Column c) throws NullPointerException {
         // Sanity check.
-        if (r==null)
+        if (c==null)
             throw new NullPointerException("Cannot mask a column which is null.");
         // Do it.
-        this.maskedColumns.remove(r);
+        this.maskedColumns.remove(c);
     }
     
     /**
@@ -222,16 +348,24 @@ public class Window implements Comparable {
     
     /**
      * Mark a {@link Table} as a subclass of another by marking the {@link Relation} between them.
-     * The {@link PrimaryKey} end of the {@link Relation} is the parent table, and the {@link ForeignKey}
-     * is the subclassed table. If it is already marked, ignore it.
-     * An exception will be thrown if any parameter is null.
+     * The {@link ForeignKey} end of the relation is the subclass end, and the {@link PrimaryKey} end
+     * is the parent table, but the parent table may not actually be the central table in this {@link Window}.
+     * If it is already marked, ignore it. As subclasses can only apply to the central table, throw an AssociationException
+     * if this is attempted on any table other than the central table. An exception will be thrown if any parameter is null.
      * @param subclass the {@link Relation} to mark as a subclass relation.
+     * @throws AssociationException if one end of the {@link Relation} is not the central table for this window, or
+     * if both ends of the {@link Relation} point to the same table.
      * @throws NullPointerException if the {@link Relation} is null.
      */
-    public void flagSubclassRelation(Relation subclass) throws NullPointerException {
+    public void flagSubclassRelation(Relation subclass) throws NullPointerException, AssociationException {
         // Sanity check.
         if (subclass==null)
             throw new NullPointerException("Cannot mark a subclass relation which is null.");
+        if (!(subclass.getPrimaryKey().getTable().equals(this.centralTable) ||
+                subclass.getForeignKey().getTable().equals(this.centralTable)))
+            throw new AssociationException("Subclassing can only take place on a relation from the central table.");
+        if (subclass.getPrimaryKey().getTable().equals(subclass.getForeignKey().getTable()))
+            throw new AssociationException("Subclassing can only take place between two distinct tables.");
         // Do it.
         this.subclassedRelations.add(subclass);
     }
@@ -257,7 +391,7 @@ public class Window implements Comparable {
     public Collection getSubclassedRelations() {
         return this.subclassedRelations;
     }
-        
+    
     /**
      * Mark a {@link Column} as partitioned. If it is already marked, it updates the partition type.
      * An exception will be thrown if any parameter is null.
@@ -314,6 +448,81 @@ public class Window implements Comparable {
     }
     
     /**
+     * Mark a {@link Relation} as concat-only. If it is already marked, it updates the concat type.
+     * An exception will be thrown if any parameter is null.
+     * @param r the {@link Relation} to mark as concat-only.
+     * @param crt the {@link ConcatRelationType} to use for the relation.
+     * @throws NullPointerException if either parameter is null.
+     */
+    public void flagConcatOnlyRelation(Relation r, ConcatRelationType crt) throws NullPointerException {
+        // Sanity check.
+        if (r==null)
+            throw new NullPointerException("Cannot modify a relation which is null.");
+        if (crt==null)
+            throw new NullPointerException("Cannot use a concat relation type which is null.");
+        // Do it (the Map will replace the value with the new value if the key already exists)
+        this.concatOnlyRelations.put(r, crt);
+    }
+    
+    /**
+     * Unmark a {@link Relation} as concat-only. If it is already unmarked, ignore it.
+     * An exception will be thrown if it is null.
+     * @param c the {@link Relation} to unmark.
+     * @throws NullPointerException if the {@link Relation} is null.
+     */
+    public void unflagConcatOnlyRelation(Relation r) throws NullPointerException {
+        // Sanity check.
+        if (r==null)
+            throw new NullPointerException("Cannot modify a column which is null.");
+        // Do it.
+        this.concatOnlyRelations.remove(r);
+    }
+    
+    /**
+     * Return the set of concat-only {@link Relation}s. It may be empty, but never null.
+     * @return the set of concat-only {@link Relation}s.
+     */
+    public Collection getConcatOnlyRelations() {
+        return this.concatOnlyRelations.keySet();
+    }
+    
+    /**
+     * Return the concat type of concat-only {@link Relation} r.
+     * It will return null if there is no such concat-only relation.
+     * @return the concat type of the {@link Relation}.
+     * @throws NullPointerException if the parameter passed in was null.
+     */
+    public ConcatRelationType getConcatRelationType(Relation r) throws NullPointerException {
+        // Sanity check.
+        if (r==null)
+            throw new NullPointerException("Relation to check cannot be null.");
+        // Do we have it?
+        if (!this.concatOnlyRelations.containsKey(r)) return null;
+        // Return it.
+        return (ConcatRelationType)this.concatOnlyRelations.get(r);
+    }
+    
+    /**
+     * If the user wishes to partition the main table by the table provider
+     * (only possible if the main table is from a {@link PartitionedTableProvider}) then set
+     * this flag to true. Otherwise, set it to false, which is its default value.
+     * @param f true if you want to turn this on, false if you want to turn it off.
+     */
+    public void setPartitionOnTableProvider(boolean f) {
+        this.partitionOnTableProvider = f;
+    }
+    
+    /**
+     * If the user wishes to partition the main table by the table provider
+     * (only possible if the main table is from a {@link PartitionedTableProvider} then this
+     * will return true. Otherwise, false, which is its default value.
+     * @return true if user wants to turn this on, false if they want to turn it off.
+     */
+    public boolean getPartitionOnTableProvider() {
+        return this.partitionOnTableProvider;
+    }
+    
+    /**
      * Synchronise this {@link Window} with the {@link TableProvider} that is
      * providing its tables. Synchronisation means checking the masked {@link Column}
      * and {@link Relation} objects and removing any that have disappeared.
@@ -327,6 +536,7 @@ public class Window implements Comparable {
         // Start with all-dead.
         Set deadRelations = new HashSet(this.maskedRelations);
         deadRelations.addAll(this.subclassedRelations);
+        deadRelations.addAll(this.concatOnlyRelations.keySet());
         Set deadColumns = new HashSet(this.maskedColumns);
         deadColumns.addAll(this.partitionedColumns.keySet());
         // Iterate through tables in each table provider.
@@ -346,6 +556,7 @@ public class Window implements Comparable {
             Relation r = (Relation)i.next();
             this.maskedRelations.remove(r);
             this.subclassedRelations.remove(r);
+            this.concatOnlyRelations.remove(r);
         }
         for (Iterator i = deadColumns.iterator(); i.hasNext(); ) {
             Column c = (Column)i.next();

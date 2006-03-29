@@ -26,6 +26,7 @@ package org.biomart.builder.model;
 
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.biomart.builder.exceptions.AlreadyExistsException;
@@ -42,32 +43,15 @@ import org.biomart.builder.model.Table.GenericTable;
  * keeping track of the {@link Table}s a {@link TableProvider} provides.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 27th March 2006
+ * @version 0.1.3, 29th March 2006
  * @since 0.1
  */
-public interface TableProvider extends Comparable {
-    /**
-     * This constant specifies the dummy {@link TableProvider} which represents the
-     * target {@link DataSet}'s tables. It does not exist, and does not connect to anything.
-     * It is here purely so that we can re-use the {@link Table} framework to represent
-     * the transformed tables in the mart as well.
-     */
-    public static final TableProvider DATASET = new GenericTableProvider("DATASET");
-    
+public interface TableProvider extends Comparable, DataLink {
     /**
      * Returns the name of this {@link TableProvider}.
      * @return the name of this provider.
      */
     public String getName();
-    
-    /**
-     * Tests the connection between this {@link TableProvider} and the data source that is
-     * providing its tables. It will return without throwing any exceptions if the connection
-     * is OK. If there is a problem with the connection, a SQLException will be thrown
-     * detailing the problems.
-     * @throws SQLException if there is a problem connecting to the data source..
-     */
-    public void testConnection() throws SQLException;
     
     /**
      * Synchronise this {@link TableProvider} with the data source that is
@@ -119,6 +103,16 @@ public interface TableProvider extends Comparable {
     public Table getTableByName(String name);
     
     /**
+     * Returns a set of unique values in a given column, which may include null. The
+     * set returned will never be null itself.
+     * @param c the {@link Column} to get unique values for.
+     * @return a set of unique values in a given column.
+     * @throws SQLException if there was any problem loading the values.
+     * @throws NullPointerException if the column was null.
+     */
+    public Collection getUniqueValues(Column c) throws NullPointerException, SQLException;
+    
+    /**
      * The generic implementation should suffice as the ground for most
      * complex implementations. It keeps track of {@link Table}s it has already seen, and
      * performs simple lookups for them.
@@ -166,6 +160,21 @@ public interface TableProvider extends Comparable {
          * @throws SQLException if there is a problem connecting to the data source..
          */
         public void testConnection() throws SQLException {}
+        
+        /**
+         * <p>Checks to see if this {@link DataLink} 'cohabits' with another one. Cohabitation means
+         * that it would be possible to write a single SQL statement that could read data from
+         * both {@link DataLink}s simultaneously.</p>
+         *
+         * <p>The generic provider has no data source, so it will always return false.</p>
+         *
+         * @param partner the other {@link DataLink} to test for cohabitation.
+         * @return true if the two can cohabit, false if not.
+         * @throws NullPointerException if the partner is null.
+         */
+        public boolean canCohabit(DataLink partner) {
+            return false;
+        }
         
         /**
          * <p>Synchronise this {@link TableProvider} with the data source that is
@@ -242,6 +251,25 @@ public interface TableProvider extends Comparable {
             if (this.tables.containsKey(name)) return (Table)this.tables.get(name);
             // Default case.
             return null;
+        }
+        
+        /**
+         * <p>Returns a set of unique values in a given column, which may include null. The
+         * set returned will never be null itself.</p>
+         *
+         * <p>This simple generic implementation returns an empty set every time.</p>
+         *
+         * @param c the {@link Column} to get unique values for.
+         * @return a set of unique values in a given column.
+         * @throws SQLException if there was any problem loading the values.
+         * @throws NullPointerException if the column was null.
+         */
+        public Collection getUniqueValues(Column c) throws NullPointerException, SQLException {
+            // Sanity check.
+            if (c==null)
+                throw new NullPointerException("Column cannot be null.");
+            // Do it.
+            return Collections.EMPTY_SET;
         }
         
         /**

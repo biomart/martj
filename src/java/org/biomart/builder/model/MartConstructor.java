@@ -34,28 +34,20 @@ import org.biomart.builder.exceptions.BuilderException;
  * task or just writes some DDL to be run by the user later is up to the implementor.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 28th March 2006
+ * @version 0.1.2, 29th March 2006
  * @since 0.1
  */
-public interface MartConstructor {
+public interface MartConstructor extends DataLink {
     /**
-     * This method takes a {@link Schema} and either generates a script for the
+     * This method takes a {@link DataSet} and either generates a script for the
      * user to run later to construct a mart, or does the work right now. The end result
      * should be a completely finished and populated mart, or the script to make one.
-     * @param s the {@link Schema} to build the mart for.
+     * @param ds the {@link DataSet} to build the mart for.
      * @throws NullPointerException if the {@link Schema} parameter is null.
      * @throws BuilderException if anything went wrong during the building process.
      * @throws SQLException if it needed to talk to a database and couldn't.
      */
-    public void constructMart(Schema s) throws NullPointerException, BuilderException, SQLException;
-    
-    /**
-     * This method tests the database connection (if one is required) that will be used to
-     * construct the mart inside. It returns nothing if successful, but if an error is encountered
-     * then an exception is thrown.
-     * @throws SQLException if it needed to talk to a database and couldn't.
-     */
-    public void testConnection() throws SQLException;
+    public void constructMart(DataSet ds) throws NullPointerException, BuilderException, SQLException;
     
     /**
      * Returns the name of this {@link MartConstructor}.
@@ -96,28 +88,33 @@ public interface MartConstructor {
         }
         
         /**
-         * <p>This method takes a {@link Schema} and either generates a script for the
+         * <p>This method takes a {@link DataSet} and either generates a script for the
          * user to run later to construct a mart, or does the work right now. The end result
          * should be a completely finished and populated mart, or the script to make one.</p>
          *
-         * <p>This simple generic implementation tests for the presence of
-         * one or more {@link Window}s in the {@link Schema}, then synchronises them. It doesn't actually
-         * generate any tables or DDL.</p>
-         * @param s the {@link Schema} to build the mart for.
-         * @throws NullPointerException if the {@link Schema} parameter is null.
+         * <p>This simple generic implementation tests for a non-null {@link DataSet}.
+         * It doesn't actually generate any tables or DDL.</p>
+         * @param ds the {@link DataSet} to build the mart for.
+         * @throws NullPointerException if the {@link DataSet} parameter is null.
          * @throws BuilderException if anything went wrong during the building process.
          * @throws SQLException if it needed to talk to a database and couldn't.
          */
-        public void constructMart(Schema s) throws NullPointerException, BuilderException, SQLException {
+        public void constructMart(DataSet ds) throws NullPointerException, BuilderException, SQLException {
             // Sanity check.
-            if (s==null)
+            if (ds==null)
                 throw new NullPointerException("Schema cannot be null.");
-            if (s.getWindows().size()<1)
-                throw new NullPointerException("No windows have been defined in this schema.");
             // Do the work.
-            s.synchronise();
             // TODO: Subclasses actually generate DDL or access JDBC/XML/whatever and do the transformation.
-            // Don't forget to include the 'hasXYZDimension' columns in the fact table and subclassed fact tables.
+            // Don't forget to include the 'hasXYZDimension' columns in the main table and subclassed main tables.
+            // Also don't forget to left-join tables when joining so we get nulls in appropriate places.
+            // Plus, check partitionOnTableProvider when dealing with PartitionedTableProvider on main table. 
+            // Use pseudo-column if PartitionedTableProvider and off, use partition-prefix if PartitionedTableProvider 
+            // and on, ignore if not PartitionedTableProvider. Applies only when partitioning main table, otherwise 
+            // normal rules apply. (Partition suffix on table name).
+            // Check for masked columns, masked relations, concat only relations, and subclass relations.
+            
+            // Can partition to separate databases by being a wrapper around one or more DataSource objects per
+            // partition name! This is for each implementation to decide for itself.
         }
         
         /**
@@ -130,6 +127,21 @@ public interface MartConstructor {
          * @throws SQLException if it needed to talk to a database and couldn't.
          */
         public void testConnection() throws SQLException {}
+        
+        /**
+         * <p>Checks to see if this {@link DataLink} 'cohabits' with another one. Cohabitation means
+         * that it would be possible to write a single SQL statement that could read data from
+         * both {@link DataLink}s simultaneously.</p>
+         *
+         * <p>The generic provider has no data source, so it will always return false.</p>
+         *
+         * @param partner the other {@link DataLink} to test for cohabitation.
+         * @return true if the two can cohabit, false if not.
+         * @throws NullPointerException if the partner is null.
+         */
+        public boolean canCohabit(DataLink partner) {
+            return false;
+        }
         
         /**
          * Displays the name of this {@link MartConstructor} object.
