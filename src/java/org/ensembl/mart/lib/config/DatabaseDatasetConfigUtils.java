@@ -691,7 +691,8 @@ public class DatabaseDatasetConfigUtils {
   private void generateTemplateXML(DatasetConfig dsConfig) throws ConfigurationException{
 	//Connection conn = null;
 	//try {
-		DatasetConfig templateConfig = dsConfig;
+		// DatasetConfig templateConfig = dsConfig;
+		DatasetConfig templateConfig = new DatasetConfig(dsConfig,true,false);
 		String template = dsConfig.getTemplate();
 		
 		// NEED TO BLANK RELEVANT BITS IN templateConfig
@@ -972,6 +973,8 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 			configAttToAdd.setTableConstraint(configAtt.getTableConstraint());
 			configAttToAdd.setField(configAtt.getField());
 			configAttToAdd.setLinkoutURL(configAtt.getLinkoutURL());			
+
+			
 			
 			AttributePage dsConfigPage = dsConfig.getAttributePageByInternalName(templatePage.getInternalName());
 			if (dsConfigPage == null){
@@ -989,6 +992,8 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 				if (templateCollection.getMaxSelectString() != null) dsConfigCollection.setMaxSelect(templateCollection.getMaxSelectString());
 				if (templateCollection.getHidden() != null) dsConfigCollection.setHidden(templateCollection.getHidden());
 				if (templateAttribute.getHidden() != null) configAttToAdd.setHidden(templateAttribute.getHidden());
+				if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+					configAttToAdd.setHidden("true");
 				
 				dsConfig.addAttributePage(dsConfigPage);
 				dsConfigPage.addAttributeGroup(dsConfigGroup);
@@ -1014,7 +1019,8 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 					if (templateAttribute.getHidden() != null) configAttToAdd.setHidden(templateAttribute.getHidden());
 					if (templateGroup.getMaxSelectString() != null) dsConfigGroup.setMaxSelect(templateGroup.getMaxSelectString());
 					if (templateCollection.getMaxSelectString() != null) dsConfigCollection.setMaxSelect(templateCollection.getMaxSelectString());	
-	
+					if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+						configAttToAdd.setHidden("true");
 					dsConfigPage.addAttributeGroup(dsConfigGroup);
 					dsConfigGroup.addAttributeCollection(dsConfigCollection);
 					dsConfigCollection.addAttributeDescription(configAttToAdd);	
@@ -1032,7 +1038,8 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 						if (templateAttribute.getHidden() != null) configAttToAdd.setHidden(templateAttribute.getHidden());
 
 						if (templateCollection.getMaxSelectString() != null) dsConfigCollection.setMaxSelect(templateCollection.getMaxSelectString());
-
+						if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+							configAttToAdd.setHidden("true");
 						dsConfigGroup.addAttributeCollection(dsConfigCollection);
 						dsConfigCollection.addAttributeDescription(configAttToAdd);	
 					}
@@ -1041,6 +1048,8 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 						if (templateCollection.getDescription() != null) dsConfigCollection.setDescription(templateCollection.getDescription());
 						if (templateCollection.getMaxSelectString() != null) dsConfigCollection.setMaxSelect(templateCollection.getMaxSelectString());
 						if (templateAttribute.getHidden() != null) configAttToAdd.setHidden(templateAttribute.getHidden());
+						if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+							configAttToAdd.setHidden("true");
 						// put in a check for this and FILTERS that the same configAtt not already added
 						// this can happen when original config has duplicate filters and atts in terms of TC and Fields
 						if (!dsConfigCollection.containsAttributeDescription(configAttToAdd.getInternalName()))
@@ -1186,13 +1195,24 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			if (configAttToAdd.getColForDisplay() != null){
 				colForDisplay = configAttToAdd.getColForDisplay();
 			}
-			Option[] options = getOptions(configAttToAdd.getField(), configAttToAdd.getTableConstraint(), 
-				configAttToAdd.getKey(), dsConfig, colForDisplay);
+			
+			Option[] options;
+			if (configAtt.getOptions().length > 0){
+				options = configAtt.getOptions();
+			}
+			else{
+				options = getOptions(configAttToAdd.getField(), configAttToAdd.getTableConstraint(), 
+					configAttToAdd.getKey(), dsConfig, colForDisplay);
+			}
 			for (int k = 0; k < options.length; k++) {
 				configAttToAdd.insertOption(k,options[k]);
 			}		  			  	
 		  }
 	  }
+	  
+	  if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+			configAttToAdd.setHidden("true");
+	  
 	  	    
 	  FilterPage dsConfigPage = dsConfig.getFilterPageByName(templatePage.getInternalName());
 	  if (dsConfigPage == null){
@@ -1208,7 +1228,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		  if (templateGroup.getHidden() != null) dsConfigGroup.setHidden(templateGroup.getHidden());
 		  if (templateCollection.getHidden() != null) dsConfigCollection.setHidden(templateCollection.getHidden());
 		  if (templateFilter.getHidden() != null) configAttToAdd.setHidden(templateFilter.getHidden());
-				
+		  if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+				configAttToAdd.setHidden("true");		
 		  dsConfig.addFilterPage(dsConfigPage);
 		  dsConfigPage.addFilterGroup(dsConfigGroup);
 		  dsConfigGroup.addFilterCollection(dsConfigCollection);
@@ -1229,7 +1250,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			  if (templateGroup.getHidden() != null) dsConfigGroup.setHidden(templateGroup.getHidden());
 			  if (templateCollection.getHidden() != null) dsConfigCollection.setHidden(templateCollection.getHidden());
 			  if (templateFilter.getHidden() != null) configAttToAdd.setHidden(templateFilter.getHidden());
-					
+			  if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+					configAttToAdd.setHidden("true");		
 			  dsConfigPage.addFilterGroup(dsConfigGroup);
 			  dsConfigGroup.addFilterCollection(dsConfigCollection);
 			  dsConfigCollection.addFilterDescription(configAttToAdd);	
@@ -1244,7 +1266,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 
 				  if (templateCollection.getHidden() != null) dsConfigCollection.setHidden(templateCollection.getHidden());
 				  if (templateFilter.getHidden() != null) configAttToAdd.setHidden(templateFilter.getHidden());
-
+				  if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+						configAttToAdd.setHidden("true");
 				  dsConfigGroup.addFilterCollection(dsConfigCollection);
 				  dsConfigCollection.addFilterDescription(configAttToAdd);	
 			  }
@@ -1252,6 +1275,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 				  if (templateCollection.getDisplayName() != null) dsConfigCollection.setDisplayName(templateCollection.getDisplayName());
 				  if (templateCollection.getDescription() != null) dsConfigCollection.setDescription(templateCollection.getDescription());
 				  if (templateFilter.getHidden() != null) configAttToAdd.setHidden(templateFilter.getHidden());
+				  if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+						configAttToAdd.setHidden("true");
 				  // put in a check for this and FILTERS that the same configAtt not already added
 				  // this can happen when original config has duplicate filters and atts in terms of TC and Fields
 				  
@@ -1296,7 +1321,20 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	  templateAttToAdd.setTableConstraint("");
 	  templateAttToAdd.setField("");
 	  if (configAtt.getHidden() != null) templateAttToAdd.setHidden(configAtt.getHidden());			
-	  templateCollection.addFilterDescription(templateAttToAdd);					
+	  // need to test if needs to be an option instead
+	  if (upstreamFilterName != null){
+	  	FilterDescription upstreamFilter = configCollection.getFilterDescriptionByInternalName(upstreamFilterName);
+	  	FilterDescription templateFilter = templateCollection.getFilterDescriptionByInternalName(upstreamFilterName);
+	  	if (templateFilter == null){
+	  		templateFilter = new FilterDescription(upstreamFilter);
+	  		templateFilter.removeOptions();
+			templateCollection.addFilterDescription(templateFilter);	
+	  	}
+	  	templateFilter.addOption(new Option(templateAttToAdd));
+	  }
+	  else{
+		  templateCollection.addFilterDescription(templateAttToAdd);					
+	  }
   }
 }
 
@@ -1758,9 +1796,7 @@ public int templateCount(String template) throws ConfigurationException{
 	  	generateTemplateXML(dsConfig);
       }
       
-      
-      
- 
+       
       String insertSQL1 = "INSERT INTO " + getSchema()[0]+"." + metatable + " (display_name, dataset, description, " +	  	"type, visible, version,dataset_id_key,modified) values (?, ?, ?, ?, ?, ?,?,?)";
       String insertSQL2 = "INSERT INTO " + getSchema()[0]+"."+MARTXMLTABLE+" (dataset_id_key, xml, compressed_xml, " +      	"message_digest) values (?, ?, ?, ?)";
 	  
@@ -5687,7 +5723,6 @@ public int templateCount(String template) throws ConfigurationException{
         + orderSQL;
     }  
            
-    System.out.println(sql);    
     PreparedStatement ps = conn.prepareStatement(sql);
     ResultSet rs = null;
     try{

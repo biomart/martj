@@ -491,6 +491,16 @@ public class FilterDescription extends QueryFilterSettings {
     if (uiOptions.size() < 1)
      hasOptions = false;
   }
+ 
+  /**
+   * Remove Options from the FilterDescription.
+   */
+  public void removeOptions() {
+  	Option[] ops = getOptions();
+  	for (int i = 0; i < ops.length; i++){
+  		removeOption(ops[i]);
+  	}
+  }
   
   /**
    * Insert an Option at a specific position within the list of Options for this FilterDescription.
