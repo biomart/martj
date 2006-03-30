@@ -761,7 +761,6 @@ public class DatabaseDatasetConfigUtils {
 		}
 		
 		if (attributeDuplicationTCFieldMap.size() > 0){
-			duplicatedAttString = "The following attributes are duplicated. Use internal placeholders instead\n";
 			Enumeration enum = attributeDuplicationTCFieldMap.keys();
 			while (enum.hasMoreElements()){
 				String intName = (String) enum.nextElement();
@@ -770,7 +769,7 @@ public class DatabaseDatasetConfigUtils {
 		}
 	  	
 	  	if (duplicatedAttString != ""){
-			JOptionPane.showMessageDialog(null, "Remove duplicates before generating template:\n"+duplicatedAttString, "ERROR",0);							  
+			JOptionPane.showMessageDialog(null, "Remove duplicates before generating template. Use internal placeholders if really need duplication:\n"+duplicatedAttString, "ERROR",0);							  
 			return;//no export of template
 	  	}
 	  	// In future maybe offer auto removal but could be dangerous  
@@ -805,7 +804,69 @@ public class DatabaseDatasetConfigUtils {
 		*/
 		
 		
-		List filterDescriptions = templateConfig.getAllFilterDescriptions();
+	// first get rid of any duplicated atts/filters in terms of TableConstraint and Fields
+	Hashtable filterDescriptionsTCFieldMap = new Hashtable();// atts should have a unique TC and field
+	Hashtable filterDuplicationTCFieldMap = new Hashtable();
+	String duplicatedFilterString = "";
+		
+	List filterDescriptions = templateConfig.getAllFilterDescriptions();
+	for (int i = 0; i < filterDescriptions.size(); i++){
+		FilterDescription fd = (FilterDescription) filterDescriptions.get(i);
+		if (fd.getInternalName().matches("\\w+\\.\\w+") || fd.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+				continue;//placeholder atts can be duplicated	
+		}
+		
+		if (fd.getTableConstraint() == null && fd.getField() == null) {
+			if (filterDescriptionsTCFieldMap.containsKey(fd.getInternalName())) continue;
+			filterDescriptionsTCFieldMap.put(fd.getInternalName(),"1");//hack to stop drop down lists being redone
+			Option[] ops = fd.getOptions();
+			for (int j = 0; j < ops.length; j++){
+				System.out.println(ops[j].getInternalName()+":"+ops[j].getTableConstraint()+":"+ops[j].getField());
+				//fd = new FilterDescription(ops[j]);
+//				don't allow any duplication of TC and field, even for hidden atts
+				if (filterDescriptionsTCFieldMap.containsKey(ops[j].getTableConstraint()+"."+ops[j].getField())){
+						 FilterPage fpage = dsConfig.getPageForFilter(ops[j].getInternalName());
+						 FilterGroup fgroup = dsConfig.getGroupForFilter(ops[j].getInternalName());
+						 FilterCollection fcollection = dsConfig.getCollectionForFilter(ops[j].getInternalName());
+					
+						 filterDuplicationTCFieldMap.put(ops[j].getTableConstraint()+"."+ops[j].getField(),
+							 fpage.getInternalName()+"->"+fgroup.getInternalName()+"->"+fcollection.getInternalName()+"->"
+							 +ops[j].getInternalName()); 
+				}
+				filterDescriptionsTCFieldMap.put(ops[j].getTableConstraint()+"."+ops[j].getField(),"1");
+			}
+			continue;
+		} 		  
+		// don't allow any duplication of TC and field, even for hidden atts
+		if (filterDescriptionsTCFieldMap.containsKey(fd.getTableConstraint()+"."+fd.getField())){
+				FilterPage fpage = dsConfig.getPageForFilter(fd.getInternalName());
+				FilterGroup fgroup = dsConfig.getGroupForFilter(fd.getInternalName());
+				FilterCollection fcollection = dsConfig.getCollectionForFilter(fd.getInternalName());
+					
+				filterDuplicationTCFieldMap.put(fd.getTableConstraint()+"."+fd.getField(),
+					fpage.getInternalName()+"->"+fgroup.getInternalName()+"->"+fcollection.getInternalName()+"->"
+					+fd.getInternalName()); 
+		}
+		filterDescriptionsTCFieldMap.put(fd.getTableConstraint()+"."+fd.getField(),"1");
+	}
+		
+	if (filterDuplicationTCFieldMap.size() > 0){
+		Enumeration enum = filterDuplicationTCFieldMap.keys();
+		while (enum.hasMoreElements()){
+			String intName = (String) enum.nextElement();
+			duplicatedFilterString = duplicatedFilterString+"Filter for "+intName+" at "+filterDuplicationTCFieldMap.get(intName)+"\n";	
+		}
+	}
+	  	
+	if (duplicatedFilterString != ""){
+		JOptionPane.showMessageDialog(null, "Remove duplicates before generating template. Use internal placeholders if really need duplication:\n"+duplicatedFilterString, "ERROR",0);							  
+		return;//no export of template
+	}
+		
+		
+		
+		
+		filterDescriptions = templateConfig.getAllFilterDescriptions();
 		for (int i = 0; i < filterDescriptions.size(); i++){
 			FilterDescription fd = (FilterDescription) filterDescriptions.get(i);
 			// change internal placeholders to template.filter
