@@ -26,10 +26,10 @@ package org.biomart.builder.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import org.biomart.builder.exceptions.AssociationException;
 
 /**
@@ -46,10 +46,16 @@ import org.biomart.builder.exceptions.AssociationException;
  * {@link ComponentStatus} of INFERRED.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 28th March 2006
+ * @version 0.1.4, 30th March 2006
  * @since 0.1
  */
 public interface Key extends Comparable {
+    /**
+     * Returns the name of this key.
+     * @return the name of this {@link Key}.
+     */
+    public String getName();
+    
     /**
      * Returns the {@link ComponentStatus} of this {@link Key}. The default value,
      * unless otherwise specified, is INFERRED.
@@ -70,6 +76,14 @@ public interface Key extends Comparable {
      * @return the set of all {@link Relation}s this {@link Key} is involved in.
      */
     public Collection getRelations();
+    
+    /**
+     * Returns the {@link Relation} on this {@link Key} with the given name. It may return
+     * null if not found.
+     * @return the namedl {@link Relation} on this {@link Key} if found, otherwise null.
+     * @throws NullPointerException if the name given was null.
+     */
+    public Relation getRelationByName(String name) throws NullPointerException;
     
     /**
      * Adds a particular {@link Relation} to the set this {@link Key} is involved in.
@@ -151,8 +165,9 @@ public interface Key extends Comparable {
         
         /**
          * Internal reference to the set of {@link Relations}s this {@link Key} is involved in.
+         * Keys are relation names.
          */
-        private final Set rels = new HashSet();
+        private final Map rels = new HashMap();
         
         /**
          * Internal reference to the {@link Table} of this {@link Key}.
@@ -226,6 +241,23 @@ public interface Key extends Comparable {
         }
         
         /**
+         * Returns the name of this key. The name is the concatenation
+         * of all the columns, contained in curly brackets and comma separated.
+         * @return the name of this {@link Key}.
+         */
+        public String getName() {
+            StringBuffer sb = new StringBuffer();
+            sb.append("{");
+            for (Iterator i = this.cols.iterator(); i.hasNext(); ) {
+                Column c = (Column)i.next();
+                sb.append(c.getName());
+                if (i.hasNext()) sb.append(",");
+            }
+            sb.append("}");
+            return sb.toString();
+        }
+        
+        /**
          * Returns the {@link ComponentStatus} of this {@link Key}. The default value,
          * unless otherwise specified, is INFERRED.
          * @return the {@link ComponentStatus} of this {@link Key}.
@@ -249,7 +281,23 @@ public interface Key extends Comparable {
          * @return the set of all {@link Relation}s this {@link Key} is involved in.
          */
         public Collection getRelations() {
-            return this.rels;
+            return this.rels.values();
+        }
+        
+        /**
+         * Returns the {@link Relation} on this {@link Key} with the given name. It may return
+         * null if not found.
+         * @return the namedl {@link Relation} on this {@link Key} if found, otherwise null.
+         * @throws NullPointerException if the name given was null.
+         */
+        public Relation getRelationByName(String name) throws NullPointerException {
+            // Sanity check.
+            if (name==null)
+                throw new NullPointerException("Name cannot be null.");
+            // Do we have it?
+            if (!this.rels.containsKey(name)) return null;
+            // Return it.
+            return (Relation)this.rels.get(name);
         }
         
         /**
@@ -268,10 +316,12 @@ public interface Key extends Comparable {
             // Does it refer to us?
             if (!(rel.getForeignKey()==this || rel.getPrimaryKey()==this))
                 throw new AssociationException("Relation does not refer to this key.");
+            // Work out its name.
+            String name = rel.getName();
             // Quietly ignore if we've already got it.
-            if (this.rels.contains(rel)) return;
+            if (this.rels.containsKey(name)) return;
             // Otherwise, do the work.
-            this.rels.add(rel);
+            this.rels.put(name, rel);
         }
         
         /**
@@ -284,10 +334,12 @@ public interface Key extends Comparable {
             // Sanity check.
             if (rel==null)
                 throw new NullPointerException("Relation to be removed cannot be null.");
+            // Work out its name.
+            String name = rel.getName();
             // Quietly ignore if we dont' know about iit.
-            if (!this.rels.contains(rel)) return;
+            if (!this.rels.containsKey(name)) return;
             // Otherwise, do the work.
-            this.rels.remove(rel);
+            this.rels.remove(name);
         }
         
         /**
@@ -318,12 +370,12 @@ public interface Key extends Comparable {
         
         /**
          * Deletes this {@link Key}, and also deletes all {@link Relation}s that use it.
-         * If it was a {@link PrimaryKey} it will remove itself from the associated 
+         * If it was a {@link PrimaryKey} it will remove itself from the associated
          * {@link Table}, and likewise if it was a {@link ForeignKey}.
          */
         public void destroy() {
             // Remove all the relations.
-            for (Iterator i = this.rels.iterator(); i.hasNext(); ) {
+            for (Iterator i = this.rels.values().iterator(); i.hasNext(); ) {
                 Relation r = (Relation)i.next();
                 r.destroy();
             }
@@ -337,26 +389,16 @@ public interface Key extends Comparable {
             } else if (this instanceof ForeignKey) {
                 this.getTable().removeForeignKey((ForeignKey)this);
             } else {
-                // Do nothing. Sure there may only be primary and foreign keys now,
-                // but what about the future...?
+                throw new AssertionError("Unknown kind of key.");
             }
         }
         
         /**
-         * Displays the name of this {@link Key} object. The name is the concatenation
-         * of all the columns, contained in curly brackets and comma separated.
+         * Displays the name of this {@link Key} object from getName().
          * @return the name of this {@link Key} object.
          */
         public String toString() {
-            StringBuffer sb = new StringBuffer();
-            sb.append("{");
-            for (Iterator i = this.cols.iterator(); i.hasNext(); ) {
-                Column c = (Column)i.next();
-                sb.append(c.toString());
-                if (i.hasNext()) sb.append(",");
-            }
-            sb.append("}");
-            return sb.toString();
+            return this.getName();
         }
         
         /**

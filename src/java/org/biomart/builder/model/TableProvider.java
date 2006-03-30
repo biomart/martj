@@ -43,7 +43,7 @@ import org.biomart.builder.model.Table.GenericTable;
  * keeping track of the {@link Table}s a {@link TableProvider} provides.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 29th March 2006
+ * @version 0.1.4, 30th March 2006
  * @since 0.1
  */
 public interface TableProvider extends Comparable, DataLink {
@@ -64,28 +64,6 @@ public interface TableProvider extends Comparable, DataLink {
      * @throws BuilderException if there was any other kind of problem.
      */
     public void synchronise() throws SQLException, BuilderException;
-    
-    /**
-     * Adds a {@link Table} to this provider. If the {@link Table} already exists
-     * an exception will be thrown.
-     * @param t the {@link Table} to add.
-     * @throws AlreadyExistsException if a {@link Table} with the same name already
-     * exists in this {@link TableProvider}.
-     * @throws NullPointerException if the {@link Table} argument is null.
-     * @throws AssociationException if the {@link TableProvider} provided by the
-     * {@link Table} object is not this same provider.
-     */
-    public void addTable(Table t) throws AlreadyExistsException, AssociationException, NullPointerException;
-    
-    /**
-     * Convenience method that creates and adds a {@link Table} to this provider.
-     * If a {@link Table} with the same name already exists an exception will be thrown.
-     * @param name the name of the {@link Table} to create and add.
-     * @throws AlreadyExistsException if a {@link Table} with the same name already
-     * exists in this {@link TableProvider}.
-     * @throws NullPointerException if the name argument is null.
-     */
-    public void createTable(String name) throws AlreadyExistsException, NullPointerException;
     
     /**
      * Returns all the {@link Table}s this provider provides. The set returned may be
@@ -126,14 +104,14 @@ public interface TableProvider extends Comparable, DataLink {
         /**
          * Internal reference to the set of {@link Table}s in this provider.
          */
-        private final Map tables = new HashMap();
+        protected final Map tables = new HashMap();
         
         /**
          * The constructor creates a provider with the given name.
          * @param name the name for this new provider.
          * @throws NullPointerException if the name is null.
          */
-        public GenericTableProvider(String name) {
+        public GenericTableProvider(String name) throws NullPointerException {
             // Sanity check.
             if (name==null)
                 throw new NullPointerException("Table provider name cannot be null.");
@@ -190,46 +168,6 @@ public interface TableProvider extends Comparable, DataLink {
          * @throws BuilderException if there was any other kind of problem.
          */
         public void synchronise() throws SQLException, BuilderException {}
-        
-        /**
-         * Adds a {@link Table} to this provider. If the {@link Table} already exists
-         * an exception will be thrown.
-         * @param t the {@link Table} to add.
-         * @throws AlreadyExistsException if a {@link Table} with the same name already
-         * exists in this {@link TableProvider}.
-         * @throws NullPointerException if the {@link Table} argument is null.
-         * @throws AssociationException if the {@link TableProvider} provided by the
-         * {@link Table} object is not this same provider.
-         */
-        public void addTable(Table t) throws AlreadyExistsException, AssociationException, NullPointerException {
-            // Sanity check.
-            if (t==null)
-                throw new NullPointerException("Table cannot be null");
-            if (t.getTableProvider()!=this)
-                throw new AssociationException("Table must be associated with this provider before being added to it.");
-            // Do the work.
-            String name = t.getName();
-            if (this.tables.containsKey(name))
-                throw new AlreadyExistsException("Table already exists in this provider", name);
-            this.tables.put(name,t);
-        }
-        
-        /**
-         * Convenience method that creates and adds a {@link Table} to this provider.
-         * If a {@link Table} with the same name already exists an exception will be thrown.
-         * @param name the name of the {@link Table} to create and add.
-         * @throws AlreadyExistsException if a {@link Table} with the same name already
-         * exists in this {@link TableProvider}.
-         * @throws NullPointerException if the name argument is null.
-         */
-        public void createTable(String name) throws AlreadyExistsException, NullPointerException {
-            Table t = new GenericTable(name, this);
-            try {
-                this.addTable(t);
-            } catch (AssociationException e) {
-                throw new AssertionError("TableProvider does not equal itself.");
-            }
-        }
         
         /**
          * Returns all the {@link Table}s this provider provides. The set returned may be

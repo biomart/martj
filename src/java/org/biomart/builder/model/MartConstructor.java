@@ -29,12 +29,11 @@ import org.biomart.builder.exceptions.BuilderException;
 
 /**
  * This interface defines the behaviour expected from an object which can take
- * a {@link Schema} and the associated {@link DataSet} objects inside it and
- * actually construct a mart based on this information. Whether it carries out the
+ * a {@link DataSet} and actually construct a mart based on this information. Whether it carries out the
  * task or just writes some DDL to be run by the user later is up to the implementor.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 29th March 2006
+ * @version 0.1.3, 30th March 2006
  * @since 0.1
  */
 public interface MartConstructor extends DataLink {

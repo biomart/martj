@@ -48,10 +48,16 @@ import org.biomart.builder.model.Key.PrimaryKey;
  * so is not included here.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2 28th March 2006
+ * @version 0.1.3 30th March 2006
  * @since 0.1
  */
 public interface Relation extends Comparable {
+    /**
+     * Returns the name of this relation.
+     * @return the name of this {@link Relation}.
+     */
+    public String getName();
+    
     /**
      * Returns the {@link PrimaryKey} of this {@link Relationship}.
      * @return the {@link PrimaryKey}
@@ -213,6 +219,23 @@ public interface Relation extends Comparable {
         }
         
         /**
+         * Returns the name of this relation. The name is the name of the {@link PrimaryKey} followed
+         * by a colon and the name of the {@link ForeignKey}, followed by a space then an indication of cardinality
+         * in brackets.
+         * @return the name of this {@link Relation}.
+         */
+        public String getName() {
+            StringBuffer sb = new StringBuffer();
+            sb.append(this.getPrimaryKey().getName());
+            sb.append(":");
+            sb.append(this.getForeignKey().getName());
+            sb.append(" (1:");
+            sb.append(this.getFKCardinality().toString());
+            sb.append(")");
+            return sb.toString();
+        }
+        
+        /**
          * Returns the {@link PrimaryKey} of this {@link Relationship}.
          * @return the {@link PrimaryKey}
          */
@@ -246,23 +269,11 @@ public interface Relation extends Comparable {
         }
         
         /**
-         * <p>The textual representation of a {@link Relation} is the name of the {@link PrimaryKey} followed
-         * by a colon and the name of the {@link ForeignKey}, followed by a space then an indication of cardinality
-         * in brackets. By name of a {@link Key} we mean the output of the {@link Key#toString() toString()} method
-         * on that {@link Key}.</p>
-         *
-         * <p>e.g.: <pre>pk_sometable:fk_sometable (1:M)</pre></p>
+         * Returns the output of getName().
          * @return the textual representation of this {@link Relation} as outlined above.
          */
         public String toString() {
-            StringBuffer sb = new StringBuffer();
-            sb.append(this.getPrimaryKey().toString());
-            sb.append(":");
-            sb.append(this.getForeignKey().toString());
-            sb.append(" (1:");
-            sb.append(this.getFKCardinality());
-            sb.append(")");
-            return sb.toString();
+            return this.getName();
         }
         
         /**

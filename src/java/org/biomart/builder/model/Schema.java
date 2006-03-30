@@ -38,7 +38,7 @@ import org.biomart.builder.exceptions.BuilderException;
  * by these, from which {@link DataSet}s are constructed. 
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 27th March 2006
+ * @version 0.1.2, 30th March 2006
  * @since 0.1
  */
 public class Schema {
@@ -187,6 +187,20 @@ public class Schema {
         for (Iterator i = this.windows.values().iterator(); i.hasNext(); ) {
             Window w = (Window)i.next();
             w.synchronise();
+        }
+    }
+    
+    /**
+     * Request that all the marts in all the windows be constructed now.
+     * @throws SQLException if there was any data source error during
+     * mart construction.
+     * @throws BuilderException if there was any other kind of error in the
+     * mart construction process.
+     */
+    public void constructMarts() throws BuilderException, SQLException {
+        for (Iterator i = this.windows.values().iterator(); i.hasNext(); ) {
+            Window w = (Window)i.next();
+            w.constructMart();
         }
     }
 }

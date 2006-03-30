@@ -25,16 +25,28 @@
 package org.biomart.builder.model;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
+import org.biomart.builder.model.Column.GenericColumn;
+import org.biomart.builder.model.Key.CompoundForeignKey;
+import org.biomart.builder.model.Key.CompoundKey;
+import org.biomart.builder.model.Key.CompoundPrimaryKey;
+import org.biomart.builder.model.Key.ForeignKey;
+import org.biomart.builder.model.Key.PrimaryKey;
+import org.biomart.builder.model.Key.SimpleForeignKey;
+import org.biomart.builder.model.Key.SimpleKey;
+import org.biomart.builder.model.Key.SimplePrimaryKey;
+import org.biomart.builder.model.Relation.GenericRelation;
+import org.biomart.builder.model.Table.GenericTable;
 
 /**
  * <p>A {@link PartitionedTableProvider} represents a collection of {@link TableProvider} objects
@@ -50,7 +62,7 @@ import org.biomart.builder.exceptions.BuilderException;
  * objects in turn.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 29th March 2006
+ * @version 0.1.3, 30th March 2006
  * @since 0.1
  */
 public interface PartitionedTableProvider extends TableProvider {
@@ -100,14 +112,14 @@ public interface PartitionedTableProvider extends TableProvider {
         /**
          * Internal reference to the map of member providers. Keys are the partition labels.
          */
-        private final Map members = new HashMap();
+        private final Map memberProviders = new HashMap();
         
         /**
          * The constructor creates a partitioned provider with the given name.
          * @param name the name for this new partitioned provider.
          * @throws NullPointerException if the name is null.
          */
-        public GenericPartitionedTableProvider(String name) {
+        public GenericPartitionedTableProvider(String name) throws NullPointerException {
             super(name);
         }
         
@@ -122,7 +134,7 @@ public interface PartitionedTableProvider extends TableProvider {
          * @throws SQLException if there is a problem connecting to the data source..
          */
         public void testConnection() throws SQLException {
-            for (Iterator i = this.members.values().iterator(); i.hasNext(); ) {
+            for (Iterator i = this.memberProviders.values().iterator(); i.hasNext(); ) {
                 TableProvider tp = (TableProvider)i.next();
                 tp.testConnection();
             }
@@ -134,80 +146,87 @@ public interface PartitionedTableProvider extends TableProvider {
          * available and drop/add any that have changed, then check each {@link Column}
          * and {@link Key} and {@link Relation} and update those too.</p>
          *
-         * <p>The partitioned provider simply delegates this call to each of its members in turn.</p>
+         * <p>The partitioned provider simply delegates this call to each of its members in turn.
+         * Then the partitioned provider's own list of {@link Table}s is updated to match the contents of the first
+         * provider in the list.</p>
          *
          * @throws SQLException if there was a problem connecting to the data source.
          * @throws BuilderException if there was any other kind of problem.
          */
         public void synchronise() throws SQLException, BuilderException {
-            for (Iterator i = this.members.values().iterator(); i.hasNext(); ) {
+            // Synchronise.
+            for (Iterator i = this.memberProviders.values().iterator(); i.hasNext(); ) {
                 TableProvider tp = (TableProvider)i.next();
                 tp.synchronise();
             }
-        }
-        
-        /**
-         * Adds a {@link Table} to this provider. If the {@link Table} already exists
-         * an exception will be thrown. As this provider is partitioned, the call is delegated
-         * to every member in turn.
-         * @param t the {@link Table} to add.
-         * @throws AlreadyExistsException if a {@link Table} with the same name already
-         * exists in this {@link TableProvider}.
-         * @throws NullPointerException if the {@link Table} argument is null.
-         * @throws AssociationException if the {@link TableProvider} provided by the
-         * {@link Table} object is not this same provider.
-         */
-        public void addTable(Table t) throws AlreadyExistsException, AssociationException, NullPointerException {
-            for (Iterator i = this.members.values().iterator(); i.hasNext(); ) {
-                TableProvider tp = (TableProvider)i.next();
-                tp.addTable(t);
+            // Update our own list.
+            // Clear it first.
+            this.tables.clear();
+            // Then create new tables based on first providers.
+            for (Iterator i = this.getFirstTableProvider().getTables().iterator(); i.hasNext(); ) {
+                Table sourceTable = (Table)i.next();
+                Table targetTable = new GenericTable(sourceTable.getName(), this);
+                // Columns.
+                for (Iterator j = sourceTable.getColumns().iterator(); j.hasNext(); ) {
+                    Column sourceColumn = (Column)j.next();
+                    Column targetColumn = new GenericColumn(sourceColumn.getName(), targetTable);
+                }
+                // Primary key.
+                PrimaryKey sourcePK = targetTable.getPrimaryKey();
+                if (sourcePK!=null) {
+                    List targetKeyCols = new ArrayList();
+                    for (Iterator n = sourcePK.getColumns().iterator(); n.hasNext(); ) {
+                        Column c = (Column)n.next();
+                        targetKeyCols.add(targetTable.getColumnByName(c.getName()));
+                    }
+                    PrimaryKey targetPK;
+                    if (sourcePK instanceof SimpleKey) targetPK = new SimplePrimaryKey((Column)targetKeyCols.toArray()[0]);
+                    else if (sourcePK instanceof CompoundKey) targetPK = new CompoundPrimaryKey(targetKeyCols);
+                    else throw new AssertionError("Unknown type of key.");
+                    targetTable.setPrimaryKey(targetPK);
+                }
+                // Foreign keys.
+                for (Iterator j = sourceTable.getForeignKeys().iterator(); j.hasNext(); ) {
+                    ForeignKey sourceFK = (ForeignKey)j.next();
+                    List targetKeyCols = new ArrayList();
+                    for (Iterator n = sourceFK.getColumns().iterator(); n.hasNext(); ) {
+                        Column c = (Column)n.next();
+                        targetKeyCols.add(targetTable.getColumnByName(c.getName()));
+                    }
+                    ForeignKey targetFK;
+                    if (sourceFK instanceof SimpleKey) targetFK = new SimpleForeignKey((Column)targetKeyCols.toArray()[0]);
+                    else if (sourceFK instanceof CompoundKey) targetFK = new CompoundForeignKey(targetKeyCols);
+                    else throw new AssertionError("Unknown type of key.");
+                    targetTable.addForeignKey(targetFK);
+                }
+                // Save it.
+                this.tables.put(targetTable.getName(), targetTable);
             }
-        }
-        
-        /**
-         * Convenience method that creates and adds a {@link Table} to this provider.
-         * If a {@link Table} with the same name already exists an exception will be thrown.
-         * As this provider is partitioned, the call is delegated to every member in turn.
-         * @param name the name of the {@link Table} to create and add.
-         * @throws AlreadyExistsException if a {@link Table} with the same name already
-         * exists in this {@link TableProvider}.
-         * @throws NullPointerException if the name argument is null.
-         */
-        public void createTable(String name) throws AlreadyExistsException, NullPointerException {
-            for (Iterator i = this.members.values().iterator(); i.hasNext(); ) {
-                TableProvider tp = (TableProvider)i.next();
-                tp.createTable(name);
+            // Now do the relations.
+            for (Iterator i = this.getFirstTableProvider().getTables().iterator(); i.hasNext(); ) {
+                Table sourceTable = (Table)i.next();
+                Table targetTable = this.getTableByName(sourceTable.getName());
+                // PKs only - everything involves a PK somewhere.
+                if (sourceTable.getPrimaryKey()!=null) {
+                    for (Iterator j = sourceTable.getPrimaryKey().getRelations().iterator(); j.hasNext(); ) {
+                        Relation sourceRelation = (Relation)j.next();
+                        ForeignKey sourceFK = sourceRelation.getForeignKey();
+                        Table sourceFKTable = sourceFK.getTable();
+                        Table targetFKTable = this.getTableByName(sourceFKTable.getName());
+                        // Locate the equivalent target foreign key.
+                        ForeignKey targetFK = targetFKTable.getForeignKeyByName(sourceFK.getName());
+                        // Create the relation.
+                        Relation targetRelation = new GenericRelation(targetTable.getPrimaryKey(), targetFK, sourceRelation.getFKCardinality());
+                        targetTable.getPrimaryKey().addRelation(targetRelation);
+                        targetFK.addRelation(targetRelation);
+                    }
+                }
             }
-            
-        }
-        
-        /**
-         * Returns all the {@link Table}s this provider provides. The set returned may be
-         * empty but it will never be null. As this provider is partitioned, the call is delegated to the
-         * first member of the set as all the others are identical. If there are no members, an empty
-         * set is returned.
-         * @return the set of all {@link Table}s in this provider.
-         */
-        public Collection getTables() {
-            if (this.members.isEmpty()) return Collections.EMPTY_SET;
-            else return this.getFirstTableProvider().getTables();
-        }
-        
-        /**
-         * Returns the {@link Table}s from this provider with the given name. If there is
-         * no such table, the method will return null. As this provider is partitioned, the call is delegated
-         * to the first member of the set as all the others are identical.
-         * @param name the name of the {@link Table} to retrieve.
-         * @return the matching {@link Table}s from this provider.
-         */
-        public Table getTableByName(String name) {
-            if (this.members.isEmpty()) return null;
-            else return this.getFirstTableProvider().getTableByName(name);
         }
         
         /**
          * <p>Returns a set of unique values in a given column, which may include null. The
-     * set returned will never be null itself.</p>
+         * set returned will never be null itself.</p>
          *
          * <p>This implementation returns the combination of unique values resulting from
          * delegating the call to all its subordinates.</p>
@@ -238,7 +257,7 @@ public interface PartitionedTableProvider extends TableProvider {
          * @return the first partition's provider.
          */
         protected TableProvider getFirstTableProvider() {
-            return (TableProvider)this.members.values().toArray()[0];
+            return (TableProvider)this.memberProviders.values().toArray()[0];
         }
         
         /**
@@ -248,7 +267,7 @@ public interface PartitionedTableProvider extends TableProvider {
          * is the label for the partition, with the values being the providers themselves..
          */
         public Map getTableProviders() {
-            return this.members;
+            return this.memberProviders;
         }
         
         /**
@@ -263,10 +282,10 @@ public interface PartitionedTableProvider extends TableProvider {
             // Sanity check.
             if (label==null)
                 throw new NullPointerException("Label cannot be null.");
-            if (!this.members.containsKey(label))
+            if (!this.memberProviders.containsKey(label))
                 throw new AssociationException("No provider has been registered with that label.");
             // Do it.
-            return (TableProvider)this.members.get(label);
+            return (TableProvider)this.memberProviders.get(label);
         }
         
         /**
@@ -286,12 +305,12 @@ public interface PartitionedTableProvider extends TableProvider {
                 throw new NullPointerException("Label cannot be null.");
             if (tp==null)
                 throw new NullPointerException("Table provider cannot be null.");
-            if (this.members.containsKey(label))
+            if (this.memberProviders.containsKey(label))
                 throw new AlreadyExistsException("A provider has already been registered with that label.", label);
             if (tp instanceof PartitionedTableProvider)
                 throw new AssociationException("You cannot nest partitioned table providers within other ones.");
             // Do it.
-            this.members.put(label,tp);
+            this.memberProviders.put(label,tp);
         }
         
         /**
@@ -305,9 +324,9 @@ public interface PartitionedTableProvider extends TableProvider {
             if (label==null)
                 throw new NullPointerException("Label cannot be null.");
             // Do we need to do it?
-            if (!this.members.containsKey(label)) return;
+            if (!this.memberProviders.containsKey(label)) return;
             // Do it.
-            this.members.remove(label);
+            this.memberProviders.remove(label);
         }
         
         /**
@@ -318,7 +337,7 @@ public interface PartitionedTableProvider extends TableProvider {
         public String toString() {
             StringBuffer sb = new StringBuffer();
             sb.append("[");
-            for (Iterator i = this.members.values().iterator(); i.hasNext(); ) {
+            for (Iterator i = this.memberProviders.values().iterator(); i.hasNext(); ) {
                 TableProvider tp = (TableProvider)i.next();
                 sb.append(tp.toString());
                 if (i.hasNext()) sb.append(",");

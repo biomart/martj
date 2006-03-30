@@ -27,12 +27,14 @@ package org.biomart.builder.model;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.model.Column.GenericColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.Table.GenericTable;
 import org.biomart.builder.model.TableProvider.GenericTableProvider;
 
@@ -42,7 +44,7 @@ import org.biomart.builder.model.TableProvider.GenericTableProvider;
  * a set of mart tables based on the contents of a {@link Window}.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 29th March 2006
+ * @version 0.1.4, 30th March 2006
  * @since 0.1
  */
 public interface DataSet extends Comparable {
@@ -69,9 +71,37 @@ public interface DataSet extends Comparable {
     public void regenerate() throws SQLException, BuilderException;
     
     /**
+     * Sets the {@link MartConstructor} this {@link DataSet} will be built by.
+     * @param mc the {@link MartConstructor} for this {@link DataSet}.
+     * @throws NullPointerException if the parameter is null.
+     */
+    public void setMartConstructor(MartConstructor mc) throws NullPointerException;
+    
+    /**
+     * Returns the {@link MartConstructor} this {@link DataSet} will be built by.
+     * @return the {@link MartConstructor} for this {@link DataSet}.
+     */
+    public MartConstructor getMartConstructor();
+    
+    
+    /**
+     * Request that the mart for this dataset be constructed now.
+     * @throws SQLException if there was any data source error during
+     * mart construction.
+     * @throws BuilderException if there was any other kind of error in the
+     * mart construction process.
+     */
+    public void constructMart() throws BuilderException, SQLException;
+    
+    /**
      * The generic version can construct itself from any given Window.
      */
     public class GenericDataSet implements DataSet {
+        /**
+         * Internal reference to the mart constructor that will build us later.
+         */
+        private MartConstructor mc;
+        
         /**
          * Internal reference to the parent window.
          */
@@ -137,6 +167,42 @@ public interface DataSet extends Comparable {
         }
         
         /**
+         * Sets the {@link MartConstructor} this {@link DataSet} will be built by.
+         * @param mc the {@link MartConstructor} for this {@link DataSet}.
+         * @throws NullPointerException if the parameter is null.
+         */
+        public void setMartConstructor(MartConstructor mc) throws NullPointerException {
+            // Sanity check.
+            if (mc==null)
+                throw new NullPointerException("Mart constructor cannot be null.");
+            // Do it.
+            this.mc = mc;
+        }
+        
+        /**
+         * Returns the {@link MartConstructor} this {@link DataSet} will be built by.
+         * @return the {@link MartConstructor} for this {@link DataSet}.
+         */
+        public MartConstructor getMartConstructor() {
+            return this.mc;
+        }
+        
+        /**
+         * Request that the mart for this dataset be constructed now.
+         * @throws SQLException if there was any data source error during
+         * mart construction.
+         * @throws BuilderException if there was any other kind of error in the
+         * mart construction process.
+         */
+        public void constructMart() throws BuilderException, SQLException {
+            // Sanity check.
+            if (this.mc==null)
+                throw new BuilderException("Cannot construct mart as no mart constructor has been specified.");
+            // Do it.
+            this.mc.constructMart(this);
+        }
+        
+        /**
          * Displays the name of this {@link DataSet} object. The name is the same as the
          * parent {@link Window}.
          * @return the name of this {@link DataSet} object.
@@ -178,6 +244,41 @@ public interface DataSet extends Comparable {
     }
     
     /**
+     * This special {@link TableProvider} allows tables to be added to it, but only accepts
+     * {@link DataSetTable}s..
+     */
+    public class DataSetTableProvider extends GenericTableProvider {
+        /**
+         * The constructor delegates directly upwards to {@link GenericTableProvider}.
+         * @param name the name to give this provider.
+         * @throws NullPointerException if the name is null.
+         */
+        public DataSetTableProvider(String name) throws NullPointerException {
+            super(name);
+        }
+        
+        /**
+         * Adds a {@link DataSetTable} to this provider. The table must not be null, and
+         * must not already exist (ie. with the same name).
+         * @param t the {@link DataSetTable} to add.
+         * @throws AlreadyExistsException if another one with the same name already exists.
+         * @throws AssociationException if the table doesn't belong to this provider.
+         * @throws NullPointerException if the table is null.
+         */
+        public void addTable(DataSetTable t) throws AlreadyExistsException, AssociationException, NullPointerException {
+            // Sanity check.
+            if (t==null)
+                throw new NullPointerException("Table cannot be null.");
+            if (!t.getTableProvider().equals(this))
+                throw new AssociationException("Table does not belong to this provider.");
+            if (this.tables.containsKey(t.getName()))
+                throw new AlreadyExistsException("Table with that name already exists in this provider.", t.getName());
+            // Do it.
+            this.tables.put(t.getName(), t);
+        }
+    }
+    
+    /**
      * This special {@link Table} represents the merge of one or more other {@link Table}s
      * by following a series of {@link Relation}s. As such it has no real columns of its own,
      * so every column is from another table and is given an alias.
@@ -195,22 +296,48 @@ public interface DataSet extends Comparable {
         
         /**
          * The constructor calls the parent {@link GenericTable} constructor. It uses a
-         * {@link TableProvider} (named '__DATASET__xyz' where 'xyz' is its own name) as a dummy parent for 
-         * itself. You must also supply a type that describes this as a main table, dimension table, etc.
+         * {@link DataSetTableProvider} as a parent for itself. You must also supply a type that
+         * describes this as a main table, dimension table, etc., and a list of relations to follow
+         * from the {@link Window} central table in order to build it.
          * @param name the table name.
+         * @param prov the {@link DataSetTableProvider} to hold this table in.
          * @param type the {@link DataSetTableType} that best describes this table.
+         * @param relations the list of {@link Relation}s to follow in order to obtain the structure
+         * of this table. All lists start with a relation from the central table in the parent {@link Window}.
+         * If the list is empty for a MAIN table then all the data comes from that central table. For
+         * a DIMENSION or MAIN_SUBCLASS type, the list cannot be empty. The list must not be null.
          * @throws NullPointerException if the name or type are null.
+         * @throws AssociationException if the relations didn't contain the right number of elements for
+         * the table type.
+         * @throws IllegalArgumentException if the relations list contained any null or non-Relation elements.
          * @throws AlreadyExistsException if the provider, for whatever reason, refuses to
-         * allow this {@link Table} to be added to it using {@link TableProvider#addTable(Table) addTable()}.
+         * allow this {@link Table} to be added to it using {@link DataSetTableProvider#addTable(Table)}.
          */
-        public DataSetTable(String name, DataSetTableType type) throws AlreadyExistsException, NullPointerException {
+        public DataSetTable(String name, DataSetTableProvider prov, DataSetTableType type, List relations) throws AlreadyExistsException, NullPointerException, AssociationException, IllegalArgumentException {
             // Super call first.
-            super(name, new GenericTableProvider("__DATASET__"+name));
+            super(name, prov);
             // Sanity check.
             if (type==null)
                 throw new NullPointerException("Table type cannot be null.");
+            if (relations==null)
+                throw new NullPointerException("Relations list cannot be null.");
             // Do the work.
             this.type = type;
+            // Check the relations and save them.
+            for (Iterator i = relations.iterator(); i.hasNext(); ) {
+                Object o = i.next();
+                if (o==null || !(o instanceof Relation))
+                    throw new IllegalArgumentException("Relations must be Relation instances, they cannot be null or anything else.");
+                this.relations.add((Relation)o);
+            }
+            if (this.relations.size()==0 && !this.type.equals(DataSetTableType.MAIN))
+                throw new AssociationException("Subclass and dimension tables must have at least one relation in the path.");
+            // Add the table to the provider.
+            try {
+                prov.addTable(this);
+            } catch (AssociationException e) {
+                throw new AssertionError("Table provider does not match itself.");
+            }
         }
         
         /**
@@ -266,8 +393,12 @@ public interface DataSet extends Comparable {
          * @throws NullPointerException if the argument is null.
          */
         public void createColumn(Column c) throws NullPointerException {
-            new DataSetColumn(c, this);
-            // By creating it we've already added it to ourselves! (Based on DataSetColumn behaviour)
+            try {
+                new WrappedColumn(c, this);
+                // By creating it we've already added it to ourselves! (Based on DataSetColumn behaviour)
+            } catch (AlreadyExistsException e) {
+                throw new AssertionError("Alias generator failed to generate a unique alias for this column.");
+            }
         }
         
         /**
@@ -292,48 +423,21 @@ public interface DataSet extends Comparable {
     }
     
     /**
-     * A column on a {@link DataSetTable} wraps an existing column but is otherwise identical to
-     * a normal column. It assigns itself an alias if the original name is already used in the target table.
-     * Can be used in keys on dataset tables.
+     * A column on a {@link DataSetTable} has to be one of the types of {@link DataSetColumn}
+     * available from this class. All types can be renamed.
      */
     public class DataSetColumn extends GenericColumn {
         /**
-         * Internal reference to the wrapped {@link Column}.
-         */
-        private final Column c;
-        
-        /**
-         * This constructor wraps an existing {@link Column} and checks that the
-         * parent {@link Table} is not null. It also assigns an alias to the wrapped {@link Column}
-         * if another one with the same name already exists on this table.
-         * @param c the {@link Column} to wrap.
+         * This constructor gives the column a name and checks that the
+         * parent {@link Table} is not null.
+         * @param name the name to give this column.
          * @param t the parent {@link Table}
+         * @throws AlreadyExistsException if the {@link DataSetTable} already has a column with
+         * that name.
          * @throws NullPointerException if either parameter is null.
          */
-        public DataSetColumn(Column c, DataSetTable t) throws NullPointerException {
-            // Sanity checks
-            if (c==null)
-                throw new NullPointerException("Wrapped column cannot be null.");
-            if (t==null)
-                throw new NullPointerException("Parent table cannot be null.");
-            // Remember the values.
-            this.c = c;
-            this.t = t;
-            // Work out the alias if name used already, otherwise use name as-is.
-            this.name = c.getName();
-            int aliasNumber = 2;
-            while (t.getColumnByName(this.name)!=null) {
-                // Alias is original name appended with _2, _3, _4 etc.
-                this.name = c.getName()+"_"+(aliasNumber++);
-            }
-            // Add it to the table - throws AssociationException and AlreadyExistsException
-            try {
-                t.addColumn(this);
-            } catch (AssociationException e) {
-                throw new AssertionError("Table does not equal itself.");
-            } catch (AlreadyExistsException e) {
-                throw new AssertionError("Table does not report duplicate column names correctly.");
-            }
+        public DataSetColumn(String name, DataSetTable t) throws NullPointerException, AlreadyExistsException {
+            super(name, t);
         }
         
         /**
@@ -354,6 +458,133 @@ public interface DataSet extends Comparable {
                 throw new AlreadyExistsException("A column with that name already exists on this table.", name);
             // Do it.
             this.name = name;
+        }
+        
+        /**
+         * A column on a {@link DataSetTable} wraps an existing column but is otherwise identical to
+         * a normal column. It assigns itself an alias if the original name is already used in the target table.
+         * Can be used in keys on dataset tables.
+         */
+        public static class WrappedColumn extends DataSetColumn {
+            /**
+             * Internal reference to the wrapped {@link Column}.
+             */
+            private final Column c;
+            
+            /**
+             * This constructor wraps an existing {@link Column} and checks that the
+             * parent {@link Table} is not null. It also assigns an alias to the wrapped {@link Column}
+             * if another one with the same name already exists on this table.
+             * @param c the {@link Column} to wrap.
+             * @param t the parent {@link Table}
+             * @throws NullPointerException if either parameter is null.
+             * @throws AlreadyExistsException if the world has stopped turning. (Should never happen.)
+             */
+            public WrappedColumn(Column c, DataSetTable t) throws NullPointerException, AlreadyExistsException {
+                // Call the parent with the alias.
+                super(generateAlias(c, t), t);
+                // Remember the wrapped column.
+                this.c = c;
+            }
+            
+            /**
+             * Returns the wrapped column.
+             * @return the wrapped {@link Column}.
+             */
+            public Column getWrappedColumn() {
+                return this.c;
+            }
+            
+            /**
+             * Internal method that generates a safe alias/name for a column. The first try is
+             * always the original column name, followed by attempts with an underscore and a
+             * sequence number appended.
+             * @param col a {@link Column} to generate the safe name for.
+             * @param t the {@link DataSetTable} that this column is being added to.
+             * @return the result.
+             * @throws NullPointerException if any parameter is null.
+             */
+            private static String generateAlias(Column c, DataSetTable t) throws NullPointerException {
+                // Sanity check.
+                if (c==null)
+                    throw new NullPointerException("Column cannot be null.");
+                if (t==null)
+                    throw new NullPointerException("Parent table cannot be null.");
+                // Do it.
+                String name = c.getName();
+                int aliasNumber = 2;
+                while (t.getColumnByName(name)!=null) {
+                    // Alias is original name appended with _2, _3, _4 etc.
+                    name = c.getName()+"_"+(aliasNumber++);
+                }
+                return name;
+            }
+        }
+        
+        /**
+         * A column on a {@link DataSetTable} that indicates the presence of a record in some dimension table.
+         * These only appear on main tables. They take a reference to
+         */
+        public static class HasDimensionColumn extends DataSetColumn {
+            /**
+             * Internal reference to the dimension this column refers to.
+             */
+            private final DataSetTable dim;
+            
+            /**
+             * The constructor takes a name for this column-to-be, and the {@link DataSetTable}
+             * on which it is to be constructed. If that table is not a MAIN or MAIN_SUBCLASS table
+             * an exception will be thrown, likewise if the reference {@link DataSetTable} which
+             * the column refers to is not a DIMENSION.
+             * @param name the name to give this column.
+             * @param main the parent {@link Table}
+             * @param dim the dimension {@link Table}
+             * @throws AlreadyExistsException if the {@link DataSetTable} already has a column with
+             * that name.
+             * @throws AssociationException if the parent is not MAIN or MAIN_SUBCLASS or the
+             * dimension is not DIMENSION.
+             * @throws NullPointerException if any parameter is null.
+             */
+            public HasDimensionColumn(String name, DataSetTable parent, DataSetTable dim) throws NullPointerException, AlreadyExistsException, AssociationException {
+                // Super first.
+                super(name, parent);
+                // Sanity check.
+                if (dim==null)
+                    throw new NullPointerException("Dimension table cannot be null.");
+                if (!dim.getType().equals(DataSetTableType.DIMENSION))
+                    throw new AssociationException("Dimension table is not of DIMENSION type.");
+                if (!(parent.getType().equals(DataSetTableType.MAIN) || parent.getType().equals(DataSetTableType.MAIN)))
+                    throw new AssociationException("Parent table is not of MAIN or MAIN_SUBCLASS type.");
+                // Do it.
+                this.dim = dim;
+            }
+            
+            /**
+             * Returns the dimension this column refers to.
+             * @return the {@link DataSetTable} representing the dimension.
+             */
+            public DataSetTable getDimension() {
+                return this.dim;
+            }
+        }
+        
+        /**
+         * A column on a {@link DataSetTable} that should be populated with the name
+         * of the table provider providing the data in this row.
+         */
+        public static class TableProviderNameColumn extends DataSetColumn {
+            /**
+             * This constructor gives the column a name and checks that the
+             * parent {@link Table} is not null.
+             * @param name the name to give this column.
+             * @param t the parent {@link Table}
+             * @throws AlreadyExistsException if the {@link DataSetTable} already has a column with
+             * that name.
+             * @throws NullPointerException if either parameter is null.
+             */
+            public TableProviderNameColumn(String name, DataSetTable t) throws NullPointerException, AlreadyExistsException {
+                super(name, t);
+            }
         }
     }
     

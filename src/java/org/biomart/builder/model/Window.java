@@ -43,12 +43,14 @@ import org.biomart.builder.model.Relation.OneToMany;
  * It will automatically mask out permanently any {@link Relation}s forming more than
  * two levels of 1:m from the central table, and will flag any forming more than one such
  * level as 'Concat only'. 'Concat only' means that the remote primary key will be merged
- * as a single column with all unique values concatenated.</p>
+ * as a single column with all unique values concatenated when followed in the 1:M
+ * direction, but this is ignored in the M:1 direction. Additional relations beyond a
+ * concat relation should be ignored when building the final mart.</p>
  *
  * <p>The name of the window is inherited by the {@link Dataset} so take care when
  * choosing it.</p>
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 29th March 2006
+ * @version 0.1.4, 30th March 2006
  * @since 0.1
  */
 public class Window implements Comparable {
@@ -110,6 +112,11 @@ public class Window implements Comparable {
     private boolean partitionOnTableProvider = false;
     
     /**
+     * Internal reference to the relations already seen when doing the prediction walk.
+     */
+    private Map relationsPredicted = new HashMap();
+    
+    /**
      * The constructor creates a {@link Window} around one central {@link Table} and
      * gives it a name. It also initiates a {@link DataSet} ready to contain the transformed
      * results.
@@ -136,85 +143,91 @@ public class Window implements Comparable {
         this.name = name;
         this.dataset = new GenericDataSet(this);
         // Predict some sensible defaults.
-        new WindowRelationStatusPredicter(this).predict();
+        this.predictRelationTypes();
     }
     
-    // COMMENT ME!!!!
+    /**
+     * This method identifies all candidate subset and concat relations, and masks out all relations
+     * more than 2 1:M relations away from the main table.
+     */
+    public void predictRelationTypes() {
+        this.relationsPredicted.clear();
+        // Predict the subclass relations from the existing m:1 relations - simple guesser based
+        // on finding foreign keys in the central table.
+        for (Iterator i = this.getTable().getForeignKeys().iterator(); i.hasNext(); ) {
+            Key k = (Key)i.next();
+            for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
+                Relation r = (Relation)j.next();
+                // Only flag potential m:1 subclass relations if they don't refer back to ourselves.
+                try {
+                    if (!r.getPrimaryKey().getTable().equals(this.getTable())) this.flagSubclassRelation(r);
+                } catch (AssociationException e) {
+                    throw new AssertionError();
+                }
+            }
+        }
+        // Find the shortest 1:m paths (depths) of each relation we have.
+        try {
+            this.walkRelations(this.getTable(), 1);
+        } catch (NullPointerException e) {
+            throw new AssertionError("Found a null reference to a table.");
+        }
+        // Check on depths of relations.
+        for (Iterator i = this.relationsPredicted.keySet().iterator(); i.hasNext(); ) {
+            Relation r = (Relation)i.next();
+            int depth = ((Integer)this.relationsPredicted.get(r)).intValue();
+            if (depth>2) {
+                // Mask all relations that involve more than two levels of 1:m abstraction away
+                // from the central main table.
+                this.maskRelation(r);
+            } else if (depth>1) {
+                // Mark as concat-only (default to comma-separation) all 1:m relations that involve
+                // more than one level of 1:m abstraction away from the central main table.
+                this.flagConcatOnlyRelation(r, ConcatRelationType.COMMA);
+            }
+        }
+    }
     
-    private class WindowRelationStatusPredicter {
-        private Window window;
-        private Map relationsSeen = new HashMap();
-        public WindowRelationStatusPredicter(Window w) {
-            this.window =w ;
+    /**
+     * Internal method which works out the lowest number of 1:M relations between
+     * the current table and all other {@link Table}s linked by as-yet-unvisited {@link Relation}s.
+     * @param current the {@link Table} to start walking from.
+     * @param currentDepth the number of 1:M relations it took to get this far.
+     * @throws NullPointerException if the table parameter is null.
+     */
+    private void walkRelations(Table current, int currentDepth) throws NullPointerException {
+        // Sanity check.
+        if (current==null)
+            throw new NullPointerException("Current table cannot be null.");
+        // Find all relations from this table.
+        Set relations = new HashSet();
+        relations.addAll(current.getPrimaryKey().getRelations());
+        for (Iterator i = current.getForeignKeys().iterator(); i.hasNext(); ) {
+            Key k = (Key)i.next();
+            relations.addAll(k.getRelations());
         }
-        public void predict() {
-            // Identify the main table.
-            Table main = this.window.getTable();
-            // Predict the subclass relations from the existing m:1 relations - simple guesser based
-            // on finding foreign keys in the central table.
-            for (Iterator i = main.getForeignKeys().iterator(); i.hasNext(); ) {
-                Key k = (Key)i.next();
-                for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
-                    Relation r = (Relation)j.next();
-                    // Only flag potential m:1 subclass relations if they don't refer back to ourselves.
-                    try {
-                        if (!r.getPrimaryKey().getTable().equals(main)) window.flagSubclassRelation(r);
-                    } catch (AssociationException e) {
-                        throw new AssertionError();
-                    }
-                }
+        // See if we need to do anything to each one.
+        for (Iterator i = relations.iterator(); i.hasNext(); ) {
+            Relation r = (Relation)i.next();
+            // Seen before?
+            if (this.relationsPredicted.containsKey(r)) {
+                // Have we got there by a shorter path? If not, then we can skip it.
+                int previousDepth = ((Integer)this.relationsPredicted.get(r)).intValue();
+                if (previousDepth <= currentDepth) continue;
             }
-            // Find the shortest 1:m paths (depths) of each relation we have.
-            this.walkRelations(main, 1);
-            // Check on depths of relations.
-            for (Iterator i = this.relationsSeen.keySet().iterator(); i.hasNext(); ) {
-                Relation r = (Relation)i.next();
-                int depth = ((Integer)this.relationsSeen.get(r)).intValue();
-                if (depth>2) {
-                    // Mask all relations that involve more than two levels of 1:m abstraction away
-                    // from the central main table.
-                    this.window.maskRelation(r);
-                } else if (depth>1) {
-                    // Mark as concat-only (default to comma-separation) all 1:m relations that involve
-                    // more than one level of 1:m abstraction away from the central main table.
-                    this.window.flagConcatOnlyRelation(r, ConcatRelationType.COMMA);
-                }
-            }
-        }
-        public void walkRelations(Table current, int currentDepth) {
-            // Find all relations from this table.
-            Set relations = new HashSet();
-            relations.addAll(current.getPrimaryKey().getRelations());
-            for (Iterator i = current.getForeignKeys().iterator(); i.hasNext(); ) {
-                Key k = (Key)i.next();
-                relations.addAll(k.getRelations());
-            }
-            // See if we need to do anything to each one.
-            for (Iterator i = relations.iterator(); i.hasNext(); ) {
-                Relation r = (Relation)i.next();
-                // Seen before?
-                if (this.relationsSeen.containsKey(r)) {
-                    // Have we got there by a shorter path? If not, then we can skip it.
-                    // Otherwise, update it with the new shorter path.
-                    int previousDepth = ((Integer)this.relationsSeen.get(r)).intValue();
-                    if (previousDepth > currentDepth) 
-                        this.relationsSeen.put(r, new Integer(currentDepth));
-                    else 
-                        continue;
-                } else {
-                    this.relationsSeen.put(r, new Integer(currentDepth));
-                }
-                if (r.getPrimaryKey().getTable().equals(current) && (r instanceof OneToMany)) {
-                    // If current is at the one end of a one-to-many relation, then
-                    // up the count and recurse down it.
-                    this.walkRelations(r.getForeignKey().getTable(), currentDepth+1);
-                } else {
-                    // Otherwise, recurse down it anyway but leave the count as-is.
-                    if (r.getPrimaryKey().getTable().equals(current))
-                        this.walkRelations(r.getForeignKey().getTable(), currentDepth);
-                    else
-                        this.walkRelations(r.getPrimaryKey().getTable(), currentDepth);
-                }
+            // Update the depth count on this relation.
+            this.relationsPredicted.put(r, new Integer(currentDepth));
+            // Work out where to go next.
+            if (r.getPrimaryKey().getTable().equals(current) && (r instanceof OneToMany)) {
+                // If current is at the one end of a one-to-many relation, then
+                // up the count and recurse down it.
+                this.walkRelations(r.getForeignKey().getTable(), currentDepth+1);
+            } else {
+                // Otherwise, recurse down it anyway but leave the count as-is.
+                if (r.getPrimaryKey().getTable().equals(current))
+                    this.walkRelations(r.getForeignKey().getTable(), currentDepth);
+                else
+                    this.walkRelations(r.getPrimaryKey().getTable(), currentDepth);
             }
         }
     }
@@ -565,6 +578,17 @@ public class Window implements Comparable {
         }
         // Regenerate the dataset
         this.dataset.regenerate();
+    }
+    
+    /**
+     * Request that the mart for this window be constructed now.
+     * @throws SQLException if there was any data source error during
+     * mart construction.
+     * @throws BuilderException if there was any other kind of error in the
+     * mart construction process.
+     */
+    public void constructMart() throws BuilderException, SQLException {
+        this.dataset.constructMart();
     }
     
     /**

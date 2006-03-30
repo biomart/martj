@@ -26,6 +26,9 @@ package org.biomart.builder.model;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Represents a method of partitioning by column. There are no methods.
@@ -33,7 +36,7 @@ import java.util.Collections;
  * to decide by looking at the class used.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 29th March 2006
+ * @version 0.1.3, 30th March 2006
  * @since 0.1
  */
 public interface PartitionedColumnType {
@@ -58,16 +61,25 @@ public interface PartitionedColumnType {
         /**
          * Internal reference to the values to select rows on.
          */
-        private Collection values;
+        private final Set values = new HashSet();
         
         /**
          * The constructor specifies the value to partition on. If the value is null,
          * or it is empty, then only rows with null in this column will be selected.
          * @param values the values to partition on.
+         * @throws IllegalArgumentException if any of the values are not-null
+         * and not Strings.
          */
-        public ValueCollection(Collection values) {
+        public ValueCollection(Collection values) throws IllegalArgumentException {
             if (values==null) values = Collections.EMPTY_SET;
-            this.values = values;
+            for (Iterator i = values.iterator(); i.hasNext(); ) {
+                Object o = i.next();
+                // Sanity check.
+                if (o!=null && !(o instanceof String))
+                    throw new IllegalArgumentException("Cannot add non-null non-String objects as values.");
+                // Add the value.
+                this.values.add((String)o);
+            }
         }
 
         /**
@@ -75,7 +87,7 @@ public interface PartitionedColumnType {
          * @return the name of this {@link PartitionedColumnType} object.
          */
         public String toString() {
-            return "ValueCollection:"+this.values;
+            return "ValueCollection:"+this.values.toString();
         }
     }
     

@@ -26,10 +26,8 @@ package org.biomart.builder.model;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.model.Column.GenericColumn;
@@ -46,7 +44,7 @@ import org.biomart.builder.model.Key.PrimaryKey;
  * but it does not provide any methods that process or analyse these.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 28th March 2006
+ * @version 0.1.4, 30th March 2006
  * @since 0.1
  */
 public interface Table extends Comparable {
@@ -85,6 +83,14 @@ public interface Table extends Comparable {
      * @return the set of {@link ForeignKey}s for this {@link Table}.
      */
     public Collection getForeignKeys();
+    
+    /**
+     * Returns the {@link ForeignKey} on this {@link Table} with the given name. It may return
+     * null if not found.
+     * @return the namedl {@link ForeignKey} on this {@link Table} if found, otherwise null.
+     * @throws NullPointerException if the name given was null.
+     */
+    public ForeignKey getForeignKeyByName(String name) throws NullPointerException;
     
     /**
      * Adds a {@link ForeignKey} to this table. It may
@@ -180,7 +186,7 @@ public interface Table extends Comparable {
         /**
          * Internal reference to the {@link ForeignKey}s of this {@link Table}.
          */
-        private final Set fks = new HashSet();
+        private final Map fks = new HashMap();
         
         /**
          * Internal reference to the {@link Column}s of this {@link Table}.
@@ -193,10 +199,8 @@ public interface Table extends Comparable {
          * @param name the table name.
          * @param prov the {@link TableProvider} this {@link Table} is associated with.
          * @throws NullPointerException if the name or provider are null.
-         * @throws AlreadyExistsException if the provider, for whatever reason, refuses to
-         * allow this {@link Table} to be added to it using {@link TableProvider#addTable(Table) addTable()}.
          */
-        public GenericTable(String name, TableProvider prov) throws AlreadyExistsException, NullPointerException {
+        public GenericTable(String name, TableProvider prov) throws NullPointerException {
             // Sanity checks.
             if (name==null)
                 throw new NullPointerException("Table name cannot be null.");
@@ -205,12 +209,6 @@ public interface Table extends Comparable {
             // Remember the values.
             this.name = name;
             this.prov = prov;
-            // Attempt to add to the provider - throws AssociationException and AlreadyExistsException..
-            try {
-                prov.addTable(this);
-            } catch (AssociationException e) {
-                throw new AssertionError("Table provider does not equal itself.");
-            }
         }
         
         /**
@@ -267,7 +265,23 @@ public interface Table extends Comparable {
          * @return the set of {@link ForeignKey}s for this {@link Table}.
          */
         public Collection getForeignKeys() {
-            return this.fks;
+            return this.fks.values();
+        }
+        
+        /**
+         * Returns the {@link ForeignKey} on this {@link Table} with the given name. It may return
+         * null if not found.
+         * @return the namedl {@link ForeignKey} on this {@link Table} if found, otherwise null.
+         * @throws NullPointerException if the name given was null.
+         */
+        public ForeignKey getForeignKeyByName(String name) throws NullPointerException {
+            // Sanity check.
+            if (name==null)
+                throw new NullPointerException("Name cannot be null.");
+            // Do we have it?
+            if (!this.fks.containsKey(name)) return null;
+            // Return it.
+            return (ForeignKey)this.fks.get(name);
         }
         
         /**
@@ -284,8 +298,12 @@ public interface Table extends Comparable {
             // Sanity checks.
             if (fk==null)
                 throw new NullPointerException("Key to be added cannot be null.");
+            // Work out its name.
+            String name = fk.getName();
+            // Quietly ignore if we've already got it.
+            if (this.fks.containsKey(name)) return;
             // Do it.
-            this.fks.add(fk);
+            this.fks.put(name, fk);
         }
         
         /**
@@ -377,7 +395,7 @@ public interface Table extends Comparable {
             // Remove primary key if if involves this column
             if (this.pk.getColumns().contains(c)) this.pk.destroy();
             // Remove all foreign keys involving this column
-            for (Iterator i = this.fks.iterator(); i.hasNext(); ) {
+            for (Iterator i = this.fks.values().iterator(); i.hasNext(); ) {
                 Key fk = (Key)i.next();
                 if (fk.getColumns().contains(c)) fk.destroy();
             }
