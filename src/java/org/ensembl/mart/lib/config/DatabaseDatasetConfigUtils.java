@@ -335,11 +335,6 @@ public class DatabaseDatasetConfigUtils {
     DatasetConfig dsConfig)
     throws ConfigurationException {
     	
-    	// in future add primaryKey strict checking	
-		//if (dsConfig.getPrimaryKeys().length == 0 || !dsConfig.getPrimaryKeys()[0].endsWith("_key")){
-		//	JOptionPane.showMessageDialog(null,"Your dataset must contain a primary key per main table, each ending _key. Fix table(s) and/or primaryKeys configuration");
-		//	return;
-		//}
     	
     	if (martUsers.equals(""))	
     		martUsers = "default";
@@ -356,12 +351,17 @@ public class DatabaseDatasetConfigUtils {
 		AttributePage apage;
 		String testInternalName;
 		String duplicationString = "";
+		String duplicatedAttString = "";
 		String spaceErrors = "";
 		String linkErrors = "";
 		String brokenString = "";
 	  
 		Hashtable descriptionsMap = new Hashtable();// atts should have a unique internal name
 		Hashtable attributeDuplicationMap = new Hashtable();
+		
+		Hashtable descriptionsTCFieldMap = new Hashtable();// atts should have a unique TC and field
+		Hashtable attributeDuplicationTCFieldMap = new Hashtable();
+		
 		Hashtable filterDuplicationMap = new Hashtable();
 		
 		for (int i = 0; i < apages.length; i++){
@@ -389,12 +389,22 @@ public class DatabaseDatasetConfigUtils {
 			  for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
 				  Object testAtt = iter.next();
 				  AttributeDescription testAD = (AttributeDescription) testAtt;
+
+				  if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+						continue;//placeholder atts can be duplicated	
+				  }
+				  
+				  // don't allow any duplication of TC and field, even for hidden atts
+				  if (descriptionsTCFieldMap.containsKey(testAD.getTableConstraint()+"."+testAD.getField())){
+				  		attributeDuplicationTCFieldMap.put(testAD.getTableConstraint()+"."+testAD.getField(),
+				  			dsConfig.getDataset()); 
+				  }
+				  descriptionsTCFieldMap.put(testAD.getTableConstraint()+"."+testAD.getField(),"1");
+				  
 				  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 					  continue;
 				  }
-				  if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
-				  	  continue;//placeholder atts can be duplicated	
-				  }
+
 				  if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
 					  spaceErrors = spaceErrors + testAD.getInternalName() + " in page " + apage.getInternalName() + "\n";
 				  }
@@ -402,6 +412,7 @@ public class DatabaseDatasetConfigUtils {
 					 attributeDuplicationMap.put(testAD.getInternalName(),dsConfig.getDataset()); 
 				  }
 				  descriptionsMap.put(testAD.getInternalName(),"1");
+				  
 				  if (dsConfig.getType().equals("GenomicSequence"))
 				  	continue;//no point in checking fields
 				  
@@ -543,14 +554,12 @@ public class DatabaseDatasetConfigUtils {
 		
 		
 		if (spaceErrors != ""){
-		System.out.println("1");	
 		  JOptionPane.showMessageDialog(null, "The following internal names contain spaces:\n"
 									+ spaceErrors, "ERROR", 0);
 		  return;//no export performed
 		}
 
 		if (brokenString != ""){
-			System.out.println("2");
 			int choice = JOptionPane.showConfirmDialog(null,"The following may not contain the required fields:\n"
 		  							+ brokenString, "Export Anyway?", JOptionPane.YES_NO_OPTION);
 		  	if (choice != 0)									
@@ -558,14 +567,23 @@ public class DatabaseDatasetConfigUtils {
 		}		
 
 		if (linkErrors != ""){
-			System.out.println("3");
 		  JOptionPane.showMessageDialog(null, "The following internal names are incorrect in links:\n"
 									+ linkErrors, "ERROR", 0);
 		  return;//no export performed
 		}
-	  	  
+
+// maybe add back in later
+/*	  	
+		if (attributeDuplicationTCFieldMap.size() > 0){
+			duplicatedAttString = "The following attributes are duplicated. Use internal placeholders instead\n";
+			Enumeration enum = attributeDuplicationTCFieldMap.keys();
+			while (enum.hasMoreElements()){
+				String intName = (String) enum.nextElement();
+				duplicatedAttString = duplicationString+"Attribute for "+intName+" in dataset "+dsConfig.getDataset()+"\n";	
+			}
+		}
+*/	  	  
 		if (attributeDuplicationMap.size() > 0){
-			System.out.println("4");
 			duplicationString = "The following attribute internal names are duplicated and will cause client problems:\n";
 			Enumeration enum = attributeDuplicationMap.keys();
 			while (enum.hasMoreElements()){
@@ -574,7 +592,6 @@ public class DatabaseDatasetConfigUtils {
 			}
 		}
 		else if (filterDuplicationMap.size() > 0){
-			System.out.println("5");
 			duplicationString = duplicationString + "The following filter/option internal names are duplicated and will cause client problems:\n";
 			Enumeration enum = filterDuplicationMap.keys();
 			while (enum.hasMoreElements()){
@@ -582,11 +599,37 @@ public class DatabaseDatasetConfigUtils {
 				duplicationString = duplicationString+"Filter "+intName+" in dataset "+dsConfig.getDataset()+"\n";	
 			}
 		} 	
-
-
+/*
+		if (duplicatedAttString != ""){
+			int choice = JOptionPane.showConfirmDialog(null, duplicatedAttString, "Remove duplicates?", JOptionPane.YES_NO_OPTION);							  
+			if (choice == 0){
+				Enumeration enum = attributeDuplicationTCFieldMap.keys();
+				while (enum.hasMoreElements()){
+					String testName = (String) enum.nextElement();				
+					int first = 0;
+					for (int j = 0; j < apages.length; j++){
+						apage = apages[j];
+						List testAtts = apage.getAllAttributeDescriptions();
+						for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+							AttributeDescription testAD = (AttributeDescription) iter.next();
+							if (!((testAD.getTableConstraint()+"."+testAD.getField()).equals(testName))) continue;
+							if (first != 0){
+								// TODO Remove attribute
+							}
+							first++;
+						}
+					}
+				}
+			}
+			else{
+				JOptionPane.showMessageDialog(null, "No Export performed",
+														  "ERROR", 0);					  
+							return;//no export performed
+			}
+		}
+*/		
 		
 		if (duplicationString != ""){	
-			System.out.println("6");
 		  int choice = JOptionPane.showConfirmDialog(null, duplicationString, "Make Unique?", JOptionPane.YES_NO_OPTION);							  
 		  // make unique code
 		  if (choice == 0){
@@ -692,16 +735,83 @@ public class DatabaseDatasetConfigUtils {
 		DatasetConfig templateConfig = new DatasetConfig(dsConfig,true,false);
 		String template = dsConfig.getTemplate();
 		
+		// first get rid of any duplicated atts/filters in terms of TableConstraint and Fields
+		Hashtable descriptionsTCFieldMap = new Hashtable();// atts should have a unique TC and field
+		Hashtable attributeDuplicationTCFieldMap = new Hashtable();
+		String duplicatedAttString = "";
+		
+		List attributeDescriptions = templateConfig.getAllAttributeDescriptions();
+		for (int i = 0; i < attributeDescriptions.size(); i++){
+			AttributeDescription ad = (AttributeDescription) attributeDescriptions.get(i);
+			if (ad.getInternalName().matches("\\w+\\.\\w+") || ad.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+					continue;//placeholder atts can be duplicated	
+			}
+				  
+			// don't allow any duplication of TC and field, even for hidden atts
+			if (descriptionsTCFieldMap.containsKey(ad.getTableConstraint()+"."+ad.getField())){
+					AttributePage apage = dsConfig.getPageForAttribute(ad.getInternalName());
+					AttributeGroup agroup = dsConfig.getGroupForAttribute(ad.getInternalName());
+					AttributeCollection acollection = dsConfig.getCollectionForAttribute(ad.getInternalName());
+					
+					attributeDuplicationTCFieldMap.put(ad.getTableConstraint()+"."+ad.getField(),
+						apage.getInternalName()+"->"+agroup.getInternalName()+"->"+acollection.getInternalName()+"->"
+						+ad.getInternalName()); 
+			}
+			descriptionsTCFieldMap.put(ad.getTableConstraint()+"."+ad.getField(),"1");
+		}
+		
+		if (attributeDuplicationTCFieldMap.size() > 0){
+			duplicatedAttString = "The following attributes are duplicated. Use internal placeholders instead\n";
+			Enumeration enum = attributeDuplicationTCFieldMap.keys();
+			while (enum.hasMoreElements()){
+				String intName = (String) enum.nextElement();
+				duplicatedAttString = duplicatedAttString+"Attribute for "+intName+" at "+attributeDuplicationTCFieldMap.get(intName)+"\n";	
+			}
+		}
+	  	
+	  	if (duplicatedAttString != ""){
+			JOptionPane.showMessageDialog(null, "Remove duplicates before generating template:\n"+duplicatedAttString, "ERROR",0);							  
+			return;//no export of template
+	  	}
+	  	// In future maybe offer auto removal but could be dangerous  
+		/*
+		if (duplicatedAttString != ""){
+			int choice = JOptionPane.showConfirmDialog(null, duplicatedAttString, "Remove duplicates?", JOptionPane.YES_NO_OPTION);							  
+			if (choice == 0){
+				Enumeration enum = attributeDuplicationTCFieldMap.keys();
+				while (enum.hasMoreElements()){
+					String testName = (String) enum.nextElement();				
+					int first = 0;
+					for (int j = 0; j < apages.length; j++){
+						apage = apages[j];
+						List testAtts = apage.getAllAttributeDescriptions();
+						for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+							AttributeDescription testAD = (AttributeDescription) iter.next();
+							if (!((testAD.getTableConstraint()+"."+testAD.getField()).equals(testName))) continue;
+							if (first != 0){
+								// TODO Remove attribute
+							}
+							first++;
+						}
+					}
+				}
+			}
+			else{
+				JOptionPane.showMessageDialog(null, "No Export performed",
+														  "ERROR", 0);					  
+							return;//no export performed
+			}
+		}		
+		*/
+		
+		
 		List filterDescriptions = templateConfig.getAllFilterDescriptions();
 		for (int i = 0; i < filterDescriptions.size(); i++){
 			FilterDescription fd = (FilterDescription) filterDescriptions.get(i);
-			
-			//if (fd.getInternalName().matches(".+\\..+")){
-				// change internal placeholders to template.filter
-				if (fd.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
+			// change internal placeholders to template.filter
+			if (fd.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
 					fd.setInternalName(fd.getInternalName().replaceFirst(dsConfig.getDataset(),template));
-			    } 
-			//}
+			} 
 			// hack to fix broken types in existing XML as updateConfigToTemplate uses list type to specify options	
 			if (fd.getType() != null && fd.getType().equals("list") && !(fd.getOptions().length > 0)){
 				fd.setType("text");
@@ -727,15 +837,13 @@ public class DatabaseDatasetConfigUtils {
 			}
 		}
 		
-		List attributeDescriptions = templateConfig.getAllAttributeDescriptions();
+		attributeDescriptions = templateConfig.getAllAttributeDescriptions();
 		for (int i = 0; i < attributeDescriptions.size(); i++){
-			AttributeDescription ad = (AttributeDescription) attributeDescriptions.get(i);
-			//if (ad.getInternalName().matches(".+\\..+")){
-			//	change internal placeholders to template.filter
-				if (ad.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
-					ad.setInternalName(ad.getInternalName().replaceFirst(dsConfig.getDataset(),template));
-				}
-			//}
+			AttributeDescription ad = (AttributeDescription) attributeDescriptions.get(i);		
+			// change internal placeholders to template.placeholder
+			if (ad.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
+				ad.setInternalName(ad.getInternalName().replaceFirst(dsConfig.getDataset(),template));
+			}
 			if (ad.getTableConstraint() != null && !ad.getTableConstraint().equals("main"))
 				ad.setTableConstraint(ad.getTableConstraint().split("__")[1]+"__"+ad.getTableConstraint().split("__")[2]);		
 			ad.setLinkoutURL("");		
@@ -1619,6 +1727,8 @@ System.out.println("!!! - UPDATING CONFIG TO TEMPLATE:"+dsConfig.getDataset());
 
 	
 	if (storeFlag == 1) storeTemplateXML(templateConfig,template);
+	//doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
+	//updateMartConfigForUser(MartEditor.getUser(),getSchema()[0]);
 	return dsConfig;
   }
 
