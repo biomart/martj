@@ -59,6 +59,13 @@ public interface Relation extends Comparable {
     public String getName();
     
     /**
+     * Returns the {@link ComponentStatus} of this {@link Relation}. The default value,
+     * unless otherwise specified, is INFERRED.
+     * @return the {@link ComponentStatus} of this {@link Relation}.
+     */
+    public ComponentStatus getStatus();
+    
+    /**
      * Returns the {@link PrimaryKey} of this {@link Relationship}.
      * @return the {@link PrimaryKey}
      */
@@ -196,8 +203,14 @@ public interface Relation extends Comparable {
         private final Cardinality fkc;
         
         /**
+         * Internal reference to the {@link ComponentStatus} of this {@link Relation}.
+         */
+        private ComponentStatus status;
+        
+        /**
          * This constructor tests that both ends of the {@link Relation} have
          * {@link Key</code>s with the same number of <code>Column}s.
+         * The default constructor sets the status to INFERRED.
          * @param pk the source {@link PrimaryKey}.
          * @param fk the target {@link ForeignKey}.
          * @param fkc the {@link Cardinality} of the {@link ForeignKey}.
@@ -216,6 +229,7 @@ public interface Relation extends Comparable {
             this.pk = pk;
             this.fk = fk;
             this.fkc = fkc;
+            this.status = ComponentStatus.INFERRED;
         }
         
         /**
@@ -233,6 +247,15 @@ public interface Relation extends Comparable {
             sb.append(this.getFKCardinality().toString());
             sb.append(")");
             return sb.toString();
+        }
+        
+        /**
+         * Returns the {@link ComponentStatus} of this {@link Relation}. The default value,
+         * unless otherwise specified, is INFERRED.
+         * @return the {@link ComponentStatus} of this {@link Relation}.
+         */
+        public ComponentStatus getStatus() {
+            return this.status;
         }
         
         /**

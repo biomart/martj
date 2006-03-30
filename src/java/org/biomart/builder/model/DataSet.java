@@ -26,15 +26,23 @@ package org.biomart.builder.model;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.model.Column.GenericColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.TableProviderNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.Key.CompoundPrimaryKey;
+import org.biomart.builder.model.Key.SimplePrimaryKey;
+import org.biomart.builder.model.Relation.OneToMany;
 import org.biomart.builder.model.Table.GenericTable;
 import org.biomart.builder.model.TableProvider.GenericTableProvider;
 
@@ -48,6 +56,31 @@ import org.biomart.builder.model.TableProvider.GenericTableProvider;
  * @since 0.1
  */
 public interface DataSet extends Comparable {
+    /**
+     * Constant representing the separator between bits of table names.
+     */
+    public static final String SEPARATOR = "__";
+    
+    /**
+     * Constant representing the suffix added to main table names.
+     */
+    public static final String MAIN_SUFFIX = "main";
+    
+    /**
+     * Constant representing the separator between main and subclass table names.
+     */
+    public static final String SUBCLASS_SEPARATOR = "__";
+    
+    /**
+     * Constant representing the prefix for a table provider partition column.
+     */
+    public static final String TBLPROVCOL_PREFIX = "__tblprov_";
+    
+    /**
+     * Constant representing the prefix for a concat column.
+     */
+    public static final String CONCATCOL_PREFIX = "__concat_";
+    
     /**
      * Returns the {@link Window} this {@link DataSet} is constructed from.
      * @return the {@link Window} for this {@link DataSet}.
@@ -82,7 +115,6 @@ public interface DataSet extends Comparable {
      * @return the {@link MartConstructor} for this {@link DataSet}.
      */
     public MartConstructor getMartConstructor();
-    
     
     /**
      * Request that the mart for this dataset be constructed now.
@@ -164,6 +196,148 @@ public interface DataSet extends Comparable {
             // Don't forget to include the 'hasXYZDimension' columns in the main table and subclassed main tables.
             // Plus, check partitionOnTableProvider when dealing with PartitionedTableProviders.
             // Check for masked columns, masked relations, concat only relations, and subclass relations.
+            
+            // Build a dummy table provider.
+            String dataSetName = this.getWindow().getName();
+            DataSetTableProvider tp = new DataSetTableProvider(this.getWindow().getName());
+            
+            // Identify main table.
+            Table centralTable = this.getWindow().getTable();
+            // if central table has subclass relations and is at the foreign key end, then follow
+            // them to the real central table.
+            for (Iterator i = centralTable.getForeignKeys().iterator(); i.hasNext(); ) {
+                Key k = (Key)i.next();
+                for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
+                    Relation r = (Relation)j.next();
+                    if (this.getWindow().getSubclassedRelations().contains(r)) {
+                        centralTable = r.getPrimaryKey().getTable();
+                        break;
+                    }
+                }
+            }
+                        
+            // Build main table and dimensions.
+            List ignorableRelations = new ArrayList();
+            List usefulRelations = new ArrayList();
+            List dimensionRelations = new ArrayList();
+            // find all rels off main table where not subclass and not at 1 end of 1:M,
+            // mark others as seen, then walk table. ignore masked ones of course.
+            // must do foreign keys first else we'll end up with 1:M to ourselves as dimensions.
+            for (Iterator j = centralTable.getForeignKeys().iterator(); j.hasNext(); ) {
+                Key k = (Key)j.next();
+                for (Iterator i = k.getRelations().iterator(); i.hasNext(); ) {
+                    Relation r = (Relation)i.next();
+                    if (this.getWindow().getMaskedRelations().contains(r)) {
+                        ignorableRelations.add(r);
+                    } else {
+                        if (this.getWindow().getSubclassedRelations().contains(r)) {
+                            ignorableRelations.add(r);
+                        }
+                    }
+                }
+            }
+            // then, primary keys.
+            if (centralTable.getPrimaryKey()!=null) for (Iterator i = centralTable.getPrimaryKey().getRelations().iterator(); i.hasNext(); ) {
+                Relation r = (Relation)i.next();
+                if (this.getWindow().getMaskedRelations().contains(r)) {
+                    ignorableRelations.add(r);
+                } else {
+                    if (r instanceof OneToMany) {
+                        // pk is in onetomany then we are at the 1 end of a 1:M and its a dimension
+                        dimensionRelations.add(r);
+                        ignorableRelations.add(r);
+                    } else if (this.getWindow().getSubclassedRelations().contains(r)) {
+                        ignorableRelations.add(r);
+                    }
+                }
+            }
+            // do the walk.
+            this.walkRelations(centralTable, usefulRelations, ignorableRelations);
+            // build the table.
+            this.mainTable = new DataSetTable(
+                    dataSetName+DataSet.SEPARATOR+
+                    centralTable.getName()+DataSet.SEPARATOR+DataSet.MAIN_SUFFIX,
+                    this, tp, DataSetTableType.MAIN, usefulRelations);
+            // build its columns.
+            List primaryKeyColumns = new ArrayList();
+            // add part tbl prov column if required
+            if (!this.getWindow().getPartitionOnTableProvider() && centralTable.getTableProvider() instanceof PartitionedTableProvider) {
+                Column c = new TableProviderNameColumn(this.TBLPROVCOL_PREFIX+this.mainTable.getName(), this.mainTable);
+                primaryKeyColumns.add(c);
+            }
+            // import columns from base table
+            for (Iterator i = centralTable.getColumns().iterator(); i.hasNext(); ) {
+                Column c = (Column)i.next();
+                if (!this.getWindow().getMaskedColumns().contains(c)) {
+                    // It's not masked, so add it. Constructor adds it to table for us.
+                    Column w = new WrappedColumn(c, this.mainTable);
+                    // if original was part of primary key, make the copy so on ours too.
+                    if (centralTable.getPrimaryKey().getColumns().contains(c)) {
+                        primaryKeyColumns.add(w);
+                    }
+                }
+            }
+            // import columns from all relations used
+            for (Iterator i = this.mainTable.getRelations().iterator(); i.hasNext(); ) {
+                Relation r = (Relation)i.next();
+                // normal or concat?
+                if (this.getWindow().getConcatOnlyRelations().contains(r)) {
+                    // concat
+                    Column c = new ConcatRelationColumn(this.CONCATCOL_PREFIX+r.getForeignKey().getTable().getName(), this.mainTable, r);
+                } else {
+                    // normal
+                    
+                    // how to work out which end of relation to add?
+                    
+                    // need to mark individual ends as added, but how to join ends together?
+                    
+                    // add cols to primary key
+                }
+            }
+            // construct primary key only if it has one or more columns.
+            if (primaryKeyColumns.size()>1) {
+                this.mainTable.setPrimaryKey(new CompoundPrimaryKey(primaryKeyColumns));
+            } else if (primaryKeyColumns.size()==1) {
+                this.mainTable.setPrimaryKey(new SimplePrimaryKey((Column)primaryKeyColumns.get(0)));
+            }
+            
+            // Build main dimensions.
+            
+            // Build subclass tables.
+            
+            // Build subclass dimensions.
+        }
+        
+        private void walkRelations(Table current, List usefulRelations, List ignorableRelations) {
+            // Relations off primary key first.
+            if (current.getPrimaryKey()!=null) this.walkRelations(current.getPrimaryKey(), usefulRelations, ignorableRelations);
+            // Then off the foreign keys.
+            for (Iterator i = current.getForeignKeys().iterator(); i.hasNext(); ) {
+                this.walkRelations((Key)i.next(), usefulRelations, ignorableRelations);
+            }
+        }
+        
+        private void walkRelations(Key sourceKey, List usefulRelations, List ignorableRelations) {
+            // Loop through all the relations on the key.
+            for (Iterator i = sourceKey.getRelations().iterator(); i.hasNext(); ) {
+                Relation r = (Relation)i.next();
+                // Can ignore it? Already used it?
+                if (!(ignorableRelations.contains(r) || usefulRelations.contains(r))) {
+                    // Is it masked?
+                    if (this.getWindow().getMaskedRelations().contains(r)) {
+                        ignorableRelations.add(r);
+                        continue;
+                    }
+                    // it's useful!
+                    usefulRelations.add(r);
+                    // Check that we're not at the parent end of a concat relation.
+                    if (!(this.getWindow().getConcatOnlyRelations().contains(r) && sourceKey.equals(r.getPrimaryKey()))) {
+                        // It isn't. Follow it!
+                        if (sourceKey.equals(r.getPrimaryKey())) this.walkRelations(r.getForeignKey(), usefulRelations, ignorableRelations);
+                        else this.walkRelations(r.getPrimaryKey(), usefulRelations, ignorableRelations);
+                    }
+                }
+            }
         }
         
         /**
@@ -295,25 +469,31 @@ public interface DataSet extends Comparable {
         private final DataSetTableType type;
         
         /**
+         * Internal reference to the dataset of this table.
+         */
+        private final DataSet ds;
+        
+        /**
          * The constructor calls the parent {@link GenericTable} constructor. It uses a
          * {@link DataSetTableProvider} as a parent for itself. You must also supply a type that
          * describes this as a main table, dimension table, etc., and a list of relations to follow
          * from the {@link Window} central table in order to build it.
          * @param name the table name.
+         * @param ds the {@link DataSet} this table belongs in.
          * @param prov the {@link DataSetTableProvider} to hold this table in.
          * @param type the {@link DataSetTableType} that best describes this table.
          * @param relations the list of {@link Relation}s to follow in order to obtain the structure
          * of this table. All lists start with a relation from the central table in the parent {@link Window}.
          * If the list is empty for a MAIN table then all the data comes from that central table. For
          * a DIMENSION or MAIN_SUBCLASS type, the list cannot be empty. The list must not be null.
-         * @throws NullPointerException if the name or type are null.
+         * @throws NullPointerException if any parameter is null.
          * @throws AssociationException if the relations didn't contain the right number of elements for
          * the table type.
          * @throws IllegalArgumentException if the relations list contained any null or non-Relation elements.
          * @throws AlreadyExistsException if the provider, for whatever reason, refuses to
          * allow this {@link Table} to be added to it using {@link DataSetTableProvider#addTable(Table)}.
          */
-        public DataSetTable(String name, DataSetTableProvider prov, DataSetTableType type, List relations) throws AlreadyExistsException, NullPointerException, AssociationException, IllegalArgumentException {
+        public DataSetTable(String name, DataSet ds, DataSetTableProvider prov, DataSetTableType type, List relations) throws AlreadyExistsException, NullPointerException, AssociationException, IllegalArgumentException {
             // Super call first.
             super(name, prov);
             // Sanity check.
@@ -321,8 +501,11 @@ public interface DataSet extends Comparable {
                 throw new NullPointerException("Table type cannot be null.");
             if (relations==null)
                 throw new NullPointerException("Relations list cannot be null.");
+            if (ds==null)
+                throw new NullPointerException("Dataset cannot be null.");
             // Do the work.
             this.type = type;
+            this.ds = ds;
             // Check the relations and save them.
             for (Iterator i = relations.iterator(); i.hasNext(); ) {
                 Object o = i.next();
@@ -346,6 +529,22 @@ public interface DataSet extends Comparable {
          */
         public DataSetTableType getType() {
             return this.type;
+        }
+        
+        /**
+         * Returns the dataset of this table specified at construction time.
+         * @return the dataset of this table.
+         */
+        public DataSet getDataSet() {
+            return this.ds;
+        }
+        
+        /**
+         * Returns the list of relations used to construct this table.
+         * @return the list of relations of this table. May be empty but never null.
+         */
+        public List getRelations() {
+            return this.relations;
         }
         
         /**
@@ -419,6 +618,24 @@ public interface DataSet extends Comparable {
                 throw new AlreadyExistsException("A table with that name already exists in this dataset.", name);
             // Do it.
             this.name = name;
+        }
+        
+        /**
+         * If this table is partitioned, returns the partitioning column(s). Otherwise, returns an empty set.
+         * @return a set, never null, of {@link Column}s this table is partitioned on.
+         */
+        public Collection getPartitionedColumns() {
+            Set cols = new HashSet();
+            for (Iterator i = this.getColumns().iterator(); i.hasNext(); ) {
+                DataSetColumn c = (DataSetColumn)i.next();
+                if (c instanceof TableProviderNameColumn && this.getDataSet().getWindow().getPartitionOnTableProvider()) {
+                    cols.add(c);
+                } else if (c instanceof WrappedColumn) {
+                    WrappedColumn wc = (WrappedColumn)c;
+                    if (this.getDataSet().getWindow().getPartitionedColumns().contains(wc)) cols.add(wc);
+                }
+            }
+            return cols;
         }
     }
     
@@ -523,7 +740,7 @@ public interface DataSet extends Comparable {
         
         /**
          * A column on a {@link DataSetTable} that indicates the presence of a record in some dimension table.
-         * These only appear on main tables. They take a reference to
+         * These only appear on main tables. They take a reference to a dimension table.
          */
         public static class HasDimensionColumn extends DataSetColumn {
             /**
@@ -565,6 +782,48 @@ public interface DataSet extends Comparable {
              */
             public DataSetTable getDimension() {
                 return this.dim;
+            }
+        }
+        
+        /**
+         * A column on a {@link DataSetTable} that indicates the cocnatentation of the primary key values of a record
+         * in some table beyond a concat-only relation. They take a reference to the concat-only relation.
+         */
+        public static class ConcatRelationColumn extends DataSetColumn {
+            /**
+             * Internal reference to the relation this column refers to.
+             */
+            private final Relation rel;
+            
+            /**
+             * The constructor takes a name for this column-to-be, and the {@link DataSetTable}
+             * on which it is to be constructed, and the {@link Relation} it represents.
+             * @param name the name to give this column.
+             * @param parent the parent {@link Table}.
+             * @param rel the concat only {@link Relation} it refers to.
+             * @throws AlreadyExistsException if the {@link DataSetTable} already has a column with
+             * that name.
+             * @throws AssociationException if the {@link Relation} is not a concat relation.
+             * @throws NullPointerException if any parameter is null.
+             */
+            public ConcatRelationColumn(String name, DataSetTable parent, Relation rel) throws NullPointerException, AlreadyExistsException, AssociationException {
+                // Super first.
+                super(name, parent);
+                // Sanity check.
+                if (rel==null)
+                    throw new NullPointerException("Relation cannot be null.");
+                if (!parent.getDataSet().getWindow().getConcatOnlyRelations().contains(rel))
+                    throw new AssociationException("This relation is not a concat relation.");
+                // Do it.
+                this.rel = rel;
+            }
+            
+            /**
+             * Returns the {@link Relation} this column refers to.
+             * @return the {@link Relation} for this column.
+             */
+            public Relation getRelation() {
+                return this.rel;
             }
         }
         

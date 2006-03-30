@@ -247,6 +247,7 @@ public interface Key extends Comparable {
          */
         public String getName() {
             StringBuffer sb = new StringBuffer();
+            sb.append(this.getTable().getName());
             sb.append("{");
             for (Iterator i = this.cols.iterator(); i.hasNext(); ) {
                 Column c = (Column)i.next();
