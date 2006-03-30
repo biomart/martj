@@ -1287,7 +1287,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	String template = dsConfig.getTemplate();
 	DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template);
 	dscutils.loadDatasetConfigWithDocument(templateConfig,getTemplateDocument(template));
-	
+
+System.out.println("!!! - UPDATING CONFIG TO TEMPLATE:"+dsConfig.getDataset());	
 	
 	// filter merge
 	List filters = dsConfig.getAllFilterDescriptions();
@@ -1348,7 +1349,10 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		Importable newImp = new Importable(tempImps[i]);
 		String[] filterNames = newImp.getFilters().split(",");
 		for (int j = 0; j < filterNames.length; j++){
-			if (!dsConfig.containsFilterDescription(filterNames[j])) continue OUTER; 
+			if (!dsConfig.containsFilterDescription(filterNames[j]) || 
+				(dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden() != null
+					&& dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden().equals("true"))) 
+						continue OUTER;
 		}
 		dsConfig.addImportable(newImp);
 	}
@@ -1375,7 +1379,11 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		Exportable newExp = new Exportable(tempExps[i]);
 		String[] attributeNames = newExp.getAttributes().split(",");
 		for (int j = 0; j < attributeNames.length; j++){
-			if (!dsConfig.containsAttributeDescription(attributeNames[j])) continue OUTER; 
+			//if (!dsConfig.containsAttributeDescription(attributeNames[j])) continue OUTER; 
+			if (!dsConfig.containsAttributeDescription(attributeNames[j]) || 
+				(dsConfig.getAttributeDescriptionByInternalName(attributeNames[j]).getHidden() != null
+					&& dsConfig.getAttributeDescriptionByInternalName(attributeNames[j]).getHidden().equals("true"))) 
+						continue OUTER;
 		}
 		dsConfig.addExportable(newExp);
 	}
