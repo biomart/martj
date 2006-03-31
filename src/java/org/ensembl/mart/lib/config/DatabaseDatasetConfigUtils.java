@@ -1739,7 +1739,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						continue;
 					
 					String configAttName = templateAttName;	
-					if (templateAttName.matches(".*"+dsConfig.getTemplate()+".+")){
+					if (templateAttName.matches(dsConfig.getTemplate()+".+")){
 						configAttName = templateAttName.replaceFirst(dsConfig.getTemplate(),dsConfig.getDataset());			
 					}
 					else{
