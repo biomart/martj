@@ -869,6 +869,16 @@ public class DatabaseDatasetConfigUtils {
 		filterDescriptions = templateConfig.getAllFilterDescriptions();
 		for (int i = 0; i < filterDescriptions.size(); i++){
 			FilterDescription fd = (FilterDescription) filterDescriptions.get(i);
+		    // make sure placeholders only have an internalName
+		    String internalName = fd.getInternalName();
+		    if (internalName.matches(".+\\..+")){
+				fd.setTableConstraint("");
+				fd.setField("");
+				fd.setDisplayName("");
+				fd.setDescription("");
+				fd.setKey("");		
+		    }
+			
 			// change internal placeholders to template.filter
 			if (fd.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
 					fd.setInternalName(fd.getInternalName().replaceFirst(dsConfig.getDataset(),template));
@@ -879,7 +889,8 @@ public class DatabaseDatasetConfigUtils {
 			}
 			
 			// remove dataset part from tableConstraint if present
-			if (fd.getTableConstraint() != null && !fd.getTableConstraint().equals("main"))			
+			if (fd.getTableConstraint() != null && !fd.getTableConstraint().equals("") 
+					&& !fd.getTableConstraint().equals("main"))			
 				fd.setTableConstraint(fd.getTableConstraint().split("__")[1]+"__"+fd.getTableConstraint().split("__")[2]);
 			fd.setOtherFilters("");
 			
@@ -901,11 +912,19 @@ public class DatabaseDatasetConfigUtils {
 		attributeDescriptions = templateConfig.getAllAttributeDescriptions();
 		for (int i = 0; i < attributeDescriptions.size(); i++){
 			AttributeDescription ad = (AttributeDescription) attributeDescriptions.get(i);		
+			String internalName = ad.getInternalName();
+			if (internalName.matches(".+\\..+")){
+				ad.setTableConstraint("");
+				ad.setField("");
+				ad.setDisplayName("");
+				ad.setDescription("");
+				ad.setKey("");	
+			}
 			// change internal placeholders to template.placeholder
 			if (ad.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
 				ad.setInternalName(ad.getInternalName().replaceFirst(dsConfig.getDataset(),template));
 			}
-			if (ad.getTableConstraint() != null && !ad.getTableConstraint().equals("main"))
+			if (ad.getTableConstraint() != null && !ad.getTableConstraint().equals("") && !ad.getTableConstraint().equals("main"))
 				ad.setTableConstraint(ad.getTableConstraint().split("__")[1]+"__"+ad.getTableConstraint().split("__")[2]);		
 			ad.setLinkoutURL("");		
 		}
@@ -1056,8 +1075,8 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 		String configCollectionName = configCollection.getInternalName();
 		
 		if (templateConfig.supportsAttributeDescription(configAttField,configAttTC)){
-			//System.out.println("1 - make sure dsConfig has same structure as templateConfig for this attribute:"
-			//	+configAtt.getInternalName()+":"+configAtt.getDisplayName()+":"+dsConfig.getDataset());
+			if (configAttName.equals("chr_name")) System.out.println("1 - make sure dsConfig has same structure as templateConfig for this attribute:"
+				+configAtt.getInternalName()+":"+configAtt.getDisplayName()+":"+dsConfig.getDataset());
 			
 			// remove att from old hierarchy in dsConfig
 			configCollection.removeAttributeDescription(configAtt);
@@ -1073,7 +1092,7 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 			// need to make sure get right template attribute: if more than one exists take the one with matching
 			// internalName as well				
 			AttributeDescription templateAttribute = templateConfig.getAttributeDescriptionByFieldNameTableConstraintInternalName(configAttField,configAttTC,configAttName);				
-			//System.out.println("GET FOR "+configAttField+":"+configAttTC+":"+configAttName+":"+templateAttribute.getInternalName());
+			if (configAttName.equals("chr_name")) System.out.println("GET FOR "+configAttField+":"+configAttTC+":"+configAttName+":"+templateAttribute.getInternalName());
 			
 			
 			//AttributeDescription templateAttribute = templateConfig.getAttributeDescriptionByFieldNameTableConstraint(configAttField,configAttTC);	
