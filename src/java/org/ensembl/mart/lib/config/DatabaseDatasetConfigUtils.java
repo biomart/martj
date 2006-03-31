@@ -1615,7 +1615,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	OUTER:for (int i = 0; i < tempImps.length; i++){
 		configImps = dsConfig.getImportables();
 		for (int j = 0; j < configImps.length; j++){
-			if (tempImps[i].getInternalName().equals(configImps[j].getInternalName())) continue OUTER;
+			if (tempImps[i].getInternalName().equals(configImps[j].getInternalName())
+				|| (tempImps[i].getFilters().equals(configImps[j].getFilters()))) continue OUTER;
 		}
 		Importable newImp = new Importable(tempImps[i]);
 		String[] filterNames = newImp.getFilters().split(",");
@@ -1645,7 +1646,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	OUTER:for (int i = 0; i < tempExps.length; i++){
 		configExps = dsConfig.getExportables();
 		for (int j = 0; j < configExps.length; j++){
-			if (tempExps[i].getInternalName().equals(configExps[j].getInternalName())) continue OUTER;
+			if (tempExps[i].getInternalName().equals(configExps[j].getInternalName())
+				|| (tempExps[i].getAttributes().equals(configExps[j].getAttributes()))) continue OUTER;
 		}
 		Exportable newExp = new Exportable(tempExps[i]);
 		String[] attributeNames = newExp.getAttributes().split(",");
@@ -1842,6 +1844,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	groupCounter = 0;
 	collectionCounter = 0;
 	descriptionCounter = 0;
+	int optionCounter = 0;
 	templatePages = templateConfig.getFilterPages();
 	for (int i = 0; i < templatePages.length; i++){
 		if (dsConfig.containsFilterPage(templatePages[i].getInternalName())){
@@ -1879,7 +1882,26 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 									dsConfigCollection.removeFilterDescription(dsConfigDescription);
 									dsConfigCollection.insertFilterDescription(descriptionCounter,dsConfigDescription);
 									descriptionCounter++;
-								}			
+									
+									
+									if (templateDescription.getOptions().length > 0 &&
+										(templateDescription.getTableConstraint() == null || 
+											templateDescription.getTableConstraint().equals(""))){
+										// fix filter option order
+										optionCounter = 0;
+										Option[] ops = templateDescription.getOptions();
+										for (int m = 0; m < ops.length; m++){
+											Option option = ops[m];
+											if (dsConfigDescription.containsOption(option.getInternalName())){
+												Option dsConfigOption = dsConfigDescription.getOptionByInternalName(option.getInternalName());
+												if (optionCounter >= dsConfigDescription.getOptions().length) continue;
+												dsConfigDescription.removeOption(dsConfigOption);
+												dsConfigDescription.insertOption(optionCounter,dsConfigOption);
+												optionCounter++;
+											}
+										}								
+									}															
+								}
 							}			
 						}			
 					}										
