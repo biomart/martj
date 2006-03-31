@@ -735,138 +735,9 @@ public class DatabaseDatasetConfigUtils {
 		DatasetConfig templateConfig = new DatasetConfig(dsConfig,true,false);
 		String template = dsConfig.getTemplate();
 		
-		// first get rid of any duplicated atts/filters in terms of TableConstraint and Fields
-		Hashtable descriptionsTCFieldMap = new Hashtable();// atts should have a unique TC and field
-		Hashtable attributeDuplicationTCFieldMap = new Hashtable();
-		String duplicatedAttString = "";
-		
-		List attributeDescriptions = templateConfig.getAllAttributeDescriptions();
-		for (int i = 0; i < attributeDescriptions.size(); i++){
-			AttributeDescription ad = (AttributeDescription) attributeDescriptions.get(i);
-			if (ad.getInternalName().matches("\\w+\\.\\w+") || ad.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
-					continue;//placeholder atts can be duplicated	
-			}
-				  
-			// don't allow any duplication of TC and field, even for hidden atts
-			if (descriptionsTCFieldMap.containsKey(ad.getTableConstraint()+"."+ad.getField())){
-					AttributePage apage = dsConfig.getPageForAttribute(ad.getInternalName());
-					AttributeGroup agroup = dsConfig.getGroupForAttribute(ad.getInternalName());
-					AttributeCollection acollection = dsConfig.getCollectionForAttribute(ad.getInternalName());
-					
-					attributeDuplicationTCFieldMap.put(ad.getTableConstraint()+"."+ad.getField(),
-						apage.getInternalName()+"->"+agroup.getInternalName()+"->"+acollection.getInternalName()+"->"
-						+ad.getInternalName()); 
-			}
-			descriptionsTCFieldMap.put(ad.getTableConstraint()+"."+ad.getField(),"1");
-		}
-		
-		if (attributeDuplicationTCFieldMap.size() > 0){
-			Enumeration enum = attributeDuplicationTCFieldMap.keys();
-			while (enum.hasMoreElements()){
-				String intName = (String) enum.nextElement();
-				duplicatedAttString = duplicatedAttString+"Attribute for "+intName+" at "+attributeDuplicationTCFieldMap.get(intName)+"\n";	
-			}
-		}
-	  	
-	  	if (duplicatedAttString != ""){
-			JOptionPane.showMessageDialog(null, "Remove duplicates before generating template. Use internal placeholders if really need duplication:\n"+duplicatedAttString, "ERROR",0);							  
-			return;//no export of template
-	  	}
-	  	// In future maybe offer auto removal but could be dangerous  
-		/*
-		if (duplicatedAttString != ""){
-			int choice = JOptionPane.showConfirmDialog(null, duplicatedAttString, "Remove duplicates?", JOptionPane.YES_NO_OPTION);							  
-			if (choice == 0){
-				Enumeration enum = attributeDuplicationTCFieldMap.keys();
-				while (enum.hasMoreElements()){
-					String testName = (String) enum.nextElement();				
-					int first = 0;
-					for (int j = 0; j < apages.length; j++){
-						apage = apages[j];
-						List testAtts = apage.getAllAttributeDescriptions();
-						for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
-							AttributeDescription testAD = (AttributeDescription) iter.next();
-							if (!((testAD.getTableConstraint()+"."+testAD.getField()).equals(testName))) continue;
-							if (first != 0){
-								// TODO Remove attribute
-							}
-							first++;
-						}
-					}
-				}
-			}
-			else{
-				JOptionPane.showMessageDialog(null, "No Export performed",
-														  "ERROR", 0);					  
-							return;//no export performed
-			}
-		}		
-		*/
-		
-		
-	// first get rid of any duplicated atts/filters in terms of TableConstraint and Fields
-	Hashtable filterDescriptionsTCFieldMap = new Hashtable();// atts should have a unique TC and field
-	Hashtable filterDuplicationTCFieldMap = new Hashtable();
-	String duplicatedFilterString = "";
-		
-	List filterDescriptions = templateConfig.getAllFilterDescriptions();
-	for (int i = 0; i < filterDescriptions.size(); i++){
-		FilterDescription fd = (FilterDescription) filterDescriptions.get(i);
-		if (fd.getInternalName().matches("\\w+\\.\\w+") || fd.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
-				continue;//placeholder atts can be duplicated	
-		}
-		
-		if (fd.getTableConstraint() == null && fd.getField() == null) {
-			if (filterDescriptionsTCFieldMap.containsKey(fd.getInternalName())) continue;
-			filterDescriptionsTCFieldMap.put(fd.getInternalName(),"1");//hack to stop drop down lists being redone
-			Option[] ops = fd.getOptions();
-			for (int j = 0; j < ops.length; j++){
-				System.out.println(ops[j].getInternalName()+":"+ops[j].getTableConstraint()+":"+ops[j].getField());
-				//fd = new FilterDescription(ops[j]);
-//				don't allow any duplication of TC and field, even for hidden atts
-				if (filterDescriptionsTCFieldMap.containsKey(ops[j].getTableConstraint()+"."+ops[j].getField())){
-						 FilterPage fpage = dsConfig.getPageForFilter(ops[j].getInternalName());
-						 FilterGroup fgroup = dsConfig.getGroupForFilter(ops[j].getInternalName());
-						 FilterCollection fcollection = dsConfig.getCollectionForFilter(ops[j].getInternalName());
-					
-						 filterDuplicationTCFieldMap.put(ops[j].getTableConstraint()+"."+ops[j].getField(),
-							 fpage.getInternalName()+"->"+fgroup.getInternalName()+"->"+fcollection.getInternalName()+"->"
-							 +ops[j].getInternalName()); 
-				}
-				filterDescriptionsTCFieldMap.put(ops[j].getTableConstraint()+"."+ops[j].getField(),"1");
-			}
-			continue;
-		} 		  
-		// don't allow any duplication of TC and field, even for hidden atts
-		if (filterDescriptionsTCFieldMap.containsKey(fd.getTableConstraint()+"."+fd.getField())){
-				FilterPage fpage = dsConfig.getPageForFilter(fd.getInternalName());
-				FilterGroup fgroup = dsConfig.getGroupForFilter(fd.getInternalName());
-				FilterCollection fcollection = dsConfig.getCollectionForFilter(fd.getInternalName());
-					
-				filterDuplicationTCFieldMap.put(fd.getTableConstraint()+"."+fd.getField(),
-					fpage.getInternalName()+"->"+fgroup.getInternalName()+"->"+fcollection.getInternalName()+"->"
-					+fd.getInternalName()); 
-		}
-		filterDescriptionsTCFieldMap.put(fd.getTableConstraint()+"."+fd.getField(),"1");
-	}
-		
-	if (filterDuplicationTCFieldMap.size() > 0){
-		Enumeration enum = filterDuplicationTCFieldMap.keys();
-		while (enum.hasMoreElements()){
-			String intName = (String) enum.nextElement();
-			duplicatedFilterString = duplicatedFilterString+"Filter for "+intName+" at "+filterDuplicationTCFieldMap.get(intName)+"\n";	
-		}
-	}
-	  	
-	if (duplicatedFilterString != ""){
-		JOptionPane.showMessageDialog(null, "Remove duplicates before generating template. Use internal placeholders if really need duplication:\n"+duplicatedFilterString, "ERROR",0);							  
-		return;//no export of template
-	}
-		
-		
-		
-		
-		filterDescriptions = templateConfig.getAllFilterDescriptions();
+		if (!uniqueCheckConfig(templateConfig)) return;	
+	
+		List filterDescriptions = templateConfig.getAllFilterDescriptions();
 		for (int i = 0; i < filterDescriptions.size(); i++){
 			FilterDescription fd = (FilterDescription) filterDescriptions.get(i);
 		    // make sure placeholders only have an internalName
@@ -909,7 +780,7 @@ public class DatabaseDatasetConfigUtils {
 			}
 		}
 		
-		attributeDescriptions = templateConfig.getAllAttributeDescriptions();
+		List attributeDescriptions = templateConfig.getAllAttributeDescriptions();
 		for (int i = 0; i < attributeDescriptions.size(); i++){
 			AttributeDescription ad = (AttributeDescription) attributeDescriptions.get(i);		
 			String internalName = ad.getInternalName();
@@ -1007,7 +878,107 @@ public class DatabaseDatasetConfigUtils {
 		}
   }
 
-  public void updateConfigsToTemplate(String template) throws ConfigurationException{
+  public boolean uniqueCheckConfig(DatasetConfig config){
+	// first get rid of any duplicated atts/filters in terms of TableConstraint and Fields
+	Hashtable descriptionsTCFieldMap = new Hashtable();// atts should have a unique TC and field
+	Hashtable attributeDuplicationTCFieldMap = new Hashtable();
+	String duplicatedAttString = "";
+		
+	List attributeDescriptions = config.getAllAttributeDescriptions();
+	for (int i = 0; i < attributeDescriptions.size(); i++){
+		AttributeDescription ad = (AttributeDescription) attributeDescriptions.get(i);
+		if (ad.getInternalName().matches("\\w+\\.\\w+") || ad.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+				continue;//placeholder atts can be duplicated	
+		}
+				  
+		// don't allow any duplication of TC and field, even for hidden atts
+		if (descriptionsTCFieldMap.containsKey(ad.getTableConstraint()+"."+ad.getField())){
+				AttributePage apage = config.getPageForAttribute(ad.getInternalName());
+				AttributeGroup agroup = config.getGroupForAttribute(ad.getInternalName());
+				AttributeCollection acollection = config.getCollectionForAttribute(ad.getInternalName());
+					
+				attributeDuplicationTCFieldMap.put(ad.getTableConstraint()+"."+ad.getField(),
+					apage.getInternalName()+"->"+agroup.getInternalName()+"->"+acollection.getInternalName()+"->"
+					+ad.getInternalName()); 
+		}
+		descriptionsTCFieldMap.put(ad.getTableConstraint()+"."+ad.getField(),"1");
+	}
+		
+	if (attributeDuplicationTCFieldMap.size() > 0){
+		Enumeration enum = attributeDuplicationTCFieldMap.keys();
+		while (enum.hasMoreElements()){
+			String intName = (String) enum.nextElement();
+			duplicatedAttString = duplicatedAttString+"Attribute for "+intName+" at "+attributeDuplicationTCFieldMap.get(intName)+"\n";	
+		}
+	}
+	  	
+	if (duplicatedAttString != ""){
+		JOptionPane.showMessageDialog(null, "Remove duplicates before generating template. Use internal placeholders if really need duplication:\n"+duplicatedAttString, "ERROR",0);							  
+		return false;//no export of template
+	}
+		
+	// first get rid of any duplicated atts/filters in terms of TableConstraint and Fields
+	Hashtable filterDescriptionsTCFieldMap = new Hashtable();// atts should have a unique TC and field
+	Hashtable filterDuplicationTCFieldMap = new Hashtable();
+	String duplicatedFilterString = "";
+		
+	List filterDescriptions = config.getAllFilterDescriptions();
+	for (int i = 0; i < filterDescriptions.size(); i++){
+		FilterDescription fd = (FilterDescription) filterDescriptions.get(i);
+		if (fd.getInternalName().matches("\\w+\\.\\w+") || fd.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+			continue;//placeholder atts can be duplicated	
+		}
+		
+		if (fd.getTableConstraint() == null && fd.getField() == null) {
+			if (filterDescriptionsTCFieldMap.containsKey(fd.getInternalName())) continue;
+			filterDescriptionsTCFieldMap.put(fd.getInternalName(),"1");//hack to stop drop down lists being redone
+			Option[] ops = fd.getOptions();
+			for (int j = 0; j < ops.length; j++){
+				//fd = new FilterDescription(ops[j]);
+				//	don't allow any duplication of TC and field, even for hidden atts
+				if (filterDescriptionsTCFieldMap.containsKey(ops[j].getTableConstraint()+"."+ops[j].getField()+"."+ops[j].getQualifier())){
+					 FilterPage fpage = config.getPageForFilter(ops[j].getInternalName());
+					 FilterGroup fgroup = config.getGroupForFilter(ops[j].getInternalName());
+					 FilterCollection fcollection = config.getCollectionForFilter(ops[j].getInternalName());
+					
+					 filterDuplicationTCFieldMap.put(ops[j].getTableConstraint()+"."+ops[j].getField()+"."+ops[j].getQualifier(),
+						 fpage.getInternalName()+"->"+fgroup.getInternalName()+"->"+fcollection.getInternalName()+"->"
+						 +ops[j].getInternalName()); 
+				}
+				filterDescriptionsTCFieldMap.put(ops[j].getTableConstraint()+"."+ops[j].getField()+"."+ops[j].getQualifier(),"1");
+			}
+			continue;
+		} 		  
+		// don't allow any duplication of TC and field, even for hidden atts
+		if (filterDescriptionsTCFieldMap.containsKey(fd.getTableConstraint()+"."+fd.getField()+"."+fd.getQualifier())){
+			FilterPage fpage = config.getPageForFilter(fd.getInternalName());
+			FilterGroup fgroup = config.getGroupForFilter(fd.getInternalName());
+			FilterCollection fcollection = config.getCollectionForFilter(fd.getInternalName());
+					
+			filterDuplicationTCFieldMap.put(fd.getTableConstraint()+"."+fd.getField()+"."+fd.getQualifier(),
+				fpage.getInternalName()+"->"+fgroup.getInternalName()+"->"+fcollection.getInternalName()+"->"
+				+fd.getInternalName()); 
+		}
+		filterDescriptionsTCFieldMap.put(fd.getTableConstraint()+"."+fd.getField()+"."+fd.getQualifier(),"1");
+	}
+		
+	if (filterDuplicationTCFieldMap.size() > 0){
+		Enumeration enum = filterDuplicationTCFieldMap.keys();
+		while (enum.hasMoreElements()){
+			String intName = (String) enum.nextElement();
+			duplicatedFilterString = duplicatedFilterString+"Filter for "+intName+" at "+filterDuplicationTCFieldMap.get(intName)+"\n";	
+		}
+	}
+	  	
+	if (duplicatedFilterString != ""){
+		JOptionPane.showMessageDialog(null, "Remove duplicates before generating template. Use internal placeholders if really need duplication:\n"+duplicatedFilterString, "ERROR",0);							  
+		return false;//no export of template
+	}
+  	return true;	  	
+  }
+
+  public void updateConfigsToTemplate(String template, DatasetConfig templateConfig) throws ConfigurationException{
+  	
   	// extract all the dataset configs matching template and call updateConfigToTemplate storing each one as returned
 	Connection conn = null;
 	try {
@@ -1017,32 +988,116 @@ public class DatabaseDatasetConfigUtils {
 		ResultSet rs = ps.executeQuery();
 		while(rs.next()){		
 			String datasetID = rs.getString(1);	
-			DatasetConfig dsv = null;
+			DatasetConfig dsConfig = null;
 			DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),MartEditor.getUser(), MartEditor.getMartUser(), true, false, true);
 			DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 			while (configs.hasNext()){
 				DatasetConfig lconfig = (DatasetConfig) configs.next();
 				if (lconfig.getDatasetID().equals(datasetID)){
-						dsv = lconfig;
+						dsConfig = lconfig;
 						break;
 				}
 			}
-			dsv.setTemplate(template);//needed otherwise gets set to dataset
+			dsConfig.setTemplate(template);//needed otherwise gets set to dataset
+		
+			// delete any non-placeholder filts/atts that are no longer in the template
+			List attributeDescriptions = dsConfig.getAllAttributeDescriptions();
+			for (int i = 0; i < attributeDescriptions.size(); i++){
+				AttributeDescription configAtt = (AttributeDescription) attributeDescriptions.get(i);
+				String configAttName = configAtt.getInternalName();
+				if (configAttName.matches(".+\\..+")) continue;
+				String configAttTC;
+				if (configAtt.getTableConstraint().equals("main"))
+					configAttTC = "main";
+				else	
+					configAttTC = configAtt.getTableConstraint().split("__")[1]+"__"+configAtt.getTableConstraint().split("__")[2];// template stores w/o the dataset part
+		
+				String configAttField = configAtt.getField(); 				
+				AttributePage configPage = dsConfig.getPageForAttribute(configAttName);
+				AttributeGroup configGroup = dsConfig.getGroupForAttribute(configAttName);
+				AttributeCollection configCollection = dsConfig.getCollectionForAttribute(configAttName);
+			
+				if (!templateConfig.supportsAttributeDescription(configAttField,configAttTC)){
+				// remove att from old hierarchy in dsConfig
+					configCollection.removeAttributeDescription(configAtt);
+					if (!(configCollection.getAttributeDescriptions().size() > 0)){
+						configGroup.removeAttributeCollection(configCollection);
+						if (!(configGroup.getAttributeCollections().length > 0)){
+							configPage.removeAttributeGroup(configGroup);
+							if (!(configPage.getAttributeGroups().size() > 0)){
+								dsConfig.removeAttributePage(configPage);
+							}					
+						}
+					}
+				}			
+			}	
+
+			List filterDescriptions = dsConfig.getAllFilterDescriptions();
+			for (int i = 0; i < filterDescriptions.size(); i++){
+				FilterDescription configAtt = (FilterDescription) filterDescriptions.get(i);
+				String configAttName = configAtt.getInternalName();
+				if (configAttName.matches(".+\\..+")) continue;
+				String configAttTC;
+				
+				if (configAtt.getOptions().length > 0 && (configAtt.getTableConstraint() == null || 
+					configAtt.getTableConstraint().equals(""))){
+					Option[] ops = configAtt.getOptions();
+					for (int j = 0; j < ops.length; j++){
+						//configAttName = ops[j].getInternalName();
+						if (ops[j].getTableConstraint().equals("main"))
+							configAttTC = "main";
+						else	
+							configAttTC = ops[j].getTableConstraint().split("__")[1]+"__"+ops[j].getTableConstraint().split("__")[2];// template stores w/o the dataset part
+						
+						if (!templateConfig.supportsFilterDescription(ops[j].getField(),configAttTC,ops[j].getQualifier())){
+							configAtt.removeOption(ops[j]);	
+						}
+					}
+					continue;
+				}
+				
+				if (configAtt.getTableConstraint() == null) continue;
+				
+				if (configAtt.getTableConstraint().equals("main"))
+					configAttTC = "main";
+				else	
+					configAttTC = configAtt.getTableConstraint().split("__")[1]+"__"+configAtt.getTableConstraint().split("__")[2];// template stores w/o the dataset part
+		
+				String configAttField = configAtt.getField(); 				
+				FilterPage configPage = dsConfig.getPageForFilter(configAttName);
+				FilterGroup configGroup = dsConfig.getGroupForFilter(configAttName);
+				FilterCollection configCollection = dsConfig.getCollectionForFilter(configAttName);
+			
+				if (!templateConfig.supportsFilterDescription(configAttField,configAttTC,configAtt.getQualifier())){			
+					// remove filter from old hierarchy in dsConfig
+					configCollection.removeFilterDescription(configAtt);
+					if (!(configCollection.getFilterDescriptions().size() > 0)){
+						configGroup.removeFilterCollection(configCollection);
+						if (!(configGroup.getFilterCollections().length > 0)){
+							configPage.removeFilterGroup(configGroup);
+							if (!(configPage.getFilterGroups().size() > 0)){
+								dsConfig.removeFilterPage(configPage);
+							}					
+						}
+					}
+				}			
+			}	
+						
 			storeDatasetConfiguration(
 										MartEditor.getUser(),
-										dsv.getInternalName(),
-										dsv.getDisplayName(),
-										dsv.getDataset(),
-										dsv.getDescription(),
-										MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsv),
+										dsConfig.getInternalName(),
+										dsConfig.getDisplayName(),
+										dsConfig.getDataset(),
+										dsConfig.getDescription(),
+										MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig),
 										true,
-										dsv.getType(),
-										dsv.getVisible(),
-										dsv.getVersion(),
-										dsv.getDatasetID(),
-										dsv.getMartUsers(),
-										dsv.getInterfaces(),
-										dsv);
+										dsConfig.getType(),
+										dsConfig.getVisible(),
+										dsConfig.getVersion(),
+										dsConfig.getDatasetID(),
+										dsConfig.getMartUsers(),
+										dsConfig.getInterfaces(),
+										dsConfig);
 		}
 	}
 	catch (SQLException e) {
@@ -1075,8 +1130,8 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 		String configCollectionName = configCollection.getInternalName();
 		
 		if (templateConfig.supportsAttributeDescription(configAttField,configAttTC)){
-			if (configAttName.equals("chr_name")) System.out.println("1 - make sure dsConfig has same structure as templateConfig for this attribute:"
-				+configAtt.getInternalName()+":"+configAtt.getDisplayName()+":"+dsConfig.getDataset());
+			//System.out.println("1 - make sure dsConfig has same structure as templateConfig for this attribute:"
+			//	+configAtt.getInternalName()+":"+configAtt.getDisplayName()+":"+dsConfig.getDataset());
 			
 			// remove att from old hierarchy in dsConfig
 			configCollection.removeAttributeDescription(configAtt);
@@ -1092,21 +1147,16 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 			// need to make sure get right template attribute: if more than one exists take the one with matching
 			// internalName as well				
 			AttributeDescription templateAttribute = templateConfig.getAttributeDescriptionByFieldNameTableConstraintInternalName(configAttField,configAttTC,configAttName);				
-			if (configAttName.equals("chr_name")) System.out.println("GET FOR "+configAttField+":"+configAttTC+":"+configAttName+":"+templateAttribute.getInternalName());
-			
 			
 			//AttributeDescription templateAttribute = templateConfig.getAttributeDescriptionByFieldNameTableConstraint(configAttField,configAttTC);	
 			AttributePage templatePage = templateConfig.getPageForAttribute(templateAttribute.getInternalName());
 			AttributeGroup templateGroup = templateConfig.getGroupForAttribute(templateAttribute.getInternalName());
 			AttributeCollection templateCollection = templateConfig.getCollectionForAttribute(templateAttribute.getInternalName());			
-
-							
+						
 			AttributeDescription configAttToAdd = new AttributeDescription(templateAttribute);
 			configAttToAdd.setTableConstraint(configAtt.getTableConstraint());
 			configAttToAdd.setField(configAtt.getField());
 			configAttToAdd.setLinkoutURL(configAtt.getLinkoutURL());			
-
-			
 			
 			AttributePage dsConfigPage = dsConfig.getAttributePageByInternalName(templatePage.getInternalName());
 			if (dsConfigPage == null){
@@ -1124,8 +1174,8 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 				if (templateCollection.getMaxSelectString() != null) dsConfigCollection.setMaxSelect(templateCollection.getMaxSelectString());
 				if (templateCollection.getHidden() != null) dsConfigCollection.setHidden(templateCollection.getHidden());
 				if (templateAttribute.getHidden() != null) configAttToAdd.setHidden(templateAttribute.getHidden());
-				if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
-					configAttToAdd.setHidden("true");
+				//if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+				//	configAttToAdd.setHidden("true");
 				
 				dsConfig.addAttributePage(dsConfigPage);
 				dsConfigPage.addAttributeGroup(dsConfigGroup);
@@ -1151,8 +1201,10 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 					if (templateAttribute.getHidden() != null) configAttToAdd.setHidden(templateAttribute.getHidden());
 					if (templateGroup.getMaxSelectString() != null) dsConfigGroup.setMaxSelect(templateGroup.getMaxSelectString());
 					if (templateCollection.getMaxSelectString() != null) dsConfigCollection.setMaxSelect(templateCollection.getMaxSelectString());	
-					if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
-						configAttToAdd.setHidden("true");
+					if (templateCollection.getHidden() != null) dsConfigCollection.setHidden(templateCollection.getHidden());
+					if (templateAttribute.getHidden() != null) configAttToAdd.setHidden(templateAttribute.getHidden());
+					//if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+						//configAttToAdd.setHidden("true");
 					dsConfigPage.addAttributeGroup(dsConfigGroup);
 					dsConfigGroup.addAttributeCollection(dsConfigCollection);
 					dsConfigCollection.addAttributeDescription(configAttToAdd);	
@@ -1170,8 +1222,8 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 						if (templateAttribute.getHidden() != null) configAttToAdd.setHidden(templateAttribute.getHidden());
 
 						if (templateCollection.getMaxSelectString() != null) dsConfigCollection.setMaxSelect(templateCollection.getMaxSelectString());
-						if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
-							configAttToAdd.setHidden("true");
+						//if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+							//configAttToAdd.setHidden("true");
 						dsConfigGroup.addAttributeCollection(dsConfigCollection);
 						dsConfigCollection.addAttributeDescription(configAttToAdd);	
 					}
@@ -1180,8 +1232,8 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 						if (templateCollection.getDescription() != null) dsConfigCollection.setDescription(templateCollection.getDescription());
 						if (templateCollection.getMaxSelectString() != null) dsConfigCollection.setMaxSelect(templateCollection.getMaxSelectString());
 						if (templateAttribute.getHidden() != null) configAttToAdd.setHidden(templateAttribute.getHidden());
-						if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
-							configAttToAdd.setHidden("true");
+						//if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+							//configAttToAdd.setHidden("true");
 						// put in a check for this and FILTERS that the same configAtt not already added
 						// this can happen when original config has duplicate filters and atts in terms of TC and Fields
 						if (!dsConfigCollection.containsAttributeDescription(configAttToAdd.getInternalName()))
@@ -1226,11 +1278,14 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 			}
 			
 			AttributeDescription templateAttToAdd = new AttributeDescription(configAtt);
-			templateAttToAdd.setTableConstraint("");
-			templateAttToAdd.setField("");
+			if (templateAttToAdd.getTableConstraint() != null && !templateAttToAdd.getTableConstraint().equals("") 
+				&& !templateAttToAdd.getTableConstraint().equals("main"))
+					templateAttToAdd.setTableConstraint(templateAttToAdd.getTableConstraint().split("__")[1]+"__"+templateAttToAdd.getTableConstraint().split("__")[2]);		
+			//templateAttToAdd.setTableConstraint("");
+			//templateAttToAdd.setField("");
 			templateAttToAdd.setLinkoutURL("");
 			if (configAtt.getHidden() != null) templateAttToAdd.setHidden(configAtt.getHidden());			
-				templateCollection.addAttributeDescription(templateAttToAdd);					
+			templateCollection.addAttributeDescription(templateAttToAdd);					
 		}
 }
 
@@ -1257,7 +1312,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
   String configGroupName = configGroup.getInternalName();
   FilterCollection configCollection = dsConfig.getCollectionForFilter(configAttName);
   String configCollectionName = configCollection.getInternalName();
-  if (templateConfig.supportsFilterDescription(configAttField,configAttTC,null)){// will find option filters as well
+  if (templateConfig.supportsFilterDescription(configAttField,configAttTC,configAtt.getQualifier())){// will find option filters as well
     //System.out.println("1 - make sure dsConfig has same structure as templateConfig for this filter:"
 	//	  +configAtt.getInternalName()+":"+configAtt.getDisplayName()+":"+dsConfig.getDataset());		
 	  // remove att from old hierarchy in dsConfig
@@ -1300,7 +1355,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		  for (int j = 0; j < ops.length; j++){
 			  if (ops[j].getTableConstraint().equals(configAttTC) &&
 				  ops[j].getField().equals(configAttField)){
-					  Option opToAdd = ops[j];
+					  //Option opToAdd = ops[j];
+					  Option opToAdd = new Option(ops[j]);
 					  opToAdd.setTableConstraint(configAtt.getTableConstraint());
 					  FilterDescription configFilterList = dsConfig.getFilterDescriptionByInternalName(templateFilter.getInternalName());
 					  if (configFilterList != null){
@@ -1322,6 +1378,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		  configAttToAdd = new FilterDescription(templateFilter);
 		  configAttToAdd.setTableConstraint(configAtt.getTableConstraint());
 		  configAttToAdd.setField(configAtt.getField());
+		  configAttToAdd.setOtherFilters(configAtt.getOtherFilters());
 		  if (templateFilter.getType().equals("list")){
 			String colForDisplay = "";
 			if (configAttToAdd.getColForDisplay() != null){
@@ -1342,8 +1399,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		  }
 	  }
 	  
-	  if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
-			configAttToAdd.setHidden("true");
+	  //if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+		//	configAttToAdd.setHidden("true");
 	  
 	  	    
 	  FilterPage dsConfigPage = dsConfig.getFilterPageByName(templatePage.getInternalName());
@@ -1360,8 +1417,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		  if (templateGroup.getHidden() != null) dsConfigGroup.setHidden(templateGroup.getHidden());
 		  if (templateCollection.getHidden() != null) dsConfigCollection.setHidden(templateCollection.getHidden());
 		  if (templateFilter.getHidden() != null) configAttToAdd.setHidden(templateFilter.getHidden());
-		  if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
-				configAttToAdd.setHidden("true");		
+		  //if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+			//	configAttToAdd.setHidden("true");		
 		  dsConfig.addFilterPage(dsConfigPage);
 		  dsConfigPage.addFilterGroup(dsConfigGroup);
 		  dsConfigGroup.addFilterCollection(dsConfigCollection);
@@ -1382,8 +1439,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			  if (templateGroup.getHidden() != null) dsConfigGroup.setHidden(templateGroup.getHidden());
 			  if (templateCollection.getHidden() != null) dsConfigCollection.setHidden(templateCollection.getHidden());
 			  if (templateFilter.getHidden() != null) configAttToAdd.setHidden(templateFilter.getHidden());
-			  if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
-					configAttToAdd.setHidden("true");		
+			  //if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+				//	configAttToAdd.setHidden("true");		
 			  dsConfigPage.addFilterGroup(dsConfigGroup);
 			  dsConfigGroup.addFilterCollection(dsConfigCollection);
 			  dsConfigCollection.addFilterDescription(configAttToAdd);	
@@ -1398,8 +1455,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 
 				  if (templateCollection.getHidden() != null) dsConfigCollection.setHidden(templateCollection.getHidden());
 				  if (templateFilter.getHidden() != null) configAttToAdd.setHidden(templateFilter.getHidden());
-				  if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
-						configAttToAdd.setHidden("true");
+				  //if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+					//	configAttToAdd.setHidden("true");
 				  dsConfigGroup.addFilterCollection(dsConfigCollection);
 				  dsConfigCollection.addFilterDescription(configAttToAdd);	
 			  }
@@ -1407,8 +1464,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 				  if (templateCollection.getDisplayName() != null) dsConfigCollection.setDisplayName(templateCollection.getDisplayName());
 				  if (templateCollection.getDescription() != null) dsConfigCollection.setDescription(templateCollection.getDescription());
 				  if (templateFilter.getHidden() != null) configAttToAdd.setHidden(templateFilter.getHidden());
-				  if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
-						configAttToAdd.setHidden("true");
+				  //if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
+					//	configAttToAdd.setHidden("true");
 				  // put in a check for this and FILTERS that the same configAtt not already added
 				  // this can happen when original config has duplicate filters and atts in terms of TC and Fields
 				  
@@ -1450,8 +1507,34 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	  }
 			
 	  FilterDescription templateAttToAdd = new FilterDescription(configAtt);
-	  templateAttToAdd.setTableConstraint("");
-	  templateAttToAdd.setField("");
+	  
+	  // hack to fix broken types in existing XML as updateConfigToTemplate uses list type to specify options	
+	  if (templateAttToAdd.getType() != null && templateAttToAdd.getType().equals("list") && !(templateAttToAdd.getOptions().length > 0)){
+			templateAttToAdd.setType("text");
+	  }
+	
+	//templateAttToAdd.setTableConstraint("");
+	//templateAttToAdd.setField("");		
+	  // remove dataset part from tableConstraint if present
+	  if (templateAttToAdd.getTableConstraint() != null && !templateAttToAdd.getTableConstraint().equals("") 
+				&& !templateAttToAdd.getTableConstraint().equals("main"))			
+			templateAttToAdd.setTableConstraint(templateAttToAdd.getTableConstraint().split("__")[1]+"__"+templateAttToAdd.getTableConstraint().split("__")[2]);
+	  templateAttToAdd.setOtherFilters("");
+			
+	  Option[] ops = templateAttToAdd.getOptions();
+	  for (int j = 0; j < ops.length; j++){
+		Option op = ops[j];
+		// if a value option remove it
+		if (op.getTableConstraint() == null){
+			templateAttToAdd.removeOption(op);
+			continue;		
+		}
+		// if a filter option remove dataset part from tableConstraint
+		if (!op.getTableConstraint().equals("main"))
+			op.setTableConstraint(op.getTableConstraint().split("__")[1]+"__"+op.getTableConstraint().split("__")[2]);
+		op.setOtherFilters("");
+	  }	  
+	  
 	  if (configAtt.getHidden() != null) templateAttToAdd.setHidden(configAtt.getHidden());			
 	  // need to test if needs to be an option instead
 	  if (upstreamFilterName != null){
@@ -1476,7 +1559,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template);
 	dscutils.loadDatasetConfigWithDocument(templateConfig,getTemplateDocument(template));
 
-System.out.println("!!! - UPDATING CONFIG TO TEMPLATE:"+dsConfig.getDataset());	
+	System.out.println("!!! - UPDATING CONFIG TO TEMPLATE:"+dsConfig.getDataset());	
 	
 	// filter merge
 	List filters = dsConfig.getAllFilterDescriptions();
