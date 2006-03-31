@@ -807,8 +807,15 @@ System.out.println ("getting driver "+ driver);
 	  disableCursor();
 
 	  String[] templates = dbutils.getAllTemplateNames();
+	  List testedTemplates = new ArrayList();
+	  for (int i = 0; i < templates.length; i++){
+	  		if (dbutils.templateCount(templates[i]) > 1) testedTemplates.add((String) templates[i]);
+	  }
+	  templates = new String[testedTemplates.size()];
+	  testedTemplates.toArray(templates);
+	  
 	  if (templates.length == 0){
-		JOptionPane.showMessageDialog(this, "No templates in this database", "ERROR", 0);
+		JOptionPane.showMessageDialog(this, "No templates (referring to > 1 dataset) in this database", "ERROR", 0);
 				return;
 	  }
 		 String template =

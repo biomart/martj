@@ -125,6 +125,8 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             			config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template);
             			MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(config,
             				MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template));
+            			config.setTemplateFlag("1");	
+           					
             		}
             		else{
       //              ignore cache, do not loadFully, include hidden members
@@ -154,11 +156,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
           else{
           	config = new DatasetConfig(dsv, true, false);
           }
-            //this.setTitle(config.getInternalName());
-             
-            //config.getDataset();
-            //config.getAdaptor().getDataSource();
-          
+        
 			this.setTitle(schema + "." + config.getDataset());
             JFrame.setDefaultLookAndFeelDecorated(true);
 
@@ -166,10 +164,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
                     config, this);
             tree = new DatasetConfigTree(config,
                     this, attrTable);
-                    
-			//DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
-			//renderer.setTextNonSelectionColor(Color.red);
-			//tree.setCellRenderer(renderer);        
+  
 			tree.setCellRenderer(new MyRenderer());        
             // for update         
             setDatasetConfig(config);
@@ -192,6 +187,9 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             setSize(800, 400);
 			int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateCount(config.getTemplate());
 			if (template == null && templateCount > 1){// flag non-template XMLs with a template origin
+			
+				JOptionPane.showMessageDialog(null,"This config is under template control. You need to edit the template in the majority of cases");
+			
 				Importable[] imps = config.getImportables();
 				for (int i = 0; i < imps.length; i++){
 					imps[i].setTemplateDrivenFlag(1);

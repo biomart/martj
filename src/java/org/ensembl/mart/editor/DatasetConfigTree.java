@@ -1205,7 +1205,10 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 
 	public void export() throws ConfigurationException {
 		dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
-		
+		if (dsConfig.getTemplateFlag() != null){
+			JOptionPane.showMessageDialog(null,"This is a template config rather than standard dataset config","",JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 		MartEditor.getDatabaseDatasetConfigUtils().storeDatasetConfiguration(
 			MartEditor.getUser(),
 			dsConfig.getInternalName(),
@@ -1225,10 +1228,13 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 	
 	public void exportTemplate() throws ConfigurationException {
 		dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
+		if (dsConfig.getTemplateFlag() == null){
+			JOptionPane.showMessageDialog(null,"This is not a template config","",JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 		if (!MartEditor.getDatabaseDatasetConfigUtils().uniqueCheckConfig(dsConfig)) return;
 		MartEditor.getDatabaseDatasetConfigUtils().storeTemplateXML(dsConfig,dsConfig.getTemplate());
 		// update config to template
-		System.out.println("TEMPLATE BEING USED IS "+dsConfig.getTemplate());
 		MartEditor.getDatabaseDatasetConfigUtils().updateConfigsToTemplate(dsConfig.getTemplate(),dsConfig);
 	}
 

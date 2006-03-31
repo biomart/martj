@@ -84,6 +84,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   private List importables = new ArrayList();
   private List exportables = new ArrayList();
 
+  private String templateFlag = null;
+
   private List primaryKeys = new ArrayList();
   private boolean hasBrokenPrimaryKeys = false;
 
@@ -308,6 +310,15 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(templateKey,template);
 	setRequiredFields(reqFields);
   }
+  
+
+	public void setTemplateFlag(String flag) {
+	  templateFlag = flag;
+	}
+	
+	public String getTemplateFlag() {
+	  return templateFlag;
+	}	
   
   
 /**
