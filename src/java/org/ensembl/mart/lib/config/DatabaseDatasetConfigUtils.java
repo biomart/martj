@@ -5265,10 +5265,10 @@ public int templateCount(String template) throws ConfigurationException{
     fcList.setDisplayName("ID LIST");
 
     FilterDescription fdBools = new FilterDescription();
-    fdBools.setInternalName("id_list_filters");
+    fdBools.setInternalName("new_id_list_filters");
     fdBools.setType("boolean_list");
     FilterDescription fdLists = new FilterDescription();
-    fdLists.setInternalName("id_list_limit_filters");
+    fdLists.setInternalName("new_id_list_limit_filters");
     fdLists.setType("id_list");
 
     for (int i = 0, n = allTables.size(); i < n; i++) {
