@@ -61,9 +61,10 @@ public class NaiveCLI {
     public void execute(TableProvider tp, String name, File file) throws Exception {
         Schema s = new Schema();
         s.addTableProvider(tp);
+        s.synchronise(); // causes the table provider to load up its info
         Table t = tp.getTableByName(name);
         Window w = new Window(s, t, t.getName());
-        s.synchronise(); // causes w to synchronise and the dataset to regenerate
+        w.synchronise(); // causes the dataset to regenerate
         SchemaSaver.save(s, file);
         // Replace the saver line with a call to setMartConstructor() and 
         // then call constructMart() to make SQL instead.
@@ -76,12 +77,11 @@ public class NaiveCLI {
      * based around the table named in the third parameter. The resulting
      * schema XML is printed out to the file named in the fourth parameter.
      * @param args the command line arguments.
-     * @return 0 if successul, -1 if not.
      */
-    public static int main(String args[]) {
+    public static void main(String[] args) {
         if (args.length<4) {
-            System.err.println("usage: org.biomart.builder.view.NaiveCLI <driver class> <connection string> <table name> <output file>");
-            return -1;
+            System.err.println("usage: java org.biomart.builder.view.NaiveCLI <driver class> <connection string> <table name> <output file>");
+            return;
         }
         try {
             Class.forName(args[0]);
@@ -89,10 +89,8 @@ public class NaiveCLI {
             String tableName = args[2];
             File file = new File(args[3]);
             (new NaiveCLI()).execute(tp, tableName, file);
-            return 0;
         } catch (Throwable t) {
             t.printStackTrace(System.err);
-            return -2;
         }
     }
     

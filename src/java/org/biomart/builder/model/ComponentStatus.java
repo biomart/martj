@@ -37,6 +37,11 @@ import java.util.Map;
  */
 public class ComponentStatus implements Comparable {
     /**
+     * Internal reference to the set of {@link ComponentStatus} singletons.
+     */
+    private static final Map singletons = new HashMap();
+    
+    /**
      * Use this constant to refer to a component that was inferred from the database
      * and is assumed to be correct.
      */
@@ -57,11 +62,6 @@ public class ComponentStatus implements Comparable {
      * Internal reference to the name of this {@link ComponentStatus}.
      */
     private final String name;
-    
-    /**
-     * Internal reference to the set of {@link ComponentStatus} singletons.
-     */
-    private static final Map singletons = new HashMap();
     
     /**
      * The static factory method creates and returns a {@link ComponentStatus}

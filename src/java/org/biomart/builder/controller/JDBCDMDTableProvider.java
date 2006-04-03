@@ -65,7 +65,7 @@ public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDa
     /**
      * Internal reference to the JDBC connection.
      */
-    private Connection conn;
+    private transient Connection conn;
     
     /**
      * Creates a new instance of JDBCDMDTableProvider based around
@@ -162,7 +162,10 @@ public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDa
             String tableName = dbTables.getString("TABLE_NAME");
             // If its a new table, create and add it. Otherwise, just look it up.
             Table dbTable = this.getTableByName(tableName);
-            if (dbTable==null) dbTable = new GenericTable(tableName, this);
+            if (dbTable==null) {
+                dbTable = new GenericTable(tableName, this);
+                this.tables.put(dbTable.getName(), dbTable);
+            }
             
             // For each table loaded, temporarily preserve existing columns. Refer
             // to them as removed columns as by the end of this the set will only
@@ -201,9 +204,9 @@ public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDa
             if (!pkCols.isEmpty()) {
                 // Create and set the primary key (only if existing one is not the same).
                 PrimaryKey newPK;
-                if (pkCols.size()==1) newPK = new SimplePrimaryKey(((Column[])pkCols.values().toArray())[0]);
+                if (pkCols.size()==1) newPK = new SimplePrimaryKey((Column)pkCols.values().toArray()[0]);
                 else newPK = new CompoundPrimaryKey(new ArrayList(pkCols.values()));
-                if (!existingPK.equals(newPK)) dbTable.setPrimaryKey(newPK);
+                if (existingPK==null || !existingPK.equals(newPK)) dbTable.setPrimaryKey(newPK);
             } else {
                 // Remove the primary key on this table, but only if the existing one is not handmade.
                 if (existingPK!=null && !existingPK.getStatus().equals(ComponentStatus.HANDMADE)) dbTable.setPrimaryKey(null);
@@ -288,16 +291,17 @@ public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDa
                         removedFKs.remove(newFK); // don't drop it any more!
                     } 
                     
-                    // Check to see if there is already a relation between the PK and each FK. If
+                    // Check to see if there is already a relation between the PK and the FK. If
                     // so, reuse it. If not, create one.                   
-                    for (Iterator f = removedRels.iterator(); f.hasNext(); ) {
+                    boolean relationExists = false;
+                    for (Iterator f = removedRels.iterator(); f.hasNext() && !relationExists; ) {
                         Relation r = (Relation)f.next();
                         if (r.getForeignKey().equals(newFK)) {
                             f.remove(); // don't drop it, just leave it untouched and reuse it.
-                        } else {
-                            new OneToMany(pk, newFK); // create and add it.
+                            relationExists = true;
                         }
                     }
+                    if (!relationExists) new OneToMany(pk, newFK); // create and add it.
                 }
             }
             

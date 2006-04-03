@@ -94,9 +94,14 @@ public class SchemaSaver {
     static {
         xstream = new XStream();
         
+        xstream.setMode(XStream.ID_REFERENCES);
+        
         xstream.registerConverter(new ComponentStatusConverter());
         xstream.registerConverter(new ConcatRelationTypeConverter());
         xstream.registerConverter(new CardinalityConverter());
+        xstream.registerConverter(new DataSetTableTypeConverter());
+        
+        xstream.alias("schema",Schema.class);
         
         xstream.alias("genericColumn",GenericColumn.class);
         xstream.alias("status",ComponentStatus.class);
@@ -281,6 +286,40 @@ public class SchemaSaver {
          */
         protected String toString(Object obj) throws ConversionException {
             return ((Cardinality)obj).toString();
+        }
+    }
+    
+    /**
+     * This converter deals with the various DataSetTableType singletons we have in the object model.
+     */
+    protected static class DataSetTableTypeConverter extends AbstractBasicConverter {
+        /**
+         * Called by XStream to determine whether to use this converter instance to marshall a particular type.
+         * @param type the type to check.
+         * @return true if it can convert it, false if not.
+         */
+        public boolean canConvert(Class type) {
+            return type.equals(DataSetTableType.class);
+        }
+        
+        /**
+         * Converts singletons from strings.
+         * @param str the string representing the singleton.
+         * @return the singleton.
+         * @throws ConversionException if the conversion failed.
+         */
+        protected Object fromString(String str) throws ConversionException {
+            return DataSetTableType.get(str);
+        }
+        
+        /**
+         * Converts singletons to strings.
+         * @param obj the singleton.
+         * @return the string representing the singleton.
+         * @throws ConversionException if the conversion failed.
+         */
+        protected String toString(Object obj) throws ConversionException {
+            return ((DataSetTableType)obj).toString();
         }
     }
 }

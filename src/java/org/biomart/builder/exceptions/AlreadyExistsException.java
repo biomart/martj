@@ -39,6 +39,6 @@ public class AlreadyExistsException extends BuilderException {
      * @param name the name of the object that already exists.
      */
     public AlreadyExistsException(String msg, String name) {
-        super(msg+" ("+name+"");
+        super(msg+" ("+name+")");
     }
 }

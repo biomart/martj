@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.model.DataSet.GenericDataSet;
@@ -119,15 +120,17 @@ public class Window implements Comparable {
     /**
      * The constructor creates a {@link Window} around one central {@link Table} and
      * gives it a name. It also initiates a {@link DataSet} ready to contain the transformed
-     * results.
+     * results. It adds itself to the specified schema automatically.
      * @param s the {@link Schema} this {@link Window} will belong to.
      * @param t the {@link Table} to use as the central table.
      * @param name the name to give this {@link Window}.
      * @throws NullPointerException if any parameter is null.
      * @throws AssociationException if the {@link Table} does not belong to any of the
      * {@link TableProvider} objects in the {@link Schema} this {@link Window} belongs to.
+     * @throws AlreadyExistsException if another {@link Window} with exactly the same name already exists
+     * in the specified schema.
      */
-    public Window(Schema s, Table t, String name) throws NullPointerException, AssociationException {
+    public Window(Schema s, Table t, String name) throws NullPointerException, AssociationException, AlreadyExistsException {
         // Sanity check.
         if (s==null)
             throw new NullPointerException("Schema cannot be null.");
@@ -144,6 +147,8 @@ public class Window implements Comparable {
         this.dataset = new GenericDataSet(this);
         // Predict some sensible defaults.
         this.predictRelationTypes();
+        // Add ourselves.
+        s.addWindow(this);
     }
     
     /**
@@ -201,7 +206,7 @@ public class Window implements Comparable {
             throw new NullPointerException("Current table cannot be null.");
         // Find all relations from this table.
         Set relations = new HashSet();
-        relations.addAll(current.getPrimaryKey().getRelations());
+        if (current.getPrimaryKey()!=null) relations.addAll(current.getPrimaryKey().getRelations());
         for (Iterator i = current.getForeignKeys().iterator(); i.hasNext(); ) {
             Key k = (Key)i.next();
             relations.addAll(k.getRelations());
@@ -220,14 +225,15 @@ public class Window implements Comparable {
             // Work out where to go next.
             if (r.getPrimaryKey().getTable().equals(current) && (r instanceof OneToMany)) {
                 // If current is at the one end of a one-to-many relation, then
-                // up the count and recurse down it.
+                // up the count and recurse down it.    
                 this.walkRelations(r.getForeignKey().getTable(), currentDepth+1);
             } else {
                 // Otherwise, recurse down it anyway but leave the count as-is.
-                if (r.getPrimaryKey().getTable().equals(current))
+                if (r.getPrimaryKey().getTable().equals(current)) {
                     this.walkRelations(r.getForeignKey().getTable(), currentDepth);
-                else
+                } else {
                     this.walkRelations(r.getPrimaryKey().getTable(), currentDepth);
+                }
             }
         }
     }
@@ -561,7 +567,7 @@ public class Window implements Comparable {
                 deadColumns.removeAll(t.getColumns());
                 // Only need primary key as all relations involve primary keys at some point.
                 Key pk = t.getPrimaryKey();
-                deadRelations.removeAll(pk.getRelations());
+                if (pk!=null) deadRelations.removeAll(pk.getRelations());
             }
         }
         // Remove any dead stuff remaining.

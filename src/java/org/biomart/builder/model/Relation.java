@@ -94,7 +94,12 @@ public interface Relation extends Comparable {
      * involved in a {@link Relationship}. Note that the names of {@link Cardinality} objects
      * are case-insensitive.
      */
-    public class Cardinality implements Comparable {
+    public class Cardinality implements Comparable {        
+        /**
+         * Internal reference to the set of {@link Cardinality} singletons.
+         */
+        private static final Map singletons = new HashMap();
+        
         /**
          * Use this constant to refer to the '1' end of a 1:M or 1:1 {@link Relationship}.
          */
@@ -109,11 +114,6 @@ public interface Relation extends Comparable {
          * Internal reference to the name of this {@link Cardinality}.
          */
         private final String name;
-        
-        /**
-         * Internal reference to the set of {@link Cardinality} singletons.
-         */
-        private static final Map singletons = new HashMap();
         
         /**
          * The static factory method creates and returns a {@link Cardinality}
@@ -230,6 +230,9 @@ public interface Relation extends Comparable {
             this.fk = fk;
             this.fkc = fkc;
             this.status = ComponentStatus.INFERRED;
+            // Add ourselves at both ends.
+            pk.addRelation(this);
+            fk.addRelation(this);
         }
         
         /**

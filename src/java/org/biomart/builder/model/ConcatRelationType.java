@@ -36,6 +36,11 @@ import java.util.Map;
  * @since 0.1
  */
 public class ConcatRelationType implements Comparable {
+    
+    /**
+     * Internal reference to the set of {@link ConcatRelationType} singletons.
+     */
+    private static final Map singletons = new HashMap();
     /**
      * Use this constant to refer to value-separation by commas.
      */
@@ -55,11 +60,6 @@ public class ConcatRelationType implements Comparable {
      * Internal reference to the name of this {@link ConcatRelationType}.
      */
     private final String name;
-    
-    /**
-     * Internal reference to the set of {@link ConcatRelationType} singletons.
-     */
-    private static final Map singletons = new HashMap();
     
     /**
      * The static factory method creates and returns a {@link ConcatRelationType}

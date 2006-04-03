@@ -226,7 +226,7 @@ public interface DataSet extends Comparable {
             // Identify all subclass and dimension relations, and set up the ignorable
             // relations for main and dimension tables.
             ignoredRelations.put(centralTable, new HashSet());
-            for (Iterator i = centralTable.getPrimaryKey().getRelations().iterator(); i.hasNext(); ) {
+            if (centralTable.getPrimaryKey()!=null) for (Iterator i = centralTable.getPrimaryKey().getRelations().iterator(); i.hasNext(); ) {
                 Relation r = (Relation)i.next();
                 // Skip masked relations.
                 if (this.getWindow().getMaskedRelations().contains(r)) continue;
@@ -237,19 +237,17 @@ public interface DataSet extends Comparable {
                     subclassRelations.add(r);
                     Table subclassTable = r.getForeignKey().getTable();
                     ignoredRelations.put(subclassTable, new HashSet());
-                    if (subclassTable.getPrimaryKey()!=null) {
-                        // Mark all OneToManys from the subclass table as dimensions.
-                        for (Iterator j = subclassTable.getPrimaryKey().getRelations().iterator(); j.hasNext(); ) {
-                            Relation sr = (Relation)j.next();
-                            // OneToMany from subclass table? Ignore it at subclass table but add to dimension set.
-                            // Also add the relation to the ignore set of the dimension.
-                            if (sr instanceof OneToMany) {
-                                ((Set)ignoredRelations.get(subclassTable)).add(sr);
-                                dimensionRelations.add(sr);
-                                Table dimTable = sr.getForeignKey().getTable();
-                                if (!ignoredRelations.containsKey(dimTable)) ignoredRelations.put(dimTable, new HashSet());
-                                ((Set)ignoredRelations.get(dimTable)).add(sr);
-                            }
+                    // Mark all OneToManys from the subclass table as dimensions.
+                    if (subclassTable.getPrimaryKey()!=null) for (Iterator j = subclassTable.getPrimaryKey().getRelations().iterator(); j.hasNext(); ) {
+                        Relation sr = (Relation)j.next();
+                        // OneToMany from subclass table? Ignore it at subclass table but add to dimension set.
+                        // Also add the relation to the ignore set of the dimension.
+                        if (sr instanceof OneToMany) {
+                            ((Set)ignoredRelations.get(subclassTable)).add(sr);
+                            dimensionRelations.add(sr);
+                            Table dimTable = sr.getForeignKey().getTable();
+                            if (!ignoredRelations.containsKey(dimTable)) ignoredRelations.put(dimTable, new HashSet());
+                            ((Set)ignoredRelations.get(dimTable)).add(sr);
                         }
                     }
                 } else if (r instanceof OneToMany) {
@@ -350,7 +348,7 @@ public interface DataSet extends Comparable {
                         // If column is a wrapped column
                         // Find associated real column
                         Column rc = ((WrappedColumn)c).getWrappedColumn();
-                        if (!rc.getTable().equals(sourceTable)) {
+                        if (!rc.getTable().equals(parentRealTable)) {
                             // If real column not on original main table, create child column for it add it to child table PK
                             childCol = new WrappedColumn(rc, dt);
                             pkCols.add(childCol);
@@ -433,7 +431,7 @@ public interface DataSet extends Comparable {
                 // Otherwise add the column to our table.
                 Column wc = new WrappedColumn(c, dsTable);
                 // If column is part of primary key, add the wrapped version to the primary key column set.
-                if (sourceTable.getPrimaryKey().getColumns().contains(c)) pkCols.add(wc);
+                if (sourceTable.getPrimaryKey()!=null && sourceTable.getPrimaryKey().getColumns().contains(c)) pkCols.add(wc);
             }
             // For all non-ignored rels in sourceTable
             for (Iterator i = sourceRels.iterator(); i.hasNext(); ) {
@@ -582,7 +580,7 @@ public interface DataSet extends Comparable {
      * by following a series of {@link Relation}s. As such it has no real columns of its own,
      * so every column is from another table and is given an alias.
      */
-    public class DataSetTable extends GenericTable {
+    public static class DataSetTable extends GenericTable {
         /**
          * Internal reference to the list of {@link Relation}s to follow to construct this table.
          * The list contains alternate references to Key (first) then Relation (second), in pairs,
@@ -617,7 +615,7 @@ public interface DataSet extends Comparable {
          */
         public DataSetTable(String name, DataSet ds, DataSetTableProvider prov, DataSetTableType type) throws AlreadyExistsException, NullPointerException, AssociationException, IllegalArgumentException {
             // Super call first.
-            super(name, prov);
+            super(generateAlias(name, prov), prov);
             // Sanity check.
             if (type==null)
                 throw new NullPointerException("Table type cannot be null.");
@@ -632,6 +630,31 @@ public interface DataSet extends Comparable {
             } catch (AssociationException e) {
                 throw new AssertionError("Table provider does not match itself.");
             }
+        }
+        
+        /**
+         * Internal method that generates a safe alias/name for a table. The first try is
+         * always the original table name, followed by attempts with an underscore and a
+         * sequence number appended.
+         * @param name the first name to try.
+         * @param tp the {@link DataSetTableProvider} that this table is being added to.
+         * @return the result.
+         * @throws NullPointerException if any parameter is null.
+         */
+        protected static String generateAlias(String name, DataSetTableProvider tp) throws NullPointerException {
+            // Sanity check.
+            if (name==null)
+                throw new NullPointerException("Table name cannot be null.");
+            if (tp==null)
+                throw new NullPointerException("Parent table provider cannot be null.");
+            // Do it.
+            String alias = name;
+            int aliasNumber = 2;
+            while (tp.getTableByName(alias)!=null) {
+                // Alias is original name appended with _2, _3, _4 etc.
+                alias = name+"_"+(aliasNumber++);
+            }
+            return alias;
         }
         
         /**
@@ -901,7 +924,7 @@ public interface DataSet extends Comparable {
                     throw new NullPointerException("Dimension table cannot be null.");
                 if (!dim.getType().equals(DataSetTableType.DIMENSION))
                     throw new AssociationException("Dimension table is not of DIMENSION type.");
-                if (!(parent.getType().equals(DataSetTableType.MAIN) || parent.getType().equals(DataSetTableType.MAIN)))
+                if (!(parent.getType().equals(DataSetTableType.MAIN) || parent.getType().equals(DataSetTableType.MAIN_SUBCLASS)))
                     throw new AssociationException("Parent table is not of MAIN or MAIN_SUBCLASS type.");
                 // Do it.
                 this.dim = dim;
@@ -983,6 +1006,11 @@ public interface DataSet extends Comparable {
      */
     public class DataSetTableType implements Comparable {
         /**
+         * Internal reference to the set of {@link DataSetTableType} singletons.
+         */
+        private static final Map singletons = new HashMap();
+        
+        /**
          * Use this constant to refer to a main table.
          */
         public static final DataSetTableType MAIN = DataSetTableType.get("MAIN");
@@ -1001,11 +1029,6 @@ public interface DataSet extends Comparable {
          * Internal reference to the name of this {@link DataSetTableType}.
          */
         private final String name;
-        
-        /**
-         * Internal reference to the set of {@link DataSetTableType} singletons.
-         */
-        private static final Map singletons = new HashMap();
         
         /**
          * The static factory method creates and returns a {@link DataSetTableType}

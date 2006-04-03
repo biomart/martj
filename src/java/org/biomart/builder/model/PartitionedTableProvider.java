@@ -207,19 +207,17 @@ public interface PartitionedTableProvider extends TableProvider {
                 Table sourceTable = (Table)i.next();
                 Table targetTable = this.getTableByName(sourceTable.getName());
                 // PKs only - everything involves a PK somewhere.
-                if (sourceTable.getPrimaryKey()!=null) {
-                    for (Iterator j = sourceTable.getPrimaryKey().getRelations().iterator(); j.hasNext(); ) {
-                        Relation sourceRelation = (Relation)j.next();
-                        ForeignKey sourceFK = sourceRelation.getForeignKey();
-                        Table sourceFKTable = sourceFK.getTable();
-                        Table targetFKTable = this.getTableByName(sourceFKTable.getName());
-                        // Locate the equivalent target foreign key.
-                        ForeignKey targetFK = targetFKTable.getForeignKeyByName(sourceFK.getName());
-                        // Create the relation.
-                        Relation targetRelation = new GenericRelation(targetTable.getPrimaryKey(), targetFK, sourceRelation.getFKCardinality());
-                        targetTable.getPrimaryKey().addRelation(targetRelation);
-                        targetFK.addRelation(targetRelation);
-                    }
+                if (sourceTable.getPrimaryKey()!=null) for (Iterator j = sourceTable.getPrimaryKey().getRelations().iterator(); j.hasNext(); ) {
+                    Relation sourceRelation = (Relation)j.next();
+                    ForeignKey sourceFK = sourceRelation.getForeignKey();
+                    Table sourceFKTable = sourceFK.getTable();
+                    Table targetFKTable = this.getTableByName(sourceFKTable.getName());
+                    // Locate the equivalent target foreign key.
+                    ForeignKey targetFK = targetFKTable.getForeignKeyByName(sourceFK.getName());
+                    // Create the relation.
+                    Relation targetRelation = new GenericRelation(targetTable.getPrimaryKey(), targetFK, sourceRelation.getFKCardinality());
+                    targetTable.getPrimaryKey().addRelation(targetRelation);
+                    targetFK.addRelation(targetRelation);
                 }
             }
         }
