@@ -1752,11 +1752,15 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					// add the missing placeholder to the dsConfig			
 					AttributePage configPage = dsConfig.getAttributePageByInternalName(templatePage.getInternalName());
 					if (configPage == null){
-						configPage = new AttributePage(templatePage.getInternalName(),
-											  templatePage.getDisplayName(),
-											  templatePage.getDescription(),
-											  templatePage.getOutFormats());
-						dsConfig.addAttributePage(configPage);				
+						// for now continue rather than adding a completely new page consisting purely of
+						// internal placeholders - this stops empty SNP pages being created for the datasets
+						// without other SNP attributes 
+						continue;
+						//configPage = new AttributePage(templatePage.getInternalName(),
+						//					  templatePage.getDisplayName(),
+						//					  templatePage.getDescription(),
+						//					  templatePage.getOutFormats());
+						//dsConfig.addAttributePage(configPage);				
 					}
 			
 					AttributeGroup configGroup = (AttributeGroup) configPage.getAttributeGroupByName(templateGroup.getInternalName());
