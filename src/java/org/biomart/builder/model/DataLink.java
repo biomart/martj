@@ -24,10 +24,8 @@
 
 package org.biomart.builder.model;
 
+import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Iterator;
-import java.util.Map;
-import javax.sql.DataSource;
 
 /**
  * This interface defines the methods required to connect to and test a data source.
@@ -35,7 +33,7 @@ import javax.sql.DataSource;
  * make the rest of the system work without worrying about where the data is coming from.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 29th March 2006
+ * @version 0.1.2, 3rd April 2006
  * @since 0.1
  */
 public interface DataLink {    
@@ -62,10 +60,10 @@ public interface DataLink {
      */
     public interface JDBCDataLink extends DataLink {
         /**
-         * Returns a JDBC {@link DataSource} connected to this database.
-         * @return the {@link DataSource} for this database.
+         * Returns a JDBC {@link Connection} connected to this database.
+         * @return the {@link Connection} for this database.
          */
-        public DataSource getDataSource();
+        public Connection getConnection();
     }
     
     /**

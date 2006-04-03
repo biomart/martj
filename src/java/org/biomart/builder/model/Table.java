@@ -26,8 +26,10 @@ package org.biomart.builder.model;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.model.Column.GenericColumn;
@@ -161,6 +163,11 @@ public interface Table extends Comparable {
      * @throws NullPointerException if the {@link Column} object is null.
      */
     public void removeColumn(Column c) throws NullPointerException;
+    
+    /**
+     * Attemps to remove all columns on a table so that it can safely be dropped.
+     */
+    public void destroy();
     
     /**
      * The generic implementation of {@link Table} provides basic methods for working with
@@ -401,6 +408,22 @@ public interface Table extends Comparable {
             }
             // Remove the column itself
             this.cols.remove(c.getName());
+        }
+        
+        /**
+         * Attemps to remove all columns on a table so that it can safely be dropped.
+         */
+        public void destroy() {
+            Set allCols = new HashSet();
+            allCols.addAll(this.cols.values());
+            for (Iterator i = allCols.iterator(); i.hasNext(); ) {
+                Column c = (Column)i.next();
+                try {
+                    this.removeColumn(c);
+                } catch (NullPointerException e) {
+                    throw new AssertionError("Found a null column.");
+                }
+            }
         }
         
         /**

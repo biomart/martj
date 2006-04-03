@@ -13,8 +13,7 @@
         {@link PrimaryKey} and one or more {@link ForeignKey}s on other {@link Table}s.</p>
         <p>{@link TableProvider}s do the work of creating all the {@link Table}s and related objects
         by querying a database or other data source. These {@link TableProvider}s know exactly how
-        their data source works, and are supplied from a {@link TableProviderFactory} associated with
-        that type of data source.</p>
+        their data source works.</p>
         <p>If the {@link TableProvider} gets the {@link Key}s or {@link Relation}s wrong, the user
         can edit them.</p>
         <p>Users select the interesting parts of the {@link Schema} by creating one or more
@@ -31,8 +30,7 @@
         {@link DataSetTable}, as the {@link Column}s to include can be inferred by following the
         {@link Relation}s and checking for masked ones in the {@link Window}.</p>
         <p>The final piece of the puzzle is the {@link MartConstructor}. Like the {@link TableProvider}
-        it is data source aware, so is provided by a {@link MartConstructorFactory} dedicated to that
-        kind of data source. The {@link MartConstructor} takes a {@link Schema} and generates
+        it is data source aware. The {@link MartConstructor} takes a {@link Schema} and generates
         the final mart based on the {@link DataSet} definitions found in that {@link Schema}. How it 
         does this is data source specific, and also depends on the compatibility of the various
         {@link TableProvider}s providing the data to be put into the mart. For instance, a {@link Schema}

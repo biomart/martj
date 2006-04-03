@@ -196,11 +196,6 @@ public interface DataSet extends Comparable {
          * @throws BuilderException if there was any other kind of problem.
          */
         public void regenerate() throws SQLException, BuilderException {
-            // TODO: do the flattening work here!
-            // Don't forget to include the 'hasXYZDimension' columns in the main table and subclassed main tables.
-            // Plus, check partitionOnTableProvider when dealing with PartitionedTableProviders.
-            // Check for masked columns, masked relations, concat only relations, and subclass relations.
-            
             // Build a dummy table provider.
             String dataSetName = this.getWindow().getName();
             DataSetTableProvider tp = new DataSetTableProvider(this.getWindow().getName());
@@ -424,7 +419,7 @@ public interface DataSet extends Comparable {
                 for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
                     Relation r = (Relation)j.next();
                     sourceRels.add(r);
-                    if (!ignoreRels.contains(r)) 
+                    if (!ignoreRels.contains(r))
                         excludedColumns.addAll(k.getColumns());
                 }
             }
@@ -779,7 +774,7 @@ public interface DataSet extends Comparable {
      * A column on a {@link DataSetTable} has to be one of the types of {@link DataSetColumn}
      * available from this class. All types can be renamed.
      */
-    public class DataSetColumn extends GenericColumn {
+    public static class DataSetColumn extends GenericColumn {
         /**
          * This constructor gives the column a name and checks that the
          * parent {@link Table} is not null.
@@ -790,7 +785,7 @@ public interface DataSet extends Comparable {
          * @throws NullPointerException if either parameter is null.
          */
         public DataSetColumn(String name, DataSetTable t) throws NullPointerException, AlreadyExistsException {
-            super(name, t);
+            super(generateAlias(name, t), t);
         }
         
         /**
@@ -811,6 +806,31 @@ public interface DataSet extends Comparable {
                 throw new AlreadyExistsException("A column with that name already exists on this table.", name);
             // Do it.
             this.name = name;
+        }
+        
+        /**
+         * Internal method that generates a safe alias/name for a column. The first try is
+         * always the original column name, followed by attempts with an underscore and a
+         * sequence number appended.
+         * @param name the first name to try.
+         * @param t the {@link DataSetTable} that this column is being added to.
+         * @return the result.
+         * @throws NullPointerException if any parameter is null.
+         */
+        protected static String generateAlias(String name, DataSetTable t) throws NullPointerException {
+            // Sanity check.
+            if (name==null)
+                throw new NullPointerException("Column name cannot be null.");
+            if (t==null)
+                throw new NullPointerException("Parent table cannot be null.");
+            // Do it.
+            String alias = name;
+            int aliasNumber = 2;
+            while (t.getColumnByName(alias)!=null) {
+                // Alias is original name appended with _2, _3, _4 etc.
+                alias = name+"_"+(aliasNumber++);
+            }
+            return alias;
         }
         
         /**
@@ -835,7 +855,7 @@ public interface DataSet extends Comparable {
              */
             public WrappedColumn(Column c, DataSetTable t) throws NullPointerException, AlreadyExistsException {
                 // Call the parent with the alias.
-                super(generateAlias(c, t), t);
+                super(c.getName(), t);
                 // Remember the wrapped column.
                 this.c = c;
             }
@@ -846,31 +866,6 @@ public interface DataSet extends Comparable {
              */
             public Column getWrappedColumn() {
                 return this.c;
-            }
-            
-            /**
-             * Internal method that generates a safe alias/name for a column. The first try is
-             * always the original column name, followed by attempts with an underscore and a
-             * sequence number appended.
-             * @param col a {@link Column} to generate the safe name for.
-             * @param t the {@link DataSetTable} that this column is being added to.
-             * @return the result.
-             * @throws NullPointerException if any parameter is null.
-             */
-            private static String generateAlias(Column c, DataSetTable t) throws NullPointerException {
-                // Sanity check.
-                if (c==null)
-                    throw new NullPointerException("Column cannot be null.");
-                if (t==null)
-                    throw new NullPointerException("Parent table cannot be null.");
-                // Do it.
-                String name = c.getName();
-                int aliasNumber = 2;
-                while (t.getColumnByName(name)!=null) {
-                    // Alias is original name appended with _2, _3, _4 etc.
-                    name = c.getName()+"_"+(aliasNumber++);
-                }
-                return name;
             }
         }
         
@@ -922,7 +917,7 @@ public interface DataSet extends Comparable {
         }
         
         /**
-         * A column on a {@link DataSetTable} that indicates the cocnatentation of the primary key values of a record
+         * A column on a {@link DataSetTable} that indicates the concatenation of the primary key values of a record
          * in some table beyond a concat-only relation. They take a reference to the concat-only relation.
          */
         public static class ConcatRelationColumn extends DataSetColumn {
