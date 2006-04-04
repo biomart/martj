@@ -24,8 +24,10 @@
 
 package org.biomart.builder.model;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
+import org.biomart.builder.exceptions.AssociationException;
 
 /**
  * This interface defines the methods required to connect to and test a data source.
@@ -36,20 +38,12 @@ import java.sql.SQLException;
  * @version 0.1.2, 3rd April 2006
  * @since 0.1
  */
-public interface DataLink {    
-    /**
-     * This method tests the database connection (if one is required) that will be used to
-     * read or write data. It returns nothing if successful, but if an error is encountered
-     * then an exception is thrown.
-     * @throws SQLException if it needed to talk to a database and couldn't.
-     */
-    public void testConnection() throws SQLException;
-    
+public interface DataLink {
     /**
      * Checks to see if this {@link DataLink} 'cohabits' with another one. Cohabitation means
      * that it would be possible to write a single SQL statement that could read data from
      * both {@link DataLink}s simultaneously.
-     * @param partner the other {@link DataLink} to test for cohabitation. 
+     * @param partner the other {@link DataLink} to test for cohabitation.
      * @return true if the two can cohabit, false if not.
      * @throws NullPointerException if the partner is null.
      */
@@ -60,10 +54,76 @@ public interface DataLink {
      */
     public interface JDBCDataLink extends DataLink {
         /**
-         * Returns a JDBC {@link Connection} connected to this database.
+         * Returns a JDBC {@link Connection} connected to this database
+         * using the data supplied to all the other methods in this interface.
          * @return the {@link Connection} for this database.
+         * @throws AssociationException if there was any problem finding the class.
+         * @throws SQLException if there was any problem connecting.
          */
-        public Connection getConnection();
+        public Connection getConnection() throws AssociationException, SQLException;
+        
+        /**
+         * Getter for property driverClassName.
+         * @return Value of property driverClassName.
+         */
+        public String getDriverClassName();
+        
+        /**
+         * Setter for property driverClassName.
+         * @param driverClassName New value of property driverClassName.
+         * @throws NullPointerException if the value is null.
+         */
+        public void setDriverClassName(String driverClassName) throws NullPointerException;
+        
+        /**
+         * Getter for property driverClassLocation.
+         * @return Value of property driverClassLocation.
+         */
+        public File getDriverClassLocation();
+        
+        /**
+         * Setter for property driverClassLocation.
+         * @param driverClassLocation New value of property driverClassLocation.
+         */
+        public void setDriverClassLocation(File driverClassLocation);
+        
+        /**
+         * Getter for property url.
+         * @return Value of property url.
+         */
+        public String getJDBCURL();
+        
+        /**
+         * Setter for property url.
+         * @param url New value of property url.
+         * @throws NullPointerException if the value is null.
+         */
+        public void setJDBCURL(String url) throws NullPointerException;
+        
+        /**
+         * Getter for property username.
+         * @return Value of property username.
+         */
+        public String getUsername();
+        
+        /**
+         * Setter for property username.
+         * @param username New value of property username.
+         * @throws NullPointerException if the value is null.
+         */
+        public void setUsername(String username) throws NullPointerException;
+        
+        /**
+         * Getter for property password.
+         * @return Value of property password.
+         */
+        public String getPassword();
+        
+        /**
+         * Setter for property password. May be null.
+         * @param password New value of property password.
+         */
+        public void setPassword(String password);
     }
     
     /**

@@ -120,17 +120,6 @@ public interface MartConstructor extends DataLink {
         }
         
         /**
-         * <p>This method tests the database connection (if one is required) that will be used to
-         * construct the mart inside. It returns nothing if successful, but if an error is encountered
-         * then an exception is thrown.</p>
-         *
-         * <p>This being a generic implementation, nothing actually happens in this method.</p>
-         *
-         * @throws SQLException if it needed to talk to a database and couldn't.
-         */
-        public void testConnection() throws SQLException {}
-        
-        /**
          * <p>Checks to see if this {@link DataLink} 'cohabits' with another one. Cohabitation means
          * that it would be possible to write a single SQL statement that could read data from
          * both {@link DataLink}s simultaneously.</p>

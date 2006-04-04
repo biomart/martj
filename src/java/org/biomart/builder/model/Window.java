@@ -97,11 +97,6 @@ public class Window implements Comparable {
     private final Set subclassedRelations = new HashSet();
     
     /**
-     * Internal reference to disabled relations.
-     */
-    private final Set disabledRelations = new HashSet();
-    
-    /**
      * Internal reference to concat-only relations. The keys of
      * the map are relations, the values are concat types.
      */

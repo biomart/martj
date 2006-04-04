@@ -132,6 +132,9 @@ public class SchemaSaver {
         xstream.alias("genericPartitionedTableProvider",GenericPartitionedTableProvider.class);
         
         xstream.alias("window",Window.class);
+        
+        // Specific implementations go here.
+        xstream.alias("JDBCDMDTableProvider",JDBCDMDTableProvider.class);
     }
     
     /**
@@ -164,21 +167,26 @@ public class SchemaSaver {
     /**
      * The save method takes a {@link Schema} object and writes out XML describing it to
      * the given {@link File}. This XML can be read by the {@link SchemaSaver#load(File)} method.
-     * @param s {@link Schema} object containing the data for the file.
+     * @param schema {@link Schema} object containing the data for the file.
      * @param file the {@link File} to save the data to.
      * @throws IOException if there was any problem writing the file.
      * @throws NullPointerException if the file or schema specified was null.
      */
-    public static void save(Schema s, File file) throws IOException, NullPointerException {
+    public static void save(Schema schema, File file) throws IOException, NullPointerException {
         // Sanity check.
         if (file==null)
             throw new NullPointerException("File argument cannot be null.");
-        if (s==null)
+        if (schema==null)
             throw new NullPointerException("Schema argument cannot be null.");
         // Open the file.
         OutputStream os = new FileOutputStream(file);
+        // Write the headers.
+        os.write((
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<!DOCTYPE schema PUBLIC \"-//EBI//DTD MartBuilder 0.1 Transitional//EN\" \"http://www.biomart.org/TR/MartBuilder-0.1/DTD/schema-transitional.dtd\">\n"
+                ).getBytes());
         // Read it in.
-        xstream.toXML(s, os);
+        xstream.toXML(schema, os);
         // Close the output stream.
         os.close();
     }

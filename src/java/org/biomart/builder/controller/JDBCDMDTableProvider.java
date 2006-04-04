@@ -24,8 +24,14 @@
 
 package org.biomart.builder.controller;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.Driver;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -34,8 +40,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
+import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.Column.GenericColumn;
@@ -61,44 +69,204 @@ import org.biomart.builder.model.TableProvider.GenericTableProvider;
  */
 public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDataLink {
     /**
-     * Internal reference to the JDBC connection.
+     * Internal reference to the JDBC connection. Transience
+     * means it won't get persisted when serialized.
      */
     private transient Connection conn;
     
     /**
+     * Internal reference to the driver class name.
+     */
+    private String driverClassName;
+    
+    /**
+     * Internal reference to the driver class location.
+     */
+    private File driverClassLocation;
+    
+    /**
+     * Internal reference to the JDBC url.
+     */
+    private String url;
+    
+    /**
+     * Internal reference to the user name.
+     */
+    private String username;
+    
+    /**
+     * Internal reference to the user password.
+     */
+    private String password;
+    
+    /**
      * Creates a new instance of JDBCDMDTableProvider based around
      * the given JDBC Connection.
+     * @param driverClassLocation the location of the class to load the JDBC driver from.
+     * Use null to use the default class loader path, which it will also fall back on if it
+     * could not find the driver at the specified location, or if this location does not exist.
+     * @param driverClassName the name of the JDBC driver.
+     * @param url the JDBC URL of the database server to connect to.
+     * @param username the username to connect as.
+     * @param password the password to connect as. Defaults to "" if null.
      * @param name the name to give it.
-     * @param conn the connection to use.
-     * @throws NullPointerException if either parameter is null.
+     * @throws NullPointerException if any parameter other than driverClassLocation or password is null.
      */
-    public JDBCDMDTableProvider(Connection conn, String name) throws NullPointerException {
+    public JDBCDMDTableProvider(File driverClassLocation, String driverClassName, String url, String username, String password, String name) throws NullPointerException {
         super(name);
         // Sanity check.
-        if (conn == null)
-            throw new NullPointerException("Connection cannot be null.");
+        if (driverClassName == null)
+            throw new NullPointerException("Driver class name cannot be null.");
+        if (url == null)
+            throw new NullPointerException("JDBC URL cannot be null.");
+        // Sensible defaults.
+        if (driverClassLocation != null && !driverClassLocation.exists()) driverClassLocation = null;
         // Do it.
-        this.conn = conn;
+        this.driverClassLocation = driverClassLocation;
+        this.driverClassName = driverClassName;
+        this.url = url;
+        this.username = username;
+        this.password = password;
     }
     
     /**
-     * Returns a JDBC {@link Connection} connected to this database.
+     * Returns a JDBC {@link Connection} connected to this database
+     * using the data supplied to all the other methods in this interface.
      * @return the {@link Connection} for this database.
+     * @throws AssociationException if there was any problem finding the class.
+     * @throws SQLException if there was any problem connecting.
      */
-    public Connection getConnection() {
+    public Connection getConnection() throws AssociationException, SQLException {
+        if (this.conn == null) {
+            // Load the driver from the custom path if specified.
+            Class loadedDriverClass = null;
+            if (this.driverClassLocation != null) {
+                try {
+                    ClassLoader classLoader = URLClassLoader.newInstance(new URL[]{this.driverClassLocation.toURL()});
+                    loadedDriverClass = classLoader.loadClass(this.driverClassName);
+                } catch (ClassNotFoundException e) {
+                    throw new AssociationException("Class specified could not be found.");
+                } catch (MalformedURLException e) {
+                    throw new AssertionError("Filename failed to translate into URL.");
+                }
+            }
+            
+            // Load the driver the usual way custom path missing or not working.
+            try {
+                loadedDriverClass = Class.forName(this.driverClassName);
+            } catch (ClassNotFoundException e) {
+                throw new AssociationException("Class specified could not be found.");
+            }
+            
+            // Check it really is an instance of Driver.
+            if (!Driver.class.isAssignableFrom(loadedDriverClass))
+                throw new AssociationException("Class specified is not a JDBC Driver class.");
+            
+            // Connect!
+            Properties connProps = new Properties();
+            connProps.setProperty("user", this.username);
+            if (this.password != null) connProps.setProperty("password", this.password);
+            this.conn = DriverManager.getConnection(this.url, connProps);
+        }
+        
+        // Return the connection.
         return this.conn;
     }
     
     /**
-     * Tests the connection between this {@link TableProvider} and the data source that is
-     * providing its tables. It will return without throwing any exceptions if the connection
-     * is OK. If there is a problem with the connection, a SQLException will be thrown
-     * detailing the problems.
-     * @throws SQLException if there is a problem connecting to the data source..
+     * Getter for property driverClassName.
+     * @return Value of property driverClassName.
      */
-    public void testConnection() throws SQLException {
-        if (this.conn.isClosed())
-            throw new SQLException("Connection has been closed but is still required.");
+    public String getDriverClassName() {
+        return this.driverClassName;
+    }
+    
+    /**
+     * Setter for property driverClassName.
+     * @param driverClassName New value of property driverClassName.
+     * @throws NullPointerException if the name is null.
+     */
+    public void setDriverClassName(String driverClassName) throws NullPointerException {
+        // Sanity check.
+        if (driverClassName == null)
+            throw new NullPointerException("Driver class name cannot be null.");
+        // Do it.
+        this.driverClassName = driverClassName;
+    }
+    
+    /**
+     * Getter for property driverClassLocation. Defaults to null if not specified.
+     * @return Value of property driverClassLocation.
+     */
+    public File getDriverClassLocation() {
+        return this.driverClassLocation;
+    }
+    
+    /**
+     * Setter for property driverClassLocation. Defaults to null if not specified.
+     * @param driverClassLocation New value of property driverClassLocation.
+     */
+    public void setDriverClassLocation(File driverClassLocation) {
+        if (driverClassLocation != null && !driverClassLocation.exists()) driverClassLocation = null;
+        this.driverClassLocation = driverClassLocation;
+    }
+    
+    /**
+     * Getter for property url.
+     * @return Value of property url.
+     */
+    public String getJDBCURL() {
+        return this.url;
+    }
+    
+    /**
+     * Setter for property url.
+     * @param url New value of property url.
+     * @throws NullPointerException if the url is null.
+     */
+    public void setJDBCURL(String url) throws NullPointerException {
+        // Sanity check.
+        if (url == null)
+            throw new NullPointerException("JDBC URL cannot be null.");
+        // Do it.
+        this.url = url;
+    }
+    
+    /**
+     * Getter for property username.
+     * @return Value of property username.
+     */
+    public String getUsername() {
+        return this.username;
+    }
+    
+    /**
+     * Setter for property username.
+     * @param username New value of property username.
+     * @throws NullPointerException if the name is null.
+     */
+    public void setUsername(String username) throws NullPointerException {
+        // Sanity check.
+        if (username == null)
+            throw new NullPointerException("Username cannot be null.");
+        // Do it.
+        this.username = username;
+    }
+    
+    /**
+     * Getter for property password.
+     * @return Value of property password.
+     */
+    public String getPassword() {
+        return this.password;
+    }
+    
+    /**
+     * Setter for property password. May be null.
+     * @param password New value of property password.
+     */
+    public void setPassword(String password) {
+        this.password = password;
     }
     
     /**
@@ -121,33 +289,46 @@ public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDa
         // Do it.
         if (!(partner instanceof JDBCDataLink)) return false;
         JDBCDataLink them = (JDBCDataLink)partner;
-        Connection theirConn = them.getConnection();
+        
         try {
+            Connection theirConn = them.getConnection();
             return (
                     theirConn.getMetaData().getURL().equals(this.conn.getMetaData().getURL()) &&
                     theirConn.getMetaData().getUserName().equals(this.conn.getMetaData().getUserName())
                     );
-        } catch (SQLException e) {
+        } catch (Exception e) {
             System.err.println("WARNING: Unable to compare database connection strings. Assuming incompatibility. Stack trace follows.");
             e.printStackTrace(System.err);
             return false;
         }
+        
     }
     
     /**
-     * Synchronise this {@link TableProvider} with the data source that is
+     * <p>Synchronise this {@link TableProvider} with the data source that is
      * providing its tables. Synchronisation means checking the list of {@link Table}s
      * available and drop/add any that have changed, then check each {@link Column}.
      * and {@link Key} and {@link Relation} and update those too.
      * Any {@link Key} or {@link Relation} that was created by the user and is still valid,
-     * ie. the underlying columns still exist, will not be affected by this operation.
+     * ie. the underlying columns still exist, will not be affected by this operation.</p>
+     *
+     * <p>This implementation reads tables and views from the schema with the same name as the
+     * logged-in user only. On MySQL, for instance, this is irrelevant as it has no such
+     * concept of schema, but on Oracle this means that only tables and views owned by
+     * the logged-in user will appear. If you want tables from other schemas in Oracle,
+     * you'll have to create views onto them from the logged-in user's schema first.</p>
+     *
+     * <p>This implementation ignores all tables returned by the connection's metadata
+     * that do not have a type of TABLE or VIEW. See {@link DatabaseMetaData#getTables(String, String, String, String[])}
+     * for details.</p>
+     *
      * @throws SQLException if there was a problem connecting to the data source.
      * @throws BuilderException if there was any other kind of problem.
      */
     public void synchronise() throws SQLException, BuilderException {
         // Get database metadata.
-        DatabaseMetaData dmd = this.conn.getMetaData();
-        String catalog = this.conn.getCatalog();
+        DatabaseMetaData dmd = this.getConnection().getMetaData();
+        String catalog = this.getConnection().getCatalog();
         String schema = dmd.getUserName();
         
         // Identify and temporarily preserve previously known tables. Refer
@@ -291,10 +472,10 @@ public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDa
                             }
                         }
                         removedFKs.remove(newFK); // don't drop it any more!
-                    } 
+                    }
                     
                     // Check to see if there is already a relation between the PK and the FK. If
-                    // so, reuse it. If not, create one.                   
+                    // so, reuse it. If not, create one.
                     boolean relationExists = false;
                     for (Iterator f = removedRels.iterator(); f.hasNext() && !relationExists; ) {
                         Relation r = (Relation)f.next();

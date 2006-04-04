@@ -121,23 +121,6 @@ public interface PartitionedTableProvider extends TableProvider {
         }
         
         /**
-         * <p>Tests the connection between this {@link TableProvider} and the data source that is
-         * providing its tables. It will return without throwing any exceptions if the connection
-         * is OK. If there is a problem with the connection, a SQLException will be thrown
-         * detailing the problems.</p>
-         *
-         * <p>The partitioned provider simply delegates this call to each of its members in turn.</p>
-         *
-         * @throws SQLException if there is a problem connecting to the data source..
-         */
-        public void testConnection() throws SQLException {
-            for (Iterator i = this.tableProviders.values().iterator(); i.hasNext(); ) {
-                TableProvider tp = (TableProvider)i.next();
-                tp.testConnection();
-            }
-        }
-        
-        /**
          * <p>Synchronise this {@link TableProvider} with the data source that is
          * providing its tables. Synchronisation means checking the list of {@link Table}s
          * available and drop/add any that have changed, then check each {@link Column}

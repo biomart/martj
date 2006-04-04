@@ -128,18 +128,6 @@ public interface TableProvider extends Comparable, DataLink {
         }
         
         /**
-         * <p>Tests the connection between this {@link TableProvider} and the data source that is
-         * providing its tables. It will return without throwing any exceptions if the connection
-         * is OK. If there is a problem with the connection, a SQLException will be thrown
-         * detailing the problems.</p>
-         *
-         * <p>The generic provider has no data source, so this method will
-         * always return successfully.</p>
-         * @throws SQLException if there is a problem connecting to the data source..
-         */
-        public void testConnection() throws SQLException {}
-        
-        /**
          * <p>Checks to see if this {@link DataLink} 'cohabits' with another one. Cohabitation means
          * that it would be possible to write a single SQL statement that could read data from
          * both {@link DataLink}s simultaneously.</p>

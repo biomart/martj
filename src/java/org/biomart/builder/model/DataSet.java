@@ -584,7 +584,7 @@ public interface DataSet extends Comparable {
          * The list contains alternate references to Key (first) then Relation (second), in pairs,
          * until the final pair. The key specifies which end of the relation to start from.
          */
-        private final List relations = new ArrayList();
+        private final List underlyingRelations = new ArrayList();
         
         /**
          * Internal reference to the type of this table.
@@ -687,12 +687,12 @@ public interface DataSet extends Comparable {
             if (relations == null)
                 throw new NullPointerException("Relations list cannot be null.");
             // Check the relations and save them.
-            this.relations.clear();
+            this.underlyingRelations.clear();
             for (Iterator i = relations.iterator(); i.hasNext(); ) {
                 Object o = i.next();
                 if (o == null || !(o instanceof Relation))
                     throw new IllegalArgumentException("Relations must be only Relation instances, they cannot be null or anything else.");
-                this.relations.add((Relation)o);
+                this.underlyingRelations.add((Relation)o);
             }
         }
         
@@ -701,7 +701,7 @@ public interface DataSet extends Comparable {
          * @return the list of relations of this table. May be empty but never null.
          */
         public List getUnderlyingRelations() {
-            return this.relations;
+            return this.underlyingRelations;
         }
         
         /**

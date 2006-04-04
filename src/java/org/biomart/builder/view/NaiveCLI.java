@@ -80,15 +80,19 @@ public class NaiveCLI {
      * @param args the command line arguments.
      */
     public static void main(String[] args) {
-        if (args.length<4) {
-            System.err.println("usage: java org.biomart.builder.view.NaiveCLI <driver class> <connection string> <table name> <output file>");
+        if (args.length<6) {
+            System.err.println("usage: java org.biomart.builder.view.NaiveCLI <driver class> <connection URL> <username> <password> <table name> <output file>");
             return;
         }
         try {
-            Class.forName(args[0]);
-            TableProvider tp = new JDBCDMDTableProvider(DriverManager.getConnection(args[1]), "naive");
-            String tableName = args[2];
-            File file = new File(args[3]);
+            String classname = args[0];
+            String url = args[1];
+            String username = args[2];
+            String password = args[3];
+            String tableName = args[4];
+            File file = new File(args[5]);
+            if (password.equals("")) password = null;
+            TableProvider tp = new JDBCDMDTableProvider(null, classname, url, username, password, "naive");
             (new NaiveCLI()).execute(tp, tableName, file);
         } catch (Throwable t) {
             t.printStackTrace(System.err);
