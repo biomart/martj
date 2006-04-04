@@ -43,12 +43,10 @@ import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.Key;
-import org.biomart.builder.model.Key.CompoundForeignKey;
-import org.biomart.builder.model.Key.CompoundPrimaryKey;
 import org.biomart.builder.model.Key.ForeignKey;
+import org.biomart.builder.model.Key.GenericForeignKey;
+import org.biomart.builder.model.Key.GenericPrimaryKey;
 import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.model.Key.SimpleForeignKey;
-import org.biomart.builder.model.Key.SimplePrimaryKey;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Relation.OneToMany;
 import org.biomart.builder.model.Table;
@@ -77,7 +75,7 @@ public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDa
     public JDBCDMDTableProvider(Connection conn, String name) throws NullPointerException {
         super(name);
         // Sanity check.
-        if (conn==null)
+        if (conn == null)
             throw new NullPointerException("Connection cannot be null.");
         // Do it.
         this.conn = conn;
@@ -116,7 +114,11 @@ public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDa
      * @return true if the two can cohabit, false if not.
      * @throws NullPointerException if the partner is null.
      */
-    public boolean canCohabit(DataLink partner) {
+    public boolean canCohabit(DataLink partner) throws NullPointerException {
+        // Sanity check.
+        if (partner == null)
+            throw new NullPointerException("Partner cannot be null.");
+        // Do it.
         if (!(partner instanceof JDBCDataLink)) return false;
         JDBCDataLink them = (JDBCDataLink)partner;
         Connection theirConn = them.getConnection();
@@ -159,61 +161,63 @@ public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDa
         // Catalog = database name/SID from connection string, Schema = username.
         ResultSet dbTables = dmd.getTables(catalog, schema, "%", new String[]{"TABLE", "VIEW"});
         while (dbTables.next()) {
-            String tableName = dbTables.getString("TABLE_NAME");
+            String dbTableName = dbTables.getString("TABLE_NAME");
             // If its a new table, create and add it. Otherwise, just look it up.
-            Table dbTable = this.getTableByName(tableName);
-            if (dbTable==null) {
-                dbTable = new GenericTable(tableName, this);
-                this.tables.put(dbTable.getName(), dbTable);
+            Table existingTable = this.getTableByName(dbTableName);
+            if (existingTable==null) {
+                existingTable = new GenericTable(dbTableName, this);
+                this.tables.put(dbTableName, existingTable);
             }
             
             // For each table loaded, temporarily preserve existing columns. Refer
             // to them as removed columns as by the end of this the set will only
             // contain those columns which are to be dropped.
             Set removedCols = new HashSet();
-            removedCols.addAll(dbTable.getColumns());
+            removedCols.addAll(existingTable.getColumns());
+            
             // Get the table columns from the database.
-            ResultSet dbTblCols = dmd.getColumns(catalog, schema, tableName, "%");
+            ResultSet dbTblCols = dmd.getColumns(catalog, schema, dbTableName, "%");
             while (dbTblCols.next()) {
-                String colName = dbTblCols.getString("COLUMN_NAME");
+                String dbTblColName = dbTblCols.getString("COLUMN_NAME");
                 // If its a new column, create and add it. Otherwise, just look it up.
-                Column dbTblCol = dbTable.getColumnByName(colName);
-                if (dbTblCol==null) dbTblCol = new GenericColumn(colName, dbTable);
+                Column dbTblCol = existingTable.getColumnByName(dbTblColName);
+                if (dbTblCol==null) dbTblCol = new GenericColumn(dbTblColName, existingTable);
             }
             dbTblCols.close();
+            
             // Remove from table all columns not found in database.
             for (Iterator i = removedCols.iterator(); i.hasNext(); ) {
                 Column colName = (Column)i.next();
-                dbTable.removeColumn(colName);
+                existingTable.removeColumn(colName);
                 i.remove(); // really get rid of it so we don't have any references left behind.
             }
+            
             // Remove table from previously known list.
-            removedTables.remove(tableName);
+            removedTables.remove(dbTableName);
             
             // Load the table's primary key.
-            ResultSet dbTblPKCols = dmd.getPrimaryKeys(catalog, schema, tableName);
+            ResultSet dbTblPKCols = dmd.getPrimaryKeys(catalog, schema, dbTableName);
             Map pkCols = new TreeMap(); // sorts by key
             while (dbTblPKCols.next()) {
                 String pkColName = dbTblPKCols.getString("COLUMN_NAME");
                 Short pkKeySeq = new Short(dbTblPKCols.getShort("KEY_SEQ"));
-                pkCols.put(pkKeySeq, dbTable.getColumnByName(pkColName));
+                pkCols.put(pkKeySeq, existingTable.getColumnByName(pkColName));
             }
             dbTblPKCols.close();
+            
             // Did we find a PK?
-            PrimaryKey existingPK = dbTable.getPrimaryKey();
+            PrimaryKey existingPK = existingTable.getPrimaryKey();
             if (!pkCols.isEmpty()) {
                 // Create and set the primary key (only if existing one is not the same).
-                PrimaryKey newPK;
-                if (pkCols.size()==1) newPK = new SimplePrimaryKey((Column)pkCols.values().toArray()[0]);
-                else newPK = new CompoundPrimaryKey(new ArrayList(pkCols.values()));
-                if (existingPK==null || !existingPK.equals(newPK)) dbTable.setPrimaryKey(newPK);
+                PrimaryKey newPK = new GenericPrimaryKey(new ArrayList(pkCols.values()));
+                if (existingPK==null || !existingPK.equals(newPK)) existingTable.setPrimaryKey(newPK);
             } else {
                 // Remove the primary key on this table, but only if the existing one is not handmade.
-                if (existingPK!=null && !existingPK.getStatus().equals(ComponentStatus.HANDMADE)) dbTable.setPrimaryKey(null);
+                if (existingPK!=null && !existingPK.getStatus().equals(ComponentStatus.HANDMADE)) existingTable.setPrimaryKey(null);
             }
             
             // For each table loaded, note the foreign keys that already exist.
-            for (Iterator i = dbTable.getForeignKeys().iterator(); i.hasNext(); ) {
+            for (Iterator i = existingTable.getForeignKeys().iterator(); i.hasNext(); ) {
                 Key k = (Key)i.next();
                 removedFKs.add(k);
             }
@@ -223,29 +227,29 @@ public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDa
         // Remove from schema all tables not found in database.
         for (Iterator i = removedTables.iterator(); i.hasNext(); ) {
             String tableName = (String)i.next();
-            Table table = (Table)this.tables.get(tableName);
-            table.destroy();
-            this.tables.remove(table);
+            Table existingTable = (Table)this.tables.get(tableName);
+            existingTable.destroy();
+            this.tables.remove(existingTable);
             i.remove(); // really get rid of it so we don't have any references left behind.
         }
         
         // Go through the tables we found and update relations.
         for (Iterator i = this.tables.values().iterator(); i.hasNext(); ) {
-            Table pkTable = (Table)i.next();
-            PrimaryKey pk = pkTable.getPrimaryKey();
-            if (pk==null) continue; // no need to do this to tables without PKs
+            Table existingTable = (Table)i.next();
+            PrimaryKey existingPK = existingTable.getPrimaryKey();
+            if (existingPK==null) continue; // no need to do this to tables without PKs
             
             // Build up a set of relations that already exist. Call it removed because by the end
             // of this it will contain a set of relations that no longer exist and should be dropped.
             Set removedRels = new HashSet();
-            for (Iterator j = pk.getRelations().iterator(); j.hasNext(); ) {
+            for (Iterator j = existingPK.getRelations().iterator(); j.hasNext(); ) {
                 Relation r = (Relation)j.next();
                 removedRels.add(r);
             }
             
             // Load relations from db referring to this primary key.
             TreeMap dbFKs = new TreeMap();
-            ResultSet dbTblFKCols = dmd.getExportedKeys(catalog, schema, pkTable.getName());
+            ResultSet dbTblFKCols = dmd.getExportedKeys(catalog, schema, existingTable.getName());
             // Build a map of key positions to lists of columns. So, if a table has two keys, it will
             // have two entries at each key position.
             while (dbTblFKCols.next()) {
@@ -263,7 +267,7 @@ public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDa
             if (!dbFKs.isEmpty()) {
                 // How many keys do we have?
                 int lowestKeySeq = ((Short)dbFKs.firstKey()).intValue();
-                int colCount = pkTable.getPrimaryKey().countColumns();
+                int colCount = existingTable.getPrimaryKey().countColumns();
                 int keyCount = ((List)dbFKs.get(dbFKs.firstKey())).size();
                 
                 // Construct the FKs we found.
@@ -275,9 +279,7 @@ public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDa
                         List l = (List)dbFKs.get(keySeq);
                         fkCols[keySeqValue] = (Column)l.get(j);
                     }
-                    ForeignKey newFK;
-                    if (fkCols.length==1) newFK = new SimpleForeignKey(fkCols[0]);
-                    else newFK = new CompoundForeignKey(Arrays.asList(fkCols));
+                    ForeignKey newFK = new GenericForeignKey(Arrays.asList(fkCols));
                     // If we've already got one like that, reuse it, otherwise add it.
                     if (removedFKs.contains(newFK)) {
                         // Nasty hack to find and reuse existing key.
@@ -301,7 +303,7 @@ public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDa
                             relationExists = true;
                         }
                     }
-                    if (!relationExists) new OneToMany(pk, newFK); // create and add it.
+                    if (!relationExists) new OneToMany(existingPK, newFK); // create and add it.
                 }
             }
             

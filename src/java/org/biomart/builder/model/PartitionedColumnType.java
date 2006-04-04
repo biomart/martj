@@ -24,7 +24,6 @@
 
 package org.biomart.builder.model;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -64,18 +63,24 @@ public interface PartitionedColumnType {
         private final Set values = new HashSet();
         
         /**
-         * The constructor specifies the value to partition on. If the value is null,
-         * or it is empty, then only rows with null in this column will be selected.
-         * @param values the values to partition on.
+         * The constructor specifies the values to partition on. If any value is null,
+         * then only rows with null in this column will be selected for that value.
+         * @param values the set of unique values to partition on.
          * @throws IllegalArgumentException if any of the values are not-null
-         * and not Strings.
+         * and not Strings, or if the input set is empty.
+         * @throws NullPointerException if the input set is null.
          */
-        public ValueCollection(Collection values) throws IllegalArgumentException {
-            if (values==null) values = Collections.EMPTY_SET;
+        public ValueCollection(Set values) throws IllegalArgumentException, NullPointerException {
+            // Sanity check.
+            if (values==null)
+                throw new NullPointerException("Values set cannot be null.");
+            if (values.size()<1)
+                throw new IllegalArgumentException("Values set must contain at least one entry.");
+            // Do it.
             for (Iterator i = values.iterator(); i.hasNext(); ) {
                 Object o = i.next();
                 // Sanity check.
-                if (o!=null && !(o instanceof String))
+                if (o != null && !(o instanceof String))
                     throw new IllegalArgumentException("Cannot add non-null non-String objects as values.");
                 // Add the value.
                 this.values.add((String)o);
@@ -87,7 +92,7 @@ public interface PartitionedColumnType {
          * @return the name of this {@link PartitionedColumnType} object.
          */
         public String toString() {
-            return "ValueCollection:"+this.values.toString();
+            return "ValueCollection:" + this.values.toString();
         }
     }
     
@@ -116,7 +121,7 @@ public interface PartitionedColumnType {
          * @return the name of this {@link PartitionedColumnType} object.
          */
         public String toString() {
-            return "SingleValue:"+this.value;
+            return "SingleValue:" + this.value;
         }
     }
 }

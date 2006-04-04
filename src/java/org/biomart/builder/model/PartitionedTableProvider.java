@@ -37,14 +37,10 @@ import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.model.Column.GenericColumn;
-import org.biomart.builder.model.Key.CompoundForeignKey;
-import org.biomart.builder.model.Key.CompoundKey;
-import org.biomart.builder.model.Key.CompoundPrimaryKey;
 import org.biomart.builder.model.Key.ForeignKey;
+import org.biomart.builder.model.Key.GenericForeignKey;
+import org.biomart.builder.model.Key.GenericPrimaryKey;
 import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.model.Key.SimpleForeignKey;
-import org.biomart.builder.model.Key.SimpleKey;
-import org.biomart.builder.model.Key.SimplePrimaryKey;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Table.GenericTable;
 
@@ -62,7 +58,7 @@ import org.biomart.builder.model.Table.GenericTable;
  * objects in turn.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 30th March 2006
+ * @version 0.1.4, 4th April 2006
  * @since 0.1
  */
 public interface PartitionedTableProvider extends TableProvider {
@@ -89,13 +85,14 @@ public interface PartitionedTableProvider extends TableProvider {
      * it throws an exception to say so. No check is made to see if the new {@link TableProvider}
      * is actually identical to the base one in terms of structure. An exception will be thrown if
      * you try to nest {@link PartitionedTableProvider}s inside other ones.
+     * 
      * @param label the label for the partition this {@link TableProvider} represents.
-     * @param tp the {@link TableProvider} to add as a new partition.
+     * @param tableProvider the {@link TableProvider} to add as a new partition.
      * @throws NullPointerException if the label or the provider are null.
      * @throws AlreadyExistsException if the provider has already been set as a partition here.
      * @throws AssociationException if the provider to be added is a {@link PartitionedTableProvider}.
      */
-    public void addTableProvider(String label, TableProvider tp) throws AlreadyExistsException, NullPointerException, AssociationException;
+    public void addTableProvider(String label, TableProvider tableProvider) throws AlreadyExistsException, NullPointerException, AssociationException;
     
     /**
      * Removes the {@link TableProvider} with the given label from this partition. If it is not recognised,
@@ -112,7 +109,7 @@ public interface PartitionedTableProvider extends TableProvider {
         /**
          * Internal reference to the map of member providers. Keys are the partition labels.
          */
-        private final Map memberProviders = new HashMap();
+        private final Map tableProviders = new HashMap();
         
         /**
          * The constructor creates a partitioned provider with the given name.
@@ -134,7 +131,7 @@ public interface PartitionedTableProvider extends TableProvider {
          * @throws SQLException if there is a problem connecting to the data source..
          */
         public void testConnection() throws SQLException {
-            for (Iterator i = this.memberProviders.values().iterator(); i.hasNext(); ) {
+            for (Iterator i = this.tableProviders.values().iterator(); i.hasNext(); ) {
                 TableProvider tp = (TableProvider)i.next();
                 tp.testConnection();
             }
@@ -155,7 +152,7 @@ public interface PartitionedTableProvider extends TableProvider {
          */
         public void synchronise() throws SQLException, BuilderException {
             // Synchronise.
-            for (Iterator i = this.memberProviders.values().iterator(); i.hasNext(); ) {
+            for (Iterator i = this.tableProviders.values().iterator(); i.hasNext(); ) {
                 TableProvider tp = (TableProvider)i.next();
                 tp.synchronise();
             }
@@ -179,10 +176,7 @@ public interface PartitionedTableProvider extends TableProvider {
                         Column c = (Column)n.next();
                         targetKeyCols.add(targetTable.getColumnByName(c.getName()));
                     }
-                    PrimaryKey targetPK;
-                    if (sourcePK instanceof SimpleKey) targetPK = new SimplePrimaryKey((Column)targetKeyCols.toArray()[0]);
-                    else if (sourcePK instanceof CompoundKey) targetPK = new CompoundPrimaryKey(targetKeyCols);
-                    else throw new AssertionError("Unknown type of key.");
+                    PrimaryKey targetPK = new GenericPrimaryKey(targetKeyCols);
                     targetTable.setPrimaryKey(targetPK);
                 }
                 // Foreign keys.
@@ -193,10 +187,7 @@ public interface PartitionedTableProvider extends TableProvider {
                         Column c = (Column)n.next();
                         targetKeyCols.add(targetTable.getColumnByName(c.getName()));
                     }
-                    ForeignKey targetFK;
-                    if (sourceFK instanceof SimpleKey) targetFK = new SimpleForeignKey((Column)targetKeyCols.toArray()[0]);
-                    else if (sourceFK instanceof CompoundKey) targetFK = new CompoundForeignKey(targetKeyCols);
-                    else throw new AssertionError("Unknown type of key.");
+                    ForeignKey targetFK = new GenericForeignKey(targetKeyCols);
                     targetTable.addForeignKey(targetFK);
                 }
                 // Save it.
@@ -215,7 +206,7 @@ public interface PartitionedTableProvider extends TableProvider {
                     // Locate the equivalent target foreign key.
                     ForeignKey targetFK = targetFKTable.getForeignKeyByName(sourceFK.getName());
                     // Create the relation.
-                    Relation targetRelation = new GenericRelation(targetTable.getPrimaryKey(), targetFK, sourceRelation.getFKCardinality());
+                    Relation targetRelation = new GenericRelation(targetTable.getPrimaryKey(), targetFK, sourceRelation.getCardinality());
                     targetTable.getPrimaryKey().addRelation(targetRelation);
                     targetFK.addRelation(targetRelation);
                 }
@@ -236,7 +227,7 @@ public interface PartitionedTableProvider extends TableProvider {
          */
         public Collection getUniqueValues(Column c) throws NullPointerException, SQLException {
             // Sanity check.
-            if (c==null)
+            if (c == null)
                 throw new NullPointerException("Column cannot be null.");
             // Do it.
             Set values = new HashSet();
@@ -255,7 +246,7 @@ public interface PartitionedTableProvider extends TableProvider {
          * @return the first partition's provider.
          */
         protected TableProvider getFirstTableProvider() {
-            return (TableProvider)this.memberProviders.values().toArray()[0];
+            return (TableProvider)this.tableProviders.values().toArray()[0];
         }
         
         /**
@@ -265,7 +256,7 @@ public interface PartitionedTableProvider extends TableProvider {
          * is the label for the partition, with the values being the providers themselves..
          */
         public Map getTableProviders() {
-            return this.memberProviders;
+            return this.tableProviders;
         }
         
         /**
@@ -278,12 +269,12 @@ public interface PartitionedTableProvider extends TableProvider {
          */
         public TableProvider getTableProvider(String label) throws NullPointerException, AssociationException {
             // Sanity check.
-            if (label==null)
+            if (label == null)
                 throw new NullPointerException("Label cannot be null.");
-            if (!this.memberProviders.containsKey(label))
+            if (!this.tableProviders.containsKey(label))
                 throw new AssociationException("No provider has been registered with that label.");
             // Do it.
-            return (TableProvider)this.memberProviders.get(label);
+            return (TableProvider)this.tableProviders.get(label);
         }
         
         /**
@@ -291,24 +282,25 @@ public interface PartitionedTableProvider extends TableProvider {
          * it throws an exception to say so. No check is made to see if the new {@link TableProvider}
          * is actually identical to the base one in terms of structure. An exception will be thrown if
          * you try to nest {@link PartitionedTableProvider}s inside other ones.
+         * 
          * @param label the label for the partition this {@link TableProvider} represents.
-         * @param tp the {@link TableProvider} to add as a new partition.
+         * @param tableProvider the {@link TableProvider} to add as a new partition.
          * @throws NullPointerException if the label or the provider are null.
          * @throws AlreadyExistsException if the provider has already been set as a partition here.
          * @throws AssociationException if the provider to be added is a {@link PartitionedTableProvider}.
          */
-        public void addTableProvider(String label, TableProvider tp) throws AlreadyExistsException, NullPointerException, AssociationException {
+        public void addTableProvider(String label, TableProvider tableProvider) throws AlreadyExistsException, NullPointerException, AssociationException {
             // Sanity check.
-            if (label==null)
+            if (label == null)
                 throw new NullPointerException("Label cannot be null.");
-            if (tp==null)
+            if (tableProvider == null)
                 throw new NullPointerException("Table provider cannot be null.");
-            if (this.memberProviders.containsKey(label))
+            if (this.tableProviders.containsKey(label))
                 throw new AlreadyExistsException("A provider has already been registered with that label.", label);
-            if (tp instanceof PartitionedTableProvider)
+            if (tableProvider instanceof PartitionedTableProvider)
                 throw new AssociationException("You cannot nest partitioned table providers within other ones.");
             // Do it.
-            this.memberProviders.put(label,tp);
+            this.tableProviders.put(label,tableProvider);
         }
         
         /**
@@ -319,12 +311,12 @@ public interface PartitionedTableProvider extends TableProvider {
          */
         public void removeTableProvider(String label) throws NullPointerException {
             // Sanity check.
-            if (label==null)
+            if (label == null)
                 throw new NullPointerException("Label cannot be null.");
             // Do we need to do it?
-            if (!this.memberProviders.containsKey(label)) return;
+            if (!this.tableProviders.containsKey(label)) return;
             // Do it.
-            this.memberProviders.remove(label);
+            this.tableProviders.remove(label);
         }
         
         /**
@@ -335,7 +327,7 @@ public interface PartitionedTableProvider extends TableProvider {
         public String toString() {
             StringBuffer sb = new StringBuffer();
             sb.append("[");
-            for (Iterator i = this.memberProviders.values().iterator(); i.hasNext(); ) {
+            for (Iterator i = this.tableProviders.values().iterator(); i.hasNext(); ) {
                 TableProvider tp = (TableProvider)i.next();
                 sb.append(tp.toString());
                 if (i.hasNext()) sb.append(",");

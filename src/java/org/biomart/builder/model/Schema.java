@@ -45,7 +45,7 @@ public class Schema {
     /**
      * Internal reference to the {@link TableProvider}s we are using for data.
      */
-    private final Map tblProvs = new HashMap();
+    private final Map tableProviders = new HashMap();
     
     /**
      * Internal reference to the {@link Window}s onto the data we are using to
@@ -59,56 +59,59 @@ public class Schema {
      * @return a set of {@link TableProvider} objects.
      */
     public Collection getTableProviders() {
-        return this.tblProvs.values();
+        return this.tableProviders.values();
     }
         
     /**
      * Returns the {@link TableProvider} object with the given name. If it doesn't exist, null is returned.
      * If the name was null, you'll get an exception.
+     * @param name the name to look for.
      * @return a {@link TableProvider} object matching the specified name.
      * @throws NullPointerException if the name was null.
      */
     public TableProvider getTableProviderByName(String name) throws NullPointerException {
         // Sanity check.
-        if (name==null)
+        if (name == null)
             throw new NullPointerException("Table provider name cannot be null.");
         // Do we have it?
-        if (!this.tblProvs.containsKey(name)) return null;
+        if (!this.tableProviders.containsKey(name)) return null;
         // Return it.
-        return (TableProvider)this.tblProvs.get(name);
+        return (TableProvider)this.tableProviders.get(name);
     }
     
     /**
      * Adds a {@link TableProvider} to the set which this {@link Schema} includes. An 
      * exception is thrown if it already is in this set, or if it is null.
-     * @param tp the {@link TableProvider} to add.
+     * 
+     * @param tableProvider the {@link TableProvider} to add.
      * @throws AlreadyExistsException if the provider is already in this schema.
      * @throws NullPointerException if the provider is null.
      */
-    public void addTableProvider(TableProvider tp) throws NullPointerException, AlreadyExistsException {
+    public void addTableProvider(TableProvider tableProvider) throws NullPointerException, AlreadyExistsException {
         // Sanity check.
-        if (tp==null)
+        if (tableProvider == null)
             throw new NullPointerException("Table provider cannot be null.");
-        if (this.tblProvs.containsKey(tp.getName()))
-            throw new AlreadyExistsException("Table provider has already been added to this schema.",tp.getName());
+        if (this.tableProviders.containsKey(tableProvider.getName()))
+            throw new AlreadyExistsException("Table provider has already been added to this schema.",tableProvider.getName());
         // Do it.
-        this.tblProvs.put(tp.getName(),tp);
+        this.tableProviders.put(tableProvider.getName(),tableProvider);
     }
 
     /**
      * Removes a {@link TableProvider} from the set which this {@link Schema} includes. An 
      * exception is thrown if it is null. If it is not found, nothing happens and it is ignored quietly.
-     * @param tp the {@link TableProvider} to remove.
+     * 
+     * @param tableProvider the {@link TableProvider} to remove.
      * @throws NullPointerException if the provider is null.
      */
-    public void removeTableProvider(TableProvider tp) throws NullPointerException {
+    public void removeTableProvider(TableProvider tableProvider) throws NullPointerException {
         // Sanity check.
-        if (tp==null)
+        if (tableProvider == null)
             throw new NullPointerException("Table provider cannot be null.");
         // Do we have it?
-        if (!this.tblProvs.containsKey(tp.getName())) return;
+        if (!this.tableProviders.containsKey(tableProvider.getName())) return;
         // Do it.
-        this.tblProvs.remove(tp.getName());
+        this.tableProviders.remove(tableProvider.getName());
     }
         
     /**
@@ -123,12 +126,13 @@ public class Schema {
     /**
      * Returns the {@link Window} object with the given name. If it doesn't exist, null is returned.
      * If the name was null, you'll get an exception.
+     * @param name the name to look for.
      * @return a {@link Window} object matching the specified name.
      * @throws NullPointerException if the name was null.
      */
     public Window getWindowByName(String name) throws NullPointerException {
         // Sanity check.
-        if (name==null)
+        if (name == null)
             throw new NullPointerException("Window name cannot be null.");
         // Do we have it?
         if (!this.windows.containsKey(name)) return null;
@@ -139,34 +143,36 @@ public class Schema {
     /**
      * Adds a {@link Window} to the set which this {@link Schema} includes. An 
      * exception is thrown if it already is in this set, or if it is null.
-     * @param w the {@link Window} to add.
+     * 
+     * @param window the {@link Window} to add.
      * @throws AlreadyExistsException if the window is already in this schema.
      * @throws NullPointerException if the window is null.
      */
-    public void addWindow(Window w) throws NullPointerException, AlreadyExistsException {
+    public void addWindow(Window window) throws NullPointerException, AlreadyExistsException {
         // Sanity check.
-        if (w==null)
+        if (window == null)
             throw new NullPointerException("Window cannot be null.");
-        if (this.windows.containsKey(w.getName()))
-            throw new AlreadyExistsException("Window has already been added to this schema.",w.getName());
+        if (this.windows.containsKey(window.getName()))
+            throw new AlreadyExistsException("Window has already been added to this schema.",window.getName());
         // Do it.
-        this.windows.put(w.getName(), w);
+        this.windows.put(window.getName(), window);
     }
 
     /**
      * Removes a {@link Window} from the set which this {@link Schema} includes. An 
      * exception is thrown if it is null. If it is not found, nothing happens and it is ignored quietly.
-     * @param w the {@link Window} to remove.
+     * 
+     * @param window the {@link Window} to remove.
      * @throws NullPointerException if the window is null.
      */
-    public void removeWindow(Window w) throws NullPointerException {
+    public void removeWindow(Window window) throws NullPointerException {
         // Sanity check.
-        if (w==null)
+        if (window == null)
             throw new NullPointerException("Window cannot be null.");
         // Do we have it?
-        if (!this.windows.containsKey(w.getName())) return;
+        if (!this.windows.containsKey(window.getName())) return;
         // Do it.
-        this.windows.remove(w);
+        this.windows.remove(window);
     }
     
     /**
@@ -179,7 +185,7 @@ public class Schema {
      */
     public void synchronise() throws SQLException, BuilderException {
         // TableProviders first
-        for (Iterator i = this.tblProvs.values().iterator(); i.hasNext(); ) {
+        for (Iterator i = this.tableProviders.values().iterator(); i.hasNext(); ) {
             TableProvider tp = (TableProvider)i.next();
             tp.synchronise();
         }

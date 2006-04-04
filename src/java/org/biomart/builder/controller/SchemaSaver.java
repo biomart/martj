@@ -45,10 +45,8 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableProvider;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.GenericDataSet;
-import org.biomart.builder.model.Key.CompoundForeignKey;
-import org.biomart.builder.model.Key.CompoundPrimaryKey;
-import org.biomart.builder.model.Key.SimpleForeignKey;
-import org.biomart.builder.model.Key.SimplePrimaryKey;
+import org.biomart.builder.model.Key.GenericForeignKey;
+import org.biomart.builder.model.Key.GenericPrimaryKey;
 import org.biomart.builder.model.PartitionedColumnType.SingleValue;
 import org.biomart.builder.model.PartitionedColumnType.UniqueValues;
 import org.biomart.builder.model.PartitionedColumnType.ValueCollection;
@@ -117,10 +115,8 @@ public class SchemaSaver {
         xstream.alias("concatRelationColumn",ConcatRelationColumn.class);
         xstream.alias("tableProviderNameColumn",TableProviderNameColumn.class);
         
-        xstream.alias("compoundPK",CompoundPrimaryKey.class);
-        xstream.alias("simplePK",SimplePrimaryKey.class);
-        xstream.alias("compoundFK",CompoundForeignKey.class);
-        xstream.alias("simpleFK",SimpleForeignKey.class);
+        xstream.alias("primaryKey",GenericPrimaryKey.class);
+        xstream.alias("foreignKey",GenericForeignKey.class);
         
         xstream.alias("singleValuePartition",SingleValue.class);
         xstream.alias("valueCollectionPartition",ValueCollection.class);

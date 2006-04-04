@@ -70,9 +70,9 @@ public interface MartConstructor extends DataLink {
          * @param name the name for this new constructor.
          * @throws NullPointerException if the name is null.
          */
-        public GenericMartConstructor(String name) {
+        public GenericMartConstructor(String name) throws NullPointerException {
             // Sanity check.
-            if (name==null)
+            if (name == null)
                 throw new NullPointerException("Mart constructor name cannot be null.");
             // Remember the values.
             this.name = name;
@@ -100,7 +100,7 @@ public interface MartConstructor extends DataLink {
          */
         public void constructMart(DataSet ds) throws NullPointerException, BuilderException, SQLException {
             // Sanity check.
-            if (ds==null)
+            if (ds == null)
                 throw new NullPointerException("Schema cannot be null.");
             // Do the work.
             // TODO: Subclasses actually generate DDL or access JDBC/XML/whatever and do the transformation.
@@ -114,6 +114,9 @@ public interface MartConstructor extends DataLink {
             
             // Can partition to separate databases by being a wrapper around one or more DataSource objects per
             // partition name! This is for each implementation to decide for itself.
+            
+            // Use abstract delegate methods (create table as table, merge tables, etc.) which will do the work
+            // and know how to be specific to a certain database..
         }
         
         /**
@@ -138,7 +141,7 @@ public interface MartConstructor extends DataLink {
          * @return true if the two can cohabit, false if not.
          * @throws NullPointerException if the partner is null.
          */
-        public boolean canCohabit(DataLink partner) {
+        public boolean canCohabit(DataLink partner) throws NullPointerException {
             return false;
         }
         
@@ -176,7 +179,7 @@ public interface MartConstructor extends DataLink {
          * otherwise false.
          */
         public boolean equals(Object o) {
-            if (o==null || !(o instanceof MartConstructor)) return false;
+            if (o == null || !(o instanceof MartConstructor)) return false;
             MartConstructor c = (MartConstructor)o;
             return c.toString().equals(this.toString());
         }

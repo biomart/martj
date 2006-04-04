@@ -113,7 +113,7 @@ public interface TableProvider extends Comparable, DataLink {
          */
         public GenericTableProvider(String name) throws NullPointerException {
             // Sanity check.
-            if (name==null)
+            if (name == null)
                 throw new NullPointerException("Table provider name cannot be null.");
             // Remember the values.
             this.name = name;
@@ -150,7 +150,7 @@ public interface TableProvider extends Comparable, DataLink {
          * @return true if the two can cohabit, false if not.
          * @throws NullPointerException if the partner is null.
          */
-        public boolean canCohabit(DataLink partner) {
+        public boolean canCohabit(DataLink partner) throws NullPointerException {
             return false;
         }
         
@@ -204,7 +204,7 @@ public interface TableProvider extends Comparable, DataLink {
          */
         public Collection getUniqueValues(Column c) throws NullPointerException, SQLException {
             // Sanity check.
-            if (c==null)
+            if (c == null)
                 throw new NullPointerException("Column cannot be null.");
             // Do it.
             return Collections.EMPTY_SET;
@@ -244,7 +244,7 @@ public interface TableProvider extends Comparable, DataLink {
          * otherwise false.
          */
         public boolean equals(Object o) {
-            if (o==null || !(o instanceof TableProvider)) return false;
+            if (o == null || !(o instanceof TableProvider)) return false;
             TableProvider t = (TableProvider)o;
             return t.toString().equals(this.toString());
         }

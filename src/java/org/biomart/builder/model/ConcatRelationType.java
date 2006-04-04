@@ -67,8 +67,12 @@ public class ConcatRelationType implements Comparable {
      * Note that the names of {@link ConcatRelationType} objects are case-insensitive.
      * @param name the name of the {@link ConcatRelationType} object.
      * @return the {@link ConcatRelationType} object.
+     * @throws NullPointerException if the name is null.
      */
-    public static ConcatRelationType get(String name) {
+    public static ConcatRelationType get(String name) throws NullPointerException {
+        // Sanity check.
+        if (name == null)
+            throw new NullPointerException("Name cannot be null.");
         // Convert to upper case.
         name = name.toUpperCase();
         // Do we already have this one?
@@ -86,7 +90,7 @@ public class ConcatRelationType implements Comparable {
      * @param name the name of the {@link ConcatRelationType}.
      */
     private ConcatRelationType(String name) {
-        this.name=name;
+        this.name = name;
     }
     
     /**
@@ -124,6 +128,6 @@ public class ConcatRelationType implements Comparable {
      */
     public boolean equals(Object o) {
         // We are dealing with singletons so can use == happily.
-        return o==this;
+        return o == this;
     }
 }

@@ -46,7 +46,7 @@ import org.biomart.builder.exceptions.AssociationException;
  * {@link ComponentStatus} of INFERRED.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 30th March 2006
+ * @version 0.1.5, 4th April 2006
  * @since 0.1
  */
 public interface Key extends Comparable {
@@ -66,9 +66,10 @@ public interface Key extends Comparable {
     /**
      * Sets the {@link ComponentStatus} of this {@link Key}. The default value,
      * unless otherwise specified, is INFERRED.
-     * @param s the new {@link ComponentStatus} of this {@link Key}.
+     * 
+     * @param status the new {@link ComponentStatus} of this {@link Key}.
      */
-    public void setStatus(ComponentStatus s);
+    public void setStatus(ComponentStatus status);
     
     /**
      * Returns all {@link Relation}s this {@link Key} is involved in. The set may be
@@ -80,7 +81,8 @@ public interface Key extends Comparable {
     /**
      * Returns the {@link Relation} on this {@link Key} with the given name. It may return
      * null if not found.
-     * @return the namedl {@link Relation} on this {@link Key} if found, otherwise null.
+     * @param name the name to look for.
+     * @return the named {@link Relation} on this {@link Key} if found, otherwise null.
      * @throws NullPointerException if the name given was null.
      */
     public Relation getRelationByName(String name) throws NullPointerException;
@@ -89,20 +91,22 @@ public interface Key extends Comparable {
      * Adds a particular {@link Relation} to the set this {@link Key} is involved in.
      * It checks first to make sure it is actually involved. It quietly ignores it if
      * it already knows about this {@link Relation}.
-     * @param rel the {@link Relation} to add to this {@link Key}.
+     * 
+     * @param relation the {@link Relation} to add to this {@link Key}.
      * @throws AssociationException if it is not actually involved in the given
      * {@link Relation} in any way.
      * @throws NullPointerException if the {@link Relation} argument was null.
      */
-    public void addRelation(Relation rel) throws AssociationException, NullPointerException;
+    public void addRelation(Relation relation) throws AssociationException, NullPointerException;
     
     /**
      * Removes a particular {@link Relation} from the set this {@link Key} is involved in.
      * It quietly ignores it if it is not involved or doesn't know about this {@link Relation}.
-     * @param rel the {@link Relation} to remove from this {@link Key}.
+     * 
+     * @param relation the {@link Relation} to remove from this {@link Key}.
      * @throws NullPointerException if the {@link Relation} argument was null.
      */
-    public void removeRelation(Relation rel) throws NullPointerException;
+    public void removeRelation(Relation relation) throws NullPointerException;
     
     /**
      * Returns the {@link Table} this {@link Key} is formed over.
@@ -119,7 +123,7 @@ public interface Key extends Comparable {
     
     /**
      * Counts the {@link Column}s this {@link Key} is formed over. It will always
-     * return values >= 1.
+     * return values > = 1.
      * @return the number of {@link Column}s this {@link Key} involves.
      */
     public int countColumns();
@@ -142,18 +146,6 @@ public interface Key extends Comparable {
     }
     
     /**
-     * This interface is designed to mark {@link Key} instances as single-column keys.
-     */
-    public interface SimpleKey extends Key {
-    }
-    
-    /**
-     * This interface is designed to mark {@link Key} instances as compound keys.
-     */
-    public interface CompoundKey extends Key {
-    }
-    
-    /**
      * The generic implementation provides the basics for more complex key types to extend.
      * It doesn't know anything except which {@link Column}s and {@link Relation}s are involved.
      */
@@ -161,13 +153,13 @@ public interface Key extends Comparable {
         /**
          * Internal reference to the set of {@link Column}s this {@link Key} is over.
          */
-        private final List cols = new ArrayList();
+        private final List columns = new ArrayList();
         
         /**
          * Internal reference to the set of {@link Relations}s this {@link Key} is involved in.
          * Keys are relation names.
          */
-        private final Map rels = new HashMap();
+        private final Map relations = new HashMap();
         
         /**
          * Internal reference to the {@link Table} of this {@link Key}.
@@ -192,52 +184,54 @@ public interface Key extends Comparable {
          * they are in a sensible order. The order they are specified in here is the order in which
          * the {@link Key} will refer to them in future. The list of {@link Column}s cannot be changed
          * outside this constructor. Nulls inside the list are ignored, but if it finds any non-{@link Column}
-         * objects in the list an exception will be thrown. The list must contain at least two {@link Column}s.
-         * @param cols the {@link List} of {@link Column}s to form the key over.
+         * objects in the list an exception will be thrown. The list must contain at least one {@link Column}.
+         * 
+         * @param columns the {@link List} of {@link Column}s to form the key over.
          * @throws NullPointerException if the input list or table is null.
          * @throws IllegalArgumentException if the input list contains any non-null non-{@link Column}
-         * objects or contains less than 2 {@link Column}s.
+         * objects or contains less than 1 {@link Column}s.
          * @throws AssociationException if any of the {@link Column}s do not belong to
          * the {@link Table} specified.
          */
-        public GenericKey(List cols) throws IllegalArgumentException, NullPointerException, AssociationException {
+        public GenericKey(List columns) throws IllegalArgumentException, NullPointerException, AssociationException {
             // Call the default constructor first.
             this();
             // Sanity check.
-            if (cols==null)
+            if (columns == null)
                 throw new NullPointerException("Key must be formed over a non-null set of columns.");
             // Do the work.
-            for (Iterator i = cols.iterator(); i.hasNext(); ) {
+            for (Iterator i = columns.iterator(); i.hasNext(); ) {
                 Object o = i.next();
-                if (o==null) continue;
+                if (o == null) continue;
                 if (!(o instanceof Column))
                     throw new IllegalArgumentException("List of columns must only contain Column instances.");
                 Column c = (Column)o;
-                if (this.table==null) this.table = c.getTable();
+                if (this.table == null) this.table = c.getTable();
                 if (!c.getTable().equals(this.table))
                     throw new AssociationException("All columns must belong to the same table.");
-                this.cols.add(c);
+                this.columns.add(c);
             }
             // Final sanity check.
-            if (this.cols.size()<2)
-                throw new IllegalArgumentException("List of columns must contain at least two Column instances.");
+            if (this.columns.size() < 1)
+                throw new IllegalArgumentException("List of columns must contain at least one Column instance.");
         }
         
         /**
          * The constructor constructs a {@link Key} over a single {@link Column}. The {@link Column}
          * cannot be changed outside this constructor.
-         * @param col the {@link Column} to form the key over.
+         * 
+         * @param column the {@link Column} to form the key over.
          * @throws NullPointerException if the input {@link Column} is null.
          */
-        public GenericKey(Column col) throws NullPointerException {
+        public GenericKey(Column column) throws NullPointerException {
             // Call the default constructor first.
             this();
             // Sanity check.
-            if (col==null)
+            if (column == null)
                 throw new NullPointerException("Column cannot be null.");
             // Do the work.
-            this.cols.add(col);
-            this.table = col.getTable();
+            this.columns.add(column);
+            this.table = column.getTable();
         }
         
         /**
@@ -249,7 +243,7 @@ public interface Key extends Comparable {
             StringBuffer sb = new StringBuffer();
             sb.append(this.getTable().getName());
             sb.append("{");
-            for (Iterator i = this.cols.iterator(); i.hasNext(); ) {
+            for (Iterator i = this.columns.iterator(); i.hasNext(); ) {
                 Column c = (Column)i.next();
                 sb.append(c.getName());
                 if (i.hasNext()) sb.append(",");
@@ -270,10 +264,11 @@ public interface Key extends Comparable {
         /**
          * Sets the {@link ComponentStatus} of this {@link Key}. The default value,
          * unless otherwise specified, is INFERRED.
-         * @param s the new {@link ComponentStatus} of this {@link Key}.
+         * 
+         * @param status the new {@link ComponentStatus} of this {@link Key}.
          */
-        public void setStatus(ComponentStatus s) {
-            this.status = s;
+        public void setStatus(ComponentStatus status) {
+            this.status = status;
         }
         
         /**
@@ -282,65 +277,68 @@ public interface Key extends Comparable {
          * @return the set of all {@link Relation}s this {@link Key} is involved in.
          */
         public Collection getRelations() {
-            return this.rels.values();
+            return this.relations.values();
         }
         
         /**
          * Returns the {@link Relation} on this {@link Key} with the given name. It may return
-         * null if not found.
+         * null if not found.  
+         * @param name the name to look for.
          * @return the namedl {@link Relation} on this {@link Key} if found, otherwise null.
          * @throws NullPointerException if the name given was null.
          */
         public Relation getRelationByName(String name) throws NullPointerException {
             // Sanity check.
-            if (name==null)
+            if (name == null)
                 throw new NullPointerException("Name cannot be null.");
             // Do we have it?
-            if (!this.rels.containsKey(name)) return null;
+            if (!this.relations.containsKey(name)) return null;
             // Return it.
-            return (Relation)this.rels.get(name);
+            return (Relation)this.relations.get(name);
         }
         
         /**
          * Adds a particular {@link Relation} to the set this {@link Key} is involved in.
          * It checks first to make sure it is actually involved. It quietly ignores it if
          * it already knows about this {@link Relation}.
-         * @param rel the {@link Relation} to add to this {@link Key}.
+         * 
+         * @param relation the {@link Relation} to add to this {@link Key}.
          * @throws AssociationException if it is not actually involved in the given
          * {@link Relation} in any way.
          * @throws NullPointerException if the {@link Relation} argument was null.
          */
-        public void addRelation(Relation rel) throws AssociationException, NullPointerException {
+        public void addRelation(Relation relation) throws AssociationException, NullPointerException {
             // Sanity check.
-            if (rel==null)
+            if (relation == null)
                 throw new NullPointerException("Relation to be added cannot be null.");
             // Does it refer to us?
-            if (!(rel.getForeignKey()==this || rel.getPrimaryKey()==this))
+            if (!(relation.getForeignKey() == this || relation.getPrimaryKey() == this))
                 throw new AssociationException("Relation does not refer to this key.");
             // Work out its name.
-            String name = rel.getName();
+            String name = relation.getName();
             // Quietly ignore if we've already got it.
-            if (this.rels.containsKey(name)) return;
+            if (this.relations.containsKey(name)) return;
             // Otherwise, do the work.
-            this.rels.put(name, rel);
+            this.relations.put(name, relation);
         }
         
         /**
          * Removes a particular {@link Relation} from the set this {@link Key} is involved in.
          * It quietly ignores it if it is not involved or doesn't know about this {@link Relation}.
-         * @param rel the {@link Relation} to remove from this {@link Key}.
+         * 
+         * @param relation the {@link Relation} to remove from this {@link Key}.
          * @throws NullPointerException if the {@link Relation} argument was null.
          */
-        public void removeRelation(Relation rel) throws NullPointerException {
+        public void removeRelation(Relation relation) throws NullPointerException {
             // Sanity check.
-            if (rel==null)
+            if (relation == null)
                 throw new NullPointerException("Relation to be removed cannot be null.");
             // Work out its name.
-            String name = rel.getName();
+            String name = relation.getName();
             // Quietly ignore if we dont' know about iit.
-            if (!this.rels.containsKey(name)) return;
+            if (!this.relations.containsKey(name)) return;
             // Otherwise, do the work.
-            this.rels.remove(name);
+            this.relations.remove(name);
         }
         
         /**
@@ -357,12 +355,12 @@ public interface Key extends Comparable {
          * @return the list of {@link Column}s this {@link Key} involves.
          */
         public List getColumns() {
-            return this.cols;
+            return this.columns;
         }
         
         /**
          * Counts the {@link Column}s this {@link Key} is formed over. It will always
-         * return values >= 1.
+         * return values > = 1.
          * @return the number of {@link Column}s this {@link Key} involves.
          */
         public int countColumns() {
@@ -376,7 +374,7 @@ public interface Key extends Comparable {
          */
         public void destroy() {
             // Remove all the relations.
-            for (Iterator i = this.rels.values().iterator(); i.hasNext(); ) {
+            for (Iterator i = this.relations.values().iterator(); i.hasNext(); ) {
                 Relation r = (Relation)i.next();
                 r.destroy();
             }
@@ -385,7 +383,9 @@ public interface Key extends Comparable {
                 try {
                     this.getTable().setPrimaryKey(null);
                 } catch (AssociationException e) {
-                    throw new AssertionError("Primary key could not be set to null.");
+                    AssertionError ae = new AssertionError("Primary key could not be set to null.");
+                    ae.initCause(e);
+                    throw ae;
                 }
             } else if (this instanceof ForeignKey) {
                 this.getTable().removeForeignKey((ForeignKey)this);
@@ -428,129 +428,61 @@ public interface Key extends Comparable {
          * otherwise false.
          */
         public boolean equals(Object o) {
-            if (o==null || !(o instanceof Key)) return false;
+            if (o == null || !(o instanceof Key)) return false;
             Key k = (Key)o;
             return k.toString().equals(this.toString());
         }
     }
     
     /**
-     * This implementation is the building block for a single-{@link Column} {@link Key}.
-     */
-    public class GenericSimpleKey extends GenericKey implements SimpleKey {
-        /**
-         * The constructor passes on all its work to the {@link GenericKey} constructor.
-         * @param col the {@link Column} to form the key over.
-         * @throws NullPointerException if the input {@link Column} is null.
-         */
-        public GenericSimpleKey(Column col) throws NullPointerException {
-            super(col);
-        }
-    }
-    
-    /**
-     * This implementation is a single-column primary key.
-     */
-    public class SimplePrimaryKey extends GenericSimpleKey implements PrimaryKey {
-        /**
-         * The constructor passes on all its work to the {@link GenericSimpleKey} constructor. It then
-         * sets itself as the {@link PrimaryKey} on the parent {@link Table}.
-         * @param col the {@link Column} to form the key over.
-         * @throws NullPointerException if the input {@link Column} is null.
-         */
-        public SimplePrimaryKey(Column col) throws NullPointerException {
-            super(col);
-            try {
-                this.getTable().setPrimaryKey(this);
-            } catch (AssociationException e) {
-                throw new AssertionError("Primary key table does not match itself.");
-            }
-        }
-    }
-    
-    /**
-     * This implementation is a single-column foreign key.
-     */
-    public class SimpleForeignKey extends GenericSimpleKey implements ForeignKey {
-        /**
-         * The constructor passes on all its work to the {@link GenericSimpleKey} constructor. It then
-         * adds itself to the set of {@link ForeignKey}s on the parent {@link Table}.
-         * @param col the {@link Column} to form the key over.
-         * @throws NullPointerException if the input {@link Column} is null.
-         */
-        public SimpleForeignKey(Column col) throws NullPointerException {
-            super(col);
-            try {
-                this.getTable().addForeignKey(this);
-            } catch (AssociationException e) {
-                throw new AssertionError("Foreign key table does not match itself.");
-            }
-        }
-    }
-    
-    /**
-     * This implementation is the building block for a multi-{@link Column} {@link Key}.
-     */
-    public class GenericCompoundKey extends GenericKey implements CompoundKey {
-        /**
-         * The constructor passes on all its work to the {@link GenericKey} constructor. It then
-         * sets itself as the {@link PrimaryKey} on the parent {@link Table}.
-         * @param cols the {@link List} of {@link Column}s to form the key over.
-         * @throws NullPointerException if the input list is null.
-         * @throws IllegalArgumentException if the input list contains any non-null non-{@link Column}
-         * objects or contains less than 2 {@link Column}s.
-         * @throws AssociationException if any of the {@link Column}s do not belong to
-         * the {@link Table} specified.
-         */
-        public GenericCompoundKey(List cols) throws NullPointerException, IllegalArgumentException, AssociationException {
-            super(cols);
-        }
-    }
-    
-    /**
      * This implementation is a multi-column primary key.
      */
-    public class CompoundPrimaryKey extends GenericCompoundKey implements PrimaryKey {
+    public class GenericPrimaryKey extends GenericKey implements PrimaryKey {
         /**
-         * The constructor passes on all its work to the {@link GenericCompoundKey} constructor.
-         * @param cols the {@link List} of {@link Column}s to form the key over.
+         * The constructor passes on all its work to the {@link GenericKey} constructor.
+         * 
+         * @param columns the {@link List} of {@link Column}s to form the key over.
          * @throws NullPointerException if the input list is null.
          * @throws IllegalArgumentException if the input list contains any non-null non-{@link Column}
          * objects or contains less than 2 {@link Column}s.
          * @throws AssociationException if any of the {@link Column}s do not belong to
          * the {@link Table} specified.
          */
-        public CompoundPrimaryKey(List cols) throws NullPointerException, IllegalArgumentException, AssociationException {
-            super(cols);
+        public GenericPrimaryKey(List columns) throws NullPointerException, IllegalArgumentException, AssociationException {
+            super(columns);
             try {
                 this.getTable().setPrimaryKey(this);
             } catch (AssociationException e) {
-                throw new AssertionError("Primary key table does not match itself.");
+                AssertionError ae = new AssertionError("Primary key table does not match itself.");
+                ae.initCause(e);
+                throw ae;
             }
-            
         }
     }
     
     /**
      * This implementation is a multi-column foreign key.
      */
-    public class CompoundForeignKey extends GenericCompoundKey implements ForeignKey {
+    public class GenericForeignKey extends GenericKey implements ForeignKey {
         /**
-         * The constructor passes on all its work to the {@link GenericCompoundKey} constructor. It then
+         * The constructor passes on all its work to the {@link GenericKey} constructor. It then
          * adds itself to the set of {@link ForeignKey}s on the parent {@link Table}.
-         * @param cols the {@link List} of {@link Column}s to form the key over.
+         * 
+         * @param columns the {@link List} of {@link Column}s to form the key over.
          * @throws NullPointerException if the input list is null.
          * @throws IllegalArgumentException if the input list contains any non-null non-{@link Column}
          * objects or contains less than 2 {@link Column}s.
          * @throws AssociationException if any of the {@link Column}s do not belong to
          * the {@link Table} specified.
          */
-        public CompoundForeignKey(List cols) throws NullPointerException, IllegalArgumentException, AssociationException {
-            super(cols);
+        public GenericForeignKey(List columns) throws NullPointerException, IllegalArgumentException, AssociationException {
+            super(columns);
             try {
                 this.getTable().addForeignKey(this);
             } catch (AssociationException e) {
-                throw new AssertionError("Foreign key table does not match itself.");
+                AssertionError ae = new AssertionError("Foreign key table does not match itself.");
+                ae.initCause(e);
+                throw ae;
             }
         }
     }

@@ -46,7 +46,7 @@ import org.biomart.builder.model.Key.PrimaryKey;
  * but it does not provide any methods that process or analyse these.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 30th March 2006
+ * @version 0.1.5, 4th April 2006
  * @since 0.1
  */
 public interface Table extends Comparable {
@@ -72,11 +72,11 @@ public interface Table extends Comparable {
     /**
      * Sets the {@link PrimaryKey} of this table. It may
      * be null, indicating that the {@link Table} has no {@link PrimaryKey}.
-     * @param pk the new {@link PrimaryKey} of this {@link Table}.
+     * @param primaryKey the new {@link PrimaryKey} of this {@link Table}.
      * @throws AssociationException if the {@link Table} parameter of the {@link ForeignKey}
      * does not match.
      */
-    public void setPrimaryKey(PrimaryKey pk) throws AssociationException;
+    public void setPrimaryKey(PrimaryKey primaryKey) throws AssociationException;
     
     /**
      * Returns a set of the {@link ForeignKey}s of this table. It may
@@ -89,7 +89,8 @@ public interface Table extends Comparable {
     /**
      * Returns the {@link ForeignKey} on this {@link Table} with the given name. It may return
      * null if not found.
-     * @return the namedl {@link ForeignKey} on this {@link Table} if found, otherwise null.
+     * @param name the name to look for.
+     * @return the named {@link ForeignKey} on this {@link Table} if found, otherwise null.
      * @throws NullPointerException if the name given was null.
      */
     public ForeignKey getForeignKeyByName(String name) throws NullPointerException;
@@ -99,21 +100,37 @@ public interface Table extends Comparable {
      * not be null. The {@link ForeignKey} must refer to this {@link Table} else
      * an {@link AssociationException} will be thrown. If it already exists, nothing
      * will happen and it will be quietly ignored.
-     * @param fk the new {@link ForeignKey} to add to this {@link Table}.
+     * @param foreignKey the new {@link ForeignKey} to add to this {@link Table}.
      * @throws AssociationException if the {@link Table} parameter of the {@link ForeignKey}
      * does not match.
      * @throws NullPointerException if the {@link ForeignKey} object is null.
      */
-    public void addForeignKey(ForeignKey fk) throws NullPointerException, AssociationException;
+    public void addForeignKey(ForeignKey foreignKey) throws NullPointerException, AssociationException;
     
     /**
      * Removes a {@link ForeignKey} from this table. It may
      * not be null. If it doesn't exist, nothing
      * will happen and it will be quietly ignored.
-     * @param fk the new {@link ForeignKey} to add to this {@link Table}.
+     * @param foreignKey the new {@link ForeignKey} to add to this {@link Table}.
      * @throws NullPointerException if the {@link ForeignKey} object is null.
      */
-    public void removeForeignKey(ForeignKey fk) throws NullPointerException;
+    public void removeForeignKey(ForeignKey foreignKey) throws NullPointerException;
+    
+    /**
+     * Returns a set of the {@link Key}s on all {@link Column}s in this table. It may
+     * be empty, indicating that the {@link Table} has no {@link Key}s.
+     * It will never return null.
+     * @return the set of {@link Key}s for this {@link Table}.
+     */
+    public Collection getKeys();
+    
+    /**
+     * Returns a set of the {@link Relation}s on all {@link Key}s in this table. It may
+     * be empty, indicating that the {@link Table} has no {@link Relation}s.
+     * It will never return null.
+     * @return the set of {@link Relation}s for this {@link Table}.
+     */
+    public Collection getRelations();
     
     /**
      * Returns a set of the {@link Column}s of this table. It may
@@ -136,14 +153,14 @@ public interface Table extends Comparable {
      * have had it's {@link Table} parameter set to match, otherwise an
      * {@link IllegalArgumentException} will be thrown. That exception will also get thrown
      * if the {@link Column} has the same name as an existing one on this table.
-     * @param c the {@link Column} to add.
+     * @param column the {@link Column} to add.
      * @throws AlreadyExistsException if the {@link Column} name has already been used on
      * this {@link Table}.
      * @throws AssociationException if the {@link Table} parameter of the {@link Column}
      * does not match.
      * @throws NullPointerException if the {@link Column} object is null.
      */
-    public void addColumn(Column c) throws AlreadyExistsException, AssociationException, NullPointerException;
+    public void addColumn(Column column) throws AlreadyExistsException, AssociationException, NullPointerException;
     
     /**
      * Convenience method that creates and adds a {@link Column} to this {@link Table}.
@@ -159,10 +176,10 @@ public interface Table extends Comparable {
      * Attemps to remove a {@link Column} from this table. If the {@link Column} does not exist on
      * this table the operation will be quietly ignored. Any {@link Key} involving that {@link Column}
      * will also be dropped along with all associated {@link Relation}s.
-     * @param c the {@link Column} to remove.
+     * @param column the {@link Column} to remove.
      * @throws NullPointerException if the {@link Column} object is null.
      */
-    public void removeColumn(Column c) throws NullPointerException;
+    public void removeColumn(Column column) throws NullPointerException;
     
     /**
      * Attemps to remove all columns on a table so that it can safely be dropped.
@@ -183,22 +200,22 @@ public interface Table extends Comparable {
         /**
          * Internal reference to the provider of this {@link Table}.
          */
-        private final TableProvider prov;
+        private final TableProvider tableProvider;
         
         /**
          * Internal reference to the {@link PrimaryKey} of this {@link Table}.
          */
-        private PrimaryKey pk;
+        private PrimaryKey primaryKey;
         
         /**
          * Internal reference to the {@link ForeignKey}s of this {@link Table}.
          */
-        private final Map fks = new HashMap();
+        private final Map foreignKeys = new HashMap();
         
         /**
          * Internal reference to the {@link Column}s of this {@link Table}.
          */
-        private final Map cols = new HashMap();
+        private final Map columns = new HashMap();
         
         /**
          * The constructor sets up an empty {@link Table} representation with the given name
@@ -209,13 +226,13 @@ public interface Table extends Comparable {
          */
         public GenericTable(String name, TableProvider prov) throws NullPointerException {
             // Sanity checks.
-            if (name==null)
+            if (name == null)
                 throw new NullPointerException("Table name cannot be null.");
-            if (prov==null)
+            if (prov == null)
                 throw new NullPointerException("Table provider cannot be null.");
             // Remember the values.
             this.name = name;
-            this.prov = prov;
+            this.tableProvider = prov;
         }
         
         /**
@@ -231,7 +248,7 @@ public interface Table extends Comparable {
          * @return the {@link TableProvider} for this {@link Table}.
          */
         public TableProvider getTableProvider() {
-            return this.prov;
+            return this.tableProvider;
         }
         
         /**
@@ -240,29 +257,29 @@ public interface Table extends Comparable {
          * @return the {@link PrimaryKey} of this {@link Table}.
          */
         public PrimaryKey getPrimaryKey() {
-            return this.pk;
+            return this.primaryKey;
         }
         
         /**
          * Sets the {@link PrimaryKey} of this table. It may
          * be null, indicating that the {@link Table} has no {@link PrimaryKey}.
-         * @param pk the new {@link PrimaryKey} of this {@link Table}.
+         * @param primaryKey the new {@link PrimaryKey} of this {@link Table}.
          * @throws AssociationException if the {@link Table} parameter of the {@link ForeignKey}
          * does not match.
          */
-        public void setPrimaryKey(PrimaryKey pk) throws AssociationException {
+        public void setPrimaryKey(PrimaryKey primaryKey) throws AssociationException {
             // Sanity check.
-            if (pk!=null && !pk.getTable().equals(this))
+            if (primaryKey != null && !primaryKey.getTable().equals(this))
                 throw new AssociationException("Primary key must specify same table as the one it is assigned to.");
             // Ensure nobody points to the old primary key
-            if (this.pk!=null) {
-                for (Iterator i = this.pk.getRelations().iterator(); i.hasNext(); ) {
+            if (this.primaryKey != null) {
+                for (Iterator i = this.primaryKey.getRelations().iterator(); i.hasNext(); ) {
                     Relation r = (Relation)i.next();
                     r.destroy();
                 }
             }
             // Update our primary key to the new one.
-            this.pk = pk;
+            this.primaryKey = primaryKey;
         }
         
         /**
@@ -272,23 +289,24 @@ public interface Table extends Comparable {
          * @return the set of {@link ForeignKey}s for this {@link Table}.
          */
         public Collection getForeignKeys() {
-            return this.fks.values();
+            return this.foreignKeys.values();
         }
         
         /**
          * Returns the {@link ForeignKey} on this {@link Table} with the given name. It may return
          * null if not found.
-         * @return the namedl {@link ForeignKey} on this {@link Table} if found, otherwise null.
+         * @param name the name to look for.
+         * @return the named {@link ForeignKey} on this {@link Table} if found, otherwise null.
          * @throws NullPointerException if the name given was null.
          */
         public ForeignKey getForeignKeyByName(String name) throws NullPointerException {
             // Sanity check.
-            if (name==null)
+            if (name == null)
                 throw new NullPointerException("Name cannot be null.");
             // Do we have it?
-            if (!this.fks.containsKey(name)) return null;
+            if (!this.foreignKeys.containsKey(name)) return null;
             // Return it.
-            return (ForeignKey)this.fks.get(name);
+            return (ForeignKey)this.foreignKeys.get(name);
         }
         
         /**
@@ -296,36 +314,65 @@ public interface Table extends Comparable {
          * not be null. The {@link ForeignKey} must refer to this {@link Table} else
          * an {@link AssociationException} will be thrown. If it already exists, nothing
          * will happen and it will be quietly ignored.
-         * @param fk the new {@link ForeignKey} to add to this {@link Table}.
+         * @param foreignKey the new {@link ForeignKey} to add to this {@link Table}.
          * @throws AssociationException if the {@link Table} parameter of the {@link ForeignKey}
          * does not match.
          * @throws NullPointerException if the {@link ForeignKey} object is null.
          */
-        public void addForeignKey(ForeignKey fk) throws NullPointerException, AssociationException {
+        public void addForeignKey(ForeignKey foreignKey) throws NullPointerException, AssociationException {
             // Sanity checks.
-            if (fk==null)
+            if (foreignKey == null)
                 throw new NullPointerException("Key to be added cannot be null.");
             // Work out its name.
-            String name = fk.getName();
+            String name = foreignKey.getName();
             // Quietly ignore if we've already got it.
-            if (this.fks.containsKey(name)) return;
+            if (this.foreignKeys.containsKey(name)) return;
             // Do it.
-            this.fks.put(name, fk);
+            this.foreignKeys.put(name, foreignKey);
         }
         
         /**
          * Removes a {@link ForeignKey} from this table. It may
          * not be null. If it doesn't exist, nothing
          * will happen and it will be quietly ignored.
-         * @param fk the new {@link ForeignKey} to add to this {@link Table}.
+         *
+         * @param foreignKey the new {@link ForeignKey} to add to this {@link Table}.
          * @throws NullPointerException if the {@link ForeignKey} object is null.
          */
-        public void removeForeignKey(ForeignKey fk) throws NullPointerException {
+        public void removeForeignKey(ForeignKey foreignKey) throws NullPointerException {
             // Sanity checks.
-            if (fk==null)
+            if (foreignKey == null)
                 throw new NullPointerException("Key to be removed cannot be null.");
             // Do it.
-            this.fks.remove(fk);
+            this.foreignKeys.remove(foreignKey);
+        }
+        
+        /**
+         * Returns a set of the {@link Key}s on all {@link Column}s in this table. It may
+         * be empty, indicating that the {@link Table} has no {@link Key}s.
+         * It will never return null.
+         * @return the set of {@link Key}s for this {@link Table}.
+         */
+        public Collection getKeys() {
+            Set allKeys = new HashSet();
+            if (this.primaryKey!=null) allKeys.add(this.primaryKey);
+            allKeys.addAll(this.foreignKeys.values());
+            return allKeys;
+        }
+        
+        /**
+         * Returns a set of the {@link Relation}s on all {@link Key}s in this table. It may
+         * be empty, indicating that the {@link Table} has no {@link Relation}s.
+         * It will never return null.
+         * @return the set of {@link Relation}s for this {@link Table}.
+         */
+        public Collection getRelations() {
+            Set allRels = new HashSet();
+            for (Iterator i = this.getKeys().iterator(); i.hasNext(); ) {
+                Key k = (Key)i.next();
+                allRels.addAll(k.getRelations());
+            }
+            return allRels;
         }
         
         /**
@@ -335,7 +382,7 @@ public interface Table extends Comparable {
          * @return the set of {@link Column}s for this {@link Table}.
          */
         public Collection getColumns() {
-            return this.cols.values();
+            return this.columns.values();
         }
         
         /**
@@ -346,7 +393,7 @@ public interface Table extends Comparable {
          */
         public Column getColumnByName(String name) {
             // Do we know this column?
-            if (this.cols.containsKey(name)) return (Column)this.cols.get(name);
+            if (this.columns.containsKey(name)) return (Column)this.columns.get(name);
             // Default case.
             return null;
         }
@@ -356,24 +403,25 @@ public interface Table extends Comparable {
          * have had it's {@link Table} parameter set to match, otherwise an
          * {@link IllegalArgumentException} will be thrown. That exception will also get thrown
          * if the {@link Column} has the same name as an existing one on this table.
-         * @param c the {@link Column} to add.
+         *
+         * @param column the {@link Column} to add.
          * @throws AlreadyExistsException if the {@link Column} name has already been used on
          * this {@link Table}.
          * @throws AssociationException if the {@link Table} parameter of the {@link Column}
          * does not match.
          * @throws NullPointerException if the {@link Column} object is null.
          */
-        public void addColumn(Column c) throws AlreadyExistsException, AssociationException, NullPointerException {
+        public void addColumn(Column column) throws AlreadyExistsException, AssociationException, NullPointerException {
             // Sanity check.
-            if (c==null)
+            if (column == null)
                 throw new NullPointerException("Column cannot be null");
-            if (c.getTable()!=this)
+            if (column.getTable() != this)
                 throw new AssociationException("Column must be associated with this table before being added to it.");
             // Do the work.
-            String name = c.getName();
-            if (this.cols.containsKey(name))
+            String name = column.getName();
+            if (this.columns.containsKey(name))
                 throw new AlreadyExistsException("Column already exists in this table", name);
-            this.cols.put(name,c);
+            this.columns.put(name,column);
         }
         
         /**
@@ -393,21 +441,20 @@ public interface Table extends Comparable {
          * Attemps to remove a {@link Column} from this table. If the {@link Column} does not exist on
          * this table the operation will be quietly ignored. Any {@link Key} involving that {@link Column}
          * will also be dropped along with all associated {@link Relation}s.
-         * @param c the {@link Column} to remove.
+         *
+         * @param column the {@link Column} to remove.
          * @throws NullPointerException if the {@link Column} object is null.
          */
-        public void removeColumn(Column c) throws NullPointerException {
+        public void removeColumn(Column column) throws NullPointerException {
             // Do we know this column?
-            if (!this.cols.containsKey(c.getName())) return;
-            // Remove primary key if if involves this column
-            if (this.pk.getColumns().contains(c)) this.pk.destroy();
-            // Remove all foreign keys involving this column
-            for (Iterator i = this.fks.values().iterator(); i.hasNext(); ) {
-                Key fk = (Key)i.next();
-                if (fk.getColumns().contains(c)) fk.destroy();
+            if (!this.columns.containsKey(column.getName())) return;
+            // Remove all keys involving this column
+            for (Iterator i = this.getKeys().iterator(); i.hasNext(); ) {
+                Key k = (Key)i.next();
+                if (k.getColumns().contains(column)) k.destroy();
             }
             // Remove the column itself
-            this.cols.remove(c.getName());
+            this.columns.remove(column.getName());
         }
         
         /**
@@ -415,13 +462,17 @@ public interface Table extends Comparable {
          */
         public void destroy() {
             Set allCols = new HashSet();
-            allCols.addAll(this.cols.values());
+            allCols.addAll(this.columns.values());
+            // Remove each column we have. This will recursively cause
+            // keys etc. to be removed.
             for (Iterator i = allCols.iterator(); i.hasNext(); ) {
                 Column c = (Column)i.next();
                 try {
                     this.removeColumn(c);
                 } catch (NullPointerException e) {
-                    throw new AssertionError("Found a null column.");
+                    AssertionError ae = new AssertionError("Found a null column.");
+                    ae.initCause(e);
+                    throw ae;
                 }
             }
         }
@@ -432,7 +483,7 @@ public interface Table extends Comparable {
          * @return the name of this {@link Table} object.
          */
         public String toString() {
-            return this.prov.toString()+":"+this.getName();
+            return this.tableProvider.toString() + ":" + this.getName();
         }
         
         /**
@@ -461,7 +512,8 @@ public interface Table extends Comparable {
          * otherwise false.
          */
         public boolean equals(Object o) {
-            if (o==null || !(o instanceof Table)) return false;
+            if (o == null || !(o instanceof Table))
+                return false;
             Table t = (Table)o;
             return t.toString().equals(this.toString());
         }

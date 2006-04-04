@@ -36,7 +36,7 @@ import org.biomart.builder.exceptions.AssociationException;
  * a simple storage/retrieval mechanism for the parent {@link Table} and name.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 27th March 2006
+ * @version 0.1.3, 4th April 2006
  * @since 0.1
  */
 public interface Column extends Comparable {
@@ -60,7 +60,7 @@ public interface Column extends Comparable {
         /**
          * Internal reference to the parent {@link Table}.
          */
-        protected Table t;
+        protected Table table;
         
         /**
          * Internal reference to the name of the {@link Column}.
@@ -75,26 +75,29 @@ public interface Column extends Comparable {
         /**
          * This constructor creates a {@link Column} and checks that neither the
          * name nor the parent {@link Table} are null.
+         * 
          * @param name the name of the {@link Column} to create.
-         * @param t the parent {@link Table}
+         * @param table the parent {@link Table}
          * @throws NullPointerException if either parameter is null.
          * @throws AlreadyExistsException if it was unable to add the {@link Column}
          * to the parent {@link Table} using {@link Table#addColumn(Column) addColumn()}.
          */
-        public GenericColumn(String name, Table t) throws AlreadyExistsException, NullPointerException {
+        public GenericColumn(String name, Table table) throws AlreadyExistsException, NullPointerException {
             // Sanity checks
-            if (name==null)
+            if (name == null)
                 throw new NullPointerException("Column name cannot be null.");
-            if (t==null)
+            if (table == null)
                 throw new NullPointerException("Parent table cannot be null.");
             // Remember the values.
             this.name = name;
-            this.t = t;
+            this.table = table;
             // Add it to the table - throws AssociationException and AlreadyExistsException
             try {
-                t.addColumn(this);
+                table.addColumn(this);
             } catch (AssociationException e) {
-                throw new AssertionError("Table does not equal itself.");
+                AssertionError ae = new AssertionError("Table does not equal itself.");
+                ae.initCause(e);
+                throw ae;
             }
         }
         
@@ -111,7 +114,7 @@ public interface Column extends Comparable {
          * @return the parent {@link Table} of this {@link Column}.
          */
         public Table getTable() {
-            return this.t;
+            return this.table;
         }
         
         /**
@@ -119,7 +122,7 @@ public interface Column extends Comparable {
          * @return the name as described above.
          */
         public String toString() {
-            return this.getTable().toString()+":"+this.getName();
+            return this.getTable().toString() + ":" + this.getName();
         }
         
         /**
@@ -148,7 +151,7 @@ public interface Column extends Comparable {
          * matches, otherwise false.
          */
         public boolean equals(Object o) {
-            if (o==null || !(o instanceof Column)) return false;
+            if (o == null || !(o instanceof Column)) return false;
             Column c = (Column)o;
             return c.toString().equals(this.toString());
         }

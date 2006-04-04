@@ -69,8 +69,12 @@ public class ComponentStatus implements Comparable {
      * Note that the names of {@link ComponentStatus} objects are case-insensitive.
      * @param name the name of the {@link ComponentStatus} object.
      * @return the {@link ComponentStatus} object.
+     * @throws NullPointerException if the name is null.
      */
-    public static ComponentStatus get(String name) {
+    public static ComponentStatus get(String name) throws NullPointerException {        
+        // Sanity check.
+        if (name == null)
+            throw new NullPointerException("Name cannot be null.");
         // Convert to upper case.
         name = name.toUpperCase();
         // Do we already have this one?
@@ -126,6 +130,6 @@ public class ComponentStatus implements Comparable {
      */
     public boolean equals(Object o) {
         // We are dealing with singletons so can use == happily.
-        return o==this;
+        return o == this;
     }
 }

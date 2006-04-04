@@ -53,16 +53,17 @@ public class NaiveCLI {
      * Does the work of loading up the table provider, creating a schema
      * based around it and a window focused on the named table, then
      * generating the dataset and the XML output file.
-     * @param tp the {@link TableProvider} to load tables from.
-     * @param table the name of the table to build the dataset around.
+     * 
+     * @param tableProvider the {@link TableProvider} to load tables from.
+     * @param name the name of the table to build the dataset around.
      * @param file the output file to write the XML to.
      * @throws Exception all kinds of weird and wonderful problems may occur.
      */
-    public void execute(TableProvider tp, String name, File file) throws Exception {
+    public void execute(TableProvider tableProvider, String name, File file) throws Exception {
         Schema s = new Schema();
-        s.addTableProvider(tp);
+        s.addTableProvider(tableProvider);
         s.synchronise(); // causes the table provider to load up its info
-        Table t = tp.getTableByName(name);
+        Table t = tableProvider.getTableByName(name);
         Window w = new Window(s, t, t.getName());
         w.synchronise(); // causes the dataset to regenerate
         SchemaSaver.save(s, file);

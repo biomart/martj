@@ -78,10 +78,11 @@ public interface Relation extends Comparable {
     public ForeignKey getForeignKey();
     
     /**
-     * Returns the {@link Cardinality} of this {@link Relationship}.
-     * @return the {@link Cardinality}
+     * Returns the {@link Cardinality} of the {@link ForeignKey} end
+     * of this {@link Relationship}.
+     * @return the {@link Cardinality}.
      */
-    public Cardinality getFKCardinality();
+    public Cardinality getCardinality();
     
     /**
      * Deconstructs the {@link Relation} by removing references to
@@ -94,7 +95,7 @@ public interface Relation extends Comparable {
      * involved in a {@link Relationship}. Note that the names of {@link Cardinality} objects
      * are case-insensitive.
      */
-    public class Cardinality implements Comparable {        
+    public class Cardinality implements Comparable {
         /**
          * Internal reference to the set of {@link Cardinality} singletons.
          */
@@ -121,8 +122,12 @@ public interface Relation extends Comparable {
          * Note that the names of {@link Cardinality} objects are case-insensitive.
          * @param name the name of the {@link Cardinality} object.
          * @return the {@link Cardinality} object.
+         * @throws NullPointerException if the name is null.
          */
-        public static Cardinality get(String name) {
+        public static Cardinality get(String name) throws NullPointerException {
+            // Sanity check.
+            if (name == null)
+                throw new NullPointerException("Name cannot be null.");
             // Convert to upper case.
             name = name.toUpperCase();
             // Do we already have this one?
@@ -140,7 +145,7 @@ public interface Relation extends Comparable {
          * @param name the name of the {@link Cardinality}.
          */
         private Cardinality(String name) {
-            this.name=name;
+            this.name = name;
         }
         
         /**
@@ -178,7 +183,7 @@ public interface Relation extends Comparable {
          */
         public boolean equals(Object o) {
             // We are dealing with singletons so can use == happily.
-            return o==this;
+            return o == this;
         }
     }
     
@@ -190,17 +195,17 @@ public interface Relation extends Comparable {
         /**
          * Internal reference to the {@link PrimaryKey} of this {@link Relation}.
          */
-        private final PrimaryKey pk;
+        private final PrimaryKey primaryKey;
         
         /**
          * Internal reference to the {@link ForeignKey} of this {@link Relation}.
          */
-        private final ForeignKey fk;
+        private final ForeignKey foreignKey;
         
         /**
          * Internal reference to the {@link Cardinality} of this {@link Relation}.
          */
-        private final Cardinality fkc;
+        private final Cardinality cardinality;
         
         /**
          * Internal reference to the {@link ComponentStatus} of this {@link Relation}.
@@ -211,28 +216,29 @@ public interface Relation extends Comparable {
          * This constructor tests that both ends of the {@link Relation} have
          * {@link Key</code>s with the same number of <code>Column}s.
          * The default constructor sets the status to INFERRED.
-         * @param pk the source {@link PrimaryKey}.
-         * @param fk the target {@link ForeignKey}.
-         * @param fkc the {@link Cardinality} of the {@link ForeignKey}.
+         *
+         * @param primaryKey the source {@link PrimaryKey}.
+         * @param foreignKey the target {@link ForeignKey}.
+         * @param cardinality the {@link Cardinality} of the {@link ForeignKey}.
          * @throws AssociationException if the number of {@link Column}s in the {@link Key}s don't match.
          * @throws NullPointerException if either {@link Key} is null or the {@link Cardinality} is null.
          */
-        public GenericRelation(PrimaryKey pk, ForeignKey fk, Cardinality fkc) throws AssociationException, NullPointerException {
+        public GenericRelation(PrimaryKey primaryKey, ForeignKey foreignKey, Cardinality cardinality) throws AssociationException, NullPointerException {
             // Sanity checks.
-            if (fkc==null)
+            if (cardinality==null)
                 throw new NullPointerException("The cardinality must not be null.");
-            if (pk==null || fk==null)
+            if (primaryKey==null || foreignKey==null)
                 throw new NullPointerException("Both primary and foreign Keys must not be null.");
-            if (pk.countColumns()!=fk.countColumns())
+            if (primaryKey.countColumns()!=foreignKey.countColumns())
                 throw new AssociationException("Column count in primary and foreign Keys must match.");
             // Remember the keys.
-            this.pk = pk;
-            this.fk = fk;
-            this.fkc = fkc;
+            this.primaryKey = primaryKey;
+            this.foreignKey = foreignKey;
+            this.cardinality = cardinality;
             this.status = ComponentStatus.INFERRED;
             // Add ourselves at both ends.
-            pk.addRelation(this);
-            fk.addRelation(this);
+            primaryKey.addRelation(this);
+            foreignKey.addRelation(this);
         }
         
         /**
@@ -247,7 +253,7 @@ public interface Relation extends Comparable {
             sb.append(":");
             sb.append(this.getForeignKey().getName());
             sb.append(" (1:");
-            sb.append(this.getFKCardinality().toString());
+            sb.append(this.getCardinality().toString());
             sb.append(")");
             return sb.toString();
         }
@@ -266,7 +272,7 @@ public interface Relation extends Comparable {
          * @return the {@link PrimaryKey}
          */
         public PrimaryKey getPrimaryKey() {
-            return this.pk;
+            return this.primaryKey;
         }
         
         /**
@@ -274,15 +280,16 @@ public interface Relation extends Comparable {
          * @return the {@link ForeignKey}
          */
         public ForeignKey getForeignKey() {
-            return this.fk;
+            return this.foreignKey;
         }
         
         /**
-         * Returns the {@link Cardinality} of this {@link Relationship}.
+         * Returns the {@link Cardinality} of the {@link ForeignKey} end
+         * of this {@link Relationship}.
          * @return the {@link Cardinality}
          */
-        public Cardinality getFKCardinality() {
-            return this.fkc;
+        public Cardinality getCardinality() {
+            return this.cardinality;
         }
         
         /**
@@ -328,7 +335,7 @@ public interface Relation extends Comparable {
          * otherwise false.
          */
         public boolean equals(Object o) {
-            if (o==null || !(o instanceof Relation)) return false;
+            if (o == null || !(o instanceof Relation)) return false;
             Relation r = (Relation)o;
             return r.toString().equals(this.toString());
         }
@@ -341,13 +348,14 @@ public interface Relation extends Comparable {
         /**
          * This constructor tests that both ends of the {@link Relation} have
          * {@link Key</code>s with the same number of <code>Column}s.
-         * @param pk the source {@link PrimaryKey}.
-         * @param fk the target {@link ForeignKey}.
+         *
+         * @param primaryKey the source {@link PrimaryKey}.
+         * @param foreignKey the target {@link ForeignKey}.
          * @throws AssociationException if the number of {@link Column}s in the {@link Key}s don't match.
          * @throws NullPointerException if either {@link Key} is null.
          */
-        public OneToOne(PrimaryKey pk, ForeignKey fk) throws AssociationException, NullPointerException {
-            super(pk, fk, Cardinality.ONE);
+        public OneToOne(PrimaryKey primaryKey, ForeignKey foreignKey) throws AssociationException, NullPointerException {
+            super(primaryKey, foreignKey, Cardinality.ONE);
         }
     }
     
@@ -358,13 +366,14 @@ public interface Relation extends Comparable {
         /**
          * This constructor tests that both ends of the {@link Relation} have
          * {@link Key</code>s with the same number of <code>Column}s.
-         * @param pk the source {@link PrimaryKey}.
-         * @param fk the target {@link ForeignKey}.
+         *
+         * @param primaryKey the source {@link PrimaryKey}.
+         * @param foreignKey the target {@link ForeignKey}.
          * @throws AssociationException if the number of {@link Column}s in the {@link Key}s don't match.
          * @throws NullPointerException if either {@link Key} is null.
          */
-        public OneToMany(PrimaryKey pk, ForeignKey fk) throws AssociationException, NullPointerException {
-            super(pk, fk, Cardinality.MANY);
+        public OneToMany(PrimaryKey primaryKey, ForeignKey foreignKey) throws AssociationException, NullPointerException {
+            super(primaryKey, foreignKey, Cardinality.MANY);
         }
     }
 }

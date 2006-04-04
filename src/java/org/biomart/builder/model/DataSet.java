@@ -41,11 +41,9 @@ import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.HasDimensionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.TableProviderNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
-import org.biomart.builder.model.Key.CompoundForeignKey;
-import org.biomart.builder.model.Key.CompoundPrimaryKey;
+import org.biomart.builder.model.Key.GenericForeignKey;
+import org.biomart.builder.model.Key.GenericPrimaryKey;
 import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.model.Key.SimpleForeignKey;
-import org.biomart.builder.model.Key.SimplePrimaryKey;
 import org.biomart.builder.model.Relation.OneToMany;
 import org.biomart.builder.model.Table.GenericTable;
 import org.biomart.builder.model.TableProvider.GenericTableProvider;
@@ -56,35 +54,10 @@ import org.biomart.builder.model.TableProvider.GenericTableProvider;
  * a set of mart tables based on the contents of a {@link Window}.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 31st March 2006
+ * @version 0.1.6, 4th April 2006
  * @since 0.1
  */
 public interface DataSet extends Comparable {
-    /**
-     * Constant representing the separator between bits of table names.
-     */
-    public static final String SEPARATOR = "__";
-    
-    /**
-     * Constant representing the suffix added to main table names.
-     */
-    public static final String MAIN_SUFFIX = "main";
-    
-    /**
-     * Constant representing the separator between main and subclass table names.
-     */
-    public static final String SUBCLASS_SEPARATOR = "__";
-    
-    /**
-     * Constant representing the prefix for a table provider partition column.
-     */
-    public static final String TBLPROVCOL_PREFIX = "__tblprov_";
-    
-    /**
-     * Constant representing the prefix for a concat column.
-     */
-    public static final String CONCATCOL_PREFIX = "__concat_";
-    
     /**
      * Returns the {@link Window} this {@link DataSet} is constructed from.
      * @return the {@link Window} for this {@link DataSet}.
@@ -109,10 +82,11 @@ public interface DataSet extends Comparable {
     
     /**
      * Sets the {@link MartConstructor} this {@link DataSet} will be built by.
-     * @param mc the {@link MartConstructor} for this {@link DataSet}.
+     *
+     * @param martConstructor the {@link MartConstructor} for this {@link DataSet}.
      * @throws NullPointerException if the parameter is null.
      */
-    public void setMartConstructor(MartConstructor mc) throws NullPointerException;
+    public void setMartConstructor(MartConstructor martConstructor) throws NullPointerException;
     
     /**
      * Returns the {@link MartConstructor} this {@link DataSet} will be built by.
@@ -136,7 +110,7 @@ public interface DataSet extends Comparable {
         /**
          * Internal reference to the mart constructor that will build us later.
          */
-        private MartConstructor mc;
+        private MartConstructor martConstructor;
         
         /**
          * Internal reference to the parent window.
@@ -150,11 +124,12 @@ public interface DataSet extends Comparable {
         
         /**
          * The constructor links this {@link DataSet} with a specific {@link Window}.
+         * @param window the {@link Window} to link this {@link DataSet} with.
          * @throws NullPointerException if the window is null.
          */
         public GenericDataSet(Window window) throws NullPointerException {
             // Sanity check.
-            if (window==null)
+            if (window == null)
                 throw new NullPointerException("Parent window cannot be null.");
             // Do it.
             this.window = window;
@@ -176,13 +151,13 @@ public interface DataSet extends Comparable {
         public DataSetTable getMainTable() throws NullPointerException {
             // Sanity check.
             try {
-                if (this.mainTable==null) this.regenerate();
+                if (this.mainTable == null) this.regenerate();
             } catch (Exception e) {
                 NullPointerException npe = new NullPointerException("Unable to regenerate DataSet.");
                 npe.initCause(e);
                 throw npe;
             }
-            if (this.mainTable==null)
+            if (this.mainTable == null)
                 throw new NullPointerException("Unable to construct a main table. Does the parent Window have a central table?");
             // Do it.
             return this.mainTable;
@@ -208,7 +183,7 @@ public interface DataSet extends Comparable {
             Set subclassRelations = new HashSet();
             
             // Identify main table.
-            Table centralTable = this.getWindow().getTable();
+            Table centralTable = this.getWindow().getCentralTable();
             // if central table has subclass relations and is at the foreign key end, then follow
             // them to the real central table.
             boolean found = false;
@@ -272,208 +247,230 @@ public interface DataSet extends Comparable {
             }
             
             // Build the main table.
-            this.mainTable = this.constructDataSetTable(tp, DataSetTableType.MAIN, centralTable, (Set)ignoredRelations.get(centralTable), null);
+            this.mainTable = this.columns(tp, DataSetTableType.MAIN, centralTable, (Set)ignoredRelations.get(centralTable), null);
             
             // Build the subclass tables.
             for (Iterator i = subclassRelations.iterator(); i.hasNext(); ) {
                 Relation r = (Relation)i.next();
                 Table sct = r.getForeignKey().getTable();
-                DataSetTable subclass = this.constructDataSetTable(tp, DataSetTableType.MAIN_SUBCLASS, sct, (Set)ignoredRelations.get(sct), r);
+                DataSetTable subclass = this.columns(tp, DataSetTableType.MAIN_SUBCLASS, sct, (Set)ignoredRelations.get(sct), r);
             }
             
             // Build the dimension tables.
             for (Iterator i = dimensionRelations.iterator(); i.hasNext(); ) {
                 Relation r = (Relation)i.next();
                 Table dt = r.getForeignKey().getTable();
-                DataSetTable dim = this.constructDataSetTable(tp, DataSetTableType.DIMENSION, dt, (Set)ignoredRelations.get(dt), r);
+                DataSetTable dim = this.columns(tp, DataSetTableType.DIMENSION, dt, (Set)ignoredRelations.get(dt), r);
                 // Add 'has' column to parent table (main table or subclass table) for this dimension.
                 DataSetTable dimParent = (DataSetTable)tp.getTableByName(r.getPrimaryKey().getTable().getName());
-                new HasDimensionColumn("__has_"+dt.getName(), dimParent, dim);
+                new HasDimensionColumn("__has_" + dt.getName(), dimParent, dim);
             }
         }
         
         /**
          * Internal function that constructs a data set table based on a real table, and the relations
-         * linking to/from it. If a primary key is supplied, then a foreign key is created on the data set
-         * table linking it to that primary key. Relations in the set supplied are ignored.
-         * @param prov the place to create the table in.
-         * @param type the type of table to create.
-         * @param sourceTable the original table to transform.
-         * @param ignoreRels the set of relations to ignore during transformation. If null, taken as empty.
-         * @param parentRel the relation between this and the 'real' parent table to link to if required.
-         * Null indicates no linking required. Linking takes place to the dataset table version of the 'real' table.
+         * linking to/from it. If a linkback relation is supplied between the real table and some parent real table,
+         * then a foreign key is created on the data set table linking it to the primary key of the dataset equivalent
+         * of the real parent table in the relation.
+         *
+         *
+         * @param dsTableProvider the place to create the table in.
+         * @param dsTableType the dsTableType of table to create.
+         * @param realTable the original table to transform.
+         * @param ignoredRelations the set of relations to ignore during transformation. If null, taken as empty.
+         * @param linkbackRelation the relation between the realTable and the real parent table to link to if required.
+         * Null indicates no linking required. Linking takes place to the dataset version of the real parent table.
          * @return a fully constructed and keyed up data set table.
          * @throws BuilderException if there was any trouble.
          * @throws NullPointerException if any required parameter was null.
          */
-        private DataSetTable constructDataSetTable(DataSetTableProvider prov, DataSetTableType type, Table sourceTable, Set ignoreRels, Relation parentRel) throws BuilderException, NullPointerException {
+        private DataSetTable columns(DataSetTableProvider dsTableProvider, DataSetTableType dsTableType, Table realTable, Set ignoredRelations, Relation linkbackRelation) throws BuilderException, NullPointerException {
             // Sanity check.
-            if (prov==null)
+            if (dsTableProvider == null)
                 throw new NullPointerException("Table provider cannot be null.");
-            if (type==null)
+            if (dsTableType == null)
                 throw new NullPointerException("Table type cannot be null.");
-            if (sourceTable==null)
+            if (realTable == null)
                 throw new NullPointerException("Source table cannot be null.");
             // Sensible defaults.
-            if (ignoreRels==null)
-                ignoreRels = new HashSet();
+            if (ignoredRelations == null)
+                ignoredRelations = new HashSet();
+            
             // Do it!
-            List keyRelations = new ArrayList();
-            List pkCols = new ArrayList();
-            Set cols = new HashSet();
-            // Add all masked columns to the ignore set.
-            ignoreRels.addAll(this.getWindow().getMaskedRelations());
+            List relationsFollowed = new ArrayList(); // relations used to construct this table
+            Set constructedColumns = new HashSet(); // constructedColumns to include in the constructed table
+            List constructedPKColumns = new ArrayList(); // constructedColumns to include in the constructed table's PK
+            
+            // Add all masked constructedColumns to the ignore set.
+            ignoredRelations.addAll(this.getWindow().getMaskedRelations());
+            
             // Create the DataSetTable
-            DataSetTable dt = new DataSetTable(sourceTable.getName(), this, prov, type);
-            this.transformTable(dt, sourceTable, ignoreRels, keyRelations, pkCols, cols);
-            dt.setUnderlyingRelations(keyRelations);
+            DataSetTable datasetTable = new DataSetTable(realTable.getName(), this, dsTableProvider, dsTableType);
+            this.transformTable(datasetTable, realTable, ignoredRelations, relationsFollowed, constructedPKColumns, constructedColumns);
+            datasetTable.setUnderlyingRelations(relationsFollowed);
+            
             // Add table provider partition column if required - must be part of primary key.
             DataSetColumn childTblProvCol=null;
-            if (sourceTable.getTableProvider() instanceof PartitionedTableProvider) {
-                childTblProvCol = new TableProviderNameColumn("__tblprov", dt);
-                pkCols.add(childTblProvCol);
+            if (realTable.getTableProvider() instanceof PartitionedTableProvider) {
+                childTblProvCol = new TableProviderNameColumn("__tblprov", datasetTable);
+                constructedPKColumns.add(childTblProvCol);
             }
+            
             // Work out the foreign key only if the parent relation is not null.
-            if (parentRel != null) {
-                // Get real table for dataset parent table
-                Table parentRealTable = parentRel.getPrimaryKey().getTable();
-                DataSetTable parentDSTable = (DataSetTable)prov.getTableByName(parentRealTable.getName());
+            if (linkbackRelation != null) {
                 // Create new, empty child FK list.
-                List fkCols = new ArrayList();
+                List constructedFKColumns = new ArrayList();
+                
+                // Get real table for dataset parent table
+                Table parentRealTable = linkbackRelation.getPrimaryKey().getTable();
+                DataSetTable parentDatasetTable = (DataSetTable)dsTableProvider.getTableByName(parentRealTable.getName());
+                
                 // For each column in dataset parent table PK
-                for (Iterator i = parentDSTable.getPrimaryKey().getColumns().iterator(); i.hasNext(); ) {
-                    DataSetColumn c = (DataSetColumn)i.next();
-                    DataSetColumn childCol;
-                    if (c instanceof WrappedColumn) {
+                for (Iterator i = parentDatasetTable.getPrimaryKey().getColumns().iterator(); i.hasNext(); ) {
+                    DataSetColumn parentDatasetTableColumn = (DataSetColumn)i.next();
+                    DataSetColumn constructedFKColumn;
+                    
+                    if (parentDatasetTableColumn instanceof WrappedColumn) {
                         // If column is a wrapped column
                         // Find associated real column
-                        Column rc = ((WrappedColumn)c).getWrappedColumn();
-                        if (!rc.getTable().equals(parentRealTable)) {
+                        Column parentRealTableColumn = ((WrappedColumn)parentDatasetTableColumn).getWrappedColumn();
+                        if (!parentRealTableColumn.getTable().equals(parentRealTable)) {
                             // If real column not on original main table, create child column for it add it to child table PK
-                            childCol = new WrappedColumn(rc, dt);
-                            pkCols.add(childCol);
+                            constructedFKColumn = new WrappedColumn(parentRealTableColumn, datasetTable);
+                            constructedPKColumns.add(constructedFKColumn);
                         } else {
                             // Else follow original relation FK end and find real child column and associated child column
-                            int parentRealPKColPos = parentRealTable.getPrimaryKey().getColumns().indexOf(rc);
-                            Column childRealFKCol = (Column)parentRel.getForeignKey().getColumns().get(parentRealPKColPos);
-                            childCol = (DataSetColumn)dt.getColumnByName(childRealFKCol.getName());
+                            int parentRealPKColPos = parentRealTable.getPrimaryKey().getColumns().indexOf(parentRealTableColumn);
+                            Column childRealFKCol = (Column)linkbackRelation.getForeignKey().getColumns().get(parentRealPKColPos);
+                            constructedFKColumn = (DataSetColumn)datasetTable.getColumnByName(childRealFKCol.getName());
                         }
-                    } else if (c instanceof TableProviderNameColumn) {
+                    } else if (parentDatasetTableColumn instanceof TableProviderNameColumn) {
                         // Else if its a tblprov column
                         // Find child tblprov column
-                        childCol = childTblProvCol;
+                        constructedFKColumn = childTblProvCol;
                     } else {
-                        // Else, can't handle.
+                        // Else, can'table handle.
                         throw new AssertionError("Cannot handle non-Wrapped non-TableProviderName columns in foreign keys.");
                     }
-                    // add child column to child FK
-                    fkCols.add(childCol);
+                    
+                    // Add child column to child FK
+                    constructedFKColumns.add(constructedFKColumn);
                 }
+                
                 // Create the foreign key.
-                if (fkCols.size()>1) dt.addForeignKey(new CompoundForeignKey(fkCols));
-                else if (fkCols.size()==1) dt.addForeignKey(new SimpleForeignKey((Column)fkCols.get(0)));
+                if (constructedFKColumns.size()>=1) datasetTable.addForeignKey(new GenericForeignKey(constructedFKColumns));
                 else throw new AssertionError("Foreign key expected but has no columns.");
             }
+            
             // Create the primary key on it.
-            if (pkCols.size()>1) dt.setPrimaryKey(new CompoundPrimaryKey(pkCols));
-            else if (pkCols.size()==1) dt.setPrimaryKey(new SimplePrimaryKey((Column)pkCols.get(0)));
+            if (constructedPKColumns.size()>=1) datasetTable.setPrimaryKey(new GenericPrimaryKey(constructedPKColumns));
+            
             // Return.
-            return dt;
+            return datasetTable;
         }
         
         /**
          * Simple recursive internal function that walks through relations, either noting that its seen them,
          * marking them as concat relations, and adding their columns to the table.
-         * @param dsTable the table to construct as we go along.
-         * @param sourceTable the table we are adding columns to dsTable from next.
-         * @param ignoreRels relations to ignore.
-         * @param keyRelations the relations used as we went along.
-         * @param pkCols the primary key columns to be added to the new table.
-         * @param cols the columns to be added to the new table.
+         * @param datasetTable the table to construct as we go along.
+         * @param realTable the table we are adding columns to datasetTable from next.
+         * @param ignoredRelations relations to ignore.
+         * @param relationsFollowed the relations used as we went along.
+         * @param constructedPKColumns the primary key columns to be added to the new table.
+         * @param constructedColumns the columns to be added to the new table.
          * @throws NullPointerException if any of the params were null.
          * @throws AlreadyExistsException if any attempt to add a column resulted in a duplicate name.
          */
-        private void transformTable(DataSetTable dsTable, Table sourceTable, Set ignoreRels, List keyRelations, List pkCols, Set cols) throws NullPointerException, AlreadyExistsException {
+        private void transformTable(DataSetTable datasetTable, Table realTable, Set ignoredRelations, List relationsFollowed, List constructedPKColumns, Set constructedColumns) throws NullPointerException, AlreadyExistsException {
             // Sanity check.
-            if (dsTable==null)
+            if (datasetTable == null)
                 throw new NullPointerException("Table cannot be null.");
-            if (sourceTable==null)
+            if (realTable == null)
                 throw new NullPointerException("Source table cannot be null.");
-            if (ignoreRels==null)
+            if (ignoredRelations == null)
                 throw new NullPointerException("Ignore relations cannot be null.");
-            if (keyRelations==null)
+            if (relationsFollowed == null)
                 throw new NullPointerException("Relations pairs cannot be null.");
-            if (pkCols==null)
+            if (constructedPKColumns == null)
                 throw new NullPointerException("Primary key columns cannot be null.");
-            if (cols==null)
+            if (constructedColumns == null)
                 throw new NullPointerException("Columns cannot be null.");
+            
             // Find all relations from source table.
             // Additionally, find all columns in foreign keys with non-ignored relations. Exclude them.
-            Set sourceRels = new HashSet();
+            Collection realTableRelations = realTable.getRelations();
             Set excludedColumns = new HashSet();
-            if (sourceTable.getPrimaryKey()!=null) sourceRels.addAll(sourceTable.getPrimaryKey().getRelations());
-            for (Iterator i = sourceTable.getForeignKeys().iterator(); i.hasNext(); ) {
+            for (Iterator i = realTable.getForeignKeys().iterator(); i.hasNext(); ) {
                 Key k = (Key)i.next();
                 for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
                     Relation r = (Relation)j.next();
-                    sourceRels.add(r);
-                    if (!ignoreRels.contains(r))
+                    if (!ignoredRelations.contains(r))
                         excludedColumns.addAll(k.getColumns());
                 }
             }
+            
             // Also exclude all masked columns.
             excludedColumns.addAll(this.getWindow().getMaskedColumns());
+            
             // Add all non-excluded columns from source table to dataset table.
-            for (Iterator i = sourceTable.getColumns().iterator(); i.hasNext(); ) {
+            for (Iterator i = realTable.getColumns().iterator(); i.hasNext(); ) {
                 Column c = (Column)i.next();
                 // If column is excluded, ignore it.
                 if (excludedColumns.contains(c)) continue;
                 // Otherwise add the column to our table.
-                Column wc = new WrappedColumn(c, dsTable);
+                Column wc = new WrappedColumn(c, datasetTable);
                 // If column is part of primary key, add the wrapped version to the primary key column set.
-                if (sourceTable.getPrimaryKey()!=null && sourceTable.getPrimaryKey().getColumns().contains(c)) pkCols.add(wc);
+                if (realTable.getPrimaryKey()!=null && realTable.getPrimaryKey().getColumns().contains(c)) constructedPKColumns.add(wc);
             }
-            // For all non-ignored rels in sourceTable
-            for (Iterator i = sourceRels.iterator(); i.hasNext(); ) {
+            
+            // For all non-ignored rels in realTable
+            for (Iterator i = realTableRelations.iterator(); i.hasNext(); ) {
                 Relation r = (Relation)i.next();
+                
                 // Need to recheck ignoreRefs in case has become ignored since we built our set of relations.
-                if (ignoreRels.contains(r)) continue;
+                if (ignoredRelations.contains(r)) continue;
+                
                 // Find key in relation that refers to this table.
-                Key sourceKey = r.getPrimaryKey();
-                Table targetTable = r.getForeignKey().getTable();
-                if (!sourceKey.getTable().equals(sourceTable)) {
-                    sourceKey = r.getForeignKey();
-                    targetTable = r.getPrimaryKey().getTable();
+                Key realTableRelSourceKey = r.getPrimaryKey();
+                Table realTableRelTargetTable = r.getForeignKey().getTable();
+                if (!realTableRelSourceKey.getTable().equals(realTable)) {
+                    realTableRelSourceKey = r.getForeignKey();
+                    realTableRelTargetTable = r.getPrimaryKey().getTable();
                 }
+                
                 // Add relation to path followed so far.
-                keyRelations.add(r);
-                // Add to ignore so don't revisit later
-                ignoreRels.add(r);
-                if (sourceKey instanceof PrimaryKey && this.getWindow().getConcatOnlyRelations().contains(r)) {
-                    // If concat-only and sourceTable is at primary key end of relation, concat it
+                relationsFollowed.add(r);
+                // Add to ignore so don'table revisit later
+                ignoredRelations.add(r);
+                
+                if (realTableRelSourceKey instanceof PrimaryKey && this.getWindow().getConcatOnlyRelations().contains(r)) {
+                    // If concat-only and realTable is at primary key end of relation, concat it
                     try {
-                        new ConcatRelationColumn("__concat_"+targetTable.getName(), dsTable, r);
+                        new ConcatRelationColumn("__concat_" + realTableRelTargetTable.getName(), datasetTable, r);
                     } catch (AssociationException e) {
-                        throw new AssertionError("Table did not match itself.");
+                        AssertionError ae = new AssertionError("Table does not equal itself.");
+                        ae.initCause(e);
+                        throw ae;
                     }
                 } else {
                     // Otherwise, recurse down to target table.
-                    this.transformTable(dsTable, targetTable, ignoreRels, keyRelations, pkCols, cols);
+                    this.transformTable(datasetTable, realTableRelTargetTable, ignoredRelations, relationsFollowed, constructedPKColumns, constructedColumns);
                 }
             }
         }
         
         /**
          * Sets the {@link MartConstructor} this {@link DataSet} will be built by.
-         * @param mc the {@link MartConstructor} for this {@link DataSet}.
+         *
+         * @param martConstructor the {@link MartConstructor} for this {@link DataSet}.
          * @throws NullPointerException if the parameter is null.
          */
-        public void setMartConstructor(MartConstructor mc) throws NullPointerException {
+        public void setMartConstructor(MartConstructor martConstructor) throws NullPointerException {
             // Sanity check.
-            if (mc==null)
+            if (martConstructor == null)
                 throw new NullPointerException("Mart constructor cannot be null.");
             // Do it.
-            this.mc = mc;
+            this.martConstructor = martConstructor;
         }
         
         /**
@@ -481,7 +478,7 @@ public interface DataSet extends Comparable {
          * @return the {@link MartConstructor} for this {@link DataSet}.
          */
         public MartConstructor getMartConstructor() {
-            return this.mc;
+            return this.martConstructor;
         }
         
         /**
@@ -493,10 +490,10 @@ public interface DataSet extends Comparable {
          */
         public void constructMart() throws BuilderException, SQLException {
             // Sanity check.
-            if (this.mc==null)
+            if (this.martConstructor == null)
                 throw new BuilderException("Cannot construct mart as no mart constructor has been specified.");
             // Do it.
-            this.mc.constructMart(this);
+            this.martConstructor.constructMart(this);
         }
         
         /**
@@ -557,21 +554,22 @@ public interface DataSet extends Comparable {
         /**
          * Adds a {@link DataSetTable} to this provider. The table must not be null, and
          * must not already exist (ie. with the same name).
-         * @param t the {@link DataSetTable} to add.
+         *
+         * @param table the {@link DataSetTable} to add.
          * @throws AlreadyExistsException if another one with the same name already exists.
-         * @throws AssociationException if the table doesn't belong to this provider.
+         * @throws AssociationException if the table doesn'table belong to this provider.
          * @throws NullPointerException if the table is null.
          */
-        public void addTable(DataSetTable t) throws AlreadyExistsException, AssociationException, NullPointerException {
+        public void addTable(DataSetTable table) throws AlreadyExistsException, AssociationException, NullPointerException {
             // Sanity check.
-            if (t==null)
+            if (table == null)
                 throw new NullPointerException("Table cannot be null.");
-            if (!t.getTableProvider().equals(this))
+            if (!table.getTableProvider().equals(this))
                 throw new AssociationException("Table does not belong to this provider.");
-            if (this.tables.containsKey(t.getName()))
-                throw new AlreadyExistsException("Table with that name already exists in this provider.", t.getName());
+            if (this.tables.containsKey(table.getName()))
+                throw new AlreadyExistsException("Table with that name already exists in this provider.", table.getName());
             // Do it.
-            this.tables.put(t.getName(), t);
+            this.tables.put(table.getName(), table);
         }
     }
     
@@ -596,39 +594,42 @@ public interface DataSet extends Comparable {
         /**
          * Internal reference to the dataset of this table.
          */
-        private final DataSet ds;
+        private final DataSet dataset;
         
         /**
          * The constructor calls the parent {@link GenericTable} constructor. It uses a
          * {@link DataSetTableProvider} as a parent for itself. You must also supply a type that
          * describes this as a main table, dimension table, etc.
+         * 
          * @param name the table name.
-         * @param ds the {@link DataSet} this table belongs in.
-         * @param prov the {@link DataSetTableProvider} to hold this table in.
+         * @param dataset the {@link DataSet} this table belongs in.
+         * @param dsTableProvider the {@link DataSetTableProvider} to hold this table in.
          * @param type the {@link DataSetTableType} that best describes this table.
          * @throws NullPointerException if any parameter is null.
-         * @throws AssociationException if the relations didn't contain the right number of elements for
+         * @throws AssociationException if the relations didn'table contain the right number of elements for
          * the table type.
          * @throws IllegalArgumentException if the relations list contained any null or non-Relation elements.
          * @throws AlreadyExistsException if the provider, for whatever reason, refuses to
          * allow this {@link Table} to be added to it using {@link DataSetTableProvider#addTable(Table)}.
          */
-        public DataSetTable(String name, DataSet ds, DataSetTableProvider prov, DataSetTableType type) throws AlreadyExistsException, NullPointerException, AssociationException, IllegalArgumentException {
+        public DataSetTable(String name, DataSet dataset, DataSetTableProvider dsTableProvider, DataSetTableType type) throws AlreadyExistsException, NullPointerException, AssociationException, IllegalArgumentException {
             // Super call first.
-            super(generateAlias(name, prov), prov);
+            super(generateAlias(name, dsTableProvider), dsTableProvider);
             // Sanity check.
-            if (type==null)
+            if (type == null)
                 throw new NullPointerException("Table type cannot be null.");
-            if (ds==null)
+            if (dataset == null)
                 throw new NullPointerException("Dataset cannot be null.");
             // Do the work.
             this.type = type;
-            this.ds = ds;
+            this.dataset = dataset;
             // Add the table to the provider.
             try {
-                prov.addTable(this);
+                dsTableProvider.addTable(this);
             } catch (AssociationException e) {
-                throw new AssertionError("Table provider does not match itself.");
+                AssertionError ae = new AssertionError("Table provider does not equal itself.");
+                ae.initCause(e);
+                throw ae;
             }
         }
         
@@ -636,23 +637,24 @@ public interface DataSet extends Comparable {
          * Internal method that generates a safe alias/name for a table. The first try is
          * always the original table name, followed by attempts with an underscore and a
          * sequence number appended.
+         *
          * @param name the first name to try.
-         * @param tp the {@link DataSetTableProvider} that this table is being added to.
+         * @param dsTableProvider the {@link DataSetTableProvider} that this table is being added to.
          * @return the result.
          * @throws NullPointerException if any parameter is null.
          */
-        protected static String generateAlias(String name, DataSetTableProvider tp) throws NullPointerException {
+        protected static String generateAlias(String name, DataSetTableProvider dsTableProvider) throws NullPointerException {
             // Sanity check.
-            if (name==null)
+            if (name == null)
                 throw new NullPointerException("Table name cannot be null.");
-            if (tp==null)
+            if (dsTableProvider == null)
                 throw new NullPointerException("Parent table provider cannot be null.");
             // Do it.
             String alias = name;
             int aliasNumber = 2;
-            while (tp.getTableByName(alias)!=null) {
+            while (dsTableProvider.getTableByName(alias)!=null) {
                 // Alias is original name appended with _2, _3, _4 etc.
-                alias = name+"_"+(aliasNumber++);
+                alias = name + "_" + (aliasNumber++);
             }
             return alias;
         }
@@ -670,24 +672,25 @@ public interface DataSet extends Comparable {
          * @return the dataset of this table.
          */
         public DataSet getDataSet() {
-            return this.ds;
+            return this.dataset;
         }
         
         /**
          * Sets the list of relations used to construct this table.
-         * @param the list of relations of this table. May be empty but never null.
+         * 
+         * @param relations the list of relations of this table. May be empty but never null.
          * @throws NullPointerException if the list was null.
-         * @throws IllegalArgumentException if the list wasn't a list of Key/Relation pairs.
+         * @throws IllegalArgumentException if the list wasn'table a list of Key/Relation pairs.
          */
         public void setUnderlyingRelations(List relations) throws NullPointerException, IllegalArgumentException {
             // Sanity check.
-            if (relations==null)
+            if (relations == null)
                 throw new NullPointerException("Relations list cannot be null.");
             // Check the relations and save them.
             this.relations.clear();
             for (Iterator i = relations.iterator(); i.hasNext(); ) {
                 Object o = i.next();
-                if (o==null || !(o instanceof Relation))
+                if (o == null || !(o instanceof Relation))
                     throw new IllegalArgumentException("Relations must be only Relation instances, they cannot be null or anything else.");
                 this.relations.add((Relation)o);
             }
@@ -709,19 +712,19 @@ public interface DataSet extends Comparable {
          *
          * <p>{@link DataSetTable}s insist that all columns are {@link DataSetColumn}s.</p>
          *
-         * @param c the {@link Column} to add, which must be a {@link DataSetColumn}..
+         * @param column the {@link Column} to add, which must be a {@link DataSetColumn}..
          * @throws AlreadyExistsException if the {@link Column} name has already been used on
          * this {@link Table}.
          * @throws AssociationException if the {@link Table} parameter of the {@link Column}
          * does not match.
          * @throws NullPointerException if the {@link Column} object is null.
          */
-        public void addColumn(Column c) throws AlreadyExistsException, AssociationException, NullPointerException {
+        public void addColumn(Column column) throws AlreadyExistsException, AssociationException, NullPointerException {
             // Sanity check.
-            if (!(c instanceof DataSetColumn))
+            if (!(column instanceof DataSetColumn))
                 throw new AssociationException("Column must be a DataSetColumn to be added to a DataSetTable.");
             // Do the work.
-            super.addColumn(c);
+            super.addColumn(column);
         }
         
         /**
@@ -742,23 +745,27 @@ public interface DataSet extends Comparable {
         
         /**
          * Convenience method that wraps a {@link Column} and adds it to this {@link Table}.
-         * @param c the {@link Column} to wrap and add.
+         *
+         * @param column the {@link Column} to wrap and add.
          * @throws NullPointerException if the argument is null.
          */
-        public void createColumn(Column c) throws NullPointerException {
+        public void createColumn(Column column) throws NullPointerException {
             try {
-                new WrappedColumn(c, this);
+                new WrappedColumn(column, this);
                 // By creating it we've already added it to ourselves! (Based on DataSetColumn behaviour)
             } catch (AlreadyExistsException e) {
-                throw new AssertionError("Alias generator failed to generate a unique alias for this column.");
+                AssertionError ae = new AssertionError("Alias generator failed to generate a unique alias for this column.");
+                ae.initCause(e);
+                throw ae;
             }
         }
         
         /**
-         * {@link DataSetTable}s can be renamed by the user if the names don't make
+         * {@link DataSetTable}s can be renamed by the user if the names don'table make
          * any sense to them. Use this method to do just that. It will check first to see if the proposed
          * name has already been used in the data set {@link TableProvider}. If it has, an AlreadyExistsException
          * will be thrown, otherwise the change will be made. The new name must not be null.
+         * 
          * @param name the new name for the table.
          * @throws AlreadyExistsException if a {@link DataSetTable} already exists with
          * that name.
@@ -801,21 +808,23 @@ public interface DataSet extends Comparable {
         /**
          * This constructor gives the column a name and checks that the
          * parent {@link Table} is not null.
+         *
          * @param name the name to give this column.
-         * @param t the parent {@link Table}
+         * @param dsTable the parent {@link Table}
          * @throws AlreadyExistsException if the {@link DataSetTable} already has a column with
          * that name.
          * @throws NullPointerException if either parameter is null.
          */
-        public DataSetColumn(String name, DataSetTable t) throws NullPointerException, AlreadyExistsException {
-            super(generateAlias(name, t), t);
+        public DataSetColumn(String name, DataSetTable dsTable) throws NullPointerException, AlreadyExistsException {
+            super(generateAlias(name, dsTable), dsTable);
         }
         
         /**
-         * Columns in {@link DataSetTable}s can be renamed by the user if the names don't make
+         * Columns in {@link DataSetTable}s can be renamed by the user if the names don'table make
          * any sense to them. Use this method to do just that. It will check first to see if the proposed
          * name has already been used on this {@link DataSetTable}. If it has, an AlreadyExistsException
          * will be thrown, otherwise the change will be made. The new name must not be null.
+         * 
          * @param name the new name for the column.
          * @throws AlreadyExistsException if the {@link DataSetTable} already has a column with
          * that name.
@@ -823,9 +832,9 @@ public interface DataSet extends Comparable {
          */
         public void setName(String name) throws NullPointerException, AlreadyExistsException {
             // Sanity check.
-            if (name==null)
+            if (name == null)
                 throw new NullPointerException("New name cannot be null.");
-            if (t.getColumnByName(name)!=null)
+            if (table.getColumnByName(name) != null)
                 throw new AlreadyExistsException("A column with that name already exists on this table.", name);
             // Do it.
             this.name = name;
@@ -835,23 +844,24 @@ public interface DataSet extends Comparable {
          * Internal method that generates a safe alias/name for a column. The first try is
          * always the original column name, followed by attempts with an underscore and a
          * sequence number appended.
+         *
          * @param name the first name to try.
-         * @param t the {@link DataSetTable} that this column is being added to.
+         * @param dsTable the {@link DataSetTable} that this column is being added to.
          * @return the result.
          * @throws NullPointerException if any parameter is null.
          */
-        protected static String generateAlias(String name, DataSetTable t) throws NullPointerException {
+        protected static String generateAlias(String name, DataSetTable dsTable) throws NullPointerException {
             // Sanity check.
-            if (name==null)
+            if (name == null)
                 throw new NullPointerException("Column name cannot be null.");
-            if (t==null)
+            if (dsTable == null)
                 throw new NullPointerException("Parent table cannot be null.");
             // Do it.
             String alias = name;
             int aliasNumber = 2;
-            while (t.getColumnByName(alias)!=null) {
+            while (dsTable.getColumnByName(alias)!=null) {
                 // Alias is original name appended with _2, _3, _4 etc.
-                alias = name+"_"+(aliasNumber++);
+                alias = name + "_" + (aliasNumber++);
             }
             return alias;
         }
@@ -865,22 +875,24 @@ public interface DataSet extends Comparable {
             /**
              * Internal reference to the wrapped {@link Column}.
              */
-            private final Column c;
+            private final Column column;
             
             /**
              * This constructor wraps an existing {@link Column} and checks that the
              * parent {@link Table} is not null. It also assigns an alias to the wrapped {@link Column}
              * if another one with the same name already exists on this table.
-             * @param c the {@link Column} to wrap.
-             * @param t the parent {@link Table}
+             *
+             *
+             * @param column the {@link Column} to wrap.
+             * @param dsTable the parent {@link Table}
              * @throws NullPointerException if either parameter is null.
              * @throws AlreadyExistsException if the world has stopped turning. (Should never happen.)
              */
-            public WrappedColumn(Column c, DataSetTable t) throws NullPointerException, AlreadyExistsException {
+            public WrappedColumn(Column column, DataSetTable dsTable) throws NullPointerException, AlreadyExistsException {
                 // Call the parent with the alias.
-                super(c.getName(), t);
+                super(column.getName(), dsTable);
                 // Remember the wrapped column.
-                this.c = c;
+                this.column = column;
             }
             
             /**
@@ -888,7 +900,7 @@ public interface DataSet extends Comparable {
              * @return the wrapped {@link Column}.
              */
             public Column getWrappedColumn() {
-                return this.c;
+                return this.column;
             }
         }
         
@@ -900,42 +912,44 @@ public interface DataSet extends Comparable {
             /**
              * Internal reference to the dimension this column refers to.
              */
-            private final DataSetTable dim;
+            private final DataSetTable dimensionTable;
             
             /**
              * The constructor takes a name for this column-to-be, and the {@link DataSetTable}
              * on which it is to be constructed. If that table is not a MAIN or MAIN_SUBCLASS table
              * an exception will be thrown, likewise if the reference {@link DataSetTable} which
              * the column refers to is not a DIMENSION.
+             *
+             *
              * @param name the name to give this column.
-             * @param main the parent {@link Table}
-             * @param dim the dimension {@link Table}
+             * @param dsTable the main {@link Table}
+             * @param dimensionTable the dimension {@link Table}
              * @throws AlreadyExistsException if the {@link DataSetTable} already has a column with
              * that name.
-             * @throws AssociationException if the parent is not MAIN or MAIN_SUBCLASS or the
+             * @throws AssociationException if the dsTable is not MAIN or MAIN_SUBCLASS or the
              * dimension is not DIMENSION.
              * @throws NullPointerException if any parameter is null.
              */
-            public HasDimensionColumn(String name, DataSetTable parent, DataSetTable dim) throws NullPointerException, AlreadyExistsException, AssociationException {
+            public HasDimensionColumn(String name, DataSetTable dsTable, DataSetTable dimensionTable) throws NullPointerException, AlreadyExistsException, AssociationException {
                 // Super first.
-                super(name, parent);
+                super(name, dsTable);
                 // Sanity check.
-                if (dim==null)
+                if (dimensionTable == null)
                     throw new NullPointerException("Dimension table cannot be null.");
-                if (!dim.getType().equals(DataSetTableType.DIMENSION))
+                if (!dimensionTable.getType().equals(DataSetTableType.DIMENSION))
                     throw new AssociationException("Dimension table is not of DIMENSION type.");
-                if (!(parent.getType().equals(DataSetTableType.MAIN) || parent.getType().equals(DataSetTableType.MAIN_SUBCLASS)))
+                if (!(dsTable.getType().equals(DataSetTableType.MAIN) || dsTable.getType().equals(DataSetTableType.MAIN_SUBCLASS)))
                     throw new AssociationException("Parent table is not of MAIN or MAIN_SUBCLASS type.");
                 // Do it.
-                this.dim = dim;
+                this.dimensionTable = dimensionTable;
             }
             
             /**
              * Returns the dimension this column refers to.
              * @return the {@link DataSetTable} representing the dimension.
              */
-            public DataSetTable getDimension() {
-                return this.dim;
+            public DataSetTable getDimensionTable() {
+                return this.dimensionTable;
             }
         }
         
@@ -947,29 +961,30 @@ public interface DataSet extends Comparable {
             /**
              * Internal reference to the relation this column refers to.
              */
-            private final Relation rel;
+            private final Relation concatRelation;
             
             /**
              * The constructor takes a name for this column-to-be, and the {@link DataSetTable}
              * on which it is to be constructed, and the {@link Relation} it represents.
+             *
              * @param name the name to give this column.
-             * @param parent the parent {@link Table}.
-             * @param rel the concat only {@link Relation} it refers to.
+             * @param dsTable the dsTable {@link Table}.
+             * @param concatRelation the concat only {@link Relation} it refers to.
              * @throws AlreadyExistsException if the {@link DataSetTable} already has a column with
              * that name.
              * @throws AssociationException if the {@link Relation} is not a concat relation.
              * @throws NullPointerException if any parameter is null.
              */
-            public ConcatRelationColumn(String name, DataSetTable parent, Relation rel) throws NullPointerException, AlreadyExistsException, AssociationException {
+            public ConcatRelationColumn(String name, DataSetTable dsTable, Relation concatRelation) throws NullPointerException, AlreadyExistsException, AssociationException {
                 // Super first.
-                super(name, parent);
+                super(name, dsTable);
                 // Sanity check.
-                if (rel==null)
+                if (concatRelation == null)
                     throw new NullPointerException("Relation cannot be null.");
-                if (!parent.getDataSet().getWindow().getConcatOnlyRelations().contains(rel))
+                if (!dsTable.getDataSet().getWindow().getConcatOnlyRelations().contains(concatRelation))
                     throw new AssociationException("This relation is not a concat relation.");
                 // Do it.
-                this.rel = rel;
+                this.concatRelation = concatRelation;
             }
             
             /**
@@ -977,7 +992,7 @@ public interface DataSet extends Comparable {
              * @return the {@link Relation} for this column.
              */
             public Relation getRelation() {
-                return this.rel;
+                return this.concatRelation;
             }
         }
         
@@ -989,14 +1004,15 @@ public interface DataSet extends Comparable {
             /**
              * This constructor gives the column a name and checks that the
              * parent {@link Table} is not null.
+             *
              * @param name the name to give this column.
-             * @param t the parent {@link Table}
+             * @param dsTable the parent {@link Table}
              * @throws AlreadyExistsException if the {@link DataSetTable} already has a column with
              * that name.
              * @throws NullPointerException if either parameter is null.
              */
-            public TableProviderNameColumn(String name, DataSetTable t) throws NullPointerException, AlreadyExistsException {
-                super(name, t);
+            public TableProviderNameColumn(String name, DataSetTable dsTable) throws NullPointerException, AlreadyExistsException {
+                super(name, dsTable);
             }
         }
     }
@@ -1036,8 +1052,12 @@ public interface DataSet extends Comparable {
          * Note that the names of {@link DataSetTableType} objects are case-insensitive.
          * @param name the name of the {@link DataSetTableType} object.
          * @return the {@link DataSetTableType} object.
+         * @throws NullPointerException if the name was null.
          */
-        public static DataSetTableType get(String name) {
+        public static DataSetTableType get(String name) throws NullPointerException {
+            // Sanity check.
+            if (name == null)
+                throw new NullPointerException("Name cannot be null.");
             // Convert to upper case.
             name = name.toUpperCase();
             // Do we already have this one?
@@ -1055,7 +1075,7 @@ public interface DataSet extends Comparable {
          * @param name the name of the {@link DataSetTableType}.
          */
         private DataSetTableType(String name) {
-            this.name=name;
+            this.name = name;
         }
         
         /**
@@ -1093,7 +1113,7 @@ public interface DataSet extends Comparable {
          */
         public boolean equals(Object o) {
             // We are dealing with singletons so can use == happily.
-            return o==this;
+            return o == this;
         }
     }
 }

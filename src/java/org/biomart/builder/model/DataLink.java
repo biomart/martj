@@ -53,7 +53,7 @@ public interface DataLink {
      * @return true if the two can cohabit, false if not.
      * @throws NullPointerException if the partner is null.
      */
-    public boolean canCohabit(DataLink partner);
+    public boolean canCohabit(DataLink partner) throws NullPointerException;
     
     /**
      * This inner interface defines methods required for JDBC connections only.
