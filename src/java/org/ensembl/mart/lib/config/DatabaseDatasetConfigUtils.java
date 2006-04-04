@@ -5834,7 +5834,8 @@ public int templateCount(String template) throws ConfigurationException{
       	op.setDisplayName(value);
       }
       String intName = value.replaceAll(" ", "_");
-      op.setInternalName(intName.toLowerCase());
+      //op.setInternalName(intName.toLowerCase());
+      op.setInternalName(intName);// breaks push action if make lower case
       //NN
       //if (!(columnName.startsWith("silent_") || columnName.startsWith("SILENT_"))) //prob. not needed, to check
         //if (!columnName.startsWith("silent_"))
