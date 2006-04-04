@@ -1,5 +1,5 @@
 /*
- * JDBCDMDTableProvider.java
+ * JDBCRelationalTableProvider.java
  *
  * Created on 03 April 2006, 13:00
  */
@@ -25,13 +25,7 @@
 package org.biomart.builder.controller;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.Driver;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -40,16 +34,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
-import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.Column.GenericColumn;
 import org.biomart.builder.model.ComponentStatus;
-import org.biomart.builder.model.DataLink;
-import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.GenericForeignKey;
@@ -59,49 +49,22 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Relation.OneToMany;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Table.GenericTable;
-import org.biomart.builder.model.TableProvider.GenericTableProvider;
 
 /**
- * The JDBC DMD {@link TableProvider} implementation loads tables from a DMD-aware
- * database at construction time, along with all columns, keys and relations between them.
+ * The JDBC relational {@link TableProvider} implementation loads tables from a 
+ * database at construction time, along with all columns, keys and relations between them that
+ * are specified in the database's {@link DatabaseMetaData} structures. Note that if a database
+ * is incapable of enforcing foreign keys etc., then you should use the non-relational version
+ * of this class instead, eg. for MyISAM tables in MySQL.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
  */
-public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDataLink {
+public class JDBCRelationalTableProvider extends JDBCNonRelationalTableProvider {    
     /**
-     * Internal reference to the JDBC connection. Transience
-     * means it won't get persisted when serialized.
-     */
-    private transient Connection conn;
-    
-    /**
-     * Internal reference to the driver class name.
-     */
-    private String driverClassName;
-    
-    /**
-     * Internal reference to the driver class location.
-     */
-    private File driverClassLocation;
-    
-    /**
-     * Internal reference to the JDBC url.
-     */
-    private String url;
-    
-    /**
-     * Internal reference to the user name.
-     */
-    private String username;
-    
-    /**
-     * Internal reference to the user password.
-     */
-    private String password;
-    
-    /**
-     * Creates a new instance of JDBCDMDTableProvider based around
-     * the given JDBC Connection.
+     * Creates a new instance of JDBCRelationalTableProvider based around
+     * the given JDBC Connection. As this is identical to JDBCNonRelationalTableProvider,
+     * it delegates upwards.
+     * 
      * @param driverClassLocation the location of the class to load the JDBC driver from.
      * Use null to use the default class loader path, which it will also fall back on if it
      * could not find the driver at the specified location, or if this location does not exist.
@@ -112,196 +75,8 @@ public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDa
      * @param name the name to give it.
      * @throws NullPointerException if any parameter other than driverClassLocation or password is null.
      */
-    public JDBCDMDTableProvider(File driverClassLocation, String driverClassName, String url, String username, String password, String name) throws NullPointerException {
-        super(name);
-        // Sanity check.
-        if (driverClassName == null)
-            throw new NullPointerException("Driver class name cannot be null.");
-        if (url == null)
-            throw new NullPointerException("JDBC URL cannot be null.");
-        // Sensible defaults.
-        if (driverClassLocation != null && !driverClassLocation.exists()) driverClassLocation = null;
-        // Do it.
-        this.driverClassLocation = driverClassLocation;
-        this.driverClassName = driverClassName;
-        this.url = url;
-        this.username = username;
-        this.password = password;
-    }
-    
-    /**
-     * Returns a JDBC {@link Connection} connected to this database
-     * using the data supplied to all the other methods in this interface.
-     * @return the {@link Connection} for this database.
-     * @throws AssociationException if there was any problem finding the class.
-     * @throws SQLException if there was any problem connecting.
-     */
-    public Connection getConnection() throws AssociationException, SQLException {
-        if (this.conn == null) {
-            // Load the driver from the custom path if specified.
-            Class loadedDriverClass = null;
-            if (this.driverClassLocation != null) {
-                try {
-                    ClassLoader classLoader = URLClassLoader.newInstance(new URL[]{this.driverClassLocation.toURL()});
-                    loadedDriverClass = classLoader.loadClass(this.driverClassName);
-                } catch (ClassNotFoundException e) {
-                    throw new AssociationException("Class specified could not be found.");
-                } catch (MalformedURLException e) {
-                    throw new AssertionError("Filename failed to translate into URL.");
-                }
-            }
-            
-            // Load the driver the usual way custom path missing or not working.
-            try {
-                loadedDriverClass = Class.forName(this.driverClassName);
-            } catch (ClassNotFoundException e) {
-                throw new AssociationException("Class specified could not be found.");
-            }
-            
-            // Check it really is an instance of Driver.
-            if (!Driver.class.isAssignableFrom(loadedDriverClass))
-                throw new AssociationException("Class specified is not a JDBC Driver class.");
-            
-            // Connect!
-            Properties connProps = new Properties();
-            connProps.setProperty("user", this.username);
-            if (this.password != null) connProps.setProperty("password", this.password);
-            this.conn = DriverManager.getConnection(this.url, connProps);
-        }
-        
-        // Return the connection.
-        return this.conn;
-    }
-    
-    /**
-     * Getter for property driverClassName.
-     * @return Value of property driverClassName.
-     */
-    public String getDriverClassName() {
-        return this.driverClassName;
-    }
-    
-    /**
-     * Setter for property driverClassName.
-     * @param driverClassName New value of property driverClassName.
-     * @throws NullPointerException if the name is null.
-     */
-    public void setDriverClassName(String driverClassName) throws NullPointerException {
-        // Sanity check.
-        if (driverClassName == null)
-            throw new NullPointerException("Driver class name cannot be null.");
-        // Do it.
-        this.driverClassName = driverClassName;
-    }
-    
-    /**
-     * Getter for property driverClassLocation. Defaults to null if not specified.
-     * @return Value of property driverClassLocation.
-     */
-    public File getDriverClassLocation() {
-        return this.driverClassLocation;
-    }
-    
-    /**
-     * Setter for property driverClassLocation. Defaults to null if not specified.
-     * @param driverClassLocation New value of property driverClassLocation.
-     */
-    public void setDriverClassLocation(File driverClassLocation) {
-        if (driverClassLocation != null && !driverClassLocation.exists()) driverClassLocation = null;
-        this.driverClassLocation = driverClassLocation;
-    }
-    
-    /**
-     * Getter for property url.
-     * @return Value of property url.
-     */
-    public String getJDBCURL() {
-        return this.url;
-    }
-    
-    /**
-     * Setter for property url.
-     * @param url New value of property url.
-     * @throws NullPointerException if the url is null.
-     */
-    public void setJDBCURL(String url) throws NullPointerException {
-        // Sanity check.
-        if (url == null)
-            throw new NullPointerException("JDBC URL cannot be null.");
-        // Do it.
-        this.url = url;
-    }
-    
-    /**
-     * Getter for property username.
-     * @return Value of property username.
-     */
-    public String getUsername() {
-        return this.username;
-    }
-    
-    /**
-     * Setter for property username.
-     * @param username New value of property username.
-     * @throws NullPointerException if the name is null.
-     */
-    public void setUsername(String username) throws NullPointerException {
-        // Sanity check.
-        if (username == null)
-            throw new NullPointerException("Username cannot be null.");
-        // Do it.
-        this.username = username;
-    }
-    
-    /**
-     * Getter for property password.
-     * @return Value of property password.
-     */
-    public String getPassword() {
-        return this.password;
-    }
-    
-    /**
-     * Setter for property password. May be null.
-     * @param password New value of property password.
-     */
-    public void setPassword(String password) {
-        this.password = password;
-    }
-    
-    /**
-     * <p>Checks to see if this {@link DataLink} 'cohabits' with another one. Cohabitation means
-     * that it would be possible to write a single SQL statement that could read data from
-     * both {@link DataLink}s simultaneously.</p>
-     *
-     * <p>In our case, cohabitation means that the partner link is also a {@link JDBCDataLink}
-     * and that its connection is connected to the same database server listening on the same port
-     * and connected with the same username.</p>
-     *
-     * @param partner the other {@link DataLink} to test for cohabitation.
-     * @return true if the two can cohabit, false if not.
-     * @throws NullPointerException if the partner is null.
-     */
-    public boolean canCohabit(DataLink partner) throws NullPointerException {
-        // Sanity check.
-        if (partner == null)
-            throw new NullPointerException("Partner cannot be null.");
-        // Do it.
-        if (!(partner instanceof JDBCDataLink)) return false;
-        JDBCDataLink them = (JDBCDataLink)partner;
-        
-        try {
-            Connection theirConn = them.getConnection();
-            return (
-                    theirConn.getMetaData().getURL().equals(this.conn.getMetaData().getURL()) &&
-                    theirConn.getMetaData().getUserName().equals(this.conn.getMetaData().getUserName())
-                    );
-        } catch (Exception e) {
-            System.err.println("WARNING: Unable to compare database connection strings. Assuming incompatibility. Stack trace follows.");
-            e.printStackTrace(System.err);
-            return false;
-        }
-        
+    public JDBCRelationalTableProvider(File driverClassLocation, String driverClassName, String url, String username, String password, String name) throws NullPointerException {
+        super(driverClassLocation, driverClassName, url, username, password, name);
     }
     
     /**
@@ -473,6 +248,12 @@ public class JDBCDMDTableProvider extends GenericTableProvider implements JDBCDa
                         }
                         removedFKs.remove(newFK); // don't drop it any more!
                     }
+
+                    // Check to see that the FK we found isn't already in a relation. If it is,
+                    // then there is something seriously wrong with DatabaseMetaData as an FK
+                    // can never point to more than one PK!
+                    if (!newFK.getRelations().isEmpty())
+                        throw new AssertionError("Database has FKs with duplicate relations.");
                     
                     // Check to see if there is already a relation between the PK and the FK. If
                     // so, reuse it. If not, create one.

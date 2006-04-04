@@ -134,7 +134,8 @@ public class SchemaSaver {
         xstream.alias("window",Window.class);
         
         // Specific implementations go here.
-        xstream.alias("JDBCDMDTableProvider",JDBCDMDTableProvider.class);
+        xstream.alias("JDBCRelationalTableProvider",JDBCRelationalTableProvider.class);
+        xstream.alias("JDBCNonRelationalTableProvider",JDBCNonRelationalTableProvider.class);
     }
     
     /**

@@ -25,8 +25,8 @@
 package org.biomart.builder.view;
 
 import java.io.File;
-import java.sql.DriverManager;
-import org.biomart.builder.controller.JDBCDMDTableProvider;
+import org.biomart.builder.controller.JDBCNonRelationalTableProvider;
+import org.biomart.builder.controller.JDBCRelationalTableProvider;
 import org.biomart.builder.controller.SchemaSaver;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
@@ -43,17 +43,17 @@ import org.biomart.builder.model.Window;
  * @since 0.1
  */
 public class NaiveCLI {
-    /** 
+    /**
      * Creates a new instance of NaiveCLI. Does nothing.
      */
     public NaiveCLI() {
     }
-
+    
     /**
      * Does the work of loading up the table provider, creating a schema
      * based around it and a window focused on the named table, then
      * generating the dataset and the XML output file.
-     * 
+     *
      * @param tableProvider the {@link TableProvider} to load tables from.
      * @param name the name of the table to build the dataset around.
      * @param file the output file to write the XML to.
@@ -67,21 +67,28 @@ public class NaiveCLI {
         Window w = new Window(s, t, t.getName());
         w.synchronise(); // causes the dataset to regenerate
         SchemaSaver.save(s, file);
-        // Replace the saver line with a call to setMartConstructor() and 
+        // Replace the saver line with a call to setMartConstructor() and
         // then call constructMart() to make SQL instead.
     }
     
     /**
      * Main method loads the JDBC driver from the first parameter,
      * the JDBC connection string from the second parameter, constructs and
-     * sets up a JDBCDMDTableProvider, then uses it to generate a dataset
-     * based around the table named in the third parameter. The resulting
-     * schema XML is printed out to the file named in the fourth parameter.
+     * sets up a JDBCRelationalTableProvider using the username and password in the
+     * 3rd and 4th parameters, then uses it to generate a dataset
+     * based around the table named in the fifth parameter. The resulting
+     * schema XML is printed out to the file named in the sixth parameter.
+     * The seventh parameter, if present and equal to 'NONRELATIONAL' will
+     * attempt to guess relations from column names instead of using database
+     * metadata.
+     * If your database does not require a password, use the empty string for
+     * the password and this will be converted to a null password internally.
+     *
      * @param args the command line arguments.
      */
     public static void main(String[] args) {
         if (args.length<6) {
-            System.err.println("usage: java org.biomart.builder.view.NaiveCLI <driver class> <connection URL> <username> <password> <table name> <output file>");
+            System.err.println("usage: java org.biomart.builder.view.NaiveCLI <driver class> <connection URL> <username> <password> <table name> <output file> [NONRELATIONAL]");
             return;
         }
         try {
@@ -92,7 +99,11 @@ public class NaiveCLI {
             String tableName = args[4];
             File file = new File(args[5]);
             if (password.equals("")) password = null;
-            TableProvider tp = new JDBCDMDTableProvider(null, classname, url, username, password, "naive");
+            TableProvider tp;
+            if (args.length>6 && args[6].equals("NONRELATIONAL"))
+                tp = new JDBCNonRelationalTableProvider(null, classname, url, username, password, "naive");
+            else
+                tp = new JDBCRelationalTableProvider(null, classname, url, username, password, "naive");
             (new NaiveCLI()).execute(tp, tableName, file);
         } catch (Throwable t) {
             t.printStackTrace(System.err);

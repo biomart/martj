@@ -247,20 +247,20 @@ public interface DataSet extends Comparable {
             }
             
             // Build the main table.
-            this.mainTable = this.columns(tp, DataSetTableType.MAIN, centralTable, (Set)ignoredRelations.get(centralTable), null);
+            this.mainTable = this.constructTable(tp, DataSetTableType.MAIN, centralTable, (Set)ignoredRelations.get(centralTable), null);
             
             // Build the subclass tables.
             for (Iterator i = subclassRelations.iterator(); i.hasNext(); ) {
                 Relation r = (Relation)i.next();
                 Table sct = r.getForeignKey().getTable();
-                DataSetTable subclass = this.columns(tp, DataSetTableType.MAIN_SUBCLASS, sct, (Set)ignoredRelations.get(sct), r);
+                DataSetTable subclass = this.constructTable(tp, DataSetTableType.MAIN_SUBCLASS, sct, (Set)ignoredRelations.get(sct), r);
             }
             
             // Build the dimension tables.
             for (Iterator i = dimensionRelations.iterator(); i.hasNext(); ) {
                 Relation r = (Relation)i.next();
                 Table dt = r.getForeignKey().getTable();
-                DataSetTable dim = this.columns(tp, DataSetTableType.DIMENSION, dt, (Set)ignoredRelations.get(dt), r);
+                DataSetTable dim = this.constructTable(tp, DataSetTableType.DIMENSION, dt, (Set)ignoredRelations.get(dt), r);
                 // Add 'has' column to parent table (main table or subclass table) for this dimension.
                 DataSetTable dimParent = (DataSetTable)tp.getTableByName(r.getPrimaryKey().getTable().getName());
                 new HasDimensionColumn("__has_" + dt.getName(), dimParent, dim);
@@ -284,7 +284,7 @@ public interface DataSet extends Comparable {
          * @throws BuilderException if there was any trouble.
          * @throws NullPointerException if any required parameter was null.
          */
-        private DataSetTable columns(DataSetTableProvider dsTableProvider, DataSetTableType dsTableType, Table realTable, Set ignoredRelations, Relation linkbackRelation) throws BuilderException, NullPointerException {
+        private DataSetTable constructTable(DataSetTableProvider dsTableProvider, DataSetTableType dsTableType, Table realTable, Set ignoredRelations, Relation linkbackRelation) throws BuilderException, NullPointerException {
             // Sanity check.
             if (dsTableProvider == null)
                 throw new NullPointerException("Table provider cannot be null.");
@@ -325,7 +325,7 @@ public interface DataSet extends Comparable {
                 Table parentRealTable = linkbackRelation.getPrimaryKey().getTable();
                 DataSetTable parentDatasetTable = (DataSetTable)dsTableProvider.getTableByName(parentRealTable.getName());
                 
-                // For each column in dataset parent table PK
+                // For each column in dataset parent table PK                
                 for (Iterator i = parentDatasetTable.getPrimaryKey().getColumns().iterator(); i.hasNext(); ) {
                     DataSetColumn parentDatasetTableColumn = (DataSetColumn)i.next();
                     DataSetColumn constructedFKColumn;
@@ -403,8 +403,8 @@ public interface DataSet extends Comparable {
             for (Iterator i = realTable.getForeignKeys().iterator(); i.hasNext(); ) {
                 Key k = (Key)i.next();
                 for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
-                    Relation r = (Relation)j.next();
-                    if (!ignoredRelations.contains(r))
+                    Relation r = (Relation)j.next();                    
+                    if (!ignoredRelations.contains(r))                       
                         excludedColumns.addAll(k.getColumns());
                 }
             }

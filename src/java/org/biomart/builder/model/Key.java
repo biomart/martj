@@ -458,10 +458,20 @@ public interface Key extends Comparable {
                 throw ae;
             }
         }
+        
+        /**
+         * Displays the name of this {@link Key} object from getName() prefixed with 'PK_'.
+         * @return the name of this {@link Key} object.
+         */
+        public String toString() {
+            String supername = super.toString();
+            return "PK_" + supername;
+        }
     }
     
     /**
-     * This implementation is a multi-column foreign key.
+     * This implementation is a multi-column foreign key. Foreign keys can only
+     * have one relation, obviously.
      */
     public class GenericForeignKey extends GenericKey implements ForeignKey {
         /**
@@ -484,6 +494,36 @@ public interface Key extends Comparable {
                 ae.initCause(e);
                 throw ae;
             }
+        }
+        
+        /**
+         * <p>Adds a particular {@link Relation} to the set this {@link Key} is involved in.
+         * It checks first to make sure it is actually involved. It quietly ignores it if
+         * it already knows about this {@link Relation}.</p>
+         * 
+         * <p>An exception will be thrown if more than one relation is added to this
+         * foreign key.</p>
+         *
+         * @param relation the {@link Relation} to add to this {@link Key}.
+         * @throws AssociationException if it is not actually involved in the given
+         * {@link Relation} in any way, or if we already have one.
+         * @throws NullPointerException if the {@link Relation} argument was null.
+         */
+        public void addRelation(Relation relation) throws AssociationException, NullPointerException {
+            // Do we already have one?
+            if (!this.getRelations().isEmpty())
+                throw new AssociationException("Foreign keys can have only one relation.");
+            // If we get here, then it's OK.
+            super.addRelation(relation);
+        }
+        
+        /**
+         * Displays the name of this {@link Key} object from getName() prefixed with 'FK_'.
+         * @return the name of this {@link Key} object.
+         */
+        public String toString() {
+            String supername = super.toString();
+            return "FK_" + supername;
         }
     }
 }
