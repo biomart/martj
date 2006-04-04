@@ -887,8 +887,9 @@ public class DatabaseDatasetConfigUtils {
 	List attributeDescriptions = config.getAllAttributeDescriptions();
 	for (int i = 0; i < attributeDescriptions.size(); i++){
 		AttributeDescription ad = (AttributeDescription) attributeDescriptions.get(i);
-		if (ad.getInternalName().matches("\\w+\\.\\w+") || ad.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
-				continue;//placeholder atts can be duplicated	
+		if (ad.getInternalName().matches("\\w+\\.\\w+") || ad.getInternalName().matches("\\w+\\.\\w+\\.\\w+") ||
+			ad.getTableConstraint() == null || ad.getTableConstraint().equals("")){
+				continue;//placeholder atts or non-tableSet ones eg GenomicSequence can be duplicated	
 		}
 				  
 		// don't allow any duplication of TC and field, even for hidden atts
@@ -925,7 +926,8 @@ public class DatabaseDatasetConfigUtils {
 	List filterDescriptions = config.getAllFilterDescriptions();
 	for (int i = 0; i < filterDescriptions.size(); i++){
 		FilterDescription fd = (FilterDescription) filterDescriptions.get(i);
-		if (fd.getInternalName().matches("\\w+\\.\\w+") || fd.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+		if (fd.getInternalName().matches("\\w+\\.\\w+") || fd.getInternalName().matches("\\w+\\.\\w+\\.\\w+") ||
+		    fd.getTableConstraint() == null || fd.getTableConstraint().equals("")){
 			continue;//placeholder atts can be duplicated	
 		}
 		
@@ -1317,9 +1319,10 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	//	  +configAtt.getInternalName()+":"+configAtt.getDisplayName()+":"+dsConfig.getDataset());		
 	  // remove att from old hierarchy in dsConfig
 	  
+	  FilterDescription upstreamFilter = null;
 	  if (upstreamFilterName != null){
 	  	
-	  	FilterDescription upstreamFilter = configCollection.getFilterDescriptionByInternalName(upstreamFilterName);
+	  	upstreamFilter = configCollection.getFilterDescriptionByInternalName(upstreamFilterName);
 	  	Option opToRemove = new Option(configAtt);
 	  	upstreamFilter.removeOption(opToRemove);
 	  	if (!(upstreamFilter.getOptions().length > 0)){
@@ -1359,7 +1362,10 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					  Option opToAdd = new Option(ops[j]);
 					  opToAdd.setTableConstraint(configAtt.getTableConstraint());
 					  FilterDescription configFilterList = dsConfig.getFilterDescriptionByInternalName(templateFilter.getInternalName());
-					  if (configFilterList != null){
+					  // get bug below when filter has been removed by the 
+					  // configCollection.removeFilterDescription(upstreamFilter) call above
+					  // therefore added extra clause to test it had options still
+					  if (configFilterList != null && upstreamFilter.getOptions().length > 0){
 					  	  // check not already there
 					  	  if (!configFilterList.containsOption(opToAdd.getInternalName())){
 						  	configFilterList.addOption(opToAdd);
@@ -1589,7 +1595,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		AttributeDescription configAtt = (AttributeDescription) attributes.get(i);
 		String configAttName = configAtt.getInternalName();
 		if (configAttName.matches(".+\\..+")) continue;
-		
+		if (configAtt.getTableConstraint() == null || configAtt.getTableConstraint().equals("")) continue;//sorts out GenomicSeq atts
 		updateAttributeToTemplate(configAtt,dsConfig,templateConfig);
 	}
 	
@@ -3960,7 +3966,7 @@ public int templateCount(String template) throws ConfigurationException{
 					for (int i = 0; i < options2.length; i++) {
 						Option op = options2[i];
 						String opName = op.getDisplayName();
-						PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderSQL);
+						PushAction pa = new PushAction(pushInternalName + "_push_" + opName.replaceAll(" ","_"), null, null, pushInternalName, orderSQL);
 						//System.out.println("1A"+pushField+"\t"+pushTableName+"\t"+field+"\t"+opName+"\t"+orderSQL);
 						pa.addOptions(getLookupOptions(pushField, pushTableName, pafield, opName, orderSQL,schema,pushColForDisplay));
 						
@@ -3998,7 +4004,7 @@ public int templateCount(String template) throws ConfigurationException{
 								for (int r = 0; r < options3.length; r++) {
 									Option op3 = options3[r];
 									String secOpName = op3.getDisplayName();
-									PushAction secondaryPA = new PushAction(secPushInternalName + "_push_" + secOpName, null, null, secPushInternalName, secOrderSQL);
+									PushAction secondaryPA = new PushAction(secPushInternalName + "_push_" + secOpName.replaceAll(" ","_"), null, null, secPushInternalName, secOrderSQL);
 									//System.out.println("1B"+pushField+"\t"+pushTableName+"\t"+field+"\t"+opName+"\t"+orderSQL);
 									secondaryPA.addOptions(getLookupOptions(secPushField, secPushTableName, secPafield, secOpName, secOrderSQL,schema,secColForDisplay));
 									options3[r].addPushAction(secondaryPA); 
@@ -4032,7 +4038,7 @@ public int templateCount(String template) throws ConfigurationException{
 					 for (int i = 0; i < options2.length; i++) {
 						Option op = options2[i];
 						String opName = op.getDisplayName();
-						PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderSQL);
+						PushAction pa = new PushAction(pushInternalName + "_push_" + opName.replaceAll(" ","_"), null, null, pushInternalName, orderSQL);
 						
 						//System.out.println("2A"+pushField+"\t"+pushTableName+"\t"+field+"\t"+opName+"\t"+orderSQL);
 						pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderSQL,schema,pushColForDisplay));
@@ -4070,7 +4076,7 @@ public int templateCount(String template) throws ConfigurationException{
 								for (int r = 0; r < options3.length; r++) {
 									Option op3 = options3[r];
 									String secOpName = op3.getDisplayName();
-									PushAction secondaryPA = new PushAction(secPushInternalName + "_push_" + secOpName, null, null, secPushInternalName, secOrderSQL);
+									PushAction secondaryPA = new PushAction(secPushInternalName + "_push_" + secOpName.replaceAll(" ","_"), null, null, secPushInternalName, secOrderSQL);
 									//System.out.println("2B"+secPushField+"\t"+secPushTableName+"\t"+secPafield+"\t"+secOpName+"\t"+secOrderSQL);
 									secondaryPA.addOptions(getLookupOptions(secPushField, secPushTableName, secPafield, secOpName, secOrderSQL,schema,secColForDisplay));
 									options3[r].addPushAction(secondaryPA); 
