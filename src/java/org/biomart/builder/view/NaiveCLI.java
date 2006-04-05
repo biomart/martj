@@ -25,9 +25,10 @@
 package org.biomart.builder.view;
 
 import java.io.File;
+import java.util.Iterator;
 import org.biomart.builder.controller.JDBCNonRelationalTableProvider;
 import org.biomart.builder.controller.JDBCRelationalTableProvider;
-import org.biomart.builder.controller.SchemaSaver;
+import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.TableProvider;
@@ -39,7 +40,7 @@ import org.biomart.builder.model.Window;
  * and does not generate any SQL to do the work.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 3rd April 2006
+ * @version 0.1.2, 5th April 2006
  * @since 0.1
  */
 public class NaiveCLI {
@@ -65,10 +66,36 @@ public class NaiveCLI {
         s.synchronise(); // causes the table provider to load up its info
         Table t = tableProvider.getTableByName(name);
         Window w = new Window(s, t, t.getName());
+        // Predict some sensible defaults.
+        w.predictRelationTypes();
         w.synchronise(); // causes the dataset to regenerate
-        SchemaSaver.save(s, file);
+        // SchemaSaver.save(s, file);
         // Replace the saver line with a call to setMartConstructor() and
         // then call constructMart() to make SQL instead.
+        System.out.println("INPUT TABLES");
+        System.out.println("------------------");
+        System.out.println();
+        for (Iterator i = tableProvider.getTables().iterator(); i.hasNext(); ) {
+            Table it = (Table)i.next();
+            System.out.println(it);
+            System.out.println(it.getColumns());
+            System.out.println(it.getKeys());
+            System.out.println(it.getRelations());
+            System.out.println();
+        }
+        System.out.println("DATASET TABLES");
+        System.out.println("------------------");
+        System.out.println();
+        for (Iterator i = w.getDataSet().getMainTable().getTableProvider().getTables().iterator(); i.hasNext(); ) {
+            Table it = (Table)i.next();
+            System.out.println(((DataSetTable)it).getType());
+            System.out.println(it);
+            System.out.println(it.getColumns());
+            System.out.println(it.getKeys());
+            System.out.println(it.getRelations());
+            System.out.println("based on "+((DataSetTable)it).getUnderlyingRelations());
+            System.out.println();
+        }
     }
     
     /**

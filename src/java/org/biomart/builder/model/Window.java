@@ -51,7 +51,7 @@ import org.biomart.builder.model.Relation.OneToMany;
  * <p>The name of the window is inherited by the {@link Dataset} so take care when
  * choosing it.</p>
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 4th April 2006
+ * @version 0.1.6, 5th April 2006
  * @since 0.1
  */
 public class Window implements Comparable {
@@ -142,8 +142,6 @@ public class Window implements Comparable {
         this.centralTable = centralTable;
         this.name = name;
         this.dataset = new GenericDataSet(this);
-        // Predict some sensible defaults.
-        this.predictRelationTypes();
         // Add ourselves.
         schema.addWindow(this);
     }

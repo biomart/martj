@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -407,8 +406,7 @@ public class JDBCNonRelationalTableProvider extends GenericTableProvider impleme
             PrimaryKey existingPK = existingTable.getPrimaryKey();
             if (!pkCols.isEmpty()) {
                 // Create and set the primary key (only if existing one is not the same).
-                PrimaryKey newPK = new GenericPrimaryKey(new ArrayList(pkCols.values()));
-                if (existingPK==null || !existingPK.equals(newPK)) existingTable.setPrimaryKey(newPK);
+                if (existingPK == null || !existingPK.getColumns().equals(pkCols)) new GenericPrimaryKey(new ArrayList(pkCols.values()));
             } else {
                 // Remove the primary key on this table, but only if the existing one is not handmade.
                 if (existingPK!=null && !existingPK.getStatus().equals(ComponentStatus.HANDMADE)) existingTable.setPrimaryKey(null);
@@ -466,23 +464,24 @@ public class JDBCNonRelationalTableProvider extends GenericTableProvider impleme
                 
                 // We found a matching set, so create a FK on it!
                 if (candidateFKColumnCount == existingPK.countColumns()) {
-                    ForeignKey newFK = new GenericForeignKey(Arrays.asList(candidateFKColumns));
+                    ForeignKey newFK = null;
                     // If we've already got one like that, reuse it, otherwise add it.
-                    if (removedFKs.contains(newFK)) {
-                        // Nasty hack to find and reuse existing key.
-                        for (Iterator f = removedFKs.iterator(); f.hasNext(); ) {
-                            ForeignKey candidateFK = (ForeignKey)f.next();
-                            if (candidateFK.equals(newFK)) {
-                                newFK = candidateFK;
-                                break;
-                            }
+                    for (Iterator f = removedFKs.iterator(); f.hasNext(); ) {
+                        ForeignKey candidateFK = (ForeignKey)f.next();
+                        if (candidateFK.getColumns().equals(candidateFKColumns) && candidateFK.getTable().equals(existingTable)) {
+                            // Found one. Reuse it!
+                            newFK = candidateFK;
+                            f.remove(); // don't drop it any more.
                         }
-                        removedFKs.remove(newFK); // don't drop it any more!
                     }
-
+                    if (newFK == null) {
+                        newFK = new GenericForeignKey(Arrays.asList(candidateFKColumns));
+                        existingTable.addForeignKey(newFK);
+                    }
+                    
                     // Check to see that the FK we found isn't already in a relation. If it is,
-                    // then we must assume the first one we found is the correct one, and 
-                    // ignore this new one. 
+                    // then we must assume the first one we found is the correct one, and
+                    // ignore this new one.
                     if (!newFK.getRelations().isEmpty()) continue;
                     
                     // Check to see if there is already a relation between the PK and the FK. If

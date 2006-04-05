@@ -460,11 +460,13 @@ public interface Key extends Comparable {
         }
         
         /**
-         * Displays the name of this {@link Key} object from getName() prefixed with 'PK_'.
-         * @return the name of this {@link Key} object.
+         * Returns the name of this key. The name is the concatenation
+         * of all the columns, contained in curly brackets and comma separated, 
+         * prefixed with "PK_".
+         * @return the name of this {@link Key}.
          */
-        public String toString() {
-            String supername = super.toString();
+        public String getName() {
+            String supername = super.getName();
             return "PK_" + supername;
         }
     }
@@ -518,11 +520,13 @@ public interface Key extends Comparable {
         }
         
         /**
-         * Displays the name of this {@link Key} object from getName() prefixed with 'FK_'.
-         * @return the name of this {@link Key} object.
+         * Returns the name of this key. The name is the concatenation
+         * of all the columns, contained in curly brackets and comma separated, 
+         * prefixed with "FK_".
+         * @return the name of this {@link Key}.
          */
-        public String toString() {
-            String supername = super.toString();
+        public String getName() {
+            String supername = super.getName();
             return "FK_" + supername;
         }
     }

@@ -41,6 +41,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.HasDimensionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.TableProviderNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.GenericForeignKey;
 import org.biomart.builder.model.Key.GenericPrimaryKey;
 import org.biomart.builder.model.Key.PrimaryKey;
@@ -358,7 +359,12 @@ public interface DataSet extends Comparable {
                 }
                 
                 // Create the foreign key.
-                if (constructedFKColumns.size()>=1) datasetTable.addForeignKey(new GenericForeignKey(constructedFKColumns));
+                if (constructedFKColumns.size()>=1) {
+                    ForeignKey newFK = new GenericForeignKey(constructedFKColumns);
+                    datasetTable.addForeignKey(newFK);
+                    // Create the relation.
+                    new OneToMany(parentDatasetTable.getPrimaryKey(), newFK);
+                }
                 else throw new AssertionError("Foreign key expected but has no columns.");
             }
             
