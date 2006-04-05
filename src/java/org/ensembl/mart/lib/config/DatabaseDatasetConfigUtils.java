@@ -1158,7 +1158,11 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 			AttributeDescription configAttToAdd = new AttributeDescription(templateAttribute);
 			configAttToAdd.setTableConstraint(configAtt.getTableConstraint());
 			configAttToAdd.setField(configAtt.getField());
-			configAttToAdd.setLinkoutURL(configAtt.getLinkoutURL());			
+			// set link to the one from the original - otherwise leave as is
+			// this means can set generic links in template instead
+			// in future may want to add a check to only add from config if template not set
+			if (configAtt.getLinkoutURL() != null && !configAtt.getLinkoutURL().equals(""))
+				configAttToAdd.setLinkoutURL(configAtt.getLinkoutURL());			
 			
 			AttributePage dsConfigPage = dsConfig.getAttributePageByInternalName(templatePage.getInternalName());
 			if (dsConfigPage == null){
