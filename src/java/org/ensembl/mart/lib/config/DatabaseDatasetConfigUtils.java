@@ -5004,9 +5004,15 @@ public int templateCount(String template) throws ConfigurationException{
     finalMains.toArray(sbases);
     dsv.addMainTables(sbases);
 
-    String[] pkeys = new String[primaryKeys.size()];
-    if (pkeys.length > 0){
-    	primaryKeys.toArray(pkeys);
+    //String[] pkeys = new String[primaryKeys.size()];
+    String[] pkeys = new String[finalMains.size()];
+    //if (pkeys.length > 0){
+    if (primaryKeys.size() > 0){
+    	//primaryKeys.toArray(pkeys);
+    	// make sure no of keys matches no of mains
+    	for (int i = 0; i < sbases.length; i++){
+    		pkeys[i] = (String) primaryKeys.get(i);
+    	}
     	dsv.addPrimaryKeys(pkeys);
     }
     
@@ -5780,6 +5786,7 @@ public int templateCount(String template) throws ConfigurationException{
       String[] primaryKeys = dsConfig.getPrimaryKeys();
       tableName = starNames[0];// in case no keys for a lookup type dataset
       for (int k = 0; k < primaryKeys.length; k++) {
+      	System.out.println(joinKey+":"+primaryKeys[k]);
         if (primaryKeys[k].equalsIgnoreCase(joinKey))
           tableName = starNames[k];
       }
