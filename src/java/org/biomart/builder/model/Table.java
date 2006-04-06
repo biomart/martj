@@ -25,11 +25,12 @@
 package org.biomart.builder.model;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.model.Column.GenericColumn;
@@ -46,7 +47,7 @@ import org.biomart.builder.model.Key.PrimaryKey;
  * but it does not provide any methods that process or analyse these.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 4th April 2006
+ * @version 0.1.6, 6th April 2006
  * @since 0.1
  */
 public interface Table extends Comparable {
@@ -210,12 +211,12 @@ public interface Table extends Comparable {
         /**
          * Internal reference to the {@link ForeignKey}s of this {@link Table}.
          */
-        private final Map foreignKeys = new HashMap();
+        private final Map foreignKeys = new TreeMap();
         
         /**
          * Internal reference to the {@link Column}s of this {@link Table}.
          */
-        private final Map columns = new HashMap();
+        private final Map columns = new TreeMap();
         
         /**
          * The constructor sets up an empty {@link Table} representation with the given name
@@ -223,8 +224,9 @@ public interface Table extends Comparable {
          * @param name the table name.
          * @param prov the {@link TableProvider} this {@link Table} is associated with.
          * @throws NullPointerException if the name or provider are null.
+         * @throws AlreadyExistsException if a table with that name already exists in the provider.
          */
-        public GenericTable(String name, TableProvider prov) throws NullPointerException {
+        public GenericTable(String name, TableProvider prov) throws NullPointerException, AlreadyExistsException {
             // Sanity checks.
             if (name == null)
                 throw new NullPointerException("Table name cannot be null.");
@@ -233,6 +235,14 @@ public interface Table extends Comparable {
             // Remember the values.
             this.name = name;
             this.tableProvider = prov;
+            // Add it to our provider.
+            try {
+                prov.addTable(this);
+            } catch (AssociationException e) {
+                AssertionError ae = new AssertionError("Table provider does not equal itself.");
+                ae.initCause(e);
+                throw ae;
+            }
         }
         
         /**
@@ -354,7 +364,7 @@ public interface Table extends Comparable {
          * @return the set of {@link Key}s for this {@link Table}.
          */
         public Collection getKeys() {
-            Set allKeys = new HashSet();
+            Set allKeys = new TreeSet();
             if (this.primaryKey!=null) allKeys.add(this.primaryKey);
             allKeys.addAll(this.foreignKeys.values());
             return allKeys;
@@ -367,7 +377,7 @@ public interface Table extends Comparable {
          * @return the set of {@link Relation}s for this {@link Table}.
          */
         public Collection getRelations() {
-            Set allRels = new HashSet();
+            Set allRels = new TreeSet();
             for (Iterator i = this.getKeys().iterator(); i.hasNext(); ) {
                 Key k = (Key)i.next();
                 allRels.addAll(k.getRelations());

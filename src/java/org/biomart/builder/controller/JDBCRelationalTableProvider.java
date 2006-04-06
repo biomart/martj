@@ -120,10 +120,7 @@ public class JDBCRelationalTableProvider extends JDBCNonRelationalTableProvider 
             String dbTableName = dbTables.getString("TABLE_NAME");
             // If its a new table, create and add it. Otherwise, just look it up.
             Table existingTable = this.getTableByName(dbTableName);
-            if (existingTable==null) {
-                existingTable = new GenericTable(dbTableName, this);
-                this.tables.put(dbTableName, existingTable);
-            }
+            if (existingTable==null) existingTable = new GenericTable(dbTableName, this);
             
             // For each table loaded, temporarily preserve existing columns. Refer
             // to them as removed columns as by the end of this the set will only
@@ -227,28 +224,27 @@ public class JDBCRelationalTableProvider extends JDBCNonRelationalTableProvider 
                 
                 // Construct the FKs we found.
                 for (int j = 0; j < keyCount; j++) {
-                    Column[] fkCols = new Column[colCount];
+                    Column[] candidateFKColumns = new Column[colCount];
                     for (Iterator k = dbFKs.keySet().iterator(); k.hasNext(); ) {
                         Short keySeq = (Short)k.next();
                         int keySeqValue = keySeq.intValue() - lowestKeySeq; // ensures 0-index
                         List l = (List)dbFKs.get(keySeq);
-                        fkCols[keySeqValue] = (Column)l.get(j);
+                        candidateFKColumns[keySeqValue] = (Column)l.get(j);
                     }
                     
-                    ForeignKey newFK = null;
+                    ForeignKey newFK = new GenericForeignKey(Arrays.asList(candidateFKColumns));
+                    boolean newFKAlreadyExists = false;
                     // If we've already got one like that, reuse it, otherwise add it.
-                    for (Iterator f = removedFKs.iterator(); f.hasNext(); ) {
+                    for (Iterator f = removedFKs.iterator(); f.hasNext() && !newFKAlreadyExists; ) {
                         ForeignKey candidateFK = (ForeignKey)f.next();
-                        if (candidateFK.getColumns().equals(fkCols) && candidateFK.getTable().equals(existingTable)) {
+                        if (candidateFK.equals(newFK)) {
                             // Found one. Reuse it!
                             newFK = candidateFK;
-                            f.remove(); // don't drop it any more.'
+                            f.remove(); // don't drop it any more.
+                            newFKAlreadyExists =true;
                         }
                     }
-                    if (newFK == null) {
-                        newFK = new GenericForeignKey(Arrays.asList(fkCols));
-                        existingTable.addForeignKey(newFK);
-                    }
+                    if (!newFKAlreadyExists) newFK.getTable().addForeignKey(newFK);
 
                     // Check to see that the FK we found isn't already in a relation. If it is,
                     // then there is something seriously wrong with DatabaseMetaData as an FK

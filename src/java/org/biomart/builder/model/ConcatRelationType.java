@@ -32,7 +32,7 @@ import java.util.Map;
  * concat-only {@link Relation}. It simply represents the separator to use.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 29th March 2006
+ * @version 0.1.2, 6th April 2006
  * @since 0.1
  */
 public class ConcatRelationType implements Comparable {
@@ -44,17 +44,17 @@ public class ConcatRelationType implements Comparable {
     /**
      * Use this constant to refer to value-separation by commas.
      */
-    public static final ConcatRelationType COMMA = ConcatRelationType.get(",");
+    public static final ConcatRelationType COMMA = new ConcatRelationType("COMMA", ",");
 
     /**
      * Use this constant to refer to value-separation by spaces.
      */
-    public static final ConcatRelationType SPACE = ConcatRelationType.get(" ");
+    public static final ConcatRelationType SPACE = new ConcatRelationType("SPACE", " ");
 
     /**
      * Use this constant to refer to value-separation by tabs.
      */
-    public static final ConcatRelationType TAB = ConcatRelationType.get("\t");
+    public static final ConcatRelationType TAB = new ConcatRelationType("TAB", "\t");
     
     /**
      * Internal reference to the name of this {@link ConcatRelationType}.
@@ -62,35 +62,36 @@ public class ConcatRelationType implements Comparable {
     private final String name;
     
     /**
-     * The static factory method creates and returns a {@link ConcatRelationType}
-     * with the given name. It ensures the object returned is a singleton.
-     * Note that the names of {@link ConcatRelationType} objects are case-insensitive.
-     * @param name the name of the {@link ConcatRelationType} object.
-     * @return the {@link ConcatRelationType} object.
-     * @throws NullPointerException if the name is null.
+     * Internal reference to the separator for this {@link ConcatRelationType}.
      */
-    public static ConcatRelationType get(String name) throws NullPointerException {
-        // Sanity check.
-        if (name == null)
-            throw new NullPointerException("Name cannot be null.");
-        // Convert to upper case.
-        name = name.toUpperCase();
-        // Do we already have this one?
-        // If so, then return it.
-        if (singletons.containsKey(name)) return (ConcatRelationType)singletons.get(name);
-        // Otherwise, create it, remember it, then return it.
-        ConcatRelationType pct = new ConcatRelationType(name);
-        singletons.put(name,pct);
-        return pct;
-    }
+    private final String separator;
     
     /**
-     * The private constructor takes a single parameter, which defines the name
-     * this {@link ConcatRelationType} object will display when printed.
+     * The private constructor takes two parameters, which define the name
+     * this {@link ConcatRelationType} object will display when printed, and the
+     * separator to use between values that have been concatenated.
      * @param name the name of the {@link ConcatRelationType}.
+     * @param separator the separator for this {@link ConcatRelationType}.
      */
-    private ConcatRelationType(String name) {
+    private ConcatRelationType(String name, String separator) {
         this.name = name;
+        this.separator = separator;
+    }
+
+    /**
+     * Displays the name of this {@link ConcatRelationType} object.
+     * @return the name of this {@link ConcatRelationType} object.
+     */
+    public String getName() {
+        return this.name;
+    }
+
+    /**
+     * Displays the separator for this {@link ConcatRelationType} object.
+     * @return the separator for this {@link ConcatRelationType} object.
+     */
+    public String getSeparator() {
+        return this.separator;
     }
     
     /**
@@ -98,7 +99,7 @@ public class ConcatRelationType implements Comparable {
      * @return the name of this {@link ConcatRelationType} object.
      */
     public String toString() {
-        return this.name;
+        return this.getName();
     }
     
     /**

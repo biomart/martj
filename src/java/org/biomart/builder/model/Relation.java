@@ -66,6 +66,13 @@ public interface Relation extends Comparable {
     public ComponentStatus getStatus();
     
     /**
+     * Sets the {@link ComponentStatus} of this {@link Relation}.
+     * @param status the new {@link ComponentStatus} of this {@link Relation}.
+     * @throws NullPointerException if the new status is null.
+     */
+    public void setStatus(ComponentStatus status) throws NullPointerException;
+    
+    /**
      * Returns the {@link PrimaryKey} of this {@link Relationship}.
      * @return the {@link PrimaryKey}
      */
@@ -265,6 +272,19 @@ public interface Relation extends Comparable {
          */
         public ComponentStatus getStatus() {
             return this.status;
+        }
+        
+        /**
+         * Sets the {@link ComponentStatus} of this {@link Relation}.
+         * @param status the new {@link ComponentStatus} of this {@link Relation}.
+         * @throws NullPointerException if the new status is null.
+         */
+        public void setStatus(ComponentStatus status) throws NullPointerException {
+            // Sanity check.
+            if (status==null)
+                throw new NullPointerException("Status cannot be null.");
+            // Do it.
+            this.status = status;
         }
         
         /**

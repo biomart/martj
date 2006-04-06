@@ -39,5 +39,15 @@ public class AssociationException extends BuilderException {
      */
     public AssociationException(String msg) {
         super(msg);
+    }   
+    
+    /**
+     * Constructs an instance of <code>AssociationException</code> with the specified detail message
+     * and initial cause.
+     * @param msg the detail message.
+     * @param t the initial cause.
+     */
+    public AssociationException(String msg, Throwable t) {
+        super(msg, t);
     }
 }

@@ -173,8 +173,6 @@ public interface PartitionedTableProvider extends TableProvider {
                     ForeignKey targetFK = new GenericForeignKey(targetKeyCols);
                     targetTable.addForeignKey(targetFK);
                 }
-                // Save it.
-                this.tables.put(targetTable.getName(), targetTable);
             }
             // Now do the relations.
             for (Iterator i = this.getFirstTableProvider().getTables().iterator(); i.hasNext(); ) {
@@ -189,9 +187,7 @@ public interface PartitionedTableProvider extends TableProvider {
                     // Locate the equivalent target foreign key.
                     ForeignKey targetFK = targetFKTable.getForeignKeyByName(sourceFK.getName());
                     // Create the relation.
-                    Relation targetRelation = new GenericRelation(targetTable.getPrimaryKey(), targetFK, sourceRelation.getCardinality());
-                    targetTable.getPrimaryKey().addRelation(targetRelation);
-                    targetFK.addRelation(targetRelation);
+                    new GenericRelation(targetTable.getPrimaryKey(), targetFK, sourceRelation.getCardinality());
                 }
             }
         }
@@ -207,8 +203,9 @@ public interface PartitionedTableProvider extends TableProvider {
          * @return a set of unique values in a given column.
          * @throws SQLException if there was any problem loading the values.
          * @throws NullPointerException if the column was null.
+         * @throws AssociationException if the column doesn't belong to any table in this provider.
          */
-        public Collection getUniqueValues(Column c) throws NullPointerException, SQLException {
+        public Collection getUniqueValues(Column c) throws NullPointerException, SQLException, AssociationException {
             // Sanity check.
             if (c == null)
                 throw new NullPointerException("Column cannot be null.");

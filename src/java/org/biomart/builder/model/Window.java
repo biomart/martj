@@ -31,6 +31,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
@@ -51,7 +53,7 @@ import org.biomart.builder.model.Relation.OneToMany;
  * <p>The name of the window is inherited by the {@link Dataset} so take care when
  * choosing it.</p>
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 5th April 2006
+ * @version 0.1.7, 6th April 2006
  * @since 0.1
  */
 public class Window implements Comparable {
@@ -78,29 +80,29 @@ public class Window implements Comparable {
     /**
      * Internal reference to masked relations.
      */
-    private final Set maskedRelations = new HashSet();
+    private final Set maskedRelations = new TreeSet();
     
     /**
      * Internal reference to masked columns.
      */
-    private final Set maskedColumns = new HashSet();
+    private final Set maskedColumns = new TreeSet();
     
     /**
      * Internal reference to partitioned columns (keys are columns,
      * values are {@link PartitionedColumnType}s).
      */
-    private final Map partitionedColumns = new HashMap();
+    private final Map partitionedColumns = new TreeMap();
     
     /**
      * Internal reference to relations between subclassed tables.
      */
-    private final Set subclassedRelations = new HashSet();
+    private final Set subclassedRelations = new TreeSet();
     
     /**
      * Internal reference to concat-only relations. The keys of
      * the map are relations, the values are concat types.
      */
-    private final Map concatOnlyRelations = new HashMap();
+    private final Map concatOnlyRelations = new TreeMap();
     
     /**
      * Internal reference to whether or not to partition by the {@link PartitionedTableProvider}.

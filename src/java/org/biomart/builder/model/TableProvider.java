@@ -27,12 +27,11 @@ package org.biomart.builder.model;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
-import org.biomart.builder.model.Table.GenericTable;
 
 /**
  * <p>A {@link TableProvider} provides one or more {@link Table} objects with
@@ -43,7 +42,7 @@ import org.biomart.builder.model.Table.GenericTable;
  * keeping track of the {@link Table}s a {@link TableProvider} provides.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 30th March 2006
+ * @version 0.1.5, 6th April 2006
  * @since 0.1
  */
 public interface TableProvider extends Comparable, DataLink {
@@ -66,6 +65,17 @@ public interface TableProvider extends Comparable, DataLink {
     public void synchronise() throws SQLException, BuilderException;
     
     /**
+     * Adds a {@link Table} to this provider. The table must not be null, and
+     * must not already exist (ie. with the same name).
+     *
+     * @param table the {@link Table} to add.
+     * @throws AlreadyExistsException if another one with the same name already exists.
+     * @throws AssociationException if the table doesn'table belong to this provider.
+     * @throws NullPointerException if the table is null.
+     */
+    public void addTable(Table table) throws AlreadyExistsException, AssociationException, NullPointerException;
+    
+    /**
      * Returns all the {@link Table}s this provider provides. The set returned may be
      * empty but it will never be null.
      * @return the set of all {@link Table}s in this provider.
@@ -85,10 +95,11 @@ public interface TableProvider extends Comparable, DataLink {
      * set returned will never be null itself.
      * @param c the {@link Column} to get unique values for.
      * @return a set of unique values in a given column.
+     * @throws AssociationException if the column doesn't belong to us.
      * @throws SQLException if there was any problem loading the values.
      * @throws NullPointerException if the column was null.
      */
-    public Collection getUniqueValues(Column c) throws NullPointerException, SQLException;
+    public Collection getUniqueValues(Column c) throws AssociationException, NullPointerException, SQLException;
     
     /**
      * The generic implementation should suffice as the ground for most
@@ -104,7 +115,7 @@ public interface TableProvider extends Comparable, DataLink {
         /**
          * Internal reference to the set of {@link Table}s in this provider.
          */
-        protected final Map tables = new HashMap();
+        protected final Map tables = new TreeMap();
         
         /**
          * The constructor creates a provider with the given name.
@@ -158,6 +169,27 @@ public interface TableProvider extends Comparable, DataLink {
         public void synchronise() throws SQLException, BuilderException {}
         
         /**
+         * Adds a {@link Table} to this provider. The table must not be null, and
+         * must not already exist (ie. with the same name).
+         *
+         * @param table the {@link Table} to add.
+         * @throws AlreadyExistsException if another one with the same name already exists.
+         * @throws AssociationException if the table doesn'table belong to this provider.
+         * @throws NullPointerException if the table is null.
+         */
+        public void addTable(Table table) throws AlreadyExistsException, AssociationException, NullPointerException {
+            // Sanity check.
+            if (table == null)
+                throw new NullPointerException("Table cannot be null.");
+            if (!table.getTableProvider().equals(this))
+                throw new AssociationException("Table does not belong to this provider.");
+            if (this.tables.containsKey(table.getName()))
+                throw new AlreadyExistsException("Table with that name already exists in this provider.", table.getName());
+            // Do it.
+            this.tables.put(table.getName(), table);
+        }
+        
+        /**
          * Returns all the {@link Table}s this provider provides. The set returned may be
          * empty but it will never be null.
          * @return the set of all {@link Table}s in this provider.
@@ -187,13 +219,16 @@ public interface TableProvider extends Comparable, DataLink {
          *
          * @param c the {@link Column} to get unique values for.
          * @return a set of unique values in a given column.
+         * @throws AssociationException if the column doesn't belong to us.
          * @throws SQLException if there was any problem loading the values.
          * @throws NullPointerException if the column was null.
          */
-        public Collection getUniqueValues(Column c) throws NullPointerException, SQLException {
+        public Collection getUniqueValues(Column c) throws AssociationException, NullPointerException, SQLException {
             // Sanity check.
             if (c == null)
                 throw new NullPointerException("Column cannot be null.");
+            if (!c.getTable().getTableProvider().equals(this))
+                throw new AssociationException("Column doesn't belong to this table provider.");
             // Do it.
             return Collections.EMPTY_SET;
         }

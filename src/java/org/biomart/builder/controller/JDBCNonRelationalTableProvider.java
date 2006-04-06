@@ -36,6 +36,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -308,6 +310,31 @@ public class JDBCNonRelationalTableProvider extends GenericTableProvider impleme
     }
     
     /**
+     * <p>Returns a set of unique values in a given column, which may include null. The
+     * set returned will never be null itself.</p>
+     *
+     * <p>This simple generic implementation returns an empty set every time.</p>
+     *
+     * @param c the {@link Column} to get unique values for.
+     * @return a set of unique values in a given column.
+     * @throws AssociationException if the column doesn't belong to us.
+     * @throws SQLException if there was any problem loading the values.
+     * @throws NullPointerException if the column was null.
+     */
+    public Collection getUniqueValues(Column c) throws AssociationException, NullPointerException, SQLException {
+        // Sanity check.
+        if (c == null)
+            throw new NullPointerException("Column cannot be null.");
+        if (!c.getTable().getTableProvider().equals(this))
+            throw new AssociationException("Column doesn't belong to this table provider.");
+        
+        // DO A SQL SELECT HERE
+        
+        // Do it.
+        return Collections.EMPTY_SET;
+    }
+    
+    /**
      * <p>Synchronise this {@link TableProvider} with the data source that is
      * providing its tables. Synchronisation means checking the list of {@link Table}s
      * available and drop/add any that have changed, then check each {@link Column}.
@@ -354,10 +381,7 @@ public class JDBCNonRelationalTableProvider extends GenericTableProvider impleme
             String dbTableName = dbTables.getString("TABLE_NAME");
             // If its a new table, create and add it. Otherwise, just look it up.
             Table existingTable = this.getTableByName(dbTableName);
-            if (existingTable==null) {
-                existingTable = new GenericTable(dbTableName, this);
-                this.tables.put(dbTableName, existingTable);
-            }
+            if (existingTable==null) existingTable = new GenericTable(dbTableName, this);
             
             // For each table loaded, temporarily preserve existing columns. Refer
             // to them as removed columns as by the end of this the set will only
@@ -464,20 +488,21 @@ public class JDBCNonRelationalTableProvider extends GenericTableProvider impleme
                 
                 // We found a matching set, so create a FK on it!
                 if (candidateFKColumnCount == existingPK.countColumns()) {
-                    ForeignKey newFK = null;
+                    
+                    ForeignKey newFK = new GenericForeignKey(Arrays.asList(candidateFKColumns));;
+                    boolean newFKAlreadyExists = false;
                     // If we've already got one like that, reuse it, otherwise add it.
-                    for (Iterator f = removedFKs.iterator(); f.hasNext(); ) {
+                    for (Iterator f = removedFKs.iterator(); f.hasNext() && !newFKAlreadyExists; ) {
                         ForeignKey candidateFK = (ForeignKey)f.next();
-                        if (candidateFK.getColumns().equals(candidateFKColumns) && candidateFK.getTable().equals(existingTable)) {
+                        if (candidateFK.equals(newFK)) {
                             // Found one. Reuse it!
                             newFK = candidateFK;
                             f.remove(); // don't drop it any more.
+                            newFKAlreadyExists =true;
                         }
                     }
-                    if (newFK == null) {
-                        newFK = new GenericForeignKey(Arrays.asList(candidateFKColumns));
-                        existingTable.addForeignKey(newFK);
-                    }
+                    if (!newFKAlreadyExists) fkTable.addForeignKey(newFK);
+                    
                     
                     // Check to see that the FK we found isn't already in a relation. If it is,
                     // then we must assume the first one we found is the correct one, and

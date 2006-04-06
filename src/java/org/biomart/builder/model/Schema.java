@@ -26,9 +26,9 @@ package org.biomart.builder.model;
 
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeMap;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.BuilderException;
 
@@ -38,20 +38,20 @@ import org.biomart.builder.exceptions.BuilderException;
  * by these, from which {@link DataSet}s are constructed. 
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 30th March 2006
+ * @version 0.1.3, 6th April 2006
  * @since 0.1
  */
 public class Schema {
     /**
      * Internal reference to the {@link TableProvider}s we are using for data.
      */
-    private final Map tableProviders = new HashMap();
+    private final Map tableProviders = new TreeMap();
     
     /**
      * Internal reference to the {@link Window}s onto the data we are using to
      * construct the marts with.
      */
-    private final Map windows = new HashMap();
+    private final Map windows = new TreeMap();
         
     /**
      * Returns the set of {@link TableProvider} objects which this {@link Schema} includes

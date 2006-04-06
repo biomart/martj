@@ -24,6 +24,7 @@
 
 package org.biomart.builder.model;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -35,7 +36,7 @@ import java.util.Set;
  * to decide by looking at the class used.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 30th March 2006
+ * @version 0.1.4, 6th April 2006
  * @since 0.1
  */
 public interface PartitionedColumnType {
@@ -65,12 +66,13 @@ public interface PartitionedColumnType {
         /**
          * The constructor specifies the values to partition on. If any value is null,
          * then only rows with null in this column will be selected for that value.
+         * Duplicate values will be ignored.
          * @param values the set of unique values to partition on.
          * @throws IllegalArgumentException if any of the values are not-null
          * and not Strings, or if the input set is empty.
          * @throws NullPointerException if the input set is null.
          */
-        public ValueCollection(Set values) throws IllegalArgumentException, NullPointerException {
+        public ValueCollection(Collection values) throws IllegalArgumentException, NullPointerException {
             // Sanity check.
             if (values==null)
                 throw new NullPointerException("Values set cannot be null.");
@@ -85,6 +87,14 @@ public interface PartitionedColumnType {
                 // Add the value.
                 this.values.add((String)o);
             }
+        }
+
+        /**
+         * Returns the values we will partition on. May be empty but never null.
+         * @return the values we will partition on.
+         */
+        public Set getValues() {
+            return this.values;
         }
 
         /**
@@ -114,6 +124,14 @@ public interface PartitionedColumnType {
         public SingleValue(String value) {
             super(Collections.singleton(value));
             this.value = value;
+        }
+
+        /**
+         * Returns the value we will partition on.
+         * @return the value we will partition on.
+         */
+        public String getValue() {
+            return this.value;
         }
 
         /**
