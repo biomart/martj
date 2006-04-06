@@ -36,7 +36,7 @@ import org.biomart.builder.exceptions.BuilderException;
  * @version 0.1.3, 30th March 2006
  * @since 0.1
  */
-public interface MartConstructor extends DataLink {
+public interface MartConstructor extends DataLink, Comparable {
     /**
      * This method takes a {@link DataSet} and either generates a script for the
      * user to run later to construct a mart, or does the work right now. The end result

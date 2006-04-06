@@ -82,7 +82,6 @@ public interface DataSet extends Comparable, TableProvider {
     
     /**
      * Sets the {@link MartConstructor} this {@link DataSet} will be built by.
-     *
      * @param martConstructor the {@link MartConstructor} for this {@link DataSet}.
      * @throws NullPointerException if the parameter is null.
      */
@@ -90,9 +89,24 @@ public interface DataSet extends Comparable, TableProvider {
     
     /**
      * Returns the {@link MartConstructor} this {@link DataSet} will be built by.
+     * Defaults to NONE and is never null.
      * @return the {@link MartConstructor} for this {@link DataSet}.
      */
     public MartConstructor getMartConstructor();
+    
+    /**
+     * Sets the {@link DataSetOptimiserType} this {@link DataSet} will be optimised with.
+     * Defaults to NONE and is never null.
+     * @param optimiser the {@link DataSetOptimiserType} for this {@link DataSet}.
+     * @throws NullPointerException if the parameter is null.
+     */
+    public void setDataSetOptimiserType(DataSetOptimiserType optimiser) throws NullPointerException;
+    
+    /**
+     * Returns the {@link DataSetOptimiserType} this {@link DataSet} will be optimised with.
+     * @return the {@link DataSetOptimiserType} for this {@link DataSet}.
+     */
+    public DataSetOptimiserType getDataSetOptimiserType();
     
     /**
      * Request that the mart for this dataset be constructed now.
@@ -111,6 +125,12 @@ public interface DataSet extends Comparable, TableProvider {
          * Internal reference to the mart constructor that will build us later.
          */
         private MartConstructor martConstructor;
+        
+        /**
+         * Internal reference to the dataset optimiser that will optimise us later.
+         * Defaults to none.
+         */
+        private DataSetOptimiserType optimiser = DataSetOptimiserType.NONE;
         
         /**
          * Internal reference to the parent window.
@@ -327,7 +347,7 @@ public interface DataSet extends Comparable, TableProvider {
                         Column parentRealTableColumn = ((WrappedColumn)parentDatasetTableColumn).getWrappedColumn();
                         if (!parentRealTableColumn.getTable().equals(parentRealTable)) {
                             // If real column not on original main table, create child column for it add it to child table PK
-                            constructedFKColumn = new WrappedColumn(parentRealTableColumn, datasetTable);
+                            constructedFKColumn = new WrappedColumn(parentRealTableColumn, datasetTable, null);
                             constructedPKColumns.add(constructedFKColumn);
                         } else {
                             // Else follow original relation FK end and find real child column and associated child column
@@ -343,6 +363,12 @@ public interface DataSet extends Comparable, TableProvider {
                         // Else, can'table handle.
                         throw new AssertionError("Cannot handle non-Wrapped non-TableProviderName columns in foreign keys.");
                     }
+                    
+                    // Set the FK column name to match the parent PK column name with "_key" appended
+                    // (naming convention requirement), but only append that extra bit if parent doesn't already have it.
+                    String candidateFKColName = parentDatasetTableColumn.getName();
+                    if (!candidateFKColName.endsWith("_key")) candidateFKColName += "_key";
+                    constructedFKColumn.setName(candidateFKColName);
                     
                     // Add child column to child FK
                     constructedFKColumns.add(constructedFKColumn);
@@ -385,7 +411,7 @@ public interface DataSet extends Comparable, TableProvider {
             if (ignoredRelations == null)
                 throw new NullPointerException("Ignore relations cannot be null.");
             if (relationsFollowed == null)
-                throw new NullPointerException("Relations pairs cannot be null.");
+                throw new NullPointerException("Relations list cannot be null.");
             if (constructedPKColumns == null)
                 throw new NullPointerException("Primary key columns cannot be null.");
             if (constructedColumns == null)
@@ -407,13 +433,17 @@ public interface DataSet extends Comparable, TableProvider {
             // Also exclude all masked columns.
             excludedColumns.addAll(this.getWindow().getMaskedColumns());
             
+            // Work out the underlying relation (the last one visited) for all columns on this table.
+            Relation underlyingRelation = null;
+            if (relationsFollowed.size()>0) underlyingRelation = (Relation)relationsFollowed.get(relationsFollowed.size()-1);
+            
             // Add all non-excluded columns from source table to dataset table.
             for (Iterator i = realTable.getColumns().iterator(); i.hasNext(); ) {
                 Column c = (Column)i.next();
                 // If column is excluded, ignore it.
                 if (excludedColumns.contains(c)) continue;
                 // Otherwise add the column to our table.
-                Column wc = new WrappedColumn(c, datasetTable);
+                Column wc = new WrappedColumn(c, datasetTable, underlyingRelation);
                 // If column is part of primary key, add the wrapped version to the primary key column set.
                 if (realTable.getPrimaryKey()!=null && realTable.getPrimaryKey().getColumns().contains(c)) constructedPKColumns.add(wc);
             }
@@ -474,6 +504,27 @@ public interface DataSet extends Comparable, TableProvider {
          */
         public MartConstructor getMartConstructor() {
             return this.martConstructor;
+        }
+        
+        /**
+         * Sets the {@link DataSetOptimiserType} this {@link DataSet} will be optimised with.
+         * @param optimiser the {@link DataSetOptimiserType} for this {@link DataSet}.
+         * @throws NullPointerException if the parameter is null.
+         */
+        public void setDataSetOptimiserType(DataSetOptimiserType optimiser) throws NullPointerException {
+            // Sanity check.
+            if (optimiser == null)
+                throw new NullPointerException("Optimiser cannot be null.");
+            // Do it.
+            this.optimiser = optimiser;
+        }
+        
+        /**
+         * Returns the {@link DataSetOptimiserType} this {@link DataSet} will be optimised with.
+         * @return the {@link DataSetOptimiserType} for this {@link DataSet}.
+         */
+        public DataSetOptimiserType getDataSetOptimiserType() {
+            return this.optimiser;
         }
         
         /**
@@ -694,23 +745,6 @@ public interface DataSet extends Comparable, TableProvider {
         }
         
         /**
-         * Convenience method that wraps a {@link Column} and adds it to this {@link Table}.
-         *
-         * @param column the {@link Column} to wrap and add.
-         * @throws NullPointerException if the argument is null.
-         */
-        public void createColumn(Column column) throws NullPointerException {
-            try {
-                new WrappedColumn(column, this);
-                // By creating it we've already added it to ourselves! (Based on DataSetColumn behaviour)
-            } catch (AlreadyExistsException e) {
-                AssertionError ae = new AssertionError("Alias generator failed to generate a unique alias for this column.");
-                ae.initCause(e);
-                throw ae;
-            }
-        }
-        
-        /**
          * {@link DataSetTable}s can be renamed by the user if the names don'table make
          * any sense to them. Use this method to do just that. It will check first to see if the proposed
          * name has already been used in the data set {@link TableProvider}. If it has, an AlreadyExistsException
@@ -756,17 +790,28 @@ public interface DataSet extends Comparable, TableProvider {
      */
     public static class DataSetColumn extends GenericColumn {
         /**
+         * Internal reference to the {@link Relation} that produces this column.
+         */
+        private final Relation underlyingRelation;
+        
+        /**
          * This constructor gives the column a name and checks that the
          * parent {@link Table} is not null.
          *
          * @param name the name to give this column.
          * @param dsTable the parent {@link Table}
+         * @param underlyingRelation the {@link Relation} that provided this column. The
+         * underlying relation can be null in two instances - when the {@link DataSetTable} is
+         * a MAIN table, in which case the column came from the parent table, and all
+         * other instances, in which case the column came from the MAIN table in this
+         * {@link DataSet}.
          * @throws AlreadyExistsException if the {@link DataSetTable} already has a column with
          * that name.
          * @throws NullPointerException if either parameter is null.
          */
-        public DataSetColumn(String name, DataSetTable dsTable) throws NullPointerException, AlreadyExistsException {
+        public DataSetColumn(String name, DataSetTable dsTable, Relation underlyingRelation) throws NullPointerException, AlreadyExistsException {
             super(generateAlias(name, dsTable), dsTable);
+            this.underlyingRelation = underlyingRelation;
         }
         
         /**
@@ -817,6 +862,17 @@ public interface DataSet extends Comparable, TableProvider {
         }
         
         /**
+         * Returns the underlying {@link Relation} that provided this column. If it returns null and
+         * this table is a MAIN table, then that means the column came from the table's real table.
+         * If it returns null in any other circumstances, ie. DIMENSION and MAIN_SUBCLASS, then
+         * the column is part of the parent {@link DataSetTable}'s primary key.
+         * @return the {@link Relation} that underpins this column.
+         */
+        public Relation getUnderlyingRelation() {
+            return this.underlyingRelation;
+        }
+        
+        /**
          * A column on a {@link DataSetTable} wraps an existing column but is otherwise identical to
          * a normal column. It assigns itself an alias if the original name is already used in the target table.
          * Can be used in keys on dataset tables.
@@ -834,12 +890,17 @@ public interface DataSet extends Comparable, TableProvider {
              *
              * @param column the {@link Column} to wrap.
              * @param dsTable the parent {@link Table}
+             * @param underlyingRelation the {@link Relation} that provided this column. The
+             * underlying relation can be null in two instances - when the {@link DataSetTable} is
+             * a MAIN table, in which case the column came from the parent table, and all
+             * other instances, in which case the column came from the MAIN table in this
+             * {@link DataSet}.
              * @throws NullPointerException if either parameter is null.
              * @throws AlreadyExistsException if the world has stopped turning. (Should never happen.)
              */
-            public WrappedColumn(Column column, DataSetTable dsTable) throws NullPointerException, AlreadyExistsException {
+            public WrappedColumn(Column column, DataSetTable dsTable, Relation underlyingRelation) throws NullPointerException, AlreadyExistsException {
                 // Call the parent with the alias.
-                super(column.getName(), dsTable);
+                super(column.getName(), dsTable, underlyingRelation);
                 // Remember the wrapped column.
                 this.column = column;
             }
@@ -859,17 +920,16 @@ public interface DataSet extends Comparable, TableProvider {
          */
         public static class ConcatRelationColumn extends DataSetColumn {
             /**
-             * Internal reference to the relation this column refers to.
-             */
-            private final Relation concatRelation;
-            
-            /**
              * The constructor takes a name for this column-to-be, and the {@link DataSetTable}
              * on which it is to be constructed, and the {@link Relation} it represents.
              *
              * @param name the name to give this column.
              * @param dsTable the dsTable {@link Table}.
-             * @param concatRelation the concat only {@link Relation} it refers to.
+             * @param underlyingRelation the {@link Relation} that provided this column. The
+             * underlying relation can be null in two instances - when the {@link DataSetTable} is
+             * a MAIN table, in which case the column came from the parent table, and all
+             * other instances, in which case the column came from the MAIN table in this
+             * {@link DataSet}.
              * @throws AlreadyExistsException if the {@link DataSetTable} already has a column with
              * that name.
              * @throws AssociationException if the {@link Relation} is not a concat relation.
@@ -877,22 +937,10 @@ public interface DataSet extends Comparable, TableProvider {
              */
             public ConcatRelationColumn(String name, DataSetTable dsTable, Relation concatRelation) throws NullPointerException, AlreadyExistsException, AssociationException {
                 // Super first.
-                super(name, dsTable);
+                super(name, dsTable, concatRelation);
                 // Sanity check.
-                if (concatRelation == null)
-                    throw new NullPointerException("Relation cannot be null.");
                 if (!((DataSet)dsTable.getTableProvider()).getWindow().getConcatOnlyRelations().contains(concatRelation))
                     throw new AssociationException("This relation is not a concat relation.");
-                // Do it.
-                this.concatRelation = concatRelation;
-            }
-            
-            /**
-             * Returns the {@link Relation} this column refers to.
-             * @return the {@link Relation} for this column.
-             */
-            public Relation getRelation() {
-                return this.concatRelation;
             }
         }
         
@@ -903,7 +951,7 @@ public interface DataSet extends Comparable, TableProvider {
         public static class TableProviderNameColumn extends DataSetColumn {
             /**
              * This constructor gives the column a name and checks that the
-             * parent {@link Table} is not null.
+             * parent {@link Table} is not null. The underlying relation is not required.
              *
              * @param name the name to give this column.
              * @param dsTable the parent {@link Table}
@@ -912,7 +960,7 @@ public interface DataSet extends Comparable, TableProvider {
              * @throws NullPointerException if either parameter is null.
              */
             public TableProviderNameColumn(String name, DataSetTable dsTable) throws NullPointerException, AlreadyExistsException {
-                super(name, dsTable);
+                super(name, dsTable, null);
             }
         }
     }
@@ -994,6 +1042,99 @@ public interface DataSet extends Comparable, TableProvider {
          * Return true if the objects are identical.
          * @param o the object to compare to.
          * @return true if the names are the same and both are {@link DataSetTableType} instances,
+         * otherwise false.
+         */
+        public boolean equals(Object o) {
+            // We are dealing with singletons so can use == happily.
+            return o == this;
+        }
+    }
+    
+    /**
+     * This class defines the various different ways of optimising a dataset after it has
+     * been constructed, eg. adding 'hasDimension' columns, or doing left joins on the dimensions.
+     */
+    public class DataSetOptimiserType implements Comparable {
+        /**
+         * Internal reference to the set of {@link DataSetOptimiserType} singletons.
+         */
+        private static final Map singletons = new HashMap();
+        
+        /**
+         * Use this constant to refer to no optimisation.
+         */
+        public static final DataSetOptimiserType NONE = new DataSetOptimiserType("NONE");
+        
+        /**
+         * Use this constant to refer to optimising by running a left join on each dimension..
+         */
+        public static final DataSetOptimiserType LEFTJOIN = new DataSetOptimiserType("LEFTJOIN");
+        
+        /**
+         * Use this constant to refer to optimising by including an extra column on the main
+         * table for each dimension and populating it with true or false..
+         */
+        public static final DataSetOptimiserType COLUMN = new DataSetOptimiserType("COLUMN");
+        
+        /**
+         * Use this constant to refer to no optimising by creating a separate table linked on a 1:1
+         * basis with the main table, with one column per dimension populated with true or false.
+         */
+        public static final DataSetOptimiserType TABLE = new DataSetOptimiserType("TABLE");
+        
+        /**
+         * Internal reference to the name of this {@link DataSetTableType}.
+         */
+        private final String name;
+        
+        /**
+         * The private constructor takes a single parameter, which defines the name
+         * this {@link DataSetOptimiserType} object will display when printed.
+         * @param name the name of the {@link DataSetOptimiserType}.
+         */
+        private DataSetOptimiserType(String name) {
+            this.name = name;
+        }
+        
+        /**
+         * Displays the name of this {@link DataSetOptimiserType} object.
+         * @return the name of this {@link DataSetOptimiserType} object.
+         */
+        public String getName() {
+            return this.name;
+        }
+        
+        /**
+         * Displays the name of this {@link DataSetOptimiserType} object.
+         * @return the name of this {@link DataSetOptimiserType} object.
+         */
+        public String toString() {
+            return this.getName();
+        }
+        
+        /**
+         * Displays the hashcode of this object.
+         * @return the hashcode of this object.
+         */
+        public int hashCode() {
+            return this.toString().hashCode();
+        }
+        
+        /**
+         * Sorts by comparing the toString() output.
+         * @param o the object to compare to.
+         * @return -1 if we are smaller, +1 if we are larger, 0 if we are equal.
+         * @throws ClassCastException if the object o is not a {@link DataSetOptimiserType}.
+         */
+        public int compareTo(Object o) throws ClassCastException {
+            DataSetOptimiserType c = (DataSetOptimiserType)o;
+            return this.toString().compareTo(c.toString());
+        }
+        
+        /**
+         * Return true if the objects are identical.
+         * @param o the object to compare to.
+         * @return true if the names are the same and both are {@link DataSetOptimiserType} instances,
          * otherwise false.
          */
         public boolean equals(Object o) {

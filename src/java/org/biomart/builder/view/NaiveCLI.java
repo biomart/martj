@@ -25,6 +25,7 @@
 package org.biomart.builder.view;
 
 import java.io.File;
+import java.util.Collections;
 import org.biomart.builder.controller.JDBCNonRelationalTableProvider;
 import org.biomart.builder.controller.JDBCRelationalTableProvider;
 import org.biomart.builder.controller.SchemaSaver;
@@ -64,10 +65,14 @@ public class NaiveCLI {
         s.addTableProvider(tableProvider);
         s.synchronise(); // causes the table provider to load up its info
         Table t = tableProvider.getTableByName(name);
-        Window w = new Window(s, t, t.getName());
         // Predict some sensible defaults.
-        w.predictRelationTypes();
+        s.suggestWindows(t);
+        // Accept the no-subclass default.
+        Window w = s.getWindowByName(t.getName());
         w.synchronise(); // causes the dataset to regenerate
+        // Remove the others.
+        s.getWindows().retainAll(Collections.singleton(w));
+        // Dump the XML.
         SchemaSaver.save(s, file);
         // Replace the saver line with a call to setMartConstructor() and
         // then call constructMart() to make SQL instead.

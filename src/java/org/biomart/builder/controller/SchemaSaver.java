@@ -50,9 +50,11 @@ import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.ConcatRelationType;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.TableProviderNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.Key;
@@ -296,34 +298,38 @@ public class SchemaSaver extends DefaultHandler {
             
             // Get the id as this is a common feature.
             String id = (String)attributes.get("id");
+            String name = (String)attributes.get("name");
             try {
                 // DataSet column?
                 if (tbl instanceof DataSetTable) {
-                    // Work out type.
+                    // Work out type and relation.
                     String type = (String)attributes.get("type");
+                    String underlyingRelationId = (String)attributes.get("underlyingRelationId");
+                    Relation underlyingRelation = null;
+                    if (!"null".equals(underlyingRelationId)) underlyingRelation = (Relation)this.mappedObjects.get(underlyingRelationId);
                     // Concat relation column?
                     if ("concatRelation".equals(type)) {
-                        String name = (String)attributes.get("name");
-                        Relation concatRel = (Relation)this.mappedObjects.get(attributes.get("relationId"));
-                        element = new ConcatRelationColumn(name, (DataSetTable)tbl, concatRel);
+                        element = new ConcatRelationColumn(name, (DataSetTable)tbl, underlyingRelation);
                     }
                     // TableProvider name column?
                     else if ("tblProvName".equals(type)) {
-                        String name = (String)attributes.get("name");
                         element = new TableProviderNameColumn(name, (DataSetTable)tbl);
                     }
                     // Wrapped column?
                     else if ("wrapped".equals(type)) {
                         Column wrappedCol = (Column)this.mappedObjects.get(attributes.get("wrappedColumnId"));
-                        element = new WrappedColumn(wrappedCol, (DataSetTable)tbl);
+                        element = new WrappedColumn(wrappedCol, (DataSetTable)tbl, underlyingRelation);
+                        // Override any aliased names.
                     }
                     // Others.
                     else
                         throw new SAXException("Unknown column type "+type);
+                    
+                    // Override the name, to make sure we get the same alias as the original.
+                    ((DataSetColumn)element).setName(name);
                 }
                 // Generic column?
                 else if (tbl instanceof GenericTable) {
-                    String name = (String)attributes.get("name");
                     element = new GenericColumn(name, tbl);
                 }
                 // Others
@@ -588,9 +594,17 @@ public class SchemaSaver extends DefaultHandler {
             Window w = (Window)this.objectStack.peek();
             
             try {
-                MartConstructor mc= (MartConstructor)this.mappedObjects.get(attributes.get("martConstructorId"));
+                String optType = (String)attributes.get("optimiser");
+                DataSetOptimiserType opt = null;
+                if ("NONE".equals(optType)) opt = DataSetOptimiserType.NONE;
+                else if ("LEFTJOIN".equals(optType)) opt = DataSetOptimiserType.LEFTJOIN;
+                else if ("COLUMN".equals(optType)) opt = DataSetOptimiserType.COLUMN;
+                else if ("TABLE".equals(optType)) opt = DataSetOptimiserType.TABLE;
+                else throw new SAXException("Unknown optimiser type encountered.");
+                MartConstructor mc = (MartConstructor)this.mappedObjects.get(attributes.get("martConstructorId"));
                 DataSet ds = w.getDataSet();
                 ds.setMartConstructor(mc);
+                ds.setDataSetOptimiserType(opt);
                 element = ds;
             } catch (NullPointerException e) {
                 throw new SAXException("One or more attributes are missing for dataset, or reference not-yet-existing objects.", e);
@@ -745,6 +759,9 @@ public class SchemaSaver extends DefaultHandler {
             
             // A dataset table?
             if (table instanceof DataSetTable) {
+                // Write the type.
+                this.writeAttribute("type",((DataSetTable)table).getType().toString());
+                
                 // Write out the underlying relations.
                 List underRelIds = new ArrayList();
                 for (Iterator i = ((DataSetTable)table).getUnderlyingRelations().iterator(); i.hasNext(); ) underRelIds.add(this.reverseMappedObjects.get(i.next()));
@@ -762,21 +779,31 @@ public class SchemaSaver extends DefaultHandler {
                 this.writeAttribute("id", colMappedID);
                 this.writeAttribute("name",col.getName());
                 
-                // Concat relation column?
-                if (col instanceof ConcatRelationColumn) {
-                    this.writeAttribute("type","concatRelation");
-                    this.writeAttribute("relationId",(String)this.reverseMappedObjects.get(((ConcatRelationColumn)col).getRelation()));
-                    this.writeAttribute("alt",((ConcatRelationColumn)col).getRelation().toString());
-                }
-                // TableProvider name column?
-                else if (col instanceof TableProviderNameColumn) {
-                    this.writeAttribute("type","tblProvName");
-                }
-                // Wrapped column?
-                else if (col instanceof WrappedColumn) {
-                    this.writeAttribute("type","wrapped");
-                    this.writeAttribute("wrappedColumnId",(String)this.reverseMappedObjects.get(((WrappedColumn)col).getWrappedColumn()));
-                    this.writeAttribute("alt",((WrappedColumn)col).getWrappedColumn().toString());
+                // Dataset column?
+                if (col instanceof DataSetColumn) {
+                    DataSetColumn dcol = (DataSetColumn)col;
+                    Relation underlyingRelation = dcol.getUnderlyingRelation();
+                    String underlyingRelationId = "null";
+                    if (underlyingRelation != null) underlyingRelationId = (String)this.reverseMappedObjects.get(underlyingRelation);
+                    this.writeAttribute("underlyingRelationId",underlyingRelationId);
+                    this.writeAttribute("alt",underlyingRelation==null?"null":underlyingRelation.toString());
+                    // Concat relation column?
+                    if (dcol instanceof ConcatRelationColumn) {
+                        this.writeAttribute("type","concatRelation");
+                    }
+                    // TableProvider name column?
+                    else if (dcol instanceof TableProviderNameColumn) {
+                        this.writeAttribute("type","tblProvName");
+                    }
+                    // Wrapped column?
+                    else if (dcol instanceof WrappedColumn) {
+                        this.writeAttribute("type","wrapped");
+                        this.writeAttribute("wrappedColumnId",(String)this.reverseMappedObjects.get(((WrappedColumn)dcol).getWrappedColumn()));
+                        this.writeAttribute("wrappedColumnAlt",((WrappedColumn)dcol).getWrappedColumn().toString());
+                    }
+                    // Others
+                    else
+                        throw new AssociationException("Unknown dataset column type encountered.");
                 }
                 // Generic column?
                 else if (col instanceof GenericColumn) {
@@ -877,6 +904,29 @@ public class SchemaSaver extends DefaultHandler {
         // Start by enclosing the whole lot in a <schema> tag.
         this.openElement("schema");
         
+        // MartConstructor (anywhere).
+        Set martConstructors = new TreeSet();
+        for (Iterator i = schema.getWindows().iterator(); i.hasNext(); ) {
+            Window w = (Window)i.next();
+            MartConstructor mc = w.getDataSet().getMartConstructor();
+            martConstructors.add(mc);
+        }
+        for (Iterator i = martConstructors.iterator(); i.hasNext(); ) {
+            MartConstructor mc = (MartConstructor)i.next();
+            String mcMappedID = ""+this.ID++;
+            this.reverseMappedObjects.put(mc, mcMappedID);
+            
+            // Generic constructor?
+            if (mc instanceof GenericMartConstructor) {
+                this.openElement("genericMartConstructor");
+                this.writeAttribute("name",mc.getName());
+                this.closeElement("genericMartConstructor");                
+            }
+            // Others?
+            else
+                throw new AssociationException("Unknown mart constructor encountered.");;
+        }
+        
         // Check for partitioned table provider.
         Map tblProvs = new HashMap();
         Collection initialTblProvs = new HashSet(schema.getTableProviders());
@@ -935,7 +985,7 @@ public class SchemaSaver extends DefaultHandler {
             else
                 throw new AssociationException("Unable to write this type of table provider.");
             
-            // Write out the contents.
+            // Write out the contents, and note the relations.
             this.writeTableProviderContents(tblProv, relations);
             
             // What kind of tbl prov was it?
@@ -1053,6 +1103,10 @@ public class SchemaSaver extends DefaultHandler {
             
             // Write out dataset inside window.
             this.openElement("dataset");
+            this.writeAttribute("optimiser",w.getDataSet().getDataSetOptimiserType().toString());
+            this.writeAttribute("martConstructorId",(String)this.reverseMappedObjects.get(w.getDataSet().getMartConstructor()));
+            
+            // Write out the contents of the dataset, and note the relations.
             Set dsRelations = new TreeSet();
             this.writeTableProviderContents(w.getDataSet(), dsRelations);
             

@@ -38,6 +38,7 @@ import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.model.DataSet.GenericDataSet;
 import org.biomart.builder.model.Key.ForeignKey;
+import org.biomart.builder.model.MartConstructor.GenericMartConstructor;
 import org.biomart.builder.model.Relation.OneToMany;
 
 /**
@@ -113,6 +114,12 @@ public class Window implements Comparable {
      * Internal reference to the relations already seen when doing the prediction walk.
      */
     private Map relationsPredicted = new HashMap();
+
+   /**
+    * This constant refers to a placeholder mart constructor which does
+    * nothing except prevent null pointer exceptions.
+    */
+    public static final MartConstructor DUMMY_MART_CONSTRUCTOR = new GenericMartConstructor("__DUMMY_MC");
     
     /**
      * The constructor creates a {@link Window} around one central {@link Table} and
@@ -144,37 +151,18 @@ public class Window implements Comparable {
         this.centralTable = centralTable;
         this.name = name;
         this.dataset = new GenericDataSet(this);
+        this.dataset.setMartConstructor(DUMMY_MART_CONSTRUCTOR);
         // Add ourselves.
         schema.addWindow(this);
     }
     
     /**
-     * This method identifies all candidate subset and concat relations, and masks out all relations
-     * more than 2 1:M relations away from the main table.
+     * This method identifies all candidate concat relations, and masks out all relations
+     * more than 2 1:M relations away from the main or subclass table.
      */
-    public void predictRelationTypes() {
+    public void optimiseRelations() {
         // Clear out our previous predictions.
         this.relationsPredicted.clear();
-        
-        // Predict the subclass relations from the existing m:1 relations - simple guesser based
-        // on finding foreign keys in the central table. Only marks the first candidate it finds, as
-        // a subclassed table cannot have been subclassed off more than one parent.
-        boolean foundSubclass = false;
-        for (Iterator i = this.getCentralTable().getForeignKeys().iterator(); i.hasNext() && !foundSubclass; ) {
-            Key k = (Key)i.next();
-            for (Iterator j = k.getRelations().iterator(); j.hasNext() && !foundSubclass; ) {
-                Relation r = (Relation)j.next();
-                // Only flag potential m:1 subclass relations if they don't refer back to ourselves.
-                try {
-                    if (!r.getPrimaryKey().getTable().equals(this.getCentralTable())) this.flagSubclassRelation(r);
-                    foundSubclass = true;
-                } catch (AssociationException e) {
-                    AssertionError ae = new AssertionError("Subclass prediction failed.");
-                    ae.initCause(e);
-                    throw ae;
-                }
-            }
-        }
         
         // Find the shortest 1:m paths (depths) of each relation we have.
         try {
@@ -229,8 +217,9 @@ public class Window implements Comparable {
             // Work out where to go next.
             if (r.getPrimaryKey().getTable().equals(currentTable) && (r instanceof OneToMany)) {
                 // If currentTable is at the one end of a one-to-many relation, then
-                // up the count and recurse down it.    
-                this.walkRelations(r.getForeignKey().getTable(), currentDepth+1);
+                // up the count (if it's not a subclass relation) and recurse down it.
+                if (!this.getSubclassedRelations().contains(r)) currentDepth++;
+                this.walkRelations(r.getForeignKey().getTable(), currentDepth);
             } else {
                 // Otherwise, recurse down it anyway but leave the count as-is.
                 if (r.getPrimaryKey().getTable().equals(currentTable)) {

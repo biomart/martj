@@ -30,12 +30,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 import org.biomart.builder.exceptions.AlreadyExistsException;
+import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 
 /**
  * The {@link Schema} contains the set of all {@link TableProvider}s that are providing
  * data to this mart. It also has one or more {@link Window}s onto the {@link Table}s provided
- * by these, from which {@link DataSet}s are constructed. 
+ * by these, from which {@link DataSet}s are constructed.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.3, 6th April 2006
@@ -52,16 +53,16 @@ public class Schema {
      * construct the marts with.
      */
     private final Map windows = new TreeMap();
-        
+    
     /**
      * Returns the set of {@link TableProvider} objects which this {@link Schema} includes
-     * when building a mart. The set may be empty but it is never null. 
+     * when building a mart. The set may be empty but it is never null.
      * @return a set of {@link TableProvider} objects.
      */
     public Collection getTableProviders() {
         return this.tableProviders.values();
     }
-        
+    
     /**
      * Returns the {@link TableProvider} object with the given name. If it doesn't exist, null is returned.
      * If the name was null, you'll get an exception.
@@ -80,9 +81,9 @@ public class Schema {
     }
     
     /**
-     * Adds a {@link TableProvider} to the set which this {@link Schema} includes. An 
+     * Adds a {@link TableProvider} to the set which this {@link Schema} includes. An
      * exception is thrown if it already is in this set, or if it is null.
-     * 
+     *
      * @param tableProvider the {@link TableProvider} to add.
      * @throws AlreadyExistsException if the provider is already in this schema.
      * @throws NullPointerException if the provider is null.
@@ -96,11 +97,11 @@ public class Schema {
         // Do it.
         this.tableProviders.put(tableProvider.getName(),tableProvider);
     }
-
+    
     /**
-     * Removes a {@link TableProvider} from the set which this {@link Schema} includes. An 
+     * Removes a {@link TableProvider} from the set which this {@link Schema} includes. An
      * exception is thrown if it is null. If it is not found, nothing happens and it is ignored quietly.
-     * 
+     *
      * @param tableProvider the {@link TableProvider} to remove.
      * @throws NullPointerException if the provider is null.
      */
@@ -113,7 +114,7 @@ public class Schema {
         // Do it.
         this.tableProviders.remove(tableProvider.getName());
     }
-        
+    
     /**
      * Returns the set of {@link Window} objects which this {@link Schema} includes
      * when building a mart. The set may be empty but it is never null.
@@ -122,7 +123,7 @@ public class Schema {
     public Collection getWindows() {
         return this.windows.values();
     }
-        
+    
     /**
      * Returns the {@link Window} object with the given name. If it doesn't exist, null is returned.
      * If the name was null, you'll get an exception.
@@ -141,9 +142,9 @@ public class Schema {
     }
     
     /**
-     * Adds a {@link Window} to the set which this {@link Schema} includes. An 
+     * Adds a {@link Window} to the set which this {@link Schema} includes. An
      * exception is thrown if it already is in this set, or if it is null.
-     * 
+     *
      * @param window the {@link Window} to add.
      * @throws AlreadyExistsException if the window is already in this schema.
      * @throws NullPointerException if the window is null.
@@ -157,11 +158,62 @@ public class Schema {
         // Do it.
         this.windows.put(window.getName(), window);
     }
-
+    
     /**
-     * Removes a {@link Window} from the set which this {@link Schema} includes. An 
+     * Given a particular {@link Table}, automatically create a number of {@link Window}s
+     * based around that {@link Table} that represent the various possible subclassing scenarios.
+     * It will always create one {@link Window} (with the same name as the {@link Table}) that
+     * doesn't subclass anything. For every M:1 relation leading off the {@link Table}, another
+     * {@link Window} will be created containing that subclass relation. Each subclass {@link Window}
+     * choice will have a number appended to it after an underscore, eg. '_SC1' ,'_SC2' etc.
+     * Each window created will have optimiseRelations() called on it automatically.
+     *
+     * @param centralTable the {@link Table} to build predicted {@link Window}s around.
+     * @throws AlreadyExistsException if a window already exists in this schema with the same
+     *  name as the {@link Table} or any of the suffixed versions.
+     * @throws NullPointerException if the table is null.
+     */
+    public void suggestWindows(Table centralTable) throws NullPointerException, AlreadyExistsException {
+        // Sanity check.
+        if (centralTable== null)
+            throw new NullPointerException("Table cannot be null.");
+        // Do it.
+        try {
+            Window mainWin = new Window(this, centralTable, centralTable.getName());
+            mainWin.optimiseRelations();
+        } catch (AssociationException e) {
+            AssertionError ae = new AssertionError("Could not suggest plain window.");
+            ae.initCause(e);
+            throw ae;
+        }
+        // Predict the subclass relations from the existing m:1 relations - simple guesser based
+        // on finding foreign keys in the central table. Only marks the first candidate it finds, as
+        // a subclassed table cannot have been subclassed off more than one parent.
+        int suffix = 1;
+        for (Iterator i = centralTable.getForeignKeys().iterator(); i.hasNext(); ) {
+            Key k = (Key)i.next();
+            for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
+                Relation r = (Relation)j.next();
+                // Only flag potential m:1 subclass relations if they don't refer back to ourselves.
+                try {
+                    if (!r.getPrimaryKey().getTable().equals(centralTable)) {
+                        Window scWin = new Window(this, centralTable, centralTable.getName()+"_SC"+(suffix++));
+                        scWin.flagSubclassRelation(r);
+                        scWin.optimiseRelations();
+                    }
+                } catch (AssociationException e) {
+                    AssertionError ae = new AssertionError("Subclass prediction failed.");
+                    ae.initCause(e);
+                    throw ae;
+                }
+            }
+        }
+    }
+    
+    /**
+     * Removes a {@link Window} from the set which this {@link Schema} includes. An
      * exception is thrown if it is null. If it is not found, nothing happens and it is ignored quietly.
-     * 
+     *
      * @param window the {@link Window} to remove.
      * @throws NullPointerException if the window is null.
      */
