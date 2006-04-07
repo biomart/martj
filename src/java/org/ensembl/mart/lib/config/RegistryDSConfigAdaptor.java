@@ -337,11 +337,12 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 						add(adaptor);
 						martRegs.add(subreg);
 					} else if (location.getType().equals(MartLocationBase.URL)) {
-
+					    if (((URLLocation) location).getUrl() != null){
 						URLDSConfigAdaptor adaptor =
 							new URLDSConfigAdaptor(((URLLocation) location).getUrl(), ignoreCache, includeHiddenMembers);
 						adaptor.setName(location.getName());
 						add(adaptor);
+					    }
 
 					} else if (location.getType().equals(MartLocationBase.DATABASE)) {
 						DatabaseLocation dbloc = (DatabaseLocation) location;

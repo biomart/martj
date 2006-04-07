@@ -438,6 +438,7 @@ public class MartRegistryXMLUtils {
               for (int i = 0, n = martLocs.length; i < n; i++) {
                 vschema.addMartLocation(martLocs[i]);
               }
+	      martreg.addVirtualSchema(vschema);
             } else {
                 if (element.getName().equals(URLLOCATION))
                   martreg.addMartLocation(getURLLocation(element));
