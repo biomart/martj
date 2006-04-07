@@ -218,8 +218,8 @@ public class SchemaSaver extends DefaultHandler {
             String name = (String)attributes.get("name");
             String type = (String)attributes.get("type");
             try {
-                if ("relational".equals(type)) element = new JDBCRelationalTableProvider(driverClassLocation, driverClassName, url, username, password, name);
-                else if ("nonrelational".equals(type)) element = new JDBCNonRelationalTableProvider(driverClassLocation, driverClassName, url, username, password, name);
+                if ("normal".equals(type)) element = new JDBCTableProvider(driverClassLocation, driverClassName, url, username, password, name);
+                else if ("keyguessing".equals(type)) element = new JDBCKeyGuessingTableProvider(driverClassLocation, driverClassName, url, username, password, name);
                 else throw new SAXException("Unknown JDBC Table Provider type: "+type);
             } catch (NullPointerException e) {
                 throw new SAXException("One or more attributes are missing for jdbcTableProvider.",e);
@@ -954,7 +954,7 @@ public class SchemaSaver extends DefaultHandler {
             TableProvider tblProv = (TableProvider)tblProvs.get(label);
             // What kind of tbl prov is it?
             // JDBC?
-            if ((tblProv instanceof JDBCRelationalTableProvider) || (tblProv instanceof JDBCNonRelationalTableProvider)) {
+            if ((tblProv instanceof JDBCTableProvider) || (tblProv instanceof JDBCKeyGuessingTableProvider)) {
                 this.openElement("jdbcTableProvider");
                 JDBCDataLink jdl = (JDBCDataLink)tblProv;
                 
@@ -966,10 +966,10 @@ public class SchemaSaver extends DefaultHandler {
                 if (jdl.getPassword() != null)
                     this.writeAttribute("password", jdl.getPassword());
                 this.writeAttribute("name", tblProv.getName());
-                if (tblProv instanceof JDBCRelationalTableProvider)
-                    this.writeAttribute("type", "relational");
+                if (tblProv instanceof JDBCTableProvider)
+                    this.writeAttribute("type", "keyguessing");
                 else
-                    this.writeAttribute("type", "nonrelational");
+                    this.writeAttribute("type", "normal");
                 if (parentTblProvPartitionName != null)
                     this.writeAttribute("partitionLabel", label);
             }
@@ -986,7 +986,7 @@ public class SchemaSaver extends DefaultHandler {
             
             // What kind of tbl prov was it?
             // JDBC?
-            if ((tblProv instanceof JDBCRelationalTableProvider) || (tblProv instanceof JDBCNonRelationalTableProvider)) {
+            if ((tblProv instanceof JDBCTableProvider) || (tblProv instanceof JDBCKeyGuessingTableProvider)) {
                 this.closeElement("jdbcTableProvider");
             }
             // Partitioned table provider? (Supplying us with overview tables).

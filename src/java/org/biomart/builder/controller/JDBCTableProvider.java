@@ -1,5 +1,5 @@
 /*
- * JDBCRelationalTableProvider.java
+ * JDBCTableProvider.java
  *
  * Created on 03 April 2006, 13:00
  */
@@ -52,18 +52,18 @@ import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Table.GenericTable;
 
 /**
- * The JDBC relational {@link TableProvider} implementation loads tables from a
+ * The plain JDBC {@link TableProvider} implementation loads tables from a
  * database at construction time, along with all columns, keys and relations between them that
  * are specified in the database's {@link DatabaseMetaData} structures. Note that if a database
- * is incapable of enforcing foreign keys etc., then you should use the non-relational version
- * of this class instead, eg. for MyISAM tables in MySQL.
+ * is incapable of enforcing foreign keys etc., then you should use the key-guessing version
+ * of this class instead, {@link JDBCKeyGuessingTableProvider}, eg. for MyISAM tables in MySQL.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
  */
-public class JDBCRelationalTableProvider extends JDBCNonRelationalTableProvider {
+public class JDBCTableProvider extends JDBCKeyGuessingTableProvider {
     /**
-     * Creates a new instance of JDBCRelationalTableProvider based around
-     * the given JDBC Connection. As this is identical to JDBCNonRelationalTableProvider,
+     * Creates a new instance of JDBCTableProvider based around
+     * the given JDBC Connection. As this is identical to JDBCKeyGuessingTableProvider,
      * it delegates upwards.
      *
      * @param driverClassLocation the location of the class to load the JDBC driver from.
@@ -76,7 +76,7 @@ public class JDBCRelationalTableProvider extends JDBCNonRelationalTableProvider 
      * @param name the name to give it.
      * @throws NullPointerException if any parameter other than driverClassLocation or password is null.
      */
-    public JDBCRelationalTableProvider(File driverClassLocation, String driverClassName, String url, String username, String password, String name) throws NullPointerException {
+    public JDBCTableProvider(File driverClassLocation, String driverClassName, String url, String username, String password, String name) throws NullPointerException {
         super(driverClassLocation, driverClassName, url, username, password, name);
     }
     
@@ -236,28 +236,44 @@ public class JDBCRelationalTableProvider extends JDBCNonRelationalTableProvider 
                     ForeignKey newFK = new GenericForeignKey(Arrays.asList(candidateFKColumns));
                     boolean newFKAlreadyExists = false;
                     // If we've already got one like that, reuse it, otherwise add it.
-                    for (Iterator f = removedFKs.iterator(); f.hasNext() && !newFKAlreadyExists; ) {
+                    for (Iterator f = newFK.getTable().getForeignKeys().iterator(); f.hasNext() && !newFKAlreadyExists; ) {
                         ForeignKey candidateFK = (ForeignKey)f.next();
                         if (candidateFK.equals(newFK)) {
                             // Found one. Reuse it!
                             newFK = candidateFK;
-                            f.remove(); // don't drop it any more.
+                            removedFKs.remove(candidateFK); // don't drop it any more.
                             newFKAlreadyExists =true;
                         }
                     }
-                    if (!newFKAlreadyExists) newFK.getTable().addForeignKey(newFK);
                     
-                    // Check to see if there is already a relation between the PK and the FK. If
-                    // so, reuse it. If not, create one.
-                    boolean relationExists = false;
-                    for (Iterator f = removedRels.iterator(); f.hasNext() && !relationExists; ) {
-                        Relation r = (Relation)f.next();
-                        if (r.getPrimaryKey().equals(existingPK) && r.getForeignKey().equals(newFK)) {
-                            f.remove(); // don't drop it, just leave it untouched and reuse it.
-                            relationExists = true;
+                    if (!newFKAlreadyExists) {
+                        // If its new, go ahead and make the relation.
+                        newFK.getTable().addForeignKey(newFK);
+                        new GenericRelation(existingPK, newFK, Cardinality.MANY);
+                    } else {
+                        // If its not new, check to see if it already has a relation.
+                        
+                        // Check to see if this FK already has a link to this PK.
+                        // If it has a correctly inferred connection to any other PK, 
+                        // complain bitterly. If it has an incorrect or handmade connection
+                        // to any other PK, remove that one.
+                        boolean relationExists = false;
+                        for (Iterator f = newFK.getRelations().iterator(); f.hasNext() && !relationExists; ) {
+                            Relation r = (Relation)f.next();
+                            if (r.getPrimaryKey().equals(existingPK)) {
+                                removedRels.remove(r); // don't drop it, just leave it untouched and reuse it.
+                                relationExists = true;
+                            } else if (r.getStatus().equals(ComponentStatus.INFERRED)) {
+                                throw new AssertionError("Database claims FK refers to more than one PK.");
+                            } else {
+                                // It'll get removed later if we leave it in removedRels.
+                                // To do that, we need do nothing.
+                            }
                         }
+                        
+                        // If checks returned false, create a new relation.
+                        if (!relationExists) new GenericRelation(existingPK, newFK, Cardinality.MANY);
                     }
-                    if (!relationExists) new GenericRelation(existingPK, newFK, Cardinality.MANY); // create and add it.
                 }
             }
             
@@ -285,7 +301,7 @@ public class JDBCRelationalTableProvider extends JDBCNonRelationalTableProvider 
             PrimaryKey pk = pkTable.getPrimaryKey();
             if (pk == null) continue; // Skip tables without PKs.
             for (Iterator j = pk.getRelations().iterator(); j.hasNext(); ) {
-                Relation rel = (Relation)j.next();              
+                Relation rel = (Relation)j.next();
                 if (!rel.getStatus().equals(ComponentStatus.INFERRED)) continue; // Skip incorrect and user-defined ones.
                 ForeignKey fk = rel.getForeignKey();
                 Table fkTable = fk.getTable();

@@ -26,8 +26,8 @@ package org.biomart.builder.view;
 
 import java.io.File;
 import java.util.Collections;
-import org.biomart.builder.controller.JDBCNonRelationalTableProvider;
-import org.biomart.builder.controller.JDBCRelationalTableProvider;
+import org.biomart.builder.controller.JDBCKeyGuessingTableProvider;
+import org.biomart.builder.controller.JDBCTableProvider;
 import org.biomart.builder.controller.SchemaSaver;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
@@ -81,7 +81,7 @@ public class NaiveCLI {
     /**
      * Main method loads the JDBC driver from the first parameter,
      * the JDBC connection string from the second parameter, constructs and
-     * sets up a JDBCRelationalTableProvider using the username and password in the
+     * sets up a JDBCTableProvider using the username and password in the
      * 3rd and 4th parameters, then uses it to generate a dataset
      * based around the table named in the fifth parameter. The resulting
      * schema XML is printed out to the file named in the sixth parameter.
@@ -90,7 +90,7 @@ public class NaiveCLI {
      * metadata.
      * If your database does not require a password, use the empty string for
      * the password and this will be converted to a null password internally.
-     *
+     * 
      * @param args the command line arguments.
      */
     public static void main(String[] args) {
@@ -107,10 +107,10 @@ public class NaiveCLI {
             File file = new File(args[5]);
             if (password.equals("")) password = null;
             TableProvider tp;
-            if (args.length>6 && args[6].equals("NONRELATIONAL"))
-                tp = new JDBCNonRelationalTableProvider(null, classname, url, username, password, "naive");
+            if (args.length>6 && args[6].equals("keyguessing"))
+                tp = new JDBCKeyGuessingTableProvider(null, classname, url, username, password, "naive");
             else
-                tp = new JDBCRelationalTableProvider(null, classname, url, username, password, "naive");
+                tp = new JDBCTableProvider(null, classname, url, username, password, "naive");
             (new NaiveCLI()).execute(tp, tableName, file);
         } catch (Throwable t) {
             t.printStackTrace(System.err);

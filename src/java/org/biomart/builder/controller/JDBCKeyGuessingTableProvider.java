@@ -1,5 +1,5 @@
 /*
- * JDBCNonRelationalTableProvider.java
+ * JDBCKeyGuessingTableProvider.java
  *
  * Created on 03 April 2006, 13:00
  */
@@ -65,7 +65,7 @@ import org.biomart.builder.model.Table.GenericTable;
 import org.biomart.builder.model.TableProvider.GenericTableProvider;
 
 /**
- * The JDBC non-relational {@link TableProvider} implementation loads tables from a
+ * The JDBC key-guessing {@link TableProvider} implementation loads tables from a
  * database at construction time, along with all columns, then it guesses the keys and
  * relations between them based on naming conventions. Primary key columns are assumed to be
  * the table name with '_id' appended, unless the {@link DatabaseMetaData} query actually responds
@@ -74,7 +74,7 @@ import org.biomart.builder.model.TableProvider.GenericTableProvider;
  *
  * @author Richard Holland <holland@ebi.ac.uk>
  */
-public class JDBCNonRelationalTableProvider extends GenericTableProvider implements JDBCDataLink {
+public class JDBCKeyGuessingTableProvider extends GenericTableProvider implements JDBCDataLink {
     /**
      * Internal reference to the JDBC connection. Transience
      * means it won't get persisted when serialized.
@@ -107,8 +107,9 @@ public class JDBCNonRelationalTableProvider extends GenericTableProvider impleme
     private String password;
     
     /**
-     * Creates a new instance of JDBCNonRelationalTableProvider based around
+     * Creates a new instance of JDBCKeyGuessingTableProvider based around
      * the given JDBC Connection.
+     *
      * @param driverClassLocation the location of the class to load the JDBC driver from.
      * Use null to use the default class loader path, which it will also fall back on if it
      * could not find the driver at the specified location, or if this location does not exist.
@@ -119,7 +120,7 @@ public class JDBCNonRelationalTableProvider extends GenericTableProvider impleme
      * @param name the name to give it.
      * @throws NullPointerException if any parameter other than driverClassLocation or password is null.
      */
-    public JDBCNonRelationalTableProvider(File driverClassLocation, String driverClassName, String url, String username, String password, String name) throws NullPointerException {
+    public JDBCKeyGuessingTableProvider(File driverClassLocation, String driverClassName, String url, String username, String password, String name) throws NullPointerException {
         super(name);
         // Sanity check.
         if (driverClassName == null)
@@ -491,6 +492,15 @@ public class JDBCNonRelationalTableProvider extends GenericTableProvider impleme
             PrimaryKey existingPK = existingTable.getPrimaryKey();
             if (existingPK==null) continue; // no need to do this to tables without PKs
             
+            // If PK is itself an existing FK, it can't be used as an FK elsewhere in
+            // the key-guessing algorithm, so skip it.
+            boolean pkIsFK = false;
+            for (Iterator j = existingTable.getForeignKeys().iterator(); j.hasNext() && !pkIsFK; ) {
+                ForeignKey k = (ForeignKey)j.next();
+                if (k.getColumns().equals(existingPK.getColumns())) pkIsFK = true;
+            }
+            if (pkIsFK) continue;
+            
             // Build up a set of relations that already exist. Call it removed because by the end
             // of this it will contain a set of relations that no longer exist and should be dropped.
             Set removedRels = new HashSet();
@@ -521,33 +531,46 @@ public class JDBCNonRelationalTableProvider extends GenericTableProvider impleme
                 // We found a matching set, so create a FK on it!
                 if (candidateFKColumnCount == existingPK.countColumns()) {
                     
-                    ForeignKey newFK = new GenericForeignKey(Arrays.asList(candidateFKColumns));;
+                    ForeignKey newFK = new GenericForeignKey(Arrays.asList(candidateFKColumns));
                     boolean newFKAlreadyExists = false;
-                    // If we've already got one like that, reuse it, otherwise add it.
-                    for (Iterator f = removedFKs.iterator(); f.hasNext() && !newFKAlreadyExists; ) {
+                    // If we've already got one like that on this table, reuse it, otherwise add it.
+                    for (Iterator f = fkTable.getForeignKeys().iterator(); f.hasNext() && !newFKAlreadyExists; ) {
                         ForeignKey candidateFK = (ForeignKey)f.next();
                         if (candidateFK.equals(newFK)) {
                             // Found one. Reuse it!
                             newFK = candidateFK;
-                            f.remove(); // don't drop it any more.
+                            removedFKs.remove(candidateFK); // don't drop it any more.
                             newFKAlreadyExists =true;
                         }
                     }
-                    if (!newFKAlreadyExists) fkTable.addForeignKey(newFK);
                     
-                    // Check to see if there is already a relation between the PK and the FK. If
-                    // so, reuse it. If not, create one.
-                    boolean relationExists = false;
-                    for (Iterator f = removedRels.iterator(); f.hasNext() && !relationExists; ) {
-                        Relation r = (Relation)f.next();
-                        if (r.getPrimaryKey().equals(existingPK) && r.getForeignKey().equals(newFK)) {
-                            f.remove(); // don't drop it, just leave it untouched and reuse it.
-                            relationExists = true;
-                        }
-                    }
-                    if (!relationExists) {
-                        // Create the relation.
+                    if (!newFKAlreadyExists) {
+                        // If its new, go ahead and make the relation.
+                        fkTable.addForeignKey(newFK);
                         new GenericRelation(existingPK, newFK, Cardinality.MANY);
+                    } else {
+                        // If its not new, check to see if it already has a relation.
+                        
+                        // Check to see if this FK already has a link to this PK.
+                        // If it has a correctly inferred connection to any other PK, 
+                        // complain bitterly. If it has an incorrect or handmade connection
+                        // to any other PK, remove that one.
+                        boolean relationExists = false;
+                        for (Iterator f = newFK.getRelations().iterator(); f.hasNext() && !relationExists; ) {
+                            Relation r = (Relation)f.next();
+                            if (r.getPrimaryKey().equals(existingPK)) {
+                                removedRels.remove(r); // don't drop it, just leave it untouched and reuse it.
+                                relationExists = true;
+                            } else if (r.getStatus().equals(ComponentStatus.INFERRED)) {
+                                throw new AssertionError("Key-guessing algorithm claims FK refers to more than one PK.");
+                            } else {
+                                // It'll get removed later if we leave it in removedRels.
+                                // To do that, we need do nothing.
+                            }
+                        }
+                        
+                        // If checks returned false, create a new relation.
+                        if (!relationExists) new GenericRelation(existingPK, newFK, Cardinality.MANY);
                     }
                 }
             }
@@ -585,6 +608,6 @@ public class JDBCNonRelationalTableProvider extends GenericTableProvider impleme
                 // If foreign key = primary key on fkTable then cardinality should be 1:1
                 if (fk.getColumns().equals(fkTablePK.getColumns())) rel.setFKCardinality(Cardinality.ONE);
             }
-        }        
+        }
     }
 }
