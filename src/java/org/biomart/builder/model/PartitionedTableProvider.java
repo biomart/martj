@@ -187,7 +187,7 @@ public interface PartitionedTableProvider extends TableProvider {
                     // Locate the equivalent target foreign key.
                     ForeignKey targetFK = targetFKTable.getForeignKeyByName(sourceFK.getName());
                     // Create the relation.
-                    new GenericRelation(targetTable.getPrimaryKey(), targetFK, sourceRelation.getCardinality());
+                    new GenericRelation(targetTable.getPrimaryKey(), targetFK, sourceRelation.getFKCardinality());
                 }
             }
         }
@@ -199,26 +199,42 @@ public interface PartitionedTableProvider extends TableProvider {
          * <p>This implementation returns the combination of unique values resulting from
          * delegating the call to all its subordinates.</p>
          *
-         * @param c the {@link Column} to get unique values for.
+         * @param column the {@link Column} to get unique values for.
          * @return a set of unique values in a given column.
          * @throws SQLException if there was any problem loading the values.
          * @throws NullPointerException if the column was null.
          * @throws AssociationException if the column doesn't belong to any table in this provider.
          */
-        public Collection getUniqueValues(Column c) throws NullPointerException, SQLException, AssociationException {
+        public Collection getUniqueValues(Column column) throws NullPointerException, SQLException, AssociationException {
             // Sanity check.
-            if (c == null)
+            if (column == null)
                 throw new NullPointerException("Column cannot be null.");
             // Do it.
             Set values = new HashSet();
             for (Iterator i = this.getTableProviders().values().iterator(); i.hasNext(); ) {
                 TableProvider tp = (TableProvider)i.next();
                 // Associate the column directly with the table when asking subordinate.
-                Table t = tp.getTableByName(c.getTable().getName());
+                Table t = tp.getTableByName(column.getTable().getName());
                 // Look up the values with the disassociated column.
-                values.addAll(tp.getUniqueValues(t.getColumnByName(c.getName())));
+                values.addAll(tp.getUniqueValues(t.getColumnByName(column.getName())));
             }
             return values;
+        }
+
+        /**
+         * <p>Counts the unique values in a given column, which may include null.</p>
+         *
+         * <p>This implementation unfortunately has to read all the data from all the providers
+         * before it can work out which ones are unique, which may be very slow.</p>
+         *
+         * @param column the {@link Column} to get unique values for.
+         * @return a count of the unique values in a given column.
+         * @throws AssociationException if the column doesn't belong to us.
+         * @throws SQLException if there was any problem counting the values.
+         * @throws NullPointerException if the column was null.
+         */
+        public int countUniqueValues(Column column) throws AssociationException, NullPointerException, SQLException {
+            return this.getUniqueValues(column).size();
         }
         
         /**

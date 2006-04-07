@@ -46,7 +46,8 @@ import org.biomart.builder.model.Key.GenericForeignKey;
 import org.biomart.builder.model.Key.GenericPrimaryKey;
 import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Relation.OneToMany;
+import org.biomart.builder.model.Relation.Cardinality;
+import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Table.GenericTable;
 
@@ -245,24 +246,18 @@ public class JDBCRelationalTableProvider extends JDBCNonRelationalTableProvider 
                         }
                     }
                     if (!newFKAlreadyExists) newFK.getTable().addForeignKey(newFK);
-
-                    // Check to see that the FK we found isn't already in a relation. If it is,
-                    // then there is something seriously wrong with DatabaseMetaData as an FK
-                    // can never point to more than one PK!
-                    if (!newFK.getRelations().isEmpty())
-                        throw new AssertionError("Database has FKs with duplicate relations.");
                     
                     // Check to see if there is already a relation between the PK and the FK. If
                     // so, reuse it. If not, create one.
                     boolean relationExists = false;
                     for (Iterator f = removedRels.iterator(); f.hasNext() && !relationExists; ) {
                         Relation r = (Relation)f.next();
-                        if (r.getForeignKey().equals(newFK)) {
+                        if (r.getPrimaryKey().equals(existingPK) && r.getForeignKey().equals(newFK)) {
                             f.remove(); // don't drop it, just leave it untouched and reuse it.
                             relationExists = true;
                         }
                     }
-                    if (!relationExists) new OneToMany(existingPK, newFK); // create and add it.
+                    if (!relationExists) new GenericRelation(existingPK, newFK, Cardinality.MANY); // create and add it.
                 }
             }
             
@@ -283,5 +278,21 @@ public class JDBCRelationalTableProvider extends JDBCNonRelationalTableProvider 
             k.destroy();
             i.remove(); // just to make sure it really has gone.
         }
+        
+        // Check and convert any 1:M relations that should be 1:1
+        for (Iterator i = this.getTables().iterator(); i.hasNext(); ) {
+            Table pkTable = (Table)i.next();
+            PrimaryKey pk = pkTable.getPrimaryKey();
+            if (pk == null) continue; // Skip tables without PKs.
+            for (Iterator j = pk.getRelations().iterator(); j.hasNext(); ) {
+                Relation rel = (Relation)j.next();
+                ForeignKey fk = rel.getForeignKey();
+                Table fkTable = fk.getTable();
+                PrimaryKey fkTablePK = fkTable.getPrimaryKey();
+                if (fkTablePK == null) continue; // Skip FK tables without PKs.
+                // If foreign key = primary key on fkTable then cardinality should be 1:1
+                if (fk.getColumns().equals(fkTablePK.getColumns())) rel.setFKCardinality(Cardinality.ONE);
+            }
+        }        
     }
 }

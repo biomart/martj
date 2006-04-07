@@ -47,7 +47,6 @@ import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.Column.GenericColumn;
 import org.biomart.builder.model.ComponentStatus;
-import org.biomart.builder.model.ConcatRelationType;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
@@ -64,22 +63,22 @@ import org.biomart.builder.model.Key.GenericPrimaryKey;
 import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.MartConstructor;
 import org.biomart.builder.model.MartConstructor.GenericMartConstructor;
-import org.biomart.builder.model.PartitionedColumnType;
-import org.biomart.builder.model.PartitionedColumnType.SingleValue;
-import org.biomart.builder.model.PartitionedColumnType.UniqueValues;
-import org.biomart.builder.model.PartitionedColumnType.ValueCollection;
 import org.biomart.builder.model.PartitionedTableProvider;
 import org.biomart.builder.model.PartitionedTableProvider.GenericPartitionedTableProvider;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Relation.Cardinality;
-import org.biomart.builder.model.Relation.OneToMany;
-import org.biomart.builder.model.Relation.OneToOne;
+import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Table.GenericTable;
 import org.biomart.builder.model.TableProvider;
 import org.biomart.builder.model.TableProvider.GenericTableProvider;
 import org.biomart.builder.model.Window;
+import org.biomart.builder.model.Window.ConcatRelationType;
+import org.biomart.builder.model.Window.PartitionedColumnType;
+import org.biomart.builder.model.Window.PartitionedColumnType.SingleValue;
+import org.biomart.builder.model.Window.PartitionedColumnType.UniqueValues;
+import org.biomart.builder.model.Window.PartitionedColumnType.ValueCollection;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -420,10 +419,7 @@ public class SchemaSaver extends DefaultHandler {
                 ForeignKey fk = (ForeignKey)this.mappedObjects.get(attributes.get("foreignKeyId"));
                 
                 // Make it
-                Relation rel = null;
-                if (card.equals(Cardinality.ONE)) rel = new OneToOne(pk, fk);
-                else if (card.equals(Cardinality.MANY)) rel = new OneToMany(pk, fk);
-                else throw new AssertionError("Unknown cardinality found: "+card);
+                Relation rel = new GenericRelation(pk, fk, card);
                 
                 // Set its status.
                 rel.setStatus(status);
@@ -866,7 +862,7 @@ public class SchemaSaver extends DefaultHandler {
             this.reverseMappedObjects.put(r, relMappedID);
             this.openElement("relation");
             this.writeAttribute("id", relMappedID);
-            this.writeAttribute("fkCardinality", r.getCardinality().toString());
+            this.writeAttribute("fkCardinality", r.getFKCardinality().toString());
             this.writeAttribute("primaryKeyId", (String)this.reverseMappedObjects.get(r.getPrimaryKey()));
             this.writeAttribute("foreignKeyId", (String)this.reverseMappedObjects.get(r.getForeignKey()));
             this.writeAttribute("status", r.getStatus().toString());

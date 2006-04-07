@@ -26,6 +26,7 @@ package org.biomart.builder.model;
 
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -39,7 +40,7 @@ import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.model.DataSet.GenericDataSet;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.MartConstructor.GenericMartConstructor;
-import org.biomart.builder.model.Relation.OneToMany;
+import org.biomart.builder.model.Relation.Cardinality;
 
 /**
  * <p>Represents a window onto a {@link Table} in a {@link TableProvider}.
@@ -54,7 +55,7 @@ import org.biomart.builder.model.Relation.OneToMany;
  * <p>The name of the window is inherited by the {@link Dataset} so take care when
  * choosing it.</p>
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 6th April 2006
+ * @version 0.1.8, 7th April 2006
  * @since 0.1
  */
 public class Window implements Comparable {
@@ -114,19 +115,19 @@ public class Window implements Comparable {
      * Internal reference to the relations already seen when doing the prediction walk.
      */
     private Map relationsPredicted = new HashMap();
-
-   /**
-    * This constant refers to a placeholder mart constructor which does
-    * nothing except prevent null pointer exceptions.
-    */
+    
+    /**
+     * This constant refers to a placeholder mart constructor which does
+     * nothing except prevent null pointer exceptions.
+     */
     public static final MartConstructor DUMMY_MART_CONSTRUCTOR = new GenericMartConstructor("__DUMMY_MC");
     
     /**
      * The constructor creates a {@link Window} around one central {@link Table} and
      * gives it a name. It also initiates a {@link DataSet} ready to contain the transformed
      * results. It adds itself to the specified schema automatically.
-     * 
-     * 
+     *
+     *
      * @param schema the {@link Schema} this {@link Window} will belong to.
      * @param centralTable the {@link Table} to use as the central centralTable.
      * @param name the name to give this {@link Window}.
@@ -163,6 +164,8 @@ public class Window implements Comparable {
     public void optimiseRelations() {
         // Clear out our previous predictions.
         this.relationsPredicted.clear();
+        this.maskedRelations.clear();
+        this.concatOnlyRelations.clear();
         
         // Find the shortest 1:m paths (depths) of each relation we have.
         try {
@@ -172,7 +175,7 @@ public class Window implements Comparable {
             ae.initCause(e);
             throw ae;
         }
-
+        
         // Check on depths of relations.
         for (Iterator i = this.relationsPredicted.keySet().iterator(); i.hasNext(); ) {
             Relation r = (Relation)i.next();
@@ -192,7 +195,7 @@ public class Window implements Comparable {
     /**
      * Internal method which works out the lowest number of 1:M relations between
      * the currentTable table and all other {@link Table}s linked by as-yet-unvisited {@link Relation}s.
-     * 
+     *
      * @param currentTable the {@link Table} to start walking from.
      * @param currentDepth the number of 1:M relations it took to get this far.
      * @throws NullPointerException if the table parameter is null.
@@ -206,8 +209,10 @@ public class Window implements Comparable {
         // See if we need to do anything to each one.
         for (Iterator i = relations.iterator(); i.hasNext(); ) {
             Relation r = (Relation)i.next();
+            // Dodge relation?
+            if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) continue;
             // Seen before?
-            if (this.relationsPredicted.containsKey(r)) {
+            else if (this.relationsPredicted.containsKey(r)) {
                 // Have we got there by a shorter path? If not, then we can skip it.
                 int previousDepth = ((Integer)this.relationsPredicted.get(r)).intValue();
                 if (previousDepth <= currentDepth) continue;
@@ -215,11 +220,12 @@ public class Window implements Comparable {
             // Update the depth count on this relation.
             this.relationsPredicted.put(r, new Integer(currentDepth));
             // Work out where to go next.
-            if (r.getPrimaryKey().getTable().equals(currentTable) && (r instanceof OneToMany)) {
+            if (r.getPrimaryKey().getTable().equals(currentTable) && (r.getFKCardinality().equals(Cardinality.MANY))) {
                 // If currentTable is at the one end of a one-to-many relation, then
                 // up the count (if it's not a subclass relation) and recurse down it.
-                if (!this.getSubclassedRelations().contains(r)) currentDepth++;
-                this.walkRelations(r.getForeignKey().getTable(), currentDepth);
+                int nextDepth = currentDepth;
+                if (!this.getSubclassedRelations().contains(r)) nextDepth++;
+                this.walkRelations(r.getForeignKey().getTable(), nextDepth);
             } else {
                 // Otherwise, recurse down it anyway but leave the count as-is.
                 if (r.getPrimaryKey().getTable().equals(currentTable)) {
@@ -267,7 +273,7 @@ public class Window implements Comparable {
     /**
      * Mask a {@link Relation}. If it is already masked, ignore it.
      * An exception will be thrown if it is null.
-     * 
+     *
      * @param relation the {@link Relation} to mask.
      * @throws NullPointerException if the {@link Relation} is null.
      */
@@ -282,7 +288,7 @@ public class Window implements Comparable {
     /**
      * Unmask a {@link Relation}. If it is already unmasked, ignore it.
      * An exception will be thrown if it is null.
-     * 
+     *
      * @param relation the {@link Relation} to unmask.
      * @throws NullPointerException if the {@link Relation} is null.
      */
@@ -307,7 +313,7 @@ public class Window implements Comparable {
      * An exception will be thrown if it is null. If the {@link Column} is
      * part of any {@link Key}, then all {@link Relation}s using that {@link Key}
      * will be masked as well.
-     * 
+     *
      * @param column the {@link Column} to mask.
      * @throws NullPointerException if the {@link Column} is null.
      */
@@ -342,7 +348,7 @@ public class Window implements Comparable {
     /**
      * Unmask a {@link Column}. If it is already unmasked, ignore it.
      * An exception will be thrown if it is null.
-     * 
+     *
      * @param column the {@link Column} to unmask.
      * @throws NullPointerException if the {@link Column} is null.
      */
@@ -368,11 +374,11 @@ public class Window implements Comparable {
      * is the parent table, but the parent table may not actually be the central table in this {@link Window}.
      * If it is already marked, ignore it. As subclasses can only apply to the central table, throw an AssociationException
      * if this is attempted on any table other than the central table. An exception will be thrown if any parameter is null.</p>
-     * 
+     *
      * <p>One further restriction is that a {@link Table} can only have a single M:1 subclass {@link Relation},
      * or multiple 1:M ones. It cannot have a mix of both, nor can it have more than one M:1 subclass {@link Relation}.
      * In either case if this is attempted an AssociationException will be thrown.</p>
-     * 
+     *
      * @param relation the {@link Relation} to mark as a relation relation.
      * @throws AssociationException if one end of the {@link Relation} is not the central table for this window, or
      * if both ends of the {@link Relation} point to the same table.
@@ -405,7 +411,7 @@ public class Window implements Comparable {
     /**
      * Unmark a {@link Relation} as a relation relation. If it is already unmarked, ignore it.
      * An exception will be thrown if it is null.
-     * 
+     *
      * @param relation the {@link Relation} to unmark.
      * @throws NullPointerException if the {@link Relation} is null.
      */
@@ -428,8 +434,8 @@ public class Window implements Comparable {
     /**
      * Mark a {@link Column} as partitioned. If it is already marked, it updates the partition type.
      * An exception will be thrown if any parameter is null.
-     * 
-     * 
+     *
+     *
      * @param column the {@link Column} to mark as partitioned.
      * @param type the {@link PartitionedColumnType} to use for the partition.
      * @throws NullPointerException if either parameter is null.
@@ -447,7 +453,7 @@ public class Window implements Comparable {
     /**
      * Unmark a {@link Column} as partitioned. If it is already unmarked, ignore it.
      * An exception will be thrown if it is null.
-     * 
+     *
      * @param column the {@link Column} to unmark.
      * @throws NullPointerException if the {@link Column} is null.
      */
@@ -487,8 +493,8 @@ public class Window implements Comparable {
     /**
      * Mark a {@link Relation} as concat-only. If it is already marked, it updates the concat type.
      * An exception will be thrown if any parameter is null.
-     * 
-     * 
+     *
+     *
      * @param relation the {@link Relation} to mark as concat-only.
      * @param type the {@link ConcatRelationType} to use for the relation.
      * @throws NullPointerException if either parameter is null.
@@ -546,7 +552,7 @@ public class Window implements Comparable {
      * If the user wishes to partition the main table by the table provider
      * (only possible if the main table is from a {@link PartitionedTableProvider}) then set
      * this flag to true. Otherwise, set it to false, which is its default value.
-     * 
+     *
      * @param partitionOnTableProvider true if you want to turn this on, false if you want to turn it off.
      */
     public void setPartitionOnTableProvider(boolean partitionOnTableProvider) {
@@ -656,5 +662,217 @@ public class Window implements Comparable {
         if (o == null || !(o instanceof Window)) return false;
         Window w = (Window)o;
         return w.toString().equals(this.toString());
+    }
+    
+    /**
+     * Represents a method of partitioning by column. There are no methods.
+     * Actual logic to divide up by column is left to the DDL generator elsewhere
+     * to decide by looking at the class used.
+     */
+    public interface PartitionedColumnType {
+        /**
+         * Use this class to refer to a column partitioned by every unique value.
+         */
+        public class UniqueValues implements PartitionedColumnType {
+            /**
+             * Displays the name of this {@link PartitionedColumnType} object.
+             * @return the name of this {@link PartitionedColumnType} object.
+             */
+            public String toString() {
+                return "UniqueValues";
+            }
+        }
+        
+        /**
+         * Use this class to partition on a set of values - ie. only columns with
+         * one of these values will be returned.
+         */
+        public class ValueCollection implements PartitionedColumnType {
+            /**
+             * Internal reference to the values to select rows on.
+             */
+            private final Set values = new HashSet();
+            
+            /**
+             * The constructor specifies the values to partition on. If any value is null,
+             * then only rows with null in this column will be selected for that value.
+             * Duplicate values will be ignored.
+             * @param values the set of unique values to partition on.
+             * @throws IllegalArgumentException if any of the values are not-null
+             * and not Strings, or if the input set is empty.
+             * @throws NullPointerException if the input set is null.
+             */
+            public ValueCollection(Collection values) throws IllegalArgumentException, NullPointerException {
+                // Sanity check.
+                if (values==null)
+                    throw new NullPointerException("Values set cannot be null.");
+                if (values.size()<1)
+                    throw new IllegalArgumentException("Values set must contain at least one entry.");
+                // Do it.
+                for (Iterator i = values.iterator(); i.hasNext(); ) {
+                    Object o = i.next();
+                    // Sanity check.
+                    if (o != null && !(o instanceof String))
+                        throw new IllegalArgumentException("Cannot add non-null non-String objects as values.");
+                    // Add the value.
+                    this.values.add((String)o);
+                }
+            }
+            
+            /**
+             * Returns the values we will partition on. May be empty but never null.
+             * @return the values we will partition on.
+             */
+            public Set getValues() {
+                return this.values;
+            }
+            
+            /**
+             * Displays the name of this {@link PartitionedColumnType} object.
+             * @return the name of this {@link PartitionedColumnType} object.
+             */
+            public String toString() {
+                return "ValueCollection:" + this.values.toString();
+            }
+        }
+        
+        /**
+         * Use this class to partition on a single value - ie. only rows matching this
+         * value will be returned.
+         */
+        public class SingleValue extends ValueCollection {
+            /**
+             * Internal reference to the single value to select rows on.
+             */
+            private String value;
+            
+            /**
+             * The constructor specifies the value to partition on. If the value is null,
+             * then only rows with null in this column will be selected.
+             * @param value the value to partition on.
+             */
+            public SingleValue(String value) {
+                super(Collections.singleton(value));
+                this.value = value;
+            }
+            
+            /**
+             * Returns the value we will partition on.
+             * @return the value we will partition on.
+             */
+            public String getValue() {
+                return this.value;
+            }
+            
+            /**
+             * Displays the name of this {@link PartitionedColumnType} object.
+             * @return the name of this {@link PartitionedColumnType} object.
+             */
+            public String toString() {
+                return "SingleValue:" + this.value;
+            }
+        }
+    }
+    
+    /**
+     * Represents a method of concatenating values in a key referenced by a
+     * concat-only {@link Relation}. It simply represents the separator to use.
+     */
+    public static class ConcatRelationType implements Comparable {
+        
+        /**
+         * Internal reference to the set of {@link ConcatRelationType} singletons.
+         */
+        private static final Map singletons = new HashMap();
+        /**
+         * Use this constant to refer to value-separation by commas.
+         */
+        public static final ConcatRelationType COMMA = new ConcatRelationType("COMMA", ",");
+        
+        /**
+         * Use this constant to refer to value-separation by spaces.
+         */
+        public static final ConcatRelationType SPACE = new ConcatRelationType("SPACE", " ");
+        
+        /**
+         * Use this constant to refer to value-separation by tabs.
+         */
+        public static final ConcatRelationType TAB = new ConcatRelationType("TAB", "\t");
+        
+        /**
+         * Internal reference to the name of this {@link ConcatRelationType}.
+         */
+        private final String name;
+        
+        /**
+         * Internal reference to the separator for this {@link ConcatRelationType}.
+         */
+        private final String separator;
+        
+        /**
+         * The private constructor takes two parameters, which define the name
+         * this {@link ConcatRelationType} object will display when printed, and the
+         * separator to use between values that have been concatenated.
+         * @param name the name of the {@link ConcatRelationType}.
+         * @param separator the separator for this {@link ConcatRelationType}.
+         */
+        private ConcatRelationType(String name, String separator) {
+            this.name = name;
+            this.separator = separator;
+        }
+        
+        /**
+         * Displays the name of this {@link ConcatRelationType} object.
+         * @return the name of this {@link ConcatRelationType} object.
+         */
+        public String getName() {
+            return this.name;
+        }
+        
+        /**
+         * Displays the separator for this {@link ConcatRelationType} object.
+         * @return the separator for this {@link ConcatRelationType} object.
+         */
+        public String getSeparator() {
+            return this.separator;
+        }
+        
+        /**
+         * Displays the name of this {@link ConcatRelationType} object.
+         * @return the name of this {@link ConcatRelationType} object.
+         */
+        public String toString() {
+            return this.getName();
+        }
+        
+        /**
+         * Displays the hashcode of this object.
+         * @return the hashcode of this object.
+         */
+        public int hashCode() {
+            return this.toString().hashCode();
+        }
+        
+        /**
+         * Sorts by comparing the toString() output.
+         * @param o the object to compare to.
+         * @return -1 if we are smaller, +1 if we are larger, 0 if we are equal.
+         * @throws ClassCastException if the object o is not a {@link ConcatRelationType}.
+         */
+        public int compareTo(Object o) throws ClassCastException {
+            ConcatRelationType pct = (ConcatRelationType)o;
+            return this.toString().compareTo(pct.toString());
+        }
+        
+        /**
+         * Return true if the objects are identical.
+         * @param o the object to compare to.
+         * @return true if the names are the same and both are {@link ConcatRelationType} instances,
+         * otherwise false.
+         */
+        public boolean equals(Object o) {
+            // We are dealing with singletons so can use == happily.
+            return o == this;
+        }
     }
 }

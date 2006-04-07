@@ -41,14 +41,8 @@ import org.biomart.builder.model.Key.PrimaryKey;
  * functionality outlined above. Subclasses of {@link GenericRelation}
  * represent different kinds of association between {@link Key}s.</p>
  *
- * <p>Two reference implementations are provided which should suffice for most
- * purposes. Both extend {@link GenericRelation}. They are 1:M and 1:1. Note
- * that a M:1 is simply the reverse of a 1:M and therefore needs no additional
- * representation. M:M cannot be simply represented in the Java object model
- * so is not included here.</p>
- *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3 30th March 2006
+ * @version 0.1.4, 7th April 2006
  * @since 0.1
  */
 public interface Relation extends Comparable {
@@ -89,7 +83,15 @@ public interface Relation extends Comparable {
      * of this {@link Relationship}.
      * @return the {@link Cardinality}.
      */
-    public Cardinality getCardinality();
+    public Cardinality getFKCardinality();
+    
+    /**
+     * Sets the {@link Cardinality} of the {@link ForeignKey} end
+     * of this {@link Relationship}.
+     * @param cardinality the {@link Cardinality}.
+     * @throws NullPointerException if the cardinality was null.
+     */
+    public void setFKCardinality(Cardinality cardinality) throws NullPointerException;
     
     /**
      * Deconstructs the {@link Relation} by removing references to
@@ -212,7 +214,7 @@ public interface Relation extends Comparable {
         /**
          * Internal reference to the {@link Cardinality} of this {@link Relation}.
          */
-        private final Cardinality cardinality;
+        private Cardinality cardinality;
         
         /**
          * Internal reference to the {@link ComponentStatus} of this {@link Relation}.
@@ -260,7 +262,7 @@ public interface Relation extends Comparable {
             sb.append(":");
             sb.append(this.getForeignKey().getName());
             sb.append(" (1:");
-            sb.append(this.getCardinality().toString());
+            sb.append(this.getFKCardinality().toString());
             sb.append(")");
             return sb.toString();
         }
@@ -308,8 +310,22 @@ public interface Relation extends Comparable {
          * of this {@link Relationship}.
          * @return the {@link Cardinality}
          */
-        public Cardinality getCardinality() {
+        public Cardinality getFKCardinality() {
             return this.cardinality;
+        }
+        
+        /**
+         * Sets the {@link Cardinality} of the {@link ForeignKey} end
+         * of this {@link Relationship}.
+         * @param cardinality the {@link Cardinality}.
+         * @throws NullPointerException if the cardinality was null.
+         */
+        public void setFKCardinality(Cardinality cardinality) throws NullPointerException {
+            // Sanity check.
+            if (cardinality==null)
+                throw new NullPointerException("Cardinality cannot be null.");
+            // Do it.
+            this.cardinality = cardinality;
         }
         
         /**
@@ -358,42 +374,6 @@ public interface Relation extends Comparable {
             if (o == null || !(o instanceof Relation)) return false;
             Relation r = (Relation)o;
             return r.toString().equals(this.toString());
-        }
-    }
-    
-    /**
-     * This utility class represents a 1:1 {@link Relationship} between two {@link Key}s.
-     */
-    public class OneToOne extends GenericRelation {
-        /**
-         * This constructor tests that both ends of the {@link Relation} have
-         * {@link Key</code>s with the same number of <code>Column}s.
-         *
-         * @param primaryKey the source {@link PrimaryKey}.
-         * @param foreignKey the target {@link ForeignKey}.
-         * @throws AssociationException if the number of {@link Column}s in the {@link Key}s don't match.
-         * @throws NullPointerException if either {@link Key} is null.
-         */
-        public OneToOne(PrimaryKey primaryKey, ForeignKey foreignKey) throws AssociationException, NullPointerException {
-            super(primaryKey, foreignKey, Cardinality.ONE);
-        }
-    }
-    
-    /**
-     * This utility class represents a 1:M {@link Relationship} between two {@link Key}s.
-     */
-    public class OneToMany extends GenericRelation {
-        /**
-         * This constructor tests that both ends of the {@link Relation} have
-         * {@link Key</code>s with the same number of <code>Column}s.
-         *
-         * @param primaryKey the source {@link PrimaryKey}.
-         * @param foreignKey the target {@link ForeignKey}.
-         * @throws AssociationException if the number of {@link Column}s in the {@link Key}s don't match.
-         * @throws NullPointerException if either {@link Key} is null.
-         */
-        public OneToMany(PrimaryKey primaryKey, ForeignKey foreignKey) throws AssociationException, NullPointerException {
-            super(primaryKey, foreignKey, Cardinality.MANY);
         }
     }
 }

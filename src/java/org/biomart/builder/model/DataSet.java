@@ -44,7 +44,8 @@ import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.GenericForeignKey;
 import org.biomart.builder.model.Key.GenericPrimaryKey;
 import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.model.Relation.OneToMany;
+import org.biomart.builder.model.Relation.Cardinality;
+import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Table.GenericTable;
 import org.biomart.builder.model.TableProvider.GenericTableProvider;
 
@@ -54,7 +55,7 @@ import org.biomart.builder.model.TableProvider.GenericTableProvider;
  * a set of mart tables based on the contents of a {@link Window}.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 6th April 2006
+ * @version 0.1.8, 7th April 2006
  * @since 0.1
  */
 public interface DataSet extends Comparable, TableProvider {
@@ -215,13 +216,14 @@ public interface DataSet extends Comparable, TableProvider {
                 }
             }
             
-            // Identify all subclass and dimension relations, and set up the ignorable
-            // relations for main and dimension tables.
+            // Identify all subclass and dimension relations.
             ignoredRelations.put(centralTable, new HashSet());
             if (centralTable.getPrimaryKey()!=null) for (Iterator i = centralTable.getPrimaryKey().getRelations().iterator(); i.hasNext(); ) {
                 Relation r = (Relation)i.next();
                 // Skip masked relations.
                 if (this.getWindow().getMaskedRelations().contains(r)) continue;
+                // Skip inferred-incorrect relations.
+                if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) continue;
                 // See what kind of relation we have.
                 if (this.getWindow().getSubclassedRelations().contains(r)) {
                     // Subclass relation from main table? Ignore it at main table but add to subclass set.
@@ -234,7 +236,7 @@ public interface DataSet extends Comparable, TableProvider {
                         Relation sr = (Relation)j.next();
                         // OneToMany from subclass table? Ignore it at subclass table but add to dimension set.
                         // Also add the relation to the ignore set of the dimension.
-                        if (sr instanceof OneToMany) {
+                        if (sr.getFKCardinality().equals(Cardinality.MANY)) {
                             ((Set)ignoredRelations.get(subclassTable)).add(sr);
                             dimensionRelations.add(sr);
                             Table dimTable = sr.getForeignKey().getTable();
@@ -242,7 +244,7 @@ public interface DataSet extends Comparable, TableProvider {
                             ((Set)ignoredRelations.get(dimTable)).add(sr);
                         }
                     }
-                } else if (r instanceof OneToMany) {
+                } else if (r.getFKCardinality().equals(Cardinality.MANY)) {
                     // OneToMany from main table? Ignore it at main table but add to dimension set.
                     // Also add the relation to the ignore set of the dimension.
                     // Note that subclass OneToMany will already have been picked up by previous test.
@@ -320,11 +322,12 @@ public interface DataSet extends Comparable, TableProvider {
             this.transformTable(datasetTable, realTable, ignoredRelations, relationsFollowed, constructedPKColumns, constructedColumns);
             datasetTable.setUnderlyingRelations(relationsFollowed);
             
-            // Add table provider partition column if required - must be part of primary key.
-            DataSetColumn childTblProvCol=null;
+            // Add table provider partition column if required.
+            DataSetColumn tblProvCol=null;
             if (realTable.getTableProvider() instanceof PartitionedTableProvider) {
-                childTblProvCol = new TableProviderNameColumn("__tblprov", datasetTable);
-                constructedPKColumns.add(childTblProvCol);
+                tblProvCol = new TableProviderNameColumn("__tblprov", datasetTable);
+                // Only add to PK if PK is not empty, as otherwise will introduce a PK where none previously existed.
+                if (!constructedPKColumns.isEmpty()) constructedPKColumns.add(tblProvCol);
             }
             
             // Work out the foreign key only if the parent relation is not null.
@@ -345,8 +348,11 @@ public interface DataSet extends Comparable, TableProvider {
                         // If column is a wrapped column
                         // Find associated real column
                         Column parentRealTableColumn = ((WrappedColumn)parentDatasetTableColumn).getWrappedColumn();
-                        if (!parentRealTableColumn.getTable().equals(parentRealTable)) {
-                            // If real column not on original main table, create child column for it add it to child table PK
+                        if (parentDatasetTableColumn.getUnderlyingRelation()!=null) {
+                            // If real column not obtained directly from original main table, ie. is from another table or a copy
+                            // of the main table obtained by linking to itself via some other route, create child column for it 
+                            // add it to child table PK. We test for where the column came from by looking at its providing 
+                            // relation - if null, then it was on the original table, if not null, then it came from somewhere else.
                             constructedFKColumn = new WrappedColumn(parentRealTableColumn, datasetTable, null);
                             constructedPKColumns.add(constructedFKColumn);
                         } else {
@@ -358,7 +364,7 @@ public interface DataSet extends Comparable, TableProvider {
                     } else if (parentDatasetTableColumn instanceof TableProviderNameColumn) {
                         // Else if its a tblprov column
                         // Find child tblprov column
-                        constructedFKColumn = childTblProvCol;
+                        constructedFKColumn = tblProvCol;
                     } else {
                         // Else, can'table handle.
                         throw new AssertionError("Cannot handle non-Wrapped non-TableProviderName columns in foreign keys.");
@@ -379,7 +385,7 @@ public interface DataSet extends Comparable, TableProvider {
                     ForeignKey newFK = new GenericForeignKey(constructedFKColumns);
                     datasetTable.addForeignKey(newFK);
                     // Create the relation.
-                    new OneToMany(parentDatasetTable.getPrimaryKey(), newFK);
+                    new GenericRelation(parentDatasetTable.getPrimaryKey(), newFK, Cardinality.MANY);
                 } else throw new AssertionError("Foreign key expected but has no columns.");
             }
             
@@ -418,14 +424,15 @@ public interface DataSet extends Comparable, TableProvider {
                 throw new NullPointerException("Columns cannot be null.");
             
             // Find all relations from source table.
-            // Additionally, find all columns in foreign keys with non-ignored relations. Exclude them.
+            // Additionally, find all columns in all keys with non-ignored relations. Exclude them,
+            // except if they're in a concat-only relation, in which case keep them.
             Collection realTableRelations = realTable.getRelations();
             Set excludedColumns = new HashSet();
-            for (Iterator i = realTable.getForeignKeys().iterator(); i.hasNext(); ) {
+            for (Iterator i = realTable.getKeys().iterator(); i.hasNext(); ) {
                 Key k = (Key)i.next();
                 for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
                     Relation r = (Relation)j.next();
-                    if (!ignoredRelations.contains(r))
+                    if (!ignoredRelations.contains(r) && !this.getWindow().getConcatOnlyRelations().contains(r))
                         excludedColumns.addAll(k.getColumns());
                 }
             }
@@ -454,6 +461,8 @@ public interface DataSet extends Comparable, TableProvider {
                 
                 // Need to recheck ignoreRefs in case has become ignored since we built our set of relations.
                 if (ignoredRelations.contains(r)) continue;
+                // Ignore incorrect relations too.
+                if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) continue;
                 
                 // Find key in relation that refers to this table.
                 Key realTableRelSourceKey = r.getPrimaryKey();

@@ -93,13 +93,23 @@ public interface TableProvider extends Comparable, DataLink {
     /**
      * Returns a set of unique values in a given column, which may include null. The
      * set returned will never be null itself.
-     * @param c the {@link Column} to get unique values for.
+     * @param column the {@link Column} to get unique values for.
      * @return a set of unique values in a given column.
      * @throws AssociationException if the column doesn't belong to us.
      * @throws SQLException if there was any problem loading the values.
      * @throws NullPointerException if the column was null.
      */
-    public Collection getUniqueValues(Column c) throws AssociationException, NullPointerException, SQLException;
+    public Collection getUniqueValues(Column column) throws AssociationException, NullPointerException, SQLException;
+    
+    /**
+     * Counts the unique values in a given column, which may include null.
+     * @param column the {@link Column} to get unique values for.
+     * @return a count of the unique values in a given column.
+     * @throws AssociationException if the column doesn't belong to us.
+     * @throws SQLException if there was any problem counting the values.
+     * @throws NullPointerException if the column was null.
+     */
+    public int countUniqueValues(Column column) throws AssociationException, NullPointerException, SQLException;
     
     /**
      * The generic implementation should suffice as the ground for most
@@ -215,22 +225,43 @@ public interface TableProvider extends Comparable, DataLink {
          * <p>Returns a set of unique values in a given column, which may include null. The
          * set returned will never be null itself.</p>
          *
-         * <p>This simple generic implementation returns an empty set every time.</p>
+         * <p>This being the generic implementation, it always returns an empty set.</p>
          *
-         * @param c the {@link Column} to get unique values for.
+         * @param column the {@link Column} to get unique values for.
          * @return a set of unique values in a given column.
          * @throws AssociationException if the column doesn't belong to us.
          * @throws SQLException if there was any problem loading the values.
          * @throws NullPointerException if the column was null.
          */
-        public Collection getUniqueValues(Column c) throws AssociationException, NullPointerException, SQLException {
+        public Collection getUniqueValues(Column column) throws AssociationException, NullPointerException, SQLException {
             // Sanity check.
-            if (c == null)
+            if (column == null)
                 throw new NullPointerException("Column cannot be null.");
-            if (!c.getTable().getTableProvider().equals(this))
+            if (!column.getTable().getTableProvider().equals(this))
                 throw new AssociationException("Column doesn't belong to this table provider.");
             // Do it.
             return Collections.EMPTY_SET;
+        }
+        
+        /**
+         * <p>Counts the unique values in a given column, which may include null.</p>
+         *
+         * <p>This being the generic implementation, it always returns 0.</p>
+         *
+         * @param column the {@link Column} to get unique values for.
+         * @return a count of the unique values in a given column.
+         * @throws AssociationException if the column doesn't belong to us.
+         * @throws SQLException if there was any problem counting the values.
+         * @throws NullPointerException if the column was null.
+         */
+        public int countUniqueValues(Column column) throws AssociationException, NullPointerException, SQLException {
+            // Sanity check.
+            if (column == null)
+                throw new NullPointerException("Column cannot be null.");
+            if (!column.getTable().getTableProvider().equals(this))
+                throw new AssociationException("Column doesn't belong to this table provider.");
+            // Do it.
+            return 0;
         }
         
         /**

@@ -32,14 +32,15 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Driver;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -57,7 +58,8 @@ import org.biomart.builder.model.Key.GenericForeignKey;
 import org.biomart.builder.model.Key.GenericPrimaryKey;
 import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Relation.OneToMany;
+import org.biomart.builder.model.Relation.Cardinality;
+import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Table.GenericTable;
 import org.biomart.builder.model.TableProvider.GenericTableProvider;
@@ -294,44 +296,74 @@ public class JDBCNonRelationalTableProvider extends GenericTableProvider impleme
         // Do it.
         if (!(partner instanceof JDBCDataLink)) return false;
         JDBCDataLink them = (JDBCDataLink)partner;
-        
-        try {
-            Connection theirConn = them.getConnection();
-            return (
-                    theirConn.getMetaData().getURL().equals(this.conn.getMetaData().getURL()) &&
-                    theirConn.getMetaData().getUserName().equals(this.conn.getMetaData().getUserName())
-                    );
-        } catch (Exception e) {
-            System.err.println("WARNING: Unable to compare database connection strings. Assuming incompatibility. Stack trace follows.");
-            e.printStackTrace(System.err);
-            return false;
-        }
-        
+        return (
+                them.getJDBCURL().equals(this.getJDBCURL()) &&
+                them.getUsername().equals(this.getUsername())
+                );
     }
     
     /**
      * <p>Returns a set of unique values in a given column, which may include null. The
      * set returned will never be null itself.</p>
      *
-     * <p>This simple generic implementation returns an empty set every time.</p>
+     * <p>This version issues a 'select distinct colname from table' via JDBC.</p>
      *
-     * @param c the {@link Column} to get unique values for.
+     * @param column the {@link Column} to get unique values for.
      * @return a set of unique values in a given column.
      * @throws AssociationException if the column doesn't belong to us.
      * @throws SQLException if there was any problem loading the values.
      * @throws NullPointerException if the column was null.
      */
-    public Collection getUniqueValues(Column c) throws AssociationException, NullPointerException, SQLException {
+    public Collection getUniqueValues(Column column) throws AssociationException, NullPointerException, SQLException {
         // Sanity check.
-        if (c == null)
+        if (column == null)
             throw new NullPointerException("Column cannot be null.");
-        if (!c.getTable().getTableProvider().equals(this))
+        if (!column.getTable().getTableProvider().equals(this))
             throw new AssociationException("Column doesn't belong to this table provider.");
-        
-        // DO A SQL SELECT HERE
-        
         // Do it.
-        return Collections.EMPTY_SET;
+        List values = new ArrayList();
+        PreparedStatement ps = this.getConnection().prepareStatement("select distinct "+column.getName()+" from "+column.getTable().getName());
+        if (ps.execute()!=true)
+            throw new AssertionError("Prepared statement failed to return a ResultSet.");
+        ResultSet rs = ps.getResultSet();
+        if (rs==null)
+            throw new AssertionError("Prepared statement said it would return a ResultSet but didn't.");
+        while (rs.next()) values.add(rs.getObject(1));
+        rs.close();
+        ps.close();
+        return values;
+    }
+    
+    /**
+     * <p>Counts the unique values in a given column, which may include null.</p>
+     *
+     * <p>This version issues a 'select count(distinct colname) from table' via JDBC.</p>
+     *
+     * @param column the {@link Column} to get unique values for.
+     * @return a count of the unique values in a given column.
+     * @throws AssociationException if the column doesn't belong to us.
+     * @throws SQLException if there was any problem counting the values.
+     * @throws NullPointerException if the column was null.
+     */
+    public int countUniqueValues(Column column) throws AssociationException, NullPointerException, SQLException {
+        // Sanity check.
+        if (column == null)
+            throw new NullPointerException("Column cannot be null.");
+        if (!column.getTable().getTableProvider().equals(this))
+            throw new AssociationException("Column doesn't belong to this table provider.");
+        // Do it.
+        PreparedStatement ps = this.getConnection().prepareStatement("select count(distinct "+column.getName()+") from "+column.getTable().getName());
+        if (ps.execute()!=true)
+            throw new AssertionError("Prepared statement failed to return a ResultSet.");
+        ResultSet rs = ps.getResultSet();
+        if (rs==null)
+            throw new AssertionError("Prepared statement said it would return a ResultSet but didn't.");
+        if (!rs.next())
+            throw new AssertionError("ResultSet guaranteed to return at least 1 row but returned 0.");
+        int rowCount = rs.getInt(1);
+        rs.close();
+        ps.close();
+        return rowCount;
     }
     
     /**
@@ -503,23 +535,20 @@ public class JDBCNonRelationalTableProvider extends GenericTableProvider impleme
                     }
                     if (!newFKAlreadyExists) fkTable.addForeignKey(newFK);
                     
-                    
-                    // Check to see that the FK we found isn't already in a relation. If it is,
-                    // then we must assume the first one we found is the correct one, and
-                    // ignore this new one.
-                    if (!newFK.getRelations().isEmpty()) continue;
-                    
                     // Check to see if there is already a relation between the PK and the FK. If
                     // so, reuse it. If not, create one.
                     boolean relationExists = false;
                     for (Iterator f = removedRels.iterator(); f.hasNext() && !relationExists; ) {
                         Relation r = (Relation)f.next();
-                        if (r.getForeignKey().equals(newFK)) {
+                        if (r.getPrimaryKey().equals(existingPK) && r.getForeignKey().equals(newFK)) {
                             f.remove(); // don't drop it, just leave it untouched and reuse it.
                             relationExists = true;
                         }
                     }
-                    if (!relationExists) new OneToMany(existingPK, newFK); // create and add it.
+                    if (!relationExists) {
+                        // Create the relation.
+                        new GenericRelation(existingPK, newFK, Cardinality.MANY);
+                    }
                 }
             }
             
@@ -540,5 +569,21 @@ public class JDBCNonRelationalTableProvider extends GenericTableProvider impleme
             k.destroy();
             i.remove(); // just to make sure it really has gone.
         }
+        
+        // Check and convert any 1:M relations that should be 1:1
+        for (Iterator i = this.getTables().iterator(); i.hasNext(); ) {
+            Table pkTable = (Table)i.next();
+            PrimaryKey pk = pkTable.getPrimaryKey();
+            if (pk == null) continue; // Skip tables without PKs.
+            for (Iterator j = pk.getRelations().iterator(); j.hasNext(); ) {
+                Relation rel = (Relation)j.next();
+                ForeignKey fk = rel.getForeignKey();
+                Table fkTable = fk.getTable();
+                PrimaryKey fkTablePK = fkTable.getPrimaryKey();
+                if (fkTablePK == null) continue; // Skip FK tables without PKs.
+                // If foreign key = primary key on fkTable then cardinality should be 1:1
+                if (fk.getColumns().equals(fkTablePK.getColumns())) rel.setFKCardinality(Cardinality.ONE);
+            }
+        }        
     }
 }
