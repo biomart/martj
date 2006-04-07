@@ -426,21 +426,20 @@ public class MartRegistryXMLUtils {
 		Element thisElement = doc.getRootElement();
 
 		MartRegistry martreg = new MartRegistry();
-
 		for (Iterator iter = thisElement.getChildren().iterator(); iter.hasNext();) {
             Element element = (Element) iter.next();
-
             if (element.getName().equals(VSCHEMA)) {
               String name = element.getAttributeValue("name");
-            
+              
               virtualSchema vschema = new virtualSchema(name);
               MartLocation[] martLocs = getLocations(element);
               for (int i = 0, n = martLocs.length; i < n; i++) {
                 vschema.addMartLocation(martLocs[i]);
               }
+              martreg.addVirtualSchema(vschema);
             } else {
                 if (element.getName().equals(URLLOCATION))
-                  martreg.addMartLocation(getURLLocation(element));
+      				martreg.addMartLocation(getURLLocation(element));
                 else if (element.getName().equals(DATABASELOCATION))
                   martreg.addMartLocation(getDBLocation(element));
                 else if (element.getName().equals(REGISTRYLOCATION))

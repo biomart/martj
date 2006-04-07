@@ -287,7 +287,7 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 		Object[] elements = martreg.getElementsInOrder();
 		for (int i = 0, n = elements.length; i < n; i++) {
             if (elements[i] instanceof MartLocation) {
-                addLocation( (MartLocation) elements[i]);
+				addLocation( (MartLocation) elements[i]);
             } else {
                 //virtualSchema
                 virtualSchema schema = (virtualSchema) elements[i];
@@ -336,13 +336,13 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 						adaptor.setName(location.getName());
 						add(adaptor);
 						martRegs.add(subreg);
-					} else if (location.getType().equals(MartLocationBase.URL)) {
-
-						URLDSConfigAdaptor adaptor =
-							new URLDSConfigAdaptor(((URLLocation) location).getUrl(), ignoreCache, includeHiddenMembers);
-						adaptor.setName(location.getName());
-						add(adaptor);
-
+					} else if (location.getType().equals(MartLocationBase.URL)) {					
+							if (((URLLocation) location).getUrl() != null){
+								URLDSConfigAdaptor adaptor =
+									new URLDSConfigAdaptor(((URLLocation) location).getUrl(), ignoreCache, includeHiddenMembers);
+								adaptor.setName(location.getName());
+								add(adaptor);
+							}
 					} else if (location.getType().equals(MartLocationBase.DATABASE)) {
 						DatabaseLocation dbloc = (DatabaseLocation) location;
 
