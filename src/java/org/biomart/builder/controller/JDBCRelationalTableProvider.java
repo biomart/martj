@@ -52,7 +52,7 @@ import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Table.GenericTable;
 
 /**
- * The JDBC relational {@link TableProvider} implementation loads tables from a 
+ * The JDBC relational {@link TableProvider} implementation loads tables from a
  * database at construction time, along with all columns, keys and relations between them that
  * are specified in the database's {@link DatabaseMetaData} structures. Note that if a database
  * is incapable of enforcing foreign keys etc., then you should use the non-relational version
@@ -60,12 +60,12 @@ import org.biomart.builder.model.Table.GenericTable;
  *
  * @author Richard Holland <holland@ebi.ac.uk>
  */
-public class JDBCRelationalTableProvider extends JDBCNonRelationalTableProvider {    
+public class JDBCRelationalTableProvider extends JDBCNonRelationalTableProvider {
     /**
      * Creates a new instance of JDBCRelationalTableProvider based around
      * the given JDBC Connection. As this is identical to JDBCNonRelationalTableProvider,
      * it delegates upwards.
-     * 
+     *
      * @param driverClassLocation the location of the class to load the JDBC driver from.
      * Use null to use the default class loader path, which it will also fall back on if it
      * could not find the driver at the specified location, or if this location does not exist.
@@ -285,7 +285,8 @@ public class JDBCRelationalTableProvider extends JDBCNonRelationalTableProvider 
             PrimaryKey pk = pkTable.getPrimaryKey();
             if (pk == null) continue; // Skip tables without PKs.
             for (Iterator j = pk.getRelations().iterator(); j.hasNext(); ) {
-                Relation rel = (Relation)j.next();
+                Relation rel = (Relation)j.next();              
+                if (!rel.getStatus().equals(ComponentStatus.INFERRED)) continue; // Skip incorrect and user-defined ones.
                 ForeignKey fk = rel.getForeignKey();
                 Table fkTable = fk.getTable();
                 PrimaryKey fkTablePK = fkTable.getPrimaryKey();
@@ -293,6 +294,6 @@ public class JDBCRelationalTableProvider extends JDBCNonRelationalTableProvider 
                 // If foreign key = primary key on fkTable then cardinality should be 1:1
                 if (fk.getColumns().equals(fkTablePK.getColumns())) rel.setFKCardinality(Cardinality.ONE);
             }
-        }        
+        }
     }
 }
