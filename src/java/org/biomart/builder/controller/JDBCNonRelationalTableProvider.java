@@ -577,6 +577,7 @@ public class JDBCNonRelationalTableProvider extends GenericTableProvider impleme
             if (pk == null) continue; // Skip tables without PKs.
             for (Iterator j = pk.getRelations().iterator(); j.hasNext(); ) {
                 Relation rel = (Relation)j.next();
+                if (!rel.getStatus().equals(ComponentStatus.INFERRED)) continue; // Skip incorrect and user-defined ones.
                 ForeignKey fk = rel.getForeignKey();
                 Table fkTable = fk.getTable();
                 PrimaryKey fkTablePK = fkTable.getPrimaryKey();
