@@ -1,6 +1,5 @@
 /*
  * AssociationException.java
- *
  * Created on 23 March 2006, 15:27
  */
 
@@ -27,19 +26,18 @@ package org.biomart.builder.exceptions;
 /**
  * This refers to exceptions where something is being added to something else, but
  * the two items are not associated or cannot be associated.
- *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.1, 23rd March 2006
  * @since 0.1
  */
-public class AssociationException extends BuilderException {        
+public class AssociationException extends BuilderException {
     /**
      * Constructs an instance of <code>AssociationException</code> with the specified detail message.
      * @param msg the detail message.
      */
     public AssociationException(String msg) {
         super(msg);
-    }   
+    }
     
     /**
      * Constructs an instance of <code>AssociationException</code> with the specified detail message

@@ -1,6 +1,5 @@
 /*
  * JDBCTableProvider.java
- *
  * Created on 03 April 2006, 13:00
  */
 
@@ -50,6 +49,7 @@ import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Table.GenericTable;
+import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * The plain JDBC {@link TableProvider} implementation loads tables from a
@@ -57,7 +57,6 @@ import org.biomart.builder.model.Table.GenericTable;
  * are specified in the database's {@link DatabaseMetaData} structures. Note that if a database
  * is incapable of enforcing foreign keys etc., then you should use the key-guessing version
  * of this class instead, {@link JDBCKeyGuessingTableProvider}, eg. for MyISAM tables in MySQL.
- *
  * @author Richard Holland <holland@ebi.ac.uk>
  */
 public class JDBCTableProvider extends JDBCKeyGuessingTableProvider {
@@ -65,7 +64,6 @@ public class JDBCTableProvider extends JDBCKeyGuessingTableProvider {
      * Creates a new instance of JDBCTableProvider based around
      * the given JDBC Connection. As this is identical to JDBCKeyGuessingTableProvider,
      * it delegates upwards.
-     *
      * @param driverClassLocation the location of the class to load the JDBC driver from.
      * Use null to use the default class loader path, which it will also fall back on if it
      * could not find the driver at the specified location, or if this location does not exist.
@@ -81,25 +79,15 @@ public class JDBCTableProvider extends JDBCKeyGuessingTableProvider {
     }
     
     /**
-     * <p>Synchronise this {@link TableProvider} with the data source that is
-     * providing its tables. Synchronisation means checking the list of {@link Table}s
-     * available and drop/add any that have changed, then check each {@link Column}.
-     * and {@link Key} and {@link Relation} and update those too.
-     * Any {@link Key} or {@link Relation} that was created by the user and is still valid,
-     * ie. the underlying columns still exist, will not be affected by this operation.</p>
-     *
+     * {@inheritDoc}
      * <p>This implementation reads tables and views from the schema with the same name as the
      * logged-in user only. On MySQL, for instance, this is irrelevant as it has no such
      * concept of schema, but on Oracle this means that only tables and views owned by
      * the logged-in user will appear. If you want tables from other schemas in Oracle,
      * you'll have to create views onto them from the logged-in user's schema first.</p>
-     *
      * <p>This implementation ignores all tables returned by the connection's metadata
      * that do not have a type of TABLE or VIEW. See {@link DatabaseMetaData#getTables(String, String, String, String[])}
      * for details.</p>
-     *
-     * @throws SQLException if there was a problem connecting to the data source.
-     * @throws BuilderException if there was any other kind of problem.
      */
     public void synchronise() throws SQLException, BuilderException {
         // Get database metadata.
@@ -254,7 +242,7 @@ public class JDBCTableProvider extends JDBCKeyGuessingTableProvider {
                         // If its not new, check to see if it already has a relation.
                         
                         // Check to see if this FK already has a link to this PK.
-                        // If it has a correctly inferred connection to any other PK, 
+                        // If it has a correctly inferred connection to any other PK,
                         // complain bitterly. If it has an incorrect or handmade connection
                         // to any other PK, remove that one.
                         boolean relationExists = false;
@@ -264,7 +252,7 @@ public class JDBCTableProvider extends JDBCKeyGuessingTableProvider {
                                 removedRels.remove(r); // don't drop it, just leave it untouched and reuse it.
                                 relationExists = true;
                             } else if (r.getStatus().equals(ComponentStatus.INFERRED)) {
-                                throw new AssertionError("Database claims FK refers to more than one PK.");
+                                throw new AssertionError(BuilderBundle.getString("fkHasMultiplePKs"));
                             } else {
                                 // It'll get removed later if we leave it in removedRels.
                                 // To do that, we need do nothing.

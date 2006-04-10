@@ -1,6 +1,5 @@
 /*
  * AlreadyExistsException.java
- *
  * Created on 23 March 2006, 15:27
  */
 
@@ -27,12 +26,11 @@ package org.biomart.builder.exceptions;
 /**
  * This refers to exceptions where something is being added to something else, but
  * already exists in its destination.
- *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.1, 23rd March 2006
  * @since 0.1
  */
-public class AlreadyExistsException extends BuilderException {        
+public class AlreadyExistsException extends BuilderException {
     /**
      * Constructs an instance of <code>AlreadyExistsException</code> with the specified detail message.
      * @param msg the detail message.

@@ -1,6 +1,5 @@
 /*
  * Schema.java
- *
  * Created on 27 March 2006, 12:54
  */
 
@@ -32,12 +31,12 @@ import java.util.TreeMap;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
+import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * The {@link Schema} contains the set of all {@link TableProvider}s that are providing
  * data to this mart. It also has one or more {@link Window}s onto the {@link Table}s provided
  * by these, from which {@link DataSet}s are constructed.
- *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.3, 6th April 2006
  * @since 0.1
@@ -73,7 +72,7 @@ public class Schema {
     public TableProvider getTableProviderByName(String name) throws NullPointerException {
         // Sanity check.
         if (name == null)
-            throw new NullPointerException("Table provider name cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
         // Do we have it?
         if (!this.tableProviders.containsKey(name)) return null;
         // Return it.
@@ -83,7 +82,6 @@ public class Schema {
     /**
      * Adds a {@link TableProvider} to the set which this {@link Schema} includes. An
      * exception is thrown if it already is in this set, or if it is null.
-     *
      * @param tableProvider the {@link TableProvider} to add.
      * @throws AlreadyExistsException if the provider is already in this schema.
      * @throws NullPointerException if the provider is null.
@@ -91,9 +89,9 @@ public class Schema {
     public void addTableProvider(TableProvider tableProvider) throws NullPointerException, AlreadyExistsException {
         // Sanity check.
         if (tableProvider == null)
-            throw new NullPointerException("Table provider cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("tblprovIsNull"));
         if (this.tableProviders.containsKey(tableProvider.getName()))
-            throw new AlreadyExistsException("Table provider has already been added to this schema.",tableProvider.getName());
+            throw new AlreadyExistsException(BuilderBundle.getString("tblprovExists"),tableProvider.getName());
         // Do it.
         this.tableProviders.put(tableProvider.getName(),tableProvider);
     }
@@ -101,14 +99,13 @@ public class Schema {
     /**
      * Removes a {@link TableProvider} from the set which this {@link Schema} includes. An
      * exception is thrown if it is null. If it is not found, nothing happens and it is ignored quietly.
-     *
      * @param tableProvider the {@link TableProvider} to remove.
      * @throws NullPointerException if the provider is null.
      */
     public void removeTableProvider(TableProvider tableProvider) throws NullPointerException {
         // Sanity check.
         if (tableProvider == null)
-            throw new NullPointerException("Table provider cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("tblprovIsNull"));
         // Do we have it?
         if (!this.tableProviders.containsKey(tableProvider.getName())) return;
         // Do it.
@@ -134,7 +131,7 @@ public class Schema {
     public Window getWindowByName(String name) throws NullPointerException {
         // Sanity check.
         if (name == null)
-            throw new NullPointerException("Window name cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
         // Do we have it?
         if (!this.windows.containsKey(name)) return null;
         // Return it.
@@ -144,7 +141,6 @@ public class Schema {
     /**
      * Adds a {@link Window} to the set which this {@link Schema} includes. An
      * exception is thrown if it already is in this set, or if it is null.
-     *
      * @param window the {@link Window} to add.
      * @throws AlreadyExistsException if the window is already in this schema.
      * @throws NullPointerException if the window is null.
@@ -152,9 +148,9 @@ public class Schema {
     public void addWindow(Window window) throws NullPointerException, AlreadyExistsException {
         // Sanity check.
         if (window == null)
-            throw new NullPointerException("Window cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("windowIsNull"));
         if (this.windows.containsKey(window.getName()))
-            throw new AlreadyExistsException("Window has already been added to this schema.",window.getName());
+            throw new AlreadyExistsException(BuilderBundle.getString("windowExists"),window.getName());
         // Do it.
         this.windows.put(window.getName(), window);
     }
@@ -167,7 +163,6 @@ public class Schema {
      * {@link Window} will be created containing that subclass relation. Each subclass {@link Window}
      * choice will have a number appended to it after an underscore, eg. '_SC1' ,'_SC2' etc.
      * Each window created will have optimiseRelations() called on it automatically.
-     *
      * @param centralTable the {@link Table} to build predicted {@link Window}s around.
      * @throws AlreadyExistsException if a window already exists in this schema with the same
      *  name as the {@link Table} or any of the suffixed versions.
@@ -176,13 +171,13 @@ public class Schema {
     public void suggestWindows(Table centralTable) throws NullPointerException, AlreadyExistsException {
         // Sanity check.
         if (centralTable== null)
-            throw new NullPointerException("Table cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("tableIsNull"));
         // Do it.
         try {
             Window mainWin = new Window(this, centralTable, centralTable.getName());
             mainWin.optimiseRelations();
         } catch (AssociationException e) {
-            AssertionError ae = new AssertionError("Could not suggest plain window.");
+            AssertionError ae = new AssertionError(BuilderBundle.getString("plainWindowPredictionFailure"));
             ae.initCause(e);
             throw ae;
         }
@@ -197,12 +192,12 @@ public class Schema {
                 // Only flag potential m:1 subclass relations if they don't refer back to ourselves.
                 try {
                     if (!r.getPrimaryKey().getTable().equals(centralTable)) {
-                        Window scWin = new Window(this, centralTable, centralTable.getName()+"_SC"+(suffix++));
+                        Window scWin = new Window(this, centralTable, centralTable.getName()+BuilderBundle.getString("subclassWindowSuffix")+(suffix++));
                         scWin.flagSubclassRelation(r);
                         scWin.optimiseRelations();
                     }
                 } catch (AssociationException e) {
-                    AssertionError ae = new AssertionError("Subclass prediction failed.");
+                    AssertionError ae = new AssertionError(BuilderBundle.getString("subclassPredictionFailure"));
                     ae.initCause(e);
                     throw ae;
                 }
@@ -213,14 +208,13 @@ public class Schema {
     /**
      * Removes a {@link Window} from the set which this {@link Schema} includes. An
      * exception is thrown if it is null. If it is not found, nothing happens and it is ignored quietly.
-     *
      * @param window the {@link Window} to remove.
      * @throws NullPointerException if the window is null.
      */
     public void removeWindow(Window window) throws NullPointerException {
         // Sanity check.
         if (window == null)
-            throw new NullPointerException("Window cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("windowIsNull"));
         // Do we have it?
         if (!this.windows.containsKey(window.getName())) return;
         // Do it.
@@ -231,7 +225,6 @@ public class Schema {
      * Synchronise this {@link Schema} with the {@link TableProvider}(s) that is(are)
      * providing its tables, then synchronising its {@link Window}s too. This is all simply a matter
      * of delegating calls and the routine does no real work itself.
-     *
      * @throws SQLException if there was a problem connecting to the data source.
      * @throws BuilderException if there was any other kind of problem.
      */

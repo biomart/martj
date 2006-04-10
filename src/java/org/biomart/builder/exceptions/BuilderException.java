@@ -1,6 +1,5 @@
 /*
  * BuilderException.java
- *
  * Created on 23 March 2006, 15:27
  */
 
@@ -25,8 +24,7 @@
 package org.biomart.builder.exceptions;
 
 /**
- * This is the base {@link Exception} for all MartBuilder exceptions. 
- *
+ * This is the base {@link Exception} for all MartBuilder exceptions.
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.1, 23rd March 2006
  * @since 0.1
@@ -39,7 +37,7 @@ public class BuilderException extends Exception {
     public BuilderException() {
         super();
     }
-        
+    
     /**
      * Constructs an instance of <code>BuilderException</code> with the specified detail message.
      * @param msg the detail message.
@@ -47,7 +45,7 @@ public class BuilderException extends Exception {
     public BuilderException(String msg) {
         super(msg);
     }
-        
+    
     /**
      * Constructs an instance of <code>BuilderException</code> with the specified detail message
      * and cause.
@@ -57,7 +55,7 @@ public class BuilderException extends Exception {
     public BuilderException(String msg, Throwable t) {
         super(msg, t);
     }
-        
+    
     /**
      * Constructs an instance of <code>BuilderException</code> with the specified cause.
      * @param t the underlying cause.

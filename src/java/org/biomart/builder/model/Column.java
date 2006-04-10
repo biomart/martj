@@ -1,6 +1,5 @@
 /*
  * Column.java
- *
  * Created on 23 March 2006, 14:10
  */
 
@@ -26,15 +25,14 @@ package org.biomart.builder.model;
 
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
+import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * <p>A {@link Column} is a simple representation of a column in some {@link Table}.
  * It has a name, and knows which {@link Table} it belongs to, but apart from that knows
  * nothing much else.</p>
- *
  * <p>A {@link GenericColumn} class is provided for ease of implementation. It provides
  * a simple storage/retrieval mechanism for the parent {@link Table} and name.</p>
- *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.3, 4th April 2006
  * @since 0.1
@@ -75,7 +73,6 @@ public interface Column extends Comparable {
         /**
          * This constructor creates a {@link Column} and checks that neither the
          * name nor the parent {@link Table} are null.
-         * 
          * @param name the name of the {@link Column} to create.
          * @param table the parent {@link Table}
          * @throws NullPointerException if either parameter is null.
@@ -85,9 +82,9 @@ public interface Column extends Comparable {
         public GenericColumn(String name, Table table) throws AlreadyExistsException, NullPointerException {
             // Sanity checks
             if (name == null)
-                throw new NullPointerException("Column name cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("columnIsNull"));
             if (table == null)
-                throw new NullPointerException("Parent table cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("tableIsNull"));
             // Remember the values.
             this.name = name;
             this.table = table;
@@ -95,49 +92,42 @@ public interface Column extends Comparable {
             try {
                 table.addColumn(this);
             } catch (AssociationException e) {
-                AssertionError ae = new AssertionError("Table does not equal itself.");
+                AssertionError ae = new AssertionError(BuilderBundle.getString("tableMismatch"));
                 ae.initCause(e);
                 throw ae;
             }
         }
         
         /**
-         * Retrieve the name of this {@link Column}.
-         * @return the name of this {@link Column}.
+         * {@inheritDoc}
          */
         public String getName() {
             return this.name;
         }
         
         /**
-         * Retrieve the parent {@link Table} of this {@link Column}.
-         * @return the parent {@link Table} of this {@link Column}.
+         * {@inheritDoc}
          */
         public Table getTable() {
             return this.table;
         }
         
         /**
-         * Returns the name in the form: <table.toString()>:<column.getName()>
-         * @return the name as described above.
+         * {@inheritDoc}
          */
         public String toString() {
             return this.getTable().toString() + ":" + this.getName();
         }
         
         /**
-         * Displays the hashcode of this object.
-         * @return the hashcode of this object.
+         * {@inheritDoc}
          */
         public int hashCode() {
             return this.toString().hashCode();
         }
         
         /**
-         * Sorts by comparing the toString() output.
-         * @param o the object to compare to.
-         * @return -1 if we are smaller, +1 if we are larger, 0 if we are equal.
-         * @throws ClassCastException if the object o is not a {@link Column}.
+         * {@inheritDoc}
          */
         public int compareTo(Object o) throws ClassCastException {
             Column c = (Column)o;
@@ -145,10 +135,7 @@ public interface Column extends Comparable {
         }
         
         /**
-         * Return true if the toString() output matches.
-         * @param o the object to compare to.
-         * @return true if both are {@link Column}s and the toString() output
-         * matches, otherwise false.
+         * {@inheritDoc}
          */
         public boolean equals(Object o) {
             if (o == null || !(o instanceof Column)) return false;

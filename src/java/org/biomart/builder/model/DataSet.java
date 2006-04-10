@@ -1,6 +1,5 @@
 /*
  * DataSet.java
- *
  * Created on 27 March 2006, 14:24
  */
 
@@ -48,12 +47,12 @@ import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Table.GenericTable;
 import org.biomart.builder.model.TableProvider.GenericTableProvider;
+import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * This is the heart of the whole system, and represents a single data set in a mart.
  * The generic implementation includes the algorithm which flattens tables down into
  * a set of mart tables based on the contents of a {@link Window}.
- *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.8, 7th April 2006
  * @since 0.1
@@ -155,39 +154,39 @@ public interface DataSet extends Comparable, TableProvider {
         }
         
         /**
-         * Returns the {@link Window} this {@link DataSet} is constructed from.
-         * @return the {@link Window} for this {@link DataSet}.
+         * {@inheritDoc}
          */
         public Window getWindow() {
             return this.window;
         }
         
         /**
-         * Returns the {@link DataSetTable} representing the central main table for this {@link DataSet}.
-         * @return the {@link DataSetTable} representing the main table for this {@link DataSet}.
-         * @throws NullPointerException if it could not muster up a main table.
+         * {@inheritDoc}
+         */
+        public String getName() {
+            return this.getWindow().getName();
+        }
+        
+        /**
+         * {@inheritDoc}
          */
         public DataSetTable getMainTable() throws NullPointerException {
             // Sanity check.
             try {
                 if (this.mainTable == null) this.regenerate();
             } catch (Exception e) {
-                NullPointerException npe = new NullPointerException("Unable to regenerate DataSet.");
+                NullPointerException npe = new NullPointerException(BuilderBundle.getString("datasetRegenerationFailed"));
                 npe.initCause(e);
                 throw npe;
             }
             if (this.mainTable == null)
-                throw new NullPointerException("Unable to construct a main table. Does the parent Window have a central table?");
+                throw new NullPointerException(BuilderBundle.getString("mainTableFailed"));
             // Do it.
             return this.mainTable;
         }
         
         /**
-         * Rebuild this {@link DataSet} based on the contents of its parent {@link Window}.
-         * It will attempt to keep any custom names etc. for tables and columns in the regenerated
-         * version where they had been previously specified by the user.
-         * @throws SQLException if there was a problem connecting to the data source.
-         * @throws BuilderException if there was any other kind of problem.
+         * {@inheritDoc}
          */
         public void regenerate() throws SQLException, BuilderException {
             // Clear our set of tables.
@@ -288,7 +287,6 @@ public interface DataSet extends Comparable, TableProvider {
          * linking to/from it. If a linkback relation is supplied between the real table and some parent real table,
          * then a foreign key is created on the data set table linking it to the primary key of the dataset equivalent
          * of the real parent table in the relation.
-         *
          * @param dsTableType the dsTableType of table to create.
          * @param realTable the original table to transform.
          * @param ignoredRelations the set of relations to ignore during transformation. If null, taken as empty.
@@ -301,9 +299,9 @@ public interface DataSet extends Comparable, TableProvider {
         private DataSetTable constructTable(DataSetTableType dsTableType, Table realTable, Set ignoredRelations, Relation linkbackRelation) throws BuilderException, NullPointerException {
             // Sanity check.
             if (dsTableType == null)
-                throw new NullPointerException("Table type cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("tableTypeIsNull"));
             if (realTable == null)
-                throw new NullPointerException("Source table cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("tableIsNull"));
             // Sensible defaults.
             if (ignoredRelations == null)
                 ignoredRelations = new HashSet();
@@ -325,7 +323,7 @@ public interface DataSet extends Comparable, TableProvider {
             // Add table provider partition column if required.
             DataSetColumn tblProvCol=null;
             if (realTable.getTableProvider() instanceof PartitionedTableProvider) {
-                tblProvCol = new TableProviderNameColumn("__tblprov", datasetTable);
+                tblProvCol = new TableProviderNameColumn(BuilderBundle.getString("tblprovColumnName"), datasetTable);
                 // Only add to PK if PK is not empty, as otherwise will introduce a PK where none previously existed.
                 if (!constructedPKColumns.isEmpty()) constructedPKColumns.add(tblProvCol);
             }
@@ -350,8 +348,8 @@ public interface DataSet extends Comparable, TableProvider {
                         Column parentRealTableColumn = ((WrappedColumn)parentDatasetTableColumn).getWrappedColumn();
                         if (parentDatasetTableColumn.getUnderlyingRelation()!=null) {
                             // If real column not obtained directly from original main table, ie. is from another table or a copy
-                            // of the main table obtained by linking to itself via some other route, create child column for it 
-                            // add it to child table PK. We test for where the column came from by looking at its providing 
+                            // of the main table obtained by linking to itself via some other route, create child column for it
+                            // add it to child table PK. We test for where the column came from by looking at its providing
                             // relation - if null, then it was on the original table, if not null, then it came from somewhere else.
                             constructedFKColumn = new WrappedColumn(parentRealTableColumn, datasetTable, null);
                             constructedPKColumns.add(constructedFKColumn);
@@ -367,13 +365,13 @@ public interface DataSet extends Comparable, TableProvider {
                         constructedFKColumn = tblProvCol;
                     } else {
                         // Else, can'table handle.
-                        throw new AssertionError("Cannot handle non-Wrapped non-TableProviderName columns in foreign keys.");
+                        throw new AssertionError(BuilderBundle.getString("unknownColumnTypeInFK", parentDatasetTableColumn.getClass().getName()));
                     }
                     
                     // Set the FK column name to match the parent PK column name with "_key" appended
                     // (naming convention requirement), but only append that extra bit if parent doesn't already have it.
                     String candidateFKColName = parentDatasetTableColumn.getName();
-                    if (!candidateFKColName.endsWith("_key")) candidateFKColName += "_key";
+                    if (!candidateFKColName.endsWith(BuilderBundle.getString("fkSuffix"))) candidateFKColName += BuilderBundle.getString("fkSuffix");
                     constructedFKColumn.setName(candidateFKColName);
                     
                     // Add child column to child FK
@@ -386,7 +384,7 @@ public interface DataSet extends Comparable, TableProvider {
                     datasetTable.addForeignKey(newFK);
                     // Create the relation.
                     new GenericRelation(parentDatasetTable.getPrimaryKey(), newFK, Cardinality.MANY);
-                } else throw new AssertionError("Foreign key expected but has no columns.");
+                } else throw new AssertionError(BuilderBundle.getString("emptyFK"));
             }
             
             // Create the primary key on it.
@@ -411,17 +409,17 @@ public interface DataSet extends Comparable, TableProvider {
         private void transformTable(DataSetTable datasetTable, Table realTable, Set ignoredRelations, List relationsFollowed, List constructedPKColumns, Set constructedColumns) throws NullPointerException, AlreadyExistsException {
             // Sanity check.
             if (datasetTable == null)
-                throw new NullPointerException("Table cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("tableIsNull"));
             if (realTable == null)
-                throw new NullPointerException("Source table cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("tableIsNull"));
             if (ignoredRelations == null)
-                throw new NullPointerException("Ignore relations cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("ignoreRelationsIsNull"));
             if (relationsFollowed == null)
-                throw new NullPointerException("Relations list cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("relationsIsNull"));
             if (constructedPKColumns == null)
-                throw new NullPointerException("Primary key columns cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("columnsIsNull"));
             if (constructedColumns == null)
-                throw new NullPointerException("Columns cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("columnsIsNull"));
             
             // Find all relations from source table.
             // Additionally, find all columns in all keys with non-ignored relations. Exclude them,
@@ -480,9 +478,9 @@ public interface DataSet extends Comparable, TableProvider {
                 if (realTableRelSourceKey instanceof PrimaryKey && this.getWindow().getConcatOnlyRelations().contains(r)) {
                     // If concat-only and realTable is at primary key end of relation, concat it
                     try {
-                        new ConcatRelationColumn("__concat_" + realTableRelTargetTable.getName(), datasetTable, r);
+                        new ConcatRelationColumn(BuilderBundle.getString("concatColumnPrefix") + realTableRelTargetTable.getName(), datasetTable, r);
                     } catch (AssociationException e) {
-                        AssertionError ae = new AssertionError("Table does not equal itself.");
+                        AssertionError ae = new AssertionError(BuilderBundle.getString("tableMismatch"));
                         ae.initCause(e);
                         throw ae;
                     }
@@ -494,120 +492,61 @@ public interface DataSet extends Comparable, TableProvider {
         }
         
         /**
-         * Sets the {@link MartConstructor} this {@link DataSet} will be built by.
-         *
-         * @param martConstructor the {@link MartConstructor} for this {@link DataSet}.
-         * @throws NullPointerException if the parameter is null.
+         * {@inheritDoc}
          */
         public void setMartConstructor(MartConstructor martConstructor) throws NullPointerException {
             // Sanity check.
             if (martConstructor == null)
-                throw new NullPointerException("Mart constructor cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("martConstructorIsNull"));
             // Do it.
             this.martConstructor = martConstructor;
         }
         
         /**
-         * Returns the {@link MartConstructor} this {@link DataSet} will be built by.
-         * @return the {@link MartConstructor} for this {@link DataSet}.
+         * {@inheritDoc}
          */
         public MartConstructor getMartConstructor() {
             return this.martConstructor;
         }
         
         /**
-         * Sets the {@link DataSetOptimiserType} this {@link DataSet} will be optimised with.
-         * @param optimiser the {@link DataSetOptimiserType} for this {@link DataSet}.
-         * @throws NullPointerException if the parameter is null.
+         * {@inheritDoc}
          */
         public void setDataSetOptimiserType(DataSetOptimiserType optimiser) throws NullPointerException {
             // Sanity check.
             if (optimiser == null)
-                throw new NullPointerException("Optimiser cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("optimiserIsNull"));
             // Do it.
             this.optimiser = optimiser;
         }
         
         /**
-         * Returns the {@link DataSetOptimiserType} this {@link DataSet} will be optimised with.
-         * @return the {@link DataSetOptimiserType} for this {@link DataSet}.
+         * {@inheritDoc}
          */
         public DataSetOptimiserType getDataSetOptimiserType() {
             return this.optimiser;
         }
         
         /**
-         * Request that the mart for this dataset be constructed now.
-         * @throws SQLException if there was any data source error during
-         * mart construction.
-         * @throws BuilderException if there was any other kind of error in the
-         * mart construction process.
+         * {@inheritDoc}
          */
         public void constructMart() throws BuilderException, SQLException {
             // Sanity check.
             if (this.martConstructor == null)
-                throw new BuilderException("Cannot construct mart as no mart constructor has been specified.");
+                throw new BuilderException(BuilderBundle.getString("martConstructorMissing"));
             // Do it.
             this.martConstructor.constructMart(this);
         }
         
         /**
-         * Adds a {@link Table} to this provider. The table must not be null, and
-         * must not already exist (ie. with the same name). The table must be an
-         * instance of {@link DataSetTable}.
-         *
-         * @param table the {@link Table} to add.
-         * @throws AlreadyExistsException if another one with the same name already exists.
-         * @throws AssociationException if the table doesn'table belong to this provider or is
-         * not a {@link DataSetTable}.
-         * @throws NullPointerException if the table is null.
+         * {@inheritDoc}
          */
         public void addTable(Table table) throws AlreadyExistsException, AssociationException, NullPointerException {
             // Sanity check.
             if (!(table instanceof DataSetTable))
-                throw new AssociationException("Table does not belong to this provider.");
+                throw new AssociationException(BuilderBundle.getString("tableTblProvMismatch"));
             // Do it.
             super.addTable(table);
-        }
-        
-        /**
-         * Displays the name of this {@link DataSet} object. The name is the same as the
-         * parent {@link Window}.
-         * @return the name of this {@link DataSet} object.
-         */
-        public String toString() {
-            return this.getWindow().getName();
-        }
-        
-        /**
-         * Displays the hashcode of this object.
-         * @return the hashcode of this object.
-         */
-        public int hashCode() {
-            return this.toString().hashCode();
-        }
-        
-        /**
-         * Sorts by comparing the toString() output.
-         * @param o the object to compare to.
-         * @return -1 if we are smaller, +1 if we are larger, 0 if we are equal.
-         * @throws ClassCastException if the object o is not a {@link DataSet}.
-         */
-        public int compareTo(Object o) throws ClassCastException {
-            DataSet d = (DataSet)o;
-            return this.toString().compareTo(d.toString());
-        }
-        
-        /**
-         * Return true if the toString()s are identical.
-         * @param o the object to compare to.
-         * @return true if the toString()s match and both objects are {@link DataSet}s,
-         * otherwise false.
-         */
-        public boolean equals(Object o) {
-            if (o==null || !(o instanceof DataSet)) return false;
-            DataSet d = (DataSet)o;
-            return d.toString().equals(this.toString());
         }
     }
     
@@ -633,7 +572,6 @@ public interface DataSet extends Comparable, TableProvider {
          * The constructor calls the parent {@link GenericTable} constructor. It uses a
          * {@link DataSetTableProvider} as a parent for itself. You must also supply a type that
          * describes this as a main table, dimension table, etc.
-         *
          * @param name the table name.
          * @param ds the {@link DataSet} to hold this table in.
          * @param type the {@link DataSetTableType} that best describes this table.
@@ -646,7 +584,7 @@ public interface DataSet extends Comparable, TableProvider {
             super(generateAlias(name, ds), ds);
             // Sanity check.
             if (type == null)
-                throw new NullPointerException("Table type cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("tableTypeIsNull"));
             // Do the work.
             this.type = type;
         }
@@ -655,7 +593,6 @@ public interface DataSet extends Comparable, TableProvider {
          * Internal method that generates a safe alias/name for a table. The first try is
          * always the original table name, followed by attempts with an underscore and a
          * sequence number appended.
-         *
          * @param name the first name to try.
          * @param ds the {@link DataSet} that this table is being added to.
          * @return the result.
@@ -664,9 +601,9 @@ public interface DataSet extends Comparable, TableProvider {
         protected static String generateAlias(String name, DataSet ds) throws NullPointerException {
             // Sanity check.
             if (name == null)
-                throw new NullPointerException("Table name cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
             if (ds == null)
-                throw new NullPointerException("Parent dataset cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("datasetIsNull"));
             // Do it.
             String alias = name;
             int aliasNumber = 2;
@@ -687,7 +624,6 @@ public interface DataSet extends Comparable, TableProvider {
         
         /**
          * Sets the list of relations used to construct this table.
-         *
          * @param relations the list of relations of this table. May be empty but never null.
          * @throws NullPointerException if the list was null.
          * @throws IllegalArgumentException if the list wasn'table a list of Key/Relation pairs.
@@ -695,13 +631,13 @@ public interface DataSet extends Comparable, TableProvider {
         public void setUnderlyingRelations(List relations) throws NullPointerException, IllegalArgumentException {
             // Sanity check.
             if (relations == null)
-                throw new NullPointerException("Relations list cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("relationsIsNull"));
             // Check the relations and save them.
             this.underlyingRelations.clear();
             for (Iterator i = relations.iterator(); i.hasNext(); ) {
                 Object o = i.next();
                 if (o == null || !(o instanceof Relation))
-                    throw new IllegalArgumentException("Relations must be only Relation instances, they cannot be null or anything else.");
+                    throw new IllegalArgumentException(BuilderBundle.getString("relationNotRelation"));
                 this.underlyingRelations.add((Relation)o);
             }
         }
@@ -715,42 +651,24 @@ public interface DataSet extends Comparable, TableProvider {
         }
         
         /**
-         * <p>Attemps to add a {@link Column} to this table. The {@link Column} will already
-         * have had it's {@link Table} parameter set to match, otherwise an
-         * {@link IllegalArgumentException} will be thrown. That exception will also get thrown
-         * if the {@link Column} has the same name as an existing one on this table.</p>
-         *
+         * {@inheritDoc}
          * <p>{@link DataSetTable}s insist that all columns are {@link DataSetColumn}s.</p>
-         *
-         * @param column the {@link Column} to add, which must be a {@link DataSetColumn}..
-         * @throws AlreadyExistsException if the {@link Column} name has already been used on
-         * this {@link Table}.
-         * @throws AssociationException if the {@link Table} parameter of the {@link Column}
-         * does not match.
-         * @throws NullPointerException if the {@link Column} object is null.
          */
         public void addColumn(Column column) throws AlreadyExistsException, AssociationException, NullPointerException {
             // Sanity check.
             if (!(column instanceof DataSetColumn))
-                throw new AssociationException("Column must be a DataSetColumn to be added to a DataSetTable.");
+                throw new AssociationException(BuilderBundle.getString("columnNotDatasetColumn"));
             // Do the work.
             super.addColumn(column);
         }
         
         /**
-         * <p>Convenience method that creates and adds a {@link Column} to this {@link Table}.
-         * If a {@link Column} with the same name already exists an exception will be thrown.</p>
-         *
+         * {@inheritDoc}
          * <p>This implementation does not allow columns to be directly created. An
          * AssertionError will be thrown if this method is called.</p>
-         *
-         * @param name the name of the {@link Column} to create and add.
-         * @throws AlreadyExistsException if a {@link Column} with the same name already
-         * exists in this {@link Table}.
-         * @throws NullPointerException if the name argument is null.
          */
         public void createColumn(String name) throws AlreadyExistsException, NullPointerException {
-            throw new AssertionError("Columns cannot be created on a DataSetTable.");
+            throw new AssertionError(BuilderBundle.getString("datasetTableCreateColumnReject"));
         }
         
         /**
@@ -758,7 +676,6 @@ public interface DataSet extends Comparable, TableProvider {
          * any sense to them. Use this method to do just that. It will check first to see if the proposed
          * name has already been used in the data set {@link TableProvider}. If it has, an AlreadyExistsException
          * will be thrown, otherwise the change will be made. The new name must not be null.
-         *
          * @param name the new name for the table.
          * @throws AlreadyExistsException if a {@link DataSetTable} already exists with
          * that name.
@@ -767,9 +684,9 @@ public interface DataSet extends Comparable, TableProvider {
         public void setName(String name) throws NullPointerException, AlreadyExistsException {
             // Sanity check.
             if (name==null)
-                throw new NullPointerException("New name cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
             if (this.getTableProvider().getTableByName(name)!=null)
-                throw new AlreadyExistsException("A table with that name already exists in this dataset.", name);
+                throw new AlreadyExistsException(BuilderBundle.getString("nameAlreadyExists"), name);
             // Do it.
             this.name = name;
         }
@@ -806,7 +723,6 @@ public interface DataSet extends Comparable, TableProvider {
         /**
          * This constructor gives the column a name and checks that the
          * parent {@link Table} is not null.
-         *
          * @param name the name to give this column.
          * @param dsTable the parent {@link Table}
          * @param underlyingRelation the {@link Relation} that provided this column. The
@@ -828,7 +744,6 @@ public interface DataSet extends Comparable, TableProvider {
          * any sense to them. Use this method to do just that. It will check first to see if the proposed
          * name has already been used on this {@link DataSetTable}. If it has, an AlreadyExistsException
          * will be thrown, otherwise the change will be made. The new name must not be null.
-         *
          * @param name the new name for the column.
          * @throws AlreadyExistsException if the {@link DataSetTable} already has a column with
          * that name.
@@ -837,9 +752,9 @@ public interface DataSet extends Comparable, TableProvider {
         public void setName(String name) throws NullPointerException, AlreadyExistsException {
             // Sanity check.
             if (name == null)
-                throw new NullPointerException("New name cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
             if (table.getColumnByName(name) != null)
-                throw new AlreadyExistsException("A column with that name already exists on this table.", name);
+                throw new AlreadyExistsException(BuilderBundle.getString("nameAlreadyExists"), name);
             // Do it.
             this.name = name;
         }
@@ -848,7 +763,6 @@ public interface DataSet extends Comparable, TableProvider {
          * Internal method that generates a safe alias/name for a column. The first try is
          * always the original column name, followed by attempts with an underscore and a
          * sequence number appended.
-         *
          * @param name the first name to try.
          * @param dsTable the {@link DataSetTable} that this column is being added to.
          * @return the result.
@@ -857,9 +771,9 @@ public interface DataSet extends Comparable, TableProvider {
         protected static String generateAlias(String name, DataSetTable dsTable) throws NullPointerException {
             // Sanity check.
             if (name == null)
-                throw new NullPointerException("Column name cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
             if (dsTable == null)
-                throw new NullPointerException("Parent table cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("tableIsNull"));
             // Do it.
             String alias = name;
             int aliasNumber = 2;
@@ -896,7 +810,6 @@ public interface DataSet extends Comparable, TableProvider {
              * This constructor wraps an existing {@link Column} and checks that the
              * parent {@link Table} is not null. It also assigns an alias to the wrapped {@link Column}
              * if another one with the same name already exists on this table.
-             *
              * @param column the {@link Column} to wrap.
              * @param dsTable the parent {@link Table}
              * @param underlyingRelation the {@link Relation} that provided this column. The
@@ -931,7 +844,6 @@ public interface DataSet extends Comparable, TableProvider {
             /**
              * The constructor takes a name for this column-to-be, and the {@link DataSetTable}
              * on which it is to be constructed, and the {@link Relation} it represents.
-             *
              * @param name the name to give this column.
              * @param dsTable the dsTable {@link Table}.
              * @param underlyingRelation the {@link Relation} that provided this column. The
@@ -949,7 +861,7 @@ public interface DataSet extends Comparable, TableProvider {
                 super(name, dsTable, concatRelation);
                 // Sanity check.
                 if (!((DataSet)dsTable.getTableProvider()).getWindow().getConcatOnlyRelations().contains(concatRelation))
-                    throw new AssociationException("This relation is not a concat relation.");
+                    throw new AssociationException(BuilderBundle.getString("relationNotConcatRelation"));
             }
         }
         
@@ -961,7 +873,6 @@ public interface DataSet extends Comparable, TableProvider {
             /**
              * This constructor gives the column a name and checks that the
              * parent {@link Table} is not null. The underlying relation is not required.
-             *
              * @param name the name to give this column.
              * @param dsTable the parent {@link Table}
              * @throws AlreadyExistsException if the {@link DataSetTable} already has a column with
@@ -1021,26 +932,21 @@ public interface DataSet extends Comparable, TableProvider {
         }
         
         /**
-         * Displays the name of this {@link DataSetTableType} object.
-         * @return the name of this {@link DataSetTableType} object.
+         * {@inheritDoc}
          */
         public String toString() {
             return this.getName();
         }
         
         /**
-         * Displays the hashcode of this object.
-         * @return the hashcode of this object.
+         * {@inheritDoc}
          */
         public int hashCode() {
             return this.toString().hashCode();
         }
         
         /**
-         * Sorts by comparing the toString() output.
-         * @param o the object to compare to.
-         * @return -1 if we are smaller, +1 if we are larger, 0 if we are equal.
-         * @throws ClassCastException if the object o is not a {@link DataSetTableType}.
+         * {@inheritDoc}
          */
         public int compareTo(Object o) throws ClassCastException {
             DataSetTableType c = (DataSetTableType)o;
@@ -1048,10 +954,7 @@ public interface DataSet extends Comparable, TableProvider {
         }
         
         /**
-         * Return true if the objects are identical.
-         * @param o the object to compare to.
-         * @return true if the names are the same and both are {@link DataSetTableType} instances,
-         * otherwise false.
+         * {@inheritDoc}
          */
         public boolean equals(Object o) {
             // We are dealing with singletons so can use == happily.
@@ -1114,26 +1017,21 @@ public interface DataSet extends Comparable, TableProvider {
         }
         
         /**
-         * Displays the name of this {@link DataSetOptimiserType} object.
-         * @return the name of this {@link DataSetOptimiserType} object.
+         * {@inheritDoc}
          */
         public String toString() {
             return this.getName();
         }
         
         /**
-         * Displays the hashcode of this object.
-         * @return the hashcode of this object.
+         * {@inheritDoc}
          */
         public int hashCode() {
             return this.toString().hashCode();
         }
         
         /**
-         * Sorts by comparing the toString() output.
-         * @param o the object to compare to.
-         * @return -1 if we are smaller, +1 if we are larger, 0 if we are equal.
-         * @throws ClassCastException if the object o is not a {@link DataSetOptimiserType}.
+         * {@inheritDoc}
          */
         public int compareTo(Object o) throws ClassCastException {
             DataSetOptimiserType c = (DataSetOptimiserType)o;
@@ -1141,10 +1039,7 @@ public interface DataSet extends Comparable, TableProvider {
         }
         
         /**
-         * Return true if the objects are identical.
-         * @param o the object to compare to.
-         * @return true if the names are the same and both are {@link DataSetOptimiserType} instances,
-         * otherwise false.
+         * {@inheritDoc}
          */
         public boolean equals(Object o) {
             // We are dealing with singletons so can use == happily.

@@ -1,6 +1,5 @@
 /*
  * Key.java
- *
  * Created on 23 March 2006, 15:03
  */
 
@@ -31,20 +30,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.biomart.builder.exceptions.AssociationException;
+import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * <p>The {@link Key} interface is core to the way {@link Table}s get associated. They
  * are involved in {@link Relation}s which link {@link Table}s together in various ways, and
  * provide information about which {@link Column}s at each end correspond.</p>
- *
  * <p>The {@link GenericSimpleKey} and {@link GenericCompoundKey} implementations are
  * there to provide the basics for more complex {@link Key}s. They keep track of which
  * {@link Column}s are involved, and which {@link Relation}s refer to this {@link Key}, but
  * not much more. {@link GenericUnionKey} is much the same.</p>
- *
  * <p>Unless otherwise specified, all {@link Key}s are created with a default
  * {@link ComponentStatus} of INFERRED.</p>
- *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.5, 4th April 2006
  * @since 0.1
@@ -66,7 +63,6 @@ public interface Key extends Comparable {
     /**
      * Sets the {@link ComponentStatus} of this {@link Key}. The default value,
      * unless otherwise specified, is INFERRED.
-     * 
      * @param status the new {@link ComponentStatus} of this {@link Key}.
      */
     public void setStatus(ComponentStatus status);
@@ -91,7 +87,6 @@ public interface Key extends Comparable {
      * Adds a particular {@link Relation} to the set this {@link Key} is involved in.
      * It checks first to make sure it is actually involved. It quietly ignores it if
      * it already knows about this {@link Relation}.
-     * 
      * @param relation the {@link Relation} to add to this {@link Key}.
      * @throws AssociationException if it is not actually involved in the given
      * {@link Relation} in any way.
@@ -102,7 +97,6 @@ public interface Key extends Comparable {
     /**
      * Removes a particular {@link Relation} from the set this {@link Key} is involved in.
      * It quietly ignores it if it is not involved or doesn't know about this {@link Relation}.
-     * 
      * @param relation the {@link Relation} to remove from this {@link Key}.
      * @throws NullPointerException if the {@link Relation} argument was null.
      */
@@ -185,7 +179,6 @@ public interface Key extends Comparable {
          * the {@link Key} will refer to them in future. The list of {@link Column}s cannot be changed
          * outside this constructor. Nulls inside the list are ignored, but if it finds any non-{@link Column}
          * objects in the list an exception will be thrown. The list must contain at least one {@link Column}.
-         * 
          * @param columns the {@link List} of {@link Column}s to form the key over.
          * @throws NullPointerException if the input list or table is null.
          * @throws IllegalArgumentException if the input list contains any non-null non-{@link Column}
@@ -198,28 +191,27 @@ public interface Key extends Comparable {
             this();
             // Sanity check.
             if (columns == null)
-                throw new NullPointerException("Key must be formed over a non-null set of columns.");
+                throw new NullPointerException(BuilderBundle.getString("columnsIsNull"));
             // Do the work.
             for (Iterator i = columns.iterator(); i.hasNext(); ) {
                 Object o = i.next();
                 if (o == null) continue;
                 if (!(o instanceof Column))
-                    throw new IllegalArgumentException("List of columns must only contain Column instances.");
+                    throw new IllegalArgumentException(BuilderBundle.getString("columnNotColumn"));
                 Column c = (Column)o;
                 if (this.table == null) this.table = c.getTable();
                 if (!c.getTable().equals(this.table))
-                    throw new AssociationException("All columns must belong to the same table.");
+                    throw new AssociationException(BuilderBundle.getString("multiTableColumns"));
                 this.columns.add(c);
             }
             // Final sanity check.
             if (this.columns.size() < 1)
-                throw new IllegalArgumentException("List of columns must contain at least one Column instance.");
+                throw new IllegalArgumentException(BuilderBundle.getString("columnsIsEmpty"));
         }
         
         /**
          * The constructor constructs a {@link Key} over a single {@link Column}. The {@link Column}
          * cannot be changed outside this constructor.
-         * 
          * @param column the {@link Column} to form the key over.
          * @throws NullPointerException if the input {@link Column} is null.
          */
@@ -228,20 +220,18 @@ public interface Key extends Comparable {
             this();
             // Sanity check.
             if (column == null)
-                throw new NullPointerException("Column cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("columnIsNull"));
             // Do the work.
             this.columns.add(column);
             this.table = column.getTable();
         }
         
         /**
-         * Returns the name of this key. The name is the concatenation
-         * of all the columns, contained in curly brackets and comma separated.
-         * @return the name of this {@link Key}.
+         * {@inheritDoc}
          */
         public String getName() {
             StringBuffer sb = new StringBuffer();
-            sb.append(this.getTable().getName());
+            sb.append(this.getTable().toString());
             sb.append("{");
             for (Iterator i = this.columns.iterator(); i.hasNext(); ) {
                 Column c = (Column)i.next();
@@ -253,44 +243,33 @@ public interface Key extends Comparable {
         }
         
         /**
-         * Returns the {@link ComponentStatus} of this {@link Key}. The default value,
-         * unless otherwise specified, is INFERRED.
-         * @return the {@link ComponentStatus} of this {@link Key}.
+         * {@inheritDoc}
          */
         public ComponentStatus getStatus() {
             return this.status;
         }
         
         /**
-         * Sets the {@link ComponentStatus} of this {@link Key}. The default value,
-         * unless otherwise specified, is INFERRED.
-         * 
-         * @param status the new {@link ComponentStatus} of this {@link Key}.
+         * {@inheritDoc}
          */
         public void setStatus(ComponentStatus status) {
             this.status = status;
         }
         
         /**
-         * Returns all {@link Relation}s this {@link Key} is involved in. The set may be
-         * empty but it will never be null.
-         * @return the set of all {@link Relation}s this {@link Key} is involved in.
+         * {@inheritDoc}
          */
         public Collection getRelations() {
             return this.relations.values();
         }
         
         /**
-         * Returns the {@link Relation} on this {@link Key} with the given name. It may return
-         * null if not found.  
-         * @param name the name to look for.
-         * @return the namedl {@link Relation} on this {@link Key} if found, otherwise null.
-         * @throws NullPointerException if the name given was null.
+         * {@inheritDoc}
          */
         public Relation getRelationByName(String name) throws NullPointerException {
             // Sanity check.
             if (name == null)
-                throw new NullPointerException("Name cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
             // Do we have it?
             if (!this.relations.containsKey(name)) return null;
             // Return it.
@@ -298,22 +277,15 @@ public interface Key extends Comparable {
         }
         
         /**
-         * Adds a particular {@link Relation} to the set this {@link Key} is involved in.
-         * It checks first to make sure it is actually involved. It quietly ignores it if
-         * it already knows about this {@link Relation}.
-         * 
-         * @param relation the {@link Relation} to add to this {@link Key}.
-         * @throws AssociationException if it is not actually involved in the given
-         * {@link Relation} in any way.
-         * @throws NullPointerException if the {@link Relation} argument was null.
+         * {@inheritDoc}
          */
         public void addRelation(Relation relation) throws AssociationException, NullPointerException {
             // Sanity check.
             if (relation == null)
-                throw new NullPointerException("Relation to be added cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("relationIsNull"));
             // Does it refer to us?
             if (!(relation.getForeignKey() == this || relation.getPrimaryKey() == this))
-                throw new AssociationException("Relation does not refer to this key.");
+                throw new AssociationException(BuilderBundle.getString("relationNotOfThisKey"));
             // Work out its name.
             String name = relation.getName();
             // Quietly ignore if we've already got it.
@@ -323,16 +295,12 @@ public interface Key extends Comparable {
         }
         
         /**
-         * Removes a particular {@link Relation} from the set this {@link Key} is involved in.
-         * It quietly ignores it if it is not involved or doesn't know about this {@link Relation}.
-         * 
-         * @param relation the {@link Relation} to remove from this {@link Key}.
-         * @throws NullPointerException if the {@link Relation} argument was null.
+         * {@inheritDoc}
          */
         public void removeRelation(Relation relation) throws NullPointerException {
             // Sanity check.
             if (relation == null)
-                throw new NullPointerException("Relation to be removed cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("relationIsNull"));
             // Work out its name.
             String name = relation.getName();
             // Quietly ignore if we dont' know about iit.
@@ -342,35 +310,28 @@ public interface Key extends Comparable {
         }
         
         /**
-         * Returns the {@link Table} this {@link Key} is formed over.
-         * @return the {@link Table} this {@link Key} involves.
+         * {@inheritDoc}
          */
         public Table getTable() {
             return this.table;
         }
         
         /**
-         * Returns the list of {@link Column}s this {@link Key} is formed over. It will always
-         * return a list with at least one entry in it.
-         * @return the list of {@link Column}s this {@link Key} involves.
+         * {@inheritDoc}
          */
         public List getColumns() {
             return this.columns;
         }
         
         /**
-         * Counts the {@link Column}s this {@link Key} is formed over. It will always
-         * return values > = 1.
-         * @return the number of {@link Column}s this {@link Key} involves.
+         * {@inheritDoc}
          */
         public int countColumns() {
             return this.getColumns().size();
         }
         
         /**
-         * Deletes this {@link Key}, and also deletes all {@link Relation}s that use it.
-         * If it was a {@link PrimaryKey} it will remove itself from the associated
-         * {@link Table}, and likewise if it was a {@link ForeignKey}.
+         * {@inheritDoc}
          */
         public void destroy() {
             // Remove all the relations.
@@ -383,38 +344,33 @@ public interface Key extends Comparable {
                 try {
                     this.getTable().setPrimaryKey(null);
                 } catch (AssociationException e) {
-                    AssertionError ae = new AssertionError("Primary key could not be set to null.");
+                    AssertionError ae = new AssertionError(BuilderBundle.getString("pkNotNullable"));
                     ae.initCause(e);
                     throw ae;
                 }
             } else if (this instanceof ForeignKey) {
                 this.getTable().removeForeignKey((ForeignKey)this);
             } else {
-                throw new AssertionError("Unknown kind of key.");
+                throw new AssertionError(BuilderBundle.getString("unknownKey", this.getClass().getName()));
             }
         }
         
         /**
-         * Displays the name of this {@link Key} object from getName().
-         * @return the name of this {@link Key} object.
+         * {@inheritDoc}
          */
         public String toString() {
             return this.getName();
         }
         
         /**
-         * Displays the hashcode of this object.
-         * @return the hashcode of this object.
+         * {@inheritDoc}
          */
         public int hashCode() {
             return this.toString().hashCode();
         }
         
         /**
-         * Sorts by comparing the toString() output.
-         * @param o the object to compare to.
-         * @return -1 if we are smaller, +1 if we are larger, 0 if we are equal.
-         * @throws ClassCastException if the object o is not a {@link Key}.
+         * {@inheritDoc}
          */
         public int compareTo(Object o) throws ClassCastException {
             Key k = (Key)o;
@@ -422,10 +378,7 @@ public interface Key extends Comparable {
         }
         
         /**
-         * Return true if the toString()s are identical.
-         * @param o the object to compare to.
-         * @return true if the toString()s match and both objects are {@link Key}s,
-         * otherwise false.
+         * {@inheritDoc}
          */
         public boolean equals(Object o) {
             if (o == null || !(o instanceof Key)) return false;
@@ -440,7 +393,6 @@ public interface Key extends Comparable {
     public class GenericPrimaryKey extends GenericKey implements PrimaryKey {
         /**
          * The constructor passes on all its work to the {@link GenericKey} constructor.
-         * 
          * @param columns the {@link List} of {@link Column}s to form the key over.
          * @throws NullPointerException if the input list is null.
          * @throws IllegalArgumentException if the input list contains any non-null non-{@link Column}
@@ -453,21 +405,18 @@ public interface Key extends Comparable {
             try {
                 this.getTable().setPrimaryKey(this);
             } catch (AssociationException e) {
-                AssertionError ae = new AssertionError("Primary key table does not match itself.");
+                AssertionError ae = new AssertionError(BuilderBundle.getString("tableMismatch"));
                 ae.initCause(e);
                 throw ae;
             }
         }
         
         /**
-         * Returns the name of this key. The name is the concatenation
-         * of all the columns, contained in curly brackets and comma separated, 
-         * prefixed with "PK_".
-         * @return the name of this {@link Key}.
+         * {@inheritDoc}
          */
         public String getName() {
             String supername = super.getName();
-            return "PK_" + supername;
+            return BuilderBundle.getString("pkPrefix") + supername;
         }
     }
     
@@ -478,7 +427,6 @@ public interface Key extends Comparable {
         /**
          * The constructor passes on all its work to the {@link GenericKey} constructor. It then
          * adds itself to the set of {@link ForeignKey}s on the parent {@link Table}.
-         * 
          * @param columns the {@link List} of {@link Column}s to form the key over.
          * @throws NullPointerException if the input list is null.
          * @throws IllegalArgumentException if the input list contains any non-null non-{@link Column}
@@ -491,21 +439,18 @@ public interface Key extends Comparable {
             try {
                 this.getTable().addForeignKey(this);
             } catch (AssociationException e) {
-                AssertionError ae = new AssertionError("Foreign key table does not match itself.");
+                AssertionError ae = new AssertionError(BuilderBundle.getString("tableMismatch"));
                 ae.initCause(e);
                 throw ae;
             }
         }
         
         /**
-         * Returns the name of this key. The name is the concatenation
-         * of all the columns, contained in curly brackets and comma separated, 
-         * prefixed with "FK_".
-         * @return the name of this {@link Key}.
+         * {@inheritDoc}
          */
         public String getName() {
             String supername = super.getName();
-            return "FK_" + supername;
+            return BuilderBundle.getString("fkPrefix") + supername;
         }
     }
 }

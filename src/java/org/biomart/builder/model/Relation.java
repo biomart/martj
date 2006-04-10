@@ -1,6 +1,5 @@
 /*
  * Relation.java
- *
  * Created on 23 March 2006, 13:10
  */
 
@@ -29,6 +28,7 @@ import java.util.Map;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.PrimaryKey;
+import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * <p>A {@link Relation} represents the association betwen a {@link PrimaryKey}
@@ -36,11 +36,9 @@ import org.biomart.builder.model.Key.PrimaryKey;
  * {@link Column}s, and the related {@link Column}s must appear
  * in the same order in both {@link Key}s. If they do not, then results may
  * be unpredictable.</p>
- *
  * <p>An {@link GenericRelation} class is provided to form the basic
  * functionality outlined above. Subclasses of {@link GenericRelation}
  * represent different kinds of association between {@link Key}s.</p>
- *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.4, 7th April 2006
  * @since 0.1
@@ -136,7 +134,7 @@ public interface Relation extends Comparable {
         public static Cardinality get(String name) throws NullPointerException {
             // Sanity check.
             if (name == null)
-                throw new NullPointerException("Name cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
             // Convert to upper case.
             name = name.toUpperCase();
             // Do we already have this one?
@@ -161,23 +159,26 @@ public interface Relation extends Comparable {
          * Displays the name of this {@link Cardinality} object.
          * @return the name of this {@link Cardinality} object.
          */
-        public String toString() {
+        public String getName() {
             return this.name;
         }
         
         /**
-         * Displays the hashcode of this object.
-         * @return the hashcode of this object.
+         * {@inheritDoc}
+         */
+        public String toString() {
+            return this.getName();
+        }
+        
+        /**
+         * {@inheritDoc}
          */
         public int hashCode() {
             return this.toString().hashCode();
         }
         
         /**
-         * Sorts by comparing the toString() output.
-         * @param o the object to compare to.
-         * @return -1 if we are smaller, +1 if we are larger, 0 if we are equal.
-         * @throws ClassCastException if the object o is not a {@link Cardinality}.
+         * {@inheritDoc}
          */
         public int compareTo(Object o) throws ClassCastException {
             Cardinality c = (Cardinality)o;
@@ -185,10 +186,7 @@ public interface Relation extends Comparable {
         }
         
         /**
-         * Return true if the objects are identical.
-         * @param o the object to compare to.
-         * @return true if the names are the same and both are {@link Cardinality} instances,
-         * otherwise false.
+         * {@inheritDoc}
          */
         public boolean equals(Object o) {
             // We are dealing with singletons so can use == happily.
@@ -225,7 +223,6 @@ public interface Relation extends Comparable {
          * This constructor tests that both ends of the {@link Relation} have
          * {@link Key</code>s with the same number of <code>Column}s.
          * The default constructor sets the status to INFERRED.
-         *
          * @param primaryKey the source {@link PrimaryKey}.
          * @param foreignKey the target {@link ForeignKey}.
          * @param cardinality the {@link Cardinality} of the {@link ForeignKey}.
@@ -235,11 +232,11 @@ public interface Relation extends Comparable {
         public GenericRelation(PrimaryKey primaryKey, ForeignKey foreignKey, Cardinality cardinality) throws AssociationException, NullPointerException {
             // Sanity checks.
             if (cardinality==null)
-                throw new NullPointerException("The cardinality must not be null.");
+                throw new NullPointerException(BuilderBundle.getString("cardinalityIsNull"));
             if (primaryKey==null || foreignKey==null)
-                throw new NullPointerException("Both primary and foreign Keys must not be null.");
+                throw new NullPointerException(BuilderBundle.getString("keysIsNull"));
             if (primaryKey.countColumns()!=foreignKey.countColumns())
-                throw new AssociationException("Column count in primary and foreign Keys must match.");
+                throw new AssociationException(BuilderBundle.getString("keyColumnCountMismatch"));
             // Remember the keys.
             this.primaryKey = primaryKey;
             this.foreignKey = foreignKey;
@@ -251,10 +248,7 @@ public interface Relation extends Comparable {
         }
         
         /**
-         * Returns the name of this relation. The name is the name of the {@link PrimaryKey} followed
-         * by a colon and the name of the {@link ForeignKey}, followed by a space then an indication of cardinality
-         * in brackets.
-         * @return the name of this {@link Relation}.
+         * {@inheritDoc}
          */
         public String getName() {
             StringBuffer sb = new StringBuffer();
@@ -262,75 +256,63 @@ public interface Relation extends Comparable {
             sb.append(":");
             sb.append(this.getForeignKey().getName());
             sb.append(" (1:");
-            sb.append(this.getFKCardinality().toString());
+            sb.append(this.getFKCardinality().getName());
             sb.append(")");
             return sb.toString();
         }
         
         /**
-         * Returns the {@link ComponentStatus} of this {@link Relation}. The default value,
-         * unless otherwise specified, is INFERRED.
-         * @return the {@link ComponentStatus} of this {@link Relation}.
+         * {@inheritDoc}
          */
         public ComponentStatus getStatus() {
             return this.status;
         }
         
         /**
-         * Sets the {@link ComponentStatus} of this {@link Relation}.
-         * @param status the new {@link ComponentStatus} of this {@link Relation}.
-         * @throws NullPointerException if the new status is null.
+         * {@inheritDoc}
          */
         public void setStatus(ComponentStatus status) throws NullPointerException {
             // Sanity check.
             if (status==null)
-                throw new NullPointerException("Status cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("statusIsNull"));
             // Do it.
             this.status = status;
         }
         
         /**
-         * Returns the {@link PrimaryKey} of this {@link Relationship}.
-         * @return the {@link PrimaryKey}
+         * {@inheritDoc}
          */
         public PrimaryKey getPrimaryKey() {
             return this.primaryKey;
         }
         
         /**
-         * Returns the {@link ForeignKey} of this {@link Relationship}.
-         * @return the {@link ForeignKey}
+         * {@inheritDoc}
          */
         public ForeignKey getForeignKey() {
             return this.foreignKey;
         }
         
         /**
-         * Returns the {@link Cardinality} of the {@link ForeignKey} end
-         * of this {@link Relationship}.
-         * @return the {@link Cardinality}
+         * {@inheritDoc}
          */
         public Cardinality getFKCardinality() {
             return this.cardinality;
         }
         
         /**
-         * Sets the {@link Cardinality} of the {@link ForeignKey} end
-         * of this {@link Relationship}.
-         * @param cardinality the {@link Cardinality}.
-         * @throws NullPointerException if the cardinality was null.
+         * {@inheritDoc}
          */
         public void setFKCardinality(Cardinality cardinality) throws NullPointerException {
             // Sanity check.
             if (cardinality==null)
-                throw new NullPointerException("Cardinality cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("cardinalityIsNull"));
             // Do it.
             this.cardinality = cardinality;
         }
         
         /**
-         * Deconstructs the {@link Relation} by removing references to
-         * itself from the {@link Key}s at both ends.
+         * {@inheritDoc}
          */
         public void destroy() {
             this.getPrimaryKey().removeRelation(this);
@@ -338,26 +320,21 @@ public interface Relation extends Comparable {
         }
         
         /**
-         * Returns the output of getName().
-         * @return the textual representation of this {@link Relation} as outlined above.
+         * {@inheritDoc}
          */
         public String toString() {
             return this.getName();
         }
         
         /**
-         * Displays the hashcode of this object.
-         * @return the hashcode of this object.
+         * {@inheritDoc}
          */
         public int hashCode() {
             return this.toString().hashCode();
         }
         
         /**
-         * Sorts by comparing the toString() output.
-         * @param o the object to compare to.
-         * @return -1 if we are smaller, +1 if we are larger, 0 if we are equal.
-         * @throws ClassCastException if the object o is not a {@link Relation}.
+         * {@inheritDoc}
          */
         public int compareTo(Object o) throws ClassCastException {
             Relation r = (Relation)o;
@@ -365,10 +342,7 @@ public interface Relation extends Comparable {
         }
         
         /**
-         * Return true if the toString()s are identical.
-         * @param o the object to compare to.
-         * @return true if the toString()s match and both objects are {@link Relation}s,
-         * otherwise false.
+         * {@inheritDoc}
          */
         public boolean equals(Object o) {
             if (o == null || !(o instanceof Relation)) return false;

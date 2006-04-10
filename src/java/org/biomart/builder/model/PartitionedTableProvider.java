@@ -1,6 +1,5 @@
 /*
  * PartitionedTableProvider.java
- *
  * Created on 27 March 2006, 11:49
  */
 
@@ -43,20 +42,18 @@ import org.biomart.builder.model.Key.GenericPrimaryKey;
 import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Table.GenericTable;
+import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * <p>A {@link PartitionedTableProvider} represents a collection of {@link TableProvider} objects
  * which all have exactly the same table names and column names. It assigns each of them
  * a name by which they can be referred to later.</p>
- *
  * <p>When generating a mart from this later, the mart will act as though the main table has an
  * extra column containing the names of these partitions, and has been set to partition itself on
  * those values.</p>
- *
  * <p>As the {@link PartitionedTableProvider} is a {@link TableProvider} itself, all operations on it
  * which modify the structure of the tables are passed on to each of its member {@link TableProvider}
  * objects in turn.</p>
- *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.4, 4th April 2006
  * @since 0.1
@@ -85,7 +82,6 @@ public interface PartitionedTableProvider extends TableProvider {
      * it throws an exception to say so. No check is made to see if the new {@link TableProvider}
      * is actually identical to the base one in terms of structure. An exception will be thrown if
      * you try to nest {@link PartitionedTableProvider}s inside other ones.
-     * 
      * @param label the label for the partition this {@link TableProvider} represents.
      * @param tableProvider the {@link TableProvider} to add as a new partition.
      * @throws NullPointerException if the label or the provider are null.
@@ -121,17 +117,10 @@ public interface PartitionedTableProvider extends TableProvider {
         }
         
         /**
-         * <p>Synchronise this {@link TableProvider} with the data source that is
-         * providing its tables. Synchronisation means checking the list of {@link Table}s
-         * available and drop/add any that have changed, then check each {@link Column}
-         * and {@link Key} and {@link Relation} and update those too.</p>
-         *
+         * {@inheritDoc}
          * <p>The partitioned provider simply delegates this call to each of its members in turn.
          * Then the partitioned provider's own list of {@link Table}s is updated to match the contents of the first
          * provider in the list.</p>
-         *
-         * @throws SQLException if there was a problem connecting to the data source.
-         * @throws BuilderException if there was any other kind of problem.
          */
         public void synchronise() throws SQLException, BuilderException {
             // Synchronise.
@@ -193,22 +182,14 @@ public interface PartitionedTableProvider extends TableProvider {
         }
         
         /**
-         * <p>Returns a set of unique values in a given column, which may include null. The
-         * set returned will never be null itself.</p>
-         *
+         * {@inheritDoc}
          * <p>This implementation returns the combination of unique values resulting from
          * delegating the call to all its subordinates.</p>
-         *
-         * @param column the {@link Column} to get unique values for.
-         * @return a set of unique values in a given column.
-         * @throws SQLException if there was any problem loading the values.
-         * @throws NullPointerException if the column was null.
-         * @throws AssociationException if the column doesn't belong to any table in this provider.
          */
         public Collection getUniqueValues(Column column) throws NullPointerException, SQLException, AssociationException {
             // Sanity check.
             if (column == null)
-                throw new NullPointerException("Column cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("columnIsNull"));
             // Do it.
             Set values = new HashSet();
             for (Iterator i = this.getTableProviders().values().iterator(); i.hasNext(); ) {
@@ -220,18 +201,11 @@ public interface PartitionedTableProvider extends TableProvider {
             }
             return values;
         }
-
+        
         /**
-         * <p>Counts the unique values in a given column, which may include null.</p>
-         *
+         * {@inheritDoc}
          * <p>This implementation unfortunately has to read all the data from all the providers
          * before it can work out which ones are unique, which may be very slow.</p>
-         *
-         * @param column the {@link Column} to get unique values for.
-         * @return a count of the unique values in a given column.
-         * @throws AssociationException if the column doesn't belong to us.
-         * @throws SQLException if there was any problem counting the values.
-         * @throws NullPointerException if the column was null.
          */
         public int countUniqueValues(Column column) throws AssociationException, NullPointerException, SQLException {
             return this.getUniqueValues(column).size();
@@ -246,69 +220,49 @@ public interface PartitionedTableProvider extends TableProvider {
         }
         
         /**
-         * Returns the label->provider map of {@link TableProvider} members of this partition. It will
-         * never return null but may return an empty map.
-         * @return the map of {@link TableProvider} options living in the partitions. Each key of the map
-         * is the label for the partition, with the values being the providers themselves..
+         * {@inheritDoc}
          */
         public Map getTableProviders() {
             return this.tableProviders;
         }
         
         /**
-         * Retrieves the {@link TableProvider} with the given label from this partition. If it is not recognised,
-         * an exception is thrown.
-         * @param label the label for the partition provider to retrieve.
-         * @return the matching provider.
-         * @throws NullPointerException if the label is null.
-         * @throws AssociationException if the label is not recognised.
+         * {@inheritDoc}
          */
         public TableProvider getTableProvider(String label) throws NullPointerException, AssociationException {
             // Sanity check.
             if (label == null)
-                throw new NullPointerException("Label cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("labelIsNull"));
             if (!this.tableProviders.containsKey(label))
-                throw new AssociationException("No provider has been registered with that label.");
+                throw new AssociationException(BuilderBundle.getString("labelUnknown"));
             // Do it.
             return (TableProvider)this.tableProviders.get(label);
         }
         
         /**
-         * Adds a {@link TableProvider} to this partition with the given label. If it is already here,
-         * it throws an exception to say so. No check is made to see if the new {@link TableProvider}
-         * is actually identical to the base one in terms of structure. An exception will be thrown if
-         * you try to nest {@link PartitionedTableProvider}s inside other ones.
-         * 
-         * @param label the label for the partition this {@link TableProvider} represents.
-         * @param tableProvider the {@link TableProvider} to add as a new partition.
-         * @throws NullPointerException if the label or the provider are null.
-         * @throws AlreadyExistsException if the provider has already been set as a partition here.
-         * @throws AssociationException if the provider to be added is a {@link PartitionedTableProvider}.
+         * {@inheritDoc}
          */
         public void addTableProvider(String label, TableProvider tableProvider) throws AlreadyExistsException, NullPointerException, AssociationException {
             // Sanity check.
             if (label == null)
-                throw new NullPointerException("Label cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("labelIsNull"));
             if (tableProvider == null)
-                throw new NullPointerException("Table provider cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("tblprovIsNull"));
             if (this.tableProviders.containsKey(label))
-                throw new AlreadyExistsException("A provider has already been registered with that label.", label);
+                throw new AlreadyExistsException(BuilderBundle.getString("labelExists"), label);
             if (tableProvider instanceof PartitionedTableProvider)
-                throw new AssociationException("You cannot nest partitioned table providers within other ones.");
+                throw new AssociationException(BuilderBundle.getString("nestedTblProv"));
             // Do it.
             this.tableProviders.put(label,tableProvider);
         }
         
         /**
-         * Removes the {@link TableProvider} with the given label from this partition. If it is not recognised,
-         * it is quietly ignored.
-         * @param label the label for the partition to remove.
-         * @throws NullPointerException if the label is null.
+         * {@inheritDoc}
          */
         public void removeTableProvider(String label) throws NullPointerException {
             // Sanity check.
             if (label == null)
-                throw new NullPointerException("Label cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("labelIsNull"));
             // Do we need to do it?
             if (!this.tableProviders.containsKey(label)) return;
             // Do it.
@@ -316,9 +270,7 @@ public interface PartitionedTableProvider extends TableProvider {
         }
         
         /**
-         * Displays the name of this {@link PartitionedTableProvider} object. The name is the concatenation
-         * of all the member {@link TableProvider}s, contained in square brackets and comma separated.
-         * @return the name of this {@link PartitionedTableProvider} object.
+         * {@inheritDoc}
          */
         public String toString() {
             StringBuffer sb = new StringBuffer();

@@ -1,6 +1,5 @@
 /*
  * ComponentStatus.java
- *
  * Created on 27 March 2006, 16:23
  */
 
@@ -26,11 +25,11 @@ package org.biomart.builder.model;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Represents the status of any {@link Key} or {@link Relation} with regard to how
  * the system came to know about it.
- *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.1, 28th March 2006
  * @since 0.1
@@ -71,10 +70,10 @@ public class ComponentStatus implements Comparable {
      * @return the {@link ComponentStatus} object.
      * @throws NullPointerException if the name is null.
      */
-    public static ComponentStatus get(String name) throws NullPointerException {        
+    public static ComponentStatus get(String name) throws NullPointerException {
         // Sanity check.
         if (name == null)
-            throw new NullPointerException("Name cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
         // Convert to upper case.
         name = name.toUpperCase();
         // Do we already have this one?
@@ -99,23 +98,26 @@ public class ComponentStatus implements Comparable {
      * Displays the name of this {@link ComponentStatus} object.
      * @return the name of this {@link ComponentStatus} object.
      */
-    public String toString() {
+    public String getName() {
         return this.name;
     }
     
     /**
-     * Displays the hashcode of this object.
-     * @return the hashcode of this object.
+     * {@inheritDoc}
+     */
+    public String toString() {
+        return this.getName();
+    }
+    
+    /**
+     * {@inheritDoc}
      */
     public int hashCode() {
         return this.toString().hashCode();
     }
     
     /**
-     * Sorts by comparing the toString() output.
-     * @param o the object to compare to.
-     * @return -1 if we are smaller, +1 if we are larger, 0 if we are equal.
-     * @throws ClassCastException if the object o is not a {@link ComponentStatus}.
+     * {@inheritDoc}
      */
     public int compareTo(Object o) throws ClassCastException {
         ComponentStatus c = (ComponentStatus)o;
@@ -123,10 +125,7 @@ public class ComponentStatus implements Comparable {
     }
     
     /**
-     * Return true if the objects are identical.
-     * @param o the object to compare to.
-     * @return true if the names are the same and both are {@link ComponentStatus} instances,
-     * otherwise false.
+     * {@inheritDoc}
      */
     public boolean equals(Object o) {
         // We are dealing with singletons so can use == happily.

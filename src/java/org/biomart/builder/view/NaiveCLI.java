@@ -1,6 +1,5 @@
 /*
  * NaiveCLI.java
- *
  * Created on 03 April 2006, 12:49
  */
 
@@ -38,7 +37,6 @@ import org.biomart.builder.model.Window;
  * Performs a naive attempt at converting a schema into a dataset
  * based around the named table. Currently generates only schema XML,
  * and does not generate any SQL to do the work.
- *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.2, 5th April 2006
  * @since 0.1
@@ -54,7 +52,6 @@ public class NaiveCLI {
      * Does the work of loading up the table provider, creating a schema
      * based around it and a window focused on the named table, then
      * generating the dataset and the XML output file.
-     *
      * @param tableProvider the {@link TableProvider} to load tables from.
      * @param name the name of the table to build the dataset around.
      * @param file the output file to write the XML to.
@@ -90,7 +87,6 @@ public class NaiveCLI {
      * metadata.
      * If your database does not require a password, use the empty string for
      * the password and this will be converted to a null password internally.
-     * 
      * @param args the command line arguments.
      */
     public static void main(String[] args) {

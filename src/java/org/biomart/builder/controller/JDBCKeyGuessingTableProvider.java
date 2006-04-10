@@ -1,6 +1,5 @@
 /*
  * JDBCKeyGuessingTableProvider.java
- *
  * Created on 03 April 2006, 13:00
  */
 
@@ -63,6 +62,7 @@ import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Table.GenericTable;
 import org.biomart.builder.model.TableProvider.GenericTableProvider;
+import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * The JDBC key-guessing {@link TableProvider} implementation loads tables from a
@@ -71,7 +71,6 @@ import org.biomart.builder.model.TableProvider.GenericTableProvider;
  * the table name with '_id' appended, unless the {@link DatabaseMetaData} query actually responds
  * with believable information, and foreign key columns are assumed to be the name of
  * the primary key column to which they refer, optionally appended with '_key'.
- *
  * @author Richard Holland <holland@ebi.ac.uk>
  */
 public class JDBCKeyGuessingTableProvider extends GenericTableProvider implements JDBCDataLink {
@@ -109,7 +108,6 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
     /**
      * Creates a new instance of JDBCKeyGuessingTableProvider based around
      * the given JDBC Connection.
-     *
      * @param driverClassLocation the location of the class to load the JDBC driver from.
      * Use null to use the default class loader path, which it will also fall back on if it
      * could not find the driver at the specified location, or if this location does not exist.
@@ -124,9 +122,9 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
         super(name);
         // Sanity check.
         if (driverClassName == null)
-            throw new NullPointerException("Driver class name cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("driverClassnameIsNull"));
         if (url == null)
-            throw new NullPointerException("JDBC URL cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("JDBCURLIsNull"));
         // Sensible defaults.
         if (driverClassLocation != null && !driverClassLocation.exists()) driverClassLocation = null;
         // Do it.
@@ -138,11 +136,7 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
     }
     
     /**
-     * Returns a JDBC {@link Connection} connected to this database
-     * using the data supplied to all the other methods in this interface.
-     * @return the {@link Connection} for this database.
-     * @throws AssociationException if there was any problem finding the class.
-     * @throws SQLException if there was any problem connecting.
+     * {@inheritDoc}
      */
     public Connection getConnection() throws AssociationException, SQLException {
         if (this.conn == null) {
@@ -153,9 +147,9 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
                     ClassLoader classLoader = URLClassLoader.newInstance(new URL[]{this.driverClassLocation.toURL()});
                     loadedDriverClass = classLoader.loadClass(this.driverClassName);
                 } catch (ClassNotFoundException e) {
-                    throw new AssociationException("Class specified could not be found.");
+                    throw new AssociationException(BuilderBundle.getString("driverClassNotFound"));
                 } catch (MalformedURLException e) {
-                    throw new AssertionError("Filename failed to translate into URL.");
+                    throw new AssertionError(BuilderBundle.getString("filenameFailedURLTest"));
                 }
             }
             
@@ -163,12 +157,12 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
             try {
                 loadedDriverClass = Class.forName(this.driverClassName);
             } catch (ClassNotFoundException e) {
-                throw new AssociationException("Class specified could not be found.");
+                throw new AssociationException(BuilderBundle.getString("driverClassNotFound"));
             }
             
             // Check it really is an instance of Driver.
             if (!Driver.class.isAssignableFrom(loadedDriverClass))
-                throw new AssociationException("Class specified is not a JDBC Driver class.");
+                throw new AssociationException(BuilderBundle.getString("driverClassNotJDBCDriver"));
             
             // Connect!
             Properties connProps = new Properties();
@@ -182,37 +176,32 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
     }
     
     /**
-     * Getter for property driverClassName.
-     * @return Value of property driverClassName.
+     * {@inheritDoc}
      */
     public String getDriverClassName() {
         return this.driverClassName;
     }
     
     /**
-     * Setter for property driverClassName.
-     * @param driverClassName New value of property driverClassName.
-     * @throws NullPointerException if the name is null.
+     * {@inheritDoc}
      */
     public void setDriverClassName(String driverClassName) throws NullPointerException {
         // Sanity check.
         if (driverClassName == null)
-            throw new NullPointerException("Driver class name cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("driverClassnameIsNull"));
         // Do it.
         this.driverClassName = driverClassName;
     }
     
     /**
-     * Getter for property driverClassLocation. Defaults to null if not specified.
-     * @return Value of property driverClassLocation.
+     * {@inheritDoc}
      */
     public File getDriverClassLocation() {
         return this.driverClassLocation;
     }
     
     /**
-     * Setter for property driverClassLocation. Defaults to null if not specified.
-     * @param driverClassLocation New value of property driverClassLocation.
+     * {@inheritDoc}
      */
     public void setDriverClassLocation(File driverClassLocation) {
         if (driverClassLocation != null && !driverClassLocation.exists()) driverClassLocation = null;
@@ -220,80 +209,65 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
     }
     
     /**
-     * Getter for property url.
-     * @return Value of property url.
+     * {@inheritDoc}
      */
     public String getJDBCURL() {
         return this.url;
     }
     
     /**
-     * Setter for property url.
-     * @param url New value of property url.
-     * @throws NullPointerException if the url is null.
+     * {@inheritDoc}
      */
     public void setJDBCURL(String url) throws NullPointerException {
         // Sanity check.
         if (url == null)
-            throw new NullPointerException("JDBC URL cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("JDBCURLIsNull"));
         // Do it.
         this.url = url;
     }
     
     /**
-     * Getter for property username.
-     * @return Value of property username.
+     * {@inheritDoc}
      */
     public String getUsername() {
         return this.username;
     }
     
     /**
-     * Setter for property username.
-     * @param username New value of property username.
-     * @throws NullPointerException if the name is null.
+     * {@inheritDoc}
      */
     public void setUsername(String username) throws NullPointerException {
         // Sanity check.
         if (username == null)
-            throw new NullPointerException("Username cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("usernameIsNull"));
         // Do it.
         this.username = username;
     }
     
     /**
-     * Getter for property password.
-     * @return Value of property password.
+     * {@inheritDoc}
      */
     public String getPassword() {
         return this.password;
     }
     
     /**
-     * Setter for property password. May be null.
-     * @param password New value of property password.
+     * {@inheritDoc}
      */
     public void setPassword(String password) {
         this.password = password;
     }
     
     /**
-     * <p>Checks to see if this {@link DataLink} 'cohabits' with another one. Cohabitation means
-     * that it would be possible to write a single SQL statement that could read data from
-     * both {@link DataLink}s simultaneously.</p>
-     *
+     * {@inheritDoc}
      * <p>In our case, cohabitation means that the partner link is also a {@link JDBCDataLink}
      * and that its connection is connected to the same database server listening on the same port
      * and connected with the same username.</p>
-     *
-     * @param partner the other {@link DataLink} to test for cohabitation.
-     * @return true if the two can cohabit, false if not.
-     * @throws NullPointerException if the partner is null.
      */
     public boolean canCohabit(DataLink partner) throws NullPointerException {
         // Sanity check.
         if (partner == null)
-            throw new NullPointerException("Partner cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("cohabitPartnerIsNull"));
         // Do it.
         if (!(partner instanceof JDBCDataLink)) return false;
         JDBCDataLink them = (JDBCDataLink)partner;
@@ -304,31 +278,23 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
     }
     
     /**
-     * <p>Returns a set of unique values in a given column, which may include null. The
-     * set returned will never be null itself.</p>
-     *
+     * {@inheritDoc}
      * <p>This version issues a 'select distinct colname from table' via JDBC.</p>
-     *
-     * @param column the {@link Column} to get unique values for.
-     * @return a set of unique values in a given column.
-     * @throws AssociationException if the column doesn't belong to us.
-     * @throws SQLException if there was any problem loading the values.
-     * @throws NullPointerException if the column was null.
      */
     public Collection getUniqueValues(Column column) throws AssociationException, NullPointerException, SQLException {
         // Sanity check.
         if (column == null)
-            throw new NullPointerException("Column cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("columnIsNull"));
         if (!column.getTable().getTableProvider().equals(this))
-            throw new AssociationException("Column doesn't belong to this table provider.");
+            throw new AssociationException(BuilderBundle.getString("columnTblprovMismatch"));
         // Do it.
         List values = new ArrayList();
         PreparedStatement ps = this.getConnection().prepareStatement("select distinct "+column.getName()+" from "+column.getTable().getName());
         if (ps.execute()!=true)
-            throw new AssertionError("Prepared statement failed to return a ResultSet.");
+            throw new AssertionError(BuilderBundle.getString("prepStmtNotResultSet"));
         ResultSet rs = ps.getResultSet();
         if (rs==null)
-            throw new AssertionError("Prepared statement said it would return a ResultSet but didn't.");
+            throw new AssertionError(BuilderBundle.getString("prepStmtHasNoResultSet"));
         while (rs.next()) values.add(rs.getObject(1));
         rs.close();
         ps.close();
@@ -336,31 +302,24 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
     }
     
     /**
-     * <p>Counts the unique values in a given column, which may include null.</p>
-     *
+     * {@inheritDoc}
      * <p>This version issues a 'select count(distinct colname) from table' via JDBC.</p>
-     *
-     * @param column the {@link Column} to get unique values for.
-     * @return a count of the unique values in a given column.
-     * @throws AssociationException if the column doesn't belong to us.
-     * @throws SQLException if there was any problem counting the values.
-     * @throws NullPointerException if the column was null.
      */
     public int countUniqueValues(Column column) throws AssociationException, NullPointerException, SQLException {
         // Sanity check.
         if (column == null)
-            throw new NullPointerException("Column cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("columnIsNull"));
         if (!column.getTable().getTableProvider().equals(this))
-            throw new AssociationException("Column doesn't belong to this table provider.");
+            throw new AssociationException(BuilderBundle.getString("columnTblprovMismatch"));
         // Do it.
         PreparedStatement ps = this.getConnection().prepareStatement("select count(distinct "+column.getName()+") from "+column.getTable().getName());
         if (ps.execute()!=true)
-            throw new AssertionError("Prepared statement failed to return a ResultSet.");
+            throw new AssertionError(BuilderBundle.getString("prepStmtNotResultSet"));
         ResultSet rs = ps.getResultSet();
         if (rs==null)
-            throw new AssertionError("Prepared statement said it would return a ResultSet but didn't.");
+            throw new AssertionError(BuilderBundle.getString("prepStmtHasNoResultSet"));
         if (!rs.next())
-            throw new AssertionError("ResultSet guaranteed to return at least 1 row but returned 0.");
+            throw new AssertionError(BuilderBundle.getString("prepStmtFailedOneRowTest"));
         int rowCount = rs.getInt(1);
         rs.close();
         ps.close();
@@ -368,29 +327,20 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
     }
     
     /**
-     * <p>Synchronise this {@link TableProvider} with the data source that is
-     * providing its tables. Synchronisation means checking the list of {@link Table}s
-     * available and drop/add any that have changed, then check each {@link Column}.
-     * and {@link Key} and {@link Relation} and update those too.
-     * Any {@link Key} or {@link Relation} that was created by the user and is still valid,
-     * ie. the underlying columns still exist, will not be affected by this operation.</p>
-     *
+     * {@inheritDoc}
      * <p>Primary keys, if not returned by the {@link DatabaseMetaData} are assumed to
      * be single-column keys named the same as the table but with '_id' appended. Foreign keys
      * are assumed wherever the columns from a primary key are found in a foreign table in
      * the same order and with the same name, or with '_key' appended to them. (Either all must
      * have '_key' appended, or none, it won't detect a mixture of both).</p>
-     *
      * <p>This implementation reads tables and views from the schema with the same name as the
      * logged-in user only. On MySQL, for instance, this is irrelevant as it has no such
      * concept of schema, but on Oracle this means that only tables and views owned by
      * the logged-in user will appear. If you want tables from other schemas in Oracle,
      * you'll have to create views onto them from the logged-in user's schema first.</p>
-     *
      * <p>This implementation ignores all tables returned by the connection's metadata
      * that do not have a type of TABLE or VIEW. See {@link DatabaseMetaData#getTables(String, String, String, String[])}
      * for details.</p>
-     *
      * @throws SQLException if there was a problem connecting to the data source.
      * @throws BuilderException if there was any other kind of problem.
      */
@@ -455,7 +405,7 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
             // Did DMD find a PK? If not, attempt to find one by looking for the column with
             // the same name as the table but with '_id' appended.
             if (pkCols.isEmpty()) {
-                Column candidateCol = existingTable.getColumnByName(dbTableName + "_id");
+                Column candidateCol = existingTable.getColumnByName(dbTableName + BuilderBundle.getString("primaryKeySuffix"));
                 if (candidateCol != null) pkCols.put(candidateCol.getName(), candidateCol);
             }
             
@@ -524,7 +474,7 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
                 for (Iterator k = existingPK.getColumns().iterator(); k.hasNext(); ) {
                     String pkColumnName = ((Column)k.next()).getName();
                     Column candidateFKColumn = fkTable.getColumnByName(pkColumnName);
-                    if (candidateFKColumn == null) candidateFKColumn = fkTable.getColumnByName(pkColumnName + "_key");
+                    if (candidateFKColumn == null) candidateFKColumn = fkTable.getColumnByName(pkColumnName + BuilderBundle.getString("foreignKeySuffix"));
                     if (candidateFKColumn != null) candidateFKColumns[candidateFKColumnCount++] = candidateFKColumn;
                 }
                 
@@ -552,7 +502,7 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
                         // If its not new, check to see if it already has a relation.
                         
                         // Check to see if this FK already has a link to this PK.
-                        // If it has a correctly inferred connection to any other PK, 
+                        // If it has a correctly inferred connection to any other PK,
                         // complain bitterly. If it has an incorrect or handmade connection
                         // to any other PK, remove that one.
                         boolean relationExists = false;
@@ -562,7 +512,7 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
                                 removedRels.remove(r); // don't drop it, just leave it untouched and reuse it.
                                 relationExists = true;
                             } else if (r.getStatus().equals(ComponentStatus.INFERRED)) {
-                                throw new AssertionError("Key-guessing algorithm claims FK refers to more than one PK.");
+                                throw new AssertionError(BuilderBundle.getString("fkHasMultiplePKs"));
                             } else {
                                 // It'll get removed later if we leave it in removedRels.
                                 // To do that, we need do nothing.

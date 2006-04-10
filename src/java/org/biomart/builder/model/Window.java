@@ -1,6 +1,5 @@
 /*
  * Window.java
- *
  * Created on 27 March 2006, 13:56
  */
 
@@ -41,6 +40,7 @@ import org.biomart.builder.model.DataSet.GenericDataSet;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.MartConstructor.GenericMartConstructor;
 import org.biomart.builder.model.Relation.Cardinality;
+import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * <p>Represents a window onto a {@link Table} in a {@link TableProvider}.
@@ -51,7 +51,6 @@ import org.biomart.builder.model.Relation.Cardinality;
  * as a single column with all unique values concatenated when followed in the 1:M
  * direction, but this is ignored in the M:1 direction. Additional relations beyond a
  * concat relation should be ignored when building the final mart.</p>
- *
  * <p>The name of the window is inherited by the {@link Dataset} so take care when
  * choosing it.</p>
  * @author Richard Holland <holland@ebi.ac.uk>
@@ -127,7 +126,6 @@ public class Window implements Comparable {
      * gives it a name. It also initiates a {@link DataSet} ready to contain the transformed
      * results. It adds itself to the specified schema automatically.
      *
-     *
      * @param schema the {@link Schema} this {@link Window} will belong to.
      * @param centralTable the {@link Table} to use as the central centralTable.
      * @param name the name to give this {@link Window}.
@@ -140,13 +138,13 @@ public class Window implements Comparable {
     public Window(Schema schema, Table centralTable, String name) throws NullPointerException, AssociationException, AlreadyExistsException {
         // Sanity check.
         if (schema == null)
-            throw new NullPointerException("Schema cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("schemaIsNull"));
         if (centralTable == null)
-            throw new NullPointerException("Central table cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("tableIsNull"));
         if (name == null)
-            throw new NullPointerException("Window name cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
         if (!schema.getTableProviders().contains(centralTable.getTableProvider()))
-            throw new AssociationException("Cannot use table that is not part of the schema supplied.");
+            throw new AssociationException(BuilderBundle.getString("tableSchemaMismatch"));
         // Do it.
         this.schema = schema;
         this.centralTable = centralTable;
@@ -171,7 +169,7 @@ public class Window implements Comparable {
         try {
             this.walkRelations(this.getCentralTable(), 1);
         } catch (NullPointerException e) {
-            AssertionError ae = new AssertionError("Found a null reference to a table.");
+            AssertionError ae = new AssertionError(BuilderBundle.getString("tableIsNull"));
             ae.initCause(e);
             throw ae;
         }
@@ -195,7 +193,6 @@ public class Window implements Comparable {
     /**
      * Internal method which works out the lowest number of 1:M relations between
      * the currentTable table and all other {@link Table}s linked by as-yet-unvisited {@link Relation}s.
-     *
      * @param currentTable the {@link Table} to start walking from.
      * @param currentDepth the number of 1:M relations it took to get this far.
      * @throws NullPointerException if the table parameter is null.
@@ -203,7 +200,7 @@ public class Window implements Comparable {
     private void walkRelations(Table currentTable, int currentDepth) throws NullPointerException {
         // Sanity check.
         if (currentTable == null)
-            throw new NullPointerException("Current table cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("tableIsNull"));
         // Find all relations from this table.
         Collection relations = currentTable.getRelations();
         // See if we need to do anything to each one.
@@ -273,14 +270,13 @@ public class Window implements Comparable {
     /**
      * Mask a {@link Relation}. If it is already masked, ignore it.
      * An exception will be thrown if it is null.
-     *
      * @param relation the {@link Relation} to mask.
      * @throws NullPointerException if the {@link Relation} is null.
      */
     public void maskRelation(Relation relation) throws NullPointerException {
         // Sanity check.
         if (relation == null)
-            throw new NullPointerException("Cannot mask a relation which is null.");
+            throw new NullPointerException(BuilderBundle.getString("relationIsNull"));
         // Do it.
         this.maskedRelations.add(relation);
     }
@@ -288,14 +284,13 @@ public class Window implements Comparable {
     /**
      * Unmask a {@link Relation}. If it is already unmasked, ignore it.
      * An exception will be thrown if it is null.
-     *
      * @param relation the {@link Relation} to unmask.
      * @throws NullPointerException if the {@link Relation} is null.
      */
     public void unmaskRelation(Relation relation) throws NullPointerException {
         // Sanity check.
         if (relation == null)
-            throw new NullPointerException("Cannot mask a relation which is null.");
+            throw new NullPointerException(BuilderBundle.getString("relationIsNull"));
         // Do it.
         this.maskedRelations.remove(relation);
     }
@@ -313,14 +308,13 @@ public class Window implements Comparable {
      * An exception will be thrown if it is null. If the {@link Column} is
      * part of any {@link Key}, then all {@link Relation}s using that {@link Key}
      * will be masked as well.
-     *
      * @param column the {@link Column} to mask.
      * @throws NullPointerException if the {@link Column} is null.
      */
     public void maskColumn(Column column) throws NullPointerException {
         // Sanity check.
         if (column == null)
-            throw new NullPointerException("Cannot mask a column which is null.");
+            throw new NullPointerException(BuilderBundle.getString("columnIsNull"));
         // Do it.
         this.maskedColumns.add(column);
         // Mask the associated relations.
@@ -348,14 +342,13 @@ public class Window implements Comparable {
     /**
      * Unmask a {@link Column}. If it is already unmasked, ignore it.
      * An exception will be thrown if it is null.
-     *
      * @param column the {@link Column} to unmask.
      * @throws NullPointerException if the {@link Column} is null.
      */
     public void unmaskColumn(Column column) throws NullPointerException {
         // Sanity check.
         if (column == null)
-            throw new NullPointerException("Cannot mask a column which is null.");
+            throw new NullPointerException(BuilderBundle.getString("columnIsNull"));
         // Do it.
         this.maskedColumns.remove(column);
     }
@@ -374,11 +367,9 @@ public class Window implements Comparable {
      * is the parent table, but the parent table may not actually be the central table in this {@link Window}.
      * If it is already marked, ignore it. As subclasses can only apply to the central table, throw an AssociationException
      * if this is attempted on any table other than the central table. An exception will be thrown if any parameter is null.</p>
-     *
      * <p>One further restriction is that a {@link Table} can only have a single M:1 subclass {@link Relation},
      * or multiple 1:M ones. It cannot have a mix of both, nor can it have more than one M:1 subclass {@link Relation}.
      * In either case if this is attempted an AssociationException will be thrown.</p>
-     *
      * @param relation the {@link Relation} to mark as a relation relation.
      * @throws AssociationException if one end of the {@link Relation} is not the central table for this window, or
      * if both ends of the {@link Relation} point to the same table.
@@ -387,12 +378,12 @@ public class Window implements Comparable {
     public void flagSubclassRelation(Relation relation) throws NullPointerException, AssociationException {
         // Sanity check.
         if (relation == null)
-            throw new NullPointerException("Cannot mark a subclass relation which is null.");
+            throw new NullPointerException(BuilderBundle.getString("relationIsNull"));
         if (!(relation.getPrimaryKey().getTable().equals(this.centralTable) ||
                 relation.getForeignKey().getTable().equals(this.centralTable)))
-            throw new AssociationException("Subclassing can only take place on a relation from the central table.");
+            throw new AssociationException(BuilderBundle.getString("subclassNotOnCentralTable"));
         if (relation.getPrimaryKey().getTable().equals(relation.getForeignKey().getTable()))
-            throw new AssociationException("Subclassing can only take place between two distinct tables.");
+            throw new AssociationException(BuilderBundle.getString("subclassNotBetweenTwoTables"));
         // Check validity.
         boolean containsM1 = false;
         for (Iterator i = this.subclassedRelations.iterator(); i.hasNext(); ) {
@@ -403,7 +394,7 @@ public class Window implements Comparable {
             }
         }
         if (containsM1 && (relation.getPrimaryKey().getTable().equals(this.centralTable) || this.subclassedRelations.size()!=0))
-            throw new AssociationException("You can only either have a single M:1 subclass relation or multiple 1:M ones, but not both.");
+            throw new AssociationException(BuilderBundle.getString("mixedCardinalitySubclasses"));
         // Do it.
         this.subclassedRelations.add(relation);
     }
@@ -411,14 +402,13 @@ public class Window implements Comparable {
     /**
      * Unmark a {@link Relation} as a relation relation. If it is already unmarked, ignore it.
      * An exception will be thrown if it is null.
-     *
      * @param relation the {@link Relation} to unmark.
      * @throws NullPointerException if the {@link Relation} is null.
      */
     public void unflagSubclassRelation(Relation relation) throws NullPointerException {
         // Sanity check.
         if (relation == null)
-            throw new NullPointerException("Cannot unmark a relation which is null.");
+            throw new NullPointerException(BuilderBundle.getString("relationIsNull"));
         // Do it.
         this.subclassedRelations.remove(relation);
     }
@@ -435,7 +425,6 @@ public class Window implements Comparable {
      * Mark a {@link Column} as partitioned. If it is already marked, it updates the partition type.
      * An exception will be thrown if any parameter is null.
      *
-     *
      * @param column the {@link Column} to mark as partitioned.
      * @param type the {@link PartitionedColumnType} to use for the partition.
      * @throws NullPointerException if either parameter is null.
@@ -443,9 +432,9 @@ public class Window implements Comparable {
     public void flagPartitionedColumn(Column column, PartitionedColumnType type) throws NullPointerException {
         // Sanity check.
         if (column == null)
-            throw new NullPointerException("Cannot partition a column which is null.");
+            throw new NullPointerException(BuilderBundle.getString("columnIsNull"));
         if (type == null)
-            throw new NullPointerException("Cannot use a partition type which is null.");
+            throw new NullPointerException(BuilderBundle.getString("partitionTypeIsNull"));
         // Do it (the Map will replace the value with the new value if the key already exists)
         this.partitionedColumns.put(column, type);
     }
@@ -453,14 +442,13 @@ public class Window implements Comparable {
     /**
      * Unmark a {@link Column} as partitioned. If it is already unmarked, ignore it.
      * An exception will be thrown if it is null.
-     *
      * @param column the {@link Column} to unmark.
      * @throws NullPointerException if the {@link Column} is null.
      */
     public void unflagPartitionedColumn(Column column) throws NullPointerException {
         // Sanity check.
         if (column == null)
-            throw new NullPointerException("Cannot unpartition a column which is null.");
+            throw new NullPointerException(BuilderBundle.getString("columnIsNull"));
         // Do it.
         this.partitionedColumns.remove(column);
     }
@@ -483,7 +471,7 @@ public class Window implements Comparable {
     public PartitionedColumnType getPartitionedColumnType(Column column) throws NullPointerException {
         // Sanity check.
         if (column == null)
-            throw new NullPointerException("Partitioned column cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("columnIsNull"));
         // Do we have it?
         if (!this.partitionedColumns.containsKey(column)) return null;
         // Return it.
@@ -494,7 +482,6 @@ public class Window implements Comparable {
      * Mark a {@link Relation} as concat-only. If it is already marked, it updates the concat type.
      * An exception will be thrown if any parameter is null.
      *
-     *
      * @param relation the {@link Relation} to mark as concat-only.
      * @param type the {@link ConcatRelationType} to use for the relation.
      * @throws NullPointerException if either parameter is null.
@@ -502,9 +489,9 @@ public class Window implements Comparable {
     public void flagConcatOnlyRelation(Relation relation, ConcatRelationType type) throws NullPointerException {
         // Sanity check.
         if (relation == null)
-            throw new NullPointerException("Cannot modify a relation which is null.");
+            throw new NullPointerException(BuilderBundle.getString("relationIsNull"));
         if (type == null)
-            throw new NullPointerException("Cannot use a concat relation type which is null.");
+            throw new NullPointerException(BuilderBundle.getString("concatRelationTypeIsNull"));
         // Do it (the Map will replace the value with the new value if the key already exists)
         this.concatOnlyRelations.put(relation, type);
     }
@@ -518,7 +505,7 @@ public class Window implements Comparable {
     public void unflagConcatOnlyRelation(Relation relation) throws NullPointerException {
         // Sanity check.
         if (relation == null)
-            throw new NullPointerException("Cannot modify a relation which is null.");
+            throw new NullPointerException(BuilderBundle.getString("relationIsNull"));
         // Do it.
         this.concatOnlyRelations.remove(relation);
     }
@@ -541,7 +528,7 @@ public class Window implements Comparable {
     public ConcatRelationType getConcatRelationType(Relation relation) throws NullPointerException {
         // Sanity check.
         if (relation == null)
-            throw new NullPointerException("Relation to check cannot be null.");
+            throw new NullPointerException(BuilderBundle.getString("relationIsNull"));
         // Do we have it?
         if (!this.concatOnlyRelations.containsKey(relation)) return null;
         // Return it.
@@ -552,7 +539,6 @@ public class Window implements Comparable {
      * If the user wishes to partition the main table by the table provider
      * (only possible if the main table is from a {@link PartitionedTableProvider}) then set
      * this flag to true. Otherwise, set it to false, which is its default value.
-     *
      * @param partitionOnTableProvider true if you want to turn this on, false if you want to turn it off.
      */
     public void setPartitionOnTableProvider(boolean partitionOnTableProvider) {
@@ -575,7 +561,6 @@ public class Window implements Comparable {
      * and {@link Relation} objects and removing any that have disappeared.
      * The associated {@link DataSet}, if one exists yet, is then regenerated.
      * If one does not exist, it is generated now.
-     *
      * @throws SQLException if there was a problem connecting to the data source.
      * @throws BuilderException if there was any other kind of problem.
      */
@@ -626,26 +611,21 @@ public class Window implements Comparable {
     }
     
     /**
-     * Displays the name of this {@link Window} object.
-     * @return the name of this {@link Window} object.
+     * {@inheritDoc}
      */
     public String toString() {
         return this.getName();
     }
     
     /**
-     * Displays the hashcode of this object.
-     * @return the hashcode of this object.
+     * {@inheritDoc}
      */
     public int hashCode() {
         return this.toString().hashCode();
     }
     
     /**
-     * Sorts by comparing the toString() output.
-     * @param o the object to compare to.
-     * @return -1 if we are smaller, +1 if we are larger, 0 if we are equal.
-     * @throws ClassCastException if the object o is not a {@link Window}.
+     * {@inheritDoc}
      */
     public int compareTo(Object o) throws ClassCastException {
         Window w = (Window)o;
@@ -653,10 +633,7 @@ public class Window implements Comparable {
     }
     
     /**
-     * Return true if the toString()s are identical.
-     * @param o the object to compare to.
-     * @return true if the toString()s match and both objects are {@link Window}s,
-     * otherwise false.
+     * {@inheritDoc}
      */
     public boolean equals(Object o) {
         if (o == null || !(o instanceof Window)) return false;
@@ -675,8 +652,7 @@ public class Window implements Comparable {
          */
         public class UniqueValues implements PartitionedColumnType {
             /**
-             * Displays the name of this {@link PartitionedColumnType} object.
-             * @return the name of this {@link PartitionedColumnType} object.
+             * {@inheritDoc}
              */
             public String toString() {
                 return "UniqueValues";
@@ -705,15 +681,15 @@ public class Window implements Comparable {
             public ValueCollection(Collection values) throws IllegalArgumentException, NullPointerException {
                 // Sanity check.
                 if (values==null)
-                    throw new NullPointerException("Values set cannot be null.");
+                    throw new NullPointerException(BuilderBundle.getString("valuesIsNull"));
                 if (values.size()<1)
-                    throw new IllegalArgumentException("Values set must contain at least one entry.");
+                    throw new IllegalArgumentException(BuilderBundle.getString("valuesEmpty"));
                 // Do it.
                 for (Iterator i = values.iterator(); i.hasNext(); ) {
                     Object o = i.next();
                     // Sanity check.
                     if (o != null && !(o instanceof String))
-                        throw new IllegalArgumentException("Cannot add non-null non-String objects as values.");
+                        throw new IllegalArgumentException(BuilderBundle.getString("valueNotString"));
                     // Add the value.
                     this.values.add((String)o);
                 }
@@ -728,8 +704,7 @@ public class Window implements Comparable {
             }
             
             /**
-             * Displays the name of this {@link PartitionedColumnType} object.
-             * @return the name of this {@link PartitionedColumnType} object.
+             * {@inheritDoc}
              */
             public String toString() {
                 return "ValueCollection:" + this.values.toString();
@@ -765,8 +740,7 @@ public class Window implements Comparable {
             }
             
             /**
-             * Displays the name of this {@link PartitionedColumnType} object.
-             * @return the name of this {@link PartitionedColumnType} object.
+             * {@inheritDoc}
              */
             public String toString() {
                 return "SingleValue:" + this.value;
@@ -838,26 +812,21 @@ public class Window implements Comparable {
         }
         
         /**
-         * Displays the name of this {@link ConcatRelationType} object.
-         * @return the name of this {@link ConcatRelationType} object.
+         * {@inheritDoc}
          */
         public String toString() {
             return this.getName();
         }
         
         /**
-         * Displays the hashcode of this object.
-         * @return the hashcode of this object.
+         * {@inheritDoc}
          */
         public int hashCode() {
             return this.toString().hashCode();
         }
         
         /**
-         * Sorts by comparing the toString() output.
-         * @param o the object to compare to.
-         * @return -1 if we are smaller, +1 if we are larger, 0 if we are equal.
-         * @throws ClassCastException if the object o is not a {@link ConcatRelationType}.
+         * {@inheritDoc}
          */
         public int compareTo(Object o) throws ClassCastException {
             ConcatRelationType pct = (ConcatRelationType)o;
@@ -865,10 +834,7 @@ public class Window implements Comparable {
         }
         
         /**
-         * Return true if the objects are identical.
-         * @param o the object to compare to.
-         * @return true if the names are the same and both are {@link ConcatRelationType} instances,
-         * otherwise false.
+         * {@inheritDoc}
          */
         public boolean equals(Object o) {
             // We are dealing with singletons so can use == happily.

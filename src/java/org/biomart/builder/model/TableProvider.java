@@ -1,6 +1,5 @@
 /*
  * TableProvider.java
- *
  * Created on 23 March 2006, 15:07
  */
 
@@ -32,15 +31,14 @@ import java.util.TreeMap;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
+import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * <p>A {@link TableProvider} provides one or more {@link Table} objects with
  * unique names for the user to use. It could be a relational database, or an XML
  * document, or any other source of potentially tabular information.</p>
- *
  * <p>The generic implementation provided should suffice for most tasks involved with
  * keeping track of the {@link Table}s a {@link TableProvider} provides.</p>
- *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.5, 6th April 2006
  * @since 0.1
@@ -67,7 +65,6 @@ public interface TableProvider extends Comparable, DataLink {
     /**
      * Adds a {@link Table} to this provider. The table must not be null, and
      * must not already exist (ie. with the same name).
-     *
      * @param table the {@link Table} to add.
      * @throws AlreadyExistsException if another one with the same name already exists.
      * @throws AssociationException if the table doesn'table belong to this provider.
@@ -135,84 +132,56 @@ public interface TableProvider extends Comparable, DataLink {
         public GenericTableProvider(String name) throws NullPointerException {
             // Sanity check.
             if (name == null)
-                throw new NullPointerException("Table provider name cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
             // Remember the values.
             this.name = name;
         }
         
         /**
-         * Returns the name of this {@link TableProvider}.
-         * @return the name of this provider.
+         * {@inheritDoc}
          */
         public String getName() {
             return this.name;
         }
         
         /**
-         * <p>Checks to see if this {@link DataLink} 'cohabits' with another one. Cohabitation means
-         * that it would be possible to write a single SQL statement that could read data from
-         * both {@link DataLink}s simultaneously.</p>
-         *
+         * {@inheritDoc}
          * <p>The generic provider has no data source, so it will always return false.</p>
-         *
-         * @param partner the other {@link DataLink} to test for cohabitation.
-         * @return true if the two can cohabit, false if not.
-         * @throws NullPointerException if the partner is null.
          */
         public boolean canCohabit(DataLink partner) throws NullPointerException {
             return false;
         }
         
         /**
-         * <p>Synchronise this {@link TableProvider} with the data source that is
-         * providing its tables. Synchronisation means checking the list of {@link Table}s
-         * available and drop/add any that have changed, then check each {@link Column}.
-         * and {@link Key} and {@link Relation} and update those too.
-         * Any {@link Key} or {@link Relation} that was created by the user and is still valid,
-         * ie. the underlying columns still exist, will not be affected by this operation.</p>
-         *
+         * {@inheritDoc}
          * <p>As this is a generic implementation, nothing actually happens here.</p>
-         *
-         * @throws SQLException if there was a problem connecting to the data source.
-         * @throws BuilderException if there was any other kind of problem.
          */
         public void synchronise() throws SQLException, BuilderException {}
         
         /**
-         * Adds a {@link Table} to this provider. The table must not be null, and
-         * must not already exist (ie. with the same name).
-         *
-         * @param table the {@link Table} to add.
-         * @throws AlreadyExistsException if another one with the same name already exists.
-         * @throws AssociationException if the table doesn'table belong to this provider.
-         * @throws NullPointerException if the table is null.
+         * {@inheritDoc}
          */
         public void addTable(Table table) throws AlreadyExistsException, AssociationException, NullPointerException {
             // Sanity check.
             if (table == null)
-                throw new NullPointerException("Table cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("tableIsNull"));
             if (!table.getTableProvider().equals(this))
-                throw new AssociationException("Table does not belong to this provider.");
+                throw new AssociationException(BuilderBundle.getString("tableTblprovMismatch"));
             if (this.tables.containsKey(table.getName()))
-                throw new AlreadyExistsException("Table with that name already exists in this provider.", table.getName());
+                throw new AlreadyExistsException(BuilderBundle.getString("tableExists"), table.getName());
             // Do it.
             this.tables.put(table.getName(), table);
         }
         
         /**
-         * Returns all the {@link Table}s this provider provides. The set returned may be
-         * empty but it will never be null.
-         * @return the set of all {@link Table}s in this provider.
+         * {@inheritDoc}
          */
         public Collection getTables() {
             return this.tables.values();
         }
         
         /**
-         * Returns the {@link Table}s from this provider with the given name. If there is
-         * no such table, the method will return null.
-         * @param name the name of the {@link Table} to retrieve.
-         * @return the matching {@link Table}s from this provider.
+         * {@inheritDoc}
          */
         public Table getTableByName(String name) {
             // Do we know about it?
@@ -222,69 +191,49 @@ public interface TableProvider extends Comparable, DataLink {
         }
         
         /**
-         * <p>Returns a set of unique values in a given column, which may include null. The
-         * set returned will never be null itself.</p>
-         *
+         * {@inheritDoc}
          * <p>This being the generic implementation, it always returns an empty set.</p>
-         *
-         * @param column the {@link Column} to get unique values for.
-         * @return a set of unique values in a given column.
-         * @throws AssociationException if the column doesn't belong to us.
-         * @throws SQLException if there was any problem loading the values.
-         * @throws NullPointerException if the column was null.
          */
         public Collection getUniqueValues(Column column) throws AssociationException, NullPointerException, SQLException {
             // Sanity check.
             if (column == null)
-                throw new NullPointerException("Column cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("columnIsNull"));
             if (!column.getTable().getTableProvider().equals(this))
-                throw new AssociationException("Column doesn't belong to this table provider.");
+                throw new AssociationException(BuilderBundle.getString("columnTblprovMismatch"));
             // Do it.
             return Collections.EMPTY_SET;
         }
         
         /**
-         * <p>Counts the unique values in a given column, which may include null.</p>
-         *
+         * {@inheritDoc}
          * <p>This being the generic implementation, it always returns 0.</p>
-         *
-         * @param column the {@link Column} to get unique values for.
-         * @return a count of the unique values in a given column.
-         * @throws AssociationException if the column doesn't belong to us.
-         * @throws SQLException if there was any problem counting the values.
-         * @throws NullPointerException if the column was null.
          */
         public int countUniqueValues(Column column) throws AssociationException, NullPointerException, SQLException {
             // Sanity check.
             if (column == null)
-                throw new NullPointerException("Column cannot be null.");
+                throw new NullPointerException(BuilderBundle.getString("columnIsNull"));
             if (!column.getTable().getTableProvider().equals(this))
-                throw new AssociationException("Column doesn't belong to this table provider.");
+                throw new AssociationException(BuilderBundle.getString("columnTblprovMismatch"));
             // Do it.
             return 0;
         }
         
         /**
-         * Displays the name of this {@link TableProvider} object.
-         * @return the name of this {@link TableProvider} object.
+         * {@inheritDoc}
          */
         public String toString() {
             return this.getName();
         }
         
         /**
-         * Displays the hashcode of this object.
-         * @return the hashcode of this object.
+         * {@inheritDoc}
          */
         public int hashCode() {
             return this.toString().hashCode();
         }
         
         /**
-         * Sorts by comparing the toString() output.
-         * @param o the object to compare to.
-         * @return -1 if we are smaller, +1 if we are larger, 0 if we are equal.
-         * @throws ClassCastException if the object o is not a {@link TableProvider}.
+         * {@inheritDoc}
          */
         public int compareTo(Object o) throws ClassCastException {
             TableProvider t = (TableProvider)o;
@@ -292,10 +241,7 @@ public interface TableProvider extends Comparable, DataLink {
         }
         
         /**
-         * Return true if the toString()s are identical.
-         * @param o the object to compare to.
-         * @return true if the toString()s match and both objects are {@link TableProvider}s,
-         * otherwise false.
+         * {@inheritDoc}
          */
         public boolean equals(Object o) {
             if (o == null || !(o instanceof TableProvider)) return false;
