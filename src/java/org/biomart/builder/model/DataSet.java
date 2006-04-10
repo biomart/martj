@@ -685,8 +685,9 @@ public interface DataSet extends Comparable, TableProvider {
             // Sanity check.
             if (name==null)
                 throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
+            if (name.equals(this.name)) return; // Skip unnecessary change.
             if (this.getTableProvider().getTableByName(name)!=null)
-                throw new AlreadyExistsException(BuilderBundle.getString("nameAlreadyExists"), name);
+                throw new AlreadyExistsException(BuilderBundle.getString("nameAExists"), name);
             // Do it.
             this.name = name;
         }
@@ -753,8 +754,9 @@ public interface DataSet extends Comparable, TableProvider {
             // Sanity check.
             if (name == null)
                 throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
+            if (name.equals(this.name)) return; // Skip unnecessary change.
             if (table.getColumnByName(name) != null)
-                throw new AlreadyExistsException(BuilderBundle.getString("nameAlreadyExists"), name);
+                throw new AlreadyExistsException(BuilderBundle.getString("nameExists"), name);
             // Do it.
             this.name = name;
         }

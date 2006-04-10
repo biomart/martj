@@ -97,7 +97,7 @@ public class SchemaSaver extends DefaultHandler {
     /**
      * Version number of XML DTD.
      */
-    private static final String DTD_VERSION = "0.1";
+    public static final String DTD_VERSION = "0.1";
     
     /**
      * Internal reference to the schema object constructed upon loading.
@@ -193,6 +193,9 @@ public class SchemaSaver extends DefaultHandler {
             String name = (String)attributes.get(BuilderBundle.getString("name"));
             try {
                 element = new GenericPartitionedTableProvider(name);
+                this.constructedSchema.addTableProvider((TableProvider)element);
+            } catch (AlreadyExistsException e) {
+                throw new SAXException(BuilderBundle.getString("duplicateTableProvider"),e);
             } catch (NullPointerException e) {
                 throw new SAXException(BuilderBundle.getString("missingAttribute"),e);
             }
@@ -213,6 +216,9 @@ public class SchemaSaver extends DefaultHandler {
                 if (BuilderBundle.getString("normal").equals(type)) element = new JDBCTableProvider(driverClassLocation, driverClassName, url, username, password, name);
                 else if (BuilderBundle.getString("keyguessing").equals(type)) element = new JDBCKeyGuessingTableProvider(driverClassLocation, driverClassName, url, username, password, name);
                 else throw new SAXException(BuilderBundle.getString("unknownJDBCTableProviderType",type));
+                this.constructedSchema.addTableProvider((TableProvider)element);
+            } catch (AlreadyExistsException e) {
+                throw new SAXException(BuilderBundle.getString("duplicateTableProvider"),e);
             } catch (NullPointerException e) {
                 throw new SAXException(BuilderBundle.getString("missingAttribute"),e);
             }
@@ -317,7 +323,7 @@ public class SchemaSaver extends DefaultHandler {
                         throw new SAXException(BuilderBundle.getString("unknownColumnType",type));
                     
                     // Override the name, to make sure we get the same alias as the original.
-                    ((DataSetColumn)element).setName(name);
+                    ((DataSetColumn)element).setName(tbl.getName()+":"+name);
                 }
                 // Generic column?
                 else if (tbl instanceof GenericTable) {
@@ -428,12 +434,17 @@ public class SchemaSaver extends DefaultHandler {
         
         // MartConstructor (anywhere).
         else if (BuilderBundle.getString("genericMartConstructor").equals(eName)) {
+            String id = (String)attributes.get(BuilderBundle.getString("id"));
+            String name = (String)attributes.get(BuilderBundle.getString("name"));
+            
             try {
-                String name = (String)attributes.get(BuilderBundle.getString("name"));
                 element = new GenericMartConstructor(name);
             } catch (NullPointerException e) {
                 throw new SAXException(BuilderBundle.getString("missingAttribute"), e);
             }
+            
+            // Store it in the map of IDed objects.
+            this.mappedObjects.put(id, element);
         }
         
         // Window (anywhere).
@@ -880,7 +891,7 @@ public class SchemaSaver extends DefaultHandler {
         
         // Write the headers.
         this.xmlWriter.write(BuilderBundle.getString("xmlHeader")+"\n");
-        this.xmlWriter.write(BuilderBundle.getString("xmlDocType",DTD_VERSION)+"\n");
+        //this.xmlWriter.write(BuilderBundle.getString("xmlDocType",DTD_VERSION)+"\n");
         
         // Initialise the ID counter.
         this.reverseMappedObjects = new HashMap();
@@ -903,6 +914,7 @@ public class SchemaSaver extends DefaultHandler {
             // Generic constructor?
             if (mc instanceof GenericMartConstructor) {
                 this.openElement(BuilderBundle.getString("genericMartConstructor"));
+                this.writeAttribute(BuilderBundle.getString("id"),mcMappedID);
                 this.writeAttribute(BuilderBundle.getString("name"),mc.getName());
                 this.closeElement(BuilderBundle.getString("genericMartConstructor"));
             }

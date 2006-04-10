@@ -36,7 +36,7 @@ public class BuilderBundle {
     /**
      * Internal reference to the resource bundle.
      */
-    private static ResourceBundle bundle = ResourceBundle.getBundle("org/biomart/builder/messages");
+    private static ResourceBundle bundle = ResourceBundle.getBundle("org/biomart/builder/resources/messages");
     
     /**
      * Obtains a string from the resource bundle "org/biomart/builder/resources/messages.properties".
