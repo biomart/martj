@@ -275,7 +275,7 @@ public class SchemaSaver extends DefaultHandler {
                 }
                 // Others
                 else
-                    throw new AssertionError(BuilderBundle.getString("unknownTableProviderType",prov.getClass().getName()));
+                    throw new SAXException(BuilderBundle.getString("unknownTableProviderType",prov.getClass().getName()));
             } catch (AlreadyExistsException e) {
                 throw new SAXException(BuilderBundle.getString("duplicateTableName"));
             } catch (NullPointerException e) {
@@ -331,7 +331,7 @@ public class SchemaSaver extends DefaultHandler {
                 }
                 // Others
                 else
-                    throw new AssertionError(BuilderBundle.getString("unknownTableType",tbl.getClass().getName()));
+                    throw new SAXException(BuilderBundle.getString("unknownTableType",tbl.getClass().getName()));
             } catch (AssociationException e) {
                 throw new AssertionError(BuilderBundle.getString("tableMismatch"));
             } catch (AlreadyExistsException e) {
@@ -612,7 +612,7 @@ public class SchemaSaver extends DefaultHandler {
         
         // Others.
         else
-            throw new AssertionError(BuilderBundle.getString("unknownTag",eName));
+            throw new SAXException(BuilderBundle.getString("unknownTag",eName));
         
         // Stick the element on the stack.
         this.objectStack.push(element);
