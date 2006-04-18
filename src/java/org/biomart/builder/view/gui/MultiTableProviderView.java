@@ -25,6 +25,7 @@
 package org.biomart.builder.view.gui;
 
 import java.awt.AWTEvent;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -72,7 +73,10 @@ public class MultiTableProviderView extends JTabbedPane {
     public MultiTableProviderView(Collection tblProvs) {
         super();
         // Add the overview to ourselves.
-        this.addTab(BuilderBundle.getString("multiTblProvOverviewTab"), new JScrollPane(new OverviewView(this)));
+        OverviewView overviewView = new OverviewView(this);
+        JScrollPane overviewScroller = new JScrollPane(overviewView);
+        overviewScroller.getViewport().setBackground(overviewView.getBackground());
+        this.addTab(BuilderBundle.getString("multiTblProvOverviewTab"), overviewScroller);
         // Add the rest of the tabs.
         this.resyncTableProviderTabs(tblProvs);
     }
@@ -99,7 +103,9 @@ public class MultiTableProviderView extends JTabbedPane {
             TableProvider tblProv = (TableProvider)i.next();
             TableProviderView tblProvView = new TableProviderView(tblProv);
             this.tblProvViews.put(tblProv, tblProvView);
-            this.addTab(tblProv.getName(), new JScrollPane(tblProvView));
+            JScrollPane tblProvScroller = new JScrollPane(tblProvView);
+            tblProvScroller.getViewport().setBackground(tblProvView.getBackground());
+            this.addTab(tblProv.getName(), tblProvScroller);
         }
         // Reset the listeners.
         this.setTableProviderListener(this.tblProvListener);
@@ -170,13 +176,13 @@ public class MultiTableProviderView extends JTabbedPane {
         if (evt.getID() == MouseEvent.MOUSE_PRESSED && evt.getButton() == MouseEvent.BUTTON3) {
             // Where was the click?
             int index = this.indexAtLocation(evt.getX(), evt.getY());
-            // Only respond to individual table providers, not the overview tab.
-            if (index>0) {
+            // Respond appropriately.
+            if (index > 0) {
                 TableProviderView tblProvView =
                         (TableProviderView)((JScrollPane)this.getComponentAt(index)).getViewport().getView();
-                this.getTabContextMenu(tblProvView).show(this, evt.getX(), evt.getY());
+                this.getTblProvTabContextMenu(tblProvView).show(this, evt.getX(), evt.getY());
                 eventProcessed = true;
-            }
+            } 
         }
         // Pass it on up if we're not interested.
         if (!eventProcessed) super.processMouseEvent(evt);
@@ -187,7 +193,7 @@ public class MultiTableProviderView extends JTabbedPane {
      * @param tblProvView the table provider view to use when the context menu items are chosen.
      * @return the popup menu.
      */
-    private JPopupMenu getTabContextMenu(final TableProviderView tblProvView) {
+    private JPopupMenu getTblProvTabContextMenu(final TableProviderView tblProvView) {
         JPopupMenu contextMenu = new JPopupMenu();
         JMenuItem close = new JMenuItem(BuilderBundle.getString("removeTblProvTitle", tblProvView.getTableProvider().getName()));
         close.setMnemonic(BuilderBundle.getString("removeTblProvMnemonic").charAt(0));
@@ -203,7 +209,12 @@ public class MultiTableProviderView extends JTabbedPane {
     /**
      * This class deals with drawing an overview of all the table providers.
      */
-    private class OverviewView extends JComponent {
+    private static class OverviewView extends JComponent {
+        /**
+         * Static reference to the background colour to use for components.
+         */
+        public static final Color BACKGROUND_COLOUR = Color.YELLOW;
+        
         /**
          * Internal reference to the parent view.
          */
@@ -215,8 +226,9 @@ public class MultiTableProviderView extends JTabbedPane {
          */
         public OverviewView(MultiTableProviderView multiTblProvView) {
             super();
-            this.multiTblProvView = multiTblProvView;   
+            this.multiTblProvView = multiTblProvView;
             this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
+            this.setBackground(OverviewView.BACKGROUND_COLOUR);
         }
         
         /**
@@ -227,6 +239,15 @@ public class MultiTableProviderView extends JTabbedPane {
          */
         private JPopupMenu getContextMenu(Object displayComponent) {
             JPopupMenu contextMenu = new JPopupMenu();
+            final JMenuItem redraw = new JMenuItem(BuilderBundle.getString("redrawTitle"));
+            redraw.setMnemonic(BuilderBundle.getString("redrawMnemonic").charAt(0));
+            redraw.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    multiTblProvView.getTableProviderListener().requestRecalculateVisibleView();
+                }
+            });
+            contextMenu.add(redraw);
+            contextMenu.addSeparator();
             final JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseAllTitle"));
             sync.setMnemonic(BuilderBundle.getString("synchroniseAllMnemonic").charAt(0));
             sync.addActionListener(new ActionListener() {
@@ -271,12 +292,11 @@ public class MultiTableProviderView extends JTabbedPane {
          * Recalculates the way to display what we see.
          */
         public void recalculateView() {
-            // Nothing, yet.     
+            // Nothing, yet.
         }
         
         /**
          * {@inheritDoc}
-         * <p>The preferred size is simply the preferred size of our schema tabs.</p>
          */
         public Dimension getPreferredSize() {
             return new Dimension(200,200);

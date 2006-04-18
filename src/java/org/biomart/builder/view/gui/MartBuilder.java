@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
-import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -216,7 +215,7 @@ public class MartBuilder extends JFrame {
      * Opens a file chooser, uses it to select a file, then loads the file.
      */
     public void loadSchema() {
-        this.xmlFileChooser.showOpenDialog(this);
+        if (this.xmlFileChooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
         File fileChosen = this.xmlFileChooser.getSelectedFile();
         if (fileChosen != null) {
             try {
@@ -259,7 +258,7 @@ public class MartBuilder extends JFrame {
     public void saveSchema(boolean chooseLocation) {
         if (chooseLocation || this.schemaFile == null) {
             // Let the user choose a new file.
-            this.xmlFileChooser.showSaveDialog(this);
+            if (this.xmlFileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
             File fileChosen = this.xmlFileChooser.getSelectedFile();
             // Skip the rest if they cancelled the save box.
             if (fileChosen == null) return;
@@ -535,6 +534,13 @@ public class MartBuilder extends JFrame {
     }
     
     /**
+     * Updates the currently visible tab.
+     */
+    public void recalculateVisibleView() {
+        this.schemaTabs.recalculateVisibleView();
+    }
+    
+    /**
      * Returns the current modified status.
      * @return the current modified status, true for modified, false for unmodified.
      */
@@ -776,7 +782,6 @@ public class MartBuilder extends JFrame {
          * {@inheritDoc}
          */
         public void actionPerformed(ActionEvent e) {
-            
             // File menu.
             
             if (e.getSource() == this.newSchema) this.martBuilder.newSchema();
@@ -835,7 +840,7 @@ public class MartBuilder extends JFrame {
             } else if (index == 0) {
                 SchemaView schemaView =
                         (SchemaView)((JScrollPane)this.getComponentAt(0)).getViewport().getView();
-                schemaView.recalculateVisibleView();
+                schemaView.requestRecalculateVisibleView();
             }
         }
         
@@ -851,7 +856,9 @@ public class MartBuilder extends JFrame {
             // Schema tab first.
             SchemaView schemaView = new SchemaView(this.martBuilder);
             this.multiTableProviderViews.add(schemaView);
-            this.addTab(BuilderBundle.getString("schemaTabName"), new JScrollPane(schemaView));
+            JScrollPane schemaScroller = new JScrollPane(schemaView);
+            schemaScroller.getViewport().setBackground(schemaView.getBackground());
+            this.addTab(BuilderBundle.getString("schemaTabName"), schemaScroller);
             
             // Now the window tabs.
             for (Iterator i = this.martBuilder.getSchema().getWindows().iterator(); i.hasNext(); ) {
@@ -897,10 +904,10 @@ public class MartBuilder extends JFrame {
             if (evt.getID() == MouseEvent.MOUSE_PRESSED && evt.getButton() == MouseEvent.BUTTON3) {
                 // Where was the click?
                 int index = this.indexAtLocation(evt.getX(), evt.getY());
-                // Only respond to individual windows, not the schema tab.
-                if (index>0) {
+                // Respond appropriately.
+                if (index > 0) {
                     Window window = this.martBuilder.getSchema().getWindowByName(this.getTitleAt(index));
-                    this.getTabContextMenu(window).show(this, evt.getX(), evt.getY());
+                    this.getWindowTabContextMenu(window).show(this, evt.getX(), evt.getY());
                     eventProcessed = true;
                 }
             }
@@ -913,7 +920,7 @@ public class MartBuilder extends JFrame {
          * @param window the window to use when the context menu items are chosen.
          * @return the popup menu.
          */
-        private JPopupMenu getTabContextMenu(final Window window) {
+        private JPopupMenu getWindowTabContextMenu(final Window window) {
             JPopupMenu contextMenu = new JPopupMenu();
             JMenuItem close = new JMenuItem(BuilderBundle.getString("removeWindowTitle", window.getName()));
             close.setMnemonic(BuilderBundle.getString("removeWindowMnemonic").charAt(0));
@@ -945,8 +952,12 @@ public class MartBuilder extends JFrame {
                 super(new BorderLayout());
                 // Create display part of the tab.
                 this.displayArea = new JPanel(new CardLayout());
-                this.displayArea.add(new JScrollPane(windowView), "WINDOW_CARD");
-                this.displayArea.add(new JScrollPane(new DataSetView(windowView)), "DATASET_CARD");
+                JScrollPane windowScroller = new JScrollPane(windowView);
+                windowScroller.getViewport().setBackground(windowView.getBackground());
+                this.displayArea.add(windowScroller, "WINDOW_CARD");
+                JScrollPane datasetScroller = new JScrollPane(new DataSetView(windowView));
+                datasetScroller.getViewport().setBackground(datasetView.getBackground());
+                this.displayArea.add(datasetScroller, "DATASET_CARD");
                 // Create switcher part of the tab.
                 JPanel switcher = new JPanel();
                 final JRadioButton datasetButton = new JRadioButton(BuilderBundle.getString("datasetButtonName"));
@@ -966,7 +977,7 @@ public class MartBuilder extends JFrame {
                         if (e.getSource() == windowButton) {
                             CardLayout cards = (CardLayout)displayArea.getLayout();
                             cards.show(displayArea, "WINDOW_CARD");
-                            windowView.recalculateVisibleView();
+                            windowView.requestRecalculateVisibleView();
                         }
                     }
                 });
@@ -994,7 +1005,7 @@ public class MartBuilder extends JFrame {
             public void recalculateVisibleView() {
                 Component comp = ((JScrollPane)displayArea.getComponent(0)).getViewport().getView();
                 if (comp instanceof DataSetView) ((DataSetView)comp).recalculateView();
-                else ((WindowView)comp).recalculateVisibleView();
+                else ((WindowView)comp).requestRecalculateVisibleView();
             }
         }
     }

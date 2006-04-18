@@ -104,6 +104,13 @@ public class DataSetView extends TableProviderView implements TableProviderListe
     /**
      * {@inheritDoc}
      */
+    public void requestRecalculateVisibleView() {
+        this.windowView.requestRecalculateVisibleView();
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
     public void customiseContextMenu(JPopupMenu contextMenu, Object displayComponent) {
         this.windowView.customiseContextMenu(contextMenu, displayComponent);
     }

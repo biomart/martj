@@ -967,9 +967,9 @@ public class SchemaSaver extends DefaultHandler {
                     this.writeAttribute(BuilderBundle.getString("password"), jdl.getPassword());
                 this.writeAttribute(BuilderBundle.getString("name"), tblProv.getName());
                 if (tblProv instanceof JDBCTableProvider)
-                    this.writeAttribute(BuilderBundle.getString("type"), BuilderBundle.getString("keyguessing"));
-                else
                     this.writeAttribute(BuilderBundle.getString("type"), BuilderBundle.getString("normal"));
+                else
+                    this.writeAttribute(BuilderBundle.getString("type"), BuilderBundle.getString("keyguessing"));
                 if (parentTblProvPartitionName != null)
                     this.writeAttribute(BuilderBundle.getString("partitionLabel"), label);
             }

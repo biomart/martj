@@ -90,4 +90,11 @@ public interface TableProviderListener {
      * @param window the window to delete.
      */
     public void removeWindow(Window window);
+    
+    /**
+     * A signal to redraw the diagrams. Should be passed back up to
+     * {@link MartBuilder#requestRecalculateVisibleView()}. No other
+     * action should be necessary.
+     */
+    public void requestRecalculateVisibleView();
 }

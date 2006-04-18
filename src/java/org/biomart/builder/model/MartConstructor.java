@@ -112,6 +112,14 @@ public interface MartConstructor extends DataLink, Comparable {
         
         /**
          * {@inheritDoc}
+         * <p>The generic constructor has no data source, so it will always return true.</p>
+         */
+        public boolean test() throws Exception {
+            return true;
+        }
+        
+        /**
+         * {@inheritDoc}
          * <p>The generic constructor has no data source, so it will always return false.</p>
          */
         public boolean canCohabit(DataLink partner) throws NullPointerException {

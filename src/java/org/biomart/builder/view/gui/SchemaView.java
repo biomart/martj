@@ -104,6 +104,13 @@ public class SchemaView extends MultiTableProviderView implements TableProviderL
     /**
      * {@inheritDoc}
      */
+    public void requestRecalculateVisibleView() {
+        this.recalculateVisibleView();
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
     public void customiseContextMenu(JPopupMenu contextMenu, Object displayComponent) {
         // Nothing extra needed here.
     }

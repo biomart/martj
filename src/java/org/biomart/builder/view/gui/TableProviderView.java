@@ -25,6 +25,7 @@
 package org.biomart.builder.view.gui;
 
 import java.awt.AWTEvent;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -46,6 +47,11 @@ import org.biomart.builder.resources.BuilderBundle;
  */
 public class TableProviderView extends JComponent {
     /**
+     * Static reference to the background colour to use for components.
+     */
+    public static final Color BACKGROUND_COLOUR = Color.WHITE;
+    
+    /**
      * Internal reference to the provider we are viewing.
      */
     private final TableProvider tblProv;
@@ -63,6 +69,7 @@ public class TableProviderView extends JComponent {
         super();
         this.tblProv = tblProv;
         this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
+        this.setBackground(TableProviderView.BACKGROUND_COLOUR);
     }
     
     /**
@@ -95,36 +102,49 @@ public class TableProviderView extends JComponent {
      * be null, so watch out for this.
      * @return the popup menu.
      */
-    private JPopupMenu getContextMenu(Object displayComponent) {
+    protected JPopupMenu getContextMenu(Object displayComponent) {
         JPopupMenu contextMenu = new JPopupMenu();
-        final JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseTblProvTitle", this.tblProv.getName()));
-        sync.setMnemonic(BuilderBundle.getString("synchroniseTblProvMnemonic").charAt(0));
-        sync.addActionListener(new ActionListener() {
+        // The following are applicable to all table provider views.
+        final JMenuItem redraw = new JMenuItem(BuilderBundle.getString("redrawTitle"));
+        redraw.setMnemonic(BuilderBundle.getString("redrawMnemonic").charAt(0));
+        redraw.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                tblProvListener.synchroniseTableProvider(tblProv);
+                tblProvListener.requestRecalculateVisibleView();
             }
         });
-        contextMenu.add(sync);
-        final JMenuItem test = new JMenuItem(BuilderBundle.getString("testTblProvTitle", this.tblProv.getName()));
-        test.setMnemonic(BuilderBundle.getString("testTblProvMnemonic").charAt(0));
-        test.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                tblProvListener.testTableProvider(tblProv);
-            }
-        });
-        contextMenu.add(test);
-        final JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeTblProvTitle", this.tblProv.getName()));
-        remove.setMnemonic(BuilderBundle.getString("removeTblProvMnemonic").charAt(0));
-        remove.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                tblProvListener.removeTableProvider(tblProv);
-            }
-        });
-        contextMenu.add(remove);
+        contextMenu.add(redraw);
+        // The following are not applicable to DataSetViews.
+        if (!(this instanceof DataSetView)) {
+            contextMenu.addSeparator();
+            final JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseTblProvTitle", this.tblProv.getName()));
+            sync.setMnemonic(BuilderBundle.getString("synchroniseTblProvMnemonic").charAt(0));
+            sync.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    tblProvListener.synchroniseTableProvider(tblProv);
+                }
+            });
+            contextMenu.add(sync);
+            final JMenuItem test = new JMenuItem(BuilderBundle.getString("testTblProvTitle", this.tblProv.getName()));
+            test.setMnemonic(BuilderBundle.getString("testTblProvMnemonic").charAt(0));
+            test.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    tblProvListener.testTableProvider(tblProv);
+                }
+            });
+            contextMenu.add(test);
+            final JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeTblProvTitle", this.tblProv.getName()));
+            remove.setMnemonic(BuilderBundle.getString("removeTblProvMnemonic").charAt(0));
+            remove.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    tblProvListener.removeTableProvider(tblProv);
+                }
+            });
+            contextMenu.add(remove);
+        }
         // Extend and return.
-        this.tblProvListener.customiseContextMenu(contextMenu, displayComponent);          
+        this.tblProvListener.customiseContextMenu(contextMenu, displayComponent);
         return contextMenu;
-
+        
     }
     
     /**
@@ -163,7 +183,6 @@ public class TableProviderView extends JComponent {
     
     /**
      * {@inheritDoc}
-     * <p>The preferred size is simply the preferred size of our schema tabs.</p>
      */
     public Dimension getPreferredSize() {
         return new Dimension(200,200);
