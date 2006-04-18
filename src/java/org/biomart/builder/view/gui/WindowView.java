@@ -24,8 +24,12 @@
 
 package org.biomart.builder.view.gui;
 
-import javax.swing.JLabel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Window;
+import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Displays the contents of a {@link Window} in graphical form.
@@ -33,7 +37,7 @@ import org.biomart.builder.model.Window;
  * @version 0.1.1, 11th April 2006
  * @since 0.1
  */
-public class WindowView extends MultiTableProviderView implements TableProviderListener {
+public class WindowView extends SchemaView implements TableProviderListener {    
     /**
      * Internal reference to the provider we are viewing.
      */
@@ -41,11 +45,45 @@ public class WindowView extends MultiTableProviderView implements TableProviderL
     
     /**
      * Creates a new instance of TableProviderView over a given window.
+     * @param martBuilder the MartBuilder to display the schema for.
      * @param window the window to display.
      */
-    public WindowView(Window window) {
-        super(window.getSchema().getTableProviders());
+    public WindowView(MartBuilder martBuilder, Window window) {
+        super(martBuilder);
         this.setTableProviderListener(this);
         this.window = window;
+    }
+    
+    /**
+     * Returns the window.
+     * @return the window.
+     */
+    public Window getWindow() {
+        return this.window;
+    }    
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void customiseContextMenu(JPopupMenu contextMenu, Object displayComponent) {
+        // Add separator.
+        contextMenu.addSeparator();
+        // Add our own stuff.
+        final JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseWindowTitle", this.window.getName()));
+        sync.setMnemonic(BuilderBundle.getString("synchroniseWindowMnemonic").charAt(0));
+        sync.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                getTableProviderListener().synchroniseWindow(window);
+            }
+        });
+        contextMenu.add(sync);
+        final JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeWindowTitle", this.window.getName()));
+        remove.setMnemonic(BuilderBundle.getString("removeWindowMnemonic").charAt(0));
+        remove.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                getTableProviderListener().removeWindow(window);
+            }
+        });
+        contextMenu.add(remove);
     }
 }

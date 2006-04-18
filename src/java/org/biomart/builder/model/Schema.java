@@ -25,8 +25,10 @@ package org.biomart.builder.model;
 
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
@@ -38,7 +40,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * data to this mart. It also has one or more {@link Window}s onto the {@link Table}s provided
  * by these, from which {@link DataSet}s are constructed.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 6th April 2006
+ * @version 0.1.4, 12th April 2006
  * @since 0.1
  */
 public class Schema {
@@ -164,11 +166,12 @@ public class Schema {
      * choice will have a number appended to it after an underscore, eg. '_SC1' ,'_SC2' etc.
      * Each window created will have optimiseRelations() called on it automatically.
      * @param centralTable the {@link Table} to build predicted {@link Window}s around.
+     * @return the newly created windows, as well as adding them to the schema.
      * @throws AlreadyExistsException if a window already exists in this schema with the same
      *  name as the {@link Table} or any of the suffixed versions.
      * @throws NullPointerException if the table is null.
      */
-    public void suggestWindows(Table centralTable) throws NullPointerException, AlreadyExistsException {
+    public Set suggestWindows(Table centralTable) throws NullPointerException, AlreadyExistsException {
         // Sanity check.
         if (centralTable== null)
             throw new NullPointerException(BuilderBundle.getString("tableIsNull"));
@@ -184,6 +187,7 @@ public class Schema {
         // Predict the subclass relations from the existing m:1 relations - simple guesser based
         // on finding foreign keys in the central table. Only marks the first candidate it finds, as
         // a subclassed table cannot have been subclassed off more than one parent.
+        Set suggestedWindows = new HashSet();
         int suffix = 1;
         for (Iterator i = centralTable.getForeignKeys().iterator(); i.hasNext(); ) {
             Key k = (Key)i.next();
@@ -195,6 +199,7 @@ public class Schema {
                         Window scWin = new Window(this, centralTable, centralTable.getName()+BuilderBundle.getString("subclassWindowSuffix")+(suffix++));
                         scWin.flagSubclassRelation(r);
                         scWin.optimiseRelations();
+                        suggestedWindows.add(scWin);
                     }
                 } catch (AssociationException e) {
                     AssertionError ae = new AssertionError(BuilderBundle.getString("subclassPredictionFailure"));
@@ -203,6 +208,7 @@ public class Schema {
                 }
             }
         }
+        return suggestedWindows;
     }
     
     /**
@@ -218,7 +224,7 @@ public class Schema {
         // Do we have it?
         if (!this.windows.containsKey(window.getName())) return;
         // Do it.
-        this.windows.remove(window);
+        this.windows.remove(window.getName());
     }
     
     /**

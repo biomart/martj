@@ -50,6 +50,16 @@ public interface DataLink {
     public boolean canCohabit(DataLink partner) throws NullPointerException;
     
     /**
+     * Checks to see if this {@link DataLink} is working properly.
+     * Returns true if it is, otherwise throws an exception describing the problem. 
+     * Should never return false.
+     * @return true if the link is working. Should never return false, as an exception
+     * will always be thrown if there is a problem.
+     * @throws Exception if there is a problem.
+     */
+    public boolean test() throws Exception;
+    
+    /**
      * This inner interface defines methods required for JDBC connections only.
      */
     public interface JDBCDataLink extends DataLink {

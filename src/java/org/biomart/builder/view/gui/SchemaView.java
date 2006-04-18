@@ -24,8 +24,10 @@
 
 package org.biomart.builder.view.gui;
 
-import javax.swing.JLabel;
+import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.TableProvider;
+import org.biomart.builder.model.Window;
 
 /**
  * Displays the contents of a {@link Schema} in graphical form.
@@ -35,17 +37,74 @@ import org.biomart.builder.model.Schema;
  */
 public class SchemaView extends MultiTableProviderView implements TableProviderListener {
     /**
-     * Internal reference to the provider we are viewing.
+     * Internal reference to the parent mart builder.
      */
-    private final Schema schema;
+    private final MartBuilder martBuilder;
     
     /**
-     * Creates a new instance of TableProviderView over a given schema.
-     * @param schema the schema to display.
+     * Creates a new instance of TableProviderView over a given MartBuilder schema.
+     * @param martBuilder the MartBuilder to display the schema for.
      */
-    public SchemaView(Schema schema) {
-        super(schema.getTableProviders());
+    public SchemaView(MartBuilder martBuilder) {
+        super(martBuilder.getSchema().getTableProviders());
         this.setTableProviderListener(this);
-        this.schema = schema;
+        this.martBuilder = martBuilder;
+    }
+    
+    /**
+     * Returns the parent mart builder.
+     * @return the parent mart builder.
+     */
+    public MartBuilder getMartBuilder() {
+        return this.martBuilder;
+    }  
+    
+    /**     
+     * {@inheritDoc}
+     */
+    public void synchroniseAll() {
+        this.martBuilder.synchroniseAll();
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void synchroniseTableProvider(TableProvider tblProv) {
+        this.martBuilder.synchroniseTableProvider(tblProv);
+    }  
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void testTableProvider(TableProvider tblProv) {
+        this.martBuilder.testTableProvider(tblProv);
+    }  
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void removeTableProvider(TableProvider tblProv) {
+        this.martBuilder.removeTableProvider(tblProv);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void synchroniseWindow(Window window) {
+        this.martBuilder.synchroniseWindow(window);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void removeWindow(Window window) {
+        this.martBuilder.removeWindow(window, true);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void customiseContextMenu(JPopupMenu contextMenu, Object displayComponent) {
+        // Nothing extra needed here.
     }
 }

@@ -24,8 +24,10 @@
 
 package org.biomart.builder.view.gui;
 
-import javax.swing.JLabel;
+import javax.swing.JPopupMenu;
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.TableProvider;
+import org.biomart.builder.model.Window;
 
 /**
  * Displays the contents of a {@link DataSet} in graphical form.
@@ -35,17 +37,74 @@ import org.biomart.builder.model.DataSet;
  */
 public class DataSetView extends TableProviderView implements TableProviderListener  {
     /**
-     * Internal reference to the provider we are viewing.
+     * Internal reference to the WindowView we are viewing the dataset for.
      */
-    private final DataSet dataset;
+    private final WindowView windowView;
     
     /**
      * Creates a new instance of TableProviderView over a given dataset.
-     * @param dataset the dataset to display.
+     * @param windowView the WindowView owning dataset to display.
      */
-    public DataSetView(DataSet dataset) {
-        super(dataset);
+    public DataSetView(WindowView windowView) {
+        super(windowView.getWindow().getDataSet());
         this.setTableProviderListener(this);
-        this.dataset = dataset;
+        this.windowView= windowView;
+    }
+    
+    /**
+     * Returns the parent window view.
+     * @return the parent WindowView.
+     */
+    public WindowView getWindowView() {
+        return this.windowView;
+    }
+    
+    /**     
+     * {@inheritDoc}
+     */
+    public void synchroniseAll() {
+        this.windowView.synchroniseAll();
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void synchroniseTableProvider(TableProvider tblProv) {
+        this.windowView.synchroniseTableProvider(tblProv);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void testTableProvider(TableProvider tblProv) {
+        this.windowView.testTableProvider(tblProv);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void removeTableProvider(TableProvider tblProv) {
+        this.windowView.removeTableProvider(tblProv);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void removeWindow(Window window) {
+        this.windowView.removeWindow(window);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void synchroniseWindow(Window window) {
+        this.windowView.synchroniseWindow(window);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void customiseContextMenu(JPopupMenu contextMenu, Object displayComponent) {
+        this.windowView.customiseContextMenu(contextMenu, displayComponent);
     }
 }

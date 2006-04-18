@@ -40,7 +40,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * <p>The generic implementation provided should suffice for most tasks involved with
  * keeping track of the {@link Table}s a {@link TableProvider} provides.</p>
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 6th April 2006
+ * @version 0.1.6, 18th April 2006
  * @since 0.1
  */
 public interface TableProvider extends Comparable, DataLink {
@@ -150,6 +150,14 @@ public interface TableProvider extends Comparable, DataLink {
          */
         public boolean canCohabit(DataLink partner) throws NullPointerException {
             return false;
+        }
+        
+        /**
+         * {@inheritDoc}
+         * <p>As this is a generic implementation, with nothing to connect to, it always returns true.</p>
+         */
+        public boolean test() throws Exception {
+            return true;
         }
         
         /**

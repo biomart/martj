@@ -58,6 +58,8 @@ import org.biomart.builder.resources.BuilderBundle;
  * is incapable of enforcing foreign keys etc., then you should use the key-guessing version
  * of this class instead, {@link JDBCKeyGuessingTableProvider}, eg. for MyISAM tables in MySQL.
  * @author Richard Holland <holland@ebi.ac.uk>
+ * @version 0.1.1, 18th April 2006
+ * @since 0.1
  */
 public class JDBCTableProvider extends JDBCKeyGuessingTableProvider {
     /**
@@ -123,7 +125,8 @@ public class JDBCTableProvider extends JDBCKeyGuessingTableProvider {
                 String dbTblColName = dbTblCols.getString("COLUMN_NAME");
                 // If its a new column, create and add it. Otherwise, just look it up.
                 Column dbTblCol = existingTable.getColumnByName(dbTblColName);
-                if (dbTblCol==null) dbTblCol = new GenericColumn(dbTblColName, existingTable);
+                if (dbTblCol==null) dbTblCol = new GenericColumn(dbTblColName, existingTable); 
+                removedCols.remove(dbTblCol); // Stop it from being dropped.
             }
             dbTblCols.close();
             
@@ -151,10 +154,14 @@ public class JDBCTableProvider extends JDBCKeyGuessingTableProvider {
             PrimaryKey existingPK = existingTable.getPrimaryKey();
             if (!pkCols.isEmpty()) {
                 // Create and set the primary key (only if existing one is not the same).
-                if (existingPK == null || !existingPK.getColumns().equals(pkCols)) new GenericPrimaryKey(new ArrayList(pkCols.values()));
+                if (existingPK == null || !existingPK.getColumns().equals(pkCols)) {
+                    existingTable.setPrimaryKey(new GenericPrimaryKey(new ArrayList(pkCols.values())));
+                }
             } else {
                 // Remove the primary key on this table, but only if the existing one is not handmade.
-                if (existingPK!=null && !existingPK.getStatus().equals(ComponentStatus.HANDMADE)) existingTable.setPrimaryKey(null);
+                if (existingPK!=null && !existingPK.getStatus().equals(ComponentStatus.HANDMADE)) {
+                    existingTable.setPrimaryKey(null);
+                }
             }
             
             // For each table loaded, note the foreign keys that already exist.

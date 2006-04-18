@@ -72,6 +72,8 @@ import org.biomart.builder.resources.BuilderBundle;
  * with believable information, and foreign key columns are assumed to be the name of
  * the primary key column to which they refer, optionally appended with '_key'.
  * @author Richard Holland <holland@ebi.ac.uk>
+ * @version 0.1.2, 18th April 2006
+ * @since 0.1
  */
 public class JDBCKeyGuessingTableProvider extends GenericTableProvider implements JDBCDataLink {
     /**
@@ -133,6 +135,14 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
         this.url = url;
         this.username = username;
         this.password = password;
+    }
+    
+    /**
+     * {@inheritDoc}
+     * <p>Attempts to connect to the JDBC source.</p>
+     */
+    public boolean test() throws Exception {
+        return this.getConnection()!=null;
     }
     
     /**
@@ -379,6 +389,7 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
                 // If its a new column, create and add it. Otherwise, just look it up.
                 Column dbTblCol = existingTable.getColumnByName(dbTblColName);
                 if (dbTblCol==null) dbTblCol = new GenericColumn(dbTblColName, existingTable);
+                removedCols.remove(dbTblCol); // Stop it from being dropped.
             }
             dbTblCols.close();
             
@@ -413,10 +424,14 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
             PrimaryKey existingPK = existingTable.getPrimaryKey();
             if (!pkCols.isEmpty()) {
                 // Create and set the primary key (only if existing one is not the same).
-                if (existingPK == null || !existingPK.getColumns().equals(pkCols)) new GenericPrimaryKey(new ArrayList(pkCols.values()));
+                if (existingPK == null || !existingPK.getColumns().equals(pkCols)) {
+                    existingTable.setPrimaryKey(new GenericPrimaryKey(new ArrayList(pkCols.values())));
+                }
             } else {
                 // Remove the primary key on this table, but only if the existing one is not handmade.
-                if (existingPK!=null && !existingPK.getStatus().equals(ComponentStatus.HANDMADE)) existingTable.setPrimaryKey(null);
+                if (existingPK != null && !existingPK.getStatus().equals(ComponentStatus.HANDMADE)) {
+                    existingTable.setPrimaryKey(null);
+                }
             }
             
             // For each table loaded, note the foreign keys that already exist.

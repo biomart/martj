@@ -24,10 +24,19 @@
 
 package org.biomart.builder.view.gui;
 
+import java.awt.AWTEvent;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import javax.swing.JComponent;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import org.biomart.builder.model.TableProvider;
+import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Displays the contents of a {@link TableProvider} in graphical form.
@@ -53,6 +62,15 @@ public class TableProviderView extends JComponent {
     public TableProviderView(TableProvider tblProv) {
         super();
         this.tblProv = tblProv;
+        this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
+    }
+    
+    /**
+     * Obtains the table provider this view displays.
+     * @return the table provider this view displays.
+     */
+    public TableProvider getTableProvider() {
+        return this.tblProv;
     }
     
     /**
@@ -61,6 +79,94 @@ public class TableProviderView extends JComponent {
      */
     public void setTableProviderListener(TableProviderListener tblProvListener) {
         this.tblProvListener = tblProvListener;
+    }
+    
+    /**
+     * Returns the listener to use.
+     * @return tblProvListener the listener that will be told when the view is interacted with.
+     */
+    public TableProviderListener getTableProviderListener() {
+        return this.tblProvListener;
+    }
+    
+    /**
+     * Construct a context menu for a given multi table provider view.
+     * @param displayComponent the display component we wish to customise this menu to. It may
+     * be null, so watch out for this.
+     * @return the popup menu.
+     */
+    private JPopupMenu getContextMenu(Object displayComponent) {
+        JPopupMenu contextMenu = new JPopupMenu();
+        final JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseTblProvTitle", this.tblProv.getName()));
+        sync.setMnemonic(BuilderBundle.getString("synchroniseTblProvMnemonic").charAt(0));
+        sync.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                tblProvListener.synchroniseTableProvider(tblProv);
+            }
+        });
+        contextMenu.add(sync);
+        final JMenuItem test = new JMenuItem(BuilderBundle.getString("testTblProvTitle", this.tblProv.getName()));
+        test.setMnemonic(BuilderBundle.getString("testTblProvMnemonic").charAt(0));
+        test.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                tblProvListener.testTableProvider(tblProv);
+            }
+        });
+        contextMenu.add(test);
+        final JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeTblProvTitle", this.tblProv.getName()));
+        remove.setMnemonic(BuilderBundle.getString("removeTblProvMnemonic").charAt(0));
+        remove.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                tblProvListener.removeTableProvider(tblProv);
+            }
+        });
+        contextMenu.add(remove);
+        // Extend and return.
+        this.tblProvListener.customiseContextMenu(contextMenu, displayComponent);          
+        return contextMenu;
+
+    }
+    
+    /**
+     * {@inheritDoc}
+     * <p>Intercept mouse events on the tabs to override right-clicks and provide context menus.</p>
+     */
+    protected void processMouseEvent(MouseEvent evt) {
+        boolean eventProcessed = false;
+        // Is it a right-click?
+        if (evt.getID() == MouseEvent.MOUSE_PRESSED && evt.getButton() == MouseEvent.BUTTON3) {
+            // Where was the click?
+            Object component = this.getDisplayComponentAtLocation(evt.getPoint());
+            // Only respond to individual table providers, not the overview tab.
+            this.getContextMenu(component).show(this, evt.getX(), evt.getY());
+            eventProcessed = true;
+        }
+        // Pass it on up if we're not interested.
+        if (!eventProcessed) super.processMouseEvent(evt);
+    }
+    
+    /**
+     * Works out what's at a given point.
+     * @param location the point to look at.
+     * @return the display component at that point, or null if nothing there.
+     */
+    private Object getDisplayComponentAtLocation(Point location) {
+        return null;
+    }
+    
+    /**
+     * Recalculates the way to display what we see.
+     */
+    public void recalculateView() {
+        // Nothing, yet.
+    }
+    
+    /**
+     * {@inheritDoc}
+     * <p>The preferred size is simply the preferred size of our schema tabs.</p>
+     */
+    public Dimension getPreferredSize() {
+        return new Dimension(200,200);
     }
     
     /**

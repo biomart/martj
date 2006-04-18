@@ -23,9 +23,11 @@
 
 package org.biomart.builder.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -273,7 +275,9 @@ public interface Table extends Comparable {
                 throw new AssociationException(BuilderBundle.getString("pkTableMismatch"));
             // Ensure nobody points to the old primary key
             if (this.primaryKey != null) {
-                for (Iterator i = this.primaryKey.getRelations().iterator(); i.hasNext(); ) {
+                // Must use copy else get concurrent-modification problems.
+                List relations = new ArrayList(this.primaryKey.getRelations());
+                for (Iterator i = relations.iterator(); i.hasNext(); ) {
                     Relation r = (Relation)i.next();
                     r.destroy();
                 }
@@ -325,7 +329,7 @@ public interface Table extends Comparable {
             if (foreignKey == null)
                 throw new NullPointerException(BuilderBundle.getString("keyIsNull"));
             // Do it.
-            this.foreignKeys.remove(foreignKey);
+            this.foreignKeys.remove(foreignKey.getName());
         }
         
         /**

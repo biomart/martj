@@ -26,17 +26,25 @@ package org.biomart.builder.view.gui;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -45,19 +53,23 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
 import org.biomart.builder.controller.SchemaSaver;
 import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.Table;
+import org.biomart.builder.model.TableProvider;
 import org.biomart.builder.model.Window;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * The main window housing the MartBuilder GUI.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 11th April 2006
+ * @version 0.1.2, 18th April 2006
  * @since 0.1
  */
 public class MartBuilder extends JFrame {
@@ -97,7 +109,7 @@ public class MartBuilder extends JFrame {
      */
     public MartBuilder() {
         // Create the window.
-        super(BuilderBundle.getString("GUITitle",SchemaSaver.DTD_VERSION));
+        super();
         // Set the look and feel to the one specified by the user, or the system
         // default if not specified by the user.
         String lookAndFeelClass = System.getProperty("martbuilder.laf"); // null if not set
@@ -145,9 +157,33 @@ public class MartBuilder extends JFrame {
      * @param t the throwable to display the stack trace for.
      */
     public void showStackTrace(Throwable t) {
+        // Create the main message.
+        final int messageClass = (t instanceof Error) ? JOptionPane.ERROR_MESSAGE : JOptionPane.WARNING_MESSAGE;
         String mainMessage = t.getLocalizedMessage();
-        int messageClass = (t instanceof Error) ? JOptionPane.ERROR_MESSAGE : JOptionPane.WARNING_MESSAGE;
-        JOptionPane.showMessageDialog(this, mainMessage, BuilderBundle.getString("stackTraceTitle"), messageClass);
+        // Extract the full stack trace.
+        StringWriter sw = new StringWriter();
+        t.printStackTrace(new PrintWriter(sw));
+        final String stackTraceText = sw.toString();
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                new Object[]{mainMessage, BuilderBundle.getString("stackTracePrompt")},
+                BuilderBundle.getString("stackTraceTitle"),
+                JOptionPane.YES_NO_OPTION);
+        // Create and show the dialog.
+        if (choice == JOptionPane.YES_OPTION) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    stackTraceText,
+                    BuilderBundle.getString("stackTraceTitle"),
+                    messageClass);
+        }
+    }
+    
+    /**
+     * Tells the application to exit.
+     */
+    public void exitNow() {
+        if (this.confirmCloseSchema()) System.exit(0);
     }
     
     /**
@@ -164,39 +200,6 @@ public class MartBuilder extends JFrame {
     public void resetHint() {
         if (this.schemaFile == null) this.setHint(BuilderBundle.getString("noFileLoaded"));
         else this.setHint(BuilderBundle.getString("editingFile", this.schemaFile.toString()));
-    }
-    
-    /**
-     * If the schema is modified, asks the user for confirmation whether to
-     * close it without saving or not. If the schema is unmodified, no action
-     * is taken.
-     * @return true if the schema can be closed without saving first, false if
-     * the user wishes to cancel the close action.
-     */
-    public boolean confirmCloseSchema() {
-        if (this.getModifiedStatus() == true) {
-            // Modified, so must confirm action first.
-            JOptionPane confirm = new JOptionPane(
-                    "Schema has been altered since the last time it was saved. " +
-                    "Is it OK to close it without saving the changes first?",
-                    JOptionPane.QUESTION_MESSAGE,
-                    JOptionPane.YES_NO_OPTION
-                    );
-            confirm.setVisible(true);
-            Object choice = confirm.getValue();
-            if (choice == null) return false; // Closed the window without clicking anything.
-            else return (((Integer)choice).intValue() == JOptionPane.YES_OPTION);
-        } else {
-            // Not modified, so can close OK.
-            return true;
-        }
-    }
-    
-    /**
-     * Tells the application to exit.
-     */
-    public void exitNow() {
-        if (this.confirmCloseSchema()) System.exit(0);
     }
     
     /**
@@ -227,11 +230,8 @@ public class MartBuilder extends JFrame {
     /**
      * Loads a schema file and attempts to parse it.
      * @param file the schema file to load.
-     * @throws Throwable if there was any problem.
      */
-    public void loadSchema(final File file) throws Throwable {
-        if (file == null)
-            throw new NullPointerException(BuilderBundle.getString("fileIsNull"));
+    public void loadSchema(final File file) {
         // Set the hint to say we're loading.
         this.setHint(BuilderBundle.getString("loadingFile", file.toString()));
         // Load the file in the background.
@@ -277,11 +277,8 @@ public class MartBuilder extends JFrame {
     /**
      * Saves the current schema to the given file and updates the modified status.
      * @param file the file to save the current schema to.
-     * @throws Throwable if there was any problem.
      */
-    public void saveSchema(final File file) throws Throwable {
-        if (file == null)
-            throw new NullPointerException(BuilderBundle.getString("fileIsNull"));
+    public void saveSchema(final File file) {
         // Set the hint to say we're saving.
         this.setHint(BuilderBundle.getString("savingFile", file.toString()));
         // Save the file in the background.
@@ -300,11 +297,242 @@ public class MartBuilder extends JFrame {
         });
     }
     
+    /**
+     * If the schema is modified, asks the user for confirmation whether to
+     * close it without saving or not. If the schema is unmodified, no action
+     * is taken.
+     * @return true if the schema can be closed without saving first, false if
+     * the user wishes to cancel the close action.
+     */
+    public boolean confirmCloseSchema() {
+        if (this.getModifiedStatus() == true) {
+            // Modified, so must confirm action first.
+            int choice = JOptionPane.showConfirmDialog(
+                    this,
+                    BuilderBundle.getString("okToClose"),
+                    BuilderBundle.getString("questionTitle"),
+                    JOptionPane.YES_NO_OPTION
+                    );
+            return choice == JOptionPane.YES_OPTION;
+        } else {
+            // Not modified, so can close OK.
+            return true;
+        }
+    }
     
-    // add/remove table provider (causes schemaTabs.resyncTableProviders)
-    // create/create-predict/remove window (causes schemaTabs.recreateTabs)    
+    /**
+     * Tests the specified table provider to see if it can connect.
+     * It shows a dialog to tell the user the results.
+     * @param tblProv the table provider to test.
+     */
+    public void testTableProvider(TableProvider tblProv) {
+        boolean passedTest = false;
+        try {
+            passedTest = tblProv.test();
+        } catch (Throwable t) {
+            passedTest = false;
+            this.showStackTrace(t);
+        }
+        // Tell the user what happened.
+        if (passedTest) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    BuilderBundle.getString("tblProvTestPassed"),
+                    BuilderBundle.getString("testTitle"),
+                    JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(
+                    this,
+                    BuilderBundle.getString("tblProvTestFailed"),
+                    BuilderBundle.getString("testTitle"),
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
     
+    /**
+     * Adds the specified table provider to the underlying schema.
+     * @param tblProv the table provider to add.
+     */
+    public void addTableProvider(TableProvider tblProv) {
+        try {
+            this.schema.addTableProvider(tblProv);
+            // Update the TableProviderView tabs.
+            this.schemaTabs.resyncTableProviderTabs();
+            // Update modified status.
+            this.setModifiedStatus(true);
+        } catch (Throwable t) {
+            this.showStackTrace(t);
+        }
+    }
     
+    /**
+     * Removes the specified table provider from the underlying schema.
+     * @param tblProv the table provider to remove.
+     */
+    public void removeTableProvider(final TableProvider tblProv) {
+        // Must confirm action first.
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                BuilderBundle.getString("confirmDelTblProv"),
+                BuilderBundle.getString("questionTitle"),
+                JOptionPane.YES_NO_OPTION
+                );
+        if (choice != JOptionPane.YES_OPTION) return;
+        // Set hint to removing table provider
+        this.setHint(BuilderBundle.getString("removingTblProv", tblProv.getName()));
+        // Do this later in the background
+        final MartBuilder mb = this;
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    // Table provider may contain windows, so remove the windows first.
+                    List windows = new ArrayList(mb.schema.getWindows());
+                    for (Iterator i = windows.iterator(); i.hasNext(); ) {
+                        Window w = (Window)i.next();
+                        if (w.getCentralTable().getTableProvider().equals(tblProv)) mb.removeWindow(w, false);
+                    }
+                    // Now remove the table provider itself.
+                    mb.schema.removeTableProvider(tblProv);
+                    // Update the TableProviderView tabs.
+                    mb.schemaTabs.resyncTableProviderTabs();
+                    // Update modified status.
+                    mb.setModifiedStatus(true);
+                } catch (Throwable t) {
+                    mb.showStackTrace(t);
+                } finally {
+                    mb.resetHint();
+                }
+            }
+        });
+    }
+    
+    /**
+     * Creates a number of suggested windows based around a given table.
+     * @param table the table to create the windows around.
+     */
+    public void createWindows(final Table table) {
+        // Set hint to creating windows
+        this.setHint(BuilderBundle.getString("creatingWindows", table.getName()));
+        // Do this later in the background
+        final MartBuilder mb = this;
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    Set suggestedWindows = mb.schema.suggestWindows(table);
+                    // Create a new tab for each of the new windows.
+                    for (Iterator i = suggestedWindows.iterator(); i.hasNext(); )
+                        mb.schemaTabs.createTab((Window)i.next());
+                    // Update modified status.
+                    mb.setModifiedStatus(true);
+                } catch (Throwable t) {
+                    mb.showStackTrace(t);
+                } finally {
+                    mb.resetHint();
+                }
+            }
+        });
+    }
+    
+    /**
+     * Remvoes the specified window from the underlying schema.
+     * @param window the window to remove.
+     * @param confirmRemove true if the user should be prompted, false if it
+     * should just remove it anyway (eg. if called from another routine where
+     * confirmation has already been obtained).
+     */
+    public void removeWindow(Window window, boolean confirmRemove) {
+        if (confirmRemove) {
+            // Must confirm action first.
+            int choice = JOptionPane.showConfirmDialog(
+                    this,
+                    BuilderBundle.getString("confirmDelDataset"),
+                    BuilderBundle.getString("questionTitle"),
+                    JOptionPane.YES_NO_OPTION
+                    );
+            if (choice != JOptionPane.YES_OPTION) return;
+        }
+        // Do it.
+        try {
+            this.schema.removeWindow(window);
+            // Remove the corresponding tab.
+            this.schemaTabs.removeTabAt(this.schemaTabs.indexOfTab(window.getName()));
+            // Update modified status.
+            this.setModifiedStatus(true);
+        } catch (Throwable t) {
+            this.showStackTrace(t);
+        }
+    }
+    
+    /**
+     * Synchronises the schema with the underlying table providers.
+     */
+    public void synchroniseAll() {
+        // Set hint to creating windows
+        this.setHint(BuilderBundle.getString("synchronisingSchema"));
+        // Do this later in the background
+        final MartBuilder mb = this;
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    mb.getSchema().synchronise();
+                    // Update modified status.
+                    mb.setModifiedStatus(true);
+                } catch (Throwable t) {
+                    mb.showStackTrace(t);
+                } finally {
+                    mb.resetHint();
+                }
+            }
+        });
+    }
+    
+    /**
+     * Synchronises the table provider with the underlying data structures.
+     * @param tblProv the table provider to synchronise.
+     */
+    public void synchroniseTableProvider(final TableProvider tblProv) {
+        // Set hint to creating windows
+        this.setHint(BuilderBundle.getString("synchronisingTblProv", tblProv.getName()));
+        // Do this later in the background
+        final MartBuilder mb = this;
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    tblProv.synchronise();
+                    // Update modified status.
+                    mb.setModifiedStatus(true);
+                } catch (Throwable t) {
+                    mb.showStackTrace(t);
+                } finally {
+                    mb.resetHint();
+                }
+            }
+        });
+    }
+    
+    /**
+     * Synchronises the window with the underlying table provider.
+     * @param window the window to synchronise.
+     */
+    public void synchroniseWindow(final Window window) {
+        // Set hint to creating windows
+        this.setHint(BuilderBundle.getString("synchronisingWindow", window.getName()));
+        // Do this later in the background
+        final MartBuilder mb = this;
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    window.synchronise();
+                    // Update modified status.
+                    mb.setModifiedStatus(true);
+                } catch (Throwable t) {
+                    mb.showStackTrace(t);
+                } finally {
+                    mb.resetHint();
+                }
+            }
+        });
+    }
     
     /**
      * Returns the current modified status.
@@ -320,6 +548,13 @@ public class MartBuilder extends JFrame {
      */
     public void setModifiedStatus(boolean status) {
         this.modifiedStatus = status;
+        // Update window title to match.
+        this.setTitle(
+                BuilderBundle.getString("GUITitle",SchemaSaver.DTD_VERSION) +
+                (status?" *":"")
+                );
+        // Recalculate visible contents.
+        this.schemaTabs.recalculateVisibleView();
     }
     
     /**
@@ -350,6 +585,22 @@ public class MartBuilder extends JFrame {
     }
     
     /**
+     * {@inheritDoc}
+     * <p>The preferred size is simply the preferred size of our schema tabs.</p>
+     */
+    public Dimension getPreferredSize() {
+        return this.schemaTabs.getPreferredSize();
+    }
+    
+    /**
+     * {@inheritDoc}
+     * <p>The minimum size is 400x400.</p>
+     */
+    public Dimension getMinimumSize() {
+        return new Dimension(400,400);
+    }
+    
+    /**
      * The main method starts the application and opens the main window.
      * @param args the command line arguments. The first argument, if present,
      * is taken as the name of a schema XML file to load when the application
@@ -365,11 +616,6 @@ public class MartBuilder extends JFrame {
             public void run() {
                 // Create it.
                 final MartBuilder mb = new MartBuilder();
-                // Set a sensible minimum size then maximize it.
-                mb.setSize(400,400);
-                mb.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                // Open it.
-                mb.setVisible(true);
                 // Do we have an input file to load?
                 if (inputFile != null) {
                     try {
@@ -377,7 +623,14 @@ public class MartBuilder extends JFrame {
                     } catch (Throwable t) {
                         mb.showStackTrace(t);
                     }
+                    // Reset the size to the new file's best options.
+                    mb.setSize(mb.getPreferredSize());
+                } else {
+                    // Set a sensible size.
+                    mb.setSize(mb.getMinimumSize());
                 }
+                // Open it.
+                mb.setVisible(true);
             }
         });
     }
@@ -389,7 +642,7 @@ public class MartBuilder extends JFrame {
         /**
          * Internal reference to the {@link MartBuilder} we're listening on.
          */
-        private MartBuilder martBuilder;
+        private final MartBuilder martBuilder;
         
         /**
          * The constructor remembers the {@link MartBuilder} we're supposed to listen
@@ -450,7 +703,7 @@ public class MartBuilder extends JFrame {
         /**
          * Internal reference to the {@link MartBuilder} parent.
          */
-        private MartBuilder martBuilder;
+        private final MartBuilder martBuilder;
         
         /**
          * Internal references to the various menu options.
@@ -460,6 +713,7 @@ public class MartBuilder extends JFrame {
         private JMenuItem saveSchema;
         private JMenuItem saveSchemaAs;
         private JMenuItem exit;
+        private JMenuItem synchroniseAll;
         
         /**
          * Constructor calls super then sets up our menu items.
@@ -503,6 +757,19 @@ public class MartBuilder extends JFrame {
             fileMenu.add(this.exit);
             
             this.add(fileMenu);
+            
+            // Schema menu.
+            
+            JMenu schemaMenu = new JMenu(BuilderBundle.getString("schemaMenuTitle"));
+            schemaMenu.setMnemonic(BuilderBundle.getString("schemaMenuMnemonic").charAt(0));
+            
+            this.synchroniseAll = new JMenuItem(BuilderBundle.getString("synchroniseAllTitle"));
+            this.synchroniseAll.setMnemonic(BuilderBundle.getString("synchroniseAllMnemonic").charAt(0));
+            this.synchroniseAll.addActionListener(this);
+            
+            schemaMenu.add(this.synchroniseAll);
+            
+            this.add(schemaMenu);
         }
         
         /**
@@ -517,6 +784,10 @@ public class MartBuilder extends JFrame {
             else if (e.getSource() == this.saveSchema) this.martBuilder.saveSchema(false);
             else if (e.getSource() == this.saveSchemaAs) this.martBuilder.saveSchema(true);
             else if (e.getSource() == this.exit) this.martBuilder.exitNow();
+            
+            // Schema menu.
+            
+            else if (e.getSource() == this.synchroniseAll) this.martBuilder.synchroniseAll();
         }
     }
     
@@ -527,13 +798,13 @@ public class MartBuilder extends JFrame {
         /**
          * Internal reference to the {@link MartBuilder} parent.
          */
-        private MartBuilder martBuilder;
+        private final MartBuilder martBuilder;
         
         /**
          * Internal reference to the set of multi-table-providers which might
          * need resyncing once in a while.
          */
-        private Set multiTableProviders = new HashSet();
+        private final Set multiTableProviderViews = new HashSet();
         
         /**
          * The constructor remembers who its daddy is.
@@ -545,30 +816,137 @@ public class MartBuilder extends JFrame {
         }
         
         /**
+         * {@inheritDoc}
+         * <p>Intercepts tab selection in order to recalculate the visible view.</p>
+         */
+        public void setSelectedIndex(int index) {
+            super.setSelectedIndex(index);
+            this.recalculateVisibleView();
+        }
+        
+        /**
+         * Recalculates the way to display what we are seeing at the moment.
+         */
+        public void recalculateVisibleView() {
+            int index = this.getSelectedIndex();
+            if (index > 0) {
+                MartBuilderWindowTab windowTab = (MartBuilderWindowTab)this.getComponentAt(index);
+                windowTab.recalculateVisibleView();
+            } else if (index == 0) {
+                SchemaView schemaView =
+                        (SchemaView)((JScrollPane)this.getComponentAt(0)).getViewport().getView();
+                schemaView.recalculateVisibleView();
+            }
+        }
+        
+        /**
          * This function makes the tabs match up with the contents of the {@link Schema}
          * object in the parent {@link MartBuilder}.
          */
         public void recreateTabs() {
             // Remove the existing tabs.
             this.removeAll();
-            this.multiTableProviders.clear();
+            this.multiTableProviderViews.clear();
             
             // Schema tab first.
-            JPanel schemaTab = new JPanel(new BorderLayout());
-            SchemaView schemaView = new SchemaView(this.martBuilder.getSchema());
-            schemaTab.add(schemaView, BorderLayout.CENTER);
-            this.multiTableProviders.add(schemaView);
-            this.addTab(BuilderBundle.getString("schemaTabName"), schemaTab);
+            SchemaView schemaView = new SchemaView(this.martBuilder);
+            this.multiTableProviderViews.add(schemaView);
+            this.addTab(BuilderBundle.getString("schemaTabName"), new JScrollPane(schemaView));
             
             // Now the window tabs.
             for (Iterator i = this.martBuilder.getSchema().getWindows().iterator(); i.hasNext(); ) {
                 Window w = (Window)i.next();
+                this.createTab(w);
+            }
+            
+            // Select the schema tab by default.
+            this.setSelectedIndex(0);
+        }
+        
+        /**
+         * Creates and adds a new tab based around a given window.
+         * @param w the window to base the new tab around.
+         */
+        public void createTab(Window w) {
+            // Create the views.
+            WindowView windowView = new WindowView(this.martBuilder, w);
+            this.multiTableProviderViews.add(windowView);
+            DataSetView datasetView = new DataSetView(windowView);
+            // Create tab itself.
+            MartBuilderWindowTab windowTab = new MartBuilderWindowTab(windowView, datasetView);
+            this.addTab(w.getName(), windowTab);
+        }
+        
+        /**
+         * Resyncs the table providers within each multi table provider tab.
+         */
+        public void resyncTableProviderTabs() {
+            for (Iterator i = this.multiTableProviderViews.iterator(); i.hasNext(); ) {
+                MultiTableProviderView multi = (MultiTableProviderView)i.next();
+                multi.resyncTableProviderTabs(this.martBuilder.getSchema().getTableProviders());
+            }
+        }
+        
+        /**
+         * {@inheritDoc}
+         * <p>Intercept mouse events on the tabs to override right-clicks and provide context menus.</p>
+         */
+        protected void processMouseEvent(MouseEvent evt) {
+            boolean eventProcessed = false;
+            // Is it a right-click?
+            if (evt.getID() == MouseEvent.MOUSE_PRESSED && evt.getButton() == MouseEvent.BUTTON3) {
+                // Where was the click?
+                int index = this.indexAtLocation(evt.getX(), evt.getY());
+                // Only respond to individual windows, not the schema tab.
+                if (index>0) {
+                    Window window = this.martBuilder.getSchema().getWindowByName(this.getTitleAt(index));
+                    this.getTabContextMenu(window).show(this, evt.getX(), evt.getY());
+                    eventProcessed = true;
+                }
+            }
+            // Pass it on up if we're not interested.
+            if (!eventProcessed) super.processMouseEvent(evt);
+        }
+        
+        /**
+         * Construct a context menu for a given window view tab.
+         * @param window the window to use when the context menu items are chosen.
+         * @return the popup menu.
+         */
+        private JPopupMenu getTabContextMenu(final Window window) {
+            JPopupMenu contextMenu = new JPopupMenu();
+            JMenuItem close = new JMenuItem(BuilderBundle.getString("removeWindowTitle", window.getName()));
+            close.setMnemonic(BuilderBundle.getString("removeWindowMnemonic").charAt(0));
+            close.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    martBuilder.removeWindow(window, true);
+                }
+            });
+            contextMenu.add(close);
+            return contextMenu;
+        }
+        
+        /**
+         * This is a custom JPanel which knows how to synchronise it's children.
+         */
+        private class MartBuilderWindowTab extends JPanel {
+            /**
+             * Internal reference to the display area.
+             */
+            private final JPanel displayArea;
+            
+            /**
+             * This constructor builds a pair of switcher-style buttons which alternate
+             * between window and dataset view.
+             * @param windowView the window view.
+             * @param datasetView the dataset view.
+             */
+            public MartBuilderWindowTab(final WindowView windowView, final DataSetView datasetView) {
+                super(new BorderLayout());
                 // Create display part of the tab.
-                final JPanel displayArea = new JPanel(new CardLayout());
-                displayArea.add(new DataSetView(w.getDataSet()), "DATASET_CARD");
-                WindowView windowView = new WindowView(w);
-                displayArea.add(windowView, "WINDOW_CARD");
-                this.multiTableProviders.add(windowView);
+                this.displayArea = new JPanel(new CardLayout());
+                this.displayArea.add(new JScrollPane(windowView), "WINDOW_CARD");
+                this.displayArea.add(new JScrollPane(new DataSetView(windowView)), "DATASET_CARD");
                 // Create switcher part of the tab.
                 JPanel switcher = new JPanel();
                 final JRadioButton datasetButton = new JRadioButton(BuilderBundle.getString("datasetButtonName"));
@@ -577,6 +955,7 @@ public class MartBuilder extends JFrame {
                         if (e.getSource() == datasetButton) {
                             CardLayout cards = (CardLayout)displayArea.getLayout();
                             cards.show(displayArea, "DATASET_CARD");
+                            datasetView.recalculateView();
                         }
                     }
                 });
@@ -587,6 +966,7 @@ public class MartBuilder extends JFrame {
                         if (e.getSource() == windowButton) {
                             CardLayout cards = (CardLayout)displayArea.getLayout();
                             cards.show(displayArea, "WINDOW_CARD");
+                            windowView.recalculateVisibleView();
                         }
                     }
                 });
@@ -596,24 +976,25 @@ public class MartBuilder extends JFrame {
                 buttons.add(windowButton);
                 buttons.add(datasetButton);
                 datasetButton.setSelected(true);
-                // Create tab itself.
-                JPanel windowTab = new JPanel(new BorderLayout());
-                windowTab.add(switcher, BorderLayout.NORTH);
-                windowTab.add(displayArea, BorderLayout.CENTER);
-                this.addTab(w.getName(), windowTab);
+                // Add the components to the panel.
+                this.add(switcher, BorderLayout.NORTH);
+                this.add(displayArea, BorderLayout.CENTER);
+                // Set our preferred size to the dataset size plus a bit on top for the switcher buttons.
+                Dimension preferredSize = datasetView.getPreferredSize();
+                double extraHeight = datasetButton.getHeight();
+                preferredSize.setSize(preferredSize.getWidth(), preferredSize.getHeight()+extraHeight);
+                this.setPreferredSize(preferredSize);
+                // Select the default one (dataset).
+                ((CardLayout)this.displayArea.getLayout()).show(displayArea, "DATASET_CARD");
             }
             
-            // Select the schema tab by default.
-            this.setSelectedComponent(schemaTab);
-        }
-        
-        /**
-         * Resyncs the table providers within each multi table provider tab.
-         */
-        public void resyncTableProviders() {
-            for (Iterator i = this.multiTableProviders.iterator(); i.hasNext(); ) {
-                MultiTableProviderView multi = (MultiTableProviderView)i.next();
-                multi.resyncTableProviders(this.martBuilder.getSchema().getTableProviders());
+            /**
+             * Recalculates the way to display what we are seeing at the moment.
+             */
+            public void recalculateVisibleView() {
+                Component comp = ((JScrollPane)displayArea.getComponent(0)).getViewport().getView();
+                if (comp instanceof DataSetView) ((DataSetView)comp).recalculateView();
+                else ((WindowView)comp).recalculateVisibleView();
             }
         }
     }
