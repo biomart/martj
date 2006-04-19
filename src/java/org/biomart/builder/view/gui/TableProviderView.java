@@ -42,10 +42,10 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Displays the contents of a {@link TableProvider} in graphical form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 11th April 2006
+ * @version 0.1.2, 19th April 2006
  * @since 0.1
  */
-public class TableProviderView extends JComponent {
+public class TableProviderView extends JComponent implements View {
     /**
      * Static reference to the background colour to use for components.
      */
@@ -54,20 +54,20 @@ public class TableProviderView extends JComponent {
     /**
      * Internal reference to the provider we are viewing.
      */
-    private final TableProvider tblProv;
+    private final TableProvider tableProvider;
     
     /**
-     * Internal reference to the listener for the provider we are viewing.
+     * Internal reference to our event listener.
      */
-    private TableProviderListener tblProvListener;
+    private Listener listener;
     
     /**
      * Creates a new instance of TableProviderView over a given provider.
-     * @param tblProv the given table provider.
+     * @param tableProvider the given table provider.
      */
-    public TableProviderView(TableProvider tblProv) {
+    public TableProviderView(TableProvider tableProvider) {
         super();
-        this.tblProv = tblProv;
+        this.tableProvider = tableProvider;
         this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
         this.setBackground(TableProviderView.BACKGROUND_COLOUR);
     }
@@ -76,24 +76,8 @@ public class TableProviderView extends JComponent {
      * Obtains the table provider this view displays.
      * @return the table provider this view displays.
      */
-    public TableProvider getTableProvider() {
-        return this.tblProv;
-    }
-    
-    /**
-     * Sets the listener to use.
-     * @param tblProvListener the listener that will be told when the view is interacted with.
-     */
-    public void setTableProviderListener(TableProviderListener tblProvListener) {
-        this.tblProvListener = tblProvListener;
-    }
-    
-    /**
-     * Returns the listener to use.
-     * @return tblProvListener the listener that will be told when the view is interacted with.
-     */
-    public TableProviderListener getTableProviderListener() {
-        return this.tblProvListener;
+    protected TableProvider getTableProvider() {
+        return this.tableProvider;
     }
     
     /**
@@ -102,49 +86,49 @@ public class TableProviderView extends JComponent {
      * be null, so watch out for this.
      * @return the popup menu.
      */
-    protected JPopupMenu getContextMenu(Object displayComponent) {
+    private JPopupMenu getContextMenu(Object displayComponent) {
         JPopupMenu contextMenu = new JPopupMenu();
         // The following are applicable to all table provider views.
         final JMenuItem redraw = new JMenuItem(BuilderBundle.getString("redrawTitle"));
         redraw.setMnemonic(BuilderBundle.getString("redrawMnemonic").charAt(0));
         redraw.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                tblProvListener.requestRecalculateVisibleView();
+                recalculateView();
             }
         });
         contextMenu.add(redraw);
-        // The following are not applicable to DataSetViews.
-        if (!(this instanceof DataSetView)) {
+        // The following are not applicable to DataSets (we can tell by the listener type).
+        if (!(this.getListener() instanceof DataSetListener)) {
             contextMenu.addSeparator();
-            final JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseTblProvTitle", this.tblProv.getName()));
+            final JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseTblProvTitle", this.tableProvider.getName()));
             sync.setMnemonic(BuilderBundle.getString("synchroniseTblProvMnemonic").charAt(0));
             sync.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    tblProvListener.synchroniseTableProvider(tblProv);
+                    getListener().requestSynchroniseTableProvider(tableProvider);
                 }
             });
             contextMenu.add(sync);
-            final JMenuItem test = new JMenuItem(BuilderBundle.getString("testTblProvTitle", this.tblProv.getName()));
+            final JMenuItem test = new JMenuItem(BuilderBundle.getString("testTblProvTitle", this.tableProvider.getName()));
             test.setMnemonic(BuilderBundle.getString("testTblProvMnemonic").charAt(0));
             test.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    tblProvListener.testTableProvider(tblProv);
+                    getListener().requestTestTableProvider(tableProvider);
                 }
             });
             contextMenu.add(test);
-            final JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeTblProvTitle", this.tblProv.getName()));
+            final JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeTblProvTitle", this.tableProvider.getName()));
             remove.setMnemonic(BuilderBundle.getString("removeTblProvMnemonic").charAt(0));
             remove.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    tblProvListener.removeTableProvider(tblProv);
+                    getListener().requestRemoveTableProvider(tableProvider);
                 }
             });
             contextMenu.add(remove);
         }
-        // Extend and return.
-        this.tblProvListener.customiseContextMenu(contextMenu, displayComponent);
-        return contextMenu;
-        
+        // Extend.
+        this.getListener().requestCustomiseContextMenu(contextMenu, displayComponent);
+        // Return.
+        return contextMenu;        
     }
     
     /**
@@ -166,6 +150,29 @@ public class TableProviderView extends JComponent {
     }
     
     /**
+     * {@inheritDoc}
+     */
+    public void setListener(Listener listener) throws NullPointerException {
+        if (listener==null) 
+            throw new NullPointerException(BuilderBundle.getString("listenerIsNull"));
+        this.listener = listener;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public Listener getListener() {
+        return this.listener;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public JComponent asJComponent() {
+        return this;
+    }
+    
+    /**
      * Works out what's at a given point.
      * @param location the point to look at.
      * @return the display component at that point, or null if nothing there.
@@ -175,7 +182,7 @@ public class TableProviderView extends JComponent {
     }
     
     /**
-     * Recalculates the way to display what we see.
+     * {@inheritDoc}
      */
     public void recalculateView() {
         // Nothing, yet.

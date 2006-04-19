@@ -1,7 +1,7 @@
 /*
- * WindowView.java
+ * WindowListener.java
  *
- * Created on 11 April 2006, 16:00
+ * Created on 19 April 2006, 09:43
  */
 
 /*
@@ -32,56 +32,78 @@ import org.biomart.builder.model.Window;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
- * Displays the contents of a {@link Window} in graphical form.
+ * Adapts listener behaviour by adding in Window-specific stuff.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 11th April 2006
+ * @version 0.0.1, 19th April 2006
  * @since 0.1
  */
-public class WindowView extends SchemaView implements TableProviderListener {    
+public class WindowListener extends DefaultListener {
     /**
-     * Internal reference to the provider we are viewing.
+     * Internal reference to our window.
      */
-    private final Window window;
+    private Window window;
     
-    /**
-     * Creates a new instance of TableProviderView over a given window.
-     * @param martBuilder the MartBuilder to display the schema for.
-     * @param window the window to display.
+    /** 
+     * Creates a new instance of WindowListener over
+     * a given window. 
+     * @param martBuilder the MartBuilder we are attached to.
+     * @param window the window we are attached to.
      */
-    public WindowView(MartBuilder martBuilder, Window window) {
+    public WindowListener(MartBuilder martBuilder, Window window) {
         super(martBuilder);
-        this.setTableProviderListener(this);
         this.window = window;
     }
     
     /**
-     * Returns the window.
-     * @return the window.
+     * Retrieve our window.
+     * @return our window.
      */
-    public Window getWindow() {
+    protected Window getWindow() {
         return this.window;
     }    
     
     /**
+     * A signal to synchronise some window. Should be passed back up to
+     * {@link MartBuilder#requestSynchroniseWindow(Window)}. No other
+     * action should be necessary.
+     * 
+     * @param window the window to synchronise.
+     */
+    public void requestSynchroniseWindow(Window window) {
+        this.getMartBuilder().synchroniseWindow(window);
+    }
+    
+    /**
+     * A signal to delete some window. Should be passed back up to
+     * {@link MartBuilder#requestRemoveWindow(Window, boolean)}. No other
+     * action should be necessary.
+     * 
+     * @param window the window to delete.
+     */
+    public void requestRemoveWindow(Window window) {
+        this.getMartBuilder().removeWindow(window, true);
+    }
+    
+    /**
      * {@inheritDoc}
      */
-    public void customiseContextMenu(JPopupMenu contextMenu, Object displayComponent) {
+    public void requestCustomiseContextMenu(JPopupMenu contextMenu, Object displayComponent) {
         // Add separator.
         contextMenu.addSeparator();
         // Add our own stuff.
-        final JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseWindowTitle", this.window.getName()));
+        final JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseWindowTitle", this.getWindow().getName()));
         sync.setMnemonic(BuilderBundle.getString("synchroniseWindowMnemonic").charAt(0));
         sync.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getTableProviderListener().synchroniseWindow(window);
+                requestSynchroniseWindow(window);
             }
         });
         contextMenu.add(sync);
-        final JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeWindowTitle", this.window.getName()));
+        final JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeWindowTitle", this.getWindow().getName()));
         remove.setMnemonic(BuilderBundle.getString("removeWindowMnemonic").charAt(0));
         remove.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getTableProviderListener().removeWindow(window);
+                requestRemoveWindow(window);
             }
         });
         contextMenu.add(remove);

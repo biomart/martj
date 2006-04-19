@@ -25,25 +25,20 @@
 package org.biomart.builder.view.gui;
 
 import java.awt.BorderLayout;
-import java.awt.CardLayout;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import javax.swing.BorderFactory;
-import javax.swing.ButtonGroup;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -51,11 +46,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
 import org.biomart.builder.controller.SchemaSaver;
@@ -68,7 +58,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * The main window housing the MartBuilder GUI.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 18th April 2006
+ * @version 0.1.3, 19th April 2006
  * @since 0.1
  */
 public class MartBuilder extends JFrame {
@@ -88,19 +78,19 @@ public class MartBuilder extends JFrame {
     private File schemaFile;
     
     /**
-     * Internal reference to the tabs containing the schema.
+     * Internal reference to the tabs containing the schema and windows.
      */
-    private MartBuilderSchemaTabs schemaTabs;
-    
-    /**
-     * Internal reference to a JFileChooser for opening/saving XML files with.
-     */
-    private XMLFileChooser xmlFileChooser = new XMLFileChooser();
+    private WindowTabSet windowTabSet;
     
     /**
      * Internal reference to the hint bar.
      */
     private JLabel hintBar = new JLabel("");
+    
+    /**
+     * Internal reference to a JFileChooser for opening/saving XML files with.
+     */
+    private JFileChooser xmlFileChooser;
     
     /**
      * Creates a new instance of MartBuilder. Calls initComponents
@@ -137,7 +127,14 @@ public class MartBuilder extends JFrame {
      */
     private void initComponents() {
         // Set up window listener and use it to handle windows closing.
-        this.addWindowListener(new MartBuilderWindowListener(this));
+        final MartBuilder mb = this;
+        this.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                if (e.getWindow() == mb) {
+                    mb.exitNow();
+                }
+            }
+        });
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         // Make a menu bar and add it.
         this.setJMenuBar(new MartBuilderMenuBar(this));
@@ -145,10 +142,28 @@ public class MartBuilder extends JFrame {
         this.hintBar.setBorder(BorderFactory.createLoweredBevelBorder());
         this.getContentPane().add(this.hintBar, BorderLayout.SOUTH);
         // Set up the schema tabs.
-        this.schemaTabs = new MartBuilderSchemaTabs(this);
-        this.getContentPane().add(this.schemaTabs, BorderLayout.CENTER);
+        this.windowTabSet = new WindowTabSet(this);
+        this.getContentPane().add(this.windowTabSet, BorderLayout.CENTER);
         // Pack the window.
         this.pack();
+        // Create the file chooser.
+        this.xmlFileChooser = new JFileChooser();
+        this.xmlFileChooser.setFileFilter(new FileFilter(){
+            /**
+             * {@inheritDoc}
+             * <p>Accepts only files ending in ".xml".</p>
+             */
+            public boolean accept(File f) {
+                return (f.isDirectory() || f.getName().endsWith(".xml"));
+            }
+            
+            /**
+             * {@inheritDoc}
+             */
+            public String getDescription() {
+                return BuilderBundle.getString("XMLFileFilterDescription");
+            }
+        });
     }
     
     /**
@@ -356,7 +371,7 @@ public class MartBuilder extends JFrame {
         try {
             this.schema.addTableProvider(tblProv);
             // Update the TableProviderView tabs.
-            this.schemaTabs.resyncTableProviderTabs();
+            this.windowTabSet.resyncTableProviderTabs();
             // Update modified status.
             this.setModifiedStatus(true);
         } catch (Throwable t) {
@@ -393,7 +408,7 @@ public class MartBuilder extends JFrame {
                     // Now remove the table provider itself.
                     mb.schema.removeTableProvider(tblProv);
                     // Update the TableProviderView tabs.
-                    mb.schemaTabs.resyncTableProviderTabs();
+                    mb.windowTabSet.resyncTableProviderTabs();
                     // Update modified status.
                     mb.setModifiedStatus(true);
                 } catch (Throwable t) {
@@ -420,7 +435,7 @@ public class MartBuilder extends JFrame {
                     Set suggestedWindows = mb.schema.suggestWindows(table);
                     // Create a new tab for each of the new windows.
                     for (Iterator i = suggestedWindows.iterator(); i.hasNext(); )
-                        mb.schemaTabs.createTab((Window)i.next());
+                        mb.windowTabSet.createTab((Window)i.next());
                     // Update modified status.
                     mb.setModifiedStatus(true);
                 } catch (Throwable t) {
@@ -454,7 +469,7 @@ public class MartBuilder extends JFrame {
         try {
             this.schema.removeWindow(window);
             // Remove the corresponding tab.
-            this.schemaTabs.removeTabAt(this.schemaTabs.indexOfTab(window.getName()));
+            this.windowTabSet.removeTabAt(this.windowTabSet.indexOfTab(window.getName()));
             // Update modified status.
             this.setModifiedStatus(true);
         } catch (Throwable t) {
@@ -534,13 +549,6 @@ public class MartBuilder extends JFrame {
     }
     
     /**
-     * Updates the currently visible tab.
-     */
-    public void recalculateVisibleView() {
-        this.schemaTabs.recalculateVisibleView();
-    }
-    
-    /**
      * Returns the current modified status.
      * @return the current modified status, true for modified, false for unmodified.
      */
@@ -560,7 +568,7 @@ public class MartBuilder extends JFrame {
                 (status?" *":"")
                 );
         // Recalculate visible contents.
-        this.schemaTabs.recalculateVisibleView();
+        this.windowTabSet.recalculateView();
     }
     
     /**
@@ -586,7 +594,7 @@ public class MartBuilder extends JFrame {
         if (this.confirmCloseSchema()) {
             this.schema = schema;
             this.setModifiedStatus(false); // New schema is in non-modified state.
-            this.schemaTabs.recreateTabs();
+            this.windowTabSet.recreateTabs();
         }
     }
     
@@ -595,12 +603,12 @@ public class MartBuilder extends JFrame {
      * <p>The preferred size is simply the preferred size of our schema tabs.</p>
      */
     public Dimension getPreferredSize() {
-        return this.schemaTabs.getPreferredSize();
+        return this.windowTabSet.getPreferredSize();
     }
     
     /**
      * {@inheritDoc}
-     * <p>The minimum size is 400x400.</p>
+     * <p>The minimum size is the 400x400, for no real reason.</p>
      */
     public Dimension getMinimumSize() {
         return new Dimension(400,400);
@@ -669,36 +677,6 @@ public class MartBuilder extends JFrame {
             if (e.getWindow() == this.martBuilder) {
                 this.martBuilder.exitNow();
             }
-        }
-    }
-    
-    /**
-     * This JFileChooser only opens XML files.
-     */
-    private class XMLFileChooser extends JFileChooser {
-        /**
-         * The default constructor calls the super, then sets the filter
-         * to XML files only.
-         */
-        public XMLFileChooser() {
-            super();
-            // Create the filter.
-            this.setFileFilter(new FileFilter(){
-                /**
-                 * {@inheritDoc}
-                 * <p>Accepts only files ending in ".xml".</p>
-                 */
-                public boolean accept(File f) {
-                    return (f.isDirectory() || f.getName().endsWith(".xml"));
-                }
-                
-                /**
-                 * {@inheritDoc}
-                 */
-                public String getDescription() {
-                    return BuilderBundle.getString("XMLFileFilterDescription");
-                }
-            });
         }
     }
     
@@ -793,220 +771,6 @@ public class MartBuilder extends JFrame {
             // Schema menu.
             
             else if (e.getSource() == this.synchroniseAll) this.martBuilder.synchroniseAll();
-        }
-    }
-    
-    /**
-     * This class represents the tabbed layout that draws Schemas.
-     */
-    private class MartBuilderSchemaTabs extends JTabbedPane {
-        /**
-         * Internal reference to the {@link MartBuilder} parent.
-         */
-        private final MartBuilder martBuilder;
-        
-        /**
-         * Internal reference to the set of multi-table-providers which might
-         * need resyncing once in a while.
-         */
-        private final Set multiTableProviderViews = new HashSet();
-        
-        /**
-         * The constructor remembers who its daddy is.
-         * @param martBuilder the parent MartBuilder to which this tabbed panel belongs.
-         */
-        public MartBuilderSchemaTabs(MartBuilder martBuilder) {
-            super();
-            this.martBuilder = martBuilder;
-        }
-        
-        /**
-         * {@inheritDoc}
-         * <p>Intercepts tab selection in order to recalculate the visible view.</p>
-         */
-        public void setSelectedIndex(int index) {
-            super.setSelectedIndex(index);
-            this.recalculateVisibleView();
-        }
-        
-        /**
-         * Recalculates the way to display what we are seeing at the moment.
-         */
-        public void recalculateVisibleView() {
-            int index = this.getSelectedIndex();
-            if (index > 0) {
-                MartBuilderWindowTab windowTab = (MartBuilderWindowTab)this.getComponentAt(index);
-                windowTab.recalculateVisibleView();
-            } else if (index == 0) {
-                SchemaView schemaView =
-                        (SchemaView)((JScrollPane)this.getComponentAt(0)).getViewport().getView();
-                schemaView.requestRecalculateVisibleView();
-            }
-        }
-        
-        /**
-         * This function makes the tabs match up with the contents of the {@link Schema}
-         * object in the parent {@link MartBuilder}.
-         */
-        public void recreateTabs() {
-            // Remove the existing tabs.
-            this.removeAll();
-            this.multiTableProviderViews.clear();
-            
-            // Schema tab first.
-            SchemaView schemaView = new SchemaView(this.martBuilder);
-            this.multiTableProviderViews.add(schemaView);
-            JScrollPane schemaScroller = new JScrollPane(schemaView);
-            schemaScroller.getViewport().setBackground(schemaView.getBackground());
-            this.addTab(BuilderBundle.getString("schemaTabName"), schemaScroller);
-            
-            // Now the window tabs.
-            for (Iterator i = this.martBuilder.getSchema().getWindows().iterator(); i.hasNext(); ) {
-                Window w = (Window)i.next();
-                this.createTab(w);
-            }
-            
-            // Select the schema tab by default.
-            this.setSelectedIndex(0);
-        }
-        
-        /**
-         * Creates and adds a new tab based around a given window.
-         * @param w the window to base the new tab around.
-         */
-        public void createTab(Window w) {
-            // Create the views.
-            WindowView windowView = new WindowView(this.martBuilder, w);
-            this.multiTableProviderViews.add(windowView);
-            DataSetView datasetView = new DataSetView(windowView);
-            // Create tab itself.
-            MartBuilderWindowTab windowTab = new MartBuilderWindowTab(windowView, datasetView);
-            this.addTab(w.getName(), windowTab);
-        }
-        
-        /**
-         * Resyncs the table providers within each multi table provider tab.
-         */
-        public void resyncTableProviderTabs() {
-            for (Iterator i = this.multiTableProviderViews.iterator(); i.hasNext(); ) {
-                MultiTableProviderView multi = (MultiTableProviderView)i.next();
-                multi.resyncTableProviderTabs(this.martBuilder.getSchema().getTableProviders());
-            }
-        }
-        
-        /**
-         * {@inheritDoc}
-         * <p>Intercept mouse events on the tabs to override right-clicks and provide context menus.</p>
-         */
-        protected void processMouseEvent(MouseEvent evt) {
-            boolean eventProcessed = false;
-            // Is it a right-click?
-            if (evt.getID() == MouseEvent.MOUSE_PRESSED && evt.getButton() == MouseEvent.BUTTON3) {
-                // Where was the click?
-                int index = this.indexAtLocation(evt.getX(), evt.getY());
-                // Respond appropriately.
-                if (index > 0) {
-                    Window window = this.martBuilder.getSchema().getWindowByName(this.getTitleAt(index));
-                    this.getWindowTabContextMenu(window).show(this, evt.getX(), evt.getY());
-                    eventProcessed = true;
-                }
-            }
-            // Pass it on up if we're not interested.
-            if (!eventProcessed) super.processMouseEvent(evt);
-        }
-        
-        /**
-         * Construct a context menu for a given window view tab.
-         * @param window the window to use when the context menu items are chosen.
-         * @return the popup menu.
-         */
-        private JPopupMenu getWindowTabContextMenu(final Window window) {
-            JPopupMenu contextMenu = new JPopupMenu();
-            JMenuItem close = new JMenuItem(BuilderBundle.getString("removeWindowTitle", window.getName()));
-            close.setMnemonic(BuilderBundle.getString("removeWindowMnemonic").charAt(0));
-            close.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    martBuilder.removeWindow(window, true);
-                }
-            });
-            contextMenu.add(close);
-            return contextMenu;
-        }
-        
-        /**
-         * This is a custom JPanel which knows how to synchronise it's children.
-         */
-        private class MartBuilderWindowTab extends JPanel {
-            /**
-             * Internal reference to the display area.
-             */
-            private final JPanel displayArea;
-            
-            /**
-             * This constructor builds a pair of switcher-style buttons which alternate
-             * between window and dataset view.
-             * @param windowView the window view.
-             * @param datasetView the dataset view.
-             */
-            public MartBuilderWindowTab(final WindowView windowView, final DataSetView datasetView) {
-                super(new BorderLayout());
-                // Create display part of the tab.
-                this.displayArea = new JPanel(new CardLayout());
-                JScrollPane windowScroller = new JScrollPane(windowView);
-                windowScroller.getViewport().setBackground(windowView.getBackground());
-                this.displayArea.add(windowScroller, "WINDOW_CARD");
-                JScrollPane datasetScroller = new JScrollPane(new DataSetView(windowView));
-                datasetScroller.getViewport().setBackground(datasetView.getBackground());
-                this.displayArea.add(datasetScroller, "DATASET_CARD");
-                // Create switcher part of the tab.
-                JPanel switcher = new JPanel();
-                final JRadioButton datasetButton = new JRadioButton(BuilderBundle.getString("datasetButtonName"));
-                datasetButton.addActionListener(new ActionListener(){
-                    public void actionPerformed(ActionEvent e) {
-                        if (e.getSource() == datasetButton) {
-                            CardLayout cards = (CardLayout)displayArea.getLayout();
-                            cards.show(displayArea, "DATASET_CARD");
-                            datasetView.recalculateView();
-                        }
-                    }
-                });
-                switcher.add(datasetButton);
-                final JRadioButton windowButton = new JRadioButton(BuilderBundle.getString("windowButtonName"));
-                windowButton.addActionListener(new ActionListener(){
-                    public void actionPerformed(ActionEvent e) {
-                        if (e.getSource() == windowButton) {
-                            CardLayout cards = (CardLayout)displayArea.getLayout();
-                            cards.show(displayArea, "WINDOW_CARD");
-                            windowView.requestRecalculateVisibleView();
-                        }
-                    }
-                });
-                switcher.add(windowButton);
-                // Make buttons mutually exclusive, and select a default.
-                ButtonGroup buttons = new ButtonGroup();
-                buttons.add(windowButton);
-                buttons.add(datasetButton);
-                datasetButton.setSelected(true);
-                // Add the components to the panel.
-                this.add(switcher, BorderLayout.NORTH);
-                this.add(displayArea, BorderLayout.CENTER);
-                // Set our preferred size to the dataset size plus a bit on top for the switcher buttons.
-                Dimension preferredSize = datasetView.getPreferredSize();
-                double extraHeight = datasetButton.getHeight();
-                preferredSize.setSize(preferredSize.getWidth(), preferredSize.getHeight()+extraHeight);
-                this.setPreferredSize(preferredSize);
-                // Select the default one (dataset).
-                ((CardLayout)this.displayArea.getLayout()).show(displayArea, "DATASET_CARD");
-            }
-            
-            /**
-             * Recalculates the way to display what we are seeing at the moment.
-             */
-            public void recalculateVisibleView() {
-                Component comp = ((JScrollPane)displayArea.getComponent(0)).getViewport().getView();
-                if (comp instanceof DataSetView) ((DataSetView)comp).recalculateView();
-                else ((WindowView)comp).requestRecalculateVisibleView();
-            }
         }
     }
 }

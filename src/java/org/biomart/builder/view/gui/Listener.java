@@ -1,5 +1,5 @@
 /*
- * TableProviderListener.java
+ * Listener.java
  *
  * Created on 11 April 2006, 16:52
  */
@@ -35,7 +35,7 @@ import org.biomart.builder.model.Window;
  * @version 0.1.1, 11th April 2006
  * @since 0.1
  */
-public interface TableProviderListener {
+public interface Listener {
     /**
      * Add items to a context menu for a given component. Must add separator
      * if required.
@@ -43,58 +43,38 @@ public interface TableProviderListener {
      * @param displayComponent the display component we wish to customise this menu to.
      * @return the popup menu.
      */
-    public void customiseContextMenu(JPopupMenu contextMenu, Object displayComponent);
+    public void requestCustomiseContextMenu(JPopupMenu contextMenu, Object displayComponent);
     
     /**
      * Causes the entire schema to be resynchronised. Should be passed back up to
-     * {@link MartBuilder#synchroniseAll()}. No other action should be necessary.
+     * {@link MartBuilder#requestSynchroniseAll()}. No other action should be necessary.
      */
-    public void synchroniseAll();
+    public void requestSynchroniseAll();
     
     /**
      * A signal to synchronise some table provider. Should be passed back up to
-     * {@link MartBuilder#synchroniseTableProvider(TableProvider)}. No other
+     * {@link MartBuilder#requestSynchroniseTableProvider(TableProvider)}. No other
      * action should be necessary.
+     * 
      * @param tblProv the table provider to sync.
      */
-    public void synchroniseTableProvider(TableProvider tblProv);
+    public void requestSynchroniseTableProvider(TableProvider tblProv);
     
     /**
      * A signal to test some table provider. Should be passed back up to
-     * {@link MartBuilder#testTableProvider(TableProvider)}. No other
+     * {@link MartBuilder#requestTestTableProvider(TableProvider)}. No other
      * action should be necessary.
+     * 
      * @param tblProv the table provider to test.
      */
-    public void testTableProvider(TableProvider tblProv);
+    public void requestTestTableProvider(TableProvider tblProv);
     
     /**
      * A signal to delete some table provider. Should be passed back up to
-     * {@link MartBuilder#removeTableProvider(TableProvider)}. No other
+     * {@link MartBuilder#requestRemoveTableProvider(TableProvider)}. No other
      * action should be necessary.
+     * 
      * @param tblProv the table provider to delete.
      */
-    public void removeTableProvider(TableProvider tblProv);
-    
-    /**
-     * A signal to synchronise some window. Should be passed back up to
-     * {@link MartBuilder#synchroniseWindow(Window)}. No other
-     * action should be necessary.
-     * @param window the window to delete.
-     */
-    public void synchroniseWindow(Window window);
-    
-    /**
-     * A signal to delete some window. Should be passed back up to
-     * {@link MartBuilder#removeWindow(Window)}. No other
-     * action should be necessary.
-     * @param window the window to delete.
-     */
-    public void removeWindow(Window window);
-    
-    /**
-     * A signal to redraw the diagrams. Should be passed back up to
-     * {@link MartBuilder#requestRecalculateVisibleView()}. No other
-     * action should be necessary.
-     */
-    public void requestRecalculateVisibleView();
+    public void requestRemoveTableProvider(TableProvider tblProv);
 }

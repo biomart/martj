@@ -54,7 +54,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * The generic implementation includes the algorithm which flattens tables down into
  * a set of mart tables based on the contents of a {@link Window}.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 7th April 2006
+ * @version 0.1.9, 19th April 2006
  * @since 0.1
  */
 public interface DataSet extends Comparable, TableProvider {
@@ -636,7 +636,8 @@ public interface DataSet extends Comparable, TableProvider {
             this.underlyingRelations.clear();
             for (Iterator i = relations.iterator(); i.hasNext(); ) {
                 Object o = i.next();
-                if (o == null || !(o instanceof Relation))
+                if (o == null) continue; // Skip nulls.
+                if (!(o instanceof Relation))
                     throw new IllegalArgumentException(BuilderBundle.getString("relationNotRelation"));
                 this.underlyingRelations.add((Relation)o);
             }
