@@ -136,7 +136,7 @@ public class TableProviderTabSet extends JTabbedPane implements MultiView {
     protected void processMouseEvent(MouseEvent evt) {
         boolean eventProcessed = false;
         // Is it a right-click?
-        if (evt.getID() == MouseEvent.MOUSE_PRESSED && evt.getButton() == MouseEvent.BUTTON3) {
+        if (evt.isPopupTrigger()) {
             // Where was the click?
             int index = this.indexAtLocation(evt.getX(), evt.getY());
             // Respond appropriately.

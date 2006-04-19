@@ -138,7 +138,7 @@ public class TableProviderView extends JComponent implements View {
     protected void processMouseEvent(MouseEvent evt) {
         boolean eventProcessed = false;
         // Is it a right-click?
-        if (evt.getID() == MouseEvent.MOUSE_PRESSED && evt.getButton() == MouseEvent.BUTTON3) {
+        if (evt.isPopupTrigger()) {
             // Where was the click?
             Object component = this.getDisplayComponentAtLocation(evt.getPoint());
             // Only respond to individual table providers, not the overview tab.
