@@ -24,16 +24,11 @@
 
 package org.biomart.builder.view.gui;
 
-import java.awt.AWTEvent;
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import javax.swing.JComponent;
+import java.util.Collection;
+import java.util.Collections;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.TableProvider;
@@ -45,7 +40,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * @version 0.1.2, 19th April 2006
  * @since 0.1
  */
-public class TableProviderView extends JComponent implements View {
+public class TableProviderView extends RadialComponentDisplay {
     /**
      * Static reference to the background colour to use for components.
      */
@@ -57,18 +52,12 @@ public class TableProviderView extends JComponent implements View {
     private final TableProvider tableProvider;
     
     /**
-     * Internal reference to our event listener.
-     */
-    private Listener listener;
-    
-    /**
      * Creates a new instance of TableProviderView over a given provider.
      * @param tableProvider the given table provider.
      */
     public TableProviderView(TableProvider tableProvider) {
         super();
         this.tableProvider = tableProvider;
-        this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
         this.setBackground(TableProviderView.BACKGROUND_COLOUR);
     }
     
@@ -82,11 +71,9 @@ public class TableProviderView extends JComponent implements View {
     
     /**
      * Construct a context menu for a given multi table provider view.
-     * @param displayComponent the display component we wish to customise this menu to. It may
-     * be null, so watch out for this.
      * @return the popup menu.
      */
-    private JPopupMenu getContextMenu(Object displayComponent) {
+    protected JPopupMenu getContextMenu() {
         JPopupMenu contextMenu = new JPopupMenu();
         // The following are applicable to all table provider views.
         final JMenuItem redraw = new JMenuItem(BuilderBundle.getString("redrawTitle"));
@@ -125,88 +112,15 @@ public class TableProviderView extends JComponent implements View {
             });
             contextMenu.add(remove);
         }
-        // Extend.
-        this.getListener().requestCustomiseContextMenu(contextMenu, displayComponent);
         // Return.
-        return contextMenu;        
-    }
-    
-    /**
-     * {@inheritDoc}
-     * <p>Intercept mouse events on the tabs to override right-clicks and provide context menus.</p>
-     */
-    protected void processMouseEvent(MouseEvent evt) {
-        boolean eventProcessed = false;
-        // Is it a right-click?
-        if (evt.isPopupTrigger()) {
-            // Where was the click?
-            Object component = this.getDisplayComponentAtLocation(evt.getPoint());
-            // Only respond to individual table providers, not the overview tab.
-            this.getContextMenu(component).show(this, evt.getX(), evt.getY());
-            eventProcessed = true;
-        }
-        // Pass it on up if we're not interested.
-        if (!eventProcessed) super.processMouseEvent(evt);
+        return contextMenu;
     }
     
     /**
      * {@inheritDoc}
      */
-    public void setListener(Listener listener) throws NullPointerException {
-        if (listener==null) 
-            throw new NullPointerException(BuilderBundle.getString("listenerIsNull"));
-        this.listener = listener;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public Listener getListener() {
-        return this.listener;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public JComponent asJComponent() {
-        return this;
-    }
-    
-    /**
-     * Works out what's at a given point.
-     * @param location the point to look at.
-     * @return the display component at that point, or null if nothing there.
-     */
-    private Object getDisplayComponentAtLocation(Point location) {
-        return null;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public void recalculateView() {
-        // Nothing, yet.
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public Dimension getPreferredSize() {
-        return new Dimension(200,200);
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    protected void paintComponent(Graphics g) {
-        // Paint background.
-        if (this.isOpaque()) {
-            g.setColor(this.getBackground());
-            g.fillRect(0, 0, this.getWidth(), this.getHeight());
-        }
-        Graphics2D g2d = (Graphics2D)g.create();
-        // Do painting of this table provider.
-        // Clean up.
-        g2d.dispose();
+    protected Collection getDisplayComponents() {
+        // TODO: Construct and return a set of Component.Table objects.
+        return Collections.EMPTY_SET;
     }
 }

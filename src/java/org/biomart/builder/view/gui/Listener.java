@@ -77,4 +77,11 @@ public interface Listener {
      * @param tblProv the table provider to delete.
      */
     public void requestRemoveTableProvider(TableProvider tblProv);
+    
+    /**
+     * About to draw a particular object. Call {@link ComponentDisplay#setFlag(int)}
+     * to tell the displayer anything special to do about it.
+     * @param displayComponent the component that is about to be drawn.
+     */
+    public void requestObjectFlags(Object displayComponent);
 }

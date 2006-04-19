@@ -600,14 +600,6 @@ public class MartBuilder extends JFrame {
     
     /**
      * {@inheritDoc}
-     * <p>The preferred size is simply the preferred size of our schema tabs.</p>
-     */
-    public Dimension getPreferredSize() {
-        return this.windowTabSet.getPreferredSize();
-    }
-    
-    /**
-     * {@inheritDoc}
      * <p>The minimum size is the 400x400, for no real reason.</p>
      */
     public Dimension getMinimumSize() {

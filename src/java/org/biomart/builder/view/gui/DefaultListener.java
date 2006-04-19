@@ -91,4 +91,12 @@ public class DefaultListener implements Listener {
     public void requestRemoveTableProvider(TableProvider tblProv) {
         this.getMartBuilder().removeTableProvider(tblProv);
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void requestObjectFlags(Object displayComponent) {
+        // Nothing special required here. Only datasets and windows
+        // may care - masked, concat, etc.
+    }
 }
