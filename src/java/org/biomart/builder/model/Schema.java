@@ -24,9 +24,11 @@
 package org.biomart.builder.model;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -40,7 +42,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * data to this mart. It also has one or more {@link Window}s onto the {@link Table}s provided
  * by these, from which {@link DataSet}s are constructed.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 12th April 2006
+ * @version 0.1.6, 21st April 2006
  * @since 0.1
  */
 public class Schema {
@@ -101,6 +103,7 @@ public class Schema {
     /**
      * Removes a {@link TableProvider} from the set which this {@link Schema} includes. An
      * exception is thrown if it is null. If it is not found, nothing happens and it is ignored quietly.
+     * Any {@link Window}s centred on this {@link TableProvider} are also removed.
      * @param tableProvider the {@link TableProvider} to remove.
      * @throws NullPointerException if the provider is null.
      */
@@ -111,6 +114,11 @@ public class Schema {
         // Do we have it?
         if (!this.tableProviders.containsKey(tableProvider.getName())) return;
         // Do it.
+        List windows = new ArrayList(this.getWindows());
+        for (Iterator i = windows.iterator(); i.hasNext(); ) {
+            Window w = (Window)i.next();
+            if (w.getCentralTable().getTableProvider().equals(tableProvider)) this.removeWindow(w);
+        }
         this.tableProviders.remove(tableProvider.getName());
     }
     
@@ -228,23 +236,37 @@ public class Schema {
     }
     
     /**
+     * Synchronise all {@link Window}s in this {@link Schema} so that they match up
+     * with the {@link Schema}'s {@link TableProvider}(s). Any {@link Window}s that
+     * are based on now-missing {@link Table}s are dropped. This is all simply a matter
+     * of delegating calls and the routine does no real work itself.
+     * @throws SQLException if there was a problem connecting to the data source.
+     * @throws BuilderException if there was any other kind of problem.
+     */
+    public void synchroniseWindows() throws SQLException, BuilderException {
+        // Then, Windows.
+        for (Iterator i = this.windows.values().iterator(); i.hasNext(); ) {
+            Window w = (Window)i.next();
+            if (!this.getTableProviders().contains(w.getCentralTable().getTableProvider())) i.remove();
+            else w.synchronise();
+        }
+    }
+    
+    /**
      * Synchronise this {@link Schema} with the {@link TableProvider}(s) that is(are)
      * providing its tables, then synchronising its {@link Window}s too. This is all simply a matter
      * of delegating calls and the routine does no real work itself.
      * @throws SQLException if there was a problem connecting to the data source.
      * @throws BuilderException if there was any other kind of problem.
      */
-    public void synchronise() throws SQLException, BuilderException {
+    public void synchroniseTableProviders() throws SQLException, BuilderException {
         // TableProviders first
         for (Iterator i = this.tableProviders.values().iterator(); i.hasNext(); ) {
             TableProvider tp = (TableProvider)i.next();
             tp.synchronise();
         }
-        // Then, Windows.
-        for (Iterator i = this.windows.values().iterator(); i.hasNext(); ) {
-            Window w = (Window)i.next();
-            w.synchronise();
-        }
+        // Then, synchronise windows.
+        this.synchroniseWindows();
     }
     
     /**

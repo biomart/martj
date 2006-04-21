@@ -1,7 +1,7 @@
 /*
- * MultiView.java
+ * DefaultAdaptor.java
  *
- * Created on 19 April 2006, 12:07
+ * Created on 19 April 2006, 09:36
  */
 
 /*
@@ -24,18 +24,40 @@
 
 package org.biomart.builder.view.gui;
 
-import java.util.Collection;
+import javax.swing.JPopupMenu;
 
 /**
- * Additional methods for displaying multiple providers.
+ * Provides the default behaviour for table provider listeners.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.0, 19th April 2006
+ * @version 0.1.3, 21st April 2006
  * @since 0.1
  */
-public interface MultiView extends View {
+public class DefaultAdaptor implements Adaptor {   
     /**
-     * Request a resync of table providers with a new set.
-     * @param the set of table providers we should sync with.
+     * The window set we belong to.
      */
-    public void resyncTableProviders(Collection newTableProviders);
+    protected WindowTabSet windowTabSet;
+    
+    /**
+     * Creates a new instance of DefaultAdaptor and binds it to a given
+     * MartBuilder instance.
+     */
+    public DefaultAdaptor(WindowTabSet windowTabSet) {
+        this.windowTabSet = windowTabSet;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void customiseContextMenu(JPopupMenu contextMenu, Object object) {
+        // Do nothing.
+    }
+        
+    /**
+     * {@inheritDoc}
+     */
+    public void aboutToDraw(Object object) {
+        // Nothing special required here. Only datasets and windows
+        // may care - masked, concat, etc.
+    }
 }

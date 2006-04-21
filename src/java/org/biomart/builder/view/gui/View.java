@@ -1,7 +1,7 @@
 /*
  * View.java
  *
- * Created on 19 April 2006, 09:48
+ * Created on 11 April 2006, 16:00
  */
 
 /*
@@ -24,36 +24,119 @@
 
 package org.biomart.builder.view.gui;
 
-import javax.swing.JComponent;
+import java.awt.AWTEvent;
+import java.awt.event.MouseEvent;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 
 /**
- * All the methods required for table provider views to interact with the mothership.
+ * Displays arbitrary objects linked in a radial form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.0, 19th April 2006
+ * @version 0.1.2, 21st April 2006
  * @since 0.1
  */
-public interface View {
+public abstract class View extends JPanel {
     /**
-     * Returns the component of this view.
-     * @return the component of this view.
+     * Internal reference to our adaptor.
      */
-    public JComponent asJComponent();
+    private Adaptor adaptor;
     
     /**
-     * Set the listener to send events to. If null, an exception is thrown.
-     * @param listener the listener to send events to.
-     * @throws NullPointerException if the listener is null.
+     * The current display flags.
      */
-    public void setListener(Listener listener) throws NullPointerException;
+    private int flags;
     
     /**
-     * Get the listener which events are being sent to.
-     * @return the listener events are going to.
+     * The window tab set we belong to.
      */
-    public Listener getListener();
+    protected WindowTabSet windowTabSet;
     
     /**
-     * Recalculate the display.
+     * Creates a new instance of View.
      */
-    public void recalculateView();
+    public View(WindowTabSet windowTabSet) {
+        // GUI stuff.
+        super(new RadialLayout());
+        this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
+        // Business stuff.
+        this.windowTabSet = windowTabSet;
+        this.synchronise();
+    }
+    
+    /**
+     * Construct a context menu for a given view.
+     * @return the popup menu.
+     */
+    protected abstract JPopupMenu getContextMenu();
+    
+    /**
+     * {@inheritDoc}
+     * <p>Intercept mouse events on the tabs to override right-clicks and provide context menus.</p>
+     */
+    protected void processMouseEvent(MouseEvent evt) {
+        boolean eventProcessed = false;
+        // Is it a right-click?
+        if (evt.isPopupTrigger()) {
+            // Only respond to individual table providers, not the overview tab.
+            JPopupMenu contextMenu = this.getContextMenu();
+            // Extend.
+            if (this.adaptor != null) this.getAdaptor().customiseContextMenu(contextMenu, null);
+            // Display.
+            contextMenu.show(this, evt.getX(), evt.getY());
+            eventProcessed = true;
+        }
+        // Pass it on up if we're not interested.
+        if (!eventProcessed) super.processMouseEvent(evt);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void setAdaptor(Adaptor adaptor) {
+        this.adaptor = adaptor;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public Adaptor getAdaptor() {
+        return this.adaptor;
+    }
+    
+    /**
+     * Reset the current display mask.
+     */
+    public void clearFlags() {
+        this.flags = 0;
+    }
+    
+    /**
+     * Set a particular flag on the display mask.
+     * @param flag the flag to set.
+     */
+    public void setFlag(int flag) {
+        this.flags |= flag;
+    }
+    
+    /**
+     * Test for a particular display mask flag.
+     * @param flag the flag to test for.
+     * @return true if it is set, false if not.
+     */
+    public boolean getFlag(int flag) {
+        return (this.flags & flag) == flag;
+    }
+    
+    /**
+     * Get the current display mask.
+     * @return the current display mask.
+     */
+    public int getFlags() {
+        return this.flags;
+    }
+    
+    /**
+     * Synchronise our display with our object contents.
+     */
+    public abstract void synchronise();
 }

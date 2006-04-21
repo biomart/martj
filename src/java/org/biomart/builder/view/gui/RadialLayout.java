@@ -1,5 +1,5 @@
 /*
- * RadialComponentDisplay.java
+ * RadialLayout.java
  *
  * Created on 11 April 2006, 16:00
  */
@@ -24,26 +24,10 @@
 
 package org.biomart.builder.view.gui;
 
-import java.awt.AWTEvent;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Shape;
-import java.awt.event.MouseEvent;
-import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import javax.swing.JComponent;
-import javax.swing.JPopupMenu;
-import org.biomart.builder.resources.BuilderBundle;
-import org.biomart.builder.view.gui.Component.DescendingHeight;
-import org.biomart.builder.view.gui.Component.DescendingWidth;
+import java.awt.Container;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.LayoutManager2;
 
 /**
  * Displays arbitrary objects linked in a radial form.
@@ -51,128 +35,54 @@ import org.biomart.builder.view.gui.Component.DescendingWidth;
  * @version 0.1.0, 19th April 2006
  * @since 0.1
  */
-public abstract class RadialComponentDisplay extends JComponent implements View, ComponentDisplay {
+public class RadialLayout implements LayoutManager2 {
     /**
      * Constant referring to the padding between rings.
      */
     public static final double PADDING_RADIUS = 36.0; // 72 = 1/2 inch at 72 dpi
     
     /**
-     * Internal reference to our event listener.
+     * Creates a new instance of ComponentDisplay.
      */
-    private Listener listener;
-    
-    /**
-     * The current display flags.
-     */
-    private int flags;
-    
-    /**
-     * The current set of rings. Keys are radii, values are lists of components to display.
-     */
-    private Map rings = new TreeMap();
-    
-    /**
-     * The component/shape/component maps.
-     */
-    private Map componentToShape = new HashMap();
-    private Map shapeToComponent = new HashMap();
-    
-    /**
-     * Creates a new instance of RadialComponentDisplay.
-     */
-    public RadialComponentDisplay() {
+    public RadialLayout() {
         super();
-        this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
     }
     
     /**
-     * Construct a context menu for a given view.
-     * @return the popup menu.
-     */
-    protected abstract JPopupMenu getContextMenu();
-    
-    /**
      * {@inheritDoc}
-     * <p>Intercept mouse events on the tabs to override right-clicks and provide context menus.</p>
+     * <p>Forget the previous layout.</p>
      */
-    protected void processMouseEvent(MouseEvent evt) {
-        boolean eventProcessed = false;
-        // Is it a right-click?
-        if (evt.isPopupTrigger()) {
-            // Only respond to individual table providers, not the overview tab.
-            JPopupMenu contextMenu = this.getContextMenu();
-            // Where was the click?
-            Object component = this.getObjectAtLocation(evt.getPoint());
-            // Extend.
-            this.getListener().requestCustomiseContextMenu(contextMenu, component);
-            // Display.
-            contextMenu.show(this, evt.getX(), evt.getY());
-            eventProcessed = true;
-        }
-        // Pass it on up if we're not interested.
-        if (!eventProcessed) super.processMouseEvent(evt);
+    public void invalidateLayout(Container target) {
     }
     
     /**
      * {@inheritDoc}
      */
-    public void setListener(Listener listener) throws NullPointerException {
-        if (listener==null)
-            throw new NullPointerException(BuilderBundle.getString("listenerIsNull"));
-        this.listener = listener;
+    public Dimension preferredLayoutSize(Container parent) {
+        return new Dimension(400,400);
     }
     
     /**
      * {@inheritDoc}
      */
-    public Listener getListener() {
-        return this.listener;
+    public Dimension minimumLayoutSize(Container parent) {
+        return new Dimension(400,400);
     }
     
     /**
      * {@inheritDoc}
      */
-    public JComponent asJComponent() {
-        return this;
-    }
-    
-    /**
-     * Reset the current display mask.
-     */
-    public void clearFlags() {
-        this.flags = 0;
-    }
-    
-    /**
-     * Set a particular flag on the display mask.
-     * @param flag the flag to set.
-     */
-    public void setFlag(int flag) {
-        this.flags |= flag;
-    }
-    
-    /**
-     * Test for a particular display mask flag.
-     * @param flag the flag to test for.
-     * @return true if it is set, false if not.
-     */
-    public boolean getFlag(int flag) {
-        return (this.flags & flag) == flag;
-    }
-    
-    /**
-     * Get the current display mask.
-     * @return the current display mask.
-     */
-    public int getFlags() {
-        return this.flags;
+    public Dimension maximumLayoutSize(Container target) {
+        return new Dimension(400,400);
     }
     
     /**
      * {@inheritDoc}
+     * <p>Compute the radial layout, unless the previous one is
+     * still valid.</p>
      */
-    public void recalculateView() {
+    public void layoutContainer(Container parent) {
+        /*
         // Clear the rings.
         this.rings.clear();
         this.componentToShape.clear();
@@ -191,8 +101,8 @@ public abstract class RadialComponentDisplay extends JComponent implements View,
         // Obtain the descending set of number of relations.
         List ringNumbers = new ArrayList(ringFamilies.keySet());
         Collections.reverse(ringNumbers);
-        // Construct the rings, innermost first.
-        double innerRingRadius = 0.0;
+        // Construct the rings, innermost first, leaving some padding in the middle.
+        double innerRingRadius = ComponentDisplay.PADDING_RADIUS;
         for (Iterator i = ringNumbers.iterator(); i.hasNext(); ) {
             List components = (List)ringFamilies.get(i.next());
             int median = components.size() / 2;
@@ -202,22 +112,25 @@ public abstract class RadialComponentDisplay extends JComponent implements View,
             double minWidthRadius = 0.0;
             for (int j = 0; j < median; j++) minWidthRadius += ((Component)components.get(j)).getWidth();
             minWidthRadius /= 2.0; // convert from diameter to radius.
+            double minWidthPadding = ((Component)components.get(0)).getWidth() / 2.0;
             // Order them by height and find the minimum radius.
             Collections.sort(components, new DescendingHeight());
             double minHeightRadius = 0.0;
             for (int j = 0; j < median; j++) minHeightRadius += ((Component)components.get(j)).getHeight();
             minHeightRadius /= 2.0; // convert from diameter to radius.
+            double minHeightPadding = ((Component)components.get(0)).getHeight() / 2.0;
             // Work out the actual minimum radius.
             double minRadius = Math.max(minHeightRadius, minWidthRadius);
-            minRadius += innerRingRadius + RadialComponentDisplay.PADDING_RADIUS;
+            double minPadding = Math.max(minWidthPadding, minHeightPadding);
+            minRadius += innerRingRadius + minPadding;
             // Plant them randomly around the ring.
             Collections.shuffle(components);
             this.rings.put(new Double(innerRingRadius), components);
             // Set the inner radius for the next ring.
-            innerRingRadius = minRadius;
+            innerRingRadius = minRadius + minPadding + ComponentDisplay.PADDING_RADIUS;
         }
         // Work out the size of the largest ring plus a bit of padding, and set it as our own size.
-        int canvasCentre = (int)(innerRingRadius + RadialComponentDisplay.PADDING_RADIUS);
+        int canvasCentre = (int)(innerRingRadius + ComponentDisplay.PADDING_RADIUS);
         this.setSize(canvasCentre*2, canvasCentre*2);
         // Construct component->shape maps.
         for (Iterator i = this.rings.keySet().iterator(); i.hasNext(); ) {
@@ -248,64 +161,57 @@ public abstract class RadialComponentDisplay extends JComponent implements View,
                 currentRadian += radianIncrement;
             }
         }
-        // Add relations to component->shape maps using the key shapes for 
-        // anchors and offsetting them against the parent component shape.    
-
+        // Add relations to component->shape maps using the key shapes for
+        // anchors and offsetting them against the parent component shape.
+        
         // DO THIS BY:
         
         // iterate through all components in componentToShape
         // iterate through relations on each one
-        // for each relation - work out key bounding box, actual bounding box, 
+        // for each relation - work out key bounding box, actual bounding box,
         // then create map of relation -> [pkbox,fkbox]
         
         // iterate through relations found
         // work out for each relation which side of pkbox and fkbox to use
-        // create and add to map line2d shapes for each relation. 
+        // create and add to map line2d shapes for each relation.
+        
+        // Finally, repaint ourselves.
+        this.repaint();
+         */
     }
     
     /**
-     * Get the components for the rings.
-     * @return a collection of components to display.
+     * {@inheritDoc}
+     * <p>Use the constraints to note positioning info about relations.</p>
      */
-    protected abstract Collection getDisplayComponents();
-    
-    /**
-     * Works out what's at a given point.
-     * @param location the point to look at.
-     * @return the display component at that point, or null if nothing there.
-     */
-    private Object getObjectAtLocation(Point location) {
-        // There has to be a better way to do this...
-        for (Iterator i = this.shapeToComponent.keySet().iterator(); i.hasNext(); ) {
-            Shape shape = (Shape)i.next();
-            if (shape.contains(location)) return ((Component)this.shapeToComponent.get(shape)).getObject();
-        }
-        // Nothing found?
-        return null;
+    public void addLayoutComponent(Component comp, Object constraints) {
     }
     
     /**
      * {@inheritDoc}
      */
-    protected void paintComponent(Graphics g) {
-        // Paint background.
-        if (this.isOpaque()) {
-            g.setColor(this.getBackground());
-            g.fillRect(0, 0, this.getWidth(), this.getHeight());
-        }
-        Graphics2D g2d = (Graphics2D)g.create();
-        // Do painting of this table provider.
-        // There has to be a better way to do this...
-        for (Iterator i = this.shapeToComponent.keySet().iterator(); i.hasNext(); ) {
-            Shape shape = (Shape)i.next();
-            if (shape.intersects(g2d.getClipBounds())) {
-                Component component = (Component)this.shapeToComponent.get(shape);
-                this.clearFlags();
-                this.getListener().requestObjectFlags(component.getObject());
-                component.paint(g2d, shape.getBounds().getLocation(), this.getFlags());
-            }
-        }
-        // Clean up.
-        g2d.dispose();
+    public void addLayoutComponent(String name, Component comp) {
+        // Ignore.
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void removeLayoutComponent(Component comp) {
+        // Ignore.
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public float getLayoutAlignmentX(Container target) {
+        return 0.0f;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public float getLayoutAlignmentY(Container target) {
+        return 0.0f;
     }
 }

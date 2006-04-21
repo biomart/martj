@@ -60,7 +60,7 @@ public class NaiveCLI {
     public void execute(TableProvider tableProvider, String name, File file) throws Exception {
         Schema s = new Schema();
         s.addTableProvider(tableProvider);
-        s.synchronise(); // causes the table provider to load up its info
+        s.synchroniseTableProviders(); // causes the table provider to load up its info
         Table t = tableProvider.getTableByName(name);
         // Predict some sensible defaults.
         s.suggestWindows(t);

@@ -1,7 +1,7 @@
 /*
- * DataSetListener.java
+ * Adaptor.java
  *
- * Created on 19 April 2006, 09:46
+ * Created on 11 April 2006, 16:52
  */
 
 /*
@@ -24,31 +24,30 @@
 
 package org.biomart.builder.view.gui;
 
-import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.Window;
+import javax.swing.JPopupMenu;
 
 /**
- * Adapts listener events suitable for datasets.
+ * Adaptor for events of interest to classes displaying graphical views
+ * of {@link TableProvider}s using {@link TableProviderView}.
+ * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.0.1, 19th April 2006
+ * @version 0.1.2, 21st April 2006
  * @since 0.1
  */
-public class DataSetListener extends WindowListener {
-    /** 
-     * Creates a new instance of DataSetListener over
-     * a given window. 
-     * @param martBuilder the MartBuilder we are attached to.
-     * @param window the window whose dataset we are attached to.
-     */
-    public DataSetListener(MartBuilder martBuilder, Window window) {
-        super(martBuilder, window);
-    }
- 
+public interface Adaptor {
     /**
-     * Retrieves our dataset.
-     * @return our dataset.
+     * Add items to a context menu for a given component. Must add separator
+     * if required.
+     * @param contextMenu the context menu to add parameters to.
+     * @param displayComponent the display component we wish to customise this menu to.
+     * @return the popup menu.
      */
-    protected DataSet getDataSet() {
-        return this.getWindow().getDataSet();
-    }
+    public void customiseContextMenu(JPopupMenu contextMenu, Object object);
+    
+    /**
+     * About to draw a particular object. Call {@link ComponentDisplay#setFlag(int)}
+     * to tell the displayer anything special to do about it.
+     * @param displayComponent the component that is about to be drawn.
+     */
+    public void aboutToDraw(Object object);
 }

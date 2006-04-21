@@ -27,9 +27,8 @@ package org.biomart.builder.view.gui;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Collection;
-import java.util.Collections;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.TableProvider;
 import org.biomart.builder.resources.BuilderBundle;
@@ -37,10 +36,10 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Displays the contents of a {@link TableProvider} in graphical form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 19th April 2006
+ * @version 0.1.3, 21st April 2006
  * @since 0.1
  */
-public class TableProviderView extends RadialComponentDisplay {
+public class TableProviderView extends View {
     /**
      * Static reference to the background colour to use for components.
      */
@@ -53,20 +52,59 @@ public class TableProviderView extends RadialComponentDisplay {
     
     /**
      * Creates a new instance of TableProviderView over a given provider.
+     *
      * @param tableProvider the given table provider.
      */
-    public TableProviderView(TableProvider tableProvider) {
-        super();
-        this.tableProvider = tableProvider;
+    public TableProviderView(WindowTabSet windowTabSet, TableProvider tableProvider) {
+        super(windowTabSet);
         this.setBackground(TableProviderView.BACKGROUND_COLOUR);
+        this.tableProvider = tableProvider;
     }
     
     /**
-     * Obtains the table provider this view displays.
-     * @return the table provider this view displays.
+     * Returns our table provider.
      */
-    protected TableProvider getTableProvider() {
+    public TableProvider getTableProvider() {
         return this.tableProvider;
+    }
+    
+    /**
+     * Syncs this table provider individually against the database.
+     */
+    public void synchroniseTableProvider() {
+        try {
+            this.tableProvider.synchronise();
+            this.windowTabSet.synchronise();
+        } catch (Throwable t) {
+            this.windowTabSet.getSchemaManager().getMartBuilder().showStackTrace(t);
+        }
+    }
+    
+    /**
+     * Test this table provider individually against the database.
+     */
+    public void testTableProvider() {
+        boolean passedTest = false;
+        try {
+            passedTest = tableProvider.test();
+        } catch (Throwable t) {
+            passedTest = false;
+            this.windowTabSet.getSchemaManager().getMartBuilder().showStackTrace(t);
+        }
+        // Tell the user what happened.
+        if (passedTest) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    BuilderBundle.getString("tblProvTestPassed"),
+                    BuilderBundle.getString("testTitle"),
+                    JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(
+                    this,
+                    BuilderBundle.getString("tblProvTestFailed"),
+                    BuilderBundle.getString("testTitle"),
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
     
     /**
@@ -76,22 +114,14 @@ public class TableProviderView extends RadialComponentDisplay {
     protected JPopupMenu getContextMenu() {
         JPopupMenu contextMenu = new JPopupMenu();
         // The following are applicable to all table provider views.
-        final JMenuItem redraw = new JMenuItem(BuilderBundle.getString("redrawTitle"));
-        redraw.setMnemonic(BuilderBundle.getString("redrawMnemonic").charAt(0));
-        redraw.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                recalculateView();
-            }
-        });
-        contextMenu.add(redraw);
         // The following are not applicable to DataSets (we can tell by the listener type).
-        if (!(this.getListener() instanceof DataSetListener)) {
+        if (!(this.getAdaptor() instanceof DataSetAdaptor)) {
             contextMenu.addSeparator();
             final JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseTblProvTitle", this.tableProvider.getName()));
             sync.setMnemonic(BuilderBundle.getString("synchroniseTblProvMnemonic").charAt(0));
             sync.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getListener().requestSynchroniseTableProvider(tableProvider);
+                    synchroniseTableProvider();
                 }
             });
             contextMenu.add(sync);
@@ -99,7 +129,7 @@ public class TableProviderView extends RadialComponentDisplay {
             test.setMnemonic(BuilderBundle.getString("testTblProvMnemonic").charAt(0));
             test.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getListener().requestTestTableProvider(tableProvider);
+                    testTableProvider();
                 }
             });
             contextMenu.add(test);
@@ -107,7 +137,7 @@ public class TableProviderView extends RadialComponentDisplay {
             remove.setMnemonic(BuilderBundle.getString("removeTblProvMnemonic").charAt(0));
             remove.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getListener().requestRemoveTableProvider(tableProvider);
+                    windowTabSet.getTableProviderTabSet().confirmRemoveTableProvider(tableProvider);
                 }
             });
             contextMenu.add(remove);
@@ -118,9 +148,9 @@ public class TableProviderView extends RadialComponentDisplay {
     
     /**
      * {@inheritDoc}
+     * Resyncs the table providers with the contents of the set.
      */
-    protected Collection getDisplayComponents() {
-        // TODO: Construct and return a set of Component.Table objects.
-        return Collections.EMPTY_SET;
+    public void synchronise() {
+        // TODO: Construct/update our set of Component.Table and Component.Relation objects.
     }
 }

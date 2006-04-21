@@ -24,17 +24,17 @@
 
 package org.biomart.builder.view.gui;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import javax.swing.JComponent;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -44,10 +44,10 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Displays the contents of multiple {@link TableProvider}s in graphical form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.0, 19th April 2006
+ * @version 0.1.2, 21st April 2006
  * @since 0.1
  */
-public class TableProviderTabSet extends JTabbedPane implements MultiView {
+public class TableProviderTabSet extends JTabbedPane {
     /**
      * Internal reference to the list of table providers, in order, mapped
      * to their tableProviderToView.
@@ -55,101 +55,110 @@ public class TableProviderTabSet extends JTabbedPane implements MultiView {
     private final Map tableProviderToView = new HashMap();
     
     /**
-     * Internal reference to the list of table providers, in order, mapped
-     * from their tableProviderToView.
+     * Internal reference to the adaptor for the providers we are viewing.
      */
-    private final Map viewToTableProvider = new HashMap();
+    private Adaptor adaptor;
     
     /**
-     * Internal reference to the listener for the providers we are viewing.
+     * The window tab set we belong to.
      */
-    private Listener listener;
+    private WindowTabSet windowTabSet;
+    
+    /**
+     * Our overview tab.
+     */
+    private MultiTableProviderView multiTableProviderView;
     
     /**
      * Creates a new multiple table provider view over the given set of
      * of table providers.
-     * 
-     * @param tableProviders the table providers to view.
      */
-    public TableProviderTabSet(Collection tableProviders) {
+    public TableProviderTabSet(WindowTabSet windowTabSet) {
         super();
+        this.windowTabSet = windowTabSet;
         // Add the overview tab to ourselves.
-        MultiView overviewView = new MultiTableProviderView(tableProviders);
-        JScrollPane scroller = new JScrollPane(overviewView.asJComponent());
-        scroller.getViewport().setBackground(overviewView.asJComponent().getBackground());
+        this.multiTableProviderView = new MultiTableProviderView(this.windowTabSet);
+        JScrollPane scroller = new JScrollPane(this.multiTableProviderView);
+        scroller.getViewport().setBackground(this.multiTableProviderView.getBackground());
         this.addTab(BuilderBundle.getString("multiTblProvOverviewTab"), scroller);
-        // Add the rest of the tabs.
-        this.resyncTableProviders(tableProviders);
+        // Synchronise ourselves.
+        this.synchronise();
     }
     
     /**
-     * Resyncs the table providers with the contents of the set.
-     * 
-     * @param newTableProviders the table providers to view.
+     * Makes sure we are displaying the correct set of table providers.
      */
-    public void resyncTableProviders(Collection newTableProviders) {
-        // Update the overview tab first.
-        ((MultiView)((JScrollPane)this.getComponentAt(0)).getViewport().getView()).resyncTableProviders(newTableProviders);
-        // Form a list to remove.
-        List removedTableProviders = new ArrayList(this.tableProviderToView.keySet());
-        removedTableProviders.removeAll(newTableProviders);
-        // Form a list to add.
-        List addedTableProviders = new ArrayList(newTableProviders);
-        addedTableProviders.removeAll(this.tableProviderToView.keySet());
-        // Remove the removedTableProviders ones.
-        for (Iterator i = removedTableProviders.iterator(); i.hasNext(); ) {
+    public void synchronise() {
+        // Add all table providers that we don't have yet.
+        List schemaTableProviders = new ArrayList(this.windowTabSet.getSchema().getTableProviders());
+        for (Iterator i = schemaTableProviders.iterator(); i.hasNext(); ) {
             TableProvider tableProvider = (TableProvider)i.next();
-            View tableProviderView = (View)this.tableProviderToView.get(tableProvider);
-            this.tableProviderToView.remove(tableProvider);
-            this.viewToTableProvider.remove(tableProviderView);
-            this.removeTabAt(this.indexOfTab(tableProvider.getName()));
+            if (!this.tableProviderToView.containsKey(tableProvider)) this.addTableProviderTab(tableProvider);
         }
-        // Add the addedTableProviders ones.
-        for (Iterator i = addedTableProviders.iterator(); i.hasNext(); ) {
+        // Remove all our table providers that are not in the schema.
+        List candidates = new ArrayList(this.tableProviderToView.keySet());
+        for (Iterator i = candidates.iterator(); i.hasNext(); ) {
             TableProvider tableProvider = (TableProvider)i.next();
-            // Create and add the tab.
-            View tableProviderView = new TableProviderView(tableProvider);
-            JScrollPane scroller = new JScrollPane(tableProviderView.asJComponent());
-            scroller.getViewport().setBackground(tableProviderView.asJComponent().getBackground());
-            this.addTab(tableProvider.getName(), scroller);
-            // Remember the view.
-            this.tableProviderToView.put(tableProvider, tableProviderView);
-            this.viewToTableProvider.put(tableProviderView, tableProvider);
-            // Set the listener on the view (if it's been set yet, which it won't be from the constructor)
-            if (this.getListener() != null) tableProviderView.setListener(this.getListener());
+            if (!schemaTableProviders.contains(tableProvider)) this.removeTableProviderTab(tableProvider);
+        }
+        // Synchronise our overview tab.
+        this.multiTableProviderView.synchronise();
+        // Synchronise our tab view contents.
+        for (int i = 1; i < this.getTabCount(); i++) {
+            JScrollPane scroller = (JScrollPane)this.getComponentAt(i);
+            TableProviderView tableProviderView = (TableProviderView)scroller.getViewport().getView();
+            tableProviderView.synchronise();
+        }
+        // Redraw.
+        this.validate();
+    }
+    
+    /**
+     * Adds a new table provider to our tabs.
+     */
+    private void addTableProviderTab(TableProvider tableProvider) {
+        // Create and add the tab.
+        TableProviderView tableProviderView = new TableProviderView(this.windowTabSet, tableProvider);
+        JScrollPane scroller = new JScrollPane(tableProviderView);
+        scroller.getViewport().setBackground(tableProviderView.getBackground());
+        this.addTab(tableProvider.getName(), scroller);
+        // Remember the view.
+        this.tableProviderToView.put(tableProvider, tableProviderView);
+        // Set the adaptor on the view.
+        tableProviderView.setAdaptor(this.getAdaptor());
+        this.multiTableProviderView.synchronise();
+    }
+    
+    /**
+     * Confirms with user then removes a table provider.
+     */
+    public void confirmRemoveTableProvider(TableProvider tableProvider) {
+        // Must confirm action first.
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                BuilderBundle.getString("confirmDelTblProv"),
+                BuilderBundle.getString("questionTitle"),
+                JOptionPane.YES_NO_OPTION
+                );
+        if (choice == JOptionPane.YES_OPTION) {
+            try {
+                this.windowTabSet.getSchema().removeTableProvider(tableProvider);
+                this.removeTableProviderTab(tableProvider);
+                this.windowTabSet.synchronise();
+                this.windowTabSet.getSchemaManager().setModifiedStatus(true);
+            } catch (Throwable t) {
+                this.windowTabSet.getSchemaManager().getMartBuilder().showStackTrace(t);
+            }
         }
     }
     
     /**
-     * {@inheritDoc}
-     * <p>Intercepts tab selection in order to recalculate the visible view.</p>
+     * Removes a table provider from our tabs.
      */
-    public void setSelectedIndex(int index) {
-        super.setSelectedIndex(index);
-        this.recalculateView();
-    }
-    
-    /**
-     * {@inheritDoc}
-     * <p>Intercept mouse events on the tabs to override right-clicks and provide context menus.</p>
-     */
-    protected void processMouseEvent(MouseEvent evt) {
-        boolean eventProcessed = false;
-        // Is it a right-click?
-        if (evt.isPopupTrigger()) {
-            // Where was the click?
-            int index = this.indexAtLocation(evt.getX(), evt.getY());
-            // Respond appropriately.
-            if (index > 0) {
-                View view =
-                        (View)((JScrollPane)this.getComponentAt(index)).getViewport().getView();
-                TableProvider tableProvider = (TableProvider)viewToTableProvider.get(view);
-                this.getTblProvTabContextMenu(tableProvider).show(this, evt.getX(), evt.getY());
-                eventProcessed = true;
-            } 
-        }
-        // Pass it on up if we're not interested.
-        if (!eventProcessed) super.processMouseEvent(evt);
+    private void removeTableProviderTab(TableProvider tableProvider) {
+        TableProviderView tableProviderView = (TableProviderView)this.tableProviderToView.get(tableProvider);
+        this.removeTabAt(this.indexOfTab(tableProvider.getName()));
+        this.tableProviderToView.remove(tableProvider);
     }
     
     /**
@@ -163,7 +172,7 @@ public class TableProviderTabSet extends JTabbedPane implements MultiView {
         close.setMnemonic(BuilderBundle.getString("removeTblProvMnemonic").charAt(0));
         close.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getListener().requestRemoveTableProvider(tableProvider);
+                confirmRemoveTableProvider(tableProvider);
             }
         });
         contextMenu.add(close);
@@ -172,40 +181,49 @@ public class TableProviderTabSet extends JTabbedPane implements MultiView {
     
     /**
      * {@inheritDoc}
+     * <p>Intercept mouse events on the tabs to override right-clicks and provide context menus.</p>
      */
-    public void setListener(Listener listener) throws NullPointerException {
-        if (listener==null) 
-            throw new NullPointerException(BuilderBundle.getString("listenerIsNull"));
-        this.listener = listener;
+    protected void processMouseEvent(MouseEvent evt) {
+        boolean eventProcessed = false;
+        // Is it a right-click?
+        if (evt.isPopupTrigger()) {
+            // Where was the click?
+            int selectedIndex = this.indexAtLocation(evt.getX(), evt.getY());
+            if (selectedIndex >= 0) {
+                Component selectedComponent = this.getComponentAt(selectedIndex);
+                // Respond appropriately.
+                if (selectedComponent instanceof JScrollPane) {
+                    Component selectedView = ((JScrollPane)selectedComponent).getViewport().getView();
+                    if (selectedView instanceof TableProviderView) {
+                        this.setSelectedIndex(selectedIndex);
+                        TableProvider tableProvider = ((TableProviderView)selectedView).getTableProvider();
+                        this.getTblProvTabContextMenu(tableProvider).show(this, evt.getX(), evt.getY());
+                        eventProcessed = true;
+                    }
+                }
+            }
+        }
+        // Pass it on up if we're not interested.
+        if (!eventProcessed) super.processMouseEvent(evt);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void setAdaptor(Adaptor adaptor) throws NullPointerException {
+        if (adaptor==null)
+            throw new NullPointerException(BuilderBundle.getString("adaptorIsNull"));
+        this.adaptor = adaptor;
         for (int i = 0; i < this.getTabCount(); i++) {
             View view = (View)((JScrollPane)this.getComponentAt(i)).getViewport().getView();
-            view.setListener(listener);
+            view.setAdaptor(adaptor);
         }
     }
     
     /**
      * {@inheritDoc}
      */
-    public Listener getListener() {
-        return this.listener;
+    public Adaptor getAdaptor() {
+        return this.adaptor;
     }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public JComponent asJComponent() {
-        return this;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public void recalculateView() {
-        int index = this.getSelectedIndex();
-        if (index >= 0) {
-            View view = (View)((JScrollPane)this.getComponentAt(index)).getViewport().getView();
-            view.recalculateView();
-        } 
-    }
-    
 }

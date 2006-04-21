@@ -1,7 +1,7 @@
 /*
- * ComponentDisplay.java
+ * DataSetAdaptor.java
  *
- * Created on 19 April 2006, 13:35
+ * Created on 19 April 2006, 09:46
  */
 
 /*
@@ -24,34 +24,32 @@
 
 package org.biomart.builder.view.gui;
 
+import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.Window;
+
 /**
- * An interface for things that actually draw things.
+ * Adapts listener events suitable for datasets.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.0, 19th April 2006
+ * @version 0.1.2, 21st April 2006
  * @since 0.1
  */
-public interface ComponentDisplay {
+public class DataSetAdaptor extends WindowAdaptor {
     /**
-     * Reset the current display mask.
+     * 
+     * Creates a new instance of DataSetAdaptor over
+     * a given window. 
+     * 
+     * @param window the window whose dataset we are attached to.
      */
-    public void clearFlags();
-    
+    public DataSetAdaptor(WindowTabSet windowTabSet, Window window) {
+        super(windowTabSet, window);
+    }
+ 
     /**
-     * Set a particular flag on the display mask.
-     * @param flag the flag to set.
+     * Retrieves our dataset.
+     * @return our dataset.
      */
-    public void setFlag(int flag);
-
-    /**
-     * Test for a particular display mask flag.
-     * @param flag the flag to test for.
-     * @return true if it is set, false if not.
-     */
-    public boolean getFlag(int flag);
-
-    /**
-     * Get the current display mask.
-     * @return the current display mask.
-     */
-    public int getFlags();
+    protected DataSet getDataSet() {
+        return this.getWindow().getDataSet();
+    }
 }

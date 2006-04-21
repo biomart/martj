@@ -26,144 +26,185 @@ package org.biomart.builder.view.gui;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import javax.swing.ButtonGroup;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Window;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Set of tabs to display a schema and set of windows.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.0, 19th April 2006
+ * @version 0.1.2, 21st April 2006
  * @since 0.1
  */
 public class WindowTabSet extends JTabbedPane {
     /**
-     * Internal reference to the {@link MartBuilder} parent.
+     * Internal reference to the table provider tabs.
      */
-    private final MartBuilder martBuilder;
+    private TableProviderTabSet tableProviderTabSet;
+    
+    /**
+     * Internal reference to the list of windows, in order, mapped
+     * to their view.
+     */
+    private Map windowToTab = new HashMap();
+    
+    /**
+     * The schema manager managing our schema.
+     */
+    private SchemaManager schemaManager;
+    
+    /**
+     * The schema we are viewing.
+     */
+    private Schema schema;
     
     /**
      * The constructor remembers who its daddy is.
      * @param martBuilder the parent MartBuilder to which this tabbed panel belongs.
      */
-    public WindowTabSet(MartBuilder martBuilder) {
+    public WindowTabSet(SchemaManager schemaManager, Schema schema) {
         super();
-        this.martBuilder = martBuilder;
+        this.schemaManager = schemaManager;
+        this.schema = schema;
+        // Load the table providers.
+        this.tableProviderTabSet = new TableProviderTabSet(this);
+        // Set up the schema tab.
+        this.addTab(BuilderBundle.getString("schemaTabName"), null);
+        // Set up the window tabs.
+        this.synchronise();
     }
     
     /**
-     * Returns the mart builder.
-     * @return the mart builder used in this instance.
+     * Return our schema.
      */
-    protected MartBuilder getMartBuilder() {
-        return this.martBuilder;
+    public Schema getSchema() {
+        return this.schema;
     }
     
     /**
-     * {@inheritDoc}
-     * <p>Intercepts tab selection in order to recalculate the visible view.</p>
+     * Return our schema manager.
      */
-    public void setSelectedIndex(int index) {
-        super.setSelectedIndex(index);
-        this.recalculateView();
+    public SchemaManager getSchemaManager() {
+        return this.schemaManager;
     }
     
     /**
-     * Recalculates the way to display what we are seeing at the moment.
+     * Return our table provider tab set.
      */
-    public void recalculateView() {
-        int index = this.getSelectedIndex();
-        if (index >= 0) {
-            View view =
-                    (View)((JScrollPane)this.getComponentAt(0)).getViewport().getView();
-            view.recalculateView();
+    public TableProviderTabSet getTableProviderTabSet() {
+        return this.tableProviderTabSet;
+    }
+    
+    /**
+     * Switch between listeners and attach the table provider set to the
+     * appropriate place.
+     */
+    public void setSelectedIndex(int selectedIndex) {
+        Component selectedComponent = this.getComponentAt(selectedIndex);
+        if (selectedComponent instanceof WindowTab) {
+            WindowTab windowTab = (WindowTab)selectedComponent;
+            windowTab.attachTableProviderTabSet(this, this.tableProviderTabSet);
+        } else {
+            JScrollPane scroller = new JScrollPane(this.tableProviderTabSet);
+            scroller.getViewport().setBackground(this.tableProviderTabSet.getBackground());
+            int componentIndex = this.indexOfTab(BuilderBundle.getString("schemaTabName"));
+            this.setComponentAt(componentIndex, scroller);
+            this.tableProviderTabSet.setAdaptor(new DefaultAdaptor(this));
         }
+        super.setSelectedIndex(selectedIndex);
     }
     
     /**
-     * This function makes the tabs match up with the contents of the {@link Schema}
-     * object in the parent {@link MartBuilder}.
+     * Syncs our windows with our schema.
      */
-    public void recreateTabs() {
-        // Remove the existing tabs.
-        this.removeAll();
-        // Schema tab first.
-        MultiView schemaView = new TableProviderTabSet(this.getMartBuilder().getSchema().getTableProviders());
-        JScrollPane scroller = new JScrollPane(schemaView.asJComponent());
-        scroller.getViewport().setBackground(schemaView.asJComponent().getBackground());
-        this.addTab(BuilderBundle.getString("schemaTabName"), scroller);
-        // Set the listener.
-        schemaView.setListener(new DefaultListener(this.getMartBuilder()));
-        // Now the window tabs.
-        for (Iterator i = this.martBuilder.getSchema().getWindows().iterator(); i.hasNext(); ) {
+    public void synchronise() {
+        // Synchronise our windows.
+        try {
+            this.schema.synchroniseWindows();
+        } catch (Throwable t) {
+            this.schemaManager.getMartBuilder().showStackTrace(t);
+        }
+        // Add all schema windows that we don't have yet.
+        List schemaWindows = new ArrayList(this.schema.getWindows());
+        for (Iterator i = schemaWindows.iterator(); i.hasNext(); ) {
             Window window = (Window)i.next();
-            this.createTab(window);
+            if (!this.windowToTab.containsKey(window)) this.addWindowTab(window);
         }
-    }
-    
-    /**
-     * Creates and adds a new tab based around a given window.
-     * @param window the window to base the new tab around.
-     */
-    public void createTab(Window window) {
-        // Create the views.
-        MultiView windowView = new TableProviderTabSet(this.getMartBuilder().getSchema().getTableProviders());
-        View datasetView = new TableProviderView(window.getDataSet());
-        // Set the listeners.
-        windowView.setListener(new WindowListener(this.getMartBuilder(), window));
-        datasetView.setListener(new DataSetListener(this.getMartBuilder(), window));
-        // Create tabs themselves.
-        WindowTab windowTab = new WindowTab(windowView, datasetView);
-        this.addTab(window.getName(), windowTab);
-    }
-    
-    /**
-     * Resyncs the table providers within each multi table provider tab.
-     */
-    public void resyncTableProviderTabs() {
-        // Synchronise the schema tab.
-        MultiView schemaTab = (TableProviderTabSet)((JScrollPane)this.getComponentAt(0)).getViewport().getView();
-        schemaTab.resyncTableProviders(this.getMartBuilder().getSchema().getTableProviders());
-        // Start loop at 1 to skip the initial schema tab.
-        for (int i = 1; i < this.getTabCount(); i++) {
-            WindowTab windowTab = (WindowTab)this.getComponentAt(i);
-            windowTab.resyncTableProviders(this.getMartBuilder().getSchema().getTableProviders());
+        // Remove all our windows that are not in the schema.
+        List candidates = new ArrayList(this.windowToTab.keySet());
+        for (Iterator i = candidates.iterator(); i.hasNext(); ) {
+            Window window = (Window)i.next();
+            if (!schemaWindows.contains(window)) this.removeWindowTab(window);
         }
+        // Synchronise the table provider views.
+        this.tableProviderTabSet.synchronise();
+        // Redraw.
+        this.validate();
     }
     
     /**
-     * {@inheritDoc}
-     * <p>Intercept mouse events on the tabs to override right-clicks and provide context menus.</p>
+     * Confirms with user whether they really want to remove this window.
      */
-    protected void processMouseEvent(MouseEvent evt) {
-        boolean eventProcessed = false;
-        // Is it a right-click?
-        if (evt.isPopupTrigger()) {
-            // Where was the click?
-            int index = this.indexAtLocation(evt.getX(), evt.getY());
-            // Respond appropriately.
-            if (index > 0) {
-                Window window = this.getMartBuilder().getSchema().getWindowByName(this.getTitleAt(index));
-                this.getWindowTabContextMenu(window).show(this, evt.getX(), evt.getY());
-                eventProcessed = true;
+    public void confirmRemoveWindow(Window window) {
+        // Must confirm action first.
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                BuilderBundle.getString("confirmDelDataset"),
+                BuilderBundle.getString("questionTitle"),
+                JOptionPane.YES_NO_OPTION
+                );
+        if (choice == JOptionPane.YES_OPTION) {
+            try {
+                this.schema.removeWindow(window);
+                this.removeWindowTab(window);
+                this.schemaManager.setModifiedStatus(true);
+                // Nasty hack to force redraw.
+                int componentIndex = this.indexOfTab(BuilderBundle.getString("schemaTabName"));
+                this.setSelectedIndex(componentIndex);
+            } catch (Throwable t) {
+                this.schemaManager.getMartBuilder().showStackTrace(t);
             }
         }
-        // Pass it on up if we're not interested.
-        if (!eventProcessed) super.processMouseEvent(evt);
+    }
+    
+    /**
+     * Removes a window and tab.
+     */
+    private void removeWindowTab(Window window) {
+        WindowTab windowTab = (WindowTab)this.windowToTab.get(window);
+        this.remove(windowTab);
+        this.windowToTab.remove(window);
+    }
+    
+    /**
+     * Creates a new tab based around a given table.
+     */
+    private void addWindowTab(Window window) {
+        // Create tabs themselves.
+        WindowTab windowTab = new WindowTab(this, window);
+        this.addTab(window.getName(), windowTab);
+        // Remember them.
+        this.windowToTab.put(window, windowTab);
     }
     
     /**
@@ -177,7 +218,7 @@ public class WindowTabSet extends JTabbedPane {
         close.setMnemonic(BuilderBundle.getString("removeWindowMnemonic").charAt(0));
         close.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getMartBuilder().removeWindow(window, true);
+                confirmRemoveWindow(window);
             }
         });
         contextMenu.add(close);
@@ -185,18 +226,48 @@ public class WindowTabSet extends JTabbedPane {
     }
     
     /**
+     * {@inheritDoc}
+     * <p>Intercept mouse events on the tabs to override right-clicks and provide context menus.</p>
+     */
+    protected void processMouseEvent(MouseEvent evt) {
+        boolean eventProcessed = false;
+        // Is it a right-click?
+        if (evt.isPopupTrigger()) {
+            // Where was the click?
+            int selectedIndex = this.indexAtLocation(evt.getX(), evt.getY());
+            if (selectedIndex >= 0) {
+                Component selectedComponent = this.getComponentAt(selectedIndex);
+                // Respond appropriately.
+                if (selectedComponent instanceof WindowTab) {
+                    this.setSelectedIndex(selectedIndex);
+                    Window window = ((WindowTab)selectedComponent).getWindow();
+                    this.getWindowTabContextMenu(window).show(this, evt.getX(), evt.getY());
+                    eventProcessed = true;
+                }
+            }
+        }
+        // Pass it on up if we're not interested.
+        if (!eventProcessed) super.processMouseEvent(evt);
+    }
+    
+    /**
      * This is a custom JPanel which knows how to synchronise it's children.
      */
     private class WindowTab extends JPanel {
         /**
-         * Internal reference to the display area.
+         * The window we are viewing.
          */
-        private final JPanel displayArea;
+        private Window window;
         
         /**
-         * Internal reference to the cards displayed in the display area.
+         * The display area.
          */
-        private Map cardToView = new HashMap();
+        private JPanel displayArea;
+        
+        /**
+         * Our window button.
+         */
+        private JRadioButton windowButton;
         
         /**
          * This constructor builds a pair of switcher-style buttons which alternate
@@ -204,20 +275,17 @@ public class WindowTabSet extends JTabbedPane {
          * @param windowView the window view.
          * @param datasetView the dataset view.
          */
-        public WindowTab(final MultiView windowView, final View datasetView) {
+        public WindowTab(final WindowTabSet windowTabSet, final Window window) {
             super(new BorderLayout());
+            this.window = window;
             // Create display part of the tab.
             this.displayArea = new JPanel(new CardLayout());
             // Dataset card first.
-            JScrollPane scroller = new JScrollPane(datasetView.asJComponent());
-            scroller.getViewport().setBackground(datasetView.asJComponent().getBackground());
-            this.displayArea.add(scroller, "DATASET_CARD");
-            this.cardToView.put("DATASET_CARD", datasetView);
-            // Window card next.
-            scroller = new JScrollPane(windowView.asJComponent());
-            scroller.getViewport().setBackground(windowView.asJComponent().getBackground());
-            this.displayArea.add(scroller, "WINDOW_CARD");
-            this.cardToView.put("WINDOW_CARD", windowView);
+            TableProviderView datasetView = new TableProviderView(windowTabSet, window.getDataSet());
+            datasetView.setAdaptor(new DataSetAdaptor(windowTabSet, window));
+            JScrollPane scroller = new JScrollPane(datasetView);
+            scroller.getViewport().setBackground(datasetView.getBackground());
+            displayArea.add(scroller, "DATASET_CARD");
             // Create switcher part of the tab.
             JPanel switcher = new JPanel();
             // Dataset button.
@@ -227,55 +295,54 @@ public class WindowTabSet extends JTabbedPane {
                     if (e.getSource() == datasetButton) {
                         CardLayout cards = (CardLayout)displayArea.getLayout();
                         cards.show(displayArea, "DATASET_CARD");
-                        datasetView.recalculateView();
                     }
                 }
             });
             switcher.add(datasetButton);
             // Window button.
-            final JRadioButton windowButton = new JRadioButton(BuilderBundle.getString("windowButtonName"));
+            this.windowButton = new JRadioButton(BuilderBundle.getString("windowButtonName"));
             windowButton.addActionListener(new ActionListener(){
                 public void actionPerformed(ActionEvent e) {
                     if (e.getSource() == windowButton) {
                         CardLayout cards = (CardLayout)displayArea.getLayout();
                         cards.show(displayArea, "WINDOW_CARD");
-                        windowView.recalculateView();
                     }
                 }
             });
             switcher.add(windowButton);
             // Make buttons mutually exclusive.
             ButtonGroup buttons = new ButtonGroup();
-            buttons.add(windowButton);
+            buttons.add(this.windowButton);
             buttons.add(datasetButton);
             // Add the components to the panel.
             this.add(switcher, BorderLayout.NORTH);
             this.add(displayArea, BorderLayout.CENTER);
             // Set our preferred size to the dataset size plus a bit on top for the switcher buttons.
-            Dimension preferredSize = datasetView.asJComponent().getPreferredSize();
+            Dimension preferredSize = datasetView.getPreferredSize();
             double extraHeight = datasetButton.getHeight();
             preferredSize.setSize(preferredSize.getWidth(), preferredSize.getHeight()+extraHeight);
             this.setPreferredSize(preferredSize);
             // Select the default one (dataset).
-            datasetButton.setSelected(true);
-            ((CardLayout)this.displayArea.getLayout()).show(displayArea, "DATASET_CARD");
+            datasetButton.doClick();
         }
         
         /**
-         * Recalculates the way to display what we are seeing at the moment.
+         * Returns our window.
          */
-        public void recalculateView() {
-            String visibleCard = ((CardLayout)this.displayArea.getLayout()).toString();
-            View view = (View)this.cardToView.get(visibleCard);
-            view.recalculateView();
+        public Window getWindow() {
+            return this.window;
         }
         
         /**
-         * Resyncs the table providers within each multi table provider tab.
-         * @param newTableProviders the new set of table providers to display.
+         * Attach the table provider tab set.
          */
-        public void resyncTableProviders(Collection newTableProviders) {
-            ((MultiView)this.cardToView.get("WINDOW_CARD")).resyncTableProviders(newTableProviders);
+        public void attachTableProviderTabSet(WindowTabSet windowTabSet, TableProviderTabSet tableProviderTabSet) {
+            tableProviderTabSet.setAdaptor(new WindowAdaptor(windowTabSet, this.window));
+            JScrollPane scroller = new JScrollPane(tableProviderTabSet);
+            scroller.getViewport().setBackground(tableProviderTabSet.getBackground());
+            this.displayArea.add(scroller, "WINDOW_CARD");
+            // Nasty hack to force table provider set to redisplay.
+            if (this.windowButton.isSelected()) this.windowButton.doClick();
         }
     }
 }
