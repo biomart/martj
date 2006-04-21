@@ -152,5 +152,8 @@ public class TableProviderView extends View {
      */
     public void synchronise() {
         // TODO: Construct/update our set of Component.Table and Component.Relation objects.
+        this.removeAll();
+        // Delegate upwards.
+        super.synchronise();
     }
 }

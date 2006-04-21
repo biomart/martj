@@ -77,5 +77,8 @@ public class MultiTableProviderView extends View {
      */
     public void synchronise() {
         // TODO: Construct/update our set of Component.TableProvider and Component.Relation objects.
+        this.removeAll();
+        // Delegate upwards.
+        super.synchronise();
     }
 }

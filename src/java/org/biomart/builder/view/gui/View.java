@@ -138,5 +138,10 @@ public abstract class View extends JPanel {
     /**
      * Synchronise our display with our object contents.
      */
-    public abstract void synchronise();
+    public void synchronise() {
+        // Update ourselves.
+        this.validate();
+        // Reset our size to the minimum.
+        this.setSize(this.getMinimumSize());
+    }
 }

@@ -27,7 +27,15 @@ package org.biomart.builder.view.gui;
 import java.awt.Container;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.LayoutManager2;
+import java.awt.Insets;
+import java.awt.LayoutManager;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Displays arbitrary objects linked in a radial form.
@@ -35,11 +43,41 @@ import java.awt.LayoutManager2;
  * @version 0.1.0, 19th April 2006
  * @since 0.1
  */
-public class RadialLayout implements LayoutManager2 {
+public class RadialLayout implements LayoutManager {
+    /**
+     * Constant referring to the padding between tables within a ring.
+     */
+    public static final double INTRA_PADDING = 36.0; // 72 = 1/2 inch at 72 dpi
+    
     /**
      * Constant referring to the padding between rings.
      */
-    public static final double PADDING_RADIUS = 36.0; // 72 = 1/2 inch at 72 dpi
+    public static final double INTER_PADDING = 36.0; // 72 = 1/2 inch at 72 dpi
+    
+    /**
+     * List of our ring radii.
+     */
+    private Map ringRadii = new TreeMap();
+    
+    /**
+     * List of our ring member counts.
+     */
+    private Map ringSizes = new TreeMap();
+    
+    /**
+     * Our minimum size.
+     */
+    private int minSize;
+    
+    /**
+     * is our size known?
+     */
+    private boolean sizeUnknown = true;
+    
+    /**
+     * Map of box components to number of relations.
+     */
+    private Map componentConstraints = new HashMap();
     
     /**
      * Creates a new instance of ComponentDisplay.
@@ -50,30 +88,111 @@ public class RadialLayout implements LayoutManager2 {
     
     /**
      * {@inheritDoc}
+     * <p>Use the constraints to note positioning info.</p>
+     */
+    public void setConstraints(Component comp, Object constraints) {
+        this.componentConstraints.put(comp, constraints);
+    }
+    
+    /**
+     * {@inheritDoc}
      * <p>Forget the previous layout.</p>
      */
     public void invalidateLayout(Container target) {
+        this.sizeUnknown = true;
     }
     
     /**
      * {@inheritDoc}
      */
     public Dimension preferredLayoutSize(Container parent) {
-        return new Dimension(400,400);
+        return this.minimumLayoutSize(parent);
     }
     
     /**
      * {@inheritDoc}
      */
     public Dimension minimumLayoutSize(Container parent) {
-        return new Dimension(400,400);
+        Dimension dim = new Dimension(0, 0);
+        this.setSizes(parent);
+        Insets insets = parent.getInsets();
+        dim.width = this.minSize
+                + insets.left + insets.right;
+        dim.height = this.minSize
+                + insets.top + insets.bottom;
+        return dim;
     }
     
     /**
-     * {@inheritDoc}
+     * Work out our canvas and ring sizes.
      */
-    public Dimension maximumLayoutSize(Container target) {
-        return new Dimension(400,400);
+    private void setSizes(Container parent) {
+        this.ringRadii.clear();
+        this.ringSizes.clear();
+        
+        // List of members, Circumference, Max shortest side
+        Map ringDetails = new TreeMap();
+        
+        int nComps = parent.getComponentCount();
+        for (int i = 0; i < nComps; i++) {
+            Component comp = parent.getComponent(i);
+            if (!comp.isVisible()) continue;
+            Dimension compSize = comp.getPreferredSize();
+            Object constraints = this.componentConstraints.get(comp);
+            // use constraints to calculate ring number!
+            // for now assume everything is a box and goes in ring 0.
+            Integer ringNumber = new Integer(0);
+            // then add the object to the appropriate ring and update circumference/max shortest side.
+            if (!ringDetails.containsKey(ringNumber))
+                ringDetails.put(
+                        ringNumber,
+                        new Object[]{new ArrayList(), new Integer(0), new Integer(0)}
+                );
+            Object[] details = (Object[])ringDetails.get(ringNumber);
+            List ringMembers = (List)details[0];
+            int circumference = ((Integer)details[1]).intValue();
+            int maxShortestSide = ((Integer)details[2]).intValue();
+            ringMembers.add(comp);
+            // increment circumference by longest side, plus padding
+            circumference +=
+                    (int)Math.max(compSize.getWidth(), compSize.getHeight()) +
+                    (int)RadialLayout.INTRA_PADDING;
+            // update longest shortest side
+            maxShortestSide = Math.max(maxShortestSide, (int)Math.min(compSize.getWidth(), compSize.getHeight()));
+            // store details back
+            ringDetails.put(ringNumber, new Object[]{ringMembers, new Integer(circumference), new Integer(maxShortestSide)});
+        }
+        
+        // Now compute the radii of the rings.
+        List ringNumbers = new ArrayList(ringDetails.keySet());
+        Collections.reverse(ringNumbers); // Most-linked in centre, please.
+        double previousRadius = 0.0;
+        for (Iterator i = ringNumbers.iterator(); i.hasNext(); ) {
+            Integer ringNumber = (Integer)i.next();
+            Object[] details = (Object[])ringDetails.get(ringNumber);
+            List ringMembers = (List)details[0];
+            double circumference = (double)((Integer)details[1]).intValue();
+            double maxShortestSide = (double)((Integer)details[2]).intValue();
+            // Work out radius.
+            double radius =
+                    (circumference / (2.0*Math.PI)) +
+                    (maxShortestSide / 2.0) +
+                    RadialLayout.INTER_PADDING +
+                    previousRadius;
+            this.ringRadii.put(ringNumber, new Double(radius));
+            // Work out sizes.
+            this.ringSizes.put(ringNumber, new Integer(ringMembers.size()));
+            // Bump ourselves up so that the next guy points to the outer edge of ourselves.
+            previousRadius =
+                    radius +
+                    (maxShortestSide / 2.0);
+        }
+        
+        // Work out min/max/preferred sizes.
+        this.minSize = (int)(previousRadius + RadialLayout.INTER_PADDING) * 2;
+        
+        // All done.
+        this.sizeUnknown = false;
     }
     
     /**
@@ -82,84 +201,45 @@ public class RadialLayout implements LayoutManager2 {
      * still valid.</p>
      */
     public void layoutContainer(Container parent) {
-        /*
-        // Clear the rings.
-        this.rings.clear();
-        this.componentToShape.clear();
-        this.shapeToComponent.clear();
-        // Work out what's going into them.
-        Collection displayComponents = this.getDisplayComponents();
-        // First, construct a set of ring families, sorted in ascending order
-        // by number of relations.
-        Map ringFamilies = new TreeMap();
-        for (Iterator i = displayComponents.iterator(); i.hasNext(); ) {
-            Component component = (Component)i.next();
-            Integer ringNumber = new Integer(component.getRelations().size());
-            if (!ringFamilies.containsKey(ringNumber)) ringFamilies.put(ringNumber, new ArrayList());
-            ((List)ringFamilies.get(ringNumber)).add(component);
-        }
-        // Obtain the descending set of number of relations.
-        List ringNumbers = new ArrayList(ringFamilies.keySet());
-        Collections.reverse(ringNumbers);
-        // Construct the rings, innermost first, leaving some padding in the middle.
-        double innerRingRadius = ComponentDisplay.PADDING_RADIUS;
-        for (Iterator i = ringNumbers.iterator(); i.hasNext(); ) {
-            List components = (List)ringFamilies.get(i.next());
-            int median = components.size() / 2;
-            if (components.size() % 2 != 0) median++;
-            // Order them by width and find the minimum radius.
-            Collections.sort(components, new DescendingWidth());
-            double minWidthRadius = 0.0;
-            for (int j = 0; j < median; j++) minWidthRadius += ((Component)components.get(j)).getWidth();
-            minWidthRadius /= 2.0; // convert from diameter to radius.
-            double minWidthPadding = ((Component)components.get(0)).getWidth() / 2.0;
-            // Order them by height and find the minimum radius.
-            Collections.sort(components, new DescendingHeight());
-            double minHeightRadius = 0.0;
-            for (int j = 0; j < median; j++) minHeightRadius += ((Component)components.get(j)).getHeight();
-            minHeightRadius /= 2.0; // convert from diameter to radius.
-            double minHeightPadding = ((Component)components.get(0)).getHeight() / 2.0;
-            // Work out the actual minimum radius.
-            double minRadius = Math.max(minHeightRadius, minWidthRadius);
-            double minPadding = Math.max(minWidthPadding, minHeightPadding);
-            minRadius += innerRingRadius + minPadding;
-            // Plant them randomly around the ring.
-            Collections.shuffle(components);
-            this.rings.put(new Double(innerRingRadius), components);
-            // Set the inner radius for the next ring.
-            innerRingRadius = minRadius + minPadding + ComponentDisplay.PADDING_RADIUS;
-        }
-        // Work out the size of the largest ring plus a bit of padding, and set it as our own size.
-        int canvasCentre = (int)(innerRingRadius + ComponentDisplay.PADDING_RADIUS);
-        this.setSize(canvasCentre*2, canvasCentre*2);
-        // Construct component->shape maps.
-        for (Iterator i = this.rings.keySet().iterator(); i.hasNext(); ) {
-            Double radius = (Double)i.next();
-            List components = (List)this.rings.get(radius);
-            // Space them equally around the points of a circle centred
-            // at (x,y) = (canvasCentre, canvasCentre). The circle is divided into
-            // equal segments.
-            double currentRadian = 0;
-            double radianIncrement = Math.PI*2.0 / components.size();
-            for (Iterator j = components.iterator(); j.hasNext(); ) {
-                Component component = (Component)j.next();
-                // Work out offset.
-                double widthOffset = component.getWidth()/2.0;
-                double heightOffset = component.getHeight()/2.0;
-                // Work out point on circumference for degree.
-                double x = canvasCentre + (radius.doubleValue() * Math.cos(currentRadian));
-                double y = canvasCentre + (radius.doubleValue() * Math.sin(currentRadian));
-                // Construct shape around centre point using offsets.
-                Shape shape = new Rectangle2D.Double(
-                        x-widthOffset, y-heightOffset,
-                        component.getWidth(), component.getHeight()
-                        );
-                // Remember the values in the component->shape maps.
-                this.componentToShape.put(component, shape);
-                this.shapeToComponent.put(shape, component);
-                // Increment for next component.
-                currentRadian += radianIncrement;
-            }
+        // Set our size first.
+        if (this.sizeUnknown) this.setSizes(parent);
+        double actualSize = Math.max(this.minSize, Math.min(parent.getWidth(), parent.getHeight()));
+        double scalar = actualSize / (double)this.minSize;
+        
+        // Work out our centre point.
+        double centreX = Math.max(actualSize, parent.getWidth())/2.0;
+        double centreY = Math.max(actualSize, parent.getHeight())/2.0;
+        
+        // Keep track of the number of items we've put in each ring so far.
+        Map ringCounts = new TreeMap();
+        
+        // Just iterate through components and add them to the various rings.
+        int nComps = parent.getComponentCount();
+        for (int i = 0; i < nComps; i++) {
+            Component comp = parent.getComponent(i);
+            if (!comp.isVisible()) continue;
+            Dimension compSize = comp.getPreferredSize();
+            Object constraints = this.componentConstraints.get(comp);
+            // use constraints to calculate ring number!
+            // for now assume everything is a box and goes in ring 0.
+            Integer ringNumber = new Integer(0);
+            // have we seen this ring before?
+            int ringCount = 0;
+            if (ringCounts.containsKey(ringNumber)) ringCount = ((Integer)ringCounts.get(ringNumber)).intValue()+1;
+            ringCounts.put(ringNumber, new Integer(ringCount));
+            // Get radius.
+            double radius = scalar * ((Double)this.ringRadii.get(ringNumber)).doubleValue();
+            // Work out radian position.
+            double radianIncrement = (Math.PI*2.0) / ((Integer)this.ringSizes.get(ringNumber)).intValue();
+            double positionRadian = radianIncrement * (double)ringCount;
+            // Work out offset.
+            double widthOffset = compSize.getWidth()/2.0;
+            double heightOffset = compSize.getHeight()/2.0;
+            // Work out point on circumference for centre of component.
+            double x = centreX + (radius * Math.cos(positionRadian));
+            double y = centreY + (radius * Math.sin(positionRadian));
+            // Place component around centre point using offsets.
+            comp.setBounds((int)(x-widthOffset), (int)(y-heightOffset), (int)compSize.getWidth(), (int)compSize.getHeight());
         }
         // Add relations to component->shape maps using the key shapes for
         // anchors and offsetting them against the parent component shape.
@@ -174,17 +254,6 @@ public class RadialLayout implements LayoutManager2 {
         // iterate through relations found
         // work out for each relation which side of pkbox and fkbox to use
         // create and add to map line2d shapes for each relation.
-        
-        // Finally, repaint ourselves.
-        this.repaint();
-         */
-    }
-    
-    /**
-     * {@inheritDoc}
-     * <p>Use the constraints to note positioning info about relations.</p>
-     */
-    public void addLayoutComponent(Component comp, Object constraints) {
     }
     
     /**
@@ -199,19 +268,5 @@ public class RadialLayout implements LayoutManager2 {
      */
     public void removeLayoutComponent(Component comp) {
         // Ignore.
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public float getLayoutAlignmentX(Container target) {
-        return 0.0f;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public float getLayoutAlignmentY(Container target) {
-        return 0.0f;
     }
 }
