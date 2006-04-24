@@ -30,8 +30,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,6 +37,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.swing.ButtonGroup;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -53,7 +52,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Set of tabs to display a schema and set of windows.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 21st April 2006
+ * @version 0.1.3, 24th April 2006
  * @since 0.1
  */
 public class WindowTabSet extends JTabbedPane {
@@ -88,8 +87,8 @@ public class WindowTabSet extends JTabbedPane {
         this.schema = schema;
         // Load the table providers.
         this.tableProviderTabSet = new TableProviderTabSet(this);
-        // Set up the schema tab.
-        this.addTab(BuilderBundle.getString("schemaTabName"), null);
+        // Set up the schema tab dummy placeholder.
+        this.addTab(BuilderBundle.getString("schemaTabName"), new JLabel());
         // Set up the window tabs.
         this.synchronise();
     }
@@ -120,16 +119,15 @@ public class WindowTabSet extends JTabbedPane {
      * appropriate place.
      */
     public void setSelectedIndex(int selectedIndex) {
+        int schemaTabIndex = this.indexOfTab(BuilderBundle.getString("schemaTabName"));
         Component selectedComponent = this.getComponentAt(selectedIndex);
         if (selectedComponent instanceof WindowTab) {
+            this.setComponentAt(schemaTabIndex, new JLabel()); // Dummy placeholder
             WindowTab windowTab = (WindowTab)selectedComponent;
             windowTab.attachTableProviderTabSet(this, this.tableProviderTabSet);
         } else {
-            JScrollPane scroller = new JScrollPane(this.tableProviderTabSet);
-            scroller.getViewport().setBackground(this.tableProviderTabSet.getBackground());
-            int componentIndex = this.indexOfTab(BuilderBundle.getString("schemaTabName"));
-            this.setComponentAt(componentIndex, scroller);
             this.tableProviderTabSet.setAdaptor(new DefaultAdaptor(this));
+            this.setComponentAt(schemaTabIndex, this.tableProviderTabSet);
         }
         super.setSelectedIndex(selectedIndex);
     }
@@ -338,9 +336,7 @@ public class WindowTabSet extends JTabbedPane {
          */
         public void attachTableProviderTabSet(WindowTabSet windowTabSet, TableProviderTabSet tableProviderTabSet) {
             tableProviderTabSet.setAdaptor(new WindowAdaptor(windowTabSet, this.window));
-            JScrollPane scroller = new JScrollPane(tableProviderTabSet);
-            scroller.getViewport().setBackground(tableProviderTabSet.getBackground());
-            this.displayArea.add(scroller, "WINDOW_CARD");
+            this.displayArea.add(tableProviderTabSet, "WINDOW_CARD");
             // Nasty hack to force table provider set to redisplay.
             if (this.windowButton.isSelected()) this.windowButton.doClick();
         }

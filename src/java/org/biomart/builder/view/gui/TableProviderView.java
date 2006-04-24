@@ -27,16 +27,23 @@ package org.biomart.builder.view.gui;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.model.TableProvider;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Displays the contents of a {@link TableProvider} in graphical form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 21st April 2006
+ * @version 0.1.4, 24th April 2006
  * @since 0.1
  */
 public class TableProviderView extends View {
@@ -59,6 +66,7 @@ public class TableProviderView extends View {
         super(windowTabSet);
         this.setBackground(TableProviderView.BACKGROUND_COLOUR);
         this.tableProvider = tableProvider;
+        this.synchronise();
     }
     
     /**
@@ -153,6 +161,30 @@ public class TableProviderView extends View {
     public void synchronise() {
         // TODO: Construct/update our set of Component.Table and Component.Relation objects.
         this.removeAll();
+        // Make a set of all relations on this table provider.
+        Set relations = new HashSet();
+        Map keyComponents = new HashMap();
+        // Add a TableComponent for each table.
+        for (Iterator i = this.getTableProvider().getTables().iterator(); i.hasNext(); ) {
+            Table table = (Table)i.next();
+            TableComponent tableComponent = new TableComponent(table, this);
+            this.add(tableComponent);
+            relations.addAll(table.getRelations());
+            keyComponents.putAll(tableComponent.getKeyComponents());
+        }
+        // Add a RelationComponent for each relation.
+        for (Iterator i = relations.iterator(); i.hasNext(); ) {
+            Relation relation = (Relation)i.next();
+            
+            // FIXME: This code doesn't work for relations between table providers.
+            
+            RelationComponent relationComponent = new RelationComponent(
+                    relation, 
+                    this, 
+                    (KeyComponent)keyComponents.get(relation.getPrimaryKey()), 
+                    (KeyComponent)keyComponents.get(relation.getForeignKey()));
+            this.add(relationComponent);
+        }
         // Delegate upwards.
         super.synchronise();
     }

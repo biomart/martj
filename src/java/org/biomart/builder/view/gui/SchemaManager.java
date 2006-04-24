@@ -24,7 +24,6 @@
 
 package org.biomart.builder.view.gui;
 
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -40,13 +39,12 @@ import javax.swing.JTabbedPane;
 import javax.swing.filechooser.FileFilter;
 import org.biomart.builder.controller.SchemaSaver;
 import org.biomart.builder.model.Schema;
-import org.biomart.builder.model.Window;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Displays a schema.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.0, 21st April 2006
+ * @version 0.1.2, 24th April 2006
  * @since 0.1
  */
 public class SchemaManager extends JTabbedPane {
@@ -266,22 +264,6 @@ public class SchemaManager extends JTabbedPane {
      */
     private JPopupMenu getSchemaTabContextMenu() {
         JPopupMenu contextMenu = new JPopupMenu();
-        JMenuItem save = new JMenuItem(BuilderBundle.getString("saveSchemaTitle"));
-        save.setMnemonic(BuilderBundle.getString("saveSchemaMnemonic").charAt(0));
-        save.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                saveSchema();
-            }
-        });
-        contextMenu.add(save);
-        JMenuItem saveAs = new JMenuItem(BuilderBundle.getString("saveSchemaAsTitle"));
-        saveAs.setMnemonic(BuilderBundle.getString("saveSchemaAsMnemonic").charAt(0));
-        saveAs.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                saveSchemaAs();
-            }
-        });
-        contextMenu.add(saveAs);
         JMenuItem close = new JMenuItem(BuilderBundle.getString("closeSchemaTitle"));
         close.setMnemonic(BuilderBundle.getString("closeSchemaMnemonic").charAt(0));
         close.addActionListener(new ActionListener() {

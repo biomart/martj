@@ -34,7 +34,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * This class deals with drawing an overview of all the table providers.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 21st April 2006
+ * @version 0.1.2, 24th April 2006
  * @since 0.1
  */
 public class MultiTableProviderView extends View {
@@ -50,6 +50,7 @@ public class MultiTableProviderView extends View {
     public MultiTableProviderView(WindowTabSet windowTabSet) {
         super(windowTabSet);
         this.setBackground(MultiTableProviderView.BACKGROUND_COLOUR);
+        this.synchronise();
     }
     
     /**

@@ -47,7 +47,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * The main window housing the MartBuilder GUI.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 21st April 2006
+ * @version 0.1.6, 24th April 2006
  * @since 0.1
  */
 public class MartBuilder extends JFrame {
