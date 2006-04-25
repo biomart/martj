@@ -54,7 +54,7 @@ public class MartBuilder extends JFrame {
     /**
      * Our schema manager.
      */
-    private SchemaTabSet schemaManager;
+    private SchemaTabSet schemaTabSet;
     
     /**
      * Creates a new instance of MartBuilder. Calls initComponents
@@ -100,8 +100,8 @@ public class MartBuilder extends JFrame {
         // Make a menu bar and add it.
         this.setJMenuBar(new MartBuilderMenuBar(this));
         // Set up the schema manager.
-        this.schemaManager = new SchemaTabSet(this);
-        this.getContentPane().add(this.schemaManager, BorderLayout.CENTER);
+        this.schemaTabSet = new SchemaTabSet(this);
+        this.getContentPane().add(this.schemaTabSet, BorderLayout.CENTER);
         // Pack the window.
         this.pack();
     }
@@ -137,7 +137,7 @@ public class MartBuilder extends JFrame {
      * Confirms the user wants to exit, then exits.
      */
     public void exitApp() {
-        if (this.schemaManager.confirmCloseAllSchemas()) System.exit(0);
+        if (this.schemaTabSet.confirmCloseAllSchemas()) System.exit(0);
     }
     
     /**
@@ -187,6 +187,7 @@ public class MartBuilder extends JFrame {
         private JMenuItem closeSchema;
         private JMenuItem exit;
         private JMenuItem synchroniseSchema;
+        private JMenuItem addTableProvider;
         
         /**
          * Constructor calls super then sets up our menu items.
@@ -239,7 +240,7 @@ public class MartBuilder extends JFrame {
             fileMenu.addMenuListener(new MenuListener() {
                 public void menuSelected(MenuEvent e) {
                     boolean hasSchema = true;
-                    if (martBuilder.schemaManager.getCurrentSchema()==null) hasSchema = false;
+                    if (martBuilder.schemaTabSet.getCurrentSchema()==null) hasSchema = false;
                     saveSchema.setEnabled(hasSchema);
                     saveSchemaAs.setEnabled(hasSchema);
                     closeSchema.setEnabled(hasSchema);
@@ -258,14 +259,20 @@ public class MartBuilder extends JFrame {
             this.synchroniseSchema = new JMenuItem(BuilderBundle.getString("synchroniseSchemaTitle"));
             this.synchroniseSchema.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
             this.synchroniseSchema.addActionListener(this);
-            
+    
+            this.addTableProvider = new JMenuItem(BuilderBundle.getString("addTblProvTitle"));
+            this.addTableProvider.setMnemonic(BuilderBundle.getString("addTblProvMnemonic").charAt(0));
+            this.addTableProvider.addActionListener(this);
+        
             schemaMenu.add(this.synchroniseSchema);
+            schemaMenu.add(this.addTableProvider);
             
             schemaMenu.addMenuListener(new MenuListener() {
                 public void menuSelected(MenuEvent e) {
                     boolean hasSchema = true;
-                    if (martBuilder.schemaManager.getCurrentSchema()==null) hasSchema = false;
+                    if (martBuilder.schemaTabSet.getCurrentSchema()==null) hasSchema = false;
                     synchroniseSchema.setEnabled(hasSchema);
+                    addTableProvider.setEnabled(hasSchema);
                 }
                 public void menuDeselected(MenuEvent e) {}
                 public void menuCanceled(MenuEvent e) {}
@@ -281,16 +288,17 @@ public class MartBuilder extends JFrame {
             
             // File menu.
             
-            if (e.getSource() == this.newSchema) this.martBuilder.schemaManager.newSchema();
-            else if (e.getSource() == this.openSchema) this.martBuilder.schemaManager.loadSchema();
-            else if (e.getSource() == this.saveSchema) this.martBuilder.schemaManager.saveSchema();
-            else if (e.getSource() == this.saveSchemaAs) this.martBuilder.schemaManager.saveSchemaAs();
-            else if (e.getSource() == this.closeSchema) this.martBuilder.schemaManager.confirmCloseSchema();
+            if (e.getSource() == this.newSchema) this.martBuilder.schemaTabSet.newSchema();
+            else if (e.getSource() == this.openSchema) this.martBuilder.schemaTabSet.loadSchema();
+            else if (e.getSource() == this.saveSchema) this.martBuilder.schemaTabSet.saveSchema();
+            else if (e.getSource() == this.saveSchemaAs) this.martBuilder.schemaTabSet.saveSchemaAs();
+            else if (e.getSource() == this.closeSchema) this.martBuilder.schemaTabSet.confirmCloseSchema();
             else if (e.getSource() == this.exit) this.martBuilder.exitApp();
             
             // Schema menu.
             
-            else if (e.getSource() == this.synchroniseSchema) this.martBuilder.schemaManager.synchroniseSchema();
+            else if (e.getSource() == this.synchroniseSchema) this.martBuilder.schemaTabSet.synchroniseSchema();
+            else if (e.getSource() == this.addTableProvider) this.martBuilder.schemaTabSet.requestAddTableProvider();
         }
     }
 }

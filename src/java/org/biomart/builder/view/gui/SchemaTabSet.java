@@ -251,9 +251,21 @@ public class SchemaTabSet extends JTabbedPane {
         Schema currentSchema = this.getCurrentSchema();
         if (currentSchema == null) return;
         try {
-            this.getCurrentSchema().synchroniseTableProviders();
+            currentSchema.synchroniseTableProviders();
             ((WindowTabSet)this.getSelectedComponent()).synchroniseTabs();
             this.setModifiedStatus(true);
+        } catch (Throwable t) {
+            this.martBuilder.showStackTrace(t);
+        }
+    }
+    
+    /**
+     * Synchronises the schema.
+     */
+    public void requestAddTableProvider() {
+        if (this.getCurrentSchema() == null) return;
+        try {
+            ((WindowTabSet)this.getSelectedComponent()).getTableProviderTabSet().requestAddTableProvider();
         } catch (Throwable t) {
             this.martBuilder.showStackTrace(t);
         }

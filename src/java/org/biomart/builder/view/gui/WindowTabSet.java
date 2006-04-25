@@ -244,6 +244,7 @@ public class WindowTabSet extends JTabbedPane {
                 this.schema.renameWindow(window, newName);
                 this.addWindowTab(window);
                 this.setSelectedIndex(this.indexOfTab(newName));
+                this.schemaTabSet.setModifiedStatus(true);
             }
         } catch (Throwable t) {
             this.schemaTabSet.getMartBuilder().showStackTrace(t);
@@ -257,6 +258,7 @@ public class WindowTabSet extends JTabbedPane {
         try {
             Window window = new Window(this.schema, table, this.getWindowName(table.getName()));
             this.synchroniseTabs();
+            this.schemaTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
             this.schemaTabSet.getMartBuilder().showStackTrace(t);
         }
@@ -269,6 +271,7 @@ public class WindowTabSet extends JTabbedPane {
         try {
             this.schema.suggestWindows(table, this.getWindowName(table.getName()));
             this.synchroniseTabs();
+            this.schemaTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
             this.schemaTabSet.getMartBuilder().showStackTrace(t);
         }
@@ -281,6 +284,7 @@ public class WindowTabSet extends JTabbedPane {
         try {
             window.optimiseRelations();
             this.synchroniseTabs();
+            this.schemaTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
             this.schemaTabSet.getMartBuilder().showStackTrace(t);
         }

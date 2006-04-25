@@ -76,6 +76,15 @@ public class TableProviderView extends View {
         });
         contextMenu.add(sync);
         
+        JMenuItem add = new JMenuItem(BuilderBundle.getString("addTblProvTitle"));
+        add.setMnemonic(BuilderBundle.getString("addTblProvMnemonic").charAt(0));
+        add.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                windowTabSet.getTableProviderTabSet().requestAddTableProvider();
+            }
+        });
+        contextMenu.add(add);
+        
         // Return.
         return contextMenu;
     }

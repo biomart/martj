@@ -70,6 +70,11 @@ public class TableProviderTabSet extends JTabbedPane {
     private TableProviderView tableProviderView;
     
     /**
+     * Our new provider dialog.
+     */
+    private NewTableProviderDialog newTableProviderDialog;
+    
+    /**
      * Creates a new multiple table provider view over the given set of
      * of table providers.
      */
@@ -81,8 +86,17 @@ public class TableProviderTabSet extends JTabbedPane {
         JScrollPane scroller = new JScrollPane(this.tableProviderView);
         scroller.getViewport().setBackground(this.tableProviderView.getBackground());
         this.addTab(BuilderBundle.getString("multiTblProvOverviewTab"), scroller);
+        // Make our own table provider dialog.
+        this.newTableProviderDialog = new NewTableProviderDialog(this);
         // Synchronise ourselves.
         this.synchroniseTabs();
+    }
+    
+    /**
+     * Who's our mummy?
+     */
+    public WindowTabSet getWindowTabSet() {
+        return this.windowTabSet;
     }
     
     /**
@@ -118,12 +132,14 @@ public class TableProviderTabSet extends JTabbedPane {
      */
     public void requestAddTableProvider() {
         // Pop up a box to get the details of the new provider.
-        TableProvider tableProvider = null; // blah
+        this.newTableProviderDialog.show();
+        TableProvider tableProvider = this.newTableProviderDialog.getTableProvider();
         // Add to schema.
         try {
             if (tableProvider != null) {
                 this.windowTabSet.getSchema().addTableProvider(tableProvider);
                 this.addTableProviderTab(tableProvider);
+                this.windowTabSet.getSchemaTabSet().setModifiedStatus(true);
             }
         } catch (Throwable t) {
             this.windowTabSet.getSchemaTabSet().getMartBuilder().showStackTrace(t);
@@ -211,6 +227,7 @@ public class TableProviderTabSet extends JTabbedPane {
                 this.windowTabSet.getSchema().renameTableProvider(tableProvider, newName);
                 this.addTableProviderTab(tableProvider);
                 this.setSelectedIndex(this.indexOfTab(newName));
+                this.windowTabSet.getSchemaTabSet().setModifiedStatus(true);
             }
         } catch (Throwable t) {
             this.windowTabSet.getSchemaTabSet().getMartBuilder().showStackTrace(t);
