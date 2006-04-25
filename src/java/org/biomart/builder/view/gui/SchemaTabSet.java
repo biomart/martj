@@ -1,5 +1,5 @@
 /*
- * SchemaManager.java
+ * SchemaTabSet.java
  *
  * Created on 21 April 2006, 08:28
  */
@@ -24,6 +24,7 @@
 
 package org.biomart.builder.view.gui;
 
+import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -44,19 +45,19 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Displays a schema.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 24th April 2006
+ * @version 0.1.3, 25th April 2006
  * @since 0.1
  */
-public class SchemaManager extends JTabbedPane {
+public class SchemaTabSet extends JTabbedPane {
     /**
      * Reference to the parent MartBuilder.
      */
-    private final MartBuilder martBuilder;
+    private MartBuilder martBuilder;
     
     /**
      * A file chooser for XML files.
      */
-    private final JFileChooser xmlFileChooser;
+    private JFileChooser xmlFileChooser;
     
     /**
      * The modified status of the schema.
@@ -68,8 +69,10 @@ public class SchemaManager extends JTabbedPane {
      */
     private Map schemaFile;
     
-    /** Creates a new instance of SchemaManager */
-    public SchemaManager(MartBuilder martBuilder) {
+    /**
+     * Creates a new instance of SchemaTabSet
+     */
+    public SchemaTabSet(MartBuilder martBuilder) {
         // GUI stuff first.
         super();
         // Create the file chooser.
@@ -206,7 +209,6 @@ public class SchemaManager extends JTabbedPane {
             } catch (Throwable t) {
                 this.martBuilder.showStackTrace(t);
             }
-            
         }
     }
     
@@ -250,7 +252,7 @@ public class SchemaManager extends JTabbedPane {
         if (currentSchema == null) return;
         try {
             this.getCurrentSchema().synchroniseTableProviders();
-            ((WindowTabSet)this.getSelectedComponent()).synchronise();
+            ((WindowTabSet)this.getSelectedComponent()).synchroniseTabs();
             this.setModifiedStatus(true);
         } catch (Throwable t) {
             this.martBuilder.showStackTrace(t);
@@ -264,6 +266,7 @@ public class SchemaManager extends JTabbedPane {
      */
     private JPopupMenu getSchemaTabContextMenu() {
         JPopupMenu contextMenu = new JPopupMenu();
+        
         JMenuItem close = new JMenuItem(BuilderBundle.getString("closeSchemaTitle"));
         close.setMnemonic(BuilderBundle.getString("closeSchemaMnemonic").charAt(0));
         close.addActionListener(new ActionListener() {
@@ -272,6 +275,7 @@ public class SchemaManager extends JTabbedPane {
             }
         });
         contextMenu.add(close);
+        
         return contextMenu;
     }
     

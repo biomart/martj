@@ -24,8 +24,11 @@
 package org.biomart.builder.model;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import org.biomart.builder.exceptions.AlreadyExistsException;
@@ -49,6 +52,13 @@ public interface TableProvider extends Comparable, DataLink {
      * @return the name of this provider.
      */
     public String getName();
+
+    /**
+     * Sets the name of this {@link TableProvider}.
+     * @param name the new name of this provider.
+     * @throws NullPointerException if the name is null.
+     */
+    public void setName(String name);
     
     /**
      * Synchronise this {@link TableProvider} with the data source that is
@@ -109,6 +119,20 @@ public interface TableProvider extends Comparable, DataLink {
     public int countUniqueValues(Column column) throws AssociationException, NullPointerException, SQLException;
     
     /**
+     * Returns a collection of all the keys from all the tables in this provider which
+     * have relations referring to tables in other table providers.
+     * @return a set of keys with relations linking to tables in other table providers.
+     */
+    public Collection getExternalKeys();
+    
+    /**
+     * Returns a collection of all the relations from all the tables in this provider which
+     * refer to tables in other table providers.
+     * @return a set of relations linking to tables in other table providers.
+     */
+    public Collection getExternalRelations();
+    
+    /**
      * The generic implementation should suffice as the ground for most
      * complex implementations. It keeps track of {@link Table}s it has already seen, and
      * performs simple lookups for them.
@@ -117,7 +141,7 @@ public interface TableProvider extends Comparable, DataLink {
         /**
          * Internal reference to the name of this provider.
          */
-        private final String name;
+        private String name;
         
         /**
          * Internal reference to the set of {@link Table}s in this provider.
@@ -142,6 +166,17 @@ public interface TableProvider extends Comparable, DataLink {
          */
         public String getName() {
             return this.name;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        public void setName(String name) {
+            // Sanity check.
+            if (name == null)
+                throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
+            // Remember the values.
+            this.name = name;
         }
         
         /**
@@ -224,6 +259,41 @@ public interface TableProvider extends Comparable, DataLink {
                 throw new AssociationException(BuilderBundle.getString("columnTblprovMismatch"));
             // Do it.
             return 0;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        public Collection getExternalKeys() {
+            List keys = new ArrayList();
+            Collection relations = this.getExternalRelations();
+            for (Iterator i = relations.iterator(); i.hasNext(); ) {
+                Relation relation = (Relation)i.next();
+                if (relation.getPrimaryKey().getTable().getTableProvider().equals(this)) keys.add(relation.getPrimaryKey());
+                else keys.add(relation.getForeignKey());
+            }
+            return keys;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        public Collection getExternalRelations() {
+            List relations = new ArrayList();
+            for (Iterator i = this.getTables().iterator(); i.hasNext(); ) {
+                Table table = (Table)i.next();
+                for (Iterator j = table.getKeys().iterator(); j.hasNext(); ) {
+                    Key key = (Key)j.next();
+                    for (Iterator l = key.getRelations().iterator(); l.hasNext(); ) {
+                        Relation relation = (Relation)l.next();
+                        if (!(relation.getPrimaryKey().getTable().getTableProvider().equals(this) &&
+                                relation.getForeignKey().getTable().getTableProvider().equals(this))) {
+                            relations.add(relation);
+                        }
+                    }
+                }
+            }
+            return relations;
         }
         
         /**

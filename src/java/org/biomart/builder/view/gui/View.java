@@ -32,7 +32,7 @@ import javax.swing.JPopupMenu;
 /**
  * Displays arbitrary objects linked in a radial form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 24th April 2006
+ * @version 0.1.4, 25th April 2006
  * @since 0.1
  */
 public abstract class View extends JPanel {
@@ -60,6 +60,13 @@ public abstract class View extends JPanel {
         this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
         // Business stuff.
         this.windowTabSet = windowTabSet;
+    }
+    
+    /**
+     * The window tab set.
+     */
+    protected WindowTabSet getWindowTabSet() {
+        return this.windowTabSet;
     }
     
     /**
@@ -137,7 +144,7 @@ public abstract class View extends JPanel {
     /**
      * Synchronise our display with our object contents.
      */
-    public void synchronise() {
+    public void synchroniseView() {
         // Update ourselves.
         this.validate();
         // Reset our size to the minimum.

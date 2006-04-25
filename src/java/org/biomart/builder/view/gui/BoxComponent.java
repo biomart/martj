@@ -63,7 +63,7 @@ public abstract class BoxComponent extends JPanel implements ViewComponent {
      * Retrieves the parent this component belongs to.
      * @return the parent.
      */
-    public View getParentDisplay() {
+    public View getView() {
         return this.parentDisplay;
     }
     
@@ -80,7 +80,7 @@ public abstract class BoxComponent extends JPanel implements ViewComponent {
      * @return the popup menu.
      */
     public JPopupMenu getContextMenu() {
-        return this.getParentDisplay().getContextMenu();
+        return this.getView().getContextMenu();
     }
     
     /**
@@ -94,7 +94,7 @@ public abstract class BoxComponent extends JPanel implements ViewComponent {
             // Build the basic menu.
             JPopupMenu contextMenu = this.getContextMenu();
             // Extend.
-            this.getParentDisplay().getAdaptor().customiseContextMenu(contextMenu, this.getObject());
+            this.getView().getAdaptor().customiseContextMenu(contextMenu, this.getObject());
             // Display.
             contextMenu.show(this, evt.getX(), evt.getY());
             eventProcessed = true;
@@ -108,8 +108,8 @@ public abstract class BoxComponent extends JPanel implements ViewComponent {
      */
     protected void paintComponent(Graphics g) {
         // Set up painting of this component.
-        this.getParentDisplay().clearFlags();
-        this.getParentDisplay().getAdaptor().aboutToDraw(this.getObject());
+        this.getView().clearFlags();
+        this.getView().getAdaptor().aboutToDraw(this.getObject());
         this.setComponentColours();
         // Do the painting.
         super.paintComponent(g);

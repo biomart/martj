@@ -38,7 +38,7 @@ import org.biomart.builder.model.Window;
  * based around the named table. Currently generates only schema XML,
  * and does not generate any SQL to do the work.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 5th April 2006
+ * @version 0.1.3, 25th April 2006
  * @since 0.1
  */
 public class NaiveCLI {
@@ -63,7 +63,7 @@ public class NaiveCLI {
         s.synchroniseTableProviders(); // causes the table provider to load up its info
         Table t = tableProvider.getTableByName(name);
         // Predict some sensible defaults.
-        s.suggestWindows(t);
+        s.suggestWindows(t, t.getName());
         // Accept the no-subclass default.
         Window w = s.getWindowByName(t.getName());
         w.synchronise(); // causes the dataset to regenerate

@@ -47,14 +47,14 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * The main window housing the MartBuilder GUI.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 24th April 2006
+ * @version 0.1.7, 25th April 2006
  * @since 0.1
  */
 public class MartBuilder extends JFrame {
     /**
      * Our schema manager.
      */
-    private SchemaManager schemaManager;
+    private SchemaTabSet schemaManager;
     
     /**
      * Creates a new instance of MartBuilder. Calls initComponents
@@ -100,7 +100,7 @@ public class MartBuilder extends JFrame {
         // Make a menu bar and add it.
         this.setJMenuBar(new MartBuilderMenuBar(this));
         // Set up the schema manager.
-        this.schemaManager = new SchemaManager(this);
+        this.schemaManager = new SchemaTabSet(this);
         this.getContentPane().add(this.schemaManager, BorderLayout.CENTER);
         // Pack the window.
         this.pack();
@@ -112,12 +112,12 @@ public class MartBuilder extends JFrame {
      */
     public void showStackTrace(Throwable t) {
         // Create the main message.
-        final int messageClass = (t instanceof Error) ? JOptionPane.ERROR_MESSAGE : JOptionPane.WARNING_MESSAGE;
+        int messageClass = (t instanceof Error) ? JOptionPane.ERROR_MESSAGE : JOptionPane.WARNING_MESSAGE;
         String mainMessage = t.getLocalizedMessage();
         // Extract the full stack trace.
         StringWriter sw = new StringWriter();
         t.printStackTrace(new PrintWriter(sw));
-        final String stackTraceText = sw.toString();
+        String stackTraceText = sw.toString();
         int choice = JOptionPane.showConfirmDialog(
                 this,
                 new Object[]{mainMessage, BuilderBundle.getString("stackTracePrompt")},
@@ -175,7 +175,7 @@ public class MartBuilder extends JFrame {
         /**
          * The MartBuilder which will receive events.
          */
-        private final MartBuilder martBuilder;
+        private MartBuilder martBuilder;
         
         /**
          * Internal references to the various menu options.
@@ -218,7 +218,7 @@ public class MartBuilder extends JFrame {
             this.saveSchemaAs = new JMenuItem(BuilderBundle.getString("saveSchemaAsTitle"));
             this.saveSchemaAs.setMnemonic(BuilderBundle.getString("saveSchemaAsMnemonic").charAt(0));
             this.saveSchemaAs.addActionListener(this);
-
+            
             this.closeSchema = new JMenuItem(BuilderBundle.getString("closeSchemaTitle"));
             this.closeSchema.setMnemonic(BuilderBundle.getString("closeSchemaMnemonic").charAt(0));
             this.closeSchema.addActionListener(this);
@@ -278,7 +278,7 @@ public class MartBuilder extends JFrame {
          * {@inheritDoc}
          */
         public void actionPerformed(ActionEvent e) {
-
+            
             // File menu.
             
             if (e.getSource() == this.newSchema) this.martBuilder.schemaManager.newSchema();

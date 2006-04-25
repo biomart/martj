@@ -37,17 +37,17 @@ import org.biomart.builder.resources.BuilderBundle;
  * @version 0.1.2, 21st April 2006
  * @since 0.1
  */
-public class WindowAdaptor extends DefaultAdaptor {
+public class WindowAdaptor extends SchemaAdaptor {
     /**
      * Internal reference to our window.
      */
     private Window window;
     
     /**
-     * 
+     *
      * Creates a new instance of WindowAdaptor over
-     * a given window. 
-     * 
+     * a given window.
+     *
      * @param window the window we are attached to.
      */
     public WindowAdaptor(WindowTabSet windowTabSet, Window window) {
@@ -61,8 +61,8 @@ public class WindowAdaptor extends DefaultAdaptor {
      */
     protected Window getWindow() {
         return this.window;
-    }    
-      
+    }
+    
     /**
      * {@inheritDoc}
      */
@@ -70,13 +70,31 @@ public class WindowAdaptor extends DefaultAdaptor {
         // Add separator.
         contextMenu.addSeparator();
         // Add our own stuff.
-        final JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeWindowTitle", this.getWindow().getName()));
+        JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeWindowTitle"));
         remove.setMnemonic(BuilderBundle.getString("removeWindowMnemonic").charAt(0));
         remove.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                windowTabSet.confirmRemoveWindow(window);
+                getWindowTabSet().confirmRemoveWindow(window);
             }
         });
         contextMenu.add(remove);
+        
+        JMenuItem optimise = new JMenuItem(BuilderBundle.getString("optimiseWindowTitle"));
+        optimise.setMnemonic(BuilderBundle.getString("optimiseWindowMnemonic").charAt(0));
+        optimise.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                getWindowTabSet().optimiseRelations(window);
+            }
+        });
+        contextMenu.add(optimise);
+        
+        JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameWindowTitle"));
+        rename.setMnemonic(BuilderBundle.getString("renameWindowMnemonic").charAt(0));
+        rename.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                getWindowTabSet().renameWindow(window);
+            }
+        });
+        contextMenu.add(rename);
     }
 }

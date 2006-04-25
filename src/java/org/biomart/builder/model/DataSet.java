@@ -54,7 +54,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * The generic implementation includes the algorithm which flattens tables down into
  * a set of mart tables based on the contents of a {@link Window}.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 19th April 2006
+ * @version 0.1.10, 25th April 2006
  * @since 0.1
  */
 public interface DataSet extends Comparable, TableProvider {
@@ -350,8 +350,9 @@ public interface DataSet extends Comparable, TableProvider {
                             // If real column not obtained directly from original main table, ie. is from another table or a copy
                             // of the main table obtained by linking to itself via some other route, create child column for it
                             // add it to child table PK. We test for where the column came from by looking at its providing
-                            // relation - if null, then it was on the original table, if not null, then it came from somewhere else.
-                            constructedFKColumn = new WrappedColumn(parentRealTableColumn, datasetTable, null);
+                            // relation - if null, then it was on the original table or subclass table, if not null, 
+                            // then it came from somewhere else.
+                            constructedFKColumn = new WrappedColumn(parentRealTableColumn, datasetTable, linkbackRelation);
                             constructedPKColumns.add(constructedFKColumn);
                         } else {
                             // Else follow original relation FK end and find real child column and associated child column

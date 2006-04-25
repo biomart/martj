@@ -93,6 +93,7 @@ public class KeyComponent extends BoxComponent {
         // Extend it for this table here.
         contextMenu.addSeparator();
         contextMenu.add(new JMenuItem("Hello from "+this.getKey()));
+        
         // Return it. Will be further adapted by a listener elsewhere.
         return contextMenu;
     }

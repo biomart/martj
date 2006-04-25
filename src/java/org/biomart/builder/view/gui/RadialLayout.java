@@ -33,17 +33,16 @@ import java.awt.Rectangle;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 /**
  * Displays arbitrary objects linked in a radial form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.0, 19th April 2006
+ * @version 0.1.2, 25th April 2006
  * @since 0.1
  */
 public class RadialLayout implements LayoutManager {
@@ -70,12 +69,12 @@ public class RadialLayout implements LayoutManager {
     /**
      * List of our ring radii.
      */
-    private Map ringRadii = new TreeMap();
+    private Map ringRadii = new HashMap();
     
     /**
      * List of our ring member counts.
      */
-    private Map ringSizes = new TreeMap();
+    private Map ringSizes = new HashMap();
     
     /**
      * Our minimum size.
@@ -212,10 +211,10 @@ public class RadialLayout implements LayoutManager {
         double centreY = Math.max(actualSize, parent.getHeight())/2.0;
         
         // Keep track of the number of items we've put in each ring so far.
-        Map ringCounts = new TreeMap();
+        Map ringCounts = new HashMap();
         
         // A set of relations we come across.
-        Set relationComponents = new HashSet();
+        List relationComponents = new ArrayList();
         
         // Just iterate through components and add them to the various rings.
         int nComps = parent.getComponentCount();
@@ -326,26 +325,21 @@ public class RadialLayout implements LayoutManager {
             // Create and add to relation the line2d shape which links mid-right
             // of the primary key to mid-left of the foreign key.
             GeneralPath path = new GeneralPath();
-            x = pkStartX;
-            y = pkY;
             // Move to starting point.
-            path.moveTo(x, y);
+            path.moveTo(pkStartX, pkY);
             // Draw starting tag.
             path.lineTo(pkTagX, pkY);
             // Draw the rest.
-            while (!(x==fkTagX && y==fkY)) {
-                int xIncrement = 0;
-                int yIncrement = 0;
-                if (x < fkTagX) xIncrement = Math.min(RadialLayout.RELATION_STEPSIZE, fkTagX - x);
-                else if (x > fkTagX) xIncrement = -Math.min(RadialLayout.RELATION_STEPSIZE, x - fkTagX);
-                if (y < fkY) yIncrement = Math.min(RadialLayout.RELATION_STEPSIZE, fkY - y);
-                else if (y > fkY) yIncrement = -Math.min(RadialLayout.RELATION_STEPSIZE, y - fkY);
-                int nextX = x + xIncrement;
-                int nextY = y + yIncrement;
-                // Draw the segment.
-                path.lineTo(nextX, nextY);
-                x = nextX;
-                y = nextY;
+            int diffX = fkTagX - pkTagX;
+            int diffY = fkY - pkY;
+            if (Math.abs(diffX) >= Math.abs(diffY)) {
+                // Move X first, then Y
+                path.lineTo(fkTagX, pkY);
+                path.lineTo(fkTagX, fkY);
+            } else {
+                // Move Y first, then X
+                path.lineTo(pkTagX, fkY);
+                path.lineTo(fkTagX, fkY);
             }
             // Draw the closing tag.
             path.lineTo(fkEndX, fkY);

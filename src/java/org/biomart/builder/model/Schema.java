@@ -42,7 +42,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * data to this mart. It also has one or more {@link Window}s onto the {@link Table}s provided
  * by these, from which {@link DataSet}s are constructed.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 21st April 2006
+ * @version 0.1.7, 25th April 2006
  * @since 0.1
  */
 public class Schema {
@@ -97,6 +97,31 @@ public class Schema {
         if (this.tableProviders.containsKey(tableProvider.getName()))
             throw new AlreadyExistsException(BuilderBundle.getString("tblprovExists"),tableProvider.getName());
         // Do it.
+        this.tableProviders.put(tableProvider.getName(),tableProvider);
+    }
+    
+    /**
+     * Renames a {@link TableProvider}. An
+     * exception is thrown if that names has already been used, or if it is null.
+     * @param tableProvider the {@link TableProvider} to rename.
+     * @param name the new name for it.
+     * @throws AlreadyExistsException if the provider name is already in this schema.
+     * @throws AssociationException if the provider does not belong to us. 
+     * @throws NullPointerException if the provider or name is null.
+     */
+    public void renameTableProvider(TableProvider tableProvider, String name) throws NullPointerException, AlreadyExistsException, AssociationException {
+        // Sanity check.
+        if (tableProvider == null)
+            throw new NullPointerException(BuilderBundle.getString("tblprovIsNull"));
+        if (name == null)
+            throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
+        if (this.tableProviders.containsKey(name))
+            throw new AlreadyExistsException(BuilderBundle.getString("tblprovExists"),tableProvider.getName());
+        if (!this.tableProviders.values().contains(tableProvider))
+            throw new AssociationException(BuilderBundle.getString("tblProvSchemaMismatch"));
+        // Do it.
+        this.tableProviders.remove(tableProvider.getName());
+        tableProvider.setName(name);
         this.tableProviders.put(tableProvider.getName(),tableProvider);
     }
     
@@ -168,26 +193,27 @@ public class Schema {
     /**
      * Given a particular {@link Table}, automatically create a number of {@link Window}s
      * based around that {@link Table} that represent the various possible subclassing scenarios.
-     * It will always create one {@link Window} (with the same name as the {@link Table}) that
+     * It will always create one {@link Window} (with the name given) that
      * doesn't subclass anything. For every M:1 relation leading off the {@link Table}, another
      * {@link Window} will be created containing that subclass relation. Each subclass {@link Window}
      * choice will have a number appended to it after an underscore, eg. '_SC1' ,'_SC2' etc.
      * Each window created will have optimiseRelations() called on it automatically.
      * @param centralTable the {@link Table} to build predicted {@link Window}s around.
+     * @param name the name to use for the windows.
      * @return the newly created windows, as well as adding them to the schema.
      * @throws AlreadyExistsException if a window already exists in this schema with the same
-     *  name as the {@link Table} or any of the suffixed versions.
+     *  name or any of the suffixed versions.
      * @throws NullPointerException if the table is null.
      */
-    public Set suggestWindows(Table centralTable) throws NullPointerException, AlreadyExistsException {
+    public Set suggestWindows(Table centralTable, String name) throws NullPointerException, AlreadyExistsException {
         // Sanity check.
         if (centralTable== null)
             throw new NullPointerException(BuilderBundle.getString("tableIsNull"));
         // Do it.
         try {
-            Window mainWin = new Window(this, centralTable, centralTable.getName());
+            Window mainWin = new Window(this, centralTable, name);
             mainWin.optimiseRelations();
-        } catch (AssociationException e) {
+        } catch (Exception e) {
             AssertionError ae = new AssertionError(BuilderBundle.getString("plainWindowPredictionFailure"));
             ae.initCause(e);
             throw ae;
@@ -204,12 +230,12 @@ public class Schema {
                 // Only flag potential m:1 subclass relations if they don't refer back to ourselves.
                 try {
                     if (!r.getPrimaryKey().getTable().equals(centralTable)) {
-                        Window scWin = new Window(this, centralTable, centralTable.getName()+BuilderBundle.getString("subclassWindowSuffix")+(suffix++));
+                        Window scWin = new Window(this, centralTable, name+BuilderBundle.getString("subclassWindowSuffix")+(suffix++));
                         scWin.flagSubclassRelation(r);
                         scWin.optimiseRelations();
                         suggestedWindows.add(scWin);
                     }
-                } catch (AssociationException e) {
+                } catch (Exception e) {
                     AssertionError ae = new AssertionError(BuilderBundle.getString("subclassPredictionFailure"));
                     ae.initCause(e);
                     throw ae;
@@ -217,6 +243,31 @@ public class Schema {
             }
         }
         return suggestedWindows;
+    }
+    
+    /**
+     * Renames a {@link Window}. An
+     * exception is thrown if that names has already been used, or if it is null.
+     * @param window the {@link Window} to rename.
+     * @param name the new name for it.
+     * @throws AlreadyExistsException if the window name is already in this schema.
+     * @throws AssociationException if the window does not belong to us. 
+     * @throws NullPointerException if the window or name is null.
+     */
+    public void renameWindow(Window window, String name) throws NullPointerException, AlreadyExistsException, AssociationException {
+        // Sanity check.
+        if (window == null)
+            throw new NullPointerException(BuilderBundle.getString("windowIsNull"));
+        if (name == null)
+            throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
+        if (this.windows.containsKey(name))
+            throw new AlreadyExistsException(BuilderBundle.getString("windowExists"),window.getName());
+        if (!this.windows.values().contains(window))
+            throw new AssociationException(BuilderBundle.getString("windowSchemaMismatch"));
+        // Do it.
+        this.windows.remove(window.getName());
+        window.setName(name);
+        this.windows.put(window.getName(),window);
     }
     
     /**

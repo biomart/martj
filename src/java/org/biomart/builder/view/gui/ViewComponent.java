@@ -31,7 +31,7 @@ import javax.swing.JPopupMenu;
  * are provided for sorting them, as they are not comparable within themselves.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 24th April 2006
+ * @version 0.1.3, 25th April 2006
  * @since 0.1
  */
 public interface ViewComponent {
@@ -39,7 +39,7 @@ public interface ViewComponent {
      * Retrieves the parent this component belongs to.
      * @return the parent.
      */
-    public View getParentDisplay();
+    public View getView();
     
     /**
      * Retrieves the real object this component is a representation of.

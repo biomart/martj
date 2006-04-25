@@ -52,7 +52,7 @@ public class TableProviderTabSet extends JTabbedPane {
      * Internal reference to the list of table providers, in order, mapped
      * to their tableProviderToView.
      */
-    private final Map tableProviderToView = new HashMap();
+    private Map tableProviderToView = new HashMap();
     
     /**
      * Internal reference to the adaptor for the providers we are viewing.
@@ -67,7 +67,7 @@ public class TableProviderTabSet extends JTabbedPane {
     /**
      * Our overview tab.
      */
-    private MultiTableProviderView multiTableProviderView;
+    private TableProviderView tableProviderView;
     
     /**
      * Creates a new multiple table provider view over the given set of
@@ -77,18 +77,18 @@ public class TableProviderTabSet extends JTabbedPane {
         super();
         this.windowTabSet = windowTabSet;
         // Add the overview tab to ourselves.
-        this.multiTableProviderView = new MultiTableProviderView(this.windowTabSet);
-        JScrollPane scroller = new JScrollPane(this.multiTableProviderView);
-        scroller.getViewport().setBackground(this.multiTableProviderView.getBackground());
+        this.tableProviderView = new TableProviderView(this.windowTabSet);
+        JScrollPane scroller = new JScrollPane(this.tableProviderView);
+        scroller.getViewport().setBackground(this.tableProviderView.getBackground());
         this.addTab(BuilderBundle.getString("multiTblProvOverviewTab"), scroller);
         // Synchronise ourselves.
-        this.synchronise();
+        this.synchroniseTabs();
     }
     
     /**
      * Makes sure we are displaying the correct set of table providers.
      */
-    public void synchronise() {
+    public void synchroniseTabs() {
         // Add all table providers that we don't have yet.
         List schemaTableProviders = new ArrayList(this.windowTabSet.getSchema().getTableProviders());
         for (Iterator i = schemaTableProviders.iterator(); i.hasNext(); ) {
@@ -102,15 +102,32 @@ public class TableProviderTabSet extends JTabbedPane {
             if (!schemaTableProviders.contains(tableProvider)) this.removeTableProviderTab(tableProvider);
         }
         // Synchronise our overview tab.
-        this.multiTableProviderView.synchronise();
+        this.tableProviderView.synchroniseView();
         // Synchronise our tab view contents.
         for (int i = 1; i < this.getTabCount(); i++) {
             JScrollPane scroller = (JScrollPane)this.getComponentAt(i);
-            TableProviderView tableProviderView = (TableProviderView)scroller.getViewport().getView();
-            tableProviderView.synchronise();
+            TableView tableView = (TableView)scroller.getViewport().getView();
+            tableView.synchroniseView();
         }
         // Redraw.
         this.validate();
+    }
+    
+    /**
+     * Confirms with user then removes a table provider.
+     */
+    public void requestAddTableProvider() {
+        // Pop up a box to get the details of the new provider.
+        TableProvider tableProvider = null; // blah
+        // Add to schema.
+        try {
+            if (tableProvider != null) {
+                this.windowTabSet.getSchema().addTableProvider(tableProvider);
+                this.addTableProviderTab(tableProvider);
+            }
+        } catch (Throwable t) {
+            this.windowTabSet.getSchemaTabSet().getMartBuilder().showStackTrace(t);
+        }
     }
     
     /**
@@ -118,15 +135,15 @@ public class TableProviderTabSet extends JTabbedPane {
      */
     private void addTableProviderTab(TableProvider tableProvider) {
         // Create and add the tab.
-        TableProviderView tableProviderView = new TableProviderView(this.windowTabSet, tableProvider);
-        JScrollPane scroller = new JScrollPane(tableProviderView);
-        scroller.getViewport().setBackground(tableProviderView.getBackground());
+        TableView tableView = new TableView(this.windowTabSet, tableProvider);
+        JScrollPane scroller = new JScrollPane(tableView);
+        scroller.getViewport().setBackground(tableView.getBackground());
         this.addTab(tableProvider.getName(), scroller);
         // Remember the view.
-        this.tableProviderToView.put(tableProvider, tableProviderView);
+        this.tableProviderToView.put(tableProvider, tableView);
         // Set the adaptor on the view.
-        tableProviderView.setAdaptor(this.getAdaptor());
-        this.multiTableProviderView.synchronise();
+        tableView.setAdaptor(this.getAdaptor());
+        this.tableProviderView.synchroniseView();
     }
     
     /**
@@ -144,10 +161,10 @@ public class TableProviderTabSet extends JTabbedPane {
             try {
                 this.windowTabSet.getSchema().removeTableProvider(tableProvider);
                 this.removeTableProviderTab(tableProvider);
-                this.windowTabSet.synchronise();
-                this.windowTabSet.getSchemaManager().setModifiedStatus(true);
+                this.windowTabSet.synchroniseTabs();
+                this.windowTabSet.getSchemaTabSet().setModifiedStatus(true);
             } catch (Throwable t) {
-                this.windowTabSet.getSchemaManager().getMartBuilder().showStackTrace(t);
+                this.windowTabSet.getSchemaTabSet().getMartBuilder().showStackTrace(t);
             }
         }
     }
@@ -156,9 +173,87 @@ public class TableProviderTabSet extends JTabbedPane {
      * Removes a table provider from our tabs.
      */
     private void removeTableProviderTab(TableProvider tableProvider) {
-        TableProviderView tableProviderView = (TableProviderView)this.tableProviderToView.get(tableProvider);
+        TableView tableView = (TableView)this.tableProviderToView.get(tableProvider);
         this.removeTabAt(this.indexOfTab(tableProvider.getName()));
         this.tableProviderToView.remove(tableProvider);
+    }
+    
+    /**
+     * Prompt for a name for a window.
+     */
+    private String getTableProviderName(String defaultResponse) {
+        // Get one from user.
+        String name = (String)JOptionPane.showInputDialog(
+                this.windowTabSet.getSchemaTabSet().getMartBuilder(),
+                BuilderBundle.getString("requestTblProvName"),
+                BuilderBundle.getString("questionTitle"),
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                null,
+                defaultResponse
+                );
+        // If empty, use table name.
+        if (name == null) return null;
+        else if (name.trim().length()==0) name = defaultResponse;
+        // Return.
+        return name;
+    }
+    
+    /**
+     * Renames a table provider (and tab).
+     */
+    public void renameTableProvider(TableProvider tableProvider) {
+        // Update the table provider name and the tab name.
+        try {
+            String newName = this.getTableProviderName(tableProvider.getName());
+            if (newName != null && !newName.equals(tableProvider.getName())) {
+                this.removeTableProviderTab(tableProvider);
+                this.windowTabSet.getSchema().renameTableProvider(tableProvider, newName);
+                this.addTableProviderTab(tableProvider);
+                this.setSelectedIndex(this.indexOfTab(newName));
+            }
+        } catch (Throwable t) {
+            this.windowTabSet.getSchemaTabSet().getMartBuilder().showStackTrace(t);
+        }
+    }
+    
+    /**
+     * Syncs this table provider individually against the database.
+     */
+    public void synchroniseTableProvider(TableProvider tableProvider) {
+        try {
+            tableProvider.synchronise();
+            this.windowTabSet.synchroniseTabs();
+        } catch (Throwable t) {
+            this.windowTabSet.getSchemaTabSet().getMartBuilder().showStackTrace(t);
+        }
+    }
+    
+    /**
+     * Test this table provider individually against the database.
+     */
+    public void testTableProvider(TableProvider tableProvider) {
+        boolean passedTest = false;
+        try {
+            passedTest = tableProvider.test();
+        } catch (Throwable t) {
+            passedTest = false;
+            this.windowTabSet.getSchemaTabSet().getMartBuilder().showStackTrace(t);
+        }
+        // Tell the user what happened.
+        if (passedTest) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    BuilderBundle.getString("tblProvTestPassed"),
+                    BuilderBundle.getString("testTitle"),
+                    JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(
+                    this,
+                    BuilderBundle.getString("tblProvTestFailed"),
+                    BuilderBundle.getString("testTitle"),
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
     
     /**
@@ -168,7 +263,8 @@ public class TableProviderTabSet extends JTabbedPane {
      */
     private JPopupMenu getTblProvTabContextMenu(final TableProvider tableProvider) {
         JPopupMenu contextMenu = new JPopupMenu();
-        JMenuItem close = new JMenuItem(BuilderBundle.getString("removeTblProvTitle", tableProvider.getName()));
+        
+        JMenuItem close = new JMenuItem(BuilderBundle.getString("removeTblProvTitle"));
         close.setMnemonic(BuilderBundle.getString("removeTblProvMnemonic").charAt(0));
         close.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
@@ -176,6 +272,16 @@ public class TableProviderTabSet extends JTabbedPane {
             }
         });
         contextMenu.add(close);
+        
+        JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameTblProvTitle"));
+        rename.setMnemonic(BuilderBundle.getString("renameTblProvMnemonic").charAt(0));
+        rename.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                renameTableProvider(tableProvider);
+            }
+        });
+        contextMenu.add(rename);
+        
         return contextMenu;
     }
     
@@ -194,9 +300,9 @@ public class TableProviderTabSet extends JTabbedPane {
                 // Respond appropriately.
                 if (selectedComponent instanceof JScrollPane) {
                     Component selectedView = ((JScrollPane)selectedComponent).getViewport().getView();
-                    if (selectedView instanceof TableProviderView) {
+                    if (selectedView instanceof TableView) {
                         this.setSelectedIndex(selectedIndex);
-                        TableProvider tableProvider = ((TableProviderView)selectedView).getTableProvider();
+                        TableProvider tableProvider = ((TableView)selectedView).getTableProvider();
                         this.getTblProvTabContextMenu(tableProvider).show(this, evt.getX(), evt.getY());
                         eventProcessed = true;
                     }

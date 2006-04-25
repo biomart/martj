@@ -61,7 +61,7 @@ public class Window implements Comparable {
     /**
      * Internal reference to the name of this window.
      */
-    private final String name;
+    private String name;
     
     /**
      * Internal reference to the parent schema.
@@ -158,8 +158,10 @@ public class Window implements Comparable {
     /**
      * This method identifies all candidate concat relations, and masks out all relations
      * more than 2 1:M relations away from the main or subclass table.
+     * @throws SQLException if there was a problem connecting to the data source.
+     * @throws BuilderException if there was any other kind of problem.
      */
-    public void optimiseRelations() {
+    public void optimiseRelations() throws SQLException, BuilderException {
         // Clear out our previous predictions.
         this.relationsPredicted.clear();
         this.maskedRelations.clear();
@@ -188,6 +190,9 @@ public class Window implements Comparable {
                 this.flagConcatOnlyRelation(r, ConcatRelationType.COMMA);
             }
         }
+        
+        // Regenerate the dataset.
+        this.dataset.regenerate();
     }
     
     /**
@@ -241,6 +246,19 @@ public class Window implements Comparable {
      */
     public String getName() {
         return this.name;
+    }
+    
+    /**
+     * Sets the name of this {@link Window}. The name will also be used for the
+     * {@link DataSet} generated from this {@link Window}.
+     * @param name the new name of this {@link Window}.
+     */
+    public void setName(String name) {
+        // Sanity check.
+        if (name == null)
+            throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
+        // Do it.
+        this.name = name;
     }
     
     /**

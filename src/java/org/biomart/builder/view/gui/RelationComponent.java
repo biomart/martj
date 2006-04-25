@@ -101,7 +101,7 @@ public class RelationComponent extends JComponent implements ViewComponent {
      * Retrieves the parent this component belongs to.
      * @return the parent.
      */
-    public View getParentDisplay() {
+    public View getView() {
         return this.parentDisplay;
     }
     
@@ -133,7 +133,7 @@ public class RelationComponent extends JComponent implements ViewComponent {
      * Intercept clicks to see if they're in our shape's outline.
      */
     public boolean contains(int x, int y) {
-        return this.shape.contains(x, y);
+        return this.shape != null && this.shape.contains(x, y);
     }
     
     /**
@@ -141,7 +141,7 @@ public class RelationComponent extends JComponent implements ViewComponent {
      * @return the popup menu.
      */
     public JPopupMenu getContextMenu() {
-        JPopupMenu contextMenu = this.getParentDisplay().getContextMenu();
+        JPopupMenu contextMenu = this.getView().getContextMenu();
         // Extend it for this table here.
         contextMenu.addSeparator();
         contextMenu.add(new JMenuItem("Hello from "+this.getRelation()));
@@ -160,7 +160,7 @@ public class RelationComponent extends JComponent implements ViewComponent {
             // Build the basic menu.
             JPopupMenu contextMenu = this.getContextMenu();
             // Extend.
-            this.getParentDisplay().getAdaptor().customiseContextMenu(contextMenu, this.getRelation());
+            this.getView().getAdaptor().customiseContextMenu(contextMenu, this.getRelation());
             // Display.
             contextMenu.show(this, evt.getX(), evt.getY());
             eventProcessed = true;
@@ -180,8 +180,8 @@ public class RelationComponent extends JComponent implements ViewComponent {
         }
         Graphics2D g2d = (Graphics2D)g.create();
         // Do painting of this component.
-        this.getParentDisplay().clearFlags();
-        this.getParentDisplay().getAdaptor().aboutToDraw(this.getRelation());
+        this.getView().clearFlags();
+        this.getView().getAdaptor().aboutToDraw(this.getRelation());
         this.paintComponent(g2d, this.getFlags());
         // Clean up.
         g2d.dispose();
@@ -191,9 +191,9 @@ public class RelationComponent extends JComponent implements ViewComponent {
      * Work out what stroke to use.
      */
     private int getFlags() {
-        this.getParentDisplay().clearFlags();
-        this.getParentDisplay().getAdaptor().aboutToDraw(this.getRelation());
-        return this.getParentDisplay().getFlags();
+        this.getView().clearFlags();
+        this.getView().getAdaptor().aboutToDraw(this.getRelation());
+        return this.getView().getFlags();
     }
     
     /**
