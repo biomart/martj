@@ -38,6 +38,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import org.biomart.builder.controller.SchemaTools;
 import org.biomart.builder.model.TableProvider;
 import org.biomart.builder.resources.BuilderBundle;
 
@@ -50,14 +51,14 @@ import org.biomart.builder.resources.BuilderBundle;
 public class TableProviderTabSet extends JTabbedPane {
     /**
      * Internal reference to the list of table providers, in order, mapped
-     * to their tableProviderToView.
+     * to their tableProviderToDiagram.
      */
-    private Map tableProviderToView = new HashMap();
+    private Map tableProviderToDiagram = new HashMap();
     
     /**
      * Internal reference to the adaptor for the providers we are viewing.
      */
-    private Adaptor adaptor;
+    private DiagramModifier adaptor;
     
     /**
      * The window tab set we belong to.
@@ -67,7 +68,7 @@ public class TableProviderTabSet extends JTabbedPane {
     /**
      * Our overview tab.
      */
-    private TableProviderView tableProviderView;
+    private TableProviderDiagram tableProviderDiagram;
     
     /**
      * Our new provider dialog.
@@ -82,9 +83,9 @@ public class TableProviderTabSet extends JTabbedPane {
         super();
         this.windowTabSet = windowTabSet;
         // Add the overview tab to ourselves.
-        this.tableProviderView = new TableProviderView(this.windowTabSet);
-        JScrollPane scroller = new JScrollPane(this.tableProviderView);
-        scroller.getViewport().setBackground(this.tableProviderView.getBackground());
+        this.tableProviderDiagram = new TableProviderDiagram(this.windowTabSet);
+        JScrollPane scroller = new JScrollPane(this.tableProviderDiagram);
+        scroller.getViewport().setBackground(this.tableProviderDiagram.getBackground());
         this.addTab(BuilderBundle.getString("multiTblProvOverviewTab"), scroller);
         // Make our own table provider dialog.
         this.newTableProviderDialog = new NewTableProviderDialog(this);
@@ -107,21 +108,21 @@ public class TableProviderTabSet extends JTabbedPane {
         List schemaTableProviders = new ArrayList(this.windowTabSet.getSchema().getTableProviders());
         for (Iterator i = schemaTableProviders.iterator(); i.hasNext(); ) {
             TableProvider tableProvider = (TableProvider)i.next();
-            if (!this.tableProviderToView.containsKey(tableProvider)) this.addTableProviderTab(tableProvider);
+            if (!this.tableProviderToDiagram.containsKey(tableProvider)) this.addTableProviderTab(tableProvider);
         }
         // Remove all our table providers that are not in the schema.
-        List candidates = new ArrayList(this.tableProviderToView.keySet());
+        List candidates = new ArrayList(this.tableProviderToDiagram.keySet());
         for (Iterator i = candidates.iterator(); i.hasNext(); ) {
             TableProvider tableProvider = (TableProvider)i.next();
             if (!schemaTableProviders.contains(tableProvider)) this.removeTableProviderTab(tableProvider);
         }
         // Synchronise our overview tab.
-        this.tableProviderView.synchroniseView();
+        this.tableProviderDiagram.synchroniseDiagram();
         // Synchronise our tab view contents.
         for (int i = 1; i < this.getTabCount(); i++) {
             JScrollPane scroller = (JScrollPane)this.getComponentAt(i);
-            TableView tableView = (TableView)scroller.getViewport().getView();
-            tableView.synchroniseView();
+            TableDiagram tableDiagram = (TableDiagram)scroller.getViewport().getView();
+            tableDiagram.synchroniseDiagram();
         }
         // Redraw.
         this.validate();
@@ -137,7 +138,7 @@ public class TableProviderTabSet extends JTabbedPane {
         // Add to schema.
         try {
             if (tableProvider != null) {
-                this.windowTabSet.getSchema().addTableProvider(tableProvider);
+                SchemaTools.addTableProviderToSchema(this.windowTabSet.getSchema(), tableProvider);
                 this.addTableProviderTab(tableProvider);
                 this.windowTabSet.getSchemaTabSet().setModifiedStatus(true);
             }
@@ -151,15 +152,15 @@ public class TableProviderTabSet extends JTabbedPane {
      */
     private void addTableProviderTab(TableProvider tableProvider) {
         // Create and add the tab.
-        TableView tableView = new TableView(this.windowTabSet, tableProvider);
-        JScrollPane scroller = new JScrollPane(tableView);
-        scroller.getViewport().setBackground(tableView.getBackground());
+        TableDiagram tableDiagram = new TableDiagram(this.windowTabSet, tableProvider);
+        JScrollPane scroller = new JScrollPane(tableDiagram);
+        scroller.getViewport().setBackground(tableDiagram.getBackground());
         this.addTab(tableProvider.getName(), scroller);
         // Remember the view.
-        this.tableProviderToView.put(tableProvider, tableView);
+        this.tableProviderToDiagram.put(tableProvider, tableDiagram);
         // Set the adaptor on the view.
-        tableView.setAdaptor(this.getAdaptor());
-        this.tableProviderView.synchroniseView();
+        tableDiagram.setAdaptor(this.getAdaptor());
+        this.tableProviderDiagram.synchroniseDiagram();
     }
     
     /**
@@ -175,7 +176,7 @@ public class TableProviderTabSet extends JTabbedPane {
                 );
         if (choice == JOptionPane.YES_OPTION) {
             try {
-                this.windowTabSet.getSchema().removeTableProvider(tableProvider);
+                SchemaTools.removeTableProviderFromSchema(this.windowTabSet.getSchema(), tableProvider);
                 this.removeTableProviderTab(tableProvider);
                 this.windowTabSet.synchroniseTabs();
                 this.windowTabSet.getSchemaTabSet().setModifiedStatus(true);
@@ -189,9 +190,9 @@ public class TableProviderTabSet extends JTabbedPane {
      * Removes a table provider from our tabs.
      */
     private void removeTableProviderTab(TableProvider tableProvider) {
-        TableView tableView = (TableView)this.tableProviderToView.get(tableProvider);
+        TableDiagram tableDiagram = (TableDiagram)this.tableProviderToDiagram.get(tableProvider);
         this.removeTabAt(this.indexOfTab(tableProvider.getName()));
-        this.tableProviderToView.remove(tableProvider);
+        this.tableProviderToDiagram.remove(tableProvider);
     }
     
     /**
@@ -224,7 +225,7 @@ public class TableProviderTabSet extends JTabbedPane {
             String newName = this.getTableProviderName(tableProvider.getName());
             if (newName != null && !newName.equals(tableProvider.getName())) {
                 this.removeTableProviderTab(tableProvider);
-                this.windowTabSet.getSchema().renameTableProvider(tableProvider, newName);
+                SchemaTools.renameTableProvider(this.windowTabSet.getSchema(), tableProvider, newName);
                 this.addTableProviderTab(tableProvider);
                 this.setSelectedIndex(this.indexOfTab(newName));
                 this.windowTabSet.getSchemaTabSet().setModifiedStatus(true);
@@ -239,7 +240,7 @@ public class TableProviderTabSet extends JTabbedPane {
      */
     public void synchroniseTableProvider(TableProvider tableProvider) {
         try {
-            tableProvider.synchronise();
+            SchemaTools.synchroniseTableProvider(tableProvider);
             this.windowTabSet.synchroniseTabs();
         } catch (Throwable t) {
             this.windowTabSet.getSchemaTabSet().getMartBuilder().showStackTrace(t);
@@ -252,7 +253,7 @@ public class TableProviderTabSet extends JTabbedPane {
     public void testTableProvider(TableProvider tableProvider) {
         boolean passedTest = false;
         try {
-            passedTest = tableProvider.test();
+            passedTest = SchemaTools.testTableProvider(tableProvider);
         } catch (Throwable t) {
             passedTest = false;
             this.windowTabSet.getSchemaTabSet().getMartBuilder().showStackTrace(t);
@@ -316,10 +317,10 @@ public class TableProviderTabSet extends JTabbedPane {
                 Component selectedComponent = this.getComponentAt(selectedIndex);
                 // Respond appropriately.
                 if (selectedComponent instanceof JScrollPane) {
-                    Component selectedView = ((JScrollPane)selectedComponent).getViewport().getView();
-                    if (selectedView instanceof TableView) {
+                    Component selectedDiagram = ((JScrollPane)selectedComponent).getViewport().getView();
+                    if (selectedDiagram instanceof TableDiagram) {
                         this.setSelectedIndex(selectedIndex);
-                        TableProvider tableProvider = ((TableView)selectedView).getTableProvider();
+                        TableProvider tableProvider = ((TableDiagram)selectedDiagram).getTableProvider();
                         this.getTblProvTabContextMenu(tableProvider).show(this, evt.getX(), evt.getY());
                         eventProcessed = true;
                     }
@@ -333,20 +334,20 @@ public class TableProviderTabSet extends JTabbedPane {
     /**
      * {@inheritDoc}
      */
-    public void setAdaptor(Adaptor adaptor) throws NullPointerException {
+    public void setAdaptor(DiagramModifier adaptor) throws NullPointerException {
         if (adaptor==null)
             throw new NullPointerException(BuilderBundle.getString("adaptorIsNull"));
         this.adaptor = adaptor;
         for (int i = 0; i < this.getTabCount(); i++) {
-            View view = (View)((JScrollPane)this.getComponentAt(i)).getViewport().getView();
-            view.setAdaptor(adaptor);
+            Diagram diagram = (Diagram)((JScrollPane)this.getComponentAt(i)).getViewport().getView();
+            diagram.setAdaptor(adaptor);
         }
     }
     
     /**
      * {@inheritDoc}
      */
-    public Adaptor getAdaptor() {
+    public DiagramModifier getAdaptor() {
         return this.adaptor;
     }
 }

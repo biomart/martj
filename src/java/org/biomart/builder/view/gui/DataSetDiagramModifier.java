@@ -1,5 +1,5 @@
 /*
- * DataSetAdaptor.java
+ * DataSetDiagramModifier.java
  *
  * Created on 19 April 2006, 09:46
  */
@@ -33,15 +33,16 @@ import org.biomart.builder.model.Window;
  * @version 0.1.2, 21st April 2006
  * @since 0.1
  */
-public class DataSetAdaptor extends WindowAdaptor {
+public class DataSetDiagramModifier extends WindowDiagramModifier {
     /**
      * 
-     * Creates a new instance of DataSetAdaptor over
+     * Creates a new instance of DataSetDiagramModifier over
      * a given window. 
+     * 
      * 
      * @param window the window whose dataset we are attached to.
      */
-    public DataSetAdaptor(WindowTabSet windowTabSet, Window window) {
+    public DataSetDiagramModifier(WindowTabSet windowTabSet, Window window) {
         super(windowTabSet, window);
     }
  

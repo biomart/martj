@@ -26,11 +26,9 @@ package org.biomart.builder.model;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
@@ -205,7 +203,7 @@ public class Schema {
      *  name or any of the suffixed versions.
      * @throws NullPointerException if the table is null.
      */
-    public Set suggestWindows(Table centralTable, String name) throws NullPointerException, AlreadyExistsException {
+    public void suggestWindows(Table centralTable, String name) throws NullPointerException, AlreadyExistsException {
         // Sanity check.
         if (centralTable== null)
             throw new NullPointerException(BuilderBundle.getString("tableIsNull"));
@@ -221,7 +219,6 @@ public class Schema {
         // Predict the subclass relations from the existing m:1 relations - simple guesser based
         // on finding foreign keys in the central table. Only marks the first candidate it finds, as
         // a subclassed table cannot have been subclassed off more than one parent.
-        Set suggestedWindows = new HashSet();
         int suffix = 1;
         for (Iterator i = centralTable.getForeignKeys().iterator(); i.hasNext(); ) {
             Key k = (Key)i.next();
@@ -233,7 +230,6 @@ public class Schema {
                         Window scWin = new Window(this, centralTable, name+BuilderBundle.getString("subclassWindowSuffix")+(suffix++));
                         scWin.flagSubclassRelation(r);
                         scWin.optimiseRelations();
-                        suggestedWindows.add(scWin);
                     }
                 } catch (Exception e) {
                     AssertionError ae = new AssertionError(BuilderBundle.getString("subclassPredictionFailure"));
@@ -242,7 +238,6 @@ public class Schema {
                 }
             }
         }
-        return suggestedWindows;
     }
     
     /**

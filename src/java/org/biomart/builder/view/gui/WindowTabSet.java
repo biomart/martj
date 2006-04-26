@@ -45,6 +45,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import org.biomart.builder.controller.SchemaTools;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Window;
@@ -127,10 +128,23 @@ public class WindowTabSet extends JTabbedPane {
             WindowTab windowTab = (WindowTab)selectedComponent;
             windowTab.attachTableProviderTabSet(this, this.tableProviderTabSet);
         } else {
-            this.tableProviderTabSet.setAdaptor(new SchemaAdaptor(this));
+            this.tableProviderTabSet.setAdaptor(new SchemaDiagramModifier(this));
             this.setComponentAt(schemaTabIndex, this.tableProviderTabSet);
         }
         super.setSelectedIndex(selectedIndex);
+    }
+    
+    /**
+     * Synchronises the schema.
+     */
+    public void synchroniseSchema() {
+        try {
+            SchemaTools.synchroniseSchemaTableProviders(this.schema);
+            this.synchroniseTabs();
+            this.schemaTabSet.setModifiedStatus(true);
+        } catch (Throwable t) {
+            this.schemaTabSet.getMartBuilder().showStackTrace(t);
+        }
     }
     
     /**
@@ -139,7 +153,7 @@ public class WindowTabSet extends JTabbedPane {
     public void synchroniseTabs() {
         // Synchronise our windows.
         try {
-            this.schema.synchroniseWindows();
+            SchemaTools.synchroniseSchemaWindows(this.schema);
         } catch (Throwable t) {
             this.schemaTabSet.getMartBuilder().showStackTrace(t);
         }
@@ -158,7 +172,7 @@ public class WindowTabSet extends JTabbedPane {
         // Synchronise our tab view contents.
         for (int i = 1; i < this.getTabCount(); i++) {
             WindowTab windowTab = (WindowTab)this.getComponentAt(i);
-            windowTab.synchroniseDatasetView();
+            windowTab.synchroniseDatasetDiagram();
         }
         // Synchronise the table provider views.
         this.tableProviderTabSet.synchroniseTabs();
@@ -179,7 +193,7 @@ public class WindowTabSet extends JTabbedPane {
                 );
         if (choice == JOptionPane.YES_OPTION) {
             try {
-                this.schema.removeWindow(window);
+                SchemaTools.removeWindowFromSchema(this.schema, window);
                 this.removeWindowTab(window);
                 this.schemaTabSet.setModifiedStatus(true);
                 // Nasty hack to force redraw.
@@ -241,7 +255,7 @@ public class WindowTabSet extends JTabbedPane {
             String newName = this.getWindowName(window.getName());
             if (newName != null && !newName.equals(window.getName())) {
                 this.removeWindowTab(window);
-                this.schema.renameWindow(window, newName);
+                SchemaTools.renameWindow(this.schema, window, newName);
                 this.addWindowTab(window);
                 this.setSelectedIndex(this.indexOfTab(newName));
                 this.schemaTabSet.setModifiedStatus(true);
@@ -256,7 +270,7 @@ public class WindowTabSet extends JTabbedPane {
      */
     public void createWindow(Table table) {
         try {
-            Window window = new Window(this.schema, table, this.getWindowName(table.getName()));
+            Window window = SchemaTools.createWindow(this.schema, table, this.getWindowName(table.getName()));
             this.synchroniseTabs();
             this.schemaTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
@@ -269,7 +283,7 @@ public class WindowTabSet extends JTabbedPane {
      */
     public void suggestWindows(Table table) {
         try {
-            this.schema.suggestWindows(table, this.getWindowName(table.getName()));
+            SchemaTools.suggestWindows(this.schema, table, this.getWindowName(table.getName()));
             this.synchroniseTabs();
             this.schemaTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
@@ -282,7 +296,7 @@ public class WindowTabSet extends JTabbedPane {
      */
     public void optimiseRelations(Window window) {
         try {
-            window.optimiseRelations();
+            SchemaTools.optimiseWindow(window);
             this.synchroniseTabs();
             this.schemaTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
@@ -366,13 +380,14 @@ public class WindowTabSet extends JTabbedPane {
         /**
          * The dataset view.
          */
-        private TableView datasetView;
+        private TableDiagram datasetDiagram;
         
         /**
          * This constructor builds a pair of switcher-style buttons which alternate
          * between window and dataset view.
+         *
          * @param windowView the window view.
-         * @param datasetView the dataset view.
+         * @param datasetDiagram the dataset view.
          */
         public WindowTab(WindowTabSet windowTabSet, Window window) {
             super(new BorderLayout());
@@ -380,10 +395,10 @@ public class WindowTabSet extends JTabbedPane {
             // Create display part of the tab.
             this.displayArea = new JPanel(new CardLayout());
             // Dataset card first.
-            this.datasetView = new TableView(windowTabSet, window.getDataSet());
-            this.datasetView.setAdaptor(new DataSetAdaptor(windowTabSet, window));
-            JScrollPane scroller = new JScrollPane(this.datasetView);
-            scroller.getViewport().setBackground(this.datasetView.getBackground());
+            this.datasetDiagram = new TableDiagram(windowTabSet, window.getDataSet());
+            this.datasetDiagram.setAdaptor(new DataSetDiagramModifier(windowTabSet, window));
+            JScrollPane scroller = new JScrollPane(this.datasetDiagram);
+            scroller.getViewport().setBackground(this.datasetDiagram.getBackground());
             displayArea.add(scroller, "DATASET_CARD");
             // Create switcher part of the tab.
             JPanel switcher = new JPanel();
@@ -417,7 +432,7 @@ public class WindowTabSet extends JTabbedPane {
             this.add(switcher, BorderLayout.NORTH);
             this.add(displayArea, BorderLayout.CENTER);
             // Set our preferred size to the dataset size plus a bit on top for the switcher buttons.
-            Dimension preferredSize = datasetView.getPreferredSize();
+            Dimension preferredSize = datasetDiagram.getPreferredSize();
             double extraHeight = datasetButton.getHeight();
             preferredSize.setSize(preferredSize.getWidth(), preferredSize.getHeight()+extraHeight);
             this.setPreferredSize(preferredSize);
@@ -436,7 +451,7 @@ public class WindowTabSet extends JTabbedPane {
          * Attach the table provider tab set.
          */
         public void attachTableProviderTabSet(WindowTabSet windowTabSet, TableProviderTabSet tableProviderTabSet) {
-            tableProviderTabSet.setAdaptor(new WindowAdaptor(windowTabSet, this.window));
+            tableProviderTabSet.setAdaptor(new WindowDiagramModifier(windowTabSet, this.window));
             this.displayArea.add(tableProviderTabSet, "WINDOW_CARD");
             // Nasty hack to force table provider set to redisplay.
             if (this.windowButton.isSelected()) this.windowButton.doClick();
@@ -445,8 +460,8 @@ public class WindowTabSet extends JTabbedPane {
         /**
          * Resync the dataset view.
          */
-        public void synchroniseDatasetView() {
-            this.datasetView.synchroniseView();
+        public void synchroniseDatasetDiagram() {
+            this.datasetDiagram.synchroniseDiagram();
         }
     }
 }

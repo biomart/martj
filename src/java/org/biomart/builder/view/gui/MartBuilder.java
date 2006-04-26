@@ -41,7 +41,7 @@ import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
-import org.biomart.builder.controller.SchemaSaver;
+import org.biomart.builder.controller.SchemaIO;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
@@ -62,7 +62,7 @@ public class MartBuilder extends JFrame {
      */
     public MartBuilder() {
         // Create the window.
-        super(BuilderBundle.getString("GUITitle",SchemaSaver.DTD_VERSION));
+        super(BuilderBundle.getString("GUITitle",SchemaIO.DTD_VERSION));
         // Set the look and feel to the one specified by the user, or the system
         // default if not specified by the user.
         String lookAndFeelClass = System.getProperty("martbuilder.laf"); // null if not set
@@ -240,7 +240,7 @@ public class MartBuilder extends JFrame {
             fileMenu.addMenuListener(new MenuListener() {
                 public void menuSelected(MenuEvent e) {
                     boolean hasSchema = true;
-                    if (martBuilder.schemaTabSet.getCurrentSchema()==null) hasSchema = false;
+                    if (martBuilder.schemaTabSet.getCurrentWindowTabSet()==null) hasSchema = false;
                     saveSchema.setEnabled(hasSchema);
                     saveSchemaAs.setEnabled(hasSchema);
                     closeSchema.setEnabled(hasSchema);
@@ -270,7 +270,7 @@ public class MartBuilder extends JFrame {
             schemaMenu.addMenuListener(new MenuListener() {
                 public void menuSelected(MenuEvent e) {
                     boolean hasSchema = true;
-                    if (martBuilder.schemaTabSet.getCurrentSchema()==null) hasSchema = false;
+                    if (martBuilder.schemaTabSet.getCurrentWindowTabSet()==null) hasSchema = false;
                     synchroniseSchema.setEnabled(hasSchema);
                     addTableProvider.setEnabled(hasSchema);
                 }
@@ -297,8 +297,8 @@ public class MartBuilder extends JFrame {
             
             // Schema menu.
             
-            else if (e.getSource() == this.synchroniseSchema) this.martBuilder.schemaTabSet.synchroniseSchema();
-            else if (e.getSource() == this.addTableProvider) this.martBuilder.schemaTabSet.requestAddTableProvider();
+            else if (e.getSource() == this.synchroniseSchema) this.martBuilder.schemaTabSet.getCurrentWindowTabSet().synchroniseSchema();
+            else if (e.getSource() == this.addTableProvider) this.martBuilder.schemaTabSet.getCurrentWindowTabSet().getTableProviderTabSet().requestAddTableProvider();
         }
     }
 }

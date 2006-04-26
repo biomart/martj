@@ -1,7 +1,7 @@
 /*
- * Adaptor.java
+ * DiagramComponent.java
  *
- * Created on 11 April 2006, 16:52
+ * Created on 19 April 2006, 15:36
  */
 
 /*
@@ -27,27 +27,30 @@ package org.biomart.builder.view.gui;
 import javax.swing.JPopupMenu;
 
 /**
- * Adaptor for events of interest to classes displaying graphical views
- * of {@link TableProvider}s using {@link TableProviderView}.
+ * An element that can be drawn on a Diagram. Two Comparators
+ * are provided for sorting them, as they are not comparable within themselves.
+ * 
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 21st April 2006
+ * @version 0.1.3, 25th April 2006
  * @since 0.1
  */
-public interface Adaptor {
+public interface DiagramComponent {
     /**
-     * Add items to a context menu for a given component. Must add separator
-     * if required.
-     * @param contextMenu the context menu to add parameters to.
-     * @param displayComponent the display component we wish to customise this menu to.
-     * @return the popup menu.
+     * Retrieves the parent this component belongs to.
+     * @return the parent.
      */
-    public void customiseContextMenu(JPopupMenu contextMenu, Object object);
+    public Diagram getDiagram();
     
     /**
-     * About to draw a particular object. Call {@link ComponentDisplay#setFlag(int)}
-     * to tell the displayer anything special to do about it.
-     * @param displayComponent the component that is about to be drawn.
+     * Retrieves the real object this component is a representation of.
+     * @return the real object.
      */
-    public void aboutToDraw(Object object);
+    public Object getObject();
+    
+    /**
+     * Construct a context menu for a given view.
+     * @return the popup menu.
+     */
+    public JPopupMenu getContextMenu();
 }

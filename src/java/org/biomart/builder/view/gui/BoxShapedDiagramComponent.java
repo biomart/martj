@@ -1,5 +1,5 @@
 /*
- * ViewComponent.java
+ * DiagramComponent.java
  *
  * Created on 19 April 2006, 15:36
  */
@@ -31,18 +31,18 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
 /**
- * An element that can be drawn on a View. Two Comparators
+ * An element that can be drawn on a Diagram. Two Comparators
  * are provided for sorting them, as they are not comparable within themselves.
- *
+ * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.1, 24th April 2006
  * @since 0.1
  */
-public abstract class BoxComponent extends JPanel implements ViewComponent {
+public abstract class BoxShapedDiagramComponent extends JPanel implements DiagramComponent {
     /**
      * Internal reference to our display parent.
      */
-    private View parentDisplay;
+    private Diagram parentDisplay;
     
     /**
      * Internal reference to the object we represent.
@@ -53,7 +53,7 @@ public abstract class BoxComponent extends JPanel implements ViewComponent {
      * The constructor constructs an object around a given
      * object, and associates with a given display.
      */
-    public BoxComponent(Object object, View parentDisplay) {
+    public BoxShapedDiagramComponent(Object object, Diagram parentDisplay) {
         this.object = object;
         this.parentDisplay = parentDisplay;
         this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
@@ -63,7 +63,7 @@ public abstract class BoxComponent extends JPanel implements ViewComponent {
      * Retrieves the parent this component belongs to.
      * @return the parent.
      */
-    public View getView() {
+    public Diagram getDiagram() {
         return this.parentDisplay;
     }
     
@@ -80,7 +80,7 @@ public abstract class BoxComponent extends JPanel implements ViewComponent {
      * @return the popup menu.
      */
     public JPopupMenu getContextMenu() {
-        return this.getView().getContextMenu();
+        return this.getDiagram().getContextMenu();
     }
     
     /**
@@ -94,7 +94,7 @@ public abstract class BoxComponent extends JPanel implements ViewComponent {
             // Build the basic menu.
             JPopupMenu contextMenu = this.getContextMenu();
             // Extend.
-            this.getView().getAdaptor().customiseContextMenu(contextMenu, this.getObject());
+            this.getDiagram().getAdaptor().customiseContextMenu(contextMenu, this.getObject());
             // Display.
             contextMenu.show(this, evt.getX(), evt.getY());
             eventProcessed = true;
@@ -108,8 +108,8 @@ public abstract class BoxComponent extends JPanel implements ViewComponent {
      */
     protected void paintComponent(Graphics g) {
         // Set up painting of this component.
-        this.getView().clearFlags();
-        this.getView().getAdaptor().aboutToDraw(this.getObject());
+        this.getDiagram().clearFlags();
+        this.getDiagram().getAdaptor().aboutToDraw(this.getObject());
         this.setComponentColours();
         // Do the painting.
         super.paintComponent(g);

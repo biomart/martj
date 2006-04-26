@@ -27,7 +27,7 @@ import java.io.File;
 import java.util.Collections;
 import org.biomart.builder.controller.JDBCKeyGuessingTableProvider;
 import org.biomart.builder.controller.JDBCTableProvider;
-import org.biomart.builder.controller.SchemaSaver;
+import org.biomart.builder.controller.SchemaIO;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.TableProvider;
@@ -70,7 +70,7 @@ public class NaiveCLI {
         // Remove the others.
         s.getWindows().retainAll(Collections.singleton(w));
         // Dump the XML.
-        SchemaSaver.save(s, file);
+        SchemaIO.save(s, file);
         // Replace the saver line with a call to setMartConstructor() and
         // then call constructMart() to make SQL instead.
     }

@@ -1,5 +1,5 @@
 /*
- * SchemaAdaptor.java
+ * SchemaDiagramModifier.java
  *
  * Created on 19 April 2006, 09:36
  */
@@ -40,17 +40,17 @@ import org.biomart.builder.resources.BuilderBundle;
  * @version 0.1.4, 25th April 2006
  * @since 0.1
  */
-public class SchemaAdaptor implements Adaptor {
+public class SchemaDiagramModifier implements DiagramModifier {
     /**
      * The window set we belong to.
      */
     protected WindowTabSet windowTabSet;
     
     /**
-     * Creates a new instance of SchemaAdaptor and binds it to a given
+     * Creates a new instance of SchemaDiagramModifier and binds it to a given
      * MartBuilder instance.
      */
-    public SchemaAdaptor(WindowTabSet windowTabSet) {
+    public SchemaDiagramModifier(WindowTabSet windowTabSet) {
         this.windowTabSet = windowTabSet;
     }
     

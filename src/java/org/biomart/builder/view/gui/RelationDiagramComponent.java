@@ -1,5 +1,5 @@
 /*
- * ViewComponent.java
+ * DiagramComponent.java
  *
  * Created on 19 April 2006, 15:36
  */
@@ -31,20 +31,21 @@ import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Rectangle2D;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Relation;
 
 /**
- * An element that can be drawn on a View. Two Comparators
+ * An element that can be drawn on a Diagram. Two Comparators
  * are provided for sorting them, as they are not comparable within themselves.
- *
+ * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.1, 24th April 2006
  * @since 0.1
  */
-public class RelationComponent extends JComponent implements ViewComponent {
+public class RelationDiagramComponent extends JComponent implements DiagramComponent {
     /**
      * Constant referring to the width of a relation shape.
      */
@@ -58,7 +59,7 @@ public class RelationComponent extends JComponent implements ViewComponent {
     /**
      * Internal reference to our display parent.
      */
-    private View parentDisplay;
+    private Diagram parentDisplay;
     
     /**
      * Internal reference to the object we represent.
@@ -68,14 +69,14 @@ public class RelationComponent extends JComponent implements ViewComponent {
     /**
      * The keys we link.
      */
-    private KeyComponent primaryKey;
-    private KeyComponent foreignKey;
+    private KeyDiagramComponent primaryKey;
+    private KeyDiagramComponent foreignKey;
     
     /**
      * The constructor constructs an object around a given
      * object, and associates with a given display.
      */
-    public RelationComponent(Relation relation, View parentDisplay, KeyComponent primaryKey, KeyComponent foreignKey) {
+    public RelationDiagramComponent(Relation relation, Diagram parentDisplay, KeyDiagramComponent primaryKey, KeyDiagramComponent foreignKey) {
         this.relation = relation;
         this.parentDisplay = parentDisplay;
         this.primaryKey = primaryKey;
@@ -86,14 +87,14 @@ public class RelationComponent extends JComponent implements ViewComponent {
     /**
      * Retrieves the primary key component.
      */
-    public KeyComponent getPrimaryKeyComponent() {
+    public KeyDiagramComponent getPrimaryKeyComponent() {
         return this.primaryKey;
     }
     
     /**
      * Retrieves the foreign key component.
      */
-    public KeyComponent getForeignKeyComponent() {
+    public KeyDiagramComponent getForeignKeyComponent() {
         return this.foreignKey;
     }
     
@@ -101,7 +102,7 @@ public class RelationComponent extends JComponent implements ViewComponent {
      * Retrieves the parent this component belongs to.
      * @return the parent.
      */
-    public View getView() {
+    public Diagram getDiagram() {
         return this.parentDisplay;
     }
     
@@ -133,7 +134,13 @@ public class RelationComponent extends JComponent implements ViewComponent {
      * Intercept clicks to see if they're in our shape's outline.
      */
     public boolean contains(int x, int y) {
-        return this.shape != null && this.shape.contains(x, y);
+        return this.shape != null && this.shape.intersects(
+                new Rectangle2D.Double(
+                x - RelationDiagramComponent.RELATION_LINEWIDTH, 
+                y - RelationDiagramComponent.RELATION_LINEWIDTH, 
+                RelationDiagramComponent.RELATION_LINEWIDTH * 2,
+                RelationDiagramComponent.RELATION_LINEWIDTH * 2
+                ));
     }
     
     /**
@@ -141,7 +148,7 @@ public class RelationComponent extends JComponent implements ViewComponent {
      * @return the popup menu.
      */
     public JPopupMenu getContextMenu() {
-        JPopupMenu contextMenu = this.getView().getContextMenu();
+        JPopupMenu contextMenu = this.getDiagram().getContextMenu();
         // Extend it for this table here.
         contextMenu.addSeparator();
         contextMenu.add(new JMenuItem("Hello from "+this.getRelation()));
@@ -160,7 +167,7 @@ public class RelationComponent extends JComponent implements ViewComponent {
             // Build the basic menu.
             JPopupMenu contextMenu = this.getContextMenu();
             // Extend.
-            this.getView().getAdaptor().customiseContextMenu(contextMenu, this.getRelation());
+            this.getDiagram().getAdaptor().customiseContextMenu(contextMenu, this.getRelation());
             // Display.
             contextMenu.show(this, evt.getX(), evt.getY());
             eventProcessed = true;
@@ -180,8 +187,8 @@ public class RelationComponent extends JComponent implements ViewComponent {
         }
         Graphics2D g2d = (Graphics2D)g.create();
         // Do painting of this component.
-        this.getView().clearFlags();
-        this.getView().getAdaptor().aboutToDraw(this.getRelation());
+        this.getDiagram().clearFlags();
+        this.getDiagram().getAdaptor().aboutToDraw(this.getRelation());
         this.paintComponent(g2d, this.getFlags());
         // Clean up.
         g2d.dispose();
@@ -191,16 +198,16 @@ public class RelationComponent extends JComponent implements ViewComponent {
      * Work out what stroke to use.
      */
     private int getFlags() {
-        this.getView().clearFlags();
-        this.getView().getAdaptor().aboutToDraw(this.getRelation());
-        return this.getView().getFlags();
+        this.getDiagram().clearFlags();
+        this.getDiagram().getAdaptor().aboutToDraw(this.getRelation());
+        return this.getDiagram().getFlags();
     }
     
     /**
      * Work out what stroke to use.
      */
     private Stroke getStroke(int flags) {
-        return new BasicStroke(RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+        return new BasicStroke(RelationDiagramComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     }
     
     /**

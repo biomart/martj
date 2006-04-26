@@ -24,7 +24,6 @@
 
 package org.biomart.builder.view.gui;
 
-import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -38,7 +37,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JTabbedPane;
 import javax.swing.filechooser.FileFilter;
-import org.biomart.builder.controller.SchemaSaver;
+import org.biomart.builder.controller.SchemaIO;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.resources.BuilderBundle;
 
@@ -108,10 +107,10 @@ public class SchemaTabSet extends JTabbedPane {
     }
     
     /**
-     * Returns the current schema.
+     * Returns the current schema's window tabset.
      */
-    public Schema getCurrentSchema() {
-        if (this.getSelectedComponent()!=null) return ((WindowTabSet)this.getSelectedComponent()).getSchema();
+    public WindowTabSet getCurrentWindowTabSet() {
+        if (this.getSelectedComponent()!=null) return (WindowTabSet)this.getSelectedComponent();
         else return null;
     }
     
@@ -139,8 +138,8 @@ public class SchemaTabSet extends JTabbedPane {
      */
     public void confirmCloseSchema() {
         boolean canClose = true;
-        Schema currentSchema = this.getCurrentSchema();
-        if (currentSchema == null) return;
+        if (this.getCurrentWindowTabSet() == null) return;
+        Schema currentSchema = this.getCurrentWindowTabSet().getSchema();
         if (this.schemaModifiedStatus.get(currentSchema).equals(Boolean.TRUE)) {
             // Modified, so must confirm action first.
             int choice = JOptionPane.showConfirmDialog(
@@ -163,15 +162,16 @@ public class SchemaTabSet extends JTabbedPane {
      * @param status true for modified, false for unmodified.
      */
     public void setModifiedStatus(boolean status) {
-        Schema currentSchema = this.getCurrentSchema();
-        this.schemaModifiedStatus.put(this.getCurrentSchema(), Boolean.valueOf(status));
-        this.setTitleAt(this.getSelectedIndex(), this.getTabName(currentSchema));
+        if (this.getCurrentWindowTabSet() == null) return;
+        Schema currentSchema = this.getCurrentWindowTabSet().getSchema();
+        this.schemaModifiedStatus.put(currentSchema, Boolean.valueOf(status));
+        this.setTitleAt(this.getSelectedIndex(), this.suggestTabName(currentSchema));
     }
     
     /**
      * Gets a tab name based on a filename.
      */
-    private String getTabName(Schema schema) {
+    private String suggestTabName(Schema schema) {
         File filename = (File)this.schemaFile.get(schema);
         String basename = BuilderBundle.getString("unsavedSchema");
         if (filename!=null) basename = filename.getName();
@@ -184,7 +184,7 @@ public class SchemaTabSet extends JTabbedPane {
     private void addSchemaTab(Schema newSchema, File schemaFile, boolean initialState) {
         this.schemaFile.put(newSchema, schemaFile);
         this.schemaModifiedStatus.put(newSchema, Boolean.valueOf(initialState));
-        this.addTab(this.getTabName(newSchema), new WindowTabSet(this, newSchema));
+        this.addTab(this.suggestTabName(newSchema), new WindowTabSet(this, newSchema));
         this.setSelectedIndex(this.getTabCount()-1); // Select the newest tab.
     }
     
@@ -199,12 +199,12 @@ public class SchemaTabSet extends JTabbedPane {
      * Saves the schema to the current file.
      */
     public void saveSchema() {
-        Schema currentSchema = this.getCurrentSchema();
-        if (currentSchema == null) return;
+        if (this.getCurrentWindowTabSet() == null) return;
+        Schema currentSchema = this.getCurrentWindowTabSet().getSchema();
         if (this.schemaFile.get(currentSchema) == null) this.saveSchemaAs();
         else {
             try {
-                SchemaSaver.save(currentSchema, (File)this.schemaFile.get(currentSchema));
+                SchemaIO.save(currentSchema, (File)this.schemaFile.get(currentSchema));
                 this.setModifiedStatus(false);
             } catch (Throwable t) {
                 this.martBuilder.showStackTrace(t);
@@ -216,8 +216,8 @@ public class SchemaTabSet extends JTabbedPane {
      * Saves the schema to a user-specified file.
      */
     public void saveSchemaAs() {
-        Schema currentSchema = this.getCurrentSchema();
-        if (currentSchema == null) return;
+        if (this.getCurrentWindowTabSet() == null) return;
+        Schema currentSchema = this.getCurrentWindowTabSet().getSchema();
         if (this.xmlFileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             File saveAsFile = this.xmlFileChooser.getSelectedFile();
             // Skip the rest if they cancelled the save box.
@@ -236,38 +236,11 @@ public class SchemaTabSet extends JTabbedPane {
             File loadFile = this.xmlFileChooser.getSelectedFile();
             if (loadFile != null) {
                 try {
-                    this.addSchemaTab(SchemaSaver.load(loadFile), loadFile, false);
+                    this.addSchemaTab(SchemaIO.load(loadFile), loadFile, false);
                 } catch (Throwable t) {
                     this.martBuilder.showStackTrace(t);
                 }
             }
-        }
-    }
-    
-    /**
-     * Synchronises the schema.
-     */
-    public void synchroniseSchema() {
-        Schema currentSchema = this.getCurrentSchema();
-        if (currentSchema == null) return;
-        try {
-            currentSchema.synchroniseTableProviders();
-            ((WindowTabSet)this.getSelectedComponent()).synchroniseTabs();
-            this.setModifiedStatus(true);
-        } catch (Throwable t) {
-            this.martBuilder.showStackTrace(t);
-        }
-    }
-    
-    /**
-     * Synchronises the schema.
-     */
-    public void requestAddTableProvider() {
-        if (this.getCurrentSchema() == null) return;
-        try {
-            ((WindowTabSet)this.getSelectedComponent()).getTableProviderTabSet().requestAddTableProvider();
-        } catch (Throwable t) {
-            this.martBuilder.showStackTrace(t);
         }
     }
     

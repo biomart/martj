@@ -136,10 +136,10 @@ public class RadialLayout implements LayoutManager {
         for (int i = 0; i < nComps; i++) {
             Component comp = parent.getComponent(i);
             // We're only interested in visible non-RelationComponents at this stage.
-            if (!comp.isVisible() || comp instanceof RelationComponent) continue;
-            // Calculate ring number! If not a TableComponent or TableProviderComponent, it's zero.
+            if (!comp.isVisible() || comp instanceof RelationDiagramComponent) continue;
+            // Calculate ring number! If not a TableDiagramComponent or TableProviderComponent, it's zero.
             Integer ringNumber = new Integer(0);
-            if (comp instanceof TableComponent) ringNumber = new Integer(((TableComponent)comp).countRelations());
+            if (comp instanceof TableDiagramComponent) ringNumber = new Integer(((TableDiagramComponent)comp).countRelations());
             //else if (comp instanceof TableProviderComponent) ringNumber = new Integer(((TableProviderComponent)comp).countRelations());
             // then add the object to the appropriate ring and update circumference/max side.
             if (!ringDetails.containsKey(ringNumber))
@@ -222,13 +222,13 @@ public class RadialLayout implements LayoutManager {
             Component comp = parent.getComponent(i);
             // We're only interested in visible non-RelationComponents at this stage.
             if (!comp.isVisible()) continue;
-            if (comp instanceof RelationComponent) {
+            if (comp instanceof RelationDiagramComponent) {
                 relationComponents.add(comp);
                 continue;
             }
-            // Calculate ring number! If not a TableComponent or TableProviderComponent, it's zero.
+            // Calculate ring number! If not a TableDiagramComponent or TableProviderComponent, it's zero.
             Integer ringNumber = new Integer(0);
-            if (comp instanceof TableComponent) ringNumber = new Integer(((TableComponent)comp).countRelations());
+            if (comp instanceof TableDiagramComponent) ringNumber = new Integer(((TableDiagramComponent)comp).countRelations());
             //else if (comp instanceof TableProviderComponent) ringNumber = new Integer(((TableProviderComponent)comp).countRelations());
             // have we seen this ring before?
             int ringCount = 0;
@@ -253,11 +253,11 @@ public class RadialLayout implements LayoutManager {
         // Add relations to component->shape maps using the key shapes for
         // anchors and offsetting them against the parent component shape.
         for (Iterator i = relationComponents.iterator(); i.hasNext(); ) {
-            RelationComponent relationComponent = (RelationComponent)i.next();
-            KeyComponent primaryKey = relationComponent.getPrimaryKeyComponent();
-            KeyComponent foreignKey = relationComponent.getForeignKeyComponent();
-            BoxComponent primaryKeyTable = primaryKey.getParentComponent();
-            BoxComponent foreignKeyTable = foreignKey.getParentComponent();
+            RelationDiagramComponent relationComponent = (RelationDiagramComponent)i.next();
+            KeyDiagramComponent primaryKey = relationComponent.getPrimaryKeyComponent();
+            KeyDiagramComponent foreignKey = relationComponent.getForeignKeyComponent();
+            BoxShapedDiagramComponent primaryKeyTable = primaryKey.getParentComponent();
+            BoxShapedDiagramComponent foreignKeyTable = foreignKey.getParentComponent();
             
             // Force the inner tables to lay themselves out correctly.
             if (!primaryKeyTable.isValid()) primaryKeyTable.validate();

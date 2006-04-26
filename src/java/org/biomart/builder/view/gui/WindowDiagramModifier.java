@@ -1,5 +1,5 @@
 /*
- * WindowAdaptor.java
+ * WindowDiagramModifier.java
  *
  * Created on 19 April 2006, 09:43
  */
@@ -37,20 +37,20 @@ import org.biomart.builder.resources.BuilderBundle;
  * @version 0.1.2, 21st April 2006
  * @since 0.1
  */
-public class WindowAdaptor extends SchemaAdaptor {
+public class WindowDiagramModifier extends SchemaDiagramModifier {
     /**
      * Internal reference to our window.
      */
     private Window window;
     
     /**
-     *
-     * Creates a new instance of WindowAdaptor over
+     * 
+     * Creates a new instance of WindowDiagramModifier over
      * a given window.
-     *
+     * 
      * @param window the window we are attached to.
      */
-    public WindowAdaptor(WindowTabSet windowTabSet, Window window) {
+    public WindowDiagramModifier(WindowTabSet windowTabSet, Window window) {
         super(windowTabSet);
         this.window = window;
     }

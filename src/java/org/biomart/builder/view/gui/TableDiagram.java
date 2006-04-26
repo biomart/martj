@@ -1,5 +1,5 @@
 /*
- * TableView.java
+ * TableDiagram.java
  *
  * Created on 11 April 2006, 16:00
  */
@@ -45,7 +45,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * @version 0.1.5, 25th April 2006
  * @since 0.1
  */
-public class TableView extends View {
+public class TableDiagram extends Diagram {
     /**
      * Static reference to the background colour to use for components.
      */
@@ -57,15 +57,15 @@ public class TableView extends View {
     private TableProvider tableProvider;
     
     /**
-     * Creates a new instance of TableView over a given provider.
-     *
+     * Creates a new instance of TableDiagram over a given provider.
+     * 
      * @param tableProvider the given table provider.
      */
-    public TableView(WindowTabSet windowTabSet, TableProvider tableProvider) {
+    public TableDiagram(WindowTabSet windowTabSet, TableProvider tableProvider) {
         super(windowTabSet);
-        this.setBackground(TableView.BACKGROUND_COLOUR);
+        this.setBackground(TableDiagram.BACKGROUND_COLOUR);
         this.tableProvider = tableProvider;
-        this.synchroniseView();
+        this.synchroniseDiagram();
     }
     
     /**
@@ -86,7 +86,7 @@ public class TableView extends View {
         // Nothing, yet!
         
         // The following are not applicable to DataSets (we can tell by the listener type).
-        if (!(this.getAdaptor() instanceof DataSetAdaptor)) {
+        if (!(this.getAdaptor() instanceof DataSetDiagramModifier)) {
             contextMenu.addSeparator();
             
             JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseTblProvTitle"));
@@ -133,34 +133,34 @@ public class TableView extends View {
      * {@inheritDoc}
      * Resyncs the table providers with the contents of the set.
      */
-    public void synchroniseView() {
+    public void synchroniseDiagram() {
         // TODO: Construct/update our set of Component.Table and Component.Relation objects.
         this.removeAll();
         // Make a set of all relations on this table provider.
         List relations = new ArrayList();
         Map keyComponents = new HashMap();
-        // Add a TableComponent for each table.
+        // Add a TableDiagramComponent for each table.
         for (Iterator i = this.getTableProvider().getTables().iterator(); i.hasNext(); ) {
             Table table = (Table)i.next();
-            TableComponent tableComponent = new TableComponent(table, this);
+            TableDiagramComponent tableComponent = new TableDiagramComponent(table, this);
             this.add(tableComponent);
             if (table.getPrimaryKey()!=null) relations.addAll(table.getPrimaryKey().getRelations()); // All relations link to a PK at some point.
             keyComponents.putAll(tableComponent.getKeyComponents());
         }
-        // Add a RelationComponent for each relation.
+        // Add a RelationDiagramComponent for each relation.
         for (Iterator i = relations.iterator(); i.hasNext(); ) {
             Relation relation = (Relation)i.next();
             // Only interested in relations that link between tables in our own table provider.
             if (relation.getForeignKey().getTable().getTableProvider().equals(this.getTableProvider())) {
-                RelationComponent relationComponent = new RelationComponent(
+                RelationDiagramComponent relationComponent = new RelationDiagramComponent(
                         relation,
                         this,
-                        (KeyComponent)keyComponents.get(relation.getPrimaryKey()),
-                        (KeyComponent)keyComponents.get(relation.getForeignKey()));
+                        (KeyDiagramComponent)keyComponents.get(relation.getPrimaryKey()),
+                        (KeyDiagramComponent)keyComponents.get(relation.getForeignKey()));
                 this.add(relationComponent);
             }
         }
         // Delegate upwards.
-        super.synchroniseView();
+        super.synchroniseDiagram();
     }
 }

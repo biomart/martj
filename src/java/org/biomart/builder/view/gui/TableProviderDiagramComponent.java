@@ -1,5 +1,5 @@
 /*
- * ViewComponent.java
+ * TableProviderDiagramComponent.java
  *
  * Created on 19 April 2006, 15:36
  */
@@ -42,14 +42,14 @@ import org.biomart.builder.model.TableProvider;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
- * An element that can be drawn on a View. Two Comparators
+ * An element that can be drawn on a Diagram. Two Comparators
  * are provided for sorting them, as they are not comparable within themselves.
- *
+ * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.1, 25th April 2006
  * @since 0.1
  */
-public class TableProviderComponent extends BoxComponent {
+public class TableProviderDiagramComponent extends BoxShapedDiagramComponent {
     /**
      * A map of keys to key components.
      */
@@ -59,7 +59,7 @@ public class TableProviderComponent extends BoxComponent {
      * The constructor constructs an object around a given
      * object, and associates with a given display.
      */
-    public TableProviderComponent(TableProvider tableProvider, View parentDisplay) {
+    public TableProviderDiagramComponent(TableProvider tableProvider, Diagram parentDisplay) {
         super(tableProvider, parentDisplay);
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         // Create the border and set up the colors and fonts.
@@ -73,7 +73,7 @@ public class TableProviderComponent extends BoxComponent {
         // Now the keys.
         for (Iterator i = tableProvider.getExternalKeys().iterator(); i.hasNext(); ) {
             Key key = (Key)i.next();
-            KeyComponent keyComponent = new KeyComponent(key, parentDisplay, this);
+            KeyDiagramComponent keyComponent = new KeyDiagramComponent(key, parentDisplay, this);
             this.keyToKeyComponent.put(key, keyComponent);
             this.add(keyComponent);
         }
@@ -113,8 +113,8 @@ public class TableProviderComponent extends BoxComponent {
         showTables.setMnemonic(BuilderBundle.getString("showTablesMnemonic").charAt(0));
         showTables.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                int index = getView().getWindowTabSet().getTableProviderTabSet().indexOfTab(getTableProvider().getName());
-                getView().getWindowTabSet().getTableProviderTabSet().setSelectedIndex(index);
+                int index = getDiagram().getWindowTabSet().getTableProviderTabSet().indexOfTab(getTableProvider().getName());
+                getDiagram().getWindowTabSet().getTableProviderTabSet().setSelectedIndex(index);
             }
         });
         contextMenu.add(showTables);
@@ -123,7 +123,7 @@ public class TableProviderComponent extends BoxComponent {
         rename.setMnemonic(BuilderBundle.getString("renameTblProvMnemonic").charAt(0));
         rename.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-               getView().getWindowTabSet().getTableProviderTabSet().renameTableProvider(getTableProvider());
+               getDiagram().getWindowTabSet().getTableProviderTabSet().renameTableProvider(getTableProvider());
             }
         });
         contextMenu.add(rename);
@@ -132,7 +132,7 @@ public class TableProviderComponent extends BoxComponent {
         sync.setMnemonic(BuilderBundle.getString("synchroniseTblProvMnemonic").charAt(0));
         sync.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getView().getWindowTabSet().getTableProviderTabSet().synchroniseTableProvider(getTableProvider());
+                getDiagram().getWindowTabSet().getTableProviderTabSet().synchroniseTableProvider(getTableProvider());
             }
         });
         contextMenu.add(sync);
@@ -141,7 +141,7 @@ public class TableProviderComponent extends BoxComponent {
         test.setMnemonic(BuilderBundle.getString("testTblProvMnemonic").charAt(0));
         test.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getView().getWindowTabSet().getTableProviderTabSet().testTableProvider(getTableProvider());
+                getDiagram().getWindowTabSet().getTableProviderTabSet().testTableProvider(getTableProvider());
             }
         });
         contextMenu.add(test);
@@ -150,7 +150,7 @@ public class TableProviderComponent extends BoxComponent {
         remove.setMnemonic(BuilderBundle.getString("removeTblProvMnemonic").charAt(0));
         remove.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-               getView().getWindowTabSet().getTableProviderTabSet().confirmRemoveTableProvider(getTableProvider());
+               getDiagram().getWindowTabSet().getTableProviderTabSet().confirmRemoveTableProvider(getTableProvider());
             }
         });
         contextMenu.add(remove);
@@ -163,6 +163,6 @@ public class TableProviderComponent extends BoxComponent {
      * Set up the colours etc. for this component. Flags have already been set.
      */
     protected void setComponentColours() {
-        // boolean xyFlagSet = this.getView().getFlag(ComponentView.XYFLAG);
+        // boolean xyFlagSet = this.getDiagram().getFlag(ComponentView.XYFLAG);
     }
 }

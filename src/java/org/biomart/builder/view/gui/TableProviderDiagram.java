@@ -1,5 +1,5 @@
 /*
- * TableProviderView.java
+ * TableProviderDiagram.java
  *
  * Created on 19 April 2006, 09:28
  */
@@ -44,7 +44,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * @version 0.1.3, 25th April 2006
  * @since 0.1
  */
-public class TableProviderView extends View {
+public class TableProviderDiagram extends Diagram {
     /**
      * Static reference to the background colour to use for components.
      */
@@ -54,10 +54,10 @@ public class TableProviderView extends View {
      * The constructor rememembers the Collection that this
      * displays.
      */
-    public TableProviderView(WindowTabSet windowTabSet) {
+    public TableProviderDiagram(WindowTabSet windowTabSet) {
         super(windowTabSet);
-        this.setBackground(TableProviderView.BACKGROUND_COLOUR);
-        this.synchroniseView();
+        this.setBackground(TableProviderDiagram.BACKGROUND_COLOUR);
+        this.synchroniseDiagram();
     }
     
     /**
@@ -71,7 +71,7 @@ public class TableProviderView extends View {
         sync.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
         sync.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                windowTabSet.getSchemaTabSet().synchroniseSchema();
+                windowTabSet.synchroniseSchema();
             }
         });
         contextMenu.add(sync);
@@ -93,7 +93,7 @@ public class TableProviderView extends View {
      * {@inheritDoc}
      * Resyncs the table providers with the contents of the set.
      */
-    public void synchroniseView() {
+    public void synchroniseDiagram() {
         // TODO: Construct/update our set of Component.Table and Component.Relation objects.
         this.removeAll();
         // Make a set of all relations on this table provider.
@@ -102,22 +102,22 @@ public class TableProviderView extends View {
         // Add a TableComponent for each table.
         for (Iterator i = this.getWindowTabSet().getSchema().getTableProviders().iterator(); i.hasNext(); ) {
             TableProvider tableProvider = (TableProvider)i.next();
-            TableProviderComponent tableProviderComponent = new TableProviderComponent(tableProvider, this);
+            TableProviderDiagramComponent tableProviderComponent = new TableProviderDiagramComponent(tableProvider, this);
             this.add(tableProviderComponent);
             relations.addAll(tableProvider.getExternalRelations());
             keyComponents.putAll(tableProviderComponent.getKeyComponents());
         }
-        // Add a RelationComponent for each relation.
+        // Add a RelationDiagramComponent for each relation.
         for (Iterator i = relations.iterator(); i.hasNext(); ) {
             Relation relation = (Relation)i.next();
-            RelationComponent relationComponent = new RelationComponent(
+            RelationDiagramComponent relationComponent = new RelationDiagramComponent(
                     relation,
                     this,
-                    (KeyComponent)keyComponents.get(relation.getPrimaryKey()),
-                    (KeyComponent)keyComponents.get(relation.getForeignKey()));
+                    (KeyDiagramComponent)keyComponents.get(relation.getPrimaryKey()),
+                    (KeyDiagramComponent)keyComponents.get(relation.getForeignKey()));
             this.add(relationComponent);
         }
         // Delegate upwards.
-        super.synchroniseView();
+        super.synchroniseDiagram();
     }
 }

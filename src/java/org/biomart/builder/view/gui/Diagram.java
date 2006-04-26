@@ -1,5 +1,5 @@
 /*
- * View.java
+ * Diagram.java
  *
  * Created on 11 April 2006, 16:00
  */
@@ -35,11 +35,11 @@ import javax.swing.JPopupMenu;
  * @version 0.1.4, 25th April 2006
  * @since 0.1
  */
-public abstract class View extends JPanel {
+public abstract class Diagram extends JPanel {
     /**
      * Internal reference to our adaptor.
      */
-    private Adaptor adaptor;
+    private DiagramModifier adaptor;
     
     /**
      * The current display flags.
@@ -52,9 +52,9 @@ public abstract class View extends JPanel {
     protected WindowTabSet windowTabSet;
     
     /**
-     * Creates a new instance of View.
+     * Creates a new instance of Diagram.
      */
-    public View(WindowTabSet windowTabSet) {
+    public Diagram(WindowTabSet windowTabSet) {
         // GUI stuff.
         super(new RadialLayout());
         this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
@@ -98,14 +98,14 @@ public abstract class View extends JPanel {
     /**
      * {@inheritDoc}
      */
-    public void setAdaptor(Adaptor adaptor) {
+    public void setAdaptor(DiagramModifier adaptor) {
         this.adaptor = adaptor;
     }
     
     /**
      * {@inheritDoc}
      */
-    public Adaptor getAdaptor() {
+    public DiagramModifier getAdaptor() {
         return this.adaptor;
     }
     
@@ -144,7 +144,7 @@ public abstract class View extends JPanel {
     /**
      * Synchronise our display with our object contents.
      */
-    public void synchroniseView() {
+    public void synchroniseDiagram() {
         // Update ourselves.
         this.validate();
         // Reset our size to the minimum.

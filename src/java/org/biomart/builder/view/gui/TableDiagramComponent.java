@@ -1,5 +1,5 @@
 /*
- * ViewComponent.java
+ * TableDiagramComponent.java
  *
  * Created on 19 April 2006, 15:36
  */
@@ -26,78 +26,89 @@ package org.biomart.builder.view.gui;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import org.biomart.builder.model.Column;
 import org.biomart.builder.model.Key;
-import org.biomart.builder.model.Key.PrimaryKey;
+import org.biomart.builder.model.Table;
 
 /**
- * An element that can be drawn on a View. Two Comparators
+ * An element that can be drawn on a Diagram. Two Comparators
  * are provided for sorting them, as they are not comparable within themselves.
- *
+ * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.1, 24th April 2006
  * @since 0.1
  */
-public class KeyComponent extends BoxComponent {
+public class TableDiagramComponent extends BoxShapedDiagramComponent {
     /**
-     * The component representing our parent box.
+     * A map of keys to key components.
      */
-    private BoxComponent parentComponent;
+    private Map keyToKeyComponent = new HashMap();
     
     /**
      * The constructor constructs an object around a given
      * object, and associates with a given display.
      */
-    public KeyComponent(Key key, View parentDisplay, BoxComponent parentComponent) {
-        super(key, parentDisplay);
-        this.parentComponent = parentComponent;   
+    public TableDiagramComponent(Table table, Diagram parentDisplay) {
+        super(table, parentDisplay);
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         // Create the border and set up the colors and fonts.
-        this.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
-        this.setForeground(Color.DARK_GRAY);
-        if (key instanceof PrimaryKey) this.setBackground(Color.CYAN);
-        else this.setBackground(Color.GREEN);
-        this.setFont(Font.decode("serif-ITALIC-8"));
-        // Add the label for each column.
-        for (Iterator i = key.getColumns().iterator(); i.hasNext(); ) {
-            this.add(new JLabel(((Column)i.next()).getName()));
+        this.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        this.setForeground(Color.BLACK);
+        this.setBackground(Color.PINK);
+        this.setFont(Font.decode("serif-PLAIN-8"));
+        // Add the label.
+        JLabel label = new JLabel(table.getName());
+        this.add(label);
+        // Now the keys.
+        for (Iterator i = table.getKeys().iterator(); i.hasNext(); ) {
+            Key key = (Key)i.next();
+            KeyDiagramComponent keyComponent = new KeyDiagramComponent(key, parentDisplay, this);
+            this.keyToKeyComponent.put(key, keyComponent);
+            this.add(keyComponent);
         }
     }
     
     /**
      * Gets our table.
      */
-    private Key getKey() {
-        return (Key)this.getObject();
+    private Table getTable() {
+        return (Table)this.getObject();
     }
     
     /**
-     * Gets our parent component.
+     * Gets a key component.
      */
-    public BoxComponent getParentComponent() {
-        return this.parentComponent;
+    public Map getKeyComponents() {
+        return this.keyToKeyComponent;
     }
-        
+    
+    /**
+     * Count the relations attached to our inner object.
+     */
+    public int countRelations() {
+        return this.getTable().getRelations().size();
+    }
+    
     /**
      * Construct a context menu for a given view.
      * @return the popup menu.
      */
     public JPopupMenu getContextMenu() {
-        JPopupMenu contextMenu = this.getParentComponent().getContextMenu();
+        JPopupMenu contextMenu = super.getContextMenu();
         // Extend it for this table here.
         contextMenu.addSeparator();
-        contextMenu.add(new JMenuItem("Hello from "+this.getKey()));
-        
+        contextMenu.add(new JMenuItem("Hello from "+this.getTable()));
         // Return it. Will be further adapted by a listener elsewhere.
         return contextMenu;
     }
-        
+    
     /**
      * Set up the colours etc. for this component. Flags have already been set.
      */
