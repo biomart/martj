@@ -58,7 +58,7 @@ public class TableDiagram extends Diagram {
     
     /**
      * Creates a new instance of TableDiagram over a given provider.
-     * 
+     *
      * @param tableProvider the given table provider.
      */
     public TableDiagram(WindowTabSet windowTabSet, TableProvider tableProvider) {
@@ -89,6 +89,24 @@ public class TableDiagram extends Diagram {
         if (!(this.getAdaptor() instanceof DataSetDiagramModifier)) {
             contextMenu.addSeparator();
             
+            JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameTblProvTitle"));
+            rename.setMnemonic(BuilderBundle.getString("renameTblProvMnemonic").charAt(0));
+            rename.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    windowTabSet.getTableProviderTabSet().renameTableProvider(tableProvider);
+                }
+            });
+            contextMenu.add(rename);
+            
+            JMenuItem modify = new JMenuItem(BuilderBundle.getString("modifyTblProvTitle"));
+            modify.setMnemonic(BuilderBundle.getString("modifyTblProvMnemonic").charAt(0));
+            modify.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    windowTabSet.getTableProviderTabSet().requestModifyTableProvider(getTableProvider());
+                }
+            });
+            contextMenu.add(modify);
+            
             JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseTblProvTitle"));
             sync.setMnemonic(BuilderBundle.getString("synchroniseTblProvMnemonic").charAt(0));
             sync.addActionListener(new ActionListener() {
@@ -115,15 +133,6 @@ public class TableDiagram extends Diagram {
                 }
             });
             contextMenu.add(remove);
-            
-            JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameTblProvTitle"));
-            rename.setMnemonic(BuilderBundle.getString("renameTblProvMnemonic").charAt(0));
-            rename.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    windowTabSet.getTableProviderTabSet().renameTableProvider(tableProvider);
-                }
-            });
-            contextMenu.add(rename);
         }
         // Return.
         return contextMenu;

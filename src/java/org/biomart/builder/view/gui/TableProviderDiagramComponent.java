@@ -66,9 +66,9 @@ public class TableProviderDiagramComponent extends BoxShapedDiagramComponent {
         this.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         this.setForeground(Color.BLACK);
         this.setBackground(Color.PINK);
-        this.setFont(Font.decode("serif-PLAIN-8"));
         // Add the label.
         JLabel label = new JLabel(tableProvider.getName());
+        label.setFont(Font.decode("Serif-BOLD-10"));
         this.add(label);
         // Now the keys.
         for (Iterator i = tableProvider.getExternalKeys().iterator(); i.hasNext(); ) {
@@ -127,6 +127,15 @@ public class TableProviderDiagramComponent extends BoxShapedDiagramComponent {
             }
         });
         contextMenu.add(rename);
+        
+        JMenuItem modify = new JMenuItem(BuilderBundle.getString("modifyTblProvTitle"));
+        modify.setMnemonic(BuilderBundle.getString("modifyTblProvMnemonic").charAt(0));
+        modify.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                getDiagram().getWindowTabSet().getTableProviderTabSet().requestModifyTableProvider(getTableProvider());
+            }
+        });
+        contextMenu.add(modify);
         
         JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseTblProvTitle"));
         sync.setMnemonic(BuilderBundle.getString("synchroniseTblProvMnemonic").charAt(0));

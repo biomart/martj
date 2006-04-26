@@ -71,11 +71,6 @@ public class TableProviderTabSet extends JTabbedPane {
     private TableProviderDiagram tableProviderDiagram;
     
     /**
-     * Our new provider dialog.
-     */
-    private NewTableProviderDialog newTableProviderDialog;
-    
-    /**
      * Creates a new multiple table provider view over the given set of
      * of table providers.
      */
@@ -87,8 +82,6 @@ public class TableProviderTabSet extends JTabbedPane {
         JScrollPane scroller = new JScrollPane(this.tableProviderDiagram);
         scroller.getViewport().setBackground(this.tableProviderDiagram.getBackground());
         this.addTab(BuilderBundle.getString("multiTblProvOverviewTab"), scroller);
-        // Make our own table provider dialog.
-        this.newTableProviderDialog = new NewTableProviderDialog(this);
         // Synchronise ourselves.
         this.synchroniseTabs();
     }
@@ -132,15 +125,28 @@ public class TableProviderTabSet extends JTabbedPane {
      * Confirms with user then removes a table provider.
      */
     public void requestAddTableProvider() {
-        // Pop up a box to get the details of the new provider.
-        this.newTableProviderDialog.setLocationRelativeTo(this.windowTabSet.getSchemaTabSet().getMartBuilder());
-        this.newTableProviderDialog.show();
         // Interpret the response.
-        TableProvider tableProvider = this.newTableProviderDialog.getTableProvider();
+        TableProvider tableProvider = TableProviderDialog.createTableProvider(this);
         // Add to schema.
         try {
             if (tableProvider != null) {
                 SchemaTools.addTableProviderToSchema(this.windowTabSet.getSchema(), tableProvider);
+                this.synchroniseTableProvider(tableProvider);
+                this.synchroniseTabs();
+                this.windowTabSet.getSchemaTabSet().setModifiedStatus(true);
+            }
+        } catch (Throwable t) {
+            this.windowTabSet.getSchemaTabSet().getMartBuilder().showStackTrace(t);
+        }
+    }
+    
+    /**
+     * Confirms with user then removes a table provider.
+     */
+    public void requestModifyTableProvider(TableProvider tableProvider) {
+        // Add to schema.
+        try {
+            if (TableProviderDialog.modifyTableProvider(this, tableProvider)) {
                 this.synchroniseTableProvider(tableProvider);
                 this.synchroniseTabs();
                 this.windowTabSet.getSchemaTabSet().setModifiedStatus(true);

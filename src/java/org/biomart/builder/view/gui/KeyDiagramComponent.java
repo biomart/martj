@@ -39,7 +39,7 @@ import org.biomart.builder.model.Key.PrimaryKey;
 /**
  * An element that can be drawn on a Diagram. Two Comparators
  * are provided for sorting them, as they are not comparable within themselves.
- * 
+ *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.1, 24th April 2006
  * @since 0.1
@@ -56,17 +56,18 @@ public class KeyDiagramComponent extends BoxShapedDiagramComponent {
      */
     public KeyDiagramComponent(Key key, Diagram parentDisplay, BoxShapedDiagramComponent parentComponent) {
         super(key, parentDisplay);
-        this.parentComponent = parentComponent;   
+        this.parentComponent = parentComponent;
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         // Create the border and set up the colors and fonts.
         this.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
         this.setForeground(Color.DARK_GRAY);
         if (key instanceof PrimaryKey) this.setBackground(Color.CYAN);
         else this.setBackground(Color.GREEN);
-        this.setFont(Font.decode("serif-ITALIC-8"));
         // Add the label for each column.
         for (Iterator i = key.getColumns().iterator(); i.hasNext(); ) {
-            this.add(new JLabel(((Column)i.next()).getName()));
+            JLabel label = new JLabel(((Column)i.next()).getName());
+            label.setFont(Font.decode("Serif-ITALIC-10"));
+            this.add(label);
         }
     }
     
@@ -83,7 +84,7 @@ public class KeyDiagramComponent extends BoxShapedDiagramComponent {
     public BoxShapedDiagramComponent getParentComponent() {
         return this.parentComponent;
     }
-        
+    
     /**
      * Construct a context menu for a given view.
      * @return the popup menu.
@@ -97,7 +98,7 @@ public class KeyDiagramComponent extends BoxShapedDiagramComponent {
         // Return it. Will be further adapted by a listener elsewhere.
         return contextMenu;
     }
-        
+    
     /**
      * Set up the colours etc. for this component. Flags have already been set.
      */

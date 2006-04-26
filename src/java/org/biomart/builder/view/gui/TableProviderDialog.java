@@ -1,5 +1,5 @@
 /*
- * NewTableProviderDialog.java
+ * TableProviderDialog.java
  *
  * Created on 25 April 2006, 16:09
  */
@@ -42,7 +42,10 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.filechooser.FileFilter;
+import org.biomart.builder.controller.JDBCKeyGuessingTableProvider;
+import org.biomart.builder.controller.JDBCTableProvider;
 import org.biomart.builder.controller.SchemaTools;
+import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.TableProvider;
 import org.biomart.builder.resources.BuilderBundle;
 
@@ -52,7 +55,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * @version 0.1.1, 25th April 2006
  * @since 0.1
  */
-public class NewTableProviderDialog extends JDialog {
+public class TableProviderDialog extends JDialog {
     /**
      * Our parent schema.
      */
@@ -77,14 +80,14 @@ public class NewTableProviderDialog extends JDialog {
     private JPasswordField password;
     private JButton test;
     private JButton cancel;
-    private JButton add;
+    private JButton execute;
     
     /**
-     * Creates a new instance of NewTableProviderDialog.
+     * Creates a new instance of TableProviderDialog.
      */
-    public NewTableProviderDialog(final TableProviderTabSet tableProviderTabSet) {
+    private TableProviderDialog(final TableProviderTabSet tableProviderTabSet, String title, String executeButtonText, TableProvider template) {
         super(tableProviderTabSet.getWindowTabSet().getSchemaTabSet().getMartBuilder(),
-                BuilderBundle.getString("newTblProvDialogTitle"),
+                title,
                 true);
         this.tableProviderTabSet = tableProviderTabSet;
         
@@ -128,7 +131,7 @@ public class NewTableProviderDialog extends JDialog {
         // create buttons in dialog
         this.test = new JButton(BuilderBundle.getString("testButton"));
         this.cancel = new JButton(BuilderBundle.getString("cancelButton"));
-        this.add = new JButton(BuilderBundle.getString("addButton"));
+        this.execute = new JButton(executeButtonText);
         
         // create the file chooser
         this.jarFileChooser = new JFileChooser();
@@ -149,7 +152,7 @@ public class NewTableProviderDialog extends JDialog {
             }
         });
         
-        // add all the buttons and fields with their labels to the dialog
+        // execute all the buttons and fields with their labels to the dialog
         JLabel label = new JLabel(BuilderBundle.getString("typeLabel"));
         gridBag.setConstraints(label, labelConstraints);
         content.add(label);
@@ -201,7 +204,7 @@ public class NewTableProviderDialog extends JDialog {
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(this.test);
         buttonPanel.add(this.cancel);
-        buttonPanel.add(this.add);
+        buttonPanel.add(this.execute);
         gridBag.setConstraints(buttonPanel, fieldLastRowConstraints);
         content.add(buttonPanel);
         
@@ -243,15 +246,15 @@ public class NewTableProviderDialog extends JDialog {
             }
         });
         
-        // intercept the add button
-        this.add.addActionListener(new ActionListener() {
+        // intercept the execute button
+        this.execute.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 tableProvider = createTableProvider();
                 if (tableProvider != null) hide();
             }
         });
         // make it the default button.
-        this.getRootPane().setDefaultButton(add);
+        this.getRootPane().setDefaultButton(execute);
         
         // attach the file chooser to the button
         this.driverClassLocationButton.addActionListener(new ActionListener() {
@@ -266,7 +269,7 @@ public class NewTableProviderDialog extends JDialog {
         });
         
         // reset the fields
-        this.resetFields();
+        this.resetFields(template);
         
         // set size of window
         this.pack();
@@ -275,15 +278,30 @@ public class NewTableProviderDialog extends JDialog {
     /**
      * Resets the fields to their default values.
      */
-    private void resetFields() {
-        this.tableProvider = null;
-        this.type.setSelectedIndex(0);
-        this.name.setText(null);
-        this.driverClass.setText(null);
-        this.driverClassLocation.setText(null);
-        this.jdbcURL.setText(null);
-        this.username.setText(null);
-        this.password.setText(null);
+    private void resetFields(TableProvider template) {
+        if (template == null) {
+            this.type.setSelectedIndex(0);
+            this.name.setText(null);
+            this.driverClass.setText(null);
+            this.driverClassLocation.setText(null);
+            this.jdbcURL.setText(null);
+            this.username.setText(null);
+            this.password.setText(null);
+        } else if (template instanceof JDBCDataLink) {
+            JDBCDataLink dataLink = (JDBCDataLink)template;
+            if (template instanceof JDBCTableProvider) this.type.setSelectedItem(BuilderBundle.getString("jdbcDMDTableProvider"));
+            else if (template instanceof JDBCKeyGuessingTableProvider) this.type.setSelectedItem(BuilderBundle.getString("jdbcKeyGuessingTableProvider"));
+            this.type.setEnabled(false); // Gray out as we can't change this property.
+            this.name.setText(template.getName());
+            this.driverClass.setText(dataLink.getDriverClassName());
+            this.driverClassLocation.setText(
+                    dataLink.getDriverClassLocation() == null
+                    ? null
+                    : dataLink.getDriverClassLocation().toString());
+            this.jdbcURL.setText(dataLink.getJDBCURL());
+            this.username.setText(dataLink.getUsername());
+            this.password.setText(dataLink.getPassword());
+        }
     }
     
     /**
@@ -380,17 +398,42 @@ public class NewTableProviderDialog extends JDialog {
     }
     
     /**
-     * Intercept the show() command and reset our fields before doing so.
+     * Static method which allows the user to create a new table provider.
      */
-    public void show() {
-        this.resetFields();
-        super.show();
+    public static TableProvider createTableProvider(TableProviderTabSet tableProviderTabSet) {
+        TableProviderDialog dialog = new TableProviderDialog(
+                tableProviderTabSet,
+                BuilderBundle.getString("newTblProvDialogTitle"),
+                BuilderBundle.getString("addButton"),
+                null);
+        dialog.setLocationRelativeTo(tableProviderTabSet.getWindowTabSet().getSchemaTabSet().getMartBuilder());
+        dialog.show();
+        return dialog.tableProvider;
     }
     
     /**
-     * Retrieve the provider we created.
+     * Static method which allows the user to modify an existing table provider.
      */
-    public TableProvider getTableProvider() {
-        return this.tableProvider;
+    public static boolean modifyTableProvider(TableProviderTabSet tableProviderTabSet, TableProvider tableProvider) {
+        TableProviderDialog dialog = new TableProviderDialog(
+                tableProviderTabSet,
+                BuilderBundle.getString("modifyTblProvDialogTitle"),
+                BuilderBundle.getString("modifyButton"),
+                tableProvider);
+        dialog.setLocationRelativeTo(tableProviderTabSet.getWindowTabSet().getSchemaTabSet().getMartBuilder());
+        dialog.show();
+        if (dialog.tableProvider != null && dialog.tableProvider instanceof JDBCDataLink) {
+            JDBCDataLink dataLink = (JDBCDataLink)tableProvider;
+            JDBCDataLink dialogDataLink = (JDBCDataLink)dialog.tableProvider;
+            tableProvider.setName(dialog.tableProvider.getName());
+            dataLink.setDriverClassName(dialogDataLink.getDriverClassName());
+            dataLink.setDriverClassLocation(dialogDataLink.getDriverClassLocation());
+            dataLink.setJDBCURL(dialogDataLink.getJDBCURL());
+            dataLink.setUsername(dialogDataLink.getUsername());
+            dataLink.setPassword(dialogDataLink.getPassword());
+            return true;
+        } else {
+            return false;
+        }
     }
 }

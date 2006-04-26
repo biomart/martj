@@ -62,9 +62,9 @@ public class TableDiagramComponent extends BoxShapedDiagramComponent {
         this.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         this.setForeground(Color.BLACK);
         this.setBackground(Color.PINK);
-        this.setFont(Font.decode("serif-PLAIN-8"));
         // Add the label.
         JLabel label = new JLabel(table.getName());
+        label.setFont(Font.decode("Serif-BOLD-10"));
         this.add(label);
         // Now the keys.
         for (Iterator i = table.getKeys().iterator(); i.hasNext(); ) {
