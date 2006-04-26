@@ -133,13 +133,16 @@ public class TableProviderTabSet extends JTabbedPane {
      */
     public void requestAddTableProvider() {
         // Pop up a box to get the details of the new provider.
+        this.newTableProviderDialog.setLocationRelativeTo(this.windowTabSet.getSchemaTabSet().getMartBuilder());
         this.newTableProviderDialog.show();
+        // Interpret the response.
         TableProvider tableProvider = this.newTableProviderDialog.getTableProvider();
         // Add to schema.
         try {
             if (tableProvider != null) {
                 SchemaTools.addTableProviderToSchema(this.windowTabSet.getSchema(), tableProvider);
-                this.addTableProviderTab(tableProvider);
+                this.synchroniseTableProvider(tableProvider);
+                this.synchroniseTabs();
                 this.windowTabSet.getSchemaTabSet().setModifiedStatus(true);
             }
         } catch (Throwable t) {
@@ -242,6 +245,7 @@ public class TableProviderTabSet extends JTabbedPane {
         try {
             SchemaTools.synchroniseTableProvider(tableProvider);
             this.windowTabSet.synchroniseTabs();
+            this.windowTabSet.getSchemaTabSet().setModifiedStatus(true);
         } catch (Throwable t) {
             this.windowTabSet.getSchemaTabSet().getMartBuilder().showStackTrace(t);
         }

@@ -482,7 +482,6 @@ public class JDBCKeyGuessingTableProvider extends GenericTableProvider implement
             for (Iterator inner = this.tables.values().iterator(); inner.hasNext(); ) {
                 Table fkTable = (Table)inner.next();
                 if (fkTable.equals(existingTable)) continue; // Don't link to ourselves!
-                
                 // Check all the PK columns to find FK candidate equivalents in this fkTable.
                 Column[] candidateFKColumns = new Column[existingPK.countColumns()];
                 int candidateFKColumnCount = 0;

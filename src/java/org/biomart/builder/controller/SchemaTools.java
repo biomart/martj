@@ -24,6 +24,7 @@
 
 package org.biomart.builder.controller;
 
+import java.io.File;
 import java.sql.SQLException;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
@@ -89,5 +90,15 @@ public class SchemaTools {
     
     public static boolean testTableProvider(TableProvider tableProvider) throws Exception {
         return tableProvider.test();
+    }
+    
+    public static TableProvider createJDBCTableProvider(File driverClassLocation, String driverClassName, String url, String username, String password, String name) throws NullPointerException {
+        if (password != null && password.equals("")) password = null;
+        return new JDBCTableProvider(driverClassLocation, driverClassName, url, username, password, name);
+    }
+    
+    public static TableProvider createJDBCKeyGuessingTableProvider(File driverClassLocation, String driverClassName, String url, String username, String password, String name) throws NullPointerException {
+        if (password != null && password.equals("")) password = null;
+        return new JDBCKeyGuessingTableProvider(driverClassLocation, driverClassName, url, username, password, name);
     }
 }

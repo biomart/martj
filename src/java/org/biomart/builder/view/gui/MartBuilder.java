@@ -47,7 +47,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * The main window housing the MartBuilder GUI.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 25th April 2006
+ * @version 0.1.8, 26th April 2006
  * @since 0.1
  */
 public class MartBuilder extends JFrame {
@@ -83,6 +83,8 @@ public class MartBuilder extends JFrame {
         }
         // Set up our GUI components.
         this.initComponents();
+        // Set a sensible size.
+        this.setSize(this.getMinimumSize());
     }
     
     /**
@@ -93,7 +95,7 @@ public class MartBuilder extends JFrame {
         final MartBuilder mb = this;
         this.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
-                if (e.getWindow() == mb) exitApp();
+                if (e.getWindow() == mb) requestExitApp();
             }
         });
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -136,7 +138,7 @@ public class MartBuilder extends JFrame {
     /**
      * Confirms the user wants to exit, then exits.
      */
-    public void exitApp() {
+    public void requestExitApp() {
         if (this.schemaTabSet.confirmCloseAllSchemas()) System.exit(0);
     }
     
@@ -160,8 +162,8 @@ public class MartBuilder extends JFrame {
             public void run() {
                 // Create it.
                 MartBuilder mb = new MartBuilder();
-                // Set a sensible size.
-                mb.setSize(mb.getMinimumSize());
+                // Centre it.
+                mb.setLocationRelativeTo(null);
                 // Open it.
                 mb.setVisible(true);
             }
@@ -186,8 +188,6 @@ public class MartBuilder extends JFrame {
         private JMenuItem saveSchemaAs;
         private JMenuItem closeSchema;
         private JMenuItem exit;
-        private JMenuItem synchroniseSchema;
-        private JMenuItem addTableProvider;
         
         /**
          * Constructor calls super then sets up our menu items.
@@ -250,35 +250,6 @@ public class MartBuilder extends JFrame {
             });
             
             this.add(fileMenu);
-            
-            // Schema menu.
-            
-            JMenu schemaMenu = new JMenu(BuilderBundle.getString("schemaMenuTitle"));
-            schemaMenu.setMnemonic(BuilderBundle.getString("schemaMenuMnemonic").charAt(0));
-            
-            this.synchroniseSchema = new JMenuItem(BuilderBundle.getString("synchroniseSchemaTitle"));
-            this.synchroniseSchema.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
-            this.synchroniseSchema.addActionListener(this);
-    
-            this.addTableProvider = new JMenuItem(BuilderBundle.getString("addTblProvTitle"));
-            this.addTableProvider.setMnemonic(BuilderBundle.getString("addTblProvMnemonic").charAt(0));
-            this.addTableProvider.addActionListener(this);
-        
-            schemaMenu.add(this.synchroniseSchema);
-            schemaMenu.add(this.addTableProvider);
-            
-            schemaMenu.addMenuListener(new MenuListener() {
-                public void menuSelected(MenuEvent e) {
-                    boolean hasSchema = true;
-                    if (martBuilder.schemaTabSet.getCurrentWindowTabSet()==null) hasSchema = false;
-                    synchroniseSchema.setEnabled(hasSchema);
-                    addTableProvider.setEnabled(hasSchema);
-                }
-                public void menuDeselected(MenuEvent e) {}
-                public void menuCanceled(MenuEvent e) {}
-            });
-            
-            this.add(schemaMenu);
         }
         
         /**
@@ -293,12 +264,7 @@ public class MartBuilder extends JFrame {
             else if (e.getSource() == this.saveSchema) this.martBuilder.schemaTabSet.saveSchema();
             else if (e.getSource() == this.saveSchemaAs) this.martBuilder.schemaTabSet.saveSchemaAs();
             else if (e.getSource() == this.closeSchema) this.martBuilder.schemaTabSet.confirmCloseSchema();
-            else if (e.getSource() == this.exit) this.martBuilder.exitApp();
-            
-            // Schema menu.
-            
-            else if (e.getSource() == this.synchroniseSchema) this.martBuilder.schemaTabSet.getCurrentWindowTabSet().synchroniseSchema();
-            else if (e.getSource() == this.addTableProvider) this.martBuilder.schemaTabSet.getCurrentWindowTabSet().getTableProviderTabSet().requestAddTableProvider();
+            else if (e.getSource() == this.exit) this.martBuilder.requestExitApp();
         }
     }
 }

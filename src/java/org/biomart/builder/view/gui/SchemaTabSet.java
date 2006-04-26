@@ -44,7 +44,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Displays a schema.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 25th April 2006
+ * @version 0.1.4, 26th April 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -91,7 +91,8 @@ public class SchemaTabSet extends JTabbedPane {
             public String getDescription() {
                 return BuilderBundle.getString("XMLFileFilterDescription");
             }
-        });
+        });		
+        this.xmlFileChooser.setMultiSelectionEnabled(true);
         
         // Now the application logic stuff.
         this.martBuilder = martBuilder;
@@ -233,10 +234,12 @@ public class SchemaTabSet extends JTabbedPane {
      */
     public void loadSchema() {
         if (this.xmlFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File loadFile = this.xmlFileChooser.getSelectedFile();
-            if (loadFile != null) {
+            File[] loadFiles = this.xmlFileChooser.getSelectedFiles();
+            if (loadFiles != null) {
                 try {
-                    this.addSchemaTab(SchemaIO.load(loadFile), loadFile, false);
+                    for (int i = 0; i < loadFiles.length; i++) {
+                        this.addSchemaTab(SchemaIO.load(loadFiles[i]), loadFiles[i], false);
+                    }
                 } catch (Throwable t) {
                     this.martBuilder.showStackTrace(t);
                 }

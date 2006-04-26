@@ -44,7 +44,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * An element that can be drawn on a Diagram. Two Comparators
  * are provided for sorting them, as they are not comparable within themselves.
- * 
+ *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.1, 25th April 2006
  * @since 0.1
@@ -96,7 +96,7 @@ public class TableProviderDiagramComponent extends BoxShapedDiagramComponent {
     /**
      * Count the relations attached to our inner object.
      */
-    public int countRelations() {
+    public int countExternalRelations() {
         return this.getTableProvider().getExternalRelations().size();
     }
     
@@ -123,7 +123,7 @@ public class TableProviderDiagramComponent extends BoxShapedDiagramComponent {
         rename.setMnemonic(BuilderBundle.getString("renameTblProvMnemonic").charAt(0));
         rename.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-               getDiagram().getWindowTabSet().getTableProviderTabSet().renameTableProvider(getTableProvider());
+                getDiagram().getWindowTabSet().getTableProviderTabSet().renameTableProvider(getTableProvider());
             }
         });
         contextMenu.add(rename);
@@ -150,7 +150,7 @@ public class TableProviderDiagramComponent extends BoxShapedDiagramComponent {
         remove.setMnemonic(BuilderBundle.getString("removeTblProvMnemonic").charAt(0));
         remove.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-               getDiagram().getWindowTabSet().getTableProviderTabSet().confirmRemoveTableProvider(getTableProvider());
+                getDiagram().getWindowTabSet().getTableProviderTabSet().confirmRemoveTableProvider(getTableProvider());
             }
         });
         contextMenu.add(remove);
