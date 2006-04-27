@@ -29,9 +29,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -212,20 +210,15 @@ public class MartBuilderXML extends DefaultHandler {
             boolean keyguessing = ((String)attributes.get("keyguessing")).equals("true");
             try {
                 element = new JDBCSchema(driverClassLocation, driverClassName, url, username, password, name, keyguessing);
-                this.constructedMart.addSchema((Schema)element);
+                // Are we inside a partitioned one?
+                if (!this.objectStack.empty() && (this.objectStack.peek() instanceof SchemaGroup)) {
+                    SchemaGroup group = (SchemaGroup)this.objectStack.peek();
+                    group.addSchema((Schema)element);
+                } else {
+                    this.constructedMart.addSchema((Schema)element);
+                }
             } catch (Exception e) {
                 throw new SAXException(e);
-            }
-            
-            // Are we inside a partitioned one?
-            if (!this.objectStack.empty() && (this.objectStack.peek() instanceof SchemaGroup)) {
-                SchemaGroup ptp = (SchemaGroup)this.objectStack.peek();
-                
-                try {
-                    ptp.addSchema((Schema)element);
-                } catch (Exception e) {
-                    throw new SAXException(e);
-                }
             }
         }
         
@@ -667,6 +660,40 @@ public class MartBuilderXML extends DefaultHandler {
         this.writeAttribute(name, sb.toString());
     }
     
+    private void writeSchema(Schema schema, Set relations) throws IOException, AssociationException {
+        // What kind of tbl prov is it?
+        // JDBC?
+        if (schema instanceof JDBCSchema) {
+            this.openElement("jdbcSchema");
+            JDBCSchema jdbcSchema = (JDBCSchema)schema;
+            
+            if (jdbcSchema.getDriverClassLocation()!=null)
+                this.writeAttribute("driverClassLocation", jdbcSchema.getDriverClassLocation().getPath());
+            this.writeAttribute("driverClassName", jdbcSchema.getDriverClassName());
+            this.writeAttribute("url", jdbcSchema.getJDBCURL());
+            this.writeAttribute("username", jdbcSchema.getUsername());
+            if (jdbcSchema.getPassword() != null)
+                this.writeAttribute("password", jdbcSchema.getPassword());
+            this.writeAttribute("name", jdbcSchema.getName());
+            this.writeAttribute("keyguessing", jdbcSchema.isKeyGuessing()?"true":"false");
+        }
+        // Others?
+        else
+            throw new AssociationException(BuilderBundle.getString("unknownSchemaType",schema.getClass().getName()));
+        
+        // Write out the contents, and note the relations.
+        this.writeSchemaContents(schema, relations);
+        
+        // What kind of tbl prov was it?
+        // JDBC?
+        if ((schema instanceof JDBCSchema) || (schema instanceof JDBCSchema)) {
+            this.closeElement("jdbcSchema");
+        }
+        // Others?
+        else
+            throw new AssociationException(BuilderBundle.getString("unknownSchemaType",schema.getClass().getName()));
+    }
+    
     /**
      * Internal method which writes out the tables of a table provider and remembers
      * the relations it saw as it goes along.
@@ -804,7 +831,7 @@ public class MartBuilderXML extends DefaultHandler {
     /**
      * Internal method which does the work of writing out XML files and
      * generating those funky ID tags you see in them.
-     * 
+     *
      * @param mart the mart to write.
      * @param ow the Writer to write the XML to.
      * @throws IOException if a write error occurs.
@@ -848,80 +875,19 @@ public class MartBuilderXML extends DefaultHandler {
                 throw new AssociationException(BuilderBundle.getString("unknownMartConstuctorType",mc.getClass().getName()));
         }
         
-        // Check for partitioned table provider.
-        Map schemas = new HashMap();
-        Collection initialSchemas = new HashSet(mart.getSchemas());
-        String parentSchemaName = null;
-        for (Iterator i = initialSchemas.iterator(); i.hasNext(); ) {
+        // Write out each schema.
+        Set relations = new TreeSet();
+        for (Iterator i = mart.getSchemas().iterator(); i.hasNext(); ) {
             Schema schema = (Schema)i.next();
             if (schema instanceof SchemaGroup) {
-                // Cannot nest these.
-                if (parentSchemaName != null)
-                    throw new AssertionError(BuilderBundle.getString("nestedSchemaGroup"));
-                parentSchemaName = schema.getName();
-                schemas.putAll(((SchemaGroup)schema).getSchemas());
-                schemas.put("__PARENT__SCHEMA", schema);
+                this.openElement("schemaGroup");
+                this.writeAttribute("name", schema.getName());
+                for (Iterator j = ((SchemaGroup)schema).getSchemas().values().iterator(); j.hasNext(); )
+                    this.writeSchema((Schema)j.next(), relations);
+                this.closeElement("schemaGroup");
             } else {
-                schemas.put(schema.getName(), schema);
+                this.writeSchema(schema, relations);
             }
-        }
-        // Was it partitioned?
-        if (parentSchemaName != null) {
-            this.openElement("schemaGroup");
-            this.writeAttribute("name", parentSchemaName);
-        }
-        
-        // Write out table providers.
-        Set relations = new TreeSet();
-        for (Iterator i = schemas.keySet().iterator(); i.hasNext(); ) {
-            String label = (String)i.next();
-            Schema schema = (Schema)schemas.get(label);
-            // What kind of tbl prov is it?
-            // JDBC?
-            if (schema instanceof JDBCSchema) {
-                this.openElement("jdbcSchema");
-                JDBCSchema jdbcSchema = (JDBCSchema)schema;
-                
-                if (jdbcSchema.getDriverClassLocation()!=null)
-                    this.writeAttribute("driverClassLocation", jdbcSchema.getDriverClassLocation().getPath());
-                this.writeAttribute("driverClassName", jdbcSchema.getDriverClassName());
-                this.writeAttribute("url", jdbcSchema.getJDBCURL());
-                this.writeAttribute("username", jdbcSchema.getUsername());
-                if (jdbcSchema.getPassword() != null)
-                    this.writeAttribute("password", jdbcSchema.getPassword());
-                this.writeAttribute("name", jdbcSchema.getName());
-                this.writeAttribute("keyguessing", jdbcSchema.isKeyGuessing()?"true":"false");
-                if (parentSchemaName != null)
-                    this.writeAttribute("partitionLabel", label);
-            }
-            // Partitioned table provider? (Supplying us with overview tables).
-            else if (schema instanceof SchemaGroup) {
-                // Can ignore as header already open.
-            }
-            // Others?
-            else
-                throw new AssociationException(BuilderBundle.getString("unknownSchemaType",schema.getClass().getName()));
-            
-            // Write out the contents, and note the relations.
-            this.writeSchemaContents(schema, relations);
-            
-            // What kind of tbl prov was it?
-            // JDBC?
-            if ((schema instanceof JDBCSchema) || (schema instanceof JDBCSchema)) {
-                this.closeElement("jdbcSchema");
-            }
-            // Partitioned table provider? (Supplying us with overview tables).
-            else if (schema instanceof SchemaGroup) {
-                // Can ignore as footer will be closed later.
-            }
-            // Others?
-            else
-                throw new AssociationException(BuilderBundle.getString("unknownSchemaType",schema.getClass().getName()));
-        }
-        
-        // Check for partitioned table provider.
-        if (parentSchemaName != null) {
-            this.closeElement("schemaGroup");
         }
         
         // Write out relations. WITH IDS.

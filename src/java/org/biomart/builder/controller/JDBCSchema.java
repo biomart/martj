@@ -167,7 +167,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
             Class loadedDriverClass = null;
             if (this.driverClassLocation != null) {
                 try {
-                    ClassLoader classLoader = URLClassLoader.newInstance(new URL[]{this.driverClassLocation.toURL()});
+                    ClassLoader classLoader =  URLClassLoader.newInstance(new URL[]{this.driverClassLocation.toURL()});
                     loadedDriverClass = classLoader.loadClass(this.driverClassName);
                 } catch (ClassNotFoundException e) {
                     throw new AssociationException(BuilderBundle.getString("driverClassNotFound"));
