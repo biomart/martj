@@ -1,5 +1,5 @@
 /*
- * TableProviderDialog.java
+ * SchemaManagementDialog.java
  *
  * Created on 25 April 2006, 16:09
  */
@@ -33,6 +33,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -42,34 +43,33 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.filechooser.FileFilter;
-import org.biomart.builder.controller.JDBCKeyGuessingTableProvider;
-import org.biomart.builder.controller.JDBCTableProvider;
-import org.biomart.builder.controller.SchemaTools;
-import org.biomart.builder.model.DataLink.JDBCDataLink;
-import org.biomart.builder.model.TableProvider;
+import org.biomart.builder.controller.JDBCSchema;
+import org.biomart.builder.controller.MartUtils;
+import org.biomart.builder.model.Schema;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Construct a new table provider based on user input.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 25th April 2006
+ * @version 0.1.2, 27th April 2006
  * @since 0.1
  */
-public class TableProviderDialog extends JDialog {
+public class SchemaManagementDialog extends JDialog {
     /**
      * Our parent schema.
      */
-    private TableProviderTabSet tableProviderTabSet;
+    private SchemaTabSet schemaTabSet;
     
     /**
      * The provider we created.
      */
-    private TableProvider tableProvider;
+    private Schema schema;
     
     /**
      * The dialog fields.
      */
     private JComboBox type;
+    private JCheckBox keyguessing;
     private JTextField name;
     private JTextField driverClass;
     private JTextField driverClassLocation;
@@ -83,13 +83,13 @@ public class TableProviderDialog extends JDialog {
     private JButton execute;
     
     /**
-     * Creates a new instance of TableProviderDialog.
+     * Creates a new instance of SchemaManagementDialog.
      */
-    private TableProviderDialog(final TableProviderTabSet tableProviderTabSet, String title, String executeButtonText, TableProvider template) {
-        super(tableProviderTabSet.getWindowTabSet().getSchemaTabSet().getMartBuilder(),
+    private SchemaManagementDialog(final SchemaTabSet schemaTabSet, String title, String executeButtonText, Schema template) {
+        super(schemaTabSet.getDataSetTabSet().getMartTabSet().getMartBuilder(),
                 title,
                 true);
-        this.tableProviderTabSet = tableProviderTabSet;
+        this.schemaTabSet = schemaTabSet;
         
         // create dialog panel
         GridBagLayout gridBag = new GridBagLayout();
@@ -117,9 +117,9 @@ public class TableProviderDialog extends JDialog {
         
         // create fields in dialog
         this.type = new JComboBox(new String[]{
-            BuilderBundle.getString("jdbcDMDTableProvider"),
-            BuilderBundle.getString("jdbcKeyGuessingTableProvider")
+            BuilderBundle.getString("jdbcSchema")
         });
+        this.keyguessing = new JCheckBox();
         this.name = new JTextField(20);
         this.driverClass = new JTextField(50);
         this.driverClassLocation = new JTextField(30);
@@ -158,6 +158,12 @@ public class TableProviderDialog extends JDialog {
         content.add(label);
         gridBag.setConstraints(this.type, fieldConstraints);
         content.add(this.type);
+        
+        label = new JLabel(BuilderBundle.getString("keyguessingLabel"));
+        gridBag.setConstraints(label, labelConstraints);
+        content.add(label);
+        gridBag.setConstraints(this.keyguessing, fieldConstraints);
+        content.add(this.keyguessing);
         
         label = new JLabel(BuilderBundle.getString("nameLabel"));
         gridBag.setConstraints(label, labelConstraints);
@@ -211,7 +217,7 @@ public class TableProviderDialog extends JDialog {
         // intercept the cancel button
         this.cancel.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                tableProvider = null;
+                schema = null;
                 hide();
             }
         });
@@ -219,26 +225,26 @@ public class TableProviderDialog extends JDialog {
         // intercept the test button
         this.test.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                TableProvider tableProvider = createTableProvider();
-                if (tableProvider != null) {
+                Schema testSchema = createSchema();
+                if (testSchema != null) {
                     boolean passedTest = false;
                     try {
-                        passedTest = SchemaTools.testTableProvider(tableProvider);
+                        passedTest = MartUtils.testSchema(testSchema);
                     } catch (Throwable t) {
                         passedTest = false;
-                        tableProviderTabSet.getWindowTabSet().getSchemaTabSet().getMartBuilder().showStackTrace(t);
+                        schemaTabSet.getDataSetTabSet().getMartTabSet().getMartBuilder().showStackTrace(t);
                     }
                     // Tell the user what happened.
                     if (passedTest) {
                         JOptionPane.showMessageDialog(
                                 content,
-                                BuilderBundle.getString("tblProvTestPassed"),
+                                BuilderBundle.getString("schemaTestPassed"),
                                 BuilderBundle.getString("testTitle"),
                                 JOptionPane.INFORMATION_MESSAGE);
                     } else {
                         JOptionPane.showMessageDialog(
                                 content,
-                                BuilderBundle.getString("tblProvTestFailed"),
+                                BuilderBundle.getString("schemaTestFailed"),
                                 BuilderBundle.getString("testTitle"),
                                 JOptionPane.ERROR_MESSAGE);
                     }
@@ -249,8 +255,8 @@ public class TableProviderDialog extends JDialog {
         // intercept the execute button
         this.execute.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                tableProvider = createTableProvider();
-                if (tableProvider != null) hide();
+                schema = createSchema();
+                if (schema != null) hide();
             }
         });
         // make it the default button.
@@ -278,29 +284,31 @@ public class TableProviderDialog extends JDialog {
     /**
      * Resets the fields to their default values.
      */
-    private void resetFields(TableProvider template) {
-        if (template == null) {
+    private void resetFields(Schema template) {
+        if (template instanceof JDBCSchema) {
+            JDBCSchema jdbcSchema = (JDBCSchema)template;
+            this.type.setSelectedItem(BuilderBundle.getString("jdbcSchema"));
+            this.type.setEnabled(false); // Gray out as we can't change this property.
+            this.keyguessing.setSelected(jdbcSchema.isKeyGuessing());
+            this.name.setText(template.getName());
+            this.name.setEnabled(false); // Gray out as we can't change this property.
+            this.driverClass.setText(jdbcSchema.getDriverClassName());
+            this.driverClassLocation.setText(
+                    jdbcSchema.getDriverClassLocation() == null
+                    ? null
+                    : jdbcSchema.getDriverClassLocation().toString());
+            this.jdbcURL.setText(jdbcSchema.getJDBCURL());
+            this.username.setText(jdbcSchema.getUsername());
+            this.password.setText(jdbcSchema.getPassword());
+        } else {
             this.type.setSelectedIndex(0);
+            this.keyguessing.setSelected(false);
             this.name.setText(null);
             this.driverClass.setText(null);
             this.driverClassLocation.setText(null);
             this.jdbcURL.setText(null);
             this.username.setText(null);
             this.password.setText(null);
-        } else if (template instanceof JDBCDataLink) {
-            JDBCDataLink dataLink = (JDBCDataLink)template;
-            if (template instanceof JDBCTableProvider) this.type.setSelectedItem(BuilderBundle.getString("jdbcDMDTableProvider"));
-            else if (template instanceof JDBCKeyGuessingTableProvider) this.type.setSelectedItem(BuilderBundle.getString("jdbcKeyGuessingTableProvider"));
-            this.type.setEnabled(false); // Gray out as we can't change this property.
-            this.name.setText(template.getName());
-            this.driverClass.setText(dataLink.getDriverClassName());
-            this.driverClassLocation.setText(
-                    dataLink.getDriverClassLocation() == null
-                    ? null
-                    : dataLink.getDriverClassLocation().toString());
-            this.jdbcURL.setText(dataLink.getJDBCURL());
-            this.username.setText(dataLink.getUsername());
-            this.password.setText(dataLink.getPassword());
         }
     }
     
@@ -356,35 +364,31 @@ public class TableProviderDialog extends JDialog {
     /**
      * Creates a table provider from the fields given.
      */
-    private TableProvider createTableProvider() {
+    private Schema createSchema() {
         if (!this.validateFields()) return null;
         else {
             try {
                 String type = (String)this.type.getSelectedItem();
-                String driverClassName = this.driverClass.getText();
-                String driverClassLocation = this.driverClassLocation.getText();
-                String url = this.jdbcURL.getText();
-                String username = this.username.getText();
-                String password = new String(this.password.getPassword());
-                String name = this.name.getText();
-                if (type.equals(BuilderBundle.getString("jdbcDMDTableProvider")))
-                    return SchemaTools.createJDBCTableProvider(
+                if (type.equals(BuilderBundle.getString("jdbcSchema"))) {
+                    boolean keyguessing = this.keyguessing.isSelected();
+                    String driverClassName = this.driverClass.getText();
+                    String driverClassLocation = this.driverClassLocation.getText();
+                    String url = this.jdbcURL.getText();
+                    String username = this.username.getText();
+                    String password = new String(this.password.getPassword());
+                    String name = this.name.getText();
+                    return MartUtils.createJDBCSchema(
                             driverClassLocation == null ? null : new File(driverClassLocation),
                             driverClassName,
                             url,
                             username,
                             password,
-                            name);
-                else if (type.equals(BuilderBundle.getString("jdbcKeyGuessingTableProvider")))
-                    return SchemaTools.createJDBCKeyGuessingTableProvider(
-                            driverClassLocation == null ? null : new File(driverClassLocation),
-                            driverClassName,
-                            url,
-                            username,
-                            password,
-                            name);
+                            name,
+                            keyguessing
+                            );
+                }
             } catch (Throwable t) {
-                this.tableProviderTabSet.getWindowTabSet().getSchemaTabSet().getMartBuilder().showStackTrace(t);
+                this.schemaTabSet.getDataSetTabSet().getMartTabSet().getMartBuilder().showStackTrace(t);
             }
             return null;
         }
@@ -400,37 +404,37 @@ public class TableProviderDialog extends JDialog {
     /**
      * Static method which allows the user to create a new table provider.
      */
-    public static TableProvider createTableProvider(TableProviderTabSet tableProviderTabSet) {
-        TableProviderDialog dialog = new TableProviderDialog(
-                tableProviderTabSet,
-                BuilderBundle.getString("newTblProvDialogTitle"),
+    public static Schema createSchema(SchemaTabSet schemaTabSet) {
+        SchemaManagementDialog dialog = new SchemaManagementDialog(
+                schemaTabSet,
+                BuilderBundle.getString("newSchemaDialogTitle"),
                 BuilderBundle.getString("addButton"),
                 null);
-        dialog.setLocationRelativeTo(tableProviderTabSet.getWindowTabSet().getSchemaTabSet().getMartBuilder());
+        dialog.setLocationRelativeTo(schemaTabSet.getDataSetTabSet().getMartTabSet().getMartBuilder());
         dialog.show();
-        return dialog.tableProvider;
+        return dialog.schema;
     }
     
     /**
      * Static method which allows the user to modify an existing table provider.
      */
-    public static boolean modifyTableProvider(TableProviderTabSet tableProviderTabSet, TableProvider tableProvider) {
-        TableProviderDialog dialog = new TableProviderDialog(
-                tableProviderTabSet,
-                BuilderBundle.getString("modifyTblProvDialogTitle"),
+    public static boolean modifySchema(SchemaTabSet schemaTabSet, Schema schema) {
+        SchemaManagementDialog dialog = new SchemaManagementDialog(
+                schemaTabSet,
+                BuilderBundle.getString("modifySchemaDialogTitle"),
                 BuilderBundle.getString("modifyButton"),
-                tableProvider);
-        dialog.setLocationRelativeTo(tableProviderTabSet.getWindowTabSet().getSchemaTabSet().getMartBuilder());
+                schema);
+        dialog.setLocationRelativeTo(schemaTabSet.getDataSetTabSet().getMartTabSet().getMartBuilder());
         dialog.show();
-        if (dialog.tableProvider != null && dialog.tableProvider instanceof JDBCDataLink) {
-            JDBCDataLink dataLink = (JDBCDataLink)tableProvider;
-            JDBCDataLink dialogDataLink = (JDBCDataLink)dialog.tableProvider;
-            tableProvider.setName(dialog.tableProvider.getName());
-            dataLink.setDriverClassName(dialogDataLink.getDriverClassName());
-            dataLink.setDriverClassLocation(dialogDataLink.getDriverClassLocation());
-            dataLink.setJDBCURL(dialogDataLink.getJDBCURL());
-            dataLink.setUsername(dialogDataLink.getUsername());
-            dataLink.setPassword(dialogDataLink.getPassword());
+        if (dialog.schema != null && dialog.schema instanceof JDBCSchema) {
+            JDBCSchema originalSchema = (JDBCSchema)schema;
+            JDBCSchema dialogSchema = (JDBCSchema)dialog.schema;
+            originalSchema.setKeyGuessing(dialogSchema.isKeyGuessing());
+            originalSchema.setDriverClassName(dialogSchema.getDriverClassName());
+            originalSchema.setDriverClassLocation(dialogSchema.getDriverClassLocation());
+            originalSchema.setJDBCURL(dialogSchema.getJDBCURL());
+            originalSchema.setUsername(dialogSchema.getUsername());
+            originalSchema.setPassword(dialogSchema.getPassword());
             return true;
         } else {
             return false;

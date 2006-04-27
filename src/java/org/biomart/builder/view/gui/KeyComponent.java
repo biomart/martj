@@ -1,5 +1,5 @@
 /*
- * KeyDiagramComponent.java
+ * KeyComponent.java
  *
  * Created on 19 April 2006, 15:36
  */
@@ -41,21 +41,21 @@ import org.biomart.builder.model.Key.PrimaryKey;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 24th April 2006
+ * @version 0.1.2, 27th April 2006
  * @since 0.1
  */
-public class KeyDiagramComponent extends BoxShapedDiagramComponent {
+public class KeyComponent extends BoxShapedComponent {
     /**
      * The component representing our parent box.
      */
-    private BoxShapedDiagramComponent parentComponent;
+    private BoxShapedComponent parentComponent;
     
     /**
      * The constructor constructs an object around a given
      * object, and associates with a given display.
      */
-    public KeyDiagramComponent(Key key, Diagram parentDisplay, BoxShapedDiagramComponent parentComponent) {
-        super(key, parentDisplay);
+    public KeyComponent(Key key, Diagram diagram, BoxShapedComponent parentComponent) {
+        super(key, diagram);
         this.parentComponent = parentComponent;
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         // Create the border and set up the colors and fonts.
@@ -81,7 +81,7 @@ public class KeyDiagramComponent extends BoxShapedDiagramComponent {
     /**
      * Gets our parent component.
      */
-    public BoxShapedDiagramComponent getParentComponent() {
+    public BoxShapedComponent getParentComponent() {
         return this.parentComponent;
     }
     

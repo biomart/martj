@@ -1,5 +1,5 @@
 /*
- * WindowTabSet.java
+ * DataSetTabSet.java
  *
  * Created on 19 April 2006, 10:58
  */
@@ -45,75 +45,76 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
-import org.biomart.builder.controller.SchemaTools;
-import org.biomart.builder.model.Schema;
+import org.biomart.builder.controller.MartUtils;
+import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.Table;
-import org.biomart.builder.model.Window;
+import org.biomart.builder.model.DataSet;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
- * Set of tabs to display a schema and set of windows.
+ * Set of tabs to display a mart and set of windows.
+ * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 25th April 2006
+ * @version 0.1.5, 27th April 2006
  * @since 0.1
  */
-public class WindowTabSet extends JTabbedPane {
+public class DataSetTabSet extends JTabbedPane {
     /**
      * Internal reference to the table provider tabs.
      */
-    private TableProviderTabSet tableProviderTabSet;
+    private SchemaTabSet schemaTabSet;
     
     /**
      * Internal reference to the list of windows, in order, mapped
      * to their view.
      */
-    private Map windowToTab = new HashMap();
+    private Map datasetToTab = new HashMap();
     
     /**
-     * The schema manager managing our schema.
+     * The mart manager managing our mart.
      */
-    private SchemaTabSet schemaTabSet;
+    private MartTabSet martTabSet;
     
     /**
-     * The schema we are viewing.
+     * The mart we are viewing.
      */
-    private Schema schema;
+    private Mart mart;
     
     /**
      * The constructor remembers who its daddy is.
      * @param martBuilder the parent MartBuilder to which this tabbed panel belongs.
      */
-    public WindowTabSet(SchemaTabSet schemaTabSet, Schema schema) {
+    public DataSetTabSet(MartTabSet martTabSet, Mart mart) {
         super();
-        this.schemaTabSet = schemaTabSet;
-        this.schema = schema;
+        this.martTabSet = martTabSet;
+        this.mart = mart;
         // Load the table providers.
-        this.tableProviderTabSet = new TableProviderTabSet(this);
-        // Set up the schema tab dummy placeholder.
+        this.schemaTabSet = new SchemaTabSet(this);
+        // Set up the mart tab dummy placeholder.
         this.addTab(BuilderBundle.getString("schemaTabName"), new JLabel());
-        // Set up the window tabs.
+        // Set up the dataset tabs.
         this.synchroniseTabs();
     }
     
     /**
-     * Return our schema.
+     * Return our mart.
      */
-    public Schema getSchema() {
-        return this.schema;
+    public Mart getMart() {
+        return this.mart;
     }
     
     /**
-     * Return our schema manager.
+     * Return our mart manager.
      */
-    public SchemaTabSet getSchemaTabSet() {
-        return this.schemaTabSet;
+    public MartTabSet getMartTabSet() {
+        return this.martTabSet;
     }
     
     /**
      * Return our table provider tab set.
      */
-    public TableProviderTabSet getTableProviderTabSet() {
-        return this.tableProviderTabSet;
+    public SchemaTabSet getSchemaTabSet() {
+        return this.schemaTabSet;
     }
     
     /**
@@ -123,67 +124,67 @@ public class WindowTabSet extends JTabbedPane {
     public void setSelectedIndex(int selectedIndex) {
         int schemaTabIndex = this.indexOfTab(BuilderBundle.getString("schemaTabName"));
         Component selectedComponent = this.getComponentAt(selectedIndex);
-        if (selectedComponent instanceof WindowTab) {
+        if (selectedComponent instanceof DataSetTab) {
             this.setComponentAt(schemaTabIndex, new JLabel()); // Dummy placeholder
-            WindowTab windowTab = (WindowTab)selectedComponent;
-            windowTab.attachTableProviderTabSet(this, this.tableProviderTabSet);
+            DataSetTab datasetTab = (DataSetTab)selectedComponent;
+            datasetTab.attachSchemaTabSet(this, this.schemaTabSet);
         } else {
-            this.tableProviderTabSet.setAdaptor(new SchemaDiagramModifier(this));
-            this.setComponentAt(schemaTabIndex, this.tableProviderTabSet);
+            this.schemaTabSet.setDiagramModifier(new SchemaDiagramModifier(this));
+            this.setComponentAt(schemaTabIndex, this.schemaTabSet);
         }
         super.setSelectedIndex(selectedIndex);
     }
     
     /**
-     * Synchronises the schema.
+     * Synchronises the mart.
      */
     public void synchroniseSchema() {
         try {
-            SchemaTools.synchroniseSchemaTableProviders(this.schema);
+            MartUtils.synchroniseMartSchemas(this.mart);
             this.synchroniseTabs();
-            this.schemaTabSet.setModifiedStatus(true);
+            this.martTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
-            this.schemaTabSet.getMartBuilder().showStackTrace(t);
+            this.martTabSet.getMartBuilder().showStackTrace(t);
         }
     }
     
     /**
-     * Syncs our windows with our schema.
+     * Syncs our windows with our mart.
      */
     public void synchroniseTabs() {
         // Synchronise our windows.
         try {
-            SchemaTools.synchroniseSchemaWindows(this.schema);
+            MartUtils.synchroniseMartDataSets(this.mart);
         } catch (Throwable t) {
-            this.schemaTabSet.getMartBuilder().showStackTrace(t);
+            this.martTabSet.getMartBuilder().showStackTrace(t);
         }
-        // Add all schema windows that we don't have yet.
-        List schemaWindows = new ArrayList(this.schema.getWindows());
-        for (Iterator i = schemaWindows.iterator(); i.hasNext(); ) {
-            Window window = (Window)i.next();
-            if (!this.windowToTab.containsKey(window)) this.addWindowTab(window);
+        // Add all mart windows that we don't have yet.
+        List martDataSets = new ArrayList(this.mart.getDataSets());
+        for (Iterator i = martDataSets.iterator(); i.hasNext(); ) {
+            DataSet dataset = (DataSet)i.next();
+            if (!this.datasetToTab.containsKey(dataset)) this.addDataSetTab(dataset);
         }
-        // Remove all our windows that are not in the schema.
-        List candidates = new ArrayList(this.windowToTab.keySet());
-        for (Iterator i = candidates.iterator(); i.hasNext(); ) {
-            Window window = (Window)i.next();
-            if (!schemaWindows.contains(window)) this.removeWindowTab(window);
+        // Remove all our windows that are not in the mart.
+        martDataSets = new ArrayList(this.datasetToTab.keySet());
+        for (Iterator i = martDataSets.iterator(); i.hasNext(); ) {
+            DataSet dataset = (DataSet)i.next();
+            if (!martDataSets.contains(dataset)) this.removeDataSetTab(dataset);
         }
         // Synchronise our tab view contents.
         for (int i = 1; i < this.getTabCount(); i++) {
-            WindowTab windowTab = (WindowTab)this.getComponentAt(i);
-            windowTab.synchroniseDatasetDiagram();
+            DataSetTab datasetTab = (DataSetTab)this.getComponentAt(i);
+            datasetTab.synchroniseDatasetDiagram();
         }
         // Synchronise the table provider views.
-        this.tableProviderTabSet.synchroniseTabs();
+        this.schemaTabSet.synchroniseTabs();
         // Redraw.
         this.validate();
     }
     
     /**
-     * Confirms with user whether they really want to remove this window.
+     * Confirms with user whether they really want to remove this dataset.
      */
-    public void confirmRemoveWindow(Window window) {
+    public void confirmRemoveDataSet(DataSet dataset) {
         // Must confirm action first.
         int choice = JOptionPane.showConfirmDialog(
                 this,
@@ -193,46 +194,46 @@ public class WindowTabSet extends JTabbedPane {
                 );
         if (choice == JOptionPane.YES_OPTION) {
             try {
-                SchemaTools.removeWindowFromSchema(this.schema, window);
-                this.removeWindowTab(window);
-                this.schemaTabSet.setModifiedStatus(true);
+                MartUtils.removeDataSetFromSchema(this.mart, dataset);
+                this.removeDataSetTab(dataset);
+                this.martTabSet.setModifiedStatus(true);
                 // Nasty hack to force redraw.
                 int componentIndex = this.indexOfTab(BuilderBundle.getString("schemaTabName"));
                 this.setSelectedIndex(componentIndex);
             } catch (Throwable t) {
-                this.schemaTabSet.getMartBuilder().showStackTrace(t);
+                this.martTabSet.getMartBuilder().showStackTrace(t);
             }
         }
     }
     
     /**
-     * Removes a window and tab.
+     * Removes a dataset and tab.
      */
-    private void removeWindowTab(Window window) {
-        WindowTab windowTab = (WindowTab)this.windowToTab.get(window);
-        this.remove(windowTab);
-        this.windowToTab.remove(window);
+    private void removeDataSetTab(DataSet dataset) {
+        DataSetTab datasetTab = (DataSetTab)this.datasetToTab.get(dataset);
+        this.remove(datasetTab);
+        this.datasetToTab.remove(dataset);
     }
     
     /**
      * Creates a new tab based around a given table.
      */
-    private void addWindowTab(Window window) {
+    private void addDataSetTab(DataSet dataset) {
         // Create tabs themselves.
-        WindowTab windowTab = new WindowTab(this, window);
-        this.addTab(window.getName(), windowTab);
+        DataSetTab datasetTab = new DataSetTab(this, dataset);
+        this.addTab(dataset.getName(), datasetTab);
         // Remember them.
-        this.windowToTab.put(window, windowTab);
+        this.datasetToTab.put(dataset, datasetTab);
     }
     
     /**
-     * Prompt for a name for a window.
+     * Prompt for a name for a dataset.
      */
-    private String getWindowName(String defaultResponse) {
+    private String getDataSetName(String defaultResponse) {
         // Get one from user.
         String name = (String)JOptionPane.showInputDialog(
-                this.schemaTabSet.getMartBuilder(),
-                BuilderBundle.getString("requestWindowName"),
+                this.martTabSet.getMartBuilder(),
+                BuilderBundle.getString("requestDataSetName"),
                 BuilderBundle.getString("questionTitle"),
                 JOptionPane.QUESTION_MESSAGE,
                 null,
@@ -249,83 +250,83 @@ public class WindowTabSet extends JTabbedPane {
     /**
      * Renames a table provider (and tab).
      */
-    public void renameWindow(Window window) {
+    public void renameDataSet(DataSet dataset) {
         // Update the table provider name and the tab name.
         try {
-            String newName = this.getWindowName(window.getName());
-            if (newName != null && !newName.equals(window.getName())) {
-                this.removeWindowTab(window);
-                SchemaTools.renameWindow(this.schema, window, newName);
-                this.addWindowTab(window);
-                this.setSelectedIndex(this.indexOfTab(newName));
-                this.schemaTabSet.setModifiedStatus(true);
+            String newName = this.getDataSetName(dataset.getName());
+            if (newName != null && !newName.equals(dataset.getName())) {
+                int tabIndex = this.indexOfTab(dataset.getName());
+                MartUtils.renameDataSet(this.mart, dataset, newName);
+                this.setTitleAt(tabIndex, newName);
+                this.martTabSet.setModifiedStatus(true);
             }
         } catch (Throwable t) {
-            this.schemaTabSet.getMartBuilder().showStackTrace(t);
+            this.martTabSet.getMartBuilder().showStackTrace(t);
         }
     }
     
     /**
-     * Create a single window.
+     * Create a single dataset.
      */
-    public void createWindow(Table table) {
+    public void createDataSet(Table table) {
         try {
-            Window window = SchemaTools.createWindow(this.schema, table, this.getWindowName(table.getName()));
+            MartUtils.createDataSet(this.mart, table, this.getDataSetName(table.getName()));
             this.synchroniseTabs();
-            this.schemaTabSet.setModifiedStatus(true);
+            this.martTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
-            this.schemaTabSet.getMartBuilder().showStackTrace(t);
+            this.martTabSet.getMartBuilder().showStackTrace(t);
         }
     }
     
     /**
      * Suggest windows.
      */
-    public void suggestWindows(Table table) {
+    public void suggestDataSets(Table table) {
         try {
-            SchemaTools.suggestWindows(this.schema, table, this.getWindowName(table.getName()));
+            MartUtils.suggestDataSets(this.mart, table, this.getDataSetName(table.getName()));
             this.synchroniseTabs();
-            this.schemaTabSet.setModifiedStatus(true);
+            this.martTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
-            this.schemaTabSet.getMartBuilder().showStackTrace(t);
+            this.martTabSet.getMartBuilder().showStackTrace(t);
         }
     }
     
     /**
      * Optimise stuff.
      */
-    public void optimiseRelations(Window window) {
+    public void optimiseDataSet(DataSet dataset) {
         try {
-            SchemaTools.optimiseWindow(window);
+            MartUtils.optimiseDataSet(dataset);
             this.synchroniseTabs();
-            this.schemaTabSet.setModifiedStatus(true);
+            this.martTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
-            this.schemaTabSet.getMartBuilder().showStackTrace(t);
+            this.martTabSet.getMartBuilder().showStackTrace(t);
         }
     }
     
     /**
-     * Construct a context menu for a given window view tab.
-     * @param window the window to use when the context menu items are chosen.
+     * Construct a context menu for a given dataset view tab.
+     * 
+     * @param dataset the dataset to use when the context menu items are chosen.
      * @return the popup menu.
      */
-    private JPopupMenu getWindowTabContextMenu(final Window window) {
+    private JPopupMenu getDataSetTabContextMenu(final DataSet dataset) {
         JPopupMenu contextMenu = new JPopupMenu();
         
-        JMenuItem close = new JMenuItem(BuilderBundle.getString("removeWindowTitle"));
-        close.setMnemonic(BuilderBundle.getString("removeWindowMnemonic").charAt(0));
+        JMenuItem close = new JMenuItem(BuilderBundle.getString("removeDataSetTitle"));
+        close.setMnemonic(BuilderBundle.getString("removeDataSetMnemonic").charAt(0));
         close.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                confirmRemoveWindow(window);
+                confirmRemoveDataSet(dataset);
             }
         });
         contextMenu.add(close);
         
-        JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameWindowTitle"));
-        rename.setMnemonic(BuilderBundle.getString("renameWindowMnemonic").charAt(0));
+        JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameDataSetTitle"));
+        rename.setMnemonic(BuilderBundle.getString("renameDataSetMnemonic").charAt(0));
         rename.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                renameWindow(window);
+                renameDataSet(dataset);
             }
         });
         contextMenu.add(rename);
@@ -346,10 +347,10 @@ public class WindowTabSet extends JTabbedPane {
             if (selectedIndex >= 0) {
                 Component selectedComponent = this.getComponentAt(selectedIndex);
                 // Respond appropriately.
-                if (selectedComponent instanceof WindowTab) {
+                if (selectedComponent instanceof DataSetTab) {
                     this.setSelectedIndex(selectedIndex);
-                    Window window = ((WindowTab)selectedComponent).getWindow();
-                    this.getWindowTabContextMenu(window).show(this, evt.getX(), evt.getY());
+                    DataSet dataset = ((DataSetTab)selectedComponent).getDataSet();
+                    this.getDataSetTabContextMenu(dataset).show(this, evt.getX(), evt.getY());
                     eventProcessed = true;
                 }
             }
@@ -361,11 +362,11 @@ public class WindowTabSet extends JTabbedPane {
     /**
      * This is a custom JPanel which knows how to synchroniseTabs it's children.
      */
-    private class WindowTab extends JPanel {
+    private class DataSetTab extends JPanel {
         /**
-         * The window we are viewing.
+         * The dataset we are viewing.
          */
-        private Window window;
+        private DataSet dataset;
         
         /**
          * The display area.
@@ -373,30 +374,30 @@ public class WindowTabSet extends JTabbedPane {
         private JPanel displayArea;
         
         /**
-         * Our window button.
+         * Our dataset button.
          */
         private JRadioButton windowButton;
         
         /**
          * The dataset view.
          */
-        private TableDiagram datasetDiagram;
+        private SchemaDiagram datasetDiagram;
         
         /**
          * This constructor builds a pair of switcher-style buttons which alternate
-         * between window and dataset view.
-         *
-         * @param windowView the window view.
+         * between dataset and dataset view.
+         * 
+         * @param windowView the dataset view.
          * @param datasetDiagram the dataset view.
          */
-        public WindowTab(WindowTabSet windowTabSet, Window window) {
+        public DataSetTab(DataSetTabSet datasetTabSet, DataSet dataset) {
             super(new BorderLayout());
-            this.window = window;
+            this.dataset = dataset;
             // Create display part of the tab.
             this.displayArea = new JPanel(new CardLayout());
             // Dataset card first.
-            this.datasetDiagram = new TableDiagram(windowTabSet, window.getDataSet());
-            this.datasetDiagram.setAdaptor(new DataSetDiagramModifier(windowTabSet, window));
+            this.datasetDiagram = new SchemaDiagram(datasetTabSet, dataset);
+            this.datasetDiagram.setDiagramModifier(new DataSetDiagramModifier(datasetTabSet, dataset));
             JScrollPane scroller = new JScrollPane(this.datasetDiagram);
             scroller.getViewport().setBackground(this.datasetDiagram.getBackground());
             displayArea.add(scroller, "DATASET_CARD");
@@ -413,7 +414,7 @@ public class WindowTabSet extends JTabbedPane {
                 }
             });
             switcher.add(datasetButton);
-            // Window button.
+            // DataSet button.
             this.windowButton = new JRadioButton(BuilderBundle.getString("windowButtonName"));
             windowButton.addActionListener(new ActionListener(){
                 public void actionPerformed(ActionEvent e) {
@@ -441,18 +442,18 @@ public class WindowTabSet extends JTabbedPane {
         }
         
         /**
-         * Returns our window.
+         * Returns our dataset.
          */
-        public Window getWindow() {
-            return this.window;
+        public DataSet getDataSet() {
+            return this.dataset;
         }
         
         /**
          * Attach the table provider tab set.
          */
-        public void attachTableProviderTabSet(WindowTabSet windowTabSet, TableProviderTabSet tableProviderTabSet) {
-            tableProviderTabSet.setAdaptor(new WindowDiagramModifier(windowTabSet, this.window));
-            this.displayArea.add(tableProviderTabSet, "WINDOW_CARD");
+        public void attachSchemaTabSet(DataSetTabSet datasetTabSet, SchemaTabSet schemaTabSet) {
+            schemaTabSet.setDiagramModifier(new WindowDiagramModifier(datasetTabSet, this.dataset));
+            this.displayArea.add(schemaTabSet, "WINDOW_CARD");
             // Nasty hack to force table provider set to redisplay.
             if (this.windowButton.isSelected()) this.windowButton.doClick();
         }

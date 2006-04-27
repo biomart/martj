@@ -1,5 +1,5 @@
 /*
- * PartitionedTableProvider.java
+ * SchemaGroup.java
  * Created on 27 March 2006, 11:49
  */
 
@@ -45,74 +45,77 @@ import org.biomart.builder.model.Table.GenericTable;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
- * <p>A {@link PartitionedTableProvider} represents a collection of {@link TableProvider} objects
+ * <p>A {@link SchemaGroup} represents a collection of {@link Schema} objects
  * which all have exactly the same table names and column names. It assigns each of them
  * a name by which they can be referred to later.</p>
  * <p>When generating a mart from this later, the mart will act as though the main table has an
  * extra column containing the names of these partitions, and has been set to partition itself on
  * those values.</p>
- * <p>As the {@link PartitionedTableProvider} is a {@link TableProvider} itself, all operations on it
- * which modify the structure of the tables are passed on to each of its member {@link TableProvider}
+ * <p>As the {@link SchemaGroup} is a {@link Schema} itself, all operations on it
+ * which modify the structure of the tables are passed on to each of its member {@link Schema}
  * objects in turn.</p>
+ * 
+ * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 4th April 2006
+ * @version 0.1.5, 27th April 2006
  * @since 0.1
  */
-public interface PartitionedTableProvider extends TableProvider {
+public interface SchemaGroup extends Schema {
     /**
-     * Returns the label->provider map of {@link TableProvider} members of this partition. It will
+     * Returns the label->provider map of {@link Schema} members of this partition. It will
      * never return null but may return an empty map.
-     * @return the map of {@link TableProvider} options living in the partitions. Each key of the map
+     * 
+     * @return the map of {@link Schema} options living in the partitions. Each key of the map
      * is the label for the partition, with the values being the providers themselves..
      */
-    public Map getTableProviders();
+    public Map getSchemas();
     
     /**
-     * Retrieves the {@link TableProvider} with the given label from this partition. If it is not recognised,
+     * Retrieves the {@link Schema} with the given name from this partition. If it is not recognised,
      * an exception is thrown.
-     * @param label the label for the partition provider to retrieve.
+     * 
+     * 
+     * @param name the name for the partition provider to retrieve.
      * @return the matching provider.
-     * @throws NullPointerException if the label is null.
-     * @throws AssociationException if the label is not recognised.
+     * @throws AssociationException if the name is not recognised.
      */
-    public TableProvider getTableProvider(String label) throws NullPointerException, AssociationException;
+    public Schema getSchemaByName(String name) throws AssociationException;
     
     /**
-     * Adds a {@link TableProvider} to this partition with the given label. If it is already here,
-     * it throws an exception to say so. No check is made to see if the new {@link TableProvider}
+     * Adds a {@link Schema} to this partition with the given label. If it is already here,
+     * it throws an exception to say so. No check is made to see if the new {@link Schema}
      * is actually identical to the base one in terms of structure. An exception will be thrown if
-     * you try to nest {@link PartitionedTableProvider}s inside other ones.
-     * @param label the label for the partition this {@link TableProvider} represents.
-     * @param tableProvider the {@link TableProvider} to add as a new partition.
-     * @throws NullPointerException if the label or the provider are null.
+     * you try to nest {@link SchemaGroup}s inside other ones.
+     *  
+     * @param label the label for the partition this {@link Schema} represents.
+     * @param schema the {@link Schema to add as a new partition.
      * @throws AlreadyExistsException if the provider has already been set as a partition here.
-     * @throws AssociationException if the provider to be added is a {@link PartitionedTableProvider}.
+     * @throws AssociationException if the provider to be added is a {@link PartSchemaGroup
      */
-    public void addTableProvider(String label, TableProvider tableProvider) throws AlreadyExistsException, NullPointerException, AssociationException;
+    public void addSchema(Schema schema) throws AlreadyExistsException, AssociationException;
     
     /**
-     * Removes the {@link TableProvider} with the given label from this partition. If it is not recognised,
+     * Removes the {@link Schema} with the given label from this partition. If it is not recognised,
      * it is quietly ignored.
+     * 
      * @param label the label for the partition to remove.
-     * @throws NullPointerException if the label is null.
      */
-    public void removeTableProvider(String label) throws NullPointerException;
+    public void removeSchema(Schema schema);
     
     /**
      * The generic implementation uses a simple map to do the work.
      */
-    public class GenericPartitionedTableProvider extends GenericTableProvider implements PartitionedTableProvider {
+    public class GenericSchemaGroup extends GenericSchema implements SchemaGroup {
         /**
          * Internal reference to the map of member providers. Keys are the partition labels.
          */
-        private final Map tableProviders = new HashMap();
+        private final Map schemas = new HashMap();
         
         /**
          * The constructor creates a partitioned provider with the given name.
          * @param name the name for this new partitioned provider.
-         * @throws NullPointerException if the name is null.
          */
-        public GenericPartitionedTableProvider(String name) throws NullPointerException {
+        public GenericSchemaGroup(String name) {
             super(name);
         }
         
@@ -124,15 +127,15 @@ public interface PartitionedTableProvider extends TableProvider {
          */
         public void synchronise() throws SQLException, BuilderException {
             // Synchronise.
-            for (Iterator i = this.tableProviders.values().iterator(); i.hasNext(); ) {
-                TableProvider tp = (TableProvider)i.next();
-                tp.synchronise();
+            for (Iterator i = this.schemas.values().iterator(); i.hasNext(); ) {
+                Schema s = (Schema)i.next();
+                s.synchronise();
             }
             // Update our own list.
             // Clear it first.
             this.tables.clear();
             // Then create new tables based on first providers.
-            for (Iterator i = this.getFirstTableProvider().getTables().iterator(); i.hasNext(); ) {
+            for (Iterator i = this.getFirstSchema().getTables().iterator(); i.hasNext(); ) {
                 Table sourceTable = (Table)i.next();
                 Table targetTable = new GenericTable(sourceTable.getName(), this);
                 // Columns.
@@ -164,7 +167,7 @@ public interface PartitionedTableProvider extends TableProvider {
                 }
             }
             // Now do the relations.
-            for (Iterator i = this.getFirstTableProvider().getTables().iterator(); i.hasNext(); ) {
+            for (Iterator i = this.getFirstSchema().getTables().iterator(); i.hasNext(); ) {
                 Table sourceTable = (Table)i.next();
                 Table targetTable = this.getTableByName(sourceTable.getName());
                 // PKs only - everything involves a PK somewhere.
@@ -186,18 +189,15 @@ public interface PartitionedTableProvider extends TableProvider {
          * <p>This implementation returns the combination of unique values resulting from
          * delegating the call to all its subordinates.</p>
          */
-        public Collection getUniqueValues(Column column) throws NullPointerException, SQLException, AssociationException {
-            // Sanity check.
-            if (column == null)
-                throw new NullPointerException(BuilderBundle.getString("columnIsNull"));
+        public Collection getUniqueValues(Column column) throws SQLException, AssociationException {
             // Do it.
             Set values = new HashSet();
-            for (Iterator i = this.getTableProviders().values().iterator(); i.hasNext(); ) {
-                TableProvider tp = (TableProvider)i.next();
+            for (Iterator i = this.getSchemas().values().iterator(); i.hasNext(); ) {
+                Schema s = (Schema)i.next();
                 // Associate the column directly with the table when asking subordinate.
-                Table t = tp.getTableByName(column.getTable().getName());
+                Table t = s.getTableByName(column.getTable().getName());
                 // Look up the values with the disassociated column.
-                values.addAll(tp.getUniqueValues(t.getColumnByName(column.getName())));
+                values.addAll(s.getUniqueValues(t.getColumnByName(column.getName())));
             }
             return values;
         }
@@ -207,66 +207,58 @@ public interface PartitionedTableProvider extends TableProvider {
          * <p>This implementation unfortunately has to read all the data from all the providers
          * before it can work out which ones are unique, which may be very slow.</p>
          */
-        public int countUniqueValues(Column column) throws AssociationException, NullPointerException, SQLException {
+        public int countUniqueValues(Column column) throws AssociationException, SQLException {
             return this.getUniqueValues(column).size();
         }
         
         /**
-         * Internal function that returns the first member partition {@link TableProvider}.
+         * Internal function that returns the first member partition {@link Schema}.
+         * 
          * @return the first partition's provider.
          */
-        protected TableProvider getFirstTableProvider() {
-            return (TableProvider)this.tableProviders.values().toArray()[0];
+        protected Schema getFirstSchema() {
+            return (Schema)this.schemas.values().toArray()[0];
         }
         
         /**
          * {@inheritDoc}
          */
-        public Map getTableProviders() {
-            return this.tableProviders;
+        public Map getSchemas() {
+            return this.schemas;
         }
         
         /**
          * {@inheritDoc}
          */
-        public TableProvider getTableProvider(String label) throws NullPointerException, AssociationException {
+        public Schema getSchemaByName(String name) throws AssociationException {
             // Sanity check.
-            if (label == null)
-                throw new NullPointerException(BuilderBundle.getString("labelIsNull"));
-            if (!this.tableProviders.containsKey(label))
-                throw new AssociationException(BuilderBundle.getString("labelUnknown"));
+            if (!this.schemas.containsKey(name))
+                throw new AssociationException(BuilderBundle.getString("nameUnknown"));
             // Do it.
-            return (TableProvider)this.tableProviders.get(label);
+            return (Schema)this.schemas.get(name);
         }
         
         /**
          * {@inheritDoc}
          */
-        public void addTableProvider(String label, TableProvider tableProvider) throws AlreadyExistsException, NullPointerException, AssociationException {
+        public void addSchema(Schema schema) throws AlreadyExistsException, AssociationException {
             // Sanity check.
-            if (label == null)
-                throw new NullPointerException(BuilderBundle.getString("labelIsNull"));
-            if (tableProvider == null)
-                throw new NullPointerException(BuilderBundle.getString("tblprovIsNull"));
-            if (this.tableProviders.containsKey(label))
-                throw new AlreadyExistsException(BuilderBundle.getString("labelExists"), label);
-            if (tableProvider instanceof PartitionedTableProvider)
-                throw new AssociationException(BuilderBundle.getString("nestedTblProv"));
+            if (this.schemas.containsKey(schema.getName()))
+                throw new AlreadyExistsException(BuilderBundle.getString("schemaExists"), schema.getName());
+            if (schema instanceof SchemaGroup)
+                throw new AssociationException(BuilderBundle.getString("nestedSchema"));
             // Do it.
-            this.tableProviders.put(label,tableProvider);
+            this.schemas.put(schema.getName(), schema);
         }
         
         /**
          * {@inheritDoc}
          */
-        public void removeTableProvider(String label) throws NullPointerException {
-            // Sanity check.
-            if (label == null)
-                throw new NullPointerException(BuilderBundle.getString("labelIsNull"));
+        public void removeSchema(Schema schema) {
             // Do we need to do it?
-            if (!this.tableProviders.containsKey(label)) return;
+            if (!this.schemas.containsKey(schema.getName())) return;
             // Do it.
-            this.tableProviders.remove(label);
+            this.schemas.remove(schema.getName());
         }
         
         /**
@@ -275,9 +267,9 @@ public interface PartitionedTableProvider extends TableProvider {
         public String toString() {
             StringBuffer sb = new StringBuffer();
             sb.append("[");
-            for (Iterator i = this.tableProviders.values().iterator(); i.hasNext(); ) {
-                TableProvider tp = (TableProvider)i.next();
-                sb.append(tp.toString());
+            for (Iterator i = this.schemas.values().iterator(); i.hasNext(); ) {
+                Schema s = (Schema)i.next();
+                sb.append(s.toString());
                 if (i.hasNext()) sb.append(",");
             }
             sb.append("]");

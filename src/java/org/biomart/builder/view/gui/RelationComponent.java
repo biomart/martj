@@ -42,10 +42,10 @@ import org.biomart.builder.model.Relation;
  * are provided for sorting them, as they are not comparable within themselves.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 24th April 2006
+ * @version 0.1.2, 27th April 2006
  * @since 0.1
  */
-public class RelationDiagramComponent extends JComponent implements DiagramComponent {
+public class RelationComponent extends JComponent implements DiagramComponent {
     /**
      * Constant referring to the width of a relation shape.
      */
@@ -59,7 +59,7 @@ public class RelationDiagramComponent extends JComponent implements DiagramCompo
     /**
      * Internal reference to our display parent.
      */
-    private Diagram parentDisplay;
+    private Diagram diagram;
     
     /**
      * Internal reference to the object we represent.
@@ -69,16 +69,16 @@ public class RelationDiagramComponent extends JComponent implements DiagramCompo
     /**
      * The keys we link.
      */
-    private KeyDiagramComponent primaryKey;
-    private KeyDiagramComponent foreignKey;
+    private KeyComponent primaryKey;
+    private KeyComponent foreignKey;
     
     /**
      * The constructor constructs an object around a given
      * object, and associates with a given display.
      */
-    public RelationDiagramComponent(Relation relation, Diagram parentDisplay, KeyDiagramComponent primaryKey, KeyDiagramComponent foreignKey) {
+    public RelationComponent(Relation relation, Diagram diagram, KeyComponent primaryKey, KeyComponent foreignKey) {
         this.relation = relation;
-        this.parentDisplay = parentDisplay;
+        this.diagram = diagram;
         this.primaryKey = primaryKey;
         this.foreignKey = foreignKey;
         this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
@@ -87,14 +87,14 @@ public class RelationDiagramComponent extends JComponent implements DiagramCompo
     /**
      * Retrieves the primary key component.
      */
-    public KeyDiagramComponent getPrimaryKeyComponent() {
+    public KeyComponent getPrimaryKeyComponent() {
         return this.primaryKey;
     }
     
     /**
      * Retrieves the foreign key component.
      */
-    public KeyDiagramComponent getForeignKeyComponent() {
+    public KeyComponent getForeignKeyComponent() {
         return this.foreignKey;
     }
     
@@ -103,7 +103,7 @@ public class RelationDiagramComponent extends JComponent implements DiagramCompo
      * @return the parent.
      */
     public Diagram getDiagram() {
-        return this.parentDisplay;
+        return this.diagram;
     }
     
     /**
@@ -136,10 +136,10 @@ public class RelationDiagramComponent extends JComponent implements DiagramCompo
     public boolean contains(int x, int y) {
         return this.shape != null && this.shape.intersects(
                 new Rectangle2D.Double(
-                x - RelationDiagramComponent.RELATION_LINEWIDTH, 
-                y - RelationDiagramComponent.RELATION_LINEWIDTH, 
-                RelationDiagramComponent.RELATION_LINEWIDTH * 2,
-                RelationDiagramComponent.RELATION_LINEWIDTH * 2
+                x - RelationComponent.RELATION_LINEWIDTH, 
+                y - RelationComponent.RELATION_LINEWIDTH, 
+                RelationComponent.RELATION_LINEWIDTH * 2,
+                RelationComponent.RELATION_LINEWIDTH * 2
                 ));
     }
     
@@ -167,7 +167,7 @@ public class RelationDiagramComponent extends JComponent implements DiagramCompo
             // Build the basic menu.
             JPopupMenu contextMenu = this.getContextMenu();
             // Extend.
-            this.getDiagram().getAdaptor().customiseContextMenu(contextMenu, this.getRelation());
+            this.getDiagram().getDiagramModifier().customiseContextMenu(contextMenu, this.getRelation());
             // Display.
             contextMenu.show(this, evt.getX(), evt.getY());
             eventProcessed = true;
@@ -188,7 +188,7 @@ public class RelationDiagramComponent extends JComponent implements DiagramCompo
         Graphics2D g2d = (Graphics2D)g.create();
         // Do painting of this component.
         this.getDiagram().clearFlags();
-        this.getDiagram().getAdaptor().aboutToDraw(this.getRelation());
+        this.getDiagram().getDiagramModifier().aboutToDraw(this.getRelation());
         this.paintComponent(g2d, this.getFlags());
         // Clean up.
         g2d.dispose();
@@ -199,7 +199,7 @@ public class RelationDiagramComponent extends JComponent implements DiagramCompo
      */
     private int getFlags() {
         this.getDiagram().clearFlags();
-        this.getDiagram().getAdaptor().aboutToDraw(this.getRelation());
+        this.getDiagram().getDiagramModifier().aboutToDraw(this.getRelation());
         return this.getDiagram().getFlags();
     }
     
@@ -207,7 +207,7 @@ public class RelationDiagramComponent extends JComponent implements DiagramCompo
      * Work out what stroke to use.
      */
     private Stroke getStroke(int flags) {
-        return new BasicStroke(RelationDiagramComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
+        return new BasicStroke(RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     }
     
     /**

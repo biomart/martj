@@ -28,39 +28,42 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import org.biomart.builder.model.Window;
+import org.biomart.builder.model.DataSet;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
- * Adapts listener behaviour by adding in Window-specific stuff.
+ * Adapts listener behaviour by adding in DataSet-specific stuff.
+ * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.2, 21st April 2006
  * @since 0.1
  */
 public class WindowDiagramModifier extends SchemaDiagramModifier {
     /**
-     * Internal reference to our window.
+     * Internal reference to our dataset.
      */
-    private Window window;
+    private DataSet dataset;
     
     /**
      * 
-     * Creates a new instance of WindowDiagramModifier over
-     * a given window.
+     * Creates a new instance of DataSetDiagramModifier over
+     * a given dataset.
      * 
-     * @param window the window we are attached to.
+     * 
+     * @param dataset the dataset we are attached to.
      */
-    public WindowDiagramModifier(WindowTabSet windowTabSet, Window window) {
-        super(windowTabSet);
-        this.window = window;
+    public WindowDiagramModifier(DataSetTabSet datasetTabSet, DataSet dataset) {
+        super(datasetTabSet);
+        this.dataset = dataset;
     }
     
     /**
-     * Retrieve our window.
-     * @return our window.
+     * Retrieve our dataset.
+     * 
+     * @return our dataset.
      */
-    protected Window getWindow() {
-        return this.window;
+    protected DataSet getDataSet() {
+        return this.dataset;
     }
     
     /**
@@ -70,29 +73,29 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
         // Add separator.
         contextMenu.addSeparator();
         // Add our own stuff.
-        JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeWindowTitle"));
-        remove.setMnemonic(BuilderBundle.getString("removeWindowMnemonic").charAt(0));
+        JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeDataSetTitle"));
+        remove.setMnemonic(BuilderBundle.getString("removeDataSetMnemonic").charAt(0));
         remove.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getWindowTabSet().confirmRemoveWindow(window);
+                getDataSetTabSet().confirmRemoveDataSet(dataset);
             }
         });
         contextMenu.add(remove);
         
-        JMenuItem optimise = new JMenuItem(BuilderBundle.getString("optimiseWindowTitle"));
-        optimise.setMnemonic(BuilderBundle.getString("optimiseWindowMnemonic").charAt(0));
+        JMenuItem optimise = new JMenuItem(BuilderBundle.getString("optimiseDataSetTitle"));
+        optimise.setMnemonic(BuilderBundle.getString("optimiseDataSetMnemonic").charAt(0));
         optimise.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getWindowTabSet().optimiseRelations(window);
+                getDataSetTabSet().optimiseDataSet(dataset);
             }
         });
         contextMenu.add(optimise);
         
-        JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameWindowTitle"));
-        rename.setMnemonic(BuilderBundle.getString("renameWindowMnemonic").charAt(0));
+        JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameDataSetTitle"));
+        rename.setMnemonic(BuilderBundle.getString("renameDataSetMnemonic").charAt(0));
         rename.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getWindowTabSet().renameWindow(window);
+                getDataSetTabSet().renameDataSet(dataset);
             }
         });
         contextMenu.add(rename);

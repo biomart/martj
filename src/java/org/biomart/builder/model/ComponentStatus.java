@@ -68,12 +68,8 @@ public class ComponentStatus implements Comparable {
      * Note that the names of {@link ComponentStatus} objects are case-insensitive.
      * @param name the name of the {@link ComponentStatus} object.
      * @return the {@link ComponentStatus} object.
-     * @throws NullPointerException if the name is null.
      */
-    public static ComponentStatus get(String name) throws NullPointerException {
-        // Sanity check.
-        if (name == null)
-            throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
+    public static ComponentStatus get(String name) {
         // Convert to upper case.
         name = name.toUpperCase();
         // Do we already have this one?

@@ -75,16 +75,10 @@ public interface Column extends Comparable {
          * name nor the parent {@link Table} are null.
          * @param name the name of the {@link Column} to create.
          * @param table the parent {@link Table}
-         * @throws NullPointerException if either parameter is null.
          * @throws AlreadyExistsException if it was unable to add the {@link Column}
          * to the parent {@link Table} using {@link Table#addColumn(Column) addColumn()}.
          */
-        public GenericColumn(String name, Table table) throws AlreadyExistsException, NullPointerException {
-            // Sanity checks
-            if (name == null)
-                throw new NullPointerException(BuilderBundle.getString("columnIsNull"));
-            if (table == null)
-                throw new NullPointerException(BuilderBundle.getString("tableIsNull"));
+        public GenericColumn(String name, Table table) throws AlreadyExistsException {
             // Remember the values.
             this.name = name;
             this.table = table;

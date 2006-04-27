@@ -1,6 +1,6 @@
 /*
  * Schema.java
- * Created on 27 March 2006, 12:54
+ * Created on 23 March 2006, 15:07
  */
 
 /*
@@ -26,6 +26,7 @@ package org.biomart.builder.model;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -36,296 +37,281 @@ import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
- * The {@link Schema} contains the set of all {@link TableProvider}s that are providing
- * data to this mart. It also has one or more {@link Window}s onto the {@link Table}s provided
- * by these, from which {@link DataSet}s are constructed.
+ * <p>A {@link Schema} provides one or more {@link Table} objects with
+ * unique names for the user to use. It could be a relational database, or an XML
+ * document, or any other source of potentially tabular information.</p>
+ * <p>The generic implementation provided should suffice for most tasks involved with
+ * keeping track of the {@link Table}s a {@link Schema} provides.</p>
+ * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 25th April 2006
+ * @version 0.1.7, 27th April 2006
  * @since 0.1
  */
-public class Schema {
+public interface Schema extends Comparable, DataLink {
     /**
-     * Internal reference to the {@link TableProvider}s we are using for data.
+     * Returns the name of this {@link Schema}.
+     * 
+     * @return the name of this provider.
      */
-    private final Map tableProviders = new TreeMap();
+    public String getName();
+
+    /**
+     * Sets the name of this {@link Schema}.
+     * 
+     * @param name the new name of this provider.
+     */
+    public void setName(String name);
     
     /**
-     * Internal reference to the {@link Window}s onto the data we are using to
-     * construct the marts with.
+     * Synchronise this {@link Schema} with the data source that is
+     * providing its tables. Synchronisation means checking the list of {@link Table}s
+     * available and drop/add any that have changed, then check each {@link Column}.
+     * and {@link Key} and {@link Relation} and update those too.
+     * Any {@link Key} or {@link Relation} that was created by the user and is still valid,
+     * ie. the underlying columns still exist, will not be affected by this operation.
+     * 
+     * @throws SQLException if there was a problem connecting to the data source.
+     * @throws BuilderException if there was any other kind of problem.
      */
-    private final Map windows = new TreeMap();
+    public void synchronise() throws SQLException, BuilderException;
     
     /**
-     * Returns the set of {@link TableProvider} objects which this {@link Schema} includes
-     * when building a mart. The set may be empty but it is never null.
-     * @return a set of {@link TableProvider} objects.
+     * Adds a {@link Table} to this provider. The table must not be null, and
+     * must not already exist (ie. with the same name).
+     * @param table the {@link Table} to add.
+     * @throws AlreadyExistsException if another one with the same name already exists.
+     * @throws AssociationException if the table doesn'table belong to this provider.
      */
-    public Collection getTableProviders() {
-        return this.tableProviders.values();
-    }
+    public void addTable(Table table) throws AlreadyExistsException, AssociationException;
     
     /**
-     * Returns the {@link TableProvider} object with the given name. If it doesn't exist, null is returned.
-     * If the name was null, you'll get an exception.
-     * @param name the name to look for.
-     * @return a {@link TableProvider} object matching the specified name.
-     * @throws NullPointerException if the name was null.
+     * Returns all the {@link Table}s this provider provides. The set returned may be
+     * empty but it will never be null.
+     * @return the set of all {@link Table}s in this provider.
      */
-    public TableProvider getTableProviderByName(String name) throws NullPointerException {
-        // Sanity check.
-        if (name == null)
-            throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
-        // Do we have it?
-        if (!this.tableProviders.containsKey(name)) return null;
-        // Return it.
-        return (TableProvider)this.tableProviders.get(name);
-    }
+    public Collection getTables();
     
     /**
-     * Adds a {@link TableProvider} to the set which this {@link Schema} includes. An
-     * exception is thrown if it already is in this set, or if it is null.
-     * @param tableProvider the {@link TableProvider} to add.
-     * @throws AlreadyExistsException if the provider is already in this schema.
-     * @throws NullPointerException if the provider is null.
+     * Returns the {@link Table}s from this provider with the given name. If there is
+     * no such table, the method will return null.
+     * @param name the name of the {@link Table} to retrieve.
+     * @return the matching {@link Table}s from this provider.
      */
-    public void addTableProvider(TableProvider tableProvider) throws NullPointerException, AlreadyExistsException {
-        // Sanity check.
-        if (tableProvider == null)
-            throw new NullPointerException(BuilderBundle.getString("tblprovIsNull"));
-        if (this.tableProviders.containsKey(tableProvider.getName()))
-            throw new AlreadyExistsException(BuilderBundle.getString("tblprovExists"),tableProvider.getName());
-        // Do it.
-        this.tableProviders.put(tableProvider.getName(),tableProvider);
-    }
+    public Table getTableByName(String name);
     
     /**
-     * Renames a {@link TableProvider}. An
-     * exception is thrown if that names has already been used, or if it is null.
-     * @param tableProvider the {@link TableProvider} to rename.
-     * @param name the new name for it.
-     * @throws AlreadyExistsException if the provider name is already in this schema.
-     * @throws AssociationException if the provider does not belong to us. 
-     * @throws NullPointerException if the provider or name is null.
+     * Returns a set of unique values in a given column, which may include null. The
+     * set returned will never be null itself.
+     * @param column the {@link Column} to get unique values for.
+     * @return a set of unique values in a given column.
+     * @throws AssociationException if the column doesn't belong to us.
+     * @throws SQLException if there was any problem loading the values.
      */
-    public void renameTableProvider(TableProvider tableProvider, String name) throws NullPointerException, AlreadyExistsException, AssociationException {
-        // Sanity check.
-        if (tableProvider == null)
-            throw new NullPointerException(BuilderBundle.getString("tblprovIsNull"));
-        if (name == null)
-            throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
-        if (this.tableProviders.containsKey(name))
-            throw new AlreadyExistsException(BuilderBundle.getString("tblprovExists"),tableProvider.getName());
-        if (!this.tableProviders.values().contains(tableProvider))
-            throw new AssociationException(BuilderBundle.getString("tblProvSchemaMismatch"));
-        // Do it.
-        this.tableProviders.remove(tableProvider.getName());
-        tableProvider.setName(name);
-        this.tableProviders.put(tableProvider.getName(),tableProvider);
-    }
+    public Collection getUniqueValues(Column column) throws AssociationException, SQLException;
     
     /**
-     * Removes a {@link TableProvider} from the set which this {@link Schema} includes. An
-     * exception is thrown if it is null. If it is not found, nothing happens and it is ignored quietly.
-     * Any {@link Window}s centred on this {@link TableProvider} are also removed.
-     * @param tableProvider the {@link TableProvider} to remove.
-     * @throws NullPointerException if the provider is null.
+     * Counts the unique values in a given column, which may include null.
+     * @param column the {@link Column} to get unique values for.
+     * @return a count of the unique values in a given column.
+     * @throws AssociationException if the column doesn't belong to us.
+     * @throws SQLException if there was any problem counting the values.
      */
-    public void removeTableProvider(TableProvider tableProvider) throws NullPointerException {
-        // Sanity check.
-        if (tableProvider == null)
-            throw new NullPointerException(BuilderBundle.getString("tblprovIsNull"));
-        // Do we have it?
-        if (!this.tableProviders.containsKey(tableProvider.getName())) return;
-        // Do it.
-        List windows = new ArrayList(this.getWindows());
-        for (Iterator i = windows.iterator(); i.hasNext(); ) {
-            Window w = (Window)i.next();
-            if (w.getCentralTable().getTableProvider().equals(tableProvider)) this.removeWindow(w);
+    public int countUniqueValues(Column column) throws AssociationException, SQLException;
+    
+    /**
+     * Returns a collection of all the keys from all the tables in this provider which
+     * have relations referring to tables in other table providers.
+     * @return a set of keys with relations linking to tables in other table providers.
+     */
+    public Collection getExternalKeys();
+    
+    /**
+     * Returns a collection of all the relations from all the tables in this provider which
+     * refer to tables in other table providers.
+     * @return a set of relations linking to tables in other table providers.
+     */
+    public Collection getExternalRelations();
+    
+    /**
+     * The generic implementation should suffice as the ground for most
+     * complex implementations. It keeps track of {@link Table}s it has already seen, and
+     * performs simple lookups for them.
+     */
+    public class GenericSchema implements Schema {
+        /**
+         * Internal reference to the name of this provider.
+         */
+        private String name;
+        
+        /**
+         * Internal reference to the set of {@link Table}s in this provider.
+         */
+        protected final Map tables = new TreeMap();
+        
+        /**
+         * The constructor creates a provider with the given name.
+         * @param name the name for this new provider.
+         */
+        public GenericSchema(String name) {
+            // Remember the values.
+            this.name = name;
         }
-        this.tableProviders.remove(tableProvider.getName());
-    }
-    
-    /**
-     * Returns the set of {@link Window} objects which this {@link Schema} includes
-     * when building a mart. The set may be empty but it is never null.
-     * @return a set of {@link Window} objects.
-     */
-    public Collection getWindows() {
-        return this.windows.values();
-    }
-    
-    /**
-     * Returns the {@link Window} object with the given name. If it doesn't exist, null is returned.
-     * If the name was null, you'll get an exception.
-     * @param name the name to look for.
-     * @return a {@link Window} object matching the specified name.
-     * @throws NullPointerException if the name was null.
-     */
-    public Window getWindowByName(String name) throws NullPointerException {
-        // Sanity check.
-        if (name == null)
-            throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
-        // Do we have it?
-        if (!this.windows.containsKey(name)) return null;
-        // Return it.
-        return (Window)this.windows.get(name);
-    }
-    
-    /**
-     * Adds a {@link Window} to the set which this {@link Schema} includes. An
-     * exception is thrown if it already is in this set, or if it is null.
-     * @param window the {@link Window} to add.
-     * @throws AlreadyExistsException if the window is already in this schema.
-     * @throws NullPointerException if the window is null.
-     */
-    public void addWindow(Window window) throws NullPointerException, AlreadyExistsException {
-        // Sanity check.
-        if (window == null)
-            throw new NullPointerException(BuilderBundle.getString("windowIsNull"));
-        if (this.windows.containsKey(window.getName()))
-            throw new AlreadyExistsException(BuilderBundle.getString("windowExists"),window.getName());
-        // Do it.
-        this.windows.put(window.getName(), window);
-    }
-    
-    /**
-     * Given a particular {@link Table}, automatically create a number of {@link Window}s
-     * based around that {@link Table} that represent the various possible subclassing scenarios.
-     * It will always create one {@link Window} (with the name given) that
-     * doesn't subclass anything. For every M:1 relation leading off the {@link Table}, another
-     * {@link Window} will be created containing that subclass relation. Each subclass {@link Window}
-     * choice will have a number appended to it after an underscore, eg. '_SC1' ,'_SC2' etc.
-     * Each window created will have optimiseRelations() called on it automatically.
-     * @param centralTable the {@link Table} to build predicted {@link Window}s around.
-     * @param name the name to use for the windows.
-     * @return the newly created windows, as well as adding them to the schema.
-     * @throws AlreadyExistsException if a window already exists in this schema with the same
-     *  name or any of the suffixed versions.
-     * @throws NullPointerException if the table is null.
-     */
-    public void suggestWindows(Table centralTable, String name) throws NullPointerException, AlreadyExistsException {
-        // Sanity check.
-        if (centralTable== null)
-            throw new NullPointerException(BuilderBundle.getString("tableIsNull"));
-        // Do it.
-        try {
-            Window mainWin = new Window(this, centralTable, name);
-            mainWin.optimiseRelations();
-        } catch (Exception e) {
-            AssertionError ae = new AssertionError(BuilderBundle.getString("plainWindowPredictionFailure"));
-            ae.initCause(e);
-            throw ae;
+        
+        /**
+         * {@inheritDoc}
+         */
+        public String getName() {
+            return this.name;
         }
-        // Predict the subclass relations from the existing m:1 relations - simple guesser based
-        // on finding foreign keys in the central table. Only marks the first candidate it finds, as
-        // a subclassed table cannot have been subclassed off more than one parent.
-        int suffix = 1;
-        for (Iterator i = centralTable.getForeignKeys().iterator(); i.hasNext(); ) {
-            Key k = (Key)i.next();
-            for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
-                Relation r = (Relation)j.next();
-                // Only flag potential m:1 subclass relations if they don't refer back to ourselves.
-                try {
-                    if (!r.getPrimaryKey().getTable().equals(centralTable)) {
-                        Window scWin = new Window(this, centralTable, name+BuilderBundle.getString("subclassWindowSuffix")+(suffix++));
-                        scWin.flagSubclassRelation(r);
-                        scWin.optimiseRelations();
+        
+        /**
+         * {@inheritDoc}
+         */
+        public void setName(String name) {
+            // Remember the values.
+            this.name = name;
+        }
+        
+        /**
+         * {@inheritDoc}
+         * <p>The generic provider has no data source, so it will always return false.</p>
+         */
+        public boolean canCohabit(DataLink partner) {
+            return false;
+        }
+        
+        /**
+         * {@inheritDoc}
+         * <p>As this is a generic implementation, with nothing to connect to, it always returns true.</p>
+         */
+        public boolean test() throws Exception {
+            return true;
+        }
+        
+        /**
+         * {@inheritDoc}
+         * <p>As this is a generic implementation, nothing actually happens here.</p>
+         */
+        public void synchronise() throws SQLException, BuilderException {}
+        
+        /**
+         * {@inheritDoc}
+         */
+        public void addTable(Table table) throws AlreadyExistsException, AssociationException {
+            // Sanity check.
+            if (!table.getSchema().equals(this))
+                throw new AssociationException(BuilderBundle.getString("tableSchemaMismatch"));
+            if (this.tables.containsKey(table.getName()))
+                throw new AlreadyExistsException(BuilderBundle.getString("tableExists"), table.getName());
+            // Do it.
+            this.tables.put(table.getName(), table);
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        public Collection getTables() {
+            return this.tables.values();
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        public Table getTableByName(String name) {
+            // Do we know about it?
+            if (this.tables.containsKey(name)) return (Table)this.tables.get(name);
+            // Default case.
+            return null;
+        }
+        
+        /**
+         * {@inheritDoc}
+         * <p>This being the generic implementation, it always returns an empty set.</p>
+         */
+        public Collection getUniqueValues(Column column) throws AssociationException, SQLException {
+            // Sanity check.
+            if (!column.getTable().getSchema().equals(this))
+                throw new AssociationException(BuilderBundle.getString("columnSchemaMismatch"));
+            // Do it.
+            return Collections.EMPTY_SET;
+        }
+        
+        /**
+         * {@inheritDoc}
+         * <p>This being the generic implementation, it always returns 0.</p>
+         */
+        public int countUniqueValues(Column column) throws AssociationException, SQLException {
+            // Sanity check.
+            if (!column.getTable().getSchema().equals(this))
+                throw new AssociationException(BuilderBundle.getString("columnSchemaMismatch"));
+            // Do it.
+            return 0;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        public Collection getExternalKeys() {
+            List keys = new ArrayList();
+            Collection relations = this.getExternalRelations();
+            for (Iterator i = relations.iterator(); i.hasNext(); ) {
+                Relation relation = (Relation)i.next();
+                if (relation.getPrimaryKey().getTable().getSchema().equals(this)) keys.add(relation.getPrimaryKey());
+                else keys.add(relation.getForeignKey());
+            }
+            return keys;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        public Collection getExternalRelations() {
+            List relations = new ArrayList();
+            for (Iterator i = this.getTables().iterator(); i.hasNext(); ) {
+                Table table = (Table)i.next();
+                for (Iterator j = table.getKeys().iterator(); j.hasNext(); ) {
+                    Key key = (Key)j.next();
+                    for (Iterator l = key.getRelations().iterator(); l.hasNext(); ) {
+                        Relation relation = (Relation)l.next();
+                        if (!(relation.getPrimaryKey().getTable().getSchema().equals(this) &&
+                                relation.getForeignKey().getTable().getSchema().equals(this))) {
+                            relations.add(relation);
+                        }
                     }
-                } catch (Exception e) {
-                    AssertionError ae = new AssertionError(BuilderBundle.getString("subclassPredictionFailure"));
-                    ae.initCause(e);
-                    throw ae;
                 }
             }
+            return relations;
         }
-    }
-    
-    /**
-     * Renames a {@link Window}. An
-     * exception is thrown if that names has already been used, or if it is null.
-     * @param window the {@link Window} to rename.
-     * @param name the new name for it.
-     * @throws AlreadyExistsException if the window name is already in this schema.
-     * @throws AssociationException if the window does not belong to us. 
-     * @throws NullPointerException if the window or name is null.
-     */
-    public void renameWindow(Window window, String name) throws NullPointerException, AlreadyExistsException, AssociationException {
-        // Sanity check.
-        if (window == null)
-            throw new NullPointerException(BuilderBundle.getString("windowIsNull"));
-        if (name == null)
-            throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
-        if (this.windows.containsKey(name))
-            throw new AlreadyExistsException(BuilderBundle.getString("windowExists"),window.getName());
-        if (!this.windows.values().contains(window))
-            throw new AssociationException(BuilderBundle.getString("windowSchemaMismatch"));
-        // Do it.
-        this.windows.remove(window.getName());
-        window.setName(name);
-        this.windows.put(window.getName(),window);
-    }
-    
-    /**
-     * Removes a {@link Window} from the set which this {@link Schema} includes. An
-     * exception is thrown if it is null. If it is not found, nothing happens and it is ignored quietly.
-     * @param window the {@link Window} to remove.
-     * @throws NullPointerException if the window is null.
-     */
-    public void removeWindow(Window window) throws NullPointerException {
-        // Sanity check.
-        if (window == null)
-            throw new NullPointerException(BuilderBundle.getString("windowIsNull"));
-        // Do we have it?
-        if (!this.windows.containsKey(window.getName())) return;
-        // Do it.
-        this.windows.remove(window.getName());
-    }
-    
-    /**
-     * Synchronise all {@link Window}s in this {@link Schema} so that they match up
-     * with the {@link Schema}'s {@link TableProvider}(s). Any {@link Window}s that
-     * are based on now-missing {@link Table}s are dropped. This is all simply a matter
-     * of delegating calls and the routine does no real work itself.
-     * @throws SQLException if there was a problem connecting to the data source.
-     * @throws BuilderException if there was any other kind of problem.
-     */
-    public void synchroniseWindows() throws SQLException, BuilderException {
-        // Then, Windows.
-        for (Iterator i = this.windows.values().iterator(); i.hasNext(); ) {
-            Window w = (Window)i.next();
-            if (!this.getTableProviders().contains(w.getCentralTable().getTableProvider())) i.remove();
-            else w.synchronise();
+        
+        /**
+         * {@inheritDoc}
+         */
+        public String toString() {
+            return this.getName();
         }
-    }
-    
-    /**
-     * Synchronise this {@link Schema} with the {@link TableProvider}(s) that is(are)
-     * providing its tables, then synchronising its {@link Window}s too. This is all simply a matter
-     * of delegating calls and the routine does no real work itself.
-     * @throws SQLException if there was a problem connecting to the data source.
-     * @throws BuilderException if there was any other kind of problem.
-     */
-    public void synchroniseTableProviders() throws SQLException, BuilderException {
-        // TableProviders first
-        for (Iterator i = this.tableProviders.values().iterator(); i.hasNext(); ) {
-            TableProvider tp = (TableProvider)i.next();
-            tp.synchronise();
+        
+        /**
+         * {@inheritDoc}
+         */
+        public int hashCode() {
+            return this.toString().hashCode();
         }
-        // Then, synchronise windows.
-        this.synchroniseWindows();
-    }
-    
-    /**
-     * Request that all the marts in all the windows be constructed now.
-     * @throws SQLException if there was any data source error during
-     * mart construction.
-     * @throws BuilderException if there was any other kind of error in the
-     * mart construction process.
-     */
-    public void constructMarts() throws BuilderException, SQLException {
-        for (Iterator i = this.windows.values().iterator(); i.hasNext(); ) {
-            Window w = (Window)i.next();
-            w.constructMart();
+        
+        /**
+         * {@inheritDoc}
+         */
+        public int compareTo(Object o) throws ClassCastException {
+            Schema t = (Schema)o;
+            return this.toString().compareTo(t.toString());
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        public boolean equals(Object o) {
+            if (o == null || !(o instanceof Schema)) return false;
+            Schema t = (Schema)o;
+            return t.toString().equals(this.toString());
         }
     }
 }

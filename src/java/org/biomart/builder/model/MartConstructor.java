@@ -29,23 +29,30 @@ import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * This interface defines the behaviour expected from an object which can take
- * a {@link DataSet} and actually construct a mart based on this information. Whether it carries out the
+ * a {@link OLDDataSet} and actually construct a mart based on this information. Whether it carries out the
  * task or just writes some DDL to be run by the user later is up to the implementor.
+ * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 30th March 2006
+ * @version 0.1.4, 27th April 2006
  * @since 0.1
  */
-public interface MartConstructor extends DataLink, Comparable {
+public interface MartConstructor extends DataLink, Comparable {    
     /**
-     * This method takes a {@link DataSet} and either generates a script for the
+     * This constant refers to a placeholder mart constructor which does
+     * nothing except prevent null pointer exceptions.
+     */
+    public static final MartConstructor DUMMY_MART_CONSTRUCTOR = new GenericMartConstructor("__DUMMY_MC");
+    
+    /**
+     * This method takes a {@link OLDDataSet} and either generates a script for the
      * user to run later to construct a mart, or does the work right now. The end result
      * should be a completely finished and populated mart, or the script to make one.
-     * @param ds the {@link DataSet} to build the mart for.
-     * @throws NullPointerException if the {@link Schema} parameter is null.
+     * 
+     * @param ds the {@link OLDDataSet} to build the mart for.
      * @throws BuilderException if anything went wrong during the building process.
      * @throws SQLException if it needed to talk to a database and couldn't.
      */
-    public void constructMart(DataSet ds) throws NullPointerException, BuilderException, SQLException;
+    public void constructMart(DataSet ds) throws BuilderException, SQLException;
     
     /**
      * Returns the name of this {@link MartConstructor}.
@@ -67,12 +74,8 @@ public interface MartConstructor extends DataLink, Comparable {
         /**
          * The constructor creates a mart constructor with the given name.
          * @param name the name for this new constructor.
-         * @throws NullPointerException if the name is null.
          */
-        public GenericMartConstructor(String name) throws NullPointerException {
-            // Sanity check.
-            if (name == null)
-                throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
+        public GenericMartConstructor(String name) {
             // Remember the values.
             this.name = name;
         }
@@ -86,13 +89,10 @@ public interface MartConstructor extends DataLink, Comparable {
         
         /**
          * {@inheritDoc}
-         * <p>This simple generic implementation tests for a non-null {@link DataSet}.
+         * <p>This simple generic implementation tests for a non-null {@link OLDDataSet}.
          * It doesn't actually generate any tables or DDL.</p>
          */
-        public void constructMart(DataSet ds) throws NullPointerException, BuilderException, SQLException {
-            // Sanity check.
-            if (ds == null)
-                throw new NullPointerException(BuilderBundle.getString("schemaIsNull"));
+        public void constructMart(DataSet ds) throws BuilderException, SQLException {
             // Do the work.
             // TODO: Subclasses actually generate DDL or access JDBC/XML/whatever and do the transformation.
             // Don't forget to include the 'hasXYZDimension' columns in the main table and subclassed main tables.
@@ -122,7 +122,7 @@ public interface MartConstructor extends DataLink, Comparable {
          * {@inheritDoc}
          * <p>The generic constructor has no data source, so it will always return false.</p>
          */
-        public boolean canCohabit(DataLink partner) throws NullPointerException {
+        public boolean canCohabit(DataLink partner) {
             return false;
         }
         

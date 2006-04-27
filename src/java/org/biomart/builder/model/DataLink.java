@@ -45,9 +45,8 @@ public interface DataLink {
      * both {@link DataLink}s simultaneously.
      * @param partner the other {@link DataLink} to test for cohabitation.
      * @return true if the two can cohabit, false if not.
-     * @throws NullPointerException if the partner is null.
      */
-    public boolean canCohabit(DataLink partner) throws NullPointerException;
+    public boolean canCohabit(DataLink partner);
     
     /**
      * Checks to see if this {@link DataLink} is working properly.
@@ -81,9 +80,8 @@ public interface DataLink {
         /**
          * Setter for property driverClassName.
          * @param driverClassName New value of property driverClassName.
-         * @throws NullPointerException if the value is null.
          */
-        public void setDriverClassName(String driverClassName) throws NullPointerException;
+        public void setDriverClassName(String driverClassName);
         
         /**
          * Getter for property driverClassLocation.
@@ -106,9 +104,8 @@ public interface DataLink {
         /**
          * Setter for property url.
          * @param url New value of property url.
-         * @throws NullPointerException if the value is null.
          */
-        public void setJDBCURL(String url) throws NullPointerException;
+        public void setJDBCURL(String url);
         
         /**
          * Getter for property username.
@@ -119,9 +116,8 @@ public interface DataLink {
         /**
          * Setter for property username.
          * @param username New value of property username.
-         * @throws NullPointerException if the value is null.
          */
-        public void setUsername(String username) throws NullPointerException;
+        public void setUsername(String username);
         
         /**
          * Getter for property password.

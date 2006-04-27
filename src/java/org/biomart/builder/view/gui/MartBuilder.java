@@ -41,20 +41,20 @@ import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
-import org.biomart.builder.controller.SchemaIO;
+import org.biomart.builder.controller.MartBuilderXML;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * The main window housing the MartBuilder GUI.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 26th April 2006
+ * @version 0.1.9, 27th April 2006
  * @since 0.1
  */
 public class MartBuilder extends JFrame {
     /**
      * Our schema manager.
      */
-    private SchemaTabSet schemaTabSet;
+    private MartTabSet martTabSet;
     
     /**
      * Creates a new instance of MartBuilder. Calls initComponents
@@ -62,7 +62,7 @@ public class MartBuilder extends JFrame {
      */
     public MartBuilder() {
         // Create the window.
-        super(BuilderBundle.getString("GUITitle",SchemaIO.DTD_VERSION));
+        super(BuilderBundle.getString("GUITitle",MartBuilderXML.DTD_VERSION));
         // Set the look and feel to the one specified by the user, or the system
         // default if not specified by the user.
         String lookAndFeelClass = System.getProperty("martbuilder.laf"); // null if not set
@@ -102,8 +102,8 @@ public class MartBuilder extends JFrame {
         // Make a menu bar and add it.
         this.setJMenuBar(new MartBuilderMenuBar(this));
         // Set up the schema manager.
-        this.schemaTabSet = new SchemaTabSet(this);
-        this.getContentPane().add(this.schemaTabSet, BorderLayout.CENTER);
+        this.martTabSet = new MartTabSet(this);
+        this.getContentPane().add(this.martTabSet, BorderLayout.CENTER);
         // Pack the window.
         this.pack();
     }
@@ -139,7 +139,7 @@ public class MartBuilder extends JFrame {
      * Confirms the user wants to exit, then exits.
      */
     public void requestExitApp() {
-        if (this.schemaTabSet.confirmCloseAllSchemas()) System.exit(0);
+        if (this.martTabSet.confirmCloseAllMarts()) System.exit(0);
     }
     
     /**
@@ -182,11 +182,11 @@ public class MartBuilder extends JFrame {
         /**
          * Internal references to the various menu options.
          */
-        private JMenuItem newSchema;
-        private JMenuItem openSchema;
-        private JMenuItem saveSchema;
-        private JMenuItem saveSchemaAs;
-        private JMenuItem closeSchema;
+        private JMenuItem newMart;
+        private JMenuItem openMart;
+        private JMenuItem saveMart;
+        private JMenuItem saveMartAs;
+        private JMenuItem closeMart;
         private JMenuItem exit;
         
         /**
@@ -204,46 +204,46 @@ public class MartBuilder extends JFrame {
             JMenu fileMenu = new JMenu(BuilderBundle.getString("fileMenuTitle"));
             fileMenu.setMnemonic(BuilderBundle.getString("fileMenuMnemonic").charAt(0));
             
-            this.newSchema = new JMenuItem(BuilderBundle.getString("newSchemaTitle"));
-            this.newSchema.setMnemonic(BuilderBundle.getString("newSchemaMnemonic").charAt(0));
-            this.newSchema.addActionListener(this);
+            this.newMart = new JMenuItem(BuilderBundle.getString("newMartTitle"));
+            this.newMart.setMnemonic(BuilderBundle.getString("newMartMnemonic").charAt(0));
+            this.newMart.addActionListener(this);
             
-            this.openSchema = new JMenuItem(BuilderBundle.getString("openSchemaTitle"));
-            this.openSchema.setMnemonic(BuilderBundle.getString("openSchemaMnemonic").charAt(0));
-            this.openSchema.addActionListener(this);
+            this.openMart = new JMenuItem(BuilderBundle.getString("openMartTitle"));
+            this.openMart.setMnemonic(BuilderBundle.getString("openMartMnemonic").charAt(0));
+            this.openMart.addActionListener(this);
             
-            this.saveSchema = new JMenuItem(BuilderBundle.getString("saveSchemaTitle"));
-            this.saveSchema.setMnemonic(BuilderBundle.getString("saveSchemaMnemonic").charAt(0));
-            this.saveSchema.addActionListener(this);
+            this.saveMart = new JMenuItem(BuilderBundle.getString("saveMartTitle"));
+            this.saveMart.setMnemonic(BuilderBundle.getString("saveMartMnemonic").charAt(0));
+            this.saveMart.addActionListener(this);
             
-            this.saveSchemaAs = new JMenuItem(BuilderBundle.getString("saveSchemaAsTitle"));
-            this.saveSchemaAs.setMnemonic(BuilderBundle.getString("saveSchemaAsMnemonic").charAt(0));
-            this.saveSchemaAs.addActionListener(this);
+            this.saveMartAs = new JMenuItem(BuilderBundle.getString("saveMartAsTitle"));
+            this.saveMartAs.setMnemonic(BuilderBundle.getString("saveMartAsMnemonic").charAt(0));
+            this.saveMartAs.addActionListener(this);
             
-            this.closeSchema = new JMenuItem(BuilderBundle.getString("closeSchemaTitle"));
-            this.closeSchema.setMnemonic(BuilderBundle.getString("closeSchemaMnemonic").charAt(0));
-            this.closeSchema.addActionListener(this);
+            this.closeMart = new JMenuItem(BuilderBundle.getString("closeMartTitle"));
+            this.closeMart.setMnemonic(BuilderBundle.getString("closeMartMnemonic").charAt(0));
+            this.closeMart.addActionListener(this);
             
             this.exit = new JMenuItem(BuilderBundle.getString("exitTitle"));
             this.exit.setMnemonic(BuilderBundle.getString("exitMnemonic").charAt(0));
             this.exit.addActionListener(this);
             
-            fileMenu.add(this.newSchema);
+            fileMenu.add(this.newMart);
             fileMenu.addSeparator();
-            fileMenu.add(this.openSchema);
-            fileMenu.add(this.saveSchema);
-            fileMenu.add(this.saveSchemaAs);
-            fileMenu.add(this.closeSchema);
+            fileMenu.add(this.openMart);
+            fileMenu.add(this.saveMart);
+            fileMenu.add(this.saveMartAs);
+            fileMenu.add(this.closeMart);
             fileMenu.addSeparator();
             fileMenu.add(this.exit);
             
             fileMenu.addMenuListener(new MenuListener() {
                 public void menuSelected(MenuEvent e) {
-                    boolean hasSchema = true;
-                    if (martBuilder.schemaTabSet.getCurrentWindowTabSet()==null) hasSchema = false;
-                    saveSchema.setEnabled(hasSchema);
-                    saveSchemaAs.setEnabled(hasSchema);
-                    closeSchema.setEnabled(hasSchema);
+                    boolean hasMart = true;
+                    if (martBuilder.martTabSet.getCurrentDataSetTabSet()==null) hasMart = false;
+                    saveMart.setEnabled(hasMart);
+                    saveMartAs.setEnabled(hasMart);
+                    closeMart.setEnabled(hasMart);
                 }
                 public void menuDeselected(MenuEvent e) {}
                 public void menuCanceled(MenuEvent e) {}
@@ -259,11 +259,11 @@ public class MartBuilder extends JFrame {
             
             // File menu.
             
-            if (e.getSource() == this.newSchema) this.martBuilder.schemaTabSet.newSchema();
-            else if (e.getSource() == this.openSchema) this.martBuilder.schemaTabSet.loadSchema();
-            else if (e.getSource() == this.saveSchema) this.martBuilder.schemaTabSet.saveSchema();
-            else if (e.getSource() == this.saveSchemaAs) this.martBuilder.schemaTabSet.saveSchemaAs();
-            else if (e.getSource() == this.closeSchema) this.martBuilder.schemaTabSet.confirmCloseSchema();
+            if (e.getSource() == this.newMart) this.martBuilder.martTabSet.requestNewMart();
+            else if (e.getSource() == this.openMart) this.martBuilder.martTabSet.loadMart();
+            else if (e.getSource() == this.saveMart) this.martBuilder.martTabSet.saveMart();
+            else if (e.getSource() == this.saveMartAs) this.martBuilder.martTabSet.saveMartAs();
+            else if (e.getSource() == this.closeMart) this.martBuilder.martTabSet.confirmCloseMart();
             else if (e.getSource() == this.exit) this.martBuilder.requestExitApp();
         }
     }

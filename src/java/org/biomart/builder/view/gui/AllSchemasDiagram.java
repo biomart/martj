@@ -1,5 +1,5 @@
 /*
- * TableProviderDiagram.java
+ * AllSchemasDiagram.java
  *
  * Created on 19 April 2006, 09:28
  */
@@ -35,16 +35,16 @@ import java.util.Map;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.TableProvider;
+import org.biomart.builder.model.Schema;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * This class deals with drawing an overview of all the table providers.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 25th April 2006
+ * @version 0.1.4, 27th April 2006
  * @since 0.1
  */
-public class TableProviderDiagram extends Diagram {
+public class AllSchemasDiagram extends Diagram {
     /**
      * Static reference to the background colour to use for components.
      */
@@ -54,9 +54,9 @@ public class TableProviderDiagram extends Diagram {
      * The constructor rememembers the Collection that this
      * displays.
      */
-    public TableProviderDiagram(WindowTabSet windowTabSet) {
-        super(windowTabSet);
-        this.setBackground(TableProviderDiagram.BACKGROUND_COLOUR);
+    public AllSchemasDiagram(DataSetTabSet datasetTabSet) {
+        super(datasetTabSet);
+        this.setBackground(AllSchemasDiagram.BACKGROUND_COLOUR);
         this.synchroniseDiagram();
     }
     
@@ -67,20 +67,20 @@ public class TableProviderDiagram extends Diagram {
     protected JPopupMenu getContextMenu() {
         JPopupMenu contextMenu = new JPopupMenu();
         
-        JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseSchemaTitle"));
-        sync.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
+        JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseAllSchemasTitle"));
+        sync.setMnemonic(BuilderBundle.getString("synchroniseAllSchemasMnemonic").charAt(0));
         sync.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                windowTabSet.synchroniseSchema();
+                getDataSetTabSet().synchroniseSchema();
             }
         });
         contextMenu.add(sync);
         
-        JMenuItem add = new JMenuItem(BuilderBundle.getString("addTblProvTitle"));
-        add.setMnemonic(BuilderBundle.getString("addTblProvMnemonic").charAt(0));
+        JMenuItem add = new JMenuItem(BuilderBundle.getString("addSchemaTitle"));
+        add.setMnemonic(BuilderBundle.getString("addSchemaMnemonic").charAt(0));
         add.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                windowTabSet.getTableProviderTabSet().requestAddTableProvider();
+                getDataSetTabSet().getSchemaTabSet().requestAddSchema();
             }
         });
         contextMenu.add(add);
@@ -100,21 +100,21 @@ public class TableProviderDiagram extends Diagram {
         List relations = new ArrayList();
         Map keyComponents = new HashMap();
         // Add a TableComponent for each table.
-        for (Iterator i = this.getWindowTabSet().getSchema().getTableProviders().iterator(); i.hasNext(); ) {
-            TableProvider tableProvider = (TableProvider)i.next();
-            TableProviderDiagramComponent tableProviderComponent = new TableProviderDiagramComponent(tableProvider, this);
-            this.add(tableProviderComponent);
-            relations.addAll(tableProvider.getExternalRelations());
-            keyComponents.putAll(tableProviderComponent.getKeyComponents());
+        for (Iterator i = this.getDataSetTabSet().getMart().getSchemas().iterator(); i.hasNext(); ) {
+            Schema schema = (Schema)i.next();
+            SchemaComponent schemaComponent = new SchemaComponent(schema, this);
+            this.add(schemaComponent);
+            relations.addAll(schema.getExternalRelations());
+            keyComponents.putAll(schemaComponent.getKeyComponents());
         }
-        // Add a RelationDiagramComponent for each relation.
+        // Add a RelationComponent for each relation.
         for (Iterator i = relations.iterator(); i.hasNext(); ) {
             Relation relation = (Relation)i.next();
-            RelationDiagramComponent relationComponent = new RelationDiagramComponent(
+            RelationComponent relationComponent = new RelationComponent(
                     relation,
                     this,
-                    (KeyDiagramComponent)keyComponents.get(relation.getPrimaryKey()),
-                    (KeyDiagramComponent)keyComponents.get(relation.getForeignKey()));
+                    (KeyComponent)keyComponents.get(relation.getPrimaryKey()),
+                    (KeyComponent)keyComponents.get(relation.getForeignKey()));
             this.add(relationComponent);
         }
         // Delegate upwards.

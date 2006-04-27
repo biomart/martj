@@ -42,7 +42,7 @@ import java.util.TreeMap;
 /**
  * Displays arbitrary objects linked in a radial form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 25th April 2006
+ * @version 0.1.3, 27th April 2006
  * @since 0.1
  */
 public class RadialLayout implements LayoutManager {
@@ -149,11 +149,11 @@ public class RadialLayout implements LayoutManager {
             for (int i = 0; i < nComps; i++) {
                 Component comp = parent.getComponent(i);
                 // We're only interested in visible non-RelationComponents at this stage.
-                if (!comp.isVisible() || comp instanceof RelationDiagramComponent) continue;
-                // Calculate ring number! If not a TableDiagramComponent or TableProviderComponent, it's zero.
+                if (!comp.isVisible() || comp instanceof RelationComponent) continue;
+                // Calculate ring number! If not a TableComponent or TableProviderComponent, it's zero.
                 Integer ringNumber = new Integer(0);
-                if (comp instanceof TableDiagramComponent) ringNumber = new Integer(((TableDiagramComponent)comp).countRelations());
-                else if (comp instanceof TableProviderDiagramComponent) ringNumber = new Integer(((TableProviderDiagramComponent)comp).countExternalRelations());
+                if (comp instanceof TableComponent) ringNumber = new Integer(((TableComponent)comp).countRelations());
+                else if (comp instanceof SchemaComponent) ringNumber = new Integer(((SchemaComponent)comp).countExternalRelations());
                 // then add the object to the appropriate ring and update circumference/max side.
                 if (!ringDetails.containsKey(ringNumber))
                     ringDetails.put(
@@ -239,14 +239,14 @@ public class RadialLayout implements LayoutManager {
                 Component comp = parent.getComponent(i);
                 // We're only interested in visible non-RelationComponents at this stage.
                 if (!comp.isVisible()) continue;
-                if (comp instanceof RelationDiagramComponent) {
+                if (comp instanceof RelationComponent) {
                     relationComponents.add(comp);
                     continue;
                 }
-                // Calculate ring number! If not a TableDiagramComponent or TableProviderComponent, it's zero.
+                // Calculate ring number! If not a TableComponent or TableProviderComponent, it's zero.
                 Integer ringNumber = new Integer(0);
-                if (comp instanceof TableDiagramComponent) ringNumber = new Integer(((TableDiagramComponent)comp).countRelations());
-                else if (comp instanceof TableProviderDiagramComponent) ringNumber = new Integer(((TableProviderDiagramComponent)comp).countExternalRelations());
+                if (comp instanceof TableComponent) ringNumber = new Integer(((TableComponent)comp).countRelations());
+                else if (comp instanceof SchemaComponent) ringNumber = new Integer(((SchemaComponent)comp).countExternalRelations());
                 // have we seen this ring before?
                 int ringCount = 0;
                 if (ringCounts.containsKey(ringNumber)) ringCount = ((Integer)ringCounts.get(ringNumber)).intValue()+1;
@@ -270,26 +270,26 @@ public class RadialLayout implements LayoutManager {
             // Add relations to component->shape maps using the key shapes for
             // anchors and offsetting them against the parent component shape.
             for (Iterator i = relationComponents.iterator(); i.hasNext(); ) {
-                RelationDiagramComponent relationComponent = (RelationDiagramComponent)i.next();
-                KeyDiagramComponent primaryKey = relationComponent.getPrimaryKeyComponent();
-                KeyDiagramComponent foreignKey = relationComponent.getForeignKeyComponent();
-                BoxShapedDiagramComponent primaryKeyTable = primaryKey.getParentComponent();
-                BoxShapedDiagramComponent foreignKeyTable = foreignKey.getParentComponent();
+                RelationComponent relationComponent = (RelationComponent)i.next();
+                KeyComponent primaryKey = relationComponent.getPrimaryKeyComponent();
+                KeyComponent foreignKey = relationComponent.getForeignKeyComponent();
+                BoxShapedComponent primaryKeyParentBox = primaryKey.getParentComponent();
+                BoxShapedComponent foreignKeyParentBox = foreignKey.getParentComponent();
                 
                 // Force the inner tables to lay themselves out correctly.
-                if (!primaryKeyTable.isValid()) primaryKeyTable.validate();
-                if (!foreignKeyTable.isValid()) foreignKeyTable.validate();
+                if (!primaryKeyParentBox.isValid()) primaryKeyParentBox.validate();
+                if (!foreignKeyParentBox.isValid()) foreignKeyParentBox.validate();
                 
                 // Work out locations of primary and foreign key boxes.
                 Rectangle primaryKeyRectangle = primaryKey.getBounds();
                 primaryKeyRectangle.setLocation(
-                        primaryKeyRectangle.x + primaryKeyTable.getX(),
-                        primaryKeyRectangle.y + primaryKeyTable.getY()
+                        primaryKeyRectangle.x + primaryKeyParentBox.getX(),
+                        primaryKeyRectangle.y + primaryKeyParentBox.getY()
                         );
                 Rectangle foreignKeyRectangle = foreignKey.getBounds();
                 foreignKeyRectangle.setLocation(
-                        foreignKeyRectangle.x + foreignKeyTable.getX(),
-                        foreignKeyRectangle.y + foreignKeyTable.getY()
+                        foreignKeyRectangle.x + foreignKeyParentBox.getX(),
+                        foreignKeyRectangle.y + foreignKeyParentBox.getY()
                         );
                 
                 // Create a bounding box around the whole lot plus 1 step size each side.

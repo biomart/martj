@@ -47,7 +47,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * more complex implementations. It is able to keep track of {@link Key}s and {@link Column}s
  * but it does not provide any methods that process or analyse these.</p>
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 6th April 2006
+ * @version 0.1.7, 27th April 2006
  * @since 0.1
  */
 public interface Table extends Comparable {
@@ -58,10 +58,11 @@ public interface Table extends Comparable {
     public String getName();
     
     /**
-     * Returns the {@link TableProvider} for this table.
-     * @return the {@link TableProvider} for this {@link Table}.
+     * Returns the {@link Schema} for this table.
+     *
+     * @return the {@link Schema} for this {@link Table}.
      */
-    public TableProvider getTableProvider();
+    public Schema getSchema();
     
     /**
      * Returns a reference to the {@link PrimaryKey} of this table. It may
@@ -92,9 +93,8 @@ public interface Table extends Comparable {
      * null if not found.
      * @param name the name to look for.
      * @return the named {@link ForeignKey} on this {@link Table} if found, otherwise null.
-     * @throws NullPointerException if the name given was null.
      */
-    public ForeignKey getForeignKeyByName(String name) throws NullPointerException;
+    public ForeignKey getForeignKeyByName(String name);
     
     /**
      * Adds a {@link ForeignKey} to this table. It may
@@ -104,18 +104,16 @@ public interface Table extends Comparable {
      * @param foreignKey the new {@link ForeignKey} to add to this {@link Table}.
      * @throws AssociationException if the {@link Table} parameter of the {@link ForeignKey}
      * does not match.
-     * @throws NullPointerException if the {@link ForeignKey} object is null.
      */
-    public void addForeignKey(ForeignKey foreignKey) throws NullPointerException, AssociationException;
+    public void addForeignKey(ForeignKey foreignKey) throws AssociationException;
     
     /**
      * Removes a {@link ForeignKey} from this table. It may
      * not be null. If it doesn't exist, nothing
      * will happen and it will be quietly ignored.
      * @param foreignKey the new {@link ForeignKey} to add to this {@link Table}.
-     * @throws NullPointerException if the {@link ForeignKey} object is null.
      */
-    public void removeForeignKey(ForeignKey foreignKey) throws NullPointerException;
+    public void removeForeignKey(ForeignKey foreignKey);
     
     /**
      * Returns a set of the {@link Key}s on all {@link Column}s in this table. It may
@@ -159,9 +157,8 @@ public interface Table extends Comparable {
      * this {@link Table}.
      * @throws AssociationException if the {@link Table} parameter of the {@link Column}
      * does not match.
-     * @throws NullPointerException if the {@link Column} object is null.
      */
-    public void addColumn(Column column) throws AlreadyExistsException, AssociationException, NullPointerException;
+    public void addColumn(Column column) throws AlreadyExistsException, AssociationException;
     
     /**
      * Convenience method that creates and adds a {@link Column} to this {@link Table}.
@@ -169,18 +166,16 @@ public interface Table extends Comparable {
      * @param name the name of the {@link Column} to create and add.
      * @throws AlreadyExistsException if a {@link Column} with the same name already
      * exists in this {@link Table}.
-     * @throws NullPointerException if the name argument is null.
      */
-    public void createColumn(String name) throws AlreadyExistsException, NullPointerException;
+    public void createColumn(String name) throws AlreadyExistsException;
     
     /**
      * Attemps to remove a {@link Column} from this table. If the {@link Column} does not exist on
      * this table the operation will be quietly ignored. Any {@link Key} involving that {@link Column}
      * will also be dropped along with all associated {@link Relation}s.
      * @param column the {@link Column} to remove.
-     * @throws NullPointerException if the {@link Column} object is null.
      */
-    public void removeColumn(Column column) throws NullPointerException;
+    public void removeColumn(Column column);
     
     /**
      * Attemps to remove all columns on a table so that it can safely be dropped.
@@ -201,7 +196,7 @@ public interface Table extends Comparable {
         /**
          * Internal reference to the provider of this {@link Table}.
          */
-        private final TableProvider tableProvider;
+        private final Schema schema;
         
         /**
          * Internal reference to the {@link PrimaryKey} of this {@link Table}.
@@ -220,26 +215,22 @@ public interface Table extends Comparable {
         
         /**
          * The constructor sets up an empty {@link Table} representation with the given name
-         * that lives within the given {@link TableProvider}.
+         * that lives within the given {@link Schema}.
+         *
+         *
          * @param name the table name.
-         * @param prov the {@link TableProvider} this {@link Table} is associated with.
-         * @throws NullPointerException if the name or provider are null.
+         * @param schema the {@link TSchema this {@link Table} is associated with.
          * @throws AlreadyExistsException if a table with that name already exists in the provider.
          */
-        public GenericTable(String name, TableProvider prov) throws NullPointerException, AlreadyExistsException {
-            // Sanity checks.
-            if (name == null)
-                throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
-            if (prov == null)
-                throw new NullPointerException(BuilderBundle.getString("tblprovIsNull"));
+        public GenericTable(String name, Schema schema) throws AlreadyExistsException {
             // Remember the values.
             this.name = name;
-            this.tableProvider = prov;
+            this.schema = schema;
             // Add it to our provider.
             try {
-                prov.addTable(this);
+                schema.addTable(this);
             } catch (AssociationException e) {
-                AssertionError ae = new AssertionError(BuilderBundle.getString("tblprovMismatch"));
+                AssertionError ae = new AssertionError(BuilderBundle.getString("schemaMismatch"));
                 ae.initCause(e);
                 throw ae;
             }
@@ -255,8 +246,8 @@ public interface Table extends Comparable {
         /**
          * {@inheritDoc}
          */
-        public TableProvider getTableProvider() {
-            return this.tableProvider;
+        public Schema getSchema() {
+            return this.schema;
         }
         
         /**
@@ -296,10 +287,7 @@ public interface Table extends Comparable {
         /**
          * {@inheritDoc}
          */
-        public ForeignKey getForeignKeyByName(String name) throws NullPointerException {
-            // Sanity check.
-            if (name == null)
-                throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
+        public ForeignKey getForeignKeyByName(String name) {
             // Do we have it?
             if (!this.foreignKeys.containsKey(name)) return null;
             // Return it.
@@ -309,10 +297,7 @@ public interface Table extends Comparable {
         /**
          * {@inheritDoc}
          */
-        public void addForeignKey(ForeignKey foreignKey) throws NullPointerException, AssociationException {
-            // Sanity checks.
-            if (foreignKey == null)
-                throw new NullPointerException(BuilderBundle.getString("keyIsNull"));
+        public void addForeignKey(ForeignKey foreignKey) throws AssociationException {
             // Work out its name.
             String name = foreignKey.getName();
             // Quietly ignore if we've already got it.
@@ -324,10 +309,7 @@ public interface Table extends Comparable {
         /**
          * {@inheritDoc}
          */
-        public void removeForeignKey(ForeignKey foreignKey) throws NullPointerException {
-            // Sanity checks.
-            if (foreignKey == null)
-                throw new NullPointerException(BuilderBundle.getString("keyIsNull"));
+        public void removeForeignKey(ForeignKey foreignKey) {
             // Do it.
             this.foreignKeys.remove(foreignKey.getName());
         }
@@ -374,10 +356,8 @@ public interface Table extends Comparable {
         /**
          * {@inheritDoc}
          */
-        public void addColumn(Column column) throws AlreadyExistsException, AssociationException, NullPointerException {
+        public void addColumn(Column column) throws AlreadyExistsException, AssociationException {
             // Sanity check.
-            if (column == null)
-                throw new NullPointerException(BuilderBundle.getString("columnIsNull"));
             if (column.getTable() != this)
                 throw new AssociationException(BuilderBundle.getString("columnTableMismatch"));
             // Do the work.
@@ -390,7 +370,7 @@ public interface Table extends Comparable {
         /**
          * {@inheritDoc}
          */
-        public void createColumn(String name) throws AlreadyExistsException, NullPointerException {
+        public void createColumn(String name) throws AlreadyExistsException {
             new GenericColumn(name, this);
             // By creating it we've already added it to ourselves! (Based on GenericColumn behaviour)
         }
@@ -398,7 +378,7 @@ public interface Table extends Comparable {
         /**
          * {@inheritDoc}
          */
-        public void removeColumn(Column column) throws NullPointerException {
+        public void removeColumn(Column column) {
             // Do we know this column?
             if (!this.columns.containsKey(column.getName())) return;
             // Remove all keys involving this column
@@ -420,13 +400,7 @@ public interface Table extends Comparable {
             // keys etc. to be removed.
             for (Iterator i = allCols.iterator(); i.hasNext(); ) {
                 Column c = (Column)i.next();
-                try {
-                    this.removeColumn(c);
-                } catch (NullPointerException e) {
-                    AssertionError ae = new AssertionError(BuilderBundle.getString("columnIsNull"));
-                    ae.initCause(e);
-                    throw ae;
-                }
+                this.removeColumn(c);
             }
         }
         
@@ -434,7 +408,7 @@ public interface Table extends Comparable {
          * {@inheritDoc}
          */
         public String toString() {
-            return this.tableProvider.toString() + ":" + this.getName();
+            return this.schema.toString() + ":" + this.getName();
         }
         
         /**

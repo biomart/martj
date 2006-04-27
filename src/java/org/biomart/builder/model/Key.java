@@ -79,9 +79,8 @@ public interface Key extends Comparable {
      * null if not found.
      * @param name the name to look for.
      * @return the named {@link Relation} on this {@link Key} if found, otherwise null.
-     * @throws NullPointerException if the name given was null.
      */
-    public Relation getRelationByName(String name) throws NullPointerException;
+    public Relation getRelationByName(String name);
     
     /**
      * Adds a particular {@link Relation} to the set this {@link Key} is involved in.
@@ -90,17 +89,15 @@ public interface Key extends Comparable {
      * @param relation the {@link Relation} to add to this {@link Key}.
      * @throws AssociationException if it is not actually involved in the given
      * {@link Relation} in any way.
-     * @throws NullPointerException if the {@link Relation} argument was null.
      */
-    public void addRelation(Relation relation) throws AssociationException, NullPointerException;
+    public void addRelation(Relation relation) throws AssociationException;
     
     /**
      * Removes a particular {@link Relation} from the set this {@link Key} is involved in.
      * It quietly ignores it if it is not involved or doesn't know about this {@link Relation}.
      * @param relation the {@link Relation} to remove from this {@link Key}.
-     * @throws NullPointerException if the {@link Relation} argument was null.
      */
-    public void removeRelation(Relation relation) throws NullPointerException;
+    public void removeRelation(Relation relation);
     
     /**
      * Returns the {@link Table} this {@link Key} is formed over.
@@ -180,18 +177,14 @@ public interface Key extends Comparable {
          * outside this constructor. Nulls inside the list are ignored, but if it finds any non-{@link Column}
          * objects in the list an exception will be thrown. The list must contain at least one {@link Column}.
          * @param columns the {@link List} of {@link Column}s to form the key over.
-         * @throws NullPointerException if the input list or table is null.
          * @throws IllegalArgumentException if the input list contains any non-null non-{@link Column}
          * objects or contains less than 1 {@link Column}s.
          * @throws AssociationException if any of the {@link Column}s do not belong to
          * the {@link Table} specified.
          */
-        public GenericKey(List columns) throws IllegalArgumentException, NullPointerException, AssociationException {
+        public GenericKey(List columns) throws IllegalArgumentException, AssociationException {
             // Call the default constructor first.
             this();
-            // Sanity check.
-            if (columns == null)
-                throw new NullPointerException(BuilderBundle.getString("columnsIsNull"));
             // Do the work.
             for (Iterator i = columns.iterator(); i.hasNext(); ) {
                 Object o = i.next();
@@ -213,14 +206,10 @@ public interface Key extends Comparable {
          * The constructor constructs a {@link Key} over a single {@link Column}. The {@link Column}
          * cannot be changed outside this constructor.
          * @param column the {@link Column} to form the key over.
-         * @throws NullPointerException if the input {@link Column} is null.
          */
-        public GenericKey(Column column) throws NullPointerException {
+        public GenericKey(Column column) {
             // Call the default constructor first.
             this();
-            // Sanity check.
-            if (column == null)
-                throw new NullPointerException(BuilderBundle.getString("columnIsNull"));
             // Do the work.
             this.columns.add(column);
             this.table = column.getTable();
@@ -266,10 +255,7 @@ public interface Key extends Comparable {
         /**
          * {@inheritDoc}
          */
-        public Relation getRelationByName(String name) throws NullPointerException {
-            // Sanity check.
-            if (name == null)
-                throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
+        public Relation getRelationByName(String name) {
             // Do we have it?
             if (!this.relations.containsKey(name)) return null;
             // Return it.
@@ -279,10 +265,7 @@ public interface Key extends Comparable {
         /**
          * {@inheritDoc}
          */
-        public void addRelation(Relation relation) throws AssociationException, NullPointerException {
-            // Sanity check.
-            if (relation == null)
-                throw new NullPointerException(BuilderBundle.getString("relationIsNull"));
+        public void addRelation(Relation relation) throws AssociationException {
             // Does it refer to us?
             if (!(relation.getForeignKey() == this || relation.getPrimaryKey() == this))
                 throw new AssociationException(BuilderBundle.getString("relationNotOfThisKey"));
@@ -297,10 +280,7 @@ public interface Key extends Comparable {
         /**
          * {@inheritDoc}
          */
-        public void removeRelation(Relation relation) throws NullPointerException {
-            // Sanity check.
-            if (relation == null)
-                throw new NullPointerException(BuilderBundle.getString("relationIsNull"));
+        public void removeRelation(Relation relation) {
             // Work out its name.
             String name = relation.getName();
             // Quietly ignore if we dont' know about iit.
@@ -394,21 +374,14 @@ public interface Key extends Comparable {
         /**
          * The constructor passes on all its work to the {@link GenericKey} constructor.
          * @param columns the {@link List} of {@link Column}s to form the key over.
-         * @throws NullPointerException if the input list is null.
          * @throws IllegalArgumentException if the input list contains any non-null non-{@link Column}
          * objects or contains less than 2 {@link Column}s.
          * @throws AssociationException if any of the {@link Column}s do not belong to
          * the {@link Table} specified.
          */
-        public GenericPrimaryKey(List columns) throws NullPointerException, IllegalArgumentException, AssociationException {
+        public GenericPrimaryKey(List columns) throws AssociationException {
             super(columns);
-            try {
-                this.getTable().setPrimaryKey(this);
-            } catch (AssociationException e) {
-                AssertionError ae = new AssertionError(BuilderBundle.getString("tableMismatch"));
-                ae.initCause(e);
-                throw ae;
-            }
+            this.getTable().setPrimaryKey(this);
         }
         
         /**
@@ -428,21 +401,14 @@ public interface Key extends Comparable {
          * The constructor passes on all its work to the {@link GenericKey} constructor. It then
          * adds itself to the set of {@link ForeignKey}s on the parent {@link Table}.
          * @param columns the {@link List} of {@link Column}s to form the key over.
-         * @throws NullPointerException if the input list is null.
          * @throws IllegalArgumentException if the input list contains any non-null non-{@link Column}
          * objects or contains less than 2 {@link Column}s.
          * @throws AssociationException if any of the {@link Column}s do not belong to
          * the {@link Table} specified.
          */
-        public GenericForeignKey(List columns) throws NullPointerException, IllegalArgumentException, AssociationException {
+        public GenericForeignKey(List columns) throws AssociationException {
             super(columns);
-            try {
-                this.getTable().addForeignKey(this);
-            } catch (AssociationException e) {
-                AssertionError ae = new AssertionError(BuilderBundle.getString("tableMismatch"));
-                ae.initCause(e);
-                throw ae;
-            }
+            this.getTable().addForeignKey(this);
         }
         
         /**

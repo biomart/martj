@@ -60,9 +60,8 @@ public interface Relation extends Comparable {
     /**
      * Sets the {@link ComponentStatus} of this {@link Relation}.
      * @param status the new {@link ComponentStatus} of this {@link Relation}.
-     * @throws NullPointerException if the new status is null.
      */
-    public void setStatus(ComponentStatus status) throws NullPointerException;
+    public void setStatus(ComponentStatus status);
     
     /**
      * Returns the {@link PrimaryKey} of this {@link Relationship}.
@@ -87,9 +86,8 @@ public interface Relation extends Comparable {
      * Sets the {@link Cardinality} of the {@link ForeignKey} end
      * of this {@link Relationship}.
      * @param cardinality the {@link Cardinality}.
-     * @throws NullPointerException if the cardinality was null.
      */
-    public void setFKCardinality(Cardinality cardinality) throws NullPointerException;
+    public void setFKCardinality(Cardinality cardinality);
     
     /**
      * Deconstructs the {@link Relation} by removing references to
@@ -129,12 +127,8 @@ public interface Relation extends Comparable {
          * Note that the names of {@link Cardinality} objects are case-insensitive.
          * @param name the name of the {@link Cardinality} object.
          * @return the {@link Cardinality} object.
-         * @throws NullPointerException if the name is null.
          */
-        public static Cardinality get(String name) throws NullPointerException {
-            // Sanity check.
-            if (name == null)
-                throw new NullPointerException(BuilderBundle.getString("nameIsNull"));
+        public static Cardinality get(String name) {
             // Convert to upper case.
             name = name.toUpperCase();
             // Do we already have this one?
@@ -227,14 +221,9 @@ public interface Relation extends Comparable {
          * @param foreignKey the target {@link ForeignKey}.
          * @param cardinality the {@link Cardinality} of the {@link ForeignKey}.
          * @throws AssociationException if the number of {@link Column}s in the {@link Key}s don't match.
-         * @throws NullPointerException if either {@link Key} is null or the {@link Cardinality} is null.
          */
-        public GenericRelation(PrimaryKey primaryKey, ForeignKey foreignKey, Cardinality cardinality) throws AssociationException, NullPointerException {
+        public GenericRelation(PrimaryKey primaryKey, ForeignKey foreignKey, Cardinality cardinality) throws AssociationException {
             // Sanity checks.
-            if (cardinality==null)
-                throw new NullPointerException(BuilderBundle.getString("cardinalityIsNull"));
-            if (primaryKey==null || foreignKey==null)
-                throw new NullPointerException(BuilderBundle.getString("keysIsNull"));
             if (primaryKey.countColumns()!=foreignKey.countColumns())
                 throw new AssociationException(BuilderBundle.getString("keyColumnCountMismatch"));
             // Remember the keys.
@@ -271,10 +260,7 @@ public interface Relation extends Comparable {
         /**
          * {@inheritDoc}
          */
-        public void setStatus(ComponentStatus status) throws NullPointerException {
-            // Sanity check.
-            if (status==null)
-                throw new NullPointerException(BuilderBundle.getString("statusIsNull"));
+        public void setStatus(ComponentStatus status) {
             // Do it.
             this.status = status;
         }
@@ -303,10 +289,7 @@ public interface Relation extends Comparable {
         /**
          * {@inheritDoc}
          */
-        public void setFKCardinality(Cardinality cardinality) throws NullPointerException {
-            // Sanity check.
-            if (cardinality==null)
-                throw new NullPointerException(BuilderBundle.getString("cardinalityIsNull"));
+        public void setFKCardinality(Cardinality cardinality) {
             // Do it.
             this.cardinality = cardinality;
         }

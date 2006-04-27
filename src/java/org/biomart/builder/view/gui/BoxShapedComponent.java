@@ -35,14 +35,14 @@ import javax.swing.JPopupMenu;
  * are provided for sorting them, as they are not comparable within themselves.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 24th April 2006
+ * @version 0.1.2, 27th April 2006
  * @since 0.1
  */
-public abstract class BoxShapedDiagramComponent extends JPanel implements DiagramComponent {
+public abstract class BoxShapedComponent extends JPanel implements DiagramComponent {
     /**
      * Internal reference to our display parent.
      */
-    private Diagram parentDisplay;
+    private Diagram diagram;
     
     /**
      * Internal reference to the object we represent.
@@ -53,9 +53,9 @@ public abstract class BoxShapedDiagramComponent extends JPanel implements Diagra
      * The constructor constructs an object around a given
      * object, and associates with a given display.
      */
-    public BoxShapedDiagramComponent(Object object, Diagram parentDisplay) {
+    public BoxShapedComponent(Object object, Diagram diagram) {
         this.object = object;
-        this.parentDisplay = parentDisplay;
+        this.diagram = diagram;
         this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
     }
     
@@ -64,7 +64,7 @@ public abstract class BoxShapedDiagramComponent extends JPanel implements Diagra
      * @return the parent.
      */
     public Diagram getDiagram() {
-        return this.parentDisplay;
+        return this.diagram;
     }
     
     /**
@@ -94,7 +94,7 @@ public abstract class BoxShapedDiagramComponent extends JPanel implements Diagra
             // Build the basic menu.
             JPopupMenu contextMenu = this.getContextMenu();
             // Extend.
-            this.getDiagram().getAdaptor().customiseContextMenu(contextMenu, this.getObject());
+            this.getDiagram().getDiagramModifier().customiseContextMenu(contextMenu, this.getObject());
             // Display.
             contextMenu.show(this, evt.getX(), evt.getY());
             eventProcessed = true;
@@ -109,7 +109,7 @@ public abstract class BoxShapedDiagramComponent extends JPanel implements Diagra
     protected void paintComponent(Graphics g) {
         // Set up painting of this component.
         this.getDiagram().clearFlags();
-        this.getDiagram().getAdaptor().aboutToDraw(this.getObject());
+        this.getDiagram().getDiagramModifier().aboutToDraw(this.getObject());
         this.setComponentColours();
         // Do the painting.
         super.paintComponent(g);

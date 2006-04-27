@@ -1,5 +1,5 @@
 /*
- * TableDiagramComponent.java
+ * TableComponent.java
  *
  * Created on 19 April 2006, 15:36
  */
@@ -42,10 +42,10 @@ import org.biomart.builder.model.Table;
  * are provided for sorting them, as they are not comparable within themselves.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 24th April 2006
+ * @version 0.1.2, 27th April 2006
  * @since 0.1
  */
-public class TableDiagramComponent extends BoxShapedDiagramComponent {
+public class TableComponent extends BoxShapedComponent {
     /**
      * A map of keys to key components.
      */
@@ -55,8 +55,8 @@ public class TableDiagramComponent extends BoxShapedDiagramComponent {
      * The constructor constructs an object around a given
      * object, and associates with a given display.
      */
-    public TableDiagramComponent(Table table, Diagram parentDisplay) {
-        super(table, parentDisplay);
+    public TableComponent(Table table, Diagram diagram) {
+        super(table, diagram);
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         // Create the border and set up the colors and fonts.
         this.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -69,7 +69,7 @@ public class TableDiagramComponent extends BoxShapedDiagramComponent {
         // Now the keys.
         for (Iterator i = table.getKeys().iterator(); i.hasNext(); ) {
             Key key = (Key)i.next();
-            KeyDiagramComponent keyComponent = new KeyDiagramComponent(key, parentDisplay, this);
+            KeyComponent keyComponent = new KeyComponent(key, diagram, this);
             this.keyToKeyComponent.put(key, keyComponent);
             this.add(keyComponent);
         }

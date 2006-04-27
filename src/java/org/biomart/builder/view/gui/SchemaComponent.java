@@ -1,5 +1,5 @@
 /*
- * TableProviderDiagramComponent.java
+ * SchemaComponent.java
  *
  * Created on 19 April 2006, 15:36
  */
@@ -38,7 +38,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Key;
-import org.biomart.builder.model.TableProvider;
+import org.biomart.builder.model.Schema;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
@@ -46,10 +46,10 @@ import org.biomart.builder.resources.BuilderBundle;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 25th April 2006
+ * @version 0.1.2, 27th April 2006
  * @since 0.1
  */
-public class TableProviderDiagramComponent extends BoxShapedDiagramComponent {
+public class SchemaComponent extends BoxShapedComponent {
     /**
      * A map of keys to key components.
      */
@@ -59,21 +59,21 @@ public class TableProviderDiagramComponent extends BoxShapedDiagramComponent {
      * The constructor constructs an object around a given
      * object, and associates with a given display.
      */
-    public TableProviderDiagramComponent(TableProvider tableProvider, Diagram parentDisplay) {
-        super(tableProvider, parentDisplay);
+    public SchemaComponent(Schema schema, Diagram diagram) {
+        super(schema, diagram);
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         // Create the border and set up the colors and fonts.
         this.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         this.setForeground(Color.BLACK);
         this.setBackground(Color.PINK);
         // Add the label.
-        JLabel label = new JLabel(tableProvider.getName());
+        JLabel label = new JLabel(schema.getName());
         label.setFont(Font.decode("Serif-BOLD-10"));
         this.add(label);
         // Now the keys.
-        for (Iterator i = tableProvider.getExternalKeys().iterator(); i.hasNext(); ) {
+        for (Iterator i = schema.getExternalKeys().iterator(); i.hasNext(); ) {
             Key key = (Key)i.next();
-            KeyDiagramComponent keyComponent = new KeyDiagramComponent(key, parentDisplay, this);
+            KeyComponent keyComponent = new KeyComponent(key, diagram, this);
             this.keyToKeyComponent.put(key, keyComponent);
             this.add(keyComponent);
         }
@@ -82,8 +82,8 @@ public class TableProviderDiagramComponent extends BoxShapedDiagramComponent {
     /**
      * Gets our tableProvider.
      */
-    private TableProvider getTableProvider() {
-        return (TableProvider)this.getObject();
+    private Schema getSchema() {
+        return (Schema)this.getObject();
     }
     
     /**
@@ -97,7 +97,7 @@ public class TableProviderDiagramComponent extends BoxShapedDiagramComponent {
      * Count the relations attached to our inner object.
      */
     public int countExternalRelations() {
-        return this.getTableProvider().getExternalRelations().size();
+        return this.getSchema().getExternalRelations().size();
     }
     
     /**
@@ -113,53 +113,53 @@ public class TableProviderDiagramComponent extends BoxShapedDiagramComponent {
         showTables.setMnemonic(BuilderBundle.getString("showTablesMnemonic").charAt(0));
         showTables.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                int index = getDiagram().getWindowTabSet().getTableProviderTabSet().indexOfTab(getTableProvider().getName());
-                getDiagram().getWindowTabSet().getTableProviderTabSet().setSelectedIndex(index);
+                int index = getDiagram().getDataSetTabSet().getSchemaTabSet().indexOfTab(getSchema().getName());
+                getDiagram().getDataSetTabSet().getSchemaTabSet().setSelectedIndex(index);
             }
         });
         contextMenu.add(showTables);
         
-        JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameTblProvTitle"));
-        rename.setMnemonic(BuilderBundle.getString("renameTblProvMnemonic").charAt(0));
+        JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameSchemaTitle"));
+        rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
         rename.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getDiagram().getWindowTabSet().getTableProviderTabSet().renameTableProvider(getTableProvider());
+                getDiagram().getDataSetTabSet().getSchemaTabSet().renameSchema(getSchema());
             }
         });
         contextMenu.add(rename);
         
-        JMenuItem modify = new JMenuItem(BuilderBundle.getString("modifyTblProvTitle"));
-        modify.setMnemonic(BuilderBundle.getString("modifyTblProvMnemonic").charAt(0));
+        JMenuItem modify = new JMenuItem(BuilderBundle.getString("modifySchemaTitle"));
+        modify.setMnemonic(BuilderBundle.getString("modifySchemaMnemonic").charAt(0));
         modify.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getDiagram().getWindowTabSet().getTableProviderTabSet().requestModifyTableProvider(getTableProvider());
+                getDiagram().getDataSetTabSet().getSchemaTabSet().requestModifySchema(getSchema());
             }
         });
         contextMenu.add(modify);
         
-        JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseTblProvTitle"));
-        sync.setMnemonic(BuilderBundle.getString("synchroniseTblProvMnemonic").charAt(0));
+        JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseSchemaTitle"));
+        sync.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
         sync.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getDiagram().getWindowTabSet().getTableProviderTabSet().synchroniseTableProvider(getTableProvider());
+                getDiagram().getDataSetTabSet().getSchemaTabSet().synchroniseSchema(getSchema());
             }
         });
         contextMenu.add(sync);
         
-        JMenuItem test = new JMenuItem(BuilderBundle.getString("testTblProvTitle"));
-        test.setMnemonic(BuilderBundle.getString("testTblProvMnemonic").charAt(0));
+        JMenuItem test = new JMenuItem(BuilderBundle.getString("testSchemaTitle"));
+        test.setMnemonic(BuilderBundle.getString("testSchemaMnemonic").charAt(0));
         test.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getDiagram().getWindowTabSet().getTableProviderTabSet().testTableProvider(getTableProvider());
+                getDiagram().getDataSetTabSet().getSchemaTabSet().testSchema(getSchema());
             }
         });
         contextMenu.add(test);
         
-        JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeTblProvTitle"));
-        remove.setMnemonic(BuilderBundle.getString("removeTblProvMnemonic").charAt(0));
+        JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeSchemaTitle"));
+        remove.setMnemonic(BuilderBundle.getString("removeSchemaMnemonic").charAt(0));
         remove.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getDiagram().getWindowTabSet().getTableProviderTabSet().confirmRemoveTableProvider(getTableProvider());
+                getDiagram().getDataSetTabSet().getSchemaTabSet().confirmRemoveSchema(getSchema());
             }
         });
         contextMenu.add(remove);

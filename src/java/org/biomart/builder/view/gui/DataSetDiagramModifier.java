@@ -25,12 +25,11 @@
 package org.biomart.builder.view.gui;
 
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.Window;
 
 /**
  * Adapts listener events suitable for datasets.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 21st April 2006
+ * @version 0.1.3, 27th April 2006
  * @since 0.1
  */
 public class DataSetDiagramModifier extends WindowDiagramModifier {
@@ -42,15 +41,7 @@ public class DataSetDiagramModifier extends WindowDiagramModifier {
      * 
      * @param window the window whose dataset we are attached to.
      */
-    public DataSetDiagramModifier(WindowTabSet windowTabSet, Window window) {
-        super(windowTabSet, window);
-    }
- 
-    /**
-     * Retrieves our dataset.
-     * @return our dataset.
-     */
-    protected DataSet getDataSet() {
-        return this.getWindow().getDataSet();
+    public DataSetDiagramModifier(DataSetTabSet datasetTabSet, DataSet dataset) {
+        super(datasetTabSet, dataset);
     }
 }

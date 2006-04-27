@@ -32,14 +32,14 @@ import javax.swing.JPopupMenu;
 /**
  * Displays arbitrary objects linked in a radial form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 25th April 2006
+ * @version 0.1.5, 27th April 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
     /**
-     * Internal reference to our adaptor.
+     * Internal reference to our diagramModifier.
      */
-    private DiagramModifier adaptor;
+    private DiagramModifier diagramModifier;
     
     /**
      * The current display flags.
@@ -49,24 +49,24 @@ public abstract class Diagram extends JPanel {
     /**
      * The window tab set we belong to.
      */
-    protected WindowTabSet windowTabSet;
+    protected DataSetTabSet datasetTabSet;
     
     /**
      * Creates a new instance of Diagram.
      */
-    public Diagram(WindowTabSet windowTabSet) {
+    public Diagram(DataSetTabSet datasetTabSet) {
         // GUI stuff.
         super(new RadialLayout());
         this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
         // Business stuff.
-        this.windowTabSet = windowTabSet;
+        this.datasetTabSet = datasetTabSet;
     }
     
     /**
      * The window tab set.
      */
-    protected WindowTabSet getWindowTabSet() {
-        return this.windowTabSet;
+    protected DataSetTabSet getDataSetTabSet() {
+        return this.datasetTabSet;
     }
     
     /**
@@ -86,7 +86,7 @@ public abstract class Diagram extends JPanel {
             // Only respond to individual table providers, not the overview tab.
             JPopupMenu contextMenu = this.getContextMenu();
             // Extend.
-            if (this.adaptor != null) this.getAdaptor().customiseContextMenu(contextMenu, null);
+            if (this.diagramModifier != null) this.getDiagramModifier().customiseContextMenu(contextMenu, null);
             // Display.
             contextMenu.show(this, evt.getX(), evt.getY());
             eventProcessed = true;
@@ -98,15 +98,15 @@ public abstract class Diagram extends JPanel {
     /**
      * {@inheritDoc}
      */
-    public void setAdaptor(DiagramModifier adaptor) {
-        this.adaptor = adaptor;
+    public void setDiagramModifier(DiagramModifier adaptor) {
+        this.diagramModifier = adaptor;
     }
     
     /**
      * {@inheritDoc}
      */
-    public DiagramModifier getAdaptor() {
-        return this.adaptor;
+    public DiagramModifier getDiagramModifier() {
+        return this.diagramModifier;
     }
     
     /**

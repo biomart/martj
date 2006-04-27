@@ -31,34 +31,34 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Table;
-import org.biomart.builder.model.Window;
+import org.biomart.builder.model.DataSet;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Provides the default behaviour for table provider listeners.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 25th April 2006
+ * @version 0.1.5, 27th April 2006
  * @since 0.1
  */
 public class SchemaDiagramModifier implements DiagramModifier {
     /**
      * The window set we belong to.
      */
-    protected WindowTabSet windowTabSet;
+    protected DataSetTabSet datasetTabSet;
     
     /**
      * Creates a new instance of SchemaDiagramModifier and binds it to a given
      * MartBuilder instance.
      */
-    public SchemaDiagramModifier(WindowTabSet windowTabSet) {
-        this.windowTabSet = windowTabSet;
+    public SchemaDiagramModifier(DataSetTabSet datasetTabSet) {
+        this.datasetTabSet = datasetTabSet;
     }
     
     /**
      * Get the window tab set.
      */
-    protected WindowTabSet getWindowTabSet() {
-        return this.windowTabSet;
+    protected DataSetTabSet getDataSetTabSet() {
+        return this.datasetTabSet;
     }
     
     /**
@@ -74,20 +74,20 @@ public class SchemaDiagramModifier implements DiagramModifier {
             // Add the dataset generation options.
             contextMenu.addSeparator();
             
-            JMenuItem create = new JMenuItem(BuilderBundle.getString("createWindowTitle", table.getName()));
-            create.setMnemonic(BuilderBundle.getString("createWindowMnemonic").charAt(0));
+            JMenuItem create = new JMenuItem(BuilderBundle.getString("createDataSetTitle", table.getName()));
+            create.setMnemonic(BuilderBundle.getString("createDataSetMnemonic").charAt(0));
             create.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    windowTabSet.createWindow(tableRef);
+                    datasetTabSet.createDataSet(tableRef);
                 }
             });
             contextMenu.add(create);
             
-            JMenuItem suggest = new JMenuItem(BuilderBundle.getString("suggestWindowsTitle", table.getName()));
-            suggest.setMnemonic(BuilderBundle.getString("suggestWindowsMnemonic").charAt(0));
+            JMenuItem suggest = new JMenuItem(BuilderBundle.getString("suggestDataSetsTitle", table.getName()));
+            suggest.setMnemonic(BuilderBundle.getString("suggestDataSetsMnemonic").charAt(0));
             suggest.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    windowTabSet.suggestWindows(tableRef);
+                    datasetTabSet.suggestDataSets(tableRef);
                 }
             });
             contextMenu.add(suggest);

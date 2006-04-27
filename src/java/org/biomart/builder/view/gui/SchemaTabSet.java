@@ -1,7 +1,7 @@
 /*
  * SchemaTabSet.java
  *
- * Created on 21 April 2006, 08:28
+ * Created on 11 April 2006, 16:00
  */
 
 /*
@@ -24,245 +24,289 @@
 
 package org.biomart.builder.view.gui;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
-import javax.swing.filechooser.FileFilter;
-import org.biomart.builder.controller.SchemaIO;
+import org.biomart.builder.controller.MartUtils;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
- * Displays a schema.
+ * Displays the contents of multiple {@link Schema}s in graphical form.
+ * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 26th April 2006
+ * @version 0.1.3, 27th April 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
     /**
-     * Reference to the parent MartBuilder.
+     * Internal reference to the list of table providers, in order, mapped
+     * to their schemaToDiagram.
      */
-    private MartBuilder martBuilder;
+    private Map schemaToDiagram = new HashMap();
     
     /**
-     * A file chooser for XML files.
+     * Internal reference to the diagramModifier for the providers we are viewing.
      */
-    private JFileChooser xmlFileChooser;
+    private DiagramModifier diagramModifier;
     
     /**
-     * The modified status of the schema.
+     * The window tab set we belong to.
      */
-    private Map schemaModifiedStatus;
+    private DataSetTabSet datasetTabSet;
     
     /**
-     * The map of schemas to files.
+     * Our overview tab.
      */
-    private Map schemaFile;
+    private AllSchemasDiagram allSchemasDiagram;
     
     /**
-     * Creates a new instance of SchemaTabSet
+     * Creates a new multiple table provider view over the given set of
+     * of table providers.
      */
-    public SchemaTabSet(MartBuilder martBuilder) {
-        // GUI stuff first.
+    public SchemaTabSet(DataSetTabSet datasetTabSet) {
         super();
-        // Create the file chooser.
-        this.xmlFileChooser = new JFileChooser();
-        this.xmlFileChooser.setFileFilter(new FileFilter(){
-            /**
-             * {@inheritDoc}
-             * <p>Accepts only files ending in ".xml".</p>
-             */
-            public boolean accept(File f) {
-                return (f.isDirectory() || f.getName().endsWith(".xml"));
-            }
-            
-            /**
-             * {@inheritDoc}
-             */
-            public String getDescription() {
-                return BuilderBundle.getString("XMLFileFilterDescription");
-            }
-        });		
-        this.xmlFileChooser.setMultiSelectionEnabled(true);
-        
-        // Now the application logic stuff.
-        this.martBuilder = martBuilder;
-        this.schemaModifiedStatus = new HashMap();
-        this.schemaFile = new HashMap();
+        this.datasetTabSet = datasetTabSet;
+        // Add the overview tab to ourselves.
+        this.allSchemasDiagram = new AllSchemasDiagram(this.datasetTabSet);
+        JScrollPane scroller = new JScrollPane(this.allSchemasDiagram);
+        scroller.getViewport().setBackground(this.allSchemasDiagram.getBackground());
+        this.addTab(BuilderBundle.getString("multiSchemaOverviewTab"), scroller);
+        // Synchronise ourselves.
+        this.synchroniseTabs();
     }
     
     /**
-     * Retrieves the parent MartBuilder.
+     * Who's our mummy?
      */
-    public MartBuilder getMartBuilder() {
-        return this.martBuilder;
+    public DataSetTabSet getDataSetTabSet() {
+        return this.datasetTabSet;
     }
     
     /**
-     * Returns the current schema's window tabset.
+     * Makes sure we are displaying the correct set of table providers.
      */
-    public WindowTabSet getCurrentWindowTabSet() {
-        if (this.getSelectedComponent()!=null) return (WindowTabSet)this.getSelectedComponent();
-        else return null;
-    }
-    
-    /**
-     * If any schema is modified, confirm they really want to do it.
-     */
-    public boolean confirmCloseAllSchemas() {
-        for (Iterator i =  this.schemaModifiedStatus.values().iterator(); i.hasNext(); ) {
-            if (i.next().equals(Boolean.TRUE)) {
-                int choice = JOptionPane.showConfirmDialog(
-                        this,
-                        BuilderBundle.getString("okToCloseAll"),
-                        BuilderBundle.getString("questionTitle"),
-                        JOptionPane.YES_NO_OPTION
-                        );
-                return choice == JOptionPane.YES_OPTION;
-            }
+    public void synchroniseTabs() {
+        // Add all table providers that we don't have yet.
+        List martSchemas = new ArrayList(this.datasetTabSet.getMart().getSchemas());
+        for (Iterator i = martSchemas.iterator(); i.hasNext(); ) {
+            Schema schema = (Schema)i.next();
+            if (!this.schemaToDiagram.containsKey(schema)) this.addSchemaTab(schema);
         }
-        return true;
+        // Remove all our table providers that are not in the schema.
+        martSchemas = new ArrayList(this.schemaToDiagram.keySet());
+        for (Iterator i = martSchemas.iterator(); i.hasNext(); ) {
+            Schema schema = (Schema)i.next();
+            if (!martSchemas.contains(schema)) this.removeSchemaTab(schema);
+        }
+        // Synchronise our overview tab.
+        this.allSchemasDiagram.synchroniseDiagram();
+        // Synchronise our tab view contents.
+        for (int i = 1; i < this.getTabCount(); i++) {
+            JScrollPane scroller = (JScrollPane)this.getComponentAt(i);
+            SchemaDiagram tableDiagram = (SchemaDiagram)scroller.getViewport().getView();
+            tableDiagram.synchroniseDiagram();
+        }
+        // Redraw.
+        this.validate();
     }
     
     /**
-     * If the schema is modified, asks the user for confirmation whether to
-     * close it without saving or not.
+     * Confirms with user then removes a table provider.
      */
-    public void confirmCloseSchema() {
-        boolean canClose = true;
-        if (this.getCurrentWindowTabSet() == null) return;
-        Schema currentSchema = this.getCurrentWindowTabSet().getSchema();
-        if (this.schemaModifiedStatus.get(currentSchema).equals(Boolean.TRUE)) {
-            // Modified, so must confirm action first.
-            int choice = JOptionPane.showConfirmDialog(
-                    this,
-                    BuilderBundle.getString("okToClose"),
-                    BuilderBundle.getString("questionTitle"),
-                    JOptionPane.YES_NO_OPTION
-                    );
-            canClose = (choice == JOptionPane.YES_OPTION);
-        }
-        if (canClose) {
-            this.removeTabAt(this.indexOfComponent(this.getSelectedComponent()));
-            this.schemaModifiedStatus.remove(currentSchema);
-            this.schemaFile.remove(currentSchema);
+    public void requestAddSchema() {
+        // Interpret the response.
+        Schema schema = SchemaManagementDialog.createSchema(this);
+        // Add to schema.
+        try {
+            if (schema != null) {
+                MartUtils.addSchemaToMart(this.datasetTabSet.getMart(), schema);
+                this.synchroniseSchema(schema);
+                this.synchroniseTabs();
+                this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
+            }
+        } catch (Throwable t) {
+            this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
         }
     }
     
     /**
-     * Sets the current modified status.
-     * @param status true for modified, false for unmodified.
+     * Confirms with user then removes a table provider.
      */
-    public void setModifiedStatus(boolean status) {
-        if (this.getCurrentWindowTabSet() == null) return;
-        Schema currentSchema = this.getCurrentWindowTabSet().getSchema();
-        this.schemaModifiedStatus.put(currentSchema, Boolean.valueOf(status));
-        this.setTitleAt(this.getSelectedIndex(), this.suggestTabName(currentSchema));
+    public void requestModifySchema(Schema schema) {
+        // Add to schema.
+        try {
+            if (SchemaManagementDialog.modifySchema(this, schema)) 
+                this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
+        } catch (Throwable t) {
+            this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+        }
     }
     
     /**
-     * Gets a tab name based on a filename.
+     * Adds a new table provider to our tabs.
      */
-    private String suggestTabName(Schema schema) {
-        File filename = (File)this.schemaFile.get(schema);
-        String basename = BuilderBundle.getString("unsavedSchema");
-        if (filename!=null) basename = filename.getName();
-        return basename + (this.schemaModifiedStatus.get(schema).equals(Boolean.TRUE) ? " *" : "");
+    private void addSchemaTab(Schema schema) {
+        // Create and add the tab.
+        SchemaDiagram schemaDiagram = new SchemaDiagram(this.datasetTabSet, schema);
+        JScrollPane scroller = new JScrollPane(schemaDiagram);
+        scroller.getViewport().setBackground(schemaDiagram.getBackground());
+        this.addTab(schema.getName(), scroller);
+        // Remember the view.
+        this.schemaToDiagram.put(schema, schemaDiagram);
+        // Set the diagramModifier on the view.
+        schemaDiagram.setDiagramModifier(this.getDiagramModifier());
+        this.allSchemasDiagram.synchroniseDiagram();
     }
     
     /**
-     * Sets up a schema.
+     * Confirms with user then removes a table provider.
      */
-    private void addSchemaTab(Schema newSchema, File schemaFile, boolean initialState) {
-        this.schemaFile.put(newSchema, schemaFile);
-        this.schemaModifiedStatus.put(newSchema, Boolean.valueOf(initialState));
-        this.addTab(this.suggestTabName(newSchema), new WindowTabSet(this, newSchema));
-        this.setSelectedIndex(this.getTabCount()-1); // Select the newest tab.
-    }
-    
-    /**
-     * Creates a new schema.
-     */
-    public void newSchema() {
-        this.addSchemaTab(new Schema(), null, true);
-    }
-    
-    /**
-     * Saves the schema to the current file.
-     */
-    public void saveSchema() {
-        if (this.getCurrentWindowTabSet() == null) return;
-        Schema currentSchema = this.getCurrentWindowTabSet().getSchema();
-        if (this.schemaFile.get(currentSchema) == null) this.saveSchemaAs();
-        else {
+    public void confirmRemoveSchema(Schema schema) {
+        // Must confirm action first.
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                BuilderBundle.getString("confirmDelSchema"),
+                BuilderBundle.getString("questionTitle"),
+                JOptionPane.YES_NO_OPTION
+                );
+        if (choice == JOptionPane.YES_OPTION) {
             try {
-                SchemaIO.save(currentSchema, (File)this.schemaFile.get(currentSchema));
-                this.setModifiedStatus(false);
+                MartUtils.removeSchemaFromMart(this.datasetTabSet.getMart(), schema);
+                this.removeSchemaTab(schema);
+                this.datasetTabSet.synchroniseTabs();
+                this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
             } catch (Throwable t) {
-                this.martBuilder.showStackTrace(t);
+                this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
             }
         }
     }
     
     /**
-     * Saves the schema to a user-specified file.
+     * Removes a table provider from our tabs.
      */
-    public void saveSchemaAs() {
-        if (this.getCurrentWindowTabSet() == null) return;
-        Schema currentSchema = this.getCurrentWindowTabSet().getSchema();
-        if (this.xmlFileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File saveAsFile = this.xmlFileChooser.getSelectedFile();
-            // Skip the rest if they cancelled the save box.
-            if (saveAsFile != null) {
-                this.schemaFile.put(currentSchema, saveAsFile);
-                this.saveSchema();
-            }
-        }
+    private void removeSchemaTab(Schema schema) {
+        SchemaDiagram schemaDiagram = (SchemaDiagram)this.schemaToDiagram.get(schema);
+        this.removeTabAt(this.indexOfTab(schema.getName()));
+        this.schemaToDiagram.remove(schema);
     }
     
     /**
-     * Loads a schema from a user-specified file.
+     * Prompt for a name for a window.
      */
-    public void loadSchema() {
-        if (this.xmlFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File[] loadFiles = this.xmlFileChooser.getSelectedFiles();
-            if (loadFiles != null) {
-                try {
-                    for (int i = 0; i < loadFiles.length; i++) {
-                        this.addSchemaTab(SchemaIO.load(loadFiles[i]), loadFiles[i], false);
-                    }
-                } catch (Throwable t) {
-                    this.martBuilder.showStackTrace(t);
-                }
+    private String getSchemaName(String defaultResponse) {
+        // Get one from user.
+        String name = (String)JOptionPane.showInputDialog(
+                this.datasetTabSet.getMartTabSet().getMartBuilder(),
+                BuilderBundle.getString("requestSchemaName"),
+                BuilderBundle.getString("questionTitle"),
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                null,
+                defaultResponse
+                );
+        // If empty, use table name.
+        if (name == null) return null;
+        else if (name.trim().length()==0) name = defaultResponse;
+        // Return.
+        return name;
+    }
+    
+    /**
+     * Renames a table provider (and tab).
+     */
+    public void renameSchema(Schema schema) {
+        // Update the table provider name and the tab name.
+        try {
+            String newName = this.getSchemaName(schema.getName());
+            if (newName != null && !newName.equals(schema.getName())) {
+                int tabIndex = this.indexOfTab(schema.getName());
+                MartUtils.renameSchema(this.datasetTabSet.getMart(), schema, newName);
+                this.setTitleAt(tabIndex, newName);
+                this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
             }
+        } catch (Throwable t) {
+            this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
         }
     }
     
     /**
-     * Construct a context menu for a given window view tab.
-     * @param window the window to use when the context menu items are chosen.
+     * Syncs this table provider individually against the database.
+     */
+    public void synchroniseSchema(Schema schema) {
+        try {
+            MartUtils.synchroniseSchema(schema);
+            this.datasetTabSet.synchroniseTabs();
+            this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
+        } catch (Throwable t) {
+            this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+        }
+    }
+    
+    /**
+     * Test this table provider individually against the database.
+     */
+    public void testSchema(Schema schema) {
+        boolean passedTest = false;
+        try {
+            passedTest = MartUtils.testSchema(schema);
+        } catch (Throwable t) {
+            passedTest = false;
+            this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+        }
+        // Tell the user what happened.
+        if (passedTest) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    BuilderBundle.getString("schemaTestPassed"),
+                    BuilderBundle.getString("testTitle"),
+                    JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(
+                    this,
+                    BuilderBundle.getString("schemaTestFailed"),
+                    BuilderBundle.getString("testTitle"),
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    /**
+     * Construct a context menu for a given table provider view tab.
+     * 
+     * @param schema the table provider to use when the context menu items are chosen.
      * @return the popup menu.
      */
-    private JPopupMenu getSchemaTabContextMenu() {
+    private JPopupMenu getSchemaTabContextMenu(final Schema schema) {
         JPopupMenu contextMenu = new JPopupMenu();
         
-        JMenuItem close = new JMenuItem(BuilderBundle.getString("closeSchemaTitle"));
-        close.setMnemonic(BuilderBundle.getString("closeSchemaMnemonic").charAt(0));
+        JMenuItem close = new JMenuItem(BuilderBundle.getString("removeSchemaTitle"));
+        close.setMnemonic(BuilderBundle.getString("removeSchemaMnemonic").charAt(0));
         close.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                confirmCloseSchema();
+                confirmRemoveSchema(schema);
             }
         });
         contextMenu.add(close);
+        
+        JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameSchemaTitle"));
+        rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
+        rename.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                renameSchema(schema);
+            }
+        });
+        contextMenu.add(rename);
         
         return contextMenu;
     }
@@ -278,13 +322,38 @@ public class SchemaTabSet extends JTabbedPane {
             // Where was the click?
             int selectedIndex = this.indexAtLocation(evt.getX(), evt.getY());
             if (selectedIndex >= 0) {
+                Component selectedComponent = this.getComponentAt(selectedIndex);
                 // Respond appropriately.
-                this.setSelectedIndex(selectedIndex);
-                this.getSchemaTabContextMenu().show(this, evt.getX(), evt.getY());
-                eventProcessed = true;
+                if (selectedComponent instanceof JScrollPane) {
+                    Component selectedDiagram = ((JScrollPane)selectedComponent).getViewport().getView();
+                    if (selectedDiagram instanceof SchemaDiagram) {
+                        this.setSelectedIndex(selectedIndex);
+                        Schema schema = ((SchemaDiagram)selectedDiagram).getSchema();
+                        this.getSchemaTabContextMenu(schema).show(this, evt.getX(), evt.getY());
+                        eventProcessed = true;
+                    }
+                }
             }
         }
         // Pass it on up if we're not interested.
         if (!eventProcessed) super.processMouseEvent(evt);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public void setDiagramModifier(DiagramModifier diagramModifier) {
+        this.diagramModifier = diagramModifier;
+        for (int i = 0; i < this.getTabCount(); i++) {
+            Diagram diagram = (Diagram)((JScrollPane)this.getComponentAt(i)).getViewport().getView();
+            diagram.setDiagramModifier(diagramModifier);
+        }
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public DiagramModifier getDiagramModifier() {
+        return this.diagramModifier;
     }
 }
