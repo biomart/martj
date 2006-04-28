@@ -30,18 +30,26 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
 import org.biomart.builder.controller.JDBCSchema;
 import org.biomart.builder.controller.MartUtils;
@@ -54,7 +62,22 @@ import org.biomart.builder.resources.BuilderBundle;
  * @version 0.1.2, 27th April 2006
  * @since 0.1
  */
-public class SchemaManagementDialog extends JDialog {
+public class SchemaManagementDialog extends JDialog implements ActionListener {
+    /**
+     * Constants.
+     */
+    private static Map DRIVER_MAP = new HashMap();
+    static {
+        DRIVER_MAP.put("com.mysql.jdbc.Driver", new String[]{"3306","jdbc:mysql://<HOST>:<PORT>/<DATABASE>"});
+        DRIVER_MAP.put("oracle.jdbc.driver.OracleDriver",new String[]{"1531","jdbc:oracle:thin:@<HOST>:<PORT>:<DATABASE>"});
+        DRIVER_MAP.put("org.postgresql.Driver",new String[]{"5432","jdbc:postgres://<HOST>:<PORT>/<DATABASE>"});
+    }
+    
+    /**
+     * The current JDBC template;
+     */
+    private String currentJDBCURLTemplate;
+    
     /**
      * Our parent schema.
      */
@@ -69,13 +92,17 @@ public class SchemaManagementDialog extends JDialog {
      * The dialog fields.
      */
     private JComboBox type;
+    private JComboBox copysettings;
     private JCheckBox keyguessing;
     private JTextField name;
-    private JTextField driverClass;
+    private JComboBox driverClass;
     private JTextField driverClassLocation;
     private JButton driverClassLocationButton;
     private JFileChooser jarFileChooser;
     private JTextField jdbcURL;
+    private JTextField host;
+    private JFormattedTextField port;
+    private JTextField database;
     private JTextField username;
     private JPasswordField password;
     private JButton test;
@@ -101,13 +128,13 @@ public class SchemaManagementDialog extends JDialog {
         labelConstraints.gridwidth = GridBagConstraints.RELATIVE;
         labelConstraints.fill = GridBagConstraints.HORIZONTAL;
         labelConstraints.anchor = GridBagConstraints.LINE_END;
-        labelConstraints.insets = new Insets(2,2,2,2);
+        labelConstraints.insets = new Insets(0,2,0,0);
         // create field constraints
         GridBagConstraints fieldConstraints = new GridBagConstraints();
         fieldConstraints.gridwidth = GridBagConstraints.REMAINDER;
         fieldConstraints.fill = GridBagConstraints.NONE;
         fieldConstraints.anchor = GridBagConstraints.LINE_START;
-        fieldConstraints.insets = new Insets(2,2,2,2);
+        fieldConstraints.insets = new Insets(0,1,0,2);
         // create last row label constraints
         GridBagConstraints labelLastRowConstraints = (GridBagConstraints)labelConstraints.clone();
         labelLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
@@ -116,17 +143,31 @@ public class SchemaManagementDialog extends JDialog {
         fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
         
         // create fields in dialog
+        this.name = new JTextField(20);
         this.type = new JComboBox(new String[]{
             BuilderBundle.getString("jdbcSchema")
         });
         this.keyguessing = new JCheckBox();
-        this.name = new JTextField(20);
-        this.driverClass = new JTextField(50);
+        this.driverClass = new JComboBox((String[])SchemaManagementDialog.DRIVER_MAP.keySet().toArray(new String[0]));
+        this.driverClass.setEditable(true);
+        this.driverClass.addActionListener(this);
         this.driverClassLocation = new JTextField(30);
         this.driverClassLocationButton = new JButton(BuilderBundle.getString("browseButton"));
-        this.jdbcURL = new JTextField(50);
-        this.username = new JTextField(20);
-        this.password = new JPasswordField(20);
+        this.jdbcURL = new JTextField(40);
+        this.host = new JTextField(10);
+        this.port = new JFormattedTextField(new DecimalFormat("0"));
+        this.port.setColumns(4);
+        this.database = new JTextField(10);
+        this.username = new JTextField(10);
+        this.password = new JPasswordField(10);
+        this.copysettings = new JComboBox(this.schemaTabSet.getDataSetTabSet().getMart().getSchemas().toArray());
+        this.copysettings.addActionListener(this);
+        
+        // create JDBC URL constructor
+        DocumentListener jdbcURLConstructor = new JDBCURLConstructor(this.host, this.port, this.database, this.jdbcURL);
+        this.host.getDocument().addDocumentListener(jdbcURLConstructor);
+        this.port.getDocument().addDocumentListener(jdbcURLConstructor);
+        this.database.getDocument().addDocumentListener(jdbcURLConstructor);
         
         // create buttons in dialog
         this.test = new JButton(BuilderBundle.getString("testButton"));
@@ -153,66 +194,87 @@ public class SchemaManagementDialog extends JDialog {
         });
         
         // execute all the buttons and fields with their labels to the dialog
-        JLabel label = new JLabel(BuilderBundle.getString("typeLabel"));
+        JLabel label = new JLabel(BuilderBundle.getString("nameLabel"));
         gridBag.setConstraints(label, labelConstraints);
         content.add(label);
-        gridBag.setConstraints(this.type, fieldConstraints);
-        content.add(this.type);
+        JPanel field = new JPanel();
+        field.add(this.name);
+        label = new JLabel(BuilderBundle.getString("copySettingsLabel"));
+        field.add(label);
+        field.add(this.copysettings);
+        gridBag.setConstraints(field, fieldConstraints);
+        content.add(field);
         
+        label = new JLabel(BuilderBundle.getString("typeLabel"));
+        gridBag.setConstraints(label, labelConstraints);
+        content.add(label);
+        field = new JPanel();
+        field.add(this.type);
         label = new JLabel(BuilderBundle.getString("keyguessingLabel"));
-        gridBag.setConstraints(label, labelConstraints);
-        content.add(label);
-        gridBag.setConstraints(this.keyguessing, fieldConstraints);
-        content.add(this.keyguessing);
-        
-        label = new JLabel(BuilderBundle.getString("nameLabel"));
-        gridBag.setConstraints(label, labelConstraints);
-        content.add(label);
-        gridBag.setConstraints(this.name, fieldConstraints);
-        content.add(this.name);
+        field.add(label);
+        field.add(this.keyguessing);
+        gridBag.setConstraints(field, fieldConstraints);
+        content.add(field);
         
         label = new JLabel(BuilderBundle.getString("driverClassLabel"));
         gridBag.setConstraints(label, labelConstraints);
         content.add(label);
-        gridBag.setConstraints(this.driverClass, fieldConstraints);
-        content.add(this.driverClass);
+        field = new JPanel();
+        field.add(this.driverClass);
+        gridBag.setConstraints(field, fieldConstraints);
+        content.add(field);
         
         label = new JLabel(BuilderBundle.getString("driverClassLocationLabel"));
         gridBag.setConstraints(label, labelConstraints);
         content.add(label);
-        JPanel driverLocationPanel = new JPanel();
-        driverLocationPanel.add(this.driverClassLocation);
-        driverLocationPanel.add(this.driverClassLocationButton);
-        gridBag.setConstraints(driverLocationPanel, fieldConstraints);
-        content.add(driverLocationPanel);
+        field = new JPanel();
+        field.add(this.driverClassLocation);
+        field.add(this.driverClassLocationButton);
+        gridBag.setConstraints(field, fieldConstraints);
+        content.add(field);
+        
+        label = new JLabel(BuilderBundle.getString("hostLabel"));
+        gridBag.setConstraints(label, labelConstraints);
+        content.add(label);
+        field = new JPanel();
+        field.add(this.host);
+        label = new JLabel(BuilderBundle.getString("portLabel"));
+        field.add(label);
+        field.add(this.port);
+        label = new JLabel(BuilderBundle.getString("databaseLabel"));
+        field.add(label);
+        field.add(this.database);
+        gridBag.setConstraints(field, fieldConstraints);
+        content.add(field);
         
         label = new JLabel(BuilderBundle.getString("jdbcURLLabel"));
         gridBag.setConstraints(label, labelConstraints);
         content.add(label);
-        gridBag.setConstraints(this.jdbcURL, fieldConstraints);
-        content.add(this.jdbcURL);
+        field = new JPanel();
+        field.add(this.jdbcURL);
+        gridBag.setConstraints(field, fieldConstraints);
+        content.add(field);
         
         label = new JLabel(BuilderBundle.getString("usernameLabel"));
         gridBag.setConstraints(label, labelConstraints);
         content.add(label);
-        gridBag.setConstraints(this.username, fieldConstraints);
-        content.add(this.username);
-        
+        field = new JPanel();
+        field.add(this.username);
         label = new JLabel(BuilderBundle.getString("passwordLabel"));
-        gridBag.setConstraints(label, labelConstraints);
-        content.add(label);
-        gridBag.setConstraints(this.password, fieldConstraints);
-        content.add(this.password);
+        field.add(label);
+        field.add(this.password);
+        gridBag.setConstraints(field, fieldConstraints);
+        content.add(field);
         
         label = new JLabel();
         gridBag.setConstraints(label, labelLastRowConstraints);
         content.add(label);
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.add(this.test);
-        buttonPanel.add(this.cancel);
-        buttonPanel.add(this.execute);
-        gridBag.setConstraints(buttonPanel, fieldLastRowConstraints);
-        content.add(buttonPanel);
+        field = new JPanel();
+        field.add(this.test);
+        field.add(this.cancel);
+        field.add(this.execute);
+        gridBag.setConstraints(field, fieldLastRowConstraints);
+        content.add(field);
         
         // intercept the cancel button
         this.cancel.addActionListener(new ActionListener() {
@@ -285,30 +347,60 @@ public class SchemaManagementDialog extends JDialog {
      * Resets the fields to their default values.
      */
     private void resetFields(Schema template) {
+        // All-comers.
+        this.copysettings.setSelectedIndex(-1);
+        // Specifics.
         if (template instanceof JDBCSchema) {
-            JDBCSchema jdbcSchema = (JDBCSchema)template;
+            this.copySettingsFrom(template);
             this.type.setSelectedItem(BuilderBundle.getString("jdbcSchema"));
             this.type.setEnabled(false); // Gray out as we can't change this property.
-            this.keyguessing.setSelected(jdbcSchema.isKeyGuessing());
             this.name.setText(template.getName());
             this.name.setEnabled(false); // Gray out as we can't change this property.
-            this.driverClass.setText(jdbcSchema.getDriverClassName());
+        }
+        // Everyone else.
+        else {
+            this.type.setSelectedIndex(0);
+            this.keyguessing.setSelected(false);
+            this.name.setText(null);
+            this.driverClass.setSelectedIndex(-1);
+            this.driverClassLocation.setText(null);
+            this.jdbcURL.setText(null);
+            this.host.setText(null);
+            this.port.setText(null);
+            this.database.setText(null);
+            this.username.setText(null);
+            this.password.setText(null);
+        }
+    }
+    
+    /**
+     * Resets the fields to their default values.
+     */
+    private void copySettingsFrom(Schema template) {
+        if (template instanceof JDBCSchema) {
+            JDBCSchema jdbcSchema = (JDBCSchema)template;
+            this.keyguessing.setSelected(jdbcSchema.isKeyGuessing());
+            this.driverClass.setSelectedItem(jdbcSchema.getDriverClassName());
             this.driverClassLocation.setText(
                     jdbcSchema.getDriverClassLocation() == null
                     ? null
                     : jdbcSchema.getDriverClassLocation().toString());
-            this.jdbcURL.setText(jdbcSchema.getJDBCURL());
+            String jdbcURL = jdbcSchema.getJDBCURL();
+            this.jdbcURL.setText(jdbcURL);
             this.username.setText(jdbcSchema.getUsername());
             this.password.setText(jdbcSchema.getPassword());
-        } else {
-            this.type.setSelectedIndex(0);
-            this.keyguessing.setSelected(false);
-            this.name.setText(null);
-            this.driverClass.setText(null);
-            this.driverClassLocation.setText(null);
-            this.jdbcURL.setText(null);
-            this.username.setText(null);
-            this.password.setText(null);
+            // Parse the JDBC URL into host, port and database if driver known.
+            String regexURL = new String(this.currentJDBCURLTemplate);
+            regexURL = regexURL.replaceAll("<HOST>","(.*)");
+            regexURL = regexURL.replaceAll("<PORT>","(.*)");
+            regexURL = regexURL.replaceAll("<DATABASE>","(.*)");
+            Pattern regex = Pattern.compile(regexURL);
+            Matcher matcher = regex.matcher(jdbcURL);
+            if (matcher.matches()) {
+                this.host.setText(matcher.group(1));
+                this.port.setText(matcher.group(2));
+                this.database.setText(matcher.group(3));
+            }
         }
     }
     
@@ -318,35 +410,30 @@ public class SchemaManagementDialog extends JDialog {
     private boolean validateFields() {
         List messages = new ArrayList();
         
-        if (isEmpty(this.name.getText())) {
+        if (this.isEmpty(this.name.getText())) {
             messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle.getString("name")));
         }
         
-        if (isEmpty(this.driverClass.getText())) {
+        if (this.isEmpty((String)this.driverClass.getSelectedItem())) {
             messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle.getString("driverClass")));
         } else {
-            // Attempt to load the class.
-            boolean classFound = false;
-            try {
-                Class.forName(this.driverClass.getText());
-                classFound = true;
-            } catch (Exception e) {
-                classFound = false;
-            }
-            // If not found, check the class location.
-            if (!classFound && isEmpty(this.driverClassLocation.getText())) {
-                messages.add(BuilderBundle.getString("driverClassNotFound"));
+            if (this.driverClassLocation.isEnabled() && this.isEmpty(this.driverClassLocation.getText()))
                 messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle.getString("driverClassLocation")));
-            } else {
-                
-            }
         }
         
-        if (isEmpty(this.jdbcURL.getText())) {
-            messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle.getString("jdbcURL")));
+        if (this.jdbcURL.isEnabled()) {
+            if (this.isEmpty(this.jdbcURL.getText()))
+                messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle.getString("jdbcURL")));
+        } else {
+            if (this.isEmpty(this.host.getText()))
+                messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle.getString("host")));
+            if (this.isEmpty(this.port.getText()))
+                messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle.getString("port")));
+            if (this.isEmpty(this.database.getText()))
+                messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle.getString("database")));
         }
         
-        if (isEmpty(this.username.getText())) {
+        if (this.isEmpty(this.username.getText())) {
             messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle.getString("username")));
         }
         
@@ -371,7 +458,7 @@ public class SchemaManagementDialog extends JDialog {
                 String type = (String)this.type.getSelectedItem();
                 if (type.equals(BuilderBundle.getString("jdbcSchema"))) {
                     boolean keyguessing = this.keyguessing.isSelected();
-                    String driverClassName = this.driverClass.getText();
+                    String driverClassName = (String)this.driverClass.getSelectedItem();
                     String driverClassLocation = this.driverClassLocation.getText();
                     String url = this.jdbcURL.getText();
                     String username = this.username.getText();
@@ -399,6 +486,108 @@ public class SchemaManagementDialog extends JDialog {
      */
     private boolean isEmpty(String string) {
         return (string == null || string.trim().length() == 0);
+    }
+    
+    public void actionPerformed(ActionEvent e) {
+        // Copy settings?
+        if (e.getSource() == this.copysettings) {
+            Object obj = this.copysettings.getSelectedItem();
+            if (obj!=null) this.copySettingsFrom((Schema)obj);
+        }
+        // Change driver class?
+        else if (e.getSource() == this.driverClass) {
+            String className = (String)this.driverClass.getSelectedItem();
+            if (className!=null) {
+                // Selected from list.
+                if (SchemaManagementDialog.DRIVER_MAP.containsKey(className)) {
+                    String[] parts = (String[])SchemaManagementDialog.DRIVER_MAP.get(className);
+                    this.currentJDBCURLTemplate = parts[1];
+                    this.port.setText(parts[0]);
+                    this.jdbcURL.setEnabled(false);
+                    this.host.setEnabled(true);
+                    this.port.setEnabled(true);
+                    this.database.setEnabled(true);
+                    // Update fields.
+                    if (this.jdbcURL.isEnabled()) {
+                        // We're changing from custom to predefined.
+                        this.jdbcURL.setText(null);
+                        this.host.setText(null);
+                        this.database.setText(null);
+                    } else {
+                        // We're changing from predefined to another predefined.
+                        // No need to do anything.
+                    }
+                }
+                // User-defined.
+                else {
+                    this.currentJDBCURLTemplate = null;
+                    // Update fields.
+                    this.jdbcURL.setEnabled(true);
+                    this.host.setEnabled(false);
+                    this.port.setEnabled(false);
+                    this.database.setEnabled(false);
+                    if (this.jdbcURL.isEnabled()) {
+                        // We're changing from custom to another custom.
+                        // No need to take any action.
+                    } else {
+                        // We're changing from predefined to custom.
+                        this.jdbcURL.setText(null);
+                        this.host.setText(null);
+                        this.port.setText(null);
+                        this.database.setText(null);
+                    }
+                }
+                // Attempt to load the driver class.
+                boolean classNotFound = true;
+                try {
+                    Class.forName(className);
+                    classNotFound = false;
+                } catch (Throwable t) {
+                    classNotFound = true;
+                }
+                // If not found, check the class location.
+                this.driverClassLocation.setEnabled(classNotFound);
+            }
+            // Nothing selected? Grey out the dependent bits.
+            else {
+                this.jdbcURL.setEnabled(false);
+                this.host.setEnabled(false);
+                this.port.setEnabled(false);
+                this.database.setEnabled(false);
+                this.driverClassLocation.setEnabled(false);
+            }
+        }
+    }
+    
+    private class JDBCURLConstructor implements DocumentListener {
+        private JTextField host;
+        private JTextField port;
+        private JTextField database;
+        private JTextField jdbcURL;
+        public JDBCURLConstructor(JTextField host, JTextField port, JTextField database, JTextField jdbcURL) {
+            this.host = host;
+            this.port = port;
+            this.database = database;
+            this.jdbcURL = jdbcURL;
+        }
+        public void insertUpdate(DocumentEvent e) {
+            this.updateJDBCURL();
+        }
+        public void removeUpdate(DocumentEvent e) {
+            this.updateJDBCURL();
+        }
+        public void changedUpdate(DocumentEvent e) {
+            this.updateJDBCURL();
+        }
+        private void updateJDBCURL() {
+            if (currentJDBCURLTemplate == null) return;
+            // Update the JDBC URL based on our current settings.
+            String newURL = new String(currentJDBCURLTemplate);
+            if (!isEmpty(this.host.getText())) newURL = newURL.replaceAll("<HOST>",this.host.getText());
+            if (!isEmpty(this.port.getText())) newURL = newURL.replaceAll("<PORT>",this.port.getText());
+            if (!isEmpty(this.database.getText())) newURL = newURL.replaceAll("<DATABASE>",this.database.getText());
+            this.jdbcURL.setText(newURL);
+        }
     }
     
     /**
