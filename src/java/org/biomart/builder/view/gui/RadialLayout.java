@@ -69,12 +69,17 @@ public class RadialLayout implements LayoutManager {
     /**
      * List of our ring radii.
      */
-    private Map ringRadii = new TreeMap();
+    private Map ringRadii = new HashMap();
     
     /**
      * List of our ring member counts.
      */
-    private Map ringSizes = new TreeMap();
+    private Map ringSizes = new HashMap();
+    
+    /**
+     * List of our ring member counts.
+     */
+    private Map ringNumbers = new HashMap();
     
     /**
      * Our minimum size.
@@ -140,6 +145,7 @@ public class RadialLayout implements LayoutManager {
         synchronized (parent.getTreeLock()) {
             this.ringRadii.clear();
             this.ringSizes.clear();
+            this.ringNumbers.clear();
             
             // List of members, Circumference, Max shortest side
             Map ringDetails = new TreeMap();
@@ -174,6 +180,8 @@ public class RadialLayout implements LayoutManager {
                 maxSide = Math.max(maxSide, (int)Math.max(compSize.getWidth(), compSize.getHeight()));
                 // store details back
                 ringDetails.put(ringNumber, new Object[]{ringMembers, new Integer(circumference), new Integer(maxSide)});
+                // store ring number for objet
+                this.ringNumbers.put(comp, ringNumber);
             }
             
             // Now compute the radii of the rings.
@@ -217,7 +225,7 @@ public class RadialLayout implements LayoutManager {
     public void layoutContainer(Container parent) {
         synchronized (parent.getTreeLock()) {
             // Calculate our size first.
-            if (this.sizeUnknown || this.componentCount != parent.getComponentCount()) this.setSizes(parent);
+            if (this.sizeUnknown) this.setSizes(parent);
             
             // Set our size.
             double actualSize = Math.max(this.minSize, Math.min(parent.getWidth(), parent.getHeight()));
@@ -243,10 +251,8 @@ public class RadialLayout implements LayoutManager {
                     relationComponents.add(comp);
                     continue;
                 }
-                // Calculate ring number! If not a TableComponent or TableProviderComponent, it's zero.
-                Integer ringNumber = new Integer(0);
-                if (comp instanceof TableComponent) ringNumber = new Integer(((TableComponent)comp).countRelations());
-                else if (comp instanceof SchemaComponent) ringNumber = new Integer(((SchemaComponent)comp).countExternalRelations());
+                // Look up the ring number! 
+                Integer ringNumber = (Integer)this.ringNumbers.get(comp);
                 // have we seen this ring before?
                 int ringCount = 0;
                 if (ringCounts.containsKey(ringNumber)) ringCount = ((Integer)ringCounts.get(ringNumber)).intValue()+1;
@@ -265,32 +271,37 @@ public class RadialLayout implements LayoutManager {
                 double y = centreY + (radius * Math.sin(positionRadian));
                 // Place component around centre point using offsets.
                 comp.setBounds((int)(x-widthOffset), (int)(y-heightOffset), (int)compSize.getWidth(), (int)compSize.getHeight());
+                // Make it update its children (necessary for laying out relations later).
+                comp.validate();
             }
             
             // Add relations to component->shape maps using the key shapes for
             // anchors and offsetting them against the parent component shape.
             for (Iterator i = relationComponents.iterator(); i.hasNext(); ) {
                 RelationComponent relationComponent = (RelationComponent)i.next();
+                
+                // Obtain primary key and work out position relative to ourselves.
                 KeyComponent primaryKey = relationComponent.getPrimaryKeyComponent();
-                KeyComponent foreignKey = relationComponent.getForeignKeyComponent();
-                BoxShapedComponent primaryKeyParentBox = primaryKey.getParentComponent();
-                BoxShapedComponent foreignKeyParentBox = foreignKey.getParentComponent();
-                
-                // Force the inner tables to lay themselves out correctly.
-                if (!primaryKeyParentBox.isValid()) primaryKeyParentBox.validate();
-                if (!foreignKeyParentBox.isValid()) foreignKeyParentBox.validate();
-                
-                // Work out locations of primary and foreign key boxes.
                 Rectangle primaryKeyRectangle = primaryKey.getBounds();
-                primaryKeyRectangle.setLocation(
-                        primaryKeyRectangle.x + primaryKeyParentBox.getX(),
-                        primaryKeyRectangle.y + primaryKeyParentBox.getY()
-                        );
+                Container primaryKeyParent = primaryKey.getParent();
+                while (primaryKeyParent != parent) {
+                    primaryKeyRectangle.setLocation(
+                            primaryKeyRectangle.x + (int)primaryKeyParent.getX(),
+                            primaryKeyRectangle.y + (int)primaryKeyParent.getY()
+                            );
+                    primaryKeyParent = primaryKeyParent.getParent();
+                }
+                
+                KeyComponent foreignKey = relationComponent.getForeignKeyComponent();
                 Rectangle foreignKeyRectangle = foreignKey.getBounds();
-                foreignKeyRectangle.setLocation(
-                        foreignKeyRectangle.x + foreignKeyParentBox.getX(),
-                        foreignKeyRectangle.y + foreignKeyParentBox.getY()
-                        );
+                Container foreignKeyParent = foreignKey.getParent();
+                while (foreignKeyParent != parent) {
+                    foreignKeyRectangle.setLocation(
+                            foreignKeyRectangle.x + (int)foreignKeyParent.getX(),
+                            foreignKeyRectangle.y + (int)foreignKeyParent.getY()
+                            );
+                    foreignKeyParent = foreignKeyParent.getParent();
+                }
                 
                 // Create a bounding box around the whole lot plus 1 step size each side.
                 int x = Math.min(primaryKeyRectangle.x, foreignKeyRectangle.x);

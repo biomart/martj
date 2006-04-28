@@ -146,7 +146,7 @@ public abstract class Diagram extends JPanel {
      */
     public void synchroniseDiagram() {
         // Update ourselves.
-        this.validate();
+        this.invalidate();
         // Reset our size to the minimum.
         this.setSize(this.getMinimumSize());
     }
