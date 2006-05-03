@@ -27,9 +27,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
@@ -49,13 +49,13 @@ public class Mart {
     /**
      * Internal reference to the {@link Schema}s we are using for data.
      */
-    private final Map schemas = new TreeMap();
+    private final Map schemas = new LinkedHashMap();
     
     /**
      * Internal reference to the {@link DataSet}s onto the data we are using to
      * construct the marts with.
      */
-    private final Map datasets = new TreeMap();
+    private final Map datasets = new LinkedHashMap();
     
     /**
      * Returns the set of {@link Schema} objects which this {@link Mart} includes

@@ -35,7 +35,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Adapts listener behaviour by adding in DataSet-specific stuff.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 21st April 2006
+ * @version 0.1.3, 2nd May 2006
  * @since 0.1
  */
 public class WindowDiagramModifier extends SchemaDiagramModifier {

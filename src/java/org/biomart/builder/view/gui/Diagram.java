@@ -32,19 +32,14 @@ import javax.swing.JPopupMenu;
 /**
  * Displays arbitrary objects linked in a radial form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 27th April 2006
+ * @version 0.1.6, 2nd May 2006
  * @since 0.1
  */
-public abstract class Diagram extends JPanel {
+public abstract class Diagram extends JPanel {    
     /**
      * Internal reference to our diagramModifier.
      */
     private DiagramModifier diagramModifier;
-    
-    /**
-     * The current display flags.
-     */
-    private int flags;
     
     /**
      * The window tab set we belong to.
@@ -110,44 +105,12 @@ public abstract class Diagram extends JPanel {
     }
     
     /**
-     * Reset the current display mask.
-     */
-    public void clearFlags() {
-        this.flags = 0;
-    }
-    
-    /**
-     * Set a particular flag on the display mask.
-     * @param flag the flag to set.
-     */
-    public void setFlag(int flag) {
-        this.flags |= flag;
-    }
-    
-    /**
-     * Test for a particular display mask flag.
-     * @param flag the flag to test for.
-     * @return true if it is set, false if not.
-     */
-    public boolean getFlag(int flag) {
-        return (this.flags & flag) == flag;
-    }
-    
-    /**
-     * Get the current display mask.
-     * @return the current display mask.
-     */
-    public int getFlags() {
-        return this.flags;
-    }
-    
-    /**
      * Synchronise our display with our object contents.
      */
     public void synchroniseDiagram() {
-        // Update ourselves.
-        this.invalidate();
         // Reset our size to the minimum.
         this.setSize(this.getMinimumSize());
+        // Update ourselves.
+        this.validate();
     }
 }

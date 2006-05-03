@@ -42,7 +42,7 @@ import org.biomart.builder.model.Table;
  * are provided for sorting them, as they are not comparable within themselves.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 27th April 2006
+ * @version 0.1.3, 2nd May 2006
  * @since 0.1
  */
 public class TableComponent extends BoxShapedComponent {
@@ -113,6 +113,6 @@ public class TableComponent extends BoxShapedComponent {
      * Set up the colours etc. for this component. Flags have already been set.
      */
     protected void setComponentColours() {
-        // boolean xyFlagSet = this.getParentDisplay().getFlag(ComponentView.XYFLAG);
+        // if getDiagram().getDiagramModifier() instanceof ...
     }
 }

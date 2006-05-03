@@ -32,7 +32,7 @@ import javax.swing.JPopupMenu;
  * 
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 21st April 2006
+ * @version 0.1.3, 2nd May 2006
  * @since 0.1
  */
 public interface DiagramModifier {
@@ -44,11 +44,4 @@ public interface DiagramModifier {
      * @return the popup menu.
      */
     public void customiseContextMenu(JPopupMenu contextMenu, Object object);
-    
-    /**
-     * About to draw a particular object. Call {@link ComponentDisplay#setFlag(int)}
-     * to tell the displayer anything special to do about it.
-     * @param displayComponent the component that is about to be drawn.
-     */
-    public void aboutToDraw(Object object);
 }

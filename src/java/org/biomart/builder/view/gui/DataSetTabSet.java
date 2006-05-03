@@ -55,7 +55,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Set of tabs to display a mart and set of windows.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 27th April 2006
+ * @version 0.1.6, 2nd May 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -138,7 +138,7 @@ public class DataSetTabSet extends JTabbedPane {
     /**
      * Synchronises the mart.
      */
-    public void synchroniseSchema() {
+    public void synchroniseSchemas() {
         try {
             MartUtils.synchroniseMartSchemas(this.mart);
             this.synchroniseTabs();
@@ -165,8 +165,8 @@ public class DataSetTabSet extends JTabbedPane {
             if (!this.datasetToTab.containsKey(dataset)) this.addDataSetTab(dataset);
         }
         // Remove all our windows that are not in the mart.
-        martDataSets = new ArrayList(this.datasetToTab.keySet());
-        for (Iterator i = martDataSets.iterator(); i.hasNext(); ) {
+        List ourDataSets = new ArrayList(this.datasetToTab.keySet());
+        for (Iterator i = ourDataSets.iterator(); i.hasNext(); ) {
             DataSet dataset = (DataSet)i.next();
             if (!martDataSets.contains(dataset)) this.removeDataSetTab(dataset);
         }
@@ -195,7 +195,7 @@ public class DataSetTabSet extends JTabbedPane {
         if (choice == JOptionPane.YES_OPTION) {
             try {
                 MartUtils.removeDataSetFromSchema(this.mart, dataset);
-                this.removeDataSetTab(dataset);
+                this.synchroniseTabs();
                 this.martTabSet.setModifiedStatus(true);
                 // Nasty hack to force redraw.
                 int componentIndex = this.indexOfTab(BuilderBundle.getString("schemaTabName"));

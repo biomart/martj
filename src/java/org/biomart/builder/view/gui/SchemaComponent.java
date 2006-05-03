@@ -35,10 +35,10 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
@@ -46,7 +46,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 27th April 2006
+ * @version 0.1.3, 2nd May 2006
  * @since 0.1
  */
 public class SchemaComponent extends BoxShapedComponent {
@@ -70,6 +70,19 @@ public class SchemaComponent extends BoxShapedComponent {
         JLabel label = new JLabel(schema.getName());
         label.setFont(Font.decode("Serif-BOLD-10"));
         this.add(label);
+        // Is it a group?
+        if (schema instanceof SchemaGroup) {
+            StringBuffer sb = new StringBuffer();
+            sb.append(BuilderBundle.getString("schemaGroupContains"));
+            for (Iterator i = ((SchemaGroup)schema).getSchemas().keySet().iterator(); i.hasNext(); ) {
+                String schemaName = (String)i.next();
+                sb.append(schemaName);
+                if (i.hasNext()) sb.append(", ");
+            }
+            label = new JLabel(sb.toString());
+            label.setFont(Font.decode("Serif-BOLDITALIC-10"));
+            this.add(label);
+        }
         // Now the keys.
         for (Iterator i = schema.getExternalKeys().iterator(); i.hasNext(); ) {
             Key key = (Key)i.next();
@@ -84,6 +97,13 @@ public class SchemaComponent extends BoxShapedComponent {
      */
     private Schema getSchema() {
         return (Schema)this.getObject();
+    }
+    
+    /**
+     * Gets our tableProvider.
+     */
+    private SchemaGroup getSchemaGroup() {
+        return (SchemaGroup)this.getObject();
     }
     
     /**
@@ -105,6 +125,15 @@ public class SchemaComponent extends BoxShapedComponent {
      * @return the popup menu.
      */
     public JPopupMenu getContextMenu() {
+        if (this.getObject() instanceof SchemaGroup) return this.getGroupContextMenu();
+        else return this.getSingleContextMenu(this.getSchema());
+    }
+    
+    /**
+     * Construct a context menu for a given view.
+     * @return the popup menu.
+     */
+    public JPopupMenu getSingleContextMenu(final Schema schema) {
         JPopupMenu contextMenu = super.getContextMenu();
         // Extend it for this table here.
         contextMenu.addSeparator();
@@ -113,7 +142,7 @@ public class SchemaComponent extends BoxShapedComponent {
         showTables.setMnemonic(BuilderBundle.getString("showTablesMnemonic").charAt(0));
         showTables.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                int index = getDiagram().getDataSetTabSet().getSchemaTabSet().indexOfTab(getSchema().getName());
+                int index = getDiagram().getDataSetTabSet().getSchemaTabSet().indexOfTab(schema.getName());
                 getDiagram().getDataSetTabSet().getSchemaTabSet().setSelectedIndex(index);
             }
         });
@@ -123,7 +152,7 @@ public class SchemaComponent extends BoxShapedComponent {
         rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
         rename.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getDiagram().getDataSetTabSet().getSchemaTabSet().renameSchema(getSchema());
+                getDiagram().getDataSetTabSet().getSchemaTabSet().renameSchema(schema);
             }
         });
         contextMenu.add(rename);
@@ -132,7 +161,7 @@ public class SchemaComponent extends BoxShapedComponent {
         modify.setMnemonic(BuilderBundle.getString("modifySchemaMnemonic").charAt(0));
         modify.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getDiagram().getDataSetTabSet().getSchemaTabSet().requestModifySchema(getSchema());
+                getDiagram().getDataSetTabSet().getSchemaTabSet().requestModifySchema(schema);
             }
         });
         contextMenu.add(modify);
@@ -141,7 +170,7 @@ public class SchemaComponent extends BoxShapedComponent {
         sync.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
         sync.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getDiagram().getDataSetTabSet().getSchemaTabSet().synchroniseSchema(getSchema());
+                getDiagram().getDataSetTabSet().getSchemaTabSet().synchroniseSchema(schema);
             }
         });
         contextMenu.add(sync);
@@ -150,7 +179,7 @@ public class SchemaComponent extends BoxShapedComponent {
         test.setMnemonic(BuilderBundle.getString("testSchemaMnemonic").charAt(0));
         test.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getDiagram().getDataSetTabSet().getSchemaTabSet().testSchema(getSchema());
+                getDiagram().getDataSetTabSet().getSchemaTabSet().testSchema(schema);
             }
         });
         contextMenu.add(test);
@@ -159,10 +188,60 @@ public class SchemaComponent extends BoxShapedComponent {
         remove.setMnemonic(BuilderBundle.getString("removeSchemaMnemonic").charAt(0));
         remove.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getDiagram().getDataSetTabSet().getSchemaTabSet().confirmRemoveSchema(getSchema());
+                getDiagram().getDataSetTabSet().getSchemaTabSet().confirmRemoveSchema(schema);
             }
         });
         contextMenu.add(remove);
+        
+        JMenuItem addToGroup = new JMenuItem(BuilderBundle.getString("addToGroupTitle"));
+        addToGroup.setMnemonic(BuilderBundle.getString("addToGroupMnemonic").charAt(0));
+        addToGroup.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                getDiagram().getDataSetTabSet().getSchemaTabSet().requestAddSchemaToSchemaGroup(schema);
+            }
+        });
+        contextMenu.add(addToGroup);
+        
+        // Return it. Will be further adapted by a listener elsewhere.
+        return contextMenu;
+    }
+    
+    /**
+     * Construct a context menu for a given view.
+     * @return the popup menu.
+     */
+    public JPopupMenu getGroupContextMenu() {
+        JPopupMenu contextMenu = super.getContextMenu();
+        // Extend it for this table here.
+        contextMenu.addSeparator();
+        
+        JMenuItem showTables = new JMenuItem(BuilderBundle.getString("showTablesTitle"));
+        showTables.setMnemonic(BuilderBundle.getString("showTablesMnemonic").charAt(0));
+        showTables.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                int index = getDiagram().getDataSetTabSet().getSchemaTabSet().indexOfTab(getSchemaGroup().getName());
+                getDiagram().getDataSetTabSet().getSchemaTabSet().setSelectedIndex(index);
+            }
+        });
+        contextMenu.add(showTables);
+        
+        JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameSchemaTitle"));
+        rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
+        rename.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                getDiagram().getDataSetTabSet().getSchemaTabSet().renameSchema(getSchemaGroup());
+            }
+        });
+        contextMenu.add(rename);
+        
+        JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseSchemaTitle"));
+        sync.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
+        sync.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                getDiagram().getDataSetTabSet().getSchemaTabSet().synchroniseSchema(getSchemaGroup());
+            }
+        });
+        contextMenu.add(sync);
         
         // Return it. Will be further adapted by a listener elsewhere.
         return contextMenu;
@@ -172,6 +251,6 @@ public class SchemaComponent extends BoxShapedComponent {
      * Set up the colours etc. for this component. Flags have already been set.
      */
     protected void setComponentColours() {
-        // boolean xyFlagSet = this.getDiagram().getFlag(ComponentView.XYFLAG);
+        // if getDiagram().getDiagramModifier() instanceof ...
     }
 }

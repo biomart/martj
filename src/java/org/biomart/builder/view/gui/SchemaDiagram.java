@@ -37,13 +37,14 @@ import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Displays the contents of a {@link Schema} in graphical form.
- * 
+ *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 27th April 2006
+ * @version 0.1.7, 2nd May 2006
  * @since 0.1
  */
 public class SchemaDiagram extends Diagram {
@@ -59,8 +60,8 @@ public class SchemaDiagram extends Diagram {
     
     /**
      * Creates a new instance of SchemaDiagram over a given provider.
-     * 
-     * 
+     *
+     *
      * @param schema the given table provider.
      */
     public SchemaDiagram(DataSetTabSet datasetTabSet, Schema schema) {
@@ -100,14 +101,16 @@ public class SchemaDiagram extends Diagram {
             });
             contextMenu.add(rename);
             
-            JMenuItem modify = new JMenuItem(BuilderBundle.getString("modifySchemaTitle"));
-            modify.setMnemonic(BuilderBundle.getString("modifySchemaMnemonic").charAt(0));
-            modify.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.getSchemaTabSet().requestModifySchema(getSchema());
-                }
-            });
-            contextMenu.add(modify);
+            if (!(this.getSchema() instanceof SchemaGroup)) {
+                JMenuItem modify = new JMenuItem(BuilderBundle.getString("modifySchemaTitle"));
+                modify.setMnemonic(BuilderBundle.getString("modifySchemaMnemonic").charAt(0));
+                modify.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        datasetTabSet.getSchemaTabSet().requestModifySchema(getSchema());
+                    }
+                });
+                contextMenu.add(modify);
+            }
             
             JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseSchemaTitle"));
             sync.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
@@ -118,23 +121,34 @@ public class SchemaDiagram extends Diagram {
             });
             contextMenu.add(sync);
             
-            JMenuItem test = new JMenuItem(BuilderBundle.getString("testSchemaTitle"));
-            test.setMnemonic(BuilderBundle.getString("testSchemaMnemonic").charAt(0));
-            test.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().getSchemaTabSet().testSchema(schema);
-                }
-            });
-            contextMenu.add(test);
-            
-            JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeSchemaTitle"));
-            remove.setMnemonic(BuilderBundle.getString("removeSchemaMnemonic").charAt(0));
-            remove.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.getSchemaTabSet().confirmRemoveSchema(schema);
-                }
-            });
-            contextMenu.add(remove);
+            if (!(this.getSchema() instanceof SchemaGroup)) {
+                JMenuItem test = new JMenuItem(BuilderBundle.getString("testSchemaTitle"));
+                test.setMnemonic(BuilderBundle.getString("testSchemaMnemonic").charAt(0));
+                test.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        getDataSetTabSet().getSchemaTabSet().testSchema(schema);
+                    }
+                });
+                contextMenu.add(test);
+                
+                JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeSchemaTitle"));
+                remove.setMnemonic(BuilderBundle.getString("removeSchemaMnemonic").charAt(0));
+                remove.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        datasetTabSet.getSchemaTabSet().confirmRemoveSchema(schema);
+                    }
+                });
+                contextMenu.add(remove);
+                
+                JMenuItem addToGroup = new JMenuItem(BuilderBundle.getString("addToGroupTitle"));
+                addToGroup.setMnemonic(BuilderBundle.getString("addToGroupMnemonic").charAt(0));
+                addToGroup.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        datasetTabSet.getSchemaTabSet().requestAddSchemaToSchemaGroup(schema);
+                    }
+                });
+                contextMenu.add(addToGroup);
+            }
         }
         // Return.
         return contextMenu;
@@ -148,28 +162,23 @@ public class SchemaDiagram extends Diagram {
         // TODO: Construct/update our set of Component.Table and Component.Relation objects.
         this.removeAll();
         // Make a set of all relations on this table provider.
-        List relations = new ArrayList();
         Map keyComponents = new HashMap();
         // Add a TableComponent for each table.
         for (Iterator i = this.getSchema().getTables().iterator(); i.hasNext(); ) {
             Table table = (Table)i.next();
             TableComponent tableComponent = new TableComponent(table, this);
             this.add(tableComponent);
-            if (table.getPrimaryKey()!=null) relations.addAll(table.getPrimaryKey().getRelations()); // All relations link to a PK at some point.
             keyComponents.putAll(tableComponent.getKeyComponents());
         }
         // Add a RelationComponent for each relation.
-        for (Iterator i = relations.iterator(); i.hasNext(); ) {
+        for (Iterator i = this.getSchema().getInternalRelations().iterator(); i.hasNext(); ) {
             Relation relation = (Relation)i.next();
-            // Only interested in relations that link between tables in our own table provider.
-            if (relation.getForeignKey().getTable().getSchema().equals(this.getSchema())) {
-                RelationComponent relationComponent = new RelationComponent(
-                        relation,
-                        this,
-                        (KeyComponent)keyComponents.get(relation.getPrimaryKey()),
-                        (KeyComponent)keyComponents.get(relation.getForeignKey()));
-                this.add(relationComponent);
-            }
+            RelationComponent relationComponent = new RelationComponent(
+                    relation,
+                    this,
+                    (KeyComponent)keyComponents.get(relation.getPrimaryKey()),
+                    (KeyComponent)keyComponents.get(relation.getForeignKey()));
+            this.add(relationComponent);
         }
         // Delegate upwards.
         super.synchroniseDiagram();

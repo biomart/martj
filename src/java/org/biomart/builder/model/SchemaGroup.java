@@ -26,9 +26,9 @@ package org.biomart.builder.model;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,17 +54,17 @@ import org.biomart.builder.resources.BuilderBundle;
  * <p>As the {@link SchemaGroup} is a {@link Schema} itself, all operations on it
  * which modify the structure of the tables are passed on to each of its member {@link Schema}
  * objects in turn.</p>
- * 
- * 
+ *
+ *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 27th April 2006
+ * @version 0.1.6, 2nd May 2006
  * @since 0.1
  */
 public interface SchemaGroup extends Schema {
     /**
      * Returns the label->provider map of {@link Schema} members of this partition. It will
      * never return null but may return an empty map.
-     * 
+     *
      * @return the map of {@link Schema} options living in the partitions. Each key of the map
      * is the label for the partition, with the values being the providers themselves..
      */
@@ -73,8 +73,8 @@ public interface SchemaGroup extends Schema {
     /**
      * Retrieves the {@link Schema} with the given name from this partition. If it is not recognised,
      * an exception is thrown.
-     * 
-     * 
+     *
+     *
      * @param name the name for the partition provider to retrieve.
      * @return the matching provider.
      * @throws AssociationException if the name is not recognised.
@@ -86,7 +86,7 @@ public interface SchemaGroup extends Schema {
      * it throws an exception to say so. No check is made to see if the new {@link Schema}
      * is actually identical to the base one in terms of structure. An exception will be thrown if
      * you try to nest {@link SchemaGroup}s inside other ones.
-     *  
+     *
      * @param label the label for the partition this {@link Schema} represents.
      * @param schema the {@link Schema to add as a new partition.
      * @throws AlreadyExistsException if the provider has already been set as a partition here.
@@ -97,7 +97,7 @@ public interface SchemaGroup extends Schema {
     /**
      * Removes the {@link Schema} with the given label from this partition. If it is not recognised,
      * it is quietly ignored.
-     * 
+     *
      * @param label the label for the partition to remove.
      */
     public void removeSchema(Schema schema);
@@ -108,8 +108,9 @@ public interface SchemaGroup extends Schema {
     public class GenericSchemaGroup extends GenericSchema implements SchemaGroup {
         /**
          * Internal reference to the map of member providers. Keys are the partition labels.
+         * Must be linked because the first one to be added must remain the same.
          */
-        private final Map schemas = new HashMap();
+        private final Map schemas = new LinkedHashMap();
         
         /**
          * The constructor creates a partitioned provider with the given name.
@@ -126,10 +127,9 @@ public interface SchemaGroup extends Schema {
          * provider in the list.</p>
          */
         public void synchronise() throws SQLException, BuilderException {
-            // Synchronise.
+            // Synchronise our members.
             for (Iterator i = this.schemas.values().iterator(); i.hasNext(); ) {
-                Schema s = (Schema)i.next();
-                s.synchronise();
+                ((Schema)i.next()).synchronise();
             }
             // Update our own list.
             // Clear it first.
@@ -144,7 +144,7 @@ public interface SchemaGroup extends Schema {
                     Column targetColumn = new GenericColumn(sourceColumn.getName(), targetTable);
                 }
                 // Primary key.
-                PrimaryKey sourcePK = targetTable.getPrimaryKey();
+                PrimaryKey sourcePK = sourceTable.getPrimaryKey();
                 if (sourcePK!=null) {
                     List targetKeyCols = new ArrayList();
                     for (Iterator n = sourcePK.getColumns().iterator(); n.hasNext(); ) {
@@ -177,7 +177,11 @@ public interface SchemaGroup extends Schema {
                     Table sourceFKTable = sourceFK.getTable();
                     Table targetFKTable = this.getTableByName(sourceFKTable.getName());
                     // Locate the equivalent target foreign key.
-                    ForeignKey targetFK = targetFKTable.getForeignKeyByName(sourceFK.getName());
+                    ForeignKey targetFK = null;
+                    for (Iterator l = targetFKTable.getForeignKeys().iterator(); l.hasNext() && targetFK==null; ) {
+                        ForeignKey k = (ForeignKey)l.next();
+                        if (k.getName().equals(sourceFK.getName())) targetFK = k;
+                    }
                     // Create the relation.
                     new GenericRelation(targetTable.getPrimaryKey(), targetFK, sourceRelation.getFKCardinality());
                 }
@@ -213,7 +217,7 @@ public interface SchemaGroup extends Schema {
         
         /**
          * Internal function that returns the first member partition {@link Schema}.
-         * 
+         *
          * @return the first partition's provider.
          */
         protected Schema getFirstSchema() {
@@ -259,21 +263,6 @@ public interface SchemaGroup extends Schema {
             if (!this.schemas.containsKey(schema.getName())) return;
             // Do it.
             this.schemas.remove(schema.getName());
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
-        public String toString() {
-            StringBuffer sb = new StringBuffer();
-            sb.append("[");
-            for (Iterator i = this.schemas.values().iterator(); i.hasNext(); ) {
-                Schema s = (Schema)i.next();
-                sb.append(s.toString());
-                if (i.hasNext()) sb.append(",");
-            }
-            sb.append("]");
-            return sb.toString();
         }
     }
 }

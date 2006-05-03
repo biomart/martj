@@ -104,19 +104,17 @@ public abstract class BoxShapedComponent extends JPanel implements DiagramCompon
     }
     
     /**
+     * Set up the colours etc. for this component. Flags have already been set.
+     */
+    protected abstract void setComponentColours();
+    
+    /**
      * {@inheritDoc}
      */
     protected void paintComponent(Graphics g) {
         // Set up painting of this component.
-        this.getDiagram().clearFlags();
-        this.getDiagram().getDiagramModifier().aboutToDraw(this.getObject());
         this.setComponentColours();
         // Do the painting.
         super.paintComponent(g);
     }
-    
-    /**
-     * Set up the colours etc. for this component. Flags have already been set.
-     */
-    protected abstract void setComponentColours();
 }

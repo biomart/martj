@@ -37,12 +37,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.TreeMap;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
@@ -71,14 +69,14 @@ import org.biomart.builder.resources.BuilderBundle;
  * the table name with '_id' appended, unless the {@link DatabaseMetaData} query actually responds
  * with believable information, and foreign key columns are assumed to be the name of
  * the primary key column to which they refer, optionally appended with '_key'.
- * 
+ *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.3, 27th April 2006
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
     /**
-     * Internal reference to the JDBC connection. 
+     * Internal reference to the JDBC connection.
      */
     private Connection conn;
     
@@ -115,8 +113,8 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
     /**
      * Creates a new instance of JDBCSchema based around
      * the given JDBC Connection.
-     * 
-     * 
+     *
+     *
      * @param driverClassLocation the location of the class to load the JDBC driver from.
      * Use null to use the default class loader path, which it will also fall back on if it
      * could not find the driver at the specified location, or if this location does not exist.
@@ -340,7 +338,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
         return this.keyGuessing;
     }
     
-    /** 
+    /**
      * Set the key guessing status.
      */
     public void setKeyGuessing(boolean keyGuessing) {
@@ -351,8 +349,126 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
      * {@inheritDoc}
      */
     public void synchronise() throws SQLException, BuilderException {
-        if (this.isKeyGuessing()) this.synchroniseWithkeyGuessing();
-        else this.synchroniseUsingDMD();
+        // Get database metadata.
+        DatabaseMetaData dmd = this.getConnection().getMetaData();
+        String catalog = this.getConnection().getCatalog();
+        String schema = dmd.getUserName();
+        
+        // Identify and temporarily preserve previously known tables. Refer
+        // to them as the removed tables as by the end of this the set will
+        // only contain those tables which have been dropped.
+        List tablesToBeDropped = new ArrayList(this.tables.values());
+        List fksToBeDropped = new ArrayList(); // for the foreign keys.
+        
+        // Load tables and columns from database.
+        // Catalog = database name/SID from connection string, Schema = username.
+        ResultSet dbTables = dmd.getTables(catalog, schema, "%", new String[]{"TABLE", "VIEW"});
+        while (dbTables.next()) {
+            String dbTableName = dbTables.getString("TABLE_NAME");
+            // If its a new table, create and add it. Otherwise, just look it up.
+            Table existingTable = this.getTableByName(dbTableName);
+            if (existingTable==null) existingTable = new GenericTable(dbTableName, this);
+            
+            // Remove table from previously known list.
+            tablesToBeDropped.remove(existingTable);
+            
+            // For each table loaded, temporarily preserve existing columns. Refer
+            // to them as removed columns as by the end of this the set will only
+            // contain those columns which are to be dropped.
+            List colsToBeDropped = new ArrayList(existingTable.getColumns());
+            
+            // Get the table columns from the database.
+            ResultSet dbTblCols = dmd.getColumns(catalog, schema, dbTableName, "%");
+            while (dbTblCols.next()) {
+                String dbTblColName = dbTblCols.getString("COLUMN_NAME");
+                // If its a new column, create and add it. Otherwise, just look it up.
+                Column dbTblCol = existingTable.getColumnByName(dbTblColName);
+                if (dbTblCol==null) dbTblCol = new GenericColumn(dbTblColName, existingTable);
+                colsToBeDropped.remove(dbTblCol); // Stop it from being dropped.
+            }
+            dbTblCols.close();
+            
+            // Remove from table all columns not found in database.
+            for (Iterator i = colsToBeDropped.iterator(); i.hasNext(); ) {
+                Column colName = (Column)i.next();
+                existingTable.removeColumn(colName);
+                i.remove(); // really get rid of it so we don't have any references left behind.
+            }
+            
+            // Load the table's primary key.
+            ResultSet dbTblPKCols = dmd.getPrimaryKeys(catalog, schema, dbTableName);
+            Map pkCols = new TreeMap(); // sorts by column position
+            while (dbTblPKCols.next()) {
+                String pkColName = dbTblPKCols.getString("COLUMN_NAME");
+                Short pkKeySeq = new Short(dbTblPKCols.getShort("KEY_SEQ"));
+                pkCols.put(pkKeySeq, existingTable.getColumnByName(pkColName));
+            }
+            dbTblPKCols.close();
+            
+            // Did DMD find a PK? If not, attempt to find one by looking for the column with
+            // the same name as the table but with '_id' appended.
+            if (this.isKeyGuessing() && pkCols.isEmpty()) {
+                Column candidateCol = existingTable.getColumnByName(dbTableName + BuilderBundle.getString("primaryKeySuffix"));
+                if (candidateCol != null) pkCols.put(candidateCol.getName(), candidateCol);
+            }
+            
+            // Did we find a PK?
+            PrimaryKey existingPK = existingTable.getPrimaryKey();
+            if (!pkCols.isEmpty()) {
+                // Create and set the primary key (only if existing one is not the same).
+                PrimaryKey candidatePK = new GenericPrimaryKey(new ArrayList(pkCols.values()));
+                if (existingPK == null || !existingPK.equals(candidatePK)) {
+                    existingTable.setPrimaryKey(candidatePK);
+                }
+            } else {
+                // Remove the primary key on this table, but only if the existing one is not handmade.
+                if (existingPK != null && !existingPK.getStatus().equals(ComponentStatus.HANDMADE)) {
+                    existingTable.setPrimaryKey(null);
+                }
+            }
+            
+            // For each table loaded, note the foreign keys that already exist.
+            fksToBeDropped.addAll(existingTable.getForeignKeys());
+        }
+        dbTables.close();
+        
+        // Remove from schema all tables not found in database.
+        for (Iterator i = tablesToBeDropped.iterator(); i.hasNext(); ) {
+            Table existingTable = (Table)i.next();
+            String tableName = existingTable.getName();
+            existingTable.destroy();
+            this.tables.remove(tableName);
+            i.remove(); // really get rid of it so we don't have any references left behind.
+        }
+        
+        // Do the fk+relation bit here
+        if (this.isKeyGuessing()) this.synchroniseUsingKeyGuessing(fksToBeDropped);
+        else this.synchroniseUsingDMD(fksToBeDropped, dmd, schema, catalog);
+        
+        // Drop any foreign keys that are left over (but not handmade ones).
+        for (Iterator i = fksToBeDropped.iterator(); i.hasNext(); ) {
+            Key k = (Key)i.next();
+            if (k.getStatus().equals(ComponentStatus.HANDMADE)) continue;
+            k.destroy();
+            i.remove(); // just to make sure it really has gone.
+        }
+        
+        // Check and convert any 1:M relations that should be 1:1
+        for (Iterator i = this.getTables().iterator(); i.hasNext(); ) {
+            Table pkTable = (Table)i.next();
+            PrimaryKey pk = pkTable.getPrimaryKey();
+            if (pk == null) continue; // Skip tables without PKs.
+            for (Iterator j = pk.getRelations().iterator(); j.hasNext(); ) {
+                Relation rel = (Relation)j.next();                   
+                if (!rel.getStatus().equals(ComponentStatus.INFERRED)) continue; // Skip incorrect and user-defined ones.
+                ForeignKey fk = rel.getForeignKey();
+                Table fkTable = fk.getTable();
+                PrimaryKey fkTablePK = fkTable.getPrimaryKey();
+                if (fkTablePK == null) continue; // Skip FK tables without PKs.
+                // If foreign key = primary key on fkTable then cardinality should be 1:1
+                if (fk.getColumns().equals(fkTablePK.getColumns())) rel.setFKCardinality(Cardinality.ONE);
+            }
+        }
     }
     
     /**
@@ -371,133 +487,32 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
      * that do not have a type of TABLE or VIEW. See {@link DatabaseMetaData#getTables(String, String, String, String[])}
      * for details.</p>
      */
-    public void synchroniseWithkeyGuessing() throws SQLException, BuilderException {
-        // Get database metadata.
-        DatabaseMetaData dmd = this.getConnection().getMetaData();
-        String catalog = this.getConnection().getCatalog();
-        String schema = dmd.getUserName();
-        
-        // Identify and temporarily preserve previously known tables. Refer
-        // to them as the removed tables as by the end of this the set will
-        // only contain those tables which have been dropped.
-        Set removedTables = new HashSet();
-        removedTables.addAll(this.tables.keySet());
-        Set removedFKs = new HashSet(); // for the foreign keys.
-        
-        // Load tables and columns from database.
-        // Catalog = database name/SID from connection string, Schema = username.
-        ResultSet dbTables = dmd.getTables(catalog, schema, "%", new String[]{"TABLE", "VIEW"});
-        while (dbTables.next()) {
-            String dbTableName = dbTables.getString("TABLE_NAME");
-            // If its a new table, create and add it. Otherwise, just look it up.
-            Table existingTable = this.getTableByName(dbTableName);
-            if (existingTable==null) existingTable = new GenericTable(dbTableName, this);
-            
-            // For each table loaded, temporarily preserve existing columns. Refer
-            // to them as removed columns as by the end of this the set will only
-            // contain those columns which are to be dropped.
-            Set removedCols = new HashSet();
-            removedCols.addAll(existingTable.getColumns());
-            
-            // Get the table columns from the database.
-            ResultSet dbTblCols = dmd.getColumns(catalog, schema, dbTableName, "%");
-            while (dbTblCols.next()) {
-                String dbTblColName = dbTblCols.getString("COLUMN_NAME");
-                // If its a new column, create and add it. Otherwise, just look it up.
-                Column dbTblCol = existingTable.getColumnByName(dbTblColName);
-                if (dbTblCol==null) dbTblCol = new GenericColumn(dbTblColName, existingTable);
-                removedCols.remove(dbTblCol); // Stop it from being dropped.
-            }
-            dbTblCols.close();
-            
-            // Remove from table all columns not found in database.
-            for (Iterator i = removedCols.iterator(); i.hasNext(); ) {
-                Column colName = (Column)i.next();
-                existingTable.removeColumn(colName);
-                i.remove(); // really get rid of it so we don't have any references left behind.
-            }
-            
-            // Remove table from previously known list.
-            removedTables.remove(dbTableName);
-            
-            // Load the table's primary key.
-            ResultSet dbTblPKCols = dmd.getPrimaryKeys(catalog, schema, dbTableName);
-            Map pkCols = new TreeMap(); // sorts by key
-            while (dbTblPKCols.next()) {
-                String pkColName = dbTblPKCols.getString("COLUMN_NAME");
-                Short pkKeySeq = new Short(dbTblPKCols.getShort("KEY_SEQ"));
-                pkCols.put(pkKeySeq, existingTable.getColumnByName(pkColName));
-            }
-            dbTblPKCols.close();
-            
-            // Did DMD find a PK? If not, attempt to find one by looking for the column with
-            // the same name as the table but with '_id' appended.
-            if (pkCols.isEmpty()) {
-                Column candidateCol = existingTable.getColumnByName(dbTableName + BuilderBundle.getString("primaryKeySuffix"));
-                if (candidateCol != null) pkCols.put(candidateCol.getName(), candidateCol);
-            }
-            
-            // Did we find a PK?
-            PrimaryKey existingPK = existingTable.getPrimaryKey();
-            if (!pkCols.isEmpty()) {
-                // Create and set the primary key (only if existing one is not the same).
-                if (existingPK == null || !existingPK.getColumns().equals(pkCols)) {
-                    existingTable.setPrimaryKey(new GenericPrimaryKey(new ArrayList(pkCols.values())));
-                }
-            } else {
-                // Remove the primary key on this table, but only if the existing one is not handmade.
-                if (existingPK != null && !existingPK.getStatus().equals(ComponentStatus.HANDMADE)) {
-                    existingTable.setPrimaryKey(null);
-                }
-            }
-            
-            // For each table loaded, note the foreign keys that already exist.
-            for (Iterator i = existingTable.getForeignKeys().iterator(); i.hasNext(); ) {
-                Key k = (Key)i.next();
-                removedFKs.add(k);
-            }
-        }
-        dbTables.close();
-        
-        // Remove from schema all tables not found in database.
-        for (Iterator i = removedTables.iterator(); i.hasNext(); ) {
-            String tableName = (String)i.next();
-            Table existingTable = (Table)this.tables.get(tableName);
-            existingTable.destroy();
-            this.tables.remove(existingTable);
-            i.remove(); // really get rid of it so we don't have any references left behind.
-        }
-        
+    public void synchroniseUsingKeyGuessing(Collection fksToBeDropped) throws SQLException, BuilderException {
         // Go through the tables we found and update relations.
         for (Iterator i = this.tables.values().iterator(); i.hasNext(); ) {
             Table existingTable = (Table)i.next();
             PrimaryKey existingPK = existingTable.getPrimaryKey();
             if (existingPK==null) continue; // no need to do this to tables without PKs
             
-            // If PK is itself an existing FK, it can't be used as an FK elsewhere in
-            // the key-guessing algorithm, so skip it.
+            // In key-guessing only, if an FK exists on the PK's table with the same columns
+            // as the PK, then the PK itself cannot be used as an FK elsewhere (because the
+            // FK that already exists indicates that other tables with the same columns have
+            // already had FKs created back to a different table). Hence, we can skip it.
             boolean pkIsFK = false;
             for (Iterator j = existingTable.getForeignKeys().iterator(); j.hasNext() && !pkIsFK; ) {
-                ForeignKey k = (ForeignKey)j.next();
+                Key k = (Key)j.next();
                 if (k.getColumns().equals(existingPK.getColumns())) pkIsFK = true;
             }
             if (pkIsFK) continue;
             
             // Build up a set of relations that already exist. Call it removed because by the end
             // of this it will contain a set of relations that no longer exist and should be dropped.
-            Set removedRels = new HashSet();
-            for (Iterator j = existingPK.getRelations().iterator(); j.hasNext(); ) {
-                Relation r = (Relation)j.next();
-                removedRels.add(r);
-            }
-            
-            // Infer relations from db referring to this primary key.
-            TreeMap dbFKs = new TreeMap();
+            List relationsToBeDropped = new ArrayList(existingPK.getRelations());
             
             // Inner iterator runs over every table looking for columns with the same
             // name or with '_key' appended.
-            for (Iterator inner = this.tables.values().iterator(); inner.hasNext(); ) {
-                Table fkTable = (Table)inner.next();
+            for (Iterator l = this.tables.values().iterator(); l.hasNext(); ) {
+                Table fkTable = (Table)l.next();
                 if (fkTable.equals(existingTable)) continue; // Don't link to ourselves!
                 // Check all the PK columns to find FK candidate equivalents in this fkTable.
                 Column[] candidateFKColumns = new Column[existingPK.countColumns()];
@@ -512,23 +527,23 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
                 // We found a matching set, so create a FK on it!
                 if (candidateFKColumnCount == existingPK.countColumns()) {
                     
-                    ForeignKey newFK = new GenericForeignKey(Arrays.asList(candidateFKColumns));
-                    boolean newFKAlreadyExists = false;
+                    ForeignKey fk = new GenericForeignKey(Arrays.asList(candidateFKColumns));
+                    boolean fkAlreadyExists = false;
                     // If we've already got one like that on this table, reuse it, otherwise add it.
-                    for (Iterator f = fkTable.getForeignKeys().iterator(); f.hasNext() && !newFKAlreadyExists; ) {
+                    for (Iterator f = fkTable.getForeignKeys().iterator(); f.hasNext() && !fkAlreadyExists; ) {
                         ForeignKey candidateFK = (ForeignKey)f.next();
-                        if (candidateFK.equals(newFK)) {
+                        if (candidateFK.equals(fk)) {
                             // Found one. Reuse it!
-                            newFK = candidateFK;
-                            removedFKs.remove(candidateFK); // don't drop it any more.
-                            newFKAlreadyExists =true;
+                            fk = candidateFK;
+                            fksToBeDropped.remove(candidateFK); // don't drop it any more.
+                            fkAlreadyExists =true;
                         }
                     }
                     
-                    if (!newFKAlreadyExists) {
+                    if (!fkAlreadyExists) {
                         // If its new, go ahead and make the relation.
-                        fkTable.addForeignKey(newFK);
-                        new GenericRelation(existingPK, newFK, Cardinality.MANY);
+                        fkTable.addForeignKey(fk);
+                        new GenericRelation(existingPK, fk, Cardinality.MANY);
                     } else {
                         // If its not new, check to see if it already has a relation.
                         
@@ -537,57 +552,32 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
                         // complain bitterly. If it has an incorrect or handmade connection
                         // to any other PK, remove that one.
                         boolean relationExists = false;
-                        for (Iterator f = newFK.getRelations().iterator(); f.hasNext() && !relationExists; ) {
+                        for (Iterator f = fk.getRelations().iterator(); f.hasNext() && !relationExists; ) {
                             Relation r = (Relation)f.next();
                             if (r.getPrimaryKey().equals(existingPK)) {
-                                removedRels.remove(r); // don't drop it, just leave it untouched and reuse it.
+                                relationsToBeDropped.remove(r); // don't drop it, just leave it untouched and reuse it.
                                 relationExists = true;
                             } else if (r.getStatus().equals(ComponentStatus.INFERRED)) {
                                 throw new AssertionError(BuilderBundle.getString("fkHasMultiplePKs"));
                             } else {
-                                // It'll get removed later if we leave it in removedRels.
+                                // It'll get removed later if we leave it in relationsToBeDropped.
                                 // To do that, we need do nothing.
                             }
                         }
                         
-                        // If checks returned false, create a new relation.
-                        if (!relationExists) new GenericRelation(existingPK, newFK, Cardinality.MANY);
+                        // If checks returned OK, create a new relation.
+                        if (!relationExists) new GenericRelation(existingPK, fk, Cardinality.MANY);
                     }
                 }
             }
             
             // Remove any relations that we don't find in the database (but leave
             // the handmade ones behind).
-            for (Iterator j = removedRels.iterator(); j.hasNext(); ) {
+            for (Iterator j = relationsToBeDropped.iterator(); j.hasNext(); ) {
                 Relation r = (Relation)j.next();
                 if (r.getStatus().equals(ComponentStatus.HANDMADE)) continue;
                 r.destroy();
                 j.remove(); // just to make sure it's really gone properly
-            }
-        }
-        
-        // Drop any foreign keys that are left over (but not handmade ones).
-        for (Iterator i = removedFKs.iterator(); i.hasNext(); ) {
-            Key k = (Key)i.next();
-            if (k.getStatus().equals(ComponentStatus.HANDMADE)) continue;
-            k.destroy();
-            i.remove(); // just to make sure it really has gone.
-        }
-        
-        // Check and convert any 1:M relations that should be 1:1
-        for (Iterator i = this.getTables().iterator(); i.hasNext(); ) {
-            Table pkTable = (Table)i.next();
-            PrimaryKey pk = pkTable.getPrimaryKey();
-            if (pk == null) continue; // Skip tables without PKs.
-            for (Iterator j = pk.getRelations().iterator(); j.hasNext(); ) {
-                Relation rel = (Relation)j.next();
-                if (!rel.getStatus().equals(ComponentStatus.INFERRED)) continue; // Skip incorrect and user-defined ones.
-                ForeignKey fk = rel.getForeignKey();
-                Table fkTable = fk.getTable();
-                PrimaryKey fkTablePK = fkTable.getPrimaryKey();
-                if (fkTablePK == null) continue; // Skip FK tables without PKs.
-                // If foreign key = primary key on fkTable then cardinality should be 1:1
-                if (fk.getColumns().equals(fkTablePK.getColumns())) rel.setFKCardinality(Cardinality.ONE);
             }
         }
     }
@@ -603,96 +593,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
      * that do not have a type of TABLE or VIEW. See {@link DatabaseMetaData#getTables(String, String, String, String[])}
      * for details.</p>
      */
-    public void synchroniseUsingDMD() throws SQLException, BuilderException {
-        // Get database metadata.
-        DatabaseMetaData dmd = this.getConnection().getMetaData();
-        String catalog = this.getConnection().getCatalog();
-        String schema = dmd.getUserName();
-        
-        // Identify and temporarily preserve previously known tables. Refer
-        // to them as the removed tables as by the end of this the set will
-        // only contain those tables which have been dropped.
-        Set removedTables = new HashSet();
-        removedTables.addAll(this.tables.keySet());
-        Set removedFKs = new HashSet(); // for the foreign keys.
-        
-        // Load tables and columns from database.
-        // Catalog = database name/SID from connection string, Schema = username.
-        ResultSet dbTables = dmd.getTables(catalog, schema, "%", new String[]{"TABLE", "VIEW"});
-        while (dbTables.next()) {
-            String dbTableName = dbTables.getString("TABLE_NAME");
-            // If its a new table, create and add it. Otherwise, just look it up.
-            Table existingTable = this.getTableByName(dbTableName);
-            if (existingTable==null) existingTable = new GenericTable(dbTableName, this);
-            
-            // For each table loaded, temporarily preserve existing columns. Refer
-            // to them as removed columns as by the end of this the set will only
-            // contain those columns which are to be dropped.
-            Set removedCols = new HashSet();
-            removedCols.addAll(existingTable.getColumns());
-            
-            // Get the table columns from the database.
-            ResultSet dbTblCols = dmd.getColumns(catalog, schema, dbTableName, "%");
-            while (dbTblCols.next()) {
-                String dbTblColName = dbTblCols.getString("COLUMN_NAME");
-                // If its a new column, create and add it. Otherwise, just look it up.
-                Column dbTblCol = existingTable.getColumnByName(dbTblColName);
-                if (dbTblCol==null) dbTblCol = new GenericColumn(dbTblColName, existingTable); 
-                removedCols.remove(dbTblCol); // Stop it from being dropped.
-            }
-            dbTblCols.close();
-            
-            // Remove from table all columns not found in database.
-            for (Iterator i = removedCols.iterator(); i.hasNext(); ) {
-                Column colName = (Column)i.next();
-                existingTable.removeColumn(colName);
-                i.remove(); // really get rid of it so we don't have any references left behind.
-            }
-            
-            // Remove table from previously known list.
-            removedTables.remove(dbTableName);
-            
-            // Load the table's primary key.
-            ResultSet dbTblPKCols = dmd.getPrimaryKeys(catalog, schema, dbTableName);
-            Map pkCols = new TreeMap(); // sorts by key
-            while (dbTblPKCols.next()) {
-                String pkColName = dbTblPKCols.getString("COLUMN_NAME");
-                Short pkKeySeq = new Short(dbTblPKCols.getShort("KEY_SEQ"));
-                pkCols.put(pkKeySeq, existingTable.getColumnByName(pkColName));
-            }
-            dbTblPKCols.close();
-            
-            // Did we find a PK?
-            PrimaryKey existingPK = existingTable.getPrimaryKey();
-            if (!pkCols.isEmpty()) {
-                // Create and set the primary key (only if existing one is not the same).
-                if (existingPK == null || !existingPK.getColumns().equals(pkCols)) {
-                    existingTable.setPrimaryKey(new GenericPrimaryKey(new ArrayList(pkCols.values())));
-                }
-            } else {
-                // Remove the primary key on this table, but only if the existing one is not handmade.
-                if (existingPK!=null && !existingPK.getStatus().equals(ComponentStatus.HANDMADE)) {
-                    existingTable.setPrimaryKey(null);
-                }
-            }
-            
-            // For each table loaded, note the foreign keys that already exist.
-            for (Iterator i = existingTable.getForeignKeys().iterator(); i.hasNext(); ) {
-                Key k = (Key)i.next();
-                removedFKs.add(k);
-            }
-        }
-        dbTables.close();
-        
-        // Remove from schema all tables not found in database.
-        for (Iterator i = removedTables.iterator(); i.hasNext(); ) {
-            String tableName = (String)i.next();
-            Table existingTable = (Table)this.tables.get(tableName);
-            existingTable.destroy();
-            this.tables.remove(existingTable);
-            i.remove(); // really get rid of it so we don't have any references left behind.
-        }
-        
+    public void synchroniseUsingDMD(Collection fksToBeDropped, DatabaseMetaData dmd, String schema, String catalog) throws SQLException, BuilderException {
         // Go through the tables we found and update relations.
         for (Iterator i = this.tables.values().iterator(); i.hasNext(); ) {
             Table existingTable = (Table)i.next();
@@ -701,14 +602,10 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
             
             // Build up a set of relations that already exist. Call it removed because by the end
             // of this it will contain a set of relations that no longer exist and should be dropped.
-            Set removedRels = new HashSet();
-            for (Iterator j = existingPK.getRelations().iterator(); j.hasNext(); ) {
-                Relation r = (Relation)j.next();
-                removedRels.add(r);
-            }
+            List relationsToBeDropped = new ArrayList(existingPK.getRelations());
             
             // Load relations from db referring to this primary key.
-            TreeMap dbFKs = new TreeMap();
+            TreeMap dbFKs = new TreeMap(); // sorts by key sequence
             ResultSet dbTblFKCols = dmd.getExportedKeys(catalog, schema, existingTable.getName());
             // Build a map of key positions to lists of columns. So, if a table has two keys, it will
             // have two entries at each key position.
@@ -740,23 +637,23 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
                         candidateFKColumns[keySeqValue] = (Column)l.get(j);
                     }
                     
-                    ForeignKey newFK = new GenericForeignKey(Arrays.asList(candidateFKColumns));
-                    boolean newFKAlreadyExists = false;
+                    ForeignKey fk = new GenericForeignKey(Arrays.asList(candidateFKColumns));
+                    boolean fkAlreadyExists = false;
                     // If we've already got one like that, reuse it, otherwise add it.
-                    for (Iterator f = newFK.getTable().getForeignKeys().iterator(); f.hasNext() && !newFKAlreadyExists; ) {
+                    for (Iterator f = fk.getTable().getForeignKeys().iterator(); f.hasNext() && !fkAlreadyExists; ) {
                         ForeignKey candidateFK = (ForeignKey)f.next();
-                        if (candidateFK.equals(newFK)) {
+                        if (candidateFK.equals(fk)) {
                             // Found one. Reuse it!
-                            newFK = candidateFK;
-                            removedFKs.remove(candidateFK); // don't drop it any more.
-                            newFKAlreadyExists =true;
+                            fk = candidateFK;
+                            fksToBeDropped.remove(candidateFK); // don't drop it any more.
+                            fkAlreadyExists =true;
                         }
                     }
                     
-                    if (!newFKAlreadyExists) {
+                    if (!fkAlreadyExists) {
                         // If its new, go ahead and make the relation.
-                        newFK.getTable().addForeignKey(newFK);
-                        new GenericRelation(existingPK, newFK, Cardinality.MANY);
+                        fk.getTable().addForeignKey(fk);
+                        new GenericRelation(existingPK, fk, Cardinality.MANY);
                     } else {
                         // If its not new, check to see if it already has a relation.
                         
@@ -765,57 +662,32 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
                         // complain bitterly. If it has an incorrect or handmade connection
                         // to any other PK, remove that one.
                         boolean relationExists = false;
-                        for (Iterator f = newFK.getRelations().iterator(); f.hasNext() && !relationExists; ) {
+                        for (Iterator f = fk.getRelations().iterator(); f.hasNext() && !relationExists; ) {
                             Relation r = (Relation)f.next();
                             if (r.getPrimaryKey().equals(existingPK)) {
-                                removedRels.remove(r); // don't drop it, just leave it untouched and reuse it.
+                                relationsToBeDropped.remove(r); // don't drop it, just leave it untouched and reuse it.
                                 relationExists = true;
                             } else if (r.getStatus().equals(ComponentStatus.INFERRED)) {
                                 throw new AssertionError(BuilderBundle.getString("fkHasMultiplePKs"));
                             } else {
-                                // It'll get removed later if we leave it in removedRels.
+                                // It'll get removed later if we leave it in relationsToBeDropped.
                                 // To do that, we need do nothing.
                             }
                         }
                         
                         // If checks returned false, create a new relation.
-                        if (!relationExists) new GenericRelation(existingPK, newFK, Cardinality.MANY);
+                        if (!relationExists) new GenericRelation(existingPK, fk, Cardinality.MANY);
                     }
                 }
             }
             
             // Remove any relations that we don't find in the database (but leave
             // the handmade ones behind).
-            for (Iterator j = removedRels.iterator(); j.hasNext(); ) {
+            for (Iterator j = relationsToBeDropped.iterator(); j.hasNext(); ) {
                 Relation r = (Relation)j.next();
                 if (r.getStatus().equals(ComponentStatus.HANDMADE)) continue;
                 r.destroy();
                 j.remove(); // just to make sure it's really gone properly
-            }
-        }
-        
-        // Drop any foreign keys that are left over (but not handmade ones).
-        for (Iterator i = removedFKs.iterator(); i.hasNext(); ) {
-            Key k = (Key)i.next();
-            if (k.getStatus().equals(ComponentStatus.HANDMADE)) continue;
-            k.destroy();
-            i.remove(); // just to make sure it really has gone.
-        }
-        
-        // Check and convert any 1:M relations that should be 1:1
-        for (Iterator i = this.getTables().iterator(); i.hasNext(); ) {
-            Table pkTable = (Table)i.next();
-            PrimaryKey pk = pkTable.getPrimaryKey();
-            if (pk == null) continue; // Skip tables without PKs.
-            for (Iterator j = pk.getRelations().iterator(); j.hasNext(); ) {
-                Relation rel = (Relation)j.next();
-                if (!rel.getStatus().equals(ComponentStatus.INFERRED)) continue; // Skip incorrect and user-defined ones.
-                ForeignKey fk = rel.getForeignKey();
-                Table fkTable = fk.getTable();
-                PrimaryKey fkTablePK = fkTable.getPrimaryKey();
-                if (fkTablePK == null) continue; // Skip FK tables without PKs.
-                // If foreign key = primary key on fkTable then cardinality should be 1:1
-                if (fk.getColumns().equals(fkTablePK.getColumns())) rel.setFKCardinality(Cardinality.ONE);
             }
         }
     }

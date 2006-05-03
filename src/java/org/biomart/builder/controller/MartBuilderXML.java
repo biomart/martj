@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -87,7 +88,7 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 27th April 2006
+ * @version 0.1.4, 2nd May 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -600,7 +601,7 @@ public class MartBuilderXML extends DefaultHandler {
             this.currentOutputIndent++;
         }
         // Write the tag.
-        for (int i = this.currentOutputIndent; i > 0; i--) this.xmlWriter.write("t");
+        for (int i = this.currentOutputIndent; i > 0; i--) this.xmlWriter.write("\t");
         this.xmlWriter.write("<");
         this.xmlWriter.write(name);
         this.currentOutputElement = name;
@@ -621,7 +622,7 @@ public class MartBuilderXML extends DefaultHandler {
             // Decrease the indent.
             this.currentOutputIndent--;
             // Output the tag.
-            for (int i = this.currentOutputIndent; i > 0; i--) this.xmlWriter.write("t");
+            for (int i = this.currentOutputIndent; i > 0; i--) this.xmlWriter.write("\t");
             this.xmlWriter.write("</");
             this.xmlWriter.write(name);
             this.xmlWriter.write(">\n");
@@ -660,7 +661,7 @@ public class MartBuilderXML extends DefaultHandler {
         this.writeAttribute(name, sb.toString());
     }
     
-    private void writeSchema(Schema schema, Set relations) throws IOException, AssociationException {
+    private void writeSchema(Schema schema) throws IOException, AssociationException {
         // What kind of tbl prov is it?
         // JDBC?
         if (schema instanceof JDBCSchema) {
@@ -682,11 +683,11 @@ public class MartBuilderXML extends DefaultHandler {
             throw new AssociationException(BuilderBundle.getString("unknownSchemaType",schema.getClass().getName()));
         
         // Write out the contents, and note the relations.
-        this.writeSchemaContents(schema, relations);
+        this.writeSchemaContents(schema);
         
         // What kind of tbl prov was it?
         // JDBC?
-        if ((schema instanceof JDBCSchema) || (schema instanceof JDBCSchema)) {
+        if (schema instanceof JDBCSchema) {
             this.closeElement("jdbcSchema");
         }
         // Others?
@@ -704,7 +705,7 @@ public class MartBuilderXML extends DefaultHandler {
      * @throws IOException if there was a problem writing to file.
      * @throws AssociationException if an unwritable kind of object was found.
      */
-    private void writeSchemaContents(Schema schema, Set relations) throws IOException, AssociationException {
+    private void writeSchemaContents(Schema schema) throws IOException, AssociationException {
         // Write out tables inside each provider. WITH IDS.
         for (Iterator ti = schema.getTables().iterator(); ti.hasNext(); ) {
             Table table = (Table)ti.next();
@@ -799,11 +800,13 @@ public class MartBuilderXML extends DefaultHandler {
                 this.writeAttribute("alt", key.toString());
                 this.closeElement(elem);
             }
-            
+
             // Finish table.
-            relations.addAll(table.getRelations());
             this.closeElement("table");
         }
+        
+        // Write relations.
+        this.writeRelations(schema.getInternalRelations());
     }
     
     /**
@@ -811,7 +814,7 @@ public class MartBuilderXML extends DefaultHandler {
      * @param relations the set of {@link Relation}s to write.
      * @throws IOException if there was a problem writing to file.
      */
-    private void writeRelations(Set relations) throws IOException {
+    private void writeRelations(Collection relations) throws IOException {
         // Write out relations. WITH IDS.
         for (Iterator i = relations.iterator(); i.hasNext(); ) {
             Relation r = (Relation)i.next();
@@ -852,7 +855,7 @@ public class MartBuilderXML extends DefaultHandler {
         this.openElement("mart");
         
         // MartConstructor (anywhere).
-        Set martConstructors = new TreeSet();
+        List martConstructors = new ArrayList();
         for (Iterator i = mart.getDataSets().iterator(); i.hasNext(); ) {
             DataSet ds = (DataSet)i.next();
             MartConstructor mc = ds.getMartConstructor();
@@ -876,22 +879,26 @@ public class MartBuilderXML extends DefaultHandler {
         }
         
         // Write out each schema.
-        Set relations = new TreeSet();
+        List externalRelations = new ArrayList();
         for (Iterator i = mart.getSchemas().iterator(); i.hasNext(); ) {
             Schema schema = (Schema)i.next();
             if (schema instanceof SchemaGroup) {
                 this.openElement("schemaGroup");
                 this.writeAttribute("name", schema.getName());
+                // Write group itself.
+                this.writeSchemaContents(schema);
+                // Write member schemas.
                 for (Iterator j = ((SchemaGroup)schema).getSchemas().values().iterator(); j.hasNext(); )
-                    this.writeSchema((Schema)j.next(), relations);
+                    this.writeSchema((Schema)j.next());
                 this.closeElement("schemaGroup");
             } else {
-                this.writeSchema(schema, relations);
+                this.writeSchema(schema);
             }
+            externalRelations.addAll(schema.getExternalRelations());
         }
         
         // Write out relations. WITH IDS.
-        this.writeRelations(relations);
+        this.writeRelations(externalRelations);
         
         // Write out mart constructors. Remember windows as we go along.
         
@@ -987,11 +994,9 @@ public class MartBuilderXML extends DefaultHandler {
             }
             
             // Write out the contents of the dataset, and note the relations.
-            Set dsRelations = new TreeSet();
-            this.writeSchemaContents(ds, dsRelations);
+            this.writeSchemaContents(ds);
             
             // Write out relations inside dataset. WITH IDS.
-            this.writeRelations(dsRelations);
             this.closeElement("dataset");
         }
         

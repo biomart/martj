@@ -42,22 +42,22 @@ import org.biomart.builder.resources.BuilderBundle;
  * document, or any other source of potentially tabular information.</p>
  * <p>The generic implementation provided should suffice for most tasks involved with
  * keeping track of the {@link Table}s a {@link Schema} provides.</p>
- * 
+ *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 27th April 2006
+ * @version 0.1.8, 2nd May 2006
  * @since 0.1
  */
 public interface Schema extends Comparable, DataLink {
     /**
      * Returns the name of this {@link Schema}.
-     * 
+     *
      * @return the name of this provider.
      */
     public String getName();
-
+    
     /**
      * Sets the name of this {@link Schema}.
-     * 
+     *
      * @param name the new name of this provider.
      */
     public void setName(String name);
@@ -69,7 +69,7 @@ public interface Schema extends Comparable, DataLink {
      * and {@link Key} and {@link Relation} and update those too.
      * Any {@link Key} or {@link Relation} that was created by the user and is still valid,
      * ie. the underlying columns still exist, will not be affected by this operation.
-     * 
+     *
      * @throws SQLException if there was a problem connecting to the data source.
      * @throws BuilderException if there was any other kind of problem.
      */
@@ -131,6 +131,8 @@ public interface Schema extends Comparable, DataLink {
      * @return a set of relations linking to tables in other table providers.
      */
     public Collection getExternalRelations();
+    
+    public Collection getInternalRelations();
     
     /**
      * The generic implementation should suffice as the ground for most
@@ -260,6 +262,22 @@ public interface Schema extends Comparable, DataLink {
                 else keys.add(relation.getForeignKey());
             }
             return keys;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        public Collection getInternalRelations() {
+            List relations = new ArrayList();
+            for (Iterator i = this.getTables().iterator(); i.hasNext(); ) {
+                Table table = (Table)i.next();
+                if (table.getPrimaryKey()==null) continue;
+                for (Iterator j = table.getPrimaryKey().getRelations().iterator(); j.hasNext(); ) {
+                    Relation relation = (Relation)j.next();
+                    if (relation.getForeignKey().getTable().getSchema().equals(this)) relations.add(relation);
+                }
+            }
+            return relations;
         }
         
         /**

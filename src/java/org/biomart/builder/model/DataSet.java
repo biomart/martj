@@ -33,8 +33,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
@@ -82,29 +80,29 @@ public class DataSet extends GenericSchema {
     /**
      * Internal reference to masked relations.
      */
-    private final Set maskedRelations = new TreeSet();
+    private final List maskedRelations = new ArrayList();
     
     /**
      * Internal reference to masked columns.
      */
-    private final Set maskedColumns = new TreeSet();
+    private final List maskedColumns = new ArrayList();
     
     /**
      * Internal reference to partitioned columns (keys are columns,
      * values are {@link PartitionedColumnType}s).
      */
-    private final Map partitionedColumns = new TreeMap();
+    private final Map partitionedColumns = new HashMap();
     
     /**
      * Internal reference to relations between subclassed tables.
      */
-    private final Set subclassedRelations = new TreeSet();
+    private final List subclassedRelations = new ArrayList();
     
     /**
      * Internal reference to concat-only relations. The keys of
      * the map are relations, the values are concat types.
      */
-    private final Map concatOnlyRelations = new TreeMap();
+    private final Map concatOnlyRelations = new HashMap();
     
     /**
      * Internal reference to whether or not to partition by the {@link SchemaGroup}.

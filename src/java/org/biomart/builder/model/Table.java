@@ -89,14 +89,6 @@ public interface Table extends Comparable {
     public Collection getForeignKeys();
     
     /**
-     * Returns the {@link ForeignKey} on this {@link Table} with the given name. It may return
-     * null if not found.
-     * @param name the name to look for.
-     * @return the named {@link ForeignKey} on this {@link Table} if found, otherwise null.
-     */
-    public ForeignKey getForeignKeyByName(String name);
-    
-    /**
      * Adds a {@link ForeignKey} to this table. It may
      * not be null. The {@link ForeignKey} must refer to this {@link Table} else
      * an {@link AssociationException} will be thrown. If it already exists, nothing
@@ -206,7 +198,7 @@ public interface Table extends Comparable {
         /**
          * Internal reference to the {@link ForeignKey}s of this {@link Table}.
          */
-        private final Map foreignKeys = new TreeMap();
+        private final List foreignKeys = new ArrayList();
         
         /**
          * Internal reference to the {@link Column}s of this {@link Table}.
@@ -281,29 +273,17 @@ public interface Table extends Comparable {
          * {@inheritDoc}
          */
         public Collection getForeignKeys() {
-            return this.foreignKeys.values();
+            return this.foreignKeys;
         }
-        
-        /**
-         * {@inheritDoc}
-         */
-        public ForeignKey getForeignKeyByName(String name) {
-            // Do we have it?
-            if (!this.foreignKeys.containsKey(name)) return null;
-            // Return it.
-            return (ForeignKey)this.foreignKeys.get(name);
-        }
-        
+                
         /**
          * {@inheritDoc}
          */
         public void addForeignKey(ForeignKey foreignKey) throws AssociationException {
-            // Work out its name.
-            String name = foreignKey.getName();
             // Quietly ignore if we've already got it.
-            if (this.foreignKeys.containsKey(name)) return;
+            if (this.foreignKeys.contains(foreignKey)) return;
             // Do it.
-            this.foreignKeys.put(name, foreignKey);
+            this.foreignKeys.add( foreignKey);
         }
         
         /**
@@ -311,16 +291,16 @@ public interface Table extends Comparable {
          */
         public void removeForeignKey(ForeignKey foreignKey) {
             // Do it.
-            this.foreignKeys.remove(foreignKey.getName());
+            this.foreignKeys.remove(foreignKey);
         }
         
         /**
          * {@inheritDoc}
          */
         public Collection getKeys() {
-            Set allKeys = new TreeSet();
+            List allKeys = new ArrayList();
             if (this.primaryKey!=null) allKeys.add(this.primaryKey);
-            allKeys.addAll(this.foreignKeys.values());
+            allKeys.addAll(this.foreignKeys);
             return allKeys;
         }
         
@@ -328,7 +308,7 @@ public interface Table extends Comparable {
          * {@inheritDoc}
          */
         public Collection getRelations() {
-            Set allRels = new TreeSet();
+            Set allRels = new TreeSet(); // enforce uniqueness
             for (Iterator i = this.getKeys().iterator(); i.hasNext(); ) {
                 Key k = (Key)i.next();
                 allRels.addAll(k.getRelations());
@@ -384,7 +364,10 @@ public interface Table extends Comparable {
             // Remove all keys involving this column
             for (Iterator i = this.getKeys().iterator(); i.hasNext(); ) {
                 Key k = (Key)i.next();
-                if (k.getColumns().contains(column)) k.destroy();
+                if (k.getColumns().contains(column)) {
+                    k.destroy();
+                    i.remove(); // to make sure
+                }
             }
             // Remove the column itself
             this.columns.remove(column.getName());
@@ -394,8 +377,7 @@ public interface Table extends Comparable {
          * {@inheritDoc}
          */
         public void destroy() {
-            Set allCols = new HashSet();
-            allCols.addAll(this.columns.values());
+            Set allCols = new HashSet(this.columns.values());
             // Remove each column we have. This will recursively cause
             // keys etc. to be removed.
             for (Iterator i = allCols.iterator(); i.hasNext(); ) {

@@ -37,7 +37,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Provides the default behaviour for table provider listeners.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 27th April 2006
+ * @version 0.1.6, 2nd May 2006
  * @since 0.1
  */
 public class SchemaDiagramModifier implements DiagramModifier {
@@ -92,13 +92,5 @@ public class SchemaDiagramModifier implements DiagramModifier {
             });
             contextMenu.add(suggest);
         }
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public void aboutToDraw(Object object) {
-        // Nothing special required here. Only datasets and windows
-        // may care - masked, concat, etc.
     }
 }

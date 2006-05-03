@@ -147,7 +147,7 @@ public class RadialLayout implements LayoutManager {
             this.ringSizes.clear();
             this.ringNumbers.clear();
             
-            // List of members, Circumference, Max shortest side
+            // List of members, Circumference, Max shortest side. Sort by ring number.
             Map ringDetails = new TreeMap();
             
             int nComps = parent.getComponentCount();

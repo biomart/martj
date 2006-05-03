@@ -1,7 +1,6 @@
 /*
- * DataSetDiagramModifier.java
- *
- * Created on 19 April 2006, 09:46
+ * AssociationException.java
+ * Created on 23 March 2006, 15:27
  */
 
 /*
@@ -22,26 +21,31 @@
         Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.view.gui;
-
-import org.biomart.builder.model.DataSet;
+package org.biomart.builder.exceptions;
 
 /**
- * Adapts listener events suitable for datasets.
+ * This refers to exceptions where something is being added to something else, but
+ * the two items are not associated or cannot be associated.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 2nd May 2006
+ * @version 0.1.1, 28th April 2006
  * @since 0.1
  */
-public class DataSetDiagramModifier extends WindowDiagramModifier {
+public class ValidationException extends BuilderException {
     /**
-     * 
-     * Creates a new instance of DataSetDiagramModifier over
-     * a given window. 
-     * 
-     * 
-     * @param window the window whose dataset we are attached to.
+     * Constructs an instance of <code>AssociationException</code> with the specified detail message.
+     * @param msg the detail message.
      */
-    public DataSetDiagramModifier(DataSetTabSet datasetTabSet, DataSet dataset) {
-        super(datasetTabSet, dataset);
+    public ValidationException(String msg) {
+        super(msg);
+    }
+    
+    /**
+     * Constructs an instance of <code>AssociationException</code> with the specified detail message
+     * and initial cause.
+     * @param msg the detail message.
+     * @param t the initial cause.
+     */
+    public ValidationException(String msg, Throwable t) {
+        super(msg, t);
     }
 }

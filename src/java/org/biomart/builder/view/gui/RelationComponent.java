@@ -36,20 +36,26 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Relation.Cardinality;
 
 /**
  * An element that can be drawn on a Diagram. Two Comparators
  * are provided for sorting them, as they are not comparable within themselves.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 27th April 2006
+ * @version 0.1.2, 2nd May 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
     /**
      * Constant referring to the width of a relation shape.
      */
-    public static final float RELATION_LINEWIDTH = 2.0f; // 72 = 1 inch at 72 dpi
+    public static final float RELATION_LINEWIDTH = 1.0f; // 72 = 1 inch at 72 dpi
+    
+    /**
+     * Constant referring to the unit size of a dash element.
+     */
+    public static final float RELATION_DASHUNIT = 3.0f; // 72 = 1 inch at 72 dpi
     
     /**
      * What do we look like?
@@ -126,7 +132,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
      * Sets the shape for us to display the outline of.
      */
     public void setShape(Shape shape) {
-        Stroke stroke = this.getStroke(this.getFlags());
+        Stroke stroke = this.getStroke();
         this.shape = stroke.createStrokedShape(shape);
     }
     
@@ -177,6 +183,25 @@ public class RelationComponent extends JComponent implements DiagramComponent {
     }
     
     /**
+     * Work out what stroke to use.
+     */
+    private Stroke getStroke() {
+        float[] dashArray;
+        if (this.getRelation().getFKCardinality().equals(Cardinality.MANY)) 
+            dashArray = new float[]{4.0f * RelationComponent.RELATION_DASHUNIT, RelationComponent.RELATION_DASHUNIT};
+        else 
+            dashArray = new float[]{RelationComponent.RELATION_DASHUNIT, RelationComponent.RELATION_DASHUNIT};
+        return new BasicStroke(RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0.0f, dashArray, 0.0f);
+    }
+    
+    /**
+     * Set up the colours etc. for this component. Flags have already been set.
+     */
+    protected void setComponentColours() {
+        // Do nothing yet.
+    }
+    
+    /**
      * {@inheritDoc}
      */
     protected void paintComponent(Graphics g) {
@@ -187,37 +212,11 @@ public class RelationComponent extends JComponent implements DiagramComponent {
         }
         Graphics2D g2d = (Graphics2D)g.create();
         // Do painting of this component.
-        this.getDiagram().clearFlags();
-        this.getDiagram().getDiagramModifier().aboutToDraw(this.getRelation());
-        this.paintComponent(g2d, this.getFlags());
-        // Clean up.
-        g2d.dispose();
-    }
-    
-    /**
-     * Work out what stroke to use.
-     */
-    private int getFlags() {
-        this.getDiagram().clearFlags();
-        this.getDiagram().getDiagramModifier().aboutToDraw(this.getRelation());
-        return this.getDiagram().getFlags();
-    }
-    
-    /**
-     * Work out what stroke to use.
-     */
-    private Stroke getStroke(int flags) {
-        return new BasicStroke(RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
-    }
-    
-    /**
-     * Override this to do your painting. The background has already
-     * been done for you if you are opaque. Flags are already set.
-     */
-    private void paintComponent(Graphics2D g2d, int flags) {
-        // Do the drawing here!
-        g2d.setStroke(this.getStroke(flags));
+        this.setComponentColours();
+        g2d.setStroke(this.getStroke());
         g2d.draw(this.shape);
         g2d.fill(this.shape);
+        // Clean up.
+        g2d.dispose();
     }
 }

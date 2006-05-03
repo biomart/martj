@@ -25,10 +25,10 @@ package org.biomart.builder.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.resources.BuilderBundle;
 
@@ -73,14 +73,6 @@ public interface Key extends Comparable {
      * @return the set of all {@link Relation}s this {@link Key} is involved in.
      */
     public Collection getRelations();
-    
-    /**
-     * Returns the {@link Relation} on this {@link Key} with the given name. It may return
-     * null if not found.
-     * @param name the name to look for.
-     * @return the named {@link Relation} on this {@link Key} if found, otherwise null.
-     */
-    public Relation getRelationByName(String name);
     
     /**
      * Adds a particular {@link Relation} to the set this {@link Key} is involved in.
@@ -150,7 +142,7 @@ public interface Key extends Comparable {
          * Internal reference to the set of {@link Relations}s this {@link Key} is involved in.
          * Keys are relation names.
          */
-        private final Map relations = new HashMap();
+        private final List relations = new ArrayList();
         
         /**
          * Internal reference to the {@link Table} of this {@link Key}.
@@ -220,7 +212,7 @@ public interface Key extends Comparable {
          */
         public String getName() {
             StringBuffer sb = new StringBuffer();
-            sb.append(this.getTable().toString());
+            sb.append(this.getTable().getName());
             sb.append("{");
             for (Iterator i = this.columns.iterator(); i.hasNext(); ) {
                 Column c = (Column)i.next();
@@ -249,17 +241,7 @@ public interface Key extends Comparable {
          * {@inheritDoc}
          */
         public Collection getRelations() {
-            return this.relations.values();
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
-        public Relation getRelationByName(String name) {
-            // Do we have it?
-            if (!this.relations.containsKey(name)) return null;
-            // Return it.
-            return (Relation)this.relations.get(name);
+            return this.relations;
         }
         
         /**
@@ -269,24 +251,20 @@ public interface Key extends Comparable {
             // Does it refer to us?
             if (!(relation.getForeignKey() == this || relation.getPrimaryKey() == this))
                 throw new AssociationException(BuilderBundle.getString("relationNotOfThisKey"));
-            // Work out its name.
-            String name = relation.getName();
             // Quietly ignore if we've already got it.
-            if (this.relations.containsKey(name)) return;
+            if (this.relations.contains(relation)) return;
             // Otherwise, do the work.
-            this.relations.put(name, relation);
+            this.relations.add(relation);
         }
         
         /**
          * {@inheritDoc}
          */
         public void removeRelation(Relation relation) {
-            // Work out its name.
-            String name = relation.getName();
             // Quietly ignore if we dont' know about iit.
-            if (!this.relations.containsKey(name)) return;
+            if (!this.relations.contains(relation)) return;
             // Otherwise, do the work.
-            this.relations.remove(name);
+            this.relations.remove(relation);
         }
         
         /**
@@ -315,7 +293,7 @@ public interface Key extends Comparable {
          */
         public void destroy() {
             // Remove all the relations.
-            for (Iterator i = this.relations.values().iterator(); i.hasNext(); ) {
+            for (Iterator i = this.relations.iterator(); i.hasNext(); ) {
                 Relation r = (Relation)i.next();
                 r.destroy();
             }
@@ -381,7 +359,6 @@ public interface Key extends Comparable {
          */
         public GenericPrimaryKey(List columns) throws AssociationException {
             super(columns);
-            this.getTable().setPrimaryKey(this);
         }
         
         /**
@@ -408,7 +385,6 @@ public interface Key extends Comparable {
          */
         public GenericForeignKey(List columns) throws AssociationException {
             super(columns);
-            this.getTable().addForeignKey(this);
         }
         
         /**

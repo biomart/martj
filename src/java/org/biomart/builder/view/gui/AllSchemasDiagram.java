@@ -41,7 +41,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * This class deals with drawing an overview of all the table providers.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 27th April 2006
+ * @version 0.1.5, 2nd May 2006
  * @since 0.1
  */
 public class AllSchemasDiagram extends Diagram {
@@ -71,7 +71,7 @@ public class AllSchemasDiagram extends Diagram {
         sync.setMnemonic(BuilderBundle.getString("synchroniseAllSchemasMnemonic").charAt(0));
         sync.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getDataSetTabSet().synchroniseSchema();
+                getDataSetTabSet().synchroniseSchemas();
             }
         });
         contextMenu.add(sync);

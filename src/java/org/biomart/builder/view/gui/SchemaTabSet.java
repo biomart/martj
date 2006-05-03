@@ -39,12 +39,14 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import org.biomart.builder.controller.MartUtils;
+import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Displays the contents of multiple {@link Schema}s in graphical form.
- * 
+ *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.3, 27th April 2006
  * @since 0.1
@@ -105,8 +107,8 @@ public class SchemaTabSet extends JTabbedPane {
             if (!this.schemaToDiagram.containsKey(schema)) this.addSchemaTab(schema);
         }
         // Remove all our table providers that are not in the schema.
-        martSchemas = new ArrayList(this.schemaToDiagram.keySet());
-        for (Iterator i = martSchemas.iterator(); i.hasNext(); ) {
+        List ourSchemas = new ArrayList(this.schemaToDiagram.keySet());
+        for (Iterator i = ourSchemas.iterator(); i.hasNext(); ) {
             Schema schema = (Schema)i.next();
             if (!martSchemas.contains(schema)) this.removeSchemaTab(schema);
         }
@@ -133,7 +135,40 @@ public class SchemaTabSet extends JTabbedPane {
             if (schema != null) {
                 MartUtils.addSchemaToMart(this.datasetTabSet.getMart(), schema);
                 this.synchroniseSchema(schema);
-                this.synchroniseTabs();
+                this.datasetTabSet.synchroniseTabs();
+                this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
+            }
+        } catch (Throwable t) {
+            this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+        }
+    }
+    
+    public void requestAddSchemaToSchemaGroup(Schema schema) {
+        // Work out existing group names, if any.
+        List groupSchemas = new ArrayList();
+        for (Iterator i = this.datasetTabSet.getMart().getSchemas().iterator(); i.hasNext(); ) {
+            Schema groupSchema = (Schema)i.next();
+            if (groupSchema instanceof SchemaGroup) groupSchemas.add(groupSchema.getName());
+        }
+        groupSchemas.add("Hello");
+        // Obtain group name from user
+        String groupName = (String)JOptionPane.showInputDialog(
+                this.datasetTabSet.getMartTabSet().getMartBuilder(),
+                BuilderBundle.getString("requestSchemaGroupName"),
+                BuilderBundle.getString("questionTitle"),
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                groupSchemas.toArray(),
+                null
+                );
+        // Add schema to group
+        try {
+            if (groupName == null) return;
+            else if (groupName.trim().length()==0) {
+                throw new ValidationException(BuilderBundle.getString("schemaGroupNameIsNull"));
+            } else {
+                SchemaGroup group = MartUtils.addSchemaToSchemaGroup(this.datasetTabSet.getMart(), schema, groupName);
+                this.datasetTabSet.synchroniseTabs();
                 this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
             }
         } catch (Throwable t) {
@@ -147,7 +182,7 @@ public class SchemaTabSet extends JTabbedPane {
     public void requestModifySchema(Schema schema) {
         // Add to schema.
         try {
-            if (SchemaManagementDialog.modifySchema(this, schema)) 
+            if (SchemaManagementDialog.modifySchema(this, schema))
                 this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
         } catch (Throwable t) {
             this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
@@ -184,7 +219,6 @@ public class SchemaTabSet extends JTabbedPane {
         if (choice == JOptionPane.YES_OPTION) {
             try {
                 MartUtils.removeSchemaFromMart(this.datasetTabSet.getMart(), schema);
-                this.removeSchemaTab(schema);
                 this.datasetTabSet.synchroniseTabs();
                 this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
             } catch (Throwable t) {
@@ -283,7 +317,7 @@ public class SchemaTabSet extends JTabbedPane {
     
     /**
      * Construct a context menu for a given table provider view tab.
-     * 
+     *
      * @param schema the table provider to use when the context menu items are chosen.
      * @return the popup menu.
      */

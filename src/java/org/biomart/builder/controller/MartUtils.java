@@ -33,6 +33,8 @@ import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.SchemaGroup;
+import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
 
 /**
  * Tools for working with the mart from a GUI or CLI.
@@ -95,5 +97,17 @@ public class MartUtils {
     public static Schema createJDBCSchema(File driverClassLocation, String driverClassName, String url, String username, String password, String name, boolean keyGuessing) {
         if (password != null && password.equals("")) password = null;
         return new JDBCSchema(driverClassLocation, driverClassName, url, username, password, name, keyGuessing);
+    }
+
+    public static SchemaGroup addSchemaToSchemaGroup(Mart mart, Schema schema, String groupName) throws BuilderException, SQLException {
+        Schema group = mart.getSchemaByName(groupName);
+        if (group == null || !(group instanceof SchemaGroup)) {            
+            group = new GenericSchemaGroup(groupName);
+            mart.addSchema(group);
+        }
+        ((SchemaGroup)group).addSchema(schema);
+        group.synchronise();
+        mart.removeSchema(schema);
+        return (SchemaGroup)group;
     }
 }

@@ -33,6 +33,7 @@ import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -54,6 +55,7 @@ import javax.swing.filechooser.FileFilter;
 import org.biomart.builder.controller.JDBCSchema;
 import org.biomart.builder.controller.MartUtils;
 import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
@@ -160,7 +162,11 @@ public class SchemaManagementDialog extends JDialog implements ActionListener {
         this.database = new JTextField(10);
         this.username = new JTextField(10);
         this.password = new JPasswordField(10);
-        this.copysettings = new JComboBox(this.schemaTabSet.getDataSetTabSet().getMart().getSchemas().toArray());
+        this.copysettings = new JComboBox();
+        for (Iterator i = this.schemaTabSet.getDataSetTabSet().getMart().getSchemas().iterator(); i.hasNext(); ) {
+            Schema s = (Schema)i.next();
+            if (!(s instanceof SchemaGroup)) this.copysettings.addItem(s);
+        }
         this.copysettings.addActionListener(this);
         
         // create JDBC URL constructor
