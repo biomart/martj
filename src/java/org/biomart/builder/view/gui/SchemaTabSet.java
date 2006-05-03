@@ -227,6 +227,25 @@ public class SchemaTabSet extends JTabbedPane {
         }
     }
     
+    public void confirmRemoveSchemaFromSchemaGroup(Schema schema, SchemaGroup schemaGroup) {
+        // Must confirm action first.
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                BuilderBundle.getString("confirmUngroupSchema"),
+                BuilderBundle.getString("questionTitle"),
+                JOptionPane.YES_NO_OPTION
+                );
+        if (choice == JOptionPane.YES_OPTION) {
+            try {
+                MartUtils.removeSchemaFromSchemaGroup(this.datasetTabSet.getMart(), schema, schemaGroup);
+                this.datasetTabSet.synchroniseTabs();
+                this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
+            } catch (Throwable t) {
+                this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+            }
+        }
+    }
+    
     /**
      * Removes a table provider from our tabs.
      */
@@ -260,14 +279,19 @@ public class SchemaTabSet extends JTabbedPane {
     /**
      * Renames a table provider (and tab).
      */
-    public void renameSchema(Schema schema) {
+    public void renameSchema(Schema schema, boolean isInGroup) {
         // Update the table provider name and the tab name.
         try {
             String newName = this.getSchemaName(schema.getName());
             if (newName != null && !newName.equals(schema.getName())) {
-                int tabIndex = this.indexOfTab(schema.getName());
-                MartUtils.renameSchema(this.datasetTabSet.getMart(), schema, newName);
-                this.setTitleAt(tabIndex, newName);
+                if (isInGroup) {
+                    MartUtils.renameSchemaInSchemaGroup(schema, newName);
+                    this.allSchemasDiagram.synchroniseDiagram();
+                } else {
+                    int tabIndex = this.indexOfTab(schema.getName());
+                    MartUtils.renameSchema(this.datasetTabSet.getMart(), schema, newName);
+                    this.setTitleAt(tabIndex, newName);
+                }
                 this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
             }
         } catch (Throwable t) {
@@ -337,7 +361,7 @@ public class SchemaTabSet extends JTabbedPane {
         rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
         rename.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                renameSchema(schema);
+                renameSchema(schema, false);
             }
         });
         contextMenu.add(rename);

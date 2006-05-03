@@ -34,6 +34,7 @@ import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Key;
@@ -74,9 +75,9 @@ public class SchemaComponent extends BoxShapedComponent {
         if (schema instanceof SchemaGroup) {
             StringBuffer sb = new StringBuffer();
             sb.append(BuilderBundle.getString("schemaGroupContains"));
-            for (Iterator i = ((SchemaGroup)schema).getSchemas().keySet().iterator(); i.hasNext(); ) {
-                String schemaName = (String)i.next();
-                sb.append(schemaName);
+            for (Iterator i = ((SchemaGroup)schema).getSchemas().iterator(); i.hasNext(); ) {
+                Schema s = (Schema)i.next();
+                sb.append(s.getName());
                 if (i.hasNext()) sb.append(", ");
             }
             label = new JLabel(sb.toString());
@@ -152,19 +153,10 @@ public class SchemaComponent extends BoxShapedComponent {
         rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
         rename.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getDiagram().getDataSetTabSet().getSchemaTabSet().renameSchema(schema);
+                getDiagram().getDataSetTabSet().getSchemaTabSet().renameSchema(schema, false);
             }
         });
         contextMenu.add(rename);
-        
-        JMenuItem modify = new JMenuItem(BuilderBundle.getString("modifySchemaTitle"));
-        modify.setMnemonic(BuilderBundle.getString("modifySchemaMnemonic").charAt(0));
-        modify.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                getDiagram().getDataSetTabSet().getSchemaTabSet().requestModifySchema(schema);
-            }
-        });
-        contextMenu.add(modify);
         
         JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseSchemaTitle"));
         sync.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
@@ -174,6 +166,15 @@ public class SchemaComponent extends BoxShapedComponent {
             }
         });
         contextMenu.add(sync);
+        
+        JMenuItem modify = new JMenuItem(BuilderBundle.getString("modifySchemaTitle"));
+        modify.setMnemonic(BuilderBundle.getString("modifySchemaMnemonic").charAt(0));
+        modify.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                getDiagram().getDataSetTabSet().getSchemaTabSet().requestModifySchema(schema);
+            }
+        });
+        contextMenu.add(modify);
         
         JMenuItem test = new JMenuItem(BuilderBundle.getString("testSchemaTitle"));
         test.setMnemonic(BuilderBundle.getString("testSchemaMnemonic").charAt(0));
@@ -229,7 +230,7 @@ public class SchemaComponent extends BoxShapedComponent {
         rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
         rename.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getDiagram().getDataSetTabSet().getSchemaTabSet().renameSchema(getSchemaGroup());
+                getDiagram().getDataSetTabSet().getSchemaTabSet().renameSchema(getSchemaGroup(), false);
             }
         });
         contextMenu.add(rename);
@@ -242,6 +243,53 @@ public class SchemaComponent extends BoxShapedComponent {
             }
         });
         contextMenu.add(sync);
+        
+        JMenu groupMembers = new JMenu(BuilderBundle.getString("groupMembersTitle"));
+        groupMembers.setMnemonic(BuilderBundle.getString("groupMembersMnemonic").charAt(0));
+        contextMenu.add(groupMembers);
+        
+        for (Iterator i = this.getSchemaGroup().getSchemas().iterator(); i.hasNext(); ) {
+            final Schema schema = (Schema)i.next();
+            JMenu schemaMenu = new JMenu(schema.getName());
+            
+            JMenuItem renameM = new JMenuItem(BuilderBundle.getString("renameSchemaTitle"));
+            renameM.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
+            renameM.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDiagram().getDataSetTabSet().getSchemaTabSet().renameSchema(schema, true);
+                }
+            });
+            schemaMenu.add(renameM);
+            
+            JMenuItem modifyM = new JMenuItem(BuilderBundle.getString("modifySchemaTitle"));
+            modifyM.setMnemonic(BuilderBundle.getString("modifySchemaMnemonic").charAt(0));
+            modifyM.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDiagram().getDataSetTabSet().getSchemaTabSet().requestModifySchema(schema);
+                }
+            });
+            schemaMenu.add(modifyM);
+            
+            JMenuItem testM = new JMenuItem(BuilderBundle.getString("testSchemaTitle"));
+            testM.setMnemonic(BuilderBundle.getString("testSchemaMnemonic").charAt(0));
+            testM.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDiagram().getDataSetTabSet().getSchemaTabSet().testSchema(schema);
+                }
+            });
+            schemaMenu.add(testM);
+                        
+            JMenuItem unGroup = new JMenuItem(BuilderBundle.getString("ungroupMemberTitle"));
+            unGroup.setMnemonic(BuilderBundle.getString("ungroupMemberMnemonic").charAt(0));
+            unGroup.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDiagram().getDataSetTabSet().getSchemaTabSet().confirmRemoveSchemaFromSchemaGroup(schema, getSchemaGroup());
+                }
+            });
+            schemaMenu.add(unGroup);
+            
+            groupMembers.add(schemaMenu);
+        }
         
         // Return it. Will be further adapted by a listener elsewhere.
         return contextMenu;

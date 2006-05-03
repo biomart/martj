@@ -888,7 +888,7 @@ public class MartBuilderXML extends DefaultHandler {
                 // Write group itself.
                 this.writeSchemaContents(schema);
                 // Write member schemas.
-                for (Iterator j = ((SchemaGroup)schema).getSchemas().values().iterator(); j.hasNext(); )
+                for (Iterator j = ((SchemaGroup)schema).getSchemas().iterator(); j.hasNext(); )
                     this.writeSchema((Schema)j.next());
                 this.closeElement("schemaGroup");
             } else {

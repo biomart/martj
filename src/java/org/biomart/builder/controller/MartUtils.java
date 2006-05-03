@@ -86,6 +86,10 @@ public class MartUtils {
         mart.renameSchema(schema, newName);
     }
     
+    public static void renameSchemaInSchemaGroup(Schema schema, String newName) throws AlreadyExistsException, AssociationException {
+        schema.setName(newName);
+    }
+    
     public static void synchroniseSchema(Schema schema) throws SQLException, BuilderException {
         schema.synchronise();
     }
@@ -100,14 +104,21 @@ public class MartUtils {
     }
 
     public static SchemaGroup addSchemaToSchemaGroup(Mart mart, Schema schema, String groupName) throws BuilderException, SQLException {
-        Schema group = mart.getSchemaByName(groupName);
-        if (group == null || !(group instanceof SchemaGroup)) {            
-            group = new GenericSchemaGroup(groupName);
-            mart.addSchema(group);
+        Schema schemaGroup = mart.getSchemaByName(groupName);
+        if (schemaGroup == null || !(schemaGroup instanceof SchemaGroup)) {            
+            schemaGroup = new GenericSchemaGroup(groupName);
+            mart.addSchema(schemaGroup);
         }
-        ((SchemaGroup)group).addSchema(schema);
-        group.synchronise();
+        ((SchemaGroup)schemaGroup).addSchema(schema);
+        schemaGroup.synchronise();
         mart.removeSchema(schema);
-        return (SchemaGroup)group;
+        return (SchemaGroup)schemaGroup;
+    }
+
+    public static void removeSchemaFromSchemaGroup(Mart mart, Schema schema, SchemaGroup schemaGroup) throws BuilderException, SQLException {
+        schemaGroup.removeSchema(schema);
+        if (schemaGroup.getSchemas().size()==0) mart.removeSchema(schemaGroup);
+        else schemaGroup.synchronise();
+        mart.addSchema(schema);
     }
 }

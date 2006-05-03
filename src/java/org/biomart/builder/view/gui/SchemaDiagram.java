@@ -96,21 +96,10 @@ public class SchemaDiagram extends Diagram {
             rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
             rename.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.getSchemaTabSet().renameSchema(schema);
+                    datasetTabSet.getSchemaTabSet().renameSchema(schema, false);
                 }
             });
             contextMenu.add(rename);
-            
-            if (!(this.getSchema() instanceof SchemaGroup)) {
-                JMenuItem modify = new JMenuItem(BuilderBundle.getString("modifySchemaTitle"));
-                modify.setMnemonic(BuilderBundle.getString("modifySchemaMnemonic").charAt(0));
-                modify.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.getSchemaTabSet().requestModifySchema(getSchema());
-                    }
-                });
-                contextMenu.add(modify);
-            }
             
             JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseSchemaTitle"));
             sync.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
@@ -122,6 +111,15 @@ public class SchemaDiagram extends Diagram {
             contextMenu.add(sync);
             
             if (!(this.getSchema() instanceof SchemaGroup)) {
+                JMenuItem modify = new JMenuItem(BuilderBundle.getString("modifySchemaTitle"));
+                modify.setMnemonic(BuilderBundle.getString("modifySchemaMnemonic").charAt(0));
+                modify.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        datasetTabSet.getSchemaTabSet().requestModifySchema(getSchema());
+                    }
+                });
+                contextMenu.add(modify);
+            
                 JMenuItem test = new JMenuItem(BuilderBundle.getString("testSchemaTitle"));
                 test.setMnemonic(BuilderBundle.getString("testSchemaMnemonic").charAt(0));
                 test.addActionListener(new ActionListener() {

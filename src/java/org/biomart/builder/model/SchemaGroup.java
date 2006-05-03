@@ -68,18 +68,7 @@ public interface SchemaGroup extends Schema {
      * @return the map of {@link Schema} options living in the partitions. Each key of the map
      * is the label for the partition, with the values being the providers themselves..
      */
-    public Map getSchemas();
-    
-    /**
-     * Retrieves the {@link Schema} with the given name from this partition. If it is not recognised,
-     * an exception is thrown.
-     *
-     *
-     * @param name the name for the partition provider to retrieve.
-     * @return the matching provider.
-     * @throws AssociationException if the name is not recognised.
-     */
-    public Schema getSchemaByName(String name) throws AssociationException;
+    public Collection getSchemas();
     
     /**
      * Adds a {@link Schema} to this partition with the given label. If it is already here,
@@ -110,7 +99,7 @@ public interface SchemaGroup extends Schema {
          * Internal reference to the map of member providers. Keys are the partition labels.
          * Must be linked because the first one to be added must remain the same.
          */
-        private final Map schemas = new LinkedHashMap();
+        private final List schemas = new ArrayList();
         
         /**
          * The constructor creates a partitioned provider with the given name.
@@ -128,7 +117,7 @@ public interface SchemaGroup extends Schema {
          */
         public void synchronise() throws SQLException, BuilderException {
             // Synchronise our members.
-            for (Iterator i = this.schemas.values().iterator(); i.hasNext(); ) {
+            for (Iterator i = this.schemas.iterator(); i.hasNext(); ) {
                 ((Schema)i.next()).synchronise();
             }
             // Update our own list.
@@ -196,7 +185,7 @@ public interface SchemaGroup extends Schema {
         public Collection getUniqueValues(Column column) throws SQLException, AssociationException {
             // Do it.
             Set values = new HashSet();
-            for (Iterator i = this.getSchemas().values().iterator(); i.hasNext(); ) {
+            for (Iterator i = this.getSchemas().iterator(); i.hasNext(); ) {
                 Schema s = (Schema)i.next();
                 // Associate the column directly with the table when asking subordinate.
                 Table t = s.getTableByName(column.getTable().getName());
@@ -221,25 +210,14 @@ public interface SchemaGroup extends Schema {
          * @return the first partition's provider.
          */
         protected Schema getFirstSchema() {
-            return (Schema)this.schemas.values().toArray()[0];
+            return (Schema)this.schemas.toArray()[0];
         }
         
         /**
          * {@inheritDoc}
          */
-        public Map getSchemas() {
+        public Collection getSchemas() {
             return this.schemas;
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
-        public Schema getSchemaByName(String name) throws AssociationException {
-            // Sanity check.
-            if (!this.schemas.containsKey(name))
-                throw new AssociationException(BuilderBundle.getString("nameUnknown"));
-            // Do it.
-            return (Schema)this.schemas.get(name);
         }
         
         /**
@@ -247,12 +225,12 @@ public interface SchemaGroup extends Schema {
          */
         public void addSchema(Schema schema) throws AlreadyExistsException, AssociationException {
             // Sanity check.
-            if (this.schemas.containsKey(schema.getName()))
+            if (this.schemas.contains(schema))
                 throw new AlreadyExistsException(BuilderBundle.getString("schemaExists"), schema.getName());
             if (schema instanceof SchemaGroup)
                 throw new AssociationException(BuilderBundle.getString("nestedSchema"));
             // Do it.
-            this.schemas.put(schema.getName(), schema);
+            this.schemas.add(schema);
         }
         
         /**
@@ -260,9 +238,9 @@ public interface SchemaGroup extends Schema {
          */
         public void removeSchema(Schema schema) {
             // Do we need to do it?
-            if (!this.schemas.containsKey(schema.getName())) return;
+            if (!this.schemas.contains(schema)) return;
             // Do it.
-            this.schemas.remove(schema.getName());
+            this.schemas.remove(schema);
         }
     }
 }
