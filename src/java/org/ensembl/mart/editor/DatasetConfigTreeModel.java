@@ -236,6 +236,9 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 																	"",
 																	"",
 																	"",
+																	"",
+																	"",
+																	"",
 																	"");
 				}
 				catch (ConfigurationException e){

@@ -43,6 +43,9 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	protected final String attributePageKey = "setAttributePage";
 	protected final String attributeKey = "setAttribute";
 	protected final String colForDisplayKey = "colForDisplay";
+	protected final String pointerDatasetKey = "pointerDataset";
+	protected final String pointerInterfaceKey = "pointerInterface";
+	protected final String pointerFilterKey = "pointerFilter";
 	
     //protected final String hiddenKey = "hidden";
 	private int[] reqFields = {0,5,7,8,10};// rendered red in AttributeTable
@@ -62,7 +65,10 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
                                                  filterListKey,
                                                  attributePageKey,
                                                  attributeKey,
-                                                 colForDisplayKey
+                                                 colForDisplayKey,
+                                                 pointerDatasetKey,
+                                                 pointerInterfaceKey,
+                                                 pointerFilterKey
   };
 
 	/**
@@ -102,13 +108,14 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	 */
 	public QueryFilterSettings(String internalName, String displayName, String description)
 		throws ConfigurationException {
-			this(internalName, displayName, description, "", "", null, "", "", "", "", "", "", "", "", "", "", "", "", "");
+			this(internalName, displayName, description, "", "", null, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "");
 	}
 
   public QueryFilterSettings(String internalName, String displayName, String description, String field, 
   	String value, String tableConstraint, String key, String type, String qualifier, String legalQualifiers, 
   	String otherFilters, String buttonURL, String regexp, String defaultValue, String defaultOn, String filterList, 
-  	String attributePage, String attribute, String colForDisplay) throws ConfigurationException {
+  	String attributePage, String attribute, String colForDisplay, String pointerDataset, String pointerInterface,
+	String pointerFilter) throws ConfigurationException {
 		super(internalName, displayName, description);
 		
     	setAttribute(fieldKey, field);
@@ -127,6 +134,9 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 		setAttribute(attributePageKey,attributePage);
 		setAttribute(attributeKey,attribute);
 		setAttribute(colForDisplayKey,colForDisplay);
+		setAttribute(pointerDatasetKey, pointerDataset);
+		setAttribute(pointerInterfaceKey, pointerInterface);
+		setAttribute(pointerFilterKey, pointerFilter);
 	    setRequiredFields(reqFields);
   }
   
@@ -161,6 +171,56 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	public String getDefaultOn() {
 		return getAttribute(defaultOnKey);
 	}	
+
+	/**
+	 * @param pointerDataset - pointer dataset, used for placeholder attributes
+	 */
+	public void setPointerDataset(String pointerDataset) {
+	  setAttribute(pointerDatasetKey, pointerDataset);
+	}
+
+	/**
+	 * Returns the pointerDataset.
+	 * 
+	 * @return String pointerDataset
+	 */
+	public String getPointerDataset() {
+	  return getAttribute(pointerDatasetKey);
+	}
+
+	/**
+	 * @param pointerInterface - pointer interface, used for placeholder attributes
+	 */
+	public void setPointerInterface(String pointerInterface) {
+	  setAttribute(pointerInterfaceKey, pointerInterface);
+	}
+
+	/**
+	 * Returns the pointerInterface.
+	 * 
+	 * @return String pointerInterface
+	 */
+	public String getPointerInterface() {
+	  return getAttribute(pointerInterfaceKey);
+	}
+  
+	/**
+	 * @param pointerFilter - pointer filter, used for placeholder attributes
+	 */
+	public void setPointerFilter(String pointerFilter) {
+	  setAttribute(pointerFilterKey, pointerFilter);
+	}
+
+	/**
+	 * Returns the pointerFilter.
+	 * 
+	 * @return String pointerFilter
+	 */
+	public String getPointerFilter() {
+	  return getAttribute(pointerFilterKey);
+	}
+
+
 
 	public void setFilterList(String field) {
 		setAttribute(filterListKey, field);

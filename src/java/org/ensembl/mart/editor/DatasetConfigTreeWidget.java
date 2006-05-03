@@ -214,7 +214,9 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 							List fds = fcoll.getFilterDescriptions();
 							for (int l = 0; l < fds.size(); l++){
 								FilterDescription fd = (FilterDescription) fds.get(l);
-								fd.setTemplateDrivenFlag(1);
+								if (!fd.getInternalName().matches("\\w+\\.\\w+") 
+									&& !fd.getInternalName().matches("\\w+\\.\\w+\\.\\w+"))
+									fd.setTemplateDrivenFlag(1);
 								Option[] ops = fd.getOptions();
 								for (int m = 0; m < ops.length; m++){
 									Option op = ops[m];
@@ -240,7 +242,9 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 							List ads = acoll.getAttributeDescriptions();
 							for (int l = 0; l < ads.size(); l++){
 								AttributeDescription ad = (AttributeDescription) ads.get(l);
-								ad.setTemplateDrivenFlag(1);
+								if (!ad.getInternalName().matches("\\w+\\.\\w+") 
+									&& !ad.getInternalName().matches("\\w+\\.\\w+\\.\\w+"))
+									ad.setTemplateDrivenFlag(1);	
 							}
 						}
 					}		

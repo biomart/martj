@@ -103,7 +103,7 @@ public class Option extends QueryFilterSettings {
 	}
 
 	public Option(String internalName, String isSelectable) throws ConfigurationException {
-		this(internalName, isSelectable, "", "", "", "", "", "", "", "", "", "", "", null, "", "", "", "", "", "","");
+		this(internalName, isSelectable, "", "", "", "", "", "", "", "", "", "", "", null, "","","","", "", "", "", "", "","");
 	}
 
 	public Option(
@@ -127,11 +127,15 @@ public class Option extends QueryFilterSettings {
 		String filterList,
 		String attributePage,
 		String attribute,
-		String colForDisplay)
+		String colForDisplay,
+		String pointerDataset,
+		String pointerInterface,
+		String pointerFilter)
 		throws ConfigurationException {
 
 		super(internalName, displayName, description, field, value, tableConstraint, key, type, qualifier, 
-			legalQualifiers, otherFilters, buttonURL, regexp, defaultValue, defaultOn, filterList, attributePage, attribute, colForDisplay);
+			legalQualifiers, otherFilters, buttonURL, regexp, defaultValue, defaultOn, filterList, attributePage, 
+			attribute, colForDisplay,pointerDataset,pointerInterface,pointerFilter);
 
     	setAttribute(isSelectableKey, isSelectable );
 		setAttribute(refKey, ref);

@@ -46,6 +46,10 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
   private final String linkoutURLKey = "linkoutURL";
   private final String maxLengthKey = "maxLength";
   private final String defaultKey = "default";
+  private final String pointerDatasetKey = "pointerDataset";
+  private final String pointerInterfaceKey = "pointerInterface";
+  private final String pointerAttributeKey = "pointerAttribute";
+  
   private int[] reqFields = {0,5,8,9};// rendered red in AttributeTable
   //private final String hiddenKey = "hidden";
   // helper field so that only setter/constructors will throw ConfigurationExceptions when string values are converted to integers
@@ -73,12 +77,15 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     setAttribute(datasetLinkKey, null);
     setAttribute(maxLengthKey, null);
     setAttribute(tableConstraintKey, null);
-	  setAttribute(keyKey, null);
+	setAttribute(keyKey, null);
     setAttribute(sourceKey, null);
     setAttribute(homepageURLKey, null);
     setAttribute(linkoutURLKey, null);
 	setAttribute(defaultKey, null);
-    //setAttribute(hiddenKey,null);
+	setAttribute(pointerDatasetKey, null);
+	setAttribute(pointerInterfaceKey, null);
+	setAttribute(pointerAttributeKey, null);
+
 	setRequiredFields(reqFields);
   }
 
@@ -91,7 +98,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
    */
   public AttributeDescription(String internalName, String field)
     throws ConfigurationException {
-    this(internalName, field, "", "0", "", "", "", "", "", "", "", "");
+    this(internalName, field, "", "0", "", "", "", "", "", "", "", "", "", "", "");
   }
   /**
    * Constructor for an AttributeDescription.
@@ -121,7 +128,10 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     String homePageURL,
     String linkoutURL,
     String datasetLink,
-    String defaultString)
+    String defaultString,
+    String pointerDataset,
+    String pointerInterface,
+    String pointerAttribute)
     throws ConfigurationException {
 
     super(internalName, displayName, description);
@@ -138,6 +148,9 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     setAttribute(linkoutURLKey, linkoutURL);
     setAttribute(datasetLinkKey, datasetLink);
 	setAttribute(defaultKey, defaultString);
+	setAttribute(pointerDatasetKey, pointerDataset);
+	setAttribute(pointerInterfaceKey, pointerInterface);
+	setAttribute(pointerAttributeKey, pointerAttribute);
 	
 	setRequiredFields(reqFields);
   }
@@ -188,12 +201,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 		return getAttribute(datasetLinkKey);
   	}
 
-  /**
-   * @param key - join field key for the field
-   */
-	public void setKey(String key) {
-	  setAttribute(keyKey, key);
-	}
+
 
 	/**
 	 * Returns the join field key.
@@ -208,7 +216,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 	 * @param key - join field key for the field
 	 */
 	public void setDefault(String defaultString) {
-	   setAttribute(keyKey, defaultString);
+	   setAttribute(defaultKey, defaultString);
 	}
 
 	  /**
@@ -219,6 +227,64 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 	  public String getKey() {
 		return getAttribute(keyKey);
 	  }
+
+	/**
+	 * @param key - join field key for the field
+	 */
+  public void setKey(String key) {
+	setAttribute(keyKey, key);
+  }
+
+  /**
+   * @param pointerDataset - pointer dataset, used for placeholder attributes
+   */
+  public void setPointerDataset(String pointerDataset) {
+	setAttribute(pointerDatasetKey, pointerDataset);
+  }
+
+  /**
+   * Returns the pointerDataset.
+   * 
+   * @return String pointerDataset
+   */
+  public String getPointerDataset() {
+	return getAttribute(pointerDatasetKey);
+  }
+
+  /**
+   * @param pointerInterface - pointer interface, used for placeholder attributes
+   */
+  public void setPointerInterface(String pointerInterface) {
+	setAttribute(pointerInterfaceKey, pointerInterface);
+  }
+
+  /**
+   * Returns the pointerInterface.
+   * 
+   * @return String pointerInterface
+   */
+  public String getPointerInterface() {
+	return getAttribute(pointerInterfaceKey);
+  }
+  
+  /**
+   * @param pointerAttribute - pointer attribute, used for placeholder attributes
+   */
+  public void setPointerAttribute(String pointerAttribute) {
+	setAttribute(pointerAttributeKey, pointerAttribute);
+  }
+
+  /**
+   * Returns the pointerDataset.
+   * 
+   * @return String pointerDataset
+   */
+  public String getPointerAttribute() {
+	return getAttribute(pointerAttributeKey);
+  }
+
+
+
 
   /**
    * @param field - field in mart table
