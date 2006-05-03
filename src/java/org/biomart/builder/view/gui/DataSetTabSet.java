@@ -53,7 +53,7 @@ import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Set of tabs to display a mart and set of windows.
- * 
+ *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.6, 2nd May 2006
  * @since 0.1
@@ -136,49 +136,36 @@ public class DataSetTabSet extends JTabbedPane {
     }
     
     /**
-     * Synchronises the mart.
-     */
-    public void synchroniseSchemas() {
-        try {
-            MartUtils.synchroniseMartSchemas(this.mart);
-            this.synchroniseTabs();
-            this.martTabSet.setModifiedStatus(true);
-        } catch (Throwable t) {
-            this.martTabSet.getMartBuilder().showStackTrace(t);
-        }
-    }
-    
-    /**
      * Syncs our windows with our mart.
      */
     public void synchroniseTabs() {
         // Synchronise our windows.
         try {
-            MartUtils.synchroniseMartDataSets(this.mart);
+            MartUtils.synchroniseMartDataSets(mart);
         } catch (Throwable t) {
-            this.martTabSet.getMartBuilder().showStackTrace(t);
+            martTabSet.getMartBuilder().showStackTrace(t);
         }
         // Add all mart windows that we don't have yet.
-        List martDataSets = new ArrayList(this.mart.getDataSets());
+        List martDataSets = new ArrayList(mart.getDataSets());
         for (Iterator i = martDataSets.iterator(); i.hasNext(); ) {
             DataSet dataset = (DataSet)i.next();
-            if (!this.datasetToTab.containsKey(dataset)) this.addDataSetTab(dataset);
+            if (!datasetToTab.containsKey(dataset)) addDataSetTab(dataset);
         }
         // Remove all our windows that are not in the mart.
-        List ourDataSets = new ArrayList(this.datasetToTab.keySet());
+        List ourDataSets = new ArrayList(datasetToTab.keySet());
         for (Iterator i = ourDataSets.iterator(); i.hasNext(); ) {
             DataSet dataset = (DataSet)i.next();
-            if (!martDataSets.contains(dataset)) this.removeDataSetTab(dataset);
+            if (!martDataSets.contains(dataset)) removeDataSetTab(dataset);
         }
         // Synchronise our tab view contents.
-        for (int i = 1; i < this.getTabCount(); i++) {
-            DataSetTab datasetTab = (DataSetTab)this.getComponentAt(i);
+        for (int i = 1; i < getTabCount(); i++) {
+            DataSetTab datasetTab = (DataSetTab)getComponentAt(i);
             datasetTab.synchroniseDatasetDiagram();
         }
         // Synchronise the table provider views.
-        this.schemaTabSet.synchroniseTabs();
+        schemaTabSet.synchroniseTabs();
         // Redraw.
-        this.validate();
+        validate();
     }
     
     /**
@@ -306,7 +293,7 @@ public class DataSetTabSet extends JTabbedPane {
     
     /**
      * Construct a context menu for a given dataset view tab.
-     * 
+     *
      * @param dataset the dataset to use when the context menu items are chosen.
      * @return the popup menu.
      */
@@ -386,7 +373,7 @@ public class DataSetTabSet extends JTabbedPane {
         /**
          * This constructor builds a pair of switcher-style buttons which alternate
          * between dataset and dataset view.
-         * 
+         *
          * @param windowView the dataset view.
          * @param datasetDiagram the dataset view.
          */

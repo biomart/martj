@@ -101,27 +101,27 @@ public class SchemaTabSet extends JTabbedPane {
      */
     public void synchroniseTabs() {
         // Add all table providers that we don't have yet.
-        List martSchemas = new ArrayList(this.datasetTabSet.getMart().getSchemas());
+        List martSchemas = new ArrayList(datasetTabSet.getMart().getSchemas());
         for (Iterator i = martSchemas.iterator(); i.hasNext(); ) {
             Schema schema = (Schema)i.next();
-            if (!this.schemaToDiagram.containsKey(schema)) this.addSchemaTab(schema);
+            if (!schemaToDiagram.containsKey(schema)) addSchemaTab(schema);
         }
         // Remove all our table providers that are not in the schema.
-        List ourSchemas = new ArrayList(this.schemaToDiagram.keySet());
+        List ourSchemas = new ArrayList(schemaToDiagram.keySet());
         for (Iterator i = ourSchemas.iterator(); i.hasNext(); ) {
             Schema schema = (Schema)i.next();
-            if (!martSchemas.contains(schema)) this.removeSchemaTab(schema);
+            if (!martSchemas.contains(schema)) removeSchemaTab(schema);
         }
         // Synchronise our overview tab.
-        this.allSchemasDiagram.synchroniseDiagram();
+        allSchemasDiagram.synchroniseDiagram();
         // Synchronise our tab view contents.
-        for (int i = 1; i < this.getTabCount(); i++) {
-            JScrollPane scroller = (JScrollPane)this.getComponentAt(i);
+        for (int i = 1; i < getTabCount(); i++) {
+            JScrollPane scroller = (JScrollPane)getComponentAt(i);
             SchemaDiagram tableDiagram = (SchemaDiagram)scroller.getViewport().getView();
             tableDiagram.synchroniseDiagram();
         }
         // Redraw.
-        this.validate();
+        validate();
     }
     
     /**
@@ -146,11 +146,12 @@ public class SchemaTabSet extends JTabbedPane {
     public void requestAddSchemaToSchemaGroup(Schema schema) {
         // Work out existing group names, if any.
         List groupSchemas = new ArrayList();
+        String newGroupName = BuilderBundle.getString("newSchemaGroup");
+        groupSchemas.add(newGroupName);
         for (Iterator i = this.datasetTabSet.getMart().getSchemas().iterator(); i.hasNext(); ) {
             Schema groupSchema = (Schema)i.next();
             if (groupSchema instanceof SchemaGroup) groupSchemas.add(groupSchema.getName());
         }
-        groupSchemas.add("Hello");
         // Obtain group name from user
         String groupName = (String)JOptionPane.showInputDialog(
                 this.datasetTabSet.getMartTabSet().getMartBuilder(),
@@ -159,8 +160,17 @@ public class SchemaTabSet extends JTabbedPane {
                 JOptionPane.QUESTION_MESSAGE,
                 null,
                 groupSchemas.toArray(),
-                null
+                newGroupName
                 );
+        // If they chose 'new group', get the new group name from a second dialog.
+        if (groupName!=null && groupName.equals(newGroupName)) {
+            groupName = (String)JOptionPane.showInputDialog(
+                    this.datasetTabSet.getMartTabSet().getMartBuilder(),
+                    BuilderBundle.getString("requestNewSchemaGroupName"),
+                    BuilderBundle.getString("questionTitle"),
+                    JOptionPane.QUESTION_MESSAGE
+                    );
+        }
         // Add schema to group
         try {
             if (groupName == null) return;
@@ -302,14 +312,35 @@ public class SchemaTabSet extends JTabbedPane {
     /**
      * Syncs this table provider individually against the database.
      */
-    public void synchroniseSchema(Schema schema) {
-        try {
-            MartUtils.synchroniseSchema(schema);
-            this.datasetTabSet.synchroniseTabs();
-            this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
-        } catch (Throwable t) {
-            this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
-        }
+    public void synchroniseSchema(final Schema schema) {
+        LongProcess.run(this, new Runnable() {
+            public void run() {
+                try {
+                    MartUtils.synchroniseSchema(schema);
+                    datasetTabSet.synchroniseTabs();
+                    datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                } catch (Throwable t) {
+                    datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+                }
+            }
+        });
+    }
+    
+    /**
+     * Synchronises the mart.
+     */
+    public void synchroniseAllSchemas() {
+        LongProcess.run(this, new Runnable() {
+            public void run() {
+                try {
+                    MartUtils.synchroniseMartSchemas(datasetTabSet.getMart());
+                    synchroniseTabs();
+                    datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                } catch (Throwable t) {
+                    datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+                }
+            }
+        });
     }
     
     /**

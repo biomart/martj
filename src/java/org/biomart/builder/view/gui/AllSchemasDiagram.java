@@ -71,7 +71,7 @@ public class AllSchemasDiagram extends Diagram {
         sync.setMnemonic(BuilderBundle.getString("synchroniseAllSchemasMnemonic").charAt(0));
         sync.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getDataSetTabSet().synchroniseSchemas();
+                getDataSetTabSet().getSchemaTabSet().synchroniseAllSchemas();
             }
         });
         contextMenu.add(sync);

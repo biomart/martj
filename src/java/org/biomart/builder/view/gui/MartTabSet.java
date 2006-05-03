@@ -91,7 +91,7 @@ public class MartTabSet extends JTabbedPane {
             public String getDescription() {
                 return BuilderBundle.getString("XMLFileFilterDescription");
             }
-        });		
+        });
         this.xmlFileChooser.setMultiSelectionEnabled(true);
         
         // Now the application logic stuff.
@@ -201,15 +201,19 @@ public class MartTabSet extends JTabbedPane {
      */
     public void saveMart() {
         if (this.getCurrentDataSetTabSet() == null) return;
-        Mart currentMart = this.getCurrentDataSetTabSet().getMart();
+        final Mart currentMart = this.getCurrentDataSetTabSet().getMart();
         if (this.martXMLFile.get(currentMart) == null) this.saveMartAs();
         else {
-            try {
-                MartBuilderXML.save(currentMart, (File)this.martXMLFile.get(currentMart));
-                this.setModifiedStatus(false);
-            } catch (Throwable t) {
-                this.martBuilder.showStackTrace(t);
-            }
+            LongProcess.run(this, new Runnable() {
+                public void run() {
+                    try {
+                        MartBuilderXML.save(currentMart, (File)martXMLFile.get(currentMart));
+                        setModifiedStatus(false);
+                    } catch (Throwable t) {
+                        martBuilder.showStackTrace(t);
+                    }
+                }
+            });
         }
     }
     
@@ -234,15 +238,19 @@ public class MartTabSet extends JTabbedPane {
      */
     public void loadMart() {
         if (this.xmlFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File[] loadFiles = this.xmlFileChooser.getSelectedFiles();
+            final File[] loadFiles = this.xmlFileChooser.getSelectedFiles();
             if (loadFiles != null) {
-                try {
-                    for (int i = 0; i < loadFiles.length; i++) {
-                        this.addMartTab(MartBuilderXML.load(loadFiles[i]), loadFiles[i], false);
+                LongProcess.run(this, new Runnable() {
+                    public void run() {
+                        try {
+                            for (int i = 0; i < loadFiles.length; i++) {
+                                addMartTab(MartBuilderXML.load(loadFiles[i]), loadFiles[i], false);
+                            }
+                        } catch (Throwable t) {
+                            martBuilder.showStackTrace(t);
+                        }
                     }
-                } catch (Throwable t) {
-                    this.martBuilder.showStackTrace(t);
-                }
+                });
             }
         }
     }
