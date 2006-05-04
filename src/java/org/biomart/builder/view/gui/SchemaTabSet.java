@@ -125,25 +125,29 @@ public class SchemaTabSet extends JTabbedPane {
     }
     
     /**
-     * Confirms with user then removes a table provider.
+     * Confirms with user then adds a table provider.
      */
     public void requestAddSchema() {
         // Interpret the response.
-        Schema schema = SchemaManagementDialog.createSchema(this);
-        // Add to schema.
-        try {
-            if (schema != null) {
-                MartUtils.addSchemaToMart(this.datasetTabSet.getMart(), schema);
-                this.synchroniseSchema(schema);
-                this.datasetTabSet.synchroniseTabs();
-                this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
+        final Schema schema = SchemaManagementDialog.createSchema(this);
+        LongProcess.run(this, new Runnable() {
+            public void run() {
+                // Add to schema.
+                try {
+                    if (schema != null) {
+                        MartUtils.addSchemaToMart(datasetTabSet.getMart(), schema);
+                        synchroniseSchema(schema);
+                        synchroniseTabs();
+                        datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                    }
+                } catch (Throwable t) {
+                    datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+                }
             }
-        } catch (Throwable t) {
-            this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
-        }
+        });
     }
     
-    public void requestAddSchemaToSchemaGroup(Schema schema) {
+    public void requestAddSchemaToSchemaGroup(final Schema schema) {
         // Work out existing group names, if any.
         List groupSchemas = new ArrayList();
         String newGroupName = BuilderBundle.getString("newSchemaGroup");
@@ -177,9 +181,18 @@ public class SchemaTabSet extends JTabbedPane {
             else if (groupName.trim().length()==0) {
                 throw new ValidationException(BuilderBundle.getString("schemaGroupNameIsNull"));
             } else {
-                SchemaGroup group = MartUtils.addSchemaToSchemaGroup(this.datasetTabSet.getMart(), schema, groupName);
-                this.datasetTabSet.synchroniseTabs();
-                this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                final String groupNameRef = groupName;
+                LongProcess.run(this, new Runnable() {
+                    public void run() {
+                        try {
+                            SchemaGroup group = MartUtils.addSchemaToSchemaGroup(datasetTabSet.getMart(), schema, groupNameRef);
+                            datasetTabSet.synchroniseTabs(); // Some datasets may disappear.
+                            datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                        } catch (Throwable t) {
+                            datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+                        }
+                    }
+                });
             }
         } catch (Throwable t) {
             this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
@@ -218,7 +231,7 @@ public class SchemaTabSet extends JTabbedPane {
     /**
      * Confirms with user then removes a table provider.
      */
-    public void confirmRemoveSchema(Schema schema) {
+    public void confirmRemoveSchema(final Schema schema) {
         // Must confirm action first.
         int choice = JOptionPane.showConfirmDialog(
                 this,
@@ -227,17 +240,21 @@ public class SchemaTabSet extends JTabbedPane {
                 JOptionPane.YES_NO_OPTION
                 );
         if (choice == JOptionPane.YES_OPTION) {
-            try {
-                MartUtils.removeSchemaFromMart(this.datasetTabSet.getMart(), schema);
-                this.datasetTabSet.synchroniseTabs();
-                this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
-            } catch (Throwable t) {
-                this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
-            }
+            LongProcess.run(this, new Runnable() {
+                public void run() {
+                    try {
+                        MartUtils.removeSchemaFromMart(datasetTabSet.getMart(), schema);
+                        datasetTabSet.synchroniseTabs(); // Some datasets may disappear.
+                        datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                    } catch (Throwable t) {
+                        datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+                    }
+                }
+            });
         }
     }
     
-    public void confirmRemoveSchemaFromSchemaGroup(Schema schema, SchemaGroup schemaGroup) {
+    public void confirmRemoveSchemaFromSchemaGroup(final Schema schema, final SchemaGroup schemaGroup) {
         // Must confirm action first.
         int choice = JOptionPane.showConfirmDialog(
                 this,
@@ -246,13 +263,17 @@ public class SchemaTabSet extends JTabbedPane {
                 JOptionPane.YES_NO_OPTION
                 );
         if (choice == JOptionPane.YES_OPTION) {
-            try {
-                MartUtils.removeSchemaFromSchemaGroup(this.datasetTabSet.getMart(), schema, schemaGroup);
-                this.datasetTabSet.synchroniseTabs();
-                this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
-            } catch (Throwable t) {
-                this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
-            }
+            LongProcess.run(this, new Runnable() {
+                public void run() {
+                    try {
+                        MartUtils.removeSchemaFromSchemaGroup(datasetTabSet.getMart(), schema, schemaGroup);
+                        datasetTabSet.synchroniseTabs(); // Some datasets may disappear.
+                        datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                    } catch (Throwable t) {
+                        datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+                    }
+                }
+            });
         }
     }
     
@@ -317,7 +338,7 @@ public class SchemaTabSet extends JTabbedPane {
             public void run() {
                 try {
                     MartUtils.synchroniseSchema(schema);
-                    datasetTabSet.synchroniseTabs();
+                    datasetTabSet.synchroniseTabs(); // Some datasets may disappear.
                     datasetTabSet.getMartTabSet().setModifiedStatus(true);
                 } catch (Throwable t) {
                     datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);

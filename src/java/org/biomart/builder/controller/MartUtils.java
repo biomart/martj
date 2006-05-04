@@ -26,13 +26,19 @@ package org.biomart.builder.controller;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.Iterator;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
+import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.DataSet.ConcatRelationType;
+import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
 
@@ -54,6 +60,10 @@ public class MartUtils {
         mart.synchroniseDataSets();
     }
     
+    public static void synchroniseDataSet(DataSet dataset) throws SQLException, BuilderException {
+        dataset.synchronise();
+    }
+    
     public static void removeDataSetFromSchema(Mart mart, DataSet dataset) {
         mart.removeDataSet(dataset);
     }
@@ -62,16 +72,17 @@ public class MartUtils {
         mart.renameDataSet(dataset, newName);
     }
     
-    public static void createDataSet(Mart mart, Table table, String name) throws AssociationException, AlreadyExistsException {
-        new DataSet(mart, table, name);
+    public static DataSet createDataSet(Mart mart, Table table, String name) throws AssociationException, AlreadyExistsException {
+        return new DataSet(mart, table, name);
     }
     
-    public static void suggestDataSets(Mart mart, Table table, String name) throws AlreadyExistsException {
-        mart.suggestDataSets(table, name);
+    public static Collection suggestDataSets(Mart mart, Table table, String name) throws AlreadyExistsException {
+        return mart.suggestDataSets(table, name);
     }
     
     public static void optimiseDataSet(DataSet dataset) throws SQLException, BuilderException {
         dataset.optimiseDataSet();
+        dataset.synchronise();
     }
     
     public static void addSchemaToMart(Mart mart, Schema schema) throws AlreadyExistsException {
@@ -102,10 +113,10 @@ public class MartUtils {
         if (password != null && password.equals("")) password = null;
         return new JDBCSchema(driverClassLocation, driverClassName, url, username, password, name, keyGuessing);
     }
-
+    
     public static SchemaGroup addSchemaToSchemaGroup(Mart mart, Schema schema, String groupName) throws BuilderException, SQLException {
         Schema schemaGroup = mart.getSchemaByName(groupName);
-        if (schemaGroup == null || !(schemaGroup instanceof SchemaGroup)) {            
+        if (schemaGroup == null || !(schemaGroup instanceof SchemaGroup)) {
             schemaGroup = new GenericSchemaGroup(groupName);
             mart.addSchema(schemaGroup);
         }
@@ -114,11 +125,72 @@ public class MartUtils {
         mart.removeSchema(schema);
         return (SchemaGroup)schemaGroup;
     }
-
+    
     public static void removeSchemaFromSchemaGroup(Mart mart, Schema schema, SchemaGroup schemaGroup) throws BuilderException, SQLException {
         schemaGroup.removeSchema(schema);
         if (schemaGroup.getSchemas().size()==0) mart.removeSchema(schemaGroup);
         else schemaGroup.synchronise();
         mart.addSchema(schema);
+    }
+    
+    public static void changeRelationCardinality(Mart mart, Relation relation, Cardinality cardinality) throws SQLException, BuilderException {
+        relation.setFKCardinality(cardinality);
+        // If 1:1, make sure it isn't used as a subclass or concat-only relation in any dataset.
+        if (cardinality.equals(Cardinality.ONE)) for (Iterator i = mart.getDataSets().iterator(); i.hasNext(); ) {
+            DataSet ds = (DataSet)i.next();
+            ds.unflagSubclassRelation(relation);
+            ds.unflagConcatOnlyRelation(relation);
+            ds.synchronise();
+        }
+    }
+    
+    public static void removeRelation(Mart mart, Relation relation) throws SQLException, BuilderException {
+        relation.destroy();
+        for (Iterator i = mart.getDataSets().iterator(); i.hasNext(); ) {
+            ((DataSet)i.next()).synchronise();
+        }
+    }
+    
+    public static void maskRelation(DataSet dataset, Relation relation) throws SQLException, BuilderException {
+        dataset.maskRelation(relation);
+        dataset.unflagSubclassRelation(relation);
+        dataset.unflagConcatOnlyRelation(relation);
+        dataset.synchronise();
+    }
+    
+    public static void unmaskRelation(DataSet dataset, Relation relation) throws SQLException, BuilderException {
+        dataset.unmaskRelation(relation);
+        dataset.synchronise();
+    }
+    
+    public static void subclassRelation(DataSet dataset, Relation relation) throws AssociationException, SQLException, BuilderException {
+        dataset.flagSubclassRelation(relation);
+        dataset.unmaskRelation(relation);
+        dataset.unflagConcatOnlyRelation(relation);
+        dataset.synchronise();
+    }
+    
+    public static void unsubclassRelation(DataSet dataset, Relation relation) throws SQLException, BuilderException {
+        dataset.unflagSubclassRelation(relation);
+        dataset.synchronise();
+    }
+    
+    public static void concatOnlyRelation(DataSet dataset, Relation relation, ConcatRelationType type) throws SQLException, BuilderException {
+        dataset.flagConcatOnlyRelation(relation, type);
+        dataset.unmaskRelation(relation);
+        dataset.unflagSubclassRelation(relation);
+        dataset.synchronise();
+    }
+    
+    public static void unconcatOnlyRelation(DataSet dataset, Relation relation) throws SQLException, BuilderException {
+        dataset.unflagConcatOnlyRelation(relation);
+        dataset.synchronise();
+    }
+    
+    public static void changeRelationStatus(Mart mart, Relation relation, ComponentStatus status) throws SQLException, BuilderException {
+        relation.setStatus(status);
+        for (Iterator i = mart.getDataSets().iterator(); i.hasNext(); ) {
+            ((DataSet)i.next()).synchronise();
+        }
     }
 }

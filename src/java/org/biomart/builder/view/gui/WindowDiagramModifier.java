@@ -26,16 +26,23 @@ package org.biomart.builder.view.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.JComponent;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.DataSet.ConcatRelationType;
+import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Adapts listener behaviour by adding in DataSet-specific stuff.
- * 
+ *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 2nd May 2006
+ * @version 0.1.4, 4th May 2006
  * @since 0.1
  */
 public class WindowDiagramModifier extends SchemaDiagramModifier {
@@ -45,11 +52,11 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
     private DataSet dataset;
     
     /**
-     * 
+     *
      * Creates a new instance of DataSetDiagramModifier over
      * a given dataset.
-     * 
-     * 
+     *
+     *
      * @param dataset the dataset we are attached to.
      */
     public WindowDiagramModifier(DataSetTabSet datasetTabSet, DataSet dataset) {
@@ -59,7 +66,7 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
     
     /**
      * Retrieve our dataset.
-     * 
+     *
      * @return our dataset.
      */
     protected DataSet getDataSet() {
@@ -69,35 +76,224 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
     /**
      * {@inheritDoc}
      */
-    public void customiseContextMenu(JPopupMenu contextMenu, Object displayComponent) {
-        // Add separator.
-        contextMenu.addSeparator();
-        // Add our own stuff.
-        JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeDataSetTitle"));
-        remove.setMnemonic(BuilderBundle.getString("removeDataSetMnemonic").charAt(0));
-        remove.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                getDataSetTabSet().confirmRemoveDataSet(dataset);
-            }
-        });
-        contextMenu.add(remove);
+    public void customiseContextMenu(JPopupMenu contextMenu, Object object) {
         
-        JMenuItem optimise = new JMenuItem(BuilderBundle.getString("optimiseDataSetTitle"));
-        optimise.setMnemonic(BuilderBundle.getString("optimiseDataSetMnemonic").charAt(0));
-        optimise.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                getDataSetTabSet().optimiseDataSet(dataset);
+        if (object instanceof Schema) {
+            // Add schema stuff
+            final Schema schema = (Schema)object;
+            contextMenu.addSeparator();
+            
+            JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameSchemaTitle"));
+            rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
+            rename.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.getSchemaTabSet().renameSchema(schema, false);
+                }
+            });
+            contextMenu.add(rename);
+            
+            JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseSchemaTitle"));
+            sync.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
+            sync.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().getSchemaTabSet().synchroniseSchema(schema);
+                }
+            });
+            contextMenu.add(sync);
+            
+            if (!(schema instanceof SchemaGroup)) {
+                JMenuItem modify = new JMenuItem(BuilderBundle.getString("modifySchemaTitle"));
+                modify.setMnemonic(BuilderBundle.getString("modifySchemaMnemonic").charAt(0));
+                modify.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        datasetTabSet.getSchemaTabSet().requestModifySchema(schema);
+                    }
+                });
+                contextMenu.add(modify);
+                
+                JMenuItem test = new JMenuItem(BuilderBundle.getString("testSchemaTitle"));
+                test.setMnemonic(BuilderBundle.getString("testSchemaMnemonic").charAt(0));
+                test.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        getDataSetTabSet().getSchemaTabSet().testSchema(schema);
+                    }
+                });
+                contextMenu.add(test);
+                
+                JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeSchemaTitle"));
+                remove.setMnemonic(BuilderBundle.getString("removeSchemaMnemonic").charAt(0));
+                remove.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        datasetTabSet.getSchemaTabSet().confirmRemoveSchema(schema);
+                    }
+                });
+                contextMenu.add(remove);
+                
+                JMenuItem addToGroup = new JMenuItem(BuilderBundle.getString("addToGroupTitle"));
+                addToGroup.setMnemonic(BuilderBundle.getString("addToGroupMnemonic").charAt(0));
+                addToGroup.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        datasetTabSet.getSchemaTabSet().requestAddSchemaToSchemaGroup(schema);
+                    }
+                });
+                contextMenu.add(addToGroup);
             }
-        });
-        contextMenu.add(optimise);
+        }
         
-        JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameDataSetTitle"));
-        rename.setMnemonic(BuilderBundle.getString("renameDataSetMnemonic").charAt(0));
-        rename.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                getDataSetTabSet().renameDataSet(dataset);
+        else if (object instanceof Relation) {
+            // Relation stuff
+            final Relation relation = (Relation)object;
+            
+            boolean incorrect = relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT);
+            
+            // Add separator.
+            contextMenu.addSeparator();
+            
+            if (this.datasetTabSet.getCurrentDataSet().getMaskedRelations().contains(relation)) {
+                JMenuItem unmask = new JMenuItem(BuilderBundle.getString("unmaskRelationTitle"));
+                unmask.setMnemonic(BuilderBundle.getString("unmaskRelationMnemonic").charAt(0));
+                unmask.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        datasetTabSet.unmaskRelation(relation);
+                    }
+                });
+                contextMenu.add(unmask);
+                if (incorrect) unmask.setEnabled(false);
+            } else {
+                JMenuItem mask = new JMenuItem(BuilderBundle.getString("maskRelationTitle"));
+                mask.setMnemonic(BuilderBundle.getString("maskRelationMnemonic").charAt(0));
+                mask.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        datasetTabSet.maskRelation(relation);
+                    }
+                });
+                contextMenu.add(mask);
+                if (incorrect) mask.setEnabled(false);
             }
-        });
-        contextMenu.add(rename);
+            
+            if (this.datasetTabSet.getCurrentDataSet().getSubclassedRelations().contains(relation)) {
+                JMenuItem unsubclass = new JMenuItem(BuilderBundle.getString("unsubclassRelationTitle"));
+                unsubclass.setMnemonic(BuilderBundle.getString("unsubclassRelationMnemonic").charAt(0));
+                unsubclass.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        datasetTabSet.unsubclassRelation(relation);
+                    }
+                });
+                contextMenu.add(unsubclass);
+                if (incorrect) unsubclass.setEnabled(false);
+            } else {
+                JMenuItem subclass = new JMenuItem(BuilderBundle.getString("subclassRelationTitle"));
+                subclass.setMnemonic(BuilderBundle.getString("subclassRelationMnemonic").charAt(0));
+                subclass.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        datasetTabSet.subclassRelation(relation);
+                    }
+                });
+                contextMenu.add(subclass);
+                if (incorrect) subclass.setEnabled(false);
+            }
+            
+            if (this.datasetTabSet.getCurrentDataSet().getConcatOnlyRelations().contains(relation)) {
+                JMenuItem unconcat = new JMenuItem(BuilderBundle.getString("unconcatOnlyRelationTitle"));
+                unconcat.setMnemonic(BuilderBundle.getString("unconcatOnlyRelationMnemonic").charAt(0));
+                unconcat.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        datasetTabSet.unconcatOnlyRelation(relation);
+                    }
+                });
+                contextMenu.add(unconcat);
+                if (incorrect) unconcat.setEnabled(false);
+            } else {
+                JMenu concatMenu = new JMenu(BuilderBundle.getString("concatOnlyRelationTitle"));
+                concatMenu.setMnemonic(BuilderBundle.getString("concatOnlyRelationMnemonic").charAt(0));
+                
+                JMenuItem comma = new JMenuItem(BuilderBundle.getString("commaConcatTitle"));
+                comma.setMnemonic(BuilderBundle.getString("commaConcatMnemonic").charAt(0));
+                comma.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        datasetTabSet.concatOnlyRelation(relation, ConcatRelationType.COMMA);
+                    }
+                });
+                concatMenu.add(comma);
+                
+                JMenuItem space = new JMenuItem(BuilderBundle.getString("spaceConcatTitle"));
+                space.setMnemonic(BuilderBundle.getString("spaceConcatMnemonic").charAt(0));
+                space.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        datasetTabSet.concatOnlyRelation(relation, ConcatRelationType.SPACE);
+                    }
+                });
+                concatMenu.add(space);
+                
+                JMenuItem tab = new JMenuItem(BuilderBundle.getString("tabConcatTitle"));
+                tab.setMnemonic(BuilderBundle.getString("tabConcatMnemonic").charAt(0));
+                tab.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        datasetTabSet.concatOnlyRelation(relation, ConcatRelationType.TAB);
+                    }
+                });
+                concatMenu.add(tab);
+                
+                contextMenu.add(concatMenu);
+                if (incorrect) concatMenu.setEnabled(false);
+            }
+        }
+        
+        else if (object == null) {
+            // Common stuff.
+            
+            // Add separator.
+            contextMenu.addSeparator();
+            
+            JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeDataSetTitle"));
+            remove.setMnemonic(BuilderBundle.getString("removeDataSetMnemonic").charAt(0));
+            remove.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().confirmRemoveDataSet(dataset);
+                }
+            });
+            contextMenu.add(remove);
+            
+            JMenuItem optimise = new JMenuItem(BuilderBundle.getString("optimiseDataSetTitle"));
+            optimise.setMnemonic(BuilderBundle.getString("optimiseDataSetMnemonic").charAt(0));
+            optimise.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().optimiseDataSet(dataset);
+                }
+            });
+            contextMenu.add(optimise);
+            
+            JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameDataSetTitle"));
+            rename.setMnemonic(BuilderBundle.getString("renameDataSetMnemonic").charAt(0));
+            rename.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().renameDataSet(dataset);
+                }
+            });
+            contextMenu.add(rename);
+        }
+    }
+    
+    public void customiseColours(JComponent component, Object object) {
+        if (object instanceof Relation) {
+            Relation relation = (Relation)object;
+            // Fade out all INFERRED_INCORRECT and MASKED relations.
+            if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT) ||
+                    datasetTabSet.getCurrentDataSet().getMaskedRelations().contains(relation)) {
+                component.setForeground(RelationComponent.FADED_COLOUR);
+            }
+            // Highlight CONCAT-ONLY relations.
+            else if (datasetTabSet.getCurrentDataSet().getConcatOnlyRelations().contains(relation)) {
+                component.setForeground(RelationComponent.CONCAT_COLOUR);
+            }
+            // Highlight SUBCLASS relations.
+            else if (datasetTabSet.getCurrentDataSet().getSubclassedRelations().contains(relation)) {
+                component.setForeground(RelationComponent.SUBCLASS_COLOUR);
+            }
+            // All others are normal.
+            else {
+                component.setForeground(RelationComponent.NORMAL_COLOUR);
+            }
+        }
     }
 }

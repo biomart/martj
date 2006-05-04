@@ -85,7 +85,7 @@ public class AllSchemasDiagram extends Diagram {
         });
         contextMenu.add(add);
         
-        // Return.
+        // Return. Will be customised elsewhere.
         return contextMenu;
     }
     
@@ -94,7 +94,6 @@ public class AllSchemasDiagram extends Diagram {
      * Resyncs the table providers with the contents of the set.
      */
     public void synchroniseDiagram() {
-        // TODO: Construct/update our set of Component.Table and Component.Relation objects.
         this.removeAll();
         // Make a set of all relations on this table provider.
         List relations = new ArrayList();
@@ -118,6 +117,6 @@ public class AllSchemasDiagram extends Diagram {
             this.add(relationComponent);
         }
         // Delegate upwards.
-        super.synchroniseDiagram();
+        this.resizeDisplay();
     }
 }

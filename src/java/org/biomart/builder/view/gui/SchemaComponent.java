@@ -149,60 +149,6 @@ public class SchemaComponent extends BoxShapedComponent {
         });
         contextMenu.add(showTables);
         
-        JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameSchemaTitle"));
-        rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
-        rename.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                getDiagram().getDataSetTabSet().getSchemaTabSet().renameSchema(schema, false);
-            }
-        });
-        contextMenu.add(rename);
-        
-        JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseSchemaTitle"));
-        sync.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
-        sync.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                getDiagram().getDataSetTabSet().getSchemaTabSet().synchroniseSchema(schema);
-            }
-        });
-        contextMenu.add(sync);
-        
-        JMenuItem modify = new JMenuItem(BuilderBundle.getString("modifySchemaTitle"));
-        modify.setMnemonic(BuilderBundle.getString("modifySchemaMnemonic").charAt(0));
-        modify.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                getDiagram().getDataSetTabSet().getSchemaTabSet().requestModifySchema(schema);
-            }
-        });
-        contextMenu.add(modify);
-        
-        JMenuItem test = new JMenuItem(BuilderBundle.getString("testSchemaTitle"));
-        test.setMnemonic(BuilderBundle.getString("testSchemaMnemonic").charAt(0));
-        test.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                getDiagram().getDataSetTabSet().getSchemaTabSet().testSchema(schema);
-            }
-        });
-        contextMenu.add(test);
-        
-        JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeSchemaTitle"));
-        remove.setMnemonic(BuilderBundle.getString("removeSchemaMnemonic").charAt(0));
-        remove.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                getDiagram().getDataSetTabSet().getSchemaTabSet().confirmRemoveSchema(schema);
-            }
-        });
-        contextMenu.add(remove);
-        
-        JMenuItem addToGroup = new JMenuItem(BuilderBundle.getString("addToGroupTitle"));
-        addToGroup.setMnemonic(BuilderBundle.getString("addToGroupMnemonic").charAt(0));
-        addToGroup.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                getDiagram().getDataSetTabSet().getSchemaTabSet().requestAddSchemaToSchemaGroup(schema);
-            }
-        });
-        contextMenu.add(addToGroup);
-        
         // Return it. Will be further adapted by a listener elsewhere.
         return contextMenu;
     }
@@ -225,25 +171,7 @@ public class SchemaComponent extends BoxShapedComponent {
             }
         });
         contextMenu.add(showTables);
-        
-        JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameSchemaTitle"));
-        rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
-        rename.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                getDiagram().getDataSetTabSet().getSchemaTabSet().renameSchema(getSchemaGroup(), false);
-            }
-        });
-        contextMenu.add(rename);
-        
-        JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseSchemaTitle"));
-        sync.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
-        sync.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                getDiagram().getDataSetTabSet().getSchemaTabSet().synchroniseSchema(getSchemaGroup());
-            }
-        });
-        contextMenu.add(sync);
-        
+                
         JMenu groupMembers = new JMenu(BuilderBundle.getString("groupMembersTitle"));
         groupMembers.setMnemonic(BuilderBundle.getString("groupMembersMnemonic").charAt(0));
         contextMenu.add(groupMembers);
@@ -293,12 +221,5 @@ public class SchemaComponent extends BoxShapedComponent {
         
         // Return it. Will be further adapted by a listener elsewhere.
         return contextMenu;
-    }
-    
-    /**
-     * Set up the colours etc. for this component. Flags have already been set.
-     */
-    protected void setComponentColours() {
-        // if getDiagram().getDiagramModifier() instanceof ...
     }
 }

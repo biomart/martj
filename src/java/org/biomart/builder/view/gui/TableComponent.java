@@ -108,11 +108,4 @@ public class TableComponent extends BoxShapedComponent {
         // Return it. Will be further adapted by a listener elsewhere.
         return contextMenu;
     }
-    
-    /**
-     * Set up the colours etc. for this component. Flags have already been set.
-     */
-    protected void setComponentColours() {
-        // if getDiagram().getDiagramModifier() instanceof ...
-    }
 }

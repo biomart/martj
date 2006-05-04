@@ -39,8 +39,8 @@ import org.biomart.builder.resources.BuilderBundle;
  * The {@link Mart} contains the set of all {@link Schema}s that are providing
  * data to this mart. It also has one or more {@link DataSet}s onto the {@link Table}s provided
  * by these, from which {@link DataSet}s are constructed.
- * 
- * 
+ *
+ *
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.8, 27th April 2006
  * @since 0.1
@@ -60,7 +60,7 @@ public class Mart {
     /**
      * Returns the set of {@link Schema} objects which this {@link Mart} includes
      * when building a mart. The set may be empty but it is never null.
-     * 
+     *
      * @return a set of {@link Schema} objects.
      */
     public Collection getSchemas() {
@@ -70,7 +70,7 @@ public class Mart {
     /**
      * Returns the {@link Schema} object with the given name. If it doesn't exist, null is returned.
      * If the name was null, you'll get an exception.
-     * 
+     *
      * @param name the name to look for.
      * @return a {@link TSchema object matching the specified name.
      */
@@ -84,8 +84,8 @@ public class Mart {
     /**
      * Adds a {@link Schema} to the set which this {@link Mart} includes. An
      * exception is thrown if it already is in this set, or if it is null.
-     * 
-     * 
+     *
+     *
      * @param schema the {@link Schema} to add.
      * @throws AlreadyExistsException if the provider is already in this schema.
      */
@@ -100,8 +100,8 @@ public class Mart {
     /**
      * Renames a {@link Schema}. An
      * exception is thrown if that names has already been used, or if it is null.
-     * 
-     * 
+     *
+     *
      * @param schema the {@link Schema} to rename.
      * @param name the new name for it.
      * @throws AlreadyExistsException if the provider name is already in this schema.
@@ -123,7 +123,7 @@ public class Mart {
      * Removes a {@link Schema} from the set which this {@link Mart} includes. An
      * exception is thrown if it is null. If it is not found, nothing happens and it is ignored quietly.
      * Any {@link DataSet}s centred on this {@link Schema} are also removed.
-     * 
+     *
      * @param schema the {@link Schema} to remove.
      */
     public void removeSchema(Schema schema) {
@@ -150,7 +150,7 @@ public class Mart {
     /**
      * Returns the {@link DataSet} object with the given name. If it doesn't exist, null is returned.
      * If the name was null, you'll get an exception.
-     * 
+     *
      * @param name the name to look for.
      * @return a {@link WDataSet object matching the specified name.
      */
@@ -183,19 +183,21 @@ public class Mart {
      * {@link DataSet} will be created containing that subclass relation. Each subclass {@link DataSet}
      * choice will have a number appended to it after an underscore, eg. '_SC1' ,'_SC2' etc.
      * Each window created will have optimiseDataSet() called on it automatically.
-     * 
-     * 
+     *
+     *
      * @param centralTable the {@link Table} to build predicted {@link DataSet}s around.
      * @param name the name to use for the datasets.
      * @return the newly created datasets, as well as adding them to the schema.
      * @throws AlreadyExistsException if a window already exists in this schema with the same
      *  name or any of the suffixed versions.
      */
-    public void suggestDataSets(Table centralTable, String name) throws AlreadyExistsException {
+    public Collection suggestDataSets(Table centralTable, String name) throws AlreadyExistsException {
+        List newDataSets = new ArrayList();
         // Do it.
         try {
             DataSet mainWin = new DataSet(this, centralTable, name);
             mainWin.optimiseDataSet();
+            newDataSets.add(mainWin);
         } catch (Exception e) {
             AssertionError ae = new AssertionError(BuilderBundle.getString("plainDataSetPredictionFailure"));
             ae.initCause(e);
@@ -215,6 +217,7 @@ public class Mart {
                         DataSet scWin = new DataSet(this, centralTable, name+BuilderBundle.getString("subclassDataSetSuffix")+(suffix++));
                         scWin.flagSubclassRelation(r);
                         scWin.optimiseDataSet();
+                        newDataSets.add(scWin);
                     }
                 } catch (Exception e) {
                     AssertionError ae = new AssertionError(BuilderBundle.getString("subclassPredictionFailure"));
@@ -223,13 +226,14 @@ public class Mart {
                 }
             }
         }
+        return newDataSets;
     }
     
     /**
      * Renames a {@link DataSet}. An
      * exception is thrown if that names has already been used, or if it is null.
-     * 
-     * 
+     *
+     *
      * @param dataset the {@link DataSet} to rename.
      * @param name the new name for it.
      * @throws AlreadyExistsException if the dataset name is already in this schema.
@@ -250,7 +254,7 @@ public class Mart {
     /**
      * Removes a {@link DataSet} from the set which this {@link Mart} includes. An
      * exception is thrown if it is null. If it is not found, nothing happens and it is ignored quietly.
-     * 
+     *
      * @param dataset the {@link DataSet} to remove.
      */
     public void removeDataSet(DataSet dataset) {
@@ -265,8 +269,8 @@ public class Mart {
      * with the {@link Mart}'s {@link Schema}(s). Any {@link DataSet}s that
      * are based on now-missing {@link Table}s are dropped. This is all simply a matter
      * of delegating calls and the routine does no real work itself.
-     * 
-     * 
+     *
+     *
      * @throws SQLException if there was a problem connecting to the data source.
      * @throws BuilderException if there was any other kind of problem.
      */
@@ -283,8 +287,8 @@ public class Mart {
      * Synchronise this {@link Mart} with the {@link Schema}(s) that is(are)
      * providing its tables, then synchronising its {@link DataSet}s too. This is all simply a matter
      * of delegating calls and the routine does no real work itself.
-     * 
-     * 
+     *
+     *
      * @throws SQLException if there was a problem connecting to the data source.
      * @throws BuilderException if there was any other kind of problem.
      */
@@ -300,7 +304,7 @@ public class Mart {
     
     /**
      * Request that all the marts in all the datasets be constructed now.
-     * 
+     *
      * @throws SQLException if there was any data source error during
      * mart construction.
      * @throws BuilderException if there was any other kind of error in the

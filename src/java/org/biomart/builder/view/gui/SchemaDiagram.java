@@ -25,26 +25,19 @@
 package org.biomart.builder.view.gui;
 
 import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Schema;
-import org.biomart.builder.model.SchemaGroup;
-import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Displays the contents of a {@link Schema} in graphical form.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 2nd May 2006
+ * @version 0.1.8, 4th May 2006
  * @since 0.1
  */
 public class SchemaDiagram extends Diagram {
@@ -88,67 +81,8 @@ public class SchemaDiagram extends Diagram {
         
         // Nothing, yet!
         
-        // The following are not applicable to DataSets (we can tell by the listener type).
-        if (!(this.getDiagramModifier() instanceof DataSetDiagramModifier)) {
-            contextMenu.addSeparator();
-            
-            JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameSchemaTitle"));
-            rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
-            rename.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.getSchemaTabSet().renameSchema(schema, false);
-                }
-            });
-            contextMenu.add(rename);
-            
-            JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseSchemaTitle"));
-            sync.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
-            sync.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().getSchemaTabSet().synchroniseSchema(schema);
-                }
-            });
-            contextMenu.add(sync);
-            
-            if (!(this.getSchema() instanceof SchemaGroup)) {
-                JMenuItem modify = new JMenuItem(BuilderBundle.getString("modifySchemaTitle"));
-                modify.setMnemonic(BuilderBundle.getString("modifySchemaMnemonic").charAt(0));
-                modify.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.getSchemaTabSet().requestModifySchema(getSchema());
-                    }
-                });
-                contextMenu.add(modify);
-            
-                JMenuItem test = new JMenuItem(BuilderBundle.getString("testSchemaTitle"));
-                test.setMnemonic(BuilderBundle.getString("testSchemaMnemonic").charAt(0));
-                test.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().getSchemaTabSet().testSchema(schema);
-                    }
-                });
-                contextMenu.add(test);
-                
-                JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeSchemaTitle"));
-                remove.setMnemonic(BuilderBundle.getString("removeSchemaMnemonic").charAt(0));
-                remove.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.getSchemaTabSet().confirmRemoveSchema(schema);
-                    }
-                });
-                contextMenu.add(remove);
-                
-                JMenuItem addToGroup = new JMenuItem(BuilderBundle.getString("addToGroupTitle"));
-                addToGroup.setMnemonic(BuilderBundle.getString("addToGroupMnemonic").charAt(0));
-                addToGroup.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.getSchemaTabSet().requestAddSchemaToSchemaGroup(schema);
-                    }
-                });
-                contextMenu.add(addToGroup);
-            }
-        }
-        // Return.
+        // Return the customised menu.
+        this.getDiagramModifier().customiseContextMenu(contextMenu, this.getSchema());
         return contextMenu;
     }
     
@@ -157,7 +91,6 @@ public class SchemaDiagram extends Diagram {
      * Resyncs the table providers with the contents of the set.
      */
     public void synchroniseDiagram() {
-        // TODO: Construct/update our set of Component.Table and Component.Relation objects.
         this.removeAll();
         // Make a set of all relations on this table provider.
         Map keyComponents = new HashMap();
@@ -179,6 +112,6 @@ public class SchemaDiagram extends Diagram {
             this.add(relationComponent);
         }
         // Delegate upwards.
-        super.synchroniseDiagram();
+        this.resizeDisplay();
     }
 }

@@ -561,8 +561,8 @@ public class DataSet extends GenericSchema {
         ignoredRelations.put(centralTable, new HashSet());
         if (centralTable.getPrimaryKey()!=null) for (Iterator i = centralTable.getPrimaryKey().getRelations().iterator(); i.hasNext(); ) {
             Relation r = (Relation)i.next();
-            // Skip masked relations.
-            if (this.getMaskedRelations().contains(r)) continue;
+            // Skip masked and concat-only relations.
+            if (this.getMaskedRelations().contains(r) || this.getConcatOnlyRelations().contains(r)) continue;
             // Skip inferred-incorrect relations.
             if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) continue;
             // See what kind of relation we have.
@@ -575,6 +575,10 @@ public class DataSet extends GenericSchema {
                 // Mark all OneToManys from the subclass table as dimensions.
                 if (subclassTable.getPrimaryKey()!=null) for (Iterator j = subclassTable.getPrimaryKey().getRelations().iterator(); j.hasNext(); ) {
                     Relation sr = (Relation)j.next();
+                    // Skip masked and concat-only relations.
+                    if (this.getMaskedRelations().contains(sr) || this.getConcatOnlyRelations().contains(sr)) continue;
+                    // Skip inferred-incorrect relations.
+                    if (sr.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) continue;
                     // OneToMany from subclass table? Ignore it at subclass table but add to dimension set.
                     // Also add the relation to the ignore set of the dimension.
                     if (sr.getFKCardinality().equals(Cardinality.MANY)) {
@@ -647,9 +651,6 @@ public class DataSet extends GenericSchema {
         if (linkbackRelation != null) relationsFollowed.add(linkbackRelation); // don't forget the parent relation
         Set constructedColumns = new HashSet(); // constructedColumns to include in the constructed table
         List constructedPKColumns = new ArrayList(); // constructedColumns to include in the constructed table's PK
-        
-        // Add all masked constructedColumns to the ignore set.
-        ignoredRelations.addAll(this.getMaskedRelations());
         
         // Create the DataSetTable
         DataSetTable datasetTable = new DataSetTable(realTable.getName(), this, dsTableType);
@@ -752,8 +753,11 @@ public class DataSet extends GenericSchema {
             Key k = (Key)i.next();
             for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
                 Relation r = (Relation)j.next();
-                if (!ignoredRelations.contains(r) && !this.getConcatOnlyRelations().contains(r))
-                    excludedColumns.addAll(k.getColumns());
+                if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT) ||
+                        ignoredRelations.contains(r) ||
+                        this.getConcatOnlyRelations().contains(r))
+                    continue;
+                else excludedColumns.addAll(k.getColumns());
             }
         }
         

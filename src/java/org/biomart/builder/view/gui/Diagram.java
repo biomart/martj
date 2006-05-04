@@ -26,13 +26,14 @@ package org.biomart.builder.view.gui;
 
 import java.awt.AWTEvent;
 import java.awt.event.MouseEvent;
+import java.util.Collection;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
 /**
  * Displays arbitrary objects linked in a radial form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 2nd May 2006
+ * @version 0.1.7, 4th May 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {    
@@ -107,7 +108,7 @@ public abstract class Diagram extends JPanel {
     /**
      * Synchronise our display with our object contents.
      */
-    public void synchroniseDiagram() {
+    public void resizeDisplay() {
         // Reset our size to the minimum.
         this.setSize(this.getMinimumSize());
         // Update ourselves.

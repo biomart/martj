@@ -26,6 +26,7 @@ package org.biomart.builder.view.gui;
 
 import java.awt.AWTEvent;
 import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Shape;
@@ -33,7 +34,6 @@ import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import javax.swing.JComponent;
-import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Relation.Cardinality;
@@ -41,9 +41,9 @@ import org.biomart.builder.model.Relation.Cardinality;
 /**
  * An element that can be drawn on a Diagram. Two Comparators
  * are provided for sorting them, as they are not comparable within themselves.
- * 
+ *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 2nd May 2006
+ * @version 0.1.3, 4th May 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
@@ -53,9 +53,39 @@ public class RelationComponent extends JComponent implements DiagramComponent {
     public static final float RELATION_LINEWIDTH = 1.0f; // 72 = 1 inch at 72 dpi
     
     /**
-     * Constant referring to the unit size of a dash element.
+     * Constant referring to normal relation colour.
      */
-    public static final float RELATION_DASHUNIT = 3.0f; // 72 = 1 inch at 72 dpi
+    public static final Color NORMAL_COLOUR = Color.DARK_GRAY;
+    
+    /**
+     * Constant referring to faded relation colour.
+     */
+    public static final Color FADED_COLOUR = Color.LIGHT_GRAY;
+    
+    /**
+     * Constant referring to handmade relation colour.
+     */
+    public static final Color HANDMADE_COLOUR = Color.GREEN;
+    
+    /**
+     * Constant referring to handmade relation colour.
+     */
+    public static final Color CONCAT_COLOUR = Color.BLUE;
+    
+    /**
+     * Constant referring to handmade relation colour.
+     */
+    public static final Color SUBCLASS_COLOUR = Color.RED;
+    
+    /**
+     * Constant defining our 1:M stroke.
+     */
+    public static final Stroke ONE_MANY = new BasicStroke(RelationComponent.RELATION_LINEWIDTH);
+    
+    /**
+     * Constant defining our 1:1 stroke.
+     */
+    public static final Stroke ONE_ONE = new DoubleStroke(RelationComponent.RELATION_LINEWIDTH);
     
     /**
      * What do we look like?
@@ -88,6 +118,14 @@ public class RelationComponent extends JComponent implements DiagramComponent {
         this.primaryKey = primaryKey;
         this.foreignKey = foreignKey;
         this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
+        this.updateToolTip();
+    }
+    
+    /**
+     * Updates the tooltip.
+     */
+    public void updateToolTip() {
+        this.setToolTipText(this.relation.getName());
     }
     
     /**
@@ -142,8 +180,8 @@ public class RelationComponent extends JComponent implements DiagramComponent {
     public boolean contains(int x, int y) {
         return this.shape != null && this.shape.intersects(
                 new Rectangle2D.Double(
-                x - RelationComponent.RELATION_LINEWIDTH, 
-                y - RelationComponent.RELATION_LINEWIDTH, 
+                x - RelationComponent.RELATION_LINEWIDTH,
+                y - RelationComponent.RELATION_LINEWIDTH,
                 RelationComponent.RELATION_LINEWIDTH * 2,
                 RelationComponent.RELATION_LINEWIDTH * 2
                 ));
@@ -155,10 +193,8 @@ public class RelationComponent extends JComponent implements DiagramComponent {
      */
     public JPopupMenu getContextMenu() {
         JPopupMenu contextMenu = this.getDiagram().getContextMenu();
-        // Extend it for this table here.
-        contextMenu.addSeparator();
-        contextMenu.add(new JMenuItem("Hello from "+this.getRelation()));
-        // Return it. Will be further adapted by a listener elsewhere.
+        // No additional entries for us yet.
+        // Return it.
         return contextMenu;
     }
     
@@ -186,19 +222,8 @@ public class RelationComponent extends JComponent implements DiagramComponent {
      * Work out what stroke to use.
      */
     private Stroke getStroke() {
-        float[] dashArray;
-        if (this.getRelation().getFKCardinality().equals(Cardinality.MANY)) 
-            dashArray = new float[]{4.0f * RelationComponent.RELATION_DASHUNIT, RelationComponent.RELATION_DASHUNIT};
-        else 
-            dashArray = new float[]{RelationComponent.RELATION_DASHUNIT, RelationComponent.RELATION_DASHUNIT};
-        return new BasicStroke(RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 0.0f, dashArray, 0.0f);
-    }
-    
-    /**
-     * Set up the colours etc. for this component. Flags have already been set.
-     */
-    protected void setComponentColours() {
-        // Do nothing yet.
+        if (this.getRelation().getFKCardinality().equals(Cardinality.MANY)) return RelationComponent.ONE_MANY;
+        else return RelationComponent.ONE_ONE;
     }
     
     /**
@@ -212,11 +237,34 @@ public class RelationComponent extends JComponent implements DiagramComponent {
         }
         Graphics2D g2d = (Graphics2D)g.create();
         // Do painting of this component.
-        this.setComponentColours();
+        this.getDiagram().getDiagramModifier().customiseColours(this, this.getObject());
         g2d.setStroke(this.getStroke());
         g2d.draw(this.shape);
         g2d.fill(this.shape);
         // Clean up.
         g2d.dispose();
+    }
+    
+    /**
+     * This Stroke implementation applies a BasicStroke to a shape twice. If you
+     * draw with this Stroke, then instead of outlining the shape, you're outlining
+     * the outline of the shape.
+     * Based on an idea from http://www.java2s.com/Code/Java/2D-Graphics-GUI/CustomStrokes.htm
+     */    
+    private static class DoubleStroke implements Stroke {
+        private BasicStroke stroke1, stroke2; // the two strokes to use
+        
+        public DoubleStroke(float width) {
+            this.stroke1 = new BasicStroke(width * 2.0f); 
+            this.stroke2 = new BasicStroke(width / 2.0f); 
+        }
+        
+        public Shape createStrokedShape(Shape s) {
+            // Use the first stroke to create an outline of the shape
+            Shape outline = this.stroke1.createStrokedShape(s);
+            // Use the second stroke to create an outline of that outline.
+            // It is this outline of the outline that will be filled in
+            return this.stroke2.createStrokedShape(outline);
+        }
     }
 }

@@ -35,14 +35,19 @@ public abstract class LongProcess {
     
     private static int longProcessCount = 0;
     
+    private static Object lockObject = new Object();
+    
     /** Creates a new instance of LongProcess */
     private LongProcess() {}
     
-    public static synchronized void run(final Container hourglassParent, final Runnable process) {
+    public static void run(final Container hourglassParent, final Runnable process) {
         Thread t = new Thread(new Runnable() {
             public void run() {
                 try {
-                    if (LongProcess.longProcessCount++ == 0) {
+                    synchronized (lockObject) {
+                        LongProcess.longProcessCount++;
+                    }
+                    if (LongProcess.longProcessCount == 1) {
                         // Start hourglass
                         Cursor hourglassCursor = new Cursor(Cursor.WAIT_CURSOR);
                         hourglassParent.setCursor(hourglassCursor);
@@ -51,7 +56,10 @@ public abstract class LongProcess {
                 } catch (Error e) {
                     throw e;
                 } finally {
-                    if (--LongProcess.longProcessCount == 0) {
+                    synchronized (lockObject) {
+                        LongProcess.longProcessCount--;
+                    }
+                    if (LongProcess.longProcessCount == 0) {
                         // Stop hourglass.
                         Cursor normalCursor = new Cursor(Cursor.DEFAULT_CURSOR);
                         hourglassParent.setCursor(normalCursor);

@@ -80,7 +80,10 @@ public abstract class BoxShapedComponent extends JPanel implements DiagramCompon
      * @return the popup menu.
      */
     public JPopupMenu getContextMenu() {
-        return this.getDiagram().getContextMenu();
+        JPopupMenu contextMenu = this.getDiagram().getContextMenu();
+        // No additional entries for us yet.
+        // Return it.
+        return contextMenu;
     }
     
     /**
@@ -104,16 +107,11 @@ public abstract class BoxShapedComponent extends JPanel implements DiagramCompon
     }
     
     /**
-     * Set up the colours etc. for this component. Flags have already been set.
-     */
-    protected abstract void setComponentColours();
-    
-    /**
      * {@inheritDoc}
      */
     protected void paintComponent(Graphics g) {
         // Set up painting of this component.
-        this.setComponentColours();
+        this.getDiagram().getDiagramModifier().customiseColours(this, this.getObject());
         // Do the painting.
         super.paintComponent(g);
     }

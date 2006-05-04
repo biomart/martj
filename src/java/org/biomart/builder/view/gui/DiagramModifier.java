@@ -24,6 +24,7 @@
 
 package org.biomart.builder.view.gui;
 
+import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 
 /**
@@ -32,7 +33,7 @@ import javax.swing.JPopupMenu;
  * 
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 2nd May 2006
+ * @version 0.1.4, 4th May 2006
  * @since 0.1
  */
 public interface DiagramModifier {
@@ -44,4 +45,6 @@ public interface DiagramModifier {
      * @return the popup menu.
      */
     public void customiseContextMenu(JPopupMenu contextMenu, Object object);
+    
+    public void customiseColours(JComponent component, Object object);
 }
