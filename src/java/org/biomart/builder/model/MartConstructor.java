@@ -33,7 +33,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * task or just writes some DDL to be run by the user later is up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 27th April 2006
+ * @version 0.1.5, 5th May 2006
  * @since 0.1
  */
 public interface MartConstructor extends DataLink, Comparable {    
@@ -97,7 +97,7 @@ public interface MartConstructor extends DataLink, Comparable {
             // TODO: Subclasses actually generate DDL or access JDBC/XML/whatever and do the transformation.
             // Don't forget to include the 'hasXYZDimension' columns in the main table and subclassed main tables.
             // Also don't forget to left-join tables when joining so we get nulls in appropriate places.
-            // Plus, check partitionOnTableProvider when dealing with PartitionedTableProvider on main table.
+            // Plus, check whether paritioning on any SchemaColumn instances.
             // Use pseudo-column if PartitionedTableProvider and off, use partition-prefix if PartitionedTableProvider
             // and on, ignore if not PartitionedTableProvider. Applies only when partitioning main table, otherwise
             // normal rules apply. (Partition suffix on table name).

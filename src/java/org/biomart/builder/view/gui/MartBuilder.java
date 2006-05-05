@@ -240,7 +240,7 @@ public class MartBuilder extends JFrame {
             fileMenu.addMenuListener(new MenuListener() {
                 public void menuSelected(MenuEvent e) {
                     boolean hasMart = true;
-                    if (martBuilder.martTabSet.getCurrentDataSetTabSet()==null) hasMart = false;
+                    if (martBuilder.martTabSet.getSelectedDataSetTabSet()==null) hasMart = false;
                     saveMart.setEnabled(hasMart);
                     saveMartAs.setEnabled(hasMart);
                     closeMart.setEnabled(hasMart);

@@ -33,7 +33,7 @@ import javax.swing.JPopupMenu;
  * 
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 4th May 2006
+ * @version 0.1.5, 5th May 2006
  * @since 0.1
  */
 public interface DiagramModifier {
@@ -46,5 +46,5 @@ public interface DiagramModifier {
      */
     public void customiseContextMenu(JPopupMenu contextMenu, Object object);
     
-    public void customiseColours(JComponent component, Object object);
+    public void customiseAppearance(JComponent component, Object object);
 }

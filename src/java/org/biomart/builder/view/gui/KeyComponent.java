@@ -27,7 +27,6 @@ package org.biomart.builder.view.gui;
 import java.awt.Color;
 import java.awt.Font;
 import java.util.Iterator;
-import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -41,7 +40,7 @@ import org.biomart.builder.model.Key.PrimaryKey;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 2nd May 2006
+ * @version 0.1.4, 5th May 2006
  * @since 0.1
  */
 public class KeyComponent extends BoxShapedComponent {
@@ -59,8 +58,6 @@ public class KeyComponent extends BoxShapedComponent {
         this.parentComponent = parentComponent;
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         // Create the border and set up the colors and fonts.
-        this.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
-        this.setForeground(Color.DARK_GRAY);
         if (key instanceof PrimaryKey) this.setBackground(Color.CYAN);
         else this.setBackground(Color.GREEN);
         // Add the label for each column.
@@ -91,9 +88,8 @@ public class KeyComponent extends BoxShapedComponent {
      */
     public JPopupMenu getContextMenu() {
         JPopupMenu contextMenu = this.getParentComponent().getContextMenu();
-        // Extend it for this table here.
-        contextMenu.addSeparator();
-        contextMenu.add(new JMenuItem("Hello from "+this.getKey()));
+        
+        // Nothing to add, yet.
         
         // Return it. Will be further adapted by a listener elsewhere.
         return contextMenu;

@@ -44,7 +44,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Displays a schema.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 27th April 2006
+ * @version 0.1.6, 5th May 2006
  * @since 0.1
  */
 public class MartTabSet extends JTabbedPane {
@@ -110,7 +110,7 @@ public class MartTabSet extends JTabbedPane {
     /**
      * Returns the current schema's window tabset.
      */
-    public DataSetTabSet getCurrentDataSetTabSet() {
+    public DataSetTabSet getSelectedDataSetTabSet() {
         if (this.getSelectedComponent()!=null) return (DataSetTabSet)this.getSelectedComponent();
         else return null;
     }
@@ -139,8 +139,8 @@ public class MartTabSet extends JTabbedPane {
      */
     public void confirmCloseMart() {
         boolean canClose = true;
-        if (this.getCurrentDataSetTabSet() == null) return;
-        Mart currentMart = this.getCurrentDataSetTabSet().getMart();
+        if (this.getSelectedDataSetTabSet() == null) return;
+        Mart currentMart = this.getSelectedDataSetTabSet().getMart();
         if (this.martModifiedStatus.get(currentMart).equals(Boolean.TRUE)) {
             // Modified, so must confirm action first.
             int choice = JOptionPane.showConfirmDialog(
@@ -163,8 +163,8 @@ public class MartTabSet extends JTabbedPane {
      * @param status true for modified, false for unmodified.
      */
     public void setModifiedStatus(boolean status) {
-        if (this.getCurrentDataSetTabSet() == null) return;
-        Mart currentMart = this.getCurrentDataSetTabSet().getMart();
+        if (this.getSelectedDataSetTabSet() == null) return;
+        Mart currentMart = this.getSelectedDataSetTabSet().getMart();
         this.martModifiedStatus.put(currentMart, Boolean.valueOf(status));
         this.setTitleAt(this.getSelectedIndex(), this.suggestTabName(currentMart));
     }
@@ -200,8 +200,8 @@ public class MartTabSet extends JTabbedPane {
      * Saves the schema to the current file.
      */
     public void saveMart() {
-        if (this.getCurrentDataSetTabSet() == null) return;
-        final Mart currentMart = this.getCurrentDataSetTabSet().getMart();
+        if (this.getSelectedDataSetTabSet() == null) return;
+        final Mart currentMart = this.getSelectedDataSetTabSet().getMart();
         if (this.martXMLFile.get(currentMart) == null) this.saveMartAs();
         else {
             LongProcess.run(this, new Runnable() {
@@ -221,8 +221,8 @@ public class MartTabSet extends JTabbedPane {
      * Saves the schema to a user-specified file.
      */
     public void saveMartAs() {
-        if (this.getCurrentDataSetTabSet() == null) return;
-        Mart currentMart = this.getCurrentDataSetTabSet().getMart();
+        if (this.getSelectedDataSetTabSet() == null) return;
+        Mart currentMart = this.getSelectedDataSetTabSet().getMart();
         if (this.xmlFileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             File saveAsFile = this.xmlFileChooser.getSelectedFile();
             // Skip the rest if they cancelled the save box.

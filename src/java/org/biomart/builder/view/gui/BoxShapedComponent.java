@@ -25,8 +25,8 @@
 package org.biomart.builder.view.gui;
 
 import java.awt.AWTEvent;
-import java.awt.Graphics;
 import java.awt.event.MouseEvent;
+import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
@@ -35,7 +35,7 @@ import javax.swing.JPopupMenu;
  * are provided for sorting them, as they are not comparable within themselves.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 27th April 2006
+ * @version 0.1.3, 5th May 2006
  * @since 0.1
  */
 public abstract class BoxShapedComponent extends JPanel implements DiagramComponent {
@@ -54,9 +54,20 @@ public abstract class BoxShapedComponent extends JPanel implements DiagramCompon
      * object, and associates with a given display.
      */
     public BoxShapedComponent(Object object, Diagram diagram) {
+        super();
         this.object = object;
         this.diagram = diagram;
         this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
+        this.updateAppearance();
+    }
+    
+    /**
+     * Updates the tooltip.
+     */
+    public void updateAppearance() {
+        DiagramModifier mod = this.getDiagram().getDiagramModifier();
+        if (mod != null) mod.customiseAppearance(this, this.getObject()); 
+        this.setBorder(BorderFactory.createLineBorder(this.getForeground()));
     }
     
     /**
@@ -104,15 +115,5 @@ public abstract class BoxShapedComponent extends JPanel implements DiagramCompon
         }
         // Pass it on up if we're not interested.
         if (!eventProcessed) super.processMouseEvent(evt);
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    protected void paintComponent(Graphics g) {
-        // Set up painting of this component.
-        this.getDiagram().getDiagramModifier().customiseColours(this, this.getObject());
-        // Do the painting.
-        super.paintComponent(g);
     }
 }

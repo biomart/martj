@@ -32,7 +32,7 @@ import javax.swing.JPopupMenu;
  * 
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 25th April 2006
+ * @version 0.1.4, 5th May 2006
  * @since 0.1
  */
 public interface DiagramComponent {
@@ -53,4 +53,6 @@ public interface DiagramComponent {
      * @return the popup menu.
      */
     public JPopupMenu getContextMenu();
+    
+    public void updateAppearance();
 }

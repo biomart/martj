@@ -45,7 +45,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
 /**
  * Tools for working with the mart from a GUI or CLI.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 26th April 2006
+ * @version 0.1.2, 5th May 2006
  * @since 0.1
  */
 public class MartUtils {
@@ -72,8 +72,10 @@ public class MartUtils {
         mart.renameDataSet(dataset, newName);
     }
     
-    public static DataSet createDataSet(Mart mart, Table table, String name) throws AssociationException, AlreadyExistsException {
-        return new DataSet(mart, table, name);
+    public static DataSet createDataSet(Mart mart, Table table, String name) throws AssociationException, AlreadyExistsException, SQLException, BuilderException {
+        DataSet dataset = new DataSet(mart, table, name);
+        dataset.synchronise();
+        return dataset;
     }
     
     public static Collection suggestDataSets(Mart mart, Table table, String name) throws AlreadyExistsException {
@@ -153,8 +155,6 @@ public class MartUtils {
     
     public static void maskRelation(DataSet dataset, Relation relation) throws SQLException, BuilderException {
         dataset.maskRelation(relation);
-        dataset.unflagSubclassRelation(relation);
-        dataset.unflagConcatOnlyRelation(relation);
         dataset.synchronise();
     }
     
@@ -165,7 +165,6 @@ public class MartUtils {
     
     public static void subclassRelation(DataSet dataset, Relation relation) throws AssociationException, SQLException, BuilderException {
         dataset.flagSubclassRelation(relation);
-        dataset.unmaskRelation(relation);
         dataset.unflagConcatOnlyRelation(relation);
         dataset.synchronise();
     }
@@ -177,7 +176,6 @@ public class MartUtils {
     
     public static void concatOnlyRelation(DataSet dataset, Relation relation, ConcatRelationType type) throws SQLException, BuilderException {
         dataset.flagConcatOnlyRelation(relation, type);
-        dataset.unmaskRelation(relation);
         dataset.unflagSubclassRelation(relation);
         dataset.synchronise();
     }

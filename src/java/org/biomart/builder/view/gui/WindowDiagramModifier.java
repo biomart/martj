@@ -33,16 +33,19 @@ import javax.swing.JPopupMenu;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
+import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Adapts listener behaviour by adding in DataSet-specific stuff.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 4th May 2006
+ * @version 0.1.5, 5th May 2006
  * @since 0.1
  */
 public class WindowDiagramModifier extends SchemaDiagramModifier {
@@ -87,7 +90,7 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
             rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
             rename.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.getSchemaTabSet().renameSchema(schema, false);
+                    datasetTabSet.getSchemaTabSet().requestRenameSchema(schema, false);
                 }
             });
             contextMenu.add(rename);
@@ -96,7 +99,7 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
             sync.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
             sync.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().getSchemaTabSet().synchroniseSchema(schema);
+                    getDataSetTabSet().getSchemaTabSet().requestSynchroniseSchema(schema);
                 }
             });
             contextMenu.add(sync);
@@ -115,7 +118,7 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
                 test.setMnemonic(BuilderBundle.getString("testSchemaMnemonic").charAt(0));
                 test.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().getSchemaTabSet().testSchema(schema);
+                        getDataSetTabSet().getSchemaTabSet().requestTestSchema(schema);
                     }
                 });
                 contextMenu.add(test);
@@ -124,7 +127,7 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
                 remove.setMnemonic(BuilderBundle.getString("removeSchemaMnemonic").charAt(0));
                 remove.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.getSchemaTabSet().confirmRemoveSchema(schema);
+                        datasetTabSet.getSchemaTabSet().requestRemoveSchema(schema);
                     }
                 });
                 contextMenu.add(remove);
@@ -143,18 +146,23 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
         else if (object instanceof Relation) {
             // Relation stuff
             final Relation relation = (Relation)object;
-            
-            boolean incorrect = relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT);
+            final DataSet ds = this.datasetTabSet.getSelectedDataSetTab().getDataSet();
             
             // Add separator.
-            contextMenu.addSeparator();
+            contextMenu.addSeparator();            
             
-            if (this.datasetTabSet.getCurrentDataSet().getMaskedRelations().contains(relation)) {
+            boolean incorrect = relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT);
+            boolean relationOneToOne = relation.getFKCardinality().equals(Cardinality.ONE);
+            boolean relationMasked = ds.getMaskedRelations().contains(relation);
+            boolean relationConcated = ds.getConcatOnlyRelations().contains(relation);
+            boolean relationSubclassed = ds.getSubclassedRelations().contains(relation);
+            
+            if (relationMasked) {
                 JMenuItem unmask = new JMenuItem(BuilderBundle.getString("unmaskRelationTitle"));
                 unmask.setMnemonic(BuilderBundle.getString("unmaskRelationMnemonic").charAt(0));
                 unmask.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.unmaskRelation(relation);
+                        datasetTabSet.requestUnmaskRelation(ds, relation);
                     }
                 });
                 contextMenu.add(unmask);
@@ -164,45 +172,45 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
                 mask.setMnemonic(BuilderBundle.getString("maskRelationMnemonic").charAt(0));
                 mask.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.maskRelation(relation);
+                        datasetTabSet.requestMaskRelation(ds, relation);
                     }
                 });
                 contextMenu.add(mask);
                 if (incorrect) mask.setEnabled(false);
             }
             
-            if (this.datasetTabSet.getCurrentDataSet().getSubclassedRelations().contains(relation)) {
+            if (relationSubclassed) {
                 JMenuItem unsubclass = new JMenuItem(BuilderBundle.getString("unsubclassRelationTitle"));
                 unsubclass.setMnemonic(BuilderBundle.getString("unsubclassRelationMnemonic").charAt(0));
                 unsubclass.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.unsubclassRelation(relation);
+                        datasetTabSet.requestUnsubclassRelation(ds, relation);
                     }
                 });
                 contextMenu.add(unsubclass);
-                if (incorrect) unsubclass.setEnabled(false);
+                if (incorrect || relationOneToOne || relationMasked || relationConcated) unsubclass.setEnabled(false);
             } else {
                 JMenuItem subclass = new JMenuItem(BuilderBundle.getString("subclassRelationTitle"));
                 subclass.setMnemonic(BuilderBundle.getString("subclassRelationMnemonic").charAt(0));
                 subclass.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.subclassRelation(relation);
+                        datasetTabSet.requestSubclassRelation(ds, relation);
                     }
                 });
                 contextMenu.add(subclass);
-                if (incorrect) subclass.setEnabled(false);
+                if (incorrect || relationOneToOne || relationMasked || relationConcated) subclass.setEnabled(false);
             }
             
-            if (this.datasetTabSet.getCurrentDataSet().getConcatOnlyRelations().contains(relation)) {
+            if (relationConcated) {
                 JMenuItem unconcat = new JMenuItem(BuilderBundle.getString("unconcatOnlyRelationTitle"));
                 unconcat.setMnemonic(BuilderBundle.getString("unconcatOnlyRelationMnemonic").charAt(0));
                 unconcat.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.unconcatOnlyRelation(relation);
+                        datasetTabSet.requestUnconcatOnlyRelation(ds, relation);
                     }
                 });
                 contextMenu.add(unconcat);
-                if (incorrect) unconcat.setEnabled(false);
+                if (incorrect || relationOneToOne || relationMasked || relationSubclassed) unconcat.setEnabled(false);
             } else {
                 JMenu concatMenu = new JMenu(BuilderBundle.getString("concatOnlyRelationTitle"));
                 concatMenu.setMnemonic(BuilderBundle.getString("concatOnlyRelationMnemonic").charAt(0));
@@ -211,7 +219,7 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
                 comma.setMnemonic(BuilderBundle.getString("commaConcatMnemonic").charAt(0));
                 comma.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.concatOnlyRelation(relation, ConcatRelationType.COMMA);
+                        datasetTabSet.requestConcatOnlyRelation(ds, relation, ConcatRelationType.COMMA);
                     }
                 });
                 concatMenu.add(comma);
@@ -220,7 +228,7 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
                 space.setMnemonic(BuilderBundle.getString("spaceConcatMnemonic").charAt(0));
                 space.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.concatOnlyRelation(relation, ConcatRelationType.SPACE);
+                        datasetTabSet.requestConcatOnlyRelation(ds, relation, ConcatRelationType.SPACE);
                     }
                 });
                 concatMenu.add(space);
@@ -229,14 +237,19 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
                 tab.setMnemonic(BuilderBundle.getString("tabConcatMnemonic").charAt(0));
                 tab.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.concatOnlyRelation(relation, ConcatRelationType.TAB);
+                        datasetTabSet.requestConcatOnlyRelation(ds, relation, ConcatRelationType.TAB);
                     }
                 });
                 concatMenu.add(tab);
                 
                 contextMenu.add(concatMenu);
-                if (incorrect) concatMenu.setEnabled(false);
+                if (incorrect || relationOneToOne || relationMasked || relationSubclassed) concatMenu.setEnabled(false);
             }
+        }
+        
+        else if (object instanceof Key) {
+            Table table = ((Key)object).getTable();
+            this.customiseContextMenu(contextMenu, table);
         }
         
         else if (object == null) {
@@ -249,7 +262,7 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
             remove.setMnemonic(BuilderBundle.getString("removeDataSetMnemonic").charAt(0));
             remove.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().confirmRemoveDataSet(dataset);
+                    getDataSetTabSet().requestRemoveDataSet(dataset);
                 }
             });
             contextMenu.add(remove);
@@ -258,7 +271,7 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
             optimise.setMnemonic(BuilderBundle.getString("optimiseDataSetMnemonic").charAt(0));
             optimise.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().optimiseDataSet(dataset);
+                    getDataSetTabSet().requestOptimiseDataSet(dataset);
                 }
             });
             contextMenu.add(optimise);
@@ -267,27 +280,30 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
             rename.setMnemonic(BuilderBundle.getString("renameDataSetMnemonic").charAt(0));
             rename.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().renameDataSet(dataset);
+                    getDataSetTabSet().requestRenameDataSet(dataset);
                 }
             });
             contextMenu.add(rename);
         }
     }
     
-    public void customiseColours(JComponent component, Object object) {
+    public void customiseAppearance(JComponent component, Object object) {
         if (object instanceof Relation) {
+            
+            DataSet ds = this.datasetTabSet.getSelectedDataSetTab().getDataSet();
+            
             Relation relation = (Relation)object;
             // Fade out all INFERRED_INCORRECT and MASKED relations.
             if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT) ||
-                    datasetTabSet.getCurrentDataSet().getMaskedRelations().contains(relation)) {
+                    ds.getMaskedRelations().contains(relation)) {
                 component.setForeground(RelationComponent.FADED_COLOUR);
             }
             // Highlight CONCAT-ONLY relations.
-            else if (datasetTabSet.getCurrentDataSet().getConcatOnlyRelations().contains(relation)) {
+            else if (ds.getConcatOnlyRelations().contains(relation)) {
                 component.setForeground(RelationComponent.CONCAT_COLOUR);
             }
             // Highlight SUBCLASS relations.
-            else if (datasetTabSet.getCurrentDataSet().getSubclassedRelations().contains(relation)) {
+            else if (ds.getSubclassedRelations().contains(relation)) {
                 component.setForeground(RelationComponent.SUBCLASS_COLOUR);
             }
             // All others are normal.

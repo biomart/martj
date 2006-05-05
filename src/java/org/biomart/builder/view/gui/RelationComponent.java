@@ -43,7 +43,7 @@ import org.biomart.builder.model.Relation.Cardinality;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 4th May 2006
+ * @version 0.1.4, 5th May 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
@@ -80,12 +80,12 @@ public class RelationComponent extends JComponent implements DiagramComponent {
     /**
      * Constant defining our 1:M stroke.
      */
-    public static final Stroke ONE_MANY = new BasicStroke(RelationComponent.RELATION_LINEWIDTH);
+    public static final Stroke ONE_MANY = new BasicStroke(RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     
     /**
      * Constant defining our 1:1 stroke.
      */
-    public static final Stroke ONE_ONE = new DoubleStroke(RelationComponent.RELATION_LINEWIDTH);
+    public static final Stroke ONE_ONE = new BasicStroke(RelationComponent.RELATION_LINEWIDTH * 2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     
     /**
      * What do we look like?
@@ -113,19 +113,23 @@ public class RelationComponent extends JComponent implements DiagramComponent {
      * object, and associates with a given display.
      */
     public RelationComponent(Relation relation, Diagram diagram, KeyComponent primaryKey, KeyComponent foreignKey) {
+        super();
         this.relation = relation;
         this.diagram = diagram;
         this.primaryKey = primaryKey;
         this.foreignKey = foreignKey;
         this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
-        this.updateToolTip();
+        this.updateAppearance();
     }
     
     /**
      * Updates the tooltip.
      */
-    public void updateToolTip() {
+    public void updateAppearance() {
         this.setToolTipText(this.relation.getName());
+        DiagramModifier mod = this.getDiagram().getDiagramModifier();
+        if (mod != null) mod.customiseAppearance(this, this.getObject());
+        this.setBackground(this.getForeground());
     }
     
     /**
@@ -209,7 +213,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
             // Build the basic menu.
             JPopupMenu contextMenu = this.getContextMenu();
             // Extend.
-            this.getDiagram().getDiagramModifier().customiseContextMenu(contextMenu, this.getRelation());
+            this.getDiagram().getDiagramModifier().customiseContextMenu(contextMenu, this.getObject());
             // Display.
             contextMenu.show(this, evt.getX(), evt.getY());
             eventProcessed = true;
@@ -230,41 +234,14 @@ public class RelationComponent extends JComponent implements DiagramComponent {
      * {@inheritDoc}
      */
     protected void paintComponent(Graphics g) {
-        // Paint background, if required.
-        if (this.isOpaque()) {
-            g.setColor(this.getBackground());
-            g.fillRect(0, 0, this.getWidth(), this.getHeight());
-        }
         Graphics2D g2d = (Graphics2D)g.create();
         // Do painting of this component.
-        this.getDiagram().getDiagramModifier().customiseColours(this, this.getObject());
+        g2d.setColor(this.getForeground());
         g2d.setStroke(this.getStroke());
         g2d.draw(this.shape);
+        g2d.setColor(this.getBackground());
         g2d.fill(this.shape);
         // Clean up.
         g2d.dispose();
-    }
-    
-    /**
-     * This Stroke implementation applies a BasicStroke to a shape twice. If you
-     * draw with this Stroke, then instead of outlining the shape, you're outlining
-     * the outline of the shape.
-     * Based on an idea from http://www.java2s.com/Code/Java/2D-Graphics-GUI/CustomStrokes.htm
-     */    
-    private static class DoubleStroke implements Stroke {
-        private BasicStroke stroke1, stroke2; // the two strokes to use
-        
-        public DoubleStroke(float width) {
-            this.stroke1 = new BasicStroke(width * 2.0f); 
-            this.stroke2 = new BasicStroke(width / 2.0f); 
-        }
-        
-        public Shape createStrokedShape(Shape s) {
-            // Use the first stroke to create an outline of the shape
-            Shape outline = this.stroke1.createStrokedShape(s);
-            // Use the second stroke to create an outline of that outline.
-            // It is this outline of the outline that will be filled in
-            return this.stroke2.createStrokedShape(outline);
-        }
     }
 }

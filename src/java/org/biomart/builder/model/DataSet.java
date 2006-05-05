@@ -63,7 +63,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * choosing it.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 27th April 2006
+ * @version 0.1.10, 5th May 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -103,11 +103,6 @@ public class DataSet extends GenericSchema {
      * the map are relations, the values are concat types.
      */
     private final Map concatOnlyRelations = new HashMap();
-    
-    /**
-     * Internal reference to whether or not to partition by the {@link SchemaGroup}.
-     */
-    private boolean partitionOnSchema = false;
     
     /**
      * Internal reference to the relations already seen when doing the prediction walk.
@@ -462,27 +457,6 @@ public class DataSet extends GenericSchema {
     }
     
     /**
-     * If the user wishes to partition the main table by the table provider
-     * (only possible if the main table is from a {@link SchemaGroup}) then set
-     * this flag to true. Otherwise, set it to false, which is its default value.
-     * @param partitionOnSchema true if you want to turn this on, false if you want to turn it off.
-     */
-    public void setPartitionOnSchema(boolean partitionOnSchema) {
-        this.partitionOnSchema = partitionOnSchema;
-    }
-    
-    /**
-     * If the user wishes to partition the main table by the table provider
-     * (only possible if the main table is from a {@link SchemaGroup} then this
-     * will return true. Otherwise, false, which is its default value.
-     *
-     * @return true if user wants to turn this on, false if they want to turn it off.
-     */
-    public boolean getPartitionOnSchema() {
-        return this.partitionOnSchema;
-    }
-    
-    /**
      * Synchronise this {@link DataSet} with the {@link Schema} that is
      * providing its tables. Synchronisation means checking the masked {@link Column}
      * and {@link Relation} objects and removing any that have disappeared.
@@ -687,10 +661,14 @@ public class DataSet extends GenericSchema {
                         // If real column not obtained directly from original main table, ie. is from another table or a copy
                         // of the main table obtained by linking to itself via some other route, create child column for it
                         // add it to child table PK. We test for where the column came from by looking at its providing
-                        // relation - if null, then it was on the original table or subclass table, if not null,
-                        // then it came from somewhere else.
-                        constructedFKColumn = new WrappedColumn(parentRealTableColumn, datasetTable, linkbackRelation);
-                        constructedPKColumns.add(constructedFKColumn);
+                        // relation - if null, then it was on the original table, if not null then it is a column inherited from
+                        // the parent of the subclass or dimension table. So, we look the column up by name to see if it is
+                        // already defined. If it is, we reuse it. If not, we create a new wrapped column for it.
+                        constructedFKColumn = (DataSetColumn)datasetTable.getColumnByName(parentDatasetTableColumn.getName());
+                        if (constructedFKColumn == null) {
+                            constructedFKColumn = new WrappedColumn(parentRealTableColumn, datasetTable, linkbackRelation);
+                            constructedPKColumns.add(constructedFKColumn);
+                        }
                     } else {
                         // Else follow original relation FK end and find real child column and associated child column
                         int parentRealPKColPos = parentRealTable.getPrimaryKey().getColumns().indexOf(parentRealTableColumn);
@@ -1235,7 +1213,7 @@ public class DataSet extends GenericSchema {
             Set cols = new HashSet();
             for (Iterator i = this.getColumns().iterator(); i.hasNext(); ) {
                 DataSetColumn c = (DataSetColumn)i.next();
-                if (c instanceof SchemaNameColumn && ((DataSet)this.getSchema()).getPartitionOnSchema()) {
+                if (c instanceof SchemaNameColumn) {
                     cols.add(c);
                 } else if (c instanceof WrappedColumn) {
                     WrappedColumn wc = (WrappedColumn)c;

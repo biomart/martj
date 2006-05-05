@@ -42,10 +42,17 @@ import org.biomart.builder.model.Table;
  * are provided for sorting them, as they are not comparable within themselves.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 2nd May 2006
+ * @version 0.1.4, 5th May 2006
  * @since 0.1
  */
 public class TableComponent extends BoxShapedComponent {
+    /**
+     * Colours
+     */
+    public static final Color SUBCLASS_COLOUR = Color.RED;
+    public static final Color DIMENSION_COLOUR = Color.BLUE;
+    public static final Color NORMAL_COLOUR = Color.BLACK;
+    
     /**
      * A map of keys to key components.
      */
@@ -59,8 +66,6 @@ public class TableComponent extends BoxShapedComponent {
         super(table, diagram);
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         // Create the border and set up the colors and fonts.
-        this.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        this.setForeground(Color.BLACK);
         this.setBackground(Color.PINK);
         // Add the label.
         JLabel label = new JLabel(table.getName());
@@ -102,9 +107,9 @@ public class TableComponent extends BoxShapedComponent {
      */
     public JPopupMenu getContextMenu() {
         JPopupMenu contextMenu = super.getContextMenu();
-        // Extend it for this table here.
-        contextMenu.addSeparator();
-        contextMenu.add(new JMenuItem("Hello from "+this.getTable()));
+       
+        // Nothing to add, yet.
+        
         // Return it. Will be further adapted by a listener elsewhere.
         return contextMenu;
     }

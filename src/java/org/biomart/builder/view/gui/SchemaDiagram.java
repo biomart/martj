@@ -25,9 +25,7 @@
 package org.biomart.builder.view.gui;
 
 import java.awt.Color;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
@@ -37,7 +35,7 @@ import org.biomart.builder.model.Schema;
  * Displays the contents of a {@link Schema} in graphical form.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 4th May 2006
+ * @version 0.1.9, 5th May 2006
  * @since 0.1
  */
 public class SchemaDiagram extends Diagram {
@@ -61,7 +59,7 @@ public class SchemaDiagram extends Diagram {
         super(datasetTabSet);
         this.setBackground(SchemaDiagram.BACKGROUND_COLOUR);
         this.schema = schema;
-        this.synchroniseDiagram();
+        this.recalculateDiagram();
     }
     
     /**
@@ -90,16 +88,13 @@ public class SchemaDiagram extends Diagram {
      * {@inheritDoc}
      * Resyncs the table providers with the contents of the set.
      */
-    public void synchroniseDiagram() {
+    public void recalculateDiagram() {
         this.removeAll();
-        // Make a set of all relations on this table provider.
-        Map keyComponents = new HashMap();
         // Add a TableComponent for each table.
         for (Iterator i = this.getSchema().getTables().iterator(); i.hasNext(); ) {
             Table table = (Table)i.next();
             TableComponent tableComponent = new TableComponent(table, this);
-            this.add(tableComponent);
-            keyComponents.putAll(tableComponent.getKeyComponents());
+            this.addDiagramComponent(tableComponent);
         }
         // Add a RelationComponent for each relation.
         for (Iterator i = this.getSchema().getInternalRelations().iterator(); i.hasNext(); ) {
@@ -107,9 +102,9 @@ public class SchemaDiagram extends Diagram {
             RelationComponent relationComponent = new RelationComponent(
                     relation,
                     this,
-                    (KeyComponent)keyComponents.get(relation.getPrimaryKey()),
-                    (KeyComponent)keyComponents.get(relation.getForeignKey()));
-            this.add(relationComponent);
+                    (KeyComponent)this.getDiagramComponent(relation.getPrimaryKey()),
+                    (KeyComponent)this.getDiagramComponent(relation.getForeignKey()));
+            this.addDiagramComponent(relationComponent);
         }
         // Delegate upwards.
         this.resizeDisplay();

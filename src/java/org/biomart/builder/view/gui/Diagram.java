@@ -26,14 +26,17 @@ package org.biomart.builder.view.gui;
 
 import java.awt.AWTEvent;
 import java.awt.event.MouseEvent;
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
 /**
  * Displays arbitrary objects linked in a radial form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 4th May 2006
+ * @version 0.1.8, 5th May 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {    
@@ -47,6 +50,8 @@ public abstract class Diagram extends JPanel {
      */
     protected DataSetTabSet datasetTabSet;
     
+    private Map componentMap = new HashMap();
+    
     /**
      * Creates a new instance of Diagram.
      */
@@ -56,6 +61,25 @@ public abstract class Diagram extends JPanel {
         this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
         // Business stuff.
         this.datasetTabSet = datasetTabSet;
+    }
+
+    public void removeAll() {
+        super.removeAll();
+        this.componentMap.clear();
+    }
+
+    public void addDiagramComponent(DiagramComponent component) {
+        this.componentMap.put(component.getObject(), component);
+        if (component instanceof TableComponent) {
+            this.componentMap.putAll(((TableComponent)component).getKeyComponents());
+        } else if (component instanceof SchemaComponent) {
+            this.componentMap.putAll(((SchemaComponent)component).getKeyComponents());
+        }
+        super.add((JComponent)component);
+    }
+    
+    public DiagramComponent getDiagramComponent(Object object) {
+        return (DiagramComponent) this.componentMap.get(object);
     }
     
     /**
@@ -96,6 +120,9 @@ public abstract class Diagram extends JPanel {
      */
     public void setDiagramModifier(DiagramModifier adaptor) {
         this.diagramModifier = adaptor;
+        for (Iterator i = this.componentMap.values().iterator(); i.hasNext(); ) {
+            ((DiagramComponent)i.next()).updateAppearance();
+        }
     }
     
     /**
@@ -103,6 +130,14 @@ public abstract class Diagram extends JPanel {
      */
     public DiagramModifier getDiagramModifier() {
         return this.diagramModifier;
+    }
+    
+    public abstract void recalculateDiagram();
+    
+    public void redrawDiagramComponent(Object object) {
+        DiagramComponent comp = (DiagramComponent)this.componentMap.get(object);
+        comp.updateAppearance();
+        ((JComponent)comp).repaint();
     }
     
     /**

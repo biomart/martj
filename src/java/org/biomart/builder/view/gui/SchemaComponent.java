@@ -31,7 +31,6 @@ import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -47,7 +46,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 2nd May 2006
+ * @version 0.1.4, 5th May 2006
  * @since 0.1
  */
 public class SchemaComponent extends BoxShapedComponent {
@@ -64,8 +63,6 @@ public class SchemaComponent extends BoxShapedComponent {
         super(schema, diagram);
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         // Create the border and set up the colors and fonts.
-        this.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        this.setForeground(Color.BLACK);
         this.setBackground(Color.PINK);
         // Add the label.
         JLabel label = new JLabel(schema.getName());
@@ -184,7 +181,7 @@ public class SchemaComponent extends BoxShapedComponent {
             renameM.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
             renameM.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDiagram().getDataSetTabSet().getSchemaTabSet().renameSchema(schema, true);
+                    getDiagram().getDataSetTabSet().getSchemaTabSet().requestRenameSchema(schema, true);
                 }
             });
             schemaMenu.add(renameM);
@@ -202,7 +199,7 @@ public class SchemaComponent extends BoxShapedComponent {
             testM.setMnemonic(BuilderBundle.getString("testSchemaMnemonic").charAt(0));
             testM.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDiagram().getDataSetTabSet().getSchemaTabSet().testSchema(schema);
+                    getDiagram().getDataSetTabSet().getSchemaTabSet().requestTestSchema(schema);
                 }
             });
             schemaMenu.add(testM);
@@ -211,7 +208,7 @@ public class SchemaComponent extends BoxShapedComponent {
             unGroup.setMnemonic(BuilderBundle.getString("ungroupMemberMnemonic").charAt(0));
             unGroup.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDiagram().getDataSetTabSet().getSchemaTabSet().confirmRemoveSchemaFromSchemaGroup(schema, getSchemaGroup());
+                    getDiagram().getDataSetTabSet().getSchemaTabSet().requestRemoveSchemaFromSchemaGroup(schema, getSchemaGroup());
                 }
             });
             schemaMenu.add(unGroup);

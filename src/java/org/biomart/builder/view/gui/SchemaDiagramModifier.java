@@ -41,7 +41,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Provides the default behaviour for table provider listeners.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 4th May 2006
+ * @version 0.1.8, 5th May 2006
  * @since 0.1
  */
 public class SchemaDiagramModifier implements DiagramModifier {
@@ -82,7 +82,7 @@ public class SchemaDiagramModifier implements DiagramModifier {
             create.setMnemonic(BuilderBundle.getString("createDataSetMnemonic").charAt(0));
             create.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.createDataSet(table);
+                    datasetTabSet.requestCreateDataSet(table);
                 }
             });
             contextMenu.add(create);
@@ -91,7 +91,7 @@ public class SchemaDiagramModifier implements DiagramModifier {
             suggest.setMnemonic(BuilderBundle.getString("suggestDataSetsMnemonic").charAt(0));
             suggest.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.suggestDataSets(table);
+                    datasetTabSet.requestSuggestDataSets(table);
                 }
             });
             contextMenu.add(suggest);
@@ -106,7 +106,7 @@ public class SchemaDiagramModifier implements DiagramModifier {
             rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
             rename.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.getSchemaTabSet().renameSchema(schema, false);
+                    datasetTabSet.getSchemaTabSet().requestRenameSchema(schema, false);
                 }
             });
             contextMenu.add(rename);
@@ -115,7 +115,7 @@ public class SchemaDiagramModifier implements DiagramModifier {
             sync.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
             sync.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().getSchemaTabSet().synchroniseSchema(schema);
+                    getDataSetTabSet().getSchemaTabSet().requestSynchroniseSchema(schema);
                 }
             });
             contextMenu.add(sync);
@@ -134,7 +134,7 @@ public class SchemaDiagramModifier implements DiagramModifier {
                 test.setMnemonic(BuilderBundle.getString("testSchemaMnemonic").charAt(0));
                 test.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().getSchemaTabSet().testSchema(schema);
+                        getDataSetTabSet().getSchemaTabSet().requestTestSchema(schema);
                     }
                 });
                 contextMenu.add(test);
@@ -143,7 +143,7 @@ public class SchemaDiagramModifier implements DiagramModifier {
                 remove.setMnemonic(BuilderBundle.getString("removeSchemaMnemonic").charAt(0));
                 remove.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.getSchemaTabSet().confirmRemoveSchema(schema);
+                        datasetTabSet.getSchemaTabSet().requestRemoveSchema(schema);
                     }
                 });
                 contextMenu.add(remove);
@@ -164,26 +164,30 @@ public class SchemaDiagramModifier implements DiagramModifier {
             final Relation relation = (Relation)object;
             contextMenu.addSeparator();
             
+            boolean relationIncorrect = relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT);
+            
             if (relation.getFKCardinality().equals(Cardinality.MANY)) {
                 // one:one
                 JMenuItem oneToOne = new JMenuItem(BuilderBundle.getString("oneToOneTitle"));
                 oneToOne.setMnemonic(BuilderBundle.getString("oneToOneMnemonic").charAt(0));
                 oneToOne.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.changeRelationCardinality(relation, Cardinality.ONE);
+                        datasetTabSet.requestChangeRelationCardinality(relation, Cardinality.ONE);
                     }
                 });
                 contextMenu.add(oneToOne);
+                if (relationIncorrect) oneToOne.setEnabled(false);
             } else if (relation.getFKCardinality().equals(Cardinality.ONE)) {
                 // one:many
                 JMenuItem oneToMany = new JMenuItem(BuilderBundle.getString("oneToManyTitle"));
                 oneToMany.setMnemonic(BuilderBundle.getString("oneToManyMnemonic").charAt(0));
                 oneToMany.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.changeRelationCardinality(relation, Cardinality.MANY);
+                        datasetTabSet.requestChangeRelationCardinality(relation, Cardinality.MANY);
                     }
                 });
                 contextMenu.add(oneToMany);
+                if (relationIncorrect) oneToMany.setEnabled(true);
             }
             
             if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) {
@@ -192,7 +196,7 @@ public class SchemaDiagramModifier implements DiagramModifier {
                 correct.setMnemonic(BuilderBundle.getString("correctRelationMnemonic").charAt(0));
                 correct.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.changeRelationStatus(relation, ComponentStatus.INFERRED);
+                        datasetTabSet.requestChangeRelationStatus(relation, ComponentStatus.INFERRED);
                     }
                 });
                 contextMenu.add(correct);
@@ -202,7 +206,7 @@ public class SchemaDiagramModifier implements DiagramModifier {
                 incorrect.setMnemonic(BuilderBundle.getString("incorrectRelationMnemonic").charAt(0));
                 incorrect.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.changeRelationStatus(relation, ComponentStatus.INFERRED_INCORRECT);
+                        datasetTabSet.requestChangeRelationStatus(relation, ComponentStatus.INFERRED_INCORRECT);
                     }
                 });
                 contextMenu.add(incorrect);
@@ -212,15 +216,20 @@ public class SchemaDiagramModifier implements DiagramModifier {
                 incorrect.setMnemonic(BuilderBundle.getString("removeRelationMnemonic").charAt(0));
                 incorrect.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.removeRelation(relation);
+                        datasetTabSet.requestRemoveRelation(relation);
                     }
                 });
                 contextMenu.add(incorrect);
             }
         }
+        
+        else if (object instanceof Key) {
+            Table table = ((Key)object).getTable();
+            this.customiseContextMenu(contextMenu, table);
+        }
     }
     
-    public void customiseColours(JComponent component, Object object) {
+    public void customiseAppearance(JComponent component, Object object) {
         if (object instanceof Relation) {
             Relation relation = (Relation)object;
             // Fade out all INFERRED_INCORRECT relations.

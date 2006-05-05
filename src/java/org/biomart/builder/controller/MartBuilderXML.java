@@ -88,7 +88,7 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 2nd May 2006
+ * @version 0.1.5, 5th May 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -545,12 +545,10 @@ public class MartBuilderXML extends DefaultHandler {
             try {
                 String name = (String)attributes.get("name");
                 Table centralTable = (Table)this.mappedObjects.get(attributes.get("centralTableId"));
-                boolean partitionOnSchema = ((String)attributes.get("partitionOnSchema")).equals("true");
                 String optType = (String)attributes.get("optimiser");
                 MartConstructor mc = (MartConstructor)this.mappedObjects.get(attributes.get("martConstructorId"));
                 
                 DataSet ds = new DataSet(this.constructedMart, centralTable, name);
-                ds.setPartitionOnSchema(partitionOnSchema);
                 DataSetOptimiserType opt = null;
                 if ("NONE".equals(optType)) opt = DataSetOptimiserType.NONE;
                 else if ("LEFTJOIN".equals(optType)) opt = DataSetOptimiserType.LEFTJOIN;
@@ -908,7 +906,6 @@ public class MartBuilderXML extends DefaultHandler {
             this.openElement("dataset");
             this.writeAttribute("name",ds.getName());
             this.writeAttribute("centralTableId",(String)this.reverseMappedObjects.get(ds.getCentralTable()));
-            this.writeAttribute("partitionOnSchema",ds.getPartitionOnSchema()?"true":"false");
             this.writeAttribute("alt",ds.getCentralTable().toString());
             this.writeAttribute("optimiser",ds.getDataSetOptimiserType().getName());
             this.writeAttribute("martConstructorId",(String)this.reverseMappedObjects.get(ds.getMartConstructor()));

@@ -40,6 +40,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import org.biomart.builder.controller.MartUtils;
 import org.biomart.builder.exceptions.ValidationException;
+import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.resources.BuilderBundle;
@@ -48,7 +49,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Displays the contents of multiple {@link Schema}s in graphical form.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 27th April 2006
+ * @version 0.1.4, 5th May 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -86,7 +87,14 @@ public class SchemaTabSet extends JTabbedPane {
         scroller.getViewport().setBackground(this.allSchemasDiagram.getBackground());
         this.addTab(BuilderBundle.getString("multiSchemaOverviewTab"), scroller);
         // Synchronise ourselves.
-        this.synchroniseTabs();
+        this.recalculateSchemaTabs();
+    }
+    
+    public void redrawRelationDiagramComponent(Relation relation) {
+        Schema pkSchema = relation.getPrimaryKey().getTable().getSchema();
+        Schema fkSchema = relation.getForeignKey().getTable().getSchema();
+        if (pkSchema.equals(fkSchema)) ((Diagram)this.schemaToDiagram.get(pkSchema)).redrawDiagramComponent(relation);
+        else this.allSchemasDiagram.redrawDiagramComponent(relation);
     }
     
     /**
@@ -99,7 +107,7 @@ public class SchemaTabSet extends JTabbedPane {
     /**
      * Makes sure we are displaying the correct set of table providers.
      */
-    public void synchroniseTabs() {
+    public void recalculateSchemaTabs() {
         // Add all table providers that we don't have yet.
         List martSchemas = new ArrayList(datasetTabSet.getMart().getSchemas());
         for (Iterator i = martSchemas.iterator(); i.hasNext(); ) {
@@ -113,12 +121,12 @@ public class SchemaTabSet extends JTabbedPane {
             if (!martSchemas.contains(schema)) removeSchemaTab(schema);
         }
         // Synchronise our overview tab.
-        allSchemasDiagram.synchroniseDiagram();
+        this.allSchemasDiagram.recalculateDiagram();
         // Synchronise our tab view contents.
         for (int i = 1; i < getTabCount(); i++) {
             JScrollPane scroller = (JScrollPane)getComponentAt(i);
             SchemaDiagram tableDiagram = (SchemaDiagram)scroller.getViewport().getView();
-            tableDiagram.synchroniseDiagram();
+            tableDiagram.recalculateDiagram();
         }
         // Redraw.
         validate();
@@ -136,8 +144,8 @@ public class SchemaTabSet extends JTabbedPane {
                 try {
                     if (schema != null) {
                         MartUtils.addSchemaToMart(datasetTabSet.getMart(), schema);
-                        synchroniseSchema(schema);
-                        synchroniseTabs();
+                        requestSynchroniseSchema(schema);
+                        addSchemaTab(schema);
                         datasetTabSet.getMartTabSet().setModifiedStatus(true);
                     }
                 } catch (Throwable t) {
@@ -186,7 +194,7 @@ public class SchemaTabSet extends JTabbedPane {
                     public void run() {
                         try {
                             SchemaGroup group = MartUtils.addSchemaToSchemaGroup(datasetTabSet.getMart(), schema, groupNameRef);
-                            datasetTabSet.synchroniseTabs(); // Some datasets may disappear.
+                            datasetTabSet.recalculateDataSetTabs(); // Some datasets may disappear. It'll call us.recalculateDataSetTabs() later.
                             datasetTabSet.getMartTabSet().setModifiedStatus(true);
                         } catch (Throwable t) {
                             datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
@@ -225,13 +233,13 @@ public class SchemaTabSet extends JTabbedPane {
         this.schemaToDiagram.put(schema, schemaDiagram);
         // Set the diagramModifier on the view.
         schemaDiagram.setDiagramModifier(this.getDiagramModifier());
-        this.allSchemasDiagram.synchroniseDiagram();
+        this.allSchemasDiagram.recalculateDiagram();
     }
     
     /**
      * Confirms with user then removes a table provider.
      */
-    public void confirmRemoveSchema(final Schema schema) {
+    public void requestRemoveSchema(final Schema schema) {
         // Must confirm action first.
         int choice = JOptionPane.showConfirmDialog(
                 this,
@@ -244,7 +252,7 @@ public class SchemaTabSet extends JTabbedPane {
                 public void run() {
                     try {
                         MartUtils.removeSchemaFromMart(datasetTabSet.getMart(), schema);
-                        datasetTabSet.synchroniseTabs(); // Some datasets may disappear.
+                        datasetTabSet.recalculateDataSetTabs(); // Some datasets may disappear. It'll call us.recalculateDataSetTabs() later.
                         datasetTabSet.getMartTabSet().setModifiedStatus(true);
                     } catch (Throwable t) {
                         datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
@@ -254,7 +262,7 @@ public class SchemaTabSet extends JTabbedPane {
         }
     }
     
-    public void confirmRemoveSchemaFromSchemaGroup(final Schema schema, final SchemaGroup schemaGroup) {
+    public void requestRemoveSchemaFromSchemaGroup(final Schema schema, final SchemaGroup schemaGroup) {
         // Must confirm action first.
         int choice = JOptionPane.showConfirmDialog(
                 this,
@@ -267,7 +275,7 @@ public class SchemaTabSet extends JTabbedPane {
                 public void run() {
                     try {
                         MartUtils.removeSchemaFromSchemaGroup(datasetTabSet.getMart(), schema, schemaGroup);
-                        datasetTabSet.synchroniseTabs(); // Some datasets may disappear.
+                        datasetTabSet.recalculateDataSetTabs(); // Some datasets may disappear. It'll call us.recalculateDataSetTabs() later.
                         datasetTabSet.getMartTabSet().setModifiedStatus(true);
                     } catch (Throwable t) {
                         datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
@@ -289,7 +297,7 @@ public class SchemaTabSet extends JTabbedPane {
     /**
      * Prompt for a name for a window.
      */
-    private String getSchemaName(String defaultResponse) {
+    private String askUserForSchemaName(String defaultResponse) {
         // Get one from user.
         String name = (String)JOptionPane.showInputDialog(
                 this.datasetTabSet.getMartTabSet().getMartBuilder(),
@@ -310,14 +318,14 @@ public class SchemaTabSet extends JTabbedPane {
     /**
      * Renames a table provider (and tab).
      */
-    public void renameSchema(Schema schema, boolean isInGroup) {
+    public void requestRenameSchema(Schema schema, boolean isInGroup) {
         // Update the table provider name and the tab name.
         try {
-            String newName = this.getSchemaName(schema.getName());
+            String newName = this.askUserForSchemaName(schema.getName());
             if (newName != null && !newName.equals(schema.getName())) {
                 if (isInGroup) {
                     MartUtils.renameSchemaInSchemaGroup(schema, newName);
-                    this.allSchemasDiagram.synchroniseDiagram();
+                    this.allSchemasDiagram.recalculateDiagram();
                 } else {
                     int tabIndex = this.indexOfTab(schema.getName());
                     MartUtils.renameSchema(this.datasetTabSet.getMart(), schema, newName);
@@ -333,12 +341,12 @@ public class SchemaTabSet extends JTabbedPane {
     /**
      * Syncs this table provider individually against the database.
      */
-    public void synchroniseSchema(final Schema schema) {
+    public void requestSynchroniseSchema(final Schema schema) {
         LongProcess.run(this, new Runnable() {
             public void run() {
                 try {
                     MartUtils.synchroniseSchema(schema);
-                    datasetTabSet.synchroniseTabs(); // Some datasets may disappear.
+                    datasetTabSet.recalculateDataSetTabs(); // Some datasets may disappear. It'll call us.recalculateDataSetTabs() later.
                     datasetTabSet.getMartTabSet().setModifiedStatus(true);
                 } catch (Throwable t) {
                     datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
@@ -350,12 +358,12 @@ public class SchemaTabSet extends JTabbedPane {
     /**
      * Synchronises the mart.
      */
-    public void synchroniseAllSchemas() {
+    public void requestSynchroniseAllSchemas() {
         LongProcess.run(this, new Runnable() {
             public void run() {
                 try {
                     MartUtils.synchroniseMartSchemas(datasetTabSet.getMart());
-                    synchroniseTabs();
+                    recalculateSchemaTabs();
                     datasetTabSet.getMartTabSet().setModifiedStatus(true);
                 } catch (Throwable t) {
                     datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
@@ -367,7 +375,7 @@ public class SchemaTabSet extends JTabbedPane {
     /**
      * Test this table provider individually against the database.
      */
-    public void testSchema(Schema schema) {
+    public void requestTestSchema(Schema schema) {
         boolean passedTest = false;
         try {
             passedTest = MartUtils.testSchema(schema);
@@ -404,7 +412,7 @@ public class SchemaTabSet extends JTabbedPane {
         close.setMnemonic(BuilderBundle.getString("removeSchemaMnemonic").charAt(0));
         close.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                confirmRemoveSchema(schema);
+                requestRemoveSchema(schema);
             }
         });
         contextMenu.add(close);
@@ -413,7 +421,7 @@ public class SchemaTabSet extends JTabbedPane {
         rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
         rename.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                renameSchema(schema, false);
+                requestRenameSchema(schema, false);
             }
         });
         contextMenu.add(rename);

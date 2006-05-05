@@ -28,10 +28,8 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Relation;
@@ -41,7 +39,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * This class deals with drawing an overview of all the table providers.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 2nd May 2006
+ * @version 0.1.6, 5th May 2006
  * @since 0.1
  */
 public class AllSchemasDiagram extends Diagram {
@@ -57,7 +55,7 @@ public class AllSchemasDiagram extends Diagram {
     public AllSchemasDiagram(DataSetTabSet datasetTabSet) {
         super(datasetTabSet);
         this.setBackground(AllSchemasDiagram.BACKGROUND_COLOUR);
-        this.synchroniseDiagram();
+        this.recalculateDiagram();
     }
     
     /**
@@ -71,7 +69,7 @@ public class AllSchemasDiagram extends Diagram {
         sync.setMnemonic(BuilderBundle.getString("synchroniseAllSchemasMnemonic").charAt(0));
         sync.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                getDataSetTabSet().getSchemaTabSet().synchroniseAllSchemas();
+                getDataSetTabSet().getSchemaTabSet().requestSynchroniseAllSchemas();
             }
         });
         contextMenu.add(sync);
@@ -93,18 +91,16 @@ public class AllSchemasDiagram extends Diagram {
      * {@inheritDoc}
      * Resyncs the table providers with the contents of the set.
      */
-    public void synchroniseDiagram() {
+    public void recalculateDiagram() {
         this.removeAll();
         // Make a set of all relations on this table provider.
         List relations = new ArrayList();
-        Map keyComponents = new HashMap();
         // Add a TableComponent for each table.
         for (Iterator i = this.getDataSetTabSet().getMart().getSchemas().iterator(); i.hasNext(); ) {
             Schema schema = (Schema)i.next();
             SchemaComponent schemaComponent = new SchemaComponent(schema, this);
-            this.add(schemaComponent);
+            this.addDiagramComponent(schemaComponent);
             relations.addAll(schema.getExternalRelations());
-            keyComponents.putAll(schemaComponent.getKeyComponents());
         }
         // Add a RelationComponent for each relation.
         for (Iterator i = relations.iterator(); i.hasNext(); ) {
@@ -112,9 +108,9 @@ public class AllSchemasDiagram extends Diagram {
             RelationComponent relationComponent = new RelationComponent(
                     relation,
                     this,
-                    (KeyComponent)keyComponents.get(relation.getPrimaryKey()),
-                    (KeyComponent)keyComponents.get(relation.getForeignKey()));
-            this.add(relationComponent);
+                    (KeyComponent)this.getDiagramComponent(relation.getPrimaryKey()),
+                    (KeyComponent)this.getDiagramComponent(relation.getForeignKey()));
+            this.addDiagramComponent(relationComponent);
         }
         // Delegate upwards.
         this.resizeDisplay();
