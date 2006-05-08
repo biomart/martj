@@ -3960,6 +3960,7 @@ public int templateCount(String template) throws ConfigurationException{
 					String pushField = fd2.getField();
 					String pushColForDisplay = fd2.getColForDisplay();
 					String pushInternalName = fd2.getInternalName();
+					pushInternalName = pushInternalName.split("\\.")[0]+"__"+pushInternalName.split("\\.")[1];
 					String pushTableName = fd2.getTableConstraint();
 
 					if (pushTableName.equals("main")) {
@@ -4033,6 +4034,7 @@ public int templateCount(String template) throws ConfigurationException{
 				 	String pushField = fd2.getField();
 					String pushColForDisplay = fd2.getColForDisplay();
 					 String pushInternalName = fd2.getInternalName();
+					pushInternalName = pushInternalName.split("\\.")[0]+"__"+pushInternalName.split("\\.")[1];
 				 	String pushTableName = fd2.getTableConstraint();
 
 					 if (pushTableName.equals("main")) {
@@ -5616,6 +5618,7 @@ public int templateCount(String template) throws ConfigurationException{
     String pushField = fd2.getField();
 	String pushColForDisplay = fd2.getColForDisplay();
     String pushInternalName = fd2.getInternalName();
+	pushInternalName = pushInternalName.split("\\.")[0]+"__"+pushInternalName.split("\\.")[1];
     String pushTableName = fd2.getTableConstraint();
 
 	if (pushTableName.equals("main")){

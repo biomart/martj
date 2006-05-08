@@ -874,7 +874,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 
 		String pushField = fd2.getField();
 		String pushColForDisplay = fd2.getColForDisplay();
-		String pushInternalName = fd2.getInternalName();
+		String pushInternalName = fd2.getInternalName();// used for ref name in PushAction
+		pushInternalName = pushInternalName.split("\\.")[0]+"__"+pushInternalName.split("\\.")[1];
 		String pushTableName = fd2.getTableConstraint();
 
 		if (pushTableName != null && pushTableName.equals("main")) {
@@ -900,7 +901,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				String[] otherFilters = fd1.getOtherFilters().split(";");
 				fd2 = null;
 				for (int p = 0; p < otherFilters.length; p++){
-					otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(null,otherFilters[p].split("\\.")[0],"",MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);  
+					otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(null,
+						otherFilters[p].split("\\.")[0],"",MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);  
 					MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigDocumentByDatasetID(null,otherFilters[p].split("\\.")[0],otherDataset.getDatasetID(),MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]));
 					if (otherDataset.containsFilterDescription(filter2))
 							fd2 = otherDataset.getFilterDescriptionByInternalName(filter2);
@@ -912,7 +914,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				fd2.setType("drop_down_basic_filter");
 				pushField = fd2.getField();
 				pushColForDisplay = fd2.getColForDisplay();
-				pushInternalName = fd2.getInternalName();
+				//pushInternalName = fd2.getInternalName();// keep original full name
 				pushTableName = fd2.getTableConstraint();
 
 				if (pushTableName.equals("main")) {
@@ -951,7 +953,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					}
 					fd2.setType("drop_down_basic_filter");
 					pushField = fd2.getField();
-					pushInternalName = fd2.getInternalName();
+					//pushInternalName = fd2.getInternalName();// keep original full name instead
 					pushTableName = fd2.getTableConstraint();
 					pushColForDisplay = fd2.getColForDisplay();
 
