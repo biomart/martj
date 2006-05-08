@@ -60,7 +60,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Construct a new table provider based on user input.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 3rd May 2006
+ * @version 0.1.2, 8th May 2006
  * @since 0.1
  */
 public class JDBCConnectionPanel extends ConnectionPanel implements ActionListener {
@@ -179,8 +179,8 @@ public class JDBCConnectionPanel extends ConnectionPanel implements ActionListen
         // execute all the buttons and fields with their labels to the dialog
         JLabel label = new JLabel(BuilderBundle.getString("copySettingsLabel"));
         gridBag.setConstraints(label, labelConstraints);
+        this.add(label);
         JPanel field = new JPanel();
-        field.add(label);
         field.add(this.copysettings);
         gridBag.setConstraints(field, fieldConstraints);
         this.add(field);
@@ -190,13 +190,8 @@ public class JDBCConnectionPanel extends ConnectionPanel implements ActionListen
         this.add(label);
         field = new JPanel();
         field.add(this.keyguessing);
-        gridBag.setConstraints(field, fieldConstraints);
-        this.add(field);
-        
         label = new JLabel(BuilderBundle.getString("driverClassLabel"));
-        gridBag.setConstraints(label, labelConstraints);
-        this.add(label);
-        field = new JPanel();
+        field.add(label);
         field.add(this.driverClass);
         gridBag.setConstraints(field, fieldConstraints);
         this.add(field);
@@ -368,7 +363,7 @@ public class JDBCConnectionPanel extends ConnectionPanel implements ActionListen
                 String url = this.jdbcURL.getText();
                 String username = this.username.getText();
                 String password = new String(this.password.getPassword());
-                return MartUtils.createJDBCSchema(
+                JDBCSchema schema = MartUtils.createJDBCSchema(
                         driverClassLocation == null ? null : new File(driverClassLocation),
                         driverClassName,
                         url,
@@ -377,6 +372,32 @@ public class JDBCConnectionPanel extends ConnectionPanel implements ActionListen
                         name,
                         keyguessing
                         );
+                // Check keyguessing.
+                if (!schema.hasForeignKeyDMD() && !keyguessing) {
+                    // Suggest turning keyguessing on.
+                    int choice = JOptionPane.showConfirmDialog(this,
+                            BuilderBundle.getString("askTurnKeyguessingOn"),
+                            BuilderBundle.getString("questionTitle"),
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.QUESTION_MESSAGE);
+                    if (choice==JOptionPane.YES_OPTION) {
+                        this.keyguessing.setSelected(true);
+                        schema.setKeyGuessing(true);
+                    }
+                } else if (schema.hasForeignKeyDMD() && keyguessing) {
+                    // Suggest turning keyguessing off.
+                    int choice = JOptionPane.showConfirmDialog(this,
+                            BuilderBundle.getString("askTurnKeyguessingOff"),
+                            BuilderBundle.getString("questionTitle"),
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.QUESTION_MESSAGE);
+                    if (choice==JOptionPane.YES_OPTION) {
+                        this.keyguessing.setSelected(false);
+                        schema.setKeyGuessing(false);
+                    }
+                }
+                // Return the schema.
+                return schema;
             } catch (Throwable t) {
                 this.schemaTabSet.getDataSetTabSet().getMartTabSet().getMartBuilder().showStackTrace(t);
             }

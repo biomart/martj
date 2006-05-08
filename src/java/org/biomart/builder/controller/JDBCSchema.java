@@ -71,7 +71,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * the primary key column to which they refer, optionally appended with '_key'.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 27th April 2006
+ * @version 0.1.4, 8th May 2006
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -154,6 +154,28 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
         tables.close();
         // If we get here, it worked.
         return true;
+    }
+    
+    public boolean hasForeignKeyDMD() throws AssociationException, SQLException {
+        Connection connection = this.getConnection();
+        // If we have no connection, we can't test it!
+        if (connection == null) return false;
+        // Get the metadata.
+        DatabaseMetaData dmd = connection.getMetaData();
+        // Open a DMD foreign key query.
+        String catalog = this.getConnection().getCatalog();
+        String schema = dmd.getUserName();
+        ResultSet tables = dmd.getTables(catalog, schema, "%", null);
+        boolean foundFK = false;
+        while (tables.next() && !foundFK) {
+            String dbTableName = tables.getString("TABLE_NAME");
+            ResultSet dbTblFKCols = dmd.getExportedKeys(catalog, schema, dbTableName);
+            foundFK = dbTblFKCols.next();
+            dbTblFKCols.close();
+        }
+        tables.close();
+        // If we get here, it worked.
+        return foundFK;
     }
     
     /**

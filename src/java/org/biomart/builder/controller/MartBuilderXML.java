@@ -88,7 +88,7 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 5th May 2006
+ * @version 0.1.6, 8th May 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -238,12 +238,15 @@ public class MartBuilderXML extends DefaultHandler {
                 if (schema instanceof DataSet) {
                     // Get the additional attributes.
                     String type = (String)attributes.get("type");
+                    String underTabId = (String)attributes.get("underlyingTableId");
                     DataSetTableType dsType = null;
                     if (type.equals("MAIN")) dsType = DataSetTableType.MAIN;
                     else if (type.equals("MAIN_SUBCLASS")) dsType = DataSetTableType.MAIN_SUBCLASS;
                     else if (type.equals("DIMENSION")) dsType = DataSetTableType.DIMENSION;
                     else throw new SAXException(BuilderBundle.getString("unknownDatasetTableType",type));
-                    DataSetTable dst = new DataSetTable(name, (DataSet)schema, dsType);
+                    Table underlyingTable = null;
+                    if (underTabId!=null && underTabId.trim().length()!=0) underlyingTable = (Table)this.mappedObjects.get(underTabId);
+                    DataSetTable dst = new DataSetTable(name, (DataSet)schema, dsType, underlyingTable);
                     element = dst;
                     
                     // Read the underlying relations.
@@ -719,6 +722,8 @@ public class MartBuilderXML extends DefaultHandler {
             if (table instanceof DataSetTable) {
                 // Write the type.
                 this.writeAttribute("type",((DataSetTable)table).getType().getName());
+                Table underlyingTable = ((DataSetTable)table).getUnderlyingTable();
+                if (underlyingTable != null) this.writeAttribute("underlyingTableId", (String)this.reverseMappedObjects.get(underlyingTable));
                 
                 // Write out the underlying relations.
                 List underRelIds = new ArrayList();

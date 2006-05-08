@@ -1,5 +1,5 @@
 /*
- * SchemaManagementDialog.java
+ * SchemaManagerDialog.java
  *
  * Created on 25 April 2006, 16:09
  */
@@ -47,10 +47,10 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Construct a new table provider based on user input.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 3rd May 2006
+ * @version 0.1.4, 8th May 2006
  * @since 0.1
  */
-public class SchemaManagementDialog extends JDialog {
+public class SchemaManagerDialog extends JDialog {
     /**
      * Our parent schema.
      */
@@ -72,9 +72,9 @@ public class SchemaManagementDialog extends JDialog {
     private JButton execute;
     
     /**
-     * Creates a new instance of SchemaManagementDialog.
+     * Creates a new instance of SchemaManagerDialog.
      */
-    private SchemaManagementDialog(final SchemaTabSet schemaTabSet, String title, String executeButtonText, final Schema template) {
+    private SchemaManagerDialog(final SchemaTabSet schemaTabSet, String title, String executeButtonText, final Schema template) {
         super(schemaTabSet.getDataSetTabSet().getMartTabSet().getMartBuilder(),
                 title,
                 true);
@@ -144,10 +144,12 @@ public class SchemaManagementDialog extends JDialog {
         content.add(label);
         field = new JPanel();
         field.add(this.type);
-        // create panel chooser here and add
-        field.add(connectionPanelHolder);
         gridBag.setConstraints(field, fieldConstraints);
         content.add(field);
+        
+        // create panel chooser here and add
+        gridBag.setConstraints(connectionPanelHolder, fieldConstraints);
+        content.add(connectionPanelHolder);
         
         label = new JLabel();
         gridBag.setConstraints(label, labelLastRowConstraints);
@@ -283,7 +285,7 @@ public class SchemaManagementDialog extends JDialog {
      * Static method which allows the user to create a new table provider.
      */
     public static Schema createSchema(SchemaTabSet schemaTabSet) {
-        SchemaManagementDialog dialog = new SchemaManagementDialog(
+        SchemaManagerDialog dialog = new SchemaManagerDialog(
                 schemaTabSet,
                 BuilderBundle.getString("newSchemaDialogTitle"),
                 BuilderBundle.getString("addButton"),
@@ -297,7 +299,7 @@ public class SchemaManagementDialog extends JDialog {
      * Static method which allows the user to modify an existing table provider.
      */
     public static boolean modifySchema(SchemaTabSet schemaTabSet, Schema schema) {
-        SchemaManagementDialog dialog = new SchemaManagementDialog(
+        SchemaManagerDialog dialog = new SchemaManagerDialog(
                 schemaTabSet,
                 BuilderBundle.getString("modifySchemaDialogTitle"),
                 BuilderBundle.getString("modifyButton"),

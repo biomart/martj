@@ -33,9 +33,9 @@ import javax.swing.JPopupMenu;
 /**
  * An element that can be drawn on a Diagram. Two Comparators
  * are provided for sorting them, as they are not comparable within themselves.
- * 
+ *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 5th May 2006
+ * @version 0.1.4, 8th May 2006
  * @since 0.1
  */
 public abstract class BoxShapedComponent extends JPanel implements DiagramComponent {
@@ -65,8 +65,8 @@ public abstract class BoxShapedComponent extends JPanel implements DiagramCompon
      * Updates the tooltip.
      */
     public void updateAppearance() {
-        DiagramModifier mod = this.getDiagram().getDiagramModifier();
-        if (mod != null) mod.customiseAppearance(this, this.getObject()); 
+        DiagramContext mod = this.getDiagram().getDiagramContext();
+        if (mod != null) mod.customiseAppearance(this, this.getObject());
         this.setBorder(BorderFactory.createLineBorder(this.getForeground()));
     }
     
@@ -85,7 +85,7 @@ public abstract class BoxShapedComponent extends JPanel implements DiagramCompon
     public Object getObject() {
         return this.object;
     }
-        
+    
     /**
      * Construct a context menu for a given view.
      * @return the popup menu.
@@ -103,16 +103,16 @@ public abstract class BoxShapedComponent extends JPanel implements DiagramCompon
      */
     protected void processMouseEvent(MouseEvent evt) {
         boolean eventProcessed = false;
-        // Is it a right-click?
-        if (evt.isPopupTrigger()) {
-            // Build the basic menu.
-            JPopupMenu contextMenu = this.getContextMenu();
-            // Extend.
-            this.getDiagram().getDiagramModifier().customiseContextMenu(contextMenu, this.getObject());
-            // Display.
-            contextMenu.show(this, evt.getX(), evt.getY());
-            eventProcessed = true;
-        }
+            // Is it a right-click?
+            if (evt.isPopupTrigger() && this.diagram.getDiagramContext().isRightClickAllowed()) {
+                // Build the basic menu.
+                JPopupMenu contextMenu = this.getContextMenu();
+                // Extend.
+                this.getDiagram().getDiagramContext().customiseContextMenu(contextMenu, this.getObject());
+                // Display.
+                contextMenu.show(this, evt.getX(), evt.getY());
+                eventProcessed = true;
+            }
         // Pass it on up if we're not interested.
         if (!eventProcessed) super.processMouseEvent(evt);
     }

@@ -39,11 +39,11 @@ import javax.swing.JPopupMenu;
  * @version 0.1.8, 5th May 2006
  * @since 0.1
  */
-public abstract class Diagram extends JPanel {    
+public abstract class Diagram extends JPanel {
     /**
-     * Internal reference to our diagramModifier.
+     * Internal reference to our diagramContext.
      */
-    private DiagramModifier diagramModifier;
+    private DiagramContext diagramContext;
     
     /**
      * The window tab set we belong to.
@@ -62,12 +62,12 @@ public abstract class Diagram extends JPanel {
         // Business stuff.
         this.datasetTabSet = datasetTabSet;
     }
-
+    
     public void removeAll() {
         super.removeAll();
         this.componentMap.clear();
     }
-
+    
     public void addDiagramComponent(DiagramComponent component) {
         this.componentMap.put(component.getObject(), component);
         if (component instanceof TableComponent) {
@@ -102,11 +102,11 @@ public abstract class Diagram extends JPanel {
     protected void processMouseEvent(MouseEvent evt) {
         boolean eventProcessed = false;
         // Is it a right-click?
-        if (evt.isPopupTrigger()) {
+        if (evt.isPopupTrigger() && this.diagramContext.isRightClickAllowed()) {
             // Only respond to individual table providers, not the overview tab.
             JPopupMenu contextMenu = this.getContextMenu();
             // Extend.
-            if (this.diagramModifier != null) this.getDiagramModifier().customiseContextMenu(contextMenu, null);
+            this.getDiagramContext().customiseContextMenu(contextMenu, null);
             // Display.
             contextMenu.show(this, evt.getX(), evt.getY());
             eventProcessed = true;
@@ -118,8 +118,8 @@ public abstract class Diagram extends JPanel {
     /**
      * {@inheritDoc}
      */
-    public void setDiagramModifier(DiagramModifier adaptor) {
-        this.diagramModifier = adaptor;
+    public void setDiagramContext(DiagramContext diagramContext) {
+        this.diagramContext = diagramContext;
         for (Iterator i = this.componentMap.values().iterator(); i.hasNext(); ) {
             ((DiagramComponent)i.next()).updateAppearance();
         }
@@ -128,8 +128,8 @@ public abstract class Diagram extends JPanel {
     /**
      * {@inheritDoc}
      */
-    public DiagramModifier getDiagramModifier() {
-        return this.diagramModifier;
+    public DiagramContext getDiagramContext() {
+        return this.diagramContext;
     }
     
     public abstract void recalculateDiagram();

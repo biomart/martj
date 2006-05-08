@@ -63,7 +63,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * choosing it.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 5th May 2006
+ * @version 0.1.11, 8th May 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -160,22 +160,8 @@ public class DataSet extends GenericSchema {
         this.concatOnlyRelations.clear();
         
         // Find the shortest 1:m paths (depths) of each relation we have.
-        this.walkRelations(this.getCentralTable(), 1);
-        
-        // Check on depths of relations.
-        for (Iterator i = this.relationsPredicted.keySet().iterator(); i.hasNext(); ) {
-            Relation r = (Relation)i.next();
-            int depth = ((Integer)this.relationsPredicted.get(r)).intValue();
-            if (depth > 2) {
-                // Mask all relations that involve more than two levels of 1:m abstraction away
-                // from the central main table.
-                this.maskRelation(r);
-            } else if (depth > 1) {
-                // Mark as concat-only (default to comma-separation) all 1:m relations that involve
-                // more than one level of 1:m abstraction away from the central main table.
-                this.flagConcatOnlyRelation(r, ConcatRelationType.COMMA);
-            }
-        }
+        this.walkRelations(this.getCentralTable(), 0);
+
         // Regenerate the dataset.
         this.regenerate();
     }
@@ -202,10 +188,23 @@ public class DataSet extends GenericSchema {
             }
             // Update the depth count on this relation.
             this.relationsPredicted.put(r, new Integer(currentDepth));
+            // Update the flags.
+            if (currentDepth >= 2) {
+                // Mask all relations that involve two or more levels of 1:m abstraction away
+                // from the central main table.
+                this.maskRelation(r);
+            } else {
+                this.unmaskRelation(r);
+            }
             // Work out where to go next.
             if (r.getPrimaryKey().getTable().equals(currentTable) && (r.getFKCardinality().equals(Cardinality.MANY))) {
                 // If currentTable is at the one end of a one-to-many relation, then
                 // up the count (if it's not a subclass relation) and recurse down it.
+                if (currentDepth >= 1) {
+                    // Mark as concat-only (default to comma-separation) all 1:m relations that involve
+                    // a second or further level of 1:m abstraction away from the central main table.
+                    this.flagConcatOnlyRelation(r, ConcatRelationType.COMMA);
+                }
                 int nextDepth = currentDepth;
                 if (!this.getSubclassedRelations().contains(r)) nextDepth++;
                 this.walkRelations(r.getForeignKey().getTable(), nextDepth);
@@ -532,7 +531,7 @@ public class DataSet extends GenericSchema {
         }
         
         // Identify all subclass and dimension relations.
-        ignoredRelations.put(centralTable, new HashSet());
+        ignoredRelations.put(centralTable, new HashSet(this.getMaskedRelations()));
         if (centralTable.getPrimaryKey()!=null) for (Iterator i = centralTable.getPrimaryKey().getRelations().iterator(); i.hasNext(); ) {
             Relation r = (Relation)i.next();
             // Skip masked and concat-only relations.
@@ -545,7 +544,7 @@ public class DataSet extends GenericSchema {
                 ((Set)ignoredRelations.get(centralTable)).add(r);
                 subclassRelations.add(r);
                 Table subclassTable = r.getForeignKey().getTable();
-                ignoredRelations.put(subclassTable, new HashSet());
+                ignoredRelations.put(subclassTable, new HashSet(this.getMaskedRelations()));
                 // Mark all OneToManys from the subclass table as dimensions.
                 if (subclassTable.getPrimaryKey()!=null) for (Iterator j = subclassTable.getPrimaryKey().getRelations().iterator(); j.hasNext(); ) {
                     Relation sr = (Relation)j.next();
@@ -559,7 +558,7 @@ public class DataSet extends GenericSchema {
                         ((Set)ignoredRelations.get(subclassTable)).add(sr);
                         dimensionRelations.add(sr);
                         Table dimTable = sr.getForeignKey().getTable();
-                        if (!ignoredRelations.containsKey(dimTable)) ignoredRelations.put(dimTable, new HashSet());
+                        if (!ignoredRelations.containsKey(dimTable)) ignoredRelations.put(dimTable, new HashSet(this.getMaskedRelations()));
                         ((Set)ignoredRelations.get(dimTable)).add(sr);
                     }
                 }
@@ -570,7 +569,7 @@ public class DataSet extends GenericSchema {
                 ((Set)ignoredRelations.get(centralTable)).add(r);
                 dimensionRelations.add(r);
                 Table dimTable = r.getForeignKey().getTable();
-                if (!ignoredRelations.containsKey(dimTable)) ignoredRelations.put(dimTable, new HashSet());
+                if (!ignoredRelations.containsKey(dimTable)) ignoredRelations.put(dimTable, new HashSet(this.getMaskedRelations()));
                 ((Set)ignoredRelations.get(dimTable)).add(r);
             }
         }
@@ -627,7 +626,7 @@ public class DataSet extends GenericSchema {
         List constructedPKColumns = new ArrayList(); // constructedColumns to include in the constructed table's PK
         
         // Create the DataSetTable
-        DataSetTable datasetTable = new DataSetTable(realTable.getName(), this, dsTableType);
+        DataSetTable datasetTable = new DataSetTable(realTable.getName(), this, dsTableType, realTable);
         this.transformTable(datasetTable, realTable, ignoredRelations, relationsFollowed, constructedPKColumns, constructedColumns);
         datasetTable.setUnderlyingRelations(relationsFollowed);
         
@@ -1094,6 +1093,8 @@ public class DataSet extends GenericSchema {
          */
         private final DataSetTableType type;
         
+        private final Table underlyingTable;
+        
         /**
          * The constructor calls the parent {@link GenericTable} constructor. It uses a
          * {@link DataSetTableProvider} as a parent for itself. You must also supply a type that
@@ -1105,11 +1106,16 @@ public class DataSet extends GenericSchema {
          * @throws AlreadyExistsException if the provider, for whatever reason, refuses to
          * allow this {@link Table} to be added to it using {@link DataSetTableProvider#addTable(Table)}.
          */
-        public DataSetTable(String name, DataSet ds, DataSetTableType type) throws AlreadyExistsException {
+        public DataSetTable(String name, DataSet ds, DataSetTableType type, Table underlyingTable) throws AlreadyExistsException {
             // Super call first.
             super(generateAlias(name, ds), ds);
             // Do the work.
+            this.underlyingTable = underlyingTable;
             this.type = type;
+        }
+        
+        public Table getUnderlyingTable() {
+            return this.underlyingTable;
         }
         
         /**

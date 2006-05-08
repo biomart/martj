@@ -26,23 +26,25 @@ package org.biomart.builder.view.gui;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Table;
+import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * An element that can be drawn on a Diagram. Two Comparators
  * are provided for sorting them, as they are not comparable within themselves.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 5th May 2006
+ * @version 0.1.5, 8th May 2006
  * @since 0.1
  */
 public class TableComponent extends BoxShapedComponent {
@@ -108,7 +110,14 @@ public class TableComponent extends BoxShapedComponent {
     public JPopupMenu getContextMenu() {
         JPopupMenu contextMenu = super.getContextMenu();
        
-        // Nothing to add, yet.
+        JMenuItem manager = new JMenuItem(BuilderBundle.getString("tableManagerTitle"));
+        manager.setMnemonic(BuilderBundle.getString("tableManagerMnemonic").charAt(0));
+        manager.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                getDiagram().getDataSetTabSet().getSchemaTabSet().requestTableManager(getTable(), getDiagram().getDiagramContext());
+            }
+        });
+        contextMenu.add(manager);
         
         // Return it. Will be further adapted by a listener elsewhere.
         return contextMenu;

@@ -1,5 +1,5 @@
 /*
- * SchemaDiagramModifier.java
+ * SchemaDiagramContext.java
  *
  * Created on 19 April 2006, 09:36
  */
@@ -24,10 +24,14 @@
 
 package org.biomart.builder.view.gui;
 
+import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.Key;
@@ -41,20 +45,20 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Provides the default behaviour for table provider listeners.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 5th May 2006
+ * @version 0.1.9, 8th May 2006
  * @since 0.1
  */
-public class SchemaDiagramModifier implements DiagramModifier {
+public class SchemaDiagramContext implements DiagramContext {
     /**
      * The window set we belong to.
      */
     protected DataSetTabSet datasetTabSet;
     
     /**
-     * Creates a new instance of SchemaDiagramModifier and binds it to a given
+     * Creates a new instance of SchemaDiagramContext and binds it to a given
      * MartBuilder instance.
      */
-    public SchemaDiagramModifier(DataSetTabSet datasetTabSet) {
+    public SchemaDiagramContext(DataSetTabSet datasetTabSet) {
         this.datasetTabSet = datasetTabSet;
     }
     
@@ -245,5 +249,16 @@ public class SchemaDiagramModifier implements DiagramModifier {
                 component.setForeground(RelationComponent.NORMAL_COLOUR);
             }
         }
+    }
+    
+    public boolean isRightClickAllowed() {
+        return true;
+    }
+    
+    public JComponent getTableManagerContextPane(Table table, JList columnsList) {
+        // Create a pane explaining the underlying relations.
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(new JLabel("Schema context"), BorderLayout.PAGE_START);
+        return panel;
     }
 }

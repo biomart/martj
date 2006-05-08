@@ -1,5 +1,5 @@
 /*
- * WindowDiagramModifier.java
+ * WindowDiagramContext.java
  *
  * Created on 19 April 2006, 09:43
  */
@@ -24,11 +24,15 @@
 
 package org.biomart.builder.view.gui;
 
+import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
@@ -45,10 +49,10 @@ import org.biomart.builder.resources.BuilderBundle;
  * Adapts listener behaviour by adding in DataSet-specific stuff.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 5th May 2006
+ * @version 0.1.6, 8th May 2006
  * @since 0.1
  */
-public class WindowDiagramModifier extends SchemaDiagramModifier {
+public class WindowDiagramContext extends SchemaDiagramContext {
     /**
      * Internal reference to our dataset.
      */
@@ -62,7 +66,7 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
      *
      * @param dataset the dataset we are attached to.
      */
-    public WindowDiagramModifier(DataSetTabSet datasetTabSet, DataSet dataset) {
+    public WindowDiagramContext(DataSetTabSet datasetTabSet, DataSet dataset) {
         super(datasetTabSet);
         this.dataset = dataset;
     }
@@ -311,5 +315,12 @@ public class WindowDiagramModifier extends SchemaDiagramModifier {
                 component.setForeground(RelationComponent.NORMAL_COLOUR);
             }
         }
+    }
+        
+    public JComponent getTableManagerContextPane(Table table, JList columnsList) {
+        // Create a pane explaining the underlying relations.
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(new JLabel("Window context"), BorderLayout.PAGE_START);
+        return panel;
     }
 }

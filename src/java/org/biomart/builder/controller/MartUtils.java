@@ -45,7 +45,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
 /**
  * Tools for working with the mart from a GUI or CLI.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 5th May 2006
+ * @version 0.1.3, 8th May 2006
  * @since 0.1
  */
 public class MartUtils {
@@ -111,7 +111,7 @@ public class MartUtils {
         return schema.test();
     }
     
-    public static Schema createJDBCSchema(File driverClassLocation, String driverClassName, String url, String username, String password, String name, boolean keyGuessing) {
+    public static JDBCSchema createJDBCSchema(File driverClassLocation, String driverClassName, String url, String username, String password, String name, boolean keyGuessing) {
         if (password != null && password.equals("")) password = null;
         return new JDBCSchema(driverClassLocation, driverClassName, url, username, password, name, keyGuessing);
     }

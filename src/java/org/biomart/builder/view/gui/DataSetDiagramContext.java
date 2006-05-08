@@ -1,5 +1,5 @@
 /*
- * DataSetDiagramModifier.java
+ * DataSetDiagramContext.java
  *
  * Created on 19 April 2006, 09:46
  */
@@ -24,12 +24,22 @@
 
 package org.biomart.builder.view.gui;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.BorderFactory;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.Key;
@@ -40,19 +50,18 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Adapts listener events suitable for datasets.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 5th May 2006
+ * @version 0.1.7, 8th May 2006
  * @since 0.1
  */
-public class DataSetDiagramModifier extends WindowDiagramModifier {
+public class DataSetDiagramContext extends WindowDiagramContext {
     /**
      *
-     * Creates a new instance of DataSetDiagramModifier over
+     * Creates a new instance of DataSetDiagramContext over
      * a given window.
-     *
      *
      * @param window the window whose dataset we are attached to.
      */
-    public DataSetDiagramModifier(DataSetTabSet datasetTabSet, DataSet dataset) {
+    public DataSetDiagramContext(DataSetTabSet datasetTabSet, DataSet dataset) {
         super(datasetTabSet, dataset);
     }
     
@@ -134,7 +143,7 @@ public class DataSetDiagramModifier extends WindowDiagramModifier {
     
     public void customiseAppearance(JComponent component, Object object) {
         if (object instanceof Relation) {
-                        
+            
             Relation relation = (Relation)object;
             // Highlight SUBCLASS relations.
             if (((DataSetTable)relation.getForeignKey().getTable()).getType().equals(DataSetTableType.MAIN_SUBCLASS)) {
@@ -155,6 +164,39 @@ public class DataSetDiagramModifier extends WindowDiagramModifier {
             } else {
                 component.setForeground(TableComponent.NORMAL_COLOUR);
             }
-        }        
+        }
+    }
+    
+    public JComponent getTableManagerContextPane(final Table table, final JList columnsList) {
+        // Create a pane explaining the underlying relations.
+        JPanel panel = new JPanel(new BorderLayout());
+        JLabel label = new JLabel(BuilderBundle.getString("underlyingRelationsLabel"));
+        label.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+        panel.add(label, BorderLayout.PAGE_START);
+        // Set up the diagram.
+        DataSetTable dsTable = (DataSetTable)table;
+        final Diagram diagram = new UnderlyingRelationsDiagram(this.datasetTabSet, dsTable);
+        final UnderlyingRelationsDiagramContext diagramContext = new UnderlyingRelationsDiagramContext(this.datasetTabSet, this.getDataSet());
+        diagram.setDiagramContext(diagramContext);
+        // Add a column listener which redraws the diagram each time it changes.
+        columnsList.addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent e) {
+                String selectedCol = (String)columnsList.getSelectedValue();
+                if (selectedCol==null) diagramContext.setSelectedColumn(null);
+                else diagramContext.setSelectedColumn((DataSetColumn)table.getColumnByName(selectedCol));
+                diagram.recalculateDiagram();
+            }
+        });        
+        // Force smallest possible initial panel.
+        Dimension martSize = this.datasetTabSet.getMartTabSet().getMartBuilder().getSize();
+        Dimension scrollSize = diagram.getPreferredSize();
+        scrollSize.width = Math.max(100, martSize.width / 2);
+        scrollSize.height = Math.max(100, martSize.height / 2);
+        panel.setPreferredSize(scrollSize);
+        // Create the scroller and add it.
+        JScrollPane scroller = new JScrollPane(diagram);
+        scroller.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+        panel.add(scroller, BorderLayout.CENTER);
+        return panel;
     }
 }

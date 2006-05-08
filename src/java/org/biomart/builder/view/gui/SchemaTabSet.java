@@ -43,13 +43,14 @@ import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Displays the contents of multiple {@link Schema}s in graphical form.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 5th May 2006
+ * @version 0.1.5, 8th May 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -60,9 +61,9 @@ public class SchemaTabSet extends JTabbedPane {
     private Map schemaToDiagram = new HashMap();
     
     /**
-     * Internal reference to the diagramModifier for the providers we are viewing.
+     * Internal reference to the diagramContext for the providers we are viewing.
      */
-    private DiagramModifier diagramModifier;
+    private DiagramContext diagramContext;
     
     /**
      * The window tab set we belong to.
@@ -137,7 +138,7 @@ public class SchemaTabSet extends JTabbedPane {
      */
     public void requestAddSchema() {
         // Interpret the response.
-        final Schema schema = SchemaManagementDialog.createSchema(this);
+        final Schema schema = SchemaManagerDialog.createSchema(this);
         LongProcess.run(this, new Runnable() {
             public void run() {
                 // Add to schema.
@@ -213,8 +214,27 @@ public class SchemaTabSet extends JTabbedPane {
     public void requestModifySchema(Schema schema) {
         // Add to schema.
         try {
-            if (SchemaManagementDialog.modifySchema(this, schema))
+            if (SchemaManagerDialog.modifySchema(this, schema))
                 this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
+        } catch (Throwable t) {
+            this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+        }
+    }
+    
+    public void requestTableManager(final Table table, DiagramContext diagramContext) {
+        try {
+            if (TableManagerDialog.showTableManager(this, table, diagramContext)) {
+                LongProcess.run(this, new Runnable() {
+                    public void run() {
+                        try {
+                            datasetTabSet.recalculateDataSetTabs(); // Some datasets may disappear. It'll call us.recalculateDataSetTabs() later.
+                            datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                        } catch (Throwable t) {
+                            datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+                        }
+                    }
+                });
+            }
         } catch (Throwable t) {
             this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
         }
@@ -231,8 +251,8 @@ public class SchemaTabSet extends JTabbedPane {
         this.addTab(schema.getName(), scroller);
         // Remember the view.
         this.schemaToDiagram.put(schema, schemaDiagram);
-        // Set the diagramModifier on the view.
-        schemaDiagram.setDiagramModifier(this.getDiagramModifier());
+        // Set the diagramContext on the view.
+        schemaDiagram.setDiagramContext(this.getDiagramContext());
         this.allSchemasDiagram.recalculateDiagram();
     }
     
@@ -363,7 +383,7 @@ public class SchemaTabSet extends JTabbedPane {
             public void run() {
                 try {
                     MartUtils.synchroniseMartSchemas(datasetTabSet.getMart());
-                    recalculateSchemaTabs();
+                    datasetTabSet.recalculateDataSetTabs(); // Some datasets may disappear. It'll call us.recalculateDataSetTabs() later.
                     datasetTabSet.getMartTabSet().setModifiedStatus(true);
                 } catch (Throwable t) {
                     datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
@@ -460,18 +480,18 @@ public class SchemaTabSet extends JTabbedPane {
     /**
      * {@inheritDoc}
      */
-    public void setDiagramModifier(DiagramModifier diagramModifier) {
-        this.diagramModifier = diagramModifier;
+    public void setDiagramContext(DiagramContext diagramContext) {
+        this.diagramContext = diagramContext;
         for (int i = 0; i < this.getTabCount(); i++) {
             Diagram diagram = (Diagram)((JScrollPane)this.getComponentAt(i)).getViewport().getView();
-            diagram.setDiagramModifier(diagramModifier);
+            diagram.setDiagramContext(diagramContext);
         }
     }
     
     /**
      * {@inheritDoc}
      */
-    public DiagramModifier getDiagramModifier() {
-        return this.diagramModifier;
+    public DiagramContext getDiagramContext() {
+        return this.diagramContext;
     }
 }

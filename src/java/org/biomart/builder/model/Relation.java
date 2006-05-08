@@ -220,7 +220,8 @@ public interface Relation extends Comparable {
          * @param primaryKey the source {@link PrimaryKey}.
          * @param foreignKey the target {@link ForeignKey}.
          * @param cardinality the {@link Cardinality} of the {@link ForeignKey}.
-         * @throws AssociationException if the number of {@link Column}s in the {@link Key}s don't match.
+         * @throws AssociationException if the number of {@link Column}s in the {@link Key}s don't match,  or if
+         * the relation already exists.
          */
         public GenericRelation(PrimaryKey primaryKey, ForeignKey foreignKey, Cardinality cardinality) throws AssociationException {
             // Sanity checks.
@@ -231,6 +232,9 @@ public interface Relation extends Comparable {
             this.foreignKey = foreignKey;
             this.cardinality = cardinality;
             this.status = ComponentStatus.INFERRED;
+            // Check the relation doesn't already exist.
+            if (primaryKey.getRelations().contains(this))
+                throw new AssociationException(BuilderBundle.getString("relationAlreadyExists"));
             // Add ourselves at both ends.
             primaryKey.addRelation(this);
             foreignKey.addRelation(this);

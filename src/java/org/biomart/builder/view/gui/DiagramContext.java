@@ -1,5 +1,5 @@
 /*
- * DiagramModifier.java
+ * DiagramContext.java
  *
  * Created on 11 April 2006, 16:52
  */
@@ -25,18 +25,18 @@
 package org.biomart.builder.view.gui;
 
 import javax.swing.JComponent;
+import javax.swing.JList;
 import javax.swing.JPopupMenu;
+import org.biomart.builder.model.Table;
 
 /**
- * DiagramModifier for events of interest to classes displaying graphical views
+ * DiagramContext for events of interest to classes displaying graphical views
  * of {@link TableProvider}s using {@link TableProviderView}.
- * 
- * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 5th May 2006
+ * @version 0.1.6, 8th May 2006
  * @since 0.1
  */
-public interface DiagramModifier {
+public interface DiagramContext {
     /**
      * Add items to a context menu for a given component. Must add separator
      * if required.
@@ -47,4 +47,8 @@ public interface DiagramModifier {
     public void customiseContextMenu(JPopupMenu contextMenu, Object object);
     
     public void customiseAppearance(JComponent component, Object object);
+
+    public JComponent getTableManagerContextPane(Table table, JList columnsList);
+    
+    public boolean isRightClickAllowed();
 }

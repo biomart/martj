@@ -62,7 +62,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Set of tabs to display a mart and set of windows.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 5th May 2006
+ * @version 0.1.9, 8th May 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -146,7 +146,7 @@ public class DataSetTabSet extends JTabbedPane {
             DataSetTab datasetTab = (DataSetTab)selectedComponent;
             datasetTab.attachSchemaTabSet(this, this.schemaTabSet);
         } else {
-            this.schemaTabSet.setDiagramModifier(new SchemaDiagramModifier(this));
+            this.schemaTabSet.setDiagramContext(new SchemaDiagramContext(this));
             this.setComponentAt(schemaTabIndex, this.schemaTabSet);
         }
     }
@@ -187,7 +187,7 @@ public class DataSetTabSet extends JTabbedPane {
     /**
      * Removes a dataset and tab.
      */
-    private void recalculateDataSetDiagram(DataSet dataset) throws SQLException, BuilderException {
+    public void recalculateDataSetDiagram(DataSet dataset) throws SQLException, BuilderException {
         DataSetTab datasetTab = (DataSetTab)this.datasetToTab.get(dataset);
         MartUtils.synchroniseDataSet(dataset);
         datasetTab.getDataSetDiagram().recalculateDiagram();
@@ -285,6 +285,7 @@ public class DataSetTabSet extends JTabbedPane {
      */
     public void requestCreateDataSet(final Table table) {
         final String name = this.askUserForDataSetName(table.getName());
+        if (name == null) return;
         LongProcess.run(this, new Runnable() {
             public void run() {
                 try {
@@ -303,6 +304,7 @@ public class DataSetTabSet extends JTabbedPane {
      */
     public void requestSuggestDataSets(final Table table) {
         final String name = this.askUserForDataSetName(table.getName());
+        if (name == null) return;
         LongProcess.run(this, new Runnable() {
             public void run() {
                 try {
@@ -620,8 +622,8 @@ public class DataSetTabSet extends JTabbedPane {
          * Attach the table provider tab set.
          */
         public void attachSchemaTabSet(DataSetTabSet datasetTabSet, SchemaTabSet schemaTabSet) {
-            this.datasetDiagram.setDiagramModifier(new DataSetDiagramModifier(datasetTabSet, dataset));
-            schemaTabSet.setDiagramModifier(new WindowDiagramModifier(datasetTabSet, this.dataset));
+            this.datasetDiagram.setDiagramContext(new DataSetDiagramContext(datasetTabSet, dataset));
+            schemaTabSet.setDiagramContext(new WindowDiagramContext(datasetTabSet, this.dataset));
             this.displayArea.add(schemaTabSet, "WINDOW_CARD");
             // Nasty hack to force table provider set to redisplay.
             if (this.windowButton.isSelected()) this.windowButton.doClick();
