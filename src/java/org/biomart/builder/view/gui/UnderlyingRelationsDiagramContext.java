@@ -69,7 +69,7 @@ public class UnderlyingRelationsDiagramContext extends WindowDiagramContext {
         else {
             if (object instanceof Relation) {
                 Relation relation = (Relation)object;
-                if (selectedColumn.getUnderlyingRelation().equals(relation)) {
+                if (selectedColumn.getUnderlyingRelation()!=null && selectedColumn.getUnderlyingRelation().equals(relation)) {
                     if (selectedColumn instanceof ConcatRelationColumn) {
                         // Highlight relation as target.
                         component.setForeground(UnderlyingRelationsDiagramContext.TARGET_COLOUR);
@@ -89,7 +89,7 @@ public class UnderlyingRelationsDiagramContext extends WindowDiagramContext {
                 } else if (selectedColumn instanceof SchemaNameColumn && table.equals(((DataSetTable)this.selectedColumn.getTable()).getUnderlyingTable())) {
                     // Highlight relation as target.
                     component.setForeground(UnderlyingRelationsDiagramContext.TARGET_COLOUR);
-                } else if (table.getRelations().contains(selectedColumn.getUnderlyingRelation())) {
+                } else if (selectedColumn.getUnderlyingRelation()!=null && table.getRelations().contains(selectedColumn.getUnderlyingRelation())) {
                     // Highlight relation en route.
                     component.setForeground(UnderlyingRelationsDiagramContext.ENROUTE_COLOUR);
                 } else {
