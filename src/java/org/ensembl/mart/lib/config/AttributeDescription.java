@@ -49,6 +49,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
   private final String pointerDatasetKey = "pointerDataset";
   private final String pointerInterfaceKey = "pointerInterface";
   private final String pointerAttributeKey = "pointerAttribute";
+  private final String pointerFilterKey = "pointerFilter";
   
   private int[] reqFields = {0,5,8,9};// rendered red in AttributeTable
   //private final String hiddenKey = "hidden";
@@ -85,7 +86,8 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 	setAttribute(pointerDatasetKey, null);
 	setAttribute(pointerInterfaceKey, null);
 	setAttribute(pointerAttributeKey, null);
-
+	setAttribute(pointerFilterKey, null);
+	
 	setRequiredFields(reqFields);
   }
 
@@ -98,7 +100,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
    */
   public AttributeDescription(String internalName, String field)
     throws ConfigurationException {
-    this(internalName, field, "", "0", "", "", "", "", "", "", "", "", "", "", "");
+    this(internalName, field, "", "0", "", "", "", "", "", "", "", "", "", "", "", "");
   }
   /**
    * Constructor for an AttributeDescription.
@@ -131,7 +133,8 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     String defaultString,
     String pointerDataset,
     String pointerInterface,
-    String pointerAttribute)
+    String pointerAttribute,
+    String pointerFilter)
     throws ConfigurationException {
 
     super(internalName, displayName, description);
@@ -151,6 +154,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 	setAttribute(pointerDatasetKey, pointerDataset);
 	setAttribute(pointerInterfaceKey, pointerInterface);
 	setAttribute(pointerAttributeKey, pointerAttribute);
+	setAttribute(pointerFilterKey, pointerFilter);
 	
 	setRequiredFields(reqFields);
   }
@@ -283,7 +287,21 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 	return getAttribute(pointerAttributeKey);
   }
 
+  /**
+   * @param pointerfilter - pointer filter, used for placeholder filters
+   */
+  public void setPointerFilter(String pointerFilter) {
+	setAttribute(pointerFilterKey, pointerFilter);
+  }
 
+  /**
+   * Returns the pointerDataset.
+   * 
+   * @return String pointerFilter
+   */
+  public String getPointerFilter() {
+	return getAttribute(pointerFilterKey);
+  }
 
 
   /**
