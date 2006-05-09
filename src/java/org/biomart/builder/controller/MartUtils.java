@@ -31,12 +31,14 @@ import java.util.Iterator;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
+import org.biomart.builder.model.Column;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
+import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.SchemaGroup;
@@ -45,7 +47,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
 /**
  * Tools for working with the mart from a GUI or CLI.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 8th May 2006
+ * @version 0.1.4, 9th May 2006
  * @since 0.1
  */
 public class MartUtils {
@@ -190,5 +192,20 @@ public class MartUtils {
         for (Iterator i = mart.getDataSets().iterator(); i.hasNext(); ) {
             ((DataSet)i.next()).synchronise();
         }
+    }
+    
+    public static void renameDataSetColumn(DataSetColumn col, String newName) throws AlreadyExistsException {
+        col.setName(newName);
+    }
+    
+    
+    public static void maskColumn(DataSet dataset, Column column) throws SQLException, BuilderException {
+        dataset.maskColumn(column);
+        dataset.synchronise();
+    }
+    
+    public static void unmaskColumn(DataSet dataset, Column column) throws SQLException, BuilderException {
+        dataset.unmaskColumn(column);
+        dataset.synchronise();
     }
 }

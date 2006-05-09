@@ -36,7 +36,7 @@ import javax.swing.JPopupMenu;
 /**
  * Displays arbitrary objects linked in a radial form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 5th May 2006
+ * @version 0.1.9, 9th May 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
@@ -138,6 +138,10 @@ public abstract class Diagram extends JPanel {
         DiagramComponent comp = (DiagramComponent)this.componentMap.get(object);
         comp.updateAppearance();
         ((JComponent)comp).repaint();
+    }
+    
+    public void redrawAllDiagramComponents() {
+        for (Iterator i = this.componentMap.keySet().iterator(); i.hasNext(); ) this.redrawDiagramComponent(i.next());
     }
     
     /**

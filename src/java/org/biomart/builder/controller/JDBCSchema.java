@@ -71,7 +71,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * the primary key column to which they refer, optionally appended with '_key'.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 8th May 2006
+ * @version 0.1.5, 9th May 2006
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -474,23 +474,6 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
             k.destroy();
             i.remove(); // just to make sure it really has gone.
         }
-        
-        // Check and convert any 1:M relations that should be 1:1
-        for (Iterator i = this.getTables().iterator(); i.hasNext(); ) {
-            Table pkTable = (Table)i.next();
-            PrimaryKey pk = pkTable.getPrimaryKey();
-            if (pk == null) continue; // Skip tables without PKs.
-            for (Iterator j = pk.getRelations().iterator(); j.hasNext(); ) {
-                Relation rel = (Relation)j.next();                   
-                if (!rel.getStatus().equals(ComponentStatus.INFERRED)) continue; // Skip incorrect and user-defined ones.
-                ForeignKey fk = rel.getForeignKey();
-                Table fkTable = fk.getTable();
-                PrimaryKey fkTablePK = fkTable.getPrimaryKey();
-                if (fkTablePK == null) continue; // Skip FK tables without PKs.
-                // If foreign key = primary key on fkTable then cardinality should be 1:1
-                if (fk.getColumns().equals(fkTablePK.getColumns())) rel.setFKCardinality(Cardinality.ONE);
-            }
-        }
     }
     
     /**
@@ -565,7 +548,10 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
                     if (!fkAlreadyExists) {
                         // If its new, go ahead and make the relation.
                         fkTable.addForeignKey(fk);
-                        new GenericRelation(existingPK, fk, Cardinality.MANY);
+                        Cardinality card = Cardinality.MANY;
+                        PrimaryKey fkPK = fkTable.getPrimaryKey();
+                        if (fkPK != null && fk.getColumns().equals(fkPK.getColumns())) card = Cardinality.ONE;
+                        new GenericRelation(existingPK, fk, card);
                     } else {
                         // If its not new, check to see if it already has a relation.
                         
@@ -588,7 +574,12 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
                         }
                         
                         // If checks returned OK, create a new relation.
-                        if (!relationExists) new GenericRelation(existingPK, fk, Cardinality.MANY);
+                        if (!relationExists) {
+                            Cardinality card = Cardinality.MANY;
+                            PrimaryKey fkPK = fkTable.getPrimaryKey();
+                            if (fkPK != null && fk.getColumns().equals(fkPK.getColumns())) card = Cardinality.ONE;
+                            new GenericRelation(existingPK, fk, card);
+                        }
                     }
                 }
             }
@@ -675,7 +666,10 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
                     if (!fkAlreadyExists) {
                         // If its new, go ahead and make the relation.
                         fk.getTable().addForeignKey(fk);
-                        new GenericRelation(existingPK, fk, Cardinality.MANY);
+                        Cardinality card = Cardinality.MANY;
+                        PrimaryKey fkPK = fk.getTable().getPrimaryKey();
+                        if (fkPK != null && fk.getColumns().equals(fkPK.getColumns())) card = Cardinality.ONE;
+                        new GenericRelation(existingPK, fk, card);
                     } else {
                         // If its not new, check to see if it already has a relation.
                         
@@ -698,7 +692,12 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
                         }
                         
                         // If checks returned false, create a new relation.
-                        if (!relationExists) new GenericRelation(existingPK, fk, Cardinality.MANY);
+                        if (!relationExists) {
+                            Cardinality card = Cardinality.MANY;
+                            PrimaryKey fkPK = fk.getTable().getPrimaryKey();
+                            if (fkPK != null && fk.getColumns().equals(fkPK.getColumns())) card = Cardinality.ONE;
+                            new GenericRelation(existingPK, fk, card);
+                        }
                     }
                 }
             }

@@ -29,10 +29,12 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -40,6 +42,9 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.Key;
@@ -50,7 +55,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Adapts listener events suitable for datasets.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 8th May 2006
+ * @version 0.1.8, 9th May 2006
  * @since 0.1
  */
 public class DataSetDiagramContext extends WindowDiagramContext {
@@ -167,36 +172,99 @@ public class DataSetDiagramContext extends WindowDiagramContext {
         }
     }
     
-    public JComponent getTableManagerContextPane(final Table table, final JList columnsList) {
-        // Create a pane explaining the underlying relations.
-        JPanel panel = new JPanel(new BorderLayout());
+    public JComponent getTableManagerContextPane(final TableManagerDialog manager) {
+        // Create a sub-pane including the mask column button, and a label for the diagram.
+        JPanel labelPane = new JPanel();
+        final JButton mask = new JButton(BuilderBundle.getString("maskColumnButton"));
+        mask.setEnabled(false); // default off.
+        labelPane.add(mask);
         JLabel label = new JLabel(BuilderBundle.getString("underlyingRelationsLabel"));
         label.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
-        panel.add(label, BorderLayout.PAGE_START);
+        labelPane.add(label);
+        // Create a pane explaining the underlying relations.
+        JPanel diagramPanel = new JPanel(new BorderLayout());
+        diagramPanel.add(labelPane, BorderLayout.PAGE_START);
         // Set up the diagram.
-        DataSetTable dsTable = (DataSetTable)table;
-        final Diagram diagram = new UnderlyingRelationsDiagram(this.datasetTabSet, dsTable);
-        final UnderlyingRelationsDiagramContext diagramContext = new UnderlyingRelationsDiagramContext(this.datasetTabSet, this.getDataSet());
+        final DataSetTable dsTable = (DataSetTable)manager.getTable();
+        final Diagram diagram = new UnderlyingRelationsDiagram(this.getDataSetTabSet(), manager);
+        final UnderlyingRelationsDiagramContext diagramContext = new UnderlyingRelationsDiagramContext(this.getDataSetTabSet(), this.getDataSet());
         diagram.setDiagramContext(diagramContext);
-        // Add a column listener which redraws the diagram each time it changes.
-        columnsList.addListSelectionListener(new ListSelectionListener() {
-            public void valueChanged(ListSelectionEvent e) {
-                String selectedCol = (String)columnsList.getSelectedValue();
-                if (selectedCol==null) diagramContext.setSelectedColumn(null);
-                else diagramContext.setSelectedColumn((DataSetColumn)table.getColumnByName(selectedCol));
-                diagram.recalculateDiagram();
-            }
-        });        
-        // Force smallest possible initial panel.
-        Dimension martSize = this.datasetTabSet.getMartTabSet().getMartBuilder().getSize();
+        // Force smallest possible initial diagramPanel.
+        Dimension martSize = this.getDataSetTabSet().getMartTabSet().getMartBuilder().getSize();
         Dimension scrollSize = diagram.getPreferredSize();
         scrollSize.width = Math.max(100, martSize.width / 2);
         scrollSize.height = Math.max(100, martSize.height / 2);
-        panel.setPreferredSize(scrollSize);
+        diagramPanel.setPreferredSize(scrollSize);
         // Create the scroller and add it.
         JScrollPane scroller = new JScrollPane(diagram);
         scroller.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
-        panel.add(scroller, BorderLayout.CENTER);
-        return panel;
+        diagramPanel.add(scroller, BorderLayout.CENTER);
+        
+        // Add a column listener which redraws the diagram each time it changes.
+        final JList columnsList = manager.getColumnsList();
+        columnsList.addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    String selectedCol = (String)columnsList.getSelectedValue();
+                    if (selectedCol==null) {
+                        diagramContext.setSelectedColumn(null);
+                        mask.setEnabled(false);
+                    } else {
+                        DataSetColumn col = (DataSetColumn)dsTable.getColumnByName(selectedCol);
+                        diagramContext.setSelectedColumn(col);
+                        mask.setEnabled(true);
+                    }
+                    diagram.redrawAllDiagramComponents();
+                }
+            }
+        });
+        
+        // Add action to the 'mask column' button.
+        mask.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String selectedCol = (String)columnsList.getSelectedValue();
+                if (selectedCol != null) {
+                    DataSetColumn col = (DataSetColumn)dsTable.getColumnByName(selectedCol);
+                    maskColumn(col, diagram, manager);
+                }
+            }
+        });
+        
+        // Return the panel
+        return diagramPanel;
+    }
+    
+    private void maskColumn(DataSetColumn col, Diagram diagram, TableManagerDialog manager) {
+        // if column is schema name column, then cannot remove.
+        if (col instanceof SchemaNameColumn) {
+            JOptionPane.showMessageDialog(manager,
+                    BuilderBundle.getString("cannotMaskBaseColumn"),
+                    BuilderBundle.getString("messageTitle"),
+                    JOptionPane.INFORMATION_MESSAGE);
+        }
+        else {
+            // Confirm.
+            int response = JOptionPane.showConfirmDialog(manager,
+                    BuilderBundle.getString("confirmMaskColumn"),
+                    BuilderBundle.getString("questionTitle"),
+                    JOptionPane.YES_NO_OPTION);
+            if (response!=JOptionPane.YES_OPTION) return;
+            // Do it.
+            if (col instanceof ConcatRelationColumn) this.getDataSetTabSet().requestMaskRelation(this.getDataSet(), col.getUnderlyingRelation());
+            else this.getDataSetTabSet().requestMaskColumn(this.getDataSet(), ((WrappedColumn)col).getWrappedColumn());
+            // Does table still exist?
+            if (this.getDataSet().getTables().contains(manager.getTable())) {
+                // Yes, redraw diagram.
+                manager.reloadTable();
+                diagram.recalculateDiagram();
+            } else {
+                // No, close dialog. (with warning)
+                JOptionPane.showMessageDialog(manager,
+                        BuilderBundle.getString("maskedColumnTableDisappeared"),
+                        BuilderBundle.getString("messageTitle"),
+                        JOptionPane.INFORMATION_MESSAGE);
+                manager.requestClose();
+            }
+        }
     }
 }

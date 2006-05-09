@@ -45,14 +45,14 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Provides the default behaviour for table provider listeners.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 8th May 2006
+ * @version 0.1.10, 9th May 2006
  * @since 0.1
  */
 public class SchemaDiagramContext implements DiagramContext {
     /**
      * The window set we belong to.
      */
-    protected DataSetTabSet datasetTabSet;
+    private DataSetTabSet datasetTabSet;
     
     /**
      * Creates a new instance of SchemaDiagramContext and binds it to a given
@@ -255,7 +255,7 @@ public class SchemaDiagramContext implements DiagramContext {
         return true;
     }
     
-    public JComponent getTableManagerContextPane(Table table, JList columnsList) {
+    public JComponent getTableManagerContextPane(TableManagerDialog manager) {
         // Create a pane explaining the underlying relations.
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(new JLabel("Schema context"), BorderLayout.PAGE_START);

@@ -50,7 +50,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Displays the contents of multiple {@link Schema}s in graphical form.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 8th May 2006
+ * @version 0.1.6, 9th May 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -96,6 +96,13 @@ public class SchemaTabSet extends JTabbedPane {
         Schema fkSchema = relation.getForeignKey().getTable().getSchema();
         if (pkSchema.equals(fkSchema)) ((Diagram)this.schemaToDiagram.get(pkSchema)).redrawDiagramComponent(relation);
         else this.allSchemasDiagram.redrawDiagramComponent(relation);
+    }
+    
+    public void redrawAllDiagramComponents() {
+        this.allSchemasDiagram.redrawAllDiagramComponents();
+        for (Iterator i = this.schemaToDiagram.values().iterator(); i.hasNext(); ) {
+            ((Diagram)i.next()).redrawAllDiagramComponents();
+        }
     }
     
     /**
@@ -223,18 +230,7 @@ public class SchemaTabSet extends JTabbedPane {
     
     public void requestTableManager(final Table table, DiagramContext diagramContext) {
         try {
-            if (TableManagerDialog.showTableManager(this, table, diagramContext)) {
-                LongProcess.run(this, new Runnable() {
-                    public void run() {
-                        try {
-                            datasetTabSet.recalculateDataSetTabs(); // Some datasets may disappear. It'll call us.recalculateDataSetTabs() later.
-                            datasetTabSet.getMartTabSet().setModifiedStatus(true);
-                        } catch (Throwable t) {
-                            datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
-                        }
-                    }
-                });
-            }
+            TableManagerDialog.showTableManager(this, table, diagramContext);
         } catch (Throwable t) {
             this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
         }

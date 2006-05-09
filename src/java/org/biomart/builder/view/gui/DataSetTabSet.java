@@ -49,11 +49,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import org.biomart.builder.controller.MartUtils;
 import org.biomart.builder.exceptions.BuilderException;
+import org.biomart.builder.model.Column;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
+import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.BuilderBundle;
@@ -62,7 +65,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Set of tabs to display a mart and set of windows.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 8th May 2006
+ * @version 0.1.10, 9th May 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -329,6 +332,7 @@ public class DataSetTabSet extends JTabbedPane {
             public void run() {
                 try {
                     MartUtils.optimiseDataSet(dataset);
+                    schemaTabSet.redrawAllDiagramComponents();
                     recalculateDataSetDiagram(dataset);
                     martTabSet.setModifiedStatus(true);
                 } catch (Throwable t) {
@@ -456,6 +460,37 @@ public class DataSetTabSet extends JTabbedPane {
                 }
             }
         });
+    }
+    
+    /**
+     * Update a relation cardinality.
+     */
+    public void requestMaskColumn(DataSet ds, Column column) {
+        try {
+            MartUtils.maskColumn(ds, column);
+            for (Iterator i = column.getTable().getKeys().iterator(); i.hasNext(); ) {
+                for (Iterator j = ((Key)i.next()).getRelations().iterator(); j.hasNext(); ) {
+                    this.schemaTabSet.redrawRelationDiagramComponent((Relation)j.next());
+                }
+            }
+            this.recalculateDataSetDiagram(ds);
+            this.martTabSet.setModifiedStatus(true);
+        } catch (Throwable t) {
+            this.martTabSet.getMartBuilder().showStackTrace(t);
+        }
+    }
+    
+    /**
+     * Update a relation cardinality.
+     */
+    public void requestUnmaskColumn(DataSet ds, Column column) {
+        try {
+            MartUtils.unmaskColumn(ds, column);
+            this.recalculateDataSetDiagram(ds);
+            this.martTabSet.setModifiedStatus(true);
+        } catch (Throwable t) {
+            this.martTabSet.getMartBuilder().showStackTrace(t);
+        }
     }
     
     /**

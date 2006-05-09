@@ -39,7 +39,7 @@ import org.biomart.builder.model.Table;
  * Adapts listener behaviour by adding in DataSet-specific stuff.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 8th May 2006
+ * @version 0.1.2, 9th May 2006
  * @since 0.1
  */
 public class UnderlyingRelationsDiagramContext extends WindowDiagramContext {
@@ -47,6 +47,7 @@ public class UnderlyingRelationsDiagramContext extends WindowDiagramContext {
     
     private static final Color ENROUTE_COLOUR = Color.ORANGE;
     private static final Color TARGET_COLOUR = Color.MAGENTA;
+    private static final Color FADED_COLOUR = Color.LIGHT_GRAY;
     
     /**
      *
@@ -65,8 +66,14 @@ public class UnderlyingRelationsDiagramContext extends WindowDiagramContext {
     }
     
     public void customiseAppearance(JComponent component, Object object) {
-        if (selectedColumn==null) super.customiseAppearance(component, object);
-        else {
+        if (selectedColumn==null) {
+            if (object instanceof Relation) {
+                component.setForeground(RelationComponent.NORMAL_COLOUR);
+            } else if (object instanceof Table) {
+                component.setForeground(TableComponent.NORMAL_COLOUR);
+            }
+            super.customiseAppearance(component, object);
+        } else {
             if (object instanceof Relation) {
                 Relation relation = (Relation)object;
                 if (selectedColumn.getUnderlyingRelation()!=null && selectedColumn.getUnderlyingRelation().equals(relation)) {
@@ -78,8 +85,8 @@ public class UnderlyingRelationsDiagramContext extends WindowDiagramContext {
                         component.setForeground(UnderlyingRelationsDiagramContext.ENROUTE_COLOUR);
                     }
                 } else {
-                    // Normal relation.
-                    super.customiseAppearance(component, object);
+                    // Normal relation. Faded.
+                    component.setForeground(UnderlyingRelationsDiagramContext.FADED_COLOUR);
                 }
             } else if (object instanceof Table) {
                 Table table = (Table)object;
@@ -93,13 +100,10 @@ public class UnderlyingRelationsDiagramContext extends WindowDiagramContext {
                     // Highlight relation en route.
                     component.setForeground(UnderlyingRelationsDiagramContext.ENROUTE_COLOUR);
                 } else {
-                    // Normal relation.
-                    super.customiseAppearance(component, object);
+                    // Normal relation. Faded.
+                    component.setForeground(UnderlyingRelationsDiagramContext.FADED_COLOUR);
                 }
-            } else {
-                // Normal relation.
-                super.customiseAppearance(component, object);
-            }
+            } 
         }
     }
     

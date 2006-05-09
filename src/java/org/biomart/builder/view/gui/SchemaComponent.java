@@ -26,12 +26,12 @@ package org.biomart.builder.view.gui;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -46,7 +46,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 5th May 2006
+ * @version 0.1.5, 9th May 2006
  * @since 0.1
  */
 public class SchemaComponent extends BoxShapedComponent {
@@ -61,7 +61,7 @@ public class SchemaComponent extends BoxShapedComponent {
      */
     public SchemaComponent(Schema schema, Diagram diagram) {
         super(schema, diagram);
-        this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        this.setLayout(new GridLayout(0,1));
         // Create the border and set up the colors and fonts.
         this.setBackground(Color.PINK);
         // Add the label.

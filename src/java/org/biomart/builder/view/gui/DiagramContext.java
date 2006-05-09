@@ -25,9 +25,7 @@
 package org.biomart.builder.view.gui;
 
 import javax.swing.JComponent;
-import javax.swing.JList;
 import javax.swing.JPopupMenu;
-import org.biomart.builder.model.Table;
 
 /**
  * DiagramContext for events of interest to classes displaying graphical views
@@ -48,7 +46,7 @@ public interface DiagramContext {
     
     public void customiseAppearance(JComponent component, Object object);
 
-    public JComponent getTableManagerContextPane(Table table, JList columnsList);
+    public JComponent getTableManagerContextPane(TableManagerDialog manager);
     
     public boolean isRightClickAllowed();
 }

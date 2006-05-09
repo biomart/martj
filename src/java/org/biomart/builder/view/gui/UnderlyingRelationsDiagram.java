@@ -36,7 +36,7 @@ import org.biomart.builder.model.Table;
  * Displays the contents of a {@link Schema} in graphical form.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 8th May 2006
+ * @version 0.1.2, 9th May 2006
  * @since 0.1
  */
 public class UnderlyingRelationsDiagram extends Diagram {
@@ -48,7 +48,7 @@ public class UnderlyingRelationsDiagram extends Diagram {
     /**
      * Internal reference to the dataset table we are viewing.
      */
-    private DataSetTable datasetTable;
+    private TableManagerDialog manager;
     
     /**
      * Creates a new instance of SchemaDiagram over a given provider.
@@ -56,10 +56,10 @@ public class UnderlyingRelationsDiagram extends Diagram {
      *
      * @param schema the given table provider.
      */
-    public UnderlyingRelationsDiagram(DataSetTabSet datasetTabSet, DataSetTable datasetTable) {
+    public UnderlyingRelationsDiagram(DataSetTabSet datasetTabSet, TableManagerDialog manager) {
         super(datasetTabSet);
         this.setBackground(UnderlyingRelationsDiagram.BACKGROUND_COLOUR);
-        this.datasetTable = datasetTable;
+        this.manager = manager;
         this.recalculateDiagram();
     }
     
@@ -77,11 +77,12 @@ public class UnderlyingRelationsDiagram extends Diagram {
      */
     public void recalculateDiagram() {
         this.removeAll();
+        DataSetTable datasetTable = (DataSetTable)this.manager.getTable();
         // Add a TableComponent for the underlying table.
-        Table underlyingTable = this.datasetTable.getUnderlyingTable();
+        Table underlyingTable = datasetTable.getUnderlyingTable();
         if (underlyingTable!=null) this.addDiagramComponent(new TableComponent(underlyingTable, this));
         // Add a TableComponent for each table.
-        for (Iterator i = this.datasetTable.getUnderlyingRelations().iterator(); i.hasNext(); ) {
+        for (Iterator i = datasetTable.getUnderlyingRelations().iterator(); i.hasNext(); ) {
             Relation relation = (Relation)i.next();
             Table pkTable = relation.getPrimaryKey().getTable();
             if (this.getDiagramComponent(pkTable)==null) {
@@ -95,7 +96,7 @@ public class UnderlyingRelationsDiagram extends Diagram {
             }
         }
         // Add Relations last to prevent overlapping.
-        for (Iterator i = this.datasetTable.getUnderlyingRelations().iterator(); i.hasNext(); ) {
+        for (Iterator i = datasetTable.getUnderlyingRelations().iterator(); i.hasNext(); ) {
             Relation relation = (Relation)i.next();
             RelationComponent relationComponent = new RelationComponent(
                     relation,

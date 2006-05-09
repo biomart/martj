@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -45,36 +46,37 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import org.biomart.builder.model.Column;
+import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 8th May 2006
+ * @version 0.1.2, 9th May 2006
  * @since 0.1
  */
 public class TableManagerDialog extends JDialog {
     
-    private boolean changed;
+    private Table table;
+    private JList columnsList;
+    private DefaultListModel columnsListModel;
+    private DiagramContext diagramContext;
     
     /** Creates a new instance of TableManagerDialog */
     private TableManagerDialog(SchemaTabSet schemaTabSet, Table table, DiagramContext diagramContext) {
         super(schemaTabSet.getDataSetTabSet().getMartTabSet().getMartBuilder(),
                 BuilderBundle.getString("tableManagerDialogTitle"),
                 true);
-
-        this.changed = false;
         
-        // load the columns
-        List columns = new ArrayList();
-        for (Iterator i = table.getColumns().iterator(); i.hasNext(); ) columns.add(((Column)i.next()).getName());
-        Collections.sort(columns);
-
+        this.table = table;
+        this.diagramContext = diagramContext;
+        
         // Useful things
         JButton close = new JButton(BuilderBundle.getString("closeButton"));
-        JList columnsList = new JList((String[])columns.toArray(new String[0]));
-        columnsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        this.columnsListModel = new DefaultListModel();
+        this.columnsList = new JList(this.columnsListModel);
+        this.columnsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         // create label constraints
         GridBagConstraints labelConstraints = new GridBagConstraints();
@@ -94,8 +96,8 @@ public class TableManagerDialog extends JDialog {
         // create last row field constraints
         GridBagConstraints fieldLastRowConstraints = (GridBagConstraints)fieldConstraints.clone();
         fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
-
-        // Make the content.        
+        
+        // Make the content.
         JPanel content = new JPanel(new BorderLayout());
         this.setContentPane(content);
         
@@ -105,31 +107,32 @@ public class TableManagerDialog extends JDialog {
         JLabel label = new JLabel(BuilderBundle.getString("schemaLabel"));
         columnsGridBag.setConstraints(label, labelConstraints);
         colsPane.add(label);
-        JComponent field = new JTextField(table.getSchema().getName());
+        JComponent field = new JTextField(this.table.getSchema().getName());
         field.setEnabled(false);
         columnsGridBag.setConstraints(field, fieldConstraints);
         colsPane.add(field);
         label = new JLabel(BuilderBundle.getString("tableLabel"));
         columnsGridBag.setConstraints(label, labelConstraints);
         colsPane.add(label);
-        field = new JTextField(table.getName());
+        field = new JTextField(this.table.getName());
         field.setEnabled(false);
         columnsGridBag.setConstraints(field, fieldConstraints);
         colsPane.add(field);
         label = new JLabel(BuilderBundle.getString("columnsLabel"));
         columnsGridBag.setConstraints(label, labelConstraints);
         colsPane.add(label);
-        field = new JScrollPane(columnsList);
+        field = new JScrollPane(this.columnsList);
         columnsGridBag.setConstraints(field, fieldConstraints);
         colsPane.add(field);
         label = new JLabel();
         columnsGridBag.setConstraints(label, labelLastRowConstraints);
         colsPane.add(label);
-        columnsGridBag.setConstraints(close, fieldLastRowConstraints);
-        colsPane.add(close);
-
+        field = close;
+        columnsGridBag.setConstraints(field, fieldLastRowConstraints);
+        colsPane.add(field);
+        
         // Context pane.
-        JComponent contextPane = diagramContext.getTableManagerContextPane(table, columnsList);
+        JComponent contextPane = this.diagramContext.getTableManagerContextPane(this);
         
         // Build the window.
         colsPane.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
@@ -140,30 +143,54 @@ public class TableManagerDialog extends JDialog {
         // intercept the close button
         close.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                hide();
+                requestClose();
             }
         });
         // make it the default button.
         this.getRootPane().setDefaultButton(close);
         
+        // populate columns list and context panel
+        this.reloadTable();
+        
         // set size of window
         this.pack();
     }
-
-    private boolean isChanged() {
-        return this.changed;
+    
+    public Table getTable() {
+        return this.table;
+    }
+    
+    public JList getColumnsList() {
+        return this.columnsList;
+    }
+    
+    public void requestClose() {
+        this.hide();
+    }
+    
+    public void reloadTable() {
+        // Dataset table may have been recreated.
+        if (this.table instanceof DataSetTable) this.table = this.table.getSchema().getTableByName(this.table.getName());
+        // load the columns.
+        this.columnsListModel.removeAllElements();
+        List columns = new ArrayList();
+        for (Iterator i = this.table.getColumns().iterator(); i.hasNext(); ) {
+            Column col = (Column)i.next();
+            columns.add(col.getName());
+        }
+        Collections.sort(columns);   
+        for (Iterator i = columns.iterator(); i.hasNext(); ) this.columnsListModel.addElement(i.next());
     }
     
     /**
      * Static method which allows the user to create a new table provider.
      */
-    public static boolean showTableManager(SchemaTabSet schemaTabSet, Table table, DiagramContext diagramContext) {
+    public static void showTableManager(SchemaTabSet schemaTabSet, Table table, DiagramContext diagramContext) {
         TableManagerDialog dialog = new TableManagerDialog(
                 schemaTabSet,
                 table,
                 diagramContext);
         dialog.setLocationRelativeTo(schemaTabSet.getDataSetTabSet().getMartTabSet().getMartBuilder());
         dialog.show();
-        return dialog.isChanged();
     }
 }

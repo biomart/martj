@@ -63,7 +63,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * choosing it.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 8th May 2006
+ * @version 0.1.12, 9th May 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -161,7 +161,7 @@ public class DataSet extends GenericSchema {
         
         // Find the shortest 1:m paths (depths) of each relation we have.
         this.walkRelations(this.getCentralTable(), 0);
-
+        
         // Regenerate the dataset.
         this.regenerate();
     }
@@ -254,6 +254,8 @@ public class DataSet extends GenericSchema {
      */
     public void unmaskRelation(Relation relation) {
         // Do it.
+        this.maskedColumns.removeAll(relation.getPrimaryKey().getColumns());
+        this.maskedColumns.removeAll(relation.getForeignKey().getColumns());
         this.maskedRelations.remove(relation);
     }
     
@@ -276,23 +278,11 @@ public class DataSet extends GenericSchema {
         // Do it.
         this.maskedColumns.add(column);
         // Mask the associated relations.
-        Table t = column.getTable();
-        // Primary key first.
-        Key pk = t.getPrimaryKey();
-        if (pk != null && pk.getColumns().contains(column)) {
-            for (Iterator j = pk.getRelations().iterator(); j.hasNext(); ) {
+        for (Iterator i = column.getTable().getKeys().iterator(); i.hasNext(); ) {
+            Key k = (Key)i.next();
+            if (k.getColumns().contains(column)) for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
                 Relation r = (Relation)j.next();
                 this.maskRelation(r);
-            }
-        }
-        // Then foreign keys.
-        for (Iterator i = t.getForeignKeys().iterator(); i.hasNext(); ) {
-            Key fk = (Key)i.next();
-            if (fk.getColumns().contains(column)) {
-                for (Iterator j = fk.getRelations().iterator(); j.hasNext(); ) {
-                    Relation r = (Relation)j.next();
-                    this.maskRelation(r);
-                }
             }
         }
     }
@@ -1193,25 +1183,6 @@ public class DataSet extends GenericSchema {
         }
         
         /**
-         * {@link DataSetTable}s can be renamed by the user if the names don'table make
-         * any sense to them. Use this method to do just that. It will check first to see if the proposed
-         * name has already been used in the data set {@link Schema}. If it has, an AlreadyExistsException
-         * will be thrown, otherwise the change will be made. The new name must not be null.
-         *
-         * @param name the new name for the table.
-         * @throws AlreadyExistsException if a {@link DataSetTable} already exists with
-         * that name.
-         */
-        public void setName(String name) throws AlreadyExistsException {
-            // Sanity check.
-            if (name.equals(this.name)) return; // Skip unnecessary change.
-            if (this.getSchema().getTableByName(name)!=null)
-                throw new AlreadyExistsException(BuilderBundle.getString("nameExists"), name);
-            // Do it.
-            this.name = name;
-        }
-        
-        /**
          * If this table is partitioned, returns the partitioning column(s). Otherwise, returns an empty set.
          * @return a set, never null, of {@link Column}s this table is partitioned on.
          */
@@ -1271,10 +1242,10 @@ public class DataSet extends GenericSchema {
         public void setName(String name) throws AlreadyExistsException {
             // Sanity check.
             if (name.equals(this.name)) return; // Skip unnecessary change.
-            if (table.getColumnByName(name) != null)
-                throw new AlreadyExistsException(BuilderBundle.getString("nameExists"), name);
             // Do it.
+            String oldName = this.name;
             this.name = name;
+            this.table.changeColumnMapKey(oldName, this.name);
         }
         
         /**

@@ -24,16 +24,23 @@
 
 package org.biomart.builder.view.gui;
 
-import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Iterator;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import org.biomart.builder.model.Column;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
@@ -49,7 +56,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Adapts listener behaviour by adding in DataSet-specific stuff.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 8th May 2006
+ * @version 0.1.7, 9th May 2006
  * @since 0.1
  */
 public class WindowDiagramContext extends SchemaDiagramContext {
@@ -94,7 +101,7 @@ public class WindowDiagramContext extends SchemaDiagramContext {
             rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
             rename.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.getSchemaTabSet().requestRenameSchema(schema, false);
+                    getDataSetTabSet().getSchemaTabSet().requestRenameSchema(schema, false);
                 }
             });
             contextMenu.add(rename);
@@ -113,7 +120,7 @@ public class WindowDiagramContext extends SchemaDiagramContext {
                 modify.setMnemonic(BuilderBundle.getString("modifySchemaMnemonic").charAt(0));
                 modify.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.getSchemaTabSet().requestModifySchema(schema);
+                        getDataSetTabSet().getSchemaTabSet().requestModifySchema(schema);
                     }
                 });
                 contextMenu.add(modify);
@@ -131,7 +138,7 @@ public class WindowDiagramContext extends SchemaDiagramContext {
                 remove.setMnemonic(BuilderBundle.getString("removeSchemaMnemonic").charAt(0));
                 remove.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.getSchemaTabSet().requestRemoveSchema(schema);
+                        getDataSetTabSet().getSchemaTabSet().requestRemoveSchema(schema);
                     }
                 });
                 contextMenu.add(remove);
@@ -140,7 +147,7 @@ public class WindowDiagramContext extends SchemaDiagramContext {
                 addToGroup.setMnemonic(BuilderBundle.getString("addToGroupMnemonic").charAt(0));
                 addToGroup.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.getSchemaTabSet().requestAddSchemaToSchemaGroup(schema);
+                        getDataSetTabSet().getSchemaTabSet().requestAddSchemaToSchemaGroup(schema);
                     }
                 });
                 contextMenu.add(addToGroup);
@@ -150,10 +157,10 @@ public class WindowDiagramContext extends SchemaDiagramContext {
         else if (object instanceof Relation) {
             // Relation stuff
             final Relation relation = (Relation)object;
-            final DataSet ds = this.datasetTabSet.getSelectedDataSetTab().getDataSet();
+            final DataSet ds = this.getDataSetTabSet().getSelectedDataSetTab().getDataSet();
             
             // Add separator.
-            contextMenu.addSeparator();            
+            contextMenu.addSeparator();
             
             boolean incorrect = relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT);
             boolean relationOneToOne = relation.getFKCardinality().equals(Cardinality.ONE);
@@ -166,7 +173,7 @@ public class WindowDiagramContext extends SchemaDiagramContext {
                 unmask.setMnemonic(BuilderBundle.getString("unmaskRelationMnemonic").charAt(0));
                 unmask.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.requestUnmaskRelation(ds, relation);
+                        getDataSetTabSet().requestUnmaskRelation(ds, relation);
                     }
                 });
                 contextMenu.add(unmask);
@@ -176,7 +183,7 @@ public class WindowDiagramContext extends SchemaDiagramContext {
                 mask.setMnemonic(BuilderBundle.getString("maskRelationMnemonic").charAt(0));
                 mask.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.requestMaskRelation(ds, relation);
+                        getDataSetTabSet().requestMaskRelation(ds, relation);
                     }
                 });
                 contextMenu.add(mask);
@@ -188,7 +195,7 @@ public class WindowDiagramContext extends SchemaDiagramContext {
                 unsubclass.setMnemonic(BuilderBundle.getString("unsubclassRelationMnemonic").charAt(0));
                 unsubclass.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.requestUnsubclassRelation(ds, relation);
+                        getDataSetTabSet().requestUnsubclassRelation(ds, relation);
                     }
                 });
                 contextMenu.add(unsubclass);
@@ -198,7 +205,7 @@ public class WindowDiagramContext extends SchemaDiagramContext {
                 subclass.setMnemonic(BuilderBundle.getString("subclassRelationMnemonic").charAt(0));
                 subclass.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.requestSubclassRelation(ds, relation);
+                        getDataSetTabSet().requestSubclassRelation(ds, relation);
                     }
                 });
                 contextMenu.add(subclass);
@@ -210,7 +217,7 @@ public class WindowDiagramContext extends SchemaDiagramContext {
                 unconcat.setMnemonic(BuilderBundle.getString("unconcatOnlyRelationMnemonic").charAt(0));
                 unconcat.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.requestUnconcatOnlyRelation(ds, relation);
+                        getDataSetTabSet().requestUnconcatOnlyRelation(ds, relation);
                     }
                 });
                 contextMenu.add(unconcat);
@@ -223,7 +230,7 @@ public class WindowDiagramContext extends SchemaDiagramContext {
                 comma.setMnemonic(BuilderBundle.getString("commaConcatMnemonic").charAt(0));
                 comma.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.requestConcatOnlyRelation(ds, relation, ConcatRelationType.COMMA);
+                        getDataSetTabSet().requestConcatOnlyRelation(ds, relation, ConcatRelationType.COMMA);
                     }
                 });
                 concatMenu.add(comma);
@@ -232,7 +239,7 @@ public class WindowDiagramContext extends SchemaDiagramContext {
                 space.setMnemonic(BuilderBundle.getString("spaceConcatMnemonic").charAt(0));
                 space.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.requestConcatOnlyRelation(ds, relation, ConcatRelationType.SPACE);
+                        getDataSetTabSet().requestConcatOnlyRelation(ds, relation, ConcatRelationType.SPACE);
                     }
                 });
                 concatMenu.add(space);
@@ -241,7 +248,7 @@ public class WindowDiagramContext extends SchemaDiagramContext {
                 tab.setMnemonic(BuilderBundle.getString("tabConcatMnemonic").charAt(0));
                 tab.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.requestConcatOnlyRelation(ds, relation, ConcatRelationType.TAB);
+                        getDataSetTabSet().requestConcatOnlyRelation(ds, relation, ConcatRelationType.TAB);
                     }
                 });
                 concatMenu.add(tab);
@@ -294,7 +301,7 @@ public class WindowDiagramContext extends SchemaDiagramContext {
     public void customiseAppearance(JComponent component, Object object) {
         if (object instanceof Relation) {
             
-            DataSet ds = this.datasetTabSet.getSelectedDataSetTab().getDataSet();
+            DataSet ds = this.getDataSetTabSet().getSelectedDataSetTab().getDataSet();
             
             Relation relation = (Relation)object;
             // Fade out all INFERRED_INCORRECT and MASKED relations.
@@ -316,11 +323,165 @@ public class WindowDiagramContext extends SchemaDiagramContext {
             }
         }
     }
+    
+    private DefaultListModel maskedColumns;
+    
+    public JComponent getTableManagerContextPane(final TableManagerDialog manager) {
+        // Create a big-box list of things.
+        Box panel = Box.createVerticalBox();
         
-    public JComponent getTableManagerContextPane(Table table, JList columnsList) {
-        // Create a pane explaining the underlying relations.
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(new JLabel("Window context"), BorderLayout.PAGE_START);
+        // Create a sub-pane including the remove column button, and a label for the diagram.
+        Box maskPane = Box.createHorizontalBox();
+        // Create a sub-sub pane for the buttons and label.
+        Box maskButtonPane = Box.createVerticalBox();
+        JLabel label = new JLabel(BuilderBundle.getString("maskedColumnsLabel"));
+        label.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+        maskButtonPane.add(label);
+        final JButton unmask = new JButton(BuilderBundle.getString("deselectColumnButton"));
+        unmask.setEnabled(false); // default off.
+        maskButtonPane.add(unmask);
+        final JButton mask = new JButton(BuilderBundle.getString("selectColumnButton"));
+        mask.setEnabled(false); // default off.
+        maskButtonPane.add(mask);
+        // Add the buttons and label to the main mask pane.
+        maskPane.add(maskButtonPane);
+        // Create a pane listing the masked columns.
+        // Set up the empty list.
+        this.maskedColumns = new DefaultListModel();
+        // Add any existing masked columns to it.
+        for (Iterator i = this.getDataSet().getMaskedColumns().iterator(); i.hasNext(); ) {
+            Column col = (Column)i.next();
+            if (col.getTable().equals(manager.getTable())) this.maskedColumns.addElement(col.getName());
+        }
+        // Add the list to the pane.
+        final JList maskedColumnsList = new JList(this.maskedColumns);
+        JScrollPane scroller = new JScrollPane(maskedColumnsList);
+        scroller.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+        maskPane.add(scroller);
+        
+        /*
+        // Create a sub-pane including the remove column button, and a label for the diagram.
+        Box partitionPane = Box.createHorizontalBox();
+        final JButton partition = new JButton(BuilderBundle.getString("deselectColumnButton"));
+        partition.setEnabled(false); // default off.
+        partitionPane.add(partition);
+        final JButton unpartition = new JButton(BuilderBundle.getString("selectColumnButton"));
+        unpartition.setEnabled(false); // default off.
+        partitionPane.add(unpartition);
+        label = new JLabel(BuilderBundle.getString("partitionColumnLabel"));
+        label.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+        partitionPane.add(label);
+        final JTextField partitionedColumn = new JTextField();
+        partitionedColumn.setEnabled(false);
+        partitionPane.add(partitionedColumn);
+        final JComboBox partitionedColumnType = new JComboBox();
+        partitionedColumnType.setEnabled(false);
+        partitionPane.add(partitionedColumnType);
+        // Look up partition types.
+            -- 'SingleValue' takes one string params,
+            -- 'UniqueValues' takes no params,
+            -- 'ValueCollection' takes unlimited string params.
+        // Look up default partitioned column.
+        if (!this.dataset.getPartitionedColumns().isEmpty()) {
+            boolean found = false;
+            for (Iterator i = this.dataset.getPartitionedColumns().iterator(); i.hasNext() && !found; ) {
+                Column c = (Column)i.next();
+                if (c.getTable().equals(manager.getTable())) {
+                    found = true;
+                    partitionedColumn.setText(c.getName());
+                    unpartition.setEnabled(true);
+                }
+            }
+        }
+         */
+        
+        // Add the panes.
+        panel.add(maskPane);
+        //panel.add(partitionPane);
+        
+        // Add a column listener which redraws the diagram each time it changes.
+        final JList columnsList = manager.getColumnsList();
+        columnsList.addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    String selectedCol = (String)columnsList.getSelectedValue();
+                    if (selectedCol==null) {
+                        mask.setEnabled(false);
+                        //              partition.setEnabled(false);
+                    } else {
+                        mask.setEnabled(true);
+                        //              partition.setEnabled(true);
+                    }
+                }
+            }
+        });
+        
+        // Add a column listener which redraws the diagram each time it changes.
+        maskedColumnsList.addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    String selectedCol = (String)maskedColumnsList.getSelectedValue();
+                    if (selectedCol==null) {
+                        unmask.setEnabled(false);
+                    } else {
+                        unmask.setEnabled(true);
+                    }
+                }
+            }
+        });
+        
+        // Add action to the 'mask column' button.
+        mask.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String selectedCol = (String)manager.getColumnsList().getSelectedValue();
+                if (selectedCol != null && !maskedColumns.contains(selectedCol)) {
+                    Column col = manager.getTable().getColumnByName(selectedCol);
+                    getDataSetTabSet().requestMaskColumn(getDataSet(), col);
+                    maskedColumns.addElement(col.getName());
+                }
+            }
+        });
+        
+        // Add action to the 'unmask column' button.
+        unmask.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String selectedCol = (String)maskedColumnsList.getSelectedValue();
+                if (selectedCol != null) {
+                    Column col = manager.getTable().getColumnByName(selectedCol);
+                    getDataSetTabSet().requestUnmaskColumn(getDataSet(), col);
+                    maskedColumns.removeElement(col.getName());
+                }
+            }
+        });
+        
+        /*
+        // Add action to the 'mask column' button.
+        partition.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String selectedCol = (String)manager.getColumnsList().getSelectedValue();
+                if (selectedCol != null) {
+                    Column col = manager.getTable().getColumnByName(selectedCol);
+                    getDataSetTabSet().requestPartitionColumn(getDataSet(), col);
+                    partitionedColumn.setText(col.getName());
+                }
+            }
+        });
+         
+        // Add action to the 'unmask column' button.
+        unpartition.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String selectedCol = (String)maskedColumnsList.getSelectedValue();
+                if (selectedCol != null) {
+                    Column col = manager.getTable().getColumnByName(selectedCol);
+                    getDataSetTabSet().requestUnpartitionColumn(getDataSet(), col);
+                    partitionedColumn.setText(BuilderBundle.getString("none"));
+                    unpartition.setEnabled(false);
+                }
+            }
+        });
+         */
+        
+        // Return the panel
         return panel;
     }
 }
