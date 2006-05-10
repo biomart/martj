@@ -50,7 +50,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Displays the contents of multiple {@link Schema}s in graphical form.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 9th May 2006
+ * @version 0.1.7, 10th May 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -223,14 +223,6 @@ public class SchemaTabSet extends JTabbedPane {
         try {
             if (SchemaManagerDialog.modifySchema(this, schema))
                 this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
-        } catch (Throwable t) {
-            this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
-        }
-    }
-    
-    public void requestTableManager(final Table table, DiagramContext diagramContext) {
-        try {
-            TableManagerDialog.showTableManager(this, table, diagramContext);
         } catch (Throwable t) {
             this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
         }

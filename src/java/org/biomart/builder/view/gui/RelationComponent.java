@@ -43,7 +43,7 @@ import org.biomart.builder.model.Relation.Cardinality;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 8th May 2006
+ * @version 0.1.6, 10th May 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
@@ -108,6 +108,8 @@ public class RelationComponent extends JComponent implements DiagramComponent {
     private KeyComponent primaryKey;
     private KeyComponent foreignKey;
     
+    private Object state;
+    
     /**
      * The constructor constructs an object around a given
      * object, and associates with a given display.
@@ -130,6 +132,14 @@ public class RelationComponent extends JComponent implements DiagramComponent {
         DiagramContext mod = this.getDiagram().getDiagramContext();
         if (mod != null) mod.customiseAppearance(this, this.getObject());
         this.setBackground(this.getForeground());
+    }
+    
+    public Object getState() {
+        return this.state;
+    }
+    
+    public void setState(Object state) {
+        this.state = state;
     }
     
     /**

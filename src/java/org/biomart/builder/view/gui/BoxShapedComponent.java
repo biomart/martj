@@ -26,6 +26,8 @@ package org.biomart.builder.view.gui;
 
 import java.awt.AWTEvent;
 import java.awt.event.MouseEvent;
+import java.util.HashMap;
+import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -35,7 +37,7 @@ import javax.swing.JPopupMenu;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 8th May 2006
+ * @version 0.1.5, 10th May 2006
  * @since 0.1
  */
 public abstract class BoxShapedComponent extends JPanel implements DiagramComponent {
@@ -50,6 +52,13 @@ public abstract class BoxShapedComponent extends JPanel implements DiagramCompon
     private Object object;
     
     /**
+     * A map of keys to key components.
+     */
+    private Map subComponents = new HashMap();
+    
+    private Object state;
+    
+    /**
      * The constructor constructs an object around a given
      * object, and associates with a given display.
      */
@@ -59,6 +68,25 @@ public abstract class BoxShapedComponent extends JPanel implements DiagramCompon
         this.diagram = diagram;
         this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
         this.updateAppearance();
+    }
+    
+    /**
+     * Gets a key component.
+     */
+    public Map getSubComponents() {
+        return this.subComponents;
+    }
+    
+    protected void addSubComponent(Object object, DiagramComponent component) {
+        this.subComponents.put(object,component);
+    }
+    
+    public Object getState() {
+        return this.state;
+    }
+    
+    public void setState(Object state) {
+        this.state = state;
     }
     
     /**

@@ -1,5 +1,5 @@
 /*
- * WindowDiagramContext.java
+ * WindowContext.java
  *
  * Created on 19 April 2006, 09:43
  */
@@ -26,20 +26,10 @@ package org.biomart.builder.view.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Iterator;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
@@ -59,7 +49,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * @version 0.1.8, 10th May 2006
  * @since 0.1
  */
-public class WindowDiagramContext extends SchemaDiagramContext {
+public class WindowContext extends SchemaContext {
     /**
      * Internal reference to our dataset.
      */
@@ -73,7 +63,7 @@ public class WindowDiagramContext extends SchemaDiagramContext {
      *
      * @param dataset the dataset we are attached to.
      */
-    public WindowDiagramContext(DataSetTabSet datasetTabSet, DataSet dataset) {
+    public WindowContext(DataSetTabSet datasetTabSet, DataSet dataset) {
         super(datasetTabSet);
         this.dataset = dataset;
     }
@@ -259,8 +249,44 @@ public class WindowDiagramContext extends SchemaDiagramContext {
         }
         
         else if (object instanceof Key) {
+            // Keys just show the parent table stuff.
             Table table = ((Key)object).getTable();
             this.customiseContextMenu(contextMenu, table);
+        }
+        
+        else if (object instanceof Column) {
+            // Columns show the parent table stuff.
+            Table table = ((Column)object).getTable();
+            this.customiseContextMenu(contextMenu, table);
+            
+            // AND they show Column stuff
+            final Column column = (Column)object;
+            final DataSet ds = this.getDataSetTabSet().getSelectedDataSetTab().getDataSet();
+            boolean isMasked = ds.getMaskedColumns().contains(column);
+            
+            // Add separator.
+            contextMenu.addSeparator();
+            
+            // Add column stuff.
+            JMenuItem mask = new JMenuItem(BuilderBundle.getString("maskColumnTitle"));
+            mask.setMnemonic(BuilderBundle.getString("maskColumnMnemonic").charAt(0));
+            mask.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestMaskColumn(ds, column);
+                }
+            });
+            contextMenu.add(mask);
+            if (isMasked) mask.setEnabled(false);
+            
+            JMenuItem unmask = new JMenuItem(BuilderBundle.getString("unmaskColumnTitle"));
+            unmask.setMnemonic(BuilderBundle.getString("unmaskColumnMnemonic").charAt(0));
+            unmask.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestUnmaskColumn(ds, column);
+                }
+            });
+            contextMenu.add(unmask);
+            if (!isMasked) unmask.setEnabled(false);
         }
         
         else if (object == null) {
@@ -322,167 +348,21 @@ public class WindowDiagramContext extends SchemaDiagramContext {
                 component.setForeground(RelationComponent.NORMAL_COLOUR);
             }
         }
-    }
-    
-    private DefaultListModel maskedColumns;
-    
-    public JComponent getTableManagerContextPane(final TableManagerDialog manager) {
-        // Create a big-box list of things.
-        Box panel = Box.createVerticalBox();
         
-        // Create a sub-pane including the remove column button, and a label for the diagram.
-        Box maskPane = Box.createHorizontalBox();
-        // Create a sub-sub pane for the buttons and label.
-        Box maskButtonPane = Box.createVerticalBox();
-        JLabel label = new JLabel(BuilderBundle.getString("maskedColumnsLabel"));
-        label.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
-        maskButtonPane.add(label);
-        final JButton unmask = new JButton(BuilderBundle.getString("deselectColumnButton"));
-        unmask.setEnabled(false); // default off.
-        maskButtonPane.add(unmask);
-        final JButton mask = new JButton(BuilderBundle.getString("selectColumnButton"));
-        mask.setEnabled(false); // default off.
-        maskButtonPane.add(mask);
-        // Add the buttons and label to the main mask pane.
-        maskPane.add(maskButtonPane);
-        // Create a pane listing the masked columns.
-        // Set up the empty list.
-        this.maskedColumns = new DefaultListModel();
-        // Add any existing masked columns to it.
-        for (Iterator i = this.getDataSet().getMaskedColumns().iterator(); i.hasNext(); ) {
-            Column col = (Column)i.next();
-            if (col.getTable().equals(manager.getTable())) this.maskedColumns.addElement(col.getName());
-        }
-        // Add the list to the pane.
-        final JList maskedColumnsList = new JList(this.maskedColumns);
-        JScrollPane scroller = new JScrollPane(maskedColumnsList);
-        scroller.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
-        maskPane.add(scroller);
-        
-        /*
-        // Create a sub-pane including the remove column button, and a label for the diagram.
-        Box partitionPane = Box.createHorizontalBox();
-        final JButton partition = new JButton(BuilderBundle.getString("deselectColumnButton"));
-        partition.setEnabled(false); // default off.
-        partitionPane.add(partition);
-        final JButton unpartition = new JButton(BuilderBundle.getString("selectColumnButton"));
-        unpartition.setEnabled(false); // default off.
-        partitionPane.add(unpartition);
-        label = new JLabel(BuilderBundle.getString("partitionColumnLabel"));
-        label.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
-        partitionPane.add(label);
-        final JTextField partitionedColumn = new JTextField();
-        partitionedColumn.setEnabled(false);
-        partitionPane.add(partitionedColumn);
-        final JComboBox partitionedColumnType = new JComboBox();
-        partitionedColumnType.setEnabled(false);
-        partitionPane.add(partitionedColumnType);
-        // Look up partition types.
-            -- 'SingleValue' takes one string params,
-            -- 'UniqueValues' takes no params,
-            -- 'ValueCollection' takes unlimited string params.
-        // Can partition only one column, or at most two if exactly one of them is a SchemaNameColumn
-        // Look up default partitioned column.
-        if (!this.dataset.getPartitionedColumns().isEmpty()) {
-            boolean found = false;
-            for (Iterator i = this.dataset.getPartitionedColumns().iterator(); i.hasNext() && !found; ) {
-                Column c = (Column)i.next();
-                if (c.getTable().equals(manager.getTable())) {
-                    found = true;
-                    partitionedColumn.setText(c.getName());
-                    unpartition.setEnabled(true);
-                }
+        // Columns.
+        else if (object instanceof Column) {
+            
+            DataSet ds = this.getDataSetTabSet().getSelectedDataSetTab().getDataSet();
+            
+            Column column = (Column)object;
+            // Fade out all MASKED columns.
+            if (ds.getMaskedColumns().contains(column)) {
+                component.setForeground(ColumnComponent.FADED_COLOUR);
+            }
+            // All others are normal.
+            else {
+                component.setForeground(ColumnComponent.NORMAL_COLOUR);
             }
         }
-         */
-        
-        // Add the panes.
-        panel.add(maskPane);
-        //panel.add(partitionPane);
-        
-        // Add a column listener which redraws the diagram each time it changes.
-        final JList columnsList = manager.getColumnsList();
-        columnsList.addListSelectionListener(new ListSelectionListener() {
-            public void valueChanged(ListSelectionEvent e) {
-                if (!e.getValueIsAdjusting()) {
-                    String selectedCol = (String)columnsList.getSelectedValue();
-                    if (selectedCol==null) {
-                        mask.setEnabled(false);
-                        //              partition.setEnabled(false);
-                    } else {
-                        mask.setEnabled(true);
-                        //              partition.setEnabled(true);
-                    }
-                }
-            }
-        });
-        
-        // Add a column listener which redraws the diagram each time it changes.
-        maskedColumnsList.addListSelectionListener(new ListSelectionListener() {
-            public void valueChanged(ListSelectionEvent e) {
-                if (!e.getValueIsAdjusting()) {
-                    String selectedCol = (String)maskedColumnsList.getSelectedValue();
-                    if (selectedCol==null) {
-                        unmask.setEnabled(false);
-                    } else {
-                        unmask.setEnabled(true);
-                    }
-                }
-            }
-        });
-        
-        // Add action to the 'mask column' button.
-        mask.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                String selectedCol = (String)manager.getColumnsList().getSelectedValue();
-                if (selectedCol != null && !maskedColumns.contains(selectedCol)) {
-                    Column col = manager.getTable().getColumnByName(selectedCol);
-                    getDataSetTabSet().requestMaskColumn(getDataSet(), col);
-                    maskedColumns.addElement(col.getName());
-                }
-            }
-        });
-        
-        // Add action to the 'unmask column' button.
-        unmask.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                String selectedCol = (String)maskedColumnsList.getSelectedValue();
-                if (selectedCol != null) {
-                    Column col = manager.getTable().getColumnByName(selectedCol);
-                    getDataSetTabSet().requestUnmaskColumn(getDataSet(), col);
-                    maskedColumns.removeElement(col.getName());
-                }
-            }
-        });
-        
-        /*
-        // Add action to the 'mask column' button.
-        partition.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                String selectedCol = (String)manager.getColumnsList().getSelectedValue();
-                if (selectedCol != null) {
-                    Column col = manager.getTable().getColumnByName(selectedCol);
-                    getDataSetTabSet().requestPartitionColumn(getDataSet(), col);
-                    partitionedColumn.setText(col.getName());
-                }
-            }
-        });
-         
-        // Add action to the 'unmask column' button.
-        unpartition.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                String selectedCol = (String)maskedColumnsList.getSelectedValue();
-                if (selectedCol != null) {
-                    Column col = manager.getTable().getColumnByName(selectedCol);
-                    getDataSetTabSet().requestUnpartitionColumn(getDataSet(), col);
-                    partitionedColumn.setText(BuilderBundle.getString("none"));
-                    unpartition.setEnabled(false);
-                }
-            }
-        });
-         */
-        
-        // Return the panel
-        return panel;
     }
 }

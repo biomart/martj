@@ -46,15 +46,10 @@ import org.biomart.builder.resources.BuilderBundle;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 9th May 2006
+ * @version 0.1.6, 10th May 2006
  * @since 0.1
  */
-public class SchemaComponent extends BoxShapedComponent {
-    /**
-     * A map of keys to key components.
-     */
-    private Map keyToKeyComponent = new HashMap();
-    
+public class SchemaComponent extends BoxShapedComponent {    
     /**
      * The constructor constructs an object around a given
      * object, and associates with a given display.
@@ -85,7 +80,7 @@ public class SchemaComponent extends BoxShapedComponent {
         for (Iterator i = schema.getExternalKeys().iterator(); i.hasNext(); ) {
             Key key = (Key)i.next();
             KeyComponent keyComponent = new KeyComponent(key, diagram, this);
-            this.keyToKeyComponent.put(key, keyComponent);
+            this.addSubComponent(key, keyComponent);
             this.add(keyComponent);
         }
     }
@@ -102,13 +97,6 @@ public class SchemaComponent extends BoxShapedComponent {
      */
     private SchemaGroup getSchemaGroup() {
         return (SchemaGroup)this.getObject();
-    }
-    
-    /**
-     * Gets a key component.
-     */
-    public Map getKeyComponents() {
-        return this.keyToKeyComponent;
     }
     
     /**

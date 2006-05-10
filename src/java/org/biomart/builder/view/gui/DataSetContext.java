@@ -1,5 +1,5 @@
 /*
- * DataSetDiagramContext.java
+ * DataSetContext.java
  *
  * Created on 19 April 2006, 09:46
  */
@@ -24,27 +24,13 @@
 
 package org.biomart.builder.view.gui;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.Key;
@@ -58,15 +44,15 @@ import org.biomart.builder.resources.BuilderBundle;
  * @version 0.1.9, 10th May 2006
  * @since 0.1
  */
-public class DataSetDiagramContext extends WindowDiagramContext {
+public class DataSetContext extends WindowContext {
     /**
      *
-     * Creates a new instance of DataSetDiagramContext over
+     * Creates a new instance of DataSetContext over
      * a given window.
      *
      * @param window the window whose dataset we are attached to.
      */
-    public DataSetDiagramContext(DataSetTabSet datasetTabSet, DataSet dataset) {
+    public DataSetContext(DataSetTabSet datasetTabSet, DataSet dataset) {
         super(datasetTabSet, dataset);
     }
     
@@ -117,6 +103,15 @@ public class DataSetDiagramContext extends WindowDiagramContext {
             // Add separator.
             contextMenu.addSeparator();
             
+            JMenuItem explain = new JMenuItem(BuilderBundle.getString("explainTableTitle"));
+            explain.setMnemonic(BuilderBundle.getString("explainTableMnemonic").charAt(0));
+            explain.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestExplainTable(table);
+                }
+            });
+            contextMenu.add(explain);
+            
             if (tableType.equals(DataSetTableType.DIMENSION)) {
                 JMenuItem removeDM = new JMenuItem(BuilderBundle.getString("removeDimensionTitle"));
                 removeDM.setMnemonic(BuilderBundle.getString("removeDimensionMnemonic").charAt(0));
@@ -141,8 +136,41 @@ public class DataSetDiagramContext extends WindowDiagramContext {
         }
         
         else if (object instanceof Key) {
+            // Show parent table stuff for keys.
             Table table = ((Key)object).getTable();
             this.customiseContextMenu(contextMenu, table);
+        }
+        
+        else if (object instanceof DataSetColumn) {
+            // Show parent table stuff first.
+            Table table = ((DataSetColumn)object).getTable();
+            this.customiseContextMenu(contextMenu, table);
+            
+            // AND they show Column stuff
+            final DataSetColumn column = (DataSetColumn)object;
+            final DataSet ds = this.getDataSetTabSet().getSelectedDataSetTab().getDataSet();
+            
+            // Add separator.
+            contextMenu.addSeparator();
+            
+            JMenuItem explain = new JMenuItem(BuilderBundle.getString("explainColumnTitle"));
+            explain.setMnemonic(BuilderBundle.getString("explainColumnMnemonic").charAt(0));
+            explain.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestExplainColumn(column);
+                }
+            });
+            contextMenu.add(explain);
+            
+            // Add column stuff.
+            JMenuItem mask = new JMenuItem(BuilderBundle.getString("maskColumnTitle"));
+            mask.setMnemonic(BuilderBundle.getString("maskColumnMnemonic").charAt(0));
+            mask.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestMaskColumn(ds, column);
+                }
+            });
+            contextMenu.add(mask);
         }
     }
     
@@ -168,102 +196,6 @@ public class DataSetDiagramContext extends WindowDiagramContext {
                 component.setForeground(TableComponent.DIMENSION_COLOUR);
             } else {
                 component.setForeground(TableComponent.NORMAL_COLOUR);
-            }
-        }
-    }
-    
-    public JComponent getTableManagerContextPane(final TableManagerDialog manager) {
-        // Create a sub-pane including the mask column button, and a label for the diagram.
-        JPanel labelPane = new JPanel();
-        final JButton mask = new JButton(BuilderBundle.getString("maskColumnButton"));
-        mask.setEnabled(false); // default off.
-        labelPane.add(mask);
-        JLabel label = new JLabel(BuilderBundle.getString("underlyingRelationsLabel"));
-        label.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
-        labelPane.add(label);
-        // Create a pane explaining the underlying relations.
-        JPanel diagramPanel = new JPanel(new BorderLayout());
-        diagramPanel.add(labelPane, BorderLayout.PAGE_START);
-        // Set up the diagram.
-        final Diagram diagram = new UnderlyingRelationsDiagram(this.getDataSetTabSet(), manager);
-        final UnderlyingRelationsDiagramContext diagramContext = new UnderlyingRelationsDiagramContext(this.getDataSetTabSet(), this.getDataSet());
-        diagram.setDiagramContext(diagramContext);
-        // Force smallest possible initial diagramPanel.
-        Dimension martSize = this.getDataSetTabSet().getMartTabSet().getMartBuilder().getSize();
-        Dimension scrollSize = diagram.getPreferredSize();
-        scrollSize.width = Math.max(100, martSize.width / 2);
-        scrollSize.height = Math.max(100, martSize.height / 2);
-        diagramPanel.setPreferredSize(scrollSize);
-        // Create the scroller and add it.
-        JScrollPane scroller = new JScrollPane(diagram);
-        scroller.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
-        diagramPanel.add(scroller, BorderLayout.CENTER);
-        
-        // Add a column listener which redraws the diagram each time it changes.
-        final JList columnsList = manager.getColumnsList();
-        columnsList.addListSelectionListener(new ListSelectionListener() {
-            public void valueChanged(ListSelectionEvent e) {
-                if (!e.getValueIsAdjusting()) {
-                    String selectedCol = (String)columnsList.getSelectedValue();
-                    if (selectedCol==null) {
-                        diagramContext.setSelectedColumn(null);
-                        mask.setEnabled(false);
-                    } else {
-                        DataSetColumn col = (DataSetColumn)((DataSetTable)manager.getTable()).getColumnByName(selectedCol);
-                        diagramContext.setSelectedColumn(col);
-                        mask.setEnabled(true);
-                    }
-                    diagram.redrawAllDiagramComponents();
-                }
-            }
-        });
-        
-        // Add action to the 'mask column' button.
-        mask.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                String selectedCol = (String)columnsList.getSelectedValue();
-                if (selectedCol != null) {
-                    DataSetColumn col = (DataSetColumn)((DataSetTable)manager.getTable()).getColumnByName(selectedCol);
-                    maskColumn(col, diagram, manager);
-                }
-            }
-        });
-        
-        // Return the panel
-        return diagramPanel;
-    }
-    
-    private void maskColumn(DataSetColumn col, Diagram diagram, TableManagerDialog manager) {
-        // if column is schema name column, then cannot remove.
-        Key colTablePK = col.getTable().getPrimaryKey();
-        if ((col instanceof SchemaNameColumn) || (colTablePK!=null && colTablePK.getColumns().contains(col))) {
-            JOptionPane.showMessageDialog(manager,
-                    BuilderBundle.getString("cannotMaskBaseColumn"),
-                    BuilderBundle.getString("messageTitle"),
-                    JOptionPane.INFORMATION_MESSAGE);
-        }
-        else {
-            // Confirm.
-            int response = JOptionPane.showConfirmDialog(manager,
-                    BuilderBundle.getString("confirmMaskColumn"),
-                    BuilderBundle.getString("questionTitle"),
-                    JOptionPane.YES_NO_OPTION);
-            if (response!=JOptionPane.YES_OPTION) return;
-            // Do it.
-            if (col instanceof ConcatRelationColumn) this.getDataSetTabSet().requestMaskRelation(this.getDataSet(), col.getUnderlyingRelation());
-            else this.getDataSetTabSet().requestMaskColumn(this.getDataSet(), ((WrappedColumn)col).getWrappedColumn());
-            // Does table still exist?
-            if (this.getDataSet().getTables().contains(manager.getTable())) {
-                // Yes, redraw diagram.
-                manager.reloadTable();
-                diagram.recalculateDiagram();
-            } else {
-                // No, close dialog. (with warning)
-                JOptionPane.showMessageDialog(manager,
-                        BuilderBundle.getString("maskedColumnTableDisappeared"),
-                        BuilderBundle.getString("messageTitle"),
-                        JOptionPane.INFORMATION_MESSAGE);
-                manager.requestClose();
             }
         }
     }

@@ -35,7 +35,7 @@ import org.biomart.builder.model.Schema;
  * Displays the contents of a {@link Schema} in graphical form.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 5th May 2006
+ * @version 0.1.10, 10th May 2006
  * @since 0.1
  */
 public class SchemaDiagram extends Diagram {
@@ -88,13 +88,12 @@ public class SchemaDiagram extends Diagram {
      * {@inheritDoc}
      * Resyncs the table providers with the contents of the set.
      */
-    public void recalculateDiagram() {
+    public void doRecalculateDiagram() {
         this.removeAll();
         // Add a TableComponent for each table.
         for (Iterator i = this.getSchema().getTables().iterator(); i.hasNext(); ) {
             Table table = (Table)i.next();
-            TableComponent tableComponent = new TableComponent(table, this);
-            this.addDiagramComponent(tableComponent);
+            this.addDiagramComponent(new TableComponent(table, this));
         }
         // Add a RelationComponent for each relation.
         for (Iterator i = this.getSchema().getInternalRelations().iterator(); i.hasNext(); ) {
@@ -107,6 +106,6 @@ public class SchemaDiagram extends Diagram {
             this.addDiagramComponent(relationComponent);
         }
         // Delegate upwards.
-        this.resizeDisplay();
+        this.resizeDiagram();
     }
 }

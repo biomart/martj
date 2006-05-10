@@ -56,7 +56,7 @@ import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.model.Key;
+import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.BuilderBundle;
@@ -65,7 +65,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Set of tabs to display a mart and set of windows.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 9th May 2006
+ * @version 0.1.11, 10th May 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -149,7 +149,7 @@ public class DataSetTabSet extends JTabbedPane {
             DataSetTab datasetTab = (DataSetTab)selectedComponent;
             datasetTab.attachSchemaTabSet(this, this.schemaTabSet);
         } else {
-            this.schemaTabSet.setDiagramContext(new SchemaDiagramContext(this));
+            this.schemaTabSet.setDiagramContext(new SchemaContext(this));
             this.setComponentAt(schemaTabIndex, this.schemaTabSet);
         }
     }
@@ -468,11 +468,7 @@ public class DataSetTabSet extends JTabbedPane {
     public void requestMaskColumn(DataSet ds, Column column) {
         try {
             MartUtils.maskColumn(ds, column);
-            for (Iterator i = column.getTable().getKeys().iterator(); i.hasNext(); ) {
-                for (Iterator j = ((Key)i.next()).getRelations().iterator(); j.hasNext(); ) {
-                    this.schemaTabSet.redrawRelationDiagramComponent((Relation)j.next());
-                }
-            }
+            this.schemaTabSet.redrawAllDiagramComponents();
             this.recalculateDataSetDiagram(ds);
             this.martTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
@@ -486,6 +482,7 @@ public class DataSetTabSet extends JTabbedPane {
     public void requestUnmaskColumn(DataSet ds, Column column) {
         try {
             MartUtils.unmaskColumn(ds, column);
+            this.schemaTabSet.redrawAllDiagramComponents();
             this.recalculateDataSetDiagram(ds);
             this.martTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
@@ -508,6 +505,22 @@ public class DataSetTabSet extends JTabbedPane {
                 }
             }
         });
+    }
+    
+    public void requestExplainTable(DataSetTable dsTable) {
+        try {
+            ExplainDataSetDialog.showTableExplanation(this.schemaTabSet, dsTable);
+        } catch (Throwable t) {
+            this.martTabSet.getMartBuilder().showStackTrace(t);
+        }
+    }
+    
+    public void requestExplainColumn(DataSetColumn dsColumn) {
+        try {
+            ExplainDataSetDialog.showColumnExplanation(this.schemaTabSet, dsColumn);
+        } catch (Throwable t) {
+            this.martTabSet.getMartBuilder().showStackTrace(t);
+        }
     }
     
     /**
@@ -657,8 +670,8 @@ public class DataSetTabSet extends JTabbedPane {
          * Attach the table provider tab set.
          */
         public void attachSchemaTabSet(DataSetTabSet datasetTabSet, SchemaTabSet schemaTabSet) {
-            this.datasetDiagram.setDiagramContext(new DataSetDiagramContext(datasetTabSet, dataset));
-            schemaTabSet.setDiagramContext(new WindowDiagramContext(datasetTabSet, this.dataset));
+            this.datasetDiagram.setDiagramContext(new DataSetContext(datasetTabSet, dataset));
+            schemaTabSet.setDiagramContext(new WindowContext(datasetTabSet, this.dataset));
             this.displayArea.add(schemaTabSet, "WINDOW_CARD");
             // Nasty hack to force table provider set to redisplay.
             if (this.windowButton.isSelected()) this.windowButton.doClick();

@@ -36,7 +36,7 @@ import javax.swing.JPopupMenu;
 /**
  * Displays arbitrary objects linked in a radial form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 9th May 2006
+ * @version 0.1.10, 10th May 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
@@ -71,9 +71,9 @@ public abstract class Diagram extends JPanel {
     public void addDiagramComponent(DiagramComponent component) {
         this.componentMap.put(component.getObject(), component);
         if (component instanceof TableComponent) {
-            this.componentMap.putAll(((TableComponent)component).getKeyComponents());
+            this.componentMap.putAll(((TableComponent)component).getSubComponents());
         } else if (component instanceof SchemaComponent) {
-            this.componentMap.putAll(((SchemaComponent)component).getKeyComponents());
+            this.componentMap.putAll(((SchemaComponent)component).getSubComponents());
         }
         super.add((JComponent)component);
     }
@@ -132,7 +132,21 @@ public abstract class Diagram extends JPanel {
         return this.diagramContext;
     }
     
-    public abstract void recalculateDiagram();
+    public void recalculateDiagram() {
+        Map states = new HashMap();
+        for (Iterator i = this.componentMap.keySet().iterator(); i.hasNext(); ) {
+            Object object = i.next();
+            states.put(object, ((DiagramComponent)this.componentMap.get(object)).getState());
+        }
+        this.doRecalculateDiagram();
+        for (Iterator i = states.keySet().iterator(); i.hasNext(); ) {
+            Object object = i.next();
+            DiagramComponent component = (DiagramComponent)this.componentMap.get(object);
+            if (component!=null) component.setState(states.get(object));
+        }
+    }
+    
+    public abstract void doRecalculateDiagram();
     
     public void redrawDiagramComponent(Object object) {
         DiagramComponent comp = (DiagramComponent)this.componentMap.get(object);
@@ -147,7 +161,7 @@ public abstract class Diagram extends JPanel {
     /**
      * Synchronise our display with our object contents.
      */
-    public void resizeDisplay() {
+    public void resizeDiagram() {
         // Reset our size to the minimum.
         this.setSize(this.getMinimumSize());
         // Update ourselves.

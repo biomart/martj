@@ -63,7 +63,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * choosing it.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 9th May 2006
+ * @version 0.1.13, 10th May 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -274,15 +274,49 @@ public class DataSet extends GenericSchema {
      * will be masked as well.
      * @param column the {@link Column} to mask.
      */
-    public void maskColumn(Column column) {
-        // Do it.
-        this.maskedColumns.add(column);
-        // Mask the associated relations.
-        for (Iterator i = column.getTable().getKeys().iterator(); i.hasNext(); ) {
-            Key k = (Key)i.next();
-            if (k.getColumns().contains(column)) for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
-                Relation r = (Relation)j.next();
-                this.maskRelation(r);
+    public void maskColumn(Column column) throws AssociationException {
+        if (column instanceof DataSetColumn) {
+            DataSetColumn dsColumn = (DataSetColumn)column;
+            DataSetTable dsTable = (DataSetTable)dsColumn.getTable();
+            Table centralTable = ((DataSet)dsTable.getSchema()).getCentralTable();
+            List okToMask = new ArrayList(dsTable.getColumns());
+            // Can mask PK cols only if not from original central table
+            Key dsTablePK = dsTable.getPrimaryKey();
+            if (dsTablePK!=null) {
+                for (Iterator i = dsTablePK.getColumns().iterator(); i.hasNext(); ) {
+                    DataSetColumn col = (DataSetColumn)i.next();
+                    Table underlyingTable = ((DataSetTable)col.getTable()).getUnderlyingTable();
+                    if (underlyingTable!=null && underlyingTable.equals(centralTable)) okToMask.remove(col);
+                }
+            }
+            // Can't mask any FK cols.
+            for (Iterator i = dsTable.getForeignKeys().iterator(); i.hasNext(); )
+                okToMask.removeAll(((Key)i.next()).getColumns());
+            // Refuse to mask necessary columns
+            if (!okToMask.contains(dsColumn))
+                throw new AssociationException(BuilderBundle.getString("cannotMaskNecessaryColumn"));
+            // Refuse to mask schema name columns.
+            else if (dsColumn instanceof SchemaNameColumn)
+                throw new AssociationException(BuilderBundle.getString("cannotMaskSchemaNameColumn"));
+            // If wrapped, mask wrapped column
+            else if (dsColumn instanceof WrappedColumn)
+                this.maskColumn(((WrappedColumn)dsColumn).getWrappedColumn());
+            // If concat-only, mask concat-only part
+            else if (dsColumn instanceof ConcatRelationColumn)
+                this.maskRelation(dsColumn.getUnderlyingRelation());
+            // Eh?
+            else
+                throw new AssertionError(BuilderBundle.getString("cannotMaskUnknownColumn"));
+        } else {
+            // Do it.
+            this.maskedColumns.add(column);
+            // Mask the associated relations.
+            for (Iterator i = column.getTable().getKeys().iterator(); i.hasNext(); ) {
+                Key k = (Key)i.next();
+                if (k.getColumns().contains(column)) for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
+                    Relation r = (Relation)j.next();
+                    this.maskRelation(r);
+                }
             }
         }
     }
@@ -712,20 +746,22 @@ public class DataSet extends GenericSchema {
      */
     private void transformTable(DataSetTable datasetTable, Table realTable, Set ignoredRelations, List relationsFollowed, List constructedPKColumns, Set constructedColumns) throws AlreadyExistsException {
         // Find all relations from source table.
-        // Additionally, find all columns in all keys with non-ignored relations. Exclude them,
-        // except if they're in a concat-only relation, in which case keep them.
         Collection realTableRelations = realTable.getRelations();
-        Set excludedColumns = new HashSet();
+        
+        // Find all columns in all keys with non-ignored non-concat-only relations. Exclude them.
+        List excludedColumns = new ArrayList();
         for (Iterator i = realTable.getKeys().iterator(); i.hasNext(); ) {
             Key k = (Key)i.next();
-            for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
+            boolean hasUnignoredRelation = false;
+            for (Iterator j = k.getRelations().iterator(); j.hasNext() && !hasUnignoredRelation; ) {
                 Relation r = (Relation)j.next();
-                if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT) ||
-                        ignoredRelations.contains(r) ||
-                        this.getConcatOnlyRelations().contains(r))
-                    continue;
-                else excludedColumns.addAll(k.getColumns());
+                if (!r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT) && 
+                        !ignoredRelations.contains(r) &&
+                        !this.getConcatOnlyRelations().contains(r)) { 
+                    hasUnignoredRelation = true;
+                }
             }
+            if (hasUnignoredRelation) excludedColumns.addAll(k.getColumns());
         }
         
         // Also exclude all masked columns.

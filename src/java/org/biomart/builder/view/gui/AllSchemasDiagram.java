@@ -39,7 +39,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * This class deals with drawing an overview of all the table providers.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 5th May 2006
+ * @version 0.1.7, 10th May 2006
  * @since 0.1
  */
 public class AllSchemasDiagram extends Diagram {
@@ -91,7 +91,7 @@ public class AllSchemasDiagram extends Diagram {
      * {@inheritDoc}
      * Resyncs the table providers with the contents of the set.
      */
-    public void recalculateDiagram() {
+    public void doRecalculateDiagram() {
         this.removeAll();
         // Make a set of all relations on this table provider.
         List relations = new ArrayList();
@@ -113,6 +113,6 @@ public class AllSchemasDiagram extends Diagram {
             this.addDiagramComponent(relationComponent);
         }
         // Delegate upwards.
-        this.resizeDisplay();
+        this.resizeDiagram();
     }
 }

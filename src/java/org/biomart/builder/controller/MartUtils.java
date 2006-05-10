@@ -47,7 +47,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
 /**
  * Tools for working with the mart from a GUI or CLI.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 9th May 2006
+ * @version 0.1.5, 10th May 2006
  * @since 0.1
  */
 public class MartUtils {
@@ -196,7 +196,7 @@ public class MartUtils {
     
     public static void renameDataSetColumn(DataSetColumn col, String newName) throws AlreadyExistsException {
         col.setName(newName);
-    }    
+    }
     
     public static void maskColumn(DataSet dataset, Column column) throws SQLException, BuilderException {
         dataset.maskColumn(column);

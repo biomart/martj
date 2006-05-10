@@ -1,5 +1,5 @@
 /*
- * SchemaDiagramContext.java
+ * SchemaContext.java
  *
  * Created on 19 April 2006, 09:36
  */
@@ -24,15 +24,12 @@
 
 package org.biomart.builder.view.gui;
 
-import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JMenuItem;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import org.biomart.builder.model.Column;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
@@ -45,20 +42,20 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Provides the default behaviour for table provider listeners.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 9th May 2006
+ * @version 0.1.11, 10th May 2006
  * @since 0.1
  */
-public class SchemaDiagramContext implements DiagramContext {
+public class SchemaContext implements DiagramContext {
     /**
      * The window set we belong to.
      */
     private DataSetTabSet datasetTabSet;
     
     /**
-     * Creates a new instance of SchemaDiagramContext and binds it to a given
+     * Creates a new instance of SchemaContext and binds it to a given
      * MartBuilder instance.
      */
-    public SchemaDiagramContext(DataSetTabSet datasetTabSet) {
+    public SchemaContext(DataSetTabSet datasetTabSet) {
         this.datasetTabSet = datasetTabSet;
     }
     
@@ -228,7 +225,14 @@ public class SchemaDiagramContext implements DiagramContext {
         }
         
         else if (object instanceof Key) {
+            // Keys just show their table menus.
             Table table = ((Key)object).getTable();
+            this.customiseContextMenu(contextMenu, table);
+        }
+        
+        else if (object instanceof Column) {
+            // Columns just show their table menus.
+            Table table = ((Column)object).getTable();
             this.customiseContextMenu(contextMenu, table);
         }
     }
@@ -253,12 +257,5 @@ public class SchemaDiagramContext implements DiagramContext {
     
     public boolean isRightClickAllowed() {
         return true;
-    }
-    
-    public JComponent getTableManagerContextPane(TableManagerDialog manager) {
-        // Create a pane explaining the underlying relations.
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(new JLabel("Schema context"), BorderLayout.PAGE_START);
-        return panel;
     }
 }
