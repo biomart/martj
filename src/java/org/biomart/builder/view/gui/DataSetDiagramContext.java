@@ -55,7 +55,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Adapts listener events suitable for datasets.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 9th May 2006
+ * @version 0.1.9, 10th May 2006
  * @since 0.1
  */
 public class DataSetDiagramContext extends WindowDiagramContext {
@@ -185,7 +185,6 @@ public class DataSetDiagramContext extends WindowDiagramContext {
         JPanel diagramPanel = new JPanel(new BorderLayout());
         diagramPanel.add(labelPane, BorderLayout.PAGE_START);
         // Set up the diagram.
-        final DataSetTable dsTable = (DataSetTable)manager.getTable();
         final Diagram diagram = new UnderlyingRelationsDiagram(this.getDataSetTabSet(), manager);
         final UnderlyingRelationsDiagramContext diagramContext = new UnderlyingRelationsDiagramContext(this.getDataSetTabSet(), this.getDataSet());
         diagram.setDiagramContext(diagramContext);
@@ -210,7 +209,7 @@ public class DataSetDiagramContext extends WindowDiagramContext {
                         diagramContext.setSelectedColumn(null);
                         mask.setEnabled(false);
                     } else {
-                        DataSetColumn col = (DataSetColumn)dsTable.getColumnByName(selectedCol);
+                        DataSetColumn col = (DataSetColumn)((DataSetTable)manager.getTable()).getColumnByName(selectedCol);
                         diagramContext.setSelectedColumn(col);
                         mask.setEnabled(true);
                     }
@@ -224,7 +223,7 @@ public class DataSetDiagramContext extends WindowDiagramContext {
             public void actionPerformed(ActionEvent e) {
                 String selectedCol = (String)columnsList.getSelectedValue();
                 if (selectedCol != null) {
-                    DataSetColumn col = (DataSetColumn)dsTable.getColumnByName(selectedCol);
+                    DataSetColumn col = (DataSetColumn)((DataSetTable)manager.getTable()).getColumnByName(selectedCol);
                     maskColumn(col, diagram, manager);
                 }
             }
@@ -236,7 +235,8 @@ public class DataSetDiagramContext extends WindowDiagramContext {
     
     private void maskColumn(DataSetColumn col, Diagram diagram, TableManagerDialog manager) {
         // if column is schema name column, then cannot remove.
-        if (col instanceof SchemaNameColumn) {
+        Key colTablePK = col.getTable().getPrimaryKey();
+        if ((col instanceof SchemaNameColumn) || (colTablePK!=null && colTablePK.getColumns().contains(col))) {
             JOptionPane.showMessageDialog(manager,
                     BuilderBundle.getString("cannotMaskBaseColumn"),
                     BuilderBundle.getString("messageTitle"),

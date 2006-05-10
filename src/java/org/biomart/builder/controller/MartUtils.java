@@ -196,8 +196,7 @@ public class MartUtils {
     
     public static void renameDataSetColumn(DataSetColumn col, String newName) throws AlreadyExistsException {
         col.setName(newName);
-    }
-    
+    }    
     
     public static void maskColumn(DataSet dataset, Column column) throws SQLException, BuilderException {
         dataset.maskColumn(column);

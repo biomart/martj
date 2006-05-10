@@ -56,7 +56,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Adapts listener behaviour by adding in DataSet-specific stuff.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 9th May 2006
+ * @version 0.1.8, 10th May 2006
  * @since 0.1
  */
 public class WindowDiagramContext extends SchemaDiagramContext {
@@ -381,6 +381,7 @@ public class WindowDiagramContext extends SchemaDiagramContext {
             -- 'SingleValue' takes one string params,
             -- 'UniqueValues' takes no params,
             -- 'ValueCollection' takes unlimited string params.
+        // Can partition only one column, or at most two if exactly one of them is a SchemaNameColumn
         // Look up default partitioned column.
         if (!this.dataset.getPartitionedColumns().isEmpty()) {
             boolean found = false;
