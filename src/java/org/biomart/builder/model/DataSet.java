@@ -120,6 +120,8 @@ public class DataSet extends GenericSchema {
      */
     private DataSetOptimiserType optimiser = DataSetOptimiserType.NONE;
     
+    private boolean partitionOnSchema = false;
+    
     /**
      * The constructor creates a {@link DataSet} around one central {@link Table} and
      * gives it a name. It also initiates a {@link OLDDataSet} ready to contain the transformed
@@ -416,9 +418,28 @@ public class DataSet extends GenericSchema {
      * @param column the {@link Column} to mark as partitioned.
      * @param type the {@link PartitionedColumnType} to use for the partition.
      */
-    public void flagPartitionedColumn(Column column, PartitionedColumnType type) {
-        // Do it (the Map will replace the value with the new value if the key already exists)
-        this.partitionedColumns.put(column, type);
+    public void flagPartitionedColumn(Column column, PartitionedColumnType type) throws AssociationException {
+        if (column instanceof WrappedColumn) {
+            this.flagPartitionedColumn(((WrappedColumn)column).getWrappedColumn(), type);
+        } else if (column instanceof DataSetColumn) {
+            throw new AssociationException(BuilderBundle.getString("cannotPartitionDataSetColumns"));
+        } else {
+            boolean alreadyHave = false;
+            for (Iterator i = this.partitionedColumns.keySet().iterator(); i.hasNext() && !alreadyHave; ) {
+                if (((Column)i.next()).getTable().equals(column.getTable())) alreadyHave = true;
+            }
+            if (alreadyHave) throw new AssociationException(BuilderBundle.getString("cannotPartitionMultiColumns"));
+            // Do it (the Map will replace the value with the new value if the key already exists)
+            this.partitionedColumns.put(column, type);
+        }
+    }
+    
+    public boolean getPartitionOnSchema() {
+        return this.partitionOnSchema;
+    }
+    
+    public void setPartitionOnSchema(boolean partitionOnSchema) {
+        this.partitionOnSchema = partitionOnSchema;
     }
     
     /**

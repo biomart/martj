@@ -32,6 +32,7 @@ import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Relation.Cardinality;
@@ -104,6 +105,8 @@ public class WindowContext extends SchemaContext {
             contextMenu.add(sync);
             
             if (!(schema instanceof SchemaGroup)) {
+                // Non-SchemaGroup specific
+                
                 JMenuItem modify = new JMenuItem(BuilderBundle.getString("modifySchemaTitle"));
                 modify.setMnemonic(BuilderBundle.getString("modifySchemaMnemonic").charAt(0));
                 modify.addActionListener(new ActionListener() {
@@ -139,28 +142,49 @@ public class WindowContext extends SchemaContext {
                     }
                 });
                 contextMenu.add(addToGroup);
+            } else {
+                // Schema-group specific
+                
+                JMenuItem partition = new JMenuItem(BuilderBundle.getString("partitionOnSchemaTitle"));
+                partition.setMnemonic(BuilderBundle.getString("partitionOnSchemaMnemonic").charAt(0));
+                partition.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        getDataSetTabSet().requestPartitionBySchema(dataset);
+                    }
+                });
+                contextMenu.add(partition);
+                if (this.dataset.getPartitionOnSchema()) partition.setEnabled(false);
+                
+                JMenuItem unpartition = new JMenuItem(BuilderBundle.getString("unpartitionOnSchemaTitle"));
+                unpartition.setMnemonic(BuilderBundle.getString("unpartitionOnSchemaMnemonic").charAt(0));
+                unpartition.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        getDataSetTabSet().requestUnpartitionBySchema(dataset);
+                    }
+                });
+                contextMenu.add(unpartition);
+                if (!this.dataset.getPartitionOnSchema()) unpartition.setEnabled(false);
             }
         }
         
         else if (object instanceof Relation) {
             // Relation stuff
             final Relation relation = (Relation)object;
-            final DataSet ds = this.getDataSetTabSet().getSelectedDataSetTab().getDataSet();
             
             // Add separator.
             contextMenu.addSeparator();
             
             boolean incorrect = relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT);
             boolean relationOneToOne = relation.getFKCardinality().equals(Cardinality.ONE);
-            boolean relationMasked = ds.getMaskedRelations().contains(relation);
-            boolean relationConcated = ds.getConcatOnlyRelations().contains(relation);
-            boolean relationSubclassed = ds.getSubclassedRelations().contains(relation);
+            boolean relationMasked = this.dataset.getMaskedRelations().contains(relation);
+            boolean relationConcated = this.dataset.getConcatOnlyRelations().contains(relation);
+            boolean relationSubclassed = this.dataset.getSubclassedRelations().contains(relation);
             
             JMenuItem mask = new JMenuItem(BuilderBundle.getString("maskRelationTitle"));
             mask.setMnemonic(BuilderBundle.getString("maskRelationMnemonic").charAt(0));
             mask.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestMaskRelation(ds, relation);
+                    getDataSetTabSet().requestMaskRelation(dataset, relation);
                 }
             });
             contextMenu.add(mask);
@@ -169,7 +193,7 @@ public class WindowContext extends SchemaContext {
             unmask.setMnemonic(BuilderBundle.getString("unmaskRelationMnemonic").charAt(0));
             unmask.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestUnmaskRelation(ds, relation);
+                    getDataSetTabSet().requestUnmaskRelation(dataset, relation);
                 }
             });
             contextMenu.add(unmask);
@@ -179,7 +203,7 @@ public class WindowContext extends SchemaContext {
             subclass.setMnemonic(BuilderBundle.getString("subclassRelationMnemonic").charAt(0));
             subclass.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestSubclassRelation(ds, relation);
+                    getDataSetTabSet().requestSubclassRelation(dataset, relation);
                 }
             });
             contextMenu.add(subclass);
@@ -188,7 +212,7 @@ public class WindowContext extends SchemaContext {
             unsubclass.setMnemonic(BuilderBundle.getString("unsubclassRelationMnemonic").charAt(0));
             unsubclass.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestUnsubclassRelation(ds, relation);
+                    getDataSetTabSet().requestUnsubclassRelation(dataset, relation);
                 }
             });
             contextMenu.add(unsubclass);
@@ -198,7 +222,7 @@ public class WindowContext extends SchemaContext {
             concat.setMnemonic(BuilderBundle.getString("concatOnlyRelationMnemonic").charAt(0));
             concat.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestConcatOnlyRelation(ds, relation);
+                    getDataSetTabSet().requestConcatOnlyRelation(dataset, relation);
                 }
             });
             contextMenu.add(concat);
@@ -207,7 +231,7 @@ public class WindowContext extends SchemaContext {
             changeConcat.setMnemonic(BuilderBundle.getString("changeConcatOnlyRelationMnemonic").charAt(0));
             changeConcat.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestConcatOnlyRelation(ds, relation);
+                    getDataSetTabSet().requestConcatOnlyRelation(dataset, relation);
                 }
             });
             contextMenu.add(changeConcat);
@@ -216,7 +240,7 @@ public class WindowContext extends SchemaContext {
             unconcat.setMnemonic(BuilderBundle.getString("unconcatOnlyRelationMnemonic").charAt(0));
             unconcat.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestUnconcatOnlyRelation(ds, relation);
+                    getDataSetTabSet().requestUnconcatOnlyRelation(dataset, relation);
                 }
             });
             contextMenu.add(unconcat);
@@ -333,6 +357,10 @@ public class WindowContext extends SchemaContext {
             // Fade out all MASKED columns.
             if (ds.getMaskedColumns().contains(column)) {
                 component.setForeground(ColumnComponent.FADED_COLOUR);
+            }
+            // Blue PARTITIONED columns and the schema name if partition on dataset.
+            else if (ds.getPartitionedColumns().contains(column) || ((column instanceof SchemaNameColumn) && ds.getPartitionOnSchema())) {
+                component.setForeground(ColumnComponent.PARTITIONED_COLOUR);
             }
             // All others are normal.
             else {

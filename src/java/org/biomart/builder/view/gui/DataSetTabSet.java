@@ -571,6 +571,16 @@ public class DataSetTabSet extends JTabbedPane {
         this.currentExplanationDiagram = diagram;
     }
     
+    public void requestPartitionBySchema(DataSet dataset) {
+        MartUtils.partitionBySchema(dataset);
+        martTabSet.setModifiedStatus(true);
+    }
+
+    public void requestUnpartitionBySchema(DataSet dataset) {
+        MartUtils.unpartitionBySchema(dataset);
+        martTabSet.setModifiedStatus(true);
+    }
+    
     /**
      * Construct a context menu for a given dataset view tab.
      *

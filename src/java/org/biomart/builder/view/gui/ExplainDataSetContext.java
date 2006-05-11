@@ -234,6 +234,15 @@ public class ExplainDataSetContext extends WindowContext {
                     // Normal relation. Faded.
                     component.setForeground(ExplainDataSetContext.FADED_COLOUR);
                 }
+            } else if (object instanceof Column) {
+                Column column = (Column)object;
+                if ((selectedColumn instanceof WrappedColumn) && column.equals(((WrappedColumn)selectedColumn).getWrappedColumn())) {
+                    // Highlight relation as target.
+                    component.setForeground(ExplainDataSetContext.TARGET_COLOUR);
+                } else {
+                    // Normal relation. Faded.
+                    component.setForeground(ExplainDataSetContext.FADED_COLOUR);
+                }
             }
         }
     }

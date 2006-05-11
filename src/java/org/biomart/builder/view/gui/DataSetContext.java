@@ -29,8 +29,10 @@ import java.awt.event.ActionListener;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.Key;
@@ -171,6 +173,29 @@ public class DataSetContext extends WindowContext {
                 }
             });
             contextMenu.add(mask);
+            
+            // If it's a schema name column...
+            if (column instanceof SchemaNameColumn) {
+                JMenuItem partition = new JMenuItem(BuilderBundle.getString("partitionOnSchemaTitle"));
+                partition.setMnemonic(BuilderBundle.getString("partitionOnSchemaMnemonic").charAt(0));
+                partition.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        getDataSetTabSet().requestPartitionBySchema(ds);
+                    }
+                });
+                contextMenu.add(partition);
+                if (ds.getPartitionOnSchema()) partition.setEnabled(false);
+                
+                JMenuItem unpartition = new JMenuItem(BuilderBundle.getString("unpartitionOnSchemaTitle"));
+                unpartition.setMnemonic(BuilderBundle.getString("unpartitionOnSchemaMnemonic").charAt(0));
+                unpartition.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        getDataSetTabSet().requestUnpartitionBySchema(ds);
+                    }
+                });
+                contextMenu.add(unpartition);
+                if (!ds.getPartitionOnSchema()) unpartition.setEnabled(false);
+            }
         }
     }
     
@@ -196,6 +221,26 @@ public class DataSetContext extends WindowContext {
                 component.setForeground(TableComponent.DIMENSION_COLOUR);
             } else {
                 component.setForeground(TableComponent.NORMAL_COLOUR);
+            }
+        }
+        
+        // Columns.
+        else if (object instanceof Column) {
+            
+            DataSet ds = this.getDataSetTabSet().getSelectedDataSetTab().getDataSet();
+            
+            Column column = (Column)object;
+            // Fade out all MASKED columns.
+            if (ds.getMaskedColumns().contains(column)) {
+                component.setForeground(ColumnComponent.FADED_COLOUR);
+            }
+            // Blue PARTITIONED columns and the schema name if partition on dataset.
+            else if (ds.getPartitionedColumns().contains(column) || ((column instanceof SchemaNameColumn) && ds.getPartitionOnSchema())) {
+                component.setForeground(ColumnComponent.PARTITIONED_COLOUR);
+            }
+            // All others are normal.
+            else {
+                component.setForeground(ColumnComponent.NORMAL_COLOUR);
             }
         }
     }

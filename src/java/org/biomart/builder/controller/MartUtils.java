@@ -47,7 +47,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
 /**
  * Tools for working with the mart from a GUI or CLI.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 10th May 2006
+ * @version 0.1.6, 11th May 2006
  * @since 0.1
  */
 public class MartUtils {
@@ -206,5 +206,13 @@ public class MartUtils {
     public static void unmaskColumn(DataSet dataset, Column column) throws SQLException, BuilderException {
         dataset.unmaskColumn(column);
         dataset.synchronise();
+    }
+    
+    public static void partitionBySchema(DataSet dataset) {
+        dataset.setPartitionOnSchema(true);
+    }
+
+    public static void unpartitionBySchema(DataSet dataset) {
+        dataset.setPartitionOnSchema(false);
     }
 }

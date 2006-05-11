@@ -88,7 +88,7 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 8th May 2006
+ * @version 0.1.7, 11th May 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -547,6 +547,7 @@ public class MartBuilderXML extends DefaultHandler {
         else if ("dataset".equals(eName)) {
             try {
                 String name = (String)attributes.get("name");
+                Boolean partitionOnSchema = Boolean.valueOf((String)attributes.get("partitionOnSchema"));
                 Table centralTable = (Table)this.mappedObjects.get(attributes.get("centralTableId"));
                 String optType = (String)attributes.get("optimiser");
                 MartConstructor mc = (MartConstructor)this.mappedObjects.get(attributes.get("martConstructorId"));
@@ -560,6 +561,7 @@ public class MartBuilderXML extends DefaultHandler {
                 else throw new SAXException(BuilderBundle.getString("unknownOptimiserType",optType));
                 ds.setMartConstructor(mc);
                 ds.setDataSetOptimiserType(opt);
+                if (partitionOnSchema!=null) ds.setPartitionOnSchema(partitionOnSchema.booleanValue());
                 element = ds;
             } catch (SAXException e) {
                 throw e;
@@ -914,6 +916,7 @@ public class MartBuilderXML extends DefaultHandler {
             this.writeAttribute("alt",ds.getCentralTable().toString());
             this.writeAttribute("optimiser",ds.getDataSetOptimiserType().getName());
             this.writeAttribute("martConstructorId",(String)this.reverseMappedObjects.get(ds.getMartConstructor()));
+            this.writeAttribute("partitionOnSchema",Boolean.toString(ds.getPartitionOnSchema()));
             
             // Write out masked relations inside window.
             for (Iterator x = ds.getMaskedRelations().iterator(); x.hasNext(); ) {

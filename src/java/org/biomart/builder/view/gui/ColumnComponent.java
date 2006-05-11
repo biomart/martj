@@ -40,7 +40,7 @@ import org.biomart.builder.model.Key.PrimaryKey;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 10th May 2006
+ * @version 0.1.2, 11th May 2006
  * @since 0.1
  */
 public class ColumnComponent extends BoxShapedComponent {
@@ -54,6 +54,11 @@ public class ColumnComponent extends BoxShapedComponent {
      * Constant referring to faded relation colour.
      */
     public static final Color FADED_COLOUR = Color.LIGHT_GRAY;
+    
+    /**
+     * Constant referring to faded relation colour.
+     */
+    public static final Color PARTITIONED_COLOUR = Color.BLUE;
     
     /**
      * The component representing our parent box.
