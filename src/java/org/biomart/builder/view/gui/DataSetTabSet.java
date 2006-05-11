@@ -65,7 +65,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Set of tabs to display a mart and set of windows.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 10th May 2006
+ * @version 0.1.12, 11th May 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -89,6 +89,8 @@ public class DataSetTabSet extends JTabbedPane {
      * The mart we are viewing.
      */
     private Mart mart;
+    
+    private Diagram currentExplanationDiagram;
     
     /**
      * The constructor remembers who its daddy is.
@@ -350,6 +352,7 @@ public class DataSetTabSet extends JTabbedPane {
             MartUtils.maskRelation(ds, relation);
             this.schemaTabSet.redrawRelationDiagramComponent(relation);
             this.recalculateDataSetDiagram(ds);
+            if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawDiagramComponent(relation);
             this.martTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
             this.martTabSet.getMartBuilder().showStackTrace(t);
@@ -364,6 +367,7 @@ public class DataSetTabSet extends JTabbedPane {
             MartUtils.unmaskRelation(ds, relation);
             this.schemaTabSet.redrawRelationDiagramComponent(relation);
             this.recalculateDataSetDiagram(ds);
+            if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawDiagramComponent(relation);
             this.martTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
             this.martTabSet.getMartBuilder().showStackTrace(t);
@@ -378,6 +382,7 @@ public class DataSetTabSet extends JTabbedPane {
             MartUtils.subclassRelation(ds, relation);
             this.schemaTabSet.redrawRelationDiagramComponent(relation);
             this.recalculateDataSetDiagram(ds);
+            if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawDiagramComponent(relation);
             this.martTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
             this.martTabSet.getMartBuilder().showStackTrace(t);
@@ -392,10 +397,45 @@ public class DataSetTabSet extends JTabbedPane {
             MartUtils.unsubclassRelation(ds, relation);
             this.schemaTabSet.redrawRelationDiagramComponent(relation);
             this.recalculateDataSetDiagram(ds);
+            if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawDiagramComponent(relation);
             this.martTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
             this.martTabSet.getMartBuilder().showStackTrace(t);
         }
+    }
+    
+    /**
+     * Update a relation cardinality.
+     */
+    public void requestConcatOnlyRelation(DataSet ds, Relation relation) {
+        // Label to concat-type
+        Map responseSet = new HashMap(); 
+        responseSet.put(BuilderBundle.getString("noConcatOption"),"");
+        responseSet.put(BuilderBundle.getString("commaConcatOption"),ConcatRelationType.COMMA);
+        responseSet.put(BuilderBundle.getString("spaceConcatOption"),ConcatRelationType.SPACE);
+        responseSet.put(BuilderBundle.getString("tabConcatOption"),ConcatRelationType.TAB);
+        Map inverseResponseSet = new HashMap(); 
+        for (Iterator i = responseSet.keySet().iterator(); i.hasNext(); ) {
+            Object key = i.next();
+            inverseResponseSet.put(responseSet.get(key), key);
+        }
+        // Work out current type, if any.
+        Object current = ds.getConcatRelationType(relation);
+        if (current==null) current="";
+        Object selected = inverseResponseSet.get(current);
+        // Open dialog.
+        Object response = JOptionPane.showInputDialog(this,
+                BuilderBundle.getString("concatTypeQuestion"),
+                BuilderBundle.getString("questionTitle"),
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                responseSet.keySet().toArray(),
+                selected);
+        if (response == null || response.equals(selected)) return;
+        // If get none response, call unconcat
+        Object type = responseSet.get(response);
+        if (type.equals("")) this.requestUnconcatOnlyRelation(ds, relation);
+        else this.requestConcatOnlyRelation(ds, relation, (ConcatRelationType)type);
     }
     
     /**
@@ -406,6 +446,7 @@ public class DataSetTabSet extends JTabbedPane {
             MartUtils.concatOnlyRelation(ds, relation, type);
             this.schemaTabSet.redrawRelationDiagramComponent(relation);
             this.recalculateDataSetDiagram(ds);
+            if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawDiagramComponent(relation);
             this.martTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
             this.martTabSet.getMartBuilder().showStackTrace(t);
@@ -420,6 +461,7 @@ public class DataSetTabSet extends JTabbedPane {
             MartUtils.unconcatOnlyRelation(ds, relation);
             this.schemaTabSet.redrawRelationDiagramComponent(relation);
             this.recalculateDataSetDiagram(ds);
+            if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawDiagramComponent(relation);
             this.martTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
             this.martTabSet.getMartBuilder().showStackTrace(t);
@@ -470,6 +512,7 @@ public class DataSetTabSet extends JTabbedPane {
             MartUtils.maskColumn(ds, column);
             this.schemaTabSet.redrawAllDiagramComponents();
             this.recalculateDataSetDiagram(ds);
+            if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawAllDiagramComponents();
             this.martTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
             this.martTabSet.getMartBuilder().showStackTrace(t);
@@ -484,6 +527,7 @@ public class DataSetTabSet extends JTabbedPane {
             MartUtils.unmaskColumn(ds, column);
             this.schemaTabSet.redrawAllDiagramComponents();
             this.recalculateDataSetDiagram(ds);
+            if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawAllDiagramComponents();
             this.martTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
             this.martTabSet.getMartBuilder().showStackTrace(t);
@@ -521,6 +565,10 @@ public class DataSetTabSet extends JTabbedPane {
         } catch (Throwable t) {
             this.martTabSet.getMartBuilder().showStackTrace(t);
         }
+    }
+    
+    public void setCurrentExplanationDiagram(Diagram diagram) {
+        this.currentExplanationDiagram = diagram;
     }
     
     /**

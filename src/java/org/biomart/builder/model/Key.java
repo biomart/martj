@@ -43,7 +43,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * <p>Unless otherwise specified, all {@link Key}s are created with a default
  * {@link ComponentStatus} of INFERRED.</p>
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 4th April 2006
+ * @version 0.1.6, 11th May 2006
  * @since 0.1
  */
 public interface Key extends Comparable {
@@ -212,11 +212,11 @@ public interface Key extends Comparable {
          */
         public String getName() {
             StringBuffer sb = new StringBuffer();
-            sb.append(this.getTable().getName());
+            sb.append(this.getTable().toString());
             sb.append("{");
             for (Iterator i = this.columns.iterator(); i.hasNext(); ) {
                 Column c = (Column)i.next();
-                sb.append(c.getName());
+                sb.append(c.toString());
                 if (i.hasNext()) sb.append(",");
             }
             sb.append("}");

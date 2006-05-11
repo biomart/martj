@@ -42,7 +42,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Provides the default behaviour for table provider listeners.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 10th May 2006
+ * @version 0.1.12, 11th May 2006
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
@@ -167,61 +167,60 @@ public class SchemaContext implements DiagramContext {
             
             boolean relationIncorrect = relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT);
             
-            if (relation.getFKCardinality().equals(Cardinality.MANY)) {
-                // one:one
-                JMenuItem oneToOne = new JMenuItem(BuilderBundle.getString("oneToOneTitle"));
-                oneToOne.setMnemonic(BuilderBundle.getString("oneToOneMnemonic").charAt(0));
-                oneToOne.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.requestChangeRelationCardinality(relation, Cardinality.ONE);
-                    }
-                });
-                contextMenu.add(oneToOne);
-                if (relationIncorrect) oneToOne.setEnabled(false);
-            } else if (relation.getFKCardinality().equals(Cardinality.ONE)) {
-                // one:many
-                JMenuItem oneToMany = new JMenuItem(BuilderBundle.getString("oneToManyTitle"));
-                oneToMany.setMnemonic(BuilderBundle.getString("oneToManyMnemonic").charAt(0));
-                oneToMany.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.requestChangeRelationCardinality(relation, Cardinality.MANY);
-                    }
-                });
-                contextMenu.add(oneToMany);
-                if (relationIncorrect) oneToMany.setEnabled(true);
-            }
+            // one:one
+            JMenuItem oneToOne = new JMenuItem(BuilderBundle.getString("oneToOneTitle"));
+            oneToOne.setMnemonic(BuilderBundle.getString("oneToOneMnemonic").charAt(0));
+            oneToOne.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.requestChangeRelationCardinality(relation, Cardinality.ONE);
+                }
+            });
+            contextMenu.add(oneToOne);
+            if (relationIncorrect || relation.getFKCardinality().equals(Cardinality.ONE)) oneToOne.setEnabled(false);
             
-            if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) {
-                // correct
-                JMenuItem correct = new JMenuItem(BuilderBundle.getString("correctRelationTitle"));
-                correct.setMnemonic(BuilderBundle.getString("correctRelationMnemonic").charAt(0));
-                correct.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.requestChangeRelationStatus(relation, ComponentStatus.INFERRED);
-                    }
-                });
-                contextMenu.add(correct);
-            } else if (relation.getStatus().equals(ComponentStatus.INFERRED)) {
-                // incorrect
-                JMenuItem incorrect = new JMenuItem(BuilderBundle.getString("incorrectRelationTitle"));
-                incorrect.setMnemonic(BuilderBundle.getString("incorrectRelationMnemonic").charAt(0));
-                incorrect.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.requestChangeRelationStatus(relation, ComponentStatus.INFERRED_INCORRECT);
-                    }
-                });
-                contextMenu.add(incorrect);
-            } else if (relation.getStatus().equals(ComponentStatus.HANDMADE)) {
-                // remove
-                JMenuItem incorrect = new JMenuItem(BuilderBundle.getString("removeRelationTitle"));
-                incorrect.setMnemonic(BuilderBundle.getString("removeRelationMnemonic").charAt(0));
-                incorrect.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        datasetTabSet.requestRemoveRelation(relation);
-                    }
-                });
-                contextMenu.add(incorrect);
-            }
+            // one:many
+            JMenuItem oneToMany = new JMenuItem(BuilderBundle.getString("oneToManyTitle"));
+            oneToMany.setMnemonic(BuilderBundle.getString("oneToManyMnemonic").charAt(0));
+            oneToMany.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.requestChangeRelationCardinality(relation, Cardinality.MANY);
+                }
+            });
+            contextMenu.add(oneToMany);
+            if (relationIncorrect || relation.getFKCardinality().equals(Cardinality.MANY)) oneToMany.setEnabled(true);
+            
+            // correct
+            JMenuItem correct = new JMenuItem(BuilderBundle.getString("correctRelationTitle"));
+            correct.setMnemonic(BuilderBundle.getString("correctRelationMnemonic").charAt(0));
+            correct.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.requestChangeRelationStatus(relation, ComponentStatus.INFERRED);
+                }
+            });
+            if (!relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) correct.setEnabled(false);
+            contextMenu.add(correct);
+            
+            // incorrect
+            JMenuItem incorrect = new JMenuItem(BuilderBundle.getString("incorrectRelationTitle"));
+            incorrect.setMnemonic(BuilderBundle.getString("incorrectRelationMnemonic").charAt(0));
+            incorrect.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.requestChangeRelationStatus(relation, ComponentStatus.INFERRED_INCORRECT);
+                }
+            });
+            if (!relation.getStatus().equals(ComponentStatus.INFERRED)) incorrect.setEnabled(false);
+            contextMenu.add(incorrect);
+            
+            // remove
+            JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeRelationTitle"));
+            remove.setMnemonic(BuilderBundle.getString("removeRelationMnemonic").charAt(0));
+            remove.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.requestRemoveRelation(relation);
+                }
+            });
+            if (!relation.getStatus().equals(ComponentStatus.HANDMADE)) remove.setEnabled(false);
+            contextMenu.add(remove);
         }
         
         else if (object instanceof Key) {

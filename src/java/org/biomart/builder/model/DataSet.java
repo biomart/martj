@@ -63,7 +63,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * choosing it.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 10th May 2006
+ * @version 0.1.14, 11th May 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -80,12 +80,12 @@ public class DataSet extends GenericSchema {
     /**
      * Internal reference to masked relations.
      */
-    private final List maskedRelations = new ArrayList();
+    private final Set maskedRelations = new HashSet();
     
     /**
      * Internal reference to masked columns.
      */
-    private final List maskedColumns = new ArrayList();
+    private final Set maskedColumns = new HashSet();
     
     /**
      * Internal reference to partitioned columns (keys are columns,
@@ -96,7 +96,7 @@ public class DataSet extends GenericSchema {
     /**
      * Internal reference to relations between subclassed tables.
      */
-    private final List subclassedRelations = new ArrayList();
+    private final Set subclassedRelations = new HashSet();
     
     /**
      * Internal reference to concat-only relations. The keys of
@@ -159,8 +159,24 @@ public class DataSet extends GenericSchema {
         this.maskedRelations.clear();
         this.concatOnlyRelations.clear();
         
+        // Identify main table.
+        Table centralTable = this.getCentralTable();
+        // if central table has subclass relations and is at the foreign key end, then follow
+        // them to the real central table.
+        boolean found = false;
+        for (Iterator i = centralTable.getForeignKeys().iterator(); i.hasNext() && !found; ) {
+            Key k = (Key)i.next();
+            for (Iterator j = k.getRelations().iterator(); j.hasNext() && !found; ) {
+                Relation r = (Relation)j.next();
+                if (this.getSubclassedRelations().contains(r)) {
+                    centralTable = r.getPrimaryKey().getTable();
+                    found = true;
+                }
+            }
+        }
+        
         // Find the shortest 1:m paths (depths) of each relation we have.
-        this.walkRelations(this.getCentralTable(), 0);
+        this.walkRelations(centralTable, 0);
         
         // Regenerate the dataset.
         this.regenerate();
@@ -173,19 +189,18 @@ public class DataSet extends GenericSchema {
      * @param currentDepth the number of 1:M relations it took to get this far.
      */
     private void walkRelations(Table currentTable, int currentDepth) {
-        // Find all relations from this table.
-        Collection relations = currentTable.getRelations();
-        // See if we need to do anything to each one.
-        for (Iterator i = relations.iterator(); i.hasNext(); ) {
+        // See if we need to do anything to each relation on this table.
+        for (Iterator i = currentTable.getRelations().iterator(); i.hasNext(); ) {
             Relation r = (Relation)i.next();
             // Dodge relation?
             if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) continue;
             // Seen before?
             else if (this.relationsPredicted.containsKey(r)) {
-                // Have we got there by a shorter path? If not, then we can skip it.
+                // Have we got there before by a path shorter than this one? If so, we can skip it.
                 int previousDepth = ((Integer)this.relationsPredicted.get(r)).intValue();
                 if (previousDepth <= currentDepth) continue;
             }
+            // If we get here, this is a new shortest path to the relation.
             // Update the depth count on this relation.
             this.relationsPredicted.put(r, new Integer(currentDepth));
             // Update the flags.
@@ -197,17 +212,19 @@ public class DataSet extends GenericSchema {
                 this.unmaskRelation(r);
             }
             // Work out where to go next.
-            if (r.getPrimaryKey().getTable().equals(currentTable) && (r.getFKCardinality().equals(Cardinality.MANY))) {
+            if (r.getPrimaryKey().getTable().equals(currentTable) && r.getFKCardinality().equals(Cardinality.MANY)) {
                 // If currentTable is at the one end of a one-to-many relation, then
                 // up the count (if it's not a subclass relation) and recurse down it.
-                if (currentDepth >= 1) {
+                if (currentDepth == 1 && !this.getSubclassedRelations().contains(r)) {
                     // Mark as concat-only (default to comma-separation) all 1:m relations that involve
                     // a second or further level of 1:m abstraction away from the central main table.
                     this.flagConcatOnlyRelation(r, ConcatRelationType.COMMA);
                 }
-                int nextDepth = currentDepth;
-                if (!this.getSubclassedRelations().contains(r)) nextDepth++;
-                this.walkRelations(r.getForeignKey().getTable(), nextDepth);
+                this.walkRelations(r.getForeignKey().getTable(),
+                        this.getSubclassedRelations().contains(r) ?
+                            currentDepth :
+                            currentDepth+1
+                        );
             } else {
                 // Otherwise, recurse down it anyway but leave the count as-is.
                 if (r.getPrimaryKey().getTable().equals(currentTable)) {
@@ -360,14 +377,13 @@ public class DataSet extends GenericSchema {
             throw new AssociationException(BuilderBundle.getString("subclassNotOnCentralTable"));
         if (relation.getPrimaryKey().getTable().equals(relation.getForeignKey().getTable()))
             throw new AssociationException(BuilderBundle.getString("subclassNotBetweenTwoTables"));
+        if (relation.getFKCardinality().equals(Cardinality.ONE))
+            throw new AssociationException(BuilderBundle.getString("subclassNotOneMany"));
         // Check validity.
         boolean containsM1 = false;
-        for (Iterator i = this.subclassedRelations.iterator(); i.hasNext(); ) {
+        for (Iterator i = this.subclassedRelations.iterator(); i.hasNext() && !containsM1; ) {
             Relation r = (Relation)i.next();
-            if (r.getForeignKey().getTable().equals(this.centralTable)) {
-                containsM1 = true;
-                break; // no need to look any further.
-            }
+            if (r.getForeignKey().getTable().equals(this.centralTable)) containsM1 = true;
         }
         if (containsM1 && (relation.getPrimaryKey().getTable().equals(this.centralTable) || this.subclassedRelations.size()!=0))
             throw new AssociationException(BuilderBundle.getString("mixedCardinalitySubclasses"));
@@ -747,17 +763,17 @@ public class DataSet extends GenericSchema {
     private void transformTable(DataSetTable datasetTable, Table realTable, Set ignoredRelations, List relationsFollowed, List constructedPKColumns, Set constructedColumns) throws AlreadyExistsException {
         // Find all relations from source table.
         Collection realTableRelations = realTable.getRelations();
+        List excludedColumns = new ArrayList();
         
         // Find all columns in all keys with non-ignored non-concat-only relations. Exclude them.
-        List excludedColumns = new ArrayList();
         for (Iterator i = realTable.getKeys().iterator(); i.hasNext(); ) {
             Key k = (Key)i.next();
             boolean hasUnignoredRelation = false;
             for (Iterator j = k.getRelations().iterator(); j.hasNext() && !hasUnignoredRelation; ) {
                 Relation r = (Relation)j.next();
-                if (!r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT) && 
+                if (!r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT) &&
                         !ignoredRelations.contains(r) &&
-                        !this.getConcatOnlyRelations().contains(r)) { 
+                        !this.getConcatOnlyRelations().contains(r)) {
                     hasUnignoredRelation = true;
                 }
             }
@@ -769,7 +785,27 @@ public class DataSet extends GenericSchema {
         
         // Work out the underlying relation (the last one visited) for all columns on this table.
         Relation underlyingRelation = null;
-        if (relationsFollowed.size()>0) underlyingRelation = (Relation)relationsFollowed.get(relationsFollowed.size()-1);
+        if (relationsFollowed.size()>0) {
+            underlyingRelation = (Relation)relationsFollowed.get(relationsFollowed.size()-1);
+            // If the realTable is the foreign key end of the relation, and the primary key of the
+            // relation has some other unignored non-concat-only relation, then don't include
+            // the foreign key columns of the relation here because they will have been covered
+            // elsewhere already.
+            if (underlyingRelation.getForeignKey().getTable().equals(realTable)) {
+                Key relPK = underlyingRelation.getPrimaryKey();
+                Collection relPKrels = new HashSet(relPK.getRelations());
+                boolean hasUnignoredRelation = false;
+                for (Iterator i = relPKrels.iterator(); i.hasNext() && !hasUnignoredRelation; ) {
+                    Relation r = (Relation)i.next();
+                    if (!r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT) &&
+                            !ignoredRelations.contains(r) &&
+                            !this.getConcatOnlyRelations().contains(r)) {
+                        hasUnignoredRelation = true;
+                    }
+                }
+                if (hasUnignoredRelation) excludedColumns.addAll(underlyingRelation.getForeignKey().getColumns());
+            }
+        }
         
         // Add all non-excluded columns from source table to dataset table.
         for (Iterator i = realTable.getColumns().iterator(); i.hasNext(); ) {

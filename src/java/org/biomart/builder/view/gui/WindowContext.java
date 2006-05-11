@@ -27,13 +27,11 @@ package org.biomart.builder.view.gui;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JComponent;
-import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Relation.Cardinality;
@@ -46,7 +44,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Adapts listener behaviour by adding in DataSet-specific stuff.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 10th May 2006
+ * @version 0.1.9, 11th May 2006
  * @since 0.1
  */
 public class WindowContext extends SchemaContext {
@@ -158,94 +156,71 @@ public class WindowContext extends SchemaContext {
             boolean relationConcated = ds.getConcatOnlyRelations().contains(relation);
             boolean relationSubclassed = ds.getSubclassedRelations().contains(relation);
             
-            if (relationMasked) {
-                JMenuItem unmask = new JMenuItem(BuilderBundle.getString("unmaskRelationTitle"));
-                unmask.setMnemonic(BuilderBundle.getString("unmaskRelationMnemonic").charAt(0));
-                unmask.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestUnmaskRelation(ds, relation);
-                    }
-                });
-                contextMenu.add(unmask);
-                if (incorrect) unmask.setEnabled(false);
-            } else {
-                JMenuItem mask = new JMenuItem(BuilderBundle.getString("maskRelationTitle"));
-                mask.setMnemonic(BuilderBundle.getString("maskRelationMnemonic").charAt(0));
-                mask.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestMaskRelation(ds, relation);
-                    }
-                });
-                contextMenu.add(mask);
-                if (incorrect) mask.setEnabled(false);
-            }
+            JMenuItem mask = new JMenuItem(BuilderBundle.getString("maskRelationTitle"));
+            mask.setMnemonic(BuilderBundle.getString("maskRelationMnemonic").charAt(0));
+            mask.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestMaskRelation(ds, relation);
+                }
+            });
+            contextMenu.add(mask);
+            if (incorrect || relationMasked) mask.setEnabled(false);
+            JMenuItem unmask = new JMenuItem(BuilderBundle.getString("unmaskRelationTitle"));
+            unmask.setMnemonic(BuilderBundle.getString("unmaskRelationMnemonic").charAt(0));
+            unmask.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestUnmaskRelation(ds, relation);
+                }
+            });
+            contextMenu.add(unmask);
+            if (incorrect || !relationMasked) unmask.setEnabled(false);
             
-            if (relationSubclassed) {
-                JMenuItem unsubclass = new JMenuItem(BuilderBundle.getString("unsubclassRelationTitle"));
-                unsubclass.setMnemonic(BuilderBundle.getString("unsubclassRelationMnemonic").charAt(0));
-                unsubclass.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestUnsubclassRelation(ds, relation);
-                    }
-                });
-                contextMenu.add(unsubclass);
-                if (incorrect || relationOneToOne || relationMasked || relationConcated) unsubclass.setEnabled(false);
-            } else {
-                JMenuItem subclass = new JMenuItem(BuilderBundle.getString("subclassRelationTitle"));
-                subclass.setMnemonic(BuilderBundle.getString("subclassRelationMnemonic").charAt(0));
-                subclass.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestSubclassRelation(ds, relation);
-                    }
-                });
-                contextMenu.add(subclass);
-                if (incorrect || relationOneToOne || relationMasked || relationConcated) subclass.setEnabled(false);
-            }
+            JMenuItem subclass = new JMenuItem(BuilderBundle.getString("subclassRelationTitle"));
+            subclass.setMnemonic(BuilderBundle.getString("subclassRelationMnemonic").charAt(0));
+            subclass.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestSubclassRelation(ds, relation);
+                }
+            });
+            contextMenu.add(subclass);
+            if (incorrect || relationSubclassed || relationOneToOne || relationMasked || relationConcated) subclass.setEnabled(false);
+            JMenuItem unsubclass = new JMenuItem(BuilderBundle.getString("unsubclassRelationTitle"));
+            unsubclass.setMnemonic(BuilderBundle.getString("unsubclassRelationMnemonic").charAt(0));
+            unsubclass.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestUnsubclassRelation(ds, relation);
+                }
+            });
+            contextMenu.add(unsubclass);
+            if (incorrect || !relationSubclassed || relationOneToOne || relationMasked || relationConcated) unsubclass.setEnabled(false);
             
-            if (relationConcated) {
-                JMenuItem unconcat = new JMenuItem(BuilderBundle.getString("unconcatOnlyRelationTitle"));
-                unconcat.setMnemonic(BuilderBundle.getString("unconcatOnlyRelationMnemonic").charAt(0));
-                unconcat.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestUnconcatOnlyRelation(ds, relation);
-                    }
-                });
-                contextMenu.add(unconcat);
-                if (incorrect || relationOneToOne || relationMasked || relationSubclassed) unconcat.setEnabled(false);
-            } else {
-                JMenu concatMenu = new JMenu(BuilderBundle.getString("concatOnlyRelationTitle"));
-                concatMenu.setMnemonic(BuilderBundle.getString("concatOnlyRelationMnemonic").charAt(0));
-                
-                JMenuItem comma = new JMenuItem(BuilderBundle.getString("commaConcatTitle"));
-                comma.setMnemonic(BuilderBundle.getString("commaConcatMnemonic").charAt(0));
-                comma.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestConcatOnlyRelation(ds, relation, ConcatRelationType.COMMA);
-                    }
-                });
-                concatMenu.add(comma);
-                
-                JMenuItem space = new JMenuItem(BuilderBundle.getString("spaceConcatTitle"));
-                space.setMnemonic(BuilderBundle.getString("spaceConcatMnemonic").charAt(0));
-                space.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestConcatOnlyRelation(ds, relation, ConcatRelationType.SPACE);
-                    }
-                });
-                concatMenu.add(space);
-                
-                JMenuItem tab = new JMenuItem(BuilderBundle.getString("tabConcatTitle"));
-                tab.setMnemonic(BuilderBundle.getString("tabConcatMnemonic").charAt(0));
-                tab.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestConcatOnlyRelation(ds, relation, ConcatRelationType.TAB);
-                    }
-                });
-                concatMenu.add(tab);
-                
-                contextMenu.add(concatMenu);
-                if (incorrect || relationOneToOne || relationMasked || relationSubclassed) concatMenu.setEnabled(false);
-            }
+            JMenuItem concat = new JMenuItem(BuilderBundle.getString("concatOnlyRelationTitle"));
+            concat.setMnemonic(BuilderBundle.getString("concatOnlyRelationMnemonic").charAt(0));
+            concat.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestConcatOnlyRelation(ds, relation);
+                }
+            });
+            contextMenu.add(concat);
+            if (incorrect || relationConcated || relationOneToOne || relationMasked || relationSubclassed) concat.setEnabled(false);
+            JMenuItem changeConcat = new JMenuItem(BuilderBundle.getString("changeConcatOnlyRelationTitle"));
+            changeConcat.setMnemonic(BuilderBundle.getString("changeConcatOnlyRelationMnemonic").charAt(0));
+            changeConcat.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestConcatOnlyRelation(ds, relation);
+                }
+            });
+            contextMenu.add(changeConcat);
+            if (incorrect || !relationConcated || relationOneToOne || relationMasked || relationSubclassed) changeConcat.setEnabled(false);
+            JMenuItem unconcat = new JMenuItem(BuilderBundle.getString("unconcatOnlyRelationTitle"));
+            unconcat.setMnemonic(BuilderBundle.getString("unconcatOnlyRelationMnemonic").charAt(0));
+            unconcat.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestUnconcatOnlyRelation(ds, relation);
+                }
+            });
+            contextMenu.add(unconcat);
+            if (incorrect || !relationConcated || relationOneToOne || relationMasked || relationSubclassed) unconcat.setEnabled(false);
         }
         
         else if (object instanceof Key) {

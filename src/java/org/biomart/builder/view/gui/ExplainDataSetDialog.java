@@ -40,11 +40,10 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 10th May 2006
+ * @version 0.1.4, 11th May 2006
  * @since 0.1
  */
-public class ExplainDataSetDialog extends JDialog {
-    
+public class ExplainDataSetDialog extends JDialog {    
     /**
      * Creates a new instance of ExplainDataSetDialog
      */
@@ -68,6 +67,7 @@ public class ExplainDataSetDialog extends JDialog {
         ExplainDataSetContext context = new ExplainDataSetContext(dsTabSet, (DataSet)dsTable.getSchema());
         if (dsColumn!=null) context.setSelectedColumn(dsColumn);
         diagram.setDiagramContext(context);
+        schemaTabSet.getDataSetTabSet().setCurrentExplanationDiagram(diagram);
         
         // Work out what size we want the diagram to be.
         Dimension size = diagram.getPreferredSize();
@@ -93,7 +93,7 @@ public class ExplainDataSetDialog extends JDialog {
         // set size of window
         this.pack();
     }
-
+    
     /**
      * Static method which allows the user to create a new table provider.
      */
@@ -101,6 +101,7 @@ public class ExplainDataSetDialog extends JDialog {
         ExplainDataSetDialog dialog = new ExplainDataSetDialog(schemaTabSet, table, null);
         dialog.setLocationRelativeTo(schemaTabSet.getDataSetTabSet().getMartTabSet().getMartBuilder());
         dialog.show();
+        schemaTabSet.getDataSetTabSet().setCurrentExplanationDiagram(null);
     }
     
     /**
@@ -110,5 +111,6 @@ public class ExplainDataSetDialog extends JDialog {
         ExplainDataSetDialog dialog = new ExplainDataSetDialog(schemaTabSet, (DataSetTable)column.getTable(), column);
         dialog.setLocationRelativeTo(schemaTabSet.getDataSetTabSet().getMartTabSet().getMartBuilder());
         dialog.show();
+        schemaTabSet.getDataSetTabSet().setCurrentExplanationDiagram(null);
     }
 }

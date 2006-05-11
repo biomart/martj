@@ -33,6 +33,7 @@ import java.util.Map;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
+import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
@@ -42,7 +43,7 @@ import org.biomart.builder.resources.BuilderBundle;
  *
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 27th April 2006
+ * @version 0.1.9, 11th May 2006
  * @since 0.1
  */
 public class Mart {
@@ -213,7 +214,7 @@ public class Mart {
                 Relation r = (Relation)j.next();
                 // Only flag potential m:1 subclass relations if they don't refer back to ourselves.
                 try {
-                    if (!r.getPrimaryKey().getTable().equals(centralTable)) {
+                    if (r.getFKCardinality().equals(Cardinality.MANY) && !r.getPrimaryKey().getTable().equals(centralTable)) {
                         DataSet scWin = new DataSet(this, centralTable, name+BuilderBundle.getString("subclassDataSetSuffix")+(suffix++));
                         scWin.flagSubclassRelation(r);
                         scWin.optimiseDataSet();
