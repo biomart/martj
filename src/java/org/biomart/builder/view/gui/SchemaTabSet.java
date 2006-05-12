@@ -151,8 +151,13 @@ public class SchemaTabSet extends JTabbedPane {
                 try {
                     if (schema != null) {
                         MartUtils.addSchemaToMart(datasetTabSet.getMart(), schema);
-                        requestSynchroniseSchema(schema);
+                        MartUtils.synchroniseSchema(schema);
+                        if (schema.getInternalRelations().size()==0) {
+                            MartUtils.enableKeyGuessing(schema);
+                            MartUtils.synchroniseSchema(schema);
+                        }
                         addSchemaTab(schema);
+                        datasetTabSet.recalculateDataSetTabs(); // Some datasets may disappear. It'll call us.recalculateDataSetTabs() later.
                         datasetTabSet.getMartTabSet().setModifiedStatus(true);
                     }
                 } catch (Throwable t) {

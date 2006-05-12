@@ -419,14 +419,14 @@ public class DataSet extends GenericSchema {
      * @param type the {@link PartitionedColumnType} to use for the partition.
      */
     public void flagPartitionedColumn(Column column, PartitionedColumnType type) throws AssociationException {
-        if (column instanceof WrappedColumn) {
-            this.flagPartitionedColumn(((WrappedColumn)column).getWrappedColumn(), type);
-        } else if (column instanceof DataSetColumn) {
-            throw new AssociationException(BuilderBundle.getString("cannotPartitionDataSetColumns"));
+        if (column instanceof DataSetColumn) {
+            if (column instanceof WrappedColumn) this.flagPartitionedColumn(((WrappedColumn)column).getWrappedColumn(), type);
+            else throw new AssociationException(BuilderBundle.getString("cannotPartitionDataSetColumns"));
         } else {
             boolean alreadyHave = false;
             for (Iterator i = this.partitionedColumns.keySet().iterator(); i.hasNext() && !alreadyHave; ) {
-                if (((Column)i.next()).getTable().equals(column.getTable())) alreadyHave = true;
+                Column testCol = (Column)i.next();
+                if (testCol.getTable().equals(column.getTable()) && !testCol.equals(column)) alreadyHave = true;
             }
             if (alreadyHave) throw new AssociationException(BuilderBundle.getString("cannotPartitionMultiColumns"));
             // Do it (the Map will replace the value with the new value if the key already exists)
@@ -448,8 +448,11 @@ public class DataSet extends GenericSchema {
      * @param column the {@link Column} to unmark.
      */
     public void unflagPartitionedColumn(Column column) {
-        // Do it.
-        this.partitionedColumns.remove(column);
+        if (column instanceof WrappedColumn) this.unflagPartitionedColumn(((WrappedColumn)column).getWrappedColumn());
+        else {
+            // Do it.
+            this.partitionedColumns.remove(column);
+        }
     }
     
     /**
@@ -467,10 +470,13 @@ public class DataSet extends GenericSchema {
      * @return the partition type of the {@link Column}.
      */
     public PartitionedColumnType getPartitionedColumnType(Column column) {
+        if (column instanceof WrappedColumn) return this.getPartitionedColumnType(((WrappedColumn)column).getWrappedColumn());
+        else {
         // Do we have it?
         if (!this.partitionedColumns.containsKey(column)) return null;
         // Return it.
         return (PartitionedColumnType)this.partitionedColumns.get(column);
+        }
     }
     
     /**
@@ -960,6 +966,8 @@ public class DataSet extends GenericSchema {
              */
             private final Set values = new HashSet();
             
+            private boolean includeNull;
+            
             /**
              * The constructor specifies the values to partition on. If any value is null,
              * then only rows with null in this column will be selected for that value.
@@ -968,19 +976,24 @@ public class DataSet extends GenericSchema {
              * @throws IllegalArgumentException if any of the values are not-null
              * and not Strings, or if the input set is empty.
              */
-            public ValueCollection(Collection values) throws IllegalArgumentException {
+            public ValueCollection(Collection values, boolean includeNull) throws IllegalArgumentException {
                 // Sanity check.
-                if (values.size()<1)
+                if (values.size()<1 && !includeNull)
                     throw new IllegalArgumentException(BuilderBundle.getString("valuesEmpty"));
                 // Do it.
                 for (Iterator i = values.iterator(); i.hasNext(); ) {
                     Object o = i.next();
                     // Sanity check.
-                    if (o != null && !(o instanceof String))
+                    if (o==null || !(o instanceof String))
                         throw new IllegalArgumentException(BuilderBundle.getString("valueNotString"));
                     // Add the value.
                     this.values.add((String)o);
                 }
+                this.includeNull = includeNull;
+            }
+            
+            public boolean getIncludeNull() {
+                return this.includeNull;
             }
             
             /**
@@ -996,6 +1009,12 @@ public class DataSet extends GenericSchema {
              */
             public String toString() {
                 return "ValueCollection:" + this.values.toString();
+            }
+            
+            public boolean equals(Object o) {
+                if (o==null || !(o instanceof ValueCollection)) return false;
+                ValueCollection vc = (ValueCollection)o;
+                return (vc.getValues().equals(this.values) && vc.getIncludeNull()==this.includeNull);
             }
         }
         
@@ -1014,11 +1033,11 @@ public class DataSet extends GenericSchema {
              * then only rows with null in this column will be selected.
              * @param value the value to partition on.
              */
-            public SingleValue(String value) {
-                super(Collections.singleton(value));
+            public SingleValue(String value, boolean useNull) {
+                super(Collections.singleton(value), useNull);
                 this.value = value;
             }
-            
+                        
             /**
              * Returns the value we will partition on.
              * @return the value we will partition on.

@@ -513,7 +513,7 @@ public class MartBuilderXML extends DefaultHandler {
                     String value = null;
                     boolean useNull = ((String)attributes.get("useNull")).equals("true");
                     if (!useNull) value = (String)attributes.get("value");
-                    resolvedType = new SingleValue(value);
+                    resolvedType = new SingleValue(value, useNull);
                 }
                 // Unique values partition?
                 else if ("uniqueValues".equals(type)) {
@@ -525,9 +525,8 @@ public class MartBuilderXML extends DefaultHandler {
                     List valueList = new ArrayList();
                     if (attributes.containsKey("values")) valueList.addAll(Arrays.asList(((String)attributes.get("values")).split("\\s*,\\s*")));
                     boolean includeNull = ((String)attributes.get("useNull")).equals("true");
-                    if (includeNull) valueList.add(null);
                     // Make the collection.
-                    resolvedType = new ValueCollection(valueList);
+                    resolvedType = new ValueCollection(valueList, includeNull);
                 }
                 // Others.
                 else
@@ -679,7 +678,7 @@ public class MartBuilderXML extends DefaultHandler {
             if (jdbcSchema.getPassword() != null)
                 this.writeAttribute("password", jdbcSchema.getPassword());
             this.writeAttribute("name", jdbcSchema.getName());
-            this.writeAttribute("keyguessing", jdbcSchema.isKeyGuessing()?"true":"false");
+            this.writeAttribute("keyguessing", jdbcSchema.getKeyGuessing()?"true":"false");
         }
         // Others?
         else
@@ -805,7 +804,7 @@ public class MartBuilderXML extends DefaultHandler {
                 this.writeAttribute("alt", key.toString());
                 this.closeElement(elem);
             }
-
+            
             // Finish table.
             this.closeElement("table");
         }
@@ -965,9 +964,10 @@ public class MartBuilderXML extends DefaultHandler {
                 // What kind of partition is it?
                 // Single value partition?
                 if (ptc instanceof SingleValue) {
+                    SingleValue sv = (SingleValue)ptc;
                     this.writeAttribute("partitionedColumnType","singleValue");
-                    String value = ((SingleValue)ptc).getValue();
-                    this.writeAttribute("useNull",value==null?"true":"false");
+                    String value = sv.getValue();
+                    this.writeAttribute("useNull",sv.getIncludeNull()?"true":"false");
                     if (value!=null) this.writeAttribute("value",value);
                 }
                 // Unique values partition?
@@ -977,16 +977,12 @@ public class MartBuilderXML extends DefaultHandler {
                 }
                 // Values collection partition?
                 else if (ptc instanceof ValueCollection) {
+                    ValueCollection vc = (ValueCollection)ptc;
                     this.writeAttribute("partitionedColumnType","valueCollection");
                     // Values are comma-separated.
                     List valueList = new ArrayList();
-                    valueList.addAll(((ValueCollection)ptc).getValues());
-                    if (valueList.contains(null)) {
-                        this.writeAttribute("useNull","true");
-                        valueList.remove(null);
-                    } else {
-                        this.writeAttribute("useNull","false");
-                    }
+                    valueList.addAll(vc.getValues());
+                    this.writeAttribute("useNull",vc.getIncludeNull()?"true":"false");
                     if (!valueList.isEmpty()) this.writeAttribute("values",(String[])valueList.toArray(new String[0]));
                 }
                 // Others.

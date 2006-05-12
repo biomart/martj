@@ -56,7 +56,9 @@ import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.BuilderBundle;
@@ -416,7 +418,6 @@ public class DataSetTabSet extends JTabbedPane {
     public void requestConcatOnlyRelation(DataSet ds, Relation relation) {
         // Label to concat-type
         Map responseSet = new HashMap();
-        responseSet.put(BuilderBundle.getString("noConcatOption"),"");
         responseSet.put(BuilderBundle.getString("commaConcatOption"),ConcatRelationType.COMMA);
         responseSet.put(BuilderBundle.getString("spaceConcatOption"),ConcatRelationType.SPACE);
         responseSet.put(BuilderBundle.getString("tabConcatOption"),ConcatRelationType.TAB);
@@ -427,7 +428,6 @@ public class DataSetTabSet extends JTabbedPane {
         }
         // Work out current type, if any.
         Object current = ds.getConcatRelationType(relation);
-        if (current==null) current="";
         Object selected = inverseResponseSet.get(current);
         // Open dialog.
         Object response = JOptionPane.showInputDialog(this,
@@ -587,6 +587,39 @@ public class DataSetTabSet extends JTabbedPane {
     public void requestUnpartitionBySchema(DataSet dataset) {
         MartUtils.unpartitionBySchema(dataset);
         this.redrawDataSetDiagramComponents(dataset);
+        martTabSet.setModifiedStatus(true);
+    }
+    
+    public void requestPartitionByColumn(DataSet dataset, Column column) {
+        PartitionedColumnType type;
+        if (column instanceof WrappedColumn) column = ((WrappedColumn)column).getWrappedColumn();
+        if (dataset.getPartitionedColumns().contains(column)) {
+            PartitionedColumnType oldType = dataset.getPartitionedColumnType(column);
+            type = PartitionColumnDialog.updatePartitionedColumnType(this, oldType);
+            if (type==null || type.equals(oldType)) return; // Unchanged.
+        } else {
+            type = PartitionColumnDialog.createPartitionedColumnType(this);
+            if (type == null) return; // Cancelled.
+        }
+        this.requestPartitionByColumn(dataset, column, type);
+    }
+    
+    public void requestPartitionByColumn(DataSet dataset, Column column, PartitionedColumnType type) {
+        try {
+            MartUtils.partitionByColumn(dataset, column, type);
+            this.schemaTabSet.redrawAllDiagramComponents();
+            this.redrawDataSetDiagramComponents(dataset);
+            if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawAllDiagramComponents();
+            martTabSet.setModifiedStatus(true);
+        } catch (Throwable t) {
+            this.martTabSet.getMartBuilder().showStackTrace(t);
+        }
+    }
+    
+    public void requestUnpartitionByColumn(DataSet dataset, Column column) {
+        MartUtils.unpartitionByColumn(dataset, column);
+        this.redrawDataSetDiagramComponents(dataset);
+        if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawAllDiagramComponents();
         martTabSet.setModifiedStatus(true);
     }
     

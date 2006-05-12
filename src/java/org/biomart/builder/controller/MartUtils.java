@@ -39,6 +39,7 @@ import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.SchemaGroup;
@@ -214,6 +215,14 @@ public class MartUtils {
 
     public static void unpartitionBySchema(DataSet dataset) {
         dataset.setPartitionOnSchema(false);
+    }
+    
+    public static void partitionByColumn(DataSet dataset, Column column, PartitionedColumnType type) throws AssociationException {
+        dataset.flagPartitionedColumn(column, type);
+    }
+
+    public static void unpartitionByColumn(DataSet dataset, Column column) {
+        dataset.unflagPartitionedColumn(column);
     }
     
     public static void enableKeyGuessing(Schema schema) {

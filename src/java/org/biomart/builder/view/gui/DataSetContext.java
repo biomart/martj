@@ -64,7 +64,7 @@ public class DataSetContext extends WindowContext {
      */
     public void populateContextMenu(JPopupMenu contextMenu, Object object) {
         if (object instanceof DataSet) {
-            // Common DataSet stuff.          
+            // Common DataSet stuff.
             
             JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeDataSetTitle"));
             remove.setMnemonic(BuilderBundle.getString("removeDataSetMnemonic").charAt(0));
@@ -145,7 +145,7 @@ public class DataSetContext extends WindowContext {
             
             // Add separator.
             contextMenu.addSeparator();
-
+            
             // AND they show Column stuff
             final DataSetColumn column = (DataSetColumn)object;
             final DataSet ds = this.getDataSetTabSet().getSelectedDataSetTab().getDataSet();
@@ -190,6 +190,40 @@ public class DataSetContext extends WindowContext {
                 });
                 contextMenu.add(unpartition);
                 if (!ds.getPartitionOnSchema()) unpartition.setEnabled(false);
+            } else if (column instanceof WrappedColumn) {
+                
+                // Partition stuff.
+                boolean isPartitioned = ds.getPartitionedColumns().contains(((WrappedColumn)column).getWrappedColumn());
+                
+                JMenuItem partition = new JMenuItem(BuilderBundle.getString("partitionColumnTitle"));
+                partition.setMnemonic(BuilderBundle.getString("partitionColumnMnemonic").charAt(0));
+                partition.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        getDataSetTabSet().requestPartitionByColumn(ds, column);
+                    }
+                });
+                contextMenu.add(partition);
+                if (isPartitioned) partition.setEnabled(false);
+                
+                JMenuItem changepartition = new JMenuItem(BuilderBundle.getString("changePartitionColumnTitle"));
+                changepartition.setMnemonic(BuilderBundle.getString("changePartitionColumnMnemonic").charAt(0));
+                changepartition.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        getDataSetTabSet().requestPartitionByColumn(ds, column);
+                    }
+                });
+                contextMenu.add(changepartition);
+                if (!isPartitioned) changepartition.setEnabled(false);
+                
+                JMenuItem unpartition = new JMenuItem(BuilderBundle.getString("unpartitionColumnTitle"));
+                unpartition.setMnemonic(BuilderBundle.getString("unpartitionColumnMnemonic").charAt(0));
+                unpartition.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        getDataSetTabSet().requestUnpartitionByColumn(ds, column);
+                    }
+                });
+                contextMenu.add(unpartition);
+                if (!isPartitioned) unpartition.setEnabled(false);
             }
         }
     }
@@ -224,6 +258,7 @@ public class DataSetContext extends WindowContext {
             
             Column column = (Column)object;
             if (column instanceof WrappedColumn) column = ((WrappedColumn)column).getWrappedColumn();
+            
             // Fade out all MASKED columns.
             if (this.getDataSet().getMaskedColumns().contains(column)) {
                 component.setForeground(ColumnComponent.FADED_COLOUR);

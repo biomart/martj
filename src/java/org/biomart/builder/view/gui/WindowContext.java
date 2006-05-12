@@ -190,7 +190,6 @@ public class WindowContext extends SchemaContext {
             final DataSet ds = this.getDataSetTabSet().getSelectedDataSetTab().getDataSet();
             boolean isMasked = ds.getMaskedColumns().contains(column);
             
-            
             // Add column stuff.
             JMenuItem mask = new JMenuItem(BuilderBundle.getString("maskColumnTitle"));
             mask.setMnemonic(BuilderBundle.getString("maskColumnMnemonic").charAt(0));
@@ -211,6 +210,39 @@ public class WindowContext extends SchemaContext {
             });
             contextMenu.add(unmask);
             if (!isMasked) unmask.setEnabled(false);
+            
+            // Partition stuff.
+            boolean isPartitioned = ds.getPartitionedColumns().contains(column);
+            
+            JMenuItem partition = new JMenuItem(BuilderBundle.getString("partitionColumnTitle"));
+            partition.setMnemonic(BuilderBundle.getString("partitionColumnMnemonic").charAt(0));
+            partition.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestPartitionByColumn(ds, column);
+                }
+            });
+            contextMenu.add(partition);
+            if (isPartitioned) partition.setEnabled(false);
+            
+            JMenuItem changepartition = new JMenuItem(BuilderBundle.getString("changePartitionColumnTitle"));
+            changepartition.setMnemonic(BuilderBundle.getString("changePartitionColumnMnemonic").charAt(0));
+            changepartition.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestPartitionByColumn(ds, column);
+                }
+            });
+            contextMenu.add(changepartition);
+            if (!isPartitioned) changepartition.setEnabled(false);
+            
+            JMenuItem unpartition = new JMenuItem(BuilderBundle.getString("unpartitionColumnTitle"));
+            unpartition.setMnemonic(BuilderBundle.getString("unpartitionColumnMnemonic").charAt(0));
+            unpartition.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestUnpartitionByColumn(ds, column);
+                }
+            });
+            contextMenu.add(unpartition);
+            if (!isPartitioned) unpartition.setEnabled(false);
         }
     }
     
