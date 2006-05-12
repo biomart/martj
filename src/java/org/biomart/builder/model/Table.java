@@ -47,7 +47,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * more complex implementations. It is able to keep track of {@link Key}s and {@link Column}s
  * but it does not provide any methods that process or analyse these.</p>
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 9th May 2006
+ * @version 0.1.9, 12th May 2006
  * @since 0.1
  */
 public interface Table extends Comparable {
@@ -377,7 +377,7 @@ public interface Table extends Comparable {
         
         public void changeColumnMapKey(String oldName, String newName) throws AlreadyExistsException {
             if (this.columns.containsKey(newName))
-                throw new AlreadyExistsException(BuilderBundle.getString("columnExists"), name);
+                throw new AlreadyExistsException(BuilderBundle.getString("columnExists"), newName);
             Column col = (Column)this.columns.get(oldName);
             this.columns.put(newName, col);
             this.columns.remove(oldName);

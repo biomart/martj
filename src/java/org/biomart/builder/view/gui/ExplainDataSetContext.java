@@ -48,7 +48,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Adapts listener behaviour by adding in DataSet-specific stuff.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 11th May 2006
+ * @version 0.1.5, 12th May 2006
  * @since 0.1
  */
 public class ExplainDataSetContext extends WindowContext {
@@ -202,12 +202,13 @@ public class ExplainDataSetContext extends WindowContext {
     }
     
     public void customiseAppearance(JComponent component, Object object) {
-        if (selectedColumn==null) {
+        if (this.selectedColumn==null) {
             super.customiseAppearance(component, object);
         } else {
             if (object instanceof Relation) {
                 Relation relation = (Relation)object;
-                if (selectedColumn.getUnderlyingRelation()!=null && selectedColumn.getUnderlyingRelation().equals(relation)) {
+                Relation underlyingRelation = this.selectedColumn.getUnderlyingRelation();
+                if (underlyingRelation!=null && underlyingRelation.equals(relation)) {
                     if (selectedColumn instanceof ConcatRelationColumn) {
                         // Highlight relation as target.
                         component.setForeground(ExplainDataSetContext.TARGET_COLOUR);

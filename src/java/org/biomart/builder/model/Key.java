@@ -43,7 +43,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * <p>Unless otherwise specified, all {@link Key}s are created with a default
  * {@link ComponentStatus} of INFERRED.</p>
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 11th May 2006
+ * @version 0.1.7, 12th May 2006
  * @since 0.1
  */
 public interface Key extends Comparable {
@@ -52,6 +52,8 @@ public interface Key extends Comparable {
      * @return the name of this {@link Key}.
      */
     public String getName();
+    
+    public Collection getColumnNames();
     
     /**
      * Returns the {@link ComponentStatus} of this {@link Key}. The default value,
@@ -210,22 +212,6 @@ public interface Key extends Comparable {
         /**
          * {@inheritDoc}
          */
-        public String getName() {
-            StringBuffer sb = new StringBuffer();
-            sb.append(this.getTable().toString());
-            sb.append("{");
-            for (Iterator i = this.columns.iterator(); i.hasNext(); ) {
-                Column c = (Column)i.next();
-                sb.append(c.toString());
-                if (i.hasNext()) sb.append(",");
-            }
-            sb.append("}");
-            return sb.toString();
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
         public ComponentStatus getStatus() {
             return this.status;
         }
@@ -311,6 +297,28 @@ public interface Key extends Comparable {
             } else {
                 throw new AssertionError(BuilderBundle.getString("unknownKey", this.getClass().getName()));
             }
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        public Collection getColumnNames() {
+            List names = new ArrayList();
+            for (Iterator i = this.columns.iterator(); i.hasNext(); ) {
+                Column c = (Column)i.next();
+                names.add(c.getName());
+            }
+            return names;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        public String getName() {
+            StringBuffer sb = new StringBuffer();
+            sb.append(this.getTable().toString());
+            sb.append(this.getColumnNames().toString());
+            return sb.toString();
         }
         
         /**

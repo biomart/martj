@@ -28,9 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
@@ -57,7 +55,7 @@ import org.biomart.builder.resources.BuilderBundle;
  *
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 2nd May 2006
+ * @version 0.1.7, 12th May 2006
  * @since 0.1
  */
 public interface SchemaGroup extends Schema {
@@ -169,7 +167,7 @@ public interface SchemaGroup extends Schema {
                     ForeignKey targetFK = null;
                     for (Iterator l = targetFKTable.getForeignKeys().iterator(); l.hasNext() && targetFK==null; ) {
                         ForeignKey k = (ForeignKey)l.next();
-                        if (k.getName().equals(sourceFK.getName())) targetFK = k;
+                        if (k.getColumnNames().equals(sourceFK.getColumnNames())) targetFK = k;
                     }
                     // Create the relation.
                     new GenericRelation(targetTable.getPrimaryKey(), targetFK, sourceRelation.getFKCardinality());

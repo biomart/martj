@@ -63,7 +63,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * choosing it.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 11th May 2006
+ * @version 0.1.15, 12th May 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -682,27 +682,21 @@ public class DataSet extends GenericSchema {
         
         // Do it!
         List relationsFollowed = new ArrayList(); // relations used to construct this table
-        if (linkbackRelation != null) relationsFollowed.add(linkbackRelation); // don't forget the parent relation
         Set constructedColumns = new HashSet(); // constructedColumns to include in the constructed table
         List constructedPKColumns = new ArrayList(); // constructedColumns to include in the constructed table's PK
+        List constructedFKColumns = new ArrayList(); // constructedColumns to include in the constructed table's FK
         
         // Create the DataSetTable
         DataSetTable datasetTable = new DataSetTable(realTable.getName(), this, dsTableType, realTable);
-        this.transformTable(datasetTable, realTable, ignoredRelations, relationsFollowed, constructedPKColumns, constructedColumns);
-        datasetTable.setUnderlyingRelations(relationsFollowed);
         
         // Add table provider partition column if required.
         DataSetColumn schemaCol=null;
-        if (realTable.getSchema() instanceof SchemaGroup) {
-            schemaCol = new SchemaNameColumn(BuilderBundle.getString("schemaColumnName"), datasetTable);
-            // Only add to PK if PK is not empty, as otherwise will introduce a PK where none previously existed.
-            if (!constructedPKColumns.isEmpty()) constructedPKColumns.add(schemaCol);
-        }
+        if (realTable.getSchema() instanceof SchemaGroup) schemaCol = new SchemaNameColumn(BuilderBundle.getString("schemaColumnName"), datasetTable);
         
-        // Work out the foreign key only if the parent relation is not null.
+        // Work out the foreign key and create its columns only if the parent relation is not null.
         if (linkbackRelation != null) {
-            // Create new, empty child FK list.
-            List constructedFKColumns = new ArrayList();
+            // Mark relation as followed.
+            relationsFollowed.add(linkbackRelation); // don't forget the parent relation
             
             // Get real table for dataset parent table
             Table parentRealTable = linkbackRelation.getPrimaryKey().getTable();
@@ -717,24 +711,8 @@ public class DataSet extends GenericSchema {
                     // If column is a wrapped column
                     // Find associated real column
                     Column parentRealTableColumn = ((WrappedColumn)parentDatasetTableColumn).getWrappedColumn();
-                    if (parentDatasetTableColumn.getUnderlyingRelation()!=null) {
-                        // If real column not obtained directly from original main table, ie. is from another table or a copy
-                        // of the main table obtained by linking to itself via some other route, create child column for it
-                        // add it to child table PK. We test for where the column came from by looking at its providing
-                        // relation - if null, then it was on the original table, if not null then it is a column inherited from
-                        // the parent of the subclass or dimension table. So, we look the column up by name to see if it is
-                        // already defined. If it is, we reuse it. If not, we create a new wrapped column for it.
-                        constructedFKColumn = (DataSetColumn)datasetTable.getColumnByName(parentDatasetTableColumn.getName());
-                        if (constructedFKColumn == null) {
-                            constructedFKColumn = new WrappedColumn(parentRealTableColumn, datasetTable, linkbackRelation);
-                            constructedPKColumns.add(constructedFKColumn);
-                        }
-                    } else {
-                        // Else follow original relation FK end and find real child column and associated child column
-                        int parentRealPKColPos = parentRealTable.getPrimaryKey().getColumns().indexOf(parentRealTableColumn);
-                        Column childRealFKCol = (Column)linkbackRelation.getForeignKey().getColumns().get(parentRealPKColPos);
-                        constructedFKColumn = (DataSetColumn)datasetTable.getColumnByName(childRealFKCol.getName());
-                    }
+                    constructedFKColumn = new WrappedColumn(parentRealTableColumn, datasetTable, linkbackRelation);
+                    constructedPKColumns.add(constructedFKColumn);
                 } else if (parentDatasetTableColumn instanceof SchemaNameColumn) {
                     // Else if its a tblprov column
                     // Find child tblprov column
@@ -743,12 +721,6 @@ public class DataSet extends GenericSchema {
                     // Else, can'table handle.
                     throw new AssertionError(BuilderBundle.getString("unknownColumnTypeInFK", parentDatasetTableColumn.getClass().getName()));
                 }
-                
-                // Set the FK column name to match the parent PK column name with "_key" appended
-                // (naming convention requirement), but only append that extra bit if parent doesn't already have it.
-                String candidateFKColName = parentDatasetTableColumn.getName();
-                if (!candidateFKColName.endsWith(BuilderBundle.getString("fkSuffix"))) candidateFKColName += BuilderBundle.getString("fkSuffix");
-                constructedFKColumn.setName(candidateFKColName);
                 
                 // Add child column to child FK
                 constructedFKColumns.add(constructedFKColumn);
@@ -761,7 +733,26 @@ public class DataSet extends GenericSchema {
                 // Create the relation.
                 new GenericRelation(parentDatasetTable.getPrimaryKey(), newFK, Cardinality.MANY);
             } else throw new AssertionError(BuilderBundle.getString("emptyFK"));
+            
+            // Remember that we've made them.
+            constructedColumns.addAll(constructedFKColumns);
         }
+        
+        // Populate the rest of the columns by transforming the table.
+        this.transformTable(datasetTable, realTable, ignoredRelations, relationsFollowed, constructedPKColumns, constructedColumns);
+        datasetTable.setUnderlyingRelations(relationsFollowed);
+        
+        // After we've gathered all our colums together, and duplicate names have been ironed out,
+        // rename our foreign key columns with '_key' suffixes.
+        for (Iterator i = constructedFKColumns.iterator(); i.hasNext(); ) {
+            DataSetColumn col = (DataSetColumn)i.next();
+            if (!col.getName().endsWith(BuilderBundle.getString("fkSuffix")))
+                col.setName(col.getName() + BuilderBundle.getString("fkSuffix"));
+        }
+        
+        // Add table provider partition column to PK if required. Must not do it if PK doesn't
+        // already exist, as this would create ridiculous constraints.
+        if (schemaCol!=null  && !constructedPKColumns.isEmpty()) constructedPKColumns.add(schemaCol);
         
         // Create the primary key on it.
         if (constructedPKColumns.size()>=1) datasetTable.setPrimaryKey(new GenericPrimaryKey(constructedPKColumns));
@@ -786,19 +777,19 @@ public class DataSet extends GenericSchema {
         Collection realTableRelations = realTable.getRelations();
         List excludedColumns = new ArrayList();
         
-        // Find all columns in all keys with non-ignored non-concat-only relations. Exclude them.
-        for (Iterator i = realTable.getKeys().iterator(); i.hasNext(); ) {
+        // Exclude columns from foreign keys with non-incorrect non-masked non-concat-only relations.
+        for (Iterator i = realTable.getForeignKeys().iterator(); i.hasNext(); ) {
             Key k = (Key)i.next();
-            boolean hasUnignoredRelation = false;
-            for (Iterator j = k.getRelations().iterator(); j.hasNext() && !hasUnignoredRelation; ) {
+            boolean hasGoodRelation = false;
+            for (Iterator j = k.getRelations().iterator(); j.hasNext() && !hasGoodRelation; ) {
                 Relation r = (Relation)j.next();
                 if (!r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT) &&
-                        !ignoredRelations.contains(r) &&
+                        !this.getMaskedRelations().contains(r) &&
                         !this.getConcatOnlyRelations().contains(r)) {
-                    hasUnignoredRelation = true;
+                    hasGoodRelation = true;
                 }
             }
-            if (hasUnignoredRelation) excludedColumns.addAll(k.getColumns());
+            if (hasGoodRelation) excludedColumns.addAll(k.getColumns());
         }
         
         // Also exclude all masked columns.
@@ -806,27 +797,8 @@ public class DataSet extends GenericSchema {
         
         // Work out the underlying relation (the last one visited) for all columns on this table.
         Relation underlyingRelation = null;
-        if (relationsFollowed.size()>0) {
+        if (relationsFollowed.size()>0)
             underlyingRelation = (Relation)relationsFollowed.get(relationsFollowed.size()-1);
-            // If the realTable is the foreign key end of the relation, and the primary key of the
-            // relation has some other unignored non-concat-only relation, then don't include
-            // the foreign key columns of the relation here because they will have been covered
-            // elsewhere already.
-            if (underlyingRelation.getForeignKey().getTable().equals(realTable)) {
-                Key relPK = underlyingRelation.getPrimaryKey();
-                Collection relPKrels = new HashSet(relPK.getRelations());
-                boolean hasUnignoredRelation = false;
-                for (Iterator i = relPKrels.iterator(); i.hasNext() && !hasUnignoredRelation; ) {
-                    Relation r = (Relation)i.next();
-                    if (!r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT) &&
-                            !ignoredRelations.contains(r) &&
-                            !this.getConcatOnlyRelations().contains(r)) {
-                        hasUnignoredRelation = true;
-                    }
-                }
-                if (hasUnignoredRelation) excludedColumns.addAll(underlyingRelation.getForeignKey().getColumns());
-            }
-        }
         
         // Add all non-excluded columns from source table to dataset table.
         for (Iterator i = realTable.getColumns().iterator(); i.hasNext(); ) {

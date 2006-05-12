@@ -33,6 +33,7 @@ import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.Key;
@@ -43,7 +44,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Adapts listener events suitable for datasets.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 10th May 2006
+ * @version 0.1.10, 12th May 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -230,6 +231,7 @@ public class DataSetContext extends WindowContext {
             DataSet ds = this.getDataSetTabSet().getSelectedDataSetTab().getDataSet();
             
             Column column = (Column)object;
+            if (column instanceof WrappedColumn) column = ((WrappedColumn)column).getWrappedColumn();
             // Fade out all MASKED columns.
             if (ds.getMaskedColumns().contains(column)) {
                 component.setForeground(ColumnComponent.FADED_COLOUR);

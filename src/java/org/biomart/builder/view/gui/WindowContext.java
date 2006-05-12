@@ -45,7 +45,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Adapts listener behaviour by adding in DataSet-specific stuff.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 11th May 2006
+ * @version 0.1.10, 12th May 2006
  * @since 0.1
  */
 public class WindowContext extends SchemaContext {
@@ -142,28 +142,6 @@ public class WindowContext extends SchemaContext {
                     }
                 });
                 contextMenu.add(addToGroup);
-            } else {
-                // Schema-group specific
-                
-                JMenuItem partition = new JMenuItem(BuilderBundle.getString("partitionOnSchemaTitle"));
-                partition.setMnemonic(BuilderBundle.getString("partitionOnSchemaMnemonic").charAt(0));
-                partition.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestPartitionBySchema(dataset);
-                    }
-                });
-                contextMenu.add(partition);
-                if (this.dataset.getPartitionOnSchema()) partition.setEnabled(false);
-                
-                JMenuItem unpartition = new JMenuItem(BuilderBundle.getString("unpartitionOnSchemaTitle"));
-                unpartition.setMnemonic(BuilderBundle.getString("unpartitionOnSchemaMnemonic").charAt(0));
-                unpartition.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestUnpartitionBySchema(dataset);
-                    }
-                });
-                contextMenu.add(unpartition);
-                if (!this.dataset.getPartitionOnSchema()) unpartition.setEnabled(false);
             }
         }
         
@@ -359,7 +337,7 @@ public class WindowContext extends SchemaContext {
                 component.setForeground(ColumnComponent.FADED_COLOUR);
             }
             // Blue PARTITIONED columns and the schema name if partition on dataset.
-            else if (ds.getPartitionedColumns().contains(column) || ((column instanceof SchemaNameColumn) && ds.getPartitionOnSchema())) {
+            else if (ds.getPartitionedColumns().contains(column)) {
                 component.setForeground(ColumnComponent.PARTITIONED_COLOUR);
             }
             // All others are normal.

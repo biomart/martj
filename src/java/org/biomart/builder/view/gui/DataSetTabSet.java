@@ -198,6 +198,11 @@ public class DataSetTabSet extends JTabbedPane {
         datasetTab.getDataSetDiagram().recalculateDiagram();
     }
     
+    public void redrawDataSetDiagramComponents(DataSet dataset) {
+        DataSetTab datasetTab = (DataSetTab)this.datasetToTab.get(dataset);
+        datasetTab.getDataSetDiagram().recalculateDiagram();
+    }
+    
     /**
      * Confirms with user whether they really want to remove this dataset.
      */
@@ -409,12 +414,12 @@ public class DataSetTabSet extends JTabbedPane {
      */
     public void requestConcatOnlyRelation(DataSet ds, Relation relation) {
         // Label to concat-type
-        Map responseSet = new HashMap(); 
+        Map responseSet = new HashMap();
         responseSet.put(BuilderBundle.getString("noConcatOption"),"");
         responseSet.put(BuilderBundle.getString("commaConcatOption"),ConcatRelationType.COMMA);
         responseSet.put(BuilderBundle.getString("spaceConcatOption"),ConcatRelationType.SPACE);
         responseSet.put(BuilderBundle.getString("tabConcatOption"),ConcatRelationType.TAB);
-        Map inverseResponseSet = new HashMap(); 
+        Map inverseResponseSet = new HashMap();
         for (Iterator i = responseSet.keySet().iterator(); i.hasNext(); ) {
             Object key = i.next();
             inverseResponseSet.put(responseSet.get(key), key);
@@ -573,11 +578,14 @@ public class DataSetTabSet extends JTabbedPane {
     
     public void requestPartitionBySchema(DataSet dataset) {
         MartUtils.partitionBySchema(dataset);
+        this.schemaTabSet.redrawAllDiagramComponents();
+        this.redrawDataSetDiagramComponents(dataset);
         martTabSet.setModifiedStatus(true);
     }
-
+    
     public void requestUnpartitionBySchema(DataSet dataset) {
         MartUtils.unpartitionBySchema(dataset);
+        this.redrawDataSetDiagramComponents(dataset);
         martTabSet.setModifiedStatus(true);
     }
     
