@@ -36,7 +36,7 @@ import javax.swing.JPopupMenu;
 /**
  * Displays arbitrary objects linked in a radial form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 10th May 2006
+ * @version 0.1.11, 12th May 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
@@ -93,7 +93,9 @@ public abstract class Diagram extends JPanel {
      * Construct a context menu for a given view.
      * @return the popup menu.
      */
-    protected abstract JPopupMenu getContextMenu();
+    protected Object getContextMenuBaseObject() {
+        return null;
+    }
     
     /**
      * {@inheritDoc}
@@ -103,13 +105,14 @@ public abstract class Diagram extends JPanel {
         boolean eventProcessed = false;
         // Is it a right-click?
         if (evt.isPopupTrigger() && this.diagramContext.isRightClickAllowed()) {
-            // Only respond to individual table providers, not the overview tab.
-            JPopupMenu contextMenu = this.getContextMenu();
             // Extend.
-            this.getDiagramContext().customiseContextMenu(contextMenu, null);
-            // Display.
-            contextMenu.show(this, evt.getX(), evt.getY());
-            eventProcessed = true;
+            JPopupMenu contextMenu = new JPopupMenu();
+            this.getDiagramContext().populateContextMenu(contextMenu, this.getContextMenuBaseObject());
+            if (contextMenu.getComponentCount()>0) {
+                // Display.
+                contextMenu.show(this, evt.getX(), evt.getY());
+                eventProcessed = true;
+            }
         }
         // Pass it on up if we're not interested.
         if (!eventProcessed) super.processMouseEvent(evt);

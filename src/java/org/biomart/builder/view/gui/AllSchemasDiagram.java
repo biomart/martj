@@ -39,7 +39,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * This class deals with drawing an overview of all the table providers.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 10th May 2006
+ * @version 0.1.8, 12th May 2006
  * @since 0.1
  */
 public class AllSchemasDiagram extends Diagram {
@@ -56,35 +56,6 @@ public class AllSchemasDiagram extends Diagram {
         super(datasetTabSet);
         this.setBackground(AllSchemasDiagram.BACKGROUND_COLOUR);
         this.recalculateDiagram();
-    }
-    
-    /**
-     * Construct a context menu for a given multi table provider view.
-     * @return the popup menu.
-     */
-    protected JPopupMenu getContextMenu() {
-        JPopupMenu contextMenu = new JPopupMenu();
-        
-        JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseAllSchemasTitle"));
-        sync.setMnemonic(BuilderBundle.getString("synchroniseAllSchemasMnemonic").charAt(0));
-        sync.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                getDataSetTabSet().getSchemaTabSet().requestSynchroniseAllSchemas();
-            }
-        });
-        contextMenu.add(sync);
-        
-        JMenuItem add = new JMenuItem(BuilderBundle.getString("addSchemaTitle"));
-        add.setMnemonic(BuilderBundle.getString("addSchemaMnemonic").charAt(0));
-        add.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                getDataSetTabSet().getSchemaTabSet().requestAddSchema();
-            }
-        });
-        contextMenu.add(add);
-        
-        // Return. Will be customised elsewhere.
-        return contextMenu;
     }
     
     /**

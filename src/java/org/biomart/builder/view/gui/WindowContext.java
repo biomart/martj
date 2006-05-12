@@ -79,78 +79,24 @@ public class WindowContext extends SchemaContext {
     /**
      * {@inheritDoc}
      */
-    public void customiseContextMenu(JPopupMenu contextMenu, Object object) {
-        
-        if (object instanceof Schema) {
-            // Add schema stuff
-            final Schema schema = (Schema)object;
-            contextMenu.addSeparator();
+    public void populateContextMenu(JPopupMenu contextMenu, Object object) {
+        if (object==null || (object instanceof Schema)) {
+            // Common stuff for background and Schema clicks.
             
-            JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameSchemaTitle"));
-            rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
-            rename.addActionListener(new ActionListener() {
+            JMenuItem optimise = new JMenuItem(BuilderBundle.getString("optimiseDataSetTitle"));
+            optimise.setMnemonic(BuilderBundle.getString("optimiseDataSetMnemonic").charAt(0));
+            optimise.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().getSchemaTabSet().requestRenameSchema(schema, false);
+                    getDataSetTabSet().requestOptimiseDataSet(dataset);
                 }
             });
-            contextMenu.add(rename);
-            
-            JMenuItem sync = new JMenuItem(BuilderBundle.getString("synchroniseSchemaTitle"));
-            sync.setMnemonic(BuilderBundle.getString("synchroniseSchemaMnemonic").charAt(0));
-            sync.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().getSchemaTabSet().requestSynchroniseSchema(schema);
-                }
-            });
-            contextMenu.add(sync);
-            
-            if (!(schema instanceof SchemaGroup)) {
-                // Non-SchemaGroup specific
-                
-                JMenuItem modify = new JMenuItem(BuilderBundle.getString("modifySchemaTitle"));
-                modify.setMnemonic(BuilderBundle.getString("modifySchemaMnemonic").charAt(0));
-                modify.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().getSchemaTabSet().requestModifySchema(schema);
-                    }
-                });
-                contextMenu.add(modify);
-                
-                JMenuItem test = new JMenuItem(BuilderBundle.getString("testSchemaTitle"));
-                test.setMnemonic(BuilderBundle.getString("testSchemaMnemonic").charAt(0));
-                test.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().getSchemaTabSet().requestTestSchema(schema);
-                    }
-                });
-                contextMenu.add(test);
-                
-                JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeSchemaTitle"));
-                remove.setMnemonic(BuilderBundle.getString("removeSchemaMnemonic").charAt(0));
-                remove.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().getSchemaTabSet().requestRemoveSchema(schema);
-                    }
-                });
-                contextMenu.add(remove);
-                
-                JMenuItem addToGroup = new JMenuItem(BuilderBundle.getString("addToGroupTitle"));
-                addToGroup.setMnemonic(BuilderBundle.getString("addToGroupMnemonic").charAt(0));
-                addToGroup.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().getSchemaTabSet().requestAddSchemaToSchemaGroup(schema);
-                    }
-                });
-                contextMenu.add(addToGroup);
-            }
+            contextMenu.add(optimise);
         }
         
         else if (object instanceof Relation) {
             // Relation stuff
             final Relation relation = (Relation)object;
             
-            // Add separator.
-            contextMenu.addSeparator();
             
             boolean incorrect = relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT);
             boolean relationOneToOne = relation.getFKCardinality().equals(Cardinality.ONE);
@@ -228,21 +174,22 @@ public class WindowContext extends SchemaContext {
         else if (object instanceof Key) {
             // Keys just show the parent table stuff.
             Table table = ((Key)object).getTable();
-            this.customiseContextMenu(contextMenu, table);
+            this.populateContextMenu(contextMenu, table);
         }
         
         else if (object instanceof Column) {
             // Columns show the parent table stuff.
             Table table = ((Column)object).getTable();
-            this.customiseContextMenu(contextMenu, table);
+            this.populateContextMenu(contextMenu, table);
+            
+            // Add separator.
+            contextMenu.addSeparator();
             
             // AND they show Column stuff
             final Column column = (Column)object;
             final DataSet ds = this.getDataSetTabSet().getSelectedDataSetTab().getDataSet();
             boolean isMasked = ds.getMaskedColumns().contains(column);
             
-            // Add separator.
-            contextMenu.addSeparator();
             
             // Add column stuff.
             JMenuItem mask = new JMenuItem(BuilderBundle.getString("maskColumnTitle"));
@@ -264,40 +211,6 @@ public class WindowContext extends SchemaContext {
             });
             contextMenu.add(unmask);
             if (!isMasked) unmask.setEnabled(false);
-        }
-        
-        else if (object == null) {
-            // Common stuff.
-            
-            // Add separator.
-            contextMenu.addSeparator();
-            
-            JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeDataSetTitle"));
-            remove.setMnemonic(BuilderBundle.getString("removeDataSetMnemonic").charAt(0));
-            remove.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestRemoveDataSet(dataset);
-                }
-            });
-            contextMenu.add(remove);
-            
-            JMenuItem optimise = new JMenuItem(BuilderBundle.getString("optimiseDataSetTitle"));
-            optimise.setMnemonic(BuilderBundle.getString("optimiseDataSetMnemonic").charAt(0));
-            optimise.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestOptimiseDataSet(dataset);
-                }
-            });
-            contextMenu.add(optimise);
-            
-            JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameDataSetTitle"));
-            rename.setMnemonic(BuilderBundle.getString("renameDataSetMnemonic").charAt(0));
-            rename.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestRenameDataSet(dataset);
-                }
-            });
-            contextMenu.add(rename);
         }
     }
     

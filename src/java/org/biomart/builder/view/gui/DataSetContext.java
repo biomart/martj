@@ -62,19 +62,15 @@ public class DataSetContext extends WindowContext {
     /**
      * {@inheritDoc}
      */
-    public void customiseContextMenu(JPopupMenu contextMenu, Object object) {
+    public void populateContextMenu(JPopupMenu contextMenu, Object object) {
         if (object instanceof DataSet) {
-            // DataSet stuff.
-            final DataSet dataset = (DataSet)object;
-            
-            // Add separator.
-            contextMenu.addSeparator();
+            // Common DataSet stuff.          
             
             JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeDataSetTitle"));
             remove.setMnemonic(BuilderBundle.getString("removeDataSetMnemonic").charAt(0));
             remove.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestRemoveDataSet(dataset);
+                    getDataSetTabSet().requestRemoveDataSet(getDataSet());
                 }
             });
             contextMenu.add(remove);
@@ -83,7 +79,7 @@ public class DataSetContext extends WindowContext {
             optimise.setMnemonic(BuilderBundle.getString("optimiseDataSetMnemonic").charAt(0));
             optimise.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestOptimiseDataSet(dataset);
+                    getDataSetTabSet().requestOptimiseDataSet(getDataSet());
                 }
             });
             contextMenu.add(optimise);
@@ -92,19 +88,16 @@ public class DataSetContext extends WindowContext {
             rename.setMnemonic(BuilderBundle.getString("renameDataSetMnemonic").charAt(0));
             rename.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestRenameDataSet(dataset);
+                    getDataSetTabSet().requestRenameDataSet(getDataSet());
                 }
             });
             contextMenu.add(rename);
         }
         
-        else if (object instanceof DataSetTable) {
+        if (object instanceof DataSetTable) {
             // DataSet table stuff.
             final DataSetTable table = (DataSetTable)object;
             DataSetTableType tableType = table.getType();
-            
-            // Add separator.
-            contextMenu.addSeparator();
             
             JMenuItem explain = new JMenuItem(BuilderBundle.getString("explainTableTitle"));
             explain.setMnemonic(BuilderBundle.getString("explainTableMnemonic").charAt(0));
@@ -141,20 +134,21 @@ public class DataSetContext extends WindowContext {
         else if (object instanceof Key) {
             // Show parent table stuff for keys.
             Table table = ((Key)object).getTable();
-            this.customiseContextMenu(contextMenu, table);
+            this.populateContextMenu(contextMenu, table);
         }
         
         else if (object instanceof DataSetColumn) {
             // Show parent table stuff first.
             Table table = ((DataSetColumn)object).getTable();
-            this.customiseContextMenu(contextMenu, table);
+            this.populateContextMenu(contextMenu, table);
             
-            // AND they show Column stuff
-            final DataSetColumn column = (DataSetColumn)object;
-            final DataSet ds = this.getDataSetTabSet().getSelectedDataSetTab().getDataSet();
             
             // Add separator.
             contextMenu.addSeparator();
+
+            // AND they show Column stuff
+            final DataSetColumn column = (DataSetColumn)object;
+            final DataSet ds = this.getDataSetTabSet().getSelectedDataSetTab().getDataSet();
             
             JMenuItem explain = new JMenuItem(BuilderBundle.getString("explainColumnTitle"));
             explain.setMnemonic(BuilderBundle.getString("explainColumnMnemonic").charAt(0));
@@ -228,16 +222,14 @@ public class DataSetContext extends WindowContext {
         // Columns.
         else if (object instanceof Column) {
             
-            DataSet ds = this.getDataSetTabSet().getSelectedDataSetTab().getDataSet();
-            
             Column column = (Column)object;
             if (column instanceof WrappedColumn) column = ((WrappedColumn)column).getWrappedColumn();
             // Fade out all MASKED columns.
-            if (ds.getMaskedColumns().contains(column)) {
+            if (this.getDataSet().getMaskedColumns().contains(column)) {
                 component.setForeground(ColumnComponent.FADED_COLOUR);
             }
             // Blue PARTITIONED columns and the schema name if partition on dataset.
-            else if (ds.getPartitionedColumns().contains(column) || ((column instanceof SchemaNameColumn) && ds.getPartitionOnSchema())) {
+            else if (this.getDataSet().getPartitionedColumns().contains(column) || ((column instanceof SchemaNameColumn) && this.getDataSet().getPartitionOnSchema())) {
                 component.setForeground(ColumnComponent.PARTITIONED_COLOUR);
             }
             // All others are normal.

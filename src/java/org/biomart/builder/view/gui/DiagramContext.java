@@ -31,7 +31,7 @@ import javax.swing.JPopupMenu;
  * DiagramContext for events of interest to classes displaying graphical views
  * of {@link TableProvider}s using {@link TableProviderView}.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 10th May 2006
+ * @version 0.1.8, 12th May 2006
  * @since 0.1
  */
 public interface DiagramContext {
@@ -42,7 +42,7 @@ public interface DiagramContext {
      * @param displayComponent the display component we wish to customise this menu to.
      * @return the popup menu.
      */
-    public void customiseContextMenu(JPopupMenu contextMenu, Object object);
+    public void populateContextMenu(JPopupMenu contextMenu, Object object);
     
     public void customiseAppearance(JComponent component, Object object);
     

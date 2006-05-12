@@ -37,7 +37,7 @@ import javax.swing.JPopupMenu;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 10th May 2006
+ * @version 0.1.6, 12th May 2006
  * @since 0.1
  */
 public abstract class BoxShapedComponent extends JPanel implements DiagramComponent {
@@ -119,7 +119,7 @@ public abstract class BoxShapedComponent extends JPanel implements DiagramCompon
      * @return the popup menu.
      */
     public JPopupMenu getContextMenu() {
-        JPopupMenu contextMenu = this.getDiagram().getContextMenu();
+        JPopupMenu contextMenu = new JPopupMenu();
         // No additional entries for us yet.
         // Return it.
         return contextMenu;
@@ -131,16 +131,19 @@ public abstract class BoxShapedComponent extends JPanel implements DiagramCompon
      */
     protected void processMouseEvent(MouseEvent evt) {
         boolean eventProcessed = false;
-            // Is it a right-click?
-            if (evt.isPopupTrigger() && this.diagram.getDiagramContext().isRightClickAllowed()) {
-                // Build the basic menu.
-                JPopupMenu contextMenu = this.getContextMenu();
-                // Extend.
-                this.getDiagram().getDiagramContext().customiseContextMenu(contextMenu, this.getObject());
-                // Display.
+        // Is it a right-click?
+        if (evt.isPopupTrigger() && this.diagram.getDiagramContext().isRightClickAllowed()) {
+            // Build the basic menu.
+            JPopupMenu contextMenu = this.getContextMenu();
+            if (contextMenu.getComponentCount()>0) contextMenu.addSeparator();
+            // Extend.
+            this.getDiagram().getDiagramContext().populateContextMenu(contextMenu, this.getObject());
+            // Display.
+            if (contextMenu.getComponentCount()>0) {
                 contextMenu.show(this, evt.getX(), evt.getY());
                 eventProcessed = true;
             }
+        }
         // Pass it on up if we're not interested.
         if (!eventProcessed) super.processMouseEvent(evt);
     }

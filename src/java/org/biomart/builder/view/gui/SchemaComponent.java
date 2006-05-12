@@ -46,7 +46,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 10th May 2006
+ * @version 0.1.7, 12th May 2006
  * @since 0.1
  */
 public class SchemaComponent extends BoxShapedComponent {    
@@ -121,8 +121,6 @@ public class SchemaComponent extends BoxShapedComponent {
      */
     public JPopupMenu getSingleContextMenu(final Schema schema) {
         JPopupMenu contextMenu = super.getContextMenu();
-        // Extend it for this table here.
-        contextMenu.addSeparator();
         
         JMenuItem showTables = new JMenuItem(BuilderBundle.getString("showTablesTitle"));
         showTables.setMnemonic(BuilderBundle.getString("showTablesMnemonic").charAt(0));
@@ -144,8 +142,6 @@ public class SchemaComponent extends BoxShapedComponent {
      */
     public JPopupMenu getGroupContextMenu() {
         JPopupMenu contextMenu = super.getContextMenu();
-        // Extend it for this table here.
-        contextMenu.addSeparator();
         
         JMenuItem showTables = new JMenuItem(BuilderBundle.getString("showTablesTitle"));
         showTables.setMnemonic(BuilderBundle.getString("showTablesMnemonic").charAt(0));

@@ -42,7 +42,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Provides the default behaviour for table provider listeners.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 11th May 2006
+ * @version 0.1.13, 12th May 2006
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
@@ -69,15 +69,36 @@ public class SchemaContext implements DiagramContext {
     /**
      * {@inheritDoc}
      */
-    public void customiseContextMenu(JPopupMenu contextMenu, Object object) {
+    public void populateContextMenu(JPopupMenu contextMenu, Object object) {
         
-        if (object instanceof Table || object instanceof Key) {
+        if (object == null) {
+            // Constant parts of schema diagram menus, for background areas only.
+            
+            JMenuItem syncAll = new JMenuItem(BuilderBundle.getString("synchroniseAllSchemasTitle"));
+            syncAll.setMnemonic(BuilderBundle.getString("synchroniseAllSchemasMnemonic").charAt(0));
+            syncAll.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().getSchemaTabSet().requestSynchroniseAllSchemas();
+                }
+            });
+            contextMenu.add(syncAll);
+            
+            JMenuItem add = new JMenuItem(BuilderBundle.getString("addSchemaTitle"));
+            add.setMnemonic(BuilderBundle.getString("addSchemaMnemonic").charAt(0));
+            add.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().getSchemaTabSet().requestAddSchema();
+                }
+            });
+            contextMenu.add(add);
+            
+        }
+        
+        else if (object instanceof Table || object instanceof Key) {
             // Add the dataset generation options.
             final Table table;
             if (object instanceof Key) table = ((Key)object).getTable();
             else table = (Table)object;
-            
-            contextMenu.addSeparator();
             
             JMenuItem create = new JMenuItem(BuilderBundle.getString("createDataSetTitle", table.getName()));
             create.setMnemonic(BuilderBundle.getString("createDataSetMnemonic").charAt(0));
@@ -101,7 +122,26 @@ public class SchemaContext implements DiagramContext {
         else if (object instanceof Schema) {
             // Add schema stuff
             final Schema schema = (Schema)object;
-            contextMenu.addSeparator();
+            
+            JMenuItem keyguess = new JMenuItem(BuilderBundle.getString("enableKeyGuessingTitle"));
+            keyguess.setMnemonic(BuilderBundle.getString("enableKeyGuessingMnemonic").charAt(0));
+            keyguess.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.getSchemaTabSet().requestEnableKeyGuessing(schema);
+                }
+            });
+            contextMenu.add(keyguess);
+            if (schema.getKeyGuessing()) keyguess.setEnabled(false);
+            
+            JMenuItem unkeyguess = new JMenuItem(BuilderBundle.getString("disableKeyGuessingTitle"));
+            unkeyguess.setMnemonic(BuilderBundle.getString("disableKeyGuessingMnemonic").charAt(0));
+            unkeyguess.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.getSchemaTabSet().requestDisableKeyGuessing(schema);
+                }
+            });
+            contextMenu.add(unkeyguess);
+            if (!schema.getKeyGuessing()) unkeyguess.setEnabled(false);
             
             JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameSchemaTitle"));
             rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
@@ -163,7 +203,6 @@ public class SchemaContext implements DiagramContext {
         else if (object instanceof Relation) {
             // Add relation stuff
             final Relation relation = (Relation)object;
-            contextMenu.addSeparator();
             
             boolean relationIncorrect = relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT);
             
@@ -226,13 +265,13 @@ public class SchemaContext implements DiagramContext {
         else if (object instanceof Key) {
             // Keys just show their table menus.
             Table table = ((Key)object).getTable();
-            this.customiseContextMenu(contextMenu, table);
+            this.populateContextMenu(contextMenu, table);
         }
         
         else if (object instanceof Column) {
             // Columns just show their table menus.
             Table table = ((Column)object).getTable();
-            this.customiseContextMenu(contextMenu, table);
+            this.populateContextMenu(contextMenu, table);
         }
     }
     

@@ -47,7 +47,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Construct a new table provider based on user input.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 8th May 2006
+ * @version 0.1.5, 12th May 2006
  * @since 0.1
  */
 public class SchemaManagerDialog extends JDialog {
@@ -136,13 +136,8 @@ public class SchemaManagerDialog extends JDialog {
         content.add(label);
         JPanel field = new JPanel();
         field.add(this.name);
-        gridBag.setConstraints(field, fieldConstraints);
-        content.add(field);
-        
         label = new JLabel(BuilderBundle.getString("typeLabel"));
-        gridBag.setConstraints(label, labelConstraints);
-        content.add(label);
-        field = new JPanel();
+        field.add(label);
         field.add(this.type);
         gridBag.setConstraints(field, fieldConstraints);
         content.add(field);

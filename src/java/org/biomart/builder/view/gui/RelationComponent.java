@@ -43,7 +43,7 @@ import org.biomart.builder.model.Relation.Cardinality;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 10th May 2006
+ * @version 0.1.7, 12th May 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
@@ -206,7 +206,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
      * @return the popup menu.
      */
     public JPopupMenu getContextMenu() {
-        JPopupMenu contextMenu = this.getDiagram().getContextMenu();
+        JPopupMenu contextMenu = new JPopupMenu();
         // No additional entries for us yet.
         // Return it.
         return contextMenu;
@@ -222,11 +222,14 @@ public class RelationComponent extends JComponent implements DiagramComponent {
         if (evt.isPopupTrigger() && this.diagram.getDiagramContext().isRightClickAllowed()) {
             // Build the basic menu.
             JPopupMenu contextMenu = this.getContextMenu();
+            if (contextMenu.getComponentCount()>0) contextMenu.addSeparator();
             // Extend.
-            this.getDiagram().getDiagramContext().customiseContextMenu(contextMenu, this.getObject());
+            this.getDiagram().getDiagramContext().populateContextMenu(contextMenu, this.getObject());
             // Display.
-            contextMenu.show(this, evt.getX(), evt.getY());
-            eventProcessed = true;
+            if (contextMenu.getComponentCount()>0) {
+                contextMenu.show(this, evt.getX(), evt.getY());
+                eventProcessed = true;
+            }
         }
         // Pass it on up if we're not interested.
         if (!eventProcessed) super.processMouseEvent(evt);

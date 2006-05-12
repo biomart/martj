@@ -60,7 +60,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Construct a new table provider based on user input.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 8th May 2006
+ * @version 0.1.3, 12th May 2006
  * @since 0.1
  */
 public class JDBCConnectionPanel extends ConnectionPanel implements ActionListener {
@@ -88,7 +88,6 @@ public class JDBCConnectionPanel extends ConnectionPanel implements ActionListen
      * The dialog fields.
      */
     private JComboBox copysettings;
-    private JCheckBox keyguessing;
     private JComboBox driverClass;
     private JTextField driverClassLocation;
     private JButton driverClassLocationButton;
@@ -131,7 +130,6 @@ public class JDBCConnectionPanel extends ConnectionPanel implements ActionListen
         fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
         
         // create fields in dialog
-        this.keyguessing = new JCheckBox();
         this.driverClass = new JComboBox((String[])JDBCConnectionPanel.DRIVER_MAP.keySet().toArray(new String[0]));
         this.driverClass.setEditable(true);
         this.driverClass.addActionListener(this);
@@ -185,13 +183,10 @@ public class JDBCConnectionPanel extends ConnectionPanel implements ActionListen
         gridBag.setConstraints(field, fieldConstraints);
         this.add(field);
         
-        label = new JLabel(BuilderBundle.getString("keyguessingLabel"));
+        label = new JLabel(BuilderBundle.getString("driverClassLabel"));
         gridBag.setConstraints(label, labelConstraints);
         this.add(label);
         field = new JPanel();
-        field.add(this.keyguessing);
-        label = new JLabel(BuilderBundle.getString("driverClassLabel"));
-        field.add(label);
         field.add(this.driverClass);
         gridBag.setConstraints(field, fieldConstraints);
         this.add(field);
@@ -267,7 +262,6 @@ public class JDBCConnectionPanel extends ConnectionPanel implements ActionListen
         }
         // Everyone else.
         else {
-            this.keyguessing.setSelected(false);
             this.driverClass.setSelectedIndex(-1);
             this.driverClassLocation.setText(null);
             this.jdbcURL.setText(null);
@@ -285,7 +279,6 @@ public class JDBCConnectionPanel extends ConnectionPanel implements ActionListen
     private void copySettingsFrom(Schema template) {
         if (template instanceof JDBCSchema) {
             JDBCSchema jdbcSchema = (JDBCSchema)template;
-            this.keyguessing.setSelected(jdbcSchema.isKeyGuessing());
             this.driverClass.setSelectedItem(jdbcSchema.getDriverClassName());
             this.driverClassLocation.setText(
                     jdbcSchema.getDriverClassLocation() == null
@@ -357,7 +350,6 @@ public class JDBCConnectionPanel extends ConnectionPanel implements ActionListen
         if (!this.validateFields()) return null;
         else {
             try {
-                boolean keyguessing = this.keyguessing.isSelected();
                 String driverClassName = (String)this.driverClass.getSelectedItem();
                 String driverClassLocation = this.driverClassLocation.getText();
                 String url = this.jdbcURL.getText();
@@ -370,32 +362,8 @@ public class JDBCConnectionPanel extends ConnectionPanel implements ActionListen
                         username,
                         password,
                         name,
-                        keyguessing
+                        false
                         );
-                // Check keyguessing.
-                if (!schema.hasForeignKeyDMD() && !keyguessing) {
-                    // Suggest turning keyguessing on.
-                    int choice = JOptionPane.showConfirmDialog(this,
-                            BuilderBundle.getString("askTurnKeyguessingOn"),
-                            BuilderBundle.getString("questionTitle"),
-                            JOptionPane.YES_NO_OPTION,
-                            JOptionPane.QUESTION_MESSAGE);
-                    if (choice==JOptionPane.YES_OPTION) {
-                        this.keyguessing.setSelected(true);
-                        schema.setKeyGuessing(true);
-                    }
-                } else if (schema.hasForeignKeyDMD() && keyguessing) {
-                    // Suggest turning keyguessing off.
-                    int choice = JOptionPane.showConfirmDialog(this,
-                            BuilderBundle.getString("askTurnKeyguessingOff"),
-                            BuilderBundle.getString("questionTitle"),
-                            JOptionPane.YES_NO_OPTION,
-                            JOptionPane.QUESTION_MESSAGE);
-                    if (choice==JOptionPane.YES_OPTION) {
-                        this.keyguessing.setSelected(false);
-                        schema.setKeyGuessing(false);
-                    }
-                }
                 // Return the schema.
                 return schema;
             } catch (Throwable t) {
@@ -414,7 +382,6 @@ public class JDBCConnectionPanel extends ConnectionPanel implements ActionListen
             if (schema instanceof JDBCSchema) {
                 try {
                     JDBCSchema jschema = (JDBCSchema)schema;
-                    jschema.setKeyGuessing(this.keyguessing.isSelected());
                     jschema.setDriverClassName((String)this.driverClass.getSelectedItem());
                     String driverClassLocation = this.driverClassLocation.getText();
                     jschema.setDriverClassLocation(driverClassLocation == null ? null : new File(driverClassLocation));

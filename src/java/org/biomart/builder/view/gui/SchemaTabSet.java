@@ -43,14 +43,13 @@ import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
-import org.biomart.builder.model.Table;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Displays the contents of multiple {@link Schema}s in graphical form.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 10th May 2006
+ * @version 0.1.8, 12th May 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -405,6 +404,16 @@ public class SchemaTabSet extends JTabbedPane {
                     BuilderBundle.getString("testTitle"),
                     JOptionPane.ERROR_MESSAGE);
         }
+    }
+    
+    public void requestEnableKeyGuessing(Schema schema) {
+        MartUtils.enableKeyGuessing(schema);
+        this.requestSynchroniseSchema(schema);
+    }
+
+    public void requestDisableKeyGuessing(Schema schema) {
+        MartUtils.disableKeyGuessing(schema);
+        this.requestSynchroniseSchema(schema);
     }
     
     /**

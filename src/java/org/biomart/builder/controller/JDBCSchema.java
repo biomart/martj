@@ -71,7 +71,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * the primary key column to which they refer, optionally appended with '_key'.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 9th May 2006
+ * @version 0.1.6, 12th May 2006
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -106,11 +106,6 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
     private String password;
     
     /**
-     * Do we key guess?
-     */
-    private boolean keyGuessing;
-    
-    /**
      * Creates a new instance of JDBCSchema based around
      * the given JDBC Connection.
      *
@@ -134,7 +129,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
         this.url = url;
         this.username = username;
         this.password = password;
-        this.keyGuessing = keyGuessing;
+        this.setKeyGuessing(keyGuessing);
     }
     
     /**
@@ -154,28 +149,6 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
         tables.close();
         // If we get here, it worked.
         return true;
-    }
-    
-    public boolean hasForeignKeyDMD() throws AssociationException, SQLException {
-        Connection connection = this.getConnection();
-        // If we have no connection, we can't test it!
-        if (connection == null) return false;
-        // Get the metadata.
-        DatabaseMetaData dmd = connection.getMetaData();
-        // Open a DMD foreign key query.
-        String catalog = this.getConnection().getCatalog();
-        String schema = dmd.getUserName();
-        ResultSet tables = dmd.getTables(catalog, schema, "%", null);
-        boolean foundFK = false;
-        while (tables.next() && !foundFK) {
-            String dbTableName = tables.getString("TABLE_NAME");
-            ResultSet dbTblFKCols = dmd.getExportedKeys(catalog, schema, dbTableName);
-            foundFK = dbTblFKCols.next();
-            dbTblFKCols.close();
-        }
-        tables.close();
-        // If we get here, it worked.
-        return foundFK;
     }
     
     /**
@@ -352,21 +325,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
         ps.close();
         return rowCount;
     }
-    
-    /**
-     * Are we key guessing?
-     */
-    public boolean isKeyGuessing() {
-        return this.keyGuessing;
-    }
-    
-    /**
-     * Set the key guessing status.
-     */
-    public void setKeyGuessing(boolean keyGuessing) {
-        this.keyGuessing = keyGuessing;
-    }
-    
+        
     /**
      * {@inheritDoc}
      */
@@ -429,7 +388,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
             
             // Did DMD find a PK? If not, attempt to find one by looking for the column with
             // the same name as the table but with '_id' appended.
-            if (this.isKeyGuessing() && pkCols.isEmpty()) {
+            if (this.getKeyGuessing() && pkCols.isEmpty()) {
                 Column candidateCol = existingTable.getColumnByName(dbTableName + BuilderBundle.getString("primaryKeySuffix"));
                 if (candidateCol != null) pkCols.put(candidateCol.getName(), candidateCol);
             }
@@ -464,7 +423,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
         }
         
         // Do the fk+relation bit here
-        if (this.isKeyGuessing()) this.synchroniseUsingKeyGuessing(fksToBeDropped);
+        if (this.getKeyGuessing()) this.synchroniseUsingKeyGuessing(fksToBeDropped);
         else this.synchroniseUsingDMD(fksToBeDropped, dmd, schema, catalog);
         
         // Drop any foreign keys that are left over (but not handmade ones).

@@ -47,7 +47,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
 /**
  * Tools for working with the mart from a GUI or CLI.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 11th May 2006
+ * @version 0.1.7, 12th May 2006
  * @since 0.1
  */
 public class MartUtils {
@@ -214,5 +214,13 @@ public class MartUtils {
 
     public static void unpartitionBySchema(DataSet dataset) {
         dataset.setPartitionOnSchema(false);
+    }
+    
+    public static void enableKeyGuessing(Schema schema) {
+        schema.setKeyGuessing(true);
+    }
+    
+    public static void disableKeyGuessing(Schema schema) {
+        schema.setKeyGuessing(false);
     }
 }

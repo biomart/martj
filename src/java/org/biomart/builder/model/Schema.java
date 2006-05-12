@@ -44,7 +44,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * keeping track of the {@link Table}s a {@link Schema} provides.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 2nd May 2006
+ * @version 0.1.9, 12th May 2006
  * @since 0.1
  */
 public interface Schema extends Comparable, DataLink {
@@ -134,6 +134,10 @@ public interface Schema extends Comparable, DataLink {
     
     public Collection getInternalRelations();
     
+    public void setKeyGuessing(boolean keyguessing);
+    
+    public boolean getKeyGuessing();
+    
     /**
      * The generic implementation should suffice as the ground for most
      * complex implementations. It keeps track of {@link Table}s it has already seen, and
@@ -150,6 +154,8 @@ public interface Schema extends Comparable, DataLink {
          */
         protected final Map tables = new TreeMap();
         
+        private boolean keyguessing;
+        
         /**
          * The constructor creates a provider with the given name.
          * @param name the name for this new provider.
@@ -158,6 +164,14 @@ public interface Schema extends Comparable, DataLink {
             // Remember the values.
             this.name = name;
         }
+    
+    public void setKeyGuessing(boolean keyguessing) {
+        this.keyguessing = keyguessing;
+    }
+    
+    public boolean getKeyGuessing() {
+        return this.keyguessing;
+    }
         
         /**
          * {@inheritDoc}

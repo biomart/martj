@@ -35,7 +35,7 @@ import org.biomart.builder.model.Schema;
  * Displays the contents of a {@link Schema} in graphical form.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 10th May 2006
+ * @version 0.1.11, 12th May 2006
  * @since 0.1
  */
 public class SchemaDiagram extends Diagram {
@@ -73,15 +73,8 @@ public class SchemaDiagram extends Diagram {
      * Construct a context menu for a given multi table provider view.
      * @return the popup menu.
      */
-    protected JPopupMenu getContextMenu() {
-        JPopupMenu contextMenu = new JPopupMenu();
-        // The following are applicable to all table provider views.
-        
-        // Nothing, yet!
-        
-        // Return the customised menu.
-        this.getDiagramContext().customiseContextMenu(contextMenu, this.getSchema());
-        return contextMenu;
+    protected Object getContextMenuBaseObject() {
+        return this.getSchema();
     }
     
     /**

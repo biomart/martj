@@ -46,7 +46,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 10th May 2006
+ * @version 0.1.8, 12th May 2006
  * @since 0.1
  */
 public class TableComponent extends BoxShapedComponent {
@@ -128,18 +128,5 @@ public class TableComponent extends BoxShapedComponent {
      */
     public int countRelations() {
         return this.getTable().getRelations().size();
-    }
-    
-    /**
-     * Construct a context menu for a given view.
-     * @return the popup menu.
-     */
-    public JPopupMenu getContextMenu() {
-        JPopupMenu contextMenu = super.getContextMenu();
-        
-        // Nothing to add.
-        
-        // Return it. Will be further adapted by a listener elsewhere.
-        return contextMenu;
     }
 }

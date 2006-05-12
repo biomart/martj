@@ -40,7 +40,7 @@ import org.biomart.builder.model.Key.PrimaryKey;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 11th May 2006
+ * @version 0.1.3, 12th May 2006
  * @since 0.1
  */
 public class ColumnComponent extends BoxShapedComponent {
@@ -92,18 +92,5 @@ public class ColumnComponent extends BoxShapedComponent {
      */
     public BoxShapedComponent getParentComponent() {
         return this.parentComponent;
-    }
-    
-    /**
-     * Construct a context menu for a given view.
-     * @return the popup menu.
-     */
-    public JPopupMenu getContextMenu() {
-        JPopupMenu contextMenu = this.getParentComponent().getContextMenu();
-        
-        // Nothing to add, yet.
-        
-        // Return it. Will be further adapted by a listener elsewhere.
-        return contextMenu;
     }
 }

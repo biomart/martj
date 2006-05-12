@@ -341,6 +341,7 @@ public class DataSetTabSet extends JTabbedPane {
                     MartUtils.optimiseDataSet(dataset);
                     schemaTabSet.redrawAllDiagramComponents();
                     recalculateDataSetDiagram(dataset);
+                    if (currentExplanationDiagram!=null) currentExplanationDiagram.redrawAllDiagramComponents();
                     martTabSet.setModifiedStatus(true);
                 } catch (Throwable t) {
                     martTabSet.getMartBuilder().showStackTrace(t);
