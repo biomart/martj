@@ -44,7 +44,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Adapts listener events suitable for datasets.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 12th May 2006
+ * @version 0.1.11, 15th May 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -142,7 +142,6 @@ public class DataSetContext extends WindowContext {
             Table table = ((DataSetColumn)object).getTable();
             this.populateContextMenu(contextMenu, table);
             
-            
             // Add separator.
             contextMenu.addSeparator();
             
@@ -193,13 +192,14 @@ public class DataSetContext extends WindowContext {
             } else if (column instanceof WrappedColumn) {
                 
                 // Partition stuff.
-                boolean isPartitioned = ds.getPartitionedColumns().contains(((WrappedColumn)column).getWrappedColumn());
+                final WrappedColumn wrappedCol = (WrappedColumn)column;
+                boolean isPartitioned = ds.getPartitionedWrappedColumns().contains(((WrappedColumn)column).getWrappedColumn());
                 
                 JMenuItem partition = new JMenuItem(BuilderBundle.getString("partitionColumnTitle"));
                 partition.setMnemonic(BuilderBundle.getString("partitionColumnMnemonic").charAt(0));
                 partition.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestPartitionByColumn(ds, column);
+                        getDataSetTabSet().requestPartitionByColumn(ds, wrappedCol);
                     }
                 });
                 contextMenu.add(partition);
@@ -209,7 +209,7 @@ public class DataSetContext extends WindowContext {
                 changepartition.setMnemonic(BuilderBundle.getString("changePartitionColumnMnemonic").charAt(0));
                 changepartition.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestPartitionByColumn(ds, column);
+                        getDataSetTabSet().requestPartitionByColumn(ds, wrappedCol);
                     }
                 });
                 contextMenu.add(changepartition);
@@ -219,7 +219,7 @@ public class DataSetContext extends WindowContext {
                 unpartition.setMnemonic(BuilderBundle.getString("unpartitionColumnMnemonic").charAt(0));
                 unpartition.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestUnpartitionByColumn(ds, column);
+                        getDataSetTabSet().requestUnpartitionByColumn(ds, wrappedCol);
                     }
                 });
                 contextMenu.add(unpartition);
@@ -257,14 +257,13 @@ public class DataSetContext extends WindowContext {
         else if (object instanceof Column) {
             
             Column column = (Column)object;
-            if (column instanceof WrappedColumn) column = ((WrappedColumn)column).getWrappedColumn();
             
             // Fade out all MASKED columns.
-            if (this.getDataSet().getMaskedColumns().contains(column)) {
+            if (this.getDataSet().getMaskedDataSetColumns().contains(column)) {
                 component.setForeground(ColumnComponent.FADED_COLOUR);
             }
             // Blue PARTITIONED columns and the schema name if partition on dataset.
-            else if (this.getDataSet().getPartitionedColumns().contains(column) || ((column instanceof SchemaNameColumn) && this.getDataSet().getPartitionOnSchema())) {
+            else if (this.getDataSet().getPartitionedWrappedColumns().contains(column) || ((column instanceof SchemaNameColumn) && this.getDataSet().getPartitionOnSchema())) {
                 component.setForeground(ColumnComponent.PARTITIONED_COLOUR);
             }
             // All others are normal.

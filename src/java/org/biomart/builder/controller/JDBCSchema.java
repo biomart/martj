@@ -71,7 +71,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * the primary key column to which they refer, optionally appended with '_key'.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 12th May 2006
+ * @version 0.1.7, 15th May 2006
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -325,7 +325,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
         ps.close();
         return rowCount;
     }
-        
+    
     /**
      * {@inheritDoc}
      */
@@ -396,9 +396,12 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
             // Did we find a PK?
             PrimaryKey existingPK = existingTable.getPrimaryKey();
             if (!pkCols.isEmpty()) {
-                // Create and set the primary key (only if existing one is not the same).
+                // Create and set the primary key (only if existing one is not the same and is not handmade).
+                // (or if existing one is same and is handmade).
                 PrimaryKey candidatePK = new GenericPrimaryKey(new ArrayList(pkCols.values()));
-                if (existingPK == null || !existingPK.equals(candidatePK)) {
+                if (existingPK == null ||
+                        (existingPK.equals(candidatePK) && existingPK.getStatus().equals(ComponentStatus.HANDMADE)) ||
+                        (!existingPK.equals(candidatePK) && !existingPK.getStatus().equals(ComponentStatus.HANDMADE))) {
                     existingTable.setPrimaryKey(candidatePK);
                 }
             } else {
@@ -499,6 +502,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
                         if (candidateFK.equals(fk)) {
                             // Found one. Reuse it!
                             fk = candidateFK;
+                            if (fk.getStatus().equals(ComponentStatus.HANDMADE)) fk.setStatus(ComponentStatus.INFERRED);
                             fksToBeDropped.remove(candidateFK); // don't drop it any more.
                             fkAlreadyExists =true;
                         }
@@ -522,6 +526,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
                         for (Iterator f = fk.getRelations().iterator(); f.hasNext() && !relationExists; ) {
                             Relation r = (Relation)f.next();
                             if (r.getPrimaryKey().equals(existingPK)) {
+                                if (r.getStatus().equals(ComponentStatus.HANDMADE)) r.setStatus(ComponentStatus.INFERRED);
                                 relationsToBeDropped.remove(r); // don't drop it, just leave it untouched and reuse it.
                                 relationExists = true;
                             } else if (r.getStatus().equals(ComponentStatus.INFERRED)) {
@@ -617,6 +622,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
                         if (candidateFK.equals(fk)) {
                             // Found one. Reuse it!
                             fk = candidateFK;
+                            if (fk.getStatus().equals(ComponentStatus.HANDMADE)) fk.setStatus(ComponentStatus.INFERRED);
                             fksToBeDropped.remove(candidateFK); // don't drop it any more.
                             fkAlreadyExists =true;
                         }
@@ -641,6 +647,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
                             Relation r = (Relation)f.next();
                             if (r.getPrimaryKey().equals(existingPK)) {
                                 relationsToBeDropped.remove(r); // don't drop it, just leave it untouched and reuse it.
+                                if (r.getStatus().equals(ComponentStatus.HANDMADE)) r.setStatus(ComponentStatus.INFERRED);
                                 relationExists = true;
                             } else if (r.getStatus().equals(ComponentStatus.INFERRED)) {
                                 throw new AssertionError(BuilderBundle.getString("fkHasMultiplePKs"));

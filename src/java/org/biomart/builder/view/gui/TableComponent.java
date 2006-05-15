@@ -29,13 +29,11 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Iterator;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Table;
@@ -67,6 +65,12 @@ public class TableComponent extends BoxShapedComponent {
     public TableComponent(Table table, Diagram diagram) {
         super(table, diagram);
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        this.recalculateDiagramComponent();
+    }
+    
+    public void recalculateDiagramComponent() {
+        this.removeAll();
+        Table table = this.getTable();
         // Create the border and set up the colors and fonts.
         this.setBackground(Color.PINK);
         // Add the label.
@@ -76,15 +80,16 @@ public class TableComponent extends BoxShapedComponent {
         // Now the keys.
         for (Iterator i = table.getKeys().iterator(); i.hasNext(); ) {
             Key key = (Key)i.next();
-            KeyComponent keyComponent = new KeyComponent(key, diagram, this);
+            KeyComponent keyComponent = new KeyComponent(key, this.getDiagram(), this);
             this.addSubComponent(key, keyComponent);
             this.add(keyComponent);
         }
         // Now the columns, in a panel of their own.
-        this.colsPanel = Box.createVerticalBox();
+        this.colsPanel = new JPanel();
+        this.colsPanel.setLayout(new BoxLayout(this.colsPanel, BoxLayout.PAGE_AXIS));
         for (Iterator i = table.getColumns().iterator(); i.hasNext(); ) {
             Column col = (Column)i.next();
-            ColumnComponent colComponent = new ColumnComponent(col, diagram, this);
+            ColumnComponent colComponent = new ColumnComponent(col, this.getDiagram(), this);
             this.addSubComponent(col, colComponent);
             this.colsPanel.add(colComponent);
         }

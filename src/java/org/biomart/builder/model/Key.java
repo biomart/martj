@@ -27,8 +27,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.resources.BuilderBundle;
 
@@ -43,7 +41,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * <p>Unless otherwise specified, all {@link Key}s are created with a default
  * {@link ComponentStatus} of INFERRED.</p>
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 12th May 2006
+ * @version 0.1.8, 15th May 2006
  * @since 0.1
  */
 public interface Key extends Comparable {
@@ -113,6 +111,8 @@ public interface Key extends Comparable {
      */
     public int countColumns();
     
+    public void setColumns(List columns) throws AssociationException;
+    
     /**
      * Deletes this {@link Key}, and also deletes all {@link Relation}s that use it.
      */
@@ -180,20 +180,7 @@ public interface Key extends Comparable {
             // Call the default constructor first.
             this();
             // Do the work.
-            for (Iterator i = columns.iterator(); i.hasNext(); ) {
-                Object o = i.next();
-                if (o == null) continue;
-                if (!(o instanceof Column))
-                    throw new IllegalArgumentException(BuilderBundle.getString("columnNotColumn"));
-                Column c = (Column)o;
-                if (this.table == null) this.table = c.getTable();
-                if (!c.getTable().equals(this.table))
-                    throw new AssociationException(BuilderBundle.getString("multiTableColumns"));
-                this.columns.add(c);
-            }
-            // Final sanity check.
-            if (this.columns.size() < 1)
-                throw new IllegalArgumentException(BuilderBundle.getString("columnsIsEmpty"));
+            this.setColumns(columns);
         }
         
         /**
@@ -209,6 +196,34 @@ public interface Key extends Comparable {
             this.table = column.getTable();
         }
         
+        public void setColumns(List columns) throws AssociationException {
+            this.columns.clear();
+            for (Iterator i = columns.iterator(); i.hasNext(); ) {
+                Object o = i.next();
+                if (o == null) continue;
+                if (!(o instanceof Column))
+                    throw new IllegalArgumentException(BuilderBundle.getString("columnNotColumn"));
+                Column column = (Column)o;
+                if (this.table == null) this.table = column.getTable();
+                if (!column.getTable().equals(this.table))
+                    throw new AssociationException(BuilderBundle.getString("multiTableColumns"));
+                if (this.columns.contains(column))
+                    throw new AssociationException(BuilderBundle.getString("duplicateColumnsInKey"));
+                this.columns.add(column);
+            }
+            // Final sanity check.
+            if (this.columns.size() < 1)
+                throw new IllegalArgumentException(BuilderBundle.getString("columnsIsEmpty"));
+            // Invalidate all relations associated with this key.
+            List deadRels = new ArrayList();
+            for (Iterator i = this.relations.iterator(); i.hasNext(); ) {
+                Relation r = (Relation)i.next();
+                if (r.getStatus().equals(ComponentStatus.HANDMADE)) deadRels.add(r);
+                else r.setStatus(ComponentStatus.INFERRED_INCORRECT);
+            }
+            for (Iterator i = deadRels.iterator(); i.hasNext(); ) ((Relation)i.next()).destroy();
+        }
+        
         /**
          * {@inheritDoc}
          */
@@ -221,6 +236,14 @@ public interface Key extends Comparable {
          */
         public void setStatus(ComponentStatus status) {
             this.status = status;
+            // Invalidate all relations associated with this key.
+            List deadRels = new ArrayList();
+            for (Iterator i = this.relations.iterator(); i.hasNext(); ) {
+                Relation r = (Relation)i.next();
+                if (r.getStatus().equals(ComponentStatus.HANDMADE)) deadRels.add(r);
+                else r.setStatus(ComponentStatus.INFERRED_INCORRECT);
+            }
+            for (Iterator i = deadRels.iterator(); i.hasNext(); ) ((Relation)i.next()).destroy();
         }
         
         /**

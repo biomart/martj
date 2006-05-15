@@ -94,7 +94,7 @@ public class SchemaContext implements DiagramContext {
             
         }
         
-        else if (object instanceof Table || object instanceof Key) {
+        else if (object instanceof Table) {
             // Add the dataset generation options.
             final Table table;
             if (object instanceof Key) table = ((Key)object).getTable();
@@ -211,7 +211,7 @@ public class SchemaContext implements DiagramContext {
             oneToOne.setMnemonic(BuilderBundle.getString("oneToOneMnemonic").charAt(0));
             oneToOne.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.requestChangeRelationCardinality(relation, Cardinality.ONE);
+                    datasetTabSet.getSchemaTabSet().requestChangeRelationCardinality(relation, Cardinality.ONE);
                 }
             });
             contextMenu.add(oneToOne);
@@ -222,7 +222,7 @@ public class SchemaContext implements DiagramContext {
             oneToMany.setMnemonic(BuilderBundle.getString("oneToManyMnemonic").charAt(0));
             oneToMany.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.requestChangeRelationCardinality(relation, Cardinality.MANY);
+                    datasetTabSet.getSchemaTabSet().requestChangeRelationCardinality(relation, Cardinality.MANY);
                 }
             });
             contextMenu.add(oneToMany);
@@ -233,7 +233,7 @@ public class SchemaContext implements DiagramContext {
             correct.setMnemonic(BuilderBundle.getString("correctRelationMnemonic").charAt(0));
             correct.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.requestChangeRelationStatus(relation, ComponentStatus.INFERRED);
+                    datasetTabSet.getSchemaTabSet().requestChangeRelationStatus(relation, ComponentStatus.INFERRED);
                 }
             });
             if (!relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) correct.setEnabled(false);
@@ -244,7 +244,7 @@ public class SchemaContext implements DiagramContext {
             incorrect.setMnemonic(BuilderBundle.getString("incorrectRelationMnemonic").charAt(0));
             incorrect.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.requestChangeRelationStatus(relation, ComponentStatus.INFERRED_INCORRECT);
+                    datasetTabSet.getSchemaTabSet().requestChangeRelationStatus(relation, ComponentStatus.INFERRED_INCORRECT);
                 }
             });
             if (!relation.getStatus().equals(ComponentStatus.INFERRED)) incorrect.setEnabled(false);
@@ -255,7 +255,7 @@ public class SchemaContext implements DiagramContext {
             remove.setMnemonic(BuilderBundle.getString("removeRelationMnemonic").charAt(0));
             remove.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.requestRemoveRelation(relation);
+                    datasetTabSet.getSchemaTabSet().requestRemoveRelation(relation);
                 }
             });
             if (!relation.getStatus().equals(ComponentStatus.HANDMADE)) remove.setEnabled(false);
@@ -263,9 +263,91 @@ public class SchemaContext implements DiagramContext {
         }
         
         else if (object instanceof Key) {
-            // Keys just show their table menus.
-            Table table = ((Key)object).getTable();
+            // Keys just show their table menus first.
+            final Table table = ((Key)object).getTable();
             this.populateContextMenu(contextMenu, table);
+            
+            // Then their own stuff.
+            final Key key = (Key)object;
+            
+            // Separators only if their is stuff to be separated from.
+            if (contextMenu.getComponentCount()>0) contextMenu.addSeparator();
+            
+            // Primary/Foreign/edit keys
+            
+            JMenuItem pk = new JMenuItem(BuilderBundle.getString("createPrimaryKeyTitle"));
+            pk.setMnemonic(BuilderBundle.getString("createPrimaryKeyMnemonic").charAt(0));
+            pk.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.getSchemaTabSet().requestCreatePrimaryKey(table);
+                }
+            });
+            if (table.getPrimaryKey()!=null) pk.setEnabled(false);
+            contextMenu.add(pk);
+            
+            JMenuItem fk = new JMenuItem(BuilderBundle.getString("createForeignKeyTitle"));
+            fk.setMnemonic(BuilderBundle.getString("createForeignKeyMnemonic").charAt(0));
+            fk.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.getSchemaTabSet().requestCreateForeignKey(table);
+                }
+            });
+            contextMenu.add(fk);
+            
+            JMenuItem editkey = new JMenuItem(BuilderBundle.getString("editKeyTitle"));
+            editkey.setMnemonic(BuilderBundle.getString("editKeyMnemonic").charAt(0));
+            editkey.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.getSchemaTabSet().requestEditKey(key);
+                }
+            });
+            contextMenu.add(editkey);
+            
+            // Create relation
+                        
+            JMenuItem createrel = new JMenuItem(BuilderBundle.getString("createRelationTitle"));
+            createrel.setMnemonic(BuilderBundle.getString("createRelationMnemonic").charAt(0));
+            createrel.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.getSchemaTabSet().requestCreateRelation(key);
+                }
+            });
+            contextMenu.add(createrel);
+            
+            // Incorrect/correct/remove keys.
+            
+            // correct
+            JMenuItem correct = new JMenuItem(BuilderBundle.getString("correctKeyTitle"));
+            correct.setMnemonic(BuilderBundle.getString("correctKeyMnemonic").charAt(0));
+            correct.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.getSchemaTabSet().requestChangeKeyStatus(key, ComponentStatus.INFERRED);
+                }
+            });
+            if (!key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) correct.setEnabled(false);
+            contextMenu.add(correct);
+            
+            // incorrect
+            JMenuItem incorrect = new JMenuItem(BuilderBundle.getString("incorrectKeyTitle"));
+            incorrect.setMnemonic(BuilderBundle.getString("incorrectKeyMnemonic").charAt(0));
+            incorrect.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.getSchemaTabSet().requestChangeKeyStatus(key, ComponentStatus.INFERRED_INCORRECT);
+                }
+            });
+            if (!key.getStatus().equals(ComponentStatus.INFERRED)) incorrect.setEnabled(false);
+            contextMenu.add(incorrect);
+            
+            // remove
+            JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeKeyTitle"));
+            remove.setMnemonic(BuilderBundle.getString("removeKeyMnemonic").charAt(0));
+            remove.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.getSchemaTabSet().requestRemoveKey(key);
+                }
+            });
+            if (!key.getStatus().equals(ComponentStatus.HANDMADE)) remove.setEnabled(false);
+            contextMenu.add(remove);
         }
         
         else if (object instanceof Column) {
@@ -280,7 +362,7 @@ public class SchemaContext implements DiagramContext {
             Relation relation = (Relation)object;
             // Fade out all INFERRED_INCORRECT relations.
             if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) {
-                component.setForeground(RelationComponent.FADED_COLOUR);
+                component.setForeground(RelationComponent.INCORRECT_COLOUR);
             }
             // Highlight all HANDMADE relations.
             else if (relation.getStatus().equals(ComponentStatus.HANDMADE)) {
@@ -289,6 +371,22 @@ public class SchemaContext implements DiagramContext {
             // All others are normal.
             else {
                 component.setForeground(RelationComponent.NORMAL_COLOUR);
+            }
+        }
+        
+        else if (object instanceof Key) {
+            Key key = (Key)object;
+            // Fade out all INFERRED_INCORRECT relations.
+            if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) {
+                component.setForeground(KeyComponent.INCORRECT_COLOUR);
+            }
+            // Highlight all HANDMADE relations.
+            else if (key.getStatus().equals(ComponentStatus.HANDMADE)) {
+                component.setForeground(KeyComponent.HANDMADE_COLOUR);
+            }
+            // All others are normal.
+            else {
+                component.setForeground(KeyComponent.NORMAL_COLOUR);
             }
         }
     }

@@ -40,7 +40,7 @@ import org.biomart.builder.model.Key.PrimaryKey;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 12th May 2006
+ * @version 0.1.4, 15th May 2006
  * @since 0.1
  */
 public class ColumnComponent extends BoxShapedComponent {
@@ -72,10 +72,15 @@ public class ColumnComponent extends BoxShapedComponent {
     public ColumnComponent(Column column, Diagram diagram, BoxShapedComponent parentComponent) {
         super(column, diagram);
         this.parentComponent = parentComponent;
+        this.recalculateDiagramComponent();
+    }
+    
+    public void recalculateDiagramComponent() {
+        this.removeAll();
         // Create the border and set up the colors and fonts.
         this.setBackground(Color.ORANGE);
         // Add the label for each column.
-        JLabel label = new JLabel(column.getName());
+        JLabel label = new JLabel(this.getColumn().getName());
         label.setFont(Font.decode("Serif-ITALIC-10"));
         this.add(label);
     }
@@ -83,8 +88,8 @@ public class ColumnComponent extends BoxShapedComponent {
     /**
      * Gets our table.
      */
-    private Key getKey() {
-        return (Key)this.getObject();
+    private Column getColumn() {
+        return (Column)this.getObject();
     }
     
     /**

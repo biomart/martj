@@ -26,11 +26,13 @@ package org.biomart.builder.view.gui;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Iterator;
 import javax.swing.BoxLayout;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
+import javax.swing.TransferHandler;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Key.PrimaryKey;
@@ -40,10 +42,29 @@ import org.biomart.builder.model.Key.PrimaryKey;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 12th May 2006
+ * @version 0.1.6, 15th May 2006
  * @since 0.1
  */
 public class KeyComponent extends BoxShapedComponent {
+    /**
+     * Constant referring to normal relation colour.
+     */
+    public static final Color NORMAL_COLOUR = Color.DARK_GRAY;
+    
+    /**
+     * Constant referring to faded relation colour.
+     */
+    public static final Color MASKED_COLOUR = Color.LIGHT_GRAY;
+    
+    /**
+     * Constant referring to faded relation colour.
+     */
+    public static final Color INCORRECT_COLOUR = Color.RED;
+    
+    /**
+     * Constant referring to handmade relation colour.
+     */
+    public static final Color HANDMADE_COLOUR = Color.GREEN;
     /**
      * The component representing our parent box.
      */
@@ -57,6 +78,12 @@ public class KeyComponent extends BoxShapedComponent {
         super(key, diagram);
         this.parentComponent = parentComponent;
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        this.recalculateDiagramComponent();
+    }
+    
+    public void recalculateDiagramComponent() {
+        this.removeAll();
+        Key key = this.getKey();
         // Create the border and set up the colors and fonts.
         if (key instanceof PrimaryKey) this.setBackground(Color.CYAN);
         else this.setBackground(Color.GREEN);
@@ -66,6 +93,9 @@ public class KeyComponent extends BoxShapedComponent {
             label.setFont(Font.decode("Serif-ITALIC-10"));
             this.add(label);
         }
+        // Add drag-and-drop.
+        this.setTransferHandler(new TransferHandler("draggedKey"));
+        this.addMouseListener(new DragMouseAdapter());
     }
     
     /**
@@ -80,5 +110,23 @@ public class KeyComponent extends BoxShapedComponent {
      */
     public BoxShapedComponent getParentComponent() {
         return this.parentComponent;
+    }
+    
+    public Key getDraggedKey() {
+        return this.getKey();
+    }
+    
+    public void setDraggedKey(Key key) {
+        if (!key.equals(this)) {
+            this.getDiagram().getDataSetTabSet().getSchemaTabSet().requestCreateRelation(key, this.getKey());
+        }
+    }
+    
+    public class DragMouseAdapter extends MouseAdapter {
+        public void mousePressed(MouseEvent e) {
+            JComponent c = (JComponent)e.getSource();
+            TransferHandler handler = c.getTransferHandler();
+            handler.exportAsDrag(c, e, TransferHandler.COPY);
+        }
     }
 }

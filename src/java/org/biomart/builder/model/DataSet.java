@@ -63,7 +63,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * choosing it.</p>
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.15, 12th May 2006
+ * @version 0.1.16, 15th May 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -85,13 +85,13 @@ public class DataSet extends GenericSchema {
     /**
      * Internal reference to masked columns.
      */
-    private final Set maskedColumns = new HashSet();
+    private final Set maskedDataSetColumns = new HashSet();
     
     /**
      * Internal reference to partitioned columns (keys are columns,
      * values are {@link PartitionedColumnType}s).
      */
-    private final Map partitionedColumns = new HashMap();
+    private final Map partitionedWrappedColumns = new HashMap();
     
     /**
      * Internal reference to relations between subclassed tables.
@@ -273,8 +273,8 @@ public class DataSet extends GenericSchema {
      */
     public void unmaskRelation(Relation relation) {
         // Do it.
-        this.maskedColumns.removeAll(relation.getPrimaryKey().getColumns());
-        this.maskedColumns.removeAll(relation.getForeignKey().getColumns());
+        this.maskedDataSetColumns.removeAll(relation.getPrimaryKey().getColumns());
+        this.maskedDataSetColumns.removeAll(relation.getForeignKey().getColumns());
         this.maskedRelations.remove(relation);
     }
     
@@ -293,51 +293,48 @@ public class DataSet extends GenericSchema {
      * will be masked as well.
      * @param column the {@link Column} to mask.
      */
-    public void maskColumn(Column column) throws AssociationException {
-        if (column instanceof DataSetColumn) {
-            DataSetColumn dsColumn = (DataSetColumn)column;
-            DataSetTable dsTable = (DataSetTable)dsColumn.getTable();
-            Table centralTable = ((DataSet)dsTable.getSchema()).getCentralTable();
-            List okToMask = new ArrayList(dsTable.getColumns());
-            // Can mask PK cols only if not from original central table
-            Key dsTablePK = dsTable.getPrimaryKey();
-            if (dsTablePK!=null) {
-                for (Iterator i = dsTablePK.getColumns().iterator(); i.hasNext(); ) {
-                    DataSetColumn col = (DataSetColumn)i.next();
-                    Table underlyingTable = ((DataSetTable)col.getTable()).getUnderlyingTable();
-                    if (underlyingTable!=null && underlyingTable.equals(centralTable)) okToMask.remove(col);
-                }
+    public void maskDataSetColumn(DataSetColumn dsColumn) throws AssociationException {
+        DataSetTable dsTable = (DataSetTable)dsColumn.getTable();
+        Table centralTable = ((DataSet)dsTable.getSchema()).getCentralTable();
+        List okToMask = new ArrayList(dsTable.getColumns());
+        // Can mask PK cols only if not from original central table
+        Key dsTablePK = dsTable.getPrimaryKey();
+        if (dsTablePK!=null) {
+            for (Iterator i = dsTablePK.getColumns().iterator(); i.hasNext(); ) {
+                DataSetColumn col = (DataSetColumn)i.next();
+                Table underlyingTable = ((DataSetTable)col.getTable()).getUnderlyingTable();
+                if (underlyingTable!=null && underlyingTable.equals(centralTable)) okToMask.remove(col);
             }
-            // Can't mask any FK cols.
-            for (Iterator i = dsTable.getForeignKeys().iterator(); i.hasNext(); )
-                okToMask.removeAll(((Key)i.next()).getColumns());
-            // Refuse to mask necessary columns
-            if (!okToMask.contains(dsColumn))
-                throw new AssociationException(BuilderBundle.getString("cannotMaskNecessaryColumn"));
-            // Refuse to mask schema name columns.
-            else if (dsColumn instanceof SchemaNameColumn)
-                throw new AssociationException(BuilderBundle.getString("cannotMaskSchemaNameColumn"));
-            // If wrapped, mask wrapped column
-            else if (dsColumn instanceof WrappedColumn)
-                this.maskColumn(((WrappedColumn)dsColumn).getWrappedColumn());
-            // If concat-only, mask concat-only part
-            else if (dsColumn instanceof ConcatRelationColumn)
-                this.maskRelation(dsColumn.getUnderlyingRelation());
-            // Eh?
-            else
-                throw new AssertionError(BuilderBundle.getString("cannotMaskUnknownColumn"));
-        } else {
+        }
+        // Can't mask any FK cols.
+        for (Iterator i = dsTable.getForeignKeys().iterator(); i.hasNext(); )
+            okToMask.removeAll(((Key)i.next()).getColumns());
+        // Refuse to mask necessary columns
+        if (!okToMask.contains(dsColumn))
+            throw new AssociationException(BuilderBundle.getString("cannotMaskNecessaryColumn"));
+        // Refuse to mask schema name columns.
+        else if (dsColumn instanceof SchemaNameColumn)
+            throw new AssociationException(BuilderBundle.getString("cannotMaskSchemaNameColumn"));
+        // If concat-only, mask concat-only relation instead
+        else if (dsColumn instanceof ConcatRelationColumn)
+            this.maskRelation(dsColumn.getUnderlyingRelation());
+        // If wrapped, mask wrapped column
+        else if (dsColumn instanceof WrappedColumn) {
+            WrappedColumn wcol = (WrappedColumn)dsColumn;
             // Do it.
-            this.maskedColumns.add(column);
+            this.maskedDataSetColumns.add(wcol);
             // Mask the associated relations.
-            for (Iterator i = column.getTable().getKeys().iterator(); i.hasNext(); ) {
+            for (Iterator i = wcol.getWrappedColumn().getTable().getKeys().iterator(); i.hasNext(); ) {
                 Key k = (Key)i.next();
-                if (k.getColumns().contains(column)) for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
+                if (k.getColumns().contains(wcol.getWrappedColumn())) for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
                     Relation r = (Relation)j.next();
                     this.maskRelation(r);
                 }
             }
         }
+        // Eh?
+        else
+            throw new AssertionError(BuilderBundle.getString("cannotMaskUnknownColumn"));
     }
     
     /**
@@ -345,17 +342,17 @@ public class DataSet extends GenericSchema {
      * An exception will be thrown if it is null.
      * @param column the {@link Column} to unmask.
      */
-    public void unmaskColumn(Column column) {
+    public void unmaskDataSetColumn(DataSetColumn column) {
         // Do it.
-        this.maskedColumns.remove(column);
+        this.maskedDataSetColumns.remove(column);
     }
     
     /**
-     * Return the set of masked {@link Column}s. It may be empty, but never null.
-     * @return the set of masked {@link Column}s.
+     * Return the set of masked {@link DataSetColumn}s. It may be empty, but never null.
+     * @return the set of masked {@link DataSetColumn}s.
      */
-    public Collection getMaskedColumns() {
-        return this.maskedColumns;
+    public Collection getMaskedDataSetColumns() {
+        return this.maskedDataSetColumns;
     }
     
     /**
@@ -411,29 +408,6 @@ public class DataSet extends GenericSchema {
         return this.subclassedRelations;
     }
     
-    /**
-     * Mark a {@link Column} as partitioned. If it is already marked, it updates the partition type.
-     * An exception will be thrown if any parameter is null.
-     *
-     * @param column the {@link Column} to mark as partitioned.
-     * @param type the {@link PartitionedColumnType} to use for the partition.
-     */
-    public void flagPartitionedColumn(Column column, PartitionedColumnType type) throws AssociationException {
-        if (column instanceof DataSetColumn) {
-            if (column instanceof WrappedColumn) this.flagPartitionedColumn(((WrappedColumn)column).getWrappedColumn(), type);
-            else throw new AssociationException(BuilderBundle.getString("cannotPartitionDataSetColumns"));
-        } else {
-            boolean alreadyHave = false;
-            for (Iterator i = this.partitionedColumns.keySet().iterator(); i.hasNext() && !alreadyHave; ) {
-                Column testCol = (Column)i.next();
-                if (testCol.getTable().equals(column.getTable()) && !testCol.equals(column)) alreadyHave = true;
-            }
-            if (alreadyHave) throw new AssociationException(BuilderBundle.getString("cannotPartitionMultiColumns"));
-            // Do it (the Map will replace the value with the new value if the key already exists)
-            this.partitionedColumns.put(column, type);
-        }
-    }
-    
     public boolean getPartitionOnSchema() {
         return this.partitionOnSchema;
     }
@@ -443,24 +417,39 @@ public class DataSet extends GenericSchema {
     }
     
     /**
+     * Mark a {@link Column} as partitioned. If it is already marked, it updates the partition type.
+     * An exception will be thrown if any parameter is null.
+     *
+     * @param column the {@link Column} to mark as partitioned.
+     * @param type the {@link PartitionedColumnType} to use for the partition.
+     */
+    public void flagPartitionedWrappedColumn(WrappedColumn column, PartitionedColumnType type) throws AssociationException {
+        boolean alreadyHave = false;
+        for (Iterator i = this.partitionedWrappedColumns.keySet().iterator(); i.hasNext() && !alreadyHave; ) {
+            WrappedColumn testCol = (WrappedColumn)i.next();
+            if (testCol.getTable().equals(column.getTable()) && !testCol.equals(column)) alreadyHave = true;
+        }
+        if (alreadyHave) throw new AssociationException(BuilderBundle.getString("cannotPartitionMultiColumns"));
+        // Do it (the Map will replace the value with the new value if the key already exists)
+        this.partitionedWrappedColumns.put(column, type);
+    }
+    
+    /**
      * Unmark a {@link Column} as partitioned. If it is already unmarked, ignore it.
      * An exception will be thrown if it is null.
      * @param column the {@link Column} to unmark.
      */
-    public void unflagPartitionedColumn(Column column) {
-        if (column instanceof WrappedColumn) this.unflagPartitionedColumn(((WrappedColumn)column).getWrappedColumn());
-        else {
-            // Do it.
-            this.partitionedColumns.remove(column);
-        }
+    public void unflagPartitionedWrappedColumn(WrappedColumn column) {
+        // Do it.
+        this.partitionedWrappedColumns.remove(column);
     }
     
     /**
      * Return the set of partitioned {@link Column}s. It may be empty, but never null.
      * @return the set of partitioned {@link Column}s.
      */
-    public Collection getPartitionedColumns() {
-        return this.partitionedColumns.keySet();
+    public Collection getPartitionedWrappedColumns() {
+        return this.partitionedWrappedColumns.keySet();
     }
     
     /**
@@ -469,14 +458,11 @@ public class DataSet extends GenericSchema {
      * @param column the {@link Column} to check the partitioning type for.
      * @return the partition type of the {@link Column}.
      */
-    public PartitionedColumnType getPartitionedColumnType(Column column) {
-        if (column instanceof WrappedColumn) return this.getPartitionedColumnType(((WrappedColumn)column).getWrappedColumn());
-        else {
+    public PartitionedColumnType getPartitionedWrappedColumnType(WrappedColumn column) {
         // Do we have it?
-        if (!this.partitionedColumns.containsKey(column)) return null;
+        if (!this.partitionedWrappedColumns.containsKey(column)) return null;
         // Return it.
-        return (PartitionedColumnType)this.partitionedColumns.get(column);
-        }
+        return (PartitionedColumnType)this.partitionedWrappedColumns.get(column);
     }
     
     /**
@@ -524,8 +510,8 @@ public class DataSet extends GenericSchema {
     
     /**
      * Synchronise this {@link DataSet} with the {@link Schema} that is
-     * providing its tables. Synchronisation means checking the masked {@link Column}
-     * and {@link Relation} objects and removing any that have disappeared.
+     * providing its tables. Synchronisation means checking the masked {@link Relation} objects
+     * and removing any that have disappeared.
      * The associated {@link OLDDataSet}, if one exists yet, is then regenerated.
      * If one does not exist, it is generated now.
      *
@@ -537,15 +523,12 @@ public class DataSet extends GenericSchema {
         Set deadRelations = new HashSet(this.maskedRelations);
         deadRelations.addAll(this.subclassedRelations);
         deadRelations.addAll(this.concatOnlyRelations.keySet());
-        Set deadColumns = new HashSet(this.maskedColumns);
-        deadColumns.addAll(this.partitionedColumns.keySet());
         // Iterate through tables in each table provider.
         // Un-dead all columns and relations in the mart
         for (Iterator i = this.getMart().getSchemas().iterator(); i.hasNext(); ) {
             Schema tp = (Schema)i.next();
             for (Iterator j = tp.getTables().iterator(); j.hasNext(); ) {
                 Table t = (Table)j.next();
-                deadColumns.removeAll(t.getColumns());
                 // Only need primary key as all relations involve primary keys at some point.
                 Key pk = t.getPrimaryKey();
                 if (pk != null) deadRelations.removeAll(pk.getRelations());
@@ -557,11 +540,6 @@ public class DataSet extends GenericSchema {
             this.maskedRelations.remove(r);
             this.subclassedRelations.remove(r);
             this.concatOnlyRelations.remove(r);
-        }
-        for (Iterator i = deadColumns.iterator(); i.hasNext(); ) {
-            Column c = (Column)i.next();
-            this.maskedColumns.remove(c);
-            this.partitionedColumns.remove(c);
         }
         // Regenerate the dataset
         this.regenerate();
@@ -588,23 +566,30 @@ public class DataSet extends GenericSchema {
         boolean found = false;
         for (Iterator i = centralTable.getForeignKeys().iterator(); i.hasNext() && !found; ) {
             Key k = (Key)i.next();
+            if (k.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) continue;
             for (Iterator j = k.getRelations().iterator(); j.hasNext() && !found; ) {
                 Relation r = (Relation)j.next();
                 if (this.getSubclassedRelations().contains(r)) {
-                    centralTable = r.getPrimaryKey().getTable();
-                    found = true;
+                    PrimaryKey pk = r.getPrimaryKey();
+                    if (!pk.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) {
+                        centralTable = pk.getTable();
+                        found = true;
+                    }
                 }
             }
         }
         
         // Identify all subclass and dimension relations.
         ignoredRelations.put(centralTable, new HashSet(this.getMaskedRelations()));
-        if (centralTable.getPrimaryKey()!=null) for (Iterator i = centralTable.getPrimaryKey().getRelations().iterator(); i.hasNext(); ) {
+        PrimaryKey pk = centralTable.getPrimaryKey();
+        if (pk!=null && !pk.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) for (Iterator i = centralTable.getPrimaryKey().getRelations().iterator(); i.hasNext(); ) {
             Relation r = (Relation)i.next();
             // Skip masked and concat-only relations.
             if (this.getMaskedRelations().contains(r) || this.getConcatOnlyRelations().contains(r)) continue;
             // Skip inferred-incorrect relations.
             if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) continue;
+            // Skip incorrect-FK relations.
+            if (r.getForeignKey().getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) continue;
             // See what kind of relation we have.
             if (this.getSubclassedRelations().contains(r)) {
                 // Subclass relation from main table? Ignore it at main table but add to subclass set.
@@ -613,12 +598,15 @@ public class DataSet extends GenericSchema {
                 Table subclassTable = r.getForeignKey().getTable();
                 ignoredRelations.put(subclassTable, new HashSet(this.getMaskedRelations()));
                 // Mark all OneToManys from the subclass table as dimensions.
-                if (subclassTable.getPrimaryKey()!=null) for (Iterator j = subclassTable.getPrimaryKey().getRelations().iterator(); j.hasNext(); ) {
+                PrimaryKey subPK = subclassTable.getPrimaryKey();
+                if (subPK!=null && !subPK.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) for (Iterator j = subclassTable.getPrimaryKey().getRelations().iterator(); j.hasNext(); ) {
                     Relation sr = (Relation)j.next();
                     // Skip masked and concat-only relations.
                     if (this.getMaskedRelations().contains(sr) || this.getConcatOnlyRelations().contains(sr)) continue;
                     // Skip inferred-incorrect relations.
                     if (sr.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) continue;
+                    // Skip incorrect-FK relations.
+                    if (sr.getForeignKey().getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) continue;
                     // OneToMany from subclass table? Ignore it at subclass table but add to dimension set.
                     // Also add the relation to the ignore set of the dimension.
                     if (sr.getFKCardinality().equals(Cardinality.MANY)) {
@@ -657,15 +645,44 @@ public class DataSet extends GenericSchema {
         for (Iterator i = subclassRelations.iterator(); i.hasNext(); ) {
             Relation r = (Relation)i.next();
             Table sct = r.getForeignKey().getTable();
-            DataSetTable subclass = this.constructTable(DataSetTableType.MAIN_SUBCLASS, sct, (Set)ignoredRelations.get(sct), r);
+            this.constructTable(DataSetTableType.MAIN_SUBCLASS, sct, (Set)ignoredRelations.get(sct), r);
         }
         
         // Build the dimension tables.
         for (Iterator i = dimensionRelations.iterator(); i.hasNext(); ) {
             Relation r = (Relation)i.next();
             Table dt = r.getForeignKey().getTable();
-            DataSetTable dim = this.constructTable(DataSetTableType.DIMENSION, dt, (Set)ignoredRelations.get(dt), r);
+            this.constructTable(DataSetTableType.DIMENSION, dt, (Set)ignoredRelations.get(dt), r);
         }
+        
+        // Attempt to reuse existing masked/partitioend columns.
+        // Drop non-existent masked columns.
+        // Recreate those that are left behind.
+        Collection newMaskedWrappedCols = new ArrayList();
+        for (Iterator i = this.maskedDataSetColumns.iterator(); i.hasNext(); ) {
+            DataSetColumn col = (DataSetColumn)i.next();
+            if (this.getTables().contains(col.getTable())) {
+                // Find the new column with the same name.
+                Table newTable = this.getTableByName(col.getTable().getName());
+                Column newCol = newTable.getColumnByName(col.getName());
+                if (newCol!=null) newMaskedWrappedCols.add(newCol);
+            }
+        }
+        this.maskedDataSetColumns.retainAll(newMaskedWrappedCols);
+        // Drop non-existent partitioned columns.
+        // Recreate those that are left behind.
+        Map newPartDSCols = new HashMap();
+        for (Iterator i = this.partitionedWrappedColumns.keySet().iterator(); i.hasNext(); ) {
+            WrappedColumn col = (WrappedColumn)i.next();
+            if (this.getTables().contains(col.getTable())) {
+                // Find the new column with the same name.
+                Table newTable = this.getTableByName(col.getTable().getName());
+                Column newCol = newTable.getColumnByName(col.getName());
+                if (newCol!=null) newPartDSCols.put(newCol, this.partitionedWrappedColumns.get(col));
+            }
+        }
+        this.partitionedWrappedColumns.clear();
+        this.partitionedWrappedColumns.putAll(newPartDSCols);
     }
     
     /**
@@ -681,7 +698,7 @@ public class DataSet extends GenericSchema {
      * @return a fully constructed and keyed up data set table.
      * @throws BuilderException if there was any trouble.
      */
-    private DataSetTable constructTable(DataSetTableType dsTableType, Table realTable, Set ignoredRelations, Relation linkbackRelation) throws BuilderException {
+    private void constructTable(DataSetTableType dsTableType, Table realTable, Set ignoredRelations, Relation linkbackRelation) throws BuilderException {
         // Sensible defaults.
         if (ignoredRelations == null)
             ignoredRelations = new HashSet();
@@ -762,9 +779,6 @@ public class DataSet extends GenericSchema {
         
         // Create the primary key on it.
         if (constructedPKColumns.size()>=1) datasetTable.setPrimaryKey(new GenericPrimaryKey(constructedPKColumns));
-        
-        // Return.
-        return datasetTable;
     }
     
     /**
@@ -783,9 +797,10 @@ public class DataSet extends GenericSchema {
         Collection realTableRelations = realTable.getRelations();
         List excludedColumns = new ArrayList();
         
-        // Exclude columns from foreign keys with non-incorrect non-masked non-concat-only relations.
+        // Exclude columns from good foreign keys with non-incorrect non-masked non-concat-only relations.
         for (Iterator i = realTable.getForeignKeys().iterator(); i.hasNext(); ) {
             Key k = (Key)i.next();
+            if (k.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) continue;
             boolean hasGoodRelation = false;
             for (Iterator j = k.getRelations().iterator(); j.hasNext() && !hasGoodRelation; ) {
                 Relation r = (Relation)j.next();
@@ -799,7 +814,7 @@ public class DataSet extends GenericSchema {
         }
         
         // Also exclude all masked columns.
-        excludedColumns.addAll(this.getMaskedColumns());
+        excludedColumns.addAll(this.getMaskedDataSetColumns());
         
         // Work out the underlying relation (the last one visited) for all columns on this table.
         Relation underlyingRelation = null;
@@ -814,7 +829,8 @@ public class DataSet extends GenericSchema {
             // Otherwise add the column to our table.
             Column wc = new WrappedColumn(c, datasetTable, underlyingRelation);
             // If column is part of primary key, add the wrapped version to the primary key column set.
-            if (realTable.getPrimaryKey()!=null && realTable.getPrimaryKey().getColumns().contains(c)) constructedPKColumns.add(wc);
+            PrimaryKey pk = realTable.getPrimaryKey();
+            if (pk!=null && !pk.getStatus().equals(ComponentStatus.INFERRED_INCORRECT) && pk.getColumns().contains(c)) constructedPKColumns.add(wc);
         }
         
         // For all non-ignored rels in realTable
@@ -825,6 +841,8 @@ public class DataSet extends GenericSchema {
             if (ignoredRelations.contains(r)) continue;
             // Ignore incorrect relations too.
             if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) continue;
+            // Ignore relations with incorrect keys at either end.
+            if (r.getPrimaryKey().getStatus().equals(ComponentStatus.INFERRED_INCORRECT) || r.getForeignKey().getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) continue;
             
             // Find key in relation that refers to this table.
             Key realTableRelSourceKey = r.getPrimaryKey();
@@ -1037,7 +1055,7 @@ public class DataSet extends GenericSchema {
                 super(Collections.singleton(value), useNull);
                 this.value = value;
             }
-                        
+            
             /**
              * Returns the value we will partition on.
              * @return the value we will partition on.
@@ -1278,7 +1296,7 @@ public class DataSet extends GenericSchema {
                     cols.add(c);
                 } else if (c instanceof WrappedColumn) {
                     WrappedColumn wc = (WrappedColumn)c;
-                    if (((DataSet)this.getSchema()).getPartitionedColumns().contains(wc)) cols.add(wc);
+                    if (((DataSet)this.getSchema()).getPartitionedWrappedColumns().contains(wc)) cols.add(wc);
                 }
             }
             return cols;

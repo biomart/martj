@@ -47,7 +47,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * The main window housing the MartBuilder GUI.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 27th April 2006
+ * @version 0.1.10, 15th May 2006
  * @since 0.1
  */
 public class MartBuilder extends JFrame {
@@ -241,7 +241,7 @@ public class MartBuilder extends JFrame {
                 public void menuSelected(MenuEvent e) {
                     boolean hasMart = true;
                     if (martBuilder.martTabSet.getSelectedDataSetTabSet()==null) hasMart = false;
-                    saveMart.setEnabled(hasMart);
+                    saveMart.setEnabled(hasMart && martBuilder.martTabSet.getModifiedStatus());
                     saveMartAs.setEnabled(hasMart);
                     closeMart.setEnabled(hasMart);
                 }

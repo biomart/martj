@@ -40,7 +40,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * functionality outlined above. Subclasses of {@link GenericRelation}
  * represent different kinds of association between {@link Key}s.</p>
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 5th May 2006
+ * @version 0.1.6, 15th May 2006
  * @since 0.1
  */
 public interface Relation extends Comparable {
@@ -245,9 +245,9 @@ public interface Relation extends Comparable {
          */
         public String getName() {
             StringBuffer sb = new StringBuffer();
-            sb.append(this.getPrimaryKey().getName());
+            sb.append(this.getPrimaryKey().toString());
             sb.append(":");
-            sb.append(this.getForeignKey().getName());
+            sb.append(this.getForeignKey().toString());
             return sb.toString();
         }
         

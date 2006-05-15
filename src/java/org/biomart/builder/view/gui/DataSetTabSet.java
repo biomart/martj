@@ -50,24 +50,23 @@ import javax.swing.JTabbedPane;
 import org.biomart.builder.controller.MartUtils;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.model.Column;
-import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Set of tabs to display a mart and set of windows.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 11th May 2006
+ * @version 0.1.13, 15th May 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -200,9 +199,14 @@ public class DataSetTabSet extends JTabbedPane {
         datasetTab.getDataSetDiagram().recalculateDiagram();
     }
     
-    public void redrawDataSetDiagramComponents(DataSet dataset) {
+    public void redrawAllDataSetDiagramComponents(DataSet dataset) {
         DataSetTab datasetTab = (DataSetTab)this.datasetToTab.get(dataset);
-        datasetTab.getDataSetDiagram().recalculateDiagram();
+        datasetTab.getDataSetDiagram().redrawAllDiagramComponents();
+    }
+    
+    public void redrawDataSetDiagramComponent(DataSet dataset, Object object) {
+        DataSetTab datasetTab = (DataSetTab)this.datasetToTab.get(dataset);
+        datasetTab.getDataSetDiagram().redrawDiagramComponent(object);
     }
     
     /**
@@ -358,7 +362,7 @@ public class DataSetTabSet extends JTabbedPane {
     public void requestMaskRelation(DataSet ds, Relation relation) {
         try {
             MartUtils.maskRelation(ds, relation);
-            this.schemaTabSet.redrawRelationDiagramComponent(relation);
+            this.schemaTabSet.redrawDiagramComponent(relation);
             this.recalculateDataSetDiagram(ds);
             if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawDiagramComponent(relation);
             this.martTabSet.setModifiedStatus(true);
@@ -373,7 +377,7 @@ public class DataSetTabSet extends JTabbedPane {
     public void requestUnmaskRelation(DataSet ds, Relation relation) {
         try {
             MartUtils.unmaskRelation(ds, relation);
-            this.schemaTabSet.redrawRelationDiagramComponent(relation);
+            this.schemaTabSet.redrawDiagramComponent(relation);
             this.recalculateDataSetDiagram(ds);
             if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawDiagramComponent(relation);
             this.martTabSet.setModifiedStatus(true);
@@ -388,7 +392,7 @@ public class DataSetTabSet extends JTabbedPane {
     public void requestSubclassRelation(DataSet ds, Relation relation) {
         try {
             MartUtils.subclassRelation(ds, relation);
-            this.schemaTabSet.redrawRelationDiagramComponent(relation);
+            this.schemaTabSet.redrawDiagramComponent(relation);
             this.recalculateDataSetDiagram(ds);
             if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawDiagramComponent(relation);
             this.martTabSet.setModifiedStatus(true);
@@ -403,7 +407,7 @@ public class DataSetTabSet extends JTabbedPane {
     public void requestUnsubclassRelation(DataSet ds, Relation relation) {
         try {
             MartUtils.unsubclassRelation(ds, relation);
-            this.schemaTabSet.redrawRelationDiagramComponent(relation);
+            this.schemaTabSet.redrawDiagramComponent(relation);
             this.recalculateDataSetDiagram(ds);
             if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawDiagramComponent(relation);
             this.martTabSet.setModifiedStatus(true);
@@ -450,7 +454,7 @@ public class DataSetTabSet extends JTabbedPane {
     public void requestConcatOnlyRelation(DataSet ds, Relation relation, ConcatRelationType type) {
         try {
             MartUtils.concatOnlyRelation(ds, relation, type);
-            this.schemaTabSet.redrawRelationDiagramComponent(relation);
+            this.schemaTabSet.redrawDiagramComponent(relation);
             this.recalculateDataSetDiagram(ds);
             if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawDiagramComponent(relation);
             this.martTabSet.setModifiedStatus(true);
@@ -465,7 +469,7 @@ public class DataSetTabSet extends JTabbedPane {
     public void requestUnconcatOnlyRelation(DataSet ds, Relation relation) {
         try {
             MartUtils.unconcatOnlyRelation(ds, relation);
-            this.schemaTabSet.redrawRelationDiagramComponent(relation);
+            this.schemaTabSet.redrawDiagramComponent(relation);
             this.recalculateDataSetDiagram(ds);
             if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawDiagramComponent(relation);
             this.martTabSet.setModifiedStatus(true);
@@ -477,46 +481,9 @@ public class DataSetTabSet extends JTabbedPane {
     /**
      * Update a relation cardinality.
      */
-    public void requestChangeRelationCardinality(final Relation relation, final Cardinality cardinality) {
-        LongProcess.run(this, new Runnable() {
-            public void run() {
-                try {
-                    MartUtils.changeRelationCardinality(mart, relation, cardinality);
-                    schemaTabSet.redrawRelationDiagramComponent(relation);
-                    recalculateDataSetTabs(); // Regenerate all datasets
-                    martTabSet.setModifiedStatus(true);
-                } catch (Throwable t) {
-                    martTabSet.getMartBuilder().showStackTrace(t);
-                }
-            }
-        });
-    }
-    
-    /**
-     * Update a relation status.
-     */
-    public void requestChangeRelationStatus(final Relation relation, final ComponentStatus status) {
-        LongProcess.run(this, new Runnable() {
-            public void run() {
-                try {
-                    MartUtils.changeRelationStatus(mart, relation, status);
-                    schemaTabSet.redrawRelationDiagramComponent(relation);
-                    recalculateDataSetTabs(); // Regenerate all datasets
-                    martTabSet.setModifiedStatus(true);
-                } catch (Throwable t) {
-                    martTabSet.getMartBuilder().showStackTrace(t);
-                }
-            }
-        });
-    }
-    
-    /**
-     * Update a relation cardinality.
-     */
-    public void requestMaskColumn(DataSet ds, Column column) {
+    public void requestMaskColumn(DataSet ds, DataSetColumn column) {
         try {
             MartUtils.maskColumn(ds, column);
-            this.schemaTabSet.redrawAllDiagramComponents();
             this.recalculateDataSetDiagram(ds);
             if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawAllDiagramComponents();
             this.martTabSet.setModifiedStatus(true);
@@ -528,33 +495,15 @@ public class DataSetTabSet extends JTabbedPane {
     /**
      * Update a relation cardinality.
      */
-    public void requestUnmaskColumn(DataSet ds, Column column) {
+    public void requestUnmaskColumn(DataSet ds, DataSetColumn column) {
         try {
             MartUtils.unmaskColumn(ds, column);
-            this.schemaTabSet.redrawAllDiagramComponents();
             this.recalculateDataSetDiagram(ds);
             if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawAllDiagramComponents();
             this.martTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
             this.martTabSet.getMartBuilder().showStackTrace(t);
         }
-    }
-    
-    /**
-     * Remove a relation.
-     */
-    public void requestRemoveRelation(final Relation relation) {
-        LongProcess.run(this, new Runnable() {
-            public void run() {
-                try {
-                    MartUtils.removeRelation(mart, relation);
-                    recalculateDataSetTabs(); // Regenerate all datasets
-                    martTabSet.setModifiedStatus(true);
-                } catch (Throwable t) {
-                    martTabSet.getMartBuilder().showStackTrace(t);
-                }
-            }
-        });
     }
     
     public void requestExplainTable(DataSetTable dsTable) {
@@ -579,22 +528,30 @@ public class DataSetTabSet extends JTabbedPane {
     
     public void requestPartitionBySchema(DataSet dataset) {
         MartUtils.partitionBySchema(dataset);
-        this.schemaTabSet.redrawAllDiagramComponents();
-        this.redrawDataSetDiagramComponents(dataset);
+        for (Iterator i = dataset.getTables().iterator(); i.hasNext(); ) {
+            for (Iterator j = ((Table)i.next()).getColumns().iterator(); i.hasNext(); ) {
+                Column c = (Column)j.next();
+                if (c instanceof SchemaNameColumn) this.redrawDataSetDiagramComponent(dataset, c);
+            }
+        }
         martTabSet.setModifiedStatus(true);
     }
     
     public void requestUnpartitionBySchema(DataSet dataset) {
         MartUtils.unpartitionBySchema(dataset);
-        this.redrawDataSetDiagramComponents(dataset);
+        for (Iterator i = dataset.getTables().iterator(); i.hasNext(); ) {
+            for (Iterator j = ((Table)i.next()).getColumns().iterator(); i.hasNext(); ) {
+                Column c = (Column)j.next();
+                if (c instanceof SchemaNameColumn) this.redrawDataSetDiagramComponent(dataset, c);
+            }
+        }
         martTabSet.setModifiedStatus(true);
     }
     
-    public void requestPartitionByColumn(DataSet dataset, Column column) {
+    public void requestPartitionByColumn(DataSet dataset, WrappedColumn column) {
         PartitionedColumnType type;
-        if (column instanceof WrappedColumn) column = ((WrappedColumn)column).getWrappedColumn();
-        if (dataset.getPartitionedColumns().contains(column)) {
-            PartitionedColumnType oldType = dataset.getPartitionedColumnType(column);
+        if (dataset.getPartitionedWrappedColumns().contains(column)) {
+            PartitionedColumnType oldType = dataset.getPartitionedWrappedColumnType(column);
             type = PartitionColumnDialog.updatePartitionedColumnType(this, oldType);
             if (type==null || type.equals(oldType)) return; // Unchanged.
         } else {
@@ -604,11 +561,10 @@ public class DataSetTabSet extends JTabbedPane {
         this.requestPartitionByColumn(dataset, column, type);
     }
     
-    public void requestPartitionByColumn(DataSet dataset, Column column, PartitionedColumnType type) {
+    public void requestPartitionByColumn(DataSet dataset, WrappedColumn column, PartitionedColumnType type) {
         try {
             MartUtils.partitionByColumn(dataset, column, type);
-            this.schemaTabSet.redrawAllDiagramComponents();
-            this.redrawDataSetDiagramComponents(dataset);
+            this.redrawDataSetDiagramComponent(dataset, column);
             if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawAllDiagramComponents();
             martTabSet.setModifiedStatus(true);
         } catch (Throwable t) {
@@ -616,9 +572,9 @@ public class DataSetTabSet extends JTabbedPane {
         }
     }
     
-    public void requestUnpartitionByColumn(DataSet dataset, Column column) {
+    public void requestUnpartitionByColumn(DataSet dataset, WrappedColumn column) {
         MartUtils.unpartitionByColumn(dataset, column);
-        this.redrawDataSetDiagramComponents(dataset);
+            this.redrawDataSetDiagramComponent(dataset, column);
         if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawAllDiagramComponents();
         martTabSet.setModifiedStatus(true);
     }

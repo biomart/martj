@@ -26,6 +26,8 @@ package org.biomart.builder.view.gui;
 
 import java.awt.AWTEvent;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -36,7 +38,7 @@ import javax.swing.JPopupMenu;
 /**
  * Displays arbitrary objects linked in a radial form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 12th May 2006
+ * @version 0.1.12, 15th May 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
@@ -68,14 +70,10 @@ public abstract class Diagram extends JPanel {
         this.componentMap.clear();
     }
     
-    public void addDiagramComponent(DiagramComponent component) {
-        this.componentMap.put(component.getObject(), component);
-        if (component instanceof TableComponent) {
-            this.componentMap.putAll(((TableComponent)component).getSubComponents());
-        } else if (component instanceof SchemaComponent) {
-            this.componentMap.putAll(((SchemaComponent)component).getSubComponents());
-        }
-        super.add((JComponent)component);
+    public void addDiagramComponent(DiagramComponent comp) {
+        this.componentMap.put(comp.getObject(), comp);
+        this.componentMap.putAll(comp.getSubComponents());
+        super.add((JComponent)comp);
     }
     
     public DiagramComponent getDiagramComponent(Object object) {
@@ -139,13 +137,16 @@ public abstract class Diagram extends JPanel {
         Map states = new HashMap();
         for (Iterator i = this.componentMap.keySet().iterator(); i.hasNext(); ) {
             Object object = i.next();
-            states.put(object, ((DiagramComponent)this.componentMap.get(object)).getState());
+            DiagramComponent comp = (DiagramComponent)this.componentMap.get(object);
+            if (comp!=null) states.put(object, comp.getState());
+            else i.remove();
         }
         this.doRecalculateDiagram();
         for (Iterator i = states.keySet().iterator(); i.hasNext(); ) {
             Object object = i.next();
-            DiagramComponent component = (DiagramComponent)this.componentMap.get(object);
-            if (component!=null) component.setState(states.get(object));
+            DiagramComponent comp = (DiagramComponent)this.componentMap.get(object);
+            if (comp!=null) comp.setState(states.get(object));
+            else i.remove();
         }
     }
     
@@ -153,12 +154,17 @@ public abstract class Diagram extends JPanel {
     
     public void redrawDiagramComponent(Object object) {
         DiagramComponent comp = (DiagramComponent)this.componentMap.get(object);
+        if (comp==null) return; // May not exist.
+        comp.recalculateDiagramComponent();
+        this.componentMap.putAll(comp.getSubComponents());
         comp.updateAppearance();
         ((JComponent)comp).repaint();
     }
     
     public void redrawAllDiagramComponents() {
-        for (Iterator i = this.componentMap.keySet().iterator(); i.hasNext(); ) this.redrawDiagramComponent(i.next());
+        Collection comps = new ArrayList(this.componentMap.keySet());
+        for (Iterator i = comps.iterator(); i.hasNext(); ) this.redrawDiagramComponent(i.next());
+        this.repaint();
     }
     
     /**

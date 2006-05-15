@@ -57,6 +57,12 @@ public class SchemaComponent extends BoxShapedComponent {
     public SchemaComponent(Schema schema, Diagram diagram) {
         super(schema, diagram);
         this.setLayout(new GridLayout(0,1));
+        this.recalculateDiagramComponent();
+    }
+    
+    public void recalculateDiagramComponent() {
+        this.removeAll();
+        Schema schema = this.getSchema();
         // Create the border and set up the colors and fonts.
         this.setBackground(Color.PINK);
         // Add the label.
@@ -79,7 +85,7 @@ public class SchemaComponent extends BoxShapedComponent {
         // Now the keys.
         for (Iterator i = schema.getExternalKeys().iterator(); i.hasNext(); ) {
             Key key = (Key)i.next();
-            KeyComponent keyComponent = new KeyComponent(key, diagram, this);
+            KeyComponent keyComponent = new KeyComponent(key, this.getDiagram(), this);
             this.addSubComponent(key, keyComponent);
             this.add(keyComponent);
         }

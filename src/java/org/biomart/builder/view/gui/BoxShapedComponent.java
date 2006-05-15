@@ -37,7 +37,7 @@ import javax.swing.JPopupMenu;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 12th May 2006
+ * @version 0.1.7, 15th May 2006
  * @since 0.1
  */
 public abstract class BoxShapedComponent extends JPanel implements DiagramComponent {
@@ -69,6 +69,8 @@ public abstract class BoxShapedComponent extends JPanel implements DiagramCompon
         this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
         this.updateAppearance();
     }
+    
+    public abstract void recalculateDiagramComponent();
     
     /**
      * Gets a key component.

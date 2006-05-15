@@ -32,12 +32,10 @@ import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Schema;
-import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.resources.BuilderBundle;
 
@@ -45,7 +43,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Adapts listener behaviour by adding in DataSet-specific stuff.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 12th May 2006
+ * @version 0.1.11, 15th May 2006
  * @since 0.1
  */
 public class WindowContext extends SchemaContext {
@@ -181,68 +179,6 @@ public class WindowContext extends SchemaContext {
             // Columns show the parent table stuff.
             Table table = ((Column)object).getTable();
             this.populateContextMenu(contextMenu, table);
-            
-            // Add separator.
-            contextMenu.addSeparator();
-            
-            // AND they show Column stuff
-            final Column column = (Column)object;
-            final DataSet ds = this.getDataSetTabSet().getSelectedDataSetTab().getDataSet();
-            boolean isMasked = ds.getMaskedColumns().contains(column);
-            
-            // Add column stuff.
-            JMenuItem mask = new JMenuItem(BuilderBundle.getString("maskColumnTitle"));
-            mask.setMnemonic(BuilderBundle.getString("maskColumnMnemonic").charAt(0));
-            mask.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestMaskColumn(ds, column);
-                }
-            });
-            contextMenu.add(mask);
-            if (isMasked) mask.setEnabled(false);
-            
-            JMenuItem unmask = new JMenuItem(BuilderBundle.getString("unmaskColumnTitle"));
-            unmask.setMnemonic(BuilderBundle.getString("unmaskColumnMnemonic").charAt(0));
-            unmask.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestUnmaskColumn(ds, column);
-                }
-            });
-            contextMenu.add(unmask);
-            if (!isMasked) unmask.setEnabled(false);
-            
-            // Partition stuff.
-            boolean isPartitioned = ds.getPartitionedColumns().contains(column);
-            
-            JMenuItem partition = new JMenuItem(BuilderBundle.getString("partitionColumnTitle"));
-            partition.setMnemonic(BuilderBundle.getString("partitionColumnMnemonic").charAt(0));
-            partition.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestPartitionByColumn(ds, column);
-                }
-            });
-            contextMenu.add(partition);
-            if (isPartitioned) partition.setEnabled(false);
-            
-            JMenuItem changepartition = new JMenuItem(BuilderBundle.getString("changePartitionColumnTitle"));
-            changepartition.setMnemonic(BuilderBundle.getString("changePartitionColumnMnemonic").charAt(0));
-            changepartition.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestPartitionByColumn(ds, column);
-                }
-            });
-            contextMenu.add(changepartition);
-            if (!isPartitioned) changepartition.setEnabled(false);
-            
-            JMenuItem unpartition = new JMenuItem(BuilderBundle.getString("unpartitionColumnTitle"));
-            unpartition.setMnemonic(BuilderBundle.getString("unpartitionColumnMnemonic").charAt(0));
-            unpartition.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestUnpartitionByColumn(ds, column);
-                }
-            });
-            contextMenu.add(unpartition);
-            if (!isPartitioned) unpartition.setEnabled(false);
         }
     }
     
@@ -255,7 +191,7 @@ public class WindowContext extends SchemaContext {
             // Fade out all INFERRED_INCORRECT and MASKED relations.
             if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT) ||
                     ds.getMaskedRelations().contains(relation)) {
-                component.setForeground(RelationComponent.FADED_COLOUR);
+                component.setForeground(RelationComponent.MASKED_COLOUR);
             }
             // Highlight CONCAT-ONLY relations.
             else if (ds.getConcatOnlyRelations().contains(relation)) {
@@ -271,23 +207,19 @@ public class WindowContext extends SchemaContext {
             }
         }
         
-        // Columns.
-        else if (object instanceof Column) {
-            
-            DataSet ds = this.getDataSetTabSet().getSelectedDataSetTab().getDataSet();
-            
-            Column column = (Column)object;
-            // Fade out all MASKED columns.
-            if (ds.getMaskedColumns().contains(column)) {
-                component.setForeground(ColumnComponent.FADED_COLOUR);
+        else if (object instanceof Key) {
+            Key key = (Key)object;
+            // Fade out all INFERRED_INCORRECT relations.
+            if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) {
+                component.setForeground(KeyComponent.MASKED_COLOUR);
             }
-            // Blue PARTITIONED columns and the schema name if partition on dataset.
-            else if (ds.getPartitionedColumns().contains(column)) {
-                component.setForeground(ColumnComponent.PARTITIONED_COLOUR);
+            // Highlight all HANDMADE relations.
+            else if (key.getStatus().equals(ComponentStatus.HANDMADE)) {
+                component.setForeground(KeyComponent.HANDMADE_COLOUR);
             }
             // All others are normal.
             else {
-                component.setForeground(ColumnComponent.NORMAL_COLOUR);
+                component.setForeground(KeyComponent.NORMAL_COLOUR);
             }
         }
     }

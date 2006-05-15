@@ -24,6 +24,7 @@
 
 package org.biomart.builder.view.gui;
 
+import java.util.Map;
 import javax.swing.JPopupMenu;
 
 /**
@@ -32,7 +33,7 @@ import javax.swing.JPopupMenu;
  * 
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 10th May 2006
+ * @version 0.1.6, 15th May 2006
  * @since 0.1
  */
 public interface DiagramComponent {
@@ -59,4 +60,8 @@ public interface DiagramComponent {
     public Object getState();
     
     public void setState(Object state);
+    
+    public void recalculateDiagramComponent();
+    
+    public Map getSubComponents();
 }

@@ -88,7 +88,7 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 11th May 2006
+ * @version 0.1.8, 15th May 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -307,7 +307,7 @@ public class MartBuilderXML extends DefaultHandler {
                         throw new SAXException(BuilderBundle.getString("unknownColumnType",type));
                     
                     // Override the name, to make sure we get the same alias as the original.
-                    ((DataSetColumn)element).setName(tbl.getName()+":"+name);
+                    ((DataSetColumn)element).setName(name);
                 }
                 // Generic column?
                 else if (tbl instanceof GenericTable) {
@@ -487,8 +487,8 @@ public class MartBuilderXML extends DefaultHandler {
             DataSet w = (DataSet)this.objectStack.peek();
             
             try {
-                Column col = (Column)this.mappedObjects.get(attributes.get("columnId"));
-                w.maskColumn(col);
+                DataSetColumn col = (DataSetColumn)this.mappedObjects.get(attributes.get("columnId"));
+                w.maskDataSetColumn(col);
                 element = col;
             } catch (Exception e) {
                 throw new SAXException(e);
@@ -503,7 +503,7 @@ public class MartBuilderXML extends DefaultHandler {
             DataSet w = (DataSet)this.objectStack.peek();
             
             try {
-                Column col = (Column)this.mappedObjects.get(attributes.get("columnId"));
+                WrappedColumn col = (WrappedColumn)this.mappedObjects.get(attributes.get("columnId"));
                 String type = (String)attributes.get("partitionedColumnType");
                 PartitionedColumnType resolvedType = null;
                 
@@ -533,7 +533,7 @@ public class MartBuilderXML extends DefaultHandler {
                     throw new SAXException(BuilderBundle.getString("unknownPartitionColumnType",type));
                 
                 // Flag the column.
-                w.flagPartitionedColumn(col, resolvedType);
+                w.flagPartitionedWrappedColumn(col, resolvedType);
                 element = col;
             } catch (SAXException e) {
                 throw e;
@@ -917,25 +917,8 @@ public class MartBuilderXML extends DefaultHandler {
             this.writeAttribute("martConstructorId",(String)this.reverseMappedObjects.get(ds.getMartConstructor()));
             this.writeAttribute("partitionOnSchema",Boolean.toString(ds.getPartitionOnSchema()));
             
-            // Write out masked relations inside window.
-            for (Iterator x = ds.getMaskedRelations().iterator(); x.hasNext(); ) {
-                Relation r = (Relation)x.next();
-                this.openElement("maskedRelation");
-                this.writeAttribute("relationId",(String)this.reverseMappedObjects.get(r));
-                this.writeAttribute("alt",r.toString());
-                this.closeElement("maskedRelation");
-            }
-            
-            // Write out subclass relations inside window.
-            for (Iterator x = ds.getSubclassedRelations().iterator(); x.hasNext(); ) {
-                Relation r = (Relation)x.next();
-                this.openElement("subclassRelation");
-                this.writeAttribute("relationId",(String)this.reverseMappedObjects.get(r));
-                this.writeAttribute("alt",r.toString());
-                this.closeElement("subclassRelation");
-            }
-            
-            // Write out concat relations inside window.
+            // Write out concat relations inside window. MUST come first else the dataset
+            // concat-only cols will complain about not having a relation to refer to.
             for (Iterator x = ds.getConcatOnlyRelations().iterator(); x.hasNext(); ) {
                 Relation r = (Relation)x.next();
                 this.openElement("concatRelation");
@@ -945,8 +928,30 @@ public class MartBuilderXML extends DefaultHandler {
                 this.closeElement("concatRelation");
             }
             
-            // Write out masked columns inside window.
-            for (Iterator x = ds.getMaskedColumns().iterator(); x.hasNext(); ) {
+            // Write out masked relations inside window. Can go before or after.
+            for (Iterator x = ds.getMaskedRelations().iterator(); x.hasNext(); ) {
+                Relation r = (Relation)x.next();
+                this.openElement("maskedRelation");
+                this.writeAttribute("relationId",(String)this.reverseMappedObjects.get(r));
+                this.writeAttribute("alt",r.toString());
+                this.closeElement("maskedRelation");
+            }
+            
+            // Write out subclass relations inside window. Can go before or after.
+            for (Iterator x = ds.getSubclassedRelations().iterator(); x.hasNext(); ) {
+                Relation r = (Relation)x.next();
+                this.openElement("subclassRelation");
+                this.writeAttribute("relationId",(String)this.reverseMappedObjects.get(r));
+                this.writeAttribute("alt",r.toString());
+                this.closeElement("subclassRelation");
+            }
+                        
+            // Write out the contents of the dataset, and note the relations.
+            this.writeSchemaContents(ds);
+            
+            // Write out masked columns inside window. MUST go after else will not have
+            // dataset cols to refer to.
+            for (Iterator x = ds.getMaskedDataSetColumns().iterator(); x.hasNext(); ) {
                 Column c = (Column)x.next();
                 this.openElement("maskedColumn");
                 this.writeAttribute("columnId",(String)this.reverseMappedObjects.get(c));
@@ -954,12 +959,13 @@ public class MartBuilderXML extends DefaultHandler {
                 this.closeElement("maskedColumn");
             }
             
-            // Write out partitioned columns inside window.
-            for (Iterator x = ds.getPartitionedColumns().iterator(); x.hasNext(); ) {
-                Column c = (Column)x.next();
+            // Write out partitioned columns inside window. MUST go after else will not have
+            // dataset cols to refer to.
+            for (Iterator x = ds.getPartitionedWrappedColumns().iterator(); x.hasNext(); ) {
+                WrappedColumn c = (WrappedColumn)x.next();
                 this.openElement("partitionColumn");
                 this.writeAttribute("columnId",(String)this.reverseMappedObjects.get(c));
-                PartitionedColumnType ptc = ds.getPartitionedColumnType(c);
+                PartitionedColumnType ptc = ds.getPartitionedWrappedColumnType(c);
                 
                 // What kind of partition is it?
                 // Single value partition?
@@ -993,9 +999,6 @@ public class MartBuilderXML extends DefaultHandler {
                 this.writeAttribute("alt",c.toString());
                 this.closeElement("partitionColumn");
             }
-            
-            // Write out the contents of the dataset, and note the relations.
-            this.writeSchemaContents(ds);
             
             // Write out relations inside dataset. WITH IDS.
             this.closeElement("dataset");

@@ -33,6 +33,8 @@ import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
+import java.util.Collections;
+import java.util.Map;
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Relation;
@@ -43,7 +45,7 @@ import org.biomart.builder.model.Relation.Cardinality;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 12th May 2006
+ * @version 0.1.8, 15th May 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
@@ -60,7 +62,12 @@ public class RelationComponent extends JComponent implements DiagramComponent {
     /**
      * Constant referring to faded relation colour.
      */
-    public static final Color FADED_COLOUR = Color.LIGHT_GRAY;
+    public static final Color MASKED_COLOUR = Color.LIGHT_GRAY;
+    
+    /**
+     * Constant referring to faded relation colour.
+     */
+    public static final Color INCORRECT_COLOUR = Color.RED;
     
     /**
      * Constant referring to handmade relation colour.
@@ -124,6 +131,10 @@ public class RelationComponent extends JComponent implements DiagramComponent {
         this.updateAppearance();
     }
     
+    public Map getSubComponents() {
+        return Collections.EMPTY_MAP;
+    }
+    
     /**
      * Updates the tooltip.
      */
@@ -132,6 +143,10 @@ public class RelationComponent extends JComponent implements DiagramComponent {
         DiagramContext mod = this.getDiagram().getDiagramContext();
         if (mod != null) mod.customiseAppearance(this, this.getObject());
         this.setBackground(this.getForeground());
+    }
+    
+    public void recalculateDiagramComponent() {
+        // Handled by paint. Need do nothing here.
     }
     
     public Object getState() {

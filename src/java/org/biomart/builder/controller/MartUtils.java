@@ -28,10 +28,10 @@ import java.io.File;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
-import org.biomart.builder.model.Column;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.Table;
@@ -39,16 +39,24 @@ import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
+import org.biomart.builder.model.Key;
+import org.biomart.builder.model.Key.ForeignKey;
+import org.biomart.builder.model.Key.GenericForeignKey;
+import org.biomart.builder.model.Key.GenericPrimaryKey;
+import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Relation.Cardinality;
+import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
+import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Tools for working with the mart from a GUI or CLI.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 12th May 2006
+ * @version 0.1.8, 15th May 2006
  * @since 0.1
  */
 public class MartUtils {
@@ -199,13 +207,13 @@ public class MartUtils {
         col.setName(newName);
     }
     
-    public static void maskColumn(DataSet dataset, Column column) throws SQLException, BuilderException {
-        dataset.maskColumn(column);
+    public static void maskColumn(DataSet dataset, DataSetColumn column) throws SQLException, BuilderException {
+        dataset.maskDataSetColumn(column);
         dataset.synchronise();
     }
     
-    public static void unmaskColumn(DataSet dataset, Column column) throws SQLException, BuilderException {
-        dataset.unmaskColumn(column);
+    public static void unmaskColumn(DataSet dataset, DataSetColumn column) throws SQLException, BuilderException {
+        dataset.unmaskDataSetColumn(column);
         dataset.synchronise();
     }
     
@@ -217,12 +225,12 @@ public class MartUtils {
         dataset.setPartitionOnSchema(false);
     }
     
-    public static void partitionByColumn(DataSet dataset, Column column, PartitionedColumnType type) throws AssociationException {
-        dataset.flagPartitionedColumn(column, type);
+    public static void partitionByColumn(DataSet dataset, WrappedColumn column, PartitionedColumnType type) throws AssociationException {
+        dataset.flagPartitionedWrappedColumn(column, type);
     }
 
-    public static void unpartitionByColumn(DataSet dataset, Column column) {
-        dataset.unflagPartitionedColumn(column);
+    public static void unpartitionByColumn(DataSet dataset, WrappedColumn column) {
+        dataset.unflagPartitionedWrappedColumn(column);
     }
     
     public static void enableKeyGuessing(Schema schema) {
@@ -231,5 +239,59 @@ public class MartUtils {
     
     public static void disableKeyGuessing(Schema schema) {
         schema.setKeyGuessing(false);
+    }
+    
+    public static void createPrimaryKey(Table table, List columns) throws SQLException, BuilderException {
+        PrimaryKey pk = new GenericPrimaryKey(columns);
+        pk.setStatus(ComponentStatus.HANDMADE);
+        table.setPrimaryKey(pk);
+    }
+    
+    public static void createForeignKey(Table table, List columns) throws SQLException, BuilderException {
+        ForeignKey fk = new GenericForeignKey(columns);
+        fk.setStatus(ComponentStatus.HANDMADE);
+        table.addForeignKey(fk);
+    }
+    
+    public static void editKeyColumns(Mart mart, Key key, List columns) throws SQLException, BuilderException {
+        key.setColumns(columns);
+        changeKeyStatus(mart, key, ComponentStatus.HANDMADE);
+        for (Iterator i = mart.getDataSets().iterator(); i.hasNext(); ) {
+            ((DataSet)i.next()).synchronise();
+        }
+    }
+    
+    public static void removeKey(Mart mart, Key key) throws SQLException, BuilderException {
+        key.destroy();
+        for (Iterator i = mart.getDataSets().iterator(); i.hasNext(); ) {
+            ((DataSet)i.next()).synchronise();
+        }
+    }
+    
+    public static void changeKeyStatus(Mart mart, Key key, ComponentStatus status) throws SQLException, BuilderException {
+        key.setStatus(status);
+        for (Iterator i = mart.getDataSets().iterator(); i.hasNext(); ) {
+            ((DataSet)i.next()).synchronise();
+        }
+    }
+    
+    public static void createRelation(Mart mart, Key from, Key to) throws SQLException, BuilderException {
+        PrimaryKey pk;
+        ForeignKey fk;
+        if ((from instanceof PrimaryKey) && (to instanceof ForeignKey)) {
+            pk = (PrimaryKey)from;
+            fk = (ForeignKey)to;
+        }
+        else if ((to instanceof PrimaryKey) && (from instanceof ForeignKey)) {
+            pk = (PrimaryKey)to;
+            fk = (ForeignKey)from;
+        } else {
+            throw new AssociationException(BuilderBundle.getString("relNotBetweenPKandFK"));
+        }
+        Relation r = new GenericRelation(pk, fk, Cardinality.MANY);
+        r.setStatus(ComponentStatus.HANDMADE);
+        for (Iterator i = mart.getDataSets().iterator(); i.hasNext(); ) {
+            ((DataSet)i.next()).synchronise();
+        }
     }
 }

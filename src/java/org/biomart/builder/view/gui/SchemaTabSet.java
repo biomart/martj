@@ -29,6 +29,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -40,16 +41,21 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import org.biomart.builder.controller.MartUtils;
 import org.biomart.builder.exceptions.ValidationException;
+import org.biomart.builder.model.ComponentStatus;
+import org.biomart.builder.model.Key;
+import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Displays the contents of multiple {@link Schema}s in graphical form.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 12th May 2006
+ * @version 0.1.9, 15th May 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -88,6 +94,15 @@ public class SchemaTabSet extends JTabbedPane {
         this.addTab(BuilderBundle.getString("multiSchemaOverviewTab"), scroller);
         // Synchronise ourselves.
         this.recalculateSchemaTabs();
+    }
+    
+    public void redrawDiagramComponent(Object object) {
+        if (object instanceof Relation) this.redrawRelationDiagramComponent((Relation)object);
+        else {
+            for (Iterator i = this.schemaToDiagram.values().iterator(); i.hasNext(); ) {
+                ((Diagram)i.next()).redrawDiagramComponent(object);
+            }
+        }
     }
     
     public void redrawRelationDiagramComponent(Relation relation) {
@@ -415,10 +430,216 @@ public class SchemaTabSet extends JTabbedPane {
         MartUtils.enableKeyGuessing(schema);
         this.requestSynchroniseSchema(schema);
     }
-
+    
     public void requestDisableKeyGuessing(Schema schema) {
         MartUtils.disableKeyGuessing(schema);
         this.requestSynchroniseSchema(schema);
+    }
+    
+    /**
+     * Update a relation cardinality.
+     */
+    public void requestChangeRelationCardinality(final Relation relation, final Cardinality cardinality) {
+        LongProcess.run(this, new Runnable() {
+            public void run() {
+                try {
+                    MartUtils.changeRelationCardinality(datasetTabSet.getMart(), relation, cardinality);
+                    redrawDiagramComponent(relation);
+                    datasetTabSet.recalculateDataSetTabs(); // Regenerate all datasets
+                    datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                } catch (Throwable t) {
+                    datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+                }
+            }
+        });
+    }
+    
+    /**
+     * Update a relation status.
+     */
+    public void requestChangeRelationStatus(final Relation relation, final ComponentStatus status) {
+        LongProcess.run(this, new Runnable() {
+            public void run() {
+                try {
+                    MartUtils.changeRelationStatus(datasetTabSet.getMart(), relation, status);
+                    redrawDiagramComponent(relation);
+                    datasetTabSet.recalculateDataSetTabs(); // Regenerate all datasets
+                    datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                } catch (Throwable t) {
+                    datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+                }
+            }
+        });
+    }
+    
+    /**
+     * Remove a relation.
+     */
+    public void requestRemoveRelation(final Relation relation) {
+        LongProcess.run(this, new Runnable() {
+            public void run() {
+                try {
+                    MartUtils.removeRelation(datasetTabSet.getMart(), relation);
+                    recalculateSchemaTabs();
+                    datasetTabSet.recalculateDataSetTabs(); // Regenerate all datasets
+                    datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                } catch (Throwable t) {
+                    datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+                }
+            }
+        });
+    }
+    
+    /**
+     * Remove a relation.
+     */
+    public void requestRemoveKey(final Key key) {
+        LongProcess.run(this, new Runnable() {
+            public void run() {
+                try {
+                    MartUtils.removeKey(datasetTabSet.getMart(), key);
+                    datasetTabSet.recalculateDataSetTabs(); // Regenerate all datasets
+                    datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                } catch (Throwable t) {
+                    datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+                }
+            }
+        });
+    }
+    
+    /**
+     * Update a relation status.
+     */
+    public void requestChangeKeyStatus(final Key key, final ComponentStatus status) {
+        LongProcess.run(this, new Runnable() {
+            public void run() {
+                try {
+                    MartUtils.changeKeyStatus(datasetTabSet.getMart(), key, status);
+                    redrawDiagramComponent(key);
+                    datasetTabSet.recalculateDataSetTabs(); // Regenerate all datasets
+                    datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                } catch (Throwable t) {
+                    datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+                }
+            }
+        });
+    }
+    
+    /**
+     * Update a relation status.
+     */
+    public void requestCreatePrimaryKey(Table table) {
+        List cols = KeyEditorDialog.createPrimaryKey(this, table);
+        if (!cols.isEmpty()) this.requestCreatePrimaryKey(table, cols);
+    }
+    
+    public void requestCreatePrimaryKey(final Table table, final List columns) {
+        LongProcess.run(this, new Runnable() {
+            public void run() {
+                try {
+                    MartUtils.createPrimaryKey(table, columns);
+                    redrawDiagramComponent(table);
+                    datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                } catch (Throwable t) {
+                    datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+                }
+            }
+        });
+    }
+    
+    /**
+     * Update a relation status.
+     */
+    public void requestCreateForeignKey(Table table) {
+        List cols = KeyEditorDialog.createForeignKey(this, table);
+        if (!cols.isEmpty()) this.requestCreateForeignKey(table, cols);
+    }
+    
+    public void requestCreateForeignKey(final Table table, final List columns) {
+        LongProcess.run(this, new Runnable() {
+            public void run() {
+                try {
+                    MartUtils.createForeignKey(table, columns);
+                    redrawDiagramComponent(table);
+                    datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                } catch (Throwable t) {
+                    datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+                }
+            }
+        });
+    }
+    
+    /**
+     * Update a relation status.
+     */
+    public void requestEditKey(Key key) {
+        List cols = KeyEditorDialog.editKey(this, key);
+        if (!cols.isEmpty() && !cols.equals(key.getColumns())) this.requestEditKey(key, cols);
+    }
+    
+    public void requestEditKey(final Key key, final List columns) {
+        LongProcess.run(this, new Runnable() {
+            public void run() {
+                try {
+                    MartUtils.editKeyColumns(datasetTabSet.getMart(), key, columns);
+                    redrawAllDiagramComponents();
+                    datasetTabSet.recalculateDataSetTabs(); // Regenerate all datasets
+                    datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                } catch (Throwable t) {
+                    datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+                }
+            }
+        });
+    }
+    
+    private Key askUserForTargetKey(Key from) {
+        Collection candidates = new ArrayList();
+        if (from instanceof PrimaryKey) {
+            for (Iterator i = this.schemaToDiagram.keySet().iterator(); i.hasNext(); ) {
+                for (Iterator j = ((Schema)i.next()).getTables().iterator(); j.hasNext(); ) {
+                    for (Iterator k = ((Table)j.next()).getForeignKeys().iterator(); k.hasNext(); ) {
+                        Key fk = (Key)k.next();
+                        if (fk.countColumns()==from.countColumns()) candidates.add(fk);
+                    }
+                }
+            }
+        } else {
+            for (Iterator i = this.schemaToDiagram.keySet().iterator(); i.hasNext(); ) {
+                for (Iterator j = ((Schema)i.next()).getTables().iterator(); j.hasNext(); ) {
+                    Key pk = ((Table)j.next()).getPrimaryKey();
+                    if (pk!=null && pk.countColumns()==from.countColumns()) candidates.add(pk);
+                }
+            }
+        }
+        // Now put up the million-dollar-question box.
+        return (Key)JOptionPane.showInputDialog(this,
+                BuilderBundle.getString("whichKeyToLinkRelationTo"),
+                BuilderBundle.getString("questionTitle"),
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                candidates.toArray(),
+                null);
+    }
+    
+    public void requestCreateRelation(Key from) {
+        // Obtain the to relation from a question box.
+        Key to = this.askUserForTargetKey(from);
+        if (to!=null) this.requestCreateRelation(from, to);
+    }
+    
+    public void requestCreateRelation(final Key from, final Key to) {
+        LongProcess.run(this, new Runnable() {
+            public void run() {
+                try {
+                    MartUtils.createRelation(datasetTabSet.getMart(), from, to);
+                    recalculateSchemaTabs();
+                    datasetTabSet.recalculateDataSetTabs(); // Regenerate all datasets
+                    datasetTabSet.getMartTabSet().setModifiedStatus(true);
+                } catch (Throwable t) {
+                    datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
+                }
+            }
+        });
     }
     
     /**

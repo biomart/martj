@@ -44,7 +44,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Displays a schema.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 5th May 2006
+ * @version 0.1.7, 15th May 2006
  * @since 0.1
  */
 public class MartTabSet extends JTabbedPane {
@@ -167,6 +167,10 @@ public class MartTabSet extends JTabbedPane {
         Mart currentMart = this.getSelectedDataSetTabSet().getMart();
         this.martModifiedStatus.put(currentMart, Boolean.valueOf(status));
         this.setTitleAt(this.getSelectedIndex(), this.suggestTabName(currentMart));
+    }
+    
+    public boolean getModifiedStatus() {
+        return this.martModifiedStatus.values().contains(Boolean.TRUE);
     }
     
     /**
