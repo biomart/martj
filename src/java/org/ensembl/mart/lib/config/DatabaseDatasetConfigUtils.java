@@ -437,7 +437,7 @@ public class DatabaseDatasetConfigUtils {
 			  String attributes = exps[i].getAttributes();
 			  String[] atts = attributes.split(",");
 			  for (int j = 0; j < atts.length; j++){
-				  if (!descriptionsMap.containsKey(atts[j])){
+				  if (!atts[j].matches("\\w+__\\w+") && !descriptionsMap.containsKey(atts[j])){
 					  linkErrors = linkErrors + atts[j] + " in exportable " + exps[i].getInternalName() + "\n";						  			
 				  }
 			  }
