@@ -24,6 +24,7 @@
 package org.biomart.builder.model;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.model.Key.ForeignKey;
@@ -40,7 +41,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * functionality outlined above. Subclasses of {@link GenericRelation}
  * represent different kinds of association between {@link Key}s.</p>
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 15th May 2006
+ * @version 0.1.7, 16th May 2006
  * @since 0.1
  */
 public interface Relation extends Comparable {
@@ -61,7 +62,7 @@ public interface Relation extends Comparable {
      * Sets the {@link ComponentStatus} of this {@link Relation}.
      * @param status the new {@link ComponentStatus} of this {@link Relation}.
      */
-    public void setStatus(ComponentStatus status);
+    public void setStatus(ComponentStatus status) throws AssociationException;
     
     /**
      * Returns the {@link PrimaryKey} of this {@link Relationship}.
@@ -235,6 +236,14 @@ public interface Relation extends Comparable {
             // Check the relation doesn't already exist.
             if (primaryKey.getRelations().contains(this))
                 throw new AssociationException(BuilderBundle.getString("relationAlreadyExists"));
+            // Check that the foreign key end doesn't have an active relation elsewhere.
+            boolean fkHasOtherRel = false;
+            for (Iterator i = foreignKey.getRelations().iterator(); i.hasNext() && !fkHasOtherRel; ) {
+                Relation r = (Relation)i.next();
+                if (!r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) fkHasOtherRel = true;
+            }
+            if (fkHasOtherRel)
+                throw new AssociationException(BuilderBundle.getString("fkHasMultiplePKs"));
             // Add ourselves at both ends.
             primaryKey.addRelation(this);
             foreignKey.addRelation(this);
@@ -261,7 +270,12 @@ public interface Relation extends Comparable {
         /**
          * {@inheritDoc}
          */
-        public void setStatus(ComponentStatus status) {
+        public void setStatus(ComponentStatus status) throws AssociationException {
+            if (!status.equals(ComponentStatus.INFERRED_INCORRECT)) {
+                // Check both keys have same cardinality.
+                if (this.primaryKey.countColumns()!=this.foreignKey.countColumns())
+                    throw new AssociationException(BuilderBundle.getString("keyColumnCountMismatch"));
+            }
             // Do it.
             this.status = status;
         }

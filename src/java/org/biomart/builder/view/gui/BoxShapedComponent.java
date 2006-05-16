@@ -37,7 +37,7 @@ import javax.swing.JPopupMenu;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 15th May 2006
+ * @version 0.1.8, 16th May 2006
  * @since 0.1
  */
 public abstract class BoxShapedComponent extends JPanel implements DiagramComponent {
@@ -134,7 +134,7 @@ public abstract class BoxShapedComponent extends JPanel implements DiagramCompon
     protected void processMouseEvent(MouseEvent evt) {
         boolean eventProcessed = false;
         // Is it a right-click?
-        if (evt.isPopupTrigger() && this.diagram.getDiagramContext().isRightClickAllowed()) {
+        if (evt.isPopupTrigger()) {
             // Build the basic menu.
             JPopupMenu contextMenu = this.getContextMenu();
             if (contextMenu.getComponentCount()>0) contextMenu.addSeparator();
@@ -143,8 +143,8 @@ public abstract class BoxShapedComponent extends JPanel implements DiagramCompon
             // Display.
             if (contextMenu.getComponentCount()>0) {
                 contextMenu.show(this, evt.getX(), evt.getY());
-                eventProcessed = true;
             }
+            eventProcessed = true;
         }
         // Pass it on up if we're not interested.
         if (!eventProcessed) super.processMouseEvent(evt);

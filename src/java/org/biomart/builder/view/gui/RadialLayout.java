@@ -42,7 +42,7 @@ import java.util.TreeMap;
 /**
  * Displays arbitrary objects linked in a radial form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 27th April 2006
+ * @version 0.1.4, 16th May 2006
  * @since 0.1
  */
 public class RadialLayout implements LayoutManager {
@@ -158,7 +158,7 @@ public class RadialLayout implements LayoutManager {
                 if (!comp.isVisible() || comp instanceof RelationComponent) continue;
                 // Calculate ring number! If not a TableComponent or TableProviderComponent, it's zero.
                 Integer ringNumber = new Integer(0);
-                if (comp instanceof TableComponent) ringNumber = new Integer(((TableComponent)comp).countRelations());
+                if (comp instanceof TableComponent) ringNumber = new Integer(((TableComponent)comp).countInternalRelations());
                 else if (comp instanceof SchemaComponent) ringNumber = new Integer(((SchemaComponent)comp).countExternalRelations());
                 // then add the object to the appropriate ring and update circumference/max side.
                 if (!ringDetails.containsKey(ringNumber))

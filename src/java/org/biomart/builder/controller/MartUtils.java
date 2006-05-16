@@ -40,6 +40,7 @@ import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Key.ForeignKey;
@@ -56,7 +57,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Tools for working with the mart from a GUI or CLI.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 15th May 2006
+ * @version 0.1.9, 16th May 2006
  * @since 0.1
  */
 public class MartUtils {
@@ -293,5 +294,9 @@ public class MartUtils {
         for (Iterator i = mart.getDataSets().iterator(); i.hasNext(); ) {
             ((DataSet)i.next()).synchronise();
         }
+    }
+    
+    public static void changeOptimiserType(DataSet dataset, DataSetOptimiserType type) {
+        dataset.setDataSetOptimiserType(type);
     }
 }

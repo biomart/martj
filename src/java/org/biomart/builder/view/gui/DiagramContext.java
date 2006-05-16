@@ -31,7 +31,7 @@ import javax.swing.JPopupMenu;
  * DiagramContext for events of interest to classes displaying graphical views
  * of {@link TableProvider}s using {@link TableProviderView}.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 12th May 2006
+ * @version 0.1.9, 16th May 2006
  * @since 0.1
  */
 public interface DiagramContext {
@@ -45,6 +45,4 @@ public interface DiagramContext {
     public void populateContextMenu(JPopupMenu contextMenu, Object object);
     
     public void customiseAppearance(JComponent component, Object object);
-    
-    public boolean isRightClickAllowed();
 }

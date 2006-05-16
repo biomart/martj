@@ -44,7 +44,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 12th May 2006
+ * @version 0.1.9, 16th May 2006
  * @since 0.1
  */
 public class TableComponent extends BoxShapedComponent {
@@ -76,6 +76,9 @@ public class TableComponent extends BoxShapedComponent {
         // Add the label.
         JLabel label = new JLabel(table.getName());
         label.setFont(Font.decode("Serif-BOLD-10"));
+        this.add(label);
+        label = new JLabel(table.getSchema().getName());
+        label.setFont(Font.decode("Serif-PLAIN-10"));
         this.add(label);
         // Now the keys.
         for (Iterator i = table.getKeys().iterator(); i.hasNext(); ) {
@@ -127,11 +130,10 @@ public class TableComponent extends BoxShapedComponent {
     private Table getTable() {
         return (Table)this.getObject();
     }
-    
     /**
      * Count the relations attached to our inner object.
      */
-    public int countRelations() {
-        return this.getTable().getRelations().size();
+    public int countInternalRelations() {
+        return this.getTable().getInternalRelations().size();
     }
 }

@@ -25,20 +25,33 @@
 package org.biomart.builder.view.gui;
 
 import java.awt.AWTEvent;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import javax.swing.JComponent;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JViewport;
+import org.biomart.builder.model.Table;
+import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Displays arbitrary objects linked in a radial form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 15th May 2006
+ * @version 0.1.13, 16th May 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
@@ -95,6 +108,62 @@ public abstract class Diagram extends JPanel {
         return null;
     }
     
+    public void findObject(Object object) {
+        if (object==null) return;
+        JViewport viewport = (JViewport)this.getParent();
+        // find out the size and coords of the selected object in our diagram.
+        JComponent comp = (JComponent)this.getDiagramComponent(object);
+        if (comp==null) return;
+        Rectangle compBounds = comp.getBounds();
+        Container parent = comp.getParent();
+        while (parent != this) {
+            compBounds.setLocation(
+                    compBounds.x + (int)parent.getX(),
+                    compBounds.y + (int)parent.getY()
+                    );
+            parent = parent.getParent();
+        }
+        Point compCentre = new Point(compBounds.x+(compBounds.width/2), compBounds.y+(compBounds.height/2));
+        Dimension diagSize = this.getSize();
+        Dimension viewSize = viewport.getExtentSize();
+        // work out target view point = centre - half diag size, rounded to 0,0 or max offsets if necessary
+        int newViewPointX = Math.min(Math.max(0, compCentre.x - (viewSize.width/2)), diagSize.width - viewSize.width);
+        int newViewPointY = Math.min(Math.max(0, compCentre.y - (viewSize.height/2)), diagSize.height - viewSize.height);
+        viewport.setViewPosition(new Point(newViewPointX, newViewPointY));
+    }
+    
+    private Table askUserForTable() {
+        Set tables = new TreeSet();
+        for (Iterator i = this.componentMap.keySet().iterator(); i.hasNext(); ) {
+            Object o = i.next();
+            if (o instanceof Table) tables.add(o);
+        }
+        return (Table)JOptionPane.showInputDialog(this.datasetTabSet,
+                BuilderBundle.getString("findTableName"),
+                BuilderBundle.getString("questionTitle"),
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                tables.toArray(),
+                null);
+    }
+    
+    private JPopupMenu getContextMenu() {
+        JPopupMenu contextMenu = new JPopupMenu();
+        
+        // Find table menu.
+        JMenuItem find = new JMenuItem(BuilderBundle.getString("findTableTitle"));
+        find.setMnemonic(BuilderBundle.getString("findTableMnemonic").charAt(0));
+        find.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Table table = askUserForTable();
+                if (table!=null) findObject(table);
+            }
+        });
+        contextMenu.add(find);
+        
+        return contextMenu;
+    }
+    
     /**
      * {@inheritDoc}
      * <p>Intercept mouse events on the tabs to override right-clicks and provide context menus.</p>
@@ -102,15 +171,15 @@ public abstract class Diagram extends JPanel {
     protected void processMouseEvent(MouseEvent evt) {
         boolean eventProcessed = false;
         // Is it a right-click?
-        if (evt.isPopupTrigger() && this.diagramContext.isRightClickAllowed()) {
+        if (evt.isPopupTrigger()) {
             // Extend.
-            JPopupMenu contextMenu = new JPopupMenu();
+            JPopupMenu contextMenu = this.getContextMenu();
             this.getDiagramContext().populateContextMenu(contextMenu, this.getContextMenuBaseObject());
             if (contextMenu.getComponentCount()>0) {
                 // Display.
                 contextMenu.show(this, evt.getX(), evt.getY());
-                eventProcessed = true;
             }
+            eventProcessed = true;
         }
         // Pass it on up if we're not interested.
         if (!eventProcessed) super.processMouseEvent(evt);
@@ -155,6 +224,7 @@ public abstract class Diagram extends JPanel {
     public void redrawDiagramComponent(Object object) {
         DiagramComponent comp = (DiagramComponent)this.componentMap.get(object);
         if (comp==null) return; // May not exist.
+        for (Iterator i = comp.getSubComponents().keySet().iterator(); i.hasNext(); ) i.remove();
         comp.recalculateDiagramComponent();
         this.componentMap.putAll(comp.getSubComponents());
         comp.updateAppearance();
@@ -164,7 +234,6 @@ public abstract class Diagram extends JPanel {
     public void redrawAllDiagramComponents() {
         Collection comps = new ArrayList(this.componentMap.keySet());
         for (Iterator i = comps.iterator(); i.hasNext(); ) this.redrawDiagramComponent(i.next());
-        this.repaint();
     }
     
     /**

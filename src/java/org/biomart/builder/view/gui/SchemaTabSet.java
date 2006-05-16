@@ -55,7 +55,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Displays the contents of multiple {@link Schema}s in graphical form.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 15th May 2006
+ * @version 0.1.10, 16th May 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -97,25 +97,16 @@ public class SchemaTabSet extends JTabbedPane {
     }
     
     public void redrawDiagramComponent(Object object) {
-        if (object instanceof Relation) this.redrawRelationDiagramComponent((Relation)object);
-        else {
+        if (object instanceof Relation) {
+            Relation relation = (Relation)object;
+            Schema pkSchema = relation.getPrimaryKey().getTable().getSchema();
+            Schema fkSchema = relation.getForeignKey().getTable().getSchema();
+            if (pkSchema.equals(fkSchema)) ((Diagram)this.schemaToDiagram.get(pkSchema)).redrawDiagramComponent(relation);
+            else this.allSchemasDiagram.redrawDiagramComponent(relation);
+        } else {
             for (Iterator i = this.schemaToDiagram.values().iterator(); i.hasNext(); ) {
                 ((Diagram)i.next()).redrawDiagramComponent(object);
             }
-        }
-    }
-    
-    public void redrawRelationDiagramComponent(Relation relation) {
-        Schema pkSchema = relation.getPrimaryKey().getTable().getSchema();
-        Schema fkSchema = relation.getForeignKey().getTable().getSchema();
-        if (pkSchema.equals(fkSchema)) ((Diagram)this.schemaToDiagram.get(pkSchema)).redrawDiagramComponent(relation);
-        else this.allSchemasDiagram.redrawDiagramComponent(relation);
-    }
-    
-    public void redrawAllDiagramComponents() {
-        this.allSchemasDiagram.redrawAllDiagramComponents();
-        for (Iterator i = this.schemaToDiagram.values().iterator(); i.hasNext(); ) {
-            ((Diagram)i.next()).redrawAllDiagramComponents();
         }
     }
     
@@ -142,16 +133,14 @@ public class SchemaTabSet extends JTabbedPane {
             Schema schema = (Schema)i.next();
             if (!martSchemas.contains(schema)) removeSchemaTab(schema);
         }
-        // Synchronise our overview tab.
-        this.allSchemasDiagram.recalculateDiagram();
         // Synchronise our tab view contents.
-        for (int i = 1; i < getTabCount(); i++) {
+        for (int i = 0; i < getTabCount(); i++) {
             JScrollPane scroller = (JScrollPane)getComponentAt(i);
-            SchemaDiagram tableDiagram = (SchemaDiagram)scroller.getViewport().getView();
+            Diagram tableDiagram = (Diagram)scroller.getViewport().getView();
             tableDiagram.recalculateDiagram();
         }
         // Redraw.
-        validate();
+        this.repaint();
     }
     
     /**
@@ -172,7 +161,6 @@ public class SchemaTabSet extends JTabbedPane {
                             MartUtils.synchroniseSchema(schema);
                         }
                         addSchemaTab(schema);
-                        datasetTabSet.recalculateDataSetTabs(); // Some datasets may disappear. It'll call us.recalculateDataSetTabs() later.
                         datasetTabSet.getMartTabSet().setModifiedStatus(true);
                     }
                 } catch (Throwable t) {
@@ -357,6 +345,7 @@ public class SchemaTabSet extends JTabbedPane {
                     int tabIndex = this.indexOfTab(schema.getName());
                     MartUtils.renameSchema(this.datasetTabSet.getMart(), schema, newName);
                     this.setTitleAt(tabIndex, newName);
+                    datasetTabSet.recalculateDataSetTabs();
                 }
                 this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
             }
@@ -444,7 +433,6 @@ public class SchemaTabSet extends JTabbedPane {
             public void run() {
                 try {
                     MartUtils.changeRelationCardinality(datasetTabSet.getMart(), relation, cardinality);
-                    redrawDiagramComponent(relation);
                     datasetTabSet.recalculateDataSetTabs(); // Regenerate all datasets
                     datasetTabSet.getMartTabSet().setModifiedStatus(true);
                 } catch (Throwable t) {
@@ -462,7 +450,6 @@ public class SchemaTabSet extends JTabbedPane {
             public void run() {
                 try {
                     MartUtils.changeRelationStatus(datasetTabSet.getMart(), relation, status);
-                    redrawDiagramComponent(relation);
                     datasetTabSet.recalculateDataSetTabs(); // Regenerate all datasets
                     datasetTabSet.getMartTabSet().setModifiedStatus(true);
                 } catch (Throwable t) {
@@ -480,7 +467,6 @@ public class SchemaTabSet extends JTabbedPane {
             public void run() {
                 try {
                     MartUtils.removeRelation(datasetTabSet.getMart(), relation);
-                    recalculateSchemaTabs();
                     datasetTabSet.recalculateDataSetTabs(); // Regenerate all datasets
                     datasetTabSet.getMartTabSet().setModifiedStatus(true);
                 } catch (Throwable t) {
@@ -515,7 +501,6 @@ public class SchemaTabSet extends JTabbedPane {
             public void run() {
                 try {
                     MartUtils.changeKeyStatus(datasetTabSet.getMart(), key, status);
-                    redrawDiagramComponent(key);
                     datasetTabSet.recalculateDataSetTabs(); // Regenerate all datasets
                     datasetTabSet.getMartTabSet().setModifiedStatus(true);
                 } catch (Throwable t) {
@@ -538,7 +523,7 @@ public class SchemaTabSet extends JTabbedPane {
             public void run() {
                 try {
                     MartUtils.createPrimaryKey(table, columns);
-                    redrawDiagramComponent(table);
+                    recalculateSchemaTabs();
                     datasetTabSet.getMartTabSet().setModifiedStatus(true);
                 } catch (Throwable t) {
                     datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
@@ -560,7 +545,7 @@ public class SchemaTabSet extends JTabbedPane {
             public void run() {
                 try {
                     MartUtils.createForeignKey(table, columns);
-                    redrawDiagramComponent(table);
+                    recalculateSchemaTabs();
                     datasetTabSet.getMartTabSet().setModifiedStatus(true);
                 } catch (Throwable t) {
                     datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
@@ -582,7 +567,6 @@ public class SchemaTabSet extends JTabbedPane {
             public void run() {
                 try {
                     MartUtils.editKeyColumns(datasetTabSet.getMart(), key, columns);
-                    redrawAllDiagramComponents();
                     datasetTabSet.recalculateDataSetTabs(); // Regenerate all datasets
                     datasetTabSet.getMartTabSet().setModifiedStatus(true);
                 } catch (Throwable t) {
@@ -632,7 +616,6 @@ public class SchemaTabSet extends JTabbedPane {
             public void run() {
                 try {
                     MartUtils.createRelation(datasetTabSet.getMart(), from, to);
-                    recalculateSchemaTabs();
                     datasetTabSet.recalculateDataSetTabs(); // Regenerate all datasets
                     datasetTabSet.getMartTabSet().setModifiedStatus(true);
                 } catch (Throwable t) {

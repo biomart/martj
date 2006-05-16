@@ -31,12 +31,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-import java.util.TreeSet;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -88,7 +88,7 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 15th May 2006
+ * @version 0.1.9, 16th May 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -883,7 +883,7 @@ public class MartBuilderXML extends DefaultHandler {
         }
         
         // Write out each schema.
-        List externalRelations = new ArrayList();
+        Set externalRelations = new HashSet();
         for (Iterator i = mart.getSchemas().iterator(); i.hasNext(); ) {
             Schema schema = (Schema)i.next();
             if (schema instanceof SchemaGroup) {

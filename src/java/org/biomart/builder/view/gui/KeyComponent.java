@@ -26,11 +26,8 @@ package org.biomart.builder.view.gui;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.Iterator;
 import javax.swing.BoxLayout;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.TransferHandler;
 import org.biomart.builder.model.Column;
@@ -42,7 +39,7 @@ import org.biomart.builder.model.Key.PrimaryKey;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 15th May 2006
+ * @version 0.1.7, 16th May 2006
  * @since 0.1
  */
 public class KeyComponent extends BoxShapedComponent {
@@ -79,6 +76,7 @@ public class KeyComponent extends BoxShapedComponent {
         this.parentComponent = parentComponent;
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         this.recalculateDiagramComponent();
+        this.setTransferHandler(new TransferHandler("draggedKey"));
     }
     
     public void recalculateDiagramComponent() {
@@ -93,9 +91,6 @@ public class KeyComponent extends BoxShapedComponent {
             label.setFont(Font.decode("Serif-ITALIC-10"));
             this.add(label);
         }
-        // Add drag-and-drop.
-        this.setTransferHandler(new TransferHandler("draggedKey"));
-        this.addMouseListener(new DragMouseAdapter());
     }
     
     /**
@@ -119,14 +114,6 @@ public class KeyComponent extends BoxShapedComponent {
     public void setDraggedKey(Key key) {
         if (!key.equals(this)) {
             this.getDiagram().getDataSetTabSet().getSchemaTabSet().requestCreateRelation(key, this.getKey());
-        }
-    }
-    
-    public class DragMouseAdapter extends MouseAdapter {
-        public void mousePressed(MouseEvent e) {
-            JComponent c = (JComponent)e.getSource();
-            TransferHandler handler = c.getTransferHandler();
-            handler.exportAsDrag(c, e, TransferHandler.COPY);
         }
     }
 }

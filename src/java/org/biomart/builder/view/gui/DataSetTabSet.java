@@ -57,6 +57,7 @@ import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.Relation;
@@ -66,7 +67,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Set of tabs to display a mart and set of windows.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 15th May 2006
+ * @version 0.1.14, 16th May 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -187,7 +188,7 @@ public class DataSetTabSet extends JTabbedPane {
         // Synchronise the table provider views.
         schemaTabSet.recalculateSchemaTabs();
         // Redraw.
-        validate();
+        this.repaint();
     }
     
     /**
@@ -197,11 +198,6 @@ public class DataSetTabSet extends JTabbedPane {
         DataSetTab datasetTab = (DataSetTab)this.datasetToTab.get(dataset);
         MartUtils.synchroniseDataSet(dataset);
         datasetTab.getDataSetDiagram().recalculateDiagram();
-    }
-    
-    public void redrawAllDataSetDiagramComponents(DataSet dataset) {
-        DataSetTab datasetTab = (DataSetTab)this.datasetToTab.get(dataset);
-        datasetTab.getDataSetDiagram().redrawAllDiagramComponents();
     }
     
     public void redrawDataSetDiagramComponent(DataSet dataset, Object object) {
@@ -345,7 +341,7 @@ public class DataSetTabSet extends JTabbedPane {
             public void run() {
                 try {
                     MartUtils.optimiseDataSet(dataset);
-                    schemaTabSet.redrawAllDiagramComponents();
+                    schemaTabSet.recalculateSchemaTabs();
                     recalculateDataSetDiagram(dataset);
                     if (currentExplanationDiagram!=null) currentExplanationDiagram.redrawAllDiagramComponents();
                     martTabSet.setModifiedStatus(true);
@@ -414,38 +410,6 @@ public class DataSetTabSet extends JTabbedPane {
         } catch (Throwable t) {
             this.martTabSet.getMartBuilder().showStackTrace(t);
         }
-    }
-    
-    /**
-     * Update a relation cardinality.
-     */
-    public void requestConcatOnlyRelation(DataSet ds, Relation relation) {
-        // Label to concat-type
-        Map responseSet = new HashMap();
-        responseSet.put(BuilderBundle.getString("commaConcatOption"),ConcatRelationType.COMMA);
-        responseSet.put(BuilderBundle.getString("spaceConcatOption"),ConcatRelationType.SPACE);
-        responseSet.put(BuilderBundle.getString("tabConcatOption"),ConcatRelationType.TAB);
-        Map inverseResponseSet = new HashMap();
-        for (Iterator i = responseSet.keySet().iterator(); i.hasNext(); ) {
-            Object key = i.next();
-            inverseResponseSet.put(responseSet.get(key), key);
-        }
-        // Work out current type, if any.
-        Object current = ds.getConcatRelationType(relation);
-        Object selected = inverseResponseSet.get(current);
-        // Open dialog.
-        Object response = JOptionPane.showInputDialog(this,
-                BuilderBundle.getString("concatTypeQuestion"),
-                BuilderBundle.getString("questionTitle"),
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                responseSet.keySet().toArray(),
-                selected);
-        if (response == null || response.equals(selected)) return;
-        // If get none response, call unconcat
-        Object type = responseSet.get(response);
-        if (type.equals("")) this.requestUnconcatOnlyRelation(ds, relation);
-        else this.requestConcatOnlyRelation(ds, relation, (ConcatRelationType)type);
     }
     
     /**
@@ -576,6 +540,11 @@ public class DataSetTabSet extends JTabbedPane {
         MartUtils.unpartitionByColumn(dataset, column);
             this.redrawDataSetDiagramComponent(dataset, column);
         if (this.currentExplanationDiagram!=null) this.currentExplanationDiagram.redrawAllDiagramComponents();
+        martTabSet.setModifiedStatus(true);
+    }
+    
+    public void requestChangeOptimiserType(DataSet dataset, DataSetOptimiserType type) {
+        MartUtils.changeOptimiserType(dataset, type);
         martTabSet.setModifiedStatus(true);
     }
     

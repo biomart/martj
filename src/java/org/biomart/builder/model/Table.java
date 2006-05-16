@@ -47,7 +47,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * more complex implementations. It is able to keep track of {@link Key}s and {@link Column}s
  * but it does not provide any methods that process or analyse these.</p>
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 12th May 2006
+ * @version 0.1.10, 16th May 2006
  * @since 0.1
  */
 public interface Table extends Comparable {
@@ -122,6 +122,8 @@ public interface Table extends Comparable {
      * @return the set of {@link Relation}s for this {@link Table}.
      */
     public Collection getRelations();
+    
+    public Collection getInternalRelations();
     
     /**
      * Returns a set of the {@link Column}s of this table. It may
@@ -282,10 +284,11 @@ public interface Table extends Comparable {
          * {@inheritDoc}
          */
         public void addForeignKey(ForeignKey foreignKey) throws AssociationException {
-            // Quietly ignore if we've already got it.
-            if (this.foreignKeys.contains(foreignKey)) return;
+            // Sanity check.
+            if (this.foreignKeys.contains(foreignKey))
+                throw new AssociationException(BuilderBundle.getString("fkAlreadyExists"));
             // Do it.
-            this.foreignKeys.add( foreignKey);
+            this.foreignKeys.add(foreignKey);
         }
         
         /**
@@ -316,6 +319,24 @@ public interface Table extends Comparable {
                 allRels.addAll(k.getRelations());
             }
             return allRels;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        public Collection getInternalRelations() {
+            Set relations = new TreeSet(); // enforce uniqueness
+            if (this.getPrimaryKey()!=null) for (Iterator j = this.getPrimaryKey().getRelations().iterator(); j.hasNext(); ) {
+                Relation relation = (Relation)j.next();
+                if (relation.getForeignKey().getTable().getSchema().equals(this.getSchema())) relations.add(relation);
+            }
+            for (Iterator i = this.getForeignKeys().iterator(); i.hasNext(); ) {
+                for (Iterator j = ((Key)i.next()).getRelations().iterator(); j.hasNext(); ) {
+                    Relation relation = (Relation)j.next();
+                    if (relation.getPrimaryKey().getTable().getSchema().equals(this.getSchema())) relations.add(relation);
+                }
+            }
+            return relations;
         }
         
         /**

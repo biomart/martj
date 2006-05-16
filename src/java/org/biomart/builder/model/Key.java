@@ -41,7 +41,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * <p>Unless otherwise specified, all {@link Key}s are created with a default
  * {@link ComponentStatus} of INFERRED.</p>
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 15th May 2006
+ * @version 0.1.9, 16th May 2006
  * @since 0.1
  */
 public interface Key extends Comparable {
@@ -241,7 +241,13 @@ public interface Key extends Comparable {
             for (Iterator i = this.relations.iterator(); i.hasNext(); ) {
                 Relation r = (Relation)i.next();
                 if (r.getStatus().equals(ComponentStatus.HANDMADE)) deadRels.add(r);
-                else r.setStatus(ComponentStatus.INFERRED_INCORRECT);
+                else {
+                    try {
+                        r.setStatus(ComponentStatus.INFERRED_INCORRECT);
+                    } catch (AssociationException e) {
+                        throw new AssertionError(BuilderBundle.getString("relAssocErrOnIncorrect"));
+                    }
+                }
             }
             for (Iterator i = deadRels.iterator(); i.hasNext(); ) ((Relation)i.next()).destroy();
         }
@@ -302,7 +308,8 @@ public interface Key extends Comparable {
          */
         public void destroy() {
             // Remove all the relations.
-            for (Iterator i = this.relations.iterator(); i.hasNext(); ) {
+            List relationsCopy = new ArrayList(this.relations);
+            for (Iterator i = relationsCopy.iterator(); i.hasNext(); ) {
                 Relation r = (Relation)i.next();
                 r.destroy();
             }

@@ -26,9 +26,6 @@ package org.biomart.builder.view.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -40,7 +37,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 11th May 2006
+ * @version 0.1.5, 16th May 2006
  * @since 0.1
  */
 public class ExplainDataSetDialog extends JDialog {    
@@ -53,9 +50,6 @@ public class ExplainDataSetDialog extends JDialog {
                     BuilderBundle.getString("explainTableDialogTitle", dsTable.getName()) :
                     BuilderBundle.getString("explainColumnDialogTitle", new String[]{dsTable.getName(), dsColumn.getName()})),
                 true);
-        
-        // Useful things
-        JButton close = new JButton(BuilderBundle.getString("closeButton"));
         
         // Make the content.
         JPanel content = new JPanel(new BorderLayout());
@@ -71,27 +65,20 @@ public class ExplainDataSetDialog extends JDialog {
         
         // Work out what size we want the diagram to be.
         Dimension size = diagram.getPreferredSize();
-        size.width = Math.max(100, Math.min(size.width, 400));
-        size.height = Math.max(100, Math.min(size.height, 400));
+        Dimension maxSize = schemaTabSet.getSize();
+        size.width = Math.max(100, Math.min(size.width, maxSize.width));
+        size.height = Math.max(100, Math.min(size.height, maxSize.height));
         content.setPreferredSize(size);
         
         // Add the diagram to the top part.
         content.add(new JScrollPane(diagram), BorderLayout.CENTER);
-
-        // Add the close button to the bottom.
-        content.add(close, BorderLayout.PAGE_END);
-
-        // intercept the close button
-        close.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                hide();
-            }
-        });
-        // make it the default button.
-        this.getRootPane().setDefaultButton(close);
         
         // set size of window
         this.pack();
+        
+        // zoom to the selected table.
+        if (dsColumn!=null) diagram.findObject(dsColumn.getUnderlyingRelation());
+        else diagram.findObject(dsTable.getUnderlyingTable());
     }
     
     /**

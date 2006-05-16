@@ -25,21 +25,16 @@
 package org.biomart.builder.view.gui;
 
 import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
+import java.util.Set;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
-import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * This class deals with drawing an overview of all the table providers.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 12th May 2006
+ * @version 0.1.9, 16th May 2006
  * @since 0.1
  */
 public class AllSchemasDiagram extends Diagram {
@@ -65,7 +60,7 @@ public class AllSchemasDiagram extends Diagram {
     public void doRecalculateDiagram() {
         this.removeAll();
         // Make a set of all relations on this table provider.
-        List relations = new ArrayList();
+        Set relations = new HashSet();
         // Add a TableComponent for each table.
         for (Iterator i = this.getDataSetTabSet().getMart().getSchemas().iterator(); i.hasNext(); ) {
             Schema schema = (Schema)i.next();

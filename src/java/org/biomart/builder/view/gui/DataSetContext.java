@@ -26,14 +26,19 @@ package org.biomart.builder.view.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.Key;
@@ -44,7 +49,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Adapts listener events suitable for datasets.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 15th May 2006
+ * @version 0.1.12, 16th May 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -64,6 +69,8 @@ public class DataSetContext extends WindowContext {
      */
     public void populateContextMenu(JPopupMenu contextMenu, Object object) {
         if (object instanceof DataSet) {
+            if (contextMenu.getComponentCount()>0) contextMenu.addSeparator();        
+            
             // Common DataSet stuff.
             
             JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeDataSetTitle"));
@@ -92,9 +99,62 @@ public class DataSetContext extends WindowContext {
                 }
             });
             contextMenu.add(rename);
+            
+            // Optimiser stuff.
+            JMenu optimiserMenu = new JMenu(BuilderBundle.getString("optimiserTypeTitle"));
+            optimiserMenu.setMnemonic(BuilderBundle.getString("optimiserTypeMnemonic").charAt(0));
+            ButtonGroup optGroup = new ButtonGroup();
+
+            JRadioButtonMenuItem optNone = new JRadioButtonMenuItem(BuilderBundle.getString("optimiserNoneTitle"));
+            optNone.setMnemonic(BuilderBundle.getString("optimiserNoneMnemonic").charAt(0));
+            optNone.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestChangeOptimiserType(getDataSet(), DataSetOptimiserType.NONE);
+                }
+            });
+            optGroup.add(optNone);
+            optimiserMenu.add(optNone);
+            if (this.getDataSet().getDataSetOptimiserType().equals(DataSetOptimiserType.NONE)) optNone.setSelected(true);
+            
+            JRadioButtonMenuItem optLJ = new JRadioButtonMenuItem(BuilderBundle.getString("optimiserLeftJoinTitle"));
+            optLJ.setMnemonic(BuilderBundle.getString("optimiserLeftJoinMnemonic").charAt(0));
+            optLJ.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestChangeOptimiserType(getDataSet(), DataSetOptimiserType.LEFTJOIN);
+                }
+            });
+            optGroup.add(optLJ);
+            optimiserMenu.add(optLJ);
+            if (this.getDataSet().getDataSetOptimiserType().equals(DataSetOptimiserType.LEFTJOIN)) optLJ.setSelected(true);
+
+            JRadioButtonMenuItem optCol= new JRadioButtonMenuItem(BuilderBundle.getString("optimiserColumnTitle"));
+            optCol.setMnemonic(BuilderBundle.getString("optimiserColumnMnemonic").charAt(0));
+            optCol.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestChangeOptimiserType(getDataSet(), DataSetOptimiserType.COLUMN);
+                }
+            });
+            optGroup.add(optCol);
+            optimiserMenu.add(optCol);
+            if (this.getDataSet().getDataSetOptimiserType().equals(DataSetOptimiserType.COLUMN)) optCol.setSelected(true);
+
+            JRadioButtonMenuItem optTbl = new JRadioButtonMenuItem(BuilderBundle.getString("optimiserTableTitle"));
+            optTbl.setMnemonic(BuilderBundle.getString("optimiserTableMnemonic").charAt(0));
+            optTbl.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    getDataSetTabSet().requestChangeOptimiserType(getDataSet(), DataSetOptimiserType.TABLE);
+                }
+            });
+            optGroup.add(optTbl);
+            optimiserMenu.add(optTbl);
+            if (this.getDataSet().getDataSetOptimiserType().equals(DataSetOptimiserType.TABLE)) optTbl.setSelected(true);
+            
+            contextMenu.add(optimiserMenu);
         }
         
         if (object instanceof DataSetTable) {
+        if (contextMenu.getComponentCount()>0) contextMenu.addSeparator();
+        
             // DataSet table stuff.
             final DataSetTable table = (DataSetTable)object;
             DataSetTableType tableType = table.getType();
@@ -143,7 +203,7 @@ public class DataSetContext extends WindowContext {
             this.populateContextMenu(contextMenu, table);
             
             // Add separator.
-            contextMenu.addSeparator();
+            if (contextMenu.getComponentCount()>0) contextMenu.addSeparator();
             
             // AND they show Column stuff
             final DataSetColumn column = (DataSetColumn)object;
@@ -159,71 +219,69 @@ public class DataSetContext extends WindowContext {
             contextMenu.add(explain);
             
             // Add column stuff.
-            JMenuItem mask = new JMenuItem(BuilderBundle.getString("maskColumnTitle"));
+            final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(BuilderBundle.getString("maskColumnTitle"));
             mask.setMnemonic(BuilderBundle.getString("maskColumnMnemonic").charAt(0));
             mask.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDataSetTabSet().requestMaskColumn(ds, column);
+                    if (mask.isSelected()) getDataSetTabSet().requestMaskColumn(ds, column);
+                    else getDataSetTabSet().requestUnmaskColumn(ds, column);
                 }
             });
             contextMenu.add(mask);
+            if (ds.getMaskedDataSetColumns().contains(column)) mask.setSelected(true);
             
             // If it's a schema name column...
             if (column instanceof SchemaNameColumn) {
-                JMenuItem partition = new JMenuItem(BuilderBundle.getString("partitionOnSchemaTitle"));
+                final JCheckBoxMenuItem partition = new JCheckBoxMenuItem(BuilderBundle.getString("partitionOnSchemaTitle"));
                 partition.setMnemonic(BuilderBundle.getString("partitionOnSchemaMnemonic").charAt(0));
                 partition.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestPartitionBySchema(ds);
+                        if (partition.isSelected()) getDataSetTabSet().requestPartitionBySchema(ds);
+                        else getDataSetTabSet().requestUnpartitionBySchema(ds);
                     }
                 });
                 contextMenu.add(partition);
-                if (ds.getPartitionOnSchema()) partition.setEnabled(false);
-                
-                JMenuItem unpartition = new JMenuItem(BuilderBundle.getString("unpartitionOnSchemaTitle"));
-                unpartition.setMnemonic(BuilderBundle.getString("unpartitionOnSchemaMnemonic").charAt(0));
-                unpartition.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestUnpartitionBySchema(ds);
-                    }
-                });
-                contextMenu.add(unpartition);
-                if (!ds.getPartitionOnSchema()) unpartition.setEnabled(false);
+                if (ds.getPartitionOnSchema()) partition.setSelected(false);
             } else if (column instanceof WrappedColumn) {
-                
                 // Partition stuff.
                 final WrappedColumn wrappedCol = (WrappedColumn)column;
-                boolean isPartitioned = ds.getPartitionedWrappedColumns().contains(((WrappedColumn)column).getWrappedColumn());
+                boolean isPartitioned = ds.getPartitionedWrappedColumns().contains(column);
                 
-                JMenuItem partition = new JMenuItem(BuilderBundle.getString("partitionColumnTitle"));
-                partition.setMnemonic(BuilderBundle.getString("partitionColumnMnemonic").charAt(0));
-                partition.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestPartitionByColumn(ds, wrappedCol);
-                    }
-                });
-                contextMenu.add(partition);
-                if (isPartitioned) partition.setEnabled(false);
-                
-                JMenuItem changepartition = new JMenuItem(BuilderBundle.getString("changePartitionColumnTitle"));
-                changepartition.setMnemonic(BuilderBundle.getString("changePartitionColumnMnemonic").charAt(0));
-                changepartition.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestPartitionByColumn(ds, wrappedCol);
-                    }
-                });
-                contextMenu.add(changepartition);
-                if (!isPartitioned) changepartition.setEnabled(false);
-                
-                JMenuItem unpartition = new JMenuItem(BuilderBundle.getString("unpartitionColumnTitle"));
-                unpartition.setMnemonic(BuilderBundle.getString("unpartitionColumnMnemonic").charAt(0));
-                unpartition.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        getDataSetTabSet().requestUnpartitionByColumn(ds, wrappedCol);
-                    }
-                });
-                contextMenu.add(unpartition);
-                if (!isPartitioned) unpartition.setEnabled(false);
+                if (isPartitioned) {
+                    // Submenu with change option.
+                    JMenu partitionSubmenu = new JMenu(BuilderBundle.getString("partitionColumnSMTitle"));
+                    partitionSubmenu.setMnemonic(BuilderBundle.getString("partitionColumnSMMnemonic").charAt(0));
+                    
+                    JMenuItem changepartition = new JMenuItem(BuilderBundle.getString("changePartitionColumnTitle"));
+                    changepartition.setMnemonic(BuilderBundle.getString("changePartitionColumnMnemonic").charAt(0));
+                    changepartition.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent evt) {
+                            getDataSetTabSet().requestPartitionByColumn(ds, wrappedCol);
+                        }
+                    });
+                    partitionSubmenu.add(changepartition);
+                    
+                    JMenuItem unpartition = new JMenuItem(BuilderBundle.getString("unpartitionColumnTitle"));
+                    unpartition.setMnemonic(BuilderBundle.getString("unpartitionColumnMnemonic").charAt(0));
+                    unpartition.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent evt) {
+                            getDataSetTabSet().requestUnpartitionByColumn(ds, wrappedCol);
+                        }
+                    });
+                    partitionSubmenu.add(unpartition);
+                    
+                    contextMenu.add(partitionSubmenu);
+                } else {
+                    // Partition option.
+                    JMenuItem partition = new JMenuItem(BuilderBundle.getString("partitionColumnTitle"));
+                    partition.setMnemonic(BuilderBundle.getString("partitionColumnMnemonic").charAt(0));
+                    partition.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent evt) {
+                            getDataSetTabSet().requestPartitionByColumn(ds, wrappedCol);
+                        }
+                    });
+                    contextMenu.add(partition);
+                }
             }
         }
     }

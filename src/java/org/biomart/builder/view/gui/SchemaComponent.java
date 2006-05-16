@@ -29,9 +29,7 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -39,6 +37,7 @@ import javax.swing.JPopupMenu;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
@@ -46,10 +45,10 @@ import org.biomart.builder.resources.BuilderBundle;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 12th May 2006
+ * @version 0.1.8, 16th May 2006
  * @since 0.1
  */
-public class SchemaComponent extends BoxShapedComponent {    
+public class SchemaComponent extends BoxShapedComponent {
     /**
      * The constructor constructs an object around a given
      * object, and associates with a given display.
@@ -82,12 +81,16 @@ public class SchemaComponent extends BoxShapedComponent {
             label.setFont(Font.decode("Serif-BOLDITALIC-10"));
             this.add(label);
         }
-        // Now the keys.
+        // Now the keys on external tables.
         for (Iterator i = schema.getExternalKeys().iterator(); i.hasNext(); ) {
             Key key = (Key)i.next();
-            KeyComponent keyComponent = new KeyComponent(key, this.getDiagram(), this);
-            this.addSubComponent(key, keyComponent);
-            this.add(keyComponent);
+            Table table = key.getTable();
+            if (!this.getSubComponents().containsKey(table)) {
+                TableComponent tableComponent = new TableComponent(table, this.getDiagram());
+                this.addSubComponent(table, tableComponent);
+                this.getSubComponents().putAll(tableComponent.getSubComponents());
+                this.add(tableComponent);
+            }
         }
     }
     
@@ -158,7 +161,7 @@ public class SchemaComponent extends BoxShapedComponent {
             }
         });
         contextMenu.add(showTables);
-                
+        
         JMenu groupMembers = new JMenu(BuilderBundle.getString("groupMembersTitle"));
         groupMembers.setMnemonic(BuilderBundle.getString("groupMembersMnemonic").charAt(0));
         contextMenu.add(groupMembers);
@@ -193,7 +196,7 @@ public class SchemaComponent extends BoxShapedComponent {
                 }
             });
             schemaMenu.add(testM);
-                        
+            
             JMenuItem unGroup = new JMenuItem(BuilderBundle.getString("ungroupMemberTitle"));
             unGroup.setMnemonic(BuilderBundle.getString("ungroupMemberMnemonic").charAt(0));
             unGroup.addActionListener(new ActionListener() {

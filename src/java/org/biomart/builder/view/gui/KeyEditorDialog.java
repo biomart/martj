@@ -40,6 +40,7 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.border.EmptyBorder;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.resources.BuilderBundle;
@@ -47,7 +48,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 15th May 2006
+ * @version 0.1.2, 16th May 2006
  * @since 0.1
  */
 public class KeyEditorDialog extends JDialog {
@@ -94,9 +95,11 @@ public class KeyEditorDialog extends JDialog {
         JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.add(new JLabel(BuilderBundle.getString("columnsAvailableLabel")), BorderLayout.PAGE_START);
         leftPanel.add(new JScrollPane(tabColList), BorderLayout.CENTER);
+        leftPanel.setBorder(new EmptyBorder(2,2,2,2));
         Box leftButtonPanel = Box.createVerticalBox();
-        leftButtonPanel.add(insertButton);
         leftButtonPanel.add(removeButton);
+        leftButtonPanel.add(insertButton);
+        leftButtonPanel.setBorder(new EmptyBorder(2,2,2,2));
         leftPanel.add(leftButtonPanel, BorderLayout.LINE_END);
         content.add(leftPanel);
         
@@ -104,13 +107,16 @@ public class KeyEditorDialog extends JDialog {
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.add(new JLabel(BuilderBundle.getString("keyColumnsLabel")), BorderLayout.PAGE_START);
         rightPanel.add(new JScrollPane(keyColList), BorderLayout.CENTER);
+        rightPanel.setBorder(new EmptyBorder(2,2,2,2));
         Box rightButtonPanel = Box.createVerticalBox();
         rightButtonPanel.add(upButton);
         rightButtonPanel.add(downButton);
+        rightButtonPanel.setBorder(new EmptyBorder(2,2,2,2));
         rightPanel.add(rightButtonPanel, BorderLayout.LINE_END);
         Box actionButtons = Box.createHorizontalBox();
         actionButtons.add(close);
         actionButtons.add(execute);
+        actionButtons.setBorder(new EmptyBorder(2,2,2,2));
         rightPanel.add(actionButtons, BorderLayout.PAGE_END);
         content.add(rightPanel);
         

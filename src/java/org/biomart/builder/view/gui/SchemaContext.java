@@ -26,9 +26,15 @@ package org.biomart.builder.view.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.TransferHandler;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.Key;
@@ -42,7 +48,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Provides the default behaviour for table provider listeners.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 12th May 2006
+ * @version 0.1.14, 16th May 2006
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
@@ -72,6 +78,8 @@ public class SchemaContext implements DiagramContext {
     public void populateContextMenu(JPopupMenu contextMenu, Object object) {
         
         if (object == null) {
+        if (contextMenu.getComponentCount()>0) contextMenu.addSeparator();
+        
             // Constant parts of schema diagram menus, for background areas only.
             
             JMenuItem syncAll = new JMenuItem(BuilderBundle.getString("synchroniseAllSchemasTitle"));
@@ -95,6 +103,8 @@ public class SchemaContext implements DiagramContext {
         }
         
         else if (object instanceof Table) {
+        if (contextMenu.getComponentCount()>0) contextMenu.addSeparator();
+        
             // Add the dataset generation options.
             final Table table;
             if (object instanceof Key) table = ((Key)object).getTable();
@@ -117,31 +127,45 @@ public class SchemaContext implements DiagramContext {
                 }
             });
             contextMenu.add(suggest);
+            
+            contextMenu.addSeparator();
+            
+            JMenuItem pk = new JMenuItem(BuilderBundle.getString("createPrimaryKeyTitle"));
+            pk.setMnemonic(BuilderBundle.getString("createPrimaryKeyMnemonic").charAt(0));
+            pk.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.getSchemaTabSet().requestCreatePrimaryKey(table);
+                }
+            });
+            if (table.getPrimaryKey()!=null) pk.setEnabled(false);
+            contextMenu.add(pk);
+            
+            JMenuItem fk = new JMenuItem(BuilderBundle.getString("createForeignKeyTitle"));
+            fk.setMnemonic(BuilderBundle.getString("createForeignKeyMnemonic").charAt(0));
+            fk.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    datasetTabSet.getSchemaTabSet().requestCreateForeignKey(table);
+                }
+            });
+            contextMenu.add(fk);
         }
         
         else if (object instanceof Schema) {
+        if (contextMenu.getComponentCount()>0) contextMenu.addSeparator();
+        
             // Add schema stuff
             final Schema schema = (Schema)object;
             
-            JMenuItem keyguess = new JMenuItem(BuilderBundle.getString("enableKeyGuessingTitle"));
+            final JCheckBoxMenuItem keyguess = new JCheckBoxMenuItem(BuilderBundle.getString("enableKeyGuessingTitle"));
             keyguess.setMnemonic(BuilderBundle.getString("enableKeyGuessingMnemonic").charAt(0));
             keyguess.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.getSchemaTabSet().requestEnableKeyGuessing(schema);
+                    if (keyguess.isSelected()) datasetTabSet.getSchemaTabSet().requestEnableKeyGuessing(schema);
+                    else datasetTabSet.getSchemaTabSet().requestDisableKeyGuessing(schema);
                 }
             });
             contextMenu.add(keyguess);
-            if (schema.getKeyGuessing()) keyguess.setEnabled(false);
-            
-            JMenuItem unkeyguess = new JMenuItem(BuilderBundle.getString("disableKeyGuessingTitle"));
-            unkeyguess.setMnemonic(BuilderBundle.getString("disableKeyGuessingMnemonic").charAt(0));
-            unkeyguess.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.getSchemaTabSet().requestDisableKeyGuessing(schema);
-                }
-            });
-            contextMenu.add(unkeyguess);
-            if (!schema.getKeyGuessing()) unkeyguess.setEnabled(false);
+            if (schema.getKeyGuessing()) keyguess.setSelected(true);
             
             JMenuItem rename = new JMenuItem(BuilderBundle.getString("renameSchemaTitle"));
             rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
@@ -201,54 +225,74 @@ public class SchemaContext implements DiagramContext {
         }
         
         else if (object instanceof Relation) {
+        if (contextMenu.getComponentCount()>0) contextMenu.addSeparator();
+        
             // Add relation stuff
             final Relation relation = (Relation)object;
             
             boolean relationIncorrect = relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT);
             
+            
+            ButtonGroup cardGroup = new ButtonGroup();
             // one:one
-            JMenuItem oneToOne = new JMenuItem(BuilderBundle.getString("oneToOneTitle"));
+            JRadioButtonMenuItem oneToOne = new JRadioButtonMenuItem(BuilderBundle.getString("oneToOneTitle"));
             oneToOne.setMnemonic(BuilderBundle.getString("oneToOneMnemonic").charAt(0));
             oneToOne.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
                     datasetTabSet.getSchemaTabSet().requestChangeRelationCardinality(relation, Cardinality.ONE);
                 }
             });
+            cardGroup.add(oneToOne);
             contextMenu.add(oneToOne);
-            if (relationIncorrect || relation.getFKCardinality().equals(Cardinality.ONE)) oneToOne.setEnabled(false);
+            if (relationIncorrect) oneToOne.setEnabled(false);
+            if (relation.getFKCardinality().equals(Cardinality.ONE)) oneToOne.setSelected(true);
             
             // one:many
-            JMenuItem oneToMany = new JMenuItem(BuilderBundle.getString("oneToManyTitle"));
+            JRadioButtonMenuItem oneToMany = new JRadioButtonMenuItem(BuilderBundle.getString("oneToManyTitle"));
             oneToMany.setMnemonic(BuilderBundle.getString("oneToManyMnemonic").charAt(0));
             oneToMany.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
                     datasetTabSet.getSchemaTabSet().requestChangeRelationCardinality(relation, Cardinality.MANY);
                 }
             });
+            cardGroup.add(oneToMany);
             contextMenu.add(oneToMany);
-            if (relationIncorrect || relation.getFKCardinality().equals(Cardinality.MANY)) oneToMany.setEnabled(true);
+            if (relationIncorrect) oneToMany.setEnabled(true);
+            if (relation.getFKCardinality().equals(Cardinality.MANY)) oneToMany.setSelected(true);
             
+        contextMenu.addSeparator();
+        
+            
+            ButtonGroup correctGroup = new ButtonGroup();
             // correct
-            JMenuItem correct = new JMenuItem(BuilderBundle.getString("correctRelationTitle"));
+            JRadioButtonMenuItem correct = new JRadioButtonMenuItem(BuilderBundle.getString("correctRelationTitle"));
             correct.setMnemonic(BuilderBundle.getString("correctRelationMnemonic").charAt(0));
             correct.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
                     datasetTabSet.getSchemaTabSet().requestChangeRelationStatus(relation, ComponentStatus.INFERRED);
                 }
             });
-            if (!relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) correct.setEnabled(false);
+            correctGroup.add(correct);
             contextMenu.add(correct);
+            if (relation.getStatus().equals(ComponentStatus.INFERRED)) correct.setSelected(true);
+            else if (relation.getStatus().equals(ComponentStatus.HANDMADE)) correct.setEnabled(false);
             
             // incorrect
-            JMenuItem incorrect = new JMenuItem(BuilderBundle.getString("incorrectRelationTitle"));
+            JRadioButtonMenuItem incorrect = new JRadioButtonMenuItem(BuilderBundle.getString("incorrectRelationTitle"));
             incorrect.setMnemonic(BuilderBundle.getString("incorrectRelationMnemonic").charAt(0));
             incorrect.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
                     datasetTabSet.getSchemaTabSet().requestChangeRelationStatus(relation, ComponentStatus.INFERRED_INCORRECT);
                 }
             });
-            if (!relation.getStatus().equals(ComponentStatus.INFERRED)) incorrect.setEnabled(false);
+            correctGroup.add(incorrect);
             contextMenu.add(incorrect);
+            if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) incorrect.setSelected(true);
+            else if (relation.getStatus().equals(ComponentStatus.HANDMADE)) incorrect.setEnabled(false);
+            
+            
+        contextMenu.addSeparator();
+        
             
             // remove
             JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeRelationTitle"));
@@ -258,8 +302,8 @@ public class SchemaContext implements DiagramContext {
                     datasetTabSet.getSchemaTabSet().requestRemoveRelation(relation);
                 }
             });
-            if (!relation.getStatus().equals(ComponentStatus.HANDMADE)) remove.setEnabled(false);
             contextMenu.add(remove);
+            if (!relation.getStatus().equals(ComponentStatus.HANDMADE)) remove.setEnabled(false);
         }
         
         else if (object instanceof Key) {
@@ -275,25 +319,6 @@ public class SchemaContext implements DiagramContext {
             
             // Primary/Foreign/edit keys
             
-            JMenuItem pk = new JMenuItem(BuilderBundle.getString("createPrimaryKeyTitle"));
-            pk.setMnemonic(BuilderBundle.getString("createPrimaryKeyMnemonic").charAt(0));
-            pk.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.getSchemaTabSet().requestCreatePrimaryKey(table);
-                }
-            });
-            if (table.getPrimaryKey()!=null) pk.setEnabled(false);
-            contextMenu.add(pk);
-            
-            JMenuItem fk = new JMenuItem(BuilderBundle.getString("createForeignKeyTitle"));
-            fk.setMnemonic(BuilderBundle.getString("createForeignKeyMnemonic").charAt(0));
-            fk.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.getSchemaTabSet().requestCreateForeignKey(table);
-                }
-            });
-            contextMenu.add(fk);
-            
             JMenuItem editkey = new JMenuItem(BuilderBundle.getString("editKeyTitle"));
             editkey.setMnemonic(BuilderBundle.getString("editKeyMnemonic").charAt(0));
             editkey.addActionListener(new ActionListener() {
@@ -304,7 +329,7 @@ public class SchemaContext implements DiagramContext {
             contextMenu.add(editkey);
             
             // Create relation
-                        
+            
             JMenuItem createrel = new JMenuItem(BuilderBundle.getString("createRelationTitle"));
             createrel.setMnemonic(BuilderBundle.getString("createRelationMnemonic").charAt(0));
             createrel.addActionListener(new ActionListener() {
@@ -313,30 +338,40 @@ public class SchemaContext implements DiagramContext {
                 }
             });
             contextMenu.add(createrel);
+            if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) createrel.setEnabled(false);
             
             // Incorrect/correct/remove keys.
             
+            contextMenu.addSeparator();
+            
+            ButtonGroup correctGroup = new ButtonGroup();
             // correct
-            JMenuItem correct = new JMenuItem(BuilderBundle.getString("correctKeyTitle"));
+            JRadioButtonMenuItem correct = new JRadioButtonMenuItem(BuilderBundle.getString("correctKeyTitle"));
             correct.setMnemonic(BuilderBundle.getString("correctKeyMnemonic").charAt(0));
             correct.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
                     datasetTabSet.getSchemaTabSet().requestChangeKeyStatus(key, ComponentStatus.INFERRED);
                 }
             });
-            if (!key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) correct.setEnabled(false);
+            correctGroup.add(correct);
             contextMenu.add(correct);
+            if (key.getStatus().equals(ComponentStatus.INFERRED)) correct.setSelected(true);
+            else if (key.getStatus().equals(ComponentStatus.HANDMADE)) correct.setEnabled(false);
             
             // incorrect
-            JMenuItem incorrect = new JMenuItem(BuilderBundle.getString("incorrectKeyTitle"));
+            JRadioButtonMenuItem incorrect = new JRadioButtonMenuItem(BuilderBundle.getString("incorrectKeyTitle"));
             incorrect.setMnemonic(BuilderBundle.getString("incorrectKeyMnemonic").charAt(0));
             incorrect.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
                     datasetTabSet.getSchemaTabSet().requestChangeKeyStatus(key, ComponentStatus.INFERRED_INCORRECT);
                 }
             });
-            if (!key.getStatus().equals(ComponentStatus.INFERRED)) incorrect.setEnabled(false);
+            correctGroup.add(incorrect);
             contextMenu.add(incorrect);
+            if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) incorrect.setSelected(true);
+            else if (key.getStatus().equals(ComponentStatus.HANDMADE)) incorrect.setEnabled(false);
+            
+            contextMenu.addSeparator();
             
             // remove
             JMenuItem remove = new JMenuItem(BuilderBundle.getString("removeKeyTitle"));
@@ -346,8 +381,8 @@ public class SchemaContext implements DiagramContext {
                     datasetTabSet.getSchemaTabSet().requestRemoveKey(key);
                 }
             });
-            if (!key.getStatus().equals(ComponentStatus.HANDMADE)) remove.setEnabled(false);
             contextMenu.add(remove);
+            if (!key.getStatus().equals(ComponentStatus.HANDMADE)) remove.setEnabled(false);
         }
         
         else if (object instanceof Column) {
@@ -359,6 +394,7 @@ public class SchemaContext implements DiagramContext {
     
     public void customiseAppearance(JComponent component, Object object) {
         if (object instanceof Relation) {
+            
             Relation relation = (Relation)object;
             // Fade out all INFERRED_INCORRECT relations.
             if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) {
@@ -388,10 +424,17 @@ public class SchemaContext implements DiagramContext {
             else {
                 component.setForeground(KeyComponent.NORMAL_COLOUR);
             }
+            
+            // Add drag-and-drop.
+            component.addMouseListener(SchemaContext.dragAdapter);
         }
     }
     
-    public boolean isRightClickAllowed() {
-        return true;
-    }
+    public static MouseAdapter dragAdapter = new MouseAdapter() {
+        public void mousePressed(MouseEvent e) {
+            JComponent c = (JComponent)e.getSource();
+            TransferHandler handler = c.getTransferHandler();
+            handler.exportAsDrag(c, e, TransferHandler.COPY);
+        }
+    };
 }
