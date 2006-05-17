@@ -45,7 +45,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 16th May 2006
+ * @version 0.1.9, 17th May 2006
  * @since 0.1
  */
 public class SchemaComponent extends BoxShapedComponent {
@@ -174,7 +174,7 @@ public class SchemaComponent extends BoxShapedComponent {
             renameM.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
             renameM.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    getDiagram().getDataSetTabSet().getSchemaTabSet().requestRenameSchema(schema, true);
+                    getDiagram().getDataSetTabSet().getSchemaTabSet().requestRenameSchema(schema, getSchemaGroup());
                 }
             });
             schemaMenu.add(renameM);

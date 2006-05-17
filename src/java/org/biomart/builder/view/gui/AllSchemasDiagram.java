@@ -34,7 +34,7 @@ import org.biomart.builder.model.Schema;
 /**
  * This class deals with drawing an overview of all the table providers.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 16th May 2006
+ * @version 0.1.10, 17th May 2006
  * @since 0.1
  */
 public class AllSchemasDiagram extends Diagram {
@@ -74,8 +74,8 @@ public class AllSchemasDiagram extends Diagram {
             RelationComponent relationComponent = new RelationComponent(
                     relation,
                     this,
-                    (KeyComponent)this.getDiagramComponent(relation.getPrimaryKey()),
-                    (KeyComponent)this.getDiagramComponent(relation.getForeignKey()));
+                    relation.getPrimaryKey(),
+                    relation.getForeignKey());
             this.addDiagramComponent(relationComponent);
         }
         // Delegate upwards.

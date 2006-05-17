@@ -48,7 +48,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 16th May 2006
+ * @version 0.1.3, 17th May 2006
  * @since 0.1
  */
 public class KeyEditorDialog extends JDialog {
@@ -150,6 +150,7 @@ public class KeyEditorDialog extends JDialog {
                         Object swap = selectedColumns.get(currIndex-1);
                         selectedColumns.setElementAt(selected, currIndex-1);
                         selectedColumns.setElementAt(swap, currIndex);
+                        keyColList.setSelectedIndex(currIndex-1);
                     }
                 }
             }
@@ -163,6 +164,7 @@ public class KeyEditorDialog extends JDialog {
                         Object swap = selectedColumns.get(currIndex+1);
                         selectedColumns.setElementAt(selected, currIndex+1);
                         selectedColumns.setElementAt(swap, currIndex);
+                        keyColList.setSelectedIndex(currIndex+1);
                     }
                 }
             }

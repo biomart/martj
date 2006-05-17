@@ -48,7 +48,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Provides the default behaviour for table provider listeners.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 16th May 2006
+ * @version 0.1.15, 17th May 2006
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
@@ -171,7 +171,7 @@ public class SchemaContext implements DiagramContext {
             rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic").charAt(0));
             rename.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    datasetTabSet.getSchemaTabSet().requestRenameSchema(schema, false);
+                    datasetTabSet.getSchemaTabSet().requestRenameSchema(schema, null);
                 }
             });
             contextMenu.add(rename);
@@ -212,6 +212,15 @@ public class SchemaContext implements DiagramContext {
                     }
                 });
                 contextMenu.add(remove);
+                
+                JMenuItem replicate = new JMenuItem(BuilderBundle.getString("replicateSchemaTitle"));
+                replicate.setMnemonic(BuilderBundle.getString("replicateSchemaMnemonic").charAt(0));
+                replicate.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        datasetTabSet.getSchemaTabSet().requestReplicateSchema(schema);
+                    }
+                });
+                contextMenu.add(replicate);
                 
                 JMenuItem addToGroup = new JMenuItem(BuilderBundle.getString("addToGroupTitle"));
                 addToGroup.setMnemonic(BuilderBundle.getString("addToGroupMnemonic").charAt(0));

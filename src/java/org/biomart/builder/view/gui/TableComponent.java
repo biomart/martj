@@ -107,6 +107,7 @@ public class TableComponent extends BoxShapedComponent {
                 } else {
                     setState(Boolean.TRUE);
                 }
+                getDiagram().recalculateDiagram();
             }
         });
         this.setState(Boolean.FALSE);
@@ -120,7 +121,6 @@ public class TableComponent extends BoxShapedComponent {
             if (this.getState()!=null && this.getState().equals(Boolean.TRUE)) this.remove(this.colsPanel);
             this.showHide.setText(BuilderBundle.getString("showColumnsButton"));
         }
-        this.validate();
         super.setState(state);
     }
     

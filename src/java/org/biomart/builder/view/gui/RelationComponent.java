@@ -37,6 +37,7 @@ import java.util.Collections;
 import java.util.Map;
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
+import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Relation.Cardinality;
 
@@ -45,7 +46,7 @@ import org.biomart.builder.model.Relation.Cardinality;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 16th May 2006
+ * @version 0.1.10, 17th May 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
@@ -112,8 +113,8 @@ public class RelationComponent extends JComponent implements DiagramComponent {
     /**
      * The keys we link.
      */
-    private KeyComponent primaryKey;
-    private KeyComponent foreignKey;
+    private Key primaryKey;
+    private Key foreignKey;
     
     private Object state;
     
@@ -121,7 +122,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
      * The constructor constructs an object around a given
      * object, and associates with a given display.
      */
-    public RelationComponent(Relation relation, Diagram diagram, KeyComponent primaryKey, KeyComponent foreignKey) {
+    public RelationComponent(Relation relation, Diagram diagram, Key primaryKey, Key foreignKey) {
         super();
         this.relation = relation;
         this.diagram = diagram;
@@ -161,14 +162,14 @@ public class RelationComponent extends JComponent implements DiagramComponent {
      * Retrieves the primary key component.
      */
     public KeyComponent getPrimaryKeyComponent() {
-        return this.primaryKey;
+        return (KeyComponent)this.diagram.getDiagramComponent(primaryKey);
     }
     
     /**
      * Retrieves the foreign key component.
      */
     public KeyComponent getForeignKeyComponent() {
-        return this.foreignKey;
+        return (KeyComponent)this.diagram.getDiagramComponent(foreignKey);
     }
     
     /**
@@ -237,7 +238,6 @@ public class RelationComponent extends JComponent implements DiagramComponent {
         if (evt.isPopupTrigger()) {
             // Build the basic menu.
             JPopupMenu contextMenu = this.getContextMenu();
-            if (contextMenu.getComponentCount()>0) contextMenu.addSeparator();
             // Extend.
             this.getDiagram().getDiagramContext().populateContextMenu(contextMenu, this.getObject());
             // Display.

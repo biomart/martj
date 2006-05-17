@@ -32,8 +32,6 @@ import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -51,7 +49,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Displays arbitrary objects linked in a radial form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 16th May 2006
+ * @version 0.1.14, 17th May 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
@@ -124,11 +122,10 @@ public abstract class Diagram extends JPanel {
             parent = parent.getParent();
         }
         Point compCentre = new Point(compBounds.x+(compBounds.width/2), compBounds.y+(compBounds.height/2));
-        Dimension diagSize = this.getSize();
         Dimension viewSize = viewport.getExtentSize();
-        // work out target view point = centre - half diag size, rounded to 0,0 or max offsets if necessary
-        int newViewPointX = Math.min(Math.max(0, compCentre.x - (viewSize.width/2)), diagSize.width - viewSize.width);
-        int newViewPointY = Math.min(Math.max(0, compCentre.y - (viewSize.height/2)), diagSize.height - viewSize.height);
+        // work out target view point = centre - half view size.
+        int newViewPointX = compCentre.x - (viewSize.width/2);
+        int newViewPointY = compCentre.y - (viewSize.height/2);
         viewport.setViewPosition(new Point(newViewPointX, newViewPointY));
     }
     
@@ -203,6 +200,9 @@ public abstract class Diagram extends JPanel {
     }
     
     public void recalculateDiagram() {
+        JViewport viewport = (JViewport)this.getParent();
+        Point viewPos = null;
+        if (viewport!=null) viewPos = viewport.getViewPosition();
         Map states = new HashMap();
         for (Iterator i = this.componentMap.keySet().iterator(); i.hasNext(); ) {
             Object object = i.next();
@@ -217,23 +217,20 @@ public abstract class Diagram extends JPanel {
             if (comp!=null) comp.setState(states.get(object));
             else i.remove();
         }
+        if (viewport!=null) viewport.setViewPosition(viewPos);
     }
     
     public abstract void doRecalculateDiagram();
     
-    public void redrawDiagramComponent(Object object) {
-        DiagramComponent comp = (DiagramComponent)this.componentMap.get(object);
-        if (comp==null) return; // May not exist.
-        for (Iterator i = comp.getSubComponents().keySet().iterator(); i.hasNext(); ) i.remove();
-        comp.recalculateDiagramComponent();
-        this.componentMap.putAll(comp.getSubComponents());
-        comp.updateAppearance();
-        ((JComponent)comp).repaint();
-    }
-    
-    public void redrawAllDiagramComponents() {
-        Collection comps = new ArrayList(this.componentMap.keySet());
-        for (Iterator i = comps.iterator(); i.hasNext(); ) this.redrawDiagramComponent(i.next());
+    public void repaintDiagram() {
+        JViewport viewport = (JViewport)this.getParent();
+        Point viewPos = null;
+        if (viewport!=null) viewPos = viewport.getViewPosition();
+        for (Iterator i = this.componentMap.values().iterator(); i.hasNext(); ) {
+            DiagramComponent comp = (DiagramComponent)i.next();
+            comp.updateAppearance();
+        }
+        if (viewport!=null) viewport.setViewPosition(viewPos);
     }
     
     /**

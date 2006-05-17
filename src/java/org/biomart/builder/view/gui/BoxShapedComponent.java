@@ -137,7 +137,6 @@ public abstract class BoxShapedComponent extends JPanel implements DiagramCompon
         if (evt.isPopupTrigger()) {
             // Build the basic menu.
             JPopupMenu contextMenu = this.getContextMenu();
-            if (contextMenu.getComponentCount()>0) contextMenu.addSeparator();
             // Extend.
             this.getDiagram().getDiagramContext().populateContextMenu(contextMenu, this.getObject());
             // Display.

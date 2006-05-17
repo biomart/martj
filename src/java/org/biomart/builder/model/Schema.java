@@ -27,13 +27,23 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
+import org.biomart.builder.model.Column.GenericColumn;
+import org.biomart.builder.model.Key.ForeignKey;
+import org.biomart.builder.model.Key.GenericForeignKey;
+import org.biomart.builder.model.Key.GenericPrimaryKey;
+import org.biomart.builder.model.Key.PrimaryKey;
+import org.biomart.builder.model.Relation.Cardinality;
+import org.biomart.builder.model.Relation.GenericRelation;
+import org.biomart.builder.model.Table.GenericTable;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
@@ -138,6 +148,10 @@ public interface Schema extends Comparable, DataLink {
     
     public boolean getKeyGuessing();
     
+    public Schema replicate(String newName);
+    
+    public void replicateContents(Schema targetSchema);
+    
     /**
      * The generic implementation should suffice as the ground for most
      * complex implementations. It keeps track of {@link Table}s it has already seen, and
@@ -164,14 +178,81 @@ public interface Schema extends Comparable, DataLink {
             // Remember the values.
             this.name = name;
         }
-    
-    public void setKeyGuessing(boolean keyguessing) {
-        this.keyguessing = keyguessing;
-    }
-    
-    public boolean getKeyGuessing() {
-        return this.keyguessing;
-    }
+        
+        public void replicateContents(Schema targetSchema) {
+            try {
+                targetSchema.getTables().clear();
+                Set relations = new HashSet();
+                // copy all tables
+                for (Iterator i = this.tables.values().iterator(); i.hasNext(); ) {
+                    Table table = (Table)i.next();
+                    Table newTable = new GenericTable(table.getName(), targetSchema);
+                    // copy all columns on the tables
+                    for (Iterator j = table.getColumns().iterator(); j.hasNext(); ) {
+                        Column col = (Column)j.next();
+                        Column newCol = new GenericColumn(col.getName(), newTable);
+                    }
+                    // copy all keys on the tables
+                    PrimaryKey pk = table.getPrimaryKey();
+                    if (pk!=null) {
+                        List columns = new ArrayList();
+                        for (Iterator k = pk.getColumnNames().iterator(); k.hasNext(); ) {
+                            columns.add(newTable.getColumnByName((String)k.next()));
+                        }
+                        PrimaryKey newPK = new GenericPrimaryKey(columns);
+                        newPK.setStatus(pk.getStatus());
+                        newTable.setPrimaryKey(newPK);
+                    }
+                    for (Iterator j = table.getForeignKeys().iterator(); j.hasNext(); ) {
+                        ForeignKey fk = (ForeignKey)j.next();
+                        List columns = new ArrayList();
+                        for (Iterator k = fk.getColumnNames().iterator(); k.hasNext(); ) {
+                            columns.add(newTable.getColumnByName((String)k.next()));
+                        }
+                        ForeignKey newFK = new GenericForeignKey(columns);
+                        newFK.setStatus(fk.getStatus());
+                        newTable.addForeignKey(newFK);
+                    }
+                    // remember the relations.
+                    relations.addAll(table.getRelations());
+                }
+                // copy all relations.
+                for (Iterator i = relations.iterator(); i.hasNext(); ) {
+                    Relation r = (Relation)i.next();
+                    PrimaryKey pk = r.getPrimaryKey();
+                    ForeignKey fk = r.getForeignKey();
+                    Cardinality card = r.getFKCardinality();
+                    PrimaryKey newPK = targetSchema.getTableByName(pk.getTable().getName()).getPrimaryKey();
+                    ForeignKey newFK = null;
+                    for (Iterator j = targetSchema.getTableByName(fk.getTable().getName()).getForeignKeys().iterator(); j.hasNext() && newFK==null; ) {
+                        ForeignKey candidate = (ForeignKey)j.next();
+                        if (candidate.getColumnNames().equals(fk.getColumnNames())) newFK = candidate;
+                    }
+                    Relation newRel;
+                    try {
+                        newRel = new GenericRelation(newPK, newFK, card);
+                        newRel.setStatus(r.getStatus());
+                    } catch (Exception e) {
+                        // Ignore. This can only happen if incorrect relations are copied across
+                        // which have different-arity keys at each end.
+                    }
+                }
+            } catch (Exception e) {
+                throw new AssertionError(e);
+            }
+        }
+        
+        public Schema replicate(String newName) {
+            return new GenericSchema(newName);
+        }
+        
+        public void setKeyGuessing(boolean keyguessing) {
+            this.keyguessing = keyguessing;
+        }
+        
+        public boolean getKeyGuessing() {
+            return this.keyguessing;
+        }
         
         /**
          * {@inheritDoc}

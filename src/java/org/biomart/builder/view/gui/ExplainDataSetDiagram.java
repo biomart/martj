@@ -36,7 +36,7 @@ import org.biomart.builder.model.Table;
  * Displays the contents of a {@link Schema} in graphical form.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 10th May 2006
+ * @version 0.1.4, 17th May 2006
  * @since 0.1
  */
 public class ExplainDataSetDiagram extends Diagram {
@@ -100,8 +100,8 @@ public class ExplainDataSetDiagram extends Diagram {
             RelationComponent relationComponent = new RelationComponent(
                     relation,
                     this,
-                    (KeyComponent)this.getDiagramComponent(relation.getPrimaryKey()),
-                    (KeyComponent)this.getDiagramComponent(relation.getForeignKey()));
+                    relation.getPrimaryKey(),
+                    relation.getForeignKey());
             this.addDiagramComponent(relationComponent);
         }
         // Delegate upwards.

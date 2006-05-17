@@ -57,7 +57,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Tools for working with the mart from a GUI or CLI.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 16th May 2006
+ * @version 0.1.10, 17th May 2006
  * @since 0.1
  */
 public class MartUtils {
@@ -70,10 +70,6 @@ public class MartUtils {
     
     public static void synchroniseMartDataSets(Mart mart) throws SQLException, BuilderException {
         mart.synchroniseDataSets();
-    }
-    
-    public static void synchroniseDataSet(DataSet dataset) throws SQLException, BuilderException {
-        dataset.synchronise();
     }
     
     public static void removeDataSetFromSchema(Mart mart, DataSet dataset) {
@@ -298,5 +294,11 @@ public class MartUtils {
     
     public static void changeOptimiserType(DataSet dataset, DataSetOptimiserType type) {
         dataset.setDataSetOptimiserType(type);
+    }
+    
+    public static Schema replicateSchema(Mart mart, Schema schema, String newName) throws SQLException, BuilderException {
+        Schema newSchema = schema.replicate(newName);
+        mart.addSchema(newSchema);
+        return newSchema;
     }
 }

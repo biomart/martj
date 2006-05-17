@@ -107,6 +107,17 @@ public interface SchemaGroup extends Schema {
             super(name);
         }
         
+        public Schema replicate(String newName) {
+            SchemaGroup newGroup = new GenericSchemaGroup(newName);
+            try {
+                for (Iterator i = this.schemas.iterator(); i.hasNext(); ) newGroup.addSchema((Schema)i.next());
+            } catch (Exception e) {
+                throw new AssertionError(e);
+            }        
+            this.replicateContents(newGroup);
+            return newGroup;
+        }
+        
         /**
          * {@inheritDoc}
          * <p>The partitioned provider simply delegates this call to each of its members in turn.

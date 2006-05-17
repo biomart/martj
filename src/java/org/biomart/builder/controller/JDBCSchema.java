@@ -57,6 +57,7 @@ import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.GenericRelation;
+import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Table.GenericTable;
 import org.biomart.builder.model.Schema.GenericSchema;
@@ -71,7 +72,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * the primary key column to which they refer, optionally appended with '_key'.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 15th May 2006
+ * @version 0.1.8, 17th May 2006
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -130,6 +131,12 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
         this.username = username;
         this.password = password;
         this.setKeyGuessing(keyGuessing);
+    }
+    
+    public Schema replicate(String newName) {
+        Schema newSchema = new JDBCSchema(this.driverClassLocation, this.driverClassName, this.url, this.username, this.password, newName, this.getKeyGuessing());
+        this.replicateContents(newSchema);
+        return newSchema;
     }
     
     /**
@@ -476,9 +483,15 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
             // of this it will contain a set of relations that no longer exist and should be dropped.
             List relationsToBeDropped = new ArrayList(existingPK.getRelations());
             
+            Column firstPKCol = (Column)existingPK.getColumns().toArray(new Column[0])[0];
+            String firstPKColName = firstPKCol.getName();
+            int idPrefixIndex = firstPKColName.indexOf(BuilderBundle.getString("primaryKeySuffix"));
+            if (idPrefixIndex>=0) firstPKColName = firstPKColName.substring(0, idPrefixIndex);
+            boolean isProbablyMainPK = firstPKColName.equals(existingTable.getName());
+            
             // Inner iterator runs over every table looking for columns with the same
             // name or with '_key' appended.
-            for (Iterator l = this.tables.values().iterator(); l.hasNext(); ) {
+            if (isProbablyMainPK) for (Iterator l = this.tables.values().iterator(); l.hasNext(); ) {
                 Table fkTable = (Table)l.next();
                 if (fkTable.equals(existingTable)) continue; // Don't link to ourselves!
                 // Check all the PK columns to find FK candidate equivalents in this fkTable.
