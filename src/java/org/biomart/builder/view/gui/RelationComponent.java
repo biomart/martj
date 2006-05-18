@@ -46,7 +46,7 @@ import org.biomart.builder.model.Relation.Cardinality;
  * are provided for sorting them, as they are not comparable within themselves.
  *
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 17th May 2006
+ * @version 0.1.11, 18th May 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
@@ -129,6 +129,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
         this.primaryKey = primaryKey;
         this.foreignKey = foreignKey;
         this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
+        this.recalculateDiagramComponent();
         this.updateAppearance();
     }
     
@@ -140,14 +141,13 @@ public class RelationComponent extends JComponent implements DiagramComponent {
      * Updates the tooltip.
      */
     public void updateAppearance() {
-        this.setToolTipText(this.relation.getName());
         DiagramContext mod = this.getDiagram().getDiagramContext();
         if (mod != null) mod.customiseAppearance(this, this.getObject());
         this.setBackground(this.getForeground());
     }
     
     public void recalculateDiagramComponent() {
-        // Handled by paint. Need do nothing here.
+        this.setToolTipText(this.relation.getName());
     }
     
     public Object getState() {

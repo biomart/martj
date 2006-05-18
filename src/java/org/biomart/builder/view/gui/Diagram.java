@@ -49,7 +49,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * Displays arbitrary objects linked in a radial form.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 17th May 2006
+ * @version 0.1.15, 18th May 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
@@ -223,14 +223,10 @@ public abstract class Diagram extends JPanel {
     public abstract void doRecalculateDiagram();
     
     public void repaintDiagram() {
-        JViewport viewport = (JViewport)this.getParent();
-        Point viewPos = null;
-        if (viewport!=null) viewPos = viewport.getViewPosition();
         for (Iterator i = this.componentMap.values().iterator(); i.hasNext(); ) {
             DiagramComponent comp = (DiagramComponent)i.next();
             comp.updateAppearance();
         }
-        if (viewport!=null) viewport.setViewPosition(viewPos);
     }
     
     /**
