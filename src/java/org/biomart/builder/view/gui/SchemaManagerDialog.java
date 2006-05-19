@@ -40,7 +40,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.AncestorListener;
 import org.biomart.builder.controller.JDBCSchema;
-import org.biomart.builder.controller.MartUtils;
+import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.resources.BuilderBundle;
 
@@ -171,7 +171,7 @@ public class SchemaManagerDialog extends JDialog {
                 if (testSchema != null) {
                     boolean passedTest = false;
                     try {
-                        passedTest = MartUtils.testSchema(testSchema);
+                        passedTest = MartBuilderUtils.testSchema(testSchema);
                     } catch (Throwable t) {
                         passedTest = false;
                         schemaTabSet.getDataSetTabSet().getMartTabSet().getMartBuilder().showStackTrace(t);

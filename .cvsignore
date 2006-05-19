@@ -11,3 +11,5 @@ oraclemart.sqls
 jre
 spy.log
 oracle.sql
+.settings
+.externalToolBuilders

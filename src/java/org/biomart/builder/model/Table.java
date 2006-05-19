@@ -32,288 +32,256 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
-import org.biomart.builder.model.Column.GenericColumn;
+import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
- * <p>The {@link Table} interface provides the basic idea of what constitutes a database
- * table or an XML document entity. It has an optional {@link PrimaryKey}, zero or more
- * {@link ForeignKey}s, and one or more {@link Column}s.</p>
+ * <p>
+ * The table interface provides the basic idea of what constitutes a database
+ * table or an XML document entity. It has an optional primary key, zero or more
+ * foreign keys, and one or more columns.
  * <p>The {@link GenericTable} class is provided as a template from which to build up
- * more complex implementations. It is able to keep track of {@link Key}s and {@link Column}s
- * but it does not provide any methods that process or analyse these.</p>
+ * more complex implementations. It is able to keep track of keys and columns
+ * but it does not provide any methods that process or analyse these.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 16th May 2006
+ * @version 0.1.11, 19th May 2006
  * @since 0.1
  */
 public interface Table extends Comparable {
     /**
      * Returns the name of this table.
-     * @return the name of this {@link Table}.
+     * @return the name of this table.
      */
     public String getName();
     
     /**
-     * Returns the {@link Schema} for this table.
+     * Returns the schema for this table.
      *
-     * @return the {@link Schema} for this {@link Table}.
+     * @return the schema for this table.
      */
     public Schema getSchema();
     
     /**
-     * Returns a reference to the {@link PrimaryKey} of this table. It may
-     * be null, indicating that the {@link Table} has no {@link PrimaryKey}.
-     * @return the {@link PrimaryKey} of this {@link Table}.
+     * Returns a reference to the primary key of this table. It may
+     * be null, indicating that the table has no primary key.
+     * @return the primary key of this table.
      */
     public PrimaryKey getPrimaryKey();
     
     /**
-     * Sets the {@link PrimaryKey} of this table. It may
-     * be null, indicating that the {@link Table} has no {@link PrimaryKey}.
-     * @param primaryKey the new {@link PrimaryKey} of this {@link Table}.
-     * @throws AssociationException if the {@link Table} parameter of the {@link ForeignKey}
-     * does not match.
+     * Sets the primary key of this table. It may
+     * be null, indicating that the table has no primary key.
+     * @param primaryKey the new primary key of this table.
+     * @throws AssociationException if the table parameter of the foreign key
+     * does not match this table.
      */
     public void setPrimaryKey(PrimaryKey primaryKey) throws AssociationException;
     
     /**
-     * Returns a set of the {@link ForeignKey}s of this table. It may
-     * be empty, indicating that the {@link Table} has no {@link ForeignKey}s.
+     * Returns a set of the foreign keys of this table. It may
+     * be empty, indicating that the table has no foreign keys.
      * It will never return null.
-     * @return the set of {@link ForeignKey}s for this {@link Table}.
+     * @return the set of foreign keys for this table.
      */
     public Collection getForeignKeys();
     
     /**
-     * Adds a {@link ForeignKey} to this table. It may
-     * not be null. The {@link ForeignKey} must refer to this {@link Table} else
-     * an {@link AssociationException} will be thrown. If it already exists, nothing
-     * will happen and it will be quietly ignored.
-     * @param foreignKey the new {@link ForeignKey} to add to this {@link Table}.
-     * @throws AssociationException if the {@link Table} parameter of the {@link ForeignKey}
-     * does not match.
+     * Adds a foreign key to this table. It may
+     * not be null. The foreign key must refer to this table else
+     * an exception will be thrown. 
+          * @param foreignKey the new foreign key to add to this table.
+     * @throws AssociationException if the table parameter of the foreign key
+     * does not match this table.
      */
     public void addForeignKey(ForeignKey foreignKey) throws AssociationException;
     
     /**
-     * Removes a {@link ForeignKey} from this table. It may
-     * not be null. If it doesn't exist, nothing
-     * will happen and it will be quietly ignored.
-     * @param foreignKey the new {@link ForeignKey} to add to this {@link Table}.
+     * Removes a foreign key from this table. 
+     * @param foreignKey the new foreign key to remove from this table.
      */
     public void removeForeignKey(ForeignKey foreignKey);
     
     /**
-     * Returns a set of the {@link Key}s on all {@link Column}s in this table. It may
-     * be empty, indicating that the {@link Table} has no {@link Key}s.
+     * Returns a set of the keys on all columns in this table. It may
+     * be empty, indicating that the table has no keys.
      * It will never return null.
-     * @return the set of {@link Key}s for this {@link Table}.
+     * @return the set of keys for this table.
      */
     public Collection getKeys();
     
     /**
-     * Returns a set of the {@link Relation}s on all {@link Key}s in this table. It may
-     * be empty, indicating that the {@link Table} has no {@link Relation}s.
+     * Returns a set of the relations on all keys in this table. It may
+     * be empty, indicating that the table has no relations.
      * It will never return null.
-     * @return the set of {@link Relation}s for this {@link Table}.
+     * @return the set of relations for this table.
      */
     public Collection getRelations();
-    
+
+        /**
+     * Returns a set of the relations on all keys in this table that refer
+     * to other keys in the same schema as this table. It may
+     * be empty, indicating that the table has no internal relations.
+     * It will never return null.
+     * @return the set of internal relations for this table.
+     */
     public Collection getInternalRelations();
     
     /**
-     * Returns a set of the {@link Column}s of this table. It may
-     * be empty, indicating that the {@link Table} has no {@link Column}s,
+     * Returns a set of the columns of this table. It may
+     * be empty, indicating that the table has no columns,
      * however this is highly unlikely! It will never return null.
-     * @return the set of {@link Column}s for this {@link Table}.
+     * @return the set of columns for this table.
      */
     public Collection getColumns();
     
     /**
-     * Attempts to locate a {@link Column} in this {@link Table} by name. If
+     * Attempts to locate a column in this table by name. If
      * it finds it, it returns it. If it doesn't, it returns null.
-     * @param name the name of the {@link Column} to look up.
-     * @return the corresponding {@link Column}, or null if it couldn't be found.
+     * @param name the name of the column to look up.
+     * @return the corresponding column, or null if it couldn't be found.
      */
     public Column getColumnByName(String name);
     
     /**
-     * Attemps to add a {@link Column} to this table. The {@link Column} will already
-     * have had it's {@link Table} parameter set to match, otherwise an
-     * {@link IllegalArgumentException} will be thrown. That exception will also get thrown
-     * if the {@link Column} has the same name as an existing one on this table.
-     * @param column the {@link Column} to add.
-     * @throws AlreadyExistsException if the {@link Column} name has already been used on
-     * this {@link Table}.
-     * @throws AssociationException if the {@link Table} parameter of the {@link Column}
-     * does not match.
+     * Attempts to add a column to this table. The column will already
+     * have had it's table parameter set to match, otherwise an
+     * exception will be thrown. An exception will also get thrown
+     * if the column has the same name as an existing one on this table.
+     * @param column the column to add.
+     * @throws AlreadyExistsException if the column name has already been used on
+     * this table.
+     * @throws AssociationException if the table parameter of the column
+     * does not match this table.
      */
     public void addColumn(Column column) throws AlreadyExistsException, AssociationException;
-    
+        
     /**
-     * Convenience method that creates and adds a {@link Column} to this {@link Table}.
-     * If a {@link Column} with the same name already exists an exception will be thrown.
-     * @param name the name of the {@link Column} to create and add.
-     * @throws AlreadyExistsException if a {@link Column} with the same name already
-     * exists in this {@link Table}.
-     */
-    public void createColumn(String name) throws AlreadyExistsException;
-    
-    /**
-     * Attemps to remove a {@link Column} from this table. If the {@link Column} does not exist on
-     * this table the operation will be quietly ignored. Any {@link Key} involving that {@link Column}
-     * will also be dropped along with all associated {@link Relation}s.
-     * @param column the {@link Column} to remove.
+     * Attempts to remove a column from this table. If the column does not exist on
+     * this table the operation will be quietly ignored. Any key involving that column
+     * will also be dropped along with all associated relations.
+     * @param column the column to remove.
      */
     public void removeColumn(Column column);
     
+    /**
+     * Attempts to rename a column. If the new name has already been taken by another
+     * column, an exception is thrown. The rename does not affect the column itself,
+     * only the representation of the column within this table. If the names are
+     * the same, nothing happens.
+     * @param oldName the old name of the column.
+     * @param newName the new name of the column.
+     * @throws AlreadyExistsException if the new name has already been used elsewhere.
+     */
     public void changeColumnMapKey(String oldName, String newName) throws AlreadyExistsException;
     
     /**
-     * Attemps to remove all columns on a table so that it can safely be dropped.
+     * Drops all columns on a table so that it can safely be dropped itself.
      */
     public void destroy();
     
     /**
-     * The generic implementation of {@link Table} provides basic methods for working with
-     * database or XML document tables, including the ability to add a new {@link Column} and
-     * check for conflicts with existing {@link Column}s.
+     * The generic implementation of table provides basic methods for working with
+     * database or XML document tables, including the ability to add a new column and
+     * check for conflicts with existing columns.
      */
     public class GenericTable implements Table {
-        /**
-         * Internal reference to the name of this {@link Table}.
-         */
-        protected String name;
-        
-        /**
-         * Internal reference to the provider of this {@link Table}.
-         */
         private final Schema schema;
         
-        /**
-         * Internal reference to the {@link PrimaryKey} of this {@link Table}.
-         */
         private PrimaryKey primaryKey;
         
-        /**
-         * Internal reference to the {@link ForeignKey}s of this {@link Table}.
-         */
         private final List foreignKeys = new ArrayList();
         
-        /**
-         * Internal reference to the {@link Column}s of this {@link Table}.
-         */
         private final Map columns = new TreeMap();
         
+        private String name;
+        
         /**
-         * The constructor sets up an empty {@link Table} representation with the given name
-         * that lives within the given {@link Schema}.
-         *
+         * The constructor sets up an empty table representation with the given name
+         * that lives within the given schema.
          *
          * @param name the table name.
-         * @param schema the {@link TSchema this {@link Table} is associated with.
-         * @throws AlreadyExistsException if a table with that name already exists in the provider.
+         * @param schema the schema this table is associated with.
+         * @throws AlreadyExistsException if a table with that name already exists in the schema.
          */
         public GenericTable(String name, Schema schema) throws AlreadyExistsException {
             // Remember the values.
             this.name = name;
             this.schema = schema;
-            // Add it to our provider.
+            
+            // Add it to the schema.
             try {
                 schema.addTable(this);
             } catch (AssociationException e) {
-                AssertionError ae = new AssertionError(BuilderBundle.getString("schemaMismatch"));
-                ae.initCause(e);
-                throw ae;
+            	// Should never happen, as it is only thrown if schema!=schema.
+            	throw new MartBuilderInternalError(e);
             }
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public String getName() {
             return this.name;
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public Schema getSchema() {
             return this.schema;
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public PrimaryKey getPrimaryKey() {
             return this.primaryKey;
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public void setPrimaryKey(PrimaryKey primaryKey) throws AssociationException {
-            // Sanity check.
+            // Check the key lives in this table first.
             if (primaryKey != null && !primaryKey.getTable().equals(this))
                 throw new AssociationException(BuilderBundle.getString("pkTableMismatch"));
+
+            // If the key is the same, do nothing.
+            if (primaryKey!=null && this.primaryKey!=null && primaryKey.equals(this.primaryKey)) return;
+            
             // Ensure nobody points to the old primary key
             if (this.primaryKey != null) {
-                // Must use copy else get concurrent-modification problems.
+                // Destroy relations on the old primary key.
+                // Must use a copy else get concurrent-modification problems.
                 List relations = new ArrayList(this.primaryKey.getRelations());
                 for (Iterator i = relations.iterator(); i.hasNext(); ) {
                     Relation r = (Relation)i.next();
                     r.destroy();
                 }
             }
+            
             // Update our primary key to the new one.
             this.primaryKey = primaryKey;
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public Collection getForeignKeys() {
             return this.foreignKeys;
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public void addForeignKey(ForeignKey foreignKey) throws AssociationException {
-            // Sanity check.
+            // Check that the key lives in this table first.
             if (this.foreignKeys.contains(foreignKey))
                 throw new AssociationException(BuilderBundle.getString("fkAlreadyExists"));
-            // Do it.
+            
+            // Add the key.
             this.foreignKeys.add(foreignKey);
         }
-        
-        /**
-         * {@inheritDoc}
-         */
+
         public void removeForeignKey(ForeignKey foreignKey) {
-            // Do it.
             this.foreignKeys.remove(foreignKey);
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public Collection getKeys() {
-            List allKeys = new ArrayList();
+            List allKeys = new ArrayList(this.foreignKeys);
             if (this.primaryKey!=null) allKeys.add(this.primaryKey);
-            allKeys.addAll(this.foreignKeys);
             return allKeys;
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public Collection getRelations() {
-            Set allRels = new TreeSet(); // enforce uniqueness
+            Set allRels = new HashSet(); // enforce uniqueness
             for (Iterator i = this.getKeys().iterator(); i.hasNext(); ) {
                 Key k = (Key)i.next();
                 allRels.addAll(k.getRelations());
@@ -321,69 +289,52 @@ public interface Table extends Comparable {
             return allRels;
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public Collection getInternalRelations() {
-            Set relations = new TreeSet(); // enforce uniqueness
+            Set relations = new HashSet(); // enforce uniqueness
+            
+            // Try the primary key relations first.
             if (this.getPrimaryKey()!=null) for (Iterator j = this.getPrimaryKey().getRelations().iterator(); j.hasNext(); ) {
+            	// Add all where the FK is the same schema as us.
                 Relation relation = (Relation)j.next();
                 if (relation.getForeignKey().getTable().getSchema().equals(this.getSchema())) relations.add(relation);
             }
+            
+            // Now do the FK relations.
             for (Iterator i = this.getForeignKeys().iterator(); i.hasNext(); ) {
                 for (Iterator j = ((Key)i.next()).getRelations().iterator(); j.hasNext(); ) {
+                	// Add all where the PK is the same schema as us.
                     Relation relation = (Relation)j.next();
                     if (relation.getPrimaryKey().getTable().getSchema().equals(this.getSchema())) relations.add(relation);
                 }
             }
+            
+            // Return the complete set.
             return relations;
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public Collection getColumns() {
             return this.columns.values();
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public Column getColumnByName(String name) {
-            // Do we know this column?
-            if (this.columns.containsKey(name)) return (Column)this.columns.get(name);
-            // Default case.
-            return null;
+return (Column)this.columns.get(name);
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public void addColumn(Column column) throws AlreadyExistsException, AssociationException {
-            // Sanity check.
+        	// Refuse to do it if the column belongs to some other table.
             if (column.getTable() != this)
                 throw new AssociationException(BuilderBundle.getString("columnTableMismatch"));
-            // Do the work.
+            
+            // Check there is no other column on this table with the same name.
             String name = column.getName();
             if (this.columns.containsKey(name))
                 throw new AlreadyExistsException(BuilderBundle.getString("columnExists"), name);
+            
+            // Add it.
             this.columns.put(name,column);
         }
         
-        /**
-         * {@inheritDoc}
-         */
-        public void createColumn(String name) throws AlreadyExistsException {
-            new GenericColumn(name, this);
-            // By creating it we've already added it to ourselves! (Based on GenericColumn behaviour)
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
         public void removeColumn(Column column) {
-            // Do we know this column?
-            if (!this.columns.containsKey(column.getName())) return;
             // Remove all keys involving this column
             for (Iterator i = this.getKeys().iterator(); i.hasNext(); ) {
                 Key k = (Key)i.next();
@@ -392,56 +343,49 @@ public interface Table extends Comparable {
                     i.remove(); // to make sure
                 }
             }
+
             // Remove the column itself
             this.columns.remove(column.getName());
         }
         
         public void changeColumnMapKey(String oldName, String newName) throws AlreadyExistsException {
+        	// If the names are the same, do nothing.
+        	if (oldName.equals(newName)) return;
+        	
+        	// Refuse to do it if the new name has been used already.
             if (this.columns.containsKey(newName))
                 throw new AlreadyExistsException(BuilderBundle.getString("columnExists"), newName);
+            
+            // Update our mapping but don't rename the columns themselves.
             Column col = (Column)this.columns.get(oldName);
             this.columns.put(newName, col);
             this.columns.remove(oldName);
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public void destroy() {
-            Set allCols = new HashSet(this.columns.values());
             // Remove each column we have. This will recursively cause
             // keys etc. to be removed.
+        	// Must use a copy else we'll get concurrent modification problems.
+            Set allCols = new HashSet(this.columns.values());
             for (Iterator i = allCols.iterator(); i.hasNext(); ) {
                 Column c = (Column)i.next();
                 this.removeColumn(c);
             }
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public String toString() {
             return this.schema.toString() + ":" + this.getName();
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public int hashCode() {
             return this.toString().hashCode();
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public int compareTo(Object o) throws ClassCastException {
             Table t = (Table)o;
             return this.toString().compareTo(t.toString());
         }
         
-        /**
-         * {@inheritDoc}
-         */
         public boolean equals(Object o) {
             if (o == null || !(o instanceof Table))
                 return false;

@@ -52,7 +52,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
 import org.biomart.builder.controller.JDBCSchema;
-import org.biomart.builder.controller.MartUtils;
+import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.resources.BuilderBundle;
@@ -355,7 +355,7 @@ public class JDBCConnectionPanel extends ConnectionPanel implements ActionListen
                 String url = this.jdbcURL.getText();
                 String username = this.username.getText();
                 String password = new String(this.password.getPassword());
-                JDBCSchema schema = MartUtils.createJDBCSchema(
+                JDBCSchema schema = MartBuilderUtils.createJDBCSchema(
                         driverClassLocation == null ? null : new File(driverClassLocation),
                         driverClassName,
                         url,

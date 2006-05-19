@@ -19,37 +19,55 @@
 package org.biomart.builder.exceptions;
 
 /**
- * This refers to exceptions where something has failed a validation test, eg.
- * incorrect input.
+ * This is a serious internal error.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 28th April 2006
+ * @version 0.1.1, 19th May 2006
  * @since 0.1
  */
-public class ValidationException extends Exception {
+public class MartBuilderInternalError extends Error {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * Constructs an instance of <tt>ValidationException</tt> with the
+	 * Creates a new instance of <tt>MartBuilderInternalError</tt> without
+	 * detail message.
+	 */
+	public MartBuilderInternalError() {
+		super();
+	}
+
+	/**
+	 * Constructs an instance of <tt>MartBuilderInternalError</tt> with the
 	 * specified detail message.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 */
-	public ValidationException(String msg) {
+	public MartBuilderInternalError(String msg) {
 		super(msg);
 	}
 
 	/**
-	 * Constructs an instance of <tt>ValidationException</tt> with the
-	 * specified detail message and initial cause.
+	 * Constructs an instance of <tt>MartBuilderInternalError</tt> with the
+	 * specified detail message and cause.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 * @param t
-	 *            the initial cause.
+	 *            the underlying cause.
 	 */
-	public ValidationException(String msg, Throwable t) {
+	public MartBuilderInternalError(String msg, Throwable t) {
 		super(msg, t);
+	}
+
+	/**
+	 * Constructs an instance of <tt>MartBuilderInternalError</tt> with the
+	 * specified cause.
+	 * 
+	 * @param t
+	 *            the underlying cause.
+	 */
+	public MartBuilderInternalError(Throwable t) {
+		super(t);
 	}
 }
