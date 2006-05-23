@@ -1,25 +1,19 @@
 /*
- * KeyComponent.java
- *
- * Created on 19 April 2006, 15:36
- */
-
-/*
-        Copyright (C) 2006 EBI
+ Copyright (C) 2006 EBI
  
-        This library is free software; you can redistribute it and/or
-        modify it under the terms of the GNU Lesser General Public
-        License as published by the Free Software Foundation; either
-        version 2.1 of the License, or (at your option) any later version.
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
  
-        This library is distributed in the hope that it will be useful,
-        but WITHOUT ANY WARRANTY; without even the itmplied warranty of
-        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-        Lesser General Public License for more details.
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the itmplied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
  
-        You should have received a copy of the GNU Lesser General Public
-        License along with this library; if not, write to the Free Software
-        Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package org.biomart.builder.view.gui;
@@ -27,93 +21,111 @@ package org.biomart.builder.view.gui;
 import java.awt.Color;
 import java.awt.Font;
 import java.util.Iterator;
+
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.TransferHandler;
+
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Key.PrimaryKey;
 
 /**
- * An element that can be drawn on a Diagram. Two Comparators
- * are provided for sorting them, as they are not comparable within themselves.
- *
+ * Represents a key by listing out in a set of labels each column in the key.
+ * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.7, 16th May 2006
  * @since 0.1
  */
 public class KeyComponent extends BoxShapedComponent {
-    /**
-     * Constant referring to normal relation colour.
-     */
-    public static final Color NORMAL_COLOUR = Color.DARK_GRAY;
-    
-    /**
-     * Constant referring to faded relation colour.
-     */
-    public static final Color MASKED_COLOUR = Color.LIGHT_GRAY;
-    
-    /**
-     * Constant referring to faded relation colour.
-     */
-    public static final Color INCORRECT_COLOUR = Color.RED;
-    
-    /**
-     * Constant referring to handmade relation colour.
-     */
-    public static final Color HANDMADE_COLOUR = Color.GREEN;
-    /**
-     * The component representing our parent box.
-     */
-    private BoxShapedComponent parentComponent;
-    
-    /**
-     * The constructor constructs an object around a given
-     * object, and associates with a given display.
-     */
-    public KeyComponent(Key key, Diagram diagram, BoxShapedComponent parentComponent) {
-        super(key, diagram);
-        this.parentComponent = parentComponent;
-        this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-        this.recalculateDiagramComponent();
-        this.setTransferHandler(new TransferHandler("draggedKey"));
-    }
-    
-    public void recalculateDiagramComponent() {
-        this.removeAll();
-        Key key = this.getKey();
-        // Create the border and set up the colors and fonts.
-        if (key instanceof PrimaryKey) this.setBackground(Color.CYAN);
-        else this.setBackground(Color.GREEN);
-        // Add the label for each column.
-        for (Iterator i = key.getColumns().iterator(); i.hasNext(); ) {
-            JLabel label = new JLabel(((Column)i.next()).getName());
-            label.setFont(Font.decode("Serif-ITALIC-10"));
-            this.add(label);
-        }
-    }
-    
-    /**
-     * Gets our table.
-     */
-    private Key getKey() {
-        return (Key)this.getObject();
-    }
-    
-    /**
-     * Gets our parent component.
-     */
-    public BoxShapedComponent getParentComponent() {
-        return this.parentComponent;
-    }
-    
-    public Key getDraggedKey() {
-        return this.getKey();
-    }
-    
-    public void setDraggedKey(Key key) {
-        if (!key.equals(this)) {
-            this.getDiagram().getDataSetTabSet().getSchemaTabSet().requestCreateRelation(key, this.getKey());
-        }
-    }
+	private static final long serialVersionUID = 1;
+
+	/**
+	 * Constant referring to normal key colour.
+	 */
+	public static final Color NORMAL_COLOUR = Color.DARK_GRAY;
+
+	/**
+	 * Constant referring to masked key colour.
+	 */
+	public static final Color MASKED_COLOUR = Color.LIGHT_GRAY;
+
+	/**
+	 * Constant referring to incorrect key colour.
+	 */
+	public static final Color INCORRECT_COLOUR = Color.RED;
+
+	/**
+	 * Constant referring to handmade key colour.
+	 */
+	public static final Color HANDMADE_COLOUR = Color.GREEN;
+
+	/**
+	 * The constructor constructs a key component around a given key object, and
+	 * associates it with the given display.
+	 * 
+	 * @param key
+	 *            the key to represent.
+	 * @param diagram
+	 *            the diagram to draw the key on.
+	 */
+	public KeyComponent(Key key, Diagram diagram) {
+		super(key, diagram);
+
+		// Keys lay out their columns vertically.
+		this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+
+		// Calculate the component layout.
+		this.recalculateDiagramComponent();
+
+		// Mark ourselves as handling 'draggedKey' events, for
+		// drag-and-drop capabilities.
+		this.setTransferHandler(new TransferHandler("draggedKey"));
+	}
+
+	public void recalculateDiagramComponent() {
+		// Removes all columns.
+		this.removeAll();
+
+		// Create the background colour.
+		if (this.getKey() instanceof PrimaryKey)
+			this.setBackground(Color.CYAN);
+		else
+			this.setBackground(Color.GREEN);
+
+		// Add the labels for each column.
+		for (Iterator i = this.getKey().getColumns().iterator(); i.hasNext();) {
+			JLabel label = new JLabel(((Column) i.next()).getName());
+			label.setFont(Font.decode("Serif-ITALIC-10"));
+			this.add(label);
+		}
+	}
+
+	private Key getKey() {
+		return (Key) this.getObject();
+	}
+
+	/**
+	 * For drag-and-drop, this returns the object that will be dropped onto the
+	 * target when drag-and-drop starts from this key.
+	 * 
+	 * @return the key the user 'picked up' with the mouse.
+	 */
+	public Key getDraggedKey() {
+		return this.getKey();
+	}
+
+	/**
+	 * For drag-and-drop, this receives an object that has been dragged from
+	 * another key, and creates a 1:M relation between the two.
+	 * 
+	 * @param key
+	 *            the key the user dropped on us with the mouse.
+	 */
+	public void setDraggedKey(Key key) {
+		// Refuse to do it to ourselves.
+		if (!key.equals(this))
+			this.getDiagram().getDataSetTabSet().getSchemaTabSet()
+					.requestCreateRelation(key, this.getKey());
+	}
 }

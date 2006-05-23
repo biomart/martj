@@ -117,7 +117,7 @@ public class MartBuilderUtils {
 	 * @param dataset
 	 *            the dataset to drop.
 	 */
-	public static void removeDataSetFromSchema(Mart mart, DataSet dataset) {
+	public static void removeDataSetFromMart(Mart mart, DataSet dataset) {
 		mart.removeDataSet(dataset);
 	}
 

@@ -1,25 +1,19 @@
 /*
- * SchemaManagerDialog.java
- *
- * Created on 25 April 2006, 16:09
- */
-
-/*
-        Copyright (C) 2006 EBI
+ Copyright (C) 2006 EBI
  
-        This library is free software; you can redistribute it and/or
-        modify it under the terms of the GNU Lesser General Public
-        License as published by the Free Software Foundation; either
-        version 2.1 of the License, or (at your option) any later version.
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
  
-        This library is distributed in the hope that it will be useful,
-        but WITHOUT ANY WARRANTY; without even the itmplied warranty of
-        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-        Lesser General Public License for more details.
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the itmplied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
  
-        You should have received a copy of the GNU Lesser General Public
-        License along with this library; if not, write to the Free Software
-        Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package org.biomart.builder.view.gui;
@@ -33,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -42,6 +37,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+
+import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.UniqueValues;
@@ -49,280 +46,373 @@ import org.biomart.builder.model.DataSet.PartitionedColumnType.ValueCollection;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
- * Construct a new table provider based on user input.
+ * This dialog asks users what kind of partitioning they want to set up on a
+ * column. According to the type they select, it asks other questions, such as
+ * what values to use.
+ * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.1, 12th May 2006
  * @since 0.1
  */
 public class PartitionColumnDialog extends JDialog {
-    private DataSetTabSet datasetTabSet;
-    
-    /**
-     * The partition type we created.
-     */
-    private PartitionedColumnType partitionType;
-    
-    /**
-     * The dialog fields.
-     */
-    private JComboBox type;
-    private JTextField singleValue;
-    private JTextArea multiValue;
-    private JButton cancel;
-    private JButton execute;
-    private JCheckBox nullable;
-    
-    /**
-     * Creates a new instance of SchemaManagerDialog.
-     */
-    private PartitionColumnDialog(final DataSetTabSet datasetTabSet, String executeButtonText, final PartitionedColumnType template) {
-        super(datasetTabSet.getMartTabSet().getMartBuilder(),
-                BuilderBundle.getString("partitionColumnDialogTitle"),
-                true);
-        this.datasetTabSet = datasetTabSet;
-        
-        // create dialog panel
-        GridBagLayout gridBag = new GridBagLayout();
-        final JPanel content = new JPanel(gridBag);
-        this.setContentPane(content);
-        
-        // create label constraints
-        GridBagConstraints labelConstraints = new GridBagConstraints();
-        labelConstraints.gridwidth = GridBagConstraints.RELATIVE;
-        labelConstraints.fill = GridBagConstraints.HORIZONTAL;
-        labelConstraints.anchor = GridBagConstraints.LINE_END;
-        labelConstraints.insets = new Insets(0,2,0,0);
-        // create field constraints
-        GridBagConstraints fieldConstraints = new GridBagConstraints();
-        fieldConstraints.gridwidth = GridBagConstraints.REMAINDER;
-        fieldConstraints.fill = GridBagConstraints.NONE;
-        fieldConstraints.anchor = GridBagConstraints.LINE_START;
-        fieldConstraints.insets = new Insets(0,1,0,2);
-        // create last row label constraints
-        GridBagConstraints labelLastRowConstraints = (GridBagConstraints)labelConstraints.clone();
-        labelLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
-        // create last row field constraints
-        GridBagConstraints fieldLastRowConstraints = (GridBagConstraints)fieldConstraints.clone();
-        fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
-        
-        // create fields in dialog
-        final JLabel valueLabel = new JLabel(BuilderBundle.getString("valuesLabel"));
-        this.singleValue = new JTextField(30);
-        this.multiValue = new JTextArea(5,30);
-        this.type = new JComboBox(new String[]{
-            BuilderBundle.getString("singlePartitionOption"),
-            BuilderBundle.getString("collectionPartitionOption"),
-            BuilderBundle.getString("uniquePartitionOption")
-        });
-        this.nullable = new JCheckBox();
-        final JDialog us = this;
-        this.type.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                String selectedItem = (String)type.getSelectedItem();
-                if (selectedItem.equals(BuilderBundle.getString("singlePartitionOption"))) {
-                    valueLabel.setVisible(true);
-                    singleValue.setVisible(true);
-                    multiValue.setVisible(false);
-                    nullable.setText(BuilderBundle.getString("useNullLabel"));
-                    nullable.setVisible(true);
-                } else if (selectedItem.equals(BuilderBundle.getString("collectionPartitionOption"))) {
-                    valueLabel.setVisible(true);
-                    singleValue.setVisible(false);
-                    multiValue.setVisible(true);
-                    nullable.setText(BuilderBundle.getString("includeNullLabel"));
-                    nullable.setVisible(true);
-                } else {
-                    valueLabel.setVisible(false);
-                    singleValue.setVisible(false);
-                    multiValue.setVisible(false);
-                    nullable.setVisible(false);
-                }
-                us.pack();
-            }
-        });
-        this.nullable.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (nullable.isSelected()) {
-                    singleValue.setText(null);
-                    singleValue.setEnabled(false);
-                } else {
-                    singleValue.setEnabled(true);
-                }
-            }
-        });
-        
-        // create buttons in dialog
-        this.cancel = new JButton(BuilderBundle.getString("cancelButton"));
-        this.execute = new JButton(executeButtonText);
-        
-        // execute all the buttons and fields with their labels to the dialog
-        JLabel label = new JLabel(BuilderBundle.getString("partitionTypeLabel"));
-        gridBag.setConstraints(label, labelConstraints);
-        content.add(label);
-        JPanel field = new JPanel();
-        field.add(this.type);
-        gridBag.setConstraints(field, fieldConstraints);
-        content.add(field);
-        
-        gridBag.setConstraints(valueLabel, labelConstraints);
-        content.add(valueLabel);
-        field = new JPanel();
-        field.add(this.singleValue);
-        field.add(this.multiValue);
-        gridBag.setConstraints(field, fieldConstraints);
-        content.add(field);
-        
-        label = new JLabel();
-        gridBag.setConstraints(label, labelConstraints);
-        content.add(label);
-        field = new JPanel();
-        field.add(this.nullable);
-        gridBag.setConstraints(field, fieldConstraints);
-        content.add(field);
-        
-        label = new JLabel();
-        gridBag.setConstraints(label, labelLastRowConstraints);
-        content.add(label);
-        field = new JPanel();
-        field.add(this.cancel);
-        field.add(this.execute);
-        gridBag.setConstraints(field, fieldLastRowConstraints);
-        content.add(field);
-        
-        // intercept the cancel button
-        this.cancel.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                partitionType = null;
-                hide();
-            }
-        });
-        
-        // intercept the execute button
-        this.execute.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                partitionType = createPartitionType();
-                if (partitionType != null) hide();
-            }
-        });
-        // make it the default button.
-        this.getRootPane().setDefaultButton(execute);
-        
-        // reset the fields
-        this.resetFields(template);
-        
-        // set size of window
-        this.pack();
-    }
-    
-    /**
-     * Resets the fields to their default values.
-     */
-    private void resetFields(PartitionedColumnType template) {
-        // make default selection and values
-        if (template instanceof SingleValue) {
-            SingleValue sv = (SingleValue)template;
-            this.type.setSelectedItem(BuilderBundle.getString("singlePartitionOption"));
-            this.singleValue.setText(sv.getValue());
-            if (sv.getIncludeNull()) this.nullable.doClick();
-        } else if (template instanceof ValueCollection) {
-            ValueCollection vc = (ValueCollection)template;
-            if (vc.getIncludeNull()) this.nullable.doClick();
-            this.type.setSelectedItem(BuilderBundle.getString("collectionPartitionOption"));
-            StringBuffer sb = new StringBuffer();
-            for (Iterator i = vc.getValues().iterator(); i.hasNext(); ) {
-                sb.append((String)i.next());
-                if (i.hasNext()) sb.append(System.getProperty("line.separator"));
-            }
-            this.multiValue.setText(sb.toString());
-        } else {
-            this.type.setSelectedItem(BuilderBundle.getString("uniquePartitionOption"));
-        }
-    }
-    
-    /**
-     * Validates the fields.
-     */
-    private boolean validateFields() {
-        List messages = new ArrayList();
-        
-        if (this.type.getSelectedIndex()==-1) {
-            messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle.getString("type")));
-        }
-        
-        String selectedItem = (String)this.type.getSelectedItem();
-        
-        if (selectedItem.equals(BuilderBundle.getString("singlePartitionOption"))) {
-            if (this.isEmpty(this.singleValue.getText()) && !this.nullable.isSelected())
-                messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle.getString("value")));
-        } else if (selectedItem.equals(BuilderBundle.getString("collectionPartitionOption"))) {
-            if (this.isEmpty(this.multiValue.getText()) && !this.nullable.isSelected())
-                messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle.getString("value")));
-        }
-        
-        if (!messages.isEmpty()) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    messages.toArray(new String[0]),
-                    BuilderBundle.getString("validationTitle"),
-                    JOptionPane.INFORMATION_MESSAGE);
-        }
-        
-        return messages.isEmpty();
-    }
-    
-    /**
-     * Creates a table provider from the fields given.
-     */
-    private PartitionedColumnType createPartitionType() {
-        if (!this.validateFields()) return null;
-        else {
-            try {
-                String type = (String)this.type.getSelectedItem();
-                if (type.equals(BuilderBundle.getString("singlePartitionOption"))) {
-                    return new SingleValue(this.singleValue.getText().trim(), this.nullable.isSelected());
-                } else if (type.equals(BuilderBundle.getString("collectionPartitionOption"))) {
-                    String[] values = this.multiValue.getText().trim().split(System.getProperty("line.separator"));
-                    return new ValueCollection(Arrays.asList(values), this.nullable.isSelected());
-                } else if (type.equals(BuilderBundle.getString("uniquePartitionOption"))) {
-                    return new UniqueValues();
-                }
-            } catch (Throwable t) {
-                this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(t);
-            }
-            return null;
-        }
-    }
-    
-    /**
-     * Tests a string for non-nullness.
-     */
-    private boolean isEmpty(String string) {
-        return (string == null || string.trim().length() == 0);
-    }
-    
-    /**
-     * Static method which allows the user to create a new table provider.
-     */
-    public static PartitionedColumnType createPartitionedColumnType(DataSetTabSet datasetTabSet) {
-        PartitionColumnDialog dialog = new PartitionColumnDialog(
-                datasetTabSet,
-                BuilderBundle.getString("createPartitionButton"),
-                null);
-        dialog.setLocationRelativeTo(datasetTabSet.getMartTabSet().getMartBuilder());
-        dialog.show();
-        return dialog.partitionType;
-    }
-    
-    /**
-     * Static method which allows the user to modify an existing table provider.
-     */
-    public static PartitionedColumnType updatePartitionedColumnType(DataSetTabSet datasetTabSet, PartitionedColumnType template) {
-        PartitionColumnDialog dialog = new PartitionColumnDialog(
-                datasetTabSet,
-                BuilderBundle.getString("updatePartitionButton"),
-                template);
-        dialog.setLocationRelativeTo(datasetTabSet.getMartTabSet().getMartBuilder());
-        dialog.show();
-        return dialog.partitionType;
-    }
+	private static final long serialVersionUID = 1;
+
+	private DataSetTabSet datasetTabSet;
+
+	private PartitionedColumnType partitionType;
+
+	private JComboBox type;
+
+	private JTextField singleValue;
+
+	private JTextArea multiValue;
+
+	private JButton cancel;
+
+	private JButton execute;
+
+	private JCheckBox nullable;
+
+	private PartitionColumnDialog(final DataSetTabSet datasetTabSet,
+			String executeButtonText, final PartitionedColumnType template) {
+		// Creates the basic dialog.
+		super(datasetTabSet.getMartTabSet().getMartBuilder(), BuilderBundle
+				.getString("partitionColumnDialogTitle"), true);
+
+		// Remembers the dataset tabset this dialog is referring to.
+		this.datasetTabSet = datasetTabSet;
+
+		// Create the content pane to store the create dialog panel.
+		GridBagLayout gridBag = new GridBagLayout();
+		final JPanel content = new JPanel(gridBag);
+		this.setContentPane(content);
+
+		// Create constraints for labels that are not in the last row.
+		GridBagConstraints labelConstraints = new GridBagConstraints();
+		labelConstraints.gridwidth = GridBagConstraints.RELATIVE;
+		labelConstraints.fill = GridBagConstraints.HORIZONTAL;
+		labelConstraints.anchor = GridBagConstraints.LINE_END;
+		labelConstraints.insets = new Insets(0, 2, 0, 0);
+		// Create constraints for fields that are not in the last row.
+		GridBagConstraints fieldConstraints = new GridBagConstraints();
+		fieldConstraints.gridwidth = GridBagConstraints.REMAINDER;
+		fieldConstraints.fill = GridBagConstraints.NONE;
+		fieldConstraints.anchor = GridBagConstraints.LINE_START;
+		fieldConstraints.insets = new Insets(0, 1, 0, 2);
+		// Create constraints for labels that are in the last row.
+		GridBagConstraints labelLastRowConstraints = (GridBagConstraints) labelConstraints
+				.clone();
+		labelLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
+		// Create constraints for fields that are in the last row.
+		GridBagConstraints fieldLastRowConstraints = (GridBagConstraints) fieldConstraints
+				.clone();
+		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
+
+		// Create the fields that will contain the user's choice and any
+		// values they may enter.
+		final JLabel valueLabel = new JLabel(BuilderBundle
+				.getString("valuesLabel"));
+		this.singleValue = new JTextField(30);
+		this.multiValue = new JTextArea(5, 30);
+		this.type = new JComboBox(new String[] {
+				BuilderBundle.getString("singlePartitionOption"),
+				BuilderBundle.getString("collectionPartitionOption"),
+				BuilderBundle.getString("uniquePartitionOption") });
+		this.nullable = new JCheckBox();
+
+		// Make the drop-down type choice change which value and nullable
+		// options appear. Use a final reference to ourselves to enable us
+		// to reference ourselves inside the anonymous classes.
+		final JDialog us = this;
+		this.type.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String selectedItem = (String) type.getSelectedItem();
+
+				// Single partitions have a single value field, with a nullable
+				// box saying 'use null'.
+				if (selectedItem.equals(BuilderBundle
+						.getString("singlePartitionOption"))) {
+					valueLabel.setVisible(true);
+					singleValue.setVisible(true);
+					multiValue.setVisible(false);
+					nullable.setText(BuilderBundle.getString("useNullLabel"));
+					nullable.setVisible(true);
+				}
+
+				// Multi-value partitions have a multi value field, with a
+				// nullable
+				// box saying 'include null'.
+				else if (selectedItem.equals(BuilderBundle
+						.getString("collectionPartitionOption"))) {
+					valueLabel.setVisible(true);
+					singleValue.setVisible(false);
+					multiValue.setVisible(true);
+					nullable.setText(BuilderBundle
+							.getString("includeNullLabel"));
+					nullable.setVisible(true);
+				}
+
+				// Other kinds of partition have no value or nullable fields.
+				else {
+					valueLabel.setVisible(false);
+					singleValue.setVisible(false);
+					multiValue.setVisible(false);
+					nullable.setVisible(false);
+				}
+				us.pack();
+			}
+		});
+
+		// Whenever nullable is selected, the values box may change.
+		this.nullable.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+
+				// If it selected, the single value field can't be used.
+				if (nullable.isSelected()) {
+					singleValue.setText(null);
+					singleValue.setEnabled(false);
+				}
+
+				// Otherwise, it can.
+				else
+					singleValue.setEnabled(true);
+			}
+		});
+
+		// Create the buttons.
+		this.cancel = new JButton(BuilderBundle.getString("cancelButton"));
+		this.execute = new JButton(executeButtonText);
+
+		// Add the partition type label and field to the dialog.
+		JLabel label = new JLabel(BuilderBundle.getString("partitionTypeLabel"));
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		JPanel field = new JPanel();
+		field.add(this.type);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+
+		// Add the value label and field to the dialog.
+		gridBag.setConstraints(valueLabel, labelConstraints);
+		content.add(valueLabel);
+		field = new JPanel();
+		field.add(this.singleValue);
+		field.add(this.multiValue);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+
+		// Add a blank label and the nullable checkbox to the dialog.
+		label = new JLabel();
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		field = new JPanel();
+		field.add(this.nullable);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+
+		// Add a blank label and the buttons to the dialog.
+		label = new JLabel();
+		gridBag.setConstraints(label, labelLastRowConstraints);
+		content.add(label);
+		field = new JPanel();
+		field.add(this.cancel);
+		field.add(this.execute);
+		gridBag.setConstraints(field, fieldLastRowConstraints);
+		content.add(field);
+
+		// Intercept the cancel button and use it to close this
+		// dialog without making any changes.
+		this.cancel.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				partitionType = null;
+				hide();
+			}
+		});
+
+		// Intercept the execute button and use it to create
+		// the appropriate partition type, then close the dialog.
+		this.execute.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				partitionType = createPartitionType();
+				if (partitionType != null)
+					hide();
+			}
+		});
+
+		// Make the execute button the default button.
+		this.getRootPane().setDefaultButton(execute);
+
+		// Reset the fields to their default values.
+		this.resetFields(template);
+
+		// Set the size of the dialog.
+		this.pack();
+	}
+
+	private void resetFields(PartitionedColumnType template) {
+		// If an existing single partition has been specified, populate
+		// its details into the box.
+		if (template instanceof SingleValue) {
+			SingleValue sv = (SingleValue) template;
+			this.type.setSelectedItem(BuilderBundle
+					.getString("singlePartitionOption"));
+			this.singleValue.setText(sv.getValue());
+			if (sv.getIncludeNull())
+				this.nullable.doClick();
+		}
+
+		// Else, do the same for an existing multi-value collection partition.
+		else if (template instanceof ValueCollection) {
+			ValueCollection vc = (ValueCollection) template;
+			if (vc.getIncludeNull())
+				this.nullable.doClick();
+			this.type.setSelectedItem(BuilderBundle
+					.getString("collectionPartitionOption"));
+			// Values appear one-per-line.
+			StringBuffer sb = new StringBuffer();
+			for (Iterator i = vc.getValues().iterator(); i.hasNext();) {
+				sb.append((String) i.next());
+				if (i.hasNext())
+					sb.append(System.getProperty("line.separator"));
+			}
+			this.multiValue.setText(sb.toString());
+		}
+
+		// Otherwise, select the unique partition option as default.
+		else
+			this.type.setSelectedItem(BuilderBundle
+					.getString("uniquePartitionOption"));
+	}
+
+	private boolean validateFields() {
+		// A placeholder to hold the validation messages, if any.
+		List messages = new ArrayList();
+
+		// We must have a partition type!
+		if (this.type.getSelectedIndex() == -1)
+			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
+					.getString("type")));
+
+		// Work out which partition type is currently selected.
+		String selectedItem = (String) this.type.getSelectedItem();
+
+		// If it's single...
+		if (selectedItem.equals(BuilderBundle
+				.getString("singlePartitionOption"))) {
+			// Check we have a value, or nullable is selected.
+			if (this.isEmpty(this.singleValue.getText())
+					&& !this.nullable.isSelected())
+				messages.add(BuilderBundle.getString("fieldIsEmpty",
+						BuilderBundle.getString("value")));
+		}
+
+		// If it's multi...
+		else if (selectedItem.equals(BuilderBundle
+				.getString("collectionPartitionOption"))) {
+			// Check we have a value, or nullable is selected.
+			if (this.isEmpty(this.multiValue.getText())
+					&& !this.nullable.isSelected())
+				messages.add(BuilderBundle.getString("fieldIsEmpty",
+						BuilderBundle.getString("value")));
+		}
+
+		// If there any messages, display them.
+		if (!messages.isEmpty()) {
+			JOptionPane.showMessageDialog(this,
+					messages.toArray(new String[0]), BuilderBundle
+							.getString("validationTitle"),
+					JOptionPane.INFORMATION_MESSAGE);
+		}
+
+		// Validation succeeds if there are no messages.
+		return messages.isEmpty();
+	}
+
+	private PartitionedColumnType createPartitionType() {
+		// If we can't validate it, we can't create it.
+		if (!this.validateFields())
+			return null;
+
+		try {
+			// Attempt to create the appropriate type.
+			String type = (String) this.type.getSelectedItem();
+
+			// Single-value uses the single value and/or nullable.
+			if (type.equals(BuilderBundle.getString("singlePartitionOption")))
+				return new SingleValue(this.singleValue.getText().trim(),
+						this.nullable.isSelected());
+
+			// Multi-value uses the multi values, and/or nullable.
+			else if (type.equals(BuilderBundle
+					.getString("collectionPartitionOption"))) {
+				String[] values = this.multiValue.getText().trim().split(
+						System.getProperty("line.separator"));
+				return new ValueCollection(Arrays.asList(values), this.nullable
+						.isSelected());
+			}
+
+			// Unique values doesn't require anything.
+			else if (type.equals(BuilderBundle
+					.getString("uniquePartitionOption")))
+				return new UniqueValues();
+
+			// Eh? Don't know what this is!
+			else
+				throw new MartBuilderInternalError();
+		} catch (Throwable t) {
+			this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(
+					t);
+		}
+
+		// If we get here, we failed, so act as if validation failed.
+		return null;
+	}
+
+	private boolean isEmpty(String string) {
+		// Strings are empty if they are null or all whitespace.
+		return (string == null || string.trim().length() == 0);
+	}
+
+	/**
+	 * This opens a dialog in order for the user to create a new partition type.
+	 * It returns that type, or null if they cancelled it.
+	 * 
+	 * @param datasetTabSet
+	 *            the dataset tabset this dialog is creating a partition type
+	 *            for.
+	 * @return the newly created partition type, or null if the dialog was
+	 *         cancelled.
+	 */
+	public static PartitionedColumnType createPartitionedColumnType(
+			DataSetTabSet datasetTabSet) {
+		PartitionColumnDialog dialog = new PartitionColumnDialog(datasetTabSet,
+				BuilderBundle.getString("createPartitionButton"), null);
+		dialog.setLocationRelativeTo(datasetTabSet.getMartTabSet()
+				.getMartBuilder());
+		dialog.show();
+		return dialog.partitionType;
+	}
+
+	/**
+	 * This opens a dialog in order for the user to edit an existing partition
+	 * type. Actually what it does is use an existing type to provide a template
+	 * to create a new type, so it is an entirely new type that is returned -
+	 * the existing one is untouched. If it returns null, the user cancelled the
+	 * dialog.
+	 * 
+	 * @param datasetTabSet
+	 *            the dataset tabset this dialog is creating a partition type
+	 *            for.
+	 * @return the replacement, updated, partition type, or null if the dialog
+	 *         was cancelled.
+	 */
+	public static PartitionedColumnType updatePartitionedColumnType(
+			DataSetTabSet datasetTabSet, PartitionedColumnType template) {
+		PartitionColumnDialog dialog = new PartitionColumnDialog(datasetTabSet,
+				BuilderBundle.getString("updatePartitionButton"), template);
+		dialog.setLocationRelativeTo(datasetTabSet.getMartTabSet()
+				.getMartBuilder());
+		dialog.show();
+		return dialog.partitionType;
+	}
 }

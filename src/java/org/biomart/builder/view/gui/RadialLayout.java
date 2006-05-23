@@ -1,31 +1,25 @@
 /*
- * RadialLayout.java
- *
- * Created on 11 April 2006, 16:00
- */
-
-/*
-        Copyright (C) 2006 EBI
+ Copyright (C) 2006 EBI
  
-        This library is free software; you can redistribute it and/or
-        modify it under the terms of the GNU Lesser General Public
-        License as published by the Free Software Foundation; either
-        version 2.1 of the License, or (at your option) any later version.
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
  
-        This library is distributed in the hope that it will be useful,
-        but WITHOUT ANY WARRANTY; without even the itmplied warranty of
-        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-        Lesser General Public License for more details.
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the itmplied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
  
-        You should have received a copy of the GNU Lesser General Public
-        License along with this library; if not, write to the Free Software
-        Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package org.biomart.builder.view.gui;
 
-import java.awt.Container;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.LayoutManager;
@@ -40,354 +34,409 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Displays arbitrary objects linked in a radial form.
+ * This rather awkward piece of code will be replaced in the final version. It
+ * is a placeholder that lays out components, based on how connected they are to
+ * other components. The more connected they are, the further to the centre of
+ * the diagram they are placed. Components with the same connectedness form a
+ * circle around a centre point.
+ * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.4, 16th May 2006
  * @since 0.1
  */
 public class RadialLayout implements LayoutManager {
-    /**
-     * Constant referring to the padding between tables within a ring.
-     */
-    public static final double INTRA_PADDING = 0.0; // 72.0 = 1 inch at 72 dpi
-    
-    /**
-     * Constant referring to the padding between rings.
-     */
-    public static final double INTER_PADDING = 10.0; // 72.0 = 1 inch at 72 dpi
-    
-    /**
-     * Constant referring to the length of each sector of a relation.
-     */
-    public static final int RELATION_STEPSIZE = 10; // 72 = 1 inch at 72 dpi
-    
-    /**
-     * Constant referring to the length of the horizontal first and last sector of a relation.
-     */
-    public static final int RELATION_TAGSIZE = 10; // 72 = 1 inch at 72 dpi
-    
-    /**
-     * List of our ring radii.
-     */
-    private Map ringRadii = new HashMap();
-    
-    /**
-     * List of our ring member counts.
-     */
-    private Map ringSizes = new HashMap();
-    
-    /**
-     * List of our ring member counts.
-     */
-    private Map ringNumbers = new HashMap();
-    
-    /**
-     * Our minimum size.
-     */
-    private int minSize;
-    
-    /**
-     * Is our size known?
-     */
-    private boolean sizeUnknown = true;
-    
-    /**
-     * How many components do we have?
-     */
-    private int componentCount = 0;
-    
-    /**
-     * Creates a new instance of ComponentDisplay.
-     */
-    public RadialLayout() {
-        super();
-    }
-    
-    /**
-     * {@inheritDoc}
-     * <p>Forget the previous layout.</p>
-     */
-    public void invalidateLayout(Container target) {
-        synchronized (target.getTreeLock()) {
-            this.sizeUnknown = true;
-        }
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public Dimension preferredLayoutSize(Container parent) {
-        synchronized (parent.getTreeLock()) {
-            return this.minimumLayoutSize(parent);
-        }
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public Dimension minimumLayoutSize(Container parent) {
-        synchronized (parent.getTreeLock()) {
-            Dimension dim = new Dimension(0, 0);
-            this.setSizes(parent);
-            Insets insets = parent.getInsets();
-            dim.width = this.minSize
-                    + insets.left + insets.right;
-            dim.height = this.minSize
-                    + insets.top + insets.bottom;
-            return dim;
-        }
-    }
-    
-    /**
-     * Work out our canvas and ring sizes.
-     */
-    private void setSizes(Container parent) {
-        synchronized (parent.getTreeLock()) {
-            this.ringRadii.clear();
-            this.ringSizes.clear();
-            this.ringNumbers.clear();
-            
-            // List of members, Circumference, Max shortest side. Sort by ring number.
-            Map ringDetails = new TreeMap();
-            
-            int nComps = parent.getComponentCount();
-            this.componentCount = nComps;
-            for (int i = 0; i < nComps; i++) {
-                Component comp = parent.getComponent(i);
-                // We're only interested in visible non-RelationComponents at this stage.
-                if (!comp.isVisible() || comp instanceof RelationComponent) continue;
-                // Calculate ring number! If not a TableComponent or TableProviderComponent, it's zero.
-                Integer ringNumber = new Integer(0);
-                if (comp instanceof TableComponent) ringNumber = new Integer(((TableComponent)comp).countInternalRelations());
-                else if (comp instanceof SchemaComponent) ringNumber = new Integer(((SchemaComponent)comp).countExternalRelations());
-                // then add the object to the appropriate ring and update circumference/max side.
-                if (!ringDetails.containsKey(ringNumber))
-                    ringDetails.put(
-                            ringNumber,
-                            new Object[]{new ArrayList(), new Integer(0), new Integer(0)}
-                    );
-                Object[] details = (Object[])ringDetails.get(ringNumber);
-                List ringMembers = (List)details[0];
-                int circumference = ((Integer)details[1]).intValue();
-                int maxSide = ((Integer)details[2]).intValue();
-                ringMembers.add(comp);
-                // increment circumference by shortest side, plus padding
-                Dimension compSize = comp.getPreferredSize();
-                circumference +=
-                        (int)Math.min(compSize.getWidth(), compSize.getHeight()) +
-                        (int)RadialLayout.INTRA_PADDING;
-                // update longest side
-                maxSide = Math.max(maxSide, (int)Math.max(compSize.getWidth(), compSize.getHeight()));
-                // store details back
-                ringDetails.put(ringNumber, new Object[]{ringMembers, new Integer(circumference), new Integer(maxSide)});
-                // store ring number for objet
-                this.ringNumbers.put(comp, ringNumber);
-            }
-            
-            // Now compute the radii of the rings.
-            List ringNumbers = new ArrayList(ringDetails.keySet());
-            Collections.reverse(ringNumbers); // Most-linked in centre, please.
-            double previousRadius = 0.0;
-            for (Iterator i = ringNumbers.iterator(); i.hasNext(); ) {
-                Integer ringNumber = (Integer)i.next();
-                Object[] details = (Object[])ringDetails.get(ringNumber);
-                List ringMembers = (List)details[0];
-                double circumference = (double)((Integer)details[1]).intValue();
-                double maxSide = (double)((Integer)details[2]).intValue();
-                // Work out radius.
-                double radius =
-                        (circumference / (2.0*Math.PI)) +
-                        (maxSide / 2.0) +
-                        RadialLayout.INTER_PADDING +
-                        previousRadius;
-                this.ringRadii.put(ringNumber, new Double(radius));
-                // Work out sizes.
-                this.ringSizes.put(ringNumber, new Integer(ringMembers.size()));
-                // Bump ourselves up so that the next guy points to the outer edge of ourselves.
-                previousRadius =
-                        radius +
-                        (maxSide / 2.0);
-            }
-            
-            // Work out min/max/preferred sizes.
-            this.minSize = (int)(previousRadius + RadialLayout.INTER_PADDING) * 2;
-            
-            // All done.
-            this.sizeUnknown = false;
-        }
-    }
-    
-    /**
-     * {@inheritDoc}
-     * <p>Compute the radial layout, unless the previous one is
-     * still valid.</p>
-     */
-    public void layoutContainer(Container parent) {
-        synchronized (parent.getTreeLock()) {
-            // Calculate our size first.
-            if (this.sizeUnknown) this.setSizes(parent);
-            
-            // Set our size.
-            double actualSize = Math.max(this.minSize, Math.min(parent.getWidth(), parent.getHeight()));
-            double scalar = actualSize / (double)this.minSize;
-            
-            // Work out our centre point.
-            double centreX = Math.max(actualSize, parent.getWidth())/2.0;
-            double centreY = Math.max(actualSize, parent.getHeight())/2.0;
-            
-            // Keep track of the number of items we've put in each ring so far.
-            Map ringCounts = new HashMap();
-            
-            // A set of relations we come across.
-            List relationComponents = new ArrayList();
-            
-            // Just iterate through components and add them to the various rings.
-            int nComps = parent.getComponentCount();
-            for (int i = 0; i < nComps; i++) {
-                Component comp = parent.getComponent(i);
-                // We're only interested in visible non-RelationComponents at this stage.
-                if (!comp.isVisible()) continue;
-                if (comp instanceof RelationComponent) {
-                    relationComponents.add(comp);
-                    continue;
-                }
-                // Look up the ring number! 
-                Integer ringNumber = (Integer)this.ringNumbers.get(comp);
-                // have we seen this ring before?
-                int ringCount = 0;
-                if (ringCounts.containsKey(ringNumber)) ringCount = ((Integer)ringCounts.get(ringNumber)).intValue()+1;
-                ringCounts.put(ringNumber, new Integer(ringCount));
-                // Get radius.
-                Dimension compSize = comp.getPreferredSize();
-                double radius = scalar * ((Double)this.ringRadii.get(ringNumber)).doubleValue();
-                // Work out radian position.
-                double radianIncrement = (Math.PI*2.0) / ((Integer)this.ringSizes.get(ringNumber)).intValue();
-                double positionRadian = radianIncrement * (double)ringCount;
-                // Work out offset.
-                double widthOffset = compSize.getWidth()/2.0;
-                double heightOffset = compSize.getHeight()/2.0;
-                // Work out point on circumference for centre of component.
-                double x = centreX + (radius * Math.cos(positionRadian));
-                double y = centreY + (radius * Math.sin(positionRadian));
-                // Place component around centre point using offsets.
-                comp.setBounds((int)(x-widthOffset), (int)(y-heightOffset), (int)compSize.getWidth(), (int)compSize.getHeight());
-                // Make it update its children (necessary for laying out relations later).
-                comp.validate();
-            }
-            
-            // Add relations to component->shape maps using the key shapes for
-            // anchors and offsetting them against the parent component shape.
-            for (Iterator i = relationComponents.iterator(); i.hasNext(); ) {
-                RelationComponent relationComponent = (RelationComponent)i.next();
-                
-                // Obtain primary key and work out position relative to ourselves.
-                KeyComponent primaryKey = relationComponent.getPrimaryKeyComponent();
-                Rectangle primaryKeyRectangle = primaryKey.getBounds();
-                Container primaryKeyParent = primaryKey.getParent();
-                while (primaryKeyParent != parent) {
-                    primaryKeyRectangle.setLocation(
-                            primaryKeyRectangle.x + (int)primaryKeyParent.getX(),
-                            primaryKeyRectangle.y + (int)primaryKeyParent.getY()
-                            );
-                    primaryKeyParent = primaryKeyParent.getParent();
-                }
-                
-                KeyComponent foreignKey = relationComponent.getForeignKeyComponent();
-                Rectangle foreignKeyRectangle = foreignKey.getBounds();
-                Container foreignKeyParent = foreignKey.getParent();
-                while (foreignKeyParent != parent) {
-                    foreignKeyRectangle.setLocation(
-                            foreignKeyRectangle.x + (int)foreignKeyParent.getX(),
-                            foreignKeyRectangle.y + (int)foreignKeyParent.getY()
-                            );
-                    foreignKeyParent = foreignKeyParent.getParent();
-                }
-                
-                // Create a bounding box around the whole lot plus 1 step size each side.
-                int x = Math.min(primaryKeyRectangle.x, foreignKeyRectangle.x);
-                int y = Math.min(primaryKeyRectangle.y, foreignKeyRectangle.y);
-                int width = Math.max(primaryKeyRectangle.x + primaryKeyRectangle.width,
-                        foreignKeyRectangle.x + foreignKeyRectangle.width) -
-                        x;
-                int height = Math.max(
-                        primaryKeyRectangle.y + primaryKeyRectangle.height,
-                        foreignKeyRectangle.y + foreignKeyRectangle.height) -
-                        y;
-                Rectangle bounds = new Rectangle(
-                        x - (int)RadialLayout.RELATION_STEPSIZE,
-                        y - (int)RadialLayout.RELATION_STEPSIZE,
-                        width + (int)RadialLayout.RELATION_STEPSIZE,
-                        height + (int)RadialLayout.RELATION_STEPSIZE
-                        );
-                relationComponent.setBounds(bounds);
-                
-                // Find side of foreign key and side of primary key to join.
-                int middleOfPK = primaryKeyRectangle.x + (primaryKeyRectangle.width / 2);
-                int middleOfFK = foreignKeyRectangle.x + (foreignKeyRectangle.width / 2);
-                int midPoint = (middleOfPK + middleOfFK) / 2;
-                int pkStartX =
-                        (midPoint <= middleOfPK) ?
-                            primaryKeyRectangle.x :
-                            primaryKeyRectangle.x + primaryKeyRectangle.width;
-                int fkEndX =
-                        (midPoint <= middleOfFK) ?
-                            foreignKeyRectangle.x :
-                            foreignKeyRectangle.x + foreignKeyRectangle.width;
-                int pkY = primaryKeyRectangle.y + (primaryKeyRectangle.height / 2);
-                int fkY = foreignKeyRectangle.y + (foreignKeyRectangle.height / 2);
-                
-                // Modify all the relation coords to be rooted at 0,0 of its bounds.
-                pkStartX -= bounds.x;
-                pkY -= bounds.y;
-                fkEndX -= bounds.x;
-                fkY -= bounds.y;
-                int pkTagX =
-                        (pkStartX < middleOfPK) ?
-                            pkStartX - RadialLayout.RELATION_TAGSIZE :
-                            pkStartX + RadialLayout.RELATION_TAGSIZE;
-                int fkTagX =
-                        (fkEndX < middleOfFK) ?
-                            fkEndX - RadialLayout.RELATION_TAGSIZE :
-                            fkEndX + RadialLayout.RELATION_TAGSIZE;
-                
-                // Create and add to relation the line2d shape which links mid-right
-                // of the primary key to mid-left of the foreign key.
-                GeneralPath path = new GeneralPath();
-                // Move to starting point.
-                path.moveTo(pkStartX, pkY);
-                // Draw starting tag.
-                path.lineTo(pkTagX, pkY);
-                // Draw the rest.
-                int diffX = fkTagX - pkTagX;
-                int diffY = fkY - pkY;
-                if (Math.abs(diffX) >= Math.abs(diffY)) {
-                    // Move X first, then Y
-                    path.lineTo(fkTagX, pkY);
-                    path.lineTo(fkTagX, fkY);
-                } else {
-                    // Move Y first, then X
-                    path.lineTo(pkTagX, fkY);
-                    path.lineTo(fkTagX, fkY);
-                }
-                // Draw the closing tag.
-                path.lineTo(fkEndX, fkY);
-                // Done!
-                relationComponent.setShape(path);
-            }
-        }
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public void addLayoutComponent(String name, Component comp) {
-        // Ignore.
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    public void removeLayoutComponent(Component comp) {
-        // Ignore.
-    }
+	private static final double INTRA_PADDING = 0.0; // 72.0 = 1 inch at 72
+
+	// dpi
+
+	private static final double INTER_PADDING = 10.0; // 72.0 = 1 inch at 72
+
+	// dpi
+
+	private static final int RELATION_STEPSIZE = 10; // 72 = 1 inch at 72 dpi
+
+	private static final int RELATION_TAGSIZE = 10; // 72 = 1 inch at 72 dpi
+
+	private Map ringRadii;
+
+	private Map ringSizes;
+
+	private Map ringNumbers;
+
+	private int minSize;
+
+	private boolean sizeUnknown;
+
+	/**
+	 * Sets up some defaults for the layout, ready for use.
+	 */
+	public RadialLayout() {
+		this.ringRadii = new HashMap();
+		this.ringSizes = new HashMap();
+		this.ringNumbers = new HashMap();
+		this.sizeUnknown = true;
+	}
+
+	public Dimension preferredLayoutSize(Container parent) {
+		synchronized (parent.getTreeLock()) {
+			// Our preferred size is our minimum size.
+			return this.minimumLayoutSize(parent);
+		}
+	}
+
+	public Dimension minimumLayoutSize(Container parent) {
+		synchronized (parent.getTreeLock()) {
+			// Work out how big we are.
+			this.setSizes(parent);
+
+			// Work out our parent's insets.
+			Insets insets = parent.getInsets();
+
+			// The minimum size is our size plus our
+			// parent's insets size.
+			Dimension dim = new Dimension(0, 0);
+			dim.width = this.minSize + insets.left + insets.right;
+			dim.height = this.minSize + insets.top + insets.bottom;
+
+			// That's it!
+			return dim;
+		}
+	}
+
+	private void setSizes(Container parent) {
+		// This method calculates which components go in which rings, and
+		// the route that relations should take between them.
+		synchronized (parent.getTreeLock()) {
+			// Ring radii contains the radii of the various rings of components.
+			this.ringRadii.clear();
+
+			// Ring sizes contains the number of components in each ring.
+			this.ringSizes.clear();
+
+			// Ring numbers contains the ring number for each component.
+			this.ringNumbers.clear();
+
+			// Ring details contains a map where they keys are the ring numbers,
+			// and the values are array objects. The array objects contain, in
+			// this order, a List of components in that ring, the circumference
+			// of the ring, and the maximum shortest side length of any
+			// component in the ring.
+			Map ringDetails = new TreeMap();
+
+			// How many components do we have?
+			int nComps = parent.getComponentCount();
+
+			// Loop through those components.
+			for (int i = 0; i < nComps; i++) {
+				Component comp = parent.getComponent(i);
+
+				// We're only interested in visible non-RelationComponents at
+				// this stage.
+				if (!comp.isVisible() || comp instanceof RelationComponent)
+					continue;
+
+				// Calculate ring number! If not a TableComponent or
+				// SchemaComponent, it's zero.
+				Integer ringNumber = new Integer(0);
+				if (comp instanceof TableComponent)
+					ringNumber = new Integer(((TableComponent) comp)
+							.countInternalRelations());
+				else if (comp instanceof SchemaComponent)
+					ringNumber = new Integer(((SchemaComponent) comp)
+							.countExternalRelations());
+
+				// Add the object to the appropriate ring and obtain
+				// circumference/max shortest side details for that ring.
+				if (!ringDetails.containsKey(ringNumber))
+					ringDetails.put(ringNumber, new Object[] { new ArrayList(),
+							new Integer(0), new Integer(0) });
+				Object[] details = (Object[]) ringDetails.get(ringNumber);
+				List ringMembers = (List) details[0];
+				int circumference = ((Integer) details[1]).intValue();
+				int maxSide = ((Integer) details[2]).intValue();
+				ringMembers.add(comp);
+
+				// Increment circumference for this ring by adding the shortest
+				// side of the new component to the existing circumference, plus
+				// padding
+				Dimension compSize = comp.getPreferredSize();
+				circumference += (int) Math.min(compSize.getWidth(), compSize
+						.getHeight())
+						+ (int) RadialLayout.INTRA_PADDING;
+
+				// Update the maximum shortest side seen so far in this ring.
+				maxSide = Math.max(maxSide, (int) Math.max(compSize.getWidth(),
+						compSize.getHeight()));
+
+				// Store the ring details back.
+				ringDetails.put(ringNumber, new Object[] { ringMembers,
+						new Integer(circumference), new Integer(maxSide) });
+
+				// Store the ring number for the object.
+				this.ringNumbers.put(comp, ringNumber);
+			}
+
+			// Now compute the radii of the rings. The keys are sorted, but with
+			// the most-linked last, so we need to reverse that before iterating
+			// over them.
+			List ringNumbers = new ArrayList(ringDetails.keySet());
+			Collections.reverse(ringNumbers);
+
+			// Keep track of the radius of the last ring inside the current one.
+			double previousRadius = 0.0;
+
+			// Iterate over the rings, most-connected (innermost) first.
+			for (Iterator i = ringNumbers.iterator(); i.hasNext();) {
+				Integer ringNumber = (Integer) i.next();
+
+				// Decode the details for the ring.
+				Object[] details = (Object[]) ringDetails.get(ringNumber);
+				List ringMembers = (List) details[0];
+				double circumference = (double) ((Integer) details[1])
+						.intValue();
+				double maxSide = (double) ((Integer) details[2]).intValue();
+
+				// Work out radius, which is based on the usual circumference
+				// calculation, plus the maximum shortest side length, plus
+				// some padding, plus the radius of the last ring before this
+				// one,
+				// which must appear fully inside this one, hence the padding.
+				double radius = (circumference / (2.0 * Math.PI))
+						+ (maxSide / 2.0) + RadialLayout.INTER_PADDING
+						+ previousRadius;
+
+				// Store the radius.
+				this.ringRadii.put(ringNumber, new Double(radius));
+
+				// Store the number of members in this ring.
+				this.ringSizes.put(ringNumber, new Integer(ringMembers.size()));
+
+				// Bump the previous radius up so that the next guy points to
+				// the outer edge of ourselves.
+				previousRadius = radius + (maxSide / 2.0);
+			}
+
+			// Work out min/max/preferred sizes.
+			this.minSize = (int) (previousRadius + RadialLayout.INTER_PADDING) * 2;
+
+			// All done.
+			this.sizeUnknown = false;
+		}
+	}
+
+	public void layoutContainer(Container parent) {
+		synchronized (parent.getTreeLock()) {
+			// Calculate our size first using the method above.
+			if (this.sizeUnknown)
+				this.setSizes(parent);
+
+			// Work out our size, which is the larger of the parent size,
+			// or our minimum size.
+			double actualSize = Math.max(this.minSize, Math.min(parent
+					.getWidth(), parent.getHeight()));
+
+			// Work out the scalar required to fit our entire diagram
+			// into the space available.
+			double scalar = Math.max(1.0, actualSize / (double) this.minSize);
+
+			// Work out our centre point, which is the centre of the area
+			// available to us from our parent.
+			double centreX = Math.max(actualSize, parent.getWidth()) / 2.0;
+			double centreY = Math.max(actualSize, parent.getHeight()) / 2.0;
+
+			// Keep track of the number of items we've put in each ring so far.
+			Map ringCounts = new HashMap();
+
+			// A collection of relations we come across on the way.
+			List relationComponents = new ArrayList();
+
+			// Just iterate through components and add them to the various
+			// rings.
+			int nComps = parent.getComponentCount();
+			for (int i = 0; i < nComps; i++) {
+				Component comp = parent.getComponent(i);
+
+				// We're only interested in visible non-RelationComponents at
+				// this stage.
+				// If they're not visible, ignore them. If they're relations,
+				// add them to the list for processing later.
+				if (!comp.isVisible())
+					continue;
+				if (comp instanceof RelationComponent) {
+					relationComponents.add(comp);
+					continue;
+				}
+
+				// Look up the ring number!
+				Integer ringNumber = (Integer) this.ringNumbers.get(comp);
+
+				// Have we seen this ring before? If not, create a new map key
+				// to
+				// hold the number of items we have placed in this ring so far.
+				// If
+				// we have seen it before, look up that number instead,
+				// increment
+				// it, and store it back.
+				int ringCount = 0;
+				if (ringCounts.containsKey(ringNumber))
+					ringCount = ((Integer) ringCounts.get(ringNumber))
+							.intValue() + 1;
+				ringCounts.put(ringNumber, new Integer(ringCount));
+
+				// Work out how big this component would like to be.
+				Dimension compSize = comp.getPreferredSize();
+
+				// Work out the radius we are using to draw this ring.
+				double radius = scalar
+						* ((Double) this.ringRadii.get(ringNumber))
+								.doubleValue();
+
+				// Work out radian position of component.
+				double radianIncrement = (Math.PI * 2.0)
+						/ ((Integer) this.ringSizes.get(ringNumber)).intValue();
+				double positionRadian = radianIncrement * (double) ringCount;
+
+				// Work out offset from circumference of circle we need to place
+				// the component at so that it's centre is on the circumference.
+				double widthOffset = compSize.getWidth() / 2.0;
+				double heightOffset = compSize.getHeight() / 2.0;
+
+				// Work out point on circumference for centre of component.
+				double x = centreX + (radius * Math.cos(positionRadian));
+				double y = centreY + (radius * Math.sin(positionRadian));
+
+				// Place component around centre point using offsets.
+				comp.setBounds((int) (x - widthOffset),
+						(int) (y - heightOffset), (int) compSize.getWidth(),
+						(int) compSize.getHeight());
+
+				// Make the component update its children (necessary for laying
+				// out relations later).
+				comp.validate();
+			}
+
+			// Add relations to the diagram by locating each key component the
+			// relation refers to, and constructing anchor lines against those
+			// and a simple two-part line between each of the anchors.
+			for (Iterator i = relationComponents.iterator(); i.hasNext();) {
+				RelationComponent relationComponent = (RelationComponent) i
+						.next();
+
+				// Obtain primary key and work out position relative to
+				// ourselves.
+				KeyComponent primaryKey = relationComponent
+						.getPrimaryKeyComponent();
+				Rectangle primaryKeyRectangle = primaryKey.getBounds();
+				Container primaryKeyParent = primaryKey.getParent();
+				while (primaryKeyParent != parent) {
+					primaryKeyRectangle.setLocation(primaryKeyRectangle.x
+							+ (int) primaryKeyParent.getX(),
+							primaryKeyRectangle.y
+									+ (int) primaryKeyParent.getY());
+					primaryKeyParent = primaryKeyParent.getParent();
+				}
+
+				// Do the same for the foreign key.
+				KeyComponent foreignKey = relationComponent
+						.getForeignKeyComponent();
+				Rectangle foreignKeyRectangle = foreignKey.getBounds();
+				Container foreignKeyParent = foreignKey.getParent();
+				while (foreignKeyParent != parent) {
+					foreignKeyRectangle.setLocation(foreignKeyRectangle.x
+							+ (int) foreignKeyParent.getX(),
+							foreignKeyRectangle.y
+									+ (int) foreignKeyParent.getY());
+					foreignKeyParent = foreignKeyParent.getParent();
+				}
+
+				// Create a bounding box around the whole lot plus 1 step size
+				// each side for mouse-sensitivity's sake.
+				int x = Math.min(primaryKeyRectangle.x, foreignKeyRectangle.x);
+				int y = Math.min(primaryKeyRectangle.y, foreignKeyRectangle.y);
+				int width = Math.max(primaryKeyRectangle.x
+						+ primaryKeyRectangle.width, foreignKeyRectangle.x
+						+ foreignKeyRectangle.width)
+						- x;
+				int height = Math.max(primaryKeyRectangle.y
+						+ primaryKeyRectangle.height, foreignKeyRectangle.y
+						+ foreignKeyRectangle.height)
+						- y;
+				Rectangle bounds = new Rectangle(x
+						- (int) RadialLayout.RELATION_STEPSIZE, y
+						- (int) RadialLayout.RELATION_STEPSIZE, width
+						+ (int) RadialLayout.RELATION_STEPSIZE, height
+						+ (int) RadialLayout.RELATION_STEPSIZE);
+				relationComponent.setBounds(bounds);
+
+				// Find midpoint of sides of foreign key and primary key. This
+				// is
+				// where the anchor lines will attach.
+				int middleOfPK = primaryKeyRectangle.x
+						+ (primaryKeyRectangle.width / 2);
+				int middleOfFK = foreignKeyRectangle.x
+						+ (foreignKeyRectangle.width / 2);
+				int midPoint = (middleOfPK + middleOfFK) / 2;
+				int pkStartX = (midPoint <= middleOfPK) ? primaryKeyRectangle.x
+						: primaryKeyRectangle.x + primaryKeyRectangle.width;
+				int fkEndX = (midPoint <= middleOfFK) ? foreignKeyRectangle.x
+						: foreignKeyRectangle.x + foreignKeyRectangle.width;
+				int pkY = primaryKeyRectangle.y
+						+ (primaryKeyRectangle.height / 2);
+				int fkY = foreignKeyRectangle.y
+						+ (foreignKeyRectangle.height / 2);
+
+				// Modify all the relation coords to be rooted at 0,0 of its
+				// bounds.
+				pkStartX -= bounds.x;
+				pkY -= bounds.y;
+				fkEndX -= bounds.x;
+				fkY -= bounds.y;
+
+				// Work out the X-offsets of the end of the key anchors that is
+				// not attached to the key itself.
+				int pkTagX = (pkStartX < middleOfPK) ? pkStartX
+						- RadialLayout.RELATION_TAGSIZE : pkStartX
+						+ RadialLayout.RELATION_TAGSIZE;
+				int fkTagX = (fkEndX < middleOfFK) ? fkEndX
+						- RadialLayout.RELATION_TAGSIZE : fkEndX
+						+ RadialLayout.RELATION_TAGSIZE;
+
+				// Create a path to describe the relation shape.
+				GeneralPath path = new GeneralPath();
+
+				// Move to starting point at primary key.
+				path.moveTo(pkStartX, pkY);
+
+				// Draw starting anchor tag.
+				path.lineTo(pkTagX, pkY);
+
+				// Draw the two-step line between.
+				int diffX = fkTagX - pkTagX;
+				int diffY = fkY - pkY;
+				if (Math.abs(diffX) >= Math.abs(diffY)) {
+					// Move X first, then Y
+					path.lineTo(fkTagX, pkY);
+					path.lineTo(fkTagX, fkY);
+				} else {
+					// Move Y first, then X
+					path.lineTo(pkTagX, fkY);
+					path.lineTo(fkTagX, fkY);
+				}
+
+				// Draw the closing anchor tag at the foreign key.
+				path.lineTo(fkEndX, fkY);
+
+				// Done! Tell the relation what shape we made.
+				relationComponent.setShape(path);
+			}
+		}
+	}
+
+	public void addLayoutComponent(String name, Component comp) {
+		// Ignore.
+	}
+
+	public void removeLayoutComponent(Component comp) {
+		// Ignore.
+	}
 }
