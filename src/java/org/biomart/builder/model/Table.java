@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;

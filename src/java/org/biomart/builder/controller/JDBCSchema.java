@@ -560,6 +560,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			for (Iterator l = this.tables.values().iterator(); l.hasNext();) {
 				// Obtain the next table to look at.
 				Table fkTable = (Table) l.next();
+
 				// Make sure the table is not the same as the PK table.
 				if (fkTable.equals(pkTable))
 					continue;
@@ -620,7 +621,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 								fk.setStatus(ComponentStatus.INFERRED);
 							// Remove the FK from the list to be dropped later,
 							// as it definitely exists now.
-							fksToBeDropped.remove(candidateFK);
+							fksToBeDropped.remove(fk);
 							// Flag the key as existing.
 							fkAlreadyExists = true;
 						}
@@ -686,6 +687,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 									}
 								// Don't drop it at the end of the loop.
 								relationsToBeDropped.remove(candidateRel);
+
 								// Say we've found it.
 								relationExists = true;
 							}
@@ -730,15 +732,15 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						}
 					}
 				}
+			}
 
-				// Remove any relations that we didn't find in the database (but
-				// leave the handmade ones behind).
-				for (Iterator j = relationsToBeDropped.iterator(); j.hasNext();) {
-					Relation r = (Relation) j.next();
-					if (r.getStatus().equals(ComponentStatus.HANDMADE))
-						continue;
-					r.destroy();
-				}
+			// Remove any relations that we didn't find in the database (but
+			// leave the handmade ones behind).
+			for (Iterator j = relationsToBeDropped.iterator(); j.hasNext();) {
+				Relation r = (Relation) j.next();
+				if (r.getStatus().equals(ComponentStatus.HANDMADE))
+					continue;
+				r.destroy();
 			}
 		}
 	}

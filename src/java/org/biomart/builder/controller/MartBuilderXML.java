@@ -748,6 +748,8 @@ public class MartBuilderXML extends DefaultHandler {
 		// Write any indent required.
 		for (int i = this.currentOutputIndent; i > 0; i--)
 			xmlWriter.write("\t");
+		// Open the tag.
+		xmlWriter.write("<");
 		// Write the tag.
 		xmlWriter.write(name);
 

@@ -200,7 +200,7 @@ public class JDBCConnectionPanel extends ConnectionPanel implements
 		this.jarFileChooser.setFileFilter(new FileFilter() {
 			// Accepts only files ending in ".jar".
 			public boolean accept(File f) {
-				return (f.isDirectory() || f.getName().toUpperCase().endsWith(
+				return (f.isDirectory() || f.getName().toLowerCase().endsWith(
 						".jar"));
 			}
 

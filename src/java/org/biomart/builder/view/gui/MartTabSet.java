@@ -72,7 +72,7 @@ public class MartTabSet extends JTabbedPane {
 		this.xmlFileChooser.setFileFilter(new FileFilter() {
 			// Accepts only files ending in ".xml".
 			public boolean accept(File f) {
-				return (f.isDirectory() || f.getName().toUpperCase().endsWith(
+				return (f.isDirectory() || f.getName().toLowerCase().endsWith(
 						".xml"));
 			}
 
