@@ -839,7 +839,7 @@
 		<relation id="762" fkCardinality="M" primaryKeyId="593" foreignKeyId="599" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:transcript_attrib[transcript_id]"/>
 		<relation id="763" fkCardinality="1" primaryKeyId="593" foreignKeyId="606" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:transcript_stable_id[transcript_id]"/>
 		<relation id="764" fkCardinality="M" primaryKeyId="593" foreignKeyId="612" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:transcript_supporting_feature[transcript_id]"/>
-		<relation id="765" fkCardinality="M" primaryKeyId="593" foreignKeyId="622" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:translation[transcript_id]"/>
+		<relation id="765" fkCardinality="1" primaryKeyId="593" foreignKeyId="622" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:translation[transcript_id]"/>
 		<relation id="766" fkCardinality="M" primaryKeyId="623" foreignKeyId="443" status="INFERRED" alt="PK_hs38:translation[translation_id]:FK_hs38:protein_feature[translation_id]"/>
 		<relation id="767" fkCardinality="M" primaryKeyId="623" foreignKeyId="629" status="INFERRED" alt="PK_hs38:translation[translation_id]:FK_hs38:translation_attrib[translation_id]"/>
 		<relation id="768" fkCardinality="1" primaryKeyId="623" foreignKeyId="636" status="INFERRED" alt="PK_hs38:translation[translation_id]:FK_hs38:translation_stable_id[translation_id]"/>
