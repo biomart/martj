@@ -40,6 +40,7 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
@@ -47,7 +48,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * provides the context menu for interacting with dataset diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 16th May 2006
+ * @version 0.1.13, 24th May 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -234,6 +235,25 @@ public class DataSetContext extends WindowContext {
 					}
 				});
 				contextMenu.add(removeDM);
+
+				// The dimension can be merged by using this option. This
+				// changes the relation that caused the dimension to exist
+				// into a 1:1 relation.
+				JMenuItem mergeDM = new JMenuItem(BuilderBundle
+						.getString("mergeTableTitle"));
+				mergeDM.setMnemonic(BuilderBundle.getString(
+						"mergeTableMnemonic").charAt(0));
+				mergeDM.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						Relation relation = (Relation) table
+								.getUnderlyingRelations().toArray(
+										new Relation[0])[0];
+						getDataSetTabSet().getSchemaTabSet().
+						requestChangeRelationCardinality(relation, 
+								Cardinality.ONE);
+					}
+				});
+				contextMenu.add(mergeDM);
 			}
 
 			// Subclass tables have their own options too.
@@ -255,6 +275,24 @@ public class DataSetContext extends WindowContext {
 					}
 				});
 				contextMenu.add(removeDM);
+
+				// The subclass table can be merged by using this option. 
+				// This unflags the relation that caused the subclass to 
+				// exist.
+				JMenuItem mergeDM = new JMenuItem(BuilderBundle
+						.getString("mergeTableTitle"));
+				mergeDM.setMnemonic(BuilderBundle.getString(
+						"mergeTableMnemonic").charAt(0));
+				mergeDM.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						Relation relation = (Relation) table
+								.getUnderlyingRelations().toArray(
+										new Relation[0])[0];
+						getDataSetTabSet().requestUnsubclassRelation(
+								getDataSet(), relation);
+					}
+				});
+				contextMenu.add(mergeDM);
 			}
 		}
 
