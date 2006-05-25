@@ -60,7 +60,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 19th May 2006
+ * @version 0.1.19, 25th May 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -203,41 +203,34 @@ public class DataSet extends GenericSchema {
 			// Update the path length on this relation.
 			relationsPredicted.put(r, new Integer(pathLength));
 
+			/**
+			 * Path length used to be 2 - the 2nd one was concat-only. Now all
+			 * that are more than 1 are masked, and none are predicted
+			 * concat-only.
+			 */
 			// Update the masked/unmasked flags.
-			if (pathLength >= 2) {
-				// Mask all relations that involve two or more levels of 1:m
+			if (pathLength >= 1)
+				// Mask all relations that involve one or more levels of 1:M
 				// abstraction away from the central main table.
 				this.maskRelation(r);
-			} else {
+			else
 				// Unmask it. This is because the relation may have previously
 				// been visited by a longer path, in which case it could have
 				// been masked by that path when it should be unmasked for this
 				// path.
 				this.unmaskRelation(r);
-			}
 
 			// Work out where to go next.
 
 			// If we're at the 1 end of a 1:M relation, increment the path
-			// length
-			// and follow it.
+			// length and follow it.
 			if (r.getPrimaryKey().getTable().equals(currentTable)
-					&& r.getFKCardinality().equals(Cardinality.MANY)) {
-
-				// If we've already followed one 1:M relation to get here, then
-				// this relation, also being a 1:M relation, should be flagged
-				// as concat-only, but only if it is not a subclass relation.
-				if (pathLength == 1
-						&& !this.getSubclassedRelations().contains(r)) {
-					this.flagConcatOnlyRelation(r, ConcatRelationType.COMMA);
-				}
-
+					&& r.getFKCardinality().equals(Cardinality.MANY))
 				// Recurse down to the foreign key end of the relation. Only
 				// increment the path length if it is not a subclass relation.
 				this.walkRelations(r.getForeignKey().getTable(), this
 						.getSubclassedRelations().contains(r) ? pathLength
 						: pathLength + 1, relationsPredicted);
-			}
 
 			// We're at the M end of a 1:M, or on a 1:1. So, recurse down the
 			// appropriate end of the relation without incrementing the path
@@ -678,16 +671,6 @@ public class DataSet extends GenericSchema {
 		// Clear all our tables out as they will all be rebuilt.
 		this.tables.clear();
 
-		// Set up a map to contain relations which can be ignored during
-		// the transformation process. Keys are tables, values are sets
-		// of relations from those tables which can be ignored.
-		Map ignoredRelations = new HashMap();
-
-		// Set up a pair of sets to represent all subclass relations, and
-		// all relations which represent the beginning of a dimension table.
-		Set dimensionRelations = new HashSet();
-		Set subclassRelations = new HashSet();
-
 		// Identify main table.
 		Table centralTable = this.getCentralTable();
 		// If central table has subclass relations and is at the foreign key
@@ -703,149 +686,9 @@ public class DataSet extends GenericSchema {
 			}
 		}
 
-		// Start out by ignoring all masked relations on the central table.
-		ignoredRelations.put(centralTable, new HashSet(this
-				.getMaskedRelations()));
-
-		// Work out the primary key on the central table.
-		PrimaryKey pk = centralTable.getPrimaryKey();
-
-		// If it has a primary key, and that key is OK, then loop over all the
-		// relations leading from that key.
-		if (pk != null
-				&& !pk.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
-			for (Iterator i = centralTable.getPrimaryKey().getRelations()
-					.iterator(); i.hasNext();) {
-				Relation r = (Relation) i.next();
-
-				// Skip masked and concat-only relations.
-				// Skip inferred-incorrect relations.
-				// Skip incorrect-FK relations.
-				if (this.getMaskedRelations().contains(r)
-						|| this.getConcatOnlyRelations().contains(r)
-						|| r.getStatus().equals(
-								ComponentStatus.INFERRED_INCORRECT)
-						|| r.getForeignKey().getStatus().equals(
-								ComponentStatus.INFERRED_INCORRECT))
-					continue;
-
-				// Is this a subclass relation?
-				if (this.getSubclassedRelations().contains(r)) {
-					// Ignore the subclass relation at the main table.
-					((Set) ignoredRelations.get(centralTable)).add(r);
-
-					// Remember the relation as a subclass relation.
-					subclassRelations.add(r);
-
-					// Work out the parent of the subclass, and create a
-					// new set of ignored relations for that table, containing
-					// the set of masked relations.
-					Table parentTable = r.getForeignKey().getTable();
-					ignoredRelations.put(parentTable, new HashSet(this
-							.getMaskedRelations()));
-
-					// Work out the primary key on the parent table.
-					PrimaryKey parentPK = parentTable.getPrimaryKey();
-
-					// If it has a PK, and that PK is correct, iterate over the
-					// relations on that PK.
-					if (parentPK != null
-							&& !parentPK.getStatus().equals(
-									ComponentStatus.INFERRED_INCORRECT))
-						for (Iterator j = parentTable.getPrimaryKey()
-								.getRelations().iterator(); j.hasNext();) {
-							Relation sr = (Relation) j.next();
-
-							// Skip masked and concat-only relations.
-							// Skip inferred-incorrect relations.
-							// Skip incorrect-FK relations.
-							if (this.getMaskedRelations().contains(sr)
-									|| this.getConcatOnlyRelations().contains(
-											sr)
-									|| sr.getStatus().equals(
-											ComponentStatus.INFERRED_INCORRECT)
-									|| sr.getForeignKey().getStatus().equals(
-											ComponentStatus.INFERRED_INCORRECT))
-								continue;
-
-							// If it is a 1:M relation with the 1 end at the
-							// parent table, then set it up as a dimension, but
-							// only if the relation is not ignored.
-							if (sr.getFKCardinality().equals(Cardinality.MANY)) {
-
-								// Ignore the relation from the parent table.
-								((Set) ignoredRelations.get(parentTable))
-										.add(sr);
-
-								// Remember it as a dimension relation.
-								dimensionRelations.add(sr);
-
-								// Work out the target table for the dimension
-								// and set up a set of ignored relations on it
-								// containing all masked relations plus the
-								// dimension relation.
-								Table dimTable = sr.getForeignKey().getTable();
-								if (!ignoredRelations.containsKey(dimTable))
-									ignoredRelations.put(dimTable, new HashSet(
-											this.getMaskedRelations()));
-								((Set) ignoredRelations.get(dimTable)).add(sr);
-							}
-						}
-				}
-
-				// Is it a potential dimension relation, ie. 1:M with the
-				// 1 end at the main table?
-				else if (r.getFKCardinality().equals(Cardinality.MANY)) {
-
-					// Ignore the relation from the central table.
-					((Set) ignoredRelations.get(centralTable)).add(r);
-
-					// Remember it as a dimension relation.
-					dimensionRelations.add(r);
-
-					// Work out the target table for the dimension
-					// and set up a set of ignored relations on it
-					// containing all masked relations plus the
-					// dimension relation.
-					Table dimTable = r.getForeignKey().getTable();
-					if (!ignoredRelations.containsKey(dimTable))
-						ignoredRelations.put(dimTable, new HashSet(this
-								.getMaskedRelations()));
-					((Set) ignoredRelations.get(dimTable)).add(r);
-				}
-			}
-
-		// Subclass tables should ignore all subclass relations except
-		// the one they depend on.
-		for (Iterator i = subclassRelations.iterator(); i.hasNext();) {
-			Relation subclassRel = (Relation) i.next();
-			for (Iterator j = subclassRelations.iterator(); j.hasNext();) {
-				Relation otherSubclassRel = (Relation) j.next();
-				if (!subclassRel.equals(otherSubclassRel))
-					((Set) ignoredRelations.get(subclassRel.getPrimaryKey()
-							.getTable())).add(otherSubclassRel);
-			}
-		}
-
-		// Build the main table.
-		this.constructTable(DataSetTableType.MAIN, centralTable,
-				(Set) ignoredRelations.get(centralTable), null);
-
-		// Build the subclass tables.
-		for (Iterator i = subclassRelations.iterator(); i.hasNext();) {
-			Relation r = (Relation) i.next();
-			Table sct = r.getForeignKey().getTable();
-			this.constructTable(DataSetTableType.MAIN_SUBCLASS, sct,
-					(Set) ignoredRelations.get(sct), r);
-		}
-
-		// Build the dimension tables.
-		for (Iterator i = dimensionRelations.iterator(); i.hasNext();) {
-			Relation r = (Relation) i.next();
-			Table dt = r.getForeignKey().getTable();
-			this.constructTable(DataSetTableType.DIMENSION, dt,
-					(Set) ignoredRelations.get(dt), r);
-		}
+		// Generate the main table. It will recursively generate all the others.
+		this.generateDataSetTable(DataSetTableType.MAIN, null, centralTable,
+				null);
 
 		// Attempt to reuse existing masked columns.
 		// Do this by first creating a set of columns from the new tables
@@ -892,309 +735,211 @@ public class DataSet extends GenericSchema {
 				i.remove();
 	}
 
-	/**
-	 * Internal function that constructs a data set table based on a real table,
-	 * and the relations linking to/from it. If a linkback relation is supplied
-	 * between the real table and some parent real table, then a foreign key is
-	 * created on the data set table linking it to the primary key of the
-	 * dataset equivalent of the real parent table in the relation.
-	 * 
-	 * @param dsTableType
-	 *            the dsTableType of table to create.
-	 * @param realTable
-	 *            the original table to transform.
-	 * @param ignoredRelations
-	 *            the set of relations to ignore during transformation. If null,
-	 *            taken as empty.
-	 * @param linkbackRelation
-	 *            the relation between the realTable and the real parent table
-	 *            to link to if required. Null indicates no linking required.
-	 *            Linking takes place to the dataset version of the real parent
-	 *            table.
-	 * @return a fully constructed and keyed up data set table.
-	 */
-	private void constructTable(DataSetTableType dsTableType, Table realTable,
-			Set ignoredRelations, Relation linkbackRelation) {
-		// Prevents null-pointer exceptions in the case where there are no
-		// relations to ignore.
-		if (ignoredRelations == null)
-			ignoredRelations = new HashSet();
-
-		// Make a list to hold the list of relations followed when constructing
-		// this table.
-		List relationsFollowed = new ArrayList();
-
-		// Make a list to hold the columns created on this table.
-		List constructedColumns = new ArrayList();
-
-		// Make a list to hold the primary key columns for this table.
-		List constructedPKColumns = new ArrayList();
-
-		// Make a list to hold the foreign key columns for this table.
-		List constructedFKColumns = new ArrayList();
-
-		// Create the empty DataSetTable into which columns will be added.
-		// Give the table the same name as the real table upon which it
-		// is based.
-		DataSetTable datasetTable;
+	private void generateDataSetTable(DataSetTableType type,
+			DataSetTable parentDSTable, Table realTable, Relation sourceRelation) {
+		// Create the dataset table.
+		DataSetTable dsTable = null;
 		try {
-			datasetTable = new DataSetTable(realTable.getName(), this,
-					dsTableType, realTable);
+			dsTable = new DataSetTable(realTable.getName(), this, type,
+					realTable);
 		} catch (Throwable t) {
 			throw new MartBuilderInternalError(t);
 		}
 
-		// Add partition-on-schema schema name column if required. This
-		// is only required when the real table is part of a schema group,
-		// and happens regardless of whether partitioning by schema
-		// group is enabled or not as it is vital to the uniqueness of
-		// the ultimate primary key on this table.
-		DataSetColumn schemaNameCol = null;
-		if (realTable.getSchema() instanceof SchemaGroup) {
-			try {
-				schemaNameCol = new SchemaNameColumn(BuilderBundle
-						.getString("schemaColumnName"), datasetTable);
-			} catch (Throwable t) {
-				throw new MartBuilderInternalError(t);
-			}
-		}
+		// Create the three relation-table pair queues we will work with. The
+		// normal queue holds pairs of relations and tables. The other two hold
+		// a list of relations only, the tables being the FK ends of each
+		// relation.
+		List normalQ = new ArrayList();
+		List subclassQ = new ArrayList();
+		List dimensionQ = new ArrayList();
 
-		// If there is a linkback relation, then that relation describes the
-		// path between two real tables. The parent real table has some
-		// other dataset table representing it, usually a main table or a
-		// subclass table. The child real table is the one we are constructing a
-		// dataset table for here. What we need to do is construct an FK on the
-		// child dataset table which contains all the columns necessary to link
-		// back
-		// to the PK on the parent dataset table.
-		if (linkbackRelation != null) {
+		// Set up a list to hold columns for this table's primary key.
+		List dsTablePKCols = new ArrayList();
 
-			// Mark linkback relation as followed.
-			relationsFollowed.add(linkbackRelation);
+		// If the parent dataset table is not null, add columns from it
+		// as appropriate. Dimension tables get just the PK, and an
+		// FK linking them back. Subclass tables get all columns, plus
+		// the PK with FK link.
+		if (parentDSTable != null) {
+			// Make a list to hold the child table's FK cols.
+			List dsTableFKCols = new ArrayList();
 
-			// Get the parent real table.
-			Table parentRealTable = linkbackRelation.getPrimaryKey().getTable();
+			// Get the primary key of the parent DS table.
+			PrimaryKey parentDSTablePK = parentDSTable.getPrimaryKey();
 
-			// Get the parent dataset table.
-			DataSetTable parentDatasetTable = (DataSetTable) this
-					.getTableByName(parentRealTable.getName());
-
-			// Loop over the columns of the PK of the parent dataset table.
-			for (Iterator i = parentDatasetTable.getPrimaryKey().getColumns()
-					.iterator(); i.hasNext();) {
-				DataSetColumn parentDatasetTableColumn = (DataSetColumn) i
-						.next();
-				DataSetColumn childDatasetTableColumn;
-
-				// If the parent dataset column is a wrapped column, then
-				// create a wrapped column on the child dataset table that
-				// points to the same real table column. Use the linkback
-				// relation to indicate that the column was obtained via
-				// this method.
-				if (parentDatasetTableColumn instanceof WrappedColumn) {
-					// Find parent real table column.
-					Column parentRealTableColumn = ((WrappedColumn) parentDatasetTableColumn)
-							.getWrappedColumn();
-
-					// Create the child dataset column.
+			// Loop over each column in the parent table. If this is
+			// a subclass table, add it. If it is a dimension table,
+			// only add it if it is in the PK. In either case, if it
+			// is in the PK, add it both to the child PK and the child FK.
+			for (Iterator i = parentDSTable.getColumns().iterator(); i
+					.hasNext();) {
+				DataSetColumn parentDSCol = (DataSetColumn) i.next();
+				// Skip columns that are not in the primary key, if
+				// we are not making a subclass table.
+				if (!parentDSTablePK.getColumns().contains(parentDSCol)
+						&& !type.equals(DataSetTableType.MAIN_SUBCLASS))
+					continue;
+				// Otherwise, create a copy of the column.
+				DataSetColumn dsTableCol = null;
+				if (parentDSCol instanceof SchemaNameColumn)
 					try {
-						childDatasetTableColumn = new WrappedColumn(
-								parentRealTableColumn, datasetTable,
-								linkbackRelation);
+						dsTableCol = new SchemaNameColumn(BuilderBundle
+								.getString("schemaColumnName"), dsTable);
 					} catch (Throwable t) {
 						throw new MartBuilderInternalError(t);
 					}
-				}
-
-				// If the parent dataset column is a schema name column, we
-				// just reuse the one we already created for the child dataset
-				// table.
-				else if (parentDatasetTableColumn instanceof SchemaNameColumn)
-					childDatasetTableColumn = schemaNameCol;
-
-				// We can't handle anything else.
+				else if (parentDSCol instanceof WrappedColumn)
+					try {
+						dsTableCol = new WrappedColumn(
+								((WrappedColumn) parentDSCol)
+										.getWrappedColumn(), dsTable, null);
+					} catch (Throwable t) {
+						throw new MartBuilderInternalError(t);
+					}
 				else
+					// Eh??? Don't know what kind of column this is.
 					throw new MartBuilderInternalError();
-
-				// Add child dataset column to child dataset table FK.
-				constructedFKColumns.add(childDatasetTableColumn);
-
-				// Because the newly created column is part of the unique
-				// PK columns on the parent dataset table, it must be
-				// part of the child's too to prevent duplicate row problems.
-				constructedPKColumns.add(childDatasetTableColumn);
+				// Add the column to the child's PK and FK, if it was in
+				// the parent PK only.
+				if (parentDSTablePK.getColumns().contains(parentDSCol)) {
+					dsTablePKCols.add(dsTableCol);
+					dsTableFKCols.add(dsTableCol);
+				}
 			}
 
-			// Create the foreign key on the child dataset table now that we
-			// have all its columns.
 			try {
-				// Make the key.
-				ForeignKey newFK = new GenericForeignKey(constructedFKColumns);
-
-				// Add it to the child dataset table.
-				datasetTable.addForeignKey(newFK);
-
-				// Create the relation between the parent and child
-				// dataset tables.
-				new GenericRelation(parentDatasetTable.getPrimaryKey(), newFK,
+				// Create the child FK.
+				ForeignKey dsTableFK = new GenericForeignKey(dsTableFKCols);
+				dsTable.addForeignKey(dsTableFK);
+				// Link the child FK to the dataset
+				new GenericRelation(parentDSTablePK, dsTableFK,
 						Cardinality.MANY);
 			} catch (Throwable t) {
 				throw new MartBuilderInternalError(t);
 			}
-
-			// Remember that we've made them.
-			constructedColumns.addAll(constructedFKColumns);
 		}
 
-		// Add the rest of the columns by running the table transformation.
-		// This transformation will populate the list of relations followed,
-		// and potentially expand the list of PK columns too.
-		this.transformTable(datasetTable, realTable, ignoredRelations,
-				relationsFollowed, constructedPKColumns, constructedColumns);
+		// Set up a set of relations that have been followed so far.
+		Set relationsFollowed = new HashSet();
 
-		// Set the underlying relations list on the child dataset table.
-		datasetTable.setUnderlyingRelations(relationsFollowed);
+		// Process the table. If a source relation was specified,
+		// ignore the cols in the key in the table that is part of that
+		// source relation, else they'll get duplicated. This will always
+		// be the FK end, as that's the only way we can get subclass and
+		// dimension tables. This operation will populate the initial
+		// pairs in the normal, subclass and dimension queues.
+		this.processTable(dsTable, dsTablePKCols, realTable, normalQ,
+				subclassQ, dimensionQ, sourceRelation, relationsFollowed);
 
-		// After we've gathered all our colums together, and duplicate names
-		// have been ironed out, rename our foreign key columns with '_key'
-		// suffixes.
-		for (Iterator i = constructedFKColumns.iterator(); i.hasNext();) {
-			DataSetColumn col = (DataSetColumn) i.next();
-			if (!col.getName().endsWith(BuilderBundle.getString("fkSuffix")))
-				try {
-					col.setName(col.getName()
-							+ BuilderBundle.getString("fkSuffix"));
-				} catch (Throwable t) {
-					throw new MartBuilderInternalError(t);
-				}
+		// Process the normal queue. This merges tables into the dataset
+		// table using the relation specified in each pair in the queue.
+		for (int i = 0; i < normalQ.size(); i++) {
+			Object[] pair = (Object[]) normalQ.get(i);
+			Relation mergeSourceRelation = (Relation) pair[0];
+			Table mergeTable = (Table) pair[1];
+			this.processTable(dsTable, dsTablePKCols, mergeTable, normalQ,
+					subclassQ, dimensionQ, mergeSourceRelation,
+					relationsFollowed);
 		}
 
-		// Add schema name column to PK, if not already there. However, this
-		// should only be done if there is already a PK, because if it doesn't
-		// already exist, this would create ridiculous constraints.
-		if (schemaNameCol != null && !constructedPKColumns.isEmpty()
-				&& !constructedPKColumns.contains(schemaNameCol))
-			constructedPKColumns.add(schemaNameCol);
-
-		// Create the primary key.
-		if (!constructedPKColumns.isEmpty())
+		// Add a schema name column, if we are partitioning by schema name.
+		// If the table has a PK by this stage, add the schema name column
+		// to it, otherwise don't bother as it'll introduce unnecessary
+		// restrictions if we do. We only need do this to main tables, as
+		// others will inherit it through their foreign key.
+		if (type.equals(DataSetTableType.MAIN)
+				&& (realTable.getSchema() instanceof SchemaGroup))
 			try {
-				datasetTable.setPrimaryKey(new GenericPrimaryKey(
-						constructedPKColumns));
+				DataSetColumn schemaNameCol = new SchemaNameColumn(
+						BuilderBundle.getString("schemaColumnName"), dsTable);
+				if (!dsTablePKCols.isEmpty())
+					dsTablePKCols.add(schemaNameCol);
 			} catch (Throwable t) {
 				throw new MartBuilderInternalError(t);
 			}
+
+		// Create the primary key on this table.
+		try {
+			if (!dsTablePKCols.isEmpty())
+				dsTable.setPrimaryKey(new GenericPrimaryKey(dsTablePKCols));
+		} catch (Throwable t) {
+			throw new MartBuilderInternalError(t);
+		}
+
+		// Process the subclass relations of this table.
+		for (int i = 0; i < subclassQ.size(); i++) {
+			Relation subclassRelation = (Relation) subclassQ.get(i);
+			this.generateDataSetTable(DataSetTableType.MAIN_SUBCLASS, dsTable,
+					subclassRelation.getForeignKey().getTable(),
+					subclassRelation);
+		}
+
+		// Process the dimension relations of this table.
+		for (int i = 0; i < dimensionQ.size(); i++) {
+			Relation dimensionRelation = (Relation) dimensionQ.get(i);
+			this.generateDataSetTable(DataSetTableType.DIMENSION, dsTable,
+					dimensionRelation.getForeignKey().getTable(),
+					dimensionRelation);
+		}
 	}
 
-	/**
-	 * <p>
-	 * Simple recursive internal function that takes a real table, and adds all
-	 * its columns to some dataset table. It then takes all the relations from
-	 * that table, and recurses down them to do the same on each target table.
-	 * <p>
-	 * Masked relations are ignored, as are those that are marked as
-	 * {@link ComponentStatus#INFERRED_INCORRECT}.
-	 * <p>
-	 * Along the way, it constructs a list of columns that are required to be in
-	 * the eventual dataset table's primary key.
-	 * 
-	 * @param datasetTable
-	 *            the table to construct as we go along.
-	 * @param realTable
-	 *            the table we are adding columns to the dataset table from
-	 *            next.
-	 * @param ignoredRelations
-	 *            relations to ignore.
-	 * @param relationsFollowed
-	 *            the relations used as we went along.
-	 * @param constructedPKColumns
-	 *            the primary key columns to be added to the new dataset table.
-	 * @param constructedColumns
-	 *            the columns to be added to the new dataset table.
-	 */
-	private void transformTable(DataSetTable datasetTable, Table realTable,
-			Set ignoredRelations, List relationsFollowed,
-			List constructedPKColumns, List constructedColumns) {
-		// Set up a list to hold columns which should not be added to this
-		// dataset table.
-		List excludedColumns = new ArrayList();
+	private void processTable(DataSetTable dsTable, List dsTablePKCols,
+			Table mergeTable, List normalQ, List subclassQ, List dimensionQ,
+			Relation sourceRelation, Set relationsFollowed) {
+		Key ignoreKey = null;
+		if (sourceRelation != null) {
+			// Work out what key to ignore, if any.
+			ignoreKey = sourceRelation.getPrimaryKey().getTable().equals(
+					mergeTable) ? (Key) sourceRelation.getPrimaryKey()
+					: (Key) sourceRelation.getForeignKey();
 
-		// Add all columns from good foreign keys to the list of columns to
-		// be excluded. This is because these columns will be added from the
-		// primary key end of the relation pointing to the foreign key instead.
-		// Good foreign keys are those that are not incorrect, and have at least
-		// one non-incorrect non-masked non-concat-only relation.
-		for (Iterator i = realTable.getForeignKeys().iterator(); i.hasNext();) {
-			Key k = (Key) i.next();
+			// Add the relation to the list of relations followed for the table.
+			dsTable.getUnderlyingRelations().add(sourceRelation);
 
-			// Skip bad keys.
-			if (k.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
-				continue;
-
-			// See if we have a good relation.
-			boolean hasGoodRelation = false;
-			for (Iterator j = k.getRelations().iterator(); j.hasNext()
-					&& !hasGoodRelation;) {
-				Relation r = (Relation) j.next();
-				hasGoodRelation = (!r.getStatus().equals(
-						ComponentStatus.INFERRED_INCORRECT)
-						&& !this.getMaskedRelations().contains(r) && !this
-						.getConcatOnlyRelations().contains(r));
-			}
-
-			// If we have a good relation, skip all columns from this key.
-			if (hasGoodRelation)
-				excludedColumns.addAll(k.getColumns());
+			// Mark the source relation as followed.
+			relationsFollowed.add(sourceRelation);
 		}
 
-		// Also exclude all masked columns.
-		excludedColumns.addAll(this.getMaskedDataSetColumns());
+		// Work out the merge table's PK.
+		PrimaryKey mergeTablePK = mergeTable.getPrimaryKey();
 
-		// Work out the last relation visited. This relation is the one
-		// that was followed to reach this table, and will be used
-		// as the underlying relation for all columns added from this table.
-		Relation underlyingRelation = null;
-		if (!relationsFollowed.isEmpty())
-			underlyingRelation = (Relation) relationsFollowed
-					.get(relationsFollowed.size() - 1);
-
-		// Add all non-excluded columns from real table to dataset table
-		// by wrapping them up.
-		for (Iterator i = realTable.getColumns().iterator(); i.hasNext();) {
+		// Add all columns from merge table to dataset table, except those in
+		// the ignore key.
+		for (Iterator i = mergeTable.getColumns().iterator(); i.hasNext();) {
 			Column c = (Column) i.next();
 
-			// If column is excluded, ignore it.
-			if (excludedColumns.contains(c))
+			// Ignore those in the key followed to get here.
+			if (ignoreKey != null && ignoreKey.getColumns().contains(c))
 				continue;
 
-			// Otherwise add the column to our table.
-			Column wc;
+			// Create a wrapped column for this column.
 			try {
-				wc = new WrappedColumn(c, datasetTable, underlyingRelation);
+				WrappedColumn wc = new WrappedColumn(c, dsTable, sourceRelation);
+
+				// If the column was in the merge table's PK, add it to the ds
+				// tables's PK too.
+				if (mergeTablePK != null
+						&& mergeTablePK.getColumns().contains(c))
+					dsTablePKCols.add(wc);
 			} catch (Throwable t) {
 				throw new MartBuilderInternalError(t);
 			}
-
-			// If column is part of the primary key on the real table, then
-			// add the wrapped version to the primary key column set on the
-			// dataset table. Only do this if the real table primary key is
-			// not incorrect.
-			PrimaryKey pk = realTable.getPrimaryKey();
-			if (pk != null
-					&& !pk.getStatus().equals(
-							ComponentStatus.INFERRED_INCORRECT)
-					&& pk.getColumns().contains(c))
-				constructedPKColumns.add(wc);
 		}
 
-		// Loop over the relations leading from the real table.
-		for (Iterator i = realTable.getRelations().iterator(); i.hasNext();) {
+		// Update the three queues with relations.
+		for (Iterator i = mergeTable.getRelations().iterator(); i.hasNext();) {
 			Relation r = (Relation) i.next();
 
-			// Skip all ignored relations.
-			// Ignore incorrect relations too.
-			// Ignore relations with incorrect keys at either end.
-			if (ignoredRelations.contains(r)
+			// Don't repeat relations.
+			if (relationsFollowed.contains(r))
+				continue;
+			else
+				relationsFollowed.add(r);
+
+			// Don't follow masked or incorrect relations, or relations
+			// between incorrect keys.
+			if (this.maskedRelations.contains(r)
 					|| r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
 					|| r.getPrimaryKey().getStatus().equals(
 							ComponentStatus.INFERRED_INCORRECT)
@@ -1202,43 +947,38 @@ public class DataSet extends GenericSchema {
 							ComponentStatus.INFERRED_INCORRECT))
 				continue;
 
-			// Add relation to the path of relations followed so far.
-			relationsFollowed.add(r);
-
-			// Add the relation to the ignore set so that we don't
-			// revisit it later.
-			ignoredRelations.add(r);
-
-			// Find which end of the relation links to the current table,
-			// and which table the other end links to.
-			Key realTableRelSourceKey = r.getPrimaryKey();
-			Table realTableRelTargetTable = r.getForeignKey().getTable();
-			if (!realTableRelSourceKey.getTable().equals(realTable)) {
-				realTableRelSourceKey = r.getForeignKey();
-				realTableRelTargetTable = r.getPrimaryKey().getTable();
-			}
-
-			// If the primary key end of the relation links to the
-			// current table, and the relation is a concat-only relation,
-			// then create a concat-only-relation column on the dataset table.
-			if (realTableRelSourceKey instanceof PrimaryKey
-					&& this.getConcatOnlyRelations().contains(r))
+			// Concatenate concat-only relations.
+			else if (this.concatOnlyRelations.containsKey(r))
 				try {
 					new ConcatRelationColumn(BuilderBundle
 							.getString("concatColumnPrefix")
-							+ realTableRelTargetTable.getName(), datasetTable,
-							r);
+							+ mergeTable.getName(), dsTable, r);
 				} catch (Throwable t) {
 					throw new MartBuilderInternalError(t);
 				}
 
-			// Otherwise, recurse down to the target table and continue
-			// from there.
-			else {
-				this.transformTable(datasetTable, realTableRelTargetTable,
-						ignoredRelations, relationsFollowed,
-						constructedPKColumns, constructedColumns);
+			// Are we at the 1 end of a 1:M?
+			else if (r.getPrimaryKey().getTable().equals(mergeTable)
+					&& r.getFKCardinality().equals(Cardinality.MANY)) {
+				// Subclass subclassed relations, but only if this is a main
+				// table.
+				if (this.subclassedRelations.contains(r)
+						&& dsTable.getType().equals(DataSetTableType.MAIN))
+					subclassQ.add(r);
+
+				// Dimensionize dimension relations, which are all other 1:M
+				// relations, but only if this is not a dimension itself.
+				else if (!dsTable.getType().equals(DataSetTableType.DIMENSION))
+					dimensionQ.add(r);
 			}
+
+			// Follow all others.
+			else
+				normalQ.add(new Object[] {
+						r,
+						(r.getPrimaryKey().getTable().equals(mergeTable) ? r
+								.getForeignKey().getTable() : r.getPrimaryKey()
+								.getTable()) });
 		}
 	}
 
