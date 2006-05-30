@@ -1,20 +1,20 @@
 /*
-	Copyright (C) 2003 EBI, GRL
+ Copyright (C) 2003 EBI, GRL
 
-	This library is free software; you can redistribute it and/or
-	modify it under the terms of the GNU Lesser General Public
-	License as published by the Free Software Foundation; either
-	version 2.1 of the License, or (at your option) any later version.
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
 
-	This library is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	Lesser General Public License for more details.
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
 
-	You should have received a copy of the GNU Lesser General Public
-	License along with this library; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
 package org.ensembl.mart.explorer;
 
@@ -38,98 +38,165 @@ import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DatasetConfig;
 
 /**
- * Widget representing an AttibuteGroup. 
+ * Widget representing an AttibuteGroup.
  */
 public class AttributeGroupWidget extends GroupWidget {
 
-  private final static Logger logger =
-    Logger.getLogger(AttributeGroupWidget.class.getName());
+	private final static Logger logger = Logger
+			.getLogger(AttributeGroupWidget.class.getName());
 
-  private int lastWidth;
+	private int lastWidth;
 
-  private AttributeGroup group;
-  private AttributePage page; 
+	private AttributeGroup group;
 
-  /**
-   * @param query
-   * @param name
-   */
-  public AttributeGroupWidget(Query query, String name, AttributeGroup group, AttributePage page, QueryTreeView tree, DatasetConfig dsv, AdaptorManager manager) {
+	private AttributePage page;
 
-    super(name, query, tree);
+	/**
+	 * @param query
+	 * @param name
+	 */
+	public AttributeGroupWidget(Query query, String name, AttributeGroup group,
+			AttributePage page, QueryTreeView tree, DatasetConfig dsv,
+			AdaptorManager manager) {
 
-    this.group = group;
-    this.page = page;
-    
-    Box panel = Box.createVerticalBox();
-    leafWidgets = addCollections(panel, group.getAttributeCollections(), dsv, manager);
-    panel.add(Box.createVerticalGlue());
-    
-    add(new JScrollPane(panel));
-    
-  }
+		super(name, query, tree);
 
-  /**
-   * @param collections
-   */
-  private List addCollections(
-    Container container,
-    AttributeCollection[] collections,
-    DatasetConfig dsv, AdaptorManager manager) {
+		this.group = group;
+		this.page = page;
 
-    List widgets = new ArrayList();
+		Box panel = Box.createVerticalBox();
+		leafWidgets = addCollections(panel, group.getAttributeCollections(),
+				dsv, manager);
+		panel.add(Box.createVerticalGlue());
 
-    for (int i = 0; i < collections.length; i++) {
+		add(new JScrollPane(panel));
 
-        if (tree.skipConfigurationObject(collections[i])) continue;
-        
-        if (group.getInternalName().equals("sequence")) {
-          if (collections[i].getInternalName().matches("\\w*seq_scope\\w*")) {              
-            SequenceGroupWidget w = new SequenceGroupWidget(collections[i].getDisplayName(), 
-                                                            collections[i].getInternalName(), 
-                                                            query,
-                                                            tree, 
-                                                            dsv, 
-                                                            manager);
-            widgets.add( w );
-            container.add( w );            
-          } else
-              continue;
-        } else {
-            AttributeCollection collection = collections[i];
-            InputPage[] attributes = getAttributeWidgets(collection, manager);
-            widgets.addAll(Arrays.asList(attributes));
-            GridPanel p =
-                new GridPanel(attributes, 2, 200, 35, collection.getDisplayName());
-            container.add( p );
-        }
-    }
-    return widgets;
-  }
+	}
 
-  /**
-   * Converts collection.UIAttributeDescriptions into InputPages.
-   * @param collection
-   * @return array of AttributeDescriptionWidgets, one for each 
-   * AttributeDescription in the collection.
-   */
-  private InputPage[] getAttributeWidgets(AttributeCollection collection, AdaptorManager manager) {
+	/**
+	 * @param collections
+	 */
+	private List addCollections(Container container,
+			AttributeCollection[] collections, DatasetConfig dsv,
+			AdaptorManager manager) {
+
+		List widgets = new ArrayList();
+		
+		
+		
+		for (int i = 0; i < collections.length; i++) {
+
+			if (tree.skipConfigurationObject(collections[i]))
+				continue;
+
+			if (group.getInternalName().equals("sequence")) {
+				if (collections[i].getInternalName().matches(
+						"\\w*seq_scope\\w*")) {
+					SequenceGroupWidget w = new SequenceGroupWidget(
+							collections[i].getDisplayName(), collections[i]
+									.getInternalName(), query, tree, dsv,
+							manager);
+					widgets.add(w);
+					container.add(w);
+				} else
+					continue;
+			} else {
+				AttributeCollection collection = collections[i];
+				InputPage[] attributes = getAttributeWidgets(collection,
+						manager, dsv);
+				widgets.addAll(Arrays.asList(attributes));
+				GridPanel p = new GridPanel(attributes, 2, 200, 35, collection
+						.getDisplayName());
+				container.add(p);
+			}
+		}
+		return widgets;
+	}
+
+	/**
+	 * Converts collection.UIAttributeDescriptions into InputPages.
+	 * 
+	 * @param collection
+	 * @return array of AttributeDescriptionWidgets, one for each
+	 *         AttributeDescription in the collection.
+	 */
+private InputPage[] getAttributeWidgets(AttributeCollection collection, AdaptorManager manager, DatasetConfig dsv) 
+{
 
     List attributeDescriptions = collection.getAttributeDescriptions();
     List pages = new ArrayList();
 
-    for (Iterator iter = attributeDescriptions.iterator(); iter.hasNext();) {
+    for (Iterator iter = attributeDescriptions.iterator(); iter.hasNext();) 
+    {
       Object element = iter.next();
       
-      if (element instanceof AttributeDescription) {
+      if (element instanceof AttributeDescription) 
+      {
 
         AttributeDescription a = (AttributeDescription) element;
         if (tree.skipConfigurationObject(a)) continue;
         
-        if (a.getInternalName().indexOf('.') > 0) {
-            a.setDisplayName(manager.getPointerAttribute(a.getInternalName()).getDisplayName());
-            a.setField(a.getInternalName());
-            a.setTableConstraint(a.getInternalName());
+        if (a.getInternalName().indexOf('.') > 0) 
+        {
+        	String[] info = a.getInternalName().split("\\.");
+            String dname = info[0];
+            String aname = info[1];
+            String temp0 = dsv.getDataset(); // returns data set name hsapiens_gene_ensembl
+            
+        	if (dname.compareTo(temp0) == 0) /// check if its  a self pointing place holder
+        	{
+        		String temp2 = info[1]; //a.getInternalName().substring ( (a.getInternalName().indexOf('.')+1), a.getInternalName().length());
+        		//AttributePage attpage_PH = dsv.getAttributePageByInternalName("homologs");
+        		AttributePage  attpage_PH = dsv.getPageForAttribute(temp2);
+        		AttributeCollection collection_PH = attpage_PH.getCollectionForAttributeDescription(temp2);
+     		        		
+        		//AttributeCollection collection_PH = dsv.getCollectionForAttribute(temp2); doesnt work
+        		
+        		List attributeDescriptions_PH = collection_PH.getAttributeDescriptions();
+        	    
+        		List pages_PH = new ArrayList();
+
+        	    for (Iterator iter_PH = attributeDescriptions_PH.iterator(); iter_PH.hasNext();) 
+        	    {
+        	      Object element_PH = iter_PH.next();
+        	      
+        	      if (element_PH instanceof AttributeDescription) 
+        	      {
+
+        	        AttributeDescription a_PH = (AttributeDescription) element_PH;
+        	        if (tree.skipConfigurationObject(a_PH)) continue;
+        	       
+        	        if(a_PH.getInternalName().compareTo(aname) == 0) // means same
+        	        {
+        	            //String temp3 = a_PH.getInternalName();
+	        	        String temp4 = a_PH.getDisplayName();
+	        	        //String temp5 = a_PH.getField();
+	        	        
+	        	        a.setDisplayName(temp4);//manager.getPointerAttribute(a.getInternalName()).getDisplayName());
+	        	        a.setField(a.getInternalName());
+	        	        a.setTableConstraint(a.getInternalName());
+	        	        break;
+        	        }
+        	      }
+        	    }
+        		//String temp1 = this.getName(); // bring the REGION:
+        		//this.page.ge
+        		
+            	//String temp2 = a.getInternalName().substring ( (a.getInternalName().indexOf('.')+1), a.getInternalName().length());
+            	//a.setDisplayName(temp2);
+        	
+
+        		//a.setDisplayName(manager.getPointerAttribute(a.getInternalName()).getDisplayName());
+            	//a.setField(a.getInternalName());
+        		//a.setTableConstraint(a.getInternalName());
+            	// //////////////////////////////
+        	}                 	
+        	else 
+        	{
+        		a.setDisplayName(manager.getPointerAttribute(a.getInternalName()).getDisplayName());
+        		a.setField(a.getInternalName());
+        		a.setTableConstraint(a.getInternalName());
+        	}
         }
         
         AttributeDescriptionWidget w = new AttributeDescriptionWidget(query, a, tree);
@@ -144,5 +211,4 @@ public class AttributeGroupWidget extends GroupWidget {
     return (InputPage[]) pages.toArray(new InputPage[pages.size()]);
 
   }
-
 }
