@@ -749,7 +749,9 @@ public class DataSet extends GenericSchema {
 		// Create the three relation-table pair queues we will work with. The
 		// normal queue holds pairs of relations and tables. The other two hold
 		// a list of relations only, the tables being the FK ends of each
-		// relation.
+		// relation. The normal queue has a third object associated with each
+		// entry, which specifies whether to treat the 1:M relations from
+		// the merged table as dimensions or not.
 		List normalQ = new ArrayList();
 		List subclassQ = new ArrayList();
 		List dimensionQ = new ArrayList();
@@ -828,19 +830,23 @@ public class DataSet extends GenericSchema {
 		// source relation, else they'll get duplicated. This will always
 		// be the FK end, as that's the only way we can get subclass and
 		// dimension tables. This operation will populate the initial
-		// pairs in the normal, subclass and dimension queues.
+		// pairs in the normal, subclass and dimension queues. We only
+		// want dimensions constructed if we are not already constructing
+		// a dimension ourselves.
 		this.processTable(dsTable, dsTablePKCols, realTable, normalQ,
-				subclassQ, dimensionQ, sourceRelation, relationsFollowed);
+				subclassQ, dimensionQ, sourceRelation, relationsFollowed, 
+				!type.equals(DataSetTableType.DIMENSION));
 
 		// Process the normal queue. This merges tables into the dataset
 		// table using the relation specified in each pair in the queue.
 		for (int i = 0; i < normalQ.size(); i++) {
-			Object[] pair = (Object[]) normalQ.get(i);
-			Relation mergeSourceRelation = (Relation) pair[0];
-			Table mergeTable = (Table) pair[1];
+			Object[] triple = (Object[]) normalQ.get(i);
+			Relation mergeSourceRelation = (Relation) triple[0];
+			Table mergeTable = (Table) triple[1];
+			boolean makeDimensions = ((Boolean)triple[2]).booleanValue();
 			this.processTable(dsTable, dsTablePKCols, mergeTable, normalQ,
 					subclassQ, dimensionQ, mergeSourceRelation,
-					relationsFollowed);
+					relationsFollowed, makeDimensions);
 		}
 
 		// Add a schema name column, if we are partitioning by schema name.
@@ -886,7 +892,7 @@ public class DataSet extends GenericSchema {
 
 	private void processTable(DataSetTable dsTable, List dsTablePKCols,
 			Table mergeTable, List normalQ, List subclassQ, List dimensionQ,
-			Relation sourceRelation, Set relationsFollowed) {
+			Relation sourceRelation, Set relationsFollowed, boolean makeDimensions) {
 
 		// Don't ignore any keys by default.
 		Key ignoreKey = null;
@@ -972,32 +978,23 @@ public class DataSet extends GenericSchema {
 					subclassQ.add(r);
 
 				// Dimensionize dimension relations, which are all other 1:M
-				// relations, if the current table is the underlying table
-				// of the dataset table we are constructing, and we are not
-				// constructing a dimension table.
-				else if (!dsTable.getType().equals(DataSetTableType.DIMENSION)
-						&& mergeTable.equals(dsTable.getUnderlyingTable()))
+				// relations, if we are not constructing a dimension table,
+				// and are currently intending to construct dimensions.
+				else if (makeDimensions && !dsTable.getType().equals(DataSetTableType.DIMENSION))
 					dimensionQ.add(r);
-
-				/*
-				 * // Subclass subclassed relations, but only if this is a main //
-				 * table. if (this.subclassedRelations.contains(r) &&
-				 * dsTable.getType().equals(DataSetTableType.MAIN))
-				 * subclassQ.add(r); // Dimensionize dimension relations, which
-				 * are all other 1:M // relations, but only if this is not a
-				 * dimension itself. else if
-				 * (!dsTable.getType().equals(DataSetTableType.DIMENSION))
-				 * dimensionQ.add(r);
-				 */
 			}
 
-			// Follow all others.
+			// Follow all others. If we follow a 1:1, and we are currently 
+			// including dimensions, include them from the 1:1 as well. 
+			// Otherwise, stop including dimensions on subsequent tables.
 			else
 				normalQ.add(new Object[] {
 						r,
 						(r.getPrimaryKey().getTable().equals(mergeTable) ? r
 								.getForeignKey().getTable() : r.getPrimaryKey()
-								.getTable()) });
+								.getTable()),
+						Boolean.valueOf(makeDimensions && r.getFKCardinality().equals(Cardinality.ONE))
+						});
 		}
 	}
 
