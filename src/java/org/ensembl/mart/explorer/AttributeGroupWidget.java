@@ -141,17 +141,13 @@ private InputPage[] getAttributeWidgets(AttributeCollection collection, AdaptorM
         	String[] info = a.getInternalName().split("\\.");
             String dname = info[0];
             String aname = info[1];
-            String temp0 = dsv.getDataset(); // returns data set name hsapiens_gene_ensembl
+            String main_dataset = dsv.getDataset(); // returns data set name hsapiens_gene_ensembl
             
-        	if (dname.compareTo(temp0) == 0) /// check if its  a self pointing place holder
-        	{
-        		String temp2 = info[1]; //a.getInternalName().substring ( (a.getInternalName().indexOf('.')+1), a.getInternalName().length());
-        		//AttributePage attpage_PH = dsv.getAttributePageByInternalName("homologs");
-        		AttributePage  attpage_PH = dsv.getPageForAttribute(temp2);
-        		AttributeCollection collection_PH = attpage_PH.getCollectionForAttributeDescription(temp2);
-     		        		
-        		//AttributeCollection collection_PH = dsv.getCollectionForAttribute(temp2); doesnt work
-        		
+        	if (dname.compareTo(main_dataset) == 0) /// check if its  a self pointing place holder
+        	{        		     		
+        		AttributePage  attpage_PH = dsv.getPageForAttribute(aname);
+        		AttributeCollection collection_PH = attpage_PH.getCollectionForAttributeDescription(aname);  		        		
+
         		List attributeDescriptions_PH = collection_PH.getAttributeDescriptions();
         	    
         		List pages_PH = new ArrayList();
@@ -168,28 +164,15 @@ private InputPage[] getAttributeWidgets(AttributeCollection collection, AdaptorM
         	       
         	        if(a_PH.getInternalName().compareTo(aname) == 0) // means same
         	        {
-        	            //String temp3 = a_PH.getInternalName();
-	        	        String temp4 = a_PH.getDisplayName();
-	        	        //String temp5 = a_PH.getField();
-	        	        
-	        	        a.setDisplayName(temp4);//manager.getPointerAttribute(a.getInternalName()).getDisplayName());
-	        	        a.setField(a.getInternalName());
-	        	        a.setTableConstraint(a.getInternalName());
+        	            a.setInternalName(a_PH.getInternalName());
+	        	        a.setDisplayName(a_PH.getDisplayName());
+	        	        a.setField(a_PH.getField());
+	        	        a.setTableConstraint(a_PH.getTableConstraint());	        	 
+	        	        a.setKey(a_PH.getKey());
 	        	        break;
         	        }
         	      }
         	    }
-        		//String temp1 = this.getName(); // bring the REGION:
-        		//this.page.ge
-        		
-            	//String temp2 = a.getInternalName().substring ( (a.getInternalName().indexOf('.')+1), a.getInternalName().length());
-            	//a.setDisplayName(temp2);
-        	
-
-        		//a.setDisplayName(manager.getPointerAttribute(a.getInternalName()).getDisplayName());
-            	//a.setField(a.getInternalName());
-        		//a.setTableConstraint(a.getInternalName());
-            	// //////////////////////////////
         	}                 	
         	else 
         	{

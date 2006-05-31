@@ -637,7 +637,9 @@ public class MartExplorer
   }
 
   private QueryEditor getSelectedQueryEditor() {
-    return (QueryEditor) tabs.getSelectedComponent();
+    //return (QueryEditor) tabs.getSelectedComponent();
+	QueryEditor obj1 = (QueryEditor) tabs.getSelectedComponent();
+	return obj1;
   }
 
   private boolean isQueryEditorSelected() {
