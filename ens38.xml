@@ -381,474 +381,476 @@
 			<column id="339" name="object_xref_id"/>
 			<column id="340" name="xref_id"/>
 			<foreignKey id="341" columnIds="340" status="INFERRED" alt="FK_hs38:object_xref[xref_id]"/>
-			<primaryKey id="342" columnIds="339" status="INFERRED" alt="PK_hs38:object_xref[object_xref_id]"/>
+			<foreignKey id="342" columnIds="337" status="HANDMADE" alt="FK_hs38:object_xref[ensembl_id]"/>
+			<primaryKey id="343" columnIds="339" status="INFERRED" alt="PK_hs38:object_xref[object_xref_id]"/>
 		</table>
-		<table id="343" name="oligo_array">
-			<column id="344" name="name"/>
-			<column id="345" name="oligo_array_id"/>
-			<column id="346" name="parent_array_id"/>
-			<column id="347" name="probe_setsize"/>
-			<column id="348" name="type"/>
-			<foreignKey id="349" columnIds="346" status="HANDMADE" alt="FK_hs38:oligo_array[parent_array_id]"/>
-			<primaryKey id="350" columnIds="345" status="INFERRED" alt="PK_hs38:oligo_array[oligo_array_id]"/>
+		<table id="344" name="oligo_array">
+			<column id="345" name="name"/>
+			<column id="346" name="oligo_array_id"/>
+			<column id="347" name="parent_array_id"/>
+			<column id="348" name="probe_setsize"/>
+			<column id="349" name="type"/>
+			<foreignKey id="350" columnIds="347" status="HANDMADE" alt="FK_hs38:oligo_array[parent_array_id]"/>
+			<primaryKey id="351" columnIds="346" status="INFERRED" alt="PK_hs38:oligo_array[oligo_array_id]"/>
 		</table>
-		<table id="351" name="oligo_feature">
-			<column id="352" name="analysis_id"/>
-			<column id="353" name="mismatches"/>
-			<column id="354" name="oligo_feature_id"/>
-			<column id="355" name="oligo_probe_id"/>
-			<column id="356" name="seq_region_end"/>
-			<column id="357" name="seq_region_id"/>
-			<column id="358" name="seq_region_start"/>
-			<column id="359" name="seq_region_strand"/>
-			<foreignKey id="360" columnIds="352" status="INFERRED" alt="FK_hs38:oligo_feature[analysis_id]"/>
-			<foreignKey id="361" columnIds="357" status="INFERRED" alt="FK_hs38:oligo_feature[seq_region_id]"/>
-			<primaryKey id="362" columnIds="354" status="INFERRED" alt="PK_hs38:oligo_feature[oligo_feature_id]"/>
+		<table id="352" name="oligo_feature">
+			<column id="353" name="analysis_id"/>
+			<column id="354" name="mismatches"/>
+			<column id="355" name="oligo_feature_id"/>
+			<column id="356" name="oligo_probe_id"/>
+			<column id="357" name="seq_region_end"/>
+			<column id="358" name="seq_region_id"/>
+			<column id="359" name="seq_region_start"/>
+			<column id="360" name="seq_region_strand"/>
+			<foreignKey id="361" columnIds="353" status="INFERRED" alt="FK_hs38:oligo_feature[analysis_id]"/>
+			<foreignKey id="362" columnIds="358" status="INFERRED" alt="FK_hs38:oligo_feature[seq_region_id]"/>
+			<primaryKey id="363" columnIds="355" status="INFERRED" alt="PK_hs38:oligo_feature[oligo_feature_id]"/>
 		</table>
-		<table id="363" name="oligo_feature_backup">
-			<column id="364" name="analysis_id"/>
-			<column id="365" name="mismatches"/>
-			<column id="366" name="oligo_feature_id"/>
-			<column id="367" name="oligo_probe_id"/>
-			<column id="368" name="seq_region_end"/>
-			<column id="369" name="seq_region_id"/>
-			<column id="370" name="seq_region_start"/>
-			<column id="371" name="seq_region_strand"/>
-			<foreignKey id="372" columnIds="364" status="INFERRED" alt="FK_hs38:oligo_feature_backup[analysis_id]"/>
-			<foreignKey id="373" columnIds="366" status="INFERRED" alt="FK_hs38:oligo_feature_backup[oligo_feature_id]"/>
-			<foreignKey id="374" columnIds="369" status="INFERRED" alt="FK_hs38:oligo_feature_backup[seq_region_id]"/>
+		<table id="364" name="oligo_feature_backup">
+			<column id="365" name="analysis_id"/>
+			<column id="366" name="mismatches"/>
+			<column id="367" name="oligo_feature_id"/>
+			<column id="368" name="oligo_probe_id"/>
+			<column id="369" name="seq_region_end"/>
+			<column id="370" name="seq_region_id"/>
+			<column id="371" name="seq_region_start"/>
+			<column id="372" name="seq_region_strand"/>
+			<foreignKey id="373" columnIds="365" status="INFERRED" alt="FK_hs38:oligo_feature_backup[analysis_id]"/>
+			<foreignKey id="374" columnIds="367" status="INFERRED" alt="FK_hs38:oligo_feature_backup[oligo_feature_id]"/>
+			<foreignKey id="375" columnIds="370" status="INFERRED" alt="FK_hs38:oligo_feature_backup[seq_region_id]"/>
 		</table>
-		<table id="375" name="oligo_probe">
-			<column id="376" name="description"/>
-			<column id="377" name="length"/>
-			<column id="378" name="name"/>
-			<column id="379" name="oligo_array_id"/>
-			<column id="380" name="oligo_probe_id"/>
-			<column id="381" name="probeset"/>
-			<foreignKey id="382" columnIds="379" status="INFERRED" alt="FK_hs38:oligo_probe[oligo_array_id]"/>
-			<primaryKey id="383" columnIds="380,379" status="INFERRED" alt="PK_hs38:oligo_probe[oligo_probe_id, oligo_array_id]"/>
+		<table id="376" name="oligo_probe">
+			<column id="377" name="description"/>
+			<column id="378" name="length"/>
+			<column id="379" name="name"/>
+			<column id="380" name="oligo_array_id"/>
+			<column id="381" name="oligo_probe_id"/>
+			<column id="382" name="probeset"/>
+			<foreignKey id="383" columnIds="380" status="INFERRED" alt="FK_hs38:oligo_probe[oligo_array_id]"/>
+			<primaryKey id="384" columnIds="381,380" status="INFERRED" alt="PK_hs38:oligo_probe[oligo_probe_id, oligo_array_id]"/>
 		</table>
-		<table id="384" name="peptide_archive">
-			<column id="385" name="md5_checksum"/>
-			<column id="386" name="peptide_archive_id"/>
-			<column id="387" name="peptide_seq"/>
-			<primaryKey id="388" columnIds="386" status="INFERRED" alt="PK_hs38:peptide_archive[peptide_archive_id]"/>
+		<table id="385" name="peptide_archive">
+			<column id="386" name="md5_checksum"/>
+			<column id="387" name="peptide_archive_id"/>
+			<column id="388" name="peptide_seq"/>
+			<primaryKey id="389" columnIds="387" status="INFERRED" alt="PK_hs38:peptide_archive[peptide_archive_id]"/>
 		</table>
-		<table id="389" name="prediction_exon">
-			<column id="390" name="exon_rank"/>
-			<column id="391" name="p_value"/>
-			<column id="392" name="prediction_exon_id"/>
-			<column id="393" name="prediction_transcript_id"/>
-			<column id="394" name="score"/>
-			<column id="395" name="seq_region_end"/>
-			<column id="396" name="seq_region_id"/>
-			<column id="397" name="seq_region_start"/>
-			<column id="398" name="seq_region_strand"/>
-			<column id="399" name="start_phase"/>
-			<foreignKey id="400" columnIds="393" status="INFERRED" alt="FK_hs38:prediction_exon[prediction_transcript_id]"/>
-			<foreignKey id="401" columnIds="396" status="INFERRED" alt="FK_hs38:prediction_exon[seq_region_id]"/>
-			<primaryKey id="402" columnIds="392" status="INFERRED" alt="PK_hs38:prediction_exon[prediction_exon_id]"/>
+		<table id="390" name="prediction_exon">
+			<column id="391" name="exon_rank"/>
+			<column id="392" name="p_value"/>
+			<column id="393" name="prediction_exon_id"/>
+			<column id="394" name="prediction_transcript_id"/>
+			<column id="395" name="score"/>
+			<column id="396" name="seq_region_end"/>
+			<column id="397" name="seq_region_id"/>
+			<column id="398" name="seq_region_start"/>
+			<column id="399" name="seq_region_strand"/>
+			<column id="400" name="start_phase"/>
+			<foreignKey id="401" columnIds="394" status="INFERRED" alt="FK_hs38:prediction_exon[prediction_transcript_id]"/>
+			<foreignKey id="402" columnIds="397" status="INFERRED" alt="FK_hs38:prediction_exon[seq_region_id]"/>
+			<primaryKey id="403" columnIds="393" status="INFERRED" alt="PK_hs38:prediction_exon[prediction_exon_id]"/>
 		</table>
-		<table id="403" name="prediction_transcript">
-			<column id="404" name="analysis_id"/>
-			<column id="405" name="display_label"/>
-			<column id="406" name="prediction_transcript_id"/>
-			<column id="407" name="seq_region_end"/>
-			<column id="408" name="seq_region_id"/>
-			<column id="409" name="seq_region_start"/>
-			<column id="410" name="seq_region_strand"/>
-			<foreignKey id="411" columnIds="404" status="INFERRED" alt="FK_hs38:prediction_transcript[analysis_id]"/>
-			<foreignKey id="412" columnIds="408" status="INFERRED" alt="FK_hs38:prediction_transcript[seq_region_id]"/>
-			<primaryKey id="413" columnIds="406" status="INFERRED" alt="PK_hs38:prediction_transcript[prediction_transcript_id]"/>
+		<table id="404" name="prediction_transcript">
+			<column id="405" name="analysis_id"/>
+			<column id="406" name="display_label"/>
+			<column id="407" name="prediction_transcript_id"/>
+			<column id="408" name="seq_region_end"/>
+			<column id="409" name="seq_region_id"/>
+			<column id="410" name="seq_region_start"/>
+			<column id="411" name="seq_region_strand"/>
+			<foreignKey id="412" columnIds="405" status="INFERRED" alt="FK_hs38:prediction_transcript[analysis_id]"/>
+			<foreignKey id="413" columnIds="409" status="INFERRED" alt="FK_hs38:prediction_transcript[seq_region_id]"/>
+			<primaryKey id="414" columnIds="407" status="INFERRED" alt="PK_hs38:prediction_transcript[prediction_transcript_id]"/>
 		</table>
-		<table id="414" name="protein_align_feature">
-			<column id="415" name="analysis_id"/>
-			<column id="416" name="cigar_line"/>
-			<column id="417" name="evalue"/>
-			<column id="418" name="hit_end"/>
-			<column id="419" name="hit_name"/>
-			<column id="420" name="hit_start"/>
-			<column id="421" name="perc_ident"/>
-			<column id="422" name="protein_align_feature_id"/>
-			<column id="423" name="score"/>
-			<column id="424" name="seq_region_end"/>
-			<column id="425" name="seq_region_id"/>
-			<column id="426" name="seq_region_start"/>
-			<column id="427" name="seq_region_strand"/>
-			<foreignKey id="428" columnIds="415" status="INFERRED" alt="FK_hs38:protein_align_feature[analysis_id]"/>
-			<foreignKey id="429" columnIds="425" status="INFERRED" alt="FK_hs38:protein_align_feature[seq_region_id]"/>
-			<primaryKey id="430" columnIds="422" status="INFERRED" alt="PK_hs38:protein_align_feature[protein_align_feature_id]"/>
+		<table id="415" name="protein_align_feature">
+			<column id="416" name="analysis_id"/>
+			<column id="417" name="cigar_line"/>
+			<column id="418" name="evalue"/>
+			<column id="419" name="hit_end"/>
+			<column id="420" name="hit_name"/>
+			<column id="421" name="hit_start"/>
+			<column id="422" name="perc_ident"/>
+			<column id="423" name="protein_align_feature_id"/>
+			<column id="424" name="score"/>
+			<column id="425" name="seq_region_end"/>
+			<column id="426" name="seq_region_id"/>
+			<column id="427" name="seq_region_start"/>
+			<column id="428" name="seq_region_strand"/>
+			<foreignKey id="429" columnIds="416" status="INFERRED" alt="FK_hs38:protein_align_feature[analysis_id]"/>
+			<foreignKey id="430" columnIds="426" status="INFERRED" alt="FK_hs38:protein_align_feature[seq_region_id]"/>
+			<primaryKey id="431" columnIds="423" status="INFERRED" alt="PK_hs38:protein_align_feature[protein_align_feature_id]"/>
 		</table>
-		<table id="431" name="protein_feature">
-			<column id="432" name="analysis_id"/>
-			<column id="433" name="evalue"/>
-			<column id="434" name="hit_end"/>
-			<column id="435" name="hit_id"/>
-			<column id="436" name="hit_start"/>
-			<column id="437" name="perc_ident"/>
-			<column id="438" name="protein_feature_id"/>
-			<column id="439" name="score"/>
-			<column id="440" name="seq_end"/>
-			<column id="441" name="seq_start"/>
-			<column id="442" name="translation_id"/>
-			<foreignKey id="443" columnIds="432" status="INFERRED" alt="FK_hs38:protein_feature[analysis_id]"/>
-			<foreignKey id="444" columnIds="442" status="INFERRED" alt="FK_hs38:protein_feature[translation_id]"/>
-			<primaryKey id="445" columnIds="438" status="INFERRED" alt="PK_hs38:protein_feature[protein_feature_id]"/>
+		<table id="432" name="protein_feature">
+			<column id="433" name="analysis_id"/>
+			<column id="434" name="evalue"/>
+			<column id="435" name="hit_end"/>
+			<column id="436" name="hit_id"/>
+			<column id="437" name="hit_start"/>
+			<column id="438" name="perc_ident"/>
+			<column id="439" name="protein_feature_id"/>
+			<column id="440" name="score"/>
+			<column id="441" name="seq_end"/>
+			<column id="442" name="seq_start"/>
+			<column id="443" name="translation_id"/>
+			<foreignKey id="444" columnIds="433" status="INFERRED" alt="FK_hs38:protein_feature[analysis_id]"/>
+			<foreignKey id="445" columnIds="443" status="INFERRED" alt="FK_hs38:protein_feature[translation_id]"/>
+			<primaryKey id="446" columnIds="439" status="INFERRED" alt="PK_hs38:protein_feature[protein_feature_id]"/>
 		</table>
-		<table id="446" name="qtl">
-			<column id="447" name="flank_marker_id_1"/>
-			<column id="448" name="flank_marker_id_2"/>
-			<column id="449" name="lod_score"/>
-			<column id="450" name="peak_marker_id"/>
-			<column id="451" name="qtl_id"/>
-			<column id="452" name="trait"/>
-			<foreignKey id="453" columnIds="447" status="HANDMADE" alt="FK_hs38:qtl[flank_marker_id_1]"/>
-			<foreignKey id="454" columnIds="448" status="HANDMADE" alt="FK_hs38:qtl[flank_marker_id_2]"/>
-			<foreignKey id="455" columnIds="450" status="HANDMADE" alt="FK_hs38:qtl[peak_marker_id]"/>
-			<primaryKey id="456" columnIds="451" status="INFERRED" alt="PK_hs38:qtl[qtl_id]"/>
+		<table id="447" name="qtl">
+			<column id="448" name="flank_marker_id_1"/>
+			<column id="449" name="flank_marker_id_2"/>
+			<column id="450" name="lod_score"/>
+			<column id="451" name="peak_marker_id"/>
+			<column id="452" name="qtl_id"/>
+			<column id="453" name="trait"/>
+			<foreignKey id="454" columnIds="448" status="HANDMADE" alt="FK_hs38:qtl[flank_marker_id_1]"/>
+			<foreignKey id="455" columnIds="449" status="HANDMADE" alt="FK_hs38:qtl[flank_marker_id_2]"/>
+			<foreignKey id="456" columnIds="451" status="HANDMADE" alt="FK_hs38:qtl[peak_marker_id]"/>
+			<primaryKey id="457" columnIds="452" status="INFERRED" alt="PK_hs38:qtl[qtl_id]"/>
 		</table>
-		<table id="457" name="qtl_feature">
-			<column id="458" name="analysis_id"/>
-			<column id="459" name="qtl_id"/>
-			<column id="460" name="seq_region_end"/>
-			<column id="461" name="seq_region_id"/>
-			<column id="462" name="seq_region_start"/>
-			<foreignKey id="463" columnIds="458" status="INFERRED" alt="FK_hs38:qtl_feature[analysis_id]"/>
-			<foreignKey id="464" columnIds="459" status="INFERRED" alt="FK_hs38:qtl_feature[qtl_id]"/>
-			<foreignKey id="465" columnIds="461" status="INFERRED" alt="FK_hs38:qtl_feature[seq_region_id]"/>
+		<table id="458" name="qtl_feature">
+			<column id="459" name="analysis_id"/>
+			<column id="460" name="qtl_id"/>
+			<column id="461" name="seq_region_end"/>
+			<column id="462" name="seq_region_id"/>
+			<column id="463" name="seq_region_start"/>
+			<foreignKey id="464" columnIds="459" status="INFERRED" alt="FK_hs38:qtl_feature[analysis_id]"/>
+			<foreignKey id="465" columnIds="460" status="INFERRED" alt="FK_hs38:qtl_feature[qtl_id]"/>
+			<foreignKey id="466" columnIds="462" status="INFERRED" alt="FK_hs38:qtl_feature[seq_region_id]"/>
 		</table>
-		<table id="466" name="qtl_synonym">
-			<column id="467" name="qtl_id"/>
-			<column id="468" name="qtl_synonym_id"/>
-			<column id="469" name="source_database"/>
-			<column id="470" name="source_primary_id"/>
-			<foreignKey id="471" columnIds="467" status="INFERRED" alt="FK_hs38:qtl_synonym[qtl_id]"/>
-			<primaryKey id="472" columnIds="468" status="INFERRED" alt="PK_hs38:qtl_synonym[qtl_synonym_id]"/>
+		<table id="467" name="qtl_synonym">
+			<column id="468" name="qtl_id"/>
+			<column id="469" name="qtl_synonym_id"/>
+			<column id="470" name="source_database"/>
+			<column id="471" name="source_primary_id"/>
+			<foreignKey id="472" columnIds="468" status="INFERRED" alt="FK_hs38:qtl_synonym[qtl_id]"/>
+			<primaryKey id="473" columnIds="469" status="INFERRED" alt="PK_hs38:qtl_synonym[qtl_synonym_id]"/>
 		</table>
-		<table id="473" name="regulatory_factor">
-			<column id="474" name="name"/>
-			<column id="475" name="regulatory_factor_id"/>
-			<column id="476" name="type"/>
-			<primaryKey id="477" columnIds="475" status="INFERRED" alt="PK_hs38:regulatory_factor[regulatory_factor_id]"/>
+		<table id="474" name="regulatory_factor">
+			<column id="475" name="name"/>
+			<column id="476" name="regulatory_factor_id"/>
+			<column id="477" name="type"/>
+			<primaryKey id="478" columnIds="476" status="INFERRED" alt="PK_hs38:regulatory_factor[regulatory_factor_id]"/>
 		</table>
-		<table id="478" name="regulatory_factor_coding">
-			<column id="479" name="gene_id"/>
-			<column id="480" name="regulatory_factor_id"/>
-			<column id="481" name="transcript_id"/>
-			<foreignKey id="482" columnIds="479" status="INFERRED" alt="FK_hs38:regulatory_factor_coding[gene_id]"/>
-			<foreignKey id="483" columnIds="480" status="INFERRED" alt="FK_hs38:regulatory_factor_coding[regulatory_factor_id]"/>
-			<foreignKey id="484" columnIds="481" status="INFERRED" alt="FK_hs38:regulatory_factor_coding[transcript_id]"/>
+		<table id="479" name="regulatory_factor_coding">
+			<column id="480" name="gene_id"/>
+			<column id="481" name="regulatory_factor_id"/>
+			<column id="482" name="transcript_id"/>
+			<foreignKey id="483" columnIds="480" status="INFERRED" alt="FK_hs38:regulatory_factor_coding[gene_id]"/>
+			<foreignKey id="484" columnIds="481" status="INFERRED" alt="FK_hs38:regulatory_factor_coding[regulatory_factor_id]"/>
+			<foreignKey id="485" columnIds="482" status="INFERRED" alt="FK_hs38:regulatory_factor_coding[transcript_id]"/>
 		</table>
-		<table id="485" name="regulatory_feature">
-			<column id="486" name="analysis_id"/>
-			<column id="487" name="name"/>
-			<column id="488" name="regulatory_factor_id"/>
-			<column id="489" name="regulatory_feature_id"/>
-			<column id="490" name="seq_region_end"/>
-			<column id="491" name="seq_region_id"/>
-			<column id="492" name="seq_region_start"/>
-			<column id="493" name="seq_region_strand"/>
-			<foreignKey id="494" columnIds="486" status="INFERRED" alt="FK_hs38:regulatory_feature[analysis_id]"/>
-			<foreignKey id="495" columnIds="488" status="INFERRED" alt="FK_hs38:regulatory_feature[regulatory_factor_id]"/>
-			<foreignKey id="496" columnIds="491" status="INFERRED" alt="FK_hs38:regulatory_feature[seq_region_id]"/>
-			<primaryKey id="497" columnIds="489" status="INFERRED" alt="PK_hs38:regulatory_feature[regulatory_feature_id]"/>
+		<table id="486" name="regulatory_feature">
+			<column id="487" name="analysis_id"/>
+			<column id="488" name="name"/>
+			<column id="489" name="regulatory_factor_id"/>
+			<column id="490" name="regulatory_feature_id"/>
+			<column id="491" name="seq_region_end"/>
+			<column id="492" name="seq_region_id"/>
+			<column id="493" name="seq_region_start"/>
+			<column id="494" name="seq_region_strand"/>
+			<foreignKey id="495" columnIds="487" status="INFERRED" alt="FK_hs38:regulatory_feature[analysis_id]"/>
+			<foreignKey id="496" columnIds="489" status="INFERRED" alt="FK_hs38:regulatory_feature[regulatory_factor_id]"/>
+			<foreignKey id="497" columnIds="492" status="INFERRED" alt="FK_hs38:regulatory_feature[seq_region_id]"/>
+			<primaryKey id="498" columnIds="490" status="INFERRED" alt="PK_hs38:regulatory_feature[regulatory_feature_id]"/>
 		</table>
-		<table id="498" name="regulatory_feature_object">
-			<column id="499" name="ensembl_object_id"/>
-			<column id="500" name="ensembl_object_type"/>
-			<column id="501" name="evidence"/>
-			<column id="502" name="influence"/>
-			<column id="503" name="regulatory_feature_id"/>
-			<foreignKey id="504" columnIds="503" status="INFERRED" alt="FK_hs38:regulatory_feature_object[regulatory_feature_id]"/>
+		<table id="499" name="regulatory_feature_object">
+			<column id="500" name="ensembl_object_id"/>
+			<column id="501" name="ensembl_object_type"/>
+			<column id="502" name="evidence"/>
+			<column id="503" name="influence"/>
+			<column id="504" name="regulatory_feature_id"/>
+			<foreignKey id="505" columnIds="504" status="INFERRED" alt="FK_hs38:regulatory_feature_object[regulatory_feature_id]"/>
 		</table>
-		<table id="505" name="regulatory_search_region">
-			<column id="506" name="analysis_id"/>
-			<column id="507" name="ensembl_object_id"/>
-			<column id="508" name="ensembl_object_type"/>
-			<column id="509" name="name"/>
-			<column id="510" name="regulatory_search_region_id"/>
-			<column id="511" name="seq_region_end"/>
-			<column id="512" name="seq_region_id"/>
-			<column id="513" name="seq_region_start"/>
-			<column id="514" name="seq_region_strand"/>
-			<foreignKey id="515" columnIds="506" status="INFERRED" alt="FK_hs38:regulatory_search_region[analysis_id]"/>
-			<foreignKey id="516" columnIds="512" status="INFERRED" alt="FK_hs38:regulatory_search_region[seq_region_id]"/>
-			<primaryKey id="517" columnIds="510" status="INFERRED" alt="PK_hs38:regulatory_search_region[regulatory_search_region_id]"/>
+		<table id="506" name="regulatory_search_region">
+			<column id="507" name="analysis_id"/>
+			<column id="508" name="ensembl_object_id"/>
+			<column id="509" name="ensembl_object_type"/>
+			<column id="510" name="name"/>
+			<column id="511" name="regulatory_search_region_id"/>
+			<column id="512" name="seq_region_end"/>
+			<column id="513" name="seq_region_id"/>
+			<column id="514" name="seq_region_start"/>
+			<column id="515" name="seq_region_strand"/>
+			<foreignKey id="516" columnIds="507" status="INFERRED" alt="FK_hs38:regulatory_search_region[analysis_id]"/>
+			<foreignKey id="517" columnIds="513" status="INFERRED" alt="FK_hs38:regulatory_search_region[seq_region_id]"/>
+			<primaryKey id="518" columnIds="511" status="INFERRED" alt="PK_hs38:regulatory_search_region[regulatory_search_region_id]"/>
 		</table>
-		<table id="518" name="repeat_consensus">
-			<column id="519" name="repeat_class"/>
-			<column id="520" name="repeat_consensus"/>
-			<column id="521" name="repeat_consensus_id"/>
-			<column id="522" name="repeat_name"/>
-			<column id="523" name="repeat_type"/>
-			<primaryKey id="524" columnIds="521" status="INFERRED" alt="PK_hs38:repeat_consensus[repeat_consensus_id]"/>
+		<table id="519" name="repeat_consensus">
+			<column id="520" name="repeat_class"/>
+			<column id="521" name="repeat_consensus"/>
+			<column id="522" name="repeat_consensus_id"/>
+			<column id="523" name="repeat_name"/>
+			<column id="524" name="repeat_type"/>
+			<primaryKey id="525" columnIds="522" status="INFERRED" alt="PK_hs38:repeat_consensus[repeat_consensus_id]"/>
 		</table>
-		<table id="525" name="repeat_feature">
-			<column id="526" name="analysis_id"/>
-			<column id="527" name="repeat_consensus_id"/>
-			<column id="528" name="repeat_end"/>
-			<column id="529" name="repeat_feature_id"/>
-			<column id="530" name="repeat_start"/>
-			<column id="531" name="score"/>
-			<column id="532" name="seq_region_end"/>
-			<column id="533" name="seq_region_id"/>
-			<column id="534" name="seq_region_start"/>
-			<column id="535" name="seq_region_strand"/>
-			<foreignKey id="536" columnIds="526" status="INFERRED" alt="FK_hs38:repeat_feature[analysis_id]"/>
-			<foreignKey id="537" columnIds="527" status="INFERRED" alt="FK_hs38:repeat_feature[repeat_consensus_id]"/>
-			<foreignKey id="538" columnIds="533" status="INFERRED" alt="FK_hs38:repeat_feature[seq_region_id]"/>
-			<primaryKey id="539" columnIds="529" status="INFERRED" alt="PK_hs38:repeat_feature[repeat_feature_id]"/>
+		<table id="526" name="repeat_feature">
+			<column id="527" name="analysis_id"/>
+			<column id="528" name="repeat_consensus_id"/>
+			<column id="529" name="repeat_end"/>
+			<column id="530" name="repeat_feature_id"/>
+			<column id="531" name="repeat_start"/>
+			<column id="532" name="score"/>
+			<column id="533" name="seq_region_end"/>
+			<column id="534" name="seq_region_id"/>
+			<column id="535" name="seq_region_start"/>
+			<column id="536" name="seq_region_strand"/>
+			<foreignKey id="537" columnIds="527" status="INFERRED" alt="FK_hs38:repeat_feature[analysis_id]"/>
+			<foreignKey id="538" columnIds="528" status="INFERRED" alt="FK_hs38:repeat_feature[repeat_consensus_id]"/>
+			<foreignKey id="539" columnIds="534" status="INFERRED" alt="FK_hs38:repeat_feature[seq_region_id]"/>
+			<primaryKey id="540" columnIds="530" status="INFERRED" alt="PK_hs38:repeat_feature[repeat_feature_id]"/>
 		</table>
-		<table id="540" name="seq_region">
-			<column id="541" name="coord_system_id"/>
-			<column id="542" name="length"/>
-			<column id="543" name="name"/>
-			<column id="544" name="seq_region_id"/>
-			<foreignKey id="545" columnIds="541" status="INFERRED" alt="FK_hs38:seq_region[coord_system_id]"/>
-			<primaryKey id="546" columnIds="544" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]"/>
+		<table id="541" name="seq_region">
+			<column id="542" name="coord_system_id"/>
+			<column id="543" name="length"/>
+			<column id="544" name="name"/>
+			<column id="545" name="seq_region_id"/>
+			<foreignKey id="546" columnIds="542" status="INFERRED" alt="FK_hs38:seq_region[coord_system_id]"/>
+			<primaryKey id="547" columnIds="545" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]"/>
 		</table>
-		<table id="547" name="seq_region_attrib">
-			<column id="548" name="attrib_type_id"/>
-			<column id="549" name="seq_region_id"/>
-			<column id="550" name="value"/>
-			<foreignKey id="551" columnIds="548" status="INFERRED" alt="FK_hs38:seq_region_attrib[attrib_type_id]"/>
-			<foreignKey id="552" columnIds="549" status="INFERRED" alt="FK_hs38:seq_region_attrib[seq_region_id]"/>
+		<table id="548" name="seq_region_attrib">
+			<column id="549" name="attrib_type_id"/>
+			<column id="550" name="seq_region_id"/>
+			<column id="551" name="value"/>
+			<foreignKey id="552" columnIds="549" status="INFERRED" alt="FK_hs38:seq_region_attrib[attrib_type_id]"/>
+			<foreignKey id="553" columnIds="550" status="INFERRED" alt="FK_hs38:seq_region_attrib[seq_region_id]"/>
 		</table>
-		<table id="553" name="simple_feature">
-			<column id="554" name="analysis_id"/>
-			<column id="555" name="display_label"/>
-			<column id="556" name="score"/>
-			<column id="557" name="seq_region_end"/>
-			<column id="558" name="seq_region_id"/>
-			<column id="559" name="seq_region_start"/>
-			<column id="560" name="seq_region_strand"/>
-			<column id="561" name="simple_feature_id"/>
-			<foreignKey id="562" columnIds="554" status="INFERRED" alt="FK_hs38:simple_feature[analysis_id]"/>
-			<foreignKey id="563" columnIds="558" status="INFERRED" alt="FK_hs38:simple_feature[seq_region_id]"/>
-			<primaryKey id="564" columnIds="561" status="INFERRED" alt="PK_hs38:simple_feature[simple_feature_id]"/>
+		<table id="554" name="simple_feature">
+			<column id="555" name="analysis_id"/>
+			<column id="556" name="display_label"/>
+			<column id="557" name="score"/>
+			<column id="558" name="seq_region_end"/>
+			<column id="559" name="seq_region_id"/>
+			<column id="560" name="seq_region_start"/>
+			<column id="561" name="seq_region_strand"/>
+			<column id="562" name="simple_feature_id"/>
+			<foreignKey id="563" columnIds="555" status="INFERRED" alt="FK_hs38:simple_feature[analysis_id]"/>
+			<foreignKey id="564" columnIds="559" status="INFERRED" alt="FK_hs38:simple_feature[seq_region_id]"/>
+			<primaryKey id="565" columnIds="562" status="INFERRED" alt="PK_hs38:simple_feature[simple_feature_id]"/>
 		</table>
-		<table id="565" name="stable_id_event">
-			<column id="566" name="mapping_session_id"/>
-			<column id="567" name="new_stable_id"/>
-			<column id="568" name="new_version"/>
-			<column id="569" name="old_stable_id"/>
-			<column id="570" name="old_version"/>
-			<column id="571" name="type"/>
-			<foreignKey id="572" columnIds="566" status="INFERRED" alt="FK_hs38:stable_id_event[mapping_session_id]"/>
+		<table id="566" name="stable_id_event">
+			<column id="567" name="mapping_session_id"/>
+			<column id="568" name="new_stable_id"/>
+			<column id="569" name="new_version"/>
+			<column id="570" name="old_stable_id"/>
+			<column id="571" name="old_version"/>
+			<column id="572" name="type"/>
+			<foreignKey id="573" columnIds="567" status="INFERRED" alt="FK_hs38:stable_id_event[mapping_session_id]"/>
 		</table>
-		<table id="573" name="supporting_feature">
-			<column id="574" name="exon_id"/>
-			<column id="575" name="feature_id"/>
-			<column id="576" name="feature_type"/>
-			<foreignKey id="577" columnIds="574" status="INFERRED" alt="FK_hs38:supporting_feature[exon_id]"/>
+		<table id="574" name="supporting_feature">
+			<column id="575" name="exon_id"/>
+			<column id="576" name="feature_id"/>
+			<column id="577" name="feature_type"/>
+			<foreignKey id="578" columnIds="575" status="INFERRED" alt="FK_hs38:supporting_feature[exon_id]"/>
 		</table>
-		<table id="578" name="transcript">
-			<column id="579" name="analysis_id"/>
-			<column id="580" name="biotype"/>
-			<column id="581" name="description"/>
-			<column id="582" name="display_xref_id"/>
-			<column id="583" name="gene_id"/>
-			<column id="584" name="seq_region_end"/>
-			<column id="585" name="seq_region_id"/>
-			<column id="586" name="seq_region_start"/>
-			<column id="587" name="seq_region_strand"/>
-			<column id="588" name="status"/>
-			<column id="589" name="transcript_id"/>
-			<foreignKey id="590" columnIds="582" status="HANDMADE" alt="FK_hs38:transcript[display_xref_id]"/>
-			<foreignKey id="591" columnIds="579" status="INFERRED" alt="FK_hs38:transcript[analysis_id]"/>
-			<foreignKey id="592" columnIds="583" status="INFERRED" alt="FK_hs38:transcript[gene_id]"/>
-			<foreignKey id="593" columnIds="585" status="INFERRED" alt="FK_hs38:transcript[seq_region_id]"/>
-			<primaryKey id="594" columnIds="589" status="INFERRED" alt="PK_hs38:transcript[transcript_id]"/>
+		<table id="579" name="transcript">
+			<column id="580" name="analysis_id"/>
+			<column id="581" name="biotype"/>
+			<column id="582" name="description"/>
+			<column id="583" name="display_xref_id"/>
+			<column id="584" name="gene_id"/>
+			<column id="585" name="seq_region_end"/>
+			<column id="586" name="seq_region_id"/>
+			<column id="587" name="seq_region_start"/>
+			<column id="588" name="seq_region_strand"/>
+			<column id="589" name="status"/>
+			<column id="590" name="transcript_id"/>
+			<foreignKey id="591" columnIds="583" status="HANDMADE" alt="FK_hs38:transcript[display_xref_id]"/>
+			<foreignKey id="592" columnIds="580" status="INFERRED" alt="FK_hs38:transcript[analysis_id]"/>
+			<foreignKey id="593" columnIds="584" status="INFERRED" alt="FK_hs38:transcript[gene_id]"/>
+			<foreignKey id="594" columnIds="586" status="INFERRED" alt="FK_hs38:transcript[seq_region_id]"/>
+			<primaryKey id="595" columnIds="590" status="INFERRED" alt="PK_hs38:transcript[transcript_id]"/>
 		</table>
-		<table id="595" name="transcript_attrib">
-			<column id="596" name="attrib_type_id"/>
-			<column id="597" name="transcript_id"/>
-			<column id="598" name="value"/>
-			<foreignKey id="599" columnIds="596" status="INFERRED" alt="FK_hs38:transcript_attrib[attrib_type_id]"/>
-			<foreignKey id="600" columnIds="597" status="INFERRED" alt="FK_hs38:transcript_attrib[transcript_id]"/>
+		<table id="596" name="transcript_attrib">
+			<column id="597" name="attrib_type_id"/>
+			<column id="598" name="transcript_id"/>
+			<column id="599" name="value"/>
+			<foreignKey id="600" columnIds="597" status="INFERRED" alt="FK_hs38:transcript_attrib[attrib_type_id]"/>
+			<foreignKey id="601" columnIds="598" status="INFERRED" alt="FK_hs38:transcript_attrib[transcript_id]"/>
 		</table>
-		<table id="601" name="transcript_stable_id">
-			<column id="602" name="created_date"/>
-			<column id="603" name="modified_date"/>
-			<column id="604" name="stable_id"/>
-			<column id="605" name="transcript_id"/>
-			<column id="606" name="version"/>
-			<foreignKey id="607" columnIds="605" status="INFERRED" alt="FK_hs38:transcript_stable_id[transcript_id]"/>
-			<primaryKey id="608" columnIds="605" status="INFERRED" alt="PK_hs38:transcript_stable_id[transcript_id]"/>
+		<table id="602" name="transcript_stable_id">
+			<column id="603" name="created_date"/>
+			<column id="604" name="modified_date"/>
+			<column id="605" name="stable_id"/>
+			<column id="606" name="transcript_id"/>
+			<column id="607" name="version"/>
+			<foreignKey id="608" columnIds="606" status="INFERRED" alt="FK_hs38:transcript_stable_id[transcript_id]"/>
+			<primaryKey id="609" columnIds="606" status="INFERRED" alt="PK_hs38:transcript_stable_id[transcript_id]"/>
 		</table>
-		<table id="609" name="transcript_supporting_feature">
-			<column id="610" name="feature_id"/>
-			<column id="611" name="feature_type"/>
-			<column id="612" name="transcript_id"/>
-			<foreignKey id="613" columnIds="612" status="INFERRED" alt="FK_hs38:transcript_supporting_feature[transcript_id]"/>
+		<table id="610" name="transcript_supporting_feature">
+			<column id="611" name="feature_id"/>
+			<column id="612" name="feature_type"/>
+			<column id="613" name="transcript_id"/>
+			<foreignKey id="614" columnIds="613" status="INFERRED" alt="FK_hs38:transcript_supporting_feature[transcript_id]"/>
 		</table>
-		<table id="614" name="translation">
-			<column id="615" name="end_exon_id"/>
-			<column id="616" name="seq_end"/>
-			<column id="617" name="seq_start"/>
-			<column id="618" name="start_exon_id"/>
-			<column id="619" name="transcript_id"/>
-			<column id="620" name="translation_id"/>
-			<foreignKey id="621" columnIds="618" status="HANDMADE" alt="FK_hs38:translation[start_exon_id]"/>
-			<foreignKey id="622" columnIds="615" status="HANDMADE" alt="FK_hs38:translation[end_exon_id]"/>
-			<foreignKey id="623" columnIds="619" status="INFERRED" alt="FK_hs38:translation[transcript_id]"/>
-			<primaryKey id="624" columnIds="620" status="INFERRED" alt="PK_hs38:translation[translation_id]"/>
+		<table id="615" name="translation">
+			<column id="616" name="end_exon_id"/>
+			<column id="617" name="seq_end"/>
+			<column id="618" name="seq_start"/>
+			<column id="619" name="start_exon_id"/>
+			<column id="620" name="transcript_id"/>
+			<column id="621" name="translation_id"/>
+			<foreignKey id="622" columnIds="619" status="HANDMADE" alt="FK_hs38:translation[start_exon_id]"/>
+			<foreignKey id="623" columnIds="616" status="HANDMADE" alt="FK_hs38:translation[end_exon_id]"/>
+			<foreignKey id="624" columnIds="620" status="INFERRED" alt="FK_hs38:translation[transcript_id]"/>
+			<primaryKey id="625" columnIds="621" status="INFERRED" alt="PK_hs38:translation[translation_id]"/>
 		</table>
-		<table id="625" name="translation_attrib">
-			<column id="626" name="attrib_type_id"/>
-			<column id="627" name="translation_id"/>
-			<column id="628" name="value"/>
-			<foreignKey id="629" columnIds="626" status="INFERRED" alt="FK_hs38:translation_attrib[attrib_type_id]"/>
-			<foreignKey id="630" columnIds="627" status="INFERRED" alt="FK_hs38:translation_attrib[translation_id]"/>
+		<table id="626" name="translation_attrib">
+			<column id="627" name="attrib_type_id"/>
+			<column id="628" name="translation_id"/>
+			<column id="629" name="value"/>
+			<foreignKey id="630" columnIds="627" status="INFERRED" alt="FK_hs38:translation_attrib[attrib_type_id]"/>
+			<foreignKey id="631" columnIds="628" status="INFERRED" alt="FK_hs38:translation_attrib[translation_id]"/>
 		</table>
-		<table id="631" name="translation_stable_id">
-			<column id="632" name="created_date"/>
-			<column id="633" name="modified_date"/>
-			<column id="634" name="stable_id"/>
-			<column id="635" name="translation_id"/>
-			<column id="636" name="version"/>
-			<foreignKey id="637" columnIds="635" status="INFERRED" alt="FK_hs38:translation_stable_id[translation_id]"/>
-			<primaryKey id="638" columnIds="635" status="INFERRED" alt="PK_hs38:translation_stable_id[translation_id]"/>
+		<table id="632" name="translation_stable_id">
+			<column id="633" name="created_date"/>
+			<column id="634" name="modified_date"/>
+			<column id="635" name="stable_id"/>
+			<column id="636" name="translation_id"/>
+			<column id="637" name="version"/>
+			<foreignKey id="638" columnIds="636" status="INFERRED" alt="FK_hs38:translation_stable_id[translation_id]"/>
+			<primaryKey id="639" columnIds="636" status="INFERRED" alt="PK_hs38:translation_stable_id[translation_id]"/>
 		</table>
-		<table id="639" name="unmapped_object">
-			<column id="640" name="analysis_id"/>
-			<column id="641" name="ensembl_id"/>
-			<column id="642" name="ensembl_object_type"/>
-			<column id="643" name="external_db_id"/>
-			<column id="644" name="identifier"/>
-			<column id="645" name="query_score"/>
-			<column id="646" name="target_score"/>
-			<column id="647" name="type"/>
-			<column id="648" name="unmapped_object_id"/>
-			<column id="649" name="unmapped_reason_id"/>
-			<foreignKey id="650" columnIds="640" status="INFERRED" alt="FK_hs38:unmapped_object[analysis_id]"/>
-			<foreignKey id="651" columnIds="643" status="INFERRED" alt="FK_hs38:unmapped_object[external_db_id]"/>
-			<foreignKey id="652" columnIds="649" status="INFERRED" alt="FK_hs38:unmapped_object[unmapped_reason_id]"/>
-			<primaryKey id="653" columnIds="648" status="INFERRED" alt="PK_hs38:unmapped_object[unmapped_object_id]"/>
+		<table id="640" name="unmapped_object">
+			<column id="641" name="analysis_id"/>
+			<column id="642" name="ensembl_id"/>
+			<column id="643" name="ensembl_object_type"/>
+			<column id="644" name="external_db_id"/>
+			<column id="645" name="identifier"/>
+			<column id="646" name="query_score"/>
+			<column id="647" name="target_score"/>
+			<column id="648" name="type"/>
+			<column id="649" name="unmapped_object_id"/>
+			<column id="650" name="unmapped_reason_id"/>
+			<foreignKey id="651" columnIds="641" status="INFERRED" alt="FK_hs38:unmapped_object[analysis_id]"/>
+			<foreignKey id="652" columnIds="644" status="INFERRED" alt="FK_hs38:unmapped_object[external_db_id]"/>
+			<foreignKey id="653" columnIds="650" status="INFERRED" alt="FK_hs38:unmapped_object[unmapped_reason_id]"/>
+			<primaryKey id="654" columnIds="649" status="INFERRED" alt="PK_hs38:unmapped_object[unmapped_object_id]"/>
 		</table>
-		<table id="654" name="unmapped_reason">
-			<column id="655" name="full_description"/>
-			<column id="656" name="summary_description"/>
-			<column id="657" name="unmapped_reason_id"/>
-			<primaryKey id="658" columnIds="657" status="INFERRED" alt="PK_hs38:unmapped_reason[unmapped_reason_id]"/>
+		<table id="655" name="unmapped_reason">
+			<column id="656" name="full_description"/>
+			<column id="657" name="summary_description"/>
+			<column id="658" name="unmapped_reason_id"/>
+			<primaryKey id="659" columnIds="658" status="INFERRED" alt="PK_hs38:unmapped_reason[unmapped_reason_id]"/>
 		</table>
-		<table id="659" name="xref">
-			<column id="660" name="dbprimary_acc"/>
-			<column id="661" name="description"/>
-			<column id="662" name="display_label"/>
-			<column id="663" name="external_db_id"/>
-			<column id="664" name="info_text"/>
-			<column id="665" name="info_type"/>
-			<column id="666" name="version"/>
-			<column id="667" name="xref_id"/>
-			<foreignKey id="668" columnIds="663" status="INFERRED" alt="FK_hs38:xref[external_db_id]"/>
-			<primaryKey id="669" columnIds="667" status="INFERRED" alt="PK_hs38:xref[xref_id]"/>
+		<table id="660" name="xref">
+			<column id="661" name="dbprimary_acc"/>
+			<column id="662" name="description"/>
+			<column id="663" name="display_label"/>
+			<column id="664" name="external_db_id"/>
+			<column id="665" name="info_text"/>
+			<column id="666" name="info_type"/>
+			<column id="667" name="version"/>
+			<column id="668" name="xref_id"/>
+			<foreignKey id="669" columnIds="664" status="INFERRED" alt="FK_hs38:xref[external_db_id]"/>
+			<primaryKey id="670" columnIds="668" status="INFERRED" alt="PK_hs38:xref[xref_id]"/>
 		</table>
-		<relation id="670" fkCardinality="M" primaryKeyId="21" foreignKeyId="26" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:analysis_description[analysis_id]"/>
-		<relation id="671" fkCardinality="M" primaryKeyId="21" foreignKeyId="101" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:density_type[analysis_id]"/>
-		<relation id="672" fkCardinality="M" primaryKeyId="21" foreignKeyId="123" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:dna_align_feature[analysis_id]"/>
-		<relation id="673" fkCardinality="M" primaryKeyId="21" foreignKeyId="185" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:gene[analysis_id]"/>
-		<relation id="674" fkCardinality="M" primaryKeyId="21" foreignKeyId="229" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:identity_xref[analysis_id]"/>
-		<relation id="675" fkCardinality="M" primaryKeyId="21" foreignKeyId="277" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:marker_feature[analysis_id]"/>
-		<relation id="676" fkCardinality="M" primaryKeyId="21" foreignKeyId="360" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:oligo_feature[analysis_id]"/>
-		<relation id="677" fkCardinality="M" primaryKeyId="21" foreignKeyId="372" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:oligo_feature_backup[analysis_id]"/>
-		<relation id="678" fkCardinality="M" primaryKeyId="21" foreignKeyId="411" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:prediction_transcript[analysis_id]"/>
-		<relation id="679" fkCardinality="M" primaryKeyId="21" foreignKeyId="428" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:protein_align_feature[analysis_id]"/>
-		<relation id="680" fkCardinality="M" primaryKeyId="21" foreignKeyId="443" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:protein_feature[analysis_id]"/>
-		<relation id="681" fkCardinality="M" primaryKeyId="21" foreignKeyId="463" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:qtl_feature[analysis_id]"/>
-		<relation id="682" fkCardinality="M" primaryKeyId="21" foreignKeyId="494" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:regulatory_feature[analysis_id]"/>
-		<relation id="683" fkCardinality="M" primaryKeyId="21" foreignKeyId="515" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:regulatory_search_region[analysis_id]"/>
-		<relation id="684" fkCardinality="M" primaryKeyId="21" foreignKeyId="536" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:repeat_feature[analysis_id]"/>
-		<relation id="685" fkCardinality="M" primaryKeyId="21" foreignKeyId="562" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:simple_feature[analysis_id]"/>
-		<relation id="686" fkCardinality="M" primaryKeyId="21" foreignKeyId="591" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:transcript[analysis_id]"/>
-		<relation id="687" fkCardinality="M" primaryKeyId="21" foreignKeyId="650" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:unmapped_object[analysis_id]"/>
-		<relation id="688" fkCardinality="M" primaryKeyId="55" foreignKeyId="203" status="INFERRED" alt="PK_hs38:attrib_type[attrib_type_id]:FK_hs38:gene_attrib[attrib_type_id]"/>
-		<relation id="689" fkCardinality="M" primaryKeyId="55" foreignKeyId="313" status="INFERRED" alt="PK_hs38:attrib_type[attrib_type_id]:FK_hs38:misc_attrib[attrib_type_id]"/>
-		<relation id="690" fkCardinality="M" primaryKeyId="55" foreignKeyId="551" status="INFERRED" alt="PK_hs38:attrib_type[attrib_type_id]:FK_hs38:seq_region_attrib[attrib_type_id]"/>
-		<relation id="691" fkCardinality="M" primaryKeyId="55" foreignKeyId="599" status="INFERRED" alt="PK_hs38:attrib_type[attrib_type_id]:FK_hs38:transcript_attrib[attrib_type_id]"/>
-		<relation id="692" fkCardinality="M" primaryKeyId="55" foreignKeyId="629" status="INFERRED" alt="PK_hs38:attrib_type[attrib_type_id]:FK_hs38:translation_attrib[attrib_type_id]"/>
-		<relation id="693" fkCardinality="M" primaryKeyId="84" foreignKeyId="308" status="INFERRED" alt="PK_hs38:coord_system[coord_system_id]:FK_hs38:meta_coord[coord_system_id]"/>
-		<relation id="694" fkCardinality="M" primaryKeyId="84" foreignKeyId="545" status="INFERRED" alt="PK_hs38:coord_system[coord_system_id]:FK_hs38:seq_region[coord_system_id]"/>
-		<relation id="695" fkCardinality="M" primaryKeyId="102" foreignKeyId="92" status="INFERRED" alt="PK_hs38:density_type[density_type_id]:FK_hs38:density_feature[density_type_id]"/>
-		<relation id="696" fkCardinality="M" primaryKeyId="141" foreignKeyId="621" status="HANDMADE" alt="PK_hs38:exon[exon_id]:FK_hs38:translation[start_exon_id]"/>
-		<relation id="697" fkCardinality="M" primaryKeyId="141" foreignKeyId="622" status="HANDMADE" alt="PK_hs38:exon[exon_id]:FK_hs38:translation[end_exon_id]"/>
-		<relation id="698" fkCardinality="1" primaryKeyId="141" foreignKeyId="148" status="INFERRED" alt="PK_hs38:exon[exon_id]:FK_hs38:exon_stable_id[exon_id]"/>
-		<relation id="699" fkCardinality="M" primaryKeyId="141" foreignKeyId="154" status="INFERRED" alt="PK_hs38:exon[exon_id]:FK_hs38:exon_transcript[exon_id]"/>
-		<relation id="700" fkCardinality="M" primaryKeyId="141" foreignKeyId="577" status="INFERRED" alt="PK_hs38:exon[exon_id]:FK_hs38:supporting_feature[exon_id]"/>
-		<relation id="701" fkCardinality="M" primaryKeyId="166" foreignKeyId="651" status="INFERRED" alt="PK_hs38:external_db[external_db_id]:FK_hs38:unmapped_object[external_db_id]"/>
-		<relation id="702" fkCardinality="M" primaryKeyId="166" foreignKeyId="668" status="INFERRED" alt="PK_hs38:external_db[external_db_id]:FK_hs38:xref[external_db_id]"/>
-		<relation id="703" fkCardinality="M" primaryKeyId="187" foreignKeyId="4" status="INFERRED" alt="PK_hs38:gene[gene_id]:FK_hs38:alt_allele[gene_id]"/>
-		<relation id="704" fkCardinality="M" primaryKeyId="187" foreignKeyId="204" status="INFERRED" alt="PK_hs38:gene[gene_id]:FK_hs38:gene_attrib[gene_id]"/>
-		<relation id="705" fkCardinality="1" primaryKeyId="187" foreignKeyId="211" status="INFERRED" alt="PK_hs38:gene[gene_id]:FK_hs38:gene_stable_id[gene_id]"/>
-		<relation id="706" fkCardinality="M" primaryKeyId="187" foreignKeyId="482" status="INFERRED" alt="PK_hs38:gene[gene_id]:FK_hs38:regulatory_factor_coding[gene_id]"/>
-		<relation id="707" fkCardinality="M" primaryKeyId="187" foreignKeyId="592" status="INFERRED" alt="PK_hs38:gene[gene_id]:FK_hs38:transcript[gene_id]"/>
-		<relation id="708" fkCardinality="M" primaryKeyId="247" foreignKeyId="288" status="INFERRED" alt="PK_hs38:map[map_id]:FK_hs38:marker_map_location[map_id]"/>
-		<relation id="709" fkCardinality="M" primaryKeyId="257" foreignKeyId="197" status="INFERRED" alt="PK_hs38:mapping_session[mapping_session_id]:FK_hs38:gene_archive[mapping_session_id]"/>
-		<relation id="710" fkCardinality="M" primaryKeyId="257" foreignKeyId="572" status="INFERRED" alt="PK_hs38:mapping_session[mapping_session_id]:FK_hs38:stable_id_event[mapping_session_id]"/>
-		<relation id="711" fkCardinality="M" primaryKeyId="268" foreignKeyId="453" status="HANDMADE" alt="PK_hs38:marker[marker_id]:FK_hs38:qtl[flank_marker_id_1]"/>
-		<relation id="712" fkCardinality="M" primaryKeyId="268" foreignKeyId="454" status="HANDMADE" alt="PK_hs38:marker[marker_id]:FK_hs38:qtl[flank_marker_id_2]"/>
-		<relation id="713" fkCardinality="M" primaryKeyId="268" foreignKeyId="455" status="HANDMADE" alt="PK_hs38:marker[marker_id]:FK_hs38:qtl[peak_marker_id]"/>
-		<relation id="714" fkCardinality="M" primaryKeyId="268" foreignKeyId="278" status="INFERRED" alt="PK_hs38:marker[marker_id]:FK_hs38:marker_feature[marker_id]"/>
-		<relation id="715" fkCardinality="M" primaryKeyId="268" foreignKeyId="289" status="INFERRED" alt="PK_hs38:marker[marker_id]:FK_hs38:marker_map_location[marker_id]"/>
-		<relation id="716" fkCardinality="M" primaryKeyId="268" foreignKeyId="297" status="INFERRED" alt="PK_hs38:marker[marker_id]:FK_hs38:marker_synonym[marker_id]"/>
-		<relation id="717" fkCardinality="M" primaryKeyId="298" foreignKeyId="267" status="HANDMADE" alt="PK_hs38:marker_synonym[marker_synonym_id]:FK_hs38:marker[display_marker_synonym_id]"/>
-		<relation id="718" fkCardinality="M" primaryKeyId="298" foreignKeyId="290" status="INFERRED" alt="PK_hs38:marker_synonym[marker_synonym_id]:FK_hs38:marker_map_location[marker_synonym_id]"/>
-		<relation id="719" fkCardinality="M" primaryKeyId="322" foreignKeyId="314" status="INFERRED" alt="PK_hs38:misc_feature[misc_feature_id]:FK_hs38:misc_attrib[misc_feature_id]"/>
-		<relation id="720" fkCardinality="M" primaryKeyId="322" foreignKeyId="326" status="INFERRED" alt="PK_hs38:misc_feature[misc_feature_id]:FK_hs38:misc_feature_misc_set[misc_feature_id]"/>
-		<relation id="721" fkCardinality="M" primaryKeyId="335" foreignKeyId="327" status="INFERRED" alt="PK_hs38:misc_set[misc_set_id]:FK_hs38:misc_feature_misc_set[misc_set_id]"/>
-		<relation id="722" fkCardinality="M" primaryKeyId="342" foreignKeyId="216" status="INFERRED" alt="PK_hs38:object_xref[object_xref_id]:FK_hs38:go_xref[object_xref_id]"/>
-		<relation id="723" fkCardinality="1" primaryKeyId="342" foreignKeyId="230" status="INFERRED" alt="PK_hs38:object_xref[object_xref_id]:FK_hs38:identity_xref[object_xref_id]"/>
-		<relation id="724" fkCardinality="M" primaryKeyId="350" foreignKeyId="382" status="INFERRED" alt="PK_hs38:oligo_array[oligo_array_id]:FK_hs38:oligo_probe[oligo_array_id]"/>
-		<relation id="725" fkCardinality="M" primaryKeyId="350" foreignKeyId="349" status="HANDMADE" alt="PK_hs38:oligo_array[oligo_array_id]:FK_hs38:oligo_array[parent_array_id]"/>
-		<relation id="726" fkCardinality="M" primaryKeyId="362" foreignKeyId="373" status="INFERRED" alt="PK_hs38:oligo_feature[oligo_feature_id]:FK_hs38:oligo_feature_backup[oligo_feature_id]"/>
-		<relation id="727" fkCardinality="M" primaryKeyId="388" foreignKeyId="198" status="INFERRED" alt="PK_hs38:peptide_archive[peptide_archive_id]:FK_hs38:gene_archive[peptide_archive_id]"/>
-		<relation id="728" fkCardinality="M" primaryKeyId="413" foreignKeyId="400" status="INFERRED" alt="PK_hs38:prediction_transcript[prediction_transcript_id]:FK_hs38:prediction_exon[prediction_transcript_id]"/>
-		<relation id="729" fkCardinality="M" primaryKeyId="456" foreignKeyId="464" status="INFERRED" alt="PK_hs38:qtl[qtl_id]:FK_hs38:qtl_feature[qtl_id]"/>
-		<relation id="730" fkCardinality="M" primaryKeyId="456" foreignKeyId="471" status="INFERRED" alt="PK_hs38:qtl[qtl_id]:FK_hs38:qtl_synonym[qtl_id]"/>
-		<relation id="731" fkCardinality="M" primaryKeyId="477" foreignKeyId="483" status="INFERRED" alt="PK_hs38:regulatory_factor[regulatory_factor_id]:FK_hs38:regulatory_factor_coding[regulatory_factor_id]"/>
-		<relation id="732" fkCardinality="M" primaryKeyId="477" foreignKeyId="495" status="INFERRED" alt="PK_hs38:regulatory_factor[regulatory_factor_id]:FK_hs38:regulatory_feature[regulatory_factor_id]"/>
-		<relation id="733" fkCardinality="M" primaryKeyId="497" foreignKeyId="504" status="INFERRED" alt="PK_hs38:regulatory_feature[regulatory_feature_id]:FK_hs38:regulatory_feature_object[regulatory_feature_id]"/>
-		<relation id="734" fkCardinality="M" primaryKeyId="524" foreignKeyId="537" status="INFERRED" alt="PK_hs38:repeat_consensus[repeat_consensus_id]:FK_hs38:repeat_feature[repeat_consensus_id]"/>
-		<relation id="735" fkCardinality="M" primaryKeyId="546" foreignKeyId="35" status="HANDMADE" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:assembly[asm_seq_region_id]"/>
-		<relation id="736" fkCardinality="M" primaryKeyId="546" foreignKeyId="36" status="HANDMADE" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:assembly[cmp_seq_region_id]"/>
-		<relation id="737" fkCardinality="M" primaryKeyId="546" foreignKeyId="47" status="HANDMADE" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:assembly_exception[exc_seq_region_id]"/>
-		<relation id="738" fkCardinality="M" primaryKeyId="546" foreignKeyId="48" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:assembly_exception[seq_region_id]"/>
-		<relation id="739" fkCardinality="M" primaryKeyId="546" foreignKeyId="66" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:chr2contig[seq_region_id]"/>
-		<relation id="740" fkCardinality="M" primaryKeyId="546" foreignKeyId="77" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:clone2contig[seq_region_id]"/>
-		<relation id="741" fkCardinality="M" primaryKeyId="546" foreignKeyId="93" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:density_feature[seq_region_id]"/>
-		<relation id="742" fkCardinality="1" primaryKeyId="546" foreignKeyId="106" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:dna[seq_region_id]"/>
-		<relation id="743" fkCardinality="M" primaryKeyId="546" foreignKeyId="124" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:dna_align_feature[seq_region_id]"/>
-		<relation id="744" fkCardinality="1" primaryKeyId="546" foreignKeyId="130" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:dnac[seq_region_id]"/>
-		<relation id="745" fkCardinality="M" primaryKeyId="546" foreignKeyId="140" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:exon[seq_region_id]"/>
-		<relation id="746" fkCardinality="M" primaryKeyId="546" foreignKeyId="186" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:gene[seq_region_id]"/>
-		<relation id="747" fkCardinality="M" primaryKeyId="546" foreignKeyId="242" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:karyotype[seq_region_id]"/>
-		<relation id="748" fkCardinality="M" primaryKeyId="546" foreignKeyId="279" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:marker_feature[seq_region_id]"/>
-		<relation id="749" fkCardinality="M" primaryKeyId="546" foreignKeyId="321" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:misc_feature[seq_region_id]"/>
-		<relation id="750" fkCardinality="M" primaryKeyId="546" foreignKeyId="361" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:oligo_feature[seq_region_id]"/>
-		<relation id="751" fkCardinality="M" primaryKeyId="546" foreignKeyId="374" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:oligo_feature_backup[seq_region_id]"/>
-		<relation id="752" fkCardinality="M" primaryKeyId="546" foreignKeyId="401" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:prediction_exon[seq_region_id]"/>
-		<relation id="753" fkCardinality="M" primaryKeyId="546" foreignKeyId="412" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:prediction_transcript[seq_region_id]"/>
-		<relation id="754" fkCardinality="M" primaryKeyId="546" foreignKeyId="429" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:protein_align_feature[seq_region_id]"/>
-		<relation id="755" fkCardinality="M" primaryKeyId="546" foreignKeyId="465" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:qtl_feature[seq_region_id]"/>
-		<relation id="756" fkCardinality="M" primaryKeyId="546" foreignKeyId="496" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:regulatory_feature[seq_region_id]"/>
-		<relation id="757" fkCardinality="M" primaryKeyId="546" foreignKeyId="516" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:regulatory_search_region[seq_region_id]"/>
-		<relation id="758" fkCardinality="M" primaryKeyId="546" foreignKeyId="538" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:repeat_feature[seq_region_id]"/>
-		<relation id="759" fkCardinality="M" primaryKeyId="546" foreignKeyId="552" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:seq_region_attrib[seq_region_id]"/>
-		<relation id="760" fkCardinality="M" primaryKeyId="546" foreignKeyId="563" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:simple_feature[seq_region_id]"/>
-		<relation id="761" fkCardinality="M" primaryKeyId="546" foreignKeyId="593" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:transcript[seq_region_id]"/>
-		<relation id="762" fkCardinality="M" primaryKeyId="594" foreignKeyId="155" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:exon_transcript[transcript_id]"/>
-		<relation id="763" fkCardinality="M" primaryKeyId="594" foreignKeyId="484" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:regulatory_factor_coding[transcript_id]"/>
-		<relation id="764" fkCardinality="M" primaryKeyId="594" foreignKeyId="600" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:transcript_attrib[transcript_id]"/>
-		<relation id="765" fkCardinality="1" primaryKeyId="594" foreignKeyId="607" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:transcript_stable_id[transcript_id]"/>
-		<relation id="766" fkCardinality="M" primaryKeyId="594" foreignKeyId="613" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:transcript_supporting_feature[transcript_id]"/>
-		<relation id="767" fkCardinality="1" primaryKeyId="594" foreignKeyId="623" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:translation[transcript_id]"/>
-		<relation id="768" fkCardinality="M" primaryKeyId="624" foreignKeyId="444" status="INFERRED" alt="PK_hs38:translation[translation_id]:FK_hs38:protein_feature[translation_id]"/>
-		<relation id="769" fkCardinality="M" primaryKeyId="624" foreignKeyId="630" status="INFERRED" alt="PK_hs38:translation[translation_id]:FK_hs38:translation_attrib[translation_id]"/>
-		<relation id="770" fkCardinality="1" primaryKeyId="624" foreignKeyId="637" status="INFERRED" alt="PK_hs38:translation[translation_id]:FK_hs38:translation_stable_id[translation_id]"/>
-		<relation id="771" fkCardinality="M" primaryKeyId="658" foreignKeyId="652" status="INFERRED" alt="PK_hs38:unmapped_reason[unmapped_reason_id]:FK_hs38:unmapped_object[unmapped_reason_id]"/>
-		<relation id="772" fkCardinality="M" primaryKeyId="669" foreignKeyId="184" status="HANDMADE" alt="PK_hs38:xref[xref_id]:FK_hs38:gene[display_xref_id]"/>
-		<relation id="773" fkCardinality="M" primaryKeyId="669" foreignKeyId="590" status="HANDMADE" alt="PK_hs38:xref[xref_id]:FK_hs38:transcript[display_xref_id]"/>
-		<relation id="774" fkCardinality="M" primaryKeyId="669" foreignKeyId="170" status="INFERRED" alt="PK_hs38:xref[xref_id]:FK_hs38:external_synonym[xref_id]"/>
-		<relation id="775" fkCardinality="M" primaryKeyId="669" foreignKeyId="341" status="INFERRED" alt="PK_hs38:xref[xref_id]:FK_hs38:object_xref[xref_id]"/>
+		<relation id="671" fkCardinality="M" primaryKeyId="21" foreignKeyId="26" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:analysis_description[analysis_id]"/>
+		<relation id="672" fkCardinality="M" primaryKeyId="21" foreignKeyId="101" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:density_type[analysis_id]"/>
+		<relation id="673" fkCardinality="M" primaryKeyId="21" foreignKeyId="123" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:dna_align_feature[analysis_id]"/>
+		<relation id="674" fkCardinality="M" primaryKeyId="21" foreignKeyId="185" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:gene[analysis_id]"/>
+		<relation id="675" fkCardinality="M" primaryKeyId="21" foreignKeyId="229" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:identity_xref[analysis_id]"/>
+		<relation id="676" fkCardinality="M" primaryKeyId="21" foreignKeyId="277" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:marker_feature[analysis_id]"/>
+		<relation id="677" fkCardinality="M" primaryKeyId="21" foreignKeyId="361" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:oligo_feature[analysis_id]"/>
+		<relation id="678" fkCardinality="M" primaryKeyId="21" foreignKeyId="373" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:oligo_feature_backup[analysis_id]"/>
+		<relation id="679" fkCardinality="M" primaryKeyId="21" foreignKeyId="412" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:prediction_transcript[analysis_id]"/>
+		<relation id="680" fkCardinality="M" primaryKeyId="21" foreignKeyId="429" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:protein_align_feature[analysis_id]"/>
+		<relation id="681" fkCardinality="M" primaryKeyId="21" foreignKeyId="444" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:protein_feature[analysis_id]"/>
+		<relation id="682" fkCardinality="M" primaryKeyId="21" foreignKeyId="464" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:qtl_feature[analysis_id]"/>
+		<relation id="683" fkCardinality="M" primaryKeyId="21" foreignKeyId="495" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:regulatory_feature[analysis_id]"/>
+		<relation id="684" fkCardinality="M" primaryKeyId="21" foreignKeyId="516" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:regulatory_search_region[analysis_id]"/>
+		<relation id="685" fkCardinality="M" primaryKeyId="21" foreignKeyId="537" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:repeat_feature[analysis_id]"/>
+		<relation id="686" fkCardinality="M" primaryKeyId="21" foreignKeyId="563" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:simple_feature[analysis_id]"/>
+		<relation id="687" fkCardinality="M" primaryKeyId="21" foreignKeyId="592" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:transcript[analysis_id]"/>
+		<relation id="688" fkCardinality="M" primaryKeyId="21" foreignKeyId="651" status="INFERRED" alt="PK_hs38:analysis[analysis_id]:FK_hs38:unmapped_object[analysis_id]"/>
+		<relation id="689" fkCardinality="M" primaryKeyId="55" foreignKeyId="203" status="INFERRED" alt="PK_hs38:attrib_type[attrib_type_id]:FK_hs38:gene_attrib[attrib_type_id]"/>
+		<relation id="690" fkCardinality="M" primaryKeyId="55" foreignKeyId="313" status="INFERRED" alt="PK_hs38:attrib_type[attrib_type_id]:FK_hs38:misc_attrib[attrib_type_id]"/>
+		<relation id="691" fkCardinality="M" primaryKeyId="55" foreignKeyId="552" status="INFERRED" alt="PK_hs38:attrib_type[attrib_type_id]:FK_hs38:seq_region_attrib[attrib_type_id]"/>
+		<relation id="692" fkCardinality="M" primaryKeyId="55" foreignKeyId="600" status="INFERRED" alt="PK_hs38:attrib_type[attrib_type_id]:FK_hs38:transcript_attrib[attrib_type_id]"/>
+		<relation id="693" fkCardinality="M" primaryKeyId="55" foreignKeyId="630" status="INFERRED" alt="PK_hs38:attrib_type[attrib_type_id]:FK_hs38:translation_attrib[attrib_type_id]"/>
+		<relation id="694" fkCardinality="M" primaryKeyId="84" foreignKeyId="308" status="INFERRED" alt="PK_hs38:coord_system[coord_system_id]:FK_hs38:meta_coord[coord_system_id]"/>
+		<relation id="695" fkCardinality="M" primaryKeyId="84" foreignKeyId="546" status="INFERRED" alt="PK_hs38:coord_system[coord_system_id]:FK_hs38:seq_region[coord_system_id]"/>
+		<relation id="696" fkCardinality="M" primaryKeyId="102" foreignKeyId="92" status="INFERRED" alt="PK_hs38:density_type[density_type_id]:FK_hs38:density_feature[density_type_id]"/>
+		<relation id="697" fkCardinality="M" primaryKeyId="141" foreignKeyId="622" status="HANDMADE" alt="PK_hs38:exon[exon_id]:FK_hs38:translation[start_exon_id]"/>
+		<relation id="698" fkCardinality="M" primaryKeyId="141" foreignKeyId="623" status="HANDMADE" alt="PK_hs38:exon[exon_id]:FK_hs38:translation[end_exon_id]"/>
+		<relation id="699" fkCardinality="1" primaryKeyId="141" foreignKeyId="148" status="INFERRED" alt="PK_hs38:exon[exon_id]:FK_hs38:exon_stable_id[exon_id]"/>
+		<relation id="700" fkCardinality="M" primaryKeyId="141" foreignKeyId="154" status="INFERRED" alt="PK_hs38:exon[exon_id]:FK_hs38:exon_transcript[exon_id]"/>
+		<relation id="701" fkCardinality="M" primaryKeyId="141" foreignKeyId="578" status="INFERRED" alt="PK_hs38:exon[exon_id]:FK_hs38:supporting_feature[exon_id]"/>
+		<relation id="702" fkCardinality="M" primaryKeyId="166" foreignKeyId="652" status="INFERRED" alt="PK_hs38:external_db[external_db_id]:FK_hs38:unmapped_object[external_db_id]"/>
+		<relation id="703" fkCardinality="M" primaryKeyId="166" foreignKeyId="669" status="INFERRED" alt="PK_hs38:external_db[external_db_id]:FK_hs38:xref[external_db_id]"/>
+		<relation id="704" fkCardinality="M" primaryKeyId="187" foreignKeyId="4" status="INFERRED" alt="PK_hs38:gene[gene_id]:FK_hs38:alt_allele[gene_id]"/>
+		<relation id="705" fkCardinality="M" primaryKeyId="187" foreignKeyId="204" status="INFERRED" alt="PK_hs38:gene[gene_id]:FK_hs38:gene_attrib[gene_id]"/>
+		<relation id="706" fkCardinality="1" primaryKeyId="187" foreignKeyId="211" status="INFERRED" alt="PK_hs38:gene[gene_id]:FK_hs38:gene_stable_id[gene_id]"/>
+		<relation id="707" fkCardinality="M" primaryKeyId="187" foreignKeyId="483" status="INFERRED" alt="PK_hs38:gene[gene_id]:FK_hs38:regulatory_factor_coding[gene_id]"/>
+		<relation id="708" fkCardinality="M" primaryKeyId="187" foreignKeyId="593" status="INFERRED" alt="PK_hs38:gene[gene_id]:FK_hs38:transcript[gene_id]"/>
+		<relation id="709" fkCardinality="M" primaryKeyId="247" foreignKeyId="288" status="INFERRED" alt="PK_hs38:map[map_id]:FK_hs38:marker_map_location[map_id]"/>
+		<relation id="710" fkCardinality="M" primaryKeyId="257" foreignKeyId="197" status="INFERRED" alt="PK_hs38:mapping_session[mapping_session_id]:FK_hs38:gene_archive[mapping_session_id]"/>
+		<relation id="711" fkCardinality="M" primaryKeyId="257" foreignKeyId="573" status="INFERRED" alt="PK_hs38:mapping_session[mapping_session_id]:FK_hs38:stable_id_event[mapping_session_id]"/>
+		<relation id="712" fkCardinality="M" primaryKeyId="268" foreignKeyId="454" status="HANDMADE" alt="PK_hs38:marker[marker_id]:FK_hs38:qtl[flank_marker_id_1]"/>
+		<relation id="713" fkCardinality="M" primaryKeyId="268" foreignKeyId="455" status="HANDMADE" alt="PK_hs38:marker[marker_id]:FK_hs38:qtl[flank_marker_id_2]"/>
+		<relation id="714" fkCardinality="M" primaryKeyId="268" foreignKeyId="456" status="HANDMADE" alt="PK_hs38:marker[marker_id]:FK_hs38:qtl[peak_marker_id]"/>
+		<relation id="715" fkCardinality="M" primaryKeyId="268" foreignKeyId="278" status="INFERRED" alt="PK_hs38:marker[marker_id]:FK_hs38:marker_feature[marker_id]"/>
+		<relation id="716" fkCardinality="M" primaryKeyId="268" foreignKeyId="289" status="INFERRED" alt="PK_hs38:marker[marker_id]:FK_hs38:marker_map_location[marker_id]"/>
+		<relation id="717" fkCardinality="M" primaryKeyId="268" foreignKeyId="297" status="INFERRED" alt="PK_hs38:marker[marker_id]:FK_hs38:marker_synonym[marker_id]"/>
+		<relation id="718" fkCardinality="M" primaryKeyId="298" foreignKeyId="267" status="HANDMADE" alt="PK_hs38:marker_synonym[marker_synonym_id]:FK_hs38:marker[display_marker_synonym_id]"/>
+		<relation id="719" fkCardinality="M" primaryKeyId="298" foreignKeyId="290" status="INFERRED" alt="PK_hs38:marker_synonym[marker_synonym_id]:FK_hs38:marker_map_location[marker_synonym_id]"/>
+		<relation id="720" fkCardinality="M" primaryKeyId="322" foreignKeyId="314" status="INFERRED" alt="PK_hs38:misc_feature[misc_feature_id]:FK_hs38:misc_attrib[misc_feature_id]"/>
+		<relation id="721" fkCardinality="M" primaryKeyId="322" foreignKeyId="326" status="INFERRED" alt="PK_hs38:misc_feature[misc_feature_id]:FK_hs38:misc_feature_misc_set[misc_feature_id]"/>
+		<relation id="722" fkCardinality="M" primaryKeyId="335" foreignKeyId="327" status="INFERRED" alt="PK_hs38:misc_set[misc_set_id]:FK_hs38:misc_feature_misc_set[misc_set_id]"/>
+		<relation id="723" fkCardinality="M" primaryKeyId="343" foreignKeyId="216" status="INFERRED" alt="PK_hs38:object_xref[object_xref_id]:FK_hs38:go_xref[object_xref_id]"/>
+		<relation id="724" fkCardinality="1" primaryKeyId="343" foreignKeyId="230" status="INFERRED" alt="PK_hs38:object_xref[object_xref_id]:FK_hs38:identity_xref[object_xref_id]"/>
+		<relation id="725" fkCardinality="M" primaryKeyId="351" foreignKeyId="383" status="INFERRED" alt="PK_hs38:oligo_array[oligo_array_id]:FK_hs38:oligo_probe[oligo_array_id]"/>
+		<relation id="726" fkCardinality="M" primaryKeyId="351" foreignKeyId="350" status="HANDMADE" alt="PK_hs38:oligo_array[oligo_array_id]:FK_hs38:oligo_array[parent_array_id]"/>
+		<relation id="727" fkCardinality="M" primaryKeyId="363" foreignKeyId="374" status="INFERRED" alt="PK_hs38:oligo_feature[oligo_feature_id]:FK_hs38:oligo_feature_backup[oligo_feature_id]"/>
+		<relation id="728" fkCardinality="M" primaryKeyId="389" foreignKeyId="198" status="INFERRED" alt="PK_hs38:peptide_archive[peptide_archive_id]:FK_hs38:gene_archive[peptide_archive_id]"/>
+		<relation id="729" fkCardinality="M" primaryKeyId="414" foreignKeyId="401" status="INFERRED" alt="PK_hs38:prediction_transcript[prediction_transcript_id]:FK_hs38:prediction_exon[prediction_transcript_id]"/>
+		<relation id="730" fkCardinality="M" primaryKeyId="457" foreignKeyId="465" status="INFERRED" alt="PK_hs38:qtl[qtl_id]:FK_hs38:qtl_feature[qtl_id]"/>
+		<relation id="731" fkCardinality="M" primaryKeyId="457" foreignKeyId="472" status="INFERRED" alt="PK_hs38:qtl[qtl_id]:FK_hs38:qtl_synonym[qtl_id]"/>
+		<relation id="732" fkCardinality="M" primaryKeyId="478" foreignKeyId="484" status="INFERRED" alt="PK_hs38:regulatory_factor[regulatory_factor_id]:FK_hs38:regulatory_factor_coding[regulatory_factor_id]"/>
+		<relation id="733" fkCardinality="M" primaryKeyId="478" foreignKeyId="496" status="INFERRED" alt="PK_hs38:regulatory_factor[regulatory_factor_id]:FK_hs38:regulatory_feature[regulatory_factor_id]"/>
+		<relation id="734" fkCardinality="M" primaryKeyId="498" foreignKeyId="505" status="INFERRED" alt="PK_hs38:regulatory_feature[regulatory_feature_id]:FK_hs38:regulatory_feature_object[regulatory_feature_id]"/>
+		<relation id="735" fkCardinality="M" primaryKeyId="525" foreignKeyId="538" status="INFERRED" alt="PK_hs38:repeat_consensus[repeat_consensus_id]:FK_hs38:repeat_feature[repeat_consensus_id]"/>
+		<relation id="736" fkCardinality="M" primaryKeyId="547" foreignKeyId="35" status="HANDMADE" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:assembly[asm_seq_region_id]"/>
+		<relation id="737" fkCardinality="M" primaryKeyId="547" foreignKeyId="36" status="HANDMADE" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:assembly[cmp_seq_region_id]"/>
+		<relation id="738" fkCardinality="M" primaryKeyId="547" foreignKeyId="47" status="HANDMADE" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:assembly_exception[exc_seq_region_id]"/>
+		<relation id="739" fkCardinality="M" primaryKeyId="547" foreignKeyId="48" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:assembly_exception[seq_region_id]"/>
+		<relation id="740" fkCardinality="M" primaryKeyId="547" foreignKeyId="66" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:chr2contig[seq_region_id]"/>
+		<relation id="741" fkCardinality="M" primaryKeyId="547" foreignKeyId="77" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:clone2contig[seq_region_id]"/>
+		<relation id="742" fkCardinality="M" primaryKeyId="547" foreignKeyId="93" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:density_feature[seq_region_id]"/>
+		<relation id="743" fkCardinality="1" primaryKeyId="547" foreignKeyId="106" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:dna[seq_region_id]"/>
+		<relation id="744" fkCardinality="M" primaryKeyId="547" foreignKeyId="124" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:dna_align_feature[seq_region_id]"/>
+		<relation id="745" fkCardinality="1" primaryKeyId="547" foreignKeyId="130" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:dnac[seq_region_id]"/>
+		<relation id="746" fkCardinality="M" primaryKeyId="547" foreignKeyId="140" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:exon[seq_region_id]"/>
+		<relation id="747" fkCardinality="M" primaryKeyId="547" foreignKeyId="186" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:gene[seq_region_id]"/>
+		<relation id="748" fkCardinality="M" primaryKeyId="547" foreignKeyId="242" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:karyotype[seq_region_id]"/>
+		<relation id="749" fkCardinality="M" primaryKeyId="547" foreignKeyId="279" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:marker_feature[seq_region_id]"/>
+		<relation id="750" fkCardinality="M" primaryKeyId="547" foreignKeyId="321" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:misc_feature[seq_region_id]"/>
+		<relation id="751" fkCardinality="M" primaryKeyId="547" foreignKeyId="362" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:oligo_feature[seq_region_id]"/>
+		<relation id="752" fkCardinality="M" primaryKeyId="547" foreignKeyId="375" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:oligo_feature_backup[seq_region_id]"/>
+		<relation id="753" fkCardinality="M" primaryKeyId="547" foreignKeyId="402" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:prediction_exon[seq_region_id]"/>
+		<relation id="754" fkCardinality="M" primaryKeyId="547" foreignKeyId="413" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:prediction_transcript[seq_region_id]"/>
+		<relation id="755" fkCardinality="M" primaryKeyId="547" foreignKeyId="430" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:protein_align_feature[seq_region_id]"/>
+		<relation id="756" fkCardinality="M" primaryKeyId="547" foreignKeyId="466" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:qtl_feature[seq_region_id]"/>
+		<relation id="757" fkCardinality="M" primaryKeyId="547" foreignKeyId="497" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:regulatory_feature[seq_region_id]"/>
+		<relation id="758" fkCardinality="M" primaryKeyId="547" foreignKeyId="517" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:regulatory_search_region[seq_region_id]"/>
+		<relation id="759" fkCardinality="M" primaryKeyId="547" foreignKeyId="539" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:repeat_feature[seq_region_id]"/>
+		<relation id="760" fkCardinality="M" primaryKeyId="547" foreignKeyId="553" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:seq_region_attrib[seq_region_id]"/>
+		<relation id="761" fkCardinality="M" primaryKeyId="547" foreignKeyId="564" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:simple_feature[seq_region_id]"/>
+		<relation id="762" fkCardinality="M" primaryKeyId="547" foreignKeyId="594" status="INFERRED" alt="PK_hs38:seq_region[seq_region_id]:FK_hs38:transcript[seq_region_id]"/>
+		<relation id="763" fkCardinality="M" primaryKeyId="595" foreignKeyId="155" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:exon_transcript[transcript_id]"/>
+		<relation id="764" fkCardinality="M" primaryKeyId="595" foreignKeyId="485" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:regulatory_factor_coding[transcript_id]"/>
+		<relation id="765" fkCardinality="M" primaryKeyId="595" foreignKeyId="601" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:transcript_attrib[transcript_id]"/>
+		<relation id="766" fkCardinality="1" primaryKeyId="595" foreignKeyId="608" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:transcript_stable_id[transcript_id]"/>
+		<relation id="767" fkCardinality="M" primaryKeyId="595" foreignKeyId="614" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:transcript_supporting_feature[transcript_id]"/>
+		<relation id="768" fkCardinality="1" primaryKeyId="595" foreignKeyId="624" status="INFERRED" alt="PK_hs38:transcript[transcript_id]:FK_hs38:translation[transcript_id]"/>
+		<relation id="769" fkCardinality="M" primaryKeyId="595" foreignKeyId="342" status="HANDMADE" alt="PK_hs38:transcript[transcript_id]:FK_hs38:object_xref[ensembl_id]"/>
+		<relation id="770" fkCardinality="M" primaryKeyId="625" foreignKeyId="445" status="INFERRED" alt="PK_hs38:translation[translation_id]:FK_hs38:protein_feature[translation_id]"/>
+		<relation id="771" fkCardinality="M" primaryKeyId="625" foreignKeyId="631" status="INFERRED" alt="PK_hs38:translation[translation_id]:FK_hs38:translation_attrib[translation_id]"/>
+		<relation id="772" fkCardinality="1" primaryKeyId="625" foreignKeyId="638" status="INFERRED" alt="PK_hs38:translation[translation_id]:FK_hs38:translation_stable_id[translation_id]"/>
+		<relation id="773" fkCardinality="M" primaryKeyId="659" foreignKeyId="653" status="INFERRED" alt="PK_hs38:unmapped_reason[unmapped_reason_id]:FK_hs38:unmapped_object[unmapped_reason_id]"/>
+		<relation id="774" fkCardinality="M" primaryKeyId="670" foreignKeyId="184" status="HANDMADE" alt="PK_hs38:xref[xref_id]:FK_hs38:gene[display_xref_id]"/>
+		<relation id="775" fkCardinality="M" primaryKeyId="670" foreignKeyId="591" status="HANDMADE" alt="PK_hs38:xref[xref_id]:FK_hs38:transcript[display_xref_id]"/>
+		<relation id="776" fkCardinality="M" primaryKeyId="670" foreignKeyId="170" status="INFERRED" alt="PK_hs38:xref[xref_id]:FK_hs38:external_synonym[xref_id]"/>
+		<relation id="777" fkCardinality="M" primaryKeyId="670" foreignKeyId="341" status="INFERRED" alt="PK_hs38:xref[xref_id]:FK_hs38:object_xref[xref_id]"/>
 	</jdbcSchema>
 </mart>
