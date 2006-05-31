@@ -48,7 +48,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * provides the context menu for interacting with dataset diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 24th May 2006
+ * @version 0.1.14, 31st May 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -348,6 +348,19 @@ public class DataSetContext extends WindowContext {
 			if (this.getDataSet().getMaskedDataSetColumns().contains(column))
 				mask.setSelected(true);
 
+			// Rename the column.
+			JMenuItem rename = new JMenuItem(BuilderBundle
+					.getString("renameColumnTitle"));
+			rename.setMnemonic(BuilderBundle
+					.getString("renameColumnMnemonic").charAt(0));
+			rename.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					getDataSetTabSet().requestRenameDataSetColumn(column);
+				}
+			});
+			contextMenu.add(rename);
+
+			
 			// If it's a schema name column...
 			if (column instanceof SchemaNameColumn) {
 

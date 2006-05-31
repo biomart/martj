@@ -63,7 +63,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.15, 17th May 2006
+ * @version 0.1.16, 31st May 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -161,7 +161,7 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	public void setSelectedIndex(int selectedIndex) {
-		// First of all, select the tab as normal. This must be 
+		// First of all, select the tab as normal. This must be
 		// done in order to get the diagram visible. If we do
 		// it later, having attempted to set up the diagram without
 		// making it visible first, we get weird null pointer
@@ -182,7 +182,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// the schema tabset makes its visit elsewhere. The schema tabset
 			// will have an appropriate diagram context attached to it
 			// by the dataset tab once it is attached.
-			this.setComponentAt(schemaTabIndex, new JLabel()); 
+			this.setComponentAt(schemaTabIndex, new JLabel());
 			DataSetTab datasetTab = (DataSetTab) selectedComponent;
 			datasetTab.attachSchemaTabSet(this.schemaTabSet);
 		} else {
@@ -382,6 +382,62 @@ public class DataSetTabSet extends JTabbedPane {
 
 			// Rename the tab displaying it.
 			this.setTitleAt(idx, dataset.getName());
+
+			// Set the tabset as modified.
+			this.martTabSet.setModifiedStatus(true);
+		} catch (Throwable t) {
+			this.martTabSet.getMartBuilder().showStackTrace(t);
+		}
+	}
+
+	private String askUserForDataSetColumnName(String defaultResponse) {
+		// Ask the user for a name. Use the default response
+		// as the default value in the input field.
+		String name = (String) JOptionPane.showInputDialog(this.martTabSet
+				.getMartBuilder(), BuilderBundle
+				.getString("requestDataSetColumnName"), BuilderBundle
+				.getString("questionTitle"), JOptionPane.QUESTION_MESSAGE,
+				null, null, defaultResponse);
+
+		// If they cancelled the request, return null.
+		if (name == null)
+			return null;
+
+		// If they didn't enter anything, use the default response
+		// as though they hadn't changed it.
+		else if (name.trim().length() == 0)
+			name = defaultResponse;
+
+		// Return the response.
+		return name;
+	}
+
+	/**
+	 * Renames a column, after prompting the user to enter a new name. By
+	 * default, the existing name is used. If the name entered is blank or
+	 * matches the existing name, no change is made.
+	 * 
+	 * @param dsColumn
+	 *            the column to rename.
+	 */
+	public void requestRenameDataSetColumn(DataSetColumn dsColumn) {
+		try {
+			// Ask user for the new name.
+			String newName = this.askUserForDataSetColumnName(dsColumn
+					.getName());
+
+			// If the new name is null (user cancelled), or has
+			// not changed, don't rename it.
+			if (newName == null || newName.equals(dsColumn.getName()))
+				return;
+
+			// Rename the dataset.
+			MartBuilderUtils.renameDataSetColumn(dsColumn, newName);
+
+			// Recalculate the dataset diagram as the column name will have
+			// caused the column and the table to resize themselves.
+			this.recalculateDataSetDiagram((DataSet) dsColumn.getTable()
+					.getSchema());
 
 			// Set the tabset as modified.
 			this.martTabSet.setModifiedStatus(true);

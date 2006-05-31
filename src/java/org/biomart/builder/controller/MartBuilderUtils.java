@@ -20,6 +20,7 @@ package org.biomart.builder.controller;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -58,7 +59,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 19th May 2006
+ * @version 0.1.12, 31st May 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -593,7 +594,8 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Renames a column within a dataset table.
+	 * Renames a column within a dataset table. If the column is in a key, then
+	 * also renames the columns in keys in other tables which correspond to it.
 	 * 
 	 * @param col
 	 *            the column to rename.
@@ -606,7 +608,52 @@ public class MartBuilderUtils {
 	 */
 	public static void renameDataSetColumn(DataSetColumn col, String newName)
 			throws AlreadyExistsException {
+		// If the new name is the same as the old, ignore the request.
+		if (newName.equals(col.getName()))
+			return;
+
+		// Rename the column.
 		col.setName(newName);
+
+		// Make a list of relations involving this column. It
+		// is empty to start with.
+		List relations = new ArrayList();
+
+		// Is it in any of the keys on this table?
+		for (Iterator i = col.getTable().getKeys().iterator(); i.hasNext();) {
+			Key k = (Key) i.next();
+
+			// Is the column in this key?
+			if (k.getColumns().contains(col))
+				// Add the relations on the key to the list to process.
+				// The first half of the object in the list is the position
+				// of the column in the key. The second half is all relations
+				// involving that object.
+				relations.add(new Object[] {
+						new Integer(k.getColumns().indexOf(col)),
+						k.getRelations() });
+		}
+
+		// For each group of relations involving this column, iterate over
+		// each relation and rename the column in the keys at both ends.
+		for (Iterator i = relations.iterator(); i.hasNext();) {
+			Object[] obj = (Object[]) i.next();
+
+			// What index in the key is the column to rename?
+			int colIndex = ((Integer) obj[0]).intValue();
+
+			// Loop over all the relations using that key.
+			for (Iterator j = ((Collection) obj[1]).iterator(); j.hasNext();) {
+				Relation r = (Relation) j.next();
+
+				// Rename both ends using recursion. This works because this
+				// method skips the rename process if the names already match.
+				renameDataSetColumn((DataSetColumn) r.getPrimaryKey()
+						.getColumns().get(colIndex), newName);
+				renameDataSetColumn((DataSetColumn) r.getForeignKey()
+						.getColumns().get(colIndex), newName);
+			}
+		}
 	}
 
 	/**

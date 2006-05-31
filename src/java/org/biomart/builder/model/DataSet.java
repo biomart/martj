@@ -60,7 +60,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.19, 25th May 2006
+ * @version 0.1.20, 31st May 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -887,7 +887,11 @@ public class DataSet extends GenericSchema {
 	private void processTable(DataSetTable dsTable, List dsTablePKCols,
 			Table mergeTable, List normalQ, List subclassQ, List dimensionQ,
 			Relation sourceRelation, Set relationsFollowed) {
+
+		// Don't ignore any keys by default.
 		Key ignoreKey = null;
+
+		// Did we get here via somewhere else?
 		if (sourceRelation != null) {
 			// Work out what key to ignore, if any.
 			ignoreKey = sourceRelation.getPrimaryKey().getTable().equals(
@@ -960,16 +964,31 @@ public class DataSet extends GenericSchema {
 			// Are we at the 1 end of a 1:M?
 			else if (r.getPrimaryKey().getTable().equals(mergeTable)
 					&& r.getFKCardinality().equals(Cardinality.MANY)) {
-				// Subclass subclassed relations, but only if this is a main
-				// table.
+
+				// Subclass subclassed relations, if we are currently
+				// building the main table of the dataset.
 				if (this.subclassedRelations.contains(r)
 						&& dsTable.getType().equals(DataSetTableType.MAIN))
 					subclassQ.add(r);
 
 				// Dimensionize dimension relations, which are all other 1:M
-				// relations, but only if this is not a dimension itself.
-				else if (!dsTable.getType().equals(DataSetTableType.DIMENSION))
+				// relations, if the current table is the underlying table
+				// of the dataset table we are constructing, and we are not
+				// constructing a dimension table.
+				else if (!dsTable.getType().equals(DataSetTableType.DIMENSION)
+						&& mergeTable.equals(dsTable.getUnderlyingTable()))
 					dimensionQ.add(r);
+
+				/*
+				 * // Subclass subclassed relations, but only if this is a main //
+				 * table. if (this.subclassedRelations.contains(r) &&
+				 * dsTable.getType().equals(DataSetTableType.MAIN))
+				 * subclassQ.add(r); // Dimensionize dimension relations, which
+				 * are all other 1:M // relations, but only if this is not a
+				 * dimension itself. else if
+				 * (!dsTable.getType().equals(DataSetTableType.DIMENSION))
+				 * dimensionQ.add(r);
+				 */
 			}
 
 			// Follow all others.
