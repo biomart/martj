@@ -32,7 +32,7 @@ import org.biomart.builder.exceptions.MartBuilderInternalError;
  * name.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 19th May 2006
+ * @version 0.1.5, 1st June 2006
  * @since 0.1
  */
 public interface Column extends Comparable {
@@ -42,6 +42,15 @@ public interface Column extends Comparable {
 	 * @return the name of this column.
 	 */
 	public String getName();
+
+	/**
+	 * Use this to rename a column. The table will be informed of the change
+	 * as well.
+	 * 
+	 * @param newName
+	 *            the new name to give the column.
+	 */
+	public void setName(String newName) throws AlreadyExistsException;
 
 	/**
 	 * Retrieve the parent table of this column.
@@ -93,16 +102,9 @@ public interface Column extends Comparable {
 		public Table getTable() {
 			return this.table;
 		}
-
-		/**
-		 * Use this to rename a column from within a subclass. Use with care as
-		 * the table will no longer recognise this column unless explicitly told
-		 * about it.
-		 * 
-		 * @param newName
-		 *            the new name to give the column.
-		 */
-		protected void setName(String newName) {
+		
+		public void setName(String newName) throws AlreadyExistsException {
+			this.getTable().changeColumnMapKey(this.name, newName);
 			this.name = newName;
 		}
 

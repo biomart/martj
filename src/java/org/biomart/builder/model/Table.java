@@ -48,7 +48,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * more complex implementations. It is able to keep track of keys and columns
  * but it does not provide any methods that process or analyse these.
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 19th May 2006
+ * @version 0.1.12, 1st June 2006
  * @since 0.1
  */
 public interface Table extends Comparable {
@@ -57,6 +57,15 @@ public interface Table extends Comparable {
      * @return the name of this table.
      */
     public String getName();
+    
+    /**
+     * Sets a new name for this table. This will also rename the
+     * table in the schema map.
+     * @param newName the new name.
+     * @throws AlreadyExistsException if a table with that name
+     * already exists in this schema.
+     */
+    public void setName(String newName) throws AlreadyExistsException;
     
     /**
      * Returns the schema for this table.
@@ -224,6 +233,15 @@ public interface Table extends Comparable {
         public String getName() {
             return this.name;
         }
+
+		public void setName(String newName) throws AlreadyExistsException {
+			// Sanity check.
+			if (newName.equals(this.name))
+				return; // Skip unnecessary change.
+			// Do it.
+			this.getSchema().changeTableMapKey(this.name, newName);
+			this.name = newName;
+		}
         
         public Schema getSchema() {
             return this.schema;

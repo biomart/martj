@@ -52,7 +52,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * with keeping track of the tables a schema provides.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 19th May 2006
+ * @version 0.1.11, 1st June 2006
  * @since 0.1
  */
 public interface Schema extends Comparable, DataLink {
@@ -120,6 +120,22 @@ public interface Schema extends Comparable, DataLink {
 	 * @return the matching tables from this provider.
 	 */
 	public Table getTableByName(String name);
+
+	/**
+	 * Attempts to rename a table. If the new name has already been taken by
+	 * another table, an exception is thrown. The rename does not affect the
+	 * table itself, only the representation of the table within this schema. If
+	 * the names are the same, nothing happens.
+	 * 
+	 * @param oldName
+	 *            the old name of the table.
+	 * @param newName
+	 *            the new name of the table.
+	 * @throws AlreadyExistsException
+	 *             if the new name has already been used elsewhere.
+	 */
+	public void changeTableMapKey(String oldName, String newName)
+			throws AlreadyExistsException;
 
 	/**
 	 * Returns a collection of all the keys in this schema which have relations
@@ -389,6 +405,23 @@ public interface Schema extends Comparable, DataLink {
 
 		public Table getTableByName(String name) {
 			return (Table) this.tables.get(name);
+		}
+
+		public void changeTableMapKey(String oldName, String newName)
+				throws AlreadyExistsException {
+			// If the names are the same, do nothing.
+			if (oldName.equals(newName))
+				return;
+
+			// Refuse to do it if the new name has been used already.
+			if (this.tables.containsKey(newName))
+				throw new AlreadyExistsException(BuilderBundle
+						.getString("tableExists"), newName);
+
+			// Update our mapping but don't rename the columns themselves.
+			Table tbl = (Table) this.tables.get(oldName);
+			this.tables.put(newName, tbl);
+			this.tables.remove(oldName);
 		}
 
 		public Collection getExternalKeys() {

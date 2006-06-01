@@ -60,7 +60,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.20, 31st May 2006
+ * @version 0.1.21, 1st June 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -1415,26 +1415,6 @@ public class DataSet extends GenericSchema {
 
 			// Remember the rest.
 			this.underlyingRelation = underlyingRelation;
-		}
-
-		/**
-		 * {@inheritDoc}
-		 * <p>
-		 * This implementation also calls the appropriate renaming functions in
-		 * the table as well, saving the caller the effort of doing so.
-		 */
-		public void setName(String newName) {
-			// Sanity check.
-			if (newName.equals(this.getName()))
-				return; // Skip unnecessary change.
-			// Do it.
-			String oldName = this.getName();
-			super.setName(newName);
-			try {
-				this.getTable().changeColumnMapKey(oldName, newName);
-			} catch (Throwable t) {
-				throw new MartBuilderInternalError(t);
-			}
 		}
 
 		/**

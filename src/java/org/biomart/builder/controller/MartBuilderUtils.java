@@ -40,6 +40,7 @@ import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
+import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.Key.ForeignKey;
@@ -59,7 +60,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 31st May 2006
+ * @version 0.1.13, 1st June 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -591,6 +592,22 @@ public class MartBuilderUtils {
 			ComponentStatus status) throws AssociationException {
 		relation.setStatus(status);
 		mart.synchroniseDataSets();
+	}
+
+	/**
+	 * Renames a table within a dataset.
+	 * 
+	 * @param tbl
+	 *            the table to rename.
+	 * @param newName
+	 *            the new name to give it. If the name is the same as the
+	 *            existing one, no action is taken.
+	 * @throws AlreadyExistsException
+	 *             if the dataset already has another table with that name.
+	 */
+	public static void renameDataSetTable(DataSetTable tbl, String newName)
+			throws AlreadyExistsException {
+		tbl.setName(newName);
 	}
 
 	/**

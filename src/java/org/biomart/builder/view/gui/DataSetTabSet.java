@@ -63,7 +63,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.16, 31st May 2006
+ * @version 0.1.17, 1st June 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -336,12 +336,11 @@ public class DataSetTabSet extends JTabbedPane {
 		this.datasetToTab.put(dataset, datasetTab);
 	}
 
-	private String askUserForDataSetName(String defaultResponse) {
+	private String askUserForName(String message, String defaultResponse) {
 		// Ask the user for a name. Use the default response
 		// as the default value in the input field.
 		String name = (String) JOptionPane.showInputDialog(this.martTabSet
-				.getMartBuilder(), BuilderBundle
-				.getString("requestDataSetName"), BuilderBundle
+				.getMartBuilder(), message, BuilderBundle
 				.getString("questionTitle"), JOptionPane.QUESTION_MESSAGE,
 				null, null, defaultResponse);
 
@@ -367,7 +366,8 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestRenameDataSet(DataSet dataset) {
 		try {
 			// Ask user for the new name.
-			String newName = this.askUserForDataSetName(dataset.getName());
+			String newName = this.askUserForName(BuilderBundle
+					.getString("requestDataSetName"), dataset.getName());
 
 			// If the new name is null (user cancelled), or has
 			// not changed, don't rename it.
@@ -390,28 +390,6 @@ public class DataSetTabSet extends JTabbedPane {
 		}
 	}
 
-	private String askUserForDataSetColumnName(String defaultResponse) {
-		// Ask the user for a name. Use the default response
-		// as the default value in the input field.
-		String name = (String) JOptionPane.showInputDialog(this.martTabSet
-				.getMartBuilder(), BuilderBundle
-				.getString("requestDataSetColumnName"), BuilderBundle
-				.getString("questionTitle"), JOptionPane.QUESTION_MESSAGE,
-				null, null, defaultResponse);
-
-		// If they cancelled the request, return null.
-		if (name == null)
-			return null;
-
-		// If they didn't enter anything, use the default response
-		// as though they hadn't changed it.
-		else if (name.trim().length() == 0)
-			name = defaultResponse;
-
-		// Return the response.
-		return name;
-	}
-
 	/**
 	 * Renames a column, after prompting the user to enter a new name. By
 	 * default, the existing name is used. If the name entered is blank or
@@ -423,7 +401,8 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestRenameDataSetColumn(DataSetColumn dsColumn) {
 		try {
 			// Ask user for the new name.
-			String newName = this.askUserForDataSetColumnName(dsColumn
+			String newName = this.askUserForName(BuilderBundle
+					.getString("requestDataSetColumnName"), dsColumn
 					.getName());
 
 			// If the new name is null (user cancelled), or has
@@ -447,6 +426,40 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Renames a table, after prompting the user to enter a new name. By
+	 * default, the existing name is used. If the name entered is blank or
+	 * matches the existing name, no change is made.
+	 * 
+	 * @param dsTable
+	 *            the table to rename.
+	 */
+	public void requestRenameDataSetTable(DataSetTable dsTable) {
+		try {
+			// Ask user for the new name.
+			String newName = this.askUserForName(BuilderBundle.getString("requestDataSetTableName"), dsTable
+					.getName());
+
+			// If the new name is null (user cancelled), or has
+			// not changed, don't rename it.
+			if (newName == null || newName.equals(dsTable.getName()))
+				return;
+
+			// Rename the dataset.
+			MartBuilderUtils.renameDataSetTable(dsTable, newName);
+
+			// Recalculate the dataset diagram as the table name will have
+			// caused the table to resize itself.
+			this.recalculateDataSetDiagram((DataSet) dsTable
+					.getSchema());
+
+			// Set the tabset as modified.
+			this.martTabSet.setModifiedStatus(true);
+		} catch (Throwable t) {
+			this.martTabSet.getMartBuilder().showStackTrace(t);
+		}
+	}
+
+	/**
 	 * Request that a single dataset be created, unoptimised, around the given
 	 * table.
 	 * 
@@ -455,7 +468,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestCreateDataSet(final Table table) {
 		// Ask user for a name to use.
-		final String name = this.askUserForDataSetName(table.getName());
+		final String name = this.askUserForName(BuilderBundle.getString("requestDataSetName"), table.getName());
 
 		// If they cancelled it, cancel the operation.
 		if (name == null)
@@ -490,7 +503,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestSuggestDataSets(final Table table) {
 		// Ask the user for a name for the table.
-		final String name = this.askUserForDataSetName(table.getName());
+		final String name = this.askUserForName(BuilderBundle.getString("requestDataSetName"), table.getName());
 
 		// If they cancelled it, return without doing anything.
 		if (name == null)

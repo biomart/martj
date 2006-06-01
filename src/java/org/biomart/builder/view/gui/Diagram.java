@@ -58,7 +58,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * what those items should be.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 23rd May 2006
+ * @version 0.1.18, 1st June 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
@@ -360,6 +360,12 @@ public abstract class Diagram extends JPanel {
 			else
 				i.remove();
 		}
+		
+		// Finally, repaint it as by default a component only repaints
+		// the area uncovered by the last action, but we have changed
+		// the entire visible area, so need the entire visible area to 
+		// be repainted.
+		this.repaint(this.getVisibleRect());
 	}
 
 	/**
