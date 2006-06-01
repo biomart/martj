@@ -32,7 +32,7 @@ import org.biomart.builder.model.Schema;
  * @version 0.1.1, 3rd May 2006
  * @since 0.1
  */
-public abstract class ConnectionPanel extends JPanel {
+public abstract class SchemaConnectionPanel extends JPanel {
 	/**
 	 * Modifies a schema based on the values in the panel's fields.
 	 * 

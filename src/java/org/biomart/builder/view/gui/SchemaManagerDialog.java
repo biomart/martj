@@ -42,7 +42,7 @@ import org.biomart.builder.resources.BuilderBundle;
 /**
  * This dialog box allows the user to define or modify a schema, by giving it a
  * name, choosing a type, then displaying the appropriate
- * {@link ConnectionPanel} according to the type chosen. The connection panel
+ * {@link SchemaConnectionPanel} according to the type chosen. The connection panel
  * then is given the job of actually creating or modifying the schema, before
  * the result is returned to the caller.
  * 
@@ -61,7 +61,7 @@ public class SchemaManagerDialog extends JDialog {
 
 	private JTextField name;
 
-	private ConnectionPanel connectionPanel;
+	private SchemaConnectionPanel connectionPanel;
 
 	private JButton test;
 
@@ -118,9 +118,9 @@ public class SchemaManagerDialog extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				if (type.getSelectedItem().equals(
 						BuilderBundle.getString("jdbcSchema"))) {
-					if (!(connectionPanel instanceof JDBCConnectionPanel)) {
+					if (!(connectionPanel instanceof JDBCSchemaConnectionPanel)) {
 						connectionPanelHolder.removeAll();
-						connectionPanel = new JDBCConnectionPanel(schemaTabSet,
+						connectionPanel = new JDBCSchemaConnectionPanel(schemaTabSet,
 								template);
 						connectionPanelHolder.add(connectionPanel);
 						connectionPanelHolder.validate();
@@ -273,7 +273,7 @@ public class SchemaManagerDialog extends JDialog {
 			// actually create the object.
 			String type = (String) this.type.getSelectedItem();
 			if (type.equals(BuilderBundle.getString("jdbcSchema")))
-				return ((JDBCConnectionPanel) this.connectionPanel)
+				return ((JDBCSchemaConnectionPanel) this.connectionPanel)
 						.createSchema(this.name.getText());
 
 			// What kind of type is it then??
@@ -331,7 +331,7 @@ public class SchemaManagerDialog extends JDialog {
 				.getMartTabSet().getMartBuilder());
 		dialog.show();
 		if (dialog.schema != null && dialog.schema instanceof JDBCSchema) {
-			return (((JDBCConnectionPanel) dialog.connectionPanel)
+			return (((JDBCSchemaConnectionPanel) dialog.connectionPanel)
 					.modifySchema(schema) != null);
 		} else {
 			return false;

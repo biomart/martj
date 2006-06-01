@@ -1068,7 +1068,7 @@ public class DataSet extends GenericSchema {
 	 *             which the mart will be constructed.
 	 */
 	public void constructMart() throws BuilderException, SQLException {
-		this.martConstructor.constructMart(this);
+		this.martConstructor.getConstructorRunnable(this);
 	}
 
 	public void addTable(Table table) throws AlreadyExistsException,

@@ -31,6 +31,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
@@ -41,6 +43,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.ProgressMonitor;
 
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.model.DataSet;
@@ -53,6 +56,7 @@ import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
@@ -402,8 +406,7 @@ public class DataSetTabSet extends JTabbedPane {
 		try {
 			// Ask user for the new name.
 			String newName = this.askUserForName(BuilderBundle
-					.getString("requestDataSetColumnName"), dsColumn
-					.getName());
+					.getString("requestDataSetColumnName"), dsColumn.getName());
 
 			// If the new name is null (user cancelled), or has
 			// not changed, don't rename it.
@@ -436,8 +439,8 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestRenameDataSetTable(DataSetTable dsTable) {
 		try {
 			// Ask user for the new name.
-			String newName = this.askUserForName(BuilderBundle.getString("requestDataSetTableName"), dsTable
-					.getName());
+			String newName = this.askUserForName(BuilderBundle
+					.getString("requestDataSetTableName"), dsTable.getName());
 
 			// If the new name is null (user cancelled), or has
 			// not changed, don't rename it.
@@ -449,8 +452,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 			// Recalculate the dataset diagram as the table name will have
 			// caused the table to resize itself.
-			this.recalculateDataSetDiagram((DataSet) dsTable
-					.getSchema());
+			this.recalculateDataSetDiagram((DataSet) dsTable.getSchema());
 
 			// Set the tabset as modified.
 			this.martTabSet.setModifiedStatus(true);
@@ -468,7 +470,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestCreateDataSet(final Table table) {
 		// Ask user for a name to use.
-		final String name = this.askUserForName(BuilderBundle.getString("requestDataSetName"), table.getName());
+		final String name = this.askUserForName(BuilderBundle
+				.getString("requestDataSetName"), table.getName());
 
 		// If they cancelled it, cancel the operation.
 		if (name == null)
@@ -503,7 +506,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestSuggestDataSets(final Table table) {
 		// Ask the user for a name for the table.
-		final String name = this.askUserForName(BuilderBundle.getString("requestDataSetName"), table.getName());
+		final String name = this.askUserForName(BuilderBundle
+				.getString("requestDataSetName"), table.getName());
 
 		// If they cancelled it, return without doing anything.
 		if (name == null)
@@ -1049,6 +1053,70 @@ public class DataSetTabSet extends JTabbedPane {
 
 		// Update the modified status on this tabset.
 		martTabSet.setModifiedStatus(true);
+	}
+
+	/**
+	 * Constructs the mart for the given dataset, using the mart constructor
+	 * currently assigned to that dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to construct into a mart.
+	 */
+	public void requestConstructMart(DataSet dataset) {
+		// Obtain a thread for constructing the dataset.
+		final ConstructorRunnable constructor = dataset.getMartConstructor()
+				.getConstructorRunnable(dataset);
+
+		// Create a progress monitor.
+		final ProgressMonitor progressMonitor = new ProgressMonitor(this
+				.getMartTabSet().getMartBuilder(), BuilderBundle.getString(
+				"creatingMart", dataset.getName()), "", 0, 100);
+		progressMonitor.setProgress(0); // Start with 0% complete.
+		progressMonitor.setMillisToDecideToPopup(0); // Open immediately.
+
+		// Start the construction.
+		final Thread thread = new Thread(constructor);
+		thread.run();
+
+		// Create and start a timer thread that will update the progress dialog.
+		final Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask() {
+			public void run() {
+				// Did the job complete yet?
+				if (thread.isAlive() && !progressMonitor.isCanceled()) {
+					// If not, update the progress report.
+					progressMonitor.setNote(constructor.getStatusMessage());
+					progressMonitor.setProgress(constructor
+							.getPercentComplete());
+				} else {
+					// If it completed, close the task and tidy up.
+					// Stop the timer.
+					timer.cancel();
+					// Stop the thread.
+					constructor.cancel();
+					// Close the progress dialog.
+					progressMonitor.close();
+					// If it failed, show the exception.
+					Exception failure = constructor.getFailureException();
+					if (failure != null)
+						getMartTabSet().getMartBuilder()
+								.showStackTrace(failure);
+					// Inform user of success or otherwise.
+					if (failure == null)
+						JOptionPane.showMessageDialog(getMartTabSet()
+								.getMartBuilder(), BuilderBundle
+								.getString("martConstructionComplete"),
+								BuilderBundle.getString("messageTitle"),
+								JOptionPane.INFORMATION_MESSAGE);
+					else
+						JOptionPane.showMessageDialog(getMartTabSet()
+								.getMartBuilder(), BuilderBundle
+								.getString("martConstructionFailed"),
+								BuilderBundle.getString("messageTitle"),
+								JOptionPane.WARNING_MESSAGE);
+				}
+			}
+		}, 0, 1 * 1000); // 1000 millis equals 1 second
 	}
 
 	private JPopupMenu getDataSetTabContextMenu(final DataSet dataset) {

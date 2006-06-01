@@ -62,7 +62,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * @version 0.1.3, 12th May 2006
  * @since 0.1
  */
-public class JDBCConnectionPanel extends ConnectionPanel implements
+public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		ActionListener {
 	private static final long serialVersionUID = 1;
 
@@ -123,7 +123,8 @@ public class JDBCConnectionPanel extends ConnectionPanel implements
 	 *            the template to use to fill the values in the panel with. If
 	 *            this is null, defaults are used.
 	 */
-	public JDBCConnectionPanel(final SchemaTabSet schemaTabSet, Schema template) {
+	public JDBCSchemaConnectionPanel(final SchemaTabSet schemaTabSet,
+			Schema template) {
 		super();
 
 		// Remember the schema tabset.
@@ -169,8 +170,8 @@ public class JDBCConnectionPanel extends ConnectionPanel implements
 		// The driver class box displays everything we know about by default,
 		// as defined by the map at the start of this class.
 		this.driverClass = new JComboBox(
-				(String[]) JDBCConnectionPanel.DRIVER_MAP.keySet().toArray(
-						new String[0]));
+				(String[]) JDBCSchemaConnectionPanel.DRIVER_MAP.keySet()
+						.toArray(new String[0]));
 		this.driverClass.setEditable(true);
 		this.driverClass.addActionListener(this);
 
@@ -453,13 +454,13 @@ public class JDBCConnectionPanel extends ConnectionPanel implements
 
 				// Do we know about this, as defined in the map at the start
 				// of this class?
-				if (JDBCConnectionPanel.DRIVER_MAP.containsKey(className)) {
+				if (JDBCSchemaConnectionPanel.DRIVER_MAP.containsKey(className)) {
 					// Yes, so we can use the map to construct a JDBC URL
-					// template, into which host, port, and database can be 
+					// template, into which host, port, and database can be
 					// placed as required.
 
 					// Obtain the template and split it.
-					String[] parts = (String[]) JDBCConnectionPanel.DRIVER_MAP
+					String[] parts = (String[]) JDBCSchemaConnectionPanel.DRIVER_MAP
 							.get(className);
 
 					// The first part of the template is the default port
@@ -469,7 +470,7 @@ public class JDBCConnectionPanel extends ConnectionPanel implements
 					// The second part is the JDBC URL template itself. Remember
 					// which template was selected, then disable the JDBC URL
 					// field in the interface as its contents will now be
-					// computed automatically. Enable the host/database/port 
+					// computed automatically. Enable the host/database/port
 					// fields instead.
 					this.currentJDBCURLTemplate = parts[1];
 					this.jdbcURL.setEnabled(false);

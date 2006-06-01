@@ -18,10 +18,6 @@
 
 package org.biomart.builder.model;
 
-import java.sql.SQLException;
-
-import org.biomart.builder.exceptions.BuilderException;
-
 /**
  * This interface defines the behaviour expected from an object which can take a
  * dataset and actually construct a mart based on this information. Whether it
@@ -29,7 +25,7 @@ import org.biomart.builder.exceptions.BuilderException;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 5th May 2006
+ * @version 0.1.6, 1st June 2006
  * @since 0.1
  */
 public interface MartConstructor extends DataLink, Comparable {
@@ -44,16 +40,16 @@ public interface MartConstructor extends DataLink, Comparable {
 	 * This method takes a dataset and either generates a script for the user to
 	 * run later to construct a mart, or does the work right now. The end result
 	 * should be a completely finished and populated mart, or the script to make
-	 * one.
+	 * one. The work is done inside a thread, which is returned unstarted. The
+	 * user should create a new {@link Thread} instance around this, and start
+	 * it by calling {@link Thread#run()}. They can then monitor it using the
+	 * methods provided by the {@link ConstructorRunnable} interface.
 	 * 
 	 * @param ds
 	 *            the dataset to build the mart for.
-	 * @throws BuilderException
-	 *             if anything went wrong during the building process.
-	 * @throws SQLException
-	 *             if it needed to talk to a database and couldn't.
+	 * @return the thread that will build it.
 	 */
-	public void constructMart(DataSet ds) throws BuilderException, SQLException;
+	public ConstructorRunnable getConstructorRunnable(DataSet ds);
 
 	/**
 	 * Returns the name of this constructor.
@@ -65,7 +61,9 @@ public interface MartConstructor extends DataLink, Comparable {
 	/**
 	 * The base implementation simply does the bare minimum, ie. synchronises
 	 * the dataset before starting work. It doesn't actually generate any tables
-	 * or DDL.
+	 * or DDL. You should override the {@link #getConstructorRunnable(DataSet)}
+	 * method to actually create a construction thread that does some useful
+	 * work.
 	 */
 	public class GenericMartConstructor implements MartConstructor {
 		private final String name;
@@ -85,30 +83,26 @@ public interface MartConstructor extends DataLink, Comparable {
 			return this.name;
 		}
 
-		public void constructMart(DataSet ds) throws BuilderException,
-				SQLException {
-			/*
-			 * TODO: Subclasses actually generate DDL or access
-			 * JDBC/XML/whatever and do the transformation. Don't forget to
-			 * include the 'hasXYZDimension' columns in the main table and
-			 * subclassed main tables. Also don't forget to left-join tables
-			 * when joining so we get nulls in appropriate places. Plus, check
-			 * whether paritioning on any SchemaColumn instances. Use
-			 * pseudo-column if PartitionedTableProvider and off, use
-			 * partition-prefix if PartitionedTableProvider and on, ignore if
-			 * not PartitionedTableProvider. Applies only when partitioning main
-			 * table, otherwise normal rules apply. (Partition suffix on table
-			 * name). Check for masked columns, masked relations, concat only
-			 * relations, and subclass relations.
-			 * 
-			 * Can partition to separate databases by being a wrapper around one
-			 * or more DataSource objects per partition name! This is for each
-			 * implementation to decide for itself.
-			 * 
-			 * Use abstract delegate methods (create table as table, merge
-			 * tables, etc.) which will do the work and know how to be specific
-			 * to a certain database..
-			 */
+		public ConstructorRunnable getConstructorRunnable(DataSet ds) {
+			return new ConstructorRunnable() {
+				public void run() {
+				}
+
+				public String getStatusMessage() {
+					return "";
+				}
+
+				public int getPercentComplete() {
+					return 100;
+				}
+
+				public Exception getFailureException() {
+					return null;
+				}
+				
+				public void cancel() {
+				}
+			};
 		}
 
 		public boolean test() throws Exception {
@@ -138,5 +132,51 @@ public interface MartConstructor extends DataLink, Comparable {
 			MartConstructor c = (MartConstructor) o;
 			return c.toString().equals(this.toString());
 		}
+	}
+
+	/**
+	 * This interface defines a class which does the actual construction work.
+	 * It should keep its status up-to-date, as these will be displayed
+	 * regularly to the user. You should probably provide a constructor which
+	 * takes a dataset as a parameter.
+	 */
+	public interface ConstructorRunnable extends Runnable {
+
+		/**
+		 * This method should return a message describing what the thread is
+		 * currently doing.
+		 * 
+		 * @return a message describing current activity.
+		 */
+		public String getStatusMessage();
+
+		/**
+		 * This method should return a value between 0 and 100 indicating how
+		 * the thread is getting along in the general scheme of things. 0
+		 * indicates just starting, 100 indicates complete or very nearly
+		 * complete.
+		 * 
+		 * @return a percentage indicating how far the thread has got.
+		 */
+		public int getPercentComplete();
+
+		/**
+		 * If the thread failed, this method should return an exception
+		 * describing the failure. If it succeeded, or is still in progress and
+		 * hasn't failed yet, it should return <tt>null</tt>.
+		 * 
+		 * @return the exception that caused the thread to fail, if any, or
+		 *         <tt>null</tt> otherwise.
+		 */
+		public Exception getFailureException();
+
+		/**
+		 * This method will be called if the user wants the thread to stop work
+		 * straight away. It should set an exception for
+		 * {@link #getFailureException()} to return saying that it was
+		 * cancelled, so that the user knows it was so, and doesn't think it
+		 * just finished successfully without any warnings.
+		 */
+		public void cancel();
 	}
 }

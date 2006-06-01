@@ -191,6 +191,18 @@ public class DataSetContext extends WindowContext {
 
 			// Add the optimiser type submenu to the context menu.
 			contextMenu.add(optimiserMenu);
+
+			// Option to construct the mart.
+			JMenuItem construct = new JMenuItem(BuilderBundle
+					.getString("constructMartTitle"));
+			construct.setMnemonic(BuilderBundle.getString("constructMartMnemonic")
+					.charAt(0));
+			construct.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					getDataSetTabSet().requestConstructMart(getDataSet());
+				}
+			});
+			contextMenu.add(construct);
 		}
 
 		// Did the user click on a dataset table?
