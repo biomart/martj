@@ -1159,6 +1159,9 @@ System.out.println ("getting driver "+ driver);
 				  if (interfaces == null)
 					interfaces = "default";
 				  
+				  // convert config to latest version using xslt
+				  odsv = MartEditor.getDatabaseDatasetConfigUtils().getUpdatedConfig(odsv);
+				  
 				  try {
 				  	    dbutils.storeDatasetConfiguration(
 									MartEditor.getUser(),
@@ -1224,6 +1227,8 @@ System.out.println ("getting driver "+ driver);
 			  dbutils.dropMetaTables();
 			  for (int k = 0; k < dsConfigs.length;k++){
 					dsv = dsConfigs[k];
+					// convert config to latest version using xslt
+				    dsv = MartEditor.getDatabaseDatasetConfigUtils().getUpdatedConfig(dsv);
 					// export it to new database	
 					dbutils.storeDatasetConfiguration(
 										MartEditor.getUser(),
@@ -1302,7 +1307,9 @@ System.out.println ("getting driver "+ driver);
 				if(databaseDialog.getDatabaseType().equals("oracle")) schema = databaseDialog.getSchema().toUpperCase();
 				else schema = databaseDialog.getSchema();
 				dsv = dbutils.getNewFiltsAtts(schema, dsv);
-				// export it	
+				// export it
+				// convert config to latest version using xslt
+				dsv = MartEditor.getDatabaseDatasetConfigUtils().getUpdatedConfig(dsv);	
 				dbutils.storeDatasetConfiguration(
 							MartEditor.getUser(),
 							dsv.getInternalName(),
@@ -1637,6 +1644,8 @@ System.out.println ("getting driver "+ driver);
 										
 				for (i = 0; i < dsList.length; i++){
 						dsv = adaptor.getDatasetConfigByDatasetInternalName(dsList[i],"default");
+						// convert config to latest version using xslt
+						dsv = MartEditor.getDatabaseDatasetConfigUtils().getUpdatedConfig(dsv);
 						dbutils.storeDatasetConfiguration(
 															user,
 															dsv.getInternalName(),

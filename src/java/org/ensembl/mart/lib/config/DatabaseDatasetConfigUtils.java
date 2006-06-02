@@ -20,6 +20,7 @@ package org.ensembl.mart.lib.config;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -57,16 +58,33 @@ import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.util.ColumnDescription;
 import org.ensembl.mart.util.TableDescription;
 import org.jdom.Document;
+import org.jdom.output.DOMOutputter;
 import org.jdom.output.XMLOutputter;
+import org.jdom.transform.JDOMResult;
+import org.jdom.transform.JDOMSource;
 
+// XSLT imports
+import org.jdom.input.SAXBuilder;
+import org.w3c.dom.Node;
+
+import javax.xml.transform.Templates;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 
 /**
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
+
 public class DatabaseDatasetConfigUtils {
 
-  private final String SOFTWAREVERSION = "0.4";
+  private final String SOFTWAREVERSION = "0.5";
+  private final String XSL_FILE = "data/mart_0_4_0_5.xsl";
   
   private final String BASEMETATABLE =      "meta_conf__dataset__main";
   private final String MARTUSERTABLE =      "meta_conf__user__dm";
@@ -2364,7 +2382,9 @@ public int templateCount(String template) throws ConfigurationException{
     
     Connection conn = null;
     try {
+      // BELOW NEEDS CHANGING SO NOT CALLED FROM EXPLORER	
       String metatable = createMetaTables(user);
+  
       String sql;
 	  if (martUser != null && !martUser.equals("")){
 		if (!dscutils.includeHiddenMembers) {
@@ -2686,6 +2706,47 @@ public int templateCount(String template) throws ConfigurationException{
       DetailedDataSource.close(conn);
     }
   }
+
+
+  /**
+   * ...
+   * @param config
+   * @return DatasetConfig JDOM Document 
+   * @throws ConfigurationException when ...
+   */
+  public DatasetConfig getUpdatedConfig(DatasetConfig config)
+	throws ConfigurationException {
+	  try{	
+		System.out.println("CONVERTING CONFIG TO "+SOFTWAREVERSION);
+		Document sourceDoc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(config);
+		InputStream xsl = this.getClass().getClassLoader().getResourceAsStream(XSL_FILE);
+		Transformer transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(xsl));      
+		JDOMResult out = new JDOMResult();
+		transformer.transform(new JDOMSource(sourceDoc),out);
+        Document resultDoc = out.getDocument();
+        
+		//dscutils.loadDatasetConfigWithDocument(config,resultDoc);// creates duplication of all pages etc
+		//return config;	
+		
+		//DatasetConfig newConfig = dscutils.getDatasetConfigForDocument(resultDoc);//error as no adaptor
+		// if do newConfig.setDSConfigAdaptor(config.getAdaptor()); lose changes
+		//return newConfig;
+		
+		// works but blank settings for DatasetConfig
+		DatasetConfig newConfig = new DatasetConfig(config.getInternalName(),config.getDisplayName(),config.getDataset(),config.getDescription(), 
+			config.getType(),config.getVisible(),config.getVisibleFilterPage(),config.getVersion(),config.getOptionalParameter(), 
+			config.getDefaultDataset(),config.getDatasetID(),config.getModified(),config.getMartUsers(),config.getInterfaces(),
+			config.getprimaryKeyRestriction(),config.getTemplate());
+		dscutils.loadDatasetConfigWithDocument(newConfig,resultDoc);
+		return newConfig;
+									
+	  }
+	  catch (Exception e){
+		throw new ConfigurationException(
+				"Caught Exception during transformation of requested DatasetConfig: " + e.getMessage(),
+				e);			
+	  }			
+	}
 
   /**
    * Returns a DatasetConfig JDOM Document from the Mart Database using a supplied DetailedDataSource for a given user, defined with the

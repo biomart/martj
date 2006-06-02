@@ -1846,4 +1846,10 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     return adaptor;
 
   }
+  /**
+   * @return adaptor that created this instance, can be null.
+   */
+  public void setAdaptor(DSConfigAdaptor dsAdaptor) {
+	adaptor = dsAdaptor;
+  }
 }

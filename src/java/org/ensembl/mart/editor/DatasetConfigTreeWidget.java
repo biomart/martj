@@ -92,70 +92,72 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
         this.setDefaultCloseOperation(JInternalFrame.DO_NOTHING_ON_CLOSE);
         this.addInternalFrameListener(new CloseListener());
         try {
-		  DatasetConfig config = null;	
-          if (dsv == null){	
-	   //  this.setFrameIcon(createImageIcon(MartEditor.IMAGE_DIR+"MartConfig_cube.gif"));
-            
-            if (file == null) {
-            	if (user == null){
-            	  if (schema == null){	
-                    config = new DatasetConfig("new", "new", "new");
-                    config.setDSConfigAdaptor(new SimpleDSConfigAdaptor(config)); //prevents lazyLoading
-                    config.addFilterPage(new FilterPage("new"));
-                    config.addAttributePage(new AttributePage("new"));
-            	  }
+		  	DatasetConfig config = null;	
+          	if (dsv == null){	
+            	if (file == null) {
+            		if (user == null){
+            	  		if (schema == null){	
+                    		config = new DatasetConfig("new", "new", "new");
+                    		config.setDSConfigAdaptor(new SimpleDSConfigAdaptor(config)); //prevents lazyLoading
+                    		config.addFilterPage(new FilterPage("new"));
+                    		config.addAttributePage(new AttributePage("new"));
+            	  		}
             	  
-            	  else{// naive
-            	  	config = MartEditor.getDatabaseDatasetConfigUtils().getNaiveDatasetConfigFor(schema,dataset);
-            	  	if (config.getPrimaryKeys().length == 0 || !config.getPrimaryKeys()[0].toLowerCase().endsWith("_key")){
-            	  		JOptionPane.showMessageDialog(null,"Your main table must contain a primary key ending _key");
-            	  		return;
-            	  	}
-            	  	config.setTemplate(template);
+            	  		else{// naive
+            	  			config = MartEditor.getDatabaseDatasetConfigUtils().getNaiveDatasetConfigFor(schema,dataset);
+            	  			if (config.getPrimaryKeys().length == 0 || !config.getPrimaryKeys()[0].toLowerCase().endsWith("_key")){
+            	  				JOptionPane.showMessageDialog(null,"Your main table must contain a primary key ending _key");
+            	  				return;
+            	  			}
+            	  			config.setTemplate(template);
             	  	
-					int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateCount(template);
-					if (templateCount > 0)			            	  	
-						config = MartEditor.getDatabaseDatasetConfigUtils().updateConfigToTemplate(config,0);
-            	  	}
-            	}
-            	else{//Importing config
-            		if (template != null){
-            			// import template
-            			//config = MartEditor.getDatabaseDatasetConfigUtils().getTemplateConfig(template);
-            			config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template);
-            			MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(config,
-            				MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template));
-            			config.setTemplateFlag("1");	
-           					
+							int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateCount(template);
+							if (templateCount > 0)			            	  	
+								config = MartEditor.getDatabaseDatasetConfigUtils().updateConfigToTemplate(config,0);
+            	  		}
             		}
-            		else{
-      //              ignore cache, do not loadFully, include hidden members
-					  DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, "", true, false, true);
-					  DatasetConfigIterator configs = adaptor.getDatasetConfigs();
-					  while (configs.hasNext()){
-            			DatasetConfig lconfig = (DatasetConfig) configs.next();
-					  	if (lconfig.getDataset().equals(dataset) && lconfig.getDatasetID().equals(datasetID)){
-					    	config = lconfig;
-					    	break;
-						}
-					  }
+            		else{//Importing config
+            			if (template != null){
+            				// import template
+            				//config = MartEditor.getDatabaseDatasetConfigUtils().getTemplateConfig(template);
+            				config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template);
+            				MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(config,
+            					MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template));
+            				config.setTemplateFlag("1");	
+            			}	
+            			else{
+      					//              ignore cache, do not loadFully, include hidden members
+					  		DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, "", true, false, true);
+					  		DatasetConfigIterator configs = adaptor.getDatasetConfigs();
+					  		while (configs.hasNext()){
+            					DatasetConfig lconfig = (DatasetConfig) configs.next();
+					  			if (lconfig.getDataset().equals(dataset) && lconfig.getDatasetID().equals(datasetID)){
+					    			config = lconfig;
+					    			break;
+								}
+					  		}
+            			}
             		}
-            	}
-            } else {// open from file
-                URL url = file.toURL();
+            	} 
+            	else {// open from file
+                	URL url = file.toURL();
 //            ignore cache, include hidden members
-                DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
+                	DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
 
                 // only config one in the file so get that one
-                config = (DatasetConfig) adaptor.getDatasetConfigs().next();
-                config.setDatasetID("");//always blank from file so gets sorted out by database during export
-                if (config.getTemplate() == null || config.getTemplate().equals(""))
-                	config.setTemplate(config.getDataset());
-            }
-          }
-          else{
-          	config = new DatasetConfig(dsv, true, false);
-          }
+                	config = (DatasetConfig) adaptor.getDatasetConfigs().next();
+                	config.setDatasetID("");//always blank from file so gets sorted out by database during export
+                	if (config.getTemplate() == null || config.getTemplate().equals(""))
+                		config.setTemplate(config.getDataset());
+            	}
+          	}// end of dsv = null
+          	else{
+          		config = new DatasetConfig(dsv, true, false);
+          	}
+        
+        	// convert config to latest version using xslt
+        	config = MartEditor.getDatabaseDatasetConfigUtils().getUpdatedConfig(config);
+        
         
 			this.setTitle(schema + "." + config.getDataset());
             JFrame.setDefaultLookAndFeelDecorated(true);
