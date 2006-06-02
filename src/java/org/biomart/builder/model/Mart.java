@@ -135,7 +135,7 @@ public class Mart {
 			if (ds.getCentralTable().getSchema().equals(schema))
 				this.removeDataSet(ds);
 		}
-		this.schemas.remove(schema);
+		this.schemas.remove(schema.getName());
 	}
 
 	/**
@@ -269,7 +269,7 @@ public class Mart {
 	 *            the dataset to remove.
 	 */
 	public void removeDataSet(DataSet dataset) {
-		this.datasets.remove(dataset);
+		this.datasets.remove(dataset.getName());
 	}
 
 	/**

@@ -186,7 +186,7 @@ public class SchemaManagerDialog extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				Schema testSchema = createSchema();
 				if (testSchema != null)
-					schemaTabSet.requestTestSchema(schema);
+					schemaTabSet.requestTestSchema(testSchema);
 			}
 		});
 

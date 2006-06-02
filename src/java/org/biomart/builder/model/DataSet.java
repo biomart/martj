@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -167,89 +168,120 @@ public class DataSet extends GenericSchema {
 			}
 		}
 
-		// Walk the relations and mark them as necessary.
-		this.walkRelations(centralTable, 0, new TreeMap());
+		// Mask all relations in all schemas.
+		for (Iterator i = this.mart.getSchemas().iterator(); i.hasNext();) {
+			Schema schema = (Schema) i.next();
+			for (Iterator j = schema.getInternalRelations().iterator(); j
+					.hasNext();)
+				this.maskedRelations.add(j.next());
+			for (Iterator j = schema.getExternalRelations().iterator(); j
+					.hasNext();) {
+				Relation rel = (Relation) j.next();
+				if (!this.maskedRelations.contains(rel))
+					this.maskedRelations.add(rel);
+			}
+		}
+
+		// Starting at the centre table, make a queue of all relations.
+		// They are stored in pairs, where the first part of the pair is the
+		// relation, and the second part is the key at the end we hit it from.
+		List relationQueue = new ArrayList();
+		List relationKeyQueue = new ArrayList();
+		for (Iterator i = centralTable.getRelations().iterator(); i.hasNext();) {
+			Relation rel = (Relation) i.next();
+			Key relationKey = rel.getPrimaryKey().getTable().equals(
+					centralTable) ? (Key) rel.getPrimaryKey() : (Key) rel
+					.getForeignKey();
+			relationQueue.add(rel);
+			relationKeyQueue.add(relationKey);
+		}
+
+		// Loop over the queue. Unmask every relation, then add
+		// subsequent relations from the target table to the queue.
+		// If hit a 1:M relation from the 1 end, don't add any
+		// subsequent relations. If hit a 1:M relation from the
+		// M end, don't add subsequent 1:M relations with their
+		// 1 end at the 1 end of the relation followed.
+		for (int i = 0; i < relationQueue.size(); i++) {
+			Relation rel = (Relation) relationQueue.get(i);
+			Key key = (Key) relationKeyQueue.get(i);
+
+			// Unmask it.
+			this.maskedRelations.remove(rel);
+
+			// What's the target end of the relation?
+			Key nextKey = key.equals(rel.getPrimaryKey()) ? (Key) rel
+					.getForeignKey() : (Key) rel.getPrimaryKey();
+
+			// Is the relation 1:M or M:1?
+			if (rel.getFKCardinality().equals(Cardinality.MANY)) {
+				// Yes, so work out which end we are at.
+				if (key instanceof ForeignKey) {
+					// Hit a 1:M from the M end.
+					// Add all subsequent relations, unless they are
+					// 1:M with their 1 end at the 1 end of this relation.
+					for (Iterator j = nextKey.getTable().getRelations()
+							.iterator(); j.hasNext();) {
+						Relation rel2 = (Relation) j.next();
+						// Skip those we've already seen.
+						if (relationQueue.contains(rel2))
+							continue;
+						// Skip those 1:M ones with their 1 end at the 1 end of
+						// this relation.
+						if (rel2.getFKCardinality().equals(Cardinality.MANY)
+								&& rel2.getPrimaryKey().getTable().equals(
+										rel.getPrimaryKey().getTable()))
+							continue;
+						// Add the rest to the queue.
+						Key relationKey2 = rel2.getPrimaryKey().getTable()
+								.equals(nextKey.getTable()) ? (Key) rel2
+								.getPrimaryKey() : (Key) rel2.getForeignKey();
+						relationQueue.add(rel2);
+						relationKeyQueue.add(relationKey2);
+					}
+				} else {
+					// Hit a 1:M from the 1 end.
+					// Only add subsequent relations if this is a subclass
+					// relation.
+					if (this.subclassedRelations.contains(rel)) {
+						for (Iterator j = nextKey.getTable().getRelations()
+								.iterator(); j.hasNext();) {
+							Relation rel2 = (Relation) j.next();
+							// Skip those we've already seen.
+							if (relationQueue.contains(rel2))
+								continue;
+							// Add the rest to the queue.
+							Key relationKey2 = rel2.getPrimaryKey().getTable()
+									.equals(nextKey.getTable()) ? (Key) rel2
+									.getPrimaryKey() : (Key) rel2
+									.getForeignKey();
+							relationQueue.add(rel2);
+							relationKeyQueue.add(relationKey2);
+						}
+					}
+				}
+			} else {
+				// No, so do the default thing.
+				// Hit a 1:1 relation.
+				// Add all subsequent relations.
+				for (Iterator j = nextKey.getTable().getRelations().iterator(); j
+						.hasNext();) {
+					Relation rel2 = (Relation) j.next();
+					// Skip those we've already seen.
+					if (relationQueue.contains(rel2))
+						continue;
+					// Add the rest to the queue.
+					Key relationKey2 = rel2.getPrimaryKey().getTable().equals(
+							nextKey.getTable()) ? (Key) rel2.getPrimaryKey()
+							: (Key) rel2.getForeignKey();
+					relationQueue.add(rel2);
+					relationKeyQueue.add(relationKey2);
+				}
+			}
+		}
 
 		// Regenerate the dataset.
 		this.regenerate();
-	}
-
-	/**
-	 * Internal method which works out the lowest number of 1:M relations
-	 * between a given table and all other tables linked to it by
-	 * as-yet-unvisited relations.
-	 * 
-	 * @param currentTable
-	 *            the table to start walking from.
-	 * @param pathLength
-	 *            the number of 1:M relations it took by following from the 1
-	 *            end to the M end to get this far.
-	 */
-	private void walkRelations(Table currentTable, int pathLength,
-			Map relationsPredicted) {
-		// Iterate through all the relations on the current table.
-		for (Iterator i = currentTable.getRelations().iterator(); i.hasNext();) {
-			Relation r = (Relation) i.next();
-
-			// Skip all incorrect relations.
-			if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
-				continue;
-
-			// Seen before?
-			else if (relationsPredicted.containsKey(r)) {
-				// Have we got there before by a path shorter than the current
-				// path? If so, we can skip it.
-				int previousShortestPathLength = ((Integer) relationsPredicted
-						.get(r)).intValue();
-				if (previousShortestPathLength <= pathLength)
-					continue;
-			}
-
-			// If we get here, this is a new shortest path to the relation.
-
-			// Update the path length on this relation.
-			relationsPredicted.put(r, new Integer(pathLength));
-
-			/**
-			 * Path length used to be 2 - the 2nd one was concat-only. Now all
-			 * that are more than 1 are masked, and none are predicted
-			 * concat-only.
-			 */
-			// Update the masked/unmasked flags.
-			if (pathLength >= 1)
-				// Mask all relations that involve one or more levels of 1:M
-				// abstraction away from the central main table.
-				this.maskRelation(r);
-			else
-				// Unmask it. This is because the relation may have previously
-				// been visited by a longer path, in which case it could have
-				// been masked by that path when it should be unmasked for this
-				// path.
-				this.unmaskRelation(r);
-
-			// Work out where to go next.
-
-			// If we're at the 1 end of a 1:M relation, increment the path
-			// length and follow it.
-			if (r.getPrimaryKey().getTable().equals(currentTable)
-					&& r.getFKCardinality().equals(Cardinality.MANY))
-				// Recurse down to the foreign key end of the relation. Only
-				// increment the path length if it is not a subclass relation.
-				this.walkRelations(r.getForeignKey().getTable(), this
-						.getSubclassedRelations().contains(r) ? pathLength
-						: pathLength + 1, relationsPredicted);
-
-			// We're at the M end of a 1:M, or on a 1:1. So, recurse down the
-			// appropriate end of the relation without incrementing the path
-			// length.
-			else {
-				Key targetKey = r.getPrimaryKey().getTable().equals(
-						currentTable) ? (Key) r.getForeignKey() : (Key) r
-						.getPrimaryKey();
-				this.walkRelations(targetKey.getTable(), pathLength,
-						relationsPredicted);
-			}
-		}
 	}
 
 	/**
