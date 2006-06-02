@@ -80,7 +80,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * or keys, or to reinstate any that have previously been marked as incorrect.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 18th May 2006
+ * @version 0.1.10, 2nd June 2006
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -535,15 +535,16 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// To maintain some degree of sanity here, we assume that a PK is
 			// the original source of data (and not a copy of data sourced from
 			// some other table) if the first column in the PK has the same name
-			// as the table it is in, or with '_id' appended. Any PK which does
-			// not have this property is skipped.
+			// as the table it is in, or with '_id' appended, or is just 'id'
+			// on its own. Any PK which does not have this property is skipped.
 			Column firstPKCol = (Column) pk.getColumns().get(0);
 			String firstPKColName = firstPKCol.getName();
 			int idPrefixIndex = firstPKColName.indexOf(BuilderBundle
 					.getString("primaryKeySuffix"));
 			if (idPrefixIndex >= 0)
 				firstPKColName = firstPKColName.substring(0, idPrefixIndex);
-			if (!firstPKColName.equals(pkTable.getName()))
+			if (!firstPKColName.equals(pkTable.getName())
+					&& !firstPKColName.equals(BuilderBundle.getString("idCol")))
 				continue;
 
 			// Make a list of relations that already exist in this schema, from
@@ -570,21 +571,33 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 				int matchingColumnCount = 0;
 
 				// Iterate through the PK columns and find a column in the
-				// target FK table with the same name, or with '_key' appended.
+				// target FK table with the same name, or with '_key' appended,
+				// or with the PK table name and an underscore prepended.
 				// If found, add that target column to the candidate FK column
 				// set.
 				for (int columnIndex = 0; columnIndex < pk.countColumns(); columnIndex++) {
 					String pkColumnName = ((Column) pk.getColumns().get(
 							columnIndex)).getName();
-					// Try equivalent name first.
-					Column candidateFKColumn = fkTable
-							.getColumnByName(pkColumnName);
-					// Then try with '_key' appended, if not found.
-					if (candidateFKColumn == null)
+					// Start out by assuming no match.
+					Column candidateFKColumn = null;
+					// Don't try to find 'id' or 'id_key' columns as that
+					// would be silly and would probably match far too much.
+					if (!pkColumnName.equals(BuilderBundle.getString("idCol"))) {
+						// Try equivalent name first.
 						candidateFKColumn = fkTable
-								.getColumnByName(pkColumnName
-										+ BuilderBundle
-												.getString("foreignKeySuffix"));
+								.getColumnByName(pkColumnName);
+						// Then try with '_key' appended, if not found.
+						if (candidateFKColumn == null)
+							candidateFKColumn = fkTable
+									.getColumnByName(pkColumnName
+											+ BuilderBundle
+													.getString("foreignKeySuffix"));
+					}
+					// Then try with PK tablename+'_' prepended, if not found.
+					if (candidateFKColumn == null)
+						candidateFKColumn = fkTable.getColumnByName(pkTable
+								.getName()
+								+ "_" + pkColumnName);
 					// Found it? Add it to the candidate list.
 					if (candidateFKColumn != null) {
 						candidateFKColumns[columnIndex] = candidateFKColumn;
