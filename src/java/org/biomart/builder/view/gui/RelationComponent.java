@@ -28,7 +28,7 @@ import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
@@ -118,9 +118,9 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		this.updateAppearance();
 	}
 
-	public List[] getSubComponents() {
+	public Map getSubComponents() {
 		// We have no sub-components.
-		return new List[]{Collections.EMPTY_LIST, Collections.EMPTY_LIST};
+		return Collections.EMPTY_MAP;
 	}
 
 	public void updateAppearance() {

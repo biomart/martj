@@ -106,7 +106,7 @@ public class SchemaComponent extends BoxShapedComponent {
 			Table table = key.getTable();
 
 			// Only add the table if it's not already added!
-			if (!this.getSubComponents()[0].contains(table)) {
+			if (!this.getSubComponents().containsKey(table)) {
 
 				// Create the table component that represents this table.
 				TableComponent tableComponent = new TableComponent(table, this
@@ -116,10 +116,8 @@ public class SchemaComponent extends BoxShapedComponent {
 				// well
 				// as the table itself as a subcomponent.
 				this.addSubComponent(table, tableComponent);
-				this.getSubComponents()[0].addAll(
-						tableComponent.getSubComponents()[0]);
-				this.getSubComponents()[1].addAll(
-						tableComponent.getSubComponents()[1]);
+				this.getSubComponents().putAll(
+						tableComponent.getSubComponents());
 
 				// Add the table component to our layout.
 				this.add(tableComponent);

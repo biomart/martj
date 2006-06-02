@@ -21,8 +21,10 @@ package org.biomart.builder.model;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
@@ -40,11 +42,11 @@ import org.biomart.builder.resources.BuilderBundle;
  * @since 0.1
  */
 public class Mart {
-	// Must use a double-list as schema names can change.
-	private final List[] schemas = new List[]{new ArrayList(), new ArrayList()};
+	// OK to use map, as keys are strings and never change.
+	private final Map schemas = new HashMap();
 
-	// Must use a double-list as dataset names can change.
-	private final List[] datasets = new List[]{new ArrayList(), new ArrayList()};
+	// OK to use map, as keys are strings and never change.
+	private final Map datasets = new HashMap();
 
 	/**
 	 * Returns the set of schema objects which this mart includes when building
@@ -53,7 +55,7 @@ public class Mart {
 	 * @return a set of schema objects.
 	 */
 	public Collection getSchemas() {
-		return this.schemas[1];
+		return this.schemas.values();
 	}
 
 	/**
@@ -65,8 +67,7 @@ public class Mart {
 	 * @return a schema object matching the specified name.
 	 */
 	public Schema getSchemaByName(String name) {
-		int index = this.schemas[0].indexOf(name);
-		return (Schema) this.schemas[1].get(index);
+		return (Schema) this.schemas.get(name);
 	}
 
 	/**
@@ -81,13 +82,12 @@ public class Mart {
 	 */
 	public void addSchema(Schema schema) throws AlreadyExistsException {
 		// Check we don't have one by this name already.
-		if (this.schemas[0].contains(schema.getName()))
+		if (this.schemas.containsKey(schema.getName()))
 			throw new AlreadyExistsException(BuilderBundle
 					.getString("schemaExists"), schema.getName());
 
 		// Add it.
-		this.schemas[0].add(schema.getName());
-		this.schemas[1].add(schema);
+		this.schemas.put(schema.getName(), schema);
 	}
 
 	/**
@@ -108,17 +108,17 @@ public class Mart {
 			throws AlreadyExistsException, AssociationException {
 		// Check the schema belongs to us, and the new name has not
 		// already been used.
-		if (this.schemas[0].contains(name))
+		if (this.schemas.containsKey(name))
 			throw new AlreadyExistsException(BuilderBundle
 					.getString("schemaExists"), schema.getName());
-		if (!this.schemas[1].contains(schema))
+		if (!this.schemas.containsValue(schema))
 			throw new AssociationException(BuilderBundle
 					.getString("schemaMartMismatch"));
 
 		// Rename it.
-		int index = this.schemas[0].indexOf(schema.getName());
+		this.schemas.remove(schema.getName());
 		schema.setName(name);
-		this.schemas[0].set(index, name);
+		this.schemas.put(name, schema);
 	}
 
 	/**
@@ -135,9 +135,7 @@ public class Mart {
 			if (ds.getCentralTable().getSchema().equals(schema))
 				this.removeDataSet(ds);
 		}
-		int index = this.schemas[0].indexOf(schema.getName());
-		this.schemas[0].remove(index);
-		this.schemas[1].remove(index);
+		this.schemas.remove(schema);
 	}
 
 	/**
@@ -147,7 +145,7 @@ public class Mart {
 	 * @return a set of dataset objects.
 	 */
 	public Collection getDataSets() {
-		return this.datasets[1];
+		return this.datasets.values();
 	}
 
 	/**
@@ -158,8 +156,7 @@ public class Mart {
 	 * @return a dataset object matching the specified name.
 	 */
 	public DataSet getDataSetByName(String name) {
-		int index = this.datasets[0].indexOf(name);
-		return (DataSet) this.datasets[1].get(index);
+		return (DataSet) this.datasets.get(name);
 	}
 
 	/**
@@ -172,13 +169,12 @@ public class Mart {
 	 */
 	public void addDataSet(DataSet dataset) throws AlreadyExistsException {
 		// Check the dataset name has not already been used.
-		if (this.datasets[0].contains(dataset.getName()))
+		if (this.datasets.containsKey(dataset.getName()))
 			throw new AlreadyExistsException(BuilderBundle
 					.getString("datasetExists"), dataset.getName());
 
 		// Add it.
-		this.datasets[0].add(dataset.getName());
-		this.datasets[1].add(dataset);
+		this.datasets.put(dataset.getName(), dataset);
 	}
 
 	/**
@@ -253,17 +249,17 @@ public class Mart {
 	public void renameDataSet(DataSet dataset, String name)
 			throws AlreadyExistsException, AssociationException {
 		// Check the dataset belongs to us and the new name is unique.
-		if (this.datasets[0].contains(name))
+		if (this.datasets.containsKey(name))
 			throw new AlreadyExistsException(BuilderBundle
 					.getString("datasetExists"), dataset.getName());
-		if (!this.datasets[1].contains(dataset))
+		if (!this.datasets.containsValue(dataset))
 			throw new AssociationException(BuilderBundle
 					.getString("datasetMartMismatch"));
 
 		// Rename it.
-		int index = this.datasets[0].indexOf(dataset.getName());
+		this.datasets.remove(dataset.getName());
 		dataset.setName(name);
-		this.datasets[0].set(index, name);
+		this.datasets.put(name, dataset);
 	}
 
 	/**
@@ -273,9 +269,7 @@ public class Mart {
 	 *            the dataset to remove.
 	 */
 	public void removeDataSet(DataSet dataset) {
-		int index = this.datasets[0].indexOf(dataset.getName());
-		this.datasets[0].remove(index);
-		this.datasets[1].remove(index);
+		this.datasets.remove(dataset);
 	}
 
 	/**
@@ -285,7 +279,7 @@ public class Mart {
 	 * does no real work itself.
 	 */
 	public void synchroniseDataSets() {
-		for (Iterator i = this.datasets[1].iterator(); i.hasNext();) {
+		for (Iterator i = this.datasets.values().iterator(); i.hasNext();) {
 			DataSet ds = (DataSet) i.next();
 
 			// Has the table gone?
@@ -314,7 +308,7 @@ public class Mart {
 	 */
 	public void synchroniseSchemas() throws SQLException, BuilderException {
 		// Schemas first
-		for (Iterator i = this.schemas[1].iterator(); i.hasNext();) {
+		for (Iterator i = this.schemas.values().iterator(); i.hasNext();) {
 			Schema s = (Schema) i.next();
 			s.synchronise();
 		}
@@ -332,7 +326,7 @@ public class Mart {
 	 *             process.
 	 */
 	public void constructMart() throws BuilderException, SQLException {
-		for (Iterator i = this.datasets[1].iterator(); i.hasNext();) {
+		for (Iterator i = this.datasets.values().iterator(); i.hasNext();) {
 			DataSet ds = (DataSet) i.next();
 			ds.constructMart();
 		}
