@@ -22,7 +22,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -60,7 +59,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.21, 1st June 2006
+ * @version 0.1.22, 2nd June 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -68,15 +67,22 @@ public class DataSet extends GenericSchema {
 
 	private final Table centralTable;
 
-	private final Set maskedRelations = new HashSet();
+	// Use List to avoid problems with hashcodes changing.
+	private final List maskedRelations = new ArrayList();
 
-	private final Set maskedDataSetColumns = new HashSet();
+	// Use List to avoid problems with hashcodes changing.
+	private final List maskedDataSetColumns = new ArrayList();
 
-	private final Map partitionedWrappedColumns = new HashMap();
+	// Use double-List to avoid problems with hashcodes changing.
+	private final List[] partitionedWrappedColumns = new List[] {
+			new ArrayList(), new ArrayList() };
 
-	private final Set subclassedRelations = new HashSet();
+	// Use List to avoid problems with hashcodes changing.
+	private final List subclassedRelations = new ArrayList();
 
-	private final Map concatOnlyRelations = new HashMap();
+	// Use double-List to avoid problems with hashcodes changing.
+	private final List[] concatOnlyRelations = new List[] { new ArrayList(),
+			new ArrayList() };
 
 	private MartConstructor martConstructor;
 
@@ -143,7 +149,8 @@ public class DataSet extends GenericSchema {
 	public void optimiseDataSet() {
 		// Clear out our previous predictions.
 		this.maskedRelations.clear();
-		this.concatOnlyRelations.clear();
+		this.concatOnlyRelations[0].clear();
+		this.concatOnlyRelations[1].clear();
 
 		// Identify main table.
 		Table centralTable = this.getCentralTable();
@@ -270,7 +277,9 @@ public class DataSet extends GenericSchema {
 	 *            the relation to mask.
 	 */
 	public void maskRelation(Relation relation) {
-		this.maskedRelations.add(relation);
+		// Skip if already masked.
+		if (!this.maskedRelations.contains(relation))
+			this.maskedRelations.add(relation);
 	}
 
 	/**
@@ -347,6 +356,12 @@ public class DataSet extends GenericSchema {
 		// If wrapped, mask wrapped column
 		else if (dsColumn instanceof WrappedColumn) {
 			WrappedColumn wcol = (WrappedColumn) dsColumn;
+
+			// Skip if already masked.
+			if (this.maskedDataSetColumns.contains(wcol))
+				return;
+
+			// Mask it.
 			this.maskedDataSetColumns.add(wcol);
 
 			// Mask the associated relations from the real underlying column.
@@ -412,6 +427,10 @@ public class DataSet extends GenericSchema {
 	 */
 	public void flagSubclassRelation(Relation relation)
 			throws AssociationException {
+		// Skip if already subclassed.
+		if (this.subclassedRelations.contains(relation))
+			return;
+
 		// Check that the relation is a 1:M relation and that it is between
 		// the central table and some other table.
 		if (!(relation.getPrimaryKey().getTable().equals(this.centralTable) || relation
@@ -503,7 +522,7 @@ public class DataSet extends GenericSchema {
 		// Check to see if we already have a partitioned column in this table,
 		// that is not the same column as this one.
 		boolean alreadyHave = false;
-		for (Iterator i = this.partitionedWrappedColumns.keySet().iterator(); i
+		for (Iterator i = this.partitionedWrappedColumns[0].iterator(); i
 				.hasNext()
 				&& !alreadyHave;) {
 			WrappedColumn testCol = (WrappedColumn) i.next();
@@ -520,7 +539,14 @@ public class DataSet extends GenericSchema {
 
 		// Partition the colum. If the column has already been partitioned, this
 		// will override the type.
-		this.partitionedWrappedColumns.put(column, type);
+		int index = this.partitionedWrappedColumns[0].indexOf(column);
+		if (index >= 0) {
+			this.partitionedWrappedColumns[0].set(index, column);
+			this.partitionedWrappedColumns[1].set(index, type);
+		} else {
+			this.partitionedWrappedColumns[0].add(column);
+			this.partitionedWrappedColumns[1].add(type);
+		}
 	}
 
 	/**
@@ -530,7 +556,11 @@ public class DataSet extends GenericSchema {
 	 *            the column to unmark.
 	 */
 	public void unflagPartitionedWrappedColumn(WrappedColumn column) {
-		this.partitionedWrappedColumns.remove(column);
+		int index = this.partitionedWrappedColumns[0].indexOf(column);
+		if (index >= 0) {
+			this.partitionedWrappedColumns[0].remove(index);
+			this.partitionedWrappedColumns[1].remove(index);
+		}
 	}
 
 	/**
@@ -539,7 +569,7 @@ public class DataSet extends GenericSchema {
 	 * @return the set of partitioned columns.
 	 */
 	public Collection getPartitionedWrappedColumns() {
-		return this.partitionedWrappedColumns.keySet();
+		return this.partitionedWrappedColumns[0];
 	}
 
 	/**
@@ -553,13 +583,12 @@ public class DataSet extends GenericSchema {
 	 */
 	public PartitionedColumnType getPartitionedWrappedColumnType(
 			WrappedColumn column) {
-		// Do we have partitioning on this column?
-		if (!this.partitionedWrappedColumns.containsKey(column))
+		int index = this.partitionedWrappedColumns[0].indexOf(column);
+		if (index >= 0)
+			return (PartitionedColumnType) this.partitionedWrappedColumns[1]
+					.get(index);
+		else
 			return null;
-
-		// Return the partitioning type.
-		return (PartitionedColumnType) this.partitionedWrappedColumns
-				.get(column);
 	}
 
 	/**
@@ -573,7 +602,14 @@ public class DataSet extends GenericSchema {
 	 */
 	public void flagConcatOnlyRelation(Relation relation,
 			ConcatRelationType type) {
-		this.concatOnlyRelations.put(relation, type);
+		int index = this.concatOnlyRelations[0].indexOf(relation);
+		if (index >= 0) {
+			this.concatOnlyRelations[0].set(index, relation);
+			this.concatOnlyRelations[1].set(index, type);
+		} else {
+			this.concatOnlyRelations[0].add(relation);
+			this.concatOnlyRelations[1].add(type);
+		}
 	}
 
 	/**
@@ -583,7 +619,11 @@ public class DataSet extends GenericSchema {
 	 *            the relation to unmark.
 	 */
 	public void unflagConcatOnlyRelation(Relation relation) {
-		this.concatOnlyRelations.remove(relation);
+		int index = this.concatOnlyRelations[0].indexOf(relation);
+		if (index >= 0) {
+			this.concatOnlyRelations[0].remove(index);
+			this.concatOnlyRelations[1].remove(index);
+		}
 	}
 
 	/**
@@ -592,7 +632,7 @@ public class DataSet extends GenericSchema {
 	 * @return the set of concat-only relations.
 	 */
 	public Collection getConcatOnlyRelations() {
-		return this.concatOnlyRelations.keySet();
+		return this.concatOnlyRelations[0];
 	}
 
 	/**
@@ -605,12 +645,11 @@ public class DataSet extends GenericSchema {
 	 *         concat-only.
 	 */
 	public ConcatRelationType getConcatRelationType(Relation relation) {
-		// Is this a concat-only relation?
-		if (!this.concatOnlyRelations.containsKey(relation))
+		int index = this.concatOnlyRelations[0].indexOf(relation);
+		if (index >= 0)
+			return (ConcatRelationType) this.concatOnlyRelations[1].get(index);
+		else
 			return null;
-
-		// Return the concat type.
-		return (ConcatRelationType) this.concatOnlyRelations.get(relation);
 	}
 
 	/**
@@ -632,7 +671,7 @@ public class DataSet extends GenericSchema {
 		// removed.
 		Set deadRelations = new HashSet(this.maskedRelations);
 		deadRelations.addAll(this.subclassedRelations);
-		deadRelations.addAll(this.concatOnlyRelations.keySet());
+		deadRelations.addAll(this.concatOnlyRelations[0]);
 
 		// Iterate through tables in each schema. For each table,
 		// find all the relations on that table and remove them
@@ -650,8 +689,8 @@ public class DataSet extends GenericSchema {
 		for (Iterator i = deadRelations.iterator(); i.hasNext();) {
 			Relation r = (Relation) i.next();
 			this.maskedRelations.remove(r);
-			this.subclassedRelations.remove(r);
-			this.concatOnlyRelations.remove(r);
+			this.unflagSubclassRelation(r);
+			this.unflagConcatOnlyRelation(r);
 		}
 
 		// Regenerate the dataset
@@ -716,7 +755,7 @@ public class DataSet extends GenericSchema {
 		// columns. Once the set is constructed, use it to replace the old
 		// set of partitioned columns.
 		Collection newPartDSCols = new ArrayList();
-		for (Iterator i = this.partitionedWrappedColumns.keySet().iterator(); i
+		for (Iterator i = this.partitionedWrappedColumns[0].iterator(); i
 				.hasNext();) {
 			WrappedColumn col = (WrappedColumn) i.next();
 			if (this.getTables().contains(col.getTable())) {
@@ -729,7 +768,7 @@ public class DataSet extends GenericSchema {
 					newPartDSCols.add(newCol);
 			}
 		}
-		for (Iterator i = this.partitionedWrappedColumns.keySet().iterator(); i
+		for (Iterator i = this.partitionedWrappedColumns[0].iterator(); i
 				.hasNext();)
 			if (!newPartDSCols.contains(i.next()))
 				i.remove();
@@ -834,8 +873,8 @@ public class DataSet extends GenericSchema {
 		// want dimensions constructed if we are not already constructing
 		// a dimension ourselves.
 		this.processTable(dsTable, dsTablePKCols, realTable, normalQ,
-				subclassQ, dimensionQ, sourceRelation, relationsFollowed, 
-				!type.equals(DataSetTableType.DIMENSION));
+				subclassQ, dimensionQ, sourceRelation, relationsFollowed, !type
+						.equals(DataSetTableType.DIMENSION));
 
 		// Process the normal queue. This merges tables into the dataset
 		// table using the relation specified in each pair in the queue.
@@ -843,7 +882,7 @@ public class DataSet extends GenericSchema {
 			Object[] triple = (Object[]) normalQ.get(i);
 			Relation mergeSourceRelation = (Relation) triple[0];
 			Table mergeTable = (Table) triple[1];
-			boolean makeDimensions = ((Boolean)triple[2]).booleanValue();
+			boolean makeDimensions = ((Boolean) triple[2]).booleanValue();
 			this.processTable(dsTable, dsTablePKCols, mergeTable, normalQ,
 					subclassQ, dimensionQ, mergeSourceRelation,
 					relationsFollowed, makeDimensions);
@@ -892,7 +931,8 @@ public class DataSet extends GenericSchema {
 
 	private void processTable(DataSetTable dsTable, List dsTablePKCols,
 			Table mergeTable, List normalQ, List subclassQ, List dimensionQ,
-			Relation sourceRelation, Set relationsFollowed, boolean makeDimensions) {
+			Relation sourceRelation, Set relationsFollowed,
+			boolean makeDimensions) {
 
 		// Don't ignore any keys by default.
 		Key ignoreKey = null;
@@ -958,7 +998,7 @@ public class DataSet extends GenericSchema {
 				continue;
 
 			// Concatenate concat-only relations.
-			else if (this.concatOnlyRelations.containsKey(r))
+			else if (this.concatOnlyRelations[0].contains(r))
 				try {
 					new ConcatRelationColumn(BuilderBundle
 							.getString("concatColumnPrefix")
@@ -980,12 +1020,14 @@ public class DataSet extends GenericSchema {
 				// Dimensionize dimension relations, which are all other 1:M
 				// relations, if we are not constructing a dimension table,
 				// and are currently intending to construct dimensions.
-				else if (makeDimensions && !dsTable.getType().equals(DataSetTableType.DIMENSION))
+				else if (makeDimensions
+						&& !dsTable.getType()
+								.equals(DataSetTableType.DIMENSION))
 					dimensionQ.add(r);
 			}
 
-			// Follow all others. If we follow a 1:1, and we are currently 
-			// including dimensions, include them from the 1:1 as well. 
+			// Follow all others. If we follow a 1:1, and we are currently
+			// including dimensions, include them from the 1:1 as well.
 			// Otherwise, stop including dimensions on subsequent tables.
 			else
 				normalQ.add(new Object[] {
@@ -993,8 +1035,10 @@ public class DataSet extends GenericSchema {
 						(r.getPrimaryKey().getTable().equals(mergeTable) ? r
 								.getForeignKey().getTable() : r.getPrimaryKey()
 								.getTable()),
-						Boolean.valueOf(makeDimensions && r.getFKCardinality().equals(Cardinality.ONE))
-						});
+						Boolean
+								.valueOf(makeDimensions
+										&& r.getFKCardinality().equals(
+												Cardinality.ONE)) });
 		}
 	}
 

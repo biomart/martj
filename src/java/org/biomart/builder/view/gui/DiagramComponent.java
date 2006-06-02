@@ -18,7 +18,7 @@
 
 package org.biomart.builder.view.gui;
 
-import java.util.Map;
+import java.util.List;
 
 import javax.swing.JPopupMenu;
 
@@ -29,7 +29,7 @@ import javax.swing.JPopupMenu;
  * interest to the diagram.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 15th May 2006
+ * @version 0.1.7, 2nd June 2006
  * @since 0.1
  */
 public interface DiagramComponent {
@@ -84,12 +84,16 @@ public interface DiagramComponent {
 	public void recalculateDiagramComponent();
 
 	/**
+	 * <p>
 	 * Returns a map of inner components inside the diagram. The keys are model
 	 * object references, and the values are the diagram components representing
 	 * them inside the current diagram component. This is useful for instance
 	 * when wanting to obtain key components for a table.
+	 * <p>
+	 * The map is actually a double-list. The 0-index of the array of lists is
+	 * the object reference, the 1-index is the diagram component.
 	 * 
 	 * @return the map of inner components.
 	 */
-	public Map getSubComponents();
+	public List[] getSubComponents();
 }

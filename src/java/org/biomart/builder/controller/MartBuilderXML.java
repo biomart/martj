@@ -98,7 +98,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 18th May 2006
+ * @version 0.1.11, 2nd June 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -487,13 +487,12 @@ public class MartBuilderXML extends DefaultHandler {
 
 		// MartConstructor (anywhere).
 		else if ("genericMartConstructor".equals(eName)) {
-			// Work out the id and name, as these are common attributes.
+			// Work out the id, as this is a common attribute.
 			String id = (String) attributes.get("id");
-			String name = (String) attributes.get("name");
 
 			try {
-				// Build it.
-				element = new GenericMartConstructor(name);
+				// Use the dummy constructor for this.
+				element = MartConstructor.DUMMY_MART_CONSTRUCTOR;
 			} catch (Exception e) {
 				throw new SAXException(e);
 			}
@@ -1121,7 +1120,6 @@ public class MartBuilderXML extends DefaultHandler {
 			if (mc instanceof GenericMartConstructor) {
 				this.openElement("genericMartConstructor", xmlWriter);
 				this.writeAttribute("id", mcMappedID, xmlWriter);
-				this.writeAttribute("name", mc.getName(), xmlWriter);
 				this.closeElement("genericMartConstructor", xmlWriter);
 			}
 			// Others?

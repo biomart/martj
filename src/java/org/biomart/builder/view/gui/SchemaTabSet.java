@@ -24,10 +24,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -59,13 +57,14 @@ import org.biomart.builder.resources.BuilderBundle;
  * has the same context applied.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 22nd May 2006
+ * @version 0.1.13, 2nd June 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
 	private static final long serialVersionUID = 1;
 
-	private Map schemaToDiagram;
+	// Schema hashcodes change, so we must use a double-list.
+	private List[] schemaToDiagram = new List[]{new ArrayList(), new ArrayList()};
 
 	private DiagramContext diagramContext;
 
@@ -103,9 +102,8 @@ public class SchemaTabSet extends JTabbedPane {
 				.addTab(BuilderBundle.getString("multiSchemaOverviewTab"),
 						scroller);
 
-		// Set up a map to hold the relation between schemas and the diagrams
-		// representing them, then populate that map by recalculating the tabs.
-		this.schemaToDiagram = new HashMap();
+		// Populate the map to hold the relation between schemas and the diagrams
+		// representing them.
 		this.recalculateSchemaTabs();
 	}
 
@@ -130,14 +128,14 @@ public class SchemaTabSet extends JTabbedPane {
 		for (Iterator i = this.datasetTabSet.getMart().getSchemas().iterator(); i
 				.hasNext();) {
 			Schema schema = (Schema) i.next();
-			if (!this.schemaToDiagram.containsKey(schema))
+			if (!this.schemaToDiagram[0].contains(schema))
 				this.addSchemaTab(schema);
 		}
 
 		// Remove all schemas we have that are no longer in the mart.
 		// We work with a copy of the list of schemas else we get
 		// concurrent modification exceptions as old ones are removed.
-		List ourSchemas = new ArrayList(this.schemaToDiagram.keySet());
+		List ourSchemas = new ArrayList(this.schemaToDiagram[0]);
 		for (Iterator i = ourSchemas.iterator(); i.hasNext();) {
 			Schema schema = (Schema) i.next();
 			if (!this.datasetTabSet.getMart().getSchemas().contains(schema))
@@ -169,7 +167,8 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the schema to repaint the diagram of.
 	 */
 	public void repaintSchemaDiagram(Schema schema) {
-		((Diagram) this.schemaToDiagram.get(schema)).repaintDiagram();
+		int index = this.schemaToDiagram[0].indexOf(schema);
+		((Diagram) this.schemaToDiagram[1].get(index)).repaintDiagram();
 	}
 
 	/**
@@ -180,7 +179,8 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the schema to recalculate the diagram of.
 	 */
 	public void recalculateSchemaDiagram(Schema schema) {
-		((Diagram) this.schemaToDiagram.get(schema)).recalculateDiagram();
+		int index = this.schemaToDiagram[0].indexOf(schema);
+		((Diagram) this.schemaToDiagram[1].get(index)).recalculateDiagram();
 	}
 
 	/**
@@ -188,7 +188,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 * individual schema tabs.
 	 */
 	public void repaintAllSchemaDiagrams() {
-		for (Iterator i = this.schemaToDiagram.values().iterator(); i.hasNext();)
+		for (Iterator i = this.schemaToDiagram[1].iterator(); i.hasNext();)
 			((Diagram) i.next()).repaintDiagram();
 	}
 
@@ -197,7 +197,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 * individual schema tabs.
 	 */
 	public void recalculateAllSchemaDiagrams() {
-		for (Iterator i = this.schemaToDiagram.values().iterator(); i.hasNext();)
+		for (Iterator i = this.schemaToDiagram[1].iterator(); i.hasNext();)
 			((Diagram) i.next()).recalculateDiagram();
 	}
 
@@ -417,7 +417,8 @@ public class SchemaTabSet extends JTabbedPane {
 		this.addTab(schema.getName(), scroller);
 
 		// Remember which diagram the schema is connected with.
-		this.schemaToDiagram.put(schema, schemaDiagram);
+		this.schemaToDiagram[0].add(schema);
+		this.schemaToDiagram[1].add(schemaDiagram);
 
 		// Set the current context on the diagram to be the same as the
 		// current context on this schema tabset.
@@ -522,7 +523,9 @@ public class SchemaTabSet extends JTabbedPane {
 		this.removeTabAt(this.indexOfTab(schema.getName()));
 
 		// Remove the association between schema and diagram.
-		this.schemaToDiagram.remove(schema);
+		int index = this.schemaToDiagram[0].indexOf(schema);
+		this.schemaToDiagram[0].remove(index);
+		this.schemaToDiagram[1].remove(index);
 
 		// Recalculate the all-schemas diagram as it has
 		// to reshuffle around the now-missing schema.
@@ -596,9 +599,12 @@ public class SchemaTabSet extends JTabbedPane {
 
 			// As the schema name has changed, the all-schemas diagram needs
 			// to be recalculated, as the schema representations may have
-			// changed size owing to the new name.
+			// changed size owing to the new name. The individual schema
+			// and dataset diagrams will also need to be recalculated.
 			this.recalculateOverviewDiagram();
-
+			this.recalculateSchemaDiagram(schema);
+			this.datasetTabSet.recalculateAllDataSetDiagrams();
+			
 			// Set the dataset tabset status to modified.
 			this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
 		} catch (Throwable t) {
@@ -1127,7 +1133,7 @@ public class SchemaTabSet extends JTabbedPane {
 		// If the key is a primary key, we want all foreign keys that
 		// have the same number of columns.
 		if (from instanceof PrimaryKey)
-			for (Iterator i = this.schemaToDiagram.keySet().iterator(); i
+			for (Iterator i = this.schemaToDiagram[0].iterator(); i
 					.hasNext();)
 				for (Iterator j = ((Schema) i.next()).getTables().iterator(); j
 						.hasNext();)
@@ -1141,7 +1147,7 @@ public class SchemaTabSet extends JTabbedPane {
 		// If the key was not primary, then it is foreign, so we want all
 		// primary keys with the same number of columns.
 		else
-			for (Iterator i = this.schemaToDiagram.keySet().iterator(); i
+			for (Iterator i = this.schemaToDiagram[0].iterator(); i
 					.hasNext();)
 				for (Iterator j = ((Schema) i.next()).getTables().iterator(); j
 						.hasNext();) {

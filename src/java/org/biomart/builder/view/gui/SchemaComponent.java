@@ -42,7 +42,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * relations will appear in full using {@link TableComponent}s.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 17th May 2006
+ * @version 0.1.10, 2nd June 2006
  * @since 0.1
  */
 public class SchemaComponent extends BoxShapedComponent {
@@ -106,7 +106,7 @@ public class SchemaComponent extends BoxShapedComponent {
 			Table table = key.getTable();
 
 			// Only add the table if it's not already added!
-			if (!this.getSubComponents().containsKey(table)) {
+			if (!this.getSubComponents()[0].contains(table)) {
 
 				// Create the table component that represents this table.
 				TableComponent tableComponent = new TableComponent(table, this
@@ -116,8 +116,10 @@ public class SchemaComponent extends BoxShapedComponent {
 				// well
 				// as the table itself as a subcomponent.
 				this.addSubComponent(table, tableComponent);
-				this.getSubComponents().putAll(
-						tableComponent.getSubComponents());
+				this.getSubComponents()[0].addAll(
+						tableComponent.getSubComponents()[0]);
+				this.getSubComponents()[1].addAll(
+						tableComponent.getSubComponents()[1]);
 
 				// Add the table component to our layout.
 				this.add(tableComponent);

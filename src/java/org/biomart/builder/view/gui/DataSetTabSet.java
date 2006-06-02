@@ -27,10 +27,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -67,7 +65,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 1st June 2006
+ * @version 0.1.18, 2nd June 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -75,7 +73,8 @@ public class DataSetTabSet extends JTabbedPane {
 
 	private SchemaTabSet schemaTabSet;
 
-	private Map datasetToTab = new HashMap();
+	// Use double-list to prevent problems with hashcodes changing.
+	private List[] datasetToTab = new List[]{new ArrayList(), new ArrayList()};
 
 	private MartTabSet martTabSet;
 
@@ -218,12 +217,12 @@ public class DataSetTabSet extends JTabbedPane {
 		List martDataSets = new ArrayList(mart.getDataSets());
 		for (Iterator i = martDataSets.iterator(); i.hasNext();) {
 			DataSet dataset = (DataSet) i.next();
-			if (!datasetToTab.containsKey(dataset))
+			if (!datasetToTab[0].contains(dataset))
 				addDataSetTab(dataset);
 		}
 
 		// Remove all the datasets in our tabs that are not in the mart.
-		List ourDataSets = new ArrayList(datasetToTab.keySet());
+		List ourDataSets = new ArrayList(datasetToTab[0]);
 		for (Iterator i = ourDataSets.iterator(); i.hasNext();) {
 			DataSet dataset = (DataSet) i.next();
 			if (!martDataSets.contains(dataset))
@@ -240,7 +239,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset to recalculate the diagram for.
 	 */
 	public void recalculateDataSetDiagram(DataSet dataset) {
-		DataSetTab datasetTab = (DataSetTab) this.datasetToTab.get(dataset);
+		int index = this.datasetToTab[0].indexOf(dataset);
+		DataSetTab datasetTab = (DataSetTab) this.datasetToTab[1].get(index);
 		datasetTab.getDataSetDiagram().recalculateDiagram();
 	}
 
@@ -254,7 +254,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset to repaint the diagram for.
 	 */
 	public void repaintDataSetDiagram(DataSet dataset) {
-		DataSetTab datasetTab = (DataSetTab) this.datasetToTab.get(dataset);
+		int index = this.datasetToTab[0].indexOf(dataset);
+		DataSetTab datasetTab = (DataSetTab) this.datasetToTab[1].get(index);
 		datasetTab.getDataSetDiagram().repaintDiagram();
 	}
 
@@ -263,7 +264,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * to match the current contents of the datasets.
 	 */
 	public void recalculateAllDataSetDiagrams() {
-		for (Iterator i = this.datasetToTab.values().iterator(); i.hasNext();)
+		for (Iterator i = this.datasetToTab[1].iterator(); i.hasNext();)
 			((DataSetTab) i.next()).getDataSetDiagram().recalculateDiagram();
 	}
 
@@ -273,7 +274,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * components have changed size - use recalculate instead.
 	 */
 	public void repaintAllDataSetDiagrams() {
-		for (Iterator i = this.datasetToTab.values().iterator(); i.hasNext();)
+		for (Iterator i = this.datasetToTab[1].iterator(); i.hasNext();)
 			((DataSetTab) i.next()).getDataSetDiagram().repaintDiagram();
 	}
 
@@ -324,11 +325,13 @@ public class DataSetTabSet extends JTabbedPane {
 
 	private void removeDataSetTab(DataSet dataset) {
 		// Work out which tab the dataset lives in.
-		DataSetTab datasetTab = (DataSetTab) this.datasetToTab.get(dataset);
+		int index = this.datasetToTab[0].indexOf(dataset);
+		DataSetTab datasetTab = (DataSetTab) this.datasetToTab[1].get(index);
 
 		// Remove the tab, and it's mapping from the dataset-to-tab map.
 		this.remove(datasetTab);
-		this.datasetToTab.remove(dataset);
+		this.datasetToTab[0].remove(index);
+		this.datasetToTab[1].remove(index);
 	}
 
 	private void addDataSetTab(DataSet dataset) {
@@ -337,7 +340,8 @@ public class DataSetTabSet extends JTabbedPane {
 
 		// Add the tab, and remember the mapping between dataset and tab.
 		this.addTab(dataset.getName(), datasetTab);
-		this.datasetToTab.put(dataset, datasetTab);
+		this.datasetToTab[0].add(dataset);
+		this.datasetToTab[1].add(datasetTab);
 	}
 
 	private String askUserForName(String message, String defaultResponse) {

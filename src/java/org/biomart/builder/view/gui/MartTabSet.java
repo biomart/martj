@@ -42,7 +42,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * of the mart inside it, including all datasets and schemas.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 15th May 2006
+ * @version 0.1.8, 2nd June 2006
  * @since 0.1
  */
 public class MartTabSet extends JTabbedPane {
@@ -52,8 +52,10 @@ public class MartTabSet extends JTabbedPane {
 
 	private JFileChooser xmlFileChooser;
 
+	// Mart hashcodes don't change, so it is safe to use a Map.
 	private Map martModifiedStatus;
 
+	// Mart hashcodes don't change, so it is safe to use a Map.
 	private Map martXMLFile;
 
 	/**

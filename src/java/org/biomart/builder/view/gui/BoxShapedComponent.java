@@ -20,8 +20,8 @@ package org.biomart.builder.view.gui;
 
 import java.awt.AWTEvent;
 import java.awt.event.MouseEvent;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
@@ -34,7 +34,7 @@ import javax.swing.JPopupMenu;
  * rather than exact component.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 16th May 2006
+ * @version 0.1.9, 2nd June 2006
  * @since 0.1
  */
 public abstract class BoxShapedComponent extends JPanel implements
@@ -43,7 +43,8 @@ public abstract class BoxShapedComponent extends JPanel implements
 
 	private Object object;
 
-	private Map subComponents = new HashMap();
+	// Use double-list to prevent problems with hashcodes changing.
+	private List[] subComponents = new List[]{new ArrayList(), new ArrayList()};
 
 	private Object state;
 
@@ -72,7 +73,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 
 	public abstract void recalculateDiagramComponent();
 
-	public Map getSubComponents() {
+	public List[] getSubComponents() {
 		return this.subComponents;
 	}
 
@@ -85,7 +86,8 @@ public abstract class BoxShapedComponent extends JPanel implements
 	 *            the component representing the model object.
 	 */
 	protected void addSubComponent(Object object, DiagramComponent component) {
-		this.subComponents.put(object, component);
+		this.subComponents[0].add(object);
+		this.subComponents[1].add(component);
 	}
 
 	public Object getState() {

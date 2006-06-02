@@ -18,6 +18,9 @@
 
 package org.biomart.builder.model;
 
+import org.biomart.builder.exceptions.ConstructorException;
+import org.biomart.builder.resources.BuilderBundle;
+
 /**
  * This interface defines the behaviour expected from an object which can take a
  * dataset and actually construct a mart based on this information. Whether it
@@ -25,7 +28,7 @@ package org.biomart.builder.model;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 1st June 2006
+ * @version 0.1.7, 2nd June 2006
  * @since 0.1
  */
 public interface MartConstructor extends DataLink, Comparable {
@@ -34,7 +37,30 @@ public interface MartConstructor extends DataLink, Comparable {
 	 * except prevent null pointer exceptions.
 	 */
 	public static final MartConstructor DUMMY_MART_CONSTRUCTOR = new GenericMartConstructor(
-			"__DUMMY_MC");
+			"__DUMMY_MC") {
+		public ConstructorRunnable getConstructorRunnable(DataSet ds) {
+			return new ConstructorRunnable() {
+				public void run() {
+				}
+
+				public String getStatusMessage() {
+					return "";
+				}
+
+				public int getPercentComplete() {
+					return 100;
+				}
+
+				public Exception getFailureException() {
+					return new ConstructorException(BuilderBundle
+							.getString("defaultMartConstNotImplemented"));
+				}
+
+				public void cancel() {
+				}
+			};
+		}
+	};
 
 	/**
 	 * This method takes a dataset and either generates a script for the user to
@@ -65,7 +91,7 @@ public interface MartConstructor extends DataLink, Comparable {
 	 * method to actually create a construction thread that does some useful
 	 * work.
 	 */
-	public class GenericMartConstructor implements MartConstructor {
+	public abstract class GenericMartConstructor implements MartConstructor {
 		private final String name;
 
 		/**
@@ -83,28 +109,8 @@ public interface MartConstructor extends DataLink, Comparable {
 			return this.name;
 		}
 
-		public ConstructorRunnable getConstructorRunnable(DataSet ds) {
-			return new ConstructorRunnable() {
-				public void run() {
-				}
-
-				public String getStatusMessage() {
-					return "";
-				}
-
-				public int getPercentComplete() {
-					return 100;
-				}
-
-				public Exception getFailureException() {
-					return null;
-				}
-				
-				public void cancel() {
-				}
-			};
-		}
-
+		public abstract ConstructorRunnable getConstructorRunnable(DataSet ds);
+		
 		public boolean test() throws Exception {
 			return true;
 		}

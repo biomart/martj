@@ -28,7 +28,7 @@ import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.util.Collections;
-import java.util.Map;
+import java.util.List;
 
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
@@ -41,7 +41,7 @@ import org.biomart.builder.model.Relation.Cardinality;
  * The line is defined by the layout manager.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 18th May 2006
+ * @version 0.1.12, 2nd June 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
@@ -118,9 +118,9 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		this.updateAppearance();
 	}
 
-	public Map getSubComponents() {
+	public List[] getSubComponents() {
 		// We have no sub-components.
-		return Collections.EMPTY_MAP;
+		return new List[]{Collections.EMPTY_LIST, Collections.EMPTY_LIST};
 	}
 
 	public void updateAppearance() {

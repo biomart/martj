@@ -25,8 +25,10 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -58,7 +60,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * what those items should be.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.18, 1st June 2006
+ * @version 0.1.18, 2nd June 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
@@ -66,7 +68,8 @@ public abstract class Diagram extends JPanel {
 
 	private DataSetTabSet datasetTabSet;
 
-	private Map componentMap;
+	// Use double-list to prevent problems with changing hashcodes.
+	private List[] componentMap = new List[]{new ArrayList(), new ArrayList()};
 
 	/**
 	 * Creates a new diagram which belongs inside the given dataset tabset. The
@@ -83,9 +86,8 @@ public abstract class Diagram extends JPanel {
 		// Enable mouse events to be picked up all over the diagram.
 		this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
 
-		// Remember our settings and make an empty map to hold our components.
+		// Remember our settings.
 		this.datasetTabSet = datasetTabSet;
-		this.componentMap = new HashMap();
 	}
 
 	/**
@@ -104,7 +106,8 @@ public abstract class Diagram extends JPanel {
 		super.removeAll();
 
 		// Clear our internal lookup map.
-		this.componentMap.clear();
+		this.componentMap[0].clear();
+		this.componentMap[1].clear();
 	}
 
 	/**
@@ -117,8 +120,10 @@ public abstract class Diagram extends JPanel {
 	 *            the component to add.
 	 */
 	public void addDiagramComponent(DiagramComponent comp) {
-		this.componentMap.put(comp.getObject(), comp);
-		this.componentMap.putAll(comp.getSubComponents());
+		this.componentMap[0].add(comp.getObject());
+		this.componentMap[1].add(comp);
+		this.componentMap[0].addAll(comp.getSubComponents()[0]);
+		this.componentMap[1].addAll(comp.getSubComponents()[1]);
 		super.add((JComponent) comp);
 	}
 
@@ -134,7 +139,8 @@ public abstract class Diagram extends JPanel {
 	 *         all.
 	 */
 	public DiagramComponent getDiagramComponent(Object object) {
-		return (DiagramComponent) this.componentMap.get(object);
+		int index = this.componentMap[0].indexOf(object);
+		return (DiagramComponent) this.componentMap[1].get(index);
 	}
 
 	/**
@@ -216,7 +222,7 @@ public abstract class Diagram extends JPanel {
 
 		// First, work out what tables are in this diagram.
 		Set tables = new TreeSet();
-		for (Iterator i = this.componentMap.keySet().iterator(); i.hasNext();) {
+		for (Iterator i = this.componentMap[0].iterator(); i.hasNext();) {
 			Object o = i.next();
 			if (o instanceof Table)
 				tables.add(o);
@@ -301,7 +307,7 @@ public abstract class Diagram extends JPanel {
 
 		// Use it straight away to update the appearance of all our
 		// components.
-		for (Iterator i = this.componentMap.values().iterator(); i.hasNext();)
+		for (Iterator i = this.componentMap[1].iterator(); i.hasNext();)
 			((DiagramComponent) i.next()).updateAppearance();
 	}
 
@@ -329,10 +335,11 @@ public abstract class Diagram extends JPanel {
 	public void recalculateDiagram() {
 		// Remember all the existing diagram component states.
 		Map states = new HashMap();
-		for (Iterator i = this.componentMap.keySet().iterator(); i.hasNext();) {
-			Object object = i.next();
-			DiagramComponent comp = (DiagramComponent) this.componentMap
-					.get(object);
+		List removed = new ArrayList();
+		for (int i = 0; i < this.componentMap[0].size(); i++) {
+			Object object = this.componentMap[0].get(i);
+			DiagramComponent comp = (DiagramComponent) this.componentMap[1]
+					.get(i);
 
 			// If the component actually exists, which it may not if the
 			// diagram has been dynamically updated elsewhere, remember the
@@ -341,9 +348,16 @@ public abstract class Diagram extends JPanel {
 			if (comp != null)
 				states.put(object, comp.getState());
 			else
-				i.remove();
+				removed.add(object);
 		}
 
+		// Remove the removed ones.
+		for (Iterator i = removed.iterator(); i.hasNext(); ) {
+			int index = this.componentMap[0].indexOf(i.next());
+			this.componentMap[0].remove(index);
+			this.componentMap[1].remove(index);
+		}
+		
 		// Delegate to do the actual diagram clear-and-repopulate.
 		this.doRecalculateDiagram();
 
@@ -353,12 +367,13 @@ public abstract class Diagram extends JPanel {
 		// old objects.
 		for (Iterator i = states.keySet().iterator(); i.hasNext();) {
 			Object object = i.next();
-			DiagramComponent comp = (DiagramComponent) this.componentMap
-					.get(object);
+			int index = this.componentMap[0].indexOf(object);
+			if (index>=0) {
+			DiagramComponent comp = (DiagramComponent) this.componentMap[1]
+					.get(index);
 			if (comp != null)
 				comp.setState(states.get(object));
-			else
-				i.remove();
+			}
 		}
 		
 		// Finally, repaint it as by default a component only repaints
@@ -391,7 +406,7 @@ public abstract class Diagram extends JPanel {
 	 * on a table).
 	 */
 	public void repaintDiagram() {
-		for (Iterator i = this.componentMap.values().iterator(); i.hasNext();)
+		for (Iterator i = this.componentMap[1].iterator(); i.hasNext();)
 			((DiagramComponent) i.next()).updateAppearance();
 	}
 
