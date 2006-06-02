@@ -46,6 +46,11 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	protected final String pointerDatasetKey = "pointerDataset";
 	protected final String pointerInterfaceKey = "pointerInterface";
 	protected final String pointerFilterKey = "pointerFilter";
+	protected final String displayTypeKey = "displayType";
+	protected final String multipleValuesKey = "multipleValues";
+	protected final String graphKey = "graph";
+	protected final String styleKey = "style";
+	protected final String autoCompletionKey = "autoCompletion";
 	
     //protected final String hiddenKey = "hidden";
 	private int[] reqFields = {0,5,7,8,10};// rendered red in AttributeTable
@@ -68,7 +73,12 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
                                                  colForDisplayKey,
                                                  pointerDatasetKey,
                                                  pointerInterfaceKey,
-                                                 pointerFilterKey
+                                                 pointerFilterKey,
+												 displayTypeKey,
+												 multipleValuesKey,
+												 graphKey,
+											 	 styleKey,
+												 autoCompletionKey	 
   };
 
 	/**
@@ -108,14 +118,14 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	 */
 	public QueryFilterSettings(String internalName, String displayName, String description)
 		throws ConfigurationException {
-			this(internalName, displayName, description, "", "", null, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "");
+			this(internalName, displayName, description, "", "", null, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "","", "", "", "", "");
 	}
 
   public QueryFilterSettings(String internalName, String displayName, String description, String field, 
   	String value, String tableConstraint, String key, String type, String qualifier, String legalQualifiers, 
   	String otherFilters, String buttonURL, String regexp, String defaultValue, String defaultOn, String filterList, 
   	String attributePage, String attribute, String colForDisplay, String pointerDataset, String pointerInterface,
-	String pointerFilter) throws ConfigurationException {
+	String pointerFilter, String displayType, String multipleValues, String graph, String style, String autoCompletion) throws ConfigurationException {
 		super(internalName, displayName, description);
 		
     	setAttribute(fieldKey, field);
@@ -137,6 +147,11 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 		setAttribute(pointerDatasetKey, pointerDataset);
 		setAttribute(pointerInterfaceKey, pointerInterface);
 		setAttribute(pointerFilterKey, pointerFilter);
+		setAttribute(displayTypeKey, displayType);
+		setAttribute(multipleValuesKey, multipleValues);
+		setAttribute(graphKey, graph);
+		setAttribute(styleKey, style);
+		setAttribute(autoCompletionKey, autoCompletion);
 	    setRequiredFields(reqFields);
   }
   

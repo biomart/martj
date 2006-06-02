@@ -1068,8 +1068,8 @@ public class DatabaseDatasetConfigUtils {
 				FilterPage configPage = dsConfig.getPageForFilter(configAttName);
 				FilterGroup configGroup = dsConfig.getGroupForFilter(configAttName);
 				FilterCollection configCollection = dsConfig.getCollectionForFilter(configAttName);
-			
-				if (!templateConfig.supportsFilterDescription(configAttField,configAttTC,configAtt.getQualifier())){			
+				if (!templateConfig.supportsFilterDescription(configAttField,configAttTC,configAtt.getQualifier())
+					&& configCollection != null){			
 					// remove filter from old hierarchy in dsConfig
 					configCollection.removeFilterDescription(configAtt);
 					if (!(configCollection.getFilterDescriptions().size() > 0)){
