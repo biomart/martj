@@ -309,6 +309,46 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	
 	public abstract String getKeyFromContext();
 	
+	public void setDisplayType(String value) {
+		setAttribute(displayTypeKey, value);
+	}
+
+	public String getDisplayType() {
+		return getAttribute(displayTypeKey);
+	}
+	
+	public void setMultipleValues(String value) {
+		setAttribute(multipleValuesKey, value);
+	}
+
+	public String getMultipleValues() {
+		return getAttribute(multipleValuesKey);
+	}
+	
+	public void setGraph(String value) {
+		setAttribute(graphKey, value);
+	}
+
+	public String getGraph() {
+		return getAttribute(graphKey);
+	}
+	
+	public void setStyle(String value) {
+		setAttribute(styleKey, value);
+	}
+
+	public String getStyle() {
+		return getAttribute(styleKey);
+	}
+	
+	public void setAutoCompletion(String value) {
+		setAttribute(autoCompletionKey, value);
+	}
+
+	public String getAutoCompletion() {
+		return getAttribute(autoCompletionKey);
+	}
+	
 	public void setType(String type) {
 		setAttribute(typeKey, type);
 	}

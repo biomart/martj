@@ -1016,6 +1016,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		String tableName = fd1.getTableConstraint();
 		String joinKey = fd1.getKey();
 		fd1.setType("list");
+		fd1.setDisplayType("list");
+		 fd1.setStyle("menu");
 		fd1.setQualifier("=");
 		fd1.setLegalQualifiers("=");
 		String colForDisplay = "";

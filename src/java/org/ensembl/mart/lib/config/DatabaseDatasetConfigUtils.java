@@ -3880,6 +3880,8 @@ public int templateCount(String template) throws ConfigurationException{
 				
 			String joinKey = validatedFilter.getKey();
 			validatedFilter.setType("list");
+		    validatedFilter.setDisplayType("list");
+		    validatedFilter.setStyle("menu");
 			validatedFilter.setQualifier("=");
 			validatedFilter.setLegalQualifiers("=");
 			String colForDisplay = validatedFilter.getColForDisplay();
@@ -4939,24 +4941,8 @@ public int templateCount(String template) throws ConfigurationException{
     	
 	Timestamp tstamp = new Timestamp(System.currentTimeMillis());
 	Connection conn = dsource.getConnection();
-	// datasetID should be "" so gets sorted out at export stage	
-	//String sql = "SELECT MAX(dataset_id_key) FROM "+getSchema()[0]+"."+BASEMETATABLE;
-	//PreparedStatement ps = conn.prepareStatement(sql);
-	//ResultSet rs = ps.executeQuery();
-	//rs.next();
-	//int result = rs.getInt(1);
-	//result++;
-	//Integer datasetNo = new Integer(result);
-	//String datasetID = datasetNo.toString();	
+
     DatasetConfig dsv = new DatasetConfig("default",datasetName,datasetName,"","TableSet","1","","","","",tstamp.toString(),"default","default","",datasetName);
-    
-    //dsv.setInternalName(datasetName);
-    //dsv.setInternalName("default");
-    //dsv.setDisplayName(datasetName + " ( " + schema + " )");
-    //dsv.setDataset(datasetName);
-    //dsv.setType("TableSet");
-    //dsv.setVisible("1");
-    
 
     AttributePage ap = new AttributePage();
     ap.setInternalName("naive_attributes");
@@ -4984,31 +4970,22 @@ public int templateCount(String template) throws ConfigurationException{
        
     List mainTables = new ArrayList();
     List finalMains = new ArrayList(); 
-    
-    //System.out.println("databasName from Utils "+databaseName+ "datasetName "+datasetName);
-    mainTables.addAll(Arrays.asList(sortNaiveMainTables(getNaiveMainTablesFor(schema, datasetName), schema)));
+
+	mainTables.addAll(Arrays.asList(sortNaiveMainTables(getNaiveMainTablesFor(schema, datasetName), schema)));
     
     
     List primaryKeys = new ArrayList();
     for (int i = 0, n = mainTables.size(); i < n; i++) {
       String tableName = (String) mainTables.get(i);
-      //System.out.println("getting table name "+tableName);
       // can have single main tables with no keys so add here now
 	  finalMains.add(mainTables.get(i));
       
       TableDescription table = getTableDescriptionFor(schema, tableName);
-      //System.out.println("table descriptin for "+ databaseName+ " table "+tableName);
       for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
-      	//System.out.println("getting columns name "+tableName);
-      	
       	ColumnDescription column = table.columnDescriptions[j];
         String cname = column.name;
-        //NN added uppercase   
-        //if (cname.endsWith("_key") && (!primaryKeys.contains(cname)))
         if ((cname.endsWith("_key") || (cname.endsWith("_KEY"))) && (!primaryKeys.contains(cname))){
           primaryKeys.add(cname);
-          // fix for Star schema - multiple keys per l main table
-          //finalStarbases.add(starbases.get(i));
         }
       }
     }
@@ -5017,11 +4994,8 @@ public int templateCount(String template) throws ConfigurationException{
     finalMains.toArray(sbases);
     dsv.addMainTables(sbases);
 
-    //String[] pkeys = new String[primaryKeys.size()];
     String[] pkeys = new String[finalMains.size()];
-    //if (pkeys.length > 0){
     if (primaryKeys.size() > 0){
-    	//primaryKeys.toArray(pkeys);
     	// make sure no of keys matches no of mains
     	for (int i = 0; i < sbases.length; i++){
     		pkeys[i] = (String) primaryKeys.get(i);
@@ -5029,19 +5003,12 @@ public int templateCount(String template) throws ConfigurationException{
     	dsv.addPrimaryKeys(pkeys);
     }
     
-    //System.out.println("before dimensions");
     
     List allTables = new ArrayList();
     allTables.addAll(mainTables);
     allTables.addAll(Arrays.asList(getNaiveDimensionTablesFor(schema, datasetName)));
     
-    //this is no longer required
-    //allTables.addAll(Arrays.asList(getNaiveLookupTablesFor(databaseName, datasetName)));
     List allCols = new ArrayList();
-
-    
-    
-    
     
     // ID LIST FC and FDs
     FilterCollection fcList = new FilterCollection();
@@ -5051,9 +5018,11 @@ public int templateCount(String template) throws ConfigurationException{
     FilterDescription fdBools = new FilterDescription();
     fdBools.setInternalName("naive_id_list_filters");
     fdBools.setType("boolean_list");
+    fdBools.setDisplayType("container");
     FilterDescription fdLists = new FilterDescription();
     fdLists.setInternalName("naive_id_list_limit_filters");
     fdLists.setType("id_list");
+    fdLists.setDisplayType("container");
 
     for (int i = 0, n = allTables.size(); i < n; i++) {
       String tableName = (String) allTables.get(i);
@@ -5296,9 +5265,11 @@ public int templateCount(String template) throws ConfigurationException{
     FilterDescription fdBools = new FilterDescription();
     fdBools.setInternalName("new_id_list_filters");
     fdBools.setType("boolean_list");
+    fdBools.setDisplayType("container");
     FilterDescription fdLists = new FilterDescription();
     fdLists.setInternalName("new_id_list_limit_filters");
     fdLists.setType("id_list");
+    fdLists.setDisplayType("container");
 
     for (int i = 0, n = allTables.size(); i < n; i++) {
       String tableName = (String) allTables.get(i);
@@ -5563,6 +5534,8 @@ public int templateCount(String template) throws ConfigurationException{
     String tableName = fd1.getTableConstraint();
     String joinKey = fd1.getKey();
     fd1.setType("list");
+    fd1.setDisplayType("list");
+    fd1.setStyle("menu");
     fd1.setQualifier("=");
     fd1.setLegalQualifiers("=");
     String colForDisplay = fd1.getColForDisplay();
@@ -5720,30 +5693,12 @@ public int templateCount(String template) throws ConfigurationException{
     DatasetConfig dsv,
     int duplicated)
     throws SQLException, ConfigurationException {
+
     FilterDescription filt = new FilterDescription();
     filt.setField(columnName);
     String descriptiveName = columnName;
-    // lookup table fds
-    if (tableName.endsWith("look")) {
-      descriptiveName = descriptiveName.replaceFirst("glook_", "");
-      descriptiveName = descriptiveName.replaceFirst("silent_", "");
-      filt.setInternalName(descriptiveName.toLowerCase());
-      filt.setDisplayName(descriptiveName.replaceAll("_", " "));
-      filt.setTableConstraint(tableName);
-      if (!columnName.startsWith("silent_")) {
-        //filt.setHandler("org.ensembl.mart.lib.GenericHandler");//handlers now removed from XML
-        filt.setType("text");
-      } else {
-        filt.setType("list");
-        filt.setQualifier("=");
-        filt.setLegalQualifiers("=");
-        Option[] options = getOptions(columnName, tableName, null, dsv,"");
-        filt.addOptions(options);
-      }
-    }
-    // main table fds
-    else {
-      if (columnName.endsWith("_bool")) {
+
+    if (columnName.endsWith("_bool")) {
       	if (duplicated == 1){
 			filt.setInternalName(tableName + "_" + columnName.toLowerCase());
       	}
@@ -5754,7 +5709,14 @@ public int templateCount(String template) throws ConfigurationException{
         filt.setType("boolean");
         filt.setQualifier("only");
         filt.setLegalQualifiers("only,excluded");
-      } else if (columnName.endsWith("_list")) {
+        filt.setDisplayType("list");
+        filt.setStyle("radio");
+        Option op1 = new Option("only","true","Only","","","","","only","","","","","","","","","","","","","","","","","","","","","");
+		Option op2 = new Option("excluded","true","Excluded","","","","","excluded","","","","","","","","","","","","","","","","","","","","","");
+ 		filt.addOption(op1);
+ 		filt.addOption(op2);
+    } 
+    else if (columnName.endsWith("_list")) {
         descriptiveName = columnName.replaceFirst("_list", "");
         filt.setType("list");
         filt.setQualifier("=");
@@ -5770,8 +5732,10 @@ public int templateCount(String template) throws ConfigurationException{
 		else{
 			filt.setInternalName(descriptiveName.toLowerCase());
 		}
-		
-      } else {
+		filt.setDisplayType("text");
+		filt.setMultipleValues("1");
+    }
+    else {
 		if (duplicated == 1){
 			filt.setInternalName(tableName + "_" + columnName.toLowerCase());	
 		}
@@ -5781,13 +5745,14 @@ public int templateCount(String template) throws ConfigurationException{
         filt.setType(DEFAULTTYPE);
         filt.setQualifier(DEFAULTQUALIFIER);
         filt.setLegalQualifiers(DEFAULTLEGALQUALIFIERS);
-      }
-      String displayName = descriptiveName.replaceAll("_", " ");
-      filt.setDisplayName(displayName.substring(0,1).toUpperCase() + displayName.substring(1));
-      filt.setTableConstraint(tableName);
-      filt.setKey(joinKey);
-
+		filt.setDisplayType("text");
     }
+    
+    String displayName = descriptiveName.replaceAll("_", " ");
+    filt.setDisplayName(displayName.substring(0,1).toUpperCase() + displayName.substring(1));
+    filt.setTableConstraint(tableName);
+    filt.setKey(joinKey);
+
     return filt;
   }
 
