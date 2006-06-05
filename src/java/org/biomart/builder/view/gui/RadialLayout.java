@@ -41,7 +41,7 @@ import java.util.TreeMap;
  * circle around a centre point.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 16th May 2006
+ * @version 0.1.5, 5th June 2006
  * @since 0.1
  */
 public class RadialLayout implements LayoutManager {
@@ -322,44 +322,44 @@ public class RadialLayout implements LayoutManager {
 				RelationComponent relationComponent = (RelationComponent) i
 						.next();
 
-				// Obtain primary key and work out position relative to
+				// Obtain first key and work out position relative to
 				// ourselves.
-				KeyComponent primaryKey = relationComponent
-						.getPrimaryKeyComponent();
-				Rectangle primaryKeyRectangle = primaryKey.getBounds();
-				Container primaryKeyParent = primaryKey.getParent();
-				while (primaryKeyParent != parent) {
-					primaryKeyRectangle.setLocation(primaryKeyRectangle.x
-							+ (int) primaryKeyParent.getX(),
-							primaryKeyRectangle.y
-									+ (int) primaryKeyParent.getY());
-					primaryKeyParent = primaryKeyParent.getParent();
+				KeyComponent firstKey = relationComponent
+						.getFirstKeyComponent();
+				Rectangle firstKeyRectangle = firstKey.getBounds();
+				Container firstKeyParent = firstKey.getParent();
+				while (firstKeyParent != parent) {
+					firstKeyRectangle.setLocation(firstKeyRectangle.x
+							+ (int) firstKeyParent.getX(),
+							firstKeyRectangle.y
+									+ (int) firstKeyParent.getY());
+					firstKeyParent = firstKeyParent.getParent();
 				}
 
-				// Do the same for the foreign key.
-				KeyComponent foreignKey = relationComponent
-						.getForeignKeyComponent();
-				Rectangle foreignKeyRectangle = foreignKey.getBounds();
-				Container foreignKeyParent = foreignKey.getParent();
-				while (foreignKeyParent != parent) {
-					foreignKeyRectangle.setLocation(foreignKeyRectangle.x
-							+ (int) foreignKeyParent.getX(),
-							foreignKeyRectangle.y
-									+ (int) foreignKeyParent.getY());
-					foreignKeyParent = foreignKeyParent.getParent();
+				// Do the same for the second key.
+				KeyComponent secondKey = relationComponent
+						.getSecondKeyComponent();
+				Rectangle secondKeyRectangle = secondKey.getBounds();
+				Container secondKeyParent = secondKey.getParent();
+				while (secondKeyParent != parent) {
+					secondKeyRectangle.setLocation(secondKeyRectangle.x
+							+ (int) secondKeyParent.getX(),
+							secondKeyRectangle.y
+									+ (int) secondKeyParent.getY());
+					secondKeyParent = secondKeyParent.getParent();
 				}
 
 				// Create a bounding box around the whole lot plus 1 step size
 				// each side for mouse-sensitivity's sake.
-				int x = Math.min(primaryKeyRectangle.x, foreignKeyRectangle.x);
-				int y = Math.min(primaryKeyRectangle.y, foreignKeyRectangle.y);
-				int width = Math.max(primaryKeyRectangle.x
-						+ primaryKeyRectangle.width, foreignKeyRectangle.x
-						+ foreignKeyRectangle.width)
+				int x = Math.min(firstKeyRectangle.x, secondKeyRectangle.x);
+				int y = Math.min(firstKeyRectangle.y, secondKeyRectangle.y);
+				int width = Math.max(firstKeyRectangle.x
+						+ firstKeyRectangle.width, secondKeyRectangle.x
+						+ secondKeyRectangle.width)
 						- x;
-				int height = Math.max(primaryKeyRectangle.y
-						+ primaryKeyRectangle.height, foreignKeyRectangle.y
-						+ foreignKeyRectangle.height)
+				int height = Math.max(firstKeyRectangle.y
+						+ firstKeyRectangle.height, secondKeyRectangle.y
+						+ secondKeyRectangle.height)
 						- y;
 				Rectangle bounds = new Rectangle(x
 						- (int) RadialLayout.RELATION_STEPSIZE, y
@@ -371,60 +371,60 @@ public class RadialLayout implements LayoutManager {
 				// Find midpoint of sides of foreign key and primary key. This
 				// is
 				// where the anchor lines will attach.
-				int middleOfPK = primaryKeyRectangle.x
-						+ (primaryKeyRectangle.width / 2);
-				int middleOfFK = foreignKeyRectangle.x
-						+ (foreignKeyRectangle.width / 2);
-				int midPoint = (middleOfPK + middleOfFK) / 2;
-				int pkStartX = (midPoint <= middleOfPK) ? primaryKeyRectangle.x
-						: primaryKeyRectangle.x + primaryKeyRectangle.width;
-				int fkEndX = (midPoint <= middleOfFK) ? foreignKeyRectangle.x
-						: foreignKeyRectangle.x + foreignKeyRectangle.width;
-				int pkY = primaryKeyRectangle.y
-						+ (primaryKeyRectangle.height / 2);
-				int fkY = foreignKeyRectangle.y
-						+ (foreignKeyRectangle.height / 2);
+				int middleOfFirst = firstKeyRectangle.x
+						+ (firstKeyRectangle.width / 2);
+				int middleOfSecond = secondKeyRectangle.x
+						+ (secondKeyRectangle.width / 2);
+				int midPoint = (middleOfFirst + middleOfSecond) / 2;
+				int firstStartX = (midPoint <= middleOfFirst) ? firstKeyRectangle.x
+						: firstKeyRectangle.x + firstKeyRectangle.width;
+				int secondEndX = (midPoint <= middleOfSecond) ? secondKeyRectangle.x
+						: secondKeyRectangle.x + secondKeyRectangle.width;
+				int firstY = firstKeyRectangle.y
+						+ (firstKeyRectangle.height / 2);
+				int secondY = secondKeyRectangle.y
+						+ (secondKeyRectangle.height / 2);
 
 				// Modify all the relation coords to be rooted at 0,0 of its
 				// bounds.
-				pkStartX -= bounds.x;
-				pkY -= bounds.y;
-				fkEndX -= bounds.x;
-				fkY -= bounds.y;
+				firstStartX -= bounds.x;
+				firstY -= bounds.y;
+				secondEndX -= bounds.x;
+				secondY -= bounds.y;
 
 				// Work out the X-offsets of the end of the key anchors that is
 				// not attached to the key itself.
-				int pkTagX = (pkStartX < middleOfPK) ? pkStartX
-						- RadialLayout.RELATION_TAGSIZE : pkStartX
+				int firstTagX = (firstStartX < middleOfFirst) ? firstStartX
+						- RadialLayout.RELATION_TAGSIZE : firstStartX
 						+ RadialLayout.RELATION_TAGSIZE;
-				int fkTagX = (fkEndX < middleOfFK) ? fkEndX
-						- RadialLayout.RELATION_TAGSIZE : fkEndX
+				int secondTagX = (secondEndX < middleOfSecond) ? secondEndX
+						- RadialLayout.RELATION_TAGSIZE : secondEndX
 						+ RadialLayout.RELATION_TAGSIZE;
 
 				// Create a path to describe the relation shape.
 				GeneralPath path = new GeneralPath();
 
 				// Move to starting point at primary key.
-				path.moveTo(pkStartX, pkY);
+				path.moveTo(firstStartX, firstY);
 
 				// Draw starting anchor tag.
-				path.lineTo(pkTagX, pkY);
+				path.lineTo(firstTagX, firstY);
 
 				// Draw the two-step line between.
-				int diffX = fkTagX - pkTagX;
-				int diffY = fkY - pkY;
+				int diffX = secondTagX - firstTagX;
+				int diffY = secondY - firstY;
 				if (Math.abs(diffX) >= Math.abs(diffY)) {
 					// Move X first, then Y
-					path.lineTo(fkTagX, pkY);
-					path.lineTo(fkTagX, fkY);
+					path.lineTo(secondTagX, firstY);
+					path.lineTo(secondTagX, secondY);
 				} else {
 					// Move Y first, then X
-					path.lineTo(pkTagX, fkY);
-					path.lineTo(fkTagX, fkY);
+					path.lineTo(firstTagX, secondY);
+					path.lineTo(secondTagX, secondY);
 				}
 
 				// Draw the closing anchor tag at the foreign key.
-				path.lineTo(fkEndX, fkY);
+				path.lineTo(secondEndX, secondY);
 
 				// Done! Tell the relation what shape we made.
 				relationComponent.setShape(path);

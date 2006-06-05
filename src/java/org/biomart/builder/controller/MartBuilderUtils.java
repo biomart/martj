@@ -50,7 +50,6 @@ import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
-import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * Tools for working with the mart from a GUI or CLI. These wrapper methods
@@ -60,7 +59,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 1st June 2006
+ * @version 0.1.14, 5th June 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -452,11 +451,11 @@ public class MartBuilderUtils {
 	public static void changeRelationCardinality(Mart mart, Relation relation,
 			Cardinality cardinality) {
 		// Change the cardinality.
-		relation.setFKCardinality(cardinality);
+		relation.setCardinality(cardinality);
 
 		// If 1:1, make sure it isn't used as a subclass or concat-only relation
 		// in any dataset.
-		if (cardinality.equals(Cardinality.ONE))
+		if (relation.isOneToOne())
 			for (Iterator i = mart.getDataSets().iterator(); i.hasNext();) {
 				DataSet ds = (DataSet) i.next();
 				ds.unflagSubclassRelation(relation);
@@ -665,9 +664,9 @@ public class MartBuilderUtils {
 
 				// Rename both ends using recursion. This works because this
 				// method skips the rename process if the names already match.
-				renameDataSetColumn((DataSetColumn) r.getPrimaryKey()
+				renameDataSetColumn((DataSetColumn) r.getFirstKey()
 						.getColumns().get(colIndex), newName);
-				renameDataSetColumn((DataSetColumn) r.getForeignKey()
+				renameDataSetColumn((DataSetColumn) r.getSecondKey()
 						.getColumns().get(colIndex), newName);
 			}
 		}
@@ -875,28 +874,14 @@ public class MartBuilderUtils {
 	 *            the first key of the relation (the 1 end of a 1:M relation).
 	 * @param to
 	 *            the second key of the relation (the M end of a 1:M relation).
-	 * @throws SQLException
-	 * @throws BuilderException
+	 * @throws AssociationException
+	 *             if the relation could not be established.
 	 */
 	public static void createRelation(Mart mart, Key from, Key to)
 			throws AssociationException {
-		// Work out which is the PK end, and which is the FK end.
-		PrimaryKey pk;
-		ForeignKey fk;
-		if ((from instanceof PrimaryKey) && (to instanceof ForeignKey)) {
-			pk = (PrimaryKey) from;
-			fk = (ForeignKey) to;
-		} else if ((to instanceof PrimaryKey) && (from instanceof ForeignKey)) {
-			pk = (PrimaryKey) to;
-			fk = (ForeignKey) from;
-		}
-		// If both are PKs or both are FKs, then we can't do this.
-		else
-			throw new AssociationException(BuilderBundle
-					.getString("relNotBetweenPKandFK"));
 
 		// Create the relation.
-		Relation r = new GenericRelation(pk, fk, Cardinality.MANY);
+		Relation r = new GenericRelation(from, to, Cardinality.MANY);
 		r.setStatus(ComponentStatus.HANDMADE);
 
 		// Synchronise the datasets.

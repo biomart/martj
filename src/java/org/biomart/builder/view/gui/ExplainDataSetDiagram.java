@@ -32,7 +32,7 @@ import org.biomart.builder.model.DataSet.DataSetTable;
  * not involved in the construction of the dataset or dataset table concerned.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 17th May 2006
+ * @version 0.1.5, 5th June 2006
  * @since 0.1
  */
 public class ExplainDataSetDiagram extends Diagram {
@@ -81,18 +81,16 @@ public class ExplainDataSetDiagram extends Diagram {
 				.hasNext();) {
 			Relation relation = (Relation) i.next();
 
-			// Add the primary key end of the table, only if not done so before.
-			Table pkTable = relation.getPrimaryKey().getTable();
-			if (this.getDiagramComponent(pkTable) == null) {
-				TableComponent tableComponent = new TableComponent(pkTable,
+			// Add the two ends of the relation, only if not done so before.
+			Table firstTable = relation.getFirstKey().getTable();
+			if (this.getDiagramComponent(firstTable) == null) {
+				TableComponent tableComponent = new TableComponent(firstTable,
 						this);
 				this.addDiagramComponent(tableComponent);
 			}
-
-			// Add the foreign key end of the table, only if not done so before.
-			Table fkTable = relation.getForeignKey().getTable();
-			if (this.getDiagramComponent(fkTable) == null) {
-				TableComponent tableComponent = new TableComponent(fkTable,
+			Table secondTable = relation.getSecondKey().getTable();
+			if (this.getDiagramComponent(secondTable) == null) {
+				TableComponent tableComponent = new TableComponent(secondTable,
 						this);
 				this.addDiagramComponent(tableComponent);
 			}

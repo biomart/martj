@@ -41,7 +41,6 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
-import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.BuilderBundle;
 
@@ -57,7 +56,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * has the same context applied.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 2nd June 2006
+ * @version 0.1.14, 5th June 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -461,6 +460,9 @@ public class SchemaTabSet extends JTabbedPane {
 					// have been dropped, so the dataset tabset needs to
 					// be recalculated.
 					datasetTabSet.recalculateDataSetTabs();
+					
+					// Recalculate the all-schemas diagram.
+					recalculateOverviewDiagram();
 
 					// Set the dataset tabset status as modified.
 					datasetTabSet.getMartTabSet().setModifiedStatus(true);
@@ -519,17 +521,20 @@ public class SchemaTabSet extends JTabbedPane {
 	}
 
 	private void removeSchemaTab(Schema schema) {
-		// Remove the tab for the schema.
-		this.removeTabAt(this.indexOfTab(schema.getName()));
-
-		// Remove the association between schema and diagram.
+		// Work out which tab the schema lives in.
 		int index = this.schemaToDiagram[0].indexOf(schema);
+
+		// Work out the tab index.
+		int tabIndex = this.indexOfTab(schema.getName());
+		
+		// Remove the tab, and it's mapping from the schema-to-tab map.
+		this.removeTabAt(tabIndex);
 		this.schemaToDiagram[0].remove(index);
 		this.schemaToDiagram[1].remove(index);
-
-		// Recalculate the all-schemas diagram as it has
-		// to reshuffle around the now-missing schema.
-		this.recalculateOverviewDiagram();
+		
+		// Fake a click on the last tab before this one to ensure 
+		// at least one tab remains visible and up-to-date.
+		this.setSelectedIndex(tabIndex-1);
 	}
 
 	/**
@@ -766,9 +771,8 @@ public class SchemaTabSet extends JTabbedPane {
 							.getMart(), relation, cardinality);
 
 					// Internal relation? Repaint the individual schema diagram.
-					if (relation.getPrimaryKey().getTable().getSchema().equals(
-							relation.getForeignKey().getTable().getSchema()))
-						repaintSchemaDiagram(relation.getPrimaryKey()
+					if (!relation.isExternal())
+						repaintSchemaDiagram(relation.getFirstKey()
 								.getTable().getSchema());
 
 					// External relation? Repaint the all-schemas diagram.
@@ -809,9 +813,8 @@ public class SchemaTabSet extends JTabbedPane {
 							.getMart(), relation, status);
 
 					// Internal relation? Repaint the individual schema diagram.
-					if (relation.getPrimaryKey().getTable().getSchema().equals(
-							relation.getForeignKey().getTable().getSchema()))
-						repaintSchemaDiagram(relation.getPrimaryKey()
+					if (!relation.isExternal())
+						repaintSchemaDiagram(relation.getFirstKey()
 								.getTable().getSchema());
 
 					// External relation? Repaint the all-schemas diagram.
@@ -849,14 +852,13 @@ public class SchemaTabSet extends JTabbedPane {
 							relation);
 
 					// Internal relation? Repaint the individual schema diagram.
-					if (relation.getPrimaryKey().getTable().getSchema().equals(
-							relation.getForeignKey().getTable().getSchema()))
-						repaintSchemaDiagram(relation.getPrimaryKey()
+					if (!relation.isExternal())
+						recalculateSchemaDiagram(relation.getFirstKey()
 								.getTable().getSchema());
 
 					// External relation? Repaint the all-schemas diagram.
 					else
-						repaintOverviewDiagram();
+						recalculateOverviewDiagram();
 
 					// This may have caused new dimensions or subclass tables to
 					// appear in datasets referring to tables in this schema, so
@@ -1130,31 +1132,17 @@ public class SchemaTabSet extends JTabbedPane {
 		// Start by making a list to contain the candidates.
 		Collection candidates = new ArrayList();
 
-		// If the key is a primary key, we want all foreign keys that
-		// have the same number of columns.
-		if (from instanceof PrimaryKey)
+		// We want all keys that have the same number of columns.
 			for (Iterator i = this.schemaToDiagram[0].iterator(); i
 					.hasNext();)
 				for (Iterator j = ((Schema) i.next()).getTables().iterator(); j
 						.hasNext();)
-					for (Iterator k = ((Table) j.next()).getForeignKeys()
+					for (Iterator k = ((Table) j.next()).getKeys()
 							.iterator(); k.hasNext();) {
-						Key fk = (Key) k.next();
-						if (fk.countColumns() == from.countColumns())
-							candidates.add(fk);
+						Key key = (Key) k.next();
+						if (key.countColumns() == from.countColumns() && !key.equals(from))
+							candidates.add(key);
 					}
-
-		// If the key was not primary, then it is foreign, so we want all
-		// primary keys with the same number of columns.
-		else
-			for (Iterator i = this.schemaToDiagram[0].iterator(); i
-					.hasNext();)
-				for (Iterator j = ((Schema) i.next()).getTables().iterator(); j
-						.hasNext();) {
-					Key pk = ((Table) j.next()).getPrimaryKey();
-					if (pk != null && pk.countColumns() == from.countColumns())
-						candidates.add(pk);
-				}
 
 		// Put up a box asking which key to link this key to, based on the
 		// list of candidates we just made. Return the key that the user

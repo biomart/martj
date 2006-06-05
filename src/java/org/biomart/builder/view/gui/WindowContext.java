@@ -37,7 +37,6 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
-import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
@@ -47,7 +46,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * rather than the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 16th May 2006
+ * @version 0.1.13, 5th June 2006
  * @since 0.1
  */
 public class WindowContext extends SchemaContext {
@@ -115,8 +114,6 @@ public class WindowContext extends SchemaContext {
 			// Work out what state the relation is already in.
 			boolean incorrect = relation.getStatus().equals(
 					ComponentStatus.INFERRED_INCORRECT);
-			boolean relationOneToOne = relation.getFKCardinality().equals(
-					Cardinality.ONE);
 			boolean relationMasked = this.dataset.getMaskedRelations()
 					.contains(relation);
 			boolean relationConcated = this.dataset.getConcatOnlyRelations()
@@ -165,7 +162,7 @@ public class WindowContext extends SchemaContext {
 			contextMenu.add(subclass);
 			if (relationSubclassed)
 				subclass.setSelected(true);
-			if (incorrect || relationOneToOne || relationMasked
+			if (incorrect || !relation.isOneToMany() || relationMasked
 					|| relationConcated)
 				subclass.setEnabled(false);
 
@@ -254,7 +251,8 @@ public class WindowContext extends SchemaContext {
 			// It is only usable when the relation is unmasked and not
 			// incorrect or already flagged as being in any conflicting state.
 			// contextMenu.add(concatSubmenu);
-			if (incorrect || relationOneToOne || relationMasked
+			contextMenu.add(concatSubmenu);
+			if (incorrect || relation.isOneToOne() || relationMasked
 					|| relationSubclassed)
 				concatSubmenu.setEnabled(false);
 		}

@@ -21,16 +21,15 @@ package org.biomart.builder.model;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
-import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
@@ -38,15 +37,17 @@ import org.biomart.builder.resources.BuilderBundle;
  * mart. It also has zero or more datasets based around these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 2nd June 2006
+ * @version 0.1.11, 5th June 2006
  * @since 0.1
  */
 public class Mart {
 	// OK to use map, as keys are strings and never change.
-	private final Map schemas = new HashMap();
+	// Use tree map to keep them in alphabetical order.
+	private final Map schemas = new TreeMap();
 
 	// OK to use map, as keys are strings and never change.
-	private final Map datasets = new HashMap();
+	// Use tree map to keep them in alphabetical order.
+	private final Map datasets = new TreeMap();
 
 	/**
 	 * Returns the set of schema objects which this mart includes when building
@@ -123,7 +124,8 @@ public class Mart {
 
 	/**
 	 * Removes a schema from the set which this mart includes. Any datasets
-	 * centred on this schema are also removed.
+	 * centred on this schema are also removed, and any external relations
+	 * referring to it also.
 	 * 
 	 * @param schema
 	 *            the schema to remove.
@@ -135,6 +137,8 @@ public class Mart {
 			if (ds.getCentralTable().getSchema().equals(schema))
 				this.removeDataSet(ds);
 		}
+		for (Iterator i = schema.getExternalRelations().iterator(); i.hasNext(); ) 
+			((Relation)i.next()).destroy();
 		this.schemas.remove(schema.getName());
 	}
 
@@ -217,8 +221,8 @@ public class Mart {
 				Relation r = (Relation) j.next();
 				// Only flag potential M:1 subclass relations if they don't
 				// refer back to ourselves.
-				if (r.getFKCardinality().equals(Cardinality.MANY)
-						&& !r.getPrimaryKey().getTable().equals(centralTable)) {
+				if (r.isOneToMany()
+						&& !r.getOtherKey(k).getTable().equals(centralTable)) {
 					DataSet subclassedDS = new DataSet(this, centralTable, name
 							+ BuilderBundle.getString("subclassDataSetSuffix")
 							+ (suffix++));

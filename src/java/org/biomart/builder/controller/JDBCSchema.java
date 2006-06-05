@@ -80,7 +80,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * or keys, or to reinstate any that have previously been marked as incorrect.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 2nd June 2006
+ * @version 0.1.11, 5th June 2006
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -687,7 +687,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 							// a) a relation already exists between the FK and
 							// the PK.
-							if (candidateRel.getPrimaryKey().equals(pk)) {
+							if (candidateRel.getOtherKey(fk).equals(pk)) {
 								// Update the relation's status if handmade, as
 								// it is now backed by the database.
 								if (candidateRel.getStatus().equals(
@@ -933,7 +933,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 							// a) a relation already exists between the FK and
 							// the PK.
-							if (candidateRel.getPrimaryKey().equals(pk)) {
+							if (candidateRel.getOtherKey(fk).equals(pk)) {
 								// Update the relation's status if handmade, as
 								// it is now backed by the database.
 								if (candidateRel.getStatus().equals(

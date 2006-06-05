@@ -41,7 +41,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * {@link ComponentStatus#INFERRED}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 16th May 2006
+ * @version 0.1.10, 5th June 2006
  * @since 0.1
  */
 public interface Key extends Comparable {
@@ -280,9 +280,13 @@ public interface Key extends Comparable {
 
 		public void addRelation(Relation relation) throws AssociationException {
 			// Does it refer to us?
-			if (!(relation.getForeignKey() == this || relation.getPrimaryKey() == this))
+			try {
+				// Will throw an exception if we are not part of the relation.
+				relation.getOtherKey(this);
+			} catch (IllegalArgumentException e) {
 				throw new AssociationException(BuilderBundle
 						.getString("relationNotOfThisKey"));
+			}
 
 			// Add it.
 			this.relations.add(relation);

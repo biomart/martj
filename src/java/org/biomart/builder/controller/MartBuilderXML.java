@@ -98,7 +98,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 2nd June 2006
+ * @version 0.1.12, 5th June 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -465,14 +465,14 @@ public class MartBuilderXML extends DefaultHandler {
 				ComponentStatus status = ComponentStatus
 						.get((String) attributes.get("status"));
 				Cardinality card = Cardinality.get((String) attributes
-						.get("fkCardinality"));
-				PrimaryKey pk = (PrimaryKey) this.mappedObjects.get(attributes
-						.get("primaryKeyId"));
-				ForeignKey fk = (ForeignKey) this.mappedObjects.get(attributes
-						.get("foreignKeyId"));
+						.get("cardinality"));
+				Key firstKey = (Key) this.mappedObjects.get(attributes
+						.get("firstKeyId"));
+				Key secondKey = (Key) this.mappedObjects.get(attributes
+						.get("secondKeyId"));
 
 				// Make it
-				Relation rel = new GenericRelation(pk, fk, card);
+				Relation rel = new GenericRelation(firstKey, secondKey, card);
 
 				// Set its status.
 				rel.setStatus(status);
@@ -1062,13 +1062,13 @@ public class MartBuilderXML extends DefaultHandler {
 			this.reverseMappedObjects.put(r, relMappedID);
 			this.openElement("relation", xmlWriter);
 			this.writeAttribute("id", relMappedID, xmlWriter);
-			this.writeAttribute("fkCardinality",
-					r.getFKCardinality().getName(), xmlWriter);
-			this.writeAttribute("primaryKeyId",
-					(String) this.reverseMappedObjects.get(r.getPrimaryKey()),
+			this.writeAttribute("cardinality", r.getCardinality().getName(),
 					xmlWriter);
-			this.writeAttribute("foreignKeyId",
-					(String) this.reverseMappedObjects.get(r.getForeignKey()),
+			this.writeAttribute("firstKeyId",
+					(String) this.reverseMappedObjects.get(r.getFirstKey()),
+					xmlWriter);
+			this.writeAttribute("secondKeyId",
+					(String) this.reverseMappedObjects.get(r.getSecondKey()),
 					xmlWriter);
 			this.writeAttribute("status", r.getStatus().toString(), xmlWriter);
 			this.writeAttribute("alt", r.toString(), xmlWriter);

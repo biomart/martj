@@ -65,7 +65,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.18, 2nd June 2006
+ * @version 0.1.19, 5th June 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -164,6 +164,9 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	public void setSelectedIndex(int selectedIndex) {
+		// Need we do anything at all?
+		if (selectedIndex==this.getSelectedIndex()) return;
+		
 		// First of all, select the tab as normal. This must be
 		// done in order to get the diagram visible. If we do
 		// it later, having attempted to set up the diagram without
@@ -328,10 +331,17 @@ public class DataSetTabSet extends JTabbedPane {
 		int index = this.datasetToTab[0].indexOf(dataset);
 		DataSetTab datasetTab = (DataSetTab) this.datasetToTab[1].get(index);
 
+		// Work out the tab index.
+		int tabIndex = this.indexOfComponent(datasetTab);
+		
 		// Remove the tab, and it's mapping from the dataset-to-tab map.
 		this.remove(datasetTab);
 		this.datasetToTab[0].remove(index);
 		this.datasetToTab[1].remove(index);
+		
+		// Fake a click on the last tab before this one to ensure 
+		// at least one tab remains visible and up-to-date.
+		this.setSelectedIndex(tabIndex-1);
 	}
 
 	private void addDataSetTab(DataSet dataset) {
@@ -591,9 +601,8 @@ public class DataSetTabSet extends JTabbedPane {
 			MartBuilderUtils.maskRelation(ds, relation);
 
 			// If it is an internal relation, repaint the schema diagram.
-			if (relation.getPrimaryKey().getTable().getSchema().equals(
-					relation.getForeignKey().getTable().getSchema()))
-				this.schemaTabSet.repaintSchemaDiagram(relation.getPrimaryKey()
+			if (!relation.isExternal())
+				this.schemaTabSet.repaintSchemaDiagram(relation.getFirstKey()
 						.getTable().getSchema());
 
 			// Otherwise, it is external, so repaint the schema overview
@@ -630,9 +639,8 @@ public class DataSetTabSet extends JTabbedPane {
 			MartBuilderUtils.unmaskRelation(ds, relation);
 
 			// If it is an internal relation, repaint the schema diagram.
-			if (relation.getPrimaryKey().getTable().getSchema().equals(
-					relation.getForeignKey().getTable().getSchema()))
-				this.schemaTabSet.repaintSchemaDiagram(relation.getPrimaryKey()
+			if (!relation.isExternal())
+				this.schemaTabSet.repaintSchemaDiagram(relation.getFirstKey()
 						.getTable().getSchema());
 
 			// Otherwise, it is external, so repaint the schema overview
@@ -669,9 +677,8 @@ public class DataSetTabSet extends JTabbedPane {
 			MartBuilderUtils.subclassRelation(ds, relation);
 
 			// If it is an internal relation, repaint the schema diagram.
-			if (relation.getPrimaryKey().getTable().getSchema().equals(
-					relation.getForeignKey().getTable().getSchema()))
-				this.schemaTabSet.repaintSchemaDiagram(relation.getPrimaryKey()
+			if (!relation.isExternal())
+				this.schemaTabSet.repaintSchemaDiagram(relation.getFirstKey()
 						.getTable().getSchema());
 
 			// Otherwise, it is external, so repaint the schema overview
@@ -708,9 +715,8 @@ public class DataSetTabSet extends JTabbedPane {
 			MartBuilderUtils.unsubclassRelation(ds, relation);
 
 			// If it is an internal relation, repaint the schema diagram.
-			if (relation.getPrimaryKey().getTable().getSchema().equals(
-					relation.getForeignKey().getTable().getSchema()))
-				this.schemaTabSet.repaintSchemaDiagram(relation.getPrimaryKey()
+			if (!relation.isExternal())
+				this.schemaTabSet.repaintSchemaDiagram(relation.getFirstKey()
 						.getTable().getSchema());
 
 			// Otherwise, it is external, so repaint the schema overview
@@ -750,9 +756,8 @@ public class DataSetTabSet extends JTabbedPane {
 			MartBuilderUtils.concatOnlyRelation(ds, relation, type);
 
 			// If it is an internal relation, repaint the schema diagram.
-			if (relation.getPrimaryKey().getTable().getSchema().equals(
-					relation.getForeignKey().getTable().getSchema()))
-				this.schemaTabSet.repaintSchemaDiagram(relation.getPrimaryKey()
+			if (!relation.isExternal())
+				this.schemaTabSet.repaintSchemaDiagram(relation.getFirstKey()
 						.getTable().getSchema());
 
 			// Otherwise, it is external, so repaint the schema overview
@@ -789,9 +794,8 @@ public class DataSetTabSet extends JTabbedPane {
 			MartBuilderUtils.unconcatOnlyRelation(ds, relation);
 
 			// If it is an internal relation, repaint the schema diagram.
-			if (relation.getPrimaryKey().getTable().getSchema().equals(
-					relation.getForeignKey().getTable().getSchema()))
-				this.schemaTabSet.repaintSchemaDiagram(relation.getPrimaryKey()
+			if (!relation.isExternal())
+				this.schemaTabSet.repaintSchemaDiagram(relation.getFirstKey()
 						.getTable().getSchema());
 
 			// Otherwise, it is external, so repaint the schema overview
@@ -1313,8 +1317,8 @@ public class DataSetTabSet extends JTabbedPane {
 		public void attachSchemaTabSet(SchemaTabSet schemaTabSet) {
 			// Set the context on the schema tabset, and set the
 			// tabset to be the window card.
-			schemaTabSet.setDiagramContext(new WindowContext(
-					this.datasetTabSet, this.dataset));
+			WindowContext context = new WindowContext(this.datasetTabSet, this.dataset);
+			schemaTabSet.setDiagramContext(context);
 			this.displayArea.add(schemaTabSet, "WINDOW_CARD");
 
 			// Nasty hack to force schema tabset to display correctly, by

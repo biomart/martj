@@ -48,7 +48,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * provides the context menu for interacting with dataset diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.15, 1st June 2006
+ * @version 0.1.16, 5th June 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -195,8 +195,8 @@ public class DataSetContext extends WindowContext {
 			// Option to construct the mart.
 			JMenuItem construct = new JMenuItem(BuilderBundle
 					.getString("constructMartTitle"));
-			construct.setMnemonic(BuilderBundle.getString("constructMartMnemonic")
-					.charAt(0));
+			construct.setMnemonic(BuilderBundle.getString(
+					"constructMartMnemonic").charAt(0));
 			construct.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getDataSetTabSet().requestConstructMart(getDataSet());
@@ -231,8 +231,8 @@ public class DataSetContext extends WindowContext {
 			// Rename the column.
 			JMenuItem rename = new JMenuItem(BuilderBundle
 					.getString("renameTableTitle"));
-			rename.setMnemonic(BuilderBundle
-					.getString("renameTableMnemonic").charAt(0));
+			rename.setMnemonic(BuilderBundle.getString("renameTableMnemonic")
+					.charAt(0));
 			rename.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getDataSetTabSet().requestRenameDataSetTable(table);
@@ -252,8 +252,7 @@ public class DataSetContext extends WindowContext {
 				removeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						Relation relation = (Relation) table
-								.getUnderlyingRelations().toArray(
-										new Relation[0])[0];
+								.getUnderlyingRelations().get(0);
 						getDataSetTabSet().requestMaskRelation(
 								(DataSet) table.getSchema(), relation);
 					}
@@ -270,14 +269,18 @@ public class DataSetContext extends WindowContext {
 				mergeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						Relation relation = (Relation) table
-								.getUnderlyingRelations().toArray(
-										new Relation[0])[0];
-						getDataSetTabSet().getSchemaTabSet().
-						requestChangeRelationCardinality(relation, 
-								Cardinality.ONE);
+								.getUnderlyingRelations().get(0);
+						getDataSetTabSet().getSchemaTabSet()
+								.requestChangeRelationCardinality(relation,
+										Cardinality.ONE);
 					}
 				});
 				contextMenu.add(mergeDM);
+				// Disable this option if the underlying relation's
+				// cardinality cannot be changed.
+				if (!((Relation) table.getUnderlyingRelations().get(0))
+						.isCardinalityChangeable())
+					mergeDM.setEnabled(false);
 			}
 
 			// Subclass tables have their own options too.
@@ -292,16 +295,15 @@ public class DataSetContext extends WindowContext {
 				removeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						Relation relation = (Relation) table
-								.getUnderlyingRelations().toArray(
-										new Relation[0])[0];
+								.getUnderlyingRelations().get(0);
 						getDataSetTabSet().requestUnsubclassRelation(
 								(DataSet) table.getSchema(), relation);
 					}
 				});
 				contextMenu.add(removeDM);
 
-				// The subclass table can be merged by using this option. 
-				// This unflags the relation that caused the subclass to 
+				// The subclass table can be merged by using this option.
+				// This unflags the relation that caused the subclass to
 				// exist.
 				JMenuItem mergeDM = new JMenuItem(BuilderBundle
 						.getString("mergeTableTitle"));
@@ -310,8 +312,7 @@ public class DataSetContext extends WindowContext {
 				mergeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						Relation relation = (Relation) table
-								.getUnderlyingRelations().toArray(
-										new Relation[0])[0];
+								.getUnderlyingRelations().get(0);
 						getDataSetTabSet().requestUnsubclassRelation(
 								getDataSet(), relation);
 					}
@@ -375,8 +376,8 @@ public class DataSetContext extends WindowContext {
 			// Rename the column.
 			JMenuItem rename = new JMenuItem(BuilderBundle
 					.getString("renameColumnTitle"));
-			rename.setMnemonic(BuilderBundle
-					.getString("renameColumnMnemonic").charAt(0));
+			rename.setMnemonic(BuilderBundle.getString("renameColumnMnemonic")
+					.charAt(0));
 			rename.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getDataSetTabSet().requestRenameDataSetColumn(column);
@@ -384,7 +385,6 @@ public class DataSetContext extends WindowContext {
 			});
 			contextMenu.add(rename);
 
-			
 			// If it's a schema name column...
 			if (column instanceof SchemaNameColumn) {
 
@@ -487,8 +487,7 @@ public class DataSetContext extends WindowContext {
 			Relation relation = (Relation) object;
 
 			// Highlight SUBCLASS relations.
-			if (((DataSetTable) relation.getForeignKey().getTable()).getType()
-					.equals(DataSetTableType.MAIN_SUBCLASS))
+			if (this.getDataSet().getSubclassedRelations().contains(relation))
 				component.setForeground(RelationComponent.SUBCLASS_COLOUR);
 
 			// All the rest are normal.

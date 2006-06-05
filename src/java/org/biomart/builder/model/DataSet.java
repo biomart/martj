@@ -24,11 +24,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
@@ -60,7 +57,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.22, 2nd June 2006
+ * @version 0.1.23, 5th June 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -156,14 +153,15 @@ public class DataSet extends GenericSchema {
 		// Identify main table.
 		Table centralTable = this.getCentralTable();
 		// If central table has subclass relations and is at the foreign key
-		// end, then follow them to the real central table.
+		// end, then follow them to the real central table. As M:Ms cannot
+		// be subclassed, we can assume the set only contains 1:Ms.
 		boolean found = false;
 		for (Iterator i = centralTable.getRelations().iterator(); i.hasNext()
 				&& !found;) {
 			Relation r = (Relation) i.next();
 			if (this.getSubclassedRelations().contains(r)
-					&& r.getForeignKey().getTable().equals(centralTable)) {
-				centralTable = r.getPrimaryKey().getTable();
+					&& r.getManyKey().getTable().equals(centralTable)) {
+				centralTable = r.getOneKey().getTable();
 				found = true;
 			}
 		}
@@ -189,9 +187,9 @@ public class DataSet extends GenericSchema {
 		List relationKeyQueue = new ArrayList();
 		for (Iterator i = centralTable.getRelations().iterator(); i.hasNext();) {
 			Relation rel = (Relation) i.next();
-			Key relationKey = rel.getPrimaryKey().getTable().equals(
-					centralTable) ? (Key) rel.getPrimaryKey() : (Key) rel
-					.getForeignKey();
+			Key relationKey = rel.getFirstKey().getTable().equals(centralTable) ? rel
+					.getFirstKey()
+					: rel.getSecondKey();
 			relationQueue.add(rel);
 			relationKeyQueue.add(relationKey);
 		}
@@ -210,15 +208,14 @@ public class DataSet extends GenericSchema {
 			this.maskedRelations.remove(rel);
 
 			// What's the target end of the relation?
-			Key nextKey = key.equals(rel.getPrimaryKey()) ? (Key) rel
-					.getForeignKey() : (Key) rel.getPrimaryKey();
+			Key nextKey = rel.getOtherKey(key);
 
-			// Is the relation 1:M or M:1?
-			if (rel.getFKCardinality().equals(Cardinality.MANY)) {
+			// Is the relation M:M, 1:M or M:1?
+			if (!rel.isOneToOne()) {
 				// Yes, so work out which end we are at.
-				if (key instanceof ForeignKey) {
+				if (rel.isOneToMany() && rel.getManyKey().equals(key)) {
 					// Hit a 1:M from the M end.
-					// Add all subsequent relations, unless they are
+					// Add all subsequent relations, unless they are M:M, or
 					// 1:M with their 1 end at the 1 end of this relation.
 					for (Iterator j = nextKey.getTable().getRelations()
 							.iterator(); j.hasNext();) {
@@ -227,20 +224,21 @@ public class DataSet extends GenericSchema {
 						if (relationQueue.contains(rel2))
 							continue;
 						// Skip those 1:M ones with their 1 end at the 1 end of
-						// this relation.
-						if (rel2.getFKCardinality().equals(Cardinality.MANY)
-								&& rel2.getPrimaryKey().getTable().equals(
-										rel.getPrimaryKey().getTable()))
+						// this relation, and all M:M ones.
+						if (rel2.isManyToMany()
+								|| (rel2.isOneToMany() && rel2.getOneKey()
+										.getTable().equals(
+												rel.getOneKey().getTable())))
 							continue;
 						// Add the rest to the queue.
-						Key relationKey2 = rel2.getPrimaryKey().getTable()
-								.equals(nextKey.getTable()) ? (Key) rel2
-								.getPrimaryKey() : (Key) rel2.getForeignKey();
+						Key relationKey2 = rel2.getFirstKey().getTable()
+								.equals(nextKey.getTable()) ? rel2
+								.getFirstKey() : rel2.getSecondKey();
 						relationQueue.add(rel2);
 						relationKeyQueue.add(relationKey2);
 					}
 				} else {
-					// Hit a 1:M from the 1 end.
+					// Hit a 1:M from the 1 end, or an M:M from either end.
 					// Only add subsequent relations if this is a subclass
 					// relation.
 					if (this.subclassedRelations.contains(rel)) {
@@ -251,10 +249,9 @@ public class DataSet extends GenericSchema {
 							if (relationQueue.contains(rel2))
 								continue;
 							// Add the rest to the queue.
-							Key relationKey2 = rel2.getPrimaryKey().getTable()
-									.equals(nextKey.getTable()) ? (Key) rel2
-									.getPrimaryKey() : (Key) rel2
-									.getForeignKey();
+							Key relationKey2 = rel2.getFirstKey().getTable()
+									.equals(nextKey.getTable()) ? rel2
+									.getFirstKey() : rel2.getSecondKey();
 							relationQueue.add(rel2);
 							relationKeyQueue.add(relationKey2);
 						}
@@ -271,9 +268,9 @@ public class DataSet extends GenericSchema {
 					if (relationQueue.contains(rel2))
 						continue;
 					// Add the rest to the queue.
-					Key relationKey2 = rel2.getPrimaryKey().getTable().equals(
-							nextKey.getTable()) ? (Key) rel2.getPrimaryKey()
-							: (Key) rel2.getForeignKey();
+					Key relationKey2 = rel2.getFirstKey().getTable().equals(
+							nextKey.getTable()) ? rel2.getFirstKey() : rel2
+							.getSecondKey();
 					relationQueue.add(rel2);
 					relationKeyQueue.add(relationKey2);
 				}
@@ -465,17 +462,18 @@ public class DataSet extends GenericSchema {
 
 		// Check that the relation is a 1:M relation and that it is between
 		// the central table and some other table.
-		if (!(relation.getPrimaryKey().getTable().equals(this.centralTable) || relation
-				.getForeignKey().getTable().equals(this.centralTable)))
-			throw new AssociationException(BuilderBundle
-					.getString("subclassNotOnCentralTable"));
-		if (relation.getPrimaryKey().getTable().equals(
-				relation.getForeignKey().getTable()))
-			throw new AssociationException(BuilderBundle
-					.getString("subclassNotBetweenTwoTables"));
-		if (relation.getFKCardinality().equals(Cardinality.ONE))
+		if (!relation.isOneToMany()
+				|| relation.getCardinality().equals(Cardinality.ONE))
 			throw new AssociationException(BuilderBundle
 					.getString("subclassNotOneMany"));
+		if (!(relation.getFirstKey().getTable().equals(this.centralTable) || relation
+				.getSecondKey().getTable().equals(this.centralTable)))
+			throw new AssociationException(BuilderBundle
+					.getString("subclassNotOnCentralTable"));
+		if (relation.getFirstKey().getTable().equals(
+				relation.getSecondKey().getTable()))
+			throw new AssociationException(BuilderBundle
+					.getString("subclassNotBetweenTwoTables"));
 
 		// Check to see if there is already a M:1 subclass relation on the
 		// central table.
@@ -483,13 +481,13 @@ public class DataSet extends GenericSchema {
 		for (Iterator i = this.subclassedRelations.iterator(); i.hasNext()
 				&& !containsM1;) {
 			Relation r = (Relation) i.next();
-			if (r.getForeignKey().getTable().equals(this.centralTable))
+			if (r.getManyKey().getTable().equals(this.centralTable))
 				containsM1 = true;
 		}
 
 		// If an M:1 relation already exists, or any relation already exists and
 		// this new relation is M:1, throw a wobbly.
-		if (relation.getForeignKey().getTable().equals(this.centralTable)
+		if (relation.getManyKey().getTable().equals(this.centralTable)
 				&& (containsM1 || this.subclassedRelations.size() != 0))
 			throw new AssociationException(BuilderBundle
 					.getString("mixedCardinalitySubclasses"));
@@ -751,8 +749,8 @@ public class DataSet extends GenericSchema {
 				&& !found;) {
 			Relation r = (Relation) i.next();
 			if (this.getSubclassedRelations().contains(r)
-					&& r.getForeignKey().getTable().equals(centralTable)) {
-				centralTable = r.getPrimaryKey().getTable();
+					&& r.getManyKey().getTable().equals(centralTable)) {
+				centralTable = r.getOneKey().getTable();
 				found = true;
 			}
 		}
@@ -899,7 +897,7 @@ public class DataSet extends GenericSchema {
 		// Process the table. If a source relation was specified,
 		// ignore the cols in the key in the table that is part of that
 		// source relation, else they'll get duplicated. This will always
-		// be the FK end, as that's the only way we can get subclass and
+		// be the FK or many end, as that's the only way we can get subclass and
 		// dimension tables. This operation will populate the initial
 		// pairs in the normal, subclass and dimension queues. We only
 		// want dimensions constructed if we are not already constructing
@@ -907,7 +905,7 @@ public class DataSet extends GenericSchema {
 		this.processTable(dsTable, dsTablePKCols, realTable, normalQ,
 				subclassQ, dimensionQ, sourceRelation, relationsFollowed, !type
 						.equals(DataSetTableType.DIMENSION));
-
+		
 		// Process the normal queue. This merges tables into the dataset
 		// table using the relation specified in each pair in the queue.
 		for (int i = 0; i < normalQ.size(); i++) {
@@ -920,6 +918,20 @@ public class DataSet extends GenericSchema {
 					relationsFollowed, makeDimensions);
 		}
 
+
+		// If the primary key is empty, then we must create one, else we
+		// will run into trouble later. Therefore, all tables must contain
+		// unique rows.
+		if (dsTablePKCols.isEmpty()) {
+			// Create the PK by adding every wrapped column in the 
+			// dataset table. We don't care about concat-only columns
+			// as that would create primary key update hell.
+			for (Iterator i = dsTable.getColumns().iterator(); i.hasNext(); ) {
+				DataSetColumn dsCol = (DataSetColumn)i.next();
+				if (dsCol instanceof WrappedColumn) dsTablePKCols.add(dsCol);
+			}
+		}
+		
 		// Add a schema name column, if we are partitioning by schema name.
 		// If the table has a PK by this stage, add the schema name column
 		// to it, otherwise don't bother as it'll introduce unnecessary
@@ -938,8 +950,7 @@ public class DataSet extends GenericSchema {
 
 		// Create the primary key on this table.
 		try {
-			if (!dsTablePKCols.isEmpty())
-				dsTable.setPrimaryKey(new GenericPrimaryKey(dsTablePKCols));
+			dsTable.setPrimaryKey(new GenericPrimaryKey(dsTablePKCols));
 		} catch (Throwable t) {
 			throw new MartBuilderInternalError(t);
 		}
@@ -948,16 +959,25 @@ public class DataSet extends GenericSchema {
 		for (int i = 0; i < subclassQ.size(); i++) {
 			Relation subclassRelation = (Relation) subclassQ.get(i);
 			this.generateDataSetTable(DataSetTableType.MAIN_SUBCLASS, dsTable,
-					subclassRelation.getForeignKey().getTable(),
-					subclassRelation);
+					subclassRelation.getManyKey().getTable(), subclassRelation);
 		}
 
-		// Process the dimension relations of this table.
+		// Process the dimension relations of this table. For 1:M it's easy.
+		// For M:M, we have to work out which end is connected to the real
+		// table,
+		// then process the table at the other end of the relation.
 		for (int i = 0; i < dimensionQ.size(); i++) {
 			Relation dimensionRelation = (Relation) dimensionQ.get(i);
-			this.generateDataSetTable(DataSetTableType.DIMENSION, dsTable,
-					dimensionRelation.getForeignKey().getTable(),
-					dimensionRelation);
+			if (dimensionRelation.isOneToMany())
+				this.generateDataSetTable(DataSetTableType.DIMENSION, dsTable,
+						dimensionRelation.getManyKey().getTable(),
+						dimensionRelation);
+			else
+				this.generateDataSetTable(DataSetTableType.DIMENSION, dsTable,
+						dimensionRelation.getFirstKey().getTable().equals(
+								realTable) ? dimensionRelation.getSecondKey()
+								.getTable() : dimensionRelation.getFirstKey()
+								.getTable(), dimensionRelation);
 		}
 	}
 
@@ -972,9 +992,9 @@ public class DataSet extends GenericSchema {
 		// Did we get here via somewhere else?
 		if (sourceRelation != null) {
 			// Work out what key to ignore, if any.
-			ignoreKey = sourceRelation.getPrimaryKey().getTable().equals(
-					mergeTable) ? (Key) sourceRelation.getPrimaryKey()
-					: (Key) sourceRelation.getForeignKey();
+			ignoreKey = sourceRelation.getFirstKey().getTable().equals(
+					mergeTable) ? sourceRelation.getFirstKey() : sourceRelation
+					.getSecondKey();
 
 			// Add the relation to the list of relations followed for the table.
 			dsTable.getUnderlyingRelations().add(sourceRelation);
@@ -1023,9 +1043,9 @@ public class DataSet extends GenericSchema {
 			// between incorrect keys.
 			if (this.maskedRelations.contains(r)
 					|| r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
-					|| r.getPrimaryKey().getStatus().equals(
+					|| r.getFirstKey().getStatus().equals(
 							ComponentStatus.INFERRED_INCORRECT)
-					|| r.getForeignKey().getStatus().equals(
+					|| r.getSecondKey().getStatus().equals(
 							ComponentStatus.INFERRED_INCORRECT))
 				continue;
 
@@ -1039,9 +1059,10 @@ public class DataSet extends GenericSchema {
 					throw new MartBuilderInternalError(t);
 				}
 
-			// Are we at the 1 end of a 1:M?
-			else if (r.getPrimaryKey().getTable().equals(mergeTable)
-					&& r.getFKCardinality().equals(Cardinality.MANY)) {
+			// Are we at the 1 end of a 1:M, or at either end of a M:M?
+			else if (r.isManyToMany()
+					|| (r.isOneToMany() && r.getOneKey().getTable().equals(
+							mergeTable))) {
 
 				// Subclass subclassed relations, if we are currently
 				// building the main table of the dataset.
@@ -1050,8 +1071,8 @@ public class DataSet extends GenericSchema {
 					subclassQ.add(r);
 
 				// Dimensionize dimension relations, which are all other 1:M
-				// relations, if we are not constructing a dimension table,
-				// and are currently intending to construct dimensions.
+				// or M:M relations, if we are not constructing a dimension
+				// table, and are currently intending to construct dimensions.
 				else if (makeDimensions
 						&& !dsTable.getType()
 								.equals(DataSetTableType.DIMENSION))
@@ -1062,14 +1083,14 @@ public class DataSet extends GenericSchema {
 			// including dimensions, include them from the 1:1 as well.
 			// Otherwise, stop including dimensions on subsequent tables.
 			else
-				normalQ.add(new Object[] {
-						r,
-						(r.getPrimaryKey().getTable().equals(mergeTable) ? r
-								.getForeignKey().getTable() : r.getPrimaryKey()
-								.getTable()),
-						Boolean
-								.valueOf(makeDimensions
-										&& r.getFKCardinality().equals(
+				normalQ
+						.add(new Object[] {
+								r,
+								(r.getFirstKey().getTable().equals(mergeTable) ? r
+										.getSecondKey().getTable()
+										: r.getFirstKey().getTable()),
+								Boolean.valueOf(makeDimensions
+										&& r.getCardinality().equals(
 												Cardinality.ONE)) });
 		}
 	}

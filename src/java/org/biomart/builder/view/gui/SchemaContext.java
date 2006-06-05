@@ -47,7 +47,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * dataset onto a set of masked relations.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.15, 17th May 2006
+ * @version 0.1.16, 5th June 2006
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
@@ -347,9 +347,9 @@ public class SchemaContext implements DiagramContext {
 			});
 			cardGroup.add(oneToOne);
 			contextMenu.add(oneToOne);
-			if (relationIncorrect)
+			if (relationIncorrect || !relation.isCardinalityChangeable())
 				oneToOne.setEnabled(false);
-			if (relation.getFKCardinality().equals(Cardinality.ONE))
+			if (relation.getCardinality().equals(Cardinality.ONE))
 				oneToOne.setSelected(true);
 
 			// Set the relation to be 1:M, but only if it is correct.
@@ -366,9 +366,9 @@ public class SchemaContext implements DiagramContext {
 			});
 			cardGroup.add(oneToMany);
 			contextMenu.add(oneToMany);
-			if (relationIncorrect)
+			if (relationIncorrect || !relation.isCardinalityChangeable())
 				oneToMany.setEnabled(true);
-			if (relation.getFKCardinality().equals(Cardinality.MANY))
+			if (relation.getCardinality().equals(Cardinality.MANY))
 				oneToMany.setSelected(true);
 
 			// Separator.

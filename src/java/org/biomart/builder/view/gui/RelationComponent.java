@@ -34,14 +34,13 @@ import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 
 import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Relation.Cardinality;
 
 /**
  * This component represents a relation between two keys, in the form of a line.
  * The line is defined by the layout manager.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 2nd June 2006
+ * @version 0.1.13, 5th June 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
@@ -51,7 +50,8 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	 * Constant referring to the normal width of a relation line.
 	 */
 	public static final float RELATION_LINEWIDTH = 1.0f; // 72 = 1 inch at 72
-															// dpi
+
+	// dpi
 
 	/**
 	 * Constant referring to normal relation colour.
@@ -95,6 +95,13 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	 */
 	public static final Stroke ONE_ONE = new BasicStroke(
 			RelationComponent.RELATION_LINEWIDTH * 2.0f, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND);
+
+	/**
+	 * Constant defining our M:M stroke.
+	 */
+	public static final Stroke MANY_MANY = new BasicStroke(
+			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
 			BasicStroke.JOIN_ROUND);
 
 	private Shape shape;
@@ -144,25 +151,25 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	}
 
 	/**
-	 * Returns the diagram component representing the primary key end of this
+	 * Returns the diagram component representing the first end of this
 	 * relation.
 	 * 
-	 * @return the diagram component for the PK end.
+	 * @return the diagram component for the first end.
 	 */
-	public KeyComponent getPrimaryKeyComponent() {
+	public KeyComponent getFirstKeyComponent() {
 		return (KeyComponent) this.diagram.getDiagramComponent(this.relation
-				.getPrimaryKey());
+				.getFirstKey());
 	}
 
 	/**
-	 * Returns the diagram component representing the foreign key end of this
+	 * Returns the diagram component representing the second end of this
 	 * relation.
 	 * 
-	 * @return the diagram component for the FK end.
+	 * @return the diagram component for the second end.
 	 */
-	public KeyComponent getForeignKeyComponent() {
+	public KeyComponent getSecondKeyComponent() {
 		return (KeyComponent) this.diagram.getDiagramComponent(this.relation
-				.getForeignKey());
+				.getSecondKey());
 	}
 
 	public Diagram getDiagram() {
@@ -170,10 +177,6 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	}
 
 	public Object getObject() {
-		return this.relation;
-	}
-
-	private Relation getRelation() {
 		return this.relation;
 	}
 
@@ -234,10 +237,12 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	}
 
 	private Stroke getStroke() {
-		if (this.getRelation().getFKCardinality().equals(Cardinality.MANY))
-			return RelationComponent.ONE_MANY;
-		else
+		if (this.relation.isOneToOne())
 			return RelationComponent.ONE_ONE;
+		else if (this.relation.isManyToMany())
+			return RelationComponent.MANY_MANY;
+		else
+			return RelationComponent.ONE_MANY;
 	}
 
 	protected void paintComponent(Graphics g) {

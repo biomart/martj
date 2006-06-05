@@ -21,6 +21,7 @@ package org.biomart.builder.view.gui;
 import java.awt.AWTEvent;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -58,10 +59,12 @@ import org.biomart.builder.resources.BuilderBundle;
  * what those items should be.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.18, 2nd June 2006
+ * @version 0.1.19, 5th June 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
+	private boolean contextChanged = false;
+	
 	private DiagramContext diagramContext;
 
 	private DataSetTabSet datasetTabSet;
@@ -298,11 +301,19 @@ public abstract class Diagram extends JPanel {
 	public void setDiagramContext(DiagramContext diagramContext) {
 		// Apply it to ourselves.
 		this.diagramContext = diagramContext;
+		this.contextChanged = true;
+	}
 
-		// Use it straight away to update the appearance of all our
-		// components.
-		for (Iterator i = this.componentMap.values().iterator(); i.hasNext();)
-			((DiagramComponent) i.next()).updateAppearance();
+	protected void paintComponent(Graphics g) {
+		// If the context has changed since last time we
+		// painted anything, update all our components
+		// appearance first.
+		if (this.contextChanged) {
+			this.repaintDiagram();
+			this.contextChanged = false;
+		}
+		// Now, repaint as normal.
+		super.paintComponent(g);
 	}
 
 	/**

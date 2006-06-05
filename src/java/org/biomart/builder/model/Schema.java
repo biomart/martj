@@ -52,7 +52,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * with keeping track of the tables a schema provides.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 1st June 2006
+ * @version 0.1.12, 5th June 2006
  * @since 0.1
  */
 public interface Schema extends Comparable, DataLink {
@@ -319,32 +319,48 @@ public interface Schema extends Comparable, DataLink {
 			for (Iterator i = relations.iterator(); i.hasNext();) {
 				Relation r = (Relation) i.next();
 
-				// Work out the primary, foreign key and cardinality of
+				// Work out the keys and cardinality of
 				// the existing relation.
-				PrimaryKey pk = r.getPrimaryKey();
-				ForeignKey fk = r.getForeignKey();
-				Cardinality card = r.getFKCardinality();
+				Key firstKey = r.getFirstKey();
+				Key secondKey = r.getSecondKey();
+				Cardinality card = r.getCardinality();
 
-				// Find the equivalent PK in the duplicate table
-				// by comparing table names.
-				PrimaryKey newPK = targetSchema.getTableByName(
-						pk.getTable().getName()).getPrimaryKey();
-
-				// Find the equivalent FK in the duplicate table by
-				// comparing table names and sets of column names.
-				ForeignKey newFK = null;
+				// Find the equivalent keys in the duplicate table
+				// by comparing table names and sets of column names.
+				Key newFirstKey = null;
 				for (Iterator j = targetSchema.getTableByName(
-						fk.getTable().getName()).getForeignKeys().iterator(); j
+						firstKey.getTable().getName()).getKeys().iterator(); j
 						.hasNext()
-						&& newFK == null;) {
-					ForeignKey candidate = (ForeignKey) j.next();
-					if (candidate.getColumnNames().equals(fk.getColumnNames()))
-						newFK = candidate;
+						&& newFirstKey == null;) {
+					Key candidate = (Key) j.next();
+					if (candidate.getColumnNames().equals(
+							firstKey.getColumnNames()))
+						newFirstKey = candidate;
+				}
+				Key newSecondKey = null;
+				for (Iterator j = targetSchema.getTableByName(
+						secondKey.getTable().getName()).getKeys().iterator(); j
+						.hasNext()
+						&& newSecondKey == null;) {
+					Key candidate = (Key) j.next();
+					if (candidate.getColumnNames().equals(
+							secondKey.getColumnNames()))
+						newSecondKey = candidate;
+				}
+
+				// If one or the other is external, set the external key
+				// appropriately to the existing key.
+				if (r.isExternal()) {
+					if (newFirstKey == null)
+						newFirstKey = firstKey;
+					else
+						newSecondKey = secondKey;
 				}
 
 				// Create the relation in the duplicate schema.
 				try {
-					Relation newRel = new GenericRelation(newPK, newFK, card);
+					Relation newRel = new GenericRelation(newFirstKey,
+							newSecondKey, card);
 					newRel.setStatus(r.getStatus());
 				} catch (Exception e) {
 					// Ignore. This can only happen if incorrect relations are
@@ -432,11 +448,10 @@ public interface Schema extends Comparable, DataLink {
 			Collection relations = this.getExternalRelations();
 			for (Iterator i = relations.iterator(); i.hasNext();) {
 				Relation relation = (Relation) i.next();
-				if (relation.getPrimaryKey().getTable().getSchema()
-						.equals(this))
-					keys.add(relation.getPrimaryKey());
+				if (relation.getFirstKey().getTable().getSchema().equals(this))
+					keys.add(relation.getFirstKey());
 				else
-					keys.add(relation.getForeignKey());
+					keys.add(relation.getSecondKey());
 			}
 			return keys;
 		}
@@ -452,8 +467,7 @@ public interface Schema extends Comparable, DataLink {
 				for (Iterator j = table.getPrimaryKey().getRelations()
 						.iterator(); j.hasNext();) {
 					Relation relation = (Relation) j.next();
-					if (relation.getForeignKey().getTable().getSchema().equals(
-							this))
+					if (!relation.isExternal())
 						relations.add(relation);
 				}
 			}
@@ -471,11 +485,8 @@ public interface Schema extends Comparable, DataLink {
 					for (Iterator l = key.getRelations().iterator(); l
 							.hasNext();) {
 						Relation relation = (Relation) l.next();
-						if (!(relation.getPrimaryKey().getTable().getSchema()
-								.equals(this) && relation.getForeignKey()
-								.getTable().getSchema().equals(this))) {
+						if (relation.isExternal())
 							relations.add(relation);
-						}
 					}
 				}
 			}

@@ -29,16 +29,20 @@ import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * <p>
- * A relation represents the association betwen a primary key and a foreign key.
- * Both keys must have the same number of columns, and the related columns must
- * appear in the same order in both keys. If they do not, then results may be
- * unpredictable.
+ * A relation represents the association between two keys. If they are both
+ * primary keys, then it is a 1:1 relation. If they are both foreign keys, then
+ * it is a M:M relation. If they are one of each, then it is either 1:M or 1:1,
+ * depending on user choice.
+ * <p>
+ * Both keys must have the same number of columns, and the related columns
+ * should appear in the same order in both keys. If they do not, then results
+ * may be unpredictable.
  * <p>
  * An {@link GenericRelation} class is provided to form the basic functionality
  * outlined above.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 16th May 2006
+ * @version 0.1.8, 5th June 2006
  * @since 0.1
  */
 public interface Relation extends Comparable {
@@ -71,39 +75,114 @@ public interface Relation extends Comparable {
 	public void setStatus(ComponentStatus status) throws AssociationException;
 
 	/**
-	 * Returns the primary key of this relation.
+	 * Returns the first key of this relation.
 	 * 
-	 * @return the primary key
+	 * @return the first key.
 	 */
-	public PrimaryKey getPrimaryKey();
+	public Key getFirstKey();
 
 	/**
-	 * Returns the foreign key of this relation.
+	 * Returns the second key of this relation.
 	 * 
-	 * @return the foreign key
+	 * @return the second key.
 	 */
-	public ForeignKey getForeignKey();
+	public Key getSecondKey();
 
 	/**
-	 * Returns the cardinality of the foreign key end of this relation.
+	 * Given a key that is in this relationship, return the other key.
 	 * 
-	 * @return the cardinality.
+	 * @param key
+	 *            the key we know is in this relationship.
+	 * @return the other key in this relationship.
+	 * @throws IllegalArgumentException
+	 *             if the key specified is not in this relationship.
 	 */
-	public Cardinality getFKCardinality();
+	public Key getOtherKey(Key key) throws IllegalArgumentException;
 
 	/**
-	 * Sets the cardinality of the foreign key end of this relation.
+	 * In a 1:M relation, this will return the M end of the relation. In all
+	 * other relation types, this will return <tt>null</tt>.
+	 * 
+	 * @return the key at the many end of the relation, or <tt>null</tt> if
+	 *         this is not a 1:M relation.
+	 */
+	public Key getManyKey();
+
+	/**
+	 * In a 1:M relation, this will return the 1 end of the relation. In all
+	 * other relation types, this will return <tt>null</tt>.
+	 * 
+	 * @return the key at the one end of the relation, or <tt>null</tt> if
+	 *         this is not a 1:M relation.
+	 */
+	public Key getOneKey();
+
+	/**
+	 * Returns the cardinality of the foreign key end of this relation, in a 1:M
+	 * relation. In 1:1 relations this will always return 1, and in M:M
+	 * relations this will always return M.
+	 * 
+	 * @return the cardinality of the foreign key end of this relation, in 1:M
+	 *         relations only. Otherwise determined by the relation type.
+	 */
+	public Cardinality getCardinality();
+
+	/**
+	 * Sets the cardinality of the foreign key end of this relation, in a 1:M
+	 * relation. In 1:1 and M:M relations, this should not be used as it is not
+	 * necessary, and will be ignored.
 	 * 
 	 * @param cardinality
 	 *            the cardinality.
 	 */
-	public void setFKCardinality(Cardinality cardinality);
+	public void setCardinality(Cardinality cardinality);
+
+	/**
+	 * Returns <tt>true</tt> if {@link #setCardinality(Cardinality)} will take
+	 * any action if called.
+	 * 
+	 * @return <tt>true</tt> is the cardinality is changeable, <tt>false</tt>
+	 *         if not.
+	 */
+	public boolean isCardinalityChangeable();
 
 	/**
 	 * Deconstructs the relation by removing references to itself from the keys
 	 * at both ends.
 	 */
 	public void destroy();
+
+	/**
+	 * Returns <tt>true</tt> if this is a 1:1 relation.
+	 * 
+	 * @return <tt>true</tt> if this is a 1:1 relation, <tt>false</tt>
+	 *         otherwise.
+	 */
+	public boolean isOneToOne();
+
+	/**
+	 * Returns <tt>true</tt> if this is a 1:M relation.
+	 * 
+	 * @return <tt>true</tt> if this is a 1:M relation, <tt>false</tt>
+	 *         otherwise.
+	 */
+	public boolean isOneToMany();
+
+	/**
+	 * Returns <tt>true</tt> if this is a M:M relation.
+	 * 
+	 * @return <tt>true</tt> if this is a M:M relation, <tt>false</tt>
+	 *         otherwise.
+	 */
+	public boolean isManyToMany();
+
+	/**
+	 * Returns <tt>true</tt> if this relation involves keys in two separate
+	 * schemas. Those that do are external, those that don't are not.
+	 * 
+	 * @return <tt>true</tt> if this is external, <tt>false</tt> otherwise.
+	 */
+	public boolean isExternal();
 
 	/**
 	 * This internal singleton class represents the cardinality of a foreign key
@@ -195,9 +274,9 @@ public interface Relation extends Comparable {
 	 * keys at both ends have the same number of columns.
 	 */
 	public class GenericRelation implements Relation {
-		private final PrimaryKey primaryKey;
+		private final Key firstKey;
 
-		private final ForeignKey foreignKey;
+		private final Key secondKey;
 
 		private Cardinality cardinality;
 
@@ -208,58 +287,72 @@ public interface Relation extends Comparable {
 		 * the same number of columns. The default constructor sets the status
 		 * to {@link ComponentStatus#INFERRED}.
 		 * 
-		 * @param primaryKey
-		 *            the primary key.
-		 * @param foreignKey
-		 *            the foreign key.
+		 * @param key
+		 *            the first key.
+		 * @param key
+		 *            the second key.
 		 * @param cardinality
-		 *            the cardinality of the foreign key.
+		 *            the cardinality of the foreign key end of this relation,
+		 *            if the relation is 1:M. Otherwise defaults to 1 for a 1:1
+		 *            relation, and M for a M:M relation.
 		 * @throws AssociationException
 		 *             if the number of columns in the keys don't match, or if
-		 *             the relation already exists, or if some other valid
-		 *             relation exists from the specified foreign key.
+		 *             the relation already exists, or if one of the keys is a
+		 *             foreign key which already has a valid relation elsewhere.
 		 */
-		public GenericRelation(PrimaryKey primaryKey, ForeignKey foreignKey,
+		public GenericRelation(Key firstKey, Key secondKey,
 				Cardinality cardinality) throws AssociationException {
 			// Check the keys have the same number of columns.
-			if (primaryKey.countColumns() != foreignKey.countColumns())
+			if (firstKey.countColumns() != secondKey.countColumns())
 				throw new AssociationException(BuilderBundle
 						.getString("keyColumnCountMismatch"));
 
 			// Remember the keys etc.
-			this.primaryKey = primaryKey;
-			this.foreignKey = foreignKey;
-			this.cardinality = cardinality;
+			this.firstKey = firstKey;
+			this.secondKey = secondKey;
+			this.setCardinality(cardinality);
 			this.status = ComponentStatus.INFERRED;
 
 			// Check the relation doesn't already exist.
-			if (primaryKey.getRelations().contains(this))
+			if (firstKey.getRelations().contains(this))
 				throw new AssociationException(BuilderBundle
 						.getString("relationAlreadyExists"));
 
-			// Check that the foreign key end doesn't have an active relation
+			// Check that any foreign key doesn't have an active relation
 			// elsewhere.
 			boolean fkHasOtherRel = false;
-			for (Iterator i = foreignKey.getRelations().iterator(); i.hasNext()
-					&& !fkHasOtherRel;) {
-				Relation r = (Relation) i.next();
-				if (!r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
-					fkHasOtherRel = true;
-			}
+			if (firstKey instanceof ForeignKey)
+				for (Iterator i = firstKey.getRelations().iterator(); i
+						.hasNext()
+						&& !fkHasOtherRel;) {
+					Relation r = (Relation) i.next();
+					if (!r.getStatus().equals(
+							ComponentStatus.INFERRED_INCORRECT))
+						fkHasOtherRel = true;
+				}
+			if (secondKey instanceof ForeignKey)
+				for (Iterator i = secondKey.getRelations().iterator(); i
+						.hasNext()
+						&& !fkHasOtherRel;) {
+					Relation r = (Relation) i.next();
+					if (!r.getStatus().equals(
+							ComponentStatus.INFERRED_INCORRECT))
+						fkHasOtherRel = true;
+				}
 			if (fkHasOtherRel)
 				throw new AssociationException(BuilderBundle
 						.getString("fkHasMultiplePKs"));
 
 			// Add ourselves to the keys at both ends.
-			primaryKey.addRelation(this);
-			foreignKey.addRelation(this);
+			firstKey.addRelation(this);
+			secondKey.addRelation(this);
 		}
 
 		public String getName() {
 			StringBuffer sb = new StringBuffer();
-			sb.append(this.getPrimaryKey().toString());
+			sb.append(this.getFirstKey().toString());
 			sb.append(":");
-			sb.append(this.getForeignKey().toString());
+			sb.append(this.getSecondKey().toString());
 			return sb.toString();
 		}
 
@@ -274,7 +367,7 @@ public interface Relation extends Comparable {
 			// columns each.
 			if (!status.equals(ComponentStatus.INFERRED_INCORRECT)) {
 				// Check both keys have same cardinality.
-				if (this.primaryKey.countColumns() != this.foreignKey
+				if (this.firstKey.countColumns() != this.secondKey
 						.countColumns())
 					throw new AssociationException(BuilderBundle
 							.getString("keyColumnCountMismatch"));
@@ -284,25 +377,80 @@ public interface Relation extends Comparable {
 			this.status = status;
 		}
 
-		public PrimaryKey getPrimaryKey() {
-			return this.primaryKey;
+		public Key getFirstKey() {
+			return this.firstKey;
 		}
 
-		public ForeignKey getForeignKey() {
-			return this.foreignKey;
+		public Key getSecondKey() {
+			return this.secondKey;
 		}
 
-		public Cardinality getFKCardinality() {
+		public Key getOtherKey(Key key) throws IllegalArgumentException {
+			if (key.equals(this.firstKey))
+				return this.secondKey;
+			else if (key.equals(this.secondKey))
+				return this.firstKey;
+			else
+				throw new IllegalArgumentException(BuilderBundle
+						.getString("keyNotInRel"));
+		}
+
+		public Key getManyKey() {
+			if (!this.isOneToMany())
+				return null;
+			// The many end is the foreign key end.
+			return (this.firstKey instanceof ForeignKey) ? this.firstKey
+					: this.secondKey;
+		}
+
+		public Key getOneKey() {
+			if (!this.isOneToMany())
+				return null;
+			// The one end is the primary key end.
+			return (this.firstKey instanceof PrimaryKey) ? this.firstKey
+					: this.secondKey;
+		}
+
+		public Cardinality getCardinality() {
 			return this.cardinality;
 		}
 
-		public void setFKCardinality(Cardinality cardinality) {
+		public void setCardinality(Cardinality cardinality) {
+			if ((this.firstKey instanceof PrimaryKey)
+					&& (this.secondKey instanceof PrimaryKey))
+				cardinality = Cardinality.ONE;
+			else if ((this.firstKey instanceof ForeignKey)
+					&& (this.secondKey instanceof ForeignKey))
+				cardinality = Cardinality.MANY;
 			this.cardinality = cardinality;
 		}
 
+		public boolean isCardinalityChangeable() {
+			return !this.firstKey.getClass().equals(this.secondKey.getClass());
+		}
+
 		public void destroy() {
-			this.getPrimaryKey().removeRelation(this);
-			this.getForeignKey().removeRelation(this);
+			this.firstKey.removeRelation(this);
+			this.secondKey.removeRelation(this);
+		}
+
+		public boolean isOneToOne() {
+			return this.cardinality.equals(Cardinality.ONE);
+		}
+
+		public boolean isOneToMany() {
+			return this.cardinality.equals(Cardinality.MANY)
+					&& !this.isManyToMany();
+		}
+
+		public boolean isManyToMany() {
+			return (this.firstKey instanceof ForeignKey)
+					&& (this.secondKey instanceof ForeignKey);
+		}
+
+		public boolean isExternal() {
+			return !this.firstKey.getTable().getSchema().equals(
+					this.secondKey.getTable().getSchema());
 		}
 
 		public String toString() {
