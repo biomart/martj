@@ -120,7 +120,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             			if (template != null){
             				// import template
             				//config = MartEditor.getDatabaseDatasetConfigUtils().getTemplateConfig(template);
-            				config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template);
+            				config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"");
             				MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(config,
             					MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template));
             				config.setTemplateFlag("1");	
@@ -157,7 +157,6 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
         
         	// convert config to latest version using xslt
         	config = MartEditor.getDatabaseDatasetConfigUtils().getUpdatedConfig(config);
-        
         
 			this.setTitle(schema + "." + config.getDataset());
             JFrame.setDefaultLookAndFeelDecorated(true);

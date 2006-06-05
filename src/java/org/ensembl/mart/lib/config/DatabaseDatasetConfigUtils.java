@@ -58,6 +58,7 @@ import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.util.ColumnDescription;
 import org.ensembl.mart.util.TableDescription;
 import org.jdom.Document;
+import org.jdom.Element;
 import org.jdom.output.DOMOutputter;
 import org.jdom.output.XMLOutputter;
 import org.jdom.transform.JDOMResult;
@@ -1589,7 +1590,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 
   public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig, int storeFlag) throws ConfigurationException, SQLException{
 	String template = dsConfig.getTemplate();
-	DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template);
+	DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"");
 	dscutils.loadDatasetConfigWithDocument(templateConfig,getTemplateDocument(template));
 
 	System.out.println("!!! - UPDATING CONFIG TO TEMPLATE:"+dsConfig.getDataset());	
@@ -2467,7 +2468,7 @@ public int templateCount(String template) throws ConfigurationException{
 		// always set internalName of dataset to default - not really used anywhere now
 		// internalName can probably be safely removed from DatasetConfig or at least from constructor
         DatasetConfig dsv = new DatasetConfig("default", dname, dset, description, type, visible,"",version,"",
-        	datasetID,modified,martUsers,interfaces,"","");
+        	datasetID,modified,martUsers,interfaces,"","","");
         dsv.setMessageDigest(digest);
         
         HashMap userMap = (HashMap) configInfo.get(user);
@@ -2719,25 +2720,22 @@ public int templateCount(String template) throws ConfigurationException{
 	  try{	
 		System.out.println("CONVERTING CONFIG TO "+SOFTWAREVERSION);
 		Document sourceDoc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(config);
+		//Element thisElement = sourceDoc.getRootElement();
+		//String template = thisElement.getAttributeValue("template", "");
+		//System.out.println("ORIGINAL DOC HAS "+template);
+		
 		InputStream xsl = this.getClass().getClassLoader().getResourceAsStream(XSL_FILE);
 		Transformer transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(xsl));      
 		JDOMResult out = new JDOMResult();
 		transformer.transform(new JDOMSource(sourceDoc),out);
         Document resultDoc = out.getDocument();
-        
-		//dscutils.loadDatasetConfigWithDocument(config,resultDoc);// creates duplication of all pages etc
-		//return config;	
-		
-		//DatasetConfig newConfig = dscutils.getDatasetConfigForDocument(resultDoc);//error as no adaptor
-		// if do newConfig.setDSConfigAdaptor(config.getAdaptor()); lose changes
-		//return newConfig;
-		
-		// works but blank settings for DatasetConfig
+        	
 		DatasetConfig newConfig = new DatasetConfig(config.getInternalName(),config.getDisplayName(),config.getDataset(),config.getDescription(), 
 			config.getType(),config.getVisible(),config.getVisibleFilterPage(),config.getVersion(),config.getOptionalParameter(), 
 			config.getDefaultDataset(),config.getDatasetID(),config.getModified(),config.getMartUsers(),config.getInterfaces(),
-			config.getprimaryKeyRestriction(),config.getTemplate());
+			config.getprimaryKeyRestriction(),config.getTemplate(),SOFTWAREVERSION);
 		dscutils.loadDatasetConfigWithDocument(newConfig,resultDoc);
+		newConfig.setTemplate(config.getTemplate());//hack as for some reason sourceDoc has template set to dataset and hence lose true template
 		return newConfig;
 									
 	  }
@@ -4871,84 +4869,6 @@ public int templateCount(String template) throws ConfigurationException{
     return retList;
   }
 
-  /**
-   * Returns a String[] of potential lookup tables from a given Mart Compliant database, hosted on a
-   * given RDBMS, constrained to an (optional) dataset.
-   * @param databaseName -- name of the RDBMS instance to search for potential tables
-   * @param datasetName -- name of the dataset to constrain the search (can be a result of getNaiveDatasetNamesFor, or null)
-   * @return String[] of potential lookup table names
-   * @throws SQLException
-   */
-  
-  
-  /**
-  
-  public String[] getNaiveLookupTablesFor(String databaseName, String datasetName) throws SQLException {
-    //want sorted entries, dont need to worry about duplicates
-    Set potentials = new TreeSet();
-
-    Connection conn = dsource.getConnection();
-
-    DatabaseMetaData dmd = conn.getMetaData();
-
-    //Note: currently this isnt cross platform,
-    //as some RDBMS capitalize all names of tables
-    //Either need to find a capitalization scheme general
-    //to all RDBMS, or search for both MAIN and main
-    //and force intermart consistency of capitalization for
-    //those RDBMS which allow users freedom to capitalize as
-    //they see fit. Currently does the latter.
-    //String tablePattern = (datasetName != null) ? datasetName + "%" : "%";
-
-    String tablePattern = "%";
-
-    tablePattern += LOOKUPTABLESUFFIX;
-    String capTablePattern = tablePattern.toUpperCase();
-
-    //get all lookup tables
-    //first search for tablePattern    
-    ResultSet rsTab = dmd.getTables(null, databaseName, tablePattern, null);
-
-    while (rsTab.next()) {
-      String tableName = rsTab.getString(3);
-      potentials.add(tableName);
-    }
-    rsTab.close();
-
-    //now try capitals, should NOT get mixed results
-    rsTab = dmd.getTables(null, databaseName, capTablePattern, null);
-    while (rsTab.next()) {
-      String tableName = rsTab.getString(3);
-
-      if (!potentials.contains(tableName))
-        potentials.add(tableName);
-    }
-    rsTab.close();
-    conn.close();
-
-    // String tablePattern = (datasetName != null) ? datasetName + "%" : "%"; 
-
-    String[] potList = new String[potentials.size()];
-    potentials.toArray(potList);
-
-    Set finals = new TreeSet();
-
-    for (int k = 0; k < potList.length; k++) {
-
-      String pat = potList[k].split("__")[0];
-      if (pat.equals("global") || datasetName.matches(pat + ".*")) {
-        finals.add(potList[k]);
-      }
-
-    }
-
-    String[] retList = new String[finals.size()];
-    finals.toArray(retList);
-    return retList;
-  }
-
-*/
-
 
   /**
    * Returns a TableDescription object describing a particular table in a given database,
@@ -5003,7 +4923,7 @@ public int templateCount(String template) throws ConfigurationException{
 	Timestamp tstamp = new Timestamp(System.currentTimeMillis());
 	Connection conn = dsource.getConnection();
 
-    DatasetConfig dsv = new DatasetConfig("default",datasetName,datasetName,"","TableSet","1","","","","",tstamp.toString(),"default","default","",datasetName);
+    DatasetConfig dsv = new DatasetConfig("default",datasetName,datasetName,"","TableSet","1","","","","",tstamp.toString(),"default","default","",datasetName,SOFTWAREVERSION);
 
     AttributePage ap = new AttributePage();
     ap.setInternalName("naive_attributes");

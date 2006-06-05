@@ -236,7 +236,7 @@ public class DatasetConfigXMLUtils {
 	if (primaryKeyRestriction.length() > 0)
 	   dsv.setPrimaryKeyRestriction(primaryKeyRestriction);  
     
-	if (template.length() > 0)
+    if (template.length() > 0)
 	   dsv.setTemplate(template);  
       
 	if (defParam.length() > 0)

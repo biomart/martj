@@ -62,6 +62,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   private final String interfacesKey="interfaces";
   private final String primaryKeyRestrictionKey="primaryKeyRestriction";
   private final String templateKey="template";
+  private final String softwareVersionKey="softwareVersion";
   
   private int[] reqFields = {0,3,4,5};// rendered red in AttributeTable
   
@@ -210,6 +211,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(interfacesKey, null);
 	setAttribute(primaryKeyRestrictionKey, null);
 	setAttribute(templateKey, null);
+	setAttribute(softwareVersionKey, null);
 	setRequiredFields(reqFields);
   }
 
@@ -242,7 +244,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     //super(internalName, displayName, description);
     
     
-	this(internalName, displayName, dataset, description, "", "0", "", "", "", "","","","","","");
+	this(internalName, displayName, dataset, description, "", "0", "", "", "", "","","","","","","");
 
     //if (dataset == null)
     //  throw new ConfigurationException("DatasetConfig objects must contain a dataset\n");
@@ -263,10 +265,10 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public DatasetConfig(String internalName, String displayName, String dataset, String description, 
   		String type, String pub, String visibleFilterPage, String version, String optParam, String datasetID, 
-  		String modified, String martUsers, String interfaces,String primaryKeyRestriction,String template)
+  		String modified, String martUsers, String interfaces,String primaryKeyRestriction,String template,String softwareVersion)
   throws ConfigurationException {
     this(internalName, displayName, dataset, description, type, pub, visibleFilterPage, version, null, null, 
-    	datasetID,modified,martUsers,interfaces,primaryKeyRestriction,template);
+    	datasetID,modified,martUsers,interfaces,primaryKeyRestriction,template,softwareVersion);
   }
   
   
@@ -287,7 +289,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   public DatasetConfig(String internalName, String displayName, String dataset, String description, 
   		String type, String pub, String visibleFilterPage, String version, String optParameters, 
   		String defaultDataset,String datasetID,String modified, String martUsers,String interfaces,
-  		String primaryKeyRestriction,String template)
+  		String primaryKeyRestriction,String template, String softwareVersion)
 		throws ConfigurationException {
 		
 	super(internalName, displayName, description);
@@ -305,9 +307,11 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(martUsersKey,martUsers);
 	setAttribute(interfacesKey,interfaces);
 	setAttribute(primaryKeyRestrictionKey,primaryKeyRestriction);
+	
 	if (template.equals(""))
 		template = dataset;//always have at least 1:1 mapping of dataset to template
 	setAttribute(templateKey,template);
+	setAttribute(softwareVersionKey,softwareVersion);
 	setRequiredFields(reqFields);
   }
   
@@ -400,6 +404,14 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   
   public String getTemplate (){
 	return attributes.getProperty(templateKey);
+  }
+  
+  public void setSoftwareVersion(String version) {
+	setAttribute(softwareVersionKey, version);
+  }
+  
+  public String getSoftWareVersion (){
+	return attributes.getProperty(softwareVersionKey);
   }
   
   /**
