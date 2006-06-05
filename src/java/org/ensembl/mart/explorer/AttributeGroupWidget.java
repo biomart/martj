@@ -145,34 +145,50 @@ private InputPage[] getAttributeWidgets(AttributeCollection collection, AdaptorM
             
         	if (dname.compareTo(main_dataset) == 0) /// check if its  a self pointing place holder
         	{        		     		
+        		// getting the page from xml which contains this attribute, could be more than one pages, here we get the first 1
         		AttributePage  attpage_PH = dsv.getPageForAttribute(aname);
-        		AttributeCollection collection_PH = attpage_PH.getCollectionForAttributeDescription(aname);  		        		
-
-        		List attributeDescriptions_PH = collection_PH.getAttributeDescriptions();
-        	    
-        		List pages_PH = new ArrayList();
-
-        	    for (Iterator iter_PH = attributeDescriptions_PH.iterator(); iter_PH.hasNext();) 
-        	    {
-        	      Object element_PH = iter_PH.next();
-        	      
-        	      if (element_PH instanceof AttributeDescription) 
-        	      {
-
-        	        AttributeDescription a_PH = (AttributeDescription) element_PH;
-        	        if (tree.skipConfigurationObject(a_PH)) continue;
-        	       
-        	        if(a_PH.getInternalName().compareTo(aname) == 0) // means same
-        	        {
-        	            a.setInternalName(a_PH.getInternalName());
-	        	        a.setDisplayName(a_PH.getDisplayName());
-	        	        a.setField(a_PH.getField());
-	        	        a.setTableConstraint(a_PH.getTableConstraint());	        	 
-	        	        a.setKey(a_PH.getKey());
-	        	        break;
-        	        }
-        	      }
-        	    }
+        		
+        		if (attpage_PH != null) // snp_mart_* caused problems due to some errros in XML        		
+        		{
+        			AttributeCollection collection_PH = attpage_PH.getCollectionForAttributeDescription(aname);  		        		
+	        			
+	        		List attributeDescriptions_PH = collection_PH.getAttributeDescriptions();
+	        	    
+	        		List pages_PH = new ArrayList();
+	
+	        	    for (Iterator iter_PH = attributeDescriptions_PH.iterator(); iter_PH.hasNext();) 
+	        	    {
+	        	      Object element_PH = iter_PH.next();
+	        	      
+	        	      if (element_PH instanceof AttributeDescription) 
+	        	      {
+	
+	        	        AttributeDescription a_PH = (AttributeDescription) element_PH;
+	        	        if (tree.skipConfigurationObject(a_PH)) continue;
+	        	       
+	        	        if(a_PH.getInternalName().compareTo(aname) == 0) // means same
+	        	        {
+	        	            a.setInternalName(a_PH.getInternalName());
+		        	        a.setDisplayName(a_PH.getDisplayName());
+		        	        a.setField(a_PH.getField());
+		        	        a.setTableConstraint(a_PH.getTableConstraint());	        	 
+		        	        a.setKey(a_PH.getKey());
+		        	       
+		        	        break;
+	        	        }
+	        	      }
+	        	    }
+        		}
+        		else
+        		{
+        			// else placed specially for snps_mart_38, where some self pointing place holders points to nowhere
+        			a.setInternalName(aname);
+        	        a.setDisplayName(aname);
+        	        a.setHidden("true");
+        			a.setDisplay("true"); // means hideDisplay = true
+        			
+        			
+        		}
         	}                 	
         	else 
         	{
