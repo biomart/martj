@@ -1322,7 +1322,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
       FilterPage page = (FilterPage) iter.next();
 
       if (page.containsFilterDescription(internalName))
-        return page;
+        	return page;
     }
     return null;
   }

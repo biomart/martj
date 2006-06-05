@@ -218,8 +218,7 @@ public class FilterPage extends BaseNamedConfigurationObject {
 		* @return boolean, true if found, false if not.
 		*/
 	public boolean containsFilterDescription(String internalName) {
-		boolean contains = false;
-
+		boolean contains = false;	
 		if (lastFilt == null) {
 			if ( ( internalName.indexOf(".") > 0 ) && !( internalName.endsWith(".") ) ) {
 				String[] refs = internalName.split("\\.");
@@ -230,7 +229,6 @@ public class FilterPage extends BaseNamedConfigurationObject {
 			if (!contains) {
 				for (Iterator iter = (Iterator) filterGroups.iterator(); iter.hasNext();) {
 					Object group = iter.next();
-
 					if (group instanceof FilterGroup && ((FilterGroup) group).containsFilterDescription(internalName)) {
 						lastFilt = ((FilterGroup) group).getFilterDescriptionByInternalName(internalName);
 						contains = true;
@@ -238,17 +236,18 @@ public class FilterPage extends BaseNamedConfigurationObject {
 					}
 				}
 			}
-		} else {
+		}
+		else {
 			if (lastFilt.getInternalName().equals(internalName))
 				contains = true;
-		  else if (lastFilt.containsOption(internalName))
-		    contains = true;
-		  else if ( ( internalName.indexOf(".") > 0 ) && !(internalName.endsWith(".")) && lastFilt.getInternalName().equals(internalName.split("\\.")[1]))
-		    contains = true;
-		  else if (lastFilt.getInternalName().matches("\\w+\\." + internalName)){
-			 contains = true;
-			 internalName = lastFilt.getInternalName();  
-		  }  
+		  	else if (lastFilt.containsOption(internalName))
+		    	contains = true;
+		  	else if ( ( internalName.indexOf(".") > 0 ) && !(internalName.endsWith(".")) && lastFilt.getInternalName().equals(internalName.split("\\.")[1]))
+		    	contains = true;
+		  	else if (lastFilt.getInternalName().matches("\\w+\\." + internalName)){
+				contains = true;
+			 	internalName = lastFilt.getInternalName();  
+		  	}  
 			else {
 				lastFilt = null;
 				contains = containsFilterDescription(internalName);

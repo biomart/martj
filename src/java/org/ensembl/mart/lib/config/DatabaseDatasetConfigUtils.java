@@ -586,7 +586,7 @@ public class DatabaseDatasetConfigUtils {
 
 		if (linkErrors != ""){
 		  JOptionPane.showMessageDialog(null, "The following internal names are incorrect in links:\n"
-									+ linkErrors, "ERROR", 0);
+		  							+ linkErrors, "ERROR", 0);
 		  return;//no export performed
 		}
 
@@ -1330,8 +1330,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
   else	
 	  configAttTC = configAtt.getTableConstraint().split("__")[1]+"__"+configAtt.getTableConstraint().split("__")[2];// template stores w/o the dataset part
 		
-  String configAttField = configAtt.getField(); 
-  	
+  String configAttField = configAtt.getField(); 	
   FilterPage configPage = dsConfig.getPageForFilter(configAttName);
   String configPageName = configPage.getInternalName();
   FilterGroup configGroup = dsConfig.getGroupForFilter(configAttName);
@@ -1728,6 +1727,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						configPage = new FilterPage(templatePage.getInternalName(),
 											  templatePage.getDisplayName(),
 											  templatePage.getDescription());
+						System.out.println("!!!! ADDING A PAGE");
 						dsConfig.addFilterPage(configPage);				
 					}
 			
@@ -2736,6 +2736,7 @@ public int templateCount(String template) throws ConfigurationException{
 			config.getprimaryKeyRestriction(),config.getTemplate(),SOFTWAREVERSION);
 		dscutils.loadDatasetConfigWithDocument(newConfig,resultDoc);
 		newConfig.setTemplate(config.getTemplate());//hack as for some reason sourceDoc has template set to dataset and hence lose true template
+		newConfig.setTemplateFlag(config.getTemplateFlag());
 		return newConfig;
 									
 	  }
