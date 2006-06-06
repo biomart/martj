@@ -46,6 +46,7 @@ import javax.swing.ProgressMonitor;
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Mart;
+import org.biomart.builder.model.MartConstructor;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
@@ -74,7 +75,7 @@ public class DataSetTabSet extends JTabbedPane {
 	private SchemaTabSet schemaTabSet;
 
 	// Use double-list to prevent problems with hashcodes changing.
-	private List[] datasetToTab = new List[]{new ArrayList(), new ArrayList()};
+	private List[] datasetToTab = new List[] { new ArrayList(), new ArrayList() };
 
 	private MartTabSet martTabSet;
 
@@ -165,8 +166,9 @@ public class DataSetTabSet extends JTabbedPane {
 
 	public void setSelectedIndex(int selectedIndex) {
 		// Need we do anything at all?
-		if (selectedIndex==this.getSelectedIndex()) return;
-		
+		if (selectedIndex == this.getSelectedIndex())
+			return;
+
 		// First of all, select the tab as normal. This must be
 		// done in order to get the diagram visible. If we do
 		// it later, having attempted to set up the diagram without
@@ -333,15 +335,15 @@ public class DataSetTabSet extends JTabbedPane {
 
 		// Work out the tab index.
 		int tabIndex = this.indexOfComponent(datasetTab);
-		
+
 		// Remove the tab, and it's mapping from the dataset-to-tab map.
 		this.remove(datasetTab);
 		this.datasetToTab[0].remove(index);
 		this.datasetToTab[1].remove(index);
-		
-		// Fake a click on the last tab before this one to ensure 
+
+		// Fake a click on the last tab before this one to ensure
 		// at least one tab remains visible and up-to-date.
-		this.setSelectedIndex(tabIndex-1);
+		this.setSelectedIndex(tabIndex - 1);
 	}
 
 	private void addDataSetTab(DataSet dataset) {
@@ -548,6 +550,54 @@ public class DataSetTabSet extends JTabbedPane {
 				}
 			}
 		});
+	}
+
+	/**
+	 * Pops up a dialog with details of the constructor, which allows the user
+	 * to modify them.
+	 * 
+	 * @param mc
+	 *            the mart constructor to modify.
+	 */
+	public void requestModifyMartConstructor(DataSet ds, MartConstructor mc) {
+		try {
+			MartConstructor modMC = MartConstructorManagerDialog.createMartConstructor(this, mc);
+			if (modMC != null) MartBuilderUtils.setMartConstructor(ds, modMC);
+		} catch (Throwable t) {
+			this.martTabSet.getMartBuilder().showStackTrace(t);
+		}
+	}
+
+	/**
+	 * Test this mart constructor to see if the datasource or database it
+	 * represents is contactable.
+	 * 
+	 * @param mc
+	 *            the mart constructor to test.
+	 */
+	public void requestTestMartConstructor(MartConstructor mc) {
+		// Assume we've failed.
+		boolean passedTest = false;
+
+		try {
+			// Attempt to pass the test.
+			passedTest = MartBuilderUtils.testMartConstructor(mc);
+		} catch (Throwable t) {
+			// If we get an exception, we failed the test, and should
+			// tell the user why.
+			passedTest = false;
+			this.martTabSet.getMartBuilder().showStackTrace(t);
+		}
+
+		// Tell the user if we passed or failed.
+		if (passedTest)
+			JOptionPane.showMessageDialog(this, BuilderBundle
+					.getString("martConstructorTestPassed"), BuilderBundle
+					.getString("testTitle"), JOptionPane.INFORMATION_MESSAGE);
+		else
+			JOptionPane.showMessageDialog(this, BuilderBundle
+					.getString("martConstructorTestFailed"), BuilderBundle
+					.getString("testTitle"), JOptionPane.ERROR_MESSAGE);
 	}
 
 	/**
@@ -1317,7 +1367,8 @@ public class DataSetTabSet extends JTabbedPane {
 		public void attachSchemaTabSet(SchemaTabSet schemaTabSet) {
 			// Set the context on the schema tabset, and set the
 			// tabset to be the window card.
-			WindowContext context = new WindowContext(this.datasetTabSet, this.dataset);
+			WindowContext context = new WindowContext(this.datasetTabSet,
+					this.dataset);
 			schemaTabSet.setDiagramContext(context);
 			this.displayArea.add(schemaTabSet, "WINDOW_CARD");
 

@@ -39,6 +39,7 @@ import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.GenericForeignKey;
 import org.biomart.builder.model.Key.GenericPrimaryKey;
 import org.biomart.builder.model.Key.PrimaryKey;
+import org.biomart.builder.model.MartConstructor.DummyMartConstructor;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Schema.GenericSchema;
@@ -57,7 +58,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.23, 5th June 2006
+ * @version 0.1.24, 6th June 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -118,7 +119,7 @@ public class DataSet extends GenericSchema {
 		// Remember the settings and make some defaults.
 		this.mart = mart;
 		this.centralTable = centralTable;
-		this.martConstructor = MartConstructor.DUMMY_MART_CONSTRUCTOR;
+		this.martConstructor = new DummyMartConstructor(name);
 		this.optimiser = DataSetOptimiserType.NONE;
 		this.partitionOnSchema = false;
 
@@ -135,11 +136,10 @@ public class DataSet extends GenericSchema {
 	 * subclass of something else, then the something else is used as the
 	 * central table for these purposes.
 	 * <p>
-	 * It then calls another method to walk through the relations and calculate
-	 * how far they are from the central table, in terms of the number of 1:M
-	 * relations traversed from the 1 end first. Those relations that are the
-	 * second 1:M relation away are marked concat-only. Those that are the third
-	 * or more are masked.
+	 * It then masks all relations, then walks from the central table unmasking
+	 * all it finds. If it finds a M:M relation or 1:M relation from the 1 end,
+	 * then any M:M relations or 1:M relations from the 1 end subsequent to that
+	 * are left masked and are not followed.
 	 * <p>
 	 * After all this, the dataset is regenerated so that it correctly reflects
 	 * the optimised relations.
@@ -181,10 +181,13 @@ public class DataSet extends GenericSchema {
 		}
 
 		// Starting at the centre table, make a queue of all relations.
-		// They are stored in pairs, where the first part of the pair is the
+		// They are stored in triples, where the first part of the pair is the
 		// relation, and the second part is the key at the end we hit it from.
+		// The third part is a flag saying whether or not they are subsequent
+		// to a dimension relation.
 		List relationQueue = new ArrayList();
 		List relationKeyQueue = new ArrayList();
+		List relationPostDimQueue = new ArrayList();
 		for (Iterator i = centralTable.getRelations().iterator(); i.hasNext();) {
 			Relation rel = (Relation) i.next();
 			Key relationKey = rel.getFirstKey().getTable().equals(centralTable) ? rel
@@ -192,17 +195,19 @@ public class DataSet extends GenericSchema {
 					: rel.getSecondKey();
 			relationQueue.add(rel);
 			relationKeyQueue.add(relationKey);
+			relationPostDimQueue.add(Boolean.FALSE);
 		}
 
-		// Loop over the queue. Unmask every relation, then add
+		// Loop over the queue, unmasking each relation, then addding
 		// subsequent relations from the target table to the queue.
-		// If hit a 1:M relation from the 1 end, don't add any
-		// subsequent relations. If hit a 1:M relation from the
-		// M end, don't add subsequent 1:M relations with their
-		// 1 end at the 1 end of the relation followed.
+		// If hit an M:M or 1:M relation from the 1 end, flag this
+		// so that subsequent relations linked to these do not get
+		// added if they are also 1:M or M:M.
 		for (int i = 0; i < relationQueue.size(); i++) {
 			Relation rel = (Relation) relationQueue.get(i);
 			Key key = (Key) relationKeyQueue.get(i);
+			boolean postDim = ((Boolean) relationPostDimQueue.get(i))
+					.booleanValue();
 
 			// Unmask it.
 			this.maskedRelations.remove(rel);
@@ -210,25 +215,20 @@ public class DataSet extends GenericSchema {
 			// What's the target end of the relation?
 			Key nextKey = rel.getOtherKey(key);
 
-			// Is the relation M:M, 1:M or M:1?
-			if (!rel.isOneToOne()) {
-				// Yes, so work out which end we are at.
-				if (rel.isOneToMany() && rel.getManyKey().equals(key)) {
-					// Hit a 1:M from the M end.
-					// Add all subsequent relations, unless they are M:M, or
-					// 1:M with their 1 end at the 1 end of this relation.
+			// Is the relation M:M or 1:M from the 1 end?
+			if (rel.isManyToMany()
+					|| (rel.isOneToMany() && rel.getOneKey().equals(key))) {
+				// Are we doing dimensions?
+				if (!postDim)
+					// Hit an M:M, or a 1:M from the 1 end, and we are
+					// doing dimensions.
+					// Add all subsequent relations, with a flag saying they
+					// are beyond a dimension.
 					for (Iterator j = nextKey.getTable().getRelations()
 							.iterator(); j.hasNext();) {
 						Relation rel2 = (Relation) j.next();
 						// Skip those we've already seen.
 						if (relationQueue.contains(rel2))
-							continue;
-						// Skip those 1:M ones with their 1 end at the 1 end of
-						// this relation, and all M:M ones.
-						if (rel2.isManyToMany()
-								|| (rel2.isOneToMany() && rel2.getOneKey()
-										.getTable().equals(
-												rel.getOneKey().getTable())))
 							continue;
 						// Add the rest to the queue.
 						Key relationKey2 = rel2.getFirstKey().getTable()
@@ -236,30 +236,10 @@ public class DataSet extends GenericSchema {
 								.getFirstKey() : rel2.getSecondKey();
 						relationQueue.add(rel2);
 						relationKeyQueue.add(relationKey2);
+						relationPostDimQueue.add(Boolean.TRUE);
 					}
-				} else {
-					// Hit a 1:M from the 1 end, or an M:M from either end.
-					// Only add subsequent relations if this is a subclass
-					// relation.
-					if (this.subclassedRelations.contains(rel)) {
-						for (Iterator j = nextKey.getTable().getRelations()
-								.iterator(); j.hasNext();) {
-							Relation rel2 = (Relation) j.next();
-							// Skip those we've already seen.
-							if (relationQueue.contains(rel2))
-								continue;
-							// Add the rest to the queue.
-							Key relationKey2 = rel2.getFirstKey().getTable()
-									.equals(nextKey.getTable()) ? rel2
-									.getFirstKey() : rel2.getSecondKey();
-							relationQueue.add(rel2);
-							relationKeyQueue.add(relationKey2);
-						}
-					}
-				}
 			} else {
-				// No, so do the default thing.
-				// Hit a 1:1 relation.
+				// Hit a 1:1 relation, or a 1:M relation from the M end.
 				// Add all subsequent relations.
 				for (Iterator j = nextKey.getTable().getRelations().iterator(); j
 						.hasNext();) {
@@ -273,6 +253,7 @@ public class DataSet extends GenericSchema {
 							.getSecondKey();
 					relationQueue.add(rel2);
 					relationKeyQueue.add(relationKey2);
+					relationPostDimQueue.add(Boolean.valueOf(postDim));
 				}
 			}
 		}
@@ -905,7 +886,7 @@ public class DataSet extends GenericSchema {
 		this.processTable(dsTable, dsTablePKCols, realTable, normalQ,
 				subclassQ, dimensionQ, sourceRelation, relationsFollowed, !type
 						.equals(DataSetTableType.DIMENSION));
-		
+
 		// Process the normal queue. This merges tables into the dataset
 		// table using the relation specified in each pair in the queue.
 		for (int i = 0; i < normalQ.size(); i++) {
@@ -918,20 +899,20 @@ public class DataSet extends GenericSchema {
 					relationsFollowed, makeDimensions);
 		}
 
-
 		// If the primary key is empty, then we must create one, else we
 		// will run into trouble later. Therefore, all tables must contain
 		// unique rows.
 		if (dsTablePKCols.isEmpty()) {
-			// Create the PK by adding every wrapped column in the 
+			// Create the PK by adding every wrapped column in the
 			// dataset table. We don't care about concat-only columns
 			// as that would create primary key update hell.
-			for (Iterator i = dsTable.getColumns().iterator(); i.hasNext(); ) {
-				DataSetColumn dsCol = (DataSetColumn)i.next();
-				if (dsCol instanceof WrappedColumn) dsTablePKCols.add(dsCol);
+			for (Iterator i = dsTable.getColumns().iterator(); i.hasNext();) {
+				DataSetColumn dsCol = (DataSetColumn) i.next();
+				if (dsCol instanceof WrappedColumn)
+					dsTablePKCols.add(dsCol);
 			}
 		}
-		
+
 		// Add a schema name column, if we are partitioning by schema name.
 		// If the table has a PK by this stage, add the schema name column
 		// to it, otherwise don't bother as it'll introduce unnecessary

@@ -28,40 +28,10 @@ import org.biomart.builder.resources.BuilderBundle;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 2nd June 2006
+ * @version 0.1.8, 5th June 2006
  * @since 0.1
  */
 public interface MartConstructor extends DataLink, Comparable {
-	/**
-	 * This constant refers to a placeholder mart constructor which does nothing
-	 * except prevent null pointer exceptions.
-	 */
-	public static final MartConstructor DUMMY_MART_CONSTRUCTOR = new GenericMartConstructor(
-			"__DUMMY_MC") {
-		public ConstructorRunnable getConstructorRunnable(DataSet ds) {
-			return new ConstructorRunnable() {
-				public void run() {
-				}
-
-				public String getStatusMessage() {
-					return "";
-				}
-
-				public int getPercentComplete() {
-					return 100;
-				}
-
-				public Exception getFailureException() {
-					return new ConstructorException(BuilderBundle
-							.getString("defaultMartConstNotImplemented"));
-				}
-
-				public void cancel() {
-				}
-			};
-		}
-	};
-
 	/**
 	 * This method takes a dataset and either generates a script for the user to
 	 * run later to construct a mart, or does the work right now. The end result
@@ -139,6 +109,51 @@ public interface MartConstructor extends DataLink, Comparable {
 			return c.toString().equals(this.toString());
 		}
 	}
+	
+	/**
+	 * This class refers to a placeholder mart constructor which does nothing
+	 * except prevent null pointer exceptions.
+	 */
+	public static class DummyMartConstructor extends GenericMartConstructor {
+		/**
+		 * The constructor passes everything on up to the parent.
+		 * @param name the name to give this mart constructor.
+		 */
+		public DummyMartConstructor(String name) {
+			super(name);
+		}
+		
+		/**
+		 * {@inheritDoc}
+		 * <p>
+		 * This runnable will always fail immediately without attempting
+		 * to do anything, throwing a constructor explanation saying
+		 * that it does not implement any kind of SQL generation.
+		 */
+		public ConstructorRunnable getConstructorRunnable(DataSet ds) {
+			return new ConstructorRunnable() {
+				public void run() {
+				}
+
+				public String getStatusMessage() {
+					return "";
+				}
+
+				public int getPercentComplete() {
+					return 100;
+				}
+
+				public Exception getFailureException() {
+					return new ConstructorException(BuilderBundle
+							.getString("defaultMartConstNotImplemented"));
+				}
+
+				public void cancel() {
+				}
+			};
+		}
+	}
+
 
 	/**
 	 * This interface defines a class which does the actual construction work.

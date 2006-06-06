@@ -48,7 +48,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * provides the context menu for interacting with dataset diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.16, 5th June 2006
+ * @version 0.1.17, 6th June 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -191,6 +191,32 @@ public class DataSetContext extends WindowContext {
 
 			// Add the optimiser type submenu to the context menu.
 			contextMenu.add(optimiserMenu);
+
+			// Option to modify the mart constructor.
+			JMenuItem modify = new JMenuItem(BuilderBundle
+					.getString("modifyMartConstructorTitle"));
+			modify.setMnemonic(BuilderBundle.getString(
+					"modifyMartConstructorMnemonic").charAt(0));
+			modify.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					getDataSetTabSet().requestModifyMartConstructor(
+							getDataSet(), getDataSet().getMartConstructor());
+				}
+			});
+			contextMenu.add(modify);
+
+			// Option to test the mart constructor.
+			JMenuItem test = new JMenuItem(BuilderBundle
+					.getString("testMartConstructorTitle"));
+			test.setMnemonic(BuilderBundle.getString(
+					"testMartConstructorMnemonic").charAt(0));
+			test.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					getDataSetTabSet().requestTestMartConstructor(
+							getDataSet().getMartConstructor());
+				}
+			});
+			contextMenu.add(test);
 
 			// Option to construct the mart.
 			JMenuItem construct = new JMenuItem(BuilderBundle

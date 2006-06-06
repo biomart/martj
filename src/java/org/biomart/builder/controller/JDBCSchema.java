@@ -80,7 +80,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * or keys, or to reinstate any that have previously been marked as incorrect.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 5th June 2006
+ * @version 0.1.12, 6th June 2006
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -121,6 +121,9 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	 *            null.
 	 * @param name
 	 *            the name to give this schema after it has been created.
+	 * @param keyGuessing
+	 * 			  <tt>true</tt> if you want keyguessing enabled, <tt>false</tt>
+	 * 			  otherwise.
 	 */
 	public JDBCSchema(File driverClassLocation, String driverClassName,
 			String url, String username, String password, String name,
