@@ -42,7 +42,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * of the mart inside it, including all datasets and schemas.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 2nd June 2006
+ * @version 0.1.9, 7th June 2006
  * @since 0.1
  */
 public class MartTabSet extends JTabbedPane {
@@ -266,7 +266,7 @@ public class MartTabSet extends JTabbedPane {
 			this.saveMartAs();
 		else {
 			// Save it in the background to the existing file.
-			LongProcess.run(this, new Runnable() {
+			LongProcess.run(new Runnable() {
 				public void run() {
 					try {
 						// Save it.
@@ -324,7 +324,7 @@ public class MartTabSet extends JTabbedPane {
 			// If they selected any at all, load them in turn.
 			if (loadFiles != null) {
 				// In the background, load them in turn.
-				LongProcess.run(this, new Runnable() {
+				LongProcess.run(new Runnable() {
 					public void run() {
 						try {
 							for (int i = 0; i < loadFiles.length; i++)

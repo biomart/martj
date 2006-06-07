@@ -28,21 +28,27 @@ import java.awt.Cursor;
  * to end will stop it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 22nd May 2006
+ * @version 0.1.2, 7th June 2006
  * @since 0.1
  */
 public abstract class LongProcess {
 
+	private static Container container;
+	
 	private static int longProcessCount = 0;
 
 	private static final Object lockObject = "My MartBuilder Hourglass Lock";
-
-	// This is a static class, so no instances please.
-	private LongProcess() {
+	
+	/**
+	 * Sets the container which the hourglass will appear over.
+	 * @param newContainer the container over which the mouse will transform
+	 * into an hourglass.
+	 */
+	public static void setContainer(Container newContainer) {
+		container = newContainer;
 	}
 
-	public synchronized static void run(final Container hourglassParent,
-			final Runnable process) {
+	public synchronized static void run(final Runnable process) {
 		Thread t = new Thread(new Runnable() {
 			public void run() {
 				try {
@@ -55,7 +61,7 @@ public abstract class LongProcess {
 					// hourglass.
 					if (LongProcess.longProcessCount == 1) {
 						Cursor hourglassCursor = new Cursor(Cursor.WAIT_CURSOR);
-						hourglassParent.setCursor(hourglassCursor);
+						container.setCursor(hourglassCursor);
 					}
 
 					// Let the process run.
@@ -71,7 +77,7 @@ public abstract class LongProcess {
 					// If that was the last one, stop the hourglass.
 					if (LongProcess.longProcessCount == 0) {
 						Cursor normalCursor = new Cursor(Cursor.DEFAULT_CURSOR);
-						hourglassParent.setCursor(normalCursor);
+						container.setCursor(normalCursor);
 					}
 				}
 			}

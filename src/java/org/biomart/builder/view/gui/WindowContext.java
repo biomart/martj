@@ -46,7 +46,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * rather than the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 5th June 2006
+ * @version 0.1.14, 7th June 2006
  * @since 0.1
  */
 public class WindowContext extends SchemaContext {
@@ -99,6 +99,30 @@ public class WindowContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(optimise);
+		}
+		
+		// This menu is attached to all table objects.
+		else if (object instanceof Table) {
+			// Add a separator if there's other stuff before us.
+			if (contextMenu.getComponentCount() > 0)
+				contextMenu.addSeparator();
+
+			// Obtain the table object we should refer to.
+			final Table table = (Table) object;
+
+			// The mask option allows the user to mask all
+			// relations on a table.
+			final JMenuItem mask = new JMenuItem(BuilderBundle
+					.getString("maskTableTitle"));
+			mask.setMnemonic(BuilderBundle.getString("maskTableMnemonic")
+					.charAt(0));
+			mask.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+						getDataSetTabSet().requestMaskTable(dataset,
+								table);
+				}
+			});
+			contextMenu.add(mask);
 		}
 
 		// This menu is attached to all the relation lines in the schema.

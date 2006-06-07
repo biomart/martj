@@ -62,7 +62,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.15, 6th June 2006
+ * @version 0.1.16, 7th June 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -575,6 +575,21 @@ public class MartBuilderUtils {
 	 */
 	public static void maskRelation(DataSet dataset, Relation relation) {
 		dataset.maskRelation(relation);
+		dataset.regenerate();
+	}
+
+	/**
+	 * Masks all relations on a table within a dataset. 
+	 * The dataset is regenerated afterwards.
+	 * 
+	 * @param dataset
+	 *            the dataset to mask the table in.
+	 * @param table
+	 *            the table to mask all relations for.
+	 */
+	public static void maskTable(DataSet dataset, Table table) {
+		for (Iterator i = table.getRelations().iterator(); i.hasNext(); ) 
+			dataset.maskRelation((Relation)i.next());
 		dataset.regenerate();
 	}
 

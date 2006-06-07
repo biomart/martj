@@ -56,7 +56,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * has the same context applied.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 5th June 2006
+ * @version 0.1.15, 7th June 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -213,7 +213,7 @@ public class SchemaTabSet extends JTabbedPane {
 			return;
 
 		// In the background, add the schema to ourselves.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Add the schema to the mart, then synchronise it.
@@ -308,7 +308,7 @@ public class SchemaTabSet extends JTabbedPane {
 				final String groupNameRef = groupName;
 
 				// In the background, add the schema to the group.
-				LongProcess.run(this, new Runnable() {
+				LongProcess.run(new Runnable() {
 					public void run() {
 						try {
 							// Lookup or create the group, add the schema to it,
@@ -445,7 +445,7 @@ public class SchemaTabSet extends JTabbedPane {
 			return;
 
 		// In the background, remove it.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Remove the schema from the mart.
@@ -495,7 +495,7 @@ public class SchemaTabSet extends JTabbedPane {
 			return;
 
 		// In the background, remove the schema from the group.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Remove the schema from the group and reinstate
@@ -626,7 +626,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestSynchroniseSchema(final Schema schema) {
 		// In the background, do the synchronisation.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Synchronise it.
@@ -660,7 +660,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestSynchroniseAllSchemas() {
 		// In the background, do the synchronisation.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Synchronise all schemas in the mart.
@@ -763,7 +763,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestChangeRelationCardinality(final Relation relation,
 			final Cardinality cardinality) {
 		// In the background, change the cardinality.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Change the cardinality.
@@ -805,7 +805,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestChangeRelationStatus(final Relation relation,
 			final ComponentStatus status) {
 		// In the background, change the status.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Change the status.
@@ -844,7 +844,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestRemoveRelation(final Relation relation) {
 		// In the background, remove the relation.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Remove the relation.
@@ -882,7 +882,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the key to remove.
 	 */
 	public void requestRemoveKey(final Key key) {
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Remove the key.
@@ -924,7 +924,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestChangeKeyStatus(final Key key,
 			final ComponentStatus status) {
 		// In the background, change the status.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Change the status.
@@ -983,7 +983,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestCreatePrimaryKey(final Table table, final List columns) {
 		// In the background, create the key.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Create the key.
@@ -1040,7 +1040,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestCreateForeignKey(final Table table, final List columns) {
 		// In the background, create the key.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Create the key.
@@ -1093,7 +1093,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestEditKey(final Key key, final List columns) {
 		// In the background, make the change.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Do the changes.
@@ -1180,7 +1180,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestCreateRelation(final Key from, final Key to) {
 		// Create the relation in the background.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Create the relation.

@@ -66,7 +66,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.19, 5th June 2006
+ * @version 0.1.20, 7th June 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -301,7 +301,7 @@ public class DataSetTabSet extends JTabbedPane {
 			return;
 
 		// Do it, but in the background.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Remove the dataset from the mart.
@@ -494,7 +494,7 @@ public class DataSetTabSet extends JTabbedPane {
 			return;
 
 		// In the background, do the dataset creation.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Create the dataset.
@@ -530,7 +530,7 @@ public class DataSetTabSet extends JTabbedPane {
 			return;
 
 		// In the background, suggest the datasets.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Suggest them.
@@ -608,7 +608,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestOptimiseDataSet(final DataSet dataset) {
 		// Do this in the background.
-		LongProcess.run(this, new Runnable() {
+		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Optimise the dataset.
@@ -635,6 +635,40 @@ public class DataSetTabSet extends JTabbedPane {
 				}
 			}
 		});
+	}
+
+	/**
+	 * Asks that all relations on a table be masked.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param table
+	 *            the schema table to mask all relations for.
+	 */
+	public void requestMaskTable(DataSet ds, Table table) {
+		try {
+			// Mask all the relations on the table.
+			MartBuilderUtils.maskTable(ds, table);
+
+			// Some of the relations are internal, and some are
+			// external, so we must repaint both the schema diagram
+			// and the all-schemas diagram.
+			this.schemaTabSet.repaintSchemaDiagram(table.getSchema());
+			this.schemaTabSet.repaintOverviewDiagram();
+
+			// Recalculate the dataset diagram based on the modified dataset.
+			this.recalculateDataSetDiagram(ds);
+
+			// Update the explanation diagram so that it correctly
+			// reflects the masked relation.
+			if (this.currentExplanationDiagram != null)
+				this.currentExplanationDiagram.repaintDiagram();
+
+			// Update the modified status.
+			this.martTabSet.setModifiedStatus(true);
+		} catch (Throwable t) {
+			this.martTabSet.getMartBuilder().showStackTrace(t);
+		}
 	}
 
 	/**
