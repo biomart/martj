@@ -47,7 +47,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * dataset onto a set of masked relations.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.16, 5th June 2006
+ * @version 0.1.17, 7th June 2006
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
@@ -347,9 +347,9 @@ public class SchemaContext implements DiagramContext {
 			});
 			cardGroup.add(oneToOne);
 			contextMenu.add(oneToOne);
-			if (relationIncorrect || !relation.isCardinalityChangeable())
+			if (relationIncorrect)
 				oneToOne.setEnabled(false);
-			if (relation.getCardinality().equals(Cardinality.ONE))
+			if (relation.isOneToOne())
 				oneToOne.setSelected(true);
 
 			// Set the relation to be 1:M, but only if it is correct.
@@ -366,10 +366,29 @@ public class SchemaContext implements DiagramContext {
 			});
 			cardGroup.add(oneToMany);
 			contextMenu.add(oneToMany);
-			if (relationIncorrect || !relation.isCardinalityChangeable())
-				oneToMany.setEnabled(true);
-			if (relation.getCardinality().equals(Cardinality.MANY))
+			if (relationIncorrect || !relation.isOneToManyAllowed())
+				oneToMany.setEnabled(false);
+			if (relation.isOneToMany())
 				oneToMany.setSelected(true);
+
+			// Set the relation to be M:M, but only if it is correct.
+			JRadioButtonMenuItem manyToMany = new JRadioButtonMenuItem(
+					BuilderBundle.getString("manyToManyTitle"));
+			manyToMany.setMnemonic(BuilderBundle.getString("manyToManyMnemonic")
+					.charAt(0));
+			manyToMany.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					datasetTabSet.getSchemaTabSet()
+							.requestChangeRelationCardinality(relation,
+									Cardinality.MANY);
+				}
+			});
+			cardGroup.add(manyToMany);
+			contextMenu.add(manyToMany);
+			if (relationIncorrect || !relation.isManyToManyAllowed())
+				manyToMany.setEnabled(false);
+			if (relation.isManyToMany())
+				manyToMany.setSelected(true);
 
 			// Separator.
 			contextMenu.addSeparator();

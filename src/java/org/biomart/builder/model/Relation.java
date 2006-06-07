@@ -29,10 +29,10 @@ import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * <p>
- * A relation represents the association between two keys. If they are both
- * primary keys, then it is a 1:1 relation. If they are both foreign keys, then
- * it is a M:M relation. If they are one of each, then it is either 1:M or 1:1,
- * depending on user choice.
+ * A relation represents the association between two keys. Relations between two
+ * primary keys are always 1:1. Relations between two foreign keys are either
+ * 1:1 or M:M. Relations between a foreign key and a primary key can either be
+ * 1:1 or 1:M.
  * <p>
  * Both keys must have the same number of columns, and the related columns
  * should appear in the same order in both keys. If they do not, then results
@@ -42,7 +42,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * outlined above.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 5th June 2006
+ * @version 0.1.9, 7th June 2006
  * @since 0.1
  */
 public interface Relation extends Comparable {
@@ -119,8 +119,8 @@ public interface Relation extends Comparable {
 
 	/**
 	 * Returns the cardinality of the foreign key end of this relation, in a 1:M
-	 * relation. In 1:1 relations this will always return 1, and in M:M
-	 * relations this will always return M.
+	 * relation. In 1:1 relations this will always return 1, and in M:M relations
+	 * it will always return M.
 	 * 
 	 * @return the cardinality of the foreign key end of this relation, in 1:M
 	 *         relations only. Otherwise determined by the relation type.
@@ -129,22 +129,26 @@ public interface Relation extends Comparable {
 
 	/**
 	 * Sets the cardinality of the foreign key end of this relation, in a 1:M
-	 * relation. In 1:1 and M:M relations, this should not be used as it is not
-	 * necessary, and will be ignored.
+	 * relation. If used on a 1:1 or M:M relation, then specifying M makes 
+	 * it M:M and specifying 1 makes it 1:1.
 	 * 
 	 * @param cardinality
 	 *            the cardinality.
 	 */
 	public void setCardinality(Cardinality cardinality);
+	
+	/**
+	 * Can this relation be 1:M? Returns true in all cases where both
+	 * keys are of different types.
+	 * @return <tt>true</tt> if this can be 1:M, <tt>false</tt> if not.
+	 */
+	public boolean isOneToManyAllowed();
 
 	/**
-	 * Returns <tt>true</tt> if {@link #setCardinality(Cardinality)} will take
-	 * any action if called.
-	 * 
-	 * @return <tt>true</tt> is the cardinality is changeable, <tt>false</tt>
-	 *         if not.
+	 * Can this relation be M:M? Returns true where both keys are foreign keys.
+	 * @return <tt>true</tt> if this can be M:M, <tt>false</tt> if not.
 	 */
-	public boolean isCardinalityChangeable();
+	public boolean isManyToManyAllowed();
 
 	/**
 	 * Deconstructs the relation by removing references to itself from the keys
@@ -292,9 +296,12 @@ public interface Relation extends Comparable {
 		 * @param key
 		 *            the second key.
 		 * @param cardinality
-		 *            the cardinality of the foreign key end of this relation,
-		 *            if the relation is 1:M. Otherwise defaults to 1 for a 1:1
-		 *            relation, and M for a M:M relation.
+		 *            the cardinality of the foreign key end of this relation.
+		 *            If both keys are primary keys, then this is ignored 
+		 *            and defaults to 1 (meaning 1:1). If they are a mixture, 
+		 *            then this differentiates between 1:1 and 1:M. If they are
+		 *            both foreign keys, then this differentiates between 1:1 
+		 *            and M:M. See {@link #setCardinality(Cardinality)}.
 		 * @throws AssociationException
 		 *             if the number of columns in the keys don't match, or if
 		 *             the relation already exists, or if one of the keys is a
@@ -419,14 +426,16 @@ public interface Relation extends Comparable {
 			if ((this.firstKey instanceof PrimaryKey)
 					&& (this.secondKey instanceof PrimaryKey))
 				cardinality = Cardinality.ONE;
-			else if ((this.firstKey instanceof ForeignKey)
-					&& (this.secondKey instanceof ForeignKey))
-				cardinality = Cardinality.MANY;
 			this.cardinality = cardinality;
 		}
 
-		public boolean isCardinalityChangeable() {
+		public boolean isOneToManyAllowed() {
 			return !this.firstKey.getClass().equals(this.secondKey.getClass());
+		}
+
+		public boolean isManyToManyAllowed() {
+			return ((this.firstKey instanceof ForeignKey)
+					&& (this.secondKey instanceof ForeignKey));
 		}
 
 		public void destroy() {
@@ -440,12 +449,12 @@ public interface Relation extends Comparable {
 
 		public boolean isOneToMany() {
 			return this.cardinality.equals(Cardinality.MANY)
-					&& !this.isManyToMany();
+					&& (this.firstKey instanceof PrimaryKey);
 		}
 
 		public boolean isManyToMany() {
-			return (this.firstKey instanceof ForeignKey)
-					&& (this.secondKey instanceof ForeignKey);
+			return this.cardinality.equals(Cardinality.MANY)
+					&& (this.firstKey instanceof ForeignKey);
 		}
 
 		public boolean isExternal() {

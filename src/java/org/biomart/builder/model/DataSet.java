@@ -959,8 +959,7 @@ public class DataSet extends GenericSchema {
 										.getSecondKey().getTable()
 										: r.getFirstKey().getTable()),
 								Boolean.valueOf(makeDimensions
-										&& r.getCardinality().equals(
-												Cardinality.ONE)) });
+										&& r.isOneToOne()) });
 		}
 	}
 

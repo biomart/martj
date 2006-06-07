@@ -48,7 +48,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * provides the context menu for interacting with dataset diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 6th June 2006
+ * @version 0.1.18, 7th June 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -302,11 +302,6 @@ public class DataSetContext extends WindowContext {
 					}
 				});
 				contextMenu.add(mergeDM);
-				// Disable this option if the underlying relation's
-				// cardinality cannot be changed.
-				if (!((Relation) table.getUnderlyingRelations().get(0))
-						.isCardinalityChangeable())
-					mergeDM.setEnabled(false);
 			}
 
 			// Subclass tables have their own options too.

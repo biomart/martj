@@ -47,7 +47,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * use JDBC to fetch/retrieve data between two databases.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 6th June 2006
+ * @version 0.1.2, 7th June 2006
  * @since 0.1
  */
 public class JDBCMartConstructor extends GenericMartConstructor implements
@@ -361,11 +361,85 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 			private Exception failure = null;
 
 			public void run() {
+				
+				// TODO
+				
+				// Check to see if input and output DDL types are
+				// understandable.
+
+				// TODO
+
+				// Number of steps = number of partition values times
+				// the number of tables in the dataset, plus one for
+				// the optimiser step. Each table completed per partition 
+				// is one step forward, and the last step is the 
+				// optimiser step.
+				
+				// TODO
+
+				// For each table...
+				
+				// Find partition values for partition column on
+				// table, if any.
+								
+				// For each partition value, which may be null if not
+				// partitioned, call A with value for each table in
+				// dataset.
+
+				// (A)
+				//  (run in parallel for each partition value)
+				//  drop temp
+				//  if value not null
+				//    call step B on table with partition column,
+				//    specifying current partition value
+				//  else
+				//    call step B on table, specifying partition value 
+				//    of null.
+				//  add schema name column if source is schema group
+				//  call step C on table
+				
+				// (B)
+				//  if temp exists
+				//    merge table with temp using left join with given
+				//     relation. create indexes on temp table relation 
+				//     key first, and drop them after.
+				//  else
+				//    create temp as select * from table, restrict
+				//     by partition column value if on this table and
+				//	   value is not null.
+				//  add all relations from merged table to queue and
+				//   call step B on each one specifying partition value
+				//   and relation.
+
+				// (C)
+				//  rename temp table to final name
+				//  call step D
+				
+				// (D)
+				//  create primary key on temp table
+				//  call step E if dimension/subclass, step F if main.
+				
+				// (E)
+				//  (depends on parent table for this partition value 
+				//   being complete)
+				//  if parent table is also partitioned, split this
+				//   table into one chunk per parent table partition.
+				//  delete records in each chunk that foreign key to
+				//   parent table does not allow
+				//  create foreign key to parent table.
+				//  if subclass table, call step F.
+				
+				// (F)
+				//  (depends on all tables for this partition value being
+				//   complete)
+				//  Run the optimiser nodes.
+				
+				
 				if (getType().equals(JDBCMartConstructorType.INTERNAL)) {
 					// Do it using DDL internally.
-				} else if (getType().equals(JDBCMartConstructorType.INTERNAL)) {
+				} else if (getType().equals(JDBCMartConstructorType.EXTERNAL)) {
 					// Do it using JDBC import/export.
-				} else if (getType().equals(JDBCMartConstructorType.INTERNAL)) {
+				} else if (getType().equals(JDBCMartConstructorType.FILE)) {
 					// Do it using DDL written to file.
 				} else {
 					failure = new ConstructorException(BuilderBundle

@@ -186,7 +186,7 @@ public class WindowContext extends SchemaContext {
 			contextMenu.add(subclass);
 			if (relationSubclassed)
 				subclass.setSelected(true);
-			if (incorrect || !relation.isOneToMany() || relationMasked
+			if (incorrect || relation.isOneToOne() || relationMasked
 					|| relationConcated)
 				subclass.setEnabled(false);
 
