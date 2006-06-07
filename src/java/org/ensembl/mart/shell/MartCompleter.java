@@ -855,7 +855,7 @@ public class MartCompleter implements ReadlineCompleter {
     try {
       String[] names =  msl.adaptorManager.getAdaptorNames();
       for (int i = 0, n = names.length; i < n; i++) {
-	    currentSet.add( msl.canonicalizeMartName( names[i] ) );			
+	    currentSet.add( msl.canonicalizeMartName( names[i] ) );
 	  }
     } catch (ConfigurationException e) {
       if (logger.isLoggable(Level.INFO))

@@ -45,9 +45,10 @@ public final class DatasetRequest {
       if (request.indexOf(DATASOURCEDELIMITER) > 0) {
         String[] toks = request.split(DATASOURCEDELIMITER);
         datasetreq = toks[0];
-        mrt = msl.deCanonicalizeMartName( toks[1] );
+        //mrt = msl.deCanonicalizeMartName( toks[1] ); 
+        mrt = toks[1] ; //CHANGED
 
-          if (!msl.adaptorManager.supportsAdaptor(mrt))
+        	if (!msl.adaptorManager.supportsAdaptor(mrt))
             throw new InvalidQueryException("Mart " + mrt + " has not been added, use add Mart\n");
 
           if (msl.adaptorManager.getAdaptorByName(mrt).getDataSource() == null)
@@ -62,8 +63,10 @@ public final class DatasetRequest {
 
         //dont use toks[0] as mart if x>y parsed above
         if (mrt == null)
-          mrt = msl.deCanonicalizeMartName( toks[0] );
-
+        {  
+        	//mrt = msl.deCanonicalizeMartName( toks[0] );
+        	mrt = toks[0] ; //CHANGED
+        }
         if (!msl.adaptorManager.supportsAdaptor(mrt))
           throw new InvalidQueryException(
             "Sourcename " + mrt + " from datasetconfig request " + request + " is not a known source\n");
@@ -83,12 +86,15 @@ public final class DatasetRequest {
       } else if (toks.length == 2) {
         //either sourcename.datasetname or datasetname.configname relative to envMart
                 
-        if (msl.adaptorManager.supportsAdaptor(msl.deCanonicalizeMartName( toks[0] ) ) ) {
+        if (msl.adaptorManager.supportsAdaptor(toks[0] /*msl.deCanonicalizeMartName( toks[0] )*/ ) ) //CHANGED
+        {
           //assume it is sourcename.datasetname
           
           if (mrt == null)
-            mrt = msl.deCanonicalizeMartName( toks[0] );
-            
+          { 
+        	  //mrt = msl.deCanonicalizeMartName( toks[0] );
+        	  mrt = toks[0];	// 	CHANGED
+          } 
           if (!msl.adaptorManager.supportsAdaptor(mrt))
             throw new InvalidQueryException(
               "Sourcename " + toks[0] + " from datasetconfig request " + request + " is not a known source\n");
@@ -121,7 +127,7 @@ public final class DatasetRequest {
       } else if (toks.length == 1) {
         if (mrt == null && msl.envMart == null)
           throw new InvalidQueryException(
-            "Must set environmental Mart to manipulate DatasetConfigs with relative name " + request + "\n");
+            "1 - Shazi: DatasetRequest: Must set environmental Mart to manipulate DatasetConfigs with relative name " + request + "\n");
 
         //either datasetname relative to envMart or configname relative to envMart.envDataset
         if (msl.adaptorManager.supportsDataset(toks[0])) {
@@ -136,7 +142,7 @@ public final class DatasetRequest {
           //assume it is configname relative to envMart and envDataset, or x>y request relative to envDataset
           if (msl.envDataset == null)
             throw new InvalidQueryException(
-              "Must set environmental Dataset to manipulate DatasetConfigs with relative name " + request + "\n");
+              "2- Shazi: DatasetRequest: Must set environmental Dataset to manipulate DatasetConfigs with relative name " + request + "\n");
 
           if (mrt == null)
             mrt = msl.envMart.getName();
