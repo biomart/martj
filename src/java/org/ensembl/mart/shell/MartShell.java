@@ -1270,14 +1270,10 @@ public class MartShell {
 
         thisLine =
           Readline.readline(
-            "\nConnection name:  (defaults to "
-              + martDatabase
-              + "@"
-              + martHost
-              + "): ",
+     		"\nConnection name (correspond to registry's entry 'name'. NO SPACES plz):  ",
             false);
         if (thisLine != null)
-          sourceKey = thisLine;
+          sourceKey = msl.canonicalizeMartName(thisLine); // CHANGED, replace spaces with '_' to prevent having a name with sapces
 
       } catch (Exception e) {
         throw new InvalidQueryException("Problem reading input for mart connection settings: " + e.getMessage());
@@ -1381,7 +1377,7 @@ public class MartShell {
               martNames.add( msl.canonicalizeMartName( adaptor.getName() ) );
         }
         mcl.setMartNames(martNames);
-
+        
         mcl.setAdaptorLocations(Arrays.asList(msl.adaptorManager.getAdaptorNames()));
         mcl.setProcedureNames(msl.getStoredMQLCommandKeys());
 
