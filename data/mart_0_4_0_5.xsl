@@ -34,6 +34,7 @@
 	<xsl:attribute name="pointerDataset"> <xsl:value-of select="substring-before(@internalName,'.')" /> </xsl:attribute>
 	<xsl:attribute name="pointerInterface">default</xsl:attribute>
         <xsl:attribute name="pointerFilter"> <xsl:value-of select="substring-after(@internalName,'.')" /> </xsl:attribute>
+
     </xsl:if>
 
     <!-- create the displayType attribute  -->
@@ -47,7 +48,7 @@
 	<xsl:when test="@type = 'boolean' or @type = 'boolean_num'" >
 	    <xsl:attribute name="displayType">list</xsl:attribute>
         </xsl:when>
-	<xsl:when test="@tableConstraint != ''">
+	<xsl:when test="@qualifier != ''">
 	    <xsl:attribute name="displayType">text</xsl:attribute>
 	</xsl:when>
 
@@ -70,7 +71,7 @@
 
     <!-- create the graph attribute  -->
     <xsl:choose>
-	<xsl:when test="count(.//Option/Option) &gt; 0 and .//Option/@tableConstraint = ''" >
+	<xsl:when test="@tableConstraint != '' and count(.//Option/Option) &gt; 0" >
 	    <xsl:attribute name="graph">1</xsl:attribute>
         </xsl:when>
 	<xsl:otherwise>
