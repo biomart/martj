@@ -132,14 +132,8 @@ public class DataSet extends GenericSchema {
 	 * This method removes all existing flags for masked and concat-only
 	 * relations.
 	 * <p>
-	 * It then works out the 'real' central table - if the central table is a
-	 * subclass of something else, then the something else is used as the
-	 * central table for these purposes.
-	 * <p>
-	 * It then masks all relations, then walks from the central table unmasking
-	 * all it finds. If it finds a M:M relation or 1:M relation from the 1 end,
-	 * then any M:M relations or 1:M relations from the 1 end subsequent to that
-	 * are left masked and are not followed.
+	 * In future, it may also suggest decent masking or concat-only candidates,
+	 * but this will not be done yet.
 	 * <p>
 	 * After all this, the dataset is regenerated so that it correctly reflects
 	 * the optimised relations.
@@ -149,114 +143,8 @@ public class DataSet extends GenericSchema {
 		this.maskedRelations.clear();
 		this.concatOnlyRelations[0].clear();
 		this.concatOnlyRelations[1].clear();
-
-		// Identify main table.
-		Table centralTable = this.getCentralTable();
-		// If central table has subclass relations and is at the foreign key
-		// end, then follow them to the real central table. As M:Ms cannot
-		// be subclassed, we can assume the set only contains 1:Ms.
-		boolean found = false;
-		for (Iterator i = centralTable.getRelations().iterator(); i.hasNext()
-				&& !found;) {
-			Relation r = (Relation) i.next();
-			if (this.getSubclassedRelations().contains(r)
-					&& r.getManyKey().getTable().equals(centralTable)) {
-				centralTable = r.getOneKey().getTable();
-				found = true;
-			}
-		}
-
-		// Mask all relations in all schemas.
-		for (Iterator i = this.mart.getSchemas().iterator(); i.hasNext();) {
-			Schema schema = (Schema) i.next();
-			for (Iterator j = schema.getInternalRelations().iterator(); j
-					.hasNext();)
-				this.maskedRelations.add(j.next());
-			for (Iterator j = schema.getExternalRelations().iterator(); j
-					.hasNext();) {
-				Relation rel = (Relation) j.next();
-				if (!this.maskedRelations.contains(rel))
-					this.maskedRelations.add(rel);
-			}
-		}
-
-		// Starting at the centre table, make a queue of all relations.
-		// They are stored in triples, where the first part of the pair is the
-		// relation, and the second part is the key at the end we hit it from.
-		// The third part is a flag saying whether or not they are subsequent
-		// to a dimension relation.
-		List relationQueue = new ArrayList();
-		List relationKeyQueue = new ArrayList();
-		List relationPostDimQueue = new ArrayList();
-		for (Iterator i = centralTable.getRelations().iterator(); i.hasNext();) {
-			Relation rel = (Relation) i.next();
-			Key relationKey = rel.getFirstKey().getTable().equals(centralTable) ? rel
-					.getFirstKey()
-					: rel.getSecondKey();
-			relationQueue.add(rel);
-			relationKeyQueue.add(relationKey);
-			relationPostDimQueue.add(Boolean.FALSE);
-		}
-
-		// Loop over the queue, unmasking each relation, then addding
-		// subsequent relations from the target table to the queue.
-		// If hit an M:M or 1:M relation from the 1 end, flag this
-		// so that subsequent relations linked to these do not get
-		// added if they are also 1:M or M:M.
-		for (int i = 0; i < relationQueue.size(); i++) {
-			Relation rel = (Relation) relationQueue.get(i);
-			Key key = (Key) relationKeyQueue.get(i);
-			boolean postDim = ((Boolean) relationPostDimQueue.get(i))
-					.booleanValue();
-
-			// Unmask it.
-			this.maskedRelations.remove(rel);
-
-			// What's the target end of the relation?
-			Key nextKey = rel.getOtherKey(key);
-
-			// Is the relation M:M or 1:M from the 1 end?
-			if (rel.isManyToMany()
-					|| (rel.isOneToMany() && rel.getOneKey().equals(key))) {
-				// Are we doing dimensions?
-				if (!postDim)
-					// Hit an M:M, or a 1:M from the 1 end, and we are
-					// doing dimensions.
-					// Add all subsequent relations, with a flag saying they
-					// are beyond a dimension.
-					for (Iterator j = nextKey.getTable().getRelations()
-							.iterator(); j.hasNext();) {
-						Relation rel2 = (Relation) j.next();
-						// Skip those we've already seen.
-						if (relationQueue.contains(rel2))
-							continue;
-						// Add the rest to the queue.
-						Key relationKey2 = rel2.getFirstKey().getTable()
-								.equals(nextKey.getTable()) ? rel2
-								.getFirstKey() : rel2.getSecondKey();
-						relationQueue.add(rel2);
-						relationKeyQueue.add(relationKey2);
-						relationPostDimQueue.add(Boolean.TRUE);
-					}
-			} else {
-				// Hit a 1:1 relation, or a 1:M relation from the M end.
-				// Add all subsequent relations.
-				for (Iterator j = nextKey.getTable().getRelations().iterator(); j
-						.hasNext();) {
-					Relation rel2 = (Relation) j.next();
-					// Skip those we've already seen.
-					if (relationQueue.contains(rel2))
-						continue;
-					// Add the rest to the queue.
-					Key relationKey2 = rel2.getFirstKey().getTable().equals(
-							nextKey.getTable()) ? rel2.getFirstKey() : rel2
-							.getSecondKey();
-					relationQueue.add(rel2);
-					relationKeyQueue.add(relationKey2);
-					relationPostDimQueue.add(Boolean.valueOf(postDim));
-				}
-			}
-		}
+		
+		// That's it! In future, more stuff may happen here.
 
 		// Regenerate the dataset.
 		this.regenerate();
