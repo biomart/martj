@@ -1018,8 +1018,11 @@ public class DatabaseDatasetConfigUtils {
 						break;
 				}
 			}
+					
 			dsConfig.setTemplate(template);//needed otherwise gets set to dataset
-		
+			
+			getUpdatedConfig(dsConfig);// transform XML to latest version
+			
 			// delete any non-placeholder filts/atts that are no longer in the template
 			List attributeDescriptions = dsConfig.getAllAttributeDescriptions();
 			for (int i = 0; i < attributeDescriptions.size(); i++){
@@ -1412,8 +1415,10 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		  configAttToAdd.setTableConstraint(configAtt.getTableConstraint());
 		  configAttToAdd.setField(configAtt.getField());
 		  configAttToAdd.setOtherFilters(configAtt.getOtherFilters());
+		  // chromosome_name hack to stop mmullata memory problems with chr options
+		  //if (templateFilter.getType().equals("list") && !templateFilter.getInternalName().equals("chromosome_name")){
 		  if (templateFilter.getType().equals("list")){
-			String colForDisplay = "";
+		  	String colForDisplay = "";
 			if (configAttToAdd.getColForDisplay() != null){
 				colForDisplay = configAttToAdd.getColForDisplay();
 			}
@@ -1558,13 +1563,15 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	  for (int j = 0; j < ops.length; j++){
 		Option op = ops[j];
 		// if a value option remove it
-		if (op.getTableConstraint() == null){
+		if (op.getTableConstraint() == null || op.getTableConstraint().equals("")){
 			templateAttToAdd.removeOption(op);
 			continue;		
 		}
 		// if a filter option remove dataset part from tableConstraint
-		if (!op.getTableConstraint().equals("main"))
+		if (!op.getTableConstraint().equals("main")){
+			System.out.println(op.getDisplayName()+":"+op.getTableConstraint());
 			op.setTableConstraint(op.getTableConstraint().split("__")[1]+"__"+op.getTableConstraint().split("__")[2]);
+		}
 		op.setOtherFilters("");
 	  }	  
 	  
@@ -2086,7 +2093,9 @@ public int templateCount(String template) throws ConfigurationException{
       if (result > 1){//usual 1:1 dataset:template do not get template merging 
       	   // System.out.println("SHOULD MERGE CONFIG AND TEMPLATE TOGETHER NOW");
 		   dsConfig = updateConfigToTemplate(dsConfig,1);
-		   doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
+		   // convert config to latest version using xslt
+		   dsConfig = MartEditor.getDatabaseDatasetConfigUtils().getUpdatedConfig(dsConfig);
+           doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
       }
       else{
       	// System.out.println("OVERWRITE TEMPLATE WITH THIS LAYOUT");
@@ -2737,6 +2746,7 @@ public int templateCount(String template) throws ConfigurationException{
 		dscutils.loadDatasetConfigWithDocument(newConfig,resultDoc);
 		newConfig.setTemplate(config.getTemplate());//hack as for some reason sourceDoc has template set to dataset and hence lose true template
 		newConfig.setTemplateFlag(config.getTemplateFlag());
+		newConfig.setSoftwareVersion(SOFTWAREVERSION);
 		return newConfig;
 									
 	  }
@@ -3497,7 +3507,7 @@ public int templateCount(String template) throws ConfigurationException{
     boolean hasBrokenAttributePages = false;
     AttributePage[] apages = validatedDatasetConfig.getAttributePages();
     HashMap brokenAPages = new HashMap();
-
+		
     for (int i = 0, n = apages.length; i < n; i++) {
       AttributePage validatedPage = getValidatedAttributePage(apages[i], dset, conn);
 
@@ -3522,6 +3532,7 @@ public int templateCount(String template) throws ConfigurationException{
     boolean hasBrokenFilterPages = false;
     HashMap brokenFPages = new HashMap();
     FilterPage[] allPages = validatedDatasetConfig.getFilterPages();
+		
     for (int i = 0, n = allPages.length; i < n; i++) {	
       FilterPage validatedPage = getValidatedFilterPage(allPages[i], dset,validatedDatasetConfig, conn);
 	  if (validatedPage.isBroken()) {
@@ -3895,7 +3906,7 @@ public int templateCount(String template) throws ConfigurationException{
       boolean optionsValid = true;
       HashMap brokenOptions = new HashMap();
       Option[] options = validatedFilter.getOptions();      
-     if (options.length > 0 && options[0].getValue() != null){// UPDATE VALUE OPTIONS
+     if (options.length > 0 && options[0].getValue() != null && !options[0].getValue().equals("only")){// UPDATE VALUE OPTIONS
       	    // regenerate options and push actions
      		//System.out.println("UPDATING OPTIONS");
       		// store the option/push action structure so can recreate      		
@@ -4198,7 +4209,8 @@ public int templateCount(String template) throws ConfigurationException{
   private Option getValidatedOption(String schema, String catalog, Option option, String dset, Connection conn) throws SQLException {
     Option validatedOption = new Option(option);
     // hack to ignore the expression drop down menu
-    if (validatedOption.getType().equals("tree"))
+    
+    if (validatedOption.getType() != null && validatedOption.getType().equals("tree"))
       return validatedOption;
       
     if (validatedOption.getField() != null) {

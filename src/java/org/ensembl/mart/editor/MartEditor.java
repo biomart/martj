@@ -1702,13 +1702,14 @@ System.out.println ("getting driver "+ driver);
           JOptionPane.showMessageDialog(this, "Nothing to Update, please Import a DatasetConfig", "ERROR", 0);
           return;
         }
-
+		
         DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
+		
         // check for new tables and cols
 		String schema = null;
 		if(databaseDialog.getDatabaseType().equals("oracle")) schema = databaseDialog.getSchema().toUpperCase();
 		else schema = databaseDialog.getSchema();
-		dsv = dbutils.getNewFiltsAtts(schema, dsv);        
+		dsv = dbutils.getNewFiltsAtts(schema, dsv);       
         //dsv = dbutils.getNewFiltsAtts(database, dsv);
 		// test if version need updating
 		String datasetVersion = dsv.getVersion();
@@ -1721,8 +1722,12 @@ System.out.println ("getting driver "+ driver);
 			}
 		}
 		dbutils.updateLinkVersions(dsv);
-		if (dbutils.templateCount(dsv.getTemplate()) > 1)
+		if (dbutils.templateCount(dsv.getTemplate()) > 1){
 			dsv = dbutils.updateConfigToTemplate(dsv,0);
+		}
+		
+//		convert config to latest version using xslt
+		dsv = MartEditor.getDatabaseDatasetConfigUtils().getUpdatedConfig(dsv);
 				
         DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, schema,null);
         frame.setVisible(true);

@@ -38,6 +38,9 @@
 
     <!-- create the displayType attribute  -->
     <xsl:choose>
+	<xsl:when test="count(.//Option) &gt; 0 and .//Option/@tableConstraint != ''">
+	    <xsl:attribute name="displayType">container</xsl:attribute>
+	</xsl:when>	
 	<xsl:when test="count(.//Option) &gt; 0 and .//Option/@value != ''" >
 	    <xsl:attribute name="displayType">list</xsl:attribute>
         </xsl:when>
@@ -47,9 +50,9 @@
 	<xsl:when test="@tableConstraint != ''">
 	    <xsl:attribute name="displayType">text</xsl:attribute>
 	</xsl:when>
-	<xsl:when test="count(.//Option) &gt; 0">
-	    <xsl:attribute name="displayType">container</xsl:attribute>
-	</xsl:when>	
+
+        
+
         <xsl:otherwise>
 	   <xsl:attribute name="displayType"></xsl:attribute>
         </xsl:otherwise>
@@ -67,7 +70,7 @@
 
     <!-- create the graph attribute  -->
     <xsl:choose>
-	<xsl:when test="count(.//Option/Option) &gt; 0 " >
+	<xsl:when test="count(.//Option/Option) &gt; 0 and .//Option/@tableConstraint = ''" >
 	    <xsl:attribute name="graph">1</xsl:attribute>
         </xsl:when>
 	<xsl:otherwise>
@@ -82,6 +85,9 @@
         </xsl:when>
         <xsl:when test="@type='boolean' or @type = 'boolean_num'" >
 	    <xsl:attribute name="style">radio</xsl:attribute>
+        </xsl:when>
+	<xsl:when test="count(.//Option) &gt; 0 and .//Option/@tableConstraint != ''">
+	    <xsl:attribute name="style"></xsl:attribute>
         </xsl:when>
         <xsl:when test="count(.//Option) &gt; 0 and .//Option/@value != ''" >
 	    <xsl:attribute name="style">menu</xsl:attribute>
