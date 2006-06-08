@@ -364,6 +364,27 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 				
 				// TODO
 				
+				// Define Helper interface. Helper provides methods
+				// to define large steps.
+				// Helper implementations perform those steps.
+				// DDLHelper generates DDL statements for each step.
+				// InternalHelper extends DDLHelper, executes stmts.
+				// FileHelper extends DDLHelper, saves stmts. Stmts
+				//  are saved in folders. Folder 1 must be finished
+				//  before folder 2, but files within folder 1 can
+				//  be executed in any order. And so on.
+				// ExternalHelper performs JDBC select/inserts.
+				
+				// TODO
+				
+				// Define Dialect interface. Dialect provides methods
+				// which generate atomic DDL or SQL statements.
+				// Oracle/MySQL/PostgreSQLDialect classes implement it.
+				// DDLHelper has one Dialect for input/output.
+				// ExternalHelper has one Dialect each for input/output.
+				
+				// TODO
+				
 				// Check to see if input and output DDL types are
 				// understandable.
 

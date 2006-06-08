@@ -29,8 +29,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
@@ -42,6 +40,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.ProgressMonitor;
+import javax.swing.Timer;
 
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.model.DataSet;
@@ -66,7 +65,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.20, 7th June 2006
+ * @version 0.1.21, 8th June 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -561,8 +560,10 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestModifyMartConstructor(DataSet ds, MartConstructor mc) {
 		try {
-			MartConstructor modMC = MartConstructorManagerDialog.createMartConstructor(this, mc);
-			if (modMC != null) MartBuilderUtils.setMartConstructor(ds, modMC);
+			MartConstructor modMC = MartConstructorManagerDialog
+					.createMartConstructor(this, mc);
+			if (modMC != null)
+				MartBuilderUtils.setMartConstructor(ds, modMC);
 		} catch (Throwable t) {
 			this.martTabSet.getMartBuilder().showStackTrace(t);
 		}
@@ -1166,14 +1167,20 @@ public class DataSetTabSet extends JTabbedPane {
 		progressMonitor.setProgress(0); // Start with 0% complete.
 		progressMonitor.setMillisToDecideToPopup(0); // Open immediately.
 
-		// Start the construction.
+		// Start the construction in a thread. It does not need to be
+		// Swing-thread-safe because it will never access the GUI. All
+		// GUI interaction is done through the Timer below.
 		final Thread thread = new Thread(constructor);
-		thread.run();
+		thread.start();
 
-		// Create and start a timer thread that will update the progress dialog.
-		final Timer timer = new Timer();
-		timer.scheduleAtFixedRate(new TimerTask() {
-			public void run() {
+		// Create a timer thread that will update the progress dialog.
+		// We use the Swing Timer to make it Swing-thread-safe. (1000 millis
+		// equals 1 second.)
+		final Timer timer = new Timer(1000 * 1, null); 
+		timer.setInitialDelay(0); // Start immediately upon request.
+		timer.setCoalesce(true); // Coalesce delayed events.
+		timer.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
 				// Did the job complete yet?
 				if (thread.isAlive() && !progressMonitor.isCanceled()) {
 					// If not, update the progress report.
@@ -1183,7 +1190,7 @@ public class DataSetTabSet extends JTabbedPane {
 				} else {
 					// If it completed, close the task and tidy up.
 					// Stop the timer.
-					timer.cancel();
+					timer.stop();
 					// Stop the thread.
 					constructor.cancel();
 					// Close the progress dialog.
@@ -1208,7 +1215,10 @@ public class DataSetTabSet extends JTabbedPane {
 								JOptionPane.WARNING_MESSAGE);
 				}
 			}
-		}, 0, 1 * 1000); // 1000 millis equals 1 second
+		});
+
+		// Start the timer.
+		timer.start();
 	}
 
 	private JPopupMenu getDataSetTabContextMenu(final DataSet dataset) {
