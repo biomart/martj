@@ -253,7 +253,7 @@ public class DatasetConfigCache {
             String version = xmlPrefs.node(dataset).node(iname).get(VERSIONKEY, null);
 			String visibleFilterPage = xmlPrefs.node(dataset).node(iname).get(VISIBLEFILTERPAGEKEY, null);
 			
-            dsv = new DatasetConfig(iname, displayName, dataset, description, type, visible,visibleFilterPage,version,"","","","","","","","");
+            dsv = new DatasetConfig(iname, displayName, dataset, description, type, visible,visibleFilterPage,version,"","","","","","","","","");
             
             dsv.setDSConfigAdaptor(adaptor);
           }

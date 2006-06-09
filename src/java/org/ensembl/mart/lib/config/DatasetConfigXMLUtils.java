@@ -80,6 +80,7 @@ public class DatasetConfigXMLUtils {
   private final String INTERNALNAME = "internalName";
   private final String OPTPARAM = "optional_parameters";
   private final String SOFTWAREVERSION = "softwareVersion";
+  private final String NOCOUNT = "noCount";
   private final String PRIMARYKEYRESTRICTION = "primaryKeyRestriction";
   private final String TEMPLATE = "template";
   private final String VISIBLEFILTERPAGEPARAM = "visibleFilterPage";
@@ -224,6 +225,7 @@ public class DatasetConfigXMLUtils {
     String intName = thisElement.getAttributeValue(INTERNALNAME, "");
     String optParam = thisElement.getAttributeValue(OPTPARAM, "");
 	String softwareVersion = thisElement.getAttributeValue(SOFTWAREVERSION, "");
+	String noCount = thisElement.getAttributeValue(NOCOUNT, "");
 	String primaryKeyRestriction = thisElement.getAttributeValue(PRIMARYKEYRESTRICTION, "");
 	String template = thisElement.getAttributeValue(TEMPLATE, "");
 	String defParam = thisElement.getAttributeValue(DEFAULTDATASET, "");
@@ -237,6 +239,9 @@ public class DatasetConfigXMLUtils {
       
 	if (softwareVersion.length() > 0)
 	  dsv.setSoftwareVersion(softwareVersion);  
+	  
+	if (noCount.length() > 0)
+	  dsv.setNoCount(noCount);    
       
 	if (primaryKeyRestriction.length() > 0)
 	   dsv.setPrimaryKeyRestriction(primaryKeyRestriction);  
