@@ -1674,7 +1674,9 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		Exportable[] tempExps = templateConfig.getExportables();
 		for (int j = 0; j < tempExps.length; j++){
 			if (tempExps[j].getInternalName().equals(configExps[i].getInternalName())) {
-				configExps[i].setAttributes(tempExps[j].getAttributes());
+				if (!configExps[i].getAttributes().matches(".+__.+")){// lets gtf stay same
+					configExps[i].setAttributes(tempExps[j].getAttributes());
+			    }
 				continue OUTER;
 			} 
 		}
