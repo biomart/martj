@@ -18,6 +18,11 @@
 
 package org.biomart.builder.model;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.resources.BuilderBundle;
 
@@ -28,7 +33,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 5th June 2006
+ * @version 0.1.9, 13th June 2006
  * @since 0.1
  */
 public interface MartConstructor extends DataLink, Comparable {
@@ -80,7 +85,7 @@ public interface MartConstructor extends DataLink, Comparable {
 		}
 
 		public abstract ConstructorRunnable getConstructorRunnable(DataSet ds);
-		
+
 		public boolean test() throws Exception {
 			return true;
 		}
@@ -109,7 +114,7 @@ public interface MartConstructor extends DataLink, Comparable {
 			return c.toString().equals(this.toString());
 		}
 	}
-	
+
 	/**
 	 * This class refers to a placeholder mart constructor which does nothing
 	 * except prevent null pointer exceptions.
@@ -117,18 +122,20 @@ public interface MartConstructor extends DataLink, Comparable {
 	public static class DummyMartConstructor extends GenericMartConstructor {
 		/**
 		 * The constructor passes everything on up to the parent.
-		 * @param name the name to give this mart constructor.
+		 * 
+		 * @param name
+		 *            the name to give this mart constructor.
 		 */
 		public DummyMartConstructor(String name) {
 			super(name);
 		}
-		
+
 		/**
 		 * {@inheritDoc}
 		 * <p>
-		 * This runnable will always fail immediately without attempting
-		 * to do anything, throwing a constructor explanation saying
-		 * that it does not implement any kind of SQL generation.
+		 * This runnable will always fail immediately without attempting to do
+		 * anything, throwing a constructor explanation saying that it does not
+		 * implement any kind of SQL generation.
 		 */
 		public ConstructorRunnable getConstructorRunnable(DataSet ds) {
 			return new ConstructorRunnable() {
@@ -153,7 +160,6 @@ public interface MartConstructor extends DataLink, Comparable {
 			};
 		}
 	}
-
 
 	/**
 	 * This interface defines a class which does the actual construction work.
@@ -199,5 +205,171 @@ public interface MartConstructor extends DataLink, Comparable {
 		 * just finished successfully without any warnings.
 		 */
 		public void cancel();
+	}
+
+	/**
+	 * Represents one task in the grand scheme of constructing a mart.
+	 * Implementations of this abstract class will provide specific methods for
+	 * working with the various different stages of mart construction.
+	 */
+	public abstract class MCAction {
+		private Set parents;
+
+		private Set children;
+
+		private int depth;
+
+		private int sequence;
+
+		private static int nextSequence = 0;
+
+		private static String nextSequenceLock = "__SEQ_LOCK";
+
+		/**
+		 * Sets up a node.
+		 */
+		public MCAction() {
+			this.depth = 0;
+			synchronized (nextSequenceLock) {
+				this.sequence = nextSequence++;
+			}
+			this.children = new HashSet();
+			this.parents = new HashSet();
+		}
+
+		/**
+		 * Adds a child to this node. The child will have this node added as a
+		 * parent.
+		 * 
+		 * @param child
+		 *            the child to add to this node.
+		 */
+		public void addChild(MCAction child) {
+			this.children.add(child);
+			child.parents.add(this);
+			child.ensureDepth(this.depth + 1);
+		}
+
+		/**
+		 * Adds a parent to this node. The parent will have this node added as a
+		 * child.
+		 * 
+		 * @param parent
+		 *            the parent to add to this node.
+		 */
+		public void addParent(MCAction parent) {
+			this.parents.add(parent);
+			parent.children.add(this);
+			this.ensureDepth(parent.depth + 1);
+		}
+
+		/**
+		 * Returns the children of this node.
+		 * 
+		 * @return the children of this node.
+		 */
+		public Collection getChildren() {
+			return this.children;
+		}
+
+		/**
+		 * Returns the parents of this node.
+		 * 
+		 * @return the parents of this node.
+		 */
+		public Collection getParents() {
+			return this.parents;
+		}
+
+		private void ensureDepth(int newDepth) {
+			// Is the new depth less than our current
+			// depth? If so, need do nothing.
+			if (this.depth >= newDepth)
+				return;
+
+			// Remember the new depth.
+			this.depth = newDepth;
+
+			// Ensure the child depths are at least one greater
+			// than our own new depth.
+			for (Iterator i = this.children.iterator(); i.hasNext();) {
+				MCAction child = (MCAction) i.next();
+				child.ensureDepth(this.depth + 1);
+			}
+		}
+
+		/**
+		 * Override this method to produce a message describing what this node
+		 * of the graph will do.
+		 * 
+		 * @return a description of what this node will do.
+		 */
+		public abstract String getStatusMessage();
+
+		/**
+		 * Returns the order in which this action was created.
+		 * 
+		 * @return the order in which this action was created. 0 is the first.
+		 */
+		public int getSequence() {
+			return this.sequence;
+		}
+
+		public int hashCode() {
+			return this.sequence;
+		}
+
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			else
+				return (obj != null && (obj instanceof MCAction) && this.sequence == ((MCAction) obj).sequence);
+		}
+	}
+
+	/**
+	 * Represents the various tasks in the mart construction process and how
+	 * they should fit together.
+	 */
+	public class MCActionGraph {
+		private Collection actions = new HashSet();
+
+		/**
+		 * Adds an action to the graph.
+		 * 
+		 * @param action
+		 *            the action to add.
+		 */
+		public void addAction(MCAction action) {
+			this.actions.add(action);
+		}
+
+		/**
+		 * Returns a set of all actions in this graph.
+		 * 
+		 * @return all the actions in this graph.
+		 */
+		public Collection getActions() {
+			return this.actions;
+		}
+
+		/**
+		 * Returns all the actions in this graph which are at a particular
+		 * depth.
+		 * 
+		 * @param depth
+		 *            the depth to search.
+		 * @return all the actions at that depth. It may return an empty set if
+		 *         there are none, but it will never return <tt>null</tt>.
+		 */
+		public Collection getActionsAtDepth(int depth) {
+			Collection matches = new HashSet();
+			for (Iterator i = this.actions.iterator(); i.hasNext();) {
+				MCAction action = (MCAction) i.next();
+				if (action.depth == depth)
+					matches.add(action);
+			}
+			return matches;
+		}
 	}
 }

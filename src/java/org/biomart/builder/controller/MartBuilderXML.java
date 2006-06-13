@@ -1183,8 +1183,8 @@ public class MartBuilderXML extends DefaultHandler {
 							xmlWriter);
 				this.writeAttribute("name", jmc.getName(), xmlWriter);
 				this.writeAttribute("type", jmc.getType().getName(), xmlWriter);
-				if (jmc.getOutputDDLFile() != null)
-					this.writeAttribute("outputDDLFile", jmc.getOutputDDLFile()
+				if (jmc.getOutputDDLZipFile() != null)
+					this.writeAttribute("outputDDLFile", jmc.getOutputDDLZipFile()
 							.getPath(), xmlWriter);
 				this.closeElement("jdbcMartConstructor", xmlWriter);
 			}

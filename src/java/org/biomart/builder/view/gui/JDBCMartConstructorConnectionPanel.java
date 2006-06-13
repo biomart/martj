@@ -61,7 +61,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * {@link JDBCMartConstructor} implementation which represents the connection.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 6th June 2006
+ * @version 0.1.2, 13th June 2006
  * @since 0.1
  */
 public class JDBCMartConstructorConnectionPanel extends
@@ -401,8 +401,8 @@ public class JDBCMartConstructorConnectionPanel extends
 			this.username.setText(jdbcMartConstructor.getUsername());
 			this.password.setText(jdbcMartConstructor.getPassword());
 			this.outputDDLLocation.setText(jdbcMartConstructor
-					.getOutputDDLFile() == null ? null : jdbcMartConstructor
-					.getOutputDDLFile().toString());
+					.getOutputDDLZipFile() == null ? null : jdbcMartConstructor
+					.getOutputDDLZipFile().toString());
 			this.type.setSelectedItem(jdbcMartConstructor.getType());
 
 			// Parse the JDBC URL into host, port and database, if the

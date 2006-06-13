@@ -19,6 +19,8 @@
 package org.biomart.builder.controller;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -27,16 +29,34 @@ import java.sql.DatabaseMetaData;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
+import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.MartConstructor;
+import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
+import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.PartitionedColumnType;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
+import org.biomart.builder.model.DataSet.PartitionedColumnType.UniqueValues;
+import org.biomart.builder.model.DataSet.PartitionedColumnType.ValueCollection;
 import org.biomart.builder.model.MartConstructor.GenericMartConstructor;
 import org.biomart.builder.resources.BuilderBundle;
 
@@ -47,7 +67,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * use JDBC to fetch/retrieve data between two databases.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 7th June 2006
+ * @version 0.1.3, 12th June 2006
  * @since 0.1
  */
 public class JDBCMartConstructor extends GenericMartConstructor implements
@@ -64,7 +84,7 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 
 	private String password;
 
-	private File outputDDLFile;
+	private File outputDDLZipFile;
 
 	private JDBCMartConstructorType type;
 
@@ -113,7 +133,7 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 		this.username = username;
 		this.password = password;
 		this.type = type;
-		this.outputDDLFile = outputDDLFile;
+		this.outputDDLZipFile = outputDDLFile;
 	}
 
 	public boolean test() throws Exception {
@@ -230,12 +250,12 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 		this.password = password;
 	}
 
-	public File getOutputDDLFile() {
-		return this.outputDDLFile;
+	public File getOutputDDLZipFile() {
+		return this.outputDDLZipFile;
 	}
 
-	public void setOutputDDLFile(File outputDDLFile) {
-		this.outputDDLFile = outputDDLFile;
+	public void setOutputDDLZipFile(File outputDDLZipFile) {
+		this.outputDDLZipFile = outputDDLZipFile;
 	}
 
 	public JDBCMartConstructorType getType() {
@@ -263,6 +283,501 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 		// We can cohabit if the JDBC URLs and usernames are identical.
 		return (partnerLink.getJDBCURL().equals(this.getJDBCURL()) && partnerLink
 				.getUsername().equals(this.getUsername()));
+	}
+
+	public ConstructorRunnable getConstructorRunnable(final DataSet ds) {
+		final JDBCMartConstructor constructor = this;
+		return new ConstructorRunnable() {
+			private String statusMessage = "";
+
+			private double percentComplete = 0.0;
+
+			private boolean cancelled = false;
+
+			private Exception failure = null;
+
+			public void run() {
+				try {
+					this.doIt();
+				} catch (ConstructorException e) {
+					this.failure = e;
+				} catch (Throwable t) {
+					this.failure = new ConstructorException(t);
+				}
+			}
+
+			private void doIt() throws Exception {
+				// Work out what kind of helper to use.
+				this.statusMessage = BuilderBundle.getString("mcMakingHelper");
+				Helper helper;
+				if (getType().equals(JDBCMartConstructorType.INTERNAL))
+					helper = new InternalHelper(getConnection());
+				else if (getType().equals(JDBCMartConstructorType.FILE))
+					helper = new FileHelper(getOutputDDLZipFile());
+				else if (getType().equals(JDBCMartConstructorType.EXTERNAL))
+					throw new ConstructorException(BuilderBundle
+							.getString("mcExternalNotImpl"));
+				else
+					throw new ConstructorException(BuilderBundle
+							.getString("unknownJDBCMCType"));
+
+				// Cancelled?
+				this.checkCancelled();
+
+				// Set the input and output dialects on the helper for each
+				// schema.
+				this.statusMessage = BuilderBundle
+						.getString("mcGatheringSchemas");
+
+				// Inputs first.
+				Set inputSchemas = new HashSet();
+				for (Iterator i = ds.getTables().iterator(); i.hasNext();) {
+					Table t = (Table) i.next();
+					for (Iterator j = t.getColumns().iterator(); j.hasNext();) {
+						Column c = (Column) j.next();
+						if (c instanceof WrappedColumn)
+							inputSchemas.add(((WrappedColumn) c).getTable()
+									.getSchema());
+					}
+				}
+				for (Iterator i = inputSchemas.iterator(); i.hasNext();) {
+					Schema s = (Schema) i.next();
+					helper.setInputDialect(s, Dialect.getDialect(s));
+				}
+
+				// Then the output.
+				helper.setOutputDialect(Dialect.getDialect(constructor));
+
+				// Cancelled?
+				this.checkCancelled();
+
+				// Work out the partition values.
+				this.statusMessage = BuilderBundle
+						.getString("mcGettingPartitions");
+				Map partitionValues = new HashMap();
+				for (Iterator i = ds.getTables().iterator(); i.hasNext();) {
+					Table t = (Table) i.next();
+					List tabCols = new ArrayList(t.getColumns());
+					tabCols.retainAll(ds.getPartitionedWrappedColumns());
+					if (!tabCols.isEmpty()) {
+						// There should be only one column left per table.
+						// As we can only partition on wrapped columns,
+						// we can assume it will be a wrapped column.
+						WrappedColumn col = (WrappedColumn) tabCols.get(0);
+
+						// What kind of partition is this?
+						PartitionedColumnType type = ds
+								.getPartitionedWrappedColumnType(col);
+
+						// Unique values - one step per value.
+						if (type instanceof UniqueValues) {
+							List values = helper.listDistinctValues(col
+									.getWrappedColumn());
+							partitionValues.put(col, values);
+						}
+
+						// Single value - one step.
+						else if (type instanceof SingleValue) {
+							SingleValue sv = (SingleValue) type;
+							Object value = sv.getIncludeNull() ? null : sv
+									.getValue();
+							partitionValues.put(col, Collections
+									.singletonList(value));
+						}
+
+						// Select values - one step per value.
+						else if (type instanceof ValueCollection) {
+							ValueCollection vc = (ValueCollection) type;
+							List values = new ArrayList(vc.getValues());
+							if (vc.getIncludeNull())
+								values.add(null);
+							partitionValues.put(col, values);
+						}
+					}
+
+					// Cancelled?
+					this.checkCancelled();
+				}
+
+				// Cancelled?
+				this.checkCancelled();
+
+				// Create a graph of actions.
+				this.statusMessage = BuilderBundle.getString("mcCreatingGraph");
+				MCActionGraph actionGraph = new MCActionGraph();
+
+				// TODO - add each of these steps as MCAction objects to graph.
+
+				/**
+				 
+				// For each schema partition...
+
+				// For each table...
+
+				// Find partition values for partition column on
+				// table, if any.
+
+				// For each partition value, which may be null if not
+				// partitioned, call A once for each value, specifying the
+				// dataset table's underlying table.
+
+				// (A)
+				// (run in parallel for each partition value)
+				// drop temp
+				// if value not null
+				// call step B on table with partition column,
+				// specifying current partition value
+				// else
+				// call step B on table, specifying partition value
+				// of null.
+				// add schema name column if source is schema group
+				// call step C on table
+
+				// (B)
+				// if temp exists
+				// merge table with temp using left join with given
+				// relation. create indexes on temp table relation
+				// key first, and drop them after.
+				// else
+				// create temp as select * from table, restrict
+				// by partition column value if on this table and
+				// value is not null.
+				// add all relations from merged table to queue and
+				// call step B on each one specifying partition value
+				// and relation.
+
+				// (C)
+				// rename temp table to final name
+				// call step D
+
+				// (D)
+				// create primary key on temp table
+				// call step E if dimension/subclass, step F if main.
+
+				// (E)
+				// (depends on parent table for this partition value
+				// being complete)
+				// if parent table is also partitioned, split this
+				// table into one chunk per parent table partition.
+				// delete records in each chunk that foreign key to
+				// parent table does not allow
+				// create foreign key to parent table.
+				// if subclass table, call step F.
+
+				// (F)
+				// (depends on all tables for this partition value being
+				// complete)
+				// Run the optimiser nodes.
+				
+				*/
+
+				// Carry out the action graph node-by-node, incrementing
+				// the progress by one step per node.
+				double stepPercent = 100.0 / (double) actionGraph.getActions()
+						.size();
+				helper.startActions();
+				
+				// Loop over all depths.
+				int depth = 0;
+				for (Collection actions = actionGraph.getActionsAtDepth(depth); !actions
+						.isEmpty(); depth++) {
+					
+					// Loop over all actions at current depth.
+					for (Iterator i = actions.iterator(); i.hasNext();) {
+						MCAction action = (MCAction) i.next();
+
+						// Execute the action.
+						this.statusMessage = action.getStatusMessage();
+						helper.executeAction(action, depth);
+						this.percentComplete += stepPercent;
+						
+						// Check not cancelled.
+						this.checkCancelled();
+					}
+				}
+				
+				// All done!
+				helper.endActions();
+			}
+
+			public String getStatusMessage() {
+				return this.statusMessage;
+			}
+
+			public int getPercentComplete() {
+				return (int) this.percentComplete;
+			}
+
+			public Exception getFailureException() {
+				return failure;
+			}
+
+			public void cancel() {
+				this.cancelled = true;
+			}
+
+			private void checkCancelled() throws ConstructorException {
+				if (this.cancelled)
+					throw new ConstructorException(BuilderBundle
+							.getString("mcCancelled"));
+			}
+		};
+	}
+
+	/**
+	 * Helper provides methods to define large steps. Helper implementations
+	 * perform those steps.
+	 */
+	public interface Helper {
+		/**
+		 * Sets the dialect to use on tables which come from the given schema.
+		 * 
+		 * @param schema
+		 *            the schema to use the dialect on.
+		 * @param dialect
+		 *            the dialect to use for tables in that schema.
+		 */
+		public void setInputDialect(Schema schema, Dialect dialect);
+
+		/**
+		 * Sets the dialect to use to create the output tables with.
+		 * 
+		 * @param dialect
+		 *            the dialect to use when creating output tables.
+		 */
+		public void setOutputDialect(Dialect dialect);
+
+		/**
+		 * Lists the distinct values in the given column. This must be a real
+		 * column, not an instance of {@link DataSetColumn}.
+		 * 
+		 * @param col
+		 *            the column to get the distinct values from.
+		 * @return the distinct values in the column.
+		 * @throws SQLException
+		 *             in case of problems.
+		 */
+		public List listDistinctValues(Column col) throws SQLException;
+
+		/**
+		 * Flag that we are about to begin.
+		 * 
+		 * @throws Exception
+		 *             if anything went wrong. Usually this will be a
+		 *             {@link SQLException} or {@link IOException}, but may be
+		 *             others too.
+		 */
+		public void startActions() throws Exception;
+
+		/**
+		 * Given an action, executes it. The action level specifies how far down
+		 * the tree of actions we are. This may or may not be important.
+		 * 
+		 * @param action
+		 *            the action to handle.
+		 * @param level
+		 *            the level the action is at. Once a particular level is
+		 *            reached, this method should never be passed actions from
+		 *            preceding levels again.
+		 * @throws Exception
+		 *             if anything went wrong. Usually this will be a
+		 *             {@link SQLException} or {@link IOException}, but may be
+		 *             others too.
+		 */
+		public void executeAction(MCAction action, int level) throws Exception;
+
+		/**
+		 * Flag that we are about to end.
+		 * 
+		 * @throws Exception
+		 *             if anything went wrong. Usually this will be a
+		 *             {@link SQLException} or {@link IOException}, but may be
+		 *             others too.
+		 */
+		public void endActions() throws Exception;
+	}
+
+	/**
+	 * DDLHelper generates DDL statements for each step.
+	 */
+	public abstract class DDLHelper implements Helper {
+		private Dialect dialect;
+
+		public void setInputDialect(Schema schema, Dialect dialect) {
+			// Ignored as is not required - the dialect is the
+			// same as the output dialect.
+		}
+
+		public void setOutputDialect(Dialect dialect) {
+			this.dialect = dialect;
+		}
+
+		public List listDistinctValues(Column col) throws SQLException {
+			return this.dialect.executeSelectDistinct(col);
+		}
+
+		public String getCommandForAction(MCAction action) throws Exception {
+			// TODO
+			// Use the dialect to translate actions into words.
+			return "";
+		}
+	}
+
+	/**
+	 * InternalHelper extends DDLHelper, executes statements.
+	 */
+	public class InternalHelper extends DDLHelper {
+		private Connection outputConn;
+
+		/**
+		 * Constructs a helper which will execute all DDL across the specified
+		 * connection.
+		 * 
+		 * @param outputConn
+		 *            the connection to which DDL will be sent for execution.
+		 */
+		public InternalHelper(Connection outputConn) {
+			super();
+			this.outputConn = outputConn;
+		}
+
+		public void startActions() throws Exception {
+			// We don't care.
+		}
+
+		public void executeAction(MCAction action, int level) throws Exception {
+			// Executes the given action.
+			String cmd = this.getCommandForAction(action);
+			// As we're working internally, the input connection is the
+			// same for all schemas, and is the same as the output one.
+			Connection inputConn = this.outputConn;
+			// Prepare and execute the command.
+			inputConn.prepareStatement(cmd).execute();
+		}
+
+		public void endActions() throws Exception {
+			// We don't care.
+		}
+	}
+
+	/**
+	 * FileHelper extends DDLHelper, saves statements. Statements are saved in
+	 * folders. Folder 1 must be finished before folder 2, but files within
+	 * folder 1 can be executed in any order. And so on.
+	 */
+	public class FileHelper extends DDLHelper {
+		private File outputFile;
+
+		private FileOutputStream outputFileStream;
+
+		private ZipOutputStream outputZipStream;
+
+		/**
+		 * Constructs a helper which will output all DDL into a structured
+		 * directory tree inside the given zip file.
+		 * 
+		 * @param outputZippedDDLFile
+		 *            the zip file to write the DDL structured tree into.
+		 */
+		public FileHelper(File outputZippedDDLFile) {
+			super();
+			this.outputFile = outputZippedDDLFile;
+		}
+
+		public void startActions() throws Exception {
+			// Open the zip stream.
+			this.outputFileStream = new FileOutputStream(this.outputFile);
+			this.outputZipStream = new ZipOutputStream(this.outputFileStream);
+		}
+
+		public void executeAction(MCAction action, int level) throws Exception {
+			// Writes the given action to file.
+			// Put the next entry to the zip file.
+			ZipEntry entry = new ZipEntry(level + "/" + action.getSequence());
+			this.outputZipStream.putNextEntry(entry);
+			// Write the data.
+			String cmd = this.getCommandForAction(action);
+			this.outputZipStream.write(cmd.getBytes());
+			// Close the entry.
+			this.outputZipStream.closeEntry();
+		}
+
+		public void endActions() throws Exception {
+			// Close the zip stream. Will also close the
+			// file output stream by default.
+			this.outputZipStream.close();
+		}
+	}
+
+	/**
+	 * Dialect provides methods which generate atomic DDL or SQL statements.
+	 * Each implementation should register itself with
+	 * {@link #registerDialect(Dialect)} in a static initializer so that it can
+	 * be used.
+	 */
+	public abstract static class Dialect {
+		private static final Set dialects = new HashSet();
+
+		/**
+		 * Registers a dialect for use with this system. Should be called from
+		 * the static initializer of every implementing class.
+		 * 
+		 * @param dialect
+		 *            the dialect to register.
+		 */
+		public static void registerDialect(Dialect dialect) {
+			dialects.add(dialect);
+		}
+
+		/**
+		 * Test to see whether this particular dialect implementation can
+		 * understand the data link given, ie. it knows how to interact with it
+		 * and speak the appropriate version of SQL or DDL.
+		 * 
+		 * @param dataLink
+		 *            the data link to test compatibility with.
+		 * @return <tt>true</tt> if it understands it, <tt>false</tt> if
+		 *         not.
+		 * @throws ConstructorException
+		 *             if there was any problem trying to establish whether or
+		 *             not the data link is compatible with this dialect.
+		 */
+		public abstract boolean understandsDataLink(DataLink dataLink)
+				throws ConstructorException;
+
+		/**
+		 * Work out what kind of dialect to use for the given data link.
+		 * 
+		 * @param dataLink
+		 *            the data link to work out the dialect for.
+		 * @return the appropriate Dialect.
+		 * @throws ConstructorException
+		 *             if there is no appropriate dialect.
+		 */
+		public static Dialect getDialect(DataLink dataLink)
+				throws ConstructorException {
+			for (Iterator i = dialects.iterator(); i.hasNext();) {
+				Dialect d = (Dialect) i.next();
+				if (d.understandsDataLink(dataLink))
+					return d;
+			}
+			throw new ConstructorException(BuilderBundle
+					.getString("mcUnknownDataLink"));
+		}
+
+		/**
+		 * Gets the distinct values in the given column. This must be a real
+		 * column, not an instance of {@link DataSetColumn}. This method
+		 * actually performs the select and returns the results as a list.
+		 * 
+		 * @param col
+		 *            the column to get the distinct values from.
+		 * @return the distinct values in the column.
+		 * @throws SQLException
+		 *             in case of problems.
+		 */
+		public abstract List executeSelectDistinct(Column col)
+				throws SQLException;
 	}
 
 	/**
@@ -354,134 +869,5 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 			// We are dealing with singletons so can use == happily.
 			return o == this;
 		}
-	}
-
-	public ConstructorRunnable getConstructorRunnable(DataSet ds) {
-		return new ConstructorRunnable() {
-			private Exception failure = null;
-
-			public void run() {
-				
-				// TODO
-				
-				// Define Helper interface. Helper provides methods
-				// to define large steps.
-				// Helper implementations perform those steps.
-				// DDLHelper generates DDL statements for each step.
-				// InternalHelper extends DDLHelper, executes stmts.
-				// FileHelper extends DDLHelper, saves stmts. Stmts
-				//  are saved in folders. Folder 1 must be finished
-				//  before folder 2, but files within folder 1 can
-				//  be executed in any order. And so on.
-				// ExternalHelper performs JDBC select/inserts.
-				
-				// TODO
-				
-				// Define Dialect interface. Dialect provides methods
-				// which generate atomic DDL or SQL statements.
-				// Oracle/MySQL/PostgreSQLDialect classes implement it.
-				// DDLHelper has one Dialect for input/output.
-				// ExternalHelper has one Dialect each for input/output.
-				
-				// TODO
-				
-				// Check to see if input and output DDL types are
-				// understandable.
-
-				// TODO
-
-				// Number of steps = number of partition values times
-				// the number of tables in the dataset, plus one for
-				// the optimiser step. Each table completed per partition 
-				// is one step forward, and the last step is the 
-				// optimiser step.
-				
-				// TODO
-
-				// For each table...
-				
-				// Find partition values for partition column on
-				// table, if any.
-								
-				// For each partition value, which may be null if not
-				// partitioned, call A with value for each table in
-				// dataset.
-
-				// (A)
-				//  (run in parallel for each partition value)
-				//  drop temp
-				//  if value not null
-				//    call step B on table with partition column,
-				//    specifying current partition value
-				//  else
-				//    call step B on table, specifying partition value 
-				//    of null.
-				//  add schema name column if source is schema group
-				//  call step C on table
-				
-				// (B)
-				//  if temp exists
-				//    merge table with temp using left join with given
-				//     relation. create indexes on temp table relation 
-				//     key first, and drop them after.
-				//  else
-				//    create temp as select * from table, restrict
-				//     by partition column value if on this table and
-				//	   value is not null.
-				//  add all relations from merged table to queue and
-				//   call step B on each one specifying partition value
-				//   and relation.
-
-				// (C)
-				//  rename temp table to final name
-				//  call step D
-				
-				// (D)
-				//  create primary key on temp table
-				//  call step E if dimension/subclass, step F if main.
-				
-				// (E)
-				//  (depends on parent table for this partition value 
-				//   being complete)
-				//  if parent table is also partitioned, split this
-				//   table into one chunk per parent table partition.
-				//  delete records in each chunk that foreign key to
-				//   parent table does not allow
-				//  create foreign key to parent table.
-				//  if subclass table, call step F.
-				
-				// (F)
-				//  (depends on all tables for this partition value being
-				//   complete)
-				//  Run the optimiser nodes.
-				
-				
-				if (getType().equals(JDBCMartConstructorType.INTERNAL)) {
-					// Do it using DDL internally.
-				} else if (getType().equals(JDBCMartConstructorType.EXTERNAL)) {
-					// Do it using JDBC import/export.
-				} else if (getType().equals(JDBCMartConstructorType.FILE)) {
-					// Do it using DDL written to file.
-				} else {
-					failure = new ConstructorException(BuilderBundle
-							.getString("unknownJDBCMCType"));
-				}
-			}
-
-			public String getStatusMessage() {
-				return "";
-			}
-
-			public int getPercentComplete() {
-				return 100;
-			}
-
-			public Exception getFailureException() {
-				return failure;
-			}
-
-			public void cancel() {
-			}
-		};
 	}
 }
