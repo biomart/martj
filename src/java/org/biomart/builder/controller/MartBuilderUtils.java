@@ -62,7 +62,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.16, 7th June 2006
+ * @version 0.1.17, 14th June 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -579,8 +579,8 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Masks all relations on a table within a dataset. 
-	 * The dataset is regenerated afterwards.
+	 * Masks all relations on a table within a dataset. The dataset is
+	 * regenerated afterwards.
 	 * 
 	 * @param dataset
 	 *            the dataset to mask the table in.
@@ -588,8 +588,8 @@ public class MartBuilderUtils {
 	 *            the table to mask all relations for.
 	 */
 	public static void maskTable(DataSet dataset, Table table) {
-		for (Iterator i = table.getRelations().iterator(); i.hasNext(); ) 
-			dataset.maskRelation((Relation)i.next());
+		for (Iterator i = table.getRelations().iterator(); i.hasNext();)
+			dataset.maskRelation((Relation) i.next());
 		dataset.regenerate();
 	}
 
@@ -960,6 +960,20 @@ public class MartBuilderUtils {
 			ComponentStatus status) {
 		key.setStatus(status);
 		mart.synchroniseDataSets();
+	}
+
+	/**
+	 * Changes the nullability of a foreign key.
+	 * 
+	 * @param key
+	 *            the foreign key to change.
+	 * @param nullable
+	 *            the new nullable status to give the key. <tt>true</tt> means
+	 *            it is nullable, <tt>false</tt> means it is not.
+	 */
+	public static void changeForeignKeyNullability(ForeignKey key,
+			boolean nullable) {
+		key.setNullable(nullable);
 	}
 
 	/**

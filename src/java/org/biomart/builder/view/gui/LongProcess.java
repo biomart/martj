@@ -32,13 +32,12 @@ import org.biomart.builder.exceptions.MartBuilderInternalError;
  * running, only the first one will start the hourglass, and only the last one
  * to end will stop it.
  * <p>
- * The threads are run using
- * {@link SwingUtilities#invokeLater(java.lang.Runnable)} and
- * {@link SwingUtilities#invokeAndWait(java.lang.Runnable)}, so that they are
+ * The thread is run using
+ * {@link SwingUtilities#invokeLater(java.lang.Runnable)}, so that it is
  * thread-safe for Swing and can safely work with the GUI.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 8th June 2006
+ * @version 0.1.4, 14th June 2006
  * @since 0.1
  */
 public abstract class LongProcess {
@@ -86,7 +85,7 @@ public abstract class LongProcess {
 
 					// Let the process run.
 					try {
-						SwingUtilities.invokeAndWait(process);
+						process.run();
 					} catch (Exception e) {
 						throw new MartBuilderInternalError(e);
 					}

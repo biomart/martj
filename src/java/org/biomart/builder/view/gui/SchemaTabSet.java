@@ -41,6 +41,7 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
+import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.BuilderBundle;
 
@@ -56,14 +57,15 @@ import org.biomart.builder.resources.BuilderBundle;
  * has the same context applied.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.15, 7th June 2006
+ * @version 0.1.16, 14th June 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
 	private static final long serialVersionUID = 1;
 
 	// Schema hashcodes change, so we must use a double-list.
-	private List[] schemaToDiagram = new List[]{new ArrayList(), new ArrayList()};
+	private List[] schemaToDiagram = new List[] { new ArrayList(),
+			new ArrayList() };
 
 	private DiagramContext diagramContext;
 
@@ -101,7 +103,8 @@ public class SchemaTabSet extends JTabbedPane {
 				.addTab(BuilderBundle.getString("multiSchemaOverviewTab"),
 						scroller);
 
-		// Populate the map to hold the relation between schemas and the diagrams
+		// Populate the map to hold the relation between schemas and the
+		// diagrams
 		// representing them.
 		this.recalculateSchemaTabs();
 	}
@@ -219,7 +222,7 @@ public class SchemaTabSet extends JTabbedPane {
 					// Add the schema to the mart, then synchronise it.
 					MartBuilderUtils.addSchemaToMart(datasetTabSet.getMart(),
 							schema);
-					
+
 					// Create and add the tab representing this schema.
 					addSchemaTab(schema);
 
@@ -234,7 +237,7 @@ public class SchemaTabSet extends JTabbedPane {
 						MartBuilderUtils.enableKeyGuessing(schema);
 						MartBuilderUtils.synchroniseSchema(schema);
 					}
-					
+
 					// Update the diagram to match the synchronised contents.
 					recalculateSchemaDiagram(schema);
 
@@ -460,7 +463,7 @@ public class SchemaTabSet extends JTabbedPane {
 					// have been dropped, so the dataset tabset needs to
 					// be recalculated.
 					datasetTabSet.recalculateDataSetTabs();
-					
+
 					// Recalculate the all-schemas diagram.
 					recalculateOverviewDiagram();
 
@@ -526,15 +529,15 @@ public class SchemaTabSet extends JTabbedPane {
 
 		// Work out the tab index.
 		int tabIndex = this.indexOfTab(schema.getName());
-		
+
 		// Remove the tab, and it's mapping from the schema-to-tab map.
 		this.removeTabAt(tabIndex);
 		this.schemaToDiagram[0].remove(index);
 		this.schemaToDiagram[1].remove(index);
-		
-		// Fake a click on the last tab before this one to ensure 
+
+		// Fake a click on the last tab before this one to ensure
 		// at least one tab remains visible and up-to-date.
-		this.setSelectedIndex(tabIndex-1);
+		this.setSelectedIndex(tabIndex - 1);
 	}
 
 	/**
@@ -609,7 +612,7 @@ public class SchemaTabSet extends JTabbedPane {
 			this.recalculateOverviewDiagram();
 			this.recalculateSchemaDiagram(schema);
 			this.datasetTabSet.recalculateAllDataSetDiagrams();
-			
+
 			// Set the dataset tabset status to modified.
 			this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
 		} catch (Throwable t) {
@@ -671,13 +674,13 @@ public class SchemaTabSet extends JTabbedPane {
 					recalculateAllSchemaDiagrams();
 
 					// As schemas may have lost or gained some external
-					// relations, the all-schemas diagram should also be 
+					// relations, the all-schemas diagram should also be
 					// recalculated.
 					recalculateOverviewDiagram();
 
 					// Schemas may have disappeared altogether, or lost some
-					// table upon which a dataset was based, so the datasets 
-					// may have changed. In which case, recalculate the dataset 
+					// table upon which a dataset was based, so the datasets
+					// may have changed. In which case, recalculate the dataset
 					// tabset to reflect this.
 					datasetTabSet.recalculateDataSetTabs();
 
@@ -772,8 +775,8 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Internal relation? Repaint the individual schema diagram.
 					if (!relation.isExternal())
-						repaintSchemaDiagram(relation.getFirstKey()
-								.getTable().getSchema());
+						repaintSchemaDiagram(relation.getFirstKey().getTable()
+								.getSchema());
 
 					// External relation? Repaint the all-schemas diagram.
 					else
@@ -814,8 +817,8 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Internal relation? Repaint the individual schema diagram.
 					if (!relation.isExternal())
-						repaintSchemaDiagram(relation.getFirstKey()
-								.getTable().getSchema());
+						repaintSchemaDiagram(relation.getFirstKey().getTable()
+								.getSchema());
 
 					// External relation? Repaint the all-schemas diagram.
 					else
@@ -1084,6 +1087,43 @@ public class SchemaTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Change the nullability of a foreign key.
+	 * 
+	 * @param key
+	 *            the key to change.
+	 * @param nullable
+	 *            <tt>true</tt> if it should be nullable, <tt>false</tt> if
+	 *            not.
+	 */
+	public void requestChangeForeignKeyNullability(final ForeignKey key,
+			final boolean nullable) {
+		// In the background, make the change.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Do the changes.
+					MartBuilderUtils.changeForeignKeyNullability(key, nullable);
+
+					// Repaint the schema diagram this key appears in, as
+					// the relation components will have changed appearance.
+					repaintSchemaDiagram(key.getTable().getSchema());
+
+					// The same may have happened in the all-schemas diagram if
+					// this key had any external relations, or belonged to a
+					// table which had external relations on some other key.
+					repaintOverviewDiagram();
+
+					// Set the dataset tabset status to modified.
+					datasetTabSet.getMartTabSet().setModifiedStatus(true);
+				} catch (Throwable t) {
+					datasetTabSet.getMartTabSet().getMartBuilder()
+							.showStackTrace(t);
+				}
+			}
+		});
+	}
+
+	/**
 	 * Change the columns that a key uses.
 	 * 
 	 * @param key
@@ -1133,16 +1173,16 @@ public class SchemaTabSet extends JTabbedPane {
 		Collection candidates = new ArrayList();
 
 		// We want all keys that have the same number of columns.
-			for (Iterator i = this.schemaToDiagram[0].iterator(); i
+		for (Iterator i = this.schemaToDiagram[0].iterator(); i.hasNext();)
+			for (Iterator j = ((Schema) i.next()).getTables().iterator(); j
 					.hasNext();)
-				for (Iterator j = ((Schema) i.next()).getTables().iterator(); j
-						.hasNext();)
-					for (Iterator k = ((Table) j.next()).getKeys()
-							.iterator(); k.hasNext();) {
-						Key key = (Key) k.next();
-						if (key.countColumns() == from.countColumns() && !key.equals(from))
-							candidates.add(key);
-					}
+				for (Iterator k = ((Table) j.next()).getKeys().iterator(); k
+						.hasNext();) {
+					Key key = (Key) k.next();
+					if (key.countColumns() == from.countColumns()
+							&& !key.equals(from))
+						candidates.add(key);
+				}
 
 		// Put up a box asking which key to link this key to, based on the
 		// list of candidates we just made. Return the key that the user

@@ -600,7 +600,7 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 	/**
 	 * DDLHelper generates DDL statements for each step.
 	 */
-	public abstract class DDLHelper implements Helper {
+	public abstract static class DDLHelper implements Helper {
 		private Dialect dialect;
 
 		public void setInputDialect(Schema schema, Dialect dialect) {
@@ -626,7 +626,7 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 	/**
 	 * InternalHelper extends DDLHelper, executes statements.
 	 */
-	public class InternalHelper extends DDLHelper {
+	public static class InternalHelper extends DDLHelper {
 		private Connection outputConn;
 
 		/**
@@ -665,7 +665,7 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 	 * folders. Folder 1 must be finished before folder 2, but files within
 	 * folder 1 can be executed in any order. And so on.
 	 */
-	public class FileHelper extends DDLHelper {
+	public static class FileHelper extends DDLHelper {
 		private File outputFile;
 
 		private FileOutputStream outputFileStream;

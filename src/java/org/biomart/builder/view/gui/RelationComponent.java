@@ -40,7 +40,7 @@ import org.biomart.builder.model.Relation;
  * The line is defined by the layout manager.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 5th June 2006
+ * @version 0.1.14, 14th June 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
@@ -49,9 +49,17 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	/**
 	 * Constant referring to the normal width of a relation line.
 	 */
-	public static final float RELATION_LINEWIDTH = 1.0f; // 72 = 1 inch at 72
+	public static final float RELATION_LINEWIDTH = 1.0f; // 72 = 1 inch
 
-	// dpi
+	/**
+	 * Constant referring to the dash size of an optional relation line.
+	 */
+	public static final float RELATION_DASHSIZE = 5.0f; // 72 = 1 inch
+
+	/**
+	 * Constant referring to the mitre trim of a relation line.
+	 */
+	public static final float RELATION_MITRE_TRIM = 10.0f; // 72 = 1 inch
 
 	/**
 	 * Constant referring to normal relation colour.
@@ -88,21 +96,48 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	 */
 	public static final Stroke ONE_MANY = new BasicStroke(
 			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND);
+			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM);
 
 	/**
 	 * Constant defining our 1:1 stroke.
 	 */
 	public static final Stroke ONE_ONE = new BasicStroke(
 			RelationComponent.RELATION_LINEWIDTH * 2.0f, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND);
+			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM);
 
 	/**
 	 * Constant defining our M:M stroke.
 	 */
 	public static final Stroke MANY_MANY = new BasicStroke(
 			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND);
+			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM);
+
+	/**
+	 * Constant defining our optional 1:M stroke.
+	 */
+	public static final Stroke ONE_MANY_OPTIONAL = new BasicStroke(
+			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
+			new float[] { RelationComponent.RELATION_DASHSIZE,
+					RelationComponent.RELATION_DASHSIZE }, 0);
+
+	/**
+	 * Constant defining our optional 1:1 stroke.
+	 */
+	public static final Stroke ONE_ONE_OPTIONAL = new BasicStroke(
+			RelationComponent.RELATION_LINEWIDTH * 2.0f, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
+			new float[] { RelationComponent.RELATION_DASHSIZE,
+					RelationComponent.RELATION_DASHSIZE }, 0);
+
+	/**
+	 * Constant defining our optional M:M stroke.
+	 */
+	public static final Stroke MANY_MANY_OPTIONAL = new BasicStroke(
+			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
+			new float[] { RelationComponent.RELATION_DASHSIZE,
+					RelationComponent.RELATION_DASHSIZE }, 0);
 
 	private Shape shape;
 
@@ -237,12 +272,21 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	}
 
 	private Stroke getStroke() {
-		if (this.relation.isOneToOne())
-			return RelationComponent.ONE_ONE;
-		else if (this.relation.isManyToMany())
-			return RelationComponent.MANY_MANY;
-		else
-			return RelationComponent.ONE_MANY;
+		if (this.relation.isOptional()) {
+			if (this.relation.isOneToOne())
+				return RelationComponent.ONE_ONE_OPTIONAL;
+			else if (this.relation.isManyToMany())
+				return RelationComponent.MANY_MANY_OPTIONAL;
+			else
+				return RelationComponent.ONE_MANY_OPTIONAL;
+		} else {
+			if (this.relation.isOneToOne())
+				return RelationComponent.ONE_ONE;
+			else if (this.relation.isManyToMany())
+				return RelationComponent.MANY_MANY;
+			else
+				return RelationComponent.ONE_MANY;
+		}
 	}
 
 	protected void paintComponent(Graphics g) {

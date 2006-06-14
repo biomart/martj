@@ -80,7 +80,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * or keys, or to reinstate any that have previously been marked as incorrect.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 6th June 2006
+ * @version 0.1.13, 13th June 2006
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -295,6 +295,9 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		DatabaseMetaData dmd = this.getConnection().getMetaData();
 		String catalog = this.getConnection().getCatalog();
 		String schema = dmd.getUserName();
+		
+		// This list will store all nullable columns we find.
+		List nullableCols = new ArrayList(); 
 
 		// Create a list of existing tables. During this method, we remove from
 		// this list all tables that still exist in the database. At the end of
@@ -334,9 +337,10 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			ResultSet dbTblCols = dmd.getColumns(catalog, schema, dbTableName,
 					"%");
 			while (dbTblCols.next()) {
-				// What is the column called?
+				// What is the column called, and is it nullable?
 				String dbTblColName = dbTblCols.getString("COLUMN_NAME");
-
+				int nullable = dbTblCols.getInt("NULLABLE");
+				
 				// Look to see if the column already exists on this table. If it
 				// does, reuse it. Else, create it.
 				Column dbTblCol = dbTable.getColumnByName(dbTblColName);
@@ -347,6 +351,9 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						throw new MartBuilderInternalError(t);
 					}
 
+				// If the column is nullable, remember the fact.
+				if (nullable == DatabaseMetaData.attributeNullable) nullableCols.add(dbTblCol);
+					
 				// Column exists, so remove it from our list of columns to be
 				// dropped at the end of the loop.
 				colsToBeDropped.remove(dbTblCol);
@@ -480,6 +487,26 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			if (k.getStatus().equals(ComponentStatus.HANDMADE))
 				continue;
 			k.destroy();
+		}
+		
+		// Iterate over the foreign keys that remain, and check all their
+		// columns. If every column in a key is nullable, then the key
+		// itself is nullable too.
+		for (Iterator i = this.tables.values().iterator(); i.hasNext(); ) {
+			Table t = (Table)i.next();
+			for (Iterator j = t.getForeignKeys().iterator(); j.hasNext(); ) {
+				ForeignKey fk = (ForeignKey)j.next();
+				// Skip any hand-made keys as we assume the user knows best.
+				if (fk.getStatus().equals(ComponentStatus.HANDMADE)) continue;
+				// Check each column one-by-one.
+				boolean allColsNullable = true;
+				for (Iterator k = fk.getColumns().iterator(); k.hasNext() && allColsNullable; ) {
+					Column c = (Column)k.next();
+					if (!nullableCols.contains(c)) allColsNullable = false;
+				}
+				// If all columns are nullable, the key is too.
+				if (allColsNullable) fk.setNullable(true);
+			}
 		}
 	}
 

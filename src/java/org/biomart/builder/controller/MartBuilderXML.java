@@ -99,7 +99,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 6th June 2006
+ * @version 0.1.14, 14th June 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -426,13 +426,16 @@ public class MartBuilderXML extends DefaultHandler {
 						.getString("fkOutsideTable"));
 			Table tbl = (Table) this.objectStack.peek();
 
-			// Get the ID.
+			// Get the ID and nullability.
 			String id = (String) attributes.get("id");
+			boolean nullable = false;
 
 			try {
 				// Work out what status it is.
 				ComponentStatus status = ComponentStatus
 						.get((String) attributes.get("status"));
+				if (attributes.containsKey("nullable")) 
+					nullable = Boolean.valueOf((String)attributes.get("nullable")).booleanValue();
 
 				// Decode the column IDs from the comma-separated list.
 				String[] fkColIds = ((String) attributes.get("columnIds"))
@@ -444,6 +447,7 @@ public class MartBuilderXML extends DefaultHandler {
 				// Make the key.
 				ForeignKey fk = new GenericForeignKey(fkCols);
 				fk.setStatus(status);
+				fk.setNullable(nullable);
 
 				// Add it to the table.
 				tbl.addForeignKey(fk);
@@ -1066,6 +1070,8 @@ public class MartBuilderXML extends DefaultHandler {
 
 				this.openElement(elem, xmlWriter);
 				this.writeAttribute("id", keyMappedID, xmlWriter);
+				if (elem.equals("foreignKey"))
+					this.writeAttribute("nullable", ""+((ForeignKey)key).getNullable(), xmlWriter);
 				List columnIds = new ArrayList();
 				for (Iterator kci = key.getColumns().iterator(); kci.hasNext();)
 					columnIds.add(this.reverseMappedObjects.get(kci.next()));

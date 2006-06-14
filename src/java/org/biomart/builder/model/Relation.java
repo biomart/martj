@@ -42,7 +42,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * outlined above.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 7th June 2006
+ * @version 0.1.10, 13th June 2006
  * @since 0.1
  */
 public interface Relation extends Comparable {
@@ -89,6 +89,16 @@ public interface Relation extends Comparable {
 	public Key getSecondKey();
 
 	/**
+	 * Returns whether or not this relation is optional or compulsory. A
+	 * relation is optional of one or both of the keys are nullable. Optionality
+	 * is set through the keys, not through the relation.
+	 * 
+	 * @return <tt>true</tt> if this relation is optional, <tt>false</tt> if
+	 *         not.
+	 */
+	public boolean isOptional();
+
+	/**
 	 * Given a key that is in this relationship, return the other key.
 	 * 
 	 * @param key
@@ -119,8 +129,8 @@ public interface Relation extends Comparable {
 
 	/**
 	 * Returns the cardinality of the foreign key end of this relation, in a 1:M
-	 * relation. In 1:1 relations this will always return 1, and in M:M relations
-	 * it will always return M.
+	 * relation. In 1:1 relations this will always return 1, and in M:M
+	 * relations it will always return M.
 	 * 
 	 * @return the cardinality of the foreign key end of this relation, in 1:M
 	 *         relations only. Otherwise determined by the relation type.
@@ -129,23 +139,25 @@ public interface Relation extends Comparable {
 
 	/**
 	 * Sets the cardinality of the foreign key end of this relation, in a 1:M
-	 * relation. If used on a 1:1 or M:M relation, then specifying M makes 
-	 * it M:M and specifying 1 makes it 1:1.
+	 * relation. If used on a 1:1 or M:M relation, then specifying M makes it
+	 * M:M and specifying 1 makes it 1:1.
 	 * 
 	 * @param cardinality
 	 *            the cardinality.
 	 */
 	public void setCardinality(Cardinality cardinality);
-	
+
 	/**
-	 * Can this relation be 1:M? Returns true in all cases where both
-	 * keys are of different types.
+	 * Can this relation be 1:M? Returns true in all cases where both keys are
+	 * of different types.
+	 * 
 	 * @return <tt>true</tt> if this can be 1:M, <tt>false</tt> if not.
 	 */
 	public boolean isOneToManyAllowed();
 
 	/**
 	 * Can this relation be M:M? Returns true where both keys are foreign keys.
+	 * 
 	 * @return <tt>true</tt> if this can be M:M, <tt>false</tt> if not.
 	 */
 	public boolean isManyToManyAllowed();
@@ -297,11 +309,11 @@ public interface Relation extends Comparable {
 		 *            the second key.
 		 * @param cardinality
 		 *            the cardinality of the foreign key end of this relation.
-		 *            If both keys are primary keys, then this is ignored 
-		 *            and defaults to 1 (meaning 1:1). If they are a mixture, 
-		 *            then this differentiates between 1:1 and 1:M. If they are
-		 *            both foreign keys, then this differentiates between 1:1 
-		 *            and M:M. See {@link #setCardinality(Cardinality)}.
+		 *            If both keys are primary keys, then this is ignored and
+		 *            defaults to 1 (meaning 1:1). If they are a mixture, then
+		 *            this differentiates between 1:1 and 1:M. If they are both
+		 *            foreign keys, then this differentiates between 1:1 and
+		 *            M:M. See {@link #setCardinality(Cardinality)}.
 		 * @throws AssociationException
 		 *             if the number of columns in the keys don't match, or if
 		 *             the relation already exists, or if one of the keys is a
@@ -392,6 +404,15 @@ public interface Relation extends Comparable {
 			return this.secondKey;
 		}
 
+		public boolean isOptional() {
+			if (this.firstKey instanceof ForeignKey)
+				return ((ForeignKey) this.firstKey).getNullable();
+			else if (this.secondKey instanceof ForeignKey)
+				return ((ForeignKey) this.secondKey).getNullable();
+			else
+				return false;
+		}
+
 		public Key getOtherKey(Key key) throws IllegalArgumentException {
 			if (key.equals(this.firstKey))
 				return this.secondKey;
@@ -434,8 +455,7 @@ public interface Relation extends Comparable {
 		}
 
 		public boolean isManyToManyAllowed() {
-			return ((this.firstKey instanceof ForeignKey)
-					&& (this.secondKey instanceof ForeignKey));
+			return ((this.firstKey instanceof ForeignKey) && (this.secondKey instanceof ForeignKey));
 		}
 
 		public void destroy() {

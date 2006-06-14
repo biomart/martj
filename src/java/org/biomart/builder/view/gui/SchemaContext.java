@@ -38,6 +38,7 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
+import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.BuilderBundle;
 
@@ -47,7 +48,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * dataset onto a set of masked relations.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 7th June 2006
+ * @version 0.1.18, 14th June 2006
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
@@ -374,8 +375,8 @@ public class SchemaContext implements DiagramContext {
 			// Set the relation to be M:M, but only if it is correct.
 			JRadioButtonMenuItem manyToMany = new JRadioButtonMenuItem(
 					BuilderBundle.getString("manyToManyTitle"));
-			manyToMany.setMnemonic(BuilderBundle.getString("manyToManyMnemonic")
-					.charAt(0));
+			manyToMany.setMnemonic(BuilderBundle
+					.getString("manyToManyMnemonic").charAt(0));
 			manyToMany.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					datasetTabSet.getSchemaTabSet()
@@ -478,6 +479,27 @@ public class SchemaContext implements DiagramContext {
 				}
 			});
 			contextMenu.add(editkey);
+
+			// Add a checkbox menu item to turn nullability on/off.
+			final JCheckBoxMenuItem nullable = new JCheckBoxMenuItem(
+					BuilderBundle.getString("nullableForeignKeyTitle"));
+			nullable.setMnemonic(BuilderBundle.getString(
+					"nullableForeignKeyMnemonic").charAt(0));
+			nullable.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					datasetTabSet.getSchemaTabSet()
+							.requestChangeForeignKeyNullability(
+									(ForeignKey) key, nullable.isSelected());
+				}
+			});
+			contextMenu.add(nullable);
+			if (!(key instanceof ForeignKey)) {
+				nullable.setEnabled(false);
+				nullable.setSelected(false);
+			} else {
+				nullable.setEnabled(true);
+				nullable.setSelected(((ForeignKey) key).getNullable());
+			}
 
 			// Option to establish a relation between this key and another.
 			JMenuItem createrel = new JMenuItem(BuilderBundle
