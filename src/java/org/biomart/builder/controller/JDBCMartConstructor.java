@@ -48,10 +48,14 @@ import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.MartConstructor;
+import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
@@ -72,6 +76,8 @@ import org.biomart.builder.resources.BuilderBundle;
  */
 public class JDBCMartConstructor extends GenericMartConstructor implements
 		JDBCDataLink {
+	private static final String DUMMY_KEY = "__jdbc_mc__dummy_map_key__";
+
 	private Connection connection;
 
 	private String driverClassName;
@@ -406,82 +412,126 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 				this.statusMessage = BuilderBundle.getString("mcCreatingGraph");
 				MCActionGraph actionGraph = new MCActionGraph();
 
-				// TODO - add each of these steps as MCAction objects to graph.
+				// Find main table.
+				DataSetTable mainTable = null;
+				for (Iterator i = ds.getTables().iterator(); i.hasNext()
+						&& mainTable == null;) {
+					DataSetTable table = (DataSetTable) i.next();
+					if (table.getType().equals(DataSetTableType.MAIN))
+						mainTable = table;
+				}
 
-				/**
-				 
-				// For each schema partition...
+				// Find schemas to partition by.
+				Collection schemas = null;
+				if (ds.getPartitionOnSchema()
+						&& (mainTable.getSchema() instanceof SchemaGroup))
+					schemas = ((SchemaGroup) mainTable.getSchema())
+							.getSchemas();
+				else
+					schemas = Collections.singletonList(mainTable.getSchema());
 
-				// For each table...
+				// Check not cancelled.
+				this.checkCancelled();
 
-				// Find partition values for partition column on
-				// table, if any.
+				// Repeat for each schema.
+				for (Iterator i = schemas.iterator(); i.hasNext();) {
+					Schema currSchema = (Schema) i.next();
+					// Maintain chained map:
+					// ds table ->
+					// parent partition value (optional) ->
+					// partition value (optional) ->
+					// actual table name
+					Map dsTableNameNestedMap = new HashMap();
 
-				// For each partition value, which may be null if not
-				// partitioned, call A once for each value, specifying the
-				// dataset table's underlying table.
+					// Maintain map:
+					// ds table -> last action
+					Map dsTableLastActionMap = new HashMap();
 
-				// (A)
-				// (run in parallel for each partition value)
-				// drop temp
-				// if value not null
-				// call step B on table with partition column,
-				// specifying current partition value
-				// else
-				// call step B on table, specifying partition value
-				// of null.
-				// add schema name column if source is schema group
-				// call step C on table
+					// Process main table.
+					this.processTable(currSchema, actionGraph, null, mainTable,
+							dsTableNameNestedMap, dsTableLastActionMap, null,
+							partitionValues);
 
-				// (B)
-				// if temp exists
-				// merge table with temp using left join with given
-				// relation. create indexes on temp table relation
-				// key first, and drop them after.
-				// else
-				// create temp as select * from table, restrict
-				// by partition column value if on this table and
-				// value is not null.
-				// add all relations from merged table to queue and
-				// call step B on each one specifying partition value
-				// and relation.
+					// Check not cancelled.
+					this.checkCancelled();
 
-				// (C)
-				// rename temp table to final name
-				// call step D
+					// Subclass tables and main dimension tables are dependent
+					// on last actions of main table.
+					MCAction scAndMainDimDependsOn = (MCAction) dsTableLastActionMap
+							.get(mainTable);
 
-				// (D)
-				// create primary key on temp table
-				// call step E if dimension/subclass, step F if main.
+					// Process all dimensions of main.
+					for (Iterator k = mainTable.getPrimaryKey().getRelations()
+							.iterator(); k.hasNext();) {
+						Relation dimRel = (Relation) k.next();
+						DataSetTable dimTableCandidate = (DataSetTable) dimRel
+								.getManyKey().getTable();
+						this.processTable(currSchema, actionGraph,
+								scAndMainDimDependsOn, dimTableCandidate,
+								dsTableNameNestedMap, dsTableLastActionMap,
+								dimRel, partitionValues);
 
-				// (E)
-				// (depends on parent table for this partition value
-				// being complete)
-				// if parent table is also partitioned, split this
-				// table into one chunk per parent table partition.
-				// delete records in each chunk that foreign key to
-				// parent table does not allow
-				// create foreign key to parent table.
-				// if subclass table, call step F.
+						// Check not cancelled.
+						this.checkCancelled();
+					}
 
-				// (F)
-				// (depends on all tables for this partition value being
-				// complete)
-				// Run the optimiser nodes.
-				
-				*/
+					// Process subclass tables.
+					for (Iterator j = mainTable.getPrimaryKey().getRelations()
+							.iterator(); j.hasNext();) {
+						Relation scRel = (Relation) j.next();
+						DataSetTable scTableCandidate = (DataSetTable) scRel
+								.getManyKey().getTable();
+						if (scTableCandidate.getType().equals(
+								DataSetTableType.MAIN_SUBCLASS)) {
+							// Process subclass table itself.
+							this.processTable(currSchema, actionGraph,
+									scAndMainDimDependsOn, scTableCandidate,
+									dsTableNameNestedMap, dsTableLastActionMap,
+									scRel, partitionValues);
+
+							// Check not cancelled.
+							this.checkCancelled();
+
+							// Subclass tables and main dimension tables are
+							// dependent on last actions of main table.
+							MCAction scDimDependsOn = (MCAction) dsTableLastActionMap
+									.get(scTableCandidate);
+
+							// Process all dimensions of subclass.
+							for (Iterator k = scTableCandidate.getPrimaryKey()
+									.getRelations().iterator(); k.hasNext();) {
+								Relation dimRel = (Relation) k.next();
+								DataSetTable dimTableCandidate = (DataSetTable) dimRel
+										.getManyKey().getTable();
+								this.processTable(currSchema, actionGraph,
+										scDimDependsOn, dimTableCandidate,
+										dsTableNameNestedMap,
+										dsTableLastActionMap, dimRel,
+										partitionValues);
+
+								// Check not cancelled.
+								this.checkCancelled();
+							}
+						}
+					}
+
+					// TODO
+					// 2. Optimiser nodes. Adding 'has' columns/tables, etc.
+					// Optimiser nodes are dependent on last actions of all
+					// tables within same schema.
+				}
 
 				// Carry out the action graph node-by-node, incrementing
 				// the progress by one step per node.
 				double stepPercent = 100.0 / (double) actionGraph.getActions()
 						.size();
 				helper.startActions();
-				
+
 				// Loop over all depths.
 				int depth = 0;
 				for (Collection actions = actionGraph.getActionsAtDepth(depth); !actions
 						.isEmpty(); depth++) {
-					
+
 					// Loop over all actions at current depth.
 					for (Iterator i = actions.iterator(); i.hasNext();) {
 						MCAction action = (MCAction) i.next();
@@ -490,14 +540,107 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 						this.statusMessage = action.getStatusMessage();
 						helper.executeAction(action, depth);
 						this.percentComplete += stepPercent;
-						
+
 						// Check not cancelled.
 						this.checkCancelled();
 					}
 				}
-				
+
 				// All done!
 				helper.endActions();
+			}
+
+			private void processTable(Schema schema, MCActionGraph actionGraph,
+					MCAction firstActionDependsOn, DataSetTable table,
+					Map dsTableNameNestedMap, Map dsTableLastActionMap,
+					Relation parentRelation, Map partitionValues)
+					throws Exception {
+				// If table has any column which is partitioned, identify
+				// the underlying partitioned table.
+				// Otherwise, identify the underlying base table of the
+				// dataset table instead.
+				WrappedColumn partitionColumn = null;
+				for (Iterator i = table.getColumns().iterator(); i.hasNext()
+						&& partitionColumn == null;) {
+					WrappedColumn c = (WrappedColumn) i.next();
+					if (partitionValues.containsKey(c))
+						partitionColumn = c;
+				}
+				Table startTable = table.getUnderlyingTable();
+				if (partitionColumn != null)
+					startTable = partitionColumn.getWrappedColumn().getTable();
+
+				// Process table once per partition value.
+				if (partitionColumn != null)
+					for (Iterator i = ((Collection) partitionValues
+							.get(partitionColumn)).iterator(); i.hasNext();)
+						this.processTable(schema, actionGraph,
+								firstActionDependsOn, table, startTable,
+								dsTableNameNestedMap, dsTableLastActionMap,
+								parentRelation, i.next(), true);
+				else
+					this.processTable(schema, actionGraph,
+							firstActionDependsOn, table, startTable,
+							dsTableNameNestedMap, dsTableLastActionMap,
+							parentRelation, null, false);
+
+			}
+
+			private void processTable(Schema schema, MCActionGraph actionGraph,
+					MCAction firstActionDependsOn, DataSetTable dsTable,
+					Table startTable, Map dsTableNameNestedMap,
+					Map dsTableLastActionMap, Relation parentRelation,
+					Object partitionValue, boolean partition) throws Exception {
+				// Holder for the last action performed on this table.
+				MCAction lastAction = null;
+
+				// When searching for ds cols for a particular real col
+				// (for translating real relations+keys), just take first
+				// ds col found that mentions it, even if there are several
+				// matches. This is because a relation can only be followed
+				// once, so it doesn't matter about the extra copies, as
+				// they won't have any relations followed off them - only
+				// the first one will.
+
+				// TODO
+				
+				// First action for each partition value is dependent on
+				// firstActionDependsOn.
+				// Subsequent actions are dependent on previous ones.
+				
+				// do...
+				// get next relation (or if queue empty, don't bother)
+				// identify cols to include
+				// create schema name col if required (if ds source schema 
+				// is schema group, regardless of partitioning)
+				// make values for any concat cols required
+				// use union if schema is schema group
+				// if table exists, create temp, else merge temp
+				// then add relations to queue if not already in queue
+				// ...while there are relations in queue
+				
+				// segment tables = dummy partition value -> temp table
+
+				// if table is DIM or SC only...
+				// work out parent table(s) for current schema
+				// work out parent PK col names 
+				// work out child FK col names
+				// clear segment tables
+				// for each parent table...
+				// create new temp table by using left join with parent
+				// segment tables.put(parent partition value -> new temp table)
+				// establish FK to PK relation on parent table
+				// after last parent table, drop original temp table
+				
+				// for each segment table...
+				// find PK col names
+				// create PK
+				// rename segment table to final name
+				// add final name to nested name map for this table
+
+				// Last action for table is rename for last segment of
+				// last partition value.
+				dsTableLastActionMap.put(dsTable, lastAction);
 			}
 
 			public String getStatusMessage() {
@@ -618,8 +761,10 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 
 		public String getCommandForAction(MCAction action) throws Exception {
 			// TODO
-			// Use the dialect to translate actions into words.
-			return "";
+			// Use the dialect to translate actions into words. We can't
+			// use parameterised queries here unfortunately as they may
+			// be written to file later.
+			return "HELLO WORLD FROM ACTION#" + action.getSequence();
 		}
 	}
 
@@ -870,4 +1015,6 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 			return o == this;
 		}
 	}
+
+	// TODO - MCAction implementations for specific tasks
 }
