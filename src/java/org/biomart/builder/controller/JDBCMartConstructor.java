@@ -621,9 +621,9 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 						Schema currSchema = (Schema) i.next();
 
 						// Come up with a new temp table name for this
-						// partition.
+						// schema.
 						tempTableName = helper.getNewTempTableName();
-						tempTableNames.put(partitionValue, tempTableName);
+						tempTableNames.put(schema, tempTableName);
 
 						// Create the table for this partition.
 						lastActions.add(this.constructTable(currSchema
@@ -639,19 +639,22 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 						// Come up with a temp table name for the union table.
 						tempTableName = helper.getNewTempTableName();
 
-						// TODO
 						// Union depends on final actions of each temporary
 						// table.
-						// Last action is union action.
+						UnionTables union = new UnionTables(tempTableName, tempTableNames.values());
+						for (Iterator i = lastActions.iterator(); i.hasNext(); )
+							union.addParent((MCAction)i.next());
+						actionGraph.addAction(union);
+						lastAction = union;
 
 						// Drop all the old temp tables that were combined in
 						// the union stage.
 						for (Iterator i = tempTableNames.values().iterator(); i
 								.hasNext();) {
 							String tableName = (String) i.next();
-							// TODO
-							// Drop temp table. Don't remember as last action.
-							// Each drop action depends on union action.
+							MCAction dropTable = new DropTable(tableName);
+							dropTable.addParent(lastAction);
+							actionGraph.addAction(dropTable);
 						}
 					}
 					// Otherwise, last action is the first (only) action in the
@@ -675,17 +678,13 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 						ForeignKey childFK = (ForeignKey) parentRelation
 								.getManyKey();
 
-						// Work out parent table from relation.
-						DataSetTable parentTable = (DataSetTable) parentPK
-								.getTable();
-
 						// Make a list to hold actions that final drop depends
 						// on.
 						List dropDependsOn = new ArrayList();
 
 						// Use dsTableNameNestedMap to identify parent partition
-						// values
-						// of parent table, in case parent itself was segmented.
+						// values of parent table, in case parent itself was 
+						// segmented.
 						Map parentVToV = (Map) dsTableNameNestedMap.get(schema);
 
 						// For each parent segment, work out partition values.
@@ -699,33 +698,41 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 							for (Iterator k = vToName.keySet().iterator(); k
 									.hasNext();) {
 								Object parentPartitionValue = k.next();
+								String parentTableName = (String)vToName.get(parentPartitionValue);
 								
 								// Come up with a temp table name for the 
 								// segment table.
 								String segmentTableName = helper.getNewTempTableName();
 								
-								// TODO
-								// (action depends on union action above)
-								// createrestrict new temp table by using natural 
-								// join with parent.
+								// Create a new temp table restricted by
+								// the parent relation.
+								RestrictTable restrict = new RestrictTable(segmentTableName, tempTableName, parentTableName, parentPK.getColumns(), childFK.getColumns());
+								restrict.addParent(lastAction);
+								actionGraph.addAction(restrict);
 								
-								// TODO
-								// (action depends on create temp table action)
-								// establish FK to PK relation on parent table.
-
-								// TODO
-								// add FK to PK action to dropDependsOn
-
+								// Establish FK to PK relation on parent table.
+								CreateFK createFK = new CreateFK(segmentTableName, childFK.getColumns(), parentTableName, parentPK.getColumns());
+								createFK.addParent(restrict);
+								actionGraph.addAction(createFK);
+								
+								// Add FK to PK action to dropDependsOn.
+								dropDependsOn.add(createFK);
+								
 								// Segments:add parent parent partition value ->
 								// parent partition value -> new temp table.
 								((Map)segmentTables.get(parentParentPartitionValue)).put(parentPartitionValue, segmentTableName);
 							}
 						}
 
-						// TODO
-						// (action depends on all dropDependsOn)
-						// after last parent parent partition, drop original temp
+						// After last parent parent partition, drop original temp
 						// table (tempTableName).
+						MCAction dropTable = new DropTable(tempTableName);
+						for (Iterator i = dropDependsOn.iterator(); i.hasNext(); )
+							dropTable.addParent((MCAction)i.next());
+						actionGraph.addAction(dropTable);
+						
+						// Subsequent actions depend on the drop table action.
+						lastAction = dropTable;
 					}
 					// If this is not a dimension or subclass, then there
 					// is only one segment, which we have already made.
@@ -735,6 +742,11 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 										JDBCMartConstructor.DUMMY_KEY,
 										tempTableName));
 
+					// Remember the last action, and a place to remember
+					// the last rename action.
+					MCAction prePKAction = lastAction;
+					MCAction lastRenameAction = null;
+					
 					// For each segment table, construct the PK and rename to
 					// their final name.
 					for (Iterator i = segmentTables.keySet().iterator(); i
@@ -750,13 +762,16 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 							String tableName = (String) parentPartitionValueMap
 									.get(parentPartitionValue);
 							
+							// Reset the last action.
+							lastAction = prePKAction;
+							
 							// Find PK columns.
 							PrimaryKey pk = dsTable.getPrimaryKey();
 							if (pk != null) {
-								// TODO
-								// (action depends on drop action above, if DIM
-								// or SC, or union action if not)
-								// create PK.
+								CreatePK createPK = new CreatePK(tableName, pk.getColumns());
+								createPK.addParent(lastAction);
+								actionGraph.addAction(createPK);
+								lastAction = createPK;
 							}
 
 							// Make the final name for this table.
@@ -764,13 +779,11 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 									schema, parentParentPartitionValue,
 									parentPartitionValue, partitionValue);
 
-							// TODO
-							// (action depends on PK action, or union if null
-							// PK)
 							// Rename segment table to final name.
-							// (tableName -> finalName)
-							// (last rename action is the last action to pass to
-							// next stage - don't care about the others)
+							MCAction rename = new RenameTable(tableName, finalName);
+							rename.addParent(lastAction);
+							actionGraph.addAction(rename);
+							lastRenameAction = rename;
 
 							// Add final name to nested name map for this table.
 							// ds table ->
@@ -800,6 +813,9 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 							vToName.put(partitionValue, finalName);
 						}
 					}
+					
+					// Make the last rename the last action for this table.
+					lastAction = lastRenameAction;
 				}
 
 				// Last action for table is rename for last segment of
@@ -909,20 +925,22 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 					// from this step as a parameter. Pass in the schema name.
 					// The Action will perform any concat columns required.
 					// Also pass in the partition dataset column and value.
-					if (fromKey == null) {
-						// TODO
-						// create temp action
-					} else {
-						// TODO
-						// merge temp
-					}
+					MCAction tableAction = null;
+					if (fromKey == null) 
+						tableAction = new CreateTable(tempTableName, realTable,
+				dsColumns, schemaName, partitionColumn, partitionValue);
+					else 
+						tableAction = new MergeTable(tempTableName, realTable,
+								dsColumns, schemaName, partitionColumn, partitionValue,
+								fromKeyDSColumns, toKey.getColumns(), relation.isOptional());
 
-					// TODO
 					// Add this action to the graph.
+					actionGraph.addAction(tableAction);
 
-					// TODO
 					// Make this action dependent on the last action performed.
 					// Set this action as the last action performed.
+					tableAction.addParent(lastAction);
+					lastAction = tableAction;
 
 					// Add new relations to queue if not already in queue.
 					for (Iterator i = realTable.getRelations().iterator(); i
@@ -954,11 +972,11 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 				
 				// Schema, parent parent partition, and parent partition.
 				name.append(schema.getName());
-				if (parentParentPartitionValue != null) {
+				if (parentParentPartitionValue != JDBCMartConstructor.DUMMY_KEY) {
 					name.append("_");
 					name.append(parentParentPartitionValue.toString());
 				}
-				if (parentPartitionValue != null) {
+				if (parentPartitionValue != JDBCMartConstructor.DUMMY_KEY) {
 					name.append("_");
 					name.append(parentPartitionValue.toString());
 				}
@@ -966,7 +984,7 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 				// Table name and partition.
 				name.append("__");
 				name.append(dsTable.getName());
-				if (partitionValue != null) {
+				if (partitionValue != JDBCMartConstructor.DUMMY_KEY) {
 					name.append("_");
 					name.append(partitionValue.toString());
 				}
@@ -1380,15 +1398,128 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 			return o == this;
 		}
 	}
-
-	// TODO - createTable(temptblname, targettbl, targetDSCols, schname, partDScols,
-	// partvalue)
-	// TODO - mergeTable extends createTable plus (fromDSCols, toCols,
-	// left/natural join)
-	// TODO - createRestrictedTable(targettblname, temptbl, parenttbl, tempFK, parentPK)
-	// TODO - unionTables(tablelist)
-	// TODO - dropTable(table)
-	// TODO - renameTable(old, new)
-	// TODO - createPK(table, dscols)
-	// TODO - createFK(table, dscols, parenttable, parentdscols)
+		
+	private class DropTable extends MCAction {
+		public String tableName;
+		public DropTable(String tableName) {
+			super();
+			this.tableName = tableName;
+		}
+		public String getStatusMessage() {
+			return BuilderBundle.getString("mcDropTable",this.tableName);
+		}
+	}	
+	
+	private class RenameTable extends MCAction {
+		public String oldName;
+		public String newName;
+		public RenameTable(String oldName, String newName) {
+			this.oldName = oldName;
+			this.newName = newName;
+		}
+		public String getStatusMessage() {
+			return BuilderBundle.getString("mcRenameTable",new String[]{this.oldName,this.newName});
+		}
+	}
+	
+	private class UnionTables extends MCAction {
+		public String tableName;
+		public Collection tableNames;
+		public UnionTables(String tableName, Collection tableNames) {
+			this.tableName = tableName;
+			this.tableNames = tableNames;
+		}
+		public String getStatusMessage() {
+			return BuilderBundle.getString("mcUnionTables",new String[]{this.tableName,""+this.tableNames});
+		}
+	}
+	
+	public class CreatePK extends MCAction {
+		public String tableName;
+		public List dsColumns;
+		public CreatePK(String tableName, List dsColumns) {
+			this.tableName = tableName;
+			this.dsColumns = dsColumns;
+		}
+		public String getStatusMessage() {
+			return BuilderBundle.getString("mcCreatePK",new String[]{this.tableName,""+this.dsColumns});
+		}
+	}
+	
+	public class CreateFK extends MCAction {
+		public String tableName;
+		public List dsColumns;
+		public String parentTableName;
+		public List parentDSColumns;
+		public CreateFK(String tableName, List dsColumns, String parentTableName, List parentDSColumns) {
+			this.tableName = tableName;
+			this.dsColumns = dsColumns;
+			this.parentTableName = parentTableName;
+			this.parentDSColumns = parentDSColumns;
+		}
+		public String getStatusMessage() {
+			return BuilderBundle.getString("mcCreateFK",new String[]{this.tableName,""+this.dsColumns,this.parentTableName,""+this.parentDSColumns});
+		}
+	}
+	
+	public class CreateTable extends MCAction {
+		public String tableName;
+		public Table realTable;
+		public List dsColumns;
+		public String schemaName;
+		public DataSetColumn partitionColumn;
+		public Object partitionValue;
+		public CreateTable(String tableName, Table realTable,
+				List dsColumns, String schemaName, DataSetColumn partitionColumn,
+				Object partitionValue) {
+			this.tableName = tableName;
+			this.realTable = realTable;
+			this.dsColumns = dsColumns;
+			this.schemaName = schemaName;
+			this.partitionColumn = partitionColumn;
+			this.partitionValue = partitionValue;
+		}
+		public String getStatusMessage() {
+			return BuilderBundle.getString("mcCreateTable",new String[]{
+					this.tableName,""+this.realTable,""+this.dsColumns,this.schemaName,""+this.partitionColumn,""+this.partitionValue});
+		}
+	}
+	
+	public class MergeTable extends CreateTable {
+		public List fromDSColumns;
+		public List toRealColumns;
+		public boolean leftJoin;
+		public MergeTable(String tableName, Table realTable,
+				List dsColumns, String schemaName, DataSetColumn partitionColumn,
+				Object partitionValue, List fromDSColumns, List toRealColumns, boolean leftJoin) {
+			super(tableName, realTable, dsColumns, schemaName, partitionColumn, partitionValue);
+			this.fromDSColumns = fromDSColumns;
+			this.toRealColumns = toRealColumns;
+			this.leftJoin = leftJoin;
+		}
+		public String getStatusMessage() {
+			return BuilderBundle.getString("mcMergeTable",new String[]{
+					this.tableName,""+this.realTable,""+this.dsColumns,this.schemaName,""+this.partitionColumn,""+this.partitionValue,""+this.fromDSColumns,""+this.toRealColumns,""+this.leftJoin});
+		}
+	}
+	
+	public class RestrictTable extends MCAction {
+		public String newTableName;
+		public String oldTableName;
+		public String parentTableName;
+		public List parentPKCols;
+		public List childFKCols;
+		public RestrictTable(String newTableName, String oldTableName, String parentTableName, List parentPKCols, List childFKCols) {
+			this.newTableName = newTableName;
+			this.oldTableName = oldTableName;
+			this.parentTableName = parentTableName;
+			this.parentPKCols = parentPKCols;
+			this.childFKCols = childFKCols;
+		}
+		public String getStatusMessage() {
+			return BuilderBundle.getString("mcRestrictTable",new String[]{
+					this.newTableName,this.oldTableName,this.parentTableName,""+this.parentPKCols,""+this.childFKCols});
+		}
+	}
+	
 }
