@@ -6,7 +6,7 @@
 	<dummyMartConstructor id="4" name="dummy5"/>
 	<dummyMartConstructor id="5" name="dummy5"/>
 	<dummyMartConstructor id="6" name="dummy5"/>
-	<dummyMartConstructor id="7" name="dummy5"/>
+	<jdbcMartConstructor id="7" name="dummy5" driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:3306/test" username="holland" type="FILE" outputDDLFile="/home/holland/test.zip"/>
 	<dummyMartConstructor id="8" name="dummy5"/>
 	<jdbcSchema driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://ensembldb.ensembl.org:3306/ensembl_compara_38" username="anonymous" name="ensembl_compara_38" keyguessing="true">
 		<table id="9" name="analysis">
@@ -150,7 +150,7 @@
 			<column id="134" name="perc_pos"/>
 			<foreignKey id="135" nullable="false" columnIds="128" status="INFERRED" alt="FK_ensembl_compara_38:homology_member[homology_id]"/>
 			<foreignKey id="136" nullable="false" columnIds="129" status="INFERRED" alt="FK_ensembl_compara_38:homology_member[member_id]"/>
-			<foreignKey id="137" nullable="false" columnIds="130" status="INFERRED" alt="FK_ensembl_compara_38:homology_member[peptide_align_feature_id]"/>
+			<foreignKey id="137" nullable="true" columnIds="130" status="INFERRED" alt="FK_ensembl_compara_38:homology_member[peptide_align_feature_id]"/>
 		</table>
 		<table id="138" name="member">
 			<column id="139" name="chr_end"/>
@@ -166,8 +166,8 @@
 			<column id="149" name="stable_id"/>
 			<column id="150" name="taxon_id"/>
 			<column id="151" name="version"/>
-			<foreignKey id="152" nullable="false" columnIds="145" status="INFERRED" alt="FK_ensembl_compara_38:member[genome_db_id]"/>
-			<foreignKey id="153" nullable="false" columnIds="147" status="INFERRED" alt="FK_ensembl_compara_38:member[sequence_id]"/>
+			<foreignKey id="152" nullable="true" columnIds="145" status="INFERRED" alt="FK_ensembl_compara_38:member[genome_db_id]"/>
+			<foreignKey id="153" nullable="true" columnIds="147" status="INFERRED" alt="FK_ensembl_compara_38:member[sequence_id]"/>
 			<foreignKey id="154" nullable="false" columnIds="149" status="HANDMADE" alt="FK_ensembl_compara_38:member[stable_id]"/>
 			<primaryKey id="155" columnIds="146" status="INFERRED" alt="PK_ensembl_compara_38:member[member_id]"/>
 		</table>
@@ -189,7 +189,7 @@
 			<column id="169" name="source"/>
 			<column id="170" name="species_set_id"/>
 			<column id="171" name="url"/>
-			<foreignKey id="172" nullable="false" columnIds="166" status="INFERRED" alt="FK_ensembl_compara_38:method_link_species_set[method_link_id]"/>
+			<foreignKey id="172" nullable="true" columnIds="166" status="INFERRED" alt="FK_ensembl_compara_38:method_link_species_set[method_link_id]"/>
 			<primaryKey id="173" columnIds="167" status="INFERRED" alt="PK_ensembl_compara_38:method_link_species_set[method_link_species_set_id]"/>
 		</table>
 		<table id="174" name="ncbi_taxa_names">
@@ -344,7 +344,7 @@
 			<column id="308" name="symbol"/>
 			<column id="309" name="type_id"/>
 			<foreignKey id="310" nullable="false" columnIds="303" status="INFERRED" alt="FK_ensembl_go_38:gene_product[dbxref_id]"/>
-			<foreignKey id="311" nullable="false" columnIds="307" status="INFERRED" alt="FK_ensembl_go_38:gene_product[species_id]"/>
+			<foreignKey id="311" nullable="true" columnIds="307" status="INFERRED" alt="FK_ensembl_go_38:gene_product[species_id]"/>
 			<primaryKey id="312" columnIds="305" status="INFERRED" alt="PK_ensembl_go_38:gene_product[id]"/>
 		</table>
 		<table id="313" name="gene_product_count">
@@ -469,7 +469,7 @@
 			<column id="416" name="term_comment"/>
 			<column id="417" name="term_definition"/>
 			<column id="418" name="term_id"/>
-			<foreignKey id="419" nullable="false" columnIds="414" status="INFERRED" alt="FK_ensembl_go_38:term_definition[dbxref_id]"/>
+			<foreignKey id="419" nullable="true" columnIds="414" status="INFERRED" alt="FK_ensembl_go_38:term_definition[dbxref_id]"/>
 			<foreignKey id="420" nullable="false" columnIds="418" status="INFERRED" alt="FK_ensembl_go_38:term_definition[term_id]"/>
 			<primaryKey id="421" columnIds="417" status="INFERRED" alt="PK_ensembl_go_38:term_definition[term_definition]"/>
 		</table>
@@ -1006,9 +1006,9 @@
 			<column id="899" name="gene_id"/>
 			<column id="900" name="regulatory_factor_id"/>
 			<column id="901" name="transcript_id"/>
-			<foreignKey id="902" nullable="false" columnIds="899" status="INFERRED" alt="FK_homo_sapiens_cdna_38_36:regulatory_factor_coding[gene_id]"/>
+			<foreignKey id="902" nullable="true" columnIds="899" status="INFERRED" alt="FK_homo_sapiens_cdna_38_36:regulatory_factor_coding[gene_id]"/>
 			<foreignKey id="903" nullable="false" columnIds="900" status="INFERRED" alt="FK_homo_sapiens_cdna_38_36:regulatory_factor_coding[regulatory_factor_id]"/>
-			<foreignKey id="904" nullable="false" columnIds="901" status="INFERRED" alt="FK_homo_sapiens_cdna_38_36:regulatory_factor_coding[transcript_id]"/>
+			<foreignKey id="904" nullable="true" columnIds="901" status="INFERRED" alt="FK_homo_sapiens_cdna_38_36:regulatory_factor_coding[transcript_id]"/>
 		</table>
 		<table id="905" name="regulatory_feature">
 			<column id="906" name="analysis_id"/>
@@ -1020,7 +1020,7 @@
 			<column id="912" name="seq_region_start"/>
 			<column id="913" name="seq_region_strand"/>
 			<foreignKey id="914" nullable="false" columnIds="906" status="INFERRED" alt="FK_homo_sapiens_cdna_38_36:regulatory_feature[analysis_id]"/>
-			<foreignKey id="915" nullable="false" columnIds="908" status="INFERRED" alt="FK_homo_sapiens_cdna_38_36:regulatory_feature[regulatory_factor_id]"/>
+			<foreignKey id="915" nullable="true" columnIds="908" status="INFERRED" alt="FK_homo_sapiens_cdna_38_36:regulatory_feature[regulatory_factor_id]"/>
 			<foreignKey id="916" nullable="false" columnIds="911" status="INFERRED" alt="FK_homo_sapiens_cdna_38_36:regulatory_feature[seq_region_id]"/>
 			<primaryKey id="917" columnIds="909" status="INFERRED" alt="PK_homo_sapiens_cdna_38_36:regulatory_feature[regulatory_feature_id]"/>
 		</table>
@@ -1902,9 +1902,9 @@
 			<column id="1712" name="gene_id"/>
 			<column id="1713" name="regulatory_factor_id"/>
 			<column id="1714" name="transcript_id"/>
-			<foreignKey id="1715" nullable="false" columnIds="1712" status="INFERRED" alt="FK_homo_sapiens_core_38_36:regulatory_factor_coding[gene_id]"/>
+			<foreignKey id="1715" nullable="true" columnIds="1712" status="INFERRED" alt="FK_homo_sapiens_core_38_36:regulatory_factor_coding[gene_id]"/>
 			<foreignKey id="1716" nullable="false" columnIds="1713" status="INFERRED" alt="FK_homo_sapiens_core_38_36:regulatory_factor_coding[regulatory_factor_id]"/>
-			<foreignKey id="1717" nullable="false" columnIds="1714" status="INFERRED" alt="FK_homo_sapiens_core_38_36:regulatory_factor_coding[transcript_id]"/>
+			<foreignKey id="1717" nullable="true" columnIds="1714" status="INFERRED" alt="FK_homo_sapiens_core_38_36:regulatory_factor_coding[transcript_id]"/>
 		</table>
 		<table id="1718" name="regulatory_feature">
 			<column id="1719" name="analysis_id"/>
@@ -1916,7 +1916,7 @@
 			<column id="1725" name="seq_region_start"/>
 			<column id="1726" name="seq_region_strand"/>
 			<foreignKey id="1727" nullable="false" columnIds="1719" status="INFERRED" alt="FK_homo_sapiens_core_38_36:regulatory_feature[analysis_id]"/>
-			<foreignKey id="1728" nullable="false" columnIds="1721" status="INFERRED" alt="FK_homo_sapiens_core_38_36:regulatory_feature[regulatory_factor_id]"/>
+			<foreignKey id="1728" nullable="true" columnIds="1721" status="INFERRED" alt="FK_homo_sapiens_core_38_36:regulatory_feature[regulatory_factor_id]"/>
 			<foreignKey id="1729" nullable="false" columnIds="1724" status="INFERRED" alt="FK_homo_sapiens_core_38_36:regulatory_feature[seq_region_id]"/>
 			<primaryKey id="1730" columnIds="1722" status="INFERRED" alt="PK_homo_sapiens_core_38_36:regulatory_feature[regulatory_feature_id]"/>
 		</table>
@@ -2869,9 +2869,9 @@
 			<column id="2575" name="gene_id"/>
 			<column id="2576" name="regulatory_factor_id"/>
 			<column id="2577" name="transcript_id"/>
-			<foreignKey id="2578" nullable="false" columnIds="2575" status="INFERRED" alt="FK_homo_sapiens_otherfeatures_38_36:regulatory_factor_coding[gene_id]"/>
+			<foreignKey id="2578" nullable="true" columnIds="2575" status="INFERRED" alt="FK_homo_sapiens_otherfeatures_38_36:regulatory_factor_coding[gene_id]"/>
 			<foreignKey id="2579" nullable="false" columnIds="2576" status="INFERRED" alt="FK_homo_sapiens_otherfeatures_38_36:regulatory_factor_coding[regulatory_factor_id]"/>
-			<foreignKey id="2580" nullable="false" columnIds="2577" status="INFERRED" alt="FK_homo_sapiens_otherfeatures_38_36:regulatory_factor_coding[transcript_id]"/>
+			<foreignKey id="2580" nullable="true" columnIds="2577" status="INFERRED" alt="FK_homo_sapiens_otherfeatures_38_36:regulatory_factor_coding[transcript_id]"/>
 		</table>
 		<table id="2581" name="regulatory_feature">
 			<column id="2582" name="analysis_id"/>
@@ -2883,7 +2883,7 @@
 			<column id="2588" name="seq_region_start"/>
 			<column id="2589" name="seq_region_strand"/>
 			<foreignKey id="2590" nullable="false" columnIds="2582" status="INFERRED" alt="FK_homo_sapiens_otherfeatures_38_36:regulatory_feature[analysis_id]"/>
-			<foreignKey id="2591" nullable="false" columnIds="2584" status="INFERRED" alt="FK_homo_sapiens_otherfeatures_38_36:regulatory_feature[regulatory_factor_id]"/>
+			<foreignKey id="2591" nullable="true" columnIds="2584" status="INFERRED" alt="FK_homo_sapiens_otherfeatures_38_36:regulatory_feature[regulatory_factor_id]"/>
 			<foreignKey id="2592" nullable="false" columnIds="2587" status="INFERRED" alt="FK_homo_sapiens_otherfeatures_38_36:regulatory_feature[seq_region_id]"/>
 			<primaryKey id="2593" columnIds="2585" status="INFERRED" alt="PK_homo_sapiens_otherfeatures_38_36:regulatory_feature[regulatory_feature_id]"/>
 		</table>
@@ -3181,7 +3181,7 @@
 			<column id="2864" name="frequency"/>
 			<column id="2865" name="sample_id"/>
 			<column id="2866" name="variation_id"/>
-			<foreignKey id="2867" nullable="false" columnIds="2865" status="INFERRED" alt="FK_homo_sapiens_variation_38_36:allele[sample_id]"/>
+			<foreignKey id="2867" nullable="true" columnIds="2865" status="INFERRED" alt="FK_homo_sapiens_variation_38_36:allele[sample_id]"/>
 			<foreignKey id="2868" nullable="false" columnIds="2866" status="INFERRED" alt="FK_homo_sapiens_variation_38_36:allele[variation_id]"/>
 			<primaryKey id="2869" columnIds="2863" status="INFERRED" alt="PK_homo_sapiens_variation_38_36:allele[allele_id]"/>
 		</table>
@@ -3192,8 +3192,8 @@
 			<column id="2874" name="sample_id"/>
 			<column id="2875" name="source_id"/>
 			<column id="2876" name="variation_group_id"/>
-			<foreignKey id="2877" nullable="false" columnIds="2874" status="INFERRED" alt="FK_homo_sapiens_variation_38_36:allele_group[sample_id]"/>
-			<foreignKey id="2878" nullable="false" columnIds="2875" status="INFERRED" alt="FK_homo_sapiens_variation_38_36:allele_group[source_id]"/>
+			<foreignKey id="2877" nullable="true" columnIds="2874" status="INFERRED" alt="FK_homo_sapiens_variation_38_36:allele_group[sample_id]"/>
+			<foreignKey id="2878" nullable="true" columnIds="2875" status="INFERRED" alt="FK_homo_sapiens_variation_38_36:allele_group[source_id]"/>
 			<foreignKey id="2879" nullable="false" columnIds="2876" status="INFERRED" alt="FK_homo_sapiens_variation_38_36:allele_group[variation_group_id]"/>
 			<primaryKey id="2880" columnIds="2871" status="INFERRED" alt="PK_homo_sapiens_variation_38_36:allele_group[allele_group_id]"/>
 		</table>
@@ -3248,7 +3248,7 @@
 			<column id="2924" name="allele_2"/>
 			<column id="2925" name="sample_id"/>
 			<column id="2926" name="variation_id"/>
-			<foreignKey id="2927" nullable="false" columnIds="2925" status="INFERRED" alt="FK_homo_sapiens_variation_38_36:individual_genotype_multiple_bp[sample_id]"/>
+			<foreignKey id="2927" nullable="true" columnIds="2925" status="INFERRED" alt="FK_homo_sapiens_variation_38_36:individual_genotype_multiple_bp[sample_id]"/>
 			<foreignKey id="2928" nullable="false" columnIds="2926" status="INFERRED" alt="FK_homo_sapiens_variation_38_36:individual_genotype_multiple_bp[variation_id]"/>
 		</table>
 		<table id="2929" name="individual_population">
@@ -3281,7 +3281,7 @@
 			<column id="2952" name="population_genotype_id"/>
 			<column id="2953" name="sample_id"/>
 			<column id="2954" name="variation_id"/>
-			<foreignKey id="2955" nullable="false" columnIds="2953" status="INFERRED" alt="FK_homo_sapiens_variation_38_36:population_genotype[sample_id]"/>
+			<foreignKey id="2955" nullable="true" columnIds="2953" status="INFERRED" alt="FK_homo_sapiens_variation_38_36:population_genotype[sample_id]"/>
 			<foreignKey id="2956" nullable="false" columnIds="2954" status="INFERRED" alt="FK_homo_sapiens_variation_38_36:population_genotype[variation_id]"/>
 			<primaryKey id="2957" columnIds="2952" status="INFERRED" alt="PK_homo_sapiens_variation_38_36:population_genotype[population_genotype_id]"/>
 		</table>
@@ -3937,9 +3937,9 @@
 			<column id="3542" name="gene_id"/>
 			<column id="3543" name="regulatory_factor_id"/>
 			<column id="3544" name="transcript_id"/>
-			<foreignKey id="3545" nullable="false" columnIds="3542" status="INFERRED" alt="FK_homo_sapiens_vega_38_36:regulatory_factor_coding[gene_id]"/>
+			<foreignKey id="3545" nullable="true" columnIds="3542" status="INFERRED" alt="FK_homo_sapiens_vega_38_36:regulatory_factor_coding[gene_id]"/>
 			<foreignKey id="3546" nullable="false" columnIds="3543" status="INFERRED" alt="FK_homo_sapiens_vega_38_36:regulatory_factor_coding[regulatory_factor_id]"/>
-			<foreignKey id="3547" nullable="false" columnIds="3544" status="INFERRED" alt="FK_homo_sapiens_vega_38_36:regulatory_factor_coding[transcript_id]"/>
+			<foreignKey id="3547" nullable="true" columnIds="3544" status="INFERRED" alt="FK_homo_sapiens_vega_38_36:regulatory_factor_coding[transcript_id]"/>
 		</table>
 		<table id="3548" name="regulatory_feature">
 			<column id="3549" name="analysis_id"/>
@@ -3951,7 +3951,7 @@
 			<column id="3555" name="seq_region_start"/>
 			<column id="3556" name="seq_region_strand"/>
 			<foreignKey id="3557" nullable="false" columnIds="3549" status="INFERRED" alt="FK_homo_sapiens_vega_38_36:regulatory_feature[analysis_id]"/>
-			<foreignKey id="3558" nullable="false" columnIds="3551" status="INFERRED" alt="FK_homo_sapiens_vega_38_36:regulatory_feature[regulatory_factor_id]"/>
+			<foreignKey id="3558" nullable="true" columnIds="3551" status="INFERRED" alt="FK_homo_sapiens_vega_38_36:regulatory_feature[regulatory_factor_id]"/>
 			<foreignKey id="3559" nullable="false" columnIds="3554" status="INFERRED" alt="FK_homo_sapiens_vega_38_36:regulatory_feature[seq_region_id]"/>
 			<primaryKey id="3560" columnIds="3552" status="INFERRED" alt="PK_homo_sapiens_vega_38_36:regulatory_feature[regulatory_feature_id]"/>
 		</table>
