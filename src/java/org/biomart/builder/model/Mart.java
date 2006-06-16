@@ -37,7 +37,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * mart. It also has zero or more datasets based around these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 5th June 2006
+ * @version 0.1.12, 16th June 2006
  * @since 0.1
  */
 public class Mart {
@@ -323,13 +323,10 @@ public class Mart {
 	/**
 	 * Request that all datasets be constructed into actual marts now.
 	 * 
-	 * @throws SQLException
-	 *             if there was any data source error during mart construction.
-	 * @throws BuilderException
-	 *             if there was any other kind of error in the mart construction
-	 *             process.
+	 * @throws Exception
+	 *             if there was any error during mart construction.
 	 */
-	public void constructMart() throws BuilderException, SQLException {
+	public void constructMart() throws Exception {
 		for (Iterator i = this.datasets.values().iterator(); i.hasNext();) {
 			DataSet ds = (DataSet) i.next();
 			ds.constructMart();

@@ -58,7 +58,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.25, 7th June 2006
+ * @version 0.1.26, 16th June 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -1026,13 +1026,10 @@ public class DataSet extends GenericSchema {
 	/**
 	 * Uses the mart constructor to construct the final mart.
 	 * 
-	 * @throws BuilderException
-	 *             if there was a logical problem constructing the mart.
-	 * @throws SQLException
-	 *             if there was a problem connecting to the database within
-	 *             which the mart will be constructed.
+	 * @throws Exception
+	 *             if there was a problem constructing the mart.
 	 */
-	public void constructMart() throws BuilderException, SQLException {
+	public void constructMart() throws Exception {
 		this.martConstructor.getConstructorRunnable(this);
 	}
 

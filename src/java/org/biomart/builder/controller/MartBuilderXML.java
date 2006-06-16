@@ -99,7 +99,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 14th June 2006
+ * @version 0.1.15, 16th June 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -510,6 +510,8 @@ public class MartBuilderXML extends DefaultHandler {
 		// JDBC Mart constructors (anywhere)
 		else if ("jdbcMartConstructor".equals(eName)) {
 			// Start a new JDBC mart constructor.
+			String id = (String) attributes.get("id");
+			String name = (String) attributes.get("name");
 
 			// Does it have a driver class location? (optional)
 			File driverClassLocation = null;
@@ -526,7 +528,6 @@ public class MartBuilderXML extends DefaultHandler {
 			String driverClassName = (String) attributes.get("driverClassName");
 			String url = (String) attributes.get("url");
 			String username = (String) attributes.get("username");
-			String name = (String) attributes.get("name");
 			JDBCMartConstructorType type = JDBCMartConstructorType
 					.get((String) attributes.get("type"));
 
@@ -545,6 +546,9 @@ public class MartBuilderXML extends DefaultHandler {
 			} catch (Exception e) {
 				throw new SAXException(e);
 			}
+
+			// Store it in the map of IDed objects.
+			this.mappedObjects.put(id, element);
 		}
 
 		// Masked Relation (inside dataset).
@@ -1187,7 +1191,6 @@ public class MartBuilderXML extends DefaultHandler {
 				if (jmc.getPassword() != null)
 					this.writeAttribute("password", jmc.getPassword(),
 							xmlWriter);
-				this.writeAttribute("name", jmc.getName(), xmlWriter);
 				this.writeAttribute("type", jmc.getType().getName(), xmlWriter);
 				if (jmc.getOutputDDLZipFile() != null)
 					this.writeAttribute("outputDDLFile", jmc.getOutputDDLZipFile()

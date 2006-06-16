@@ -40,6 +40,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.ProgressMonitor;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
 import org.biomart.builder.controller.MartBuilderUtils;
@@ -65,7 +66,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.21, 8th June 2006
+ * @version 0.1.22, 16th June 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -164,10 +165,6 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	public void setSelectedIndex(int selectedIndex) {
-		// Need we do anything at all?
-		if (selectedIndex == this.getSelectedIndex())
-			return;
-
 		// First of all, select the tab as normal. This must be
 		// done in order to get the diagram visible. If we do
 		// it later, having attempted to set up the diagram without
@@ -214,7 +211,8 @@ public class DataSetTabSet extends JTabbedPane {
 		try {
 			MartBuilderUtils.synchroniseMartDataSets(mart);
 		} catch (Throwable t) {
-			martTabSet.getMartBuilder().showStackTrace(t);
+			this.martTabSet.getMartBuilder().showStackTrace(t);
+			return;
 		}
 
 		// Add all datasets that we don't have yet.
@@ -311,15 +309,6 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Set our modified status to true.
 					martTabSet.setModifiedStatus(true);
-
-					// Nasty hack to force re-attachment of the schema
-					// tabset to the currently displayed tab, as if
-					// the user had clicked on that tab. For some reason
-					// this does not happen normally when a tab becomes
-					// selected after another one is removed. If no
-					// tab is selected after removal, select the
-					// first tab by default.
-					setSelectedIndex(Math.max(getSelectedIndex(), 0));
 				} catch (Throwable t) {
 					martTabSet.getMartBuilder().showStackTrace(t);
 				}
@@ -342,7 +331,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 		// Fake a click on the last tab before this one to ensure
 		// at least one tab remains visible and up-to-date.
-		this.setSelectedIndex(tabIndex - 1);
+		this.setSelectedIndex(Math.max(tabIndex - 1, 0));
 	}
 
 	private void addDataSetTab(DataSet dataset) {
@@ -1017,7 +1006,7 @@ public class DataSetTabSet extends JTabbedPane {
 		this.repaintDataSetDiagram(dataset);
 
 		// Update the modified status.
-		martTabSet.setModifiedStatus(true);
+		this.martTabSet.setModifiedStatus(true);
 	}
 
 	/**
@@ -1035,7 +1024,7 @@ public class DataSetTabSet extends JTabbedPane {
 		this.repaintDataSetDiagram(dataset);
 
 		// Update the modified status.
-		martTabSet.setModifiedStatus(true);
+		this.martTabSet.setModifiedStatus(true);
 	}
 
 	/**
@@ -1104,7 +1093,7 @@ public class DataSetTabSet extends JTabbedPane {
 			this.repaintDataSetDiagram(dataset);
 
 			// Update the modified status on this tabset.
-			martTabSet.setModifiedStatus(true);
+			this.martTabSet.setModifiedStatus(true);
 		} catch (Throwable t) {
 			this.martTabSet.getMartBuilder().showStackTrace(t);
 		}
@@ -1127,7 +1116,7 @@ public class DataSetTabSet extends JTabbedPane {
 		this.repaintDataSetDiagram(dataset);
 
 		// Update the modified status on this tabset.
-		martTabSet.setModifiedStatus(true);
+		this.martTabSet.setModifiedStatus(true);
 	}
 
 	/**
@@ -1145,7 +1134,7 @@ public class DataSetTabSet extends JTabbedPane {
 		MartBuilderUtils.changeOptimiserType(dataset, type);
 
 		// Update the modified status on this tabset.
-		martTabSet.setModifiedStatus(true);
+		this.martTabSet.setModifiedStatus(true);
 	}
 
 	/**
@@ -1157,15 +1146,22 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestConstructMart(DataSet dataset) {
 		// Obtain a thread for constructing the dataset.
-		final ConstructorRunnable constructor = dataset.getMartConstructor()
+		final ConstructorRunnable constructor;
+		
+		try {
+			constructor = dataset.getMartConstructor()
 				.getConstructorRunnable(dataset);
+		} catch (Throwable t) {
+			this.martTabSet.getMartBuilder().showStackTrace(t);
+			return;
+		}
 
 		// Create a progress monitor.
 		final ProgressMonitor progressMonitor = new ProgressMonitor(this
 				.getMartTabSet().getMartBuilder(), BuilderBundle.getString(
 				"creatingMart", dataset.getName()), "", 0, 100);
 		progressMonitor.setProgress(0); // Start with 0% complete.
-		progressMonitor.setMillisToDecideToPopup(0); // Open immediately.
+		progressMonitor.setMillisToPopup(1000); // Open after 1 second.
 
 		// Start the construction in a thread. It does not need to be
 		// Swing-thread-safe because it will never access the GUI. All
@@ -1176,49 +1172,57 @@ public class DataSetTabSet extends JTabbedPane {
 		// Create a timer thread that will update the progress dialog.
 		// We use the Swing Timer to make it Swing-thread-safe. (1000 millis
 		// equals 1 second.)
-		final Timer timer = new Timer(1000 * 1, null); 
+		final Timer timer = new Timer(500, null); 
 		timer.setInitialDelay(0); // Start immediately upon request.
 		timer.setCoalesce(true); // Coalesce delayed events.
 		timer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// Did the job complete yet?
-				if (thread.isAlive() && !progressMonitor.isCanceled()) {
-					// If not, update the progress report.
-					progressMonitor.setNote(constructor.getStatusMessage());
-					progressMonitor.setProgress(constructor
-							.getPercentComplete());
-				} else {
-					// If it completed, close the task and tidy up.
-					// Stop the timer.
-					timer.stop();
-					// Stop the thread.
-					constructor.cancel();
-					// Close the progress dialog.
-					progressMonitor.close();
-					// If it failed, show the exception.
-					Exception failure = constructor.getFailureException();
-					if (failure != null)
-						getMartTabSet().getMartBuilder()
-								.showStackTrace(failure);
-					// Inform user of success or otherwise.
-					if (failure == null)
-						JOptionPane.showMessageDialog(getMartTabSet()
-								.getMartBuilder(), BuilderBundle
-								.getString("martConstructionComplete"),
-								BuilderBundle.getString("messageTitle"),
-								JOptionPane.INFORMATION_MESSAGE);
-					else
-						JOptionPane.showMessageDialog(getMartTabSet()
-								.getMartBuilder(), BuilderBundle
-								.getString("martConstructionFailed"),
-								BuilderBundle.getString("messageTitle"),
-								JOptionPane.WARNING_MESSAGE);
-				}
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						monitorConstructionProgress(thread, timer, progressMonitor, constructor);
+					}
+				});
 			}
 		});
 
 		// Start the timer.
 		timer.start();
+	}
+	
+	private void monitorConstructionProgress(Thread thread, Timer timer, ProgressMonitor progressMonitor, ConstructorRunnable constructor) {
+		// Did the job complete yet?
+		if (thread.isAlive() && !progressMonitor.isCanceled()) {
+			// If not, update the progress report.
+			progressMonitor.setNote(constructor.getStatusMessage());
+			progressMonitor.setProgress(constructor
+					.getPercentComplete());
+		} else {
+			// If it completed, close the task and tidy up.
+			// Stop the timer.
+			timer.stop();
+			// Stop the thread.
+			constructor.cancel();
+			// Close the progress dialog.
+			progressMonitor.close();
+			// If it failed, show the exception.
+			Exception failure = constructor.getFailureException();
+			if (failure != null)
+				getMartTabSet().getMartBuilder()
+						.showStackTrace(failure);
+			// Inform user of success or otherwise.
+			if (failure == null)
+				JOptionPane.showMessageDialog(getMartTabSet()
+						.getMartBuilder(), BuilderBundle
+						.getString("martConstructionComplete"),
+						BuilderBundle.getString("messageTitle"),
+						JOptionPane.INFORMATION_MESSAGE);
+			else
+				JOptionPane.showMessageDialog(getMartTabSet()
+						.getMartBuilder(), BuilderBundle
+						.getString("martConstructionFailed"),
+						BuilderBundle.getString("messageTitle"),
+						JOptionPane.WARNING_MESSAGE);
+		}
 	}
 
 	private JPopupMenu getDataSetTabContextMenu(final DataSet dataset) {
