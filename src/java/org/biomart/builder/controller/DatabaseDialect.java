@@ -107,4 +107,6 @@ public abstract class DatabaseDialect {
 	 * @return the escaped string.
 	 */
 	public abstract String escapeQuotedString(String string);
+	
+	//TODO: further methods.
 }

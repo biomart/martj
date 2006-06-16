@@ -418,12 +418,13 @@ public interface MartConstructor extends DataLink, Comparable {
 			// not then we make a list containing just the original schema
 			// on its own. By making a list with just one entry we simplify
 			// the code later.
+			Schema mainTableSchema = mainTable.getUnderlyingTable().getSchema();
 			Collection schemas = null;
 			if (ds.getPartitionOnSchema()
-					&& (mainTable.getSchema() instanceof SchemaGroup))
-				schemas = ((SchemaGroup) mainTable.getSchema()).getSchemas();
+					&& (mainTableSchema instanceof SchemaGroup))
+				schemas = ((SchemaGroup) mainTableSchema).getSchemas();
 			else
-				schemas = Collections.singletonList(mainTable.getSchema());
+				schemas = Collections.singletonList(mainTableSchema);
 
 			// Check not cancelled.
 			this.checkCancelled();
@@ -1003,20 +1004,17 @@ public interface MartConstructor extends DataLink, Comparable {
 					for (int i = 0; i < fromKey.getColumns().size(); i++)
 						fromKeyDSColumns.add(null);
 
-					// TODO
 					// We can't guarantee that this exact key will be in the
-					// dataset
-					// table, because it may have used other columns which refer
-					// to this key instead. So, we have to find all keys in the
-					// already-merged tables which refer via a relation to the
-					// same
-					// columns as this key, and make a list of them. We run
-					// through that list until we find a key that we have
-					// already
-					// merged, and then we use that one instead. We can use the
-					// first one because it doesn't matter about second ones, as
-					// relations can only get followed once and so we will never
-					// be asked to do this for two different relations.
+					// dataset table, because it may have used other columns
+					// which refer to this key instead. So, we have to find all
+					// keys in the already-merged tables which refer via a
+					// relation to the same columns as this key, and make a
+					// list of them. We run through that list until we find a
+					// key that we have already merged, and then we use that one
+					// instead. We can use the first one because it doesn't
+					// matter about second ones, as relations can only get
+					// followed once and so we will never be asked to do this
+					// for two different relations.
 					List potentialFromKeys = new ArrayList();
 					potentialFromKeys.add(fromKey);
 
@@ -1048,16 +1046,13 @@ public interface MartConstructor extends DataLink, Comparable {
 							DataSetColumn dsCol = (DataSetColumn) i.next();
 
 							// When searching for ds cols for a particular real
-							// col
-							// (for translating real relations+keys), just take
-							// first ds col found that mentions it, even if
-							// there
-							// are several matches. This is because a relation
-							// can
-							// only be followed once, so it doesn't matter about
-							// the extra copies, as they won't have any
-							// relations
-							// followed off them - only the first one will.
+							// col (for translating real relations+keys), just
+							// take first ds col found that mentions it, even if
+							// there are several matches. This is because a
+							// relation can only be followed once, so it doesn't
+							// matter about the extra copies, as they won't have
+							// any relations followed off them - only the first
+							// one will.
 							if (dsCol instanceof WrappedColumn) {
 								Column unwrappedCol = ((WrappedColumn) dsCol)
 										.getWrappedColumn();

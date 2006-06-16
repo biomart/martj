@@ -534,10 +534,6 @@ public class SchemaTabSet extends JTabbedPane {
 		this.removeTabAt(tabIndex);
 		this.schemaToDiagram[0].remove(index);
 		this.schemaToDiagram[1].remove(index);
-
-		// Fake a click on the last tab before this one to ensure
-		// at least one tab remains visible and up-to-date.
-		this.setSelectedIndex(tabIndex - 1);
 	}
 
 	/**
