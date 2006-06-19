@@ -261,6 +261,8 @@ public class MySQLDialect extends DatabaseDialect {
 
 		// TODO : concat-relations
 
+		String joinKW = (action.leftJoin && action.partitionColumn==null) ? "left" : "inner";
+		
 		if (action.partitionColumn != null) {
 			if (action.partitionValue == null)
 				sb.append(" where b."
@@ -273,13 +275,11 @@ public class MySQLDialect extends DatabaseDialect {
 						+ action.partitionValue + "'");
 		}
 
-		String joinKW = action.leftJoin ? "left" : "inner";
-		
 		commands.add("#" + action.getStatusMessage());
 		commands.add("create table " + schemaName + "." + tempTableName
 				+ " as select a.*, " + sbCols.toString() + " from "
-				+ schemaName + "." + parentTableName + " as a "+joinKW+" join "
-				+ childSchemaName + "." + childTableName + " as b "
+				+ schemaName + "." + parentTableName + " as a " + joinKW
+				+ " join " + childSchemaName + "." + childTableName + " as b "
 				+ sb.toString());
 
 		// Drop the parent table.
@@ -327,8 +327,8 @@ public class MySQLDialect extends DatabaseDialect {
 				isb.append(",");
 		}
 		commands.add("#" + action.getStatusMessage());
-		commands.add("create index "+childTableName+"_I on " + schemaName + "." + childTableName
-				+ "(" + isb.toString() + ")");
+		commands.add("create index " + childTableName + "_I on " + schemaName
+				+ "." + childTableName + "(" + isb.toString() + ")");
 
 		// Restrict the table.
 		StringBuffer sb = new StringBuffer();
@@ -365,15 +365,15 @@ public class MySQLDialect extends DatabaseDialect {
 		return new String[] { "#" + action.getStatusMessage(), sb.toString() };
 	}
 
-	private String convertDSColumn(String tableAlias, String schemaName, DataSetColumn dsCol)
-			throws Exception {
+	private String convertDSColumn(String tableAlias, String schemaName,
+			DataSetColumn dsCol) throws Exception {
 		if (dsCol instanceof WrappedColumn) {
 			WrappedColumn wc = (WrappedColumn) dsCol;
-			return tableAlias+"." + wc.getWrappedColumn().getName() + " as "
+			return tableAlias + "." + wc.getWrappedColumn().getName() + " as "
 					+ wc.getName();
 		} else if (dsCol instanceof SchemaNameColumn) {
 			SchemaNameColumn sn = (SchemaNameColumn) dsCol;
-			return "'"+schemaName + "' as " + sn.getName();
+			return "'" + schemaName + "' as " + sn.getName();
 		} else if (dsCol instanceof ConcatRelationColumn) {
 			ConcatRelationColumn cr = (ConcatRelationColumn) dsCol;
 			// TODO

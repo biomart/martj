@@ -46,7 +46,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * rather than the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 7th June 2006
+ * @version 0.1.15, 19th June 2006
  * @since 0.1
  */
 public class WindowContext extends SchemaContext {
@@ -100,7 +100,7 @@ public class WindowContext extends SchemaContext {
 			});
 			contextMenu.add(optimise);
 		}
-		
+
 		// This menu is attached to all table objects.
 		else if (object instanceof Table) {
 			// Add a separator if there's other stuff before us.
@@ -118,8 +118,7 @@ public class WindowContext extends SchemaContext {
 					.charAt(0));
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-						getDataSetTabSet().requestMaskTable(dataset,
-								table);
+					getDataSetTabSet().requestMaskTable(dataset, table);
 				}
 			});
 			contextMenu.add(mask);
@@ -215,60 +214,174 @@ public class WindowContext extends SchemaContext {
 				none.setSelected(true);
 
 			// This item in the concat-only relation submenu turns concat-only
-			// relations into ones separated by commas.
+			// relations into ones separated by commas then commas.
 			JRadioButtonMenuItem comma = new JRadioButtonMenuItem(BuilderBundle
-					.getString("commaConcatTitle"));
-			comma.setMnemonic(BuilderBundle.getString("commaConcatMnemonic")
-					.charAt(0));
+					.getString("commaCommaConcatTitle"));
+			comma.setMnemonic(BuilderBundle.getString(
+					"commaCommaConcatMnemonic").charAt(0));
 			comma.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getDataSetTabSet().requestConcatOnlyRelation(dataset,
-							relation, ConcatRelationType.COMMA);
+							relation, ConcatRelationType.COMMA_COMMA);
 				}
 			});
 			concatGroup.add(comma);
 			concatSubmenu.add(comma);
 			if (this.dataset.getConcatRelationType(relation) != null
 					&& dataset.getConcatRelationType(relation).equals(
-							ConcatRelationType.COMMA))
+							ConcatRelationType.COMMA_COMMA))
 				comma.setSelected(true);
 
 			// This item in the concat-only relation submenu turns concat-only
-			// relations into ones separated by tabs.
+			// relations into ones separated by commas then tabs.
 			JRadioButtonMenuItem tab = new JRadioButtonMenuItem(BuilderBundle
-					.getString("tabConcatTitle"));
-			tab.setMnemonic(BuilderBundle.getString("tabConcatMnemonic")
+					.getString("commaTabConcatTitle"));
+			tab.setMnemonic(BuilderBundle.getString("commaTabConcatMnemonic")
 					.charAt(0));
 			tab.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getDataSetTabSet().requestConcatOnlyRelation(dataset,
-							relation, ConcatRelationType.TAB);
+							relation, ConcatRelationType.COMMA_TAB);
 				}
 			});
 			concatGroup.add(tab);
 			concatSubmenu.add(tab);
 			if (this.dataset.getConcatRelationType(relation) != null
 					&& dataset.getConcatRelationType(relation).equals(
-							ConcatRelationType.TAB))
+							ConcatRelationType.COMMA_TAB))
 				tab.setSelected(true);
 
 			// This item in the concat-only relation submenu turns concat-only
-			// relations into ones separated by spaces.
+			// relations into ones separated by commas then spaces.
 			JRadioButtonMenuItem space = new JRadioButtonMenuItem(BuilderBundle
-					.getString("spaceConcatTitle"));
-			space.setMnemonic(BuilderBundle.getString("spaceConcatMnemonic")
-					.charAt(0));
+					.getString("commaSpaceConcatTitle"));
+			space.setMnemonic(BuilderBundle.getString(
+					"commaSpaceConcatMnemonic").charAt(0));
 			space.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getDataSetTabSet().requestConcatOnlyRelation(dataset,
-							relation, ConcatRelationType.SPACE);
+							relation, ConcatRelationType.COMMA_SPACE);
 				}
 			});
 			concatGroup.add(space);
 			concatSubmenu.add(space);
 			if (this.dataset.getConcatRelationType(relation) != null
 					&& dataset.getConcatRelationType(relation).equals(
-							ConcatRelationType.SPACE))
+							ConcatRelationType.COMMA_SPACE))
+				space.setSelected(true);
+
+			// This item in the concat-only relation submenu turns concat-only
+			// relations into ones separated by spaces then commas.
+			comma = new JRadioButtonMenuItem(BuilderBundle
+					.getString("spaceCommaConcatTitle"));
+			comma.setMnemonic(BuilderBundle.getString(
+					"spaceCommaConcatMnemonic").charAt(0));
+			comma.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					getDataSetTabSet().requestConcatOnlyRelation(dataset,
+							relation, ConcatRelationType.SPACE_COMMA);
+				}
+			});
+			concatGroup.add(comma);
+			concatSubmenu.add(comma);
+			if (this.dataset.getConcatRelationType(relation) != null
+					&& dataset.getConcatRelationType(relation).equals(
+							ConcatRelationType.SPACE_COMMA))
+				comma.setSelected(true);
+
+			// This item in the concat-only relation submenu turns concat-only
+			// relations into ones separated by spaces then tabs.
+			tab = new JRadioButtonMenuItem(BuilderBundle
+					.getString("spaceTabConcatTitle"));
+			tab.setMnemonic(BuilderBundle.getString("spaceTabConcatMnemonic")
+					.charAt(0));
+			tab.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					getDataSetTabSet().requestConcatOnlyRelation(dataset,
+							relation, ConcatRelationType.SPACE_TAB);
+				}
+			});
+			concatGroup.add(tab);
+			concatSubmenu.add(tab);
+			if (this.dataset.getConcatRelationType(relation) != null
+					&& dataset.getConcatRelationType(relation).equals(
+							ConcatRelationType.SPACE_TAB))
+				tab.setSelected(true);
+
+			// This item in the concat-only relation submenu turns concat-only
+			// relations into ones separated by spaces then spaces.
+			space = new JRadioButtonMenuItem(BuilderBundle
+					.getString("spaceSpaceConcatTitle"));
+			space.setMnemonic(BuilderBundle.getString(
+					"spaceSpaceConcatMnemonic").charAt(0));
+			space.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					getDataSetTabSet().requestConcatOnlyRelation(dataset,
+							relation, ConcatRelationType.SPACE_SPACE);
+				}
+			});
+			concatGroup.add(space);
+			concatSubmenu.add(space);
+			if (this.dataset.getConcatRelationType(relation) != null
+					&& dataset.getConcatRelationType(relation).equals(
+							ConcatRelationType.SPACE_SPACE))
+				space.setSelected(true);
+
+			// This item in the concat-only relation submenu turns concat-only
+			// relations into ones separated by tabs then commas.
+			comma = new JRadioButtonMenuItem(BuilderBundle
+					.getString("tabCommaConcatTitle"));
+			comma.setMnemonic(BuilderBundle.getString("tabCommaConcatMnemonic")
+					.charAt(0));
+			comma.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					getDataSetTabSet().requestConcatOnlyRelation(dataset,
+							relation, ConcatRelationType.TAB_COMMA);
+				}
+			});
+			concatGroup.add(comma);
+			concatSubmenu.add(comma);
+			if (this.dataset.getConcatRelationType(relation) != null
+					&& dataset.getConcatRelationType(relation).equals(
+							ConcatRelationType.TAB_COMMA))
+				comma.setSelected(true);
+
+			// This item in the concat-only relation submenu turns concat-only
+			// relations into ones separated by tabs then tabs.
+			tab = new JRadioButtonMenuItem(BuilderBundle
+					.getString("tabTabConcatTitle"));
+			tab.setMnemonic(BuilderBundle.getString("tabTabConcatMnemonic")
+					.charAt(0));
+			tab.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					getDataSetTabSet().requestConcatOnlyRelation(dataset,
+							relation, ConcatRelationType.TAB_TAB);
+				}
+			});
+			concatGroup.add(tab);
+			concatSubmenu.add(tab);
+			if (this.dataset.getConcatRelationType(relation) != null
+					&& dataset.getConcatRelationType(relation).equals(
+							ConcatRelationType.TAB_TAB))
+				tab.setSelected(true);
+
+			// This item in the concat-only relation submenu turns concat-only
+			// relations into ones separated by tabs then spaces.
+			space = new JRadioButtonMenuItem(BuilderBundle
+					.getString("tabSpaceConcatTitle"));
+			space.setMnemonic(BuilderBundle.getString("tabSpaceConcatMnemonic")
+					.charAt(0));
+			space.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					getDataSetTabSet().requestConcatOnlyRelation(dataset,
+							relation, ConcatRelationType.TAB_SPACE);
+				}
+			});
+			concatGroup.add(space);
+			concatSubmenu.add(space);
+			if (this.dataset.getConcatRelationType(relation) != null
+					&& dataset.getConcatRelationType(relation).equals(
+							ConcatRelationType.TAB_SPACE))
 				space.setSelected(true);
 
 			// Attach the concat-only submenu to the main context menu.
@@ -307,19 +420,19 @@ public class WindowContext extends SchemaContext {
 
 			// Fade out all INFERRED_INCORRECT and MASKED relations.
 			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
-					|| this.dataset.getMaskedRelations().contains(relation)) 
+					|| this.dataset.getMaskedRelations().contains(relation))
 				component.setForeground(RelationComponent.MASKED_COLOUR);
 
 			// Highlight CONCAT-ONLY relations.
-			else if (this.dataset.getConcatOnlyRelations().contains(relation)) 
-				component.setForeground(RelationComponent.CONCAT_COLOUR);			
+			else if (this.dataset.getConcatOnlyRelations().contains(relation))
+				component.setForeground(RelationComponent.CONCAT_COLOUR);
 
 			// Highlight SUBCLASS relations.
-			else if (this.dataset.getSubclassedRelations().contains(relation)) 
+			else if (this.dataset.getSubclassedRelations().contains(relation))
 				component.setForeground(RelationComponent.SUBCLASS_COLOUR);
 
 			// All others are normal.
-			else 
+			else
 				component.setForeground(RelationComponent.NORMAL_COLOUR);
 		}
 
@@ -331,15 +444,15 @@ public class WindowContext extends SchemaContext {
 			Key key = (Key) object;
 
 			// Fade out all INFERRED_INCORRECT keys.
-			if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) 
+			if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
 				component.setForeground(KeyComponent.MASKED_COLOUR);
 
 			// Highlight all HANDMADE keys.
-			else if (key.getStatus().equals(ComponentStatus.HANDMADE)) 
-				component.setForeground(KeyComponent.HANDMADE_COLOUR);			
+			else if (key.getStatus().equals(ComponentStatus.HANDMADE))
+				component.setForeground(KeyComponent.HANDMADE_COLOUR);
 
 			// All others are normal.
-			else 
+			else
 				component.setForeground(KeyComponent.NORMAL_COLOUR);
 
 			// Remove drag-and-drop from the key as it does not apply in

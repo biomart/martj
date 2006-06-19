@@ -58,7 +58,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.26, 16th June 2006
+ * @version 0.1.27, 19th June 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -1162,39 +1162,80 @@ public class DataSet extends GenericSchema {
 	public static class ConcatRelationType implements Comparable {
 		private final String name;
 
-		private final String separator;
+		private final String valueSeparator;
+
+		private final String recordSeparator;
 
 		/**
-		 * Use this constant to refer to value-separation by commas.
+		 * Use this constant to refer to value-separation by commas, and record-separation by commas.
 		 */
-		public static final ConcatRelationType COMMA = new ConcatRelationType(
-				"COMMA", ",");
+		public static final ConcatRelationType COMMA_COMMA = new ConcatRelationType(
+				"COMMA_COMMA", ",", ",");
 
 		/**
-		 * Use this constant to refer to value-separation by spaces.
+		 * Use this constant to refer to value-separation by commas, and record-separation by spaces.
 		 */
-		public static final ConcatRelationType SPACE = new ConcatRelationType(
-				"SPACE", " ");
+		public static final ConcatRelationType COMMA_SPACE = new ConcatRelationType(
+				"COMMA_SPACE", ",", " ");
 
 		/**
-		 * Use this constant to refer to value-separation by tabs.
+		 * Use this constant to refer to value-separation by commas, and record-separation by tabs.
 		 */
-		public static final ConcatRelationType TAB = new ConcatRelationType(
-				"TAB", "\t");
+		public static final ConcatRelationType COMMA_TAB = new ConcatRelationType(
+				"COMMA_TAB", ",", "\t");
 
 		/**
-		 * The private constructor takes two parameters, which define the name
+		 * Use this constant to refer to value-separation by spaces, and record-separation by commas.
+		 */
+		public static final ConcatRelationType SPACE_COMMA = new ConcatRelationType(
+				"SPACE_COMMA", " ", ",");
+
+		/**
+		 * Use this constant to refer to value-separation by spaces, and record-separation by spaces.
+		 */
+		public static final ConcatRelationType SPACE_SPACE = new ConcatRelationType(
+				"SPACE_SPACE", " ", " ");
+
+		/**
+		 * Use this constant to refer to value-separation by spaces, and record-separation by tabs.
+		 */
+		public static final ConcatRelationType SPACE_TAB = new ConcatRelationType(
+				"SPACE_TAB", " ", "\t");
+
+		/**
+		 * Use this constant to refer to value-separation by tabs, and record-separation by commas.
+		 */
+		public static final ConcatRelationType TAB_COMMA = new ConcatRelationType(
+				"TAB_COMMA", "\t", ",");
+
+		/**
+		 * Use this constant to refer to value-separation by tabs, and record-separation by spaces.
+		 */
+		public static final ConcatRelationType TAB_SPACE = new ConcatRelationType(
+				"TAB_SPACE", "\t", " ");
+
+		/**
+		 * Use this constant to refer to value-separation by tabs, and record-separation by tabs.
+		 */
+		public static final ConcatRelationType TAB_TAB = new ConcatRelationType(
+				"TAB_TAB", "\t", "\t");
+
+		/**
+		 * The private constructor takes parameters which define the name
 		 * this concat type object will display when printed, and the separator
-		 * to use between values that have been concatenated.
+		 * to use between values and records that have been concatenated.
 		 * 
 		 * @param name
 		 *            the name of the concat type.
-		 * @param separator
-		 *            the separator for this concat type.
+		 * @param valueSeparator
+		 *            the separator for values in this concat type.
+		 * @param recordSeparator
+		 *            the separator for records in this concat type.
 		 */
-		private ConcatRelationType(String name, String separator) {
+		private ConcatRelationType(String name, String valueSeparator, String recordSeparator) {
 			this.name = name;
-			this.separator = separator;
+			this.valueSeparator = valueSeparator;
+			this.recordSeparator = recordSeparator;
 		}
 
 		/**
@@ -1207,12 +1248,21 @@ public class DataSet extends GenericSchema {
 		}
 
 		/**
-		 * Displays the separator for this concat type object.
+		 * Displays the value separator for this concat type object.
 		 * 
-		 * @return the separator for this concat type object.
+		 * @return the value separator for this concat type object.
 		 */
-		public String getSeparator() {
-			return this.separator;
+		public String getValueSeparator() {
+			return this.valueSeparator;
+		}
+
+		/**
+		 * Displays the record separator for this concat type object.
+		 * 
+		 * @return the record separator for this concat type object.
+		 */
+		public String getRecordSeparator() {
+			return this.recordSeparator;
 		}
 
 		public String toString() {

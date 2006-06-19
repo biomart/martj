@@ -99,7 +99,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.15, 16th June 2006
+ * @version 0.1.16, 19th June 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -612,12 +612,24 @@ public class MartBuilderXML extends DefaultHandler {
 				// Work out what concat-only type to use.
 				String type = (String) attributes.get("concatRelationType");
 				ConcatRelationType crType = null;
-				if (type.equals("COMMA"))
-					crType = ConcatRelationType.COMMA;
-				else if (type.equals("SPACE"))
-					crType = ConcatRelationType.SPACE;
-				else if (type.equals("TAB"))
-					crType = ConcatRelationType.TAB;
+				if (type.equals("COMMA_COMMA"))
+					crType = ConcatRelationType.COMMA_COMMA;
+				else if (type.equals("COMMA_SPACE"))
+					crType = ConcatRelationType.COMMA_SPACE;
+				else if (type.equals("COMMA_TAB"))
+					crType = ConcatRelationType.COMMA_TAB;
+				if (type.equals("SPACE_COMMA"))
+					crType = ConcatRelationType.SPACE_COMMA;
+				else if (type.equals("SPACE_SPACE"))
+					crType = ConcatRelationType.SPACE_SPACE;
+				else if (type.equals("SPACE_TAB"))
+					crType = ConcatRelationType.SPACE_TAB;
+				if (type.equals("TAB_COMMA"))
+					crType = ConcatRelationType.TAB_COMMA;
+				else if (type.equals("TAB_SPACE"))
+					crType = ConcatRelationType.TAB_SPACE;
+				else if (type.equals("TAB_TAB"))
+					crType = ConcatRelationType.TAB_TAB;
 				else
 					throw new SAXException(BuilderBundle.getString(
 							"unknownConcatRelationType", type));

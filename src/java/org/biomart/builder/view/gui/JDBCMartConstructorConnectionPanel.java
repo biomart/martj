@@ -226,7 +226,8 @@ public class JDBCMartConstructorConnectionPanel extends
 		this.type = new JComboBox();
 		this.type.addItem(JDBCMartConstructorType.EXTERNAL);
 		this.type.addItem(JDBCMartConstructorType.INTERNAL);
-		this.type.addItem(JDBCMartConstructorType.FILE);
+		this.type.addItem(JDBCMartConstructorType.SINGLEFILE);
+		this.type.addItem(JDBCMartConstructorType.MULTIFILE);
 		this.type.addActionListener(this);
 
 		// Create a file chooser for choosing the file to save the DDL to.
@@ -447,8 +448,9 @@ public class JDBCMartConstructorConnectionPanel extends
 			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
 					.getString("jdbcMCType")));
 		// If FILE is selected, make sure a file is specified.
-		else if (this.type.getSelectedItem().equals(
-				JDBCMartConstructorType.FILE)
+		else if ((this.type.getSelectedItem().equals(
+				JDBCMartConstructorType.MULTIFILE) || this.type
+				.getSelectedItem().equals(JDBCMartConstructorType.SINGLEFILE))
 				&& this.isEmpty(this.outputDDLLocation.getText()))
 			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
 					.getString("outputDDLLocation")));
@@ -534,7 +536,9 @@ public class JDBCMartConstructorConnectionPanel extends
 
 			// If one was actually seleted, check to see
 			// if we need to enable/disable the file field.
-			if (obj != null && obj.equals(JDBCMartConstructorType.FILE)) {
+			if (obj != null
+					&& (obj.equals(JDBCMartConstructorType.MULTIFILE) || obj
+							.equals(JDBCMartConstructorType.SINGLEFILE))) {
 				// It is, so enable the fields.
 				this.outputDDLLocation.setEnabled(true);
 				this.outputDDLLocationButton.setEnabled(true);
@@ -554,7 +558,7 @@ public class JDBCMartConstructorConnectionPanel extends
 				if (schema instanceof SchemaGroup)
 					schema = (Schema) ((SchemaGroup) schema).getSchemas()
 							.iterator().next();
-				
+
 				// If it's a JDBC schema, copy the settings.
 				if (schema instanceof JDBCSchema) {
 					JDBCSchema jdbcSchema = (JDBCSchema) schema;

@@ -309,8 +309,10 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 		DDLHelper helper;
 		if (getType().equals(JDBCMartConstructorType.INTERNAL))
 			helper = new InternalHelper(getConnection());
-		else if (getType().equals(JDBCMartConstructorType.FILE))
-			helper = new FileHelper(getOutputDDLZipFile());
+		else if (getType().equals(JDBCMartConstructorType.SINGLEFILE))
+			helper = new SingleFileHelper(getOutputDDLZipFile());
+		else if (getType().equals(JDBCMartConstructorType.MULTIFILE))
+			helper = new MultiFileHelper(getOutputDDLZipFile());
 		else if (getType().equals(JDBCMartConstructorType.EXTERNAL))
 			throw new Error(BuilderBundle.getString("mcExternalNotImpl"));
 		else
@@ -446,11 +448,68 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 	}
 
 	/**
-	 * FileHelper extends DDLHelper, saves statements. Statements are saved in
-	 * folders. Folder 1 must be finished before folder 2, but files within
+	 * SingleFileHelper extends DDLHelper, saves statements. Statements are
+	 * saved as a single SQL file inside a Zip file.
+	 */
+	public static class SingleFileHelper extends DDLHelper {
+		private File outputFile;
+
+		private FileOutputStream outputFileStream;
+
+		private ZipOutputStream outputZipStream;
+
+		private ZipEntry entry;
+
+		/**
+		 * Constructs a helper which will output all DDL into a single file
+		 * inside the given zip file.
+		 * 
+		 * @param outputZippedDDLFile
+		 *            the zip file to write the DDL into.
+		 */
+		public SingleFileHelper(File outputZippedDDLFile) {
+			super();
+			this.outputFile = outputZippedDDLFile;
+		}
+
+		public void startActions() throws Exception {
+			// Open the zip stream.
+			this.outputFileStream = new FileOutputStream(this.outputFile);
+			this.outputZipStream = new ZipOutputStream(this.outputFileStream);
+			this.outputZipStream.setMethod(ZipOutputStream.DEFLATED);
+			this.entry = new ZipEntry("ddl.sql");
+			entry.setTime(System.currentTimeMillis());
+			this.outputZipStream.putNextEntry(entry);
+		}
+
+		public void executeAction(MCAction action, int level) throws Exception {
+			// Convert the action to some DDL.
+			String[] cmd = this.getStatementsForAction(action);
+			// Write the data.
+			for (int i = 0; i < cmd.length; i++) {
+				this.outputZipStream.write(cmd[i].getBytes());
+				this.outputZipStream.write(';');
+				this.outputZipStream.write(System.getProperty("line.separator")
+						.getBytes());
+			}
+		}
+
+		public void endActions() throws Exception {
+			// Close the zip stream. Will also close the
+			// file output stream by default.
+			this.outputZipStream.closeEntry();
+			this.outputZipStream.finish();
+			this.outputFileStream.flush();
+			this.outputFileStream.close();
+		}
+	}
+
+	/**
+	 * MultiFileHelper extends DDLHelper, saves statements. Statements are saved
+	 * in folders. Folder 1 must be finished before folder 2, but files within
 	 * folder 1 can be executed in any order. And so on.
 	 */
-	public static class FileHelper extends DDLHelper {
+	public static class MultiFileHelper extends DDLHelper {
 		private File outputFile;
 
 		private FileOutputStream outputFileStream;
@@ -464,7 +523,7 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 		 * @param outputZippedDDLFile
 		 *            the zip file to write the DDL structured tree into.
 		 */
-		public FileHelper(File outputZippedDDLFile) {
+		public MultiFileHelper(File outputZippedDDLFile) {
 			super();
 			this.outputFile = outputZippedDDLFile;
 		}
@@ -535,8 +594,14 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 		/**
 		 * Use this constant to refer to generation of DDL in a file.
 		 */
-		public static final JDBCMartConstructorType FILE = JDBCMartConstructorType
-				.get(BuilderBundle.getString("jdbcMCTypeFile"));
+		public static final JDBCMartConstructorType SINGLEFILE = JDBCMartConstructorType
+				.get(BuilderBundle.getString("jdbcMCTypeSingleFile"));
+
+		/**
+		 * Use this constant to refer to generation of DDL in a file.
+		 */
+		public static final JDBCMartConstructorType MULTIFILE = JDBCMartConstructorType
+				.get(BuilderBundle.getString("jdbcMCTypeMultiFile"));
 
 		/**
 		 * The static factory method creates and returns a type with the given
