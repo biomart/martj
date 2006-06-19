@@ -17,6 +17,7 @@
  */
 package org.biomart.builder.controller;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -27,23 +28,25 @@ import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.MartConstructor.MCAction;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
- * DatabaseDialect provides methods which generate atomic DDL or SQL statements. Each
- * implementation should register itself with {@link #registerDialect(DatabaseDialect)}
- * in a static initializer so that it can be used.
+ * DatabaseDialect provides methods which generate atomic DDL or SQL statements.
+ * Each implementation should register itself with
+ * {@link #registerDialect(DatabaseDialect)} in a static initializer so that it
+ * can be used.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 16th June 2006
+ * @version 0.1.2, 19th June 2006
  * @since 0.1
  */
 public abstract class DatabaseDialect {
 	private static final Set dialects = new HashSet();
 
 	/**
-	 * Registers all known dialects for use with this system. Need only
-	 * be called once, but doesn't hurt to call multiple times.
+	 * Registers all known dialects for use with this system. Need only be
+	 * called once, but doesn't hurt to call multiple times.
 	 */
 	public static void registerDialects() {
 		dialects.add(new MySQLDialect());
@@ -83,7 +86,7 @@ public abstract class DatabaseDialect {
 	 */
 	public abstract boolean understandsDataLink(DataLink dataLink)
 			throws ConstructorException;
-	
+
 	/**
 	 * Gets the distinct values in the given column. This must be a real column,
 	 * not an instance of {@link DataSetColumn}. This method actually performs
@@ -98,15 +101,22 @@ public abstract class DatabaseDialect {
 	public abstract List executeSelectDistinct(Column col) throws SQLException;
 
 	/**
-	 * Escapes a string so that it may safely be contained as a quoted literal
-	 * within a statement. The quotes themselves should not be added by this
-	 * method.
+	 * Given a particular action, return a SQL statement that will perform it.
+	 * If multiple statements are required to perform the action, they are
+	 * returned as an array. Each line of the array is considered to be a
+	 * complete single statement which can be executed directly with
+	 * {@link PreparedStatement#execute()}.
+	 * <p>
+	 * Note that the statements cannot be parameterised as they may be written
+	 * to file for later execution.
 	 * 
-	 * @param string
-	 *            the string to escape.
-	 * @return the escaped string.
+	 * @param action
+	 *            the action to translate into SQL (or DDL).
+	 * @return the statement(s) that represent the action.
+	 * @throws ConstructorException
+	 *             if the action was not able to be converted into one or more
+	 *             SQL/DDL statements.
 	 */
-	public abstract String escapeQuotedString(String string);
-	
-	//TODO: further methods.
+	public abstract String[] getStatementsForAction(MCAction action)
+			throws ConstructorException;
 }

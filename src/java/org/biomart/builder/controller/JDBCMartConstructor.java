@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -393,13 +392,19 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 			return this.dialect.executeSelectDistinct(col);
 		}
 
-		public String getCommandForAction(MCAction action) throws Exception {
-			// TODO
-			// Use the dialect to translate actions into words. We can't
-			// use parameterised queries here unfortunately as they may
-			// be written to file later.
-			return "#" + action.getSequence() + ": "
-					+ action.getStatusMessage();
+		/**
+		 * Translates an action into commands, using
+		 * {@link DatabaseDialect#getStatementsForAction(MCAction)}
+		 * 
+		 * @param action
+		 *            the action to translate.
+		 * @return the translated action.
+		 * @throws Exception
+		 *             if anything went wrong.
+		 */
+		public String[] getStatementsForAction(MCAction action)
+				throws Exception {
+			return dialect.getStatementsForAction(action);
 		}
 	}
 
@@ -427,12 +432,12 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 
 		public void executeAction(MCAction action, int level) throws Exception {
 			// Executes the given action.
-			String cmd = this.getCommandForAction(action);
+			String[] cmd = this.getStatementsForAction(action);
 			// As we're working internally, the input connection is the
 			// same for all schemas, and is the same as the output one.
-			Connection inputConn = this.outputConn;
 			// Prepare and execute the command.
-			inputConn.prepareStatement(cmd).execute();
+			for (int i = 0; i < cmd.length; i++)
+				this.outputConn.prepareStatement(cmd[i]).execute();
 		}
 
 		public void endActions() throws Exception {
@@ -473,27 +478,27 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 
 		public void executeAction(MCAction action, int level) throws Exception {
 			try {
-				// Convert the action to some DDL.
-				String cmd = this.getCommandForAction(action);
-				// Work out it's CRC32
-				CRC32 crc = new CRC32();
-				crc.update(cmd.getBytes());
 				// Writes the given action to file.
 				// Put the next entry to the zip file.
 				ZipEntry entry = new ZipEntry(level + "/" + level + "-"
 						+ action.getSequence() + ".sql");
 				entry.setTime(System.currentTimeMillis());
-				entry.setSize(cmd.length());
-				entry.setCrc(crc.getValue());
 				this.outputZipStream.putNextEntry(entry);
+				// Convert the action to some DDL.
+				String[] cmd = this.getStatementsForAction(action);
 				// Write the data.
-				this.outputZipStream.write(cmd.getBytes());
+				for (int i = 0; i < cmd.length; i++) {
+					this.outputZipStream.write(cmd[i].getBytes());
+					this.outputZipStream.write(';');
+					this.outputZipStream.write(System.getProperty(
+							"line.separator").getBytes());
+				}
 				// Close the entry.
 				this.outputZipStream.closeEntry();
 			} catch (Exception e) {
-				// Make sure we don't leave open files lying around
+				// Make sure we don't leave open entries lying around
 				// if exceptions get thrown.
-				this.outputZipStream.close();
+				this.outputZipStream.closeEntry();
 				throw e;
 			}
 		}
@@ -519,19 +524,19 @@ public class JDBCMartConstructor extends GenericMartConstructor implements
 		 * Use this constant to refer to in-database DDL execution.
 		 */
 		public static final JDBCMartConstructorType INTERNAL = JDBCMartConstructorType
-				.get("INTERNAL");
+				.get(BuilderBundle.getString("jdbcMCTypeInternal"));
 
 		/**
 		 * Use this constant to refer to creation via JDBC import/export.
 		 */
 		public static final JDBCMartConstructorType EXTERNAL = JDBCMartConstructorType
-				.get("EXTERNAL");
+				.get(BuilderBundle.getString("jdbcMCTypeExternal"));
 
 		/**
 		 * Use this constant to refer to generation of DDL in a file.
 		 */
 		public static final JDBCMartConstructorType FILE = JDBCMartConstructorType
-				.get("FILE");
+				.get(BuilderBundle.getString("jdbcMCTypeFile"));
 
 		/**
 		 * The static factory method creates and returns a type with the given

@@ -47,10 +47,13 @@ import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
 
 import org.biomart.builder.controller.JDBCMartConstructor;
+import org.biomart.builder.controller.JDBCSchema;
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.controller.JDBCMartConstructor.JDBCMartConstructorType;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.MartConstructor;
+import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
@@ -61,7 +64,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * {@link JDBCMartConstructor} implementation which represents the connection.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 13th June 2006
+ * @version 0.1.4, 19th June 2006
  * @since 0.1
  */
 public class JDBCMartConstructorConnectionPanel extends
@@ -540,6 +543,54 @@ public class JDBCMartConstructorConnectionPanel extends
 				this.outputDDLLocation.setEnabled(false);
 				this.outputDDLLocationButton.setEnabled(false);
 				this.outputDDLLocation.setText(null);
+			}
+
+			// If not external, copy JDBC settings from source schema,
+			// except for target database name which can be left untouched.
+			if (obj != null && !obj.equals(JDBCMartConstructorType.EXTERNAL)) {
+				// Work out source schema.
+				Schema schema = this.datasetTabSet.getSelectedDataSetTab()
+						.getDataSet().getCentralTable().getSchema();
+				if (schema instanceof SchemaGroup)
+					schema = (Schema) ((SchemaGroup) schema).getSchemas()
+							.iterator().next();
+				
+				// If it's a JDBC schema, copy the settings.
+				if (schema instanceof JDBCSchema) {
+					JDBCSchema jdbcSchema = (JDBCSchema) schema;
+					this.driverClass.setSelectedItem(jdbcSchema
+							.getDriverClassName());
+					this.driverClassLocation.setText(jdbcSchema
+							.getDriverClassLocation() == null ? null
+							: jdbcSchema.getDriverClassLocation().toString());
+					String jdbcURL = jdbcSchema.getJDBCURL();
+					this.jdbcURL.setText(jdbcURL);
+					this.username.setText(jdbcSchema.getUsername());
+					this.password.setText(jdbcSchema.getPassword());
+
+					// Parse the JDBC URL into host, port and database, if the
+					// driver is known to us (defined in the map at the start
+					// of this class).
+					String regexURL = new String(this.currentJDBCURLTemplate);
+
+					// Replace the three placeholders in the JDBC URL template
+					// with regex patterns. Obviously, this depends on the
+					// three placeholders appearing in the correct order.
+					// If they don't, then you're stuffed.
+					regexURL = regexURL.replaceAll("<HOST>", "(.*)");
+					regexURL = regexURL.replaceAll("<PORT>", "(.*)");
+					regexURL = regexURL.replaceAll("<DATABASE>", "(.*)");
+
+					// Use the regex to parse out the host, port and database
+					// from the JDBC URL.
+					Pattern regex = Pattern.compile(regexURL);
+					Matcher matcher = regex.matcher(jdbcURL);
+					if (matcher.matches()) {
+						this.host.setText(matcher.group(1));
+						this.port.setText(matcher.group(2));
+						// NOT the database, as the user will override this.
+					}
+				}
 			}
 		}
 

@@ -66,7 +66,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.22, 16th June 2006
+ * @version 0.1.23, 19th June 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -551,8 +551,12 @@ public class DataSetTabSet extends JTabbedPane {
 		try {
 			MartConstructor modMC = MartConstructorManagerDialog
 					.createMartConstructor(this, mc);
-			if (modMC != null)
+			if (modMC != null) {
 				MartBuilderUtils.setMartConstructor(ds, modMC);
+
+				// Update the modified status for this tabset.
+				martTabSet.setModifiedStatus(true);
+			}
 		} catch (Throwable t) {
 			this.martTabSet.getMartBuilder().showStackTrace(t);
 		}
