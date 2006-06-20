@@ -174,128 +174,12 @@ public class MySQLDialect extends DatabaseDialect {
 						+ " (" + sbPK.toString() + ")" };
 	}
 
-	private String[] createTableStatements(CreateTable action) throws Exception {
-		String schemaName = ((JDBCDataLink) action.dataLink).getConnection()
-				.getCatalog();
-		String newTableName = action.tableName;
-		String childSchemaName = ((JDBCSchema) action.schema).getConnection()
-				.getCatalog();
-		String childTableName = action.realTable.getName();
-
-		// Work out what columns to include.
-		StringBuffer sbCols = new StringBuffer();
-		for (Iterator i = action.dsColumns.iterator(); i.hasNext();) {
-			sbCols.append(this.convertDSColumn("a", childSchemaName,
-					(DataSetColumn) i.next()));
-			if (i.hasNext())
-				sbCols.append(",");
-		}
-
-		// TODO : concat-relations
-
-		String whereClause = "";
-		if (action.partitionColumn != null) {
-			if (action.partitionValue == null)
-				whereClause = "where a."
-						+ ((WrappedColumn) action.partitionColumn)
-								.getWrappedColumn().getName() + " is null";
-			else
-				whereClause = "where a."
-						+ ((WrappedColumn) action.partitionColumn)
-								.getWrappedColumn().getName() + " = '"
-						+ action.partitionValue + "'";
-		}
-
-		return new String[] {
-				"#" + action.getStatusMessage(),
-				"create table " + schemaName + "." + newTableName
-						+ " as select " + sbCols.toString() + " from "
-						+ childSchemaName + "." + childTableName + " as a "
-						+ whereClause };
-	}
-
 	private String[] dropTableStatements(DropTable action) throws Exception {
 		String schemaName = ((JDBCDataLink) action.dataLink).getConnection()
 				.getCatalog();
 		String tableName = action.tableName;
 		return new String[] { "#" + action.getStatusMessage(),
 				"drop table " + schemaName + "." + tableName };
-	}
-
-	private String[] mergeTableStatements(MergeTable action) throws Exception {
-		List commands = new ArrayList();
-		String schemaName = ((JDBCDataLink) action.dataLink).getConnection()
-				.getCatalog();
-		String tempTableName = action.tempTable;
-		String childSchemaName = ((JDBCSchema) action.schema).getConnection()
-				.getCatalog();
-		String childTableName = action.realTable.getName();
-		String parentTableName = action.tableName;
-
-		// We must assume the source schema is read-only, therefore
-		// we cannot make any temporary indexes on it even though
-		// we'd probably quite like to.
-
-		// Work out what columns to include.
-		StringBuffer sbCols = new StringBuffer();
-		for (Iterator i = action.dsColumns.iterator(); i.hasNext();) {
-			sbCols.append(this.convertDSColumn("b", childSchemaName,
-					(DataSetColumn) i.next()));
-			if (i.hasNext())
-				sbCols.append(",");
-		}
-
-		// Restrict the table.
-		StringBuffer sb = new StringBuffer();
-		sb.append("on (");
-		for (int i = 0; i < action.fromDSColumns.size(); i++) {
-			if (i > 0)
-				sb.append(" and ");
-			String parentColName = ((Column) action.fromDSColumns.get(i))
-					.getName();
-			String childColName = ((Column) action.toRealColumns.get(i))
-					.getName();
-			sb.append("a." + parentColName + " = b." + childColName);
-		}
-		sb.append(")");
-
-		// TODO : concat-relations
-
-		String joinKW = (action.leftJoin && action.partitionColumn==null) ? "left" : "inner";
-		
-		if (action.partitionColumn != null) {
-			if (action.partitionValue == null)
-				sb.append(" where b."
-						+ ((WrappedColumn) action.partitionColumn)
-								.getWrappedColumn().getName() + " is null");
-			else
-				sb.append(" where b."
-						+ ((WrappedColumn) action.partitionColumn)
-								.getWrappedColumn().getName() + " = '"
-						+ action.partitionValue + "'");
-		}
-
-		commands.add("#" + action.getStatusMessage());
-		commands.add("create table " + schemaName + "." + tempTableName
-				+ " as select a.*, " + sbCols.toString() + " from "
-				+ schemaName + "." + parentTableName + " as a " + joinKW
-				+ " join " + childSchemaName + "." + childTableName + " as b "
-				+ sb.toString());
-
-		// Drop the parent table.
-		String[] dropBits = this.dropTableStatements(new DropTable(
-				action.dataLink, parentTableName));
-		for (int i = 0; i < dropBits.length; i++)
-			commands.add(dropBits[i]);
-
-		// Rename the child table.
-		String[] renameBits = this.renameTableStatements(new RenameTable(
-				action.dataLink, tempTableName, parentTableName));
-		for (int i = 0; i < renameBits.length; i++)
-			commands.add(renameBits[i]);
-
-		// Return.
-		return (String[]) commands.toArray(new String[0]);
 	}
 
 	private String[] renameTableStatements(RenameTable action) throws Exception {
@@ -307,6 +191,23 @@ public class MySQLDialect extends DatabaseDialect {
 				"#" + action.getStatusMessage(),
 				"rename table " + schemaName + "." + oldTableName + " to "
 						+ schemaName + "." + newTableName };
+	}
+
+	private String[] createTableStatements(CreateTable action) throws Exception {
+		return processTableStatements(action, ((JDBCDataLink) action.dataLink)
+				.getConnection().getCatalog(), ((JDBCSchema) action.schema)
+				.getConnection().getCatalog(), action.tableName, null,
+				action.realTable.getName(), action.dsColumns, null, null,
+				false, action.partitionColumn, action.partitionValue);
+	}
+
+	private String[] mergeTableStatements(MergeTable action) throws Exception {
+		return this.processTableStatements(action,
+				((JDBCDataLink) action.dataLink).getConnection().getCatalog(),
+				((JDBCSchema) action.schema).getConnection().getCatalog(),
+				action.tempTable, action.tableName, action.realTable.getName(),
+				action.dsColumns, action.fromDSColumns, action.toRealColumns,
+				action.leftJoin, action.partitionColumn, action.partitionValue);
 	}
 
 	private String[] restrictTableStatements(RestrictTable action)
@@ -365,21 +266,127 @@ public class MySQLDialect extends DatabaseDialect {
 		return new String[] { "#" + action.getStatusMessage(), sb.toString() };
 	}
 
-	private String convertDSColumn(String tableAlias, String schemaName,
-			DataSetColumn dsCol) throws Exception {
-		if (dsCol instanceof WrappedColumn) {
-			WrappedColumn wc = (WrappedColumn) dsCol;
-			return tableAlias + "." + wc.getWrappedColumn().getName() + " as "
-					+ wc.getName();
-		} else if (dsCol instanceof SchemaNameColumn) {
-			SchemaNameColumn sn = (SchemaNameColumn) dsCol;
-			return "'" + schemaName + "' as " + sn.getName();
-		} else if (dsCol instanceof ConcatRelationColumn) {
-			ConcatRelationColumn cr = (ConcatRelationColumn) dsCol;
-			// TODO
-			return "'concat' as " + cr.getName();
+	private String[] processTableStatements(MCAction action,
+			String dsSchemaName, String targetSchemaName, String tempTableName,
+			String existingTableName, String targetTableName, List dsColumns,
+			List fromDSColumns, List toRealColumns, boolean leftJoin,
+			DataSetColumn partitionColumn, Object partitionValue)
+			throws Exception {
+
+		List commands = new ArrayList();
+
+		// We must assume the source schema is read-only, therefore
+		// we cannot make any temporary indexes on it even though
+		// we'd probably quite like to.
+
+		// Join the table to the parent, if parent table not null.
+		StringBuffer sbJoin = new StringBuffer();
+		if (existingTableName != null) {
+
+			// Work out what kind of join to use, if any.
+			String joinKW = (leftJoin && partitionColumn == null) ? "left"
+					: "inner";
+
+			// Do the join.
+			sbJoin.append(dsSchemaName);
+			sbJoin.append(".");
+			sbJoin.append(existingTableName);
+			sbJoin.append(" ");
+			sbJoin.append(joinKW);
+			sbJoin.append(" as a join ");
+			sbJoin.append(targetSchemaName);
+			sbJoin.append(".");
+			sbJoin.append(targetTableName);
+			sbJoin.append(" as b on (");
+			for (int i = 0; i < fromDSColumns.size(); i++) {
+				if (i > 0)
+					sbJoin.append(" and ");
+				String parentColName = ((Column) fromDSColumns.get(i))
+						.getName();
+				String childColName = ((Column) toRealColumns.get(i)).getName();
+				sbJoin.append("a." + parentColName + " = b." + childColName);
+			}
+			sbJoin.append(")");
 		}
-		throw new ConstructorException(BuilderBundle
-				.getString("mcUnknownDSCol"));
+		// Otherwise, just select from target table.
+		else {
+			sbJoin.append(targetSchemaName);
+			sbJoin.append(".");
+			sbJoin.append(targetTableName);
+			sbJoin.append(" as b ");
+		}
+
+		// Work out what columns to include.
+		StringBuffer sbCols = new StringBuffer();
+		if (existingTableName != null)
+			sbCols.append("a.*,");
+		for (Iterator i = dsColumns.iterator(); i.hasNext();) {
+			DataSetColumn dsCol = (DataSetColumn) i.next();
+			if (dsCol instanceof WrappedColumn) {
+				WrappedColumn wc = (WrappedColumn) dsCol;
+				sbCols.append("b." + wc.getWrappedColumn().getName() + " as "
+						+ wc.getName());
+			} else if (dsCol instanceof SchemaNameColumn) {
+				SchemaNameColumn sn = (SchemaNameColumn) dsCol;
+				sbCols.append("'" + targetSchemaName + "' as " + sn.getName());
+			} else if (dsCol instanceof ConcatRelationColumn) {
+				ConcatRelationColumn cr = (ConcatRelationColumn) dsCol;
+				// TODO
+				sbCols.append("'concat' as " + cr.getName());
+			} else
+				throw new ConstructorException(BuilderBundle
+						.getString("mcUnknownDSCol"));
+			if (i.hasNext())
+				sbCols.append(",");
+		}
+
+		// TODO : concat-relations. Do these by group-by all the columns
+		// on the original table, then adding an additional LEFT/INNER join
+		// per concat relation, and adding a GROUP_CONCAT(DISTINCT CONCAT_WS(
+		// valsep, ifnull(col1,''), ifnull(col2,''), ..., ifnull(colN,''))
+		// SEPARATOR rowsep) column as the concat column for that relation.
+		// The cols selected are the PK cols of the remote table. The join
+		// cols are obvious.
+		// Watch out for the MySQL property 'group_concat_max_len'. Also
+		// watch out for null being replaced with empty string in CONCAT_WS -
+		// alternative is to leave as null, then it will be skipped altogether
+		// and output will be missing one entire value including separator.
+
+		// Restrict to a particular partition.
+		StringBuffer sbWhere = new StringBuffer();
+		if (partitionColumn != null) {
+			if (partitionValue == null)
+				sbWhere.append(" where b."
+						+ ((WrappedColumn) partitionColumn).getWrappedColumn()
+								.getName() + " is null");
+			else
+				sbWhere.append(" where b."
+						+ ((WrappedColumn) partitionColumn).getWrappedColumn()
+								.getName() + " = '" + partitionValue + "'");
+		}
+
+		// Write the command.
+		commands.add("#" + action.getStatusMessage());
+		commands.add("create table " + dsSchemaName + "." + tempTableName
+				+ " as select " + sbCols.toString() + " from "
+				+ sbJoin.toString() + sbWhere.toString());
+
+		// If it has a parent table...
+		if (existingTableName != null) {
+			// Drop the parent table.
+			String[] dropBits = this.dropTableStatements(new DropTable(
+					action.dataLink, existingTableName));
+			for (int i = 0; i < dropBits.length; i++)
+				commands.add(dropBits[i]);
+
+			// Rename the child table.
+			String[] renameBits = this.renameTableStatements(new RenameTable(
+					action.dataLink, tempTableName, existingTableName));
+			for (int i = 0; i < renameBits.length; i++)
+				commands.add(renameBits[i]);
+		}
+
+		// Return.
+		return (String[]) commands.toArray(new String[0]);
 	}
 }

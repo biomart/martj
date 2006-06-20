@@ -58,7 +58,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.27, 19th June 2006
+ * @version 0.1.28, 20th June 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -918,24 +918,24 @@ public class DataSet extends GenericSchema {
 							ComponentStatus.INFERRED_INCORRECT))
 				continue;
 
-			// Concatenate concat-only relations.
-			else if (this.concatOnlyRelations[0].contains(r))
-				try {
-					new ConcatRelationColumn(BuilderBundle
-							.getString("concatColumnPrefix")
-							+ mergeTable.getName(), dsTable, r);
-				} catch (Throwable t) {
-					throw new MartBuilderInternalError(t);
-				}
-
 			// Are we at the 1 end of a 1:M, or at either end of a M:M?
 			else if (r.isManyToMany()
 					|| (r.isOneToMany() && r.getOneKey().getTable().equals(
 							mergeTable))) {
 
+				// Concatenate concat-only relations.
+				if (this.concatOnlyRelations[0].contains(r))
+					try {
+						new ConcatRelationColumn(BuilderBundle
+								.getString("concatColumnPrefix")
+								+ mergeTable.getName(), dsTable, r);
+					} catch (Throwable t) {
+						throw new MartBuilderInternalError(t);
+					}
+
 				// Subclass subclassed relations, if we are currently
 				// building the main table of the dataset.
-				if (this.subclassedRelations.contains(r)
+				else if (this.subclassedRelations.contains(r)
 						&& dsTable.getType().equals(DataSetTableType.MAIN))
 					subclassQ.add(r);
 

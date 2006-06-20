@@ -42,7 +42,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * outlined above.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 13th June 2006
+ * @version 0.1.11, 20th June 2006
  * @since 0.1
  */
 public interface Relation extends Comparable {
@@ -469,12 +469,14 @@ public interface Relation extends Comparable {
 
 		public boolean isOneToMany() {
 			return this.cardinality.equals(Cardinality.MANY)
-					&& (this.firstKey instanceof PrimaryKey);
+					&& (this.firstKey instanceof PrimaryKey
+							|| this.secondKey instanceof PrimaryKey);
 		}
 
 		public boolean isManyToMany() {
 			return this.cardinality.equals(Cardinality.MANY)
-					&& (this.firstKey instanceof ForeignKey);
+					&& !(this.firstKey instanceof PrimaryKey
+							|| this.secondKey instanceof PrimaryKey);
 		}
 
 		public boolean isExternal() {
