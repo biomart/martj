@@ -32,12 +32,14 @@ import org.biomart.builder.exceptions.MartBuilderInternalError;
  * running, only the first one will start the hourglass, and only the last one
  * to end will stop it.
  * <p>
- * The thread is run using
+ * The hourglass portion of the thread is run using
  * {@link SwingUtilities#invokeLater(java.lang.Runnable)}, so that it is
- * thread-safe for Swing and can safely work with the GUI.
+ * thread-safe for Swing and can safely work with the GUI. Any parts of the
+ * process passed in that work with the GUI must also use this construct to
+ * avoid concurrent modification problems.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 14th June 2006
+ * @version 0.1.5, 20th June 2006
  * @since 0.1
  */
 public abstract class LongProcess {
@@ -68,7 +70,7 @@ public abstract class LongProcess {
 	 *            the process to run.
 	 */
 	public synchronized static void run(final Runnable process) {
-		SwingUtilities.invokeLater(new Runnable() {
+		new Thread(new Runnable() {
 			public void run() {
 				try {
 					// Update the number of processes currently running.
@@ -79,8 +81,13 @@ public abstract class LongProcess {
 					// If this is the first process to start, open the
 					// hourglass.
 					if (LongProcess.longProcessCount == 1) {
-						Cursor hourglassCursor = new Cursor(Cursor.WAIT_CURSOR);
-						container.setCursor(hourglassCursor);
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								Cursor normalCursor = new Cursor(
+										Cursor.WAIT_CURSOR);
+								container.setCursor(normalCursor);
+							}
+						});
 					}
 
 					// Let the process run.
@@ -99,11 +106,16 @@ public abstract class LongProcess {
 
 					// If that was the last one, stop the hourglass.
 					if (LongProcess.longProcessCount == 0) {
-						Cursor normalCursor = new Cursor(Cursor.DEFAULT_CURSOR);
-						container.setCursor(normalCursor);
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								Cursor normalCursor = new Cursor(
+										Cursor.DEFAULT_CURSOR);
+								container.setCursor(normalCursor);
+							}
+						});
 					}
 				}
 			}
-		});
+		}).start();
 	}
 }

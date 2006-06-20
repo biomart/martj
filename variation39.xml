@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mart>
-	<dummyMartConstructor id="1" name="population_structure"/>
-	<dummyMartConstructor id="2" name="variation_feature"/>
 	<jdbcSchema driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_39_36a" username="anonymous" password="" name="ensembl39" keyguessing="true">
 		<table id="3" name="alt_allele">
 			<column id="4" name="alt_allele_id"/>

@@ -24,6 +24,7 @@ import java.util.Iterator;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
+import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * Displays the contents of a schema within a standard diagram object. It adds a
@@ -32,7 +33,7 @@ import org.biomart.builder.model.Table;
  * the basic background object of the diagram.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 17th May 2006
+ * @version 0.1.13, 20th May 2006
  * @since 0.1
  */
 public class SchemaDiagram extends Diagram {
@@ -49,12 +50,14 @@ public class SchemaDiagram extends Diagram {
 	 * Creates a new diagram that displays the tables and relations inside a
 	 * specific schema.
 	 * 
+	 * @param martTab
+	 * 			  the tab within which this diagram appears.
 	 * @param schema
 	 *            the schema to draw in this diagram.
 	 */
-	public SchemaDiagram(DataSetTabSet datasetTabSet, Schema schema) {
+	public SchemaDiagram(MartTab martTab, Schema schema) {
 		// Call the general diagram constructor first.
-		super(datasetTabSet);
+		super(martTab);
 
 		// Set up our background colour.
 		this.setBackground(SchemaDiagram.BACKGROUND_COLOUR);

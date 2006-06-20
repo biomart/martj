@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mart>
-	<dummyMartConstructor id="1" name="karyotype"/>
-	<dummyMartConstructor id="2" name="misc_attrib"/>
-	<dummyMartConstructor id="3" name="dummy5"/>
-	<dummyMartConstructor id="4" name="go_xref"/>
-	<dummyMartConstructor id="5" name="marker_feature"/>
-	<jdbcMartConstructor id="6" name="qtl_feature" driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://ensembldb.ensembl.org:3306/ensembl_mart_39" username="anonymous" type="SINGLE FILE" outputDDLFile="/Users/arek/mystestfile"/>
-	<dummyMartConstructor id="7" name="exon_transcript"/>
 	<jdbcSchema driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://ensembldb.ensembl.org:3306/ensembl_compara_38" username="anonymous" name="ensembl_compara_38" keyguessing="true">
 		<table id="8" name="analysis">
 			<column id="9" name="analysis_id"/>

@@ -40,7 +40,7 @@ import org.biomart.builder.model.Relation;
  * The line is defined by the layout manager.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 14th June 2006
+ * @version 0.1.15, 20th June 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
@@ -255,8 +255,9 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 			JPopupMenu contextMenu = this.getContextMenu();
 
 			// Customise it using the diagram context.
-			this.getDiagram().getDiagramContext().populateContextMenu(
-					contextMenu, this.getObject());
+			if (this.getDiagram().getDiagramContext() != null)
+				this.getDiagram().getDiagramContext().populateContextMenu(
+						contextMenu, this.getObject());
 
 			// Display.
 			if (contextMenu.getComponentCount() > 0)

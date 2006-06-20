@@ -32,6 +32,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
 
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.exceptions.ValidationException;
@@ -44,6 +45,7 @@ import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * <p>
@@ -57,7 +59,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * has the same context applied.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.16, 14th June 2006
+ * @version 0.1.17, 20th June 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -69,33 +71,31 @@ public class SchemaTabSet extends JTabbedPane {
 
 	private DiagramContext diagramContext;
 
-	private DataSetTabSet datasetTabSet;
+	private MartTab martTab;
 
 	private AllSchemasDiagram allSchemasDiagram;
 
 	/**
 	 * Creates a new set of tabs to represent the schemas in a mart. The mart is
-	 * obtained by using methods on the dataset tabset passed in as a parameter.
-	 * The dataset tabset is the parent tabset that this schema tabset will
-	 * appear inside the tabs of. It handles the assigning of diagram contexts
-	 * as the user flips through the various datasets in the mart, and hence
-	 * requires this schema tabset to be customised to match them.
+	 * obtained by using methods on the mart tab passed in as a parameter. The
+	 * mart tab is the parent tab that this schema tabset will appear inside the
+	 * tabs of.
 	 * 
-	 * @param datasetTabSet
-	 *            the parent tabset this schema tabset will appear inside the
-	 *            tabs of.
+	 * @param martTab
+	 *            the parent tab this schema tabset will appear inside the tabs
+	 *            of.
 	 */
-	public SchemaTabSet(DataSetTabSet datasetTabSet) {
+	public SchemaTabSet(MartTab martTab) {
 		super();
 
 		// Remember the dataset tabset we are shown inside.
-		this.datasetTabSet = datasetTabSet;
+		this.martTab = martTab;
 
 		// Add the all-schemas overview tab. This tab displays a diagram
 		// in which all schemas appear, linked where necessary by external
 		// relations. This diagram could be quite large, so it is held inside
 		// a scrollpane.
-		this.allSchemasDiagram = new AllSchemasDiagram(this.datasetTabSet);
+		this.allSchemasDiagram = new AllSchemasDiagram(this.martTab);
 		JScrollPane scroller = new JScrollPane(this.allSchemasDiagram);
 		scroller.getViewport().setBackground(
 				this.allSchemasDiagram.getBackground());
@@ -110,12 +110,12 @@ public class SchemaTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Returns the dataset tabset that this schema tabset lives inside.
+	 * Returns the mart tab that this schema tabset lives inside.
 	 * 
-	 * @return the parent dataset tabset.
+	 * @return the parent mart tab.
 	 */
-	public DataSetTabSet getDataSetTabSet() {
-		return this.datasetTabSet;
+	public MartTab getMartTab() {
+		return this.martTab;
 	}
 
 	/**
@@ -127,7 +127,7 @@ public class SchemaTabSet extends JTabbedPane {
 		// Add all schemas in the mart that we don't have yet.
 		// We work with a copy of the list of schemas else we get
 		// concurrent modification exceptions as new ones are added.
-		for (Iterator i = this.datasetTabSet.getMart().getSchemas().iterator(); i
+		for (Iterator i = this.martTab.getMart().getSchemas().iterator(); i
 				.hasNext();) {
 			Schema schema = (Schema) i.next();
 			if (!this.schemaToDiagram[0].contains(schema))
@@ -140,7 +140,7 @@ public class SchemaTabSet extends JTabbedPane {
 		List ourSchemas = new ArrayList(this.schemaToDiagram[0]);
 		for (Iterator i = ourSchemas.iterator(); i.hasNext();) {
 			Schema schema = (Schema) i.next();
-			if (!this.datasetTabSet.getMart().getSchemas().contains(schema))
+			if (!this.martTab.getMart().getSchemas().contains(schema))
 				this.removeSchemaTab(schema);
 		}
 	}
@@ -209,7 +209,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestAddSchema() {
 		// Pop up a dialog to get the details of the new schema, then
 		// obtain a copy of that schema.
-		final Schema schema = SchemaManagerDialog.createSchema(this);
+		final Schema schema = SchemaManagerDialog.createSchema(this.martTab);
 
 		// If no schema was defined, ignore the request.
 		if (schema == null)
@@ -220,11 +220,7 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Add the schema to the mart, then synchronise it.
-					MartBuilderUtils.addSchemaToMart(datasetTabSet.getMart(),
-							schema);
-
-					// Create and add the tab representing this schema.
-					addSchemaTab(schema);
+					MartBuilderUtils.addSchemaToMart(martTab.getMart(), schema);
 
 					// Synchronise it.
 					MartBuilderUtils.synchroniseSchema(schema);
@@ -238,14 +234,26 @@ public class SchemaTabSet extends JTabbedPane {
 						MartBuilderUtils.synchroniseSchema(schema);
 					}
 
-					// Update the diagram to match the synchronised contents.
-					recalculateSchemaDiagram(schema);
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Create and add the tab representing this schema.
+							addSchemaTab(schema);
 
-					// Set the dataset tabset status as modified.
-					datasetTabSet.getMartTabSet().setModifiedStatus(true);
-				} catch (Throwable t) {
-					datasetTabSet.getMartTabSet().getMartBuilder()
-							.showStackTrace(t);
+							// Update the diagram to match the synchronised
+							// contents.
+							recalculateSchemaDiagram(schema);
+
+							// Set the dataset tabset status as modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
 				}
 			}
 		});
@@ -261,7 +269,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestAddSchemaToSchemaGroup(final Schema schema) {
 		// Find out what groups already exist and make a list.
 		List groupSchemas = new ArrayList();
-		for (Iterator i = this.datasetTabSet.getMart().getSchemas().iterator(); i
+		for (Iterator i = this.martTab.getMart().getSchemas().iterator(); i
 				.hasNext();) {
 			Schema groupSchema = (Schema) i.next();
 			if (groupSchema instanceof SchemaGroup)
@@ -273,12 +281,11 @@ public class SchemaTabSet extends JTabbedPane {
 		groupSchemas.add(newGroupName);
 
 		// Ask use which group to use.
-		String groupName = (String) JOptionPane.showInputDialog(
-				this.datasetTabSet.getMartTabSet().getMartBuilder(),
-				BuilderBundle.getString("requestSchemaGroupName"),
-				BuilderBundle.getString("questionTitle"),
-				JOptionPane.QUESTION_MESSAGE, null, groupSchemas.toArray(),
-				newGroupName);
+		String groupName = (String) JOptionPane.showInputDialog(this.martTab
+				.getMartTabSet().getMartBuilder(), BuilderBundle
+				.getString("requestSchemaGroupName"), BuilderBundle
+				.getString("questionTitle"), JOptionPane.QUESTION_MESSAGE,
+				null, groupSchemas.toArray(), newGroupName);
 
 		// If they cancelled the choice, cancel the add group request too.
 		if (groupName == null)
@@ -287,7 +294,7 @@ public class SchemaTabSet extends JTabbedPane {
 		// If they chose 'new group', get the new group name from a second
 		// dialog.
 		if (groupName.equals(newGroupName)) {
-			groupName = (String) JOptionPane.showInputDialog(this.datasetTabSet
+			groupName = (String) JOptionPane.showInputDialog(this.martTab
 					.getMartTabSet().getMartBuilder(), BuilderBundle
 					.getString("requestNewSchemaGroupName"), BuilderBundle
 					.getString("questionTitle"), JOptionPane.QUESTION_MESSAGE);
@@ -316,37 +323,51 @@ public class SchemaTabSet extends JTabbedPane {
 						try {
 							// Lookup or create the group, add the schema to it,
 							// then obtain the group that it was added to.
-							SchemaGroup group = MartBuilderUtils
-									.addSchemaToSchemaGroup(datasetTabSet
-											.getMart(), schema, groupNameRef);
+							final SchemaGroup group = MartBuilderUtils
+									.addSchemaToSchemaGroup(martTab.getMart(),
+											schema, groupNameRef);
 
-							// Remove the tab for the individual schema.
-							removeSchemaTab(schema);
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									// Remove the tab for the individual schema.
+									removeSchemaTab(schema);
 
-							// If the group is a new group, ie. contains only
-							// one schema, then add a tab to represent it.
-							if (group.getSchemas().size() == 1)
-								addSchemaTab(group);
+									// If the group is a new group, ie. contains
+									// only
+									// one schema, then add a tab to represent
+									// it.
+									if (group.getSchemas().size() == 1)
+										addSchemaTab(group);
 
-							// Some datasets may have referred to the individual
-							// schema. As it is no longer individual, they will
-							// have been dropped, so the dataset tabset needs to
-							// be recalculated.
-							datasetTabSet.recalculateDataSetTabs();
+									// Some datasets may have referred to the
+									// individual
+									// schema. As it is no longer individual,
+									// they will
+									// have been dropped, so the dataset tabset
+									// needs to
+									// be recalculated.
+									martTab.getDataSetTabSet()
+											.recalculateDataSetTabs();
 
-							// Set the dataset tabset status as modified.
-							datasetTabSet.getMartTabSet().setModifiedStatus(
-									true);
-						} catch (Throwable t) {
-							datasetTabSet.getMartTabSet().getMartBuilder()
-									.showStackTrace(t);
+									// Set the dataset tabset status as
+									// modified.
+									martTab.getMartTabSet().setModifiedStatus(
+											true);
+								}
+							});
+						} catch (final Throwable t) {
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									martTab.getMartTabSet().getMartBuilder()
+											.showStackTrace(t);
+								}
+							});
 						}
 					}
 				});
 			}
 		} catch (Throwable t) {
-			this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(
-					t);
+			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 		}
 	}
 
@@ -361,11 +382,10 @@ public class SchemaTabSet extends JTabbedPane {
 		try {
 			// If the user actually made any changes, then synchronise the
 			// schema to reflect them.
-			if (SchemaManagerDialog.modifySchema(this, schema))
+			if (SchemaManagerDialog.modifySchema(this.martTab, schema))
 				this.requestSynchroniseSchema(schema);
 		} catch (Throwable t) {
-			this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(
-					t);
+			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 		}
 	}
 
@@ -387,29 +407,27 @@ public class SchemaTabSet extends JTabbedPane {
 				return;
 
 			// Create the replicate.
-			Schema newSchema = MartBuilderUtils.replicateSchema(
-					this.datasetTabSet.getMart(), schema, newName);
+			Schema newSchema = MartBuilderUtils.replicateSchema(this.martTab
+					.getMart(), schema, newName);
 
 			// Add a tab to represent the replicate.
 			this.addSchemaTab(newSchema);
 
 			// Set the dataset tabset status as modified.
-			this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
+			this.martTab.getMartTabSet().setModifiedStatus(true);
 
 			// Pop up a dialog to ask the user if they
 			// want to change any of the details of the
 			// replicated schema.
 			this.requestModifySchema(newSchema);
 		} catch (Throwable t) {
-			this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(
-					t);
+			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 		}
 	}
 
 	private void addSchemaTab(Schema schema) {
 		// Create the diagram to represent this schema.
-		SchemaDiagram schemaDiagram = new SchemaDiagram(this.datasetTabSet,
-				schema);
+		SchemaDiagram schemaDiagram = new SchemaDiagram(this.martTab, schema);
 
 		// Create a scroller to contain the diagram.
 		JScrollPane scroller = new JScrollPane(schemaDiagram);
@@ -429,6 +447,10 @@ public class SchemaTabSet extends JTabbedPane {
 		// Update the all-schemas diagram so that it includes the new
 		// schema.
 		this.recalculateOverviewDiagram();
+		
+		// Select the new schema.
+		this.setSelectedIndex(this.indexOfComponent(scroller));
+		this.martTab.selectSchemaEditor();
 	}
 
 	/**
@@ -452,26 +474,34 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Remove the schema from the mart.
-					MartBuilderUtils.removeSchemaFromMart(datasetTabSet
-							.getMart(), schema);
+					MartBuilderUtils.removeSchemaFromMart(martTab.getMart(),
+							schema);
 
-					// Remove the schema tab from the schema tabset.
-					removeSchemaTab(schema);
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Remove the schema tab from the schema tabset.
+							removeSchemaTab(schema);
 
-					// Some datasets may have referred to the individual
-					// schema. As it no longer exists, they will
-					// have been dropped, so the dataset tabset needs to
-					// be recalculated.
-					datasetTabSet.recalculateDataSetTabs();
+							// Some datasets may have referred to the individual
+							// schema. As it no longer exists, they will
+							// have been dropped, so the dataset tabset needs to
+							// be recalculated.
+							martTab.getDataSetTabSet().recalculateDataSetTabs();
 
-					// Recalculate the all-schemas diagram.
-					recalculateOverviewDiagram();
+							// Recalculate the all-schemas diagram.
+							recalculateOverviewDiagram();
 
-					// Set the dataset tabset status as modified.
-					datasetTabSet.getMartTabSet().setModifiedStatus(true);
-				} catch (Throwable t) {
-					datasetTabSet.getMartTabSet().getMartBuilder()
-							.showStackTrace(t);
+							// Set the dataset tabset status as modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
 				}
 			}
 		});
@@ -503,21 +533,29 @@ public class SchemaTabSet extends JTabbedPane {
 				try {
 					// Remove the schema from the group and reinstate
 					// it as an individual schema.
-					MartBuilderUtils.removeSchemaFromSchemaGroup(datasetTabSet
+					MartBuilderUtils.removeSchemaFromSchemaGroup(martTab
 							.getMart(), schema, schemaGroup);
 
-					// Reinstate the tab for the individual schema.
-					addSchemaTab(schema);
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Reinstate the tab for the individual schema.
+							addSchemaTab(schema);
 
-					// If the group is now empty, remove the tab for it.
-					if (schemaGroup.getSchemas().size() == 0)
-						removeSchemaTab(schemaGroup);
+							// If the group is now empty, remove the tab for it.
+							if (schemaGroup.getSchemas().size() == 0)
+								removeSchemaTab(schemaGroup);
 
-					// Set the dataset tabset status as modified.
-					datasetTabSet.getMartTabSet().setModifiedStatus(true);
-				} catch (Throwable t) {
-					datasetTabSet.getMartTabSet().getMartBuilder()
-							.showStackTrace(t);
+							// Set the dataset tabset status as modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
 				}
 			}
 		});
@@ -545,7 +583,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	private String askUserForSchemaName(String defaultResponse) {
 		// Ask user for a name, giving them the default suggestion.
-		String name = (String) JOptionPane.showInputDialog(this.datasetTabSet
+		String name = (String) JOptionPane.showInputDialog(this.martTab
 				.getMartTabSet().getMartBuilder(), BuilderBundle
 				.getString("requestSchemaName"), BuilderBundle
 				.getString("questionTitle"), JOptionPane.QUESTION_MESSAGE,
@@ -594,8 +632,8 @@ public class SchemaTabSet extends JTabbedPane {
 				int idx = this.indexOfTab(schema.getName());
 
 				// Rename the schema.
-				MartBuilderUtils.renameSchema(this.datasetTabSet.getMart(),
-						schema, newName);
+				MartBuilderUtils.renameSchema(this.martTab.getMart(), schema,
+						newName);
 
 				// Rename the tab displaying it.
 				this.setTitleAt(idx, schema.getName());
@@ -607,13 +645,12 @@ public class SchemaTabSet extends JTabbedPane {
 			// and dataset diagrams will also need to be recalculated.
 			this.recalculateOverviewDiagram();
 			this.recalculateSchemaDiagram(schema);
-			this.datasetTabSet.recalculateAllDataSetDiagrams();
+			this.martTab.getDataSetTabSet().recalculateAllDataSetDiagrams();
 
 			// Set the dataset tabset status to modified.
-			this.datasetTabSet.getMartTabSet().setModifiedStatus(true);
+			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (Throwable t) {
-			this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(
-					t);
+			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 		}
 	}
 
@@ -631,24 +668,37 @@ public class SchemaTabSet extends JTabbedPane {
 					// Synchronise it.
 					MartBuilderUtils.synchroniseSchema(schema);
 
-					// Recalculate the diagram.
-					recalculateSchemaDiagram(schema);
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Recalculate the diagram.
+							recalculateSchemaDiagram(schema);
 
-					// As it may have lost or gained some external relations,
-					// the all-schemas diagram should also be recalculated.
-					recalculateOverviewDiagram();
+							// As it may have lost or gained some external
+							// relations,
+							// the all-schemas diagram should also be
+							// recalculated.
+							recalculateOverviewDiagram();
 
-					// It may have disappeared altogether, or lost some table
-					// upon which a dataset was based, so the datasets may have
-					// changed. In which case, recalculate the dataset tabset
-					// to reflect this.
-					datasetTabSet.recalculateDataSetTabs();
+							// It may have disappeared altogether, or lost some
+							// table
+							// upon which a dataset was based, so the datasets
+							// may have
+							// changed. In which case, recalculate the dataset
+							// tabset
+							// to reflect this.
+							martTab.getDataSetTabSet().recalculateDataSetTabs();
 
-					// Update the dataset tabset status to modified.
-					datasetTabSet.getMartTabSet().setModifiedStatus(true);
-				} catch (Throwable t) {
-					datasetTabSet.getMartTabSet().getMartBuilder()
-							.showStackTrace(t);
+							// Update the dataset tabset status to modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
 				}
 			}
 		});
@@ -663,28 +713,38 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Synchronise all schemas in the mart.
-					MartBuilderUtils.synchroniseMartSchemas(datasetTabSet
-							.getMart());
+					MartBuilderUtils.synchroniseMartSchemas(martTab.getMart());
 
-					// Recalculate all schema diagrams.
-					recalculateAllSchemaDiagrams();
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Recalculate all schema diagrams.
+							recalculateAllSchemaDiagrams();
 
-					// As schemas may have lost or gained some external
-					// relations, the all-schemas diagram should also be
-					// recalculated.
-					recalculateOverviewDiagram();
+							// As schemas may have lost or gained some external
+							// relations, the all-schemas diagram should also be
+							// recalculated.
+							recalculateOverviewDiagram();
 
-					// Schemas may have disappeared altogether, or lost some
-					// table upon which a dataset was based, so the datasets
-					// may have changed. In which case, recalculate the dataset
-					// tabset to reflect this.
-					datasetTabSet.recalculateDataSetTabs();
+							// Schemas may have disappeared altogether, or lost
+							// some
+							// table upon which a dataset was based, so the
+							// datasets
+							// may have changed. In which case, recalculate the
+							// dataset
+							// tabset to reflect this.
+							martTab.getDataSetTabSet().recalculateDataSetTabs();
 
-					// Update the dataset tabset status to modified.
-					datasetTabSet.getMartTabSet().setModifiedStatus(true);
-				} catch (Throwable t) {
-					datasetTabSet.getMartTabSet().getMartBuilder()
-							.showStackTrace(t);
+							// Update the dataset tabset status to modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
 				}
 			}
 		});
@@ -708,8 +768,7 @@ public class SchemaTabSet extends JTabbedPane {
 			// If we get an exception, we failed the test, and should
 			// tell the user why.
 			passedTest = false;
-			this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(
-					t);
+			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 		}
 
 		// Tell the user if we passed or failed.
@@ -766,28 +825,42 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Change the cardinality.
-					MartBuilderUtils.changeRelationCardinality(datasetTabSet
+					MartBuilderUtils.changeRelationCardinality(martTab
 							.getMart(), relation, cardinality);
 
-					// Internal relation? Repaint the individual schema diagram.
-					if (!relation.isExternal())
-						repaintSchemaDiagram(relation.getFirstKey().getTable()
-								.getSchema());
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Internal relation? Repaint the individual schema
+							// diagram.
+							if (!relation.isExternal())
+								repaintSchemaDiagram(relation.getFirstKey()
+										.getTable().getSchema());
 
-					// External relation? Repaint the all-schemas diagram.
-					else
-						repaintOverviewDiagram();
+							// External relation? Repaint the all-schemas
+							// diagram.
+							else
+								repaintOverviewDiagram();
 
-					// This may have caused new dimensions or subclass tables to
-					// appear in datasets referring to tables in this schema, so
-					// we need to recalculate all dataset diagrams just in case.
-					datasetTabSet.recalculateAllDataSetDiagrams();
+							// This may have caused new dimensions or subclass
+							// tables to
+							// appear in datasets referring to tables in this
+							// schema, so
+							// we need to recalculate all dataset diagrams just
+							// in case.
+							martTab.getDataSetTabSet()
+									.recalculateAllDataSetDiagrams();
 
-					// Set the dataset tabset status to modified.
-					datasetTabSet.getMartTabSet().setModifiedStatus(true);
-				} catch (Throwable t) {
-					datasetTabSet.getMartTabSet().getMartBuilder()
-							.showStackTrace(t);
+							// Set the dataset tabset status to modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
 				}
 			}
 		});
@@ -808,28 +881,42 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Change the status.
-					MartBuilderUtils.changeRelationStatus(datasetTabSet
-							.getMart(), relation, status);
+					MartBuilderUtils.changeRelationStatus(martTab.getMart(),
+							relation, status);
 
-					// Internal relation? Repaint the individual schema diagram.
-					if (!relation.isExternal())
-						repaintSchemaDiagram(relation.getFirstKey().getTable()
-								.getSchema());
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Internal relation? Repaint the individual schema
+							// diagram.
+							if (!relation.isExternal())
+								repaintSchemaDiagram(relation.getFirstKey()
+										.getTable().getSchema());
 
-					// External relation? Repaint the all-schemas diagram.
-					else
-						repaintOverviewDiagram();
+							// External relation? Repaint the all-schemas
+							// diagram.
+							else
+								repaintOverviewDiagram();
 
-					// This may have caused new dimensions or subclass tables to
-					// appear in datasets referring to tables in this schema, so
-					// we need to recalculate all dataset diagrams just in case.
-					datasetTabSet.recalculateAllDataSetDiagrams();
+							// This may have caused new dimensions or subclass
+							// tables to
+							// appear in datasets referring to tables in this
+							// schema, so
+							// we need to recalculate all dataset diagrams just
+							// in case.
+							martTab.getDataSetTabSet()
+									.recalculateAllDataSetDiagrams();
 
-					// Set the dataset tabset status to modified.
-					datasetTabSet.getMartTabSet().setModifiedStatus(true);
-				} catch (Throwable t) {
-					datasetTabSet.getMartTabSet().getMartBuilder()
-							.showStackTrace(t);
+							// Set the dataset tabset status to modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
 				}
 			}
 		});
@@ -847,28 +934,42 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Remove the relation.
-					MartBuilderUtils.removeRelation(datasetTabSet.getMart(),
-							relation);
+					MartBuilderUtils
+							.removeRelation(martTab.getMart(), relation);
 
-					// Internal relation? Repaint the individual schema diagram.
-					if (!relation.isExternal())
-						recalculateSchemaDiagram(relation.getFirstKey()
-								.getTable().getSchema());
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Internal relation? Repaint the individual schema
+							// diagram.
+							if (!relation.isExternal())
+								recalculateSchemaDiagram(relation.getFirstKey()
+										.getTable().getSchema());
 
-					// External relation? Repaint the all-schemas diagram.
-					else
-						recalculateOverviewDiagram();
+							// External relation? Repaint the all-schemas
+							// diagram.
+							else
+								recalculateOverviewDiagram();
 
-					// This may have caused new dimensions or subclass tables to
-					// appear in datasets referring to tables in this schema, so
-					// we need to recalculate all dataset diagrams just in case.
-					datasetTabSet.recalculateAllDataSetDiagrams();
+							// This may have caused new dimensions or subclass
+							// tables to
+							// appear in datasets referring to tables in this
+							// schema, so
+							// we need to recalculate all dataset diagrams just
+							// in case.
+							martTab.getDataSetTabSet()
+									.recalculateAllDataSetDiagrams();
 
-					// Set the dataset tabset status to modified.
-					datasetTabSet.getMartTabSet().setModifiedStatus(true);
-				} catch (Throwable t) {
-					datasetTabSet.getMartTabSet().getMartBuilder()
-							.showStackTrace(t);
+							// Set the dataset tabset status to modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
 				}
 			}
 		});
@@ -885,28 +986,45 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Remove the key.
-					MartBuilderUtils.removeKey(datasetTabSet.getMart(), key);
+					MartBuilderUtils.removeKey(martTab.getMart(), key);
 
-					// Recalculate the schema diagram this key appears in, as
-					// the table components will have changed size, and some
-					// relations may have disappeared.
-					recalculateSchemaDiagram(key.getTable().getSchema());
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Recalculate the schema diagram this key appears
+							// in, as
+							// the table components will have changed size, and
+							// some
+							// relations may have disappeared.
+							recalculateSchemaDiagram(key.getTable().getSchema());
 
-					// The same may have happened in the all-schemas diagram if
-					// this key had any external relations, or belonged to a
-					// table which had external relations on some other key.
-					recalculateOverviewDiagram();
+							// The same may have happened in the all-schemas
+							// diagram if
+							// this key had any external relations, or belonged
+							// to a
+							// table which had external relations on some other
+							// key.
+							recalculateOverviewDiagram();
 
-					// This may have caused new dimensions or subclass tables to
-					// appear in datasets referring to tables in this schema, so
-					// we need to recalculate all dataset diagrams just in case.
-					datasetTabSet.recalculateAllDataSetDiagrams();
+							// This may have caused new dimensions or subclass
+							// tables to
+							// appear in datasets referring to tables in this
+							// schema, so
+							// we need to recalculate all dataset diagrams just
+							// in case.
+							martTab.getDataSetTabSet()
+									.recalculateAllDataSetDiagrams();
 
-					// Set the dataset tabset status to modified.
-					datasetTabSet.getMartTabSet().setModifiedStatus(true);
-				} catch (Throwable t) {
-					datasetTabSet.getMartTabSet().getMartBuilder()
-							.showStackTrace(t);
+							// Set the dataset tabset status to modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
 				}
 			}
 		});
@@ -927,29 +1045,46 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Change the status.
-					MartBuilderUtils.changeKeyStatus(datasetTabSet.getMart(),
-							key, status);
+					MartBuilderUtils.changeKeyStatus(martTab.getMart(), key,
+							status);
 
-					// Recalculate the schema diagram this key appears in, as
-					// the table components will have changed size, and some
-					// relations may have disappeared.
-					recalculateSchemaDiagram(key.getTable().getSchema());
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Recalculate the schema diagram this key appears
+							// in, as
+							// the table components will have changed size, and
+							// some
+							// relations may have disappeared.
+							recalculateSchemaDiagram(key.getTable().getSchema());
 
-					// The same may have happened in the all-schemas diagram if
-					// this key had any external relations, or belonged to a
-					// table which had external relations on some other key.
-					recalculateOverviewDiagram();
+							// The same may have happened in the all-schemas
+							// diagram if
+							// this key had any external relations, or belonged
+							// to a
+							// table which had external relations on some other
+							// key.
+							recalculateOverviewDiagram();
 
-					// This may have caused new dimensions or subclass tables to
-					// appear in datasets referring to tables in this schema, so
-					// we need to recalculate all dataset diagrams just in case.
-					datasetTabSet.recalculateAllDataSetDiagrams();
+							// This may have caused new dimensions or subclass
+							// tables to
+							// appear in datasets referring to tables in this
+							// schema, so
+							// we need to recalculate all dataset diagrams just
+							// in case.
+							martTab.getDataSetTabSet()
+									.recalculateAllDataSetDiagrams();
 
-					// Set the dataset tabset status to modified.
-					datasetTabSet.getMartTabSet().setModifiedStatus(true);
-				} catch (Throwable t) {
-					datasetTabSet.getMartTabSet().getMartBuilder()
-							.showStackTrace(t);
+							// Set the dataset tabset status to modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
 				}
 			}
 		});
@@ -963,7 +1098,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestCreatePrimaryKey(Table table) {
 		// Pop up a dialog to ask which columns to use.
-		List cols = KeyEditorDialog.createPrimaryKey(this, table);
+		List cols = KeyEditorDialog.createPrimaryKey(this.martTab, table);
 
 		// If they chose some columns, create the key.
 		if (!cols.isEmpty())
@@ -988,26 +1123,43 @@ public class SchemaTabSet extends JTabbedPane {
 					// Create the key.
 					MartBuilderUtils.createPrimaryKey(table, columns);
 
-					// Recalculate the schema diagram this key appears in, as
-					// the table components will have changed size, and some
-					// relations may have disappeared.
-					recalculateSchemaDiagram(table.getSchema());
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Recalculate the schema diagram this key appears
+							// in, as
+							// the table components will have changed size, and
+							// some
+							// relations may have disappeared.
+							recalculateSchemaDiagram(table.getSchema());
 
-					// The same may have happened in the all-schemas diagram if
-					// this key had any external relations, or belonged to a
-					// table which had external relations on some other key.
-					recalculateOverviewDiagram();
+							// The same may have happened in the all-schemas
+							// diagram if
+							// this key had any external relations, or belonged
+							// to a
+							// table which had external relations on some other
+							// key.
+							recalculateOverviewDiagram();
 
-					// This may have caused new dimensions or subclass tables to
-					// appear in datasets referring to tables in this schema, so
-					// we need to recalculate all dataset diagrams just in case.
-					datasetTabSet.recalculateAllDataSetDiagrams();
+							// This may have caused new dimensions or subclass
+							// tables to
+							// appear in datasets referring to tables in this
+							// schema, so
+							// we need to recalculate all dataset diagrams just
+							// in case.
+							martTab.getDataSetTabSet()
+									.recalculateAllDataSetDiagrams();
 
-					// Set the dataset tabset status to modified.
-					datasetTabSet.getMartTabSet().setModifiedStatus(true);
-				} catch (Throwable t) {
-					datasetTabSet.getMartTabSet().getMartBuilder()
-							.showStackTrace(t);
+							// Set the dataset tabset status to modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
 				}
 			}
 		});
@@ -1021,7 +1173,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestCreateForeignKey(Table table) {
 		// Pop up a dialog to ask which columns to use.
-		List cols = KeyEditorDialog.createPrimaryKey(this, table);
+		List cols = KeyEditorDialog.createPrimaryKey(this.martTab, table);
 
 		// If they chose some columns, create the key.
 		if (!cols.isEmpty())
@@ -1045,20 +1197,31 @@ public class SchemaTabSet extends JTabbedPane {
 					// Create the key.
 					MartBuilderUtils.createForeignKey(table, columns);
 
-					// Recalculate the schema diagram this key appears in, as
-					// the table components will have changed size.
-					recalculateSchemaDiagram(table.getSchema());
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Recalculate the schema diagram this key appears
+							// in, as
+							// the table components will have changed size.
+							recalculateSchemaDiagram(table.getSchema());
 
-					// The same may have happened in the all-schemas diagram if
-					// this key belonged to a table which has external relations
-					// on some other key.
-					recalculateOverviewDiagram();
+							// The same may have happened in the all-schemas
+							// diagram if
+							// this key belonged to a table which has external
+							// relations
+							// on some other key.
+							recalculateOverviewDiagram();
 
-					// Set the dataset tabset status to modified.
-					datasetTabSet.getMartTabSet().setModifiedStatus(true);
-				} catch (Throwable t) {
-					datasetTabSet.getMartTabSet().getMartBuilder()
-							.showStackTrace(t);
+							// Set the dataset tabset status to modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
 				}
 			}
 		});
@@ -1074,7 +1237,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestEditKey(Key key) {
 		// Pop up the dialog which describes the key, and obtain the
 		// list of columns they selected in response.
-		List cols = KeyEditorDialog.editKey(this, key);
+		List cols = KeyEditorDialog.editKey(this.martTab, key);
 
 		// If they selected any columns, and those columns are not
 		// the same as the ones already in the key, modify the key.
@@ -1100,20 +1263,33 @@ public class SchemaTabSet extends JTabbedPane {
 					// Do the changes.
 					MartBuilderUtils.changeForeignKeyNullability(key, nullable);
 
-					// Repaint the schema diagram this key appears in, as
-					// the relation components will have changed appearance.
-					repaintSchemaDiagram(key.getTable().getSchema());
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the schema diagram this key appears in,
+							// as
+							// the relation components will have changed
+							// appearance.
+							repaintSchemaDiagram(key.getTable().getSchema());
 
-					// The same may have happened in the all-schemas diagram if
-					// this key had any external relations, or belonged to a
-					// table which had external relations on some other key.
-					repaintOverviewDiagram();
+							// The same may have happened in the all-schemas
+							// diagram if
+							// this key had any external relations, or belonged
+							// to a
+							// table which had external relations on some other
+							// key.
+							repaintOverviewDiagram();
 
-					// Set the dataset tabset status to modified.
-					datasetTabSet.getMartTabSet().setModifiedStatus(true);
-				} catch (Throwable t) {
-					datasetTabSet.getMartTabSet().getMartBuilder()
-							.showStackTrace(t);
+							// Set the dataset tabset status to modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
 				}
 			}
 		});
@@ -1133,29 +1309,46 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Do the changes.
-					MartBuilderUtils.editKeyColumns(datasetTabSet.getMart(),
-							key, columns);
+					MartBuilderUtils.editKeyColumns(martTab.getMart(), key,
+							columns);
 
-					// Recalculate the schema diagram this key appears in, as
-					// the table components will have changed size, and some
-					// relations may have disappeared.
-					recalculateSchemaDiagram(key.getTable().getSchema());
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Recalculate the schema diagram this key appears
+							// in, as
+							// the table components will have changed size, and
+							// some
+							// relations may have disappeared.
+							recalculateSchemaDiagram(key.getTable().getSchema());
 
-					// The same may have happened in the all-schemas diagram if
-					// this key had any external relations, or belonged to a
-					// table which had external relations on some other key.
-					recalculateOverviewDiagram();
+							// The same may have happened in the all-schemas
+							// diagram if
+							// this key had any external relations, or belonged
+							// to a
+							// table which had external relations on some other
+							// key.
+							recalculateOverviewDiagram();
 
-					// This may have caused new dimensions or subclass tables to
-					// appear in datasets referring to tables in this schema, so
-					// we need to recalculate all dataset diagrams just in case.
-					datasetTabSet.recalculateAllDataSetDiagrams();
+							// This may have caused new dimensions or subclass
+							// tables to
+							// appear in datasets referring to tables in this
+							// schema, so
+							// we need to recalculate all dataset diagrams just
+							// in case.
+							martTab.getDataSetTabSet()
+									.recalculateAllDataSetDiagrams();
 
-					// Set the dataset tabset status to modified.
-					datasetTabSet.getMartTabSet().setModifiedStatus(true);
-				} catch (Throwable t) {
-					datasetTabSet.getMartTabSet().getMartBuilder()
-							.showStackTrace(t);
+							// Set the dataset tabset status to modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
 				}
 			}
 		});
@@ -1220,29 +1413,43 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Create the relation.
-					MartBuilderUtils.createRelation(datasetTabSet.getMart(),
-							from, to);
+					MartBuilderUtils
+							.createRelation(martTab.getMart(), from, to);
 
-					// If it is an internal relation, recalculate the diagram
-					// for the schema it is inside of.
-					if (from.getTable().getSchema().equals(
-							to.getTable().getSchema()))
-						recalculateSchemaDiagram(from.getTable().getSchema());
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// If it is an internal relation, recalculate the
+							// diagram
+							// for the schema it is inside of.
+							if (from.getTable().getSchema().equals(
+									to.getTable().getSchema()))
+								recalculateSchemaDiagram(from.getTable()
+										.getSchema());
 
-					// If it is external, recalculate the all-schemas diagram.
-					else
-						recalculateOverviewDiagram();
+							// If it is external, recalculate the all-schemas
+							// diagram.
+							else
+								recalculateOverviewDiagram();
 
-					// This may have caused dimensions or subclasses to change
-					// in some datasets, so recalculate all the dataset diagrams
-					// too.
-					datasetTabSet.recalculateAllDataSetDiagrams();
+							// This may have caused dimensions or subclasses to
+							// change
+							// in some datasets, so recalculate all the dataset
+							// diagrams
+							// too.
+							martTab.getDataSetTabSet()
+									.recalculateAllDataSetDiagrams();
 
-					// Set the dataset tabset status to modified.
-					datasetTabSet.getMartTabSet().setModifiedStatus(true);
-				} catch (Throwable t) {
-					datasetTabSet.getMartTabSet().getMartBuilder()
-							.showStackTrace(t);
+							// Set the dataset tabset status to modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
 				}
 			}
 		});

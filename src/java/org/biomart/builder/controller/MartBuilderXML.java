@@ -37,7 +37,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.biomart.builder.controller.JDBCMartConstructor.JDBCMartConstructorType;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.model.Column;
@@ -45,7 +44,6 @@ import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Mart;
-import org.biomart.builder.model.MartConstructor;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
@@ -67,7 +65,6 @@ import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.GenericForeignKey;
 import org.biomart.builder.model.Key.GenericPrimaryKey;
 import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.model.MartConstructor.DummyMartConstructor;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Schema.GenericSchema;
@@ -99,7 +96,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.16, 19th June 2006
+ * @version 0.1.17, 20th June 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -490,67 +487,6 @@ public class MartBuilderXML extends DefaultHandler {
 			this.mappedObjects.put(id, element);
 		}
 
-		// Dummy MartConstructor (anywhere).
-		else if ("dummyMartConstructor".equals(eName)) {
-			// Work out the id, as this is a common attribute.
-			String id = (String) attributes.get("id");
-			String name = (String) attributes.get("name");
-
-			try {
-				// Use the dummy constructor for this.
-				element = new DummyMartConstructor(name);
-			} catch (Exception e) {
-				throw new SAXException(e);
-			}
-
-			// Store it in the map of IDed objects.
-			this.mappedObjects.put(id, element);
-		}
-
-		// JDBC Mart constructors (anywhere)
-		else if ("jdbcMartConstructor".equals(eName)) {
-			// Start a new JDBC mart constructor.
-			String id = (String) attributes.get("id");
-			String name = (String) attributes.get("name");
-
-			// Does it have a driver class location? (optional)
-			File driverClassLocation = null;
-			if (attributes.containsKey("driverClassLocation"))
-				driverClassLocation = new File((String) attributes
-						.get("driverClassLocation"));
-
-			// Does it have a password? (optional)
-			String password = null;
-			if (attributes.containsKey("password"))
-				password = (String) attributes.get("password");
-
-			// Load the compulsory attributes.
-			String driverClassName = (String) attributes.get("driverClassName");
-			String url = (String) attributes.get("url");
-			String username = (String) attributes.get("username");
-			JDBCMartConstructorType type = JDBCMartConstructorType
-					.get((String) attributes.get("type"));
-
-			// Does it have an output file? (optional)
-			File outputDDLFile = null;
-			if (attributes.containsKey("outputDDLFile"))
-				outputDDLFile = new File((String) attributes
-						.get("outputDDLFile"));
-
-			// Construct the JDBC mart constructor.
-			try {
-				MartConstructor mc = new JDBCMartConstructor(
-						driverClassLocation, driverClassName, url, username,
-						password, name, type, outputDDLFile);
-				element = mc;
-			} catch (Exception e) {
-				throw new SAXException(e);
-			}
-
-			// Store it in the map of IDed objects.
-			this.mappedObjects.put(id, element);
-		}
-
 		// Masked Relation (inside dataset).
 		else if ("maskedRelation".equals(eName)) {
 			// What dataset does it belong to? Throw a wobbly if none.
@@ -730,8 +666,6 @@ public class MartBuilderXML extends DefaultHandler {
 				Table centralTable = (Table) this.mappedObjects.get(attributes
 						.get("centralTableId"));
 				String optType = (String) attributes.get("optimiser");
-				MartConstructor mc = (MartConstructor) this.mappedObjects
-						.get(attributes.get("martConstructorId"));
 
 				// Construct the dataset.
 				DataSet ds = new DataSet(this.constructedMart, centralTable,
@@ -753,7 +687,6 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Assign the mart constructor, optimiser, and partition on
 				// schema settings.
-				ds.setMartConstructor(mc);
 				ds.setDataSetOptimiserType(opt);
 				if (partitionOnSchema != null)
 					ds.setPartitionOnSchema(partitionOnSchema.booleanValue());
@@ -1168,53 +1101,6 @@ public class MartBuilderXML extends DefaultHandler {
 		// Start by enclosing the whole lot in a <mart> tag.
 		this.openElement("mart", xmlWriter);
 
-		// MartConstructor (anywhere).
-		List martConstructors = new ArrayList();
-		for (Iterator i = mart.getDataSets().iterator(); i.hasNext();) {
-			DataSet ds = (DataSet) i.next();
-			MartConstructor mc = ds.getMartConstructor();
-			martConstructors.add(mc);
-		}
-		for (Iterator i = martConstructors.iterator(); i.hasNext();) {
-			MartConstructor mc = (MartConstructor) i.next();
-			String mcMappedID = "" + this.currentElementID++;
-			this.reverseMappedObjects.put(mc, mcMappedID);
-
-			// Generic constructor?
-			if (mc instanceof DummyMartConstructor) {
-				this.openElement("dummyMartConstructor", xmlWriter);
-				this.writeAttribute("id", mcMappedID, xmlWriter);
-				this.writeAttribute("name", mc.getName(), xmlWriter);
-				this.closeElement("dummyMartConstructor", xmlWriter);
-			}
-			// JDBC constructor?
-			else if (mc instanceof JDBCMartConstructor) {
-				this.openElement("jdbcMartConstructor", xmlWriter);
-				JDBCMartConstructor jmc = (JDBCMartConstructor) mc;
-				this.writeAttribute("id", mcMappedID, xmlWriter);
-				this.writeAttribute("name", mc.getName(), xmlWriter);				
-				if (jmc.getDriverClassLocation() != null)
-					this.writeAttribute("driverClassLocation", jmc
-							.getDriverClassLocation().getPath(), xmlWriter);
-				this.writeAttribute("driverClassName",
-						jmc.getDriverClassName(), xmlWriter);
-				this.writeAttribute("url", jmc.getJDBCURL(), xmlWriter);
-				this.writeAttribute("username", jmc.getUsername(), xmlWriter);
-				if (jmc.getPassword() != null)
-					this.writeAttribute("password", jmc.getPassword(),
-							xmlWriter);
-				this.writeAttribute("type", jmc.getType().getName(), xmlWriter);
-				if (jmc.getOutputDDLZipFile() != null)
-					this.writeAttribute("outputDDLFile", jmc.getOutputDDLZipFile()
-							.getPath(), xmlWriter);
-				this.closeElement("jdbcMartConstructor", xmlWriter);
-			}
-			// Others?
-			else
-				throw new BuilderException(BuilderBundle.getString(
-						"unknownMartConstuctorType", mc.getClass().getName()));
-		}
-
 		// Write out each schema.
 		Set externalRelations = new HashSet();
 		for (Iterator i = mart.getSchemas().iterator(); i.hasNext();) {
@@ -1252,9 +1138,6 @@ public class MartBuilderXML extends DefaultHandler {
 					xmlWriter);
 			this.writeAttribute("optimiser", ds.getDataSetOptimiserType()
 					.getName(), xmlWriter);
-			this.writeAttribute("martConstructorId",
-					(String) this.reverseMappedObjects.get(ds
-							.getMartConstructor()), xmlWriter);
 			this.writeAttribute("partitionOnSchema", Boolean.toString(ds
 					.getPartitionOnSchema()), xmlWriter);
 

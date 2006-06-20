@@ -31,6 +31,7 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * The explain-dataset context highlights relations and tables that explain how
@@ -39,7 +40,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
  * are the same in all cases.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 12th May 2006
+ * @version 0.1.6, 20th June 2006
  * @since 0.1
  */
 public class ExplainDataSetContext extends WindowContext {
@@ -54,13 +55,13 @@ public class ExplainDataSetContext extends WindowContext {
 	/**
 	 * Creates a new explanation diagram for a given dataset.
 	 * 
-	 * @param datasetTabSet
-	 *            the dataset tabset that will handle menu events.
+	 * @param martTab 
+	 *            the mart tab that will handle menu events.
 	 * @param dataset
 	 *            the dataset we are explaning.
 	 */
-	public ExplainDataSetContext(DataSetTabSet datasetTabSet, DataSet dataset) {
-		super(datasetTabSet, dataset);
+	public ExplainDataSetContext(MartTab martTab, DataSet dataset) {
+		super(martTab, dataset);
 	}
 
 	/**

@@ -42,7 +42,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * relations will appear in full using {@link TableComponent}s.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 2nd June 2006
+ * @version 0.1.11, 20th June 2006
  * @since 0.1
  */
 public class SchemaComponent extends BoxShapedComponent {
@@ -163,9 +163,9 @@ public class SchemaComponent extends BoxShapedComponent {
 				.charAt(0));
 		showTables.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				int index = getDiagram().getDataSetTabSet().getSchemaTabSet()
+				int index = getDiagram().getMartTab().getSchemaTabSet()
 						.indexOfTab(schema.getName());
-				getDiagram().getDataSetTabSet().getSchemaTabSet()
+				getDiagram().getMartTab().getSchemaTabSet()
 						.setSelectedIndex(index);
 			}
 		});
@@ -187,9 +187,9 @@ public class SchemaComponent extends BoxShapedComponent {
 				.charAt(0));
 		showTables.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				int index = getDiagram().getDataSetTabSet().getSchemaTabSet()
+				int index = getDiagram().getMartTab().getSchemaTabSet()
 						.indexOfTab(getSchemaGroup().getName());
-				getDiagram().getDataSetTabSet().getSchemaTabSet()
+				getDiagram().getMartTab().getSchemaTabSet()
 						.setSelectedIndex(index);
 			}
 		});
@@ -220,7 +220,7 @@ public class SchemaComponent extends BoxShapedComponent {
 					.charAt(0));
 			renameM.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDiagram().getDataSetTabSet().getSchemaTabSet()
+					getDiagram().getMartTab().getSchemaTabSet()
 							.requestRenameSchema(schema, getSchemaGroup());
 				}
 			});
@@ -233,7 +233,7 @@ public class SchemaComponent extends BoxShapedComponent {
 					.charAt(0));
 			modifyM.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDiagram().getDataSetTabSet().getSchemaTabSet()
+					getDiagram().getMartTab().getSchemaTabSet()
 							.requestModifySchema(schema);
 				}
 			});
@@ -246,7 +246,7 @@ public class SchemaComponent extends BoxShapedComponent {
 					.charAt(0));
 			testM.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDiagram().getDataSetTabSet().getSchemaTabSet()
+					getDiagram().getMartTab().getSchemaTabSet()
 							.requestTestSchema(schema);
 				}
 			});
@@ -260,7 +260,7 @@ public class SchemaComponent extends BoxShapedComponent {
 					.getString("ungroupMemberMnemonic").charAt(0));
 			unGroup.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDiagram().getDataSetTabSet().getSchemaTabSet()
+					getDiagram().getMartTab().getSchemaTabSet()
 							.requestRemoveSchemaFromSchemaGroup(schema,
 									getSchemaGroup());
 				}

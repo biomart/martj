@@ -52,141 +52,30 @@ import org.biomart.builder.resources.BuilderBundle;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 19th June 2006
+ * @version 0.1.12, 20th June 2006
  * @since 0.1
  */
-public interface MartConstructor extends DataLink, Comparable {
+public interface MartConstructor {
 	/**
-	 * This method takes a dataset and either generates a script for the user to
-	 * run later to construct a mart, or does the work right now. The end result
-	 * should be a completely finished and populated mart, or the script to make
-	 * one. The work is done inside a thread, which is returned unstarted. The
-	 * user should create a new {@link Thread} instance around this, and start
-	 * it by calling {@link Thread#run()}. They can then monitor it using the
-	 * methods provided by the {@link ConstructorRunnable} interface.
+	 * This method takes a dataset and generates a script for the user to run
+	 * later to construct a mart.
+	 * <p>
+	 * The work is done inside a thread, which is returned unstarted. The user
+	 * should create a new {@link Thread} instance around this, and start it by
+	 * calling {@link Thread#run()}. They can then monitor it using the methods
+	 * provided by the {@link ConstructorRunnable} interface.
 	 * 
-	 * @param ds
-	 *            the dataset to build the mart for.
+	 * @param targetSchemaName
+	 *            the name of the schema to create the dataset tables in.
+	 * @param datasets
+	 *            a set of datasets to construct. An empty set means nothing
+	 *            will get constructed.
 	 * @return the thread that will build it.
 	 * @throws Exception
 	 *             if there was any problem creating the builder thread.
 	 */
-	public ConstructorRunnable getConstructorRunnable(DataSet ds)
-			throws Exception;
-
-	/**
-	 * Returns the name of this constructor.
-	 * 
-	 * @return the name of this constructor.
-	 */
-	public String getName();
-
-	/**
-	 * The base implementation simply does the bare minimum, ie. synchronises
-	 * the dataset before starting work. It doesn't actually generate any tables
-	 * or DDL. You should override the {@link #getConstructorRunnable(DataSet)}
-	 * method to actually create a construction thread that does some useful
-	 * work.
-	 */
-	public abstract class GenericMartConstructor implements MartConstructor {
-		private final String name;
-
-		/**
-		 * The constructor creates a mart constructor with the given name.
-		 * 
-		 * @param name
-		 *            the name for this new constructor.
-		 */
-		public GenericMartConstructor(String name) {
-			// Remember the values.
-			this.name = name;
-		}
-
-		public String getName() {
-			return this.name;
-		}
-
-		public abstract ConstructorRunnable getConstructorRunnable(DataSet ds)
-				throws Exception;
-
-		public boolean test() throws Exception {
-			return true;
-		}
-
-		public boolean canCohabit(DataLink partner) {
-			return false;
-		}
-
-		public String toString() {
-			return this.getName();
-		}
-
-		public int hashCode() {
-			return this.toString().hashCode();
-		}
-
-		public int compareTo(Object o) throws ClassCastException {
-			MartConstructor c = (MartConstructor) o;
-			return this.toString().compareTo(c.toString());
-		}
-
-		public boolean equals(Object o) {
-			if (o == null || !(o instanceof MartConstructor))
-				return false;
-			MartConstructor c = (MartConstructor) o;
-			return c.toString().equals(this.toString());
-		}
-	}
-
-	/**
-	 * This class refers to a placeholder mart constructor which does nothing
-	 * except prevent null pointer exceptions.
-	 */
-	public static class DummyMartConstructor extends GenericMartConstructor {
-		/**
-		 * The constructor passes everything on up to the parent.
-		 * 
-		 * @param name
-		 *            the name to give this mart constructor.
-		 */
-		public DummyMartConstructor(String name) {
-			super(name);
-		}
-
-		/**
-		 * {@inheritDoc}
-		 * <p>
-		 * This runnable will always fail immediately without attempting to do
-		 * anything, throwing a constructor explanation saying that it does not
-		 * implement any kind of SQL generation.
-		 */
-		public ConstructorRunnable getConstructorRunnable(final DataSet ds) {
-			return new ConstructorRunnable() {
-				public DataLink getDataLink() {
-					return ds.getMartConstructor();
-				}
-
-				public void run() {
-				}
-
-				public String getStatusMessage() {
-					return "";
-				}
-
-				public int getPercentComplete() {
-					return 100;
-				}
-
-				public Exception getFailureException() {
-					return new ConstructorException(BuilderBundle
-							.getString("defaultMartConstNotImplemented"));
-				}
-
-				public void cancel() {
-				}
-			};
-		}
-	}
+	public ConstructorRunnable getConstructorRunnable(String targetSchemaName,
+			Collection datasets) throws Exception;
 
 	/**
 	 * This interface defines a class which does the actual construction work.
@@ -195,14 +84,6 @@ public interface MartConstructor extends DataLink, Comparable {
 	 * takes a dataset as a parameter.
 	 */
 	public interface ConstructorRunnable extends Runnable {
-
-		/**
-		 * This method returns the data link which will receive all output from
-		 * the runnable.
-		 * 
-		 * @return the datalink that will have the tables etc. created in it.
-		 */
-		public DataLink getDataLink();
 
 		/**
 		 * This method should return a message describing what the thread is
@@ -268,14 +149,24 @@ public interface MartConstructor extends DataLink, Comparable {
 		public List listDistinctValues(Column col) throws SQLException;
 
 		/**
-		 * Flag that we are about to begin.
+		 * Flag that we are about to begin a mart.
 		 * 
 		 * @throws Exception
 		 *             if anything went wrong. Usually this will be a
 		 *             {@link SQLException} or {@link IOException}, but may be
 		 *             others too.
 		 */
-		public void startActions() throws Exception;
+		public void startActionsForMart() throws Exception;
+
+		/**
+		 * Flag that we are about to begin a dataset.
+		 * 
+		 * @throws Exception
+		 *             if anything went wrong. Usually this will be a
+		 *             {@link SQLException} or {@link IOException}, but may be
+		 *             others too.
+		 */
+		public void startActionsForDataSet() throws Exception;
 
 		/**
 		 * Given an action, executes it. The action level specifies how far down
@@ -295,14 +186,24 @@ public interface MartConstructor extends DataLink, Comparable {
 		public void executeAction(MCAction action, int level) throws Exception;
 
 		/**
-		 * Flag that we are about to end.
+		 * Flag that we are about to end a dataset.
 		 * 
 		 * @throws Exception
 		 *             if anything went wrong. Usually this will be a
 		 *             {@link SQLException} or {@link IOException}, but may be
 		 *             others too.
 		 */
-		public void endActions() throws Exception;
+		public void endActionsForDataSet() throws Exception;
+
+		/**
+		 * Flag that we are about to end a mart.
+		 * 
+		 * @throws Exception
+		 *             if anything went wrong. Usually this will be a
+		 *             {@link SQLException} or {@link IOException}, but may be
+		 *             others too.
+		 */
+		public void endActionsForMart() throws Exception;
 	}
 
 	/**
@@ -320,46 +221,55 @@ public interface MartConstructor extends DataLink, Comparable {
 
 		private Exception failure = null;
 
-		private DataSet ds;
+		private Collection datasets;
 
 		private Helper helper;
 
-		private DataLink dataLink;
+		private String targetSchemaName;
 
 		/**
 		 * Constructs a mart builder that will build the mart in the given
 		 * dataset, using the given helper.
 		 * 
-		 * @param dataLink
-		 *            the data link to which data created by this runnable will
-		 *            be written.
+		 * @param targetSchemaName
+		 *            the schema to which data created by this runnable will be
+		 *            written.
 		 * @param ds
-		 *            the dataset to transform into a mart.
+		 *            the dataset(s) to transform into a mart.
 		 * @param helper
 		 *            the helper to use in the transformation.
 		 */
-		public GenericConstructorRunnable(DataSet ds, Helper helper) {
+		public GenericConstructorRunnable(String targetSchemaName,
+				Collection datasets, Helper helper) {
 			super();
-			this.dataLink = ds.getMartConstructor();
-			this.ds = ds;
+			this.datasets = datasets;
 			this.helper = helper;
-		}
-
-		public DataLink getDataLink() {
-			return this.dataLink;
+			this.targetSchemaName = targetSchemaName;
 		}
 
 		public void run() {
 			try {
-				this.doIt();
+				helper.startActionsForMart();
+				// Loop over all the datasets we want included.
+				for (Iterator i = this.datasets.iterator(); i.hasNext();)
+					this.doIt((DataSet) i.next());
 			} catch (ConstructorException e) {
 				this.failure = e;
 			} catch (Throwable t) {
 				this.failure = new ConstructorException(t);
+			} finally {
+				// Make sure the file is always closed properly.
+				try {
+					helper.endActionsForMart();
+				} catch (ConstructorException e) {
+					this.failure = e;
+				} catch (Throwable t) {
+					this.failure = new ConstructorException(t);
+				}
 			}
 		}
 
-		private void doIt() throws Exception {
+		private void doIt(DataSet ds) throws Exception {
 			// Mart construction is done by processing the main table first,
 			// then the main dimension(s), then the subclass table(s), with
 			// subclass dimensions after the subclass table they belong to.
@@ -421,11 +331,6 @@ public interface MartConstructor extends DataLink, Comparable {
 			// Cancelled?
 			this.checkCancelled();
 
-			// Now we have to make space to store the graph of actions we
-			// must carry out.
-			this.statusMessage = BuilderBundle.getString("mcCreatingGraph");
-			MCActionGraph actionGraph = new MCActionGraph();
-
 			// Find the main table of the dataset.
 			DataSetTable mainTable = null;
 			for (Iterator i = ds.getTables().iterator(); i.hasNext()
@@ -450,6 +355,11 @@ public interface MartConstructor extends DataLink, Comparable {
 
 			// Check not cancelled.
 			this.checkCancelled();
+
+			// We have to make space to store the graph of actions we
+			// must carry out.
+			this.statusMessage = BuilderBundle.getString("mcCreatingGraph");
+			MCActionGraph actionGraph = new MCActionGraph();
 
 			// For each schema partition, we process all the tables. If
 			// we are partitioning by schema, then this will result in
@@ -590,13 +500,14 @@ public interface MartConstructor extends DataLink, Comparable {
 
 			// Initialize the helper, telling it we are about to start
 			// sending it actions to process.
-			helper.startActions();
+			helper.startActionsForDataSet();
 
 			try {
 				// The action graph is tiered into several levels, called
 				// depths. These levels are assigned automatically according
 				// to the dependency of actions on other actions. We want
-				// to start at the first depth (0), process all actions there,
+				// to start at the first depth (0), process all actions
+				// there,
 				// then move on the next depth, and so on. Each depth is
 				// reliant on the previous depth completing before it can
 				// begin processing.
@@ -628,7 +539,7 @@ public interface MartConstructor extends DataLink, Comparable {
 				// Make sure the helper always gets a chance to tidy up,
 				// even if an exception is thrown.
 				// All done!
-				helper.endActions();
+				helper.endActionsForDataSet();
 			}
 		}
 
@@ -746,7 +657,7 @@ public interface MartConstructor extends DataLink, Comparable {
 
 					// Union depends on final actions of each temporary
 					// table.
-					UnionTables union = new UnionTables(this.getDataLink(),
+					UnionTables union = new UnionTables(this.targetSchemaName,
 							targetTempTableName, tempTableNames.values());
 					for (Iterator i = lastActions.iterator(); i.hasNext();)
 						union.addParent((MCAction) i.next());
@@ -758,8 +669,8 @@ public interface MartConstructor extends DataLink, Comparable {
 					for (Iterator i = tempTableNames.values().iterator(); i
 							.hasNext();) {
 						String tableName = (String) i.next();
-						MCAction dropTable = new DropTable(this.getDataLink(),
-								tableName);
+						MCAction dropTable = new DropTable(
+								this.targetSchemaName, tableName);
 						dropTable.addParent(lastAction);
 						actionGraph.addAction(dropTable);
 					}
@@ -839,8 +750,8 @@ public interface MartConstructor extends DataLink, Comparable {
 
 							// Create a new temp table restricted by
 							// the parent relation.
-							RestrictTable restrict = new RestrictTable(this
-									.getDataLink(), segmentTableName,
+							RestrictTable restrict = new RestrictTable(
+									this.targetSchemaName, segmentTableName,
 									targetTempTableName, parentTableName,
 									parentPK.getColumns(), childFK.getColumns());
 							restrict.addParent(lastAction);
@@ -848,7 +759,7 @@ public interface MartConstructor extends DataLink, Comparable {
 
 							// Establish FK to PK relation on parent table.
 							CreateFK createFK = new CreateFK(
-									this.getDataLink(), segmentTableName,
+									this.targetSchemaName, segmentTableName,
 									childFK.getColumns(), parentTableName,
 									parentPK.getColumns());
 							createFK.addParent(restrict);
@@ -866,7 +777,7 @@ public interface MartConstructor extends DataLink, Comparable {
 
 					// After last segment, drop original temp table
 					// (tempTableName) as it has now been split into pieces.
-					MCAction dropTable = new DropTable(this.getDataLink(),
+					MCAction dropTable = new DropTable(this.targetSchemaName,
 							targetTempTableName);
 					for (Iterator i = dropDependsOn.iterator(); i.hasNext();)
 						dropTable.addParent((MCAction) i.next());
@@ -924,7 +835,7 @@ public interface MartConstructor extends DataLink, Comparable {
 						PrimaryKey pk = dsTable.getPrimaryKey();
 						if (pk != null) {
 							CreatePK createPK = new CreatePK(
-									this.getDataLink(), tableName, pk
+									this.targetSchemaName, tableName, pk
 											.getColumns());
 							createPK.addParent(lastAction);
 							actionGraph.addAction(createPK);
@@ -941,8 +852,8 @@ public interface MartConstructor extends DataLink, Comparable {
 						// either be the action before this loop, or the
 						// create PK action above, depending on whether a PK
 						// exists or not.
-						MCAction rename = new RenameTable(this.getDataLink(),
-								tableName, finalName);
+						MCAction rename = new RenameTable(
+								this.targetSchemaName, tableName, finalName);
 						rename.addParent(lastAction);
 						actionGraph.addAction(rename);
 						lastRenameAction = rename;
@@ -989,6 +900,9 @@ public interface MartConstructor extends DataLink, Comparable {
 				DataSetTable dsTable, Table startTable,
 				DataSetColumn partitionColumn, Object partitionValue,
 				String tempTableName) throws Exception {
+			// Work out what dataset we are in.
+			DataSet ds = (DataSet) dsTable.getSchema();
+
 			// Holder for the last action performed on this table.
 			// By default, the last action is the first, but this
 			// will be overridden by any actual actions.
@@ -1138,11 +1052,11 @@ public interface MartConstructor extends DataLink, Comparable {
 				// Also pass in the partition dataset column and value.
 				MCAction tableAction = null;
 				if (fromKey == null)
-					tableAction = new CreateTable(this.getDataLink(),
+					tableAction = new CreateTable(this.targetSchemaName,
 							tempTableName, realTable, dsColumns, schema,
 							partitionColumn, partitionValue);
 				else
-					tableAction = new MergeTable(this.getDataLink(),
+					tableAction = new MergeTable(this.targetSchemaName,
 							tempTableName, realTable, helper
 									.getNewTempTableName(), dsColumns, schema,
 							partitionColumn, partitionValue, fromKeyDSColumns,
@@ -1186,6 +1100,8 @@ public interface MartConstructor extends DataLink, Comparable {
 		private String createFinalName(DataSetTable dsTable, Schema schema,
 				Object parentParentPartitionValue, Object parentPartitionValue,
 				Object partitionValue) {
+			// Work out what dataset we are in.
+			DataSet ds = (DataSet) dsTable.getSchema();
 
 			// TODO - come up with a better naming scheme
 			// Currently the name is:
@@ -1197,7 +1113,7 @@ public interface MartConstructor extends DataLink, Comparable {
 			StringBuffer name = new StringBuffer();
 
 			// Dataset name.
-			name.append(this.ds.getName());
+			name.append(ds.getName());
 
 			// Schema, parent parent partition, and parent partition.
 			name.append(BuilderBundle.getString("tablenameSep"));
@@ -1318,17 +1234,16 @@ public interface MartConstructor extends DataLink, Comparable {
 
 		private static final String nextSequenceLock = "__SEQ_LOCK";
 
-		public final DataLink dataLink;
+		public final String targetSchemaName;
 
 		/**
 		 * Sets up a node.
 		 * 
-		 * @param dataLink
-		 *            the data link to which data created by this action will be
-		 *            written.
+		 * @param targetSchemaName
+		 *            the name of the schema to create the dataset tables in.
 		 */
-		public MCAction(DataLink dataLink) {
-			this.dataLink = dataLink;
+		public MCAction(String targetSchemaName) {
+			this.targetSchemaName = targetSchemaName;
 			this.depth = 0;
 			synchronized (nextSequenceLock) {
 				this.sequence = nextSequence++;
@@ -1439,14 +1354,13 @@ public interface MartConstructor extends DataLink, Comparable {
 		/**
 		 * Constructs an action which represents the dropping of a table.
 		 * 
-		 * @param dataLink
-		 *            the data link to which data created by this action will be
-		 *            written.
+		 * @param targetSchemaName
+		 *            the name of the schema to create the dataset tables in.
 		 * @param tableName
 		 *            the name of the table to drop.
 		 */
-		public DropTable(DataLink dataLink, String tableName) {
-			super(dataLink);
+		public DropTable(String targetSchemaName, String tableName) {
+			super(targetSchemaName);
 			this.tableName = tableName;
 		}
 
@@ -1472,16 +1386,16 @@ public interface MartConstructor extends DataLink, Comparable {
 		/**
 		 * Constructs an action which represents the renaming of a table.
 		 * 
-		 * @param dataLink
-		 *            the data link to which data created by this action will be
-		 *            written.
+		 * @param targetSchemaName
+		 *            the name of the schema to create the dataset tables in.
 		 * @param oldName
 		 *            the existing table name.
 		 * @param newName
 		 *            the new name to give it.
 		 */
-		public RenameTable(DataLink dataLink, String oldName, String newName) {
-			super(dataLink);
+		public RenameTable(String targetSchemaName, String oldName,
+				String newName) {
+			super(targetSchemaName);
 			this.oldName = oldName;
 			this.newName = newName;
 		}
@@ -1511,17 +1425,16 @@ public interface MartConstructor extends DataLink, Comparable {
 		 * Constructs an action which represents the performing of a union over
 		 * a number of tables.
 		 * 
-		 * @param dataLink
-		 *            the data link to which data created by this action will be
-		 *            written.
+		 * @param targetSchemaName
+		 *            the name of the schema to create the dataset tables in.
 		 * @param tableName
 		 *            the name of the table to create.
 		 * @param tableNames
 		 *            the names of the tables to use in the union.
 		 */
-		public UnionTables(DataLink dataLink, String tableName,
+		public UnionTables(String targetSchemaName, String tableName,
 				Collection tableNames) {
-			super(dataLink);
+			super(targetSchemaName);
 			this.tableName = tableName;
 			this.tableNames = tableNames;
 		}
@@ -1548,17 +1461,17 @@ public interface MartConstructor extends DataLink, Comparable {
 		/**
 		 * Constructs an action which represents the creation of a primary key.
 		 * 
-		 * @param dataLink
-		 *            the data link to which data created by this action will be
-		 *            written.
+		 * @param targetSchemaName
+		 *            the name of the schema to create the dataset tables in.
 		 * @param tableName
 		 *            the name fo the table to create the key for.
 		 * @param dsColumns
 		 *            the dataset columns, in order, which represent the colums
 		 *            to include in the key.
 		 */
-		public CreatePK(DataLink dataLink, String tableName, List dsColumns) {
-			super(dataLink);
+		public CreatePK(String targetSchemaName, String tableName,
+				List dsColumns) {
+			super(targetSchemaName);
 			this.tableName = tableName;
 			this.dsColumns = dsColumns;
 		}
@@ -1596,9 +1509,8 @@ public interface MartConstructor extends DataLink, Comparable {
 		/**
 		 * Creates an action that represents the creation of a foreign key.
 		 * 
-		 * @param dataLink
-		 *            the data link to which data created by this action will be
-		 *            written.
+		 * @param targetSchemaName
+		 *            the name of the schema to create the dataset tables in.
 		 * @param tableName
 		 *            the table the foreign key is to be created on.
 		 * @param dsColumns
@@ -1610,9 +1522,9 @@ public interface MartConstructor extends DataLink, Comparable {
 		 *            the dataset columns, in order, of the primary key that the
 		 *            foreign key refers to.
 		 */
-		public CreateFK(DataLink dataLink, String tableName, List dsColumns,
-				String parentTableName, List parentDSColumns) {
-			super(dataLink);
+		public CreateFK(String targetSchemaName, String tableName,
+				List dsColumns, String parentTableName, List parentDSColumns) {
+			super(targetSchemaName);
 			this.tableName = tableName;
 			this.dsColumns = dsColumns;
 			this.parentTableName = parentTableName;
@@ -1663,9 +1575,8 @@ public interface MartConstructor extends DataLink, Comparable {
 		/**
 		 * Creates an action that represents the creation of a new table.
 		 * 
-		 * @param dataLink
-		 *            the data link to which data created by this action will be
-		 *            written.
+		 * @param targetSchemaName
+		 *            the name of the schema to create the dataset tables in.
 		 * @param tableName
 		 *            the name of the table to create.
 		 * @param realTable
@@ -1680,10 +1591,10 @@ public interface MartConstructor extends DataLink, Comparable {
 		 * @param partitionValue
 		 *            the value to restrict the partition column by.
 		 */
-		public CreateTable(DataLink dataLink, String tableName,
+		public CreateTable(String targetSchemaName, String tableName,
 				Table realTable, List dsColumns, Schema schema,
 				DataSetColumn partitionColumn, Object partitionValue) {
-			super(dataLink);
+			super(targetSchemaName);
 			this.tableName = tableName;
 			this.realTable = realTable;
 			this.dsColumns = dsColumns;
@@ -1728,9 +1639,8 @@ public interface MartConstructor extends DataLink, Comparable {
 		 * Creates an action that represents the merging of a table with an
 		 * existing one.
 		 * 
-		 * @param dataLink
-		 *            the data link to which data created by this action will be
-		 *            written.
+		 * @param targetSchemaName
+		 *            the name of the schema to create the dataset tables in.
 		 * @param tableName
 		 *            the name of the table to create.
 		 * @param realTable
@@ -1756,11 +1666,12 @@ public interface MartConstructor extends DataLink, Comparable {
 		 *            <tt>true</tt> if the join should be a left-join,
 		 *            <tt>false</tt> if it should be a natural-join.
 		 */
-		public MergeTable(DataLink dataLink, String tableName, Table realTable,
-				String tempTable, List dsColumns, Schema schema,
-				DataSetColumn partitionColumn, Object partitionValue,
-				List fromDSColumns, List toRealColumns, boolean leftJoin) {
-			super(dataLink, tableName, realTable, dsColumns, schema,
+		public MergeTable(String targetSchemaName, String tableName,
+				Table realTable, String tempTable, List dsColumns,
+				Schema schema, DataSetColumn partitionColumn,
+				Object partitionValue, List fromDSColumns, List toRealColumns,
+				boolean leftJoin) {
+			super(targetSchemaName, tableName, realTable, dsColumns, schema,
 					partitionColumn, partitionValue);
 			this.tempTable = tempTable;
 			this.fromDSColumns = fromDSColumns;
@@ -1810,9 +1721,8 @@ public interface MartConstructor extends DataLink, Comparable {
 		/**
 		 * Creates an action which represents the restriction of a table.
 		 * 
-		 * @param dataLink
-		 *            the data link to which data created by this action will be
-		 *            written.
+		 * @param targetSchemaName
+		 *            the name of the schema to create the dataset tables in.
 		 * @param newTableName
 		 *            the name of the new table to create.
 		 * @param oldTableName
@@ -1826,10 +1736,10 @@ public interface MartConstructor extends DataLink, Comparable {
 		 *            the foreign key of the table to be restricted which refers
 		 *            to the primary key of the restrictive table.
 		 */
-		public RestrictTable(DataLink dataLink, String newTableName,
+		public RestrictTable(String targetSchemaName, String newTableName,
 				String oldTableName, String parentTableName, List parentPKCols,
 				List childFKCols) {
-			super(dataLink);
+			super(targetSchemaName);
 			this.newTableName = newTableName;
 			this.oldTableName = oldTableName;
 			this.parentTableName = parentTableName;

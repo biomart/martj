@@ -19,24 +19,20 @@
 package org.biomart.builder.view.gui;
 
 import java.awt.Color;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 
-import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
- * This diagram draws a box for each schema in the mart, as a
- * {@link SchemaComponent}. If any of them have external relations to other
- * schemas, then a {@link RelationComponent} is drawn between them.
+ * This diagram draws a box for each dataset in the mart, as a
+ * {@link SchemaComponent}. 
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 20th June 2006
+ * @version 0.1.1, 20th June 2006
  * @since 0.1
  */
-public class AllSchemasDiagram extends Diagram {
+public class AllDataSetsDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
 
 	/**
@@ -49,15 +45,15 @@ public class AllSchemasDiagram extends Diagram {
 	 * mart tab.
 	 * 
 	 * @param martTab
-	 *            the mart tab to associate with this schema. It will
+	 *            the mart tab to associate with this dataset. It will
 	 *            be used to work out who receives all user menu events, 
 	 *            etc.
 	 */
-	public AllSchemasDiagram(MartTab martTab) {
+	public AllDataSetsDiagram(MartTab martTab) {
 		super(martTab);
 
 		// Set the background.
-		this.setBackground(AllSchemasDiagram.BACKGROUND_COLOUR);
+		this.setBackground(AllDataSetsDiagram.BACKGROUND_COLOUR);
 
 		// Calculate the diagram.
 		this.recalculateDiagram();
@@ -67,25 +63,12 @@ public class AllSchemasDiagram extends Diagram {
 		// Remove all existing components.
 		this.removeAll();
 
-		// Make a set to hold all external relations on this diagram.
-		Set relations = new HashSet();
-
-		// Add a SchemaComponent for each schema.
-		for (Iterator i = this.getMartTab().getMart().getSchemas()
+		// Add a SchemaComponent for each dataset.
+		for (Iterator i = this.getMartTab().getMart().getDataSets()
 				.iterator(); i.hasNext();) {
-			Schema schema = (Schema) i.next();
-			SchemaComponent schemaComponent = new SchemaComponent(schema, this);
-			this.addDiagramComponent(schemaComponent);
-			// Remember the external relations.
-			relations.addAll(schema.getExternalRelations());
-		}
-
-		// Add a RelationComponent for each external relation.
-		for (Iterator i = relations.iterator(); i.hasNext();) {
-			Relation relation = (Relation) i.next();
-			RelationComponent relationComponent = new RelationComponent(
-					relation, this);
-			this.addDiagramComponent(relationComponent);
+			DataSet ds = (DataSet) i.next();
+			DataSetComponent dsComponent = new DataSetComponent(ds, this);
+			this.addDiagramComponent(dsComponent);
 		}
 
 		// Resize the diagram to fit the components.

@@ -42,13 +42,14 @@ import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * This context adapts dataset diagrams to display different colours, and
  * provides the context menu for interacting with dataset diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.18, 7th June 2006
+ * @version 0.1.19, 20th June 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -56,14 +57,14 @@ public class DataSetContext extends WindowContext {
 	 * Creates a new context that will adapt objects according to the settings
 	 * in the specified dataset.
 	 * 
-	 * @param datasetTabSet
-	 *            the dataset tabset this context appears in.
+	 * @param martTab
+	 *            the mart tab this context appears in.
 	 * @param dataset
 	 *            the dataset this context will use for customising menus and
 	 *            colours.
 	 */
-	public DataSetContext(DataSetTabSet datasetTabSet, DataSet dataset) {
-		super(datasetTabSet, dataset);
+	public DataSetContext(MartTab martTab, DataSet dataset) {
+		super(martTab, dataset);
 	}
 
 	public void populateContextMenu(JPopupMenu contextMenu, Object object) {
@@ -82,7 +83,8 @@ public class DataSetContext extends WindowContext {
 					.charAt(0));
 			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestRemoveDataSet(getDataSet());
+					getMartTab().getDataSetTabSet().requestRemoveDataSet(
+							getDataSet());
 				}
 			});
 			contextMenu.add(remove);
@@ -94,7 +96,8 @@ public class DataSetContext extends WindowContext {
 					"optimiseDataSetMnemonic").charAt(0));
 			optimise.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestOptimiseDataSet(getDataSet());
+					getMartTab().getDataSetTabSet().requestOptimiseDataSet(
+							getDataSet());
 				}
 			});
 			contextMenu.add(optimise);
@@ -106,7 +109,8 @@ public class DataSetContext extends WindowContext {
 					.charAt(0));
 			rename.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestRenameDataSet(getDataSet());
+					getMartTab().getDataSetTabSet().requestRenameDataSet(
+							getDataSet());
 				}
 			});
 			contextMenu.add(rename);
@@ -128,8 +132,8 @@ public class DataSetContext extends WindowContext {
 					.getString("optimiserNoneMnemonic").charAt(0));
 			optNone.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestChangeOptimiserType(getDataSet(),
-							DataSetOptimiserType.NONE);
+					getMartTab().getDataSetTabSet().requestChangeOptimiserType(
+							getDataSet(), DataSetOptimiserType.NONE);
 				}
 			});
 			optGroup.add(optNone);
@@ -145,8 +149,8 @@ public class DataSetContext extends WindowContext {
 					"optimiserLeftJoinMnemonic").charAt(0));
 			optLJ.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestChangeOptimiserType(getDataSet(),
-							DataSetOptimiserType.LEFTJOIN);
+					getMartTab().getDataSetTabSet().requestChangeOptimiserType(
+							getDataSet(), DataSetOptimiserType.LEFTJOIN);
 				}
 			});
 			optGroup.add(optLJ);
@@ -162,8 +166,8 @@ public class DataSetContext extends WindowContext {
 					"optimiserColumnMnemonic").charAt(0));
 			optCol.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestChangeOptimiserType(getDataSet(),
-							DataSetOptimiserType.COLUMN);
+					getMartTab().getDataSetTabSet().requestChangeOptimiserType(
+							getDataSet(), DataSetOptimiserType.COLUMN);
 				}
 			});
 			optGroup.add(optCol);
@@ -179,8 +183,8 @@ public class DataSetContext extends WindowContext {
 					.getString("optimiserTableMnemonic").charAt(0));
 			optTbl.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestChangeOptimiserType(getDataSet(),
-							DataSetOptimiserType.TABLE);
+					getMartTab().getDataSetTabSet().requestChangeOptimiserType(
+							getDataSet(), DataSetOptimiserType.TABLE);
 				}
 			});
 			optGroup.add(optTbl);
@@ -192,43 +196,18 @@ public class DataSetContext extends WindowContext {
 			// Add the optimiser type submenu to the context menu.
 			contextMenu.add(optimiserMenu);
 
-			// Option to modify the mart constructor.
-			JMenuItem modify = new JMenuItem(BuilderBundle
-					.getString("modifyMartConstructorTitle"));
-			modify.setMnemonic(BuilderBundle.getString(
-					"modifyMartConstructorMnemonic").charAt(0));
-			modify.addActionListener(new ActionListener() {
+			// Option to create the DDL for the dataset.
+			JMenuItem createDDL = new JMenuItem(BuilderBundle
+					.getString("createDDLTitle"));
+			createDDL.setMnemonic(BuilderBundle.getString("createDDLMnemonic")
+					.charAt(0));
+			createDDL.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestModifyMartConstructor(
-							getDataSet(), getDataSet().getMartConstructor());
+					getMartTab().getDataSetTabSet().requestCreateDDL(
+							getDataSet());
 				}
 			});
-			contextMenu.add(modify);
-
-			// Option to test the mart constructor.
-			JMenuItem test = new JMenuItem(BuilderBundle
-					.getString("testMartConstructorTitle"));
-			test.setMnemonic(BuilderBundle.getString(
-					"testMartConstructorMnemonic").charAt(0));
-			test.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestTestMartConstructor(
-							getDataSet().getMartConstructor());
-				}
-			});
-			contextMenu.add(test);
-
-			// Option to construct the mart.
-			JMenuItem construct = new JMenuItem(BuilderBundle
-					.getString("constructMartTitle"));
-			construct.setMnemonic(BuilderBundle.getString(
-					"constructMartMnemonic").charAt(0));
-			construct.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestConstructMart(getDataSet());
-				}
-			});
-			contextMenu.add(construct);
+			contextMenu.add(createDDL);
 		}
 
 		// Did the user click on a dataset table?
@@ -249,7 +228,7 @@ public class DataSetContext extends WindowContext {
 					.charAt(0));
 			explain.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestExplainTable(table);
+					getMartTab().getDataSetTabSet().requestExplainTable(table);
 				}
 			});
 			contextMenu.add(explain);
@@ -261,7 +240,8 @@ public class DataSetContext extends WindowContext {
 					.charAt(0));
 			rename.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestRenameDataSetTable(table);
+					getMartTab().getDataSetTabSet().requestRenameDataSetTable(
+							table);
 				}
 			});
 			contextMenu.add(rename);
@@ -279,7 +259,7 @@ public class DataSetContext extends WindowContext {
 					public void actionPerformed(ActionEvent evt) {
 						Relation relation = (Relation) table
 								.getUnderlyingRelations().get(0);
-						getDataSetTabSet().requestMaskRelation(
+						getMartTab().getDataSetTabSet().requestMaskRelation(
 								(DataSet) table.getSchema(), relation);
 					}
 				});
@@ -296,7 +276,7 @@ public class DataSetContext extends WindowContext {
 					public void actionPerformed(ActionEvent evt) {
 						Relation relation = (Relation) table
 								.getUnderlyingRelations().get(0);
-						getDataSetTabSet().getSchemaTabSet()
+						getMartTab().getSchemaTabSet()
 								.requestChangeRelationCardinality(relation,
 										Cardinality.ONE);
 					}
@@ -317,8 +297,9 @@ public class DataSetContext extends WindowContext {
 					public void actionPerformed(ActionEvent evt) {
 						Relation relation = (Relation) table
 								.getUnderlyingRelations().get(0);
-						getDataSetTabSet().requestUnsubclassRelation(
-								(DataSet) table.getSchema(), relation);
+						getMartTab().getDataSetTabSet()
+								.requestUnsubclassRelation(
+										(DataSet) table.getSchema(), relation);
 					}
 				});
 				contextMenu.add(removeDM);
@@ -334,8 +315,9 @@ public class DataSetContext extends WindowContext {
 					public void actionPerformed(ActionEvent evt) {
 						Relation relation = (Relation) table
 								.getUnderlyingRelations().get(0);
-						getDataSetTabSet().requestUnsubclassRelation(
-								getDataSet(), relation);
+						getMartTab().getDataSetTabSet()
+								.requestUnsubclassRelation(getDataSet(),
+										relation);
 					}
 				});
 				contextMenu.add(mergeDM);
@@ -370,7 +352,8 @@ public class DataSetContext extends WindowContext {
 					.getString("explainColumnMnemonic").charAt(0));
 			explain.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestExplainColumn(column);
+					getMartTab().getDataSetTabSet()
+							.requestExplainColumn(column);
 				}
 			});
 			contextMenu.add(explain);
@@ -383,11 +366,11 @@ public class DataSetContext extends WindowContext {
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					if (mask.isSelected())
-						getDataSetTabSet().requestMaskColumn(getDataSet(),
-								column);
+						getMartTab().getDataSetTabSet().requestMaskColumn(
+								getDataSet(), column);
 					else
-						getDataSetTabSet().requestUnmaskColumn(getDataSet(),
-								column);
+						getMartTab().getDataSetTabSet().requestUnmaskColumn(
+								getDataSet(), column);
 				}
 			});
 			contextMenu.add(mask);
@@ -401,7 +384,8 @@ public class DataSetContext extends WindowContext {
 					.charAt(0));
 			rename.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestRenameDataSetColumn(column);
+					getMartTab().getDataSetTabSet().requestRenameDataSetColumn(
+							column);
 				}
 			});
 			contextMenu.add(rename);
@@ -418,11 +402,11 @@ public class DataSetContext extends WindowContext {
 				partition.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						if (partition.isSelected())
-							getDataSetTabSet().requestPartitionBySchema(
-									getDataSet());
+							getMartTab().getDataSetTabSet()
+									.requestPartitionBySchema(getDataSet());
 						else
-							getDataSetTabSet().requestUnpartitionBySchema(
-									getDataSet());
+							getMartTab().getDataSetTabSet()
+									.requestUnpartitionBySchema(getDataSet());
 					}
 				});
 				contextMenu.add(partition);
@@ -455,8 +439,9 @@ public class DataSetContext extends WindowContext {
 							"changePartitionColumnMnemonic").charAt(0));
 					changepartition.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent evt) {
-							getDataSetTabSet().requestPartitionByColumn(
-									getDataSet(), wrappedCol);
+							getMartTab().getDataSetTabSet()
+									.requestPartitionByColumn(getDataSet(),
+											wrappedCol);
 						}
 					});
 					partitionSubmenu.add(changepartition);
@@ -468,8 +453,9 @@ public class DataSetContext extends WindowContext {
 							"unpartitionColumnMnemonic").charAt(0));
 					unpartition.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent evt) {
-							getDataSetTabSet().requestUnpartitionByColumn(
-									getDataSet(), wrappedCol);
+							getMartTab().getDataSetTabSet()
+									.requestUnpartitionByColumn(getDataSet(),
+											wrappedCol);
 						}
 					});
 					partitionSubmenu.add(unpartition);
@@ -489,8 +475,9 @@ public class DataSetContext extends WindowContext {
 							"partitionColumnMnemonic").charAt(0));
 					partition.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent evt) {
-							getDataSetTabSet().requestPartitionByColumn(
-									getDataSet(), wrappedCol);
+							getMartTab().getDataSetTabSet()
+									.requestPartitionByColumn(getDataSet(),
+											wrappedCol);
 						}
 					});
 					contextMenu.add(partition);

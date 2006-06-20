@@ -51,7 +51,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Understands how to create SQL and DDL for a MySQL database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 19th June 2006
+ * @version 0.1.3, 20th June 2006
  * @since 0.1
  */
 public class MySQLDialect extends DatabaseDialect {
@@ -131,8 +131,7 @@ public class MySQLDialect extends DatabaseDialect {
 	}
 
 	private String[] createPKStatements(CreatePK action) throws Exception {
-		String schemaName = ((JDBCDataLink) action.dataLink).getConnection()
-				.getCatalog();
+		String schemaName = action.targetSchemaName;
 		String tableName = action.tableName;
 		StringBuffer sb = new StringBuffer();
 		for (Iterator i = action.dsColumns.iterator(); i.hasNext();) {
@@ -148,8 +147,7 @@ public class MySQLDialect extends DatabaseDialect {
 	}
 
 	private String[] createFKStatements(CreateFK action) throws Exception {
-		String schemaName = ((JDBCDataLink) action.dataLink).getConnection()
-				.getCatalog();
+		String schemaName = action.targetSchemaName;
 		String fkTableName = action.tableName;
 		String pkTableName = action.parentTableName;
 		StringBuffer sbFK = new StringBuffer();
@@ -175,16 +173,14 @@ public class MySQLDialect extends DatabaseDialect {
 	}
 
 	private String[] dropTableStatements(DropTable action) throws Exception {
-		String schemaName = ((JDBCDataLink) action.dataLink).getConnection()
-				.getCatalog();
+		String schemaName = action.targetSchemaName;
 		String tableName = action.tableName;
 		return new String[] { "#" + action.getStatusMessage(),
 				"drop table " + schemaName + "." + tableName };
 	}
 
 	private String[] renameTableStatements(RenameTable action) throws Exception {
-		String schemaName = ((JDBCDataLink) action.dataLink).getConnection()
-				.getCatalog();
+		String schemaName = action.targetSchemaName;
 		String oldTableName = action.oldName;
 		String newTableName = action.newName;
 		return new String[] {
@@ -194,8 +190,7 @@ public class MySQLDialect extends DatabaseDialect {
 	}
 
 	private String[] createTableStatements(CreateTable action) throws Exception {
-		return processTableStatements(action, ((JDBCDataLink) action.dataLink)
-				.getConnection().getCatalog(), ((JDBCSchema) action.schema)
+		return processTableStatements(action, action.targetSchemaName, ((JDBCSchema) action.schema)
 				.getConnection().getCatalog(), action.tableName, null,
 				action.realTable.getName(), action.dsColumns, null, null,
 				false, action.partitionColumn, action.partitionValue);
@@ -203,7 +198,7 @@ public class MySQLDialect extends DatabaseDialect {
 
 	private String[] mergeTableStatements(MergeTable action) throws Exception {
 		return this.processTableStatements(action,
-				((JDBCDataLink) action.dataLink).getConnection().getCatalog(),
+				action.targetSchemaName,
 				((JDBCSchema) action.schema).getConnection().getCatalog(),
 				action.tempTable, action.tableName, action.realTable.getName(),
 				action.dsColumns, action.fromDSColumns, action.toRealColumns,
@@ -213,8 +208,7 @@ public class MySQLDialect extends DatabaseDialect {
 	private String[] restrictTableStatements(RestrictTable action)
 			throws Exception {
 		List commands = new ArrayList();
-		String schemaName = ((JDBCDataLink) action.dataLink).getConnection()
-				.getCatalog();
+		String schemaName = action.targetSchemaName;
 		String newTableName = action.newTableName;
 		String childTableName = action.oldTableName;
 		String parentTableName = action.parentTableName;
@@ -252,8 +246,7 @@ public class MySQLDialect extends DatabaseDialect {
 	}
 
 	private String[] unionTablesStatements(UnionTables action) throws Exception {
-		String schemaName = ((JDBCDataLink) action.dataLink).getConnection()
-				.getCatalog();
+		String schemaName = action.targetSchemaName;
 		String tableName = action.tableName;
 		StringBuffer sb = new StringBuffer();
 		sb.append("create table " + schemaName + "." + tableName
@@ -331,7 +324,27 @@ public class MySQLDialect extends DatabaseDialect {
 				sbCols.append("'" + targetSchemaName + "' as " + sn.getName());
 			} else if (dsCol instanceof ConcatRelationColumn) {
 				ConcatRelationColumn cr = (ConcatRelationColumn) dsCol;
-				// TODO
+
+				// TODO : concat-relations. Do these by group-by all the columns
+				// on the original table, then adding an additional LEFT/INNER
+				// join
+				// per concat relation, and adding a GROUP_CONCAT(DISTINCT
+				// CONCAT_WS(
+				// valsep, ifnull(col1,''), ifnull(col2,''), ...,
+				// ifnull(colN,''))
+				// SEPARATOR rowsep) column as the concat column for that
+				// relation.
+				// The cols selected are the PK cols of the remote table. The
+				// join
+				// cols are obvious.
+				// Watch out for the MySQL property 'group_concat_max_len'. Also
+				// watch out for null being replaced with empty string in
+				// CONCAT_WS -
+				// alternative is to leave as null, then it will be skipped
+				// altogether
+				// and output will be missing one entire value including
+				// separator.
+
 				sbCols.append("'concat' as " + cr.getName());
 			} else
 				throw new ConstructorException(BuilderBundle
@@ -339,18 +352,6 @@ public class MySQLDialect extends DatabaseDialect {
 			if (i.hasNext())
 				sbCols.append(",");
 		}
-
-		// TODO : concat-relations. Do these by group-by all the columns
-		// on the original table, then adding an additional LEFT/INNER join
-		// per concat relation, and adding a GROUP_CONCAT(DISTINCT CONCAT_WS(
-		// valsep, ifnull(col1,''), ifnull(col2,''), ..., ifnull(colN,''))
-		// SEPARATOR rowsep) column as the concat column for that relation.
-		// The cols selected are the PK cols of the remote table. The join
-		// cols are obvious.
-		// Watch out for the MySQL property 'group_concat_max_len'. Also
-		// watch out for null being replaced with empty string in CONCAT_WS -
-		// alternative is to leave as null, then it will be skipped altogether
-		// and output will be missing one entire value including separator.
 
 		// Restrict to a particular partition.
 		StringBuffer sbWhere = new StringBuffer();
@@ -375,13 +376,13 @@ public class MySQLDialect extends DatabaseDialect {
 		if (existingTableName != null) {
 			// Drop the parent table.
 			String[] dropBits = this.dropTableStatements(new DropTable(
-					action.dataLink, existingTableName));
+					action.targetSchemaName, existingTableName));
 			for (int i = 0; i < dropBits.length; i++)
 				commands.add(dropBits[i]);
 
 			// Rename the child table.
 			String[] renameBits = this.renameTableStatements(new RenameTable(
-					action.dataLink, tempTableName, existingTableName));
+					action.targetSchemaName, tempTableName, existingTableName));
 			for (int i = 0; i < renameBits.length; i++)
 				commands.add(renameBits[i]);
 		}

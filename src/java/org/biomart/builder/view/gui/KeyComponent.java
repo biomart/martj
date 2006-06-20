@@ -34,7 +34,7 @@ import org.biomart.builder.model.Key.PrimaryKey;
  * Represents a key by listing out in a set of labels each column in the key.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 16th May 2006
+ * @version 0.1.8, 20th June 2006
  * @since 0.1
  */
 public class KeyComponent extends BoxShapedComponent {
@@ -125,7 +125,7 @@ public class KeyComponent extends BoxShapedComponent {
 	public void setDraggedKey(Key key) {
 		// Refuse to do it to ourselves.
 		if (!key.equals(this))
-			this.getDiagram().getDataSetTabSet().getSchemaTabSet()
+			this.getDiagram().getMartTab().getSchemaTabSet()
 					.requestCreateRelation(key, this.getKey());
 	}
 }

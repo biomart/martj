@@ -38,6 +38,7 @@ import org.biomart.builder.controller.JDBCSchema;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * This dialog box allows the user to define or modify a schema, by giving it a
@@ -47,13 +48,13 @@ import org.biomart.builder.resources.BuilderBundle;
  * the result is returned to the caller.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 6th June 2006
+ * @version 0.1.7, 20th June 2006
  * @since 0.1
  */
 public class SchemaManagerDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	private SchemaTabSet schemaTabSet;
+	private MartTab martTab;
 
 	private Schema schema;
 
@@ -69,15 +70,15 @@ public class SchemaManagerDialog extends JDialog {
 
 	private JButton execute;
 
-	private SchemaManagerDialog(final SchemaTabSet schemaTabSet, String title,
+	private SchemaManagerDialog(final MartTab martTab, String title,
 			String executeButtonText, final Schema template) {
 		// Create the basic dialog centred on the main mart builder window.
-		super(schemaTabSet.getDataSetTabSet().getMartTabSet().getMartBuilder(),
+		super(martTab.getMartTabSet().getMartBuilder(),
 				title, true);
 
 		// Remember the tabset that the schema we are working with is part of
 		// (or will be part of if it's not been created yet).
-		this.schemaTabSet = schemaTabSet;
+		this.martTab = martTab;
 
 		// Create the content pane for the dialog, ie. the bit that will hold
 		// all the various questions and answers.
@@ -120,7 +121,7 @@ public class SchemaManagerDialog extends JDialog {
 						BuilderBundle.getString("jdbcSchema"))) {
 					if (!(connectionPanel instanceof JDBCSchemaConnectionPanel)) {
 						connectionPanelHolder.removeAll();
-						connectionPanel = new JDBCSchemaConnectionPanel(schemaTabSet,
+						connectionPanel = new JDBCSchemaConnectionPanel(martTab, 
 								template);
 						connectionPanelHolder.add(connectionPanel);
 						pack();
@@ -186,7 +187,7 @@ public class SchemaManagerDialog extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				Schema testSchema = createSchema();
 				if (testSchema != null)
-					schemaTabSet.requestTestSchema(testSchema);
+					martTab.getSchemaTabSet().requestTestSchema(testSchema);
 			}
 		});
 
@@ -280,7 +281,7 @@ public class SchemaManagerDialog extends JDialog {
 			else
 				throw new MartBuilderInternalError();
 		} catch (Throwable t) {
-			this.schemaTabSet.getDataSetTabSet().getMartTabSet()
+			this.martTab.getMartTabSet()
 					.getMartBuilder().showStackTrace(t);
 		}
 
@@ -298,15 +299,15 @@ public class SchemaManagerDialog extends JDialog {
 	 * Pop up a dialog asking the user for details for a new schema, then create
 	 * and return that schema.
 	 * 
-	 * @param schemaTabSet
-	 *            the schema tabset to use when creating the schema.
+	 * @param martTab
+	 *            the mart tab to use when creating the schema.
 	 * @return the newly created schema, or null if it was cancelled.
 	 */
-	public static Schema createSchema(SchemaTabSet schemaTabSet) {
-		SchemaManagerDialog dialog = new SchemaManagerDialog(schemaTabSet,
+	public static Schema createSchema(MartTab martTab) {
+		SchemaManagerDialog dialog = new SchemaManagerDialog(martTab,
 				BuilderBundle.getString("newSchemaDialogTitle"), BuilderBundle
 						.getString("addButton"), null);
-		dialog.setLocationRelativeTo(schemaTabSet.getDataSetTabSet()
+		dialog.setLocationRelativeTo(martTab
 				.getMartTabSet().getMartBuilder());
 		dialog.show();
 		return dialog.schema;
@@ -316,18 +317,18 @@ public class SchemaManagerDialog extends JDialog {
 	 * Pop up a dialog asking the user to modify details for a schema, then
 	 * modify that schema. Returns whether it was successful or not.
 	 * 
-	 * @param schemaTabSet
-	 *            the schema tabset to use when creating the schema.
+	 * @param martTab
+	 *            the mart tab to use when creating the schema.
 	 * @param schema
 	 *            the schema to modify.
 	 * @return <tt>true</tt> if modification was successful, <tt>false</tt>
 	 *         if not.
 	 */
-	public static boolean modifySchema(SchemaTabSet schemaTabSet, Schema schema) {
-		SchemaManagerDialog dialog = new SchemaManagerDialog(schemaTabSet,
+	public static boolean modifySchema(MartTab martTab, Schema schema) {
+		SchemaManagerDialog dialog = new SchemaManagerDialog(martTab,
 				BuilderBundle.getString("modifySchemaDialogTitle"),
 				BuilderBundle.getString("modifyButton"), schema);
-		dialog.setLocationRelativeTo(schemaTabSet.getDataSetTabSet()
+		dialog.setLocationRelativeTo(martTab
 				.getMartTabSet().getMartBuilder());
 		dialog.show();
 		if (dialog.schema != null && dialog.schema instanceof JDBCSchema) {

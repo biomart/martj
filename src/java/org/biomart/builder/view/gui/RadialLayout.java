@@ -41,17 +41,13 @@ import java.util.TreeMap;
  * circle around a centre point.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 5th June 2006
+ * @version 0.1.6, 20th June 2006
  * @since 0.1
  */
 public class RadialLayout implements LayoutManager {
-	private static final double INTRA_PADDING = 0.0; // 72.0 = 1 inch at 72
+	private static final double INTRA_PADDING = 0.0; // 72.0 = 1 inch 
 
-	// dpi
-
-	private static final double INTER_PADDING = 10.0; // 72.0 = 1 inch at 72
-
-	// dpi
+	private static final double INTER_PADDING = 10.0; // 72.0 = 1 inch
 
 	private static final int RELATION_STEPSIZE = 10; // 72 = 1 inch at 72 dpi
 

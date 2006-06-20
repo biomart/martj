@@ -50,6 +50,7 @@ import org.biomart.builder.controller.JDBCSchema;
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * This connection panel implementation allows a user to define some JDBC
@@ -59,11 +60,11 @@ import org.biomart.builder.resources.BuilderBundle;
  * {@link JDBCSchema} implementation which represents the connection.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 12th May 2006
+ * @version 0.1.4, 20th June 2006
  * @since 0.1
  */
 public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
-		ActionListener {
+		ActionListener, DocumentListener {
 	private static final long serialVersionUID = 1;
 
 	// Please add any more default drivers that we support to this list. The
@@ -74,22 +75,34 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	// appear in the order mentioned. Any other order will break the regex
 	// replacement function elsewhere in this class.
 	private static Map DRIVER_MAP = new HashMap();
+
+	private static Map DRIVER_NAME_MAP = new HashMap();
 	static {
+		// JDBC URL formats.
 		DRIVER_MAP.put("com.mysql.jdbc.Driver", new String[] { "3306",
 				"jdbc:mysql://<HOST>:<PORT>/<DATABASE>" });
 		DRIVER_MAP.put("oracle.jdbc.driver.OracleDriver", new String[] {
 				"1531", "jdbc:oracle:thin:@<HOST>:<PORT>:<DATABASE>" });
 		DRIVER_MAP.put("org.postgresql.Driver", new String[] { "5432",
 				"jdbc:postgres://<HOST>:<PORT>/<DATABASE>" });
+		// Names.
+		DRIVER_NAME_MAP.put(BuilderBundle.getString("driverClassMySQL"),
+				"com.mysql.jdbc.Driver");
+		DRIVER_NAME_MAP.put(BuilderBundle.getString("driverClassOracle"),
+				"oracle.jdbc.driver.OracleDriver");
+		DRIVER_NAME_MAP.put(BuilderBundle.getString("driverClassPostgreSQL"),
+				"org.postgresql.Driver");
 	}
 
 	private String currentJDBCURLTemplate;
 
-	private SchemaTabSet schemaTabSet;
+	private MartTab martTab;
 
 	private JComboBox copysettings;
 
-	private JComboBox driverClass;
+	private JComboBox predefinedDriverClass;
+
+	private JTextField driverClass;
 
 	private JTextField driverClassLocation;
 
@@ -116,19 +129,18 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	 * populate the fields of the panel. If this template is null, then defaults
 	 * are used instead.
 	 * 
-	 * @param schemaTabSet
-	 *            the schema tabset to which the schema to be created or
-	 *            modified belongs.
+	 * @param martTab
+	 *            the mart tab to which the schema to be created or modified
+	 *            belongs.
 	 * @param template
 	 *            the template to use to fill the values in the panel with. If
 	 *            this is null, defaults are used.
 	 */
-	public JDBCSchemaConnectionPanel(final SchemaTabSet schemaTabSet,
-			Schema template) {
+	public JDBCSchemaConnectionPanel(final MartTab martTab, Schema template) {
 		super();
 
 		// Remember the schema tabset.
-		this.schemaTabSet = schemaTabSet;
+		this.martTab = martTab;
 
 		// Create the layout manager for this panel.
 		GridBagLayout gridBag = new GridBagLayout();
@@ -167,19 +179,24 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		this.username = new JTextField(10);
 		this.password = new JPasswordField(10);
 
-		// The driver class box displays everything we know about by default,
-		// as defined by the map at the start of this class.
-		this.driverClass = new JComboBox(
-				(String[]) JDBCSchemaConnectionPanel.DRIVER_MAP.keySet()
+		// The driver class box displays the currently selected driver
+		// class. As it changes, other fields become highlighted.
+		this.driverClass = new JTextField(20);
+		this.driverClass.getDocument().addDocumentListener(this);
+		this.driverClass.setText(null); // Force into default state.
+
+		// The predefined driver class box displays everything we know
+		// about by default, as defined by the map at the start of this class.
+		this.predefinedDriverClass = new JComboBox(
+				(String[]) JDBCSchemaConnectionPanel.DRIVER_NAME_MAP.keySet()
 						.toArray(new String[0]));
-		this.driverClass.setEditable(true);
-		this.driverClass.addActionListener(this);
+		this.predefinedDriverClass.addActionListener(this);
 
 		// Build a combo box that lists all other JDBCSchema instances in
 		// the mart, and allows the user to copy settings from them.
 		this.copysettings = new JComboBox();
-		for (Iterator i = this.schemaTabSet.getDataSetTabSet().getMart()
-				.getSchemas().iterator(); i.hasNext();) {
+		for (Iterator i = this.martTab.getMart().getSchemas().iterator(); i
+				.hasNext();) {
 			Schema s = (Schema) i.next();
 			if (s instanceof JDBCSchema)
 				this.copysettings.addItem(s);
@@ -189,11 +206,9 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		// Create a listener that listens for changes on the host, port
 		// and database fields, and uses this to automatically update
 		// and construct a JDBC URL based on their contents.
-		DocumentListener jdbcURLConstructor = new JDBCURLConstructor(this.host,
-				this.port, this.database, this.jdbcURL);
-		this.host.getDocument().addDocumentListener(jdbcURLConstructor);
-		this.port.getDocument().addDocumentListener(jdbcURLConstructor);
-		this.database.getDocument().addDocumentListener(jdbcURLConstructor);
+		this.host.getDocument().addDocumentListener(this);
+		this.port.getDocument().addDocumentListener(this);
+		this.database.getDocument().addDocumentListener(this);
 
 		// Create a file chooser for finding the JAR file where the driver
 		// lives.
@@ -225,6 +240,10 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		this.add(label);
 		field = new JPanel();
 		field.add(this.driverClass);
+		label = new JLabel(BuilderBundle
+				.getString("predefinedDriverClassLabel"));
+		field.add(label);
+		field.add(this.predefinedDriverClass);
 		gridBag.setConstraints(field, fieldConstraints);
 		this.add(field);
 
@@ -300,6 +319,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	private void resetFields(Schema template) {
 		// Set the copy-settings box to nothing-selected.
 		this.copysettings.setSelectedIndex(-1);
+		this.predefinedDriverClass.setSelectedIndex(-1);
 
 		// If the template is a JDBC schema, copy the settings
 		// from it.
@@ -308,7 +328,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 
 		// Otherwise, set some sensible defaults.
 		else {
-			this.driverClass.setSelectedIndex(-1);
+			this.driverClass.setText(null);
 			this.driverClassLocation.setText(null);
 			this.jdbcURL.setText(null);
 			this.host.setText(null);
@@ -325,7 +345,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			JDBCSchema jdbcSchema = (JDBCSchema) template;
 
 			// If it is, copy everything over from it.
-			this.driverClass.setSelectedItem(jdbcSchema.getDriverClassName());
+			this.driverClass.setText(jdbcSchema.getDriverClassName());
 			this.driverClassLocation.setText(jdbcSchema
 					.getDriverClassLocation() == null ? null : jdbcSchema
 					.getDriverClassLocation().toString());
@@ -337,7 +357,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			// Parse the JDBC URL into host, port and database, if the
 			// driver is known to us (defined in the map at the start
 			// of this class).
-			String regexURL = new String(this.currentJDBCURLTemplate);
+			String regexURL = this.currentJDBCURLTemplate;
 
 			// Replace the three placeholders in the JDBC URL template
 			// with regex patterns. Obviously, this depends on the
@@ -369,7 +389,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		List messages = new ArrayList();
 
 		// If we don't have a class, complain.
-		if (this.isEmpty((String) this.driverClass.getSelectedItem()))
+		if (this.isEmpty((String) this.driverClass.getText()))
 			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
 					.getString("driverClass")));
 
@@ -424,6 +444,120 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		return (string == null || string.trim().length() == 0);
 	}
 
+	public void insertUpdate(DocumentEvent e) {
+		this.documentEvent(e);
+	}
+
+	public void removeUpdate(DocumentEvent e) {
+		this.documentEvent(e);
+	}
+
+	public void changedUpdate(DocumentEvent e) {
+		this.documentEvent(e);
+	}
+
+	private void documentEvent(DocumentEvent e) {
+		if (e.getDocument().equals(this.driverClass.getDocument()))
+			this.driverClassChanged();
+		else
+			this.updateJDBCURL();
+	}
+
+	private void driverClassChanged() {
+		// Work out which class we should try out.
+		String className = this.driverClass.getText();
+
+		// If it's not empty...
+		if (!this.isEmpty(className)) {
+			// Do we know about this, as defined in the map at the start
+			// of this class?
+			if (JDBCSchemaConnectionPanel.DRIVER_MAP.containsKey(className)) {
+				// Yes, so we can use the map to construct a JDBC URL
+				// template, into which host, port, and database can be
+				// placed as required.
+
+				// Obtain the template and split it.
+				String[] parts = (String[]) JDBCSchemaConnectionPanel.DRIVER_MAP
+						.get(className);
+
+				// The second part is the JDBC URL template itself. Remember
+				// which template was selected, then disable the JDBC URL
+				// field in the interface as its contents will now be
+				// computed automatically. Enable the host/database/port
+				// fields instead.
+				this.currentJDBCURLTemplate = parts[1];
+				this.jdbcURL.setEnabled(false);
+				this.host.setEnabled(true);
+				this.port.setEnabled(true);
+				this.database.setEnabled(true);
+
+				// The first part of the template is the default port
+				// number, so set the port field to that number.
+				this.port.setText(parts[0]);
+			}
+
+			// This else statement deals with JDBC drivers that we do not
+			// have a template for.
+			else {
+				// Blank out our current template, so that we don't try
+				// and use it by accident.
+				this.currentJDBCURLTemplate = null;
+
+				// Enable the user-specified JDBC URL field, and disable
+				// the host/port/database fields as they're no longer
+				// required.
+				this.jdbcURL.setEnabled(true);
+				this.host.setEnabled(false);
+				this.port.setEnabled(false);
+				this.database.setEnabled(false);
+			}
+
+			// Attempt to load the driver class that the user specified.
+			boolean classNotFound = true;
+			try {
+				Class.forName(className);
+				classNotFound = false;
+			} catch (Throwable t) {
+				classNotFound = true;
+			}
+
+			// If not found, then the user needs to specify a location
+			// for the class too.
+			this.driverClassLocation.setEnabled(classNotFound);
+		}
+
+		// If it's empty, disable the fields that depend on it.
+		else {
+			this.host.setEnabled(false);
+			this.port.setEnabled(false);
+			this.database.setEnabled(false);
+			this.jdbcURL.setEnabled(false);
+		}
+	}
+
+	private void updateJDBCURL() {
+		// If we don't have a current template, we can't parse it,
+		// so don't even attempt to do so.
+		if (currentJDBCURLTemplate == null)
+			return;
+
+		// Update the JDBC URL based on our current settings. Do this
+		// by replacing the placeholders in the template with the
+		// current values of the host/port/database fields. If there
+		// are no values in these fields, leave the placeholders
+		// as they are.
+		String newURL = currentJDBCURLTemplate;
+		if (!isEmpty(this.host.getText()))
+			newURL = newURL.replaceAll("<HOST>", this.host.getText());
+		if (!isEmpty(this.port.getText()))
+			newURL = newURL.replaceAll("<PORT>", this.port.getText());
+		if (!isEmpty(this.database.getText()))
+			newURL = newURL.replaceAll("<DATABASE>", this.database.getText());
+
+		// Set the JDBC URL field to contain the URL we constructed.
+		this.jdbcURL.setText(newURL);
+	}
+
 	public void actionPerformed(ActionEvent e) {
 		// This method is called when the driver class field is
 		// changed, either by the user typing in it, or using
@@ -443,108 +577,18 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		}
 
 		// Driver class field changed?
-		else if (e.getSource() == this.driverClass) {
-			// Work out which class we should try out.
-			String className = (String) this.driverClass.getSelectedItem();
+		else if (e.getSource() == this.predefinedDriverClass) {
+			// Work out which database was selected.
+			String classType = (String) this.predefinedDriverClass
+					.getSelectedItem();
 
-			// If one has actually been specified...
-			if (!this.isEmpty(className)) {
-				// ...then we should try and work out the default settings for
-				// it.
-
-				// Do we know about this, as defined in the map at the start
-				// of this class?
-				if (JDBCSchemaConnectionPanel.DRIVER_MAP.containsKey(className)) {
-					// Yes, so we can use the map to construct a JDBC URL
-					// template, into which host, port, and database can be
-					// placed as required.
-
-					// Obtain the template and split it.
-					String[] parts = (String[]) JDBCSchemaConnectionPanel.DRIVER_MAP
-							.get(className);
-
-					// The first part of the template is the default port
-					// number, so set the port field to that number.
-					this.port.setText(parts[0]);
-
-					// The second part is the JDBC URL template itself. Remember
-					// which template was selected, then disable the JDBC URL
-					// field in the interface as its contents will now be
-					// computed automatically. Enable the host/database/port
-					// fields instead.
-					this.currentJDBCURLTemplate = parts[1];
-					this.jdbcURL.setEnabled(false);
-					this.host.setEnabled(true);
-					this.port.setEnabled(true);
-					this.database.setEnabled(true);
-
-					// Work out what we're changing from and to.
-					if (this.jdbcURL.isEnabled()) {
-						// We're changing from custom to predefined. This
-						// means we need to blank out any existing JDBC URL,
-						// host, and database information (the port has
-						// already been set).
-						this.jdbcURL.setText(null);
-						this.host.setText(null);
-						this.database.setText(null);
-					} else {
-						// We're changing from predefined to another predefined.
-						// No need to do anything.
-					}
-				}
-
-				// This else statement deals with JDBC drivers that we do not
-				// have a template for.
-				else {
-					// Blank out our current template, so that we don't try
-					// and use it by accident.
-					this.currentJDBCURLTemplate = null;
-
-					// Enable the user-specified JDBC URL field, and disable
-					// the host/port/database fields as they're no longer
-					// required.
-					this.jdbcURL.setEnabled(true);
-					this.host.setEnabled(false);
-					this.port.setEnabled(false);
-					this.database.setEnabled(false);
-
-					// Work out what we're changing from and to.
-					if (this.jdbcURL.isEnabled()) {
-						// We're changing from custom to another custom.
-						// No need to take any action.
-					} else {
-						// We're changing from predefined to custom, so
-						// we need to blank out the host/port/database fields
-						// so they don't interfere.
-						this.jdbcURL.setText(null);
-						this.host.setText(null);
-						this.port.setText(null);
-						this.database.setText(null);
-					}
-				}
-
-				// Attempt to load the driver class that the user specified.
-				boolean classNotFound = true;
-				try {
-					Class.forName(className);
-					classNotFound = false;
-				} catch (Throwable t) {
-					classNotFound = true;
-				}
-
-				// If not found, then the user needs to specify a location
-				// for the class too.
-				this.driverClassLocation.setEnabled(classNotFound);
-			}
-
-			// No driver selected? Grey out all the bits that depend
-			// on the driver being selected.
-			else {
-				this.jdbcURL.setEnabled(false);
-				this.host.setEnabled(false);
-				this.port.setEnabled(false);
-				this.database.setEnabled(false);
-				this.driverClassLocation.setEnabled(false);
+			// Use it to look up the default class for that database,
+			// then reset the drop-down to nothing-selected.
+			if (!this.isEmpty(classType)) {
+				this.driverClass
+						.setText((String) JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
+								.get(classType));
+				this.predefinedDriverClass.setSelectedIndex(-1);
 			}
 		}
 	}
@@ -564,8 +608,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 
 		try {
 			// Record the user's specifications.
-			String driverClassName = (String) this.driverClass
-					.getSelectedItem();
+			String driverClassName = (String) this.driverClass.getText();
 			String driverClassLocation = this.driverClassLocation.getText();
 			String url = this.jdbcURL.getText();
 			String username = this.username.getText();
@@ -580,8 +623,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			// Return that schema.
 			return schema;
 		} catch (Throwable t) {
-			this.schemaTabSet.getDataSetTabSet().getMartTabSet()
-					.getMartBuilder().showStackTrace(t);
+			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 		}
 
 		// If we got here, something went wrong, so behave
@@ -607,8 +649,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				// Use the user input to update the fields on
 				// the existing schema object.
 				JDBCSchema jschema = (JDBCSchema) schema;
-				jschema.setDriverClassName((String) this.driverClass
-						.getSelectedItem());
+				jschema.setDriverClassName((String) this.driverClass.getText());
 				String driverClassLocation = this.driverClassLocation.getText();
 				jschema
 						.setDriverClassLocation(driverClassLocation == null ? null
@@ -617,83 +658,11 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				jschema.setUsername(this.username.getText());
 				jschema.setPassword(new String(this.password.getPassword()));
 			} catch (Throwable t) {
-				this.schemaTabSet.getDataSetTabSet().getMartTabSet()
-						.getMartBuilder().showStackTrace(t);
+				this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 			}
 
 		// Return the modified schema, or the original schema if
 		// it was not a JDBC schema.
 		return schema;
-	}
-
-	// This class updates the JDBC URL based on the user input in the
-	// host, port and database fields, and the template for the currently
-	// selected driver class.
-	private class JDBCURLConstructor implements DocumentListener {
-		private JTextField host;
-
-		private JTextField port;
-
-		private JTextField database;
-
-		private JTextField jdbcURL;
-
-		/**
-		 * This constructor creates a listener, with references to the fields
-		 * that it is listening for changes on, and the field to construct the
-		 * JDBC URL in.
-		 * 
-		 * @param host
-		 *            the host field to listen to.
-		 * @param port
-		 *            the port field to listen to.
-		 * @param database
-		 *            the database field to listen to.
-		 * @param jdbcURL
-		 *            the JDBC URL field to place the constructed URL in.
-		 */
-		public JDBCURLConstructor(JTextField host, JTextField port,
-				JTextField database, JTextField jdbcURL) {
-			this.host = host;
-			this.port = port;
-			this.database = database;
-			this.jdbcURL = jdbcURL;
-		}
-
-		public void insertUpdate(DocumentEvent e) {
-			this.updateJDBCURL();
-		}
-
-		public void removeUpdate(DocumentEvent e) {
-			this.updateJDBCURL();
-		}
-
-		public void changedUpdate(DocumentEvent e) {
-			this.updateJDBCURL();
-		}
-
-		private void updateJDBCURL() {
-			// If we don't have a current template, we can't parse it,
-			// so don't even attempt to do so.
-			if (currentJDBCURLTemplate == null)
-				return;
-
-			// Update the JDBC URL based on our current settings. Do this
-			// by replacing the placeholders in the template with the
-			// current values of the host/port/database fields. If there
-			// are no values in these fields, leave the placeholders
-			// as they are.
-			String newURL = new String(currentJDBCURLTemplate);
-			if (!isEmpty(this.host.getText()))
-				newURL = newURL.replaceAll("<HOST>", this.host.getText());
-			if (!isEmpty(this.port.getText()))
-				newURL = newURL.replaceAll("<PORT>", this.port.getText());
-			if (!isEmpty(this.database.getText()))
-				newURL = newURL.replaceAll("<DATABASE>", this.database
-						.getText());
-
-			// Set the JDBC URL field to contain the URL we constructed.
-			this.jdbcURL.setText(newURL);
-		}
 	}
 }

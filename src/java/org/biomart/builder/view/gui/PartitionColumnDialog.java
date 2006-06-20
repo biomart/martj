@@ -44,6 +44,7 @@ import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.UniqueValues;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.ValueCollection;
 import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * This dialog asks users what kind of partitioning they want to set up on a
@@ -51,13 +52,13 @@ import org.biomart.builder.resources.BuilderBundle;
  * what values to use.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 12th May 2006
+ * @version 0.1.2, 20th June 2006
  * @since 0.1
  */
 public class PartitionColumnDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	private DataSetTabSet datasetTabSet;
+	private MartTab martTab;
 
 	private PartitionedColumnType partitionType;
 
@@ -73,14 +74,14 @@ public class PartitionColumnDialog extends JDialog {
 
 	private JCheckBox nullable;
 
-	private PartitionColumnDialog(final DataSetTabSet datasetTabSet,
+	private PartitionColumnDialog(final MartTab martTab,
 			String executeButtonText, final PartitionedColumnType template) {
 		// Creates the basic dialog.
-		super(datasetTabSet.getMartTabSet().getMartBuilder(), BuilderBundle
+		super(martTab.getMartTabSet().getMartBuilder(), BuilderBundle
 				.getString("partitionColumnDialogTitle"), true);
 
 		// Remembers the dataset tabset this dialog is referring to.
-		this.datasetTabSet = datasetTabSet;
+		this.martTab = martTab;
 
 		// Create the content pane to store the create dialog panel.
 		GridBagLayout gridBag = new GridBagLayout();
@@ -360,8 +361,7 @@ public class PartitionColumnDialog extends JDialog {
 			else
 				throw new MartBuilderInternalError();
 		} catch (Throwable t) {
-			this.datasetTabSet.getMartTabSet().getMartBuilder().showStackTrace(
-					t);
+			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 		}
 
 		// If we get here, we failed, so act as if validation failed.
@@ -377,18 +377,16 @@ public class PartitionColumnDialog extends JDialog {
 	 * This opens a dialog in order for the user to create a new partition type.
 	 * It returns that type, or null if they cancelled it.
 	 * 
-	 * @param datasetTabSet
-	 *            the dataset tabset this dialog is creating a partition type
-	 *            for.
+	 * @param martTab
+	 *            the mart tab this dialog is creating a partition type for.
 	 * @return the newly created partition type, or null if the dialog was
 	 *         cancelled.
 	 */
 	public static PartitionedColumnType createPartitionedColumnType(
-			DataSetTabSet datasetTabSet) {
-		PartitionColumnDialog dialog = new PartitionColumnDialog(datasetTabSet,
+			MartTab martTab) {
+		PartitionColumnDialog dialog = new PartitionColumnDialog(martTab,
 				BuilderBundle.getString("createPartitionButton"), null);
-		dialog.setLocationRelativeTo(datasetTabSet.getMartTabSet()
-				.getMartBuilder());
+		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
 		return dialog.partitionType;
 	}
@@ -400,18 +398,16 @@ public class PartitionColumnDialog extends JDialog {
 	 * the existing one is untouched. If it returns null, the user cancelled the
 	 * dialog.
 	 * 
-	 * @param datasetTabSet
-	 *            the dataset tabset this dialog is creating a partition type
-	 *            for.
+	 * @param martTab
+	 *            the mart tab this dialog is creating a partition type for.
 	 * @return the replacement, updated, partition type, or null if the dialog
 	 *         was cancelled.
 	 */
 	public static PartitionedColumnType updatePartitionedColumnType(
-			DataSetTabSet datasetTabSet, PartitionedColumnType template) {
-		PartitionColumnDialog dialog = new PartitionColumnDialog(datasetTabSet,
+			MartTab martTab, PartitionedColumnType template) {
+		PartitionColumnDialog dialog = new PartitionColumnDialog(martTab,
 				BuilderBundle.getString("updatePartitionButton"), template);
-		dialog.setLocationRelativeTo(datasetTabSet.getMartTabSet()
-				.getMartBuilder());
+		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
 		return dialog.partitionType;
 	}

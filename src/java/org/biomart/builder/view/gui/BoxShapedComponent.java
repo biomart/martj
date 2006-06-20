@@ -34,7 +34,7 @@ import javax.swing.JPopupMenu;
  * rather than exact component.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 2nd June 2006
+ * @version 0.1.10, 20th June 2006
  * @since 0.1
  */
 public abstract class BoxShapedComponent extends JPanel implements
@@ -128,8 +128,9 @@ public abstract class BoxShapedComponent extends JPanel implements
 			// Build the basic menu.
 			JPopupMenu contextMenu = this.getContextMenu();
 			// Customise the context menu for this box's model object.
-			this.getDiagram().getDiagramContext().populateContextMenu(
-					contextMenu, this.getObject());
+			if (this.getDiagram().getDiagramContext() != null)
+				this.getDiagram().getDiagramContext().populateContextMenu(
+						contextMenu, this.getObject());
 			// Display.
 			if (contextMenu.getComponentCount() > 0)
 				contextMenu.show(this, evt.getX(), evt.getY());

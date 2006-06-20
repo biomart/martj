@@ -40,6 +40,7 @@ import javax.swing.border.EmptyBorder;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * A dialog which lists all the columns in a key, and all the columns in the
@@ -47,7 +48,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * move those columns around, thus editing the key.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 17th May 2006
+ * @version 0.1.4, 20th June 2006
  * @since 0.1
  */
 public class KeyEditorDialog extends JDialog {
@@ -57,11 +58,10 @@ public class KeyEditorDialog extends JDialog {
 
 	private DefaultListModel selectedColumns;
 
-	private KeyEditorDialog(SchemaTabSet schemaTabSet, Table table,
-			String title, String action, List columns) {
+	private KeyEditorDialog(MartTab martTab, Table table, String title,
+			String action, List columns) {
 		// Create the base dialog.
-		super(schemaTabSet.getDataSetTabSet().getMartTabSet().getMartBuilder(),
-				title, true);
+		super(martTab.getMartTabSet().getMartBuilder(), title, true);
 
 		// The list of table columns is populated with the names of columns.
 		this.tableColumns = new DefaultListModel();
@@ -246,18 +246,17 @@ public class KeyEditorDialog extends JDialog {
 	 * Creates a new primary key, or rather creates a list of columns for the
 	 * calling code to create a key with.
 	 * 
-	 * @param schemaTabSet
-	 *            the schema tabset this all belongs to.
+	 * @param martTab
+	 *            the mart tab this all belongs to.
 	 * @param table
 	 *            the table the key is to be created on.
 	 * @return the list of columns the user selected.
 	 */
-	public static List createPrimaryKey(SchemaTabSet schemaTabSet, Table table) {
-		KeyEditorDialog dialog = new KeyEditorDialog(schemaTabSet, table,
+	public static List createPrimaryKey(MartTab martTab, Table table) {
+		KeyEditorDialog dialog = new KeyEditorDialog(martTab, table,
 				BuilderBundle.getString("newPKDialogTitle"), BuilderBundle
 						.getString("addButton"), null);
-		dialog.setLocationRelativeTo(schemaTabSet.getDataSetTabSet()
-				.getMartTabSet().getMartBuilder());
+		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
 		return Arrays.asList(dialog.selectedColumns.toArray());
 	}
@@ -266,18 +265,17 @@ public class KeyEditorDialog extends JDialog {
 	 * Creates a new foreign key, or rather creates a list of columns for the
 	 * calling code to create a key with.
 	 * 
-	 * @param schemaTabSet
-	 *            the schema tabset this all belongs to.
+	 * @param martTab
+	 *            the mart tab this all belongs to.
 	 * @param table
 	 *            the table the key is to be created on.
 	 * @return the list of columns the user selected.
 	 */
-	public static List createForeignKey(SchemaTabSet schemaTabSet, Table table) {
-		KeyEditorDialog dialog = new KeyEditorDialog(schemaTabSet, table,
+	public static List createForeignKey(MartTab martTab, Table table) {
+		KeyEditorDialog dialog = new KeyEditorDialog(martTab, table,
 				BuilderBundle.getString("newFKDialogTitle"), BuilderBundle
 						.getString("addButton"), null);
-		dialog.setLocationRelativeTo(schemaTabSet.getDataSetTabSet()
-				.getMartTabSet().getMartBuilder());
+		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
 		return Arrays.asList(dialog.selectedColumns.toArray());
 	}
@@ -286,18 +284,17 @@ public class KeyEditorDialog extends JDialog {
 	 * Edits an existing key, or rather creates a list of columns for the
 	 * calling code to edit the key with.
 	 * 
-	 * @param schemaTabSet
-	 *            the schema tabset this all belongs to.
+	 * @param martTab
+	 *            the mart tab this all belongs to.
 	 * @param key
 	 *            the key to be edited.
 	 * @return the list of columns the user selected.
 	 */
-	public static List editKey(SchemaTabSet schemaTabSet, Key key) {
-		KeyEditorDialog dialog = new KeyEditorDialog(schemaTabSet, key
-				.getTable(), BuilderBundle.getString("editKeyDialogTitle"),
-				BuilderBundle.getString("modifyButton"), key.getColumns());
-		dialog.setLocationRelativeTo(schemaTabSet.getDataSetTabSet()
-				.getMartTabSet().getMartBuilder());
+	public static List editKey(MartTab martTab, Key key) {
+		KeyEditorDialog dialog = new KeyEditorDialog(martTab, key.getTable(),
+				BuilderBundle.getString("editKeyDialogTitle"), BuilderBundle
+						.getString("modifyButton"), key.getColumns());
+		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
 		return Arrays.asList(dialog.selectedColumns.toArray());
 	}

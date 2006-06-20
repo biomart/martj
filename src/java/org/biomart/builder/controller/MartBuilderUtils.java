@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.biomart.builder.controller.JDBCMartConstructor.JDBCMartConstructorType;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
@@ -34,7 +33,6 @@ import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Mart;
-import org.biomart.builder.model.MartConstructor;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
@@ -49,7 +47,6 @@ import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.GenericForeignKey;
 import org.biomart.builder.model.Key.GenericPrimaryKey;
 import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.model.MartConstructor.DummyMartConstructor;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
@@ -62,7 +59,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 14th June 2006
+ * @version 0.1.18, 20th June 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -221,6 +218,20 @@ public class MartBuilderUtils {
 	}
 
 	/**
+	 * Optimises all datasets by going through and marking relations as
+	 * concat-only, or masking them, where they extend more than a certain
+	 * distance beyond the central table of the dataset. This will undo all
+	 * previous concat-only and masked relation operations.
+	 * 
+	 * @param mart
+	 * the mart in which the datasets live.
+	 */
+	public static void optimiseAllDataSets(Mart mart) {
+		for (Iterator i = mart.getDataSets().iterator(); i.hasNext(); )
+			((DataSet)i.next()).optimiseDataSet();
+	}
+
+	/**
 	 * Adds a schema to a mart.
 	 * 
 	 * @param mart
@@ -319,87 +330,6 @@ public class MartBuilderUtils {
 	 */
 	public static boolean testSchema(Schema schema) throws Exception {
 		return schema.test();
-	}
-
-	/**
-	 * Tests a mart constructor. In most cases, this simply tests the connection
-	 * between the mart constructor and the data source or database it
-	 * represents. The connection between test failure and throwing an exception
-	 * describing the failure means that this routine will (probably) never
-	 * return <tt>false</tt>, only ever <tt>true</tt> or an exception.
-	 * 
-	 * @param mc
-	 *            the mart constructor to test.
-	 * @return <tt>true</tt> if it passed the test, <tt>false</tt>
-	 *         otherwise.
-	 * @throws Exception
-	 *             if it failed the test. The exception will describe the reason
-	 *             for failure.
-	 */
-	public static boolean testMartConstructor(MartConstructor mc)
-			throws Exception {
-		return mc.test();
-	}
-
-	/**
-	 * Sets the mart constructor to use for a specific dataset. This cannot be
-	 * null, otherwise unpredictable behaviour may occur.
-	 * 
-	 * @param ds
-	 *            the dataset to set the mart constructor for.
-	 * @param mc
-	 *            the mart constructor to use.
-	 */
-	public static void setMartConstructor(DataSet ds, MartConstructor mc) {
-		ds.setMartConstructor(mc);
-	}
-
-	/**
-	 * Creates a JDBC mart constructor and returns it.
-	 * 
-	 * @param driverClassLocation
-	 *            the location, optional, of the JDBC driver class. This can
-	 *            either be a JAR file or a path to a class file. If null, the
-	 *            default system class loader is used to load the class. The
-	 *            system class loader is also used if the class could not be
-	 *            found in the location specified here.
-	 * @param driverClassName
-	 *            the name of the JDBC driver class, eg.
-	 *            <tt>com.mysql.jdbc.Driver</tt>
-	 * @param url
-	 *            the JDBC url to connect to.
-	 * @param username
-	 *            the username to connect with.
-	 * @param password
-	 *            the password to connect with. If the empty string is passed
-	 *            in, no password is given to the connection at all.
-	 * @param name
-	 *            the name to give the created mart constructor.
-	 * @param type
-	 *            the type of constructor to create.
-	 * @param outputDDLFile
-	 *            if writing DDL to file, the location of the file to create.
-	 * @return the created mart constructor.
-	 */
-	public static JDBCMartConstructor createJDBCMartConstructor(
-			File driverClassLocation, String driverClassName, String url,
-			String username, String password, String name,
-			JDBCMartConstructorType type, File outputDDLFile) {
-		if (password != null && password.equals(""))
-			password = null;
-		return new JDBCMartConstructor(driverClassLocation, driverClassName,
-				url, username, password, name, type, outputDDLFile);
-	}
-
-	/**
-	 * Creates a dummy mart constructor and returns it.
-	 * 
-	 * @param name
-	 *            the name to give the created mart constructor.
-	 * @return the created mart constructor.
-	 */
-	public static DummyMartConstructor createDummyMartConstructor(String name) {
-		return new DummyMartConstructor(name);
 	}
 
 	/**

@@ -1,0 +1,151 @@
+/*
+ Copyright (C) 2006 EBI
+ 
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+ 
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the itmplied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+ 
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+package org.biomart.builder.view.gui;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.JComponent;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+
+import org.biomart.builder.model.DataSet;
+import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.view.gui.MartTabSet.MartTab;
+
+/**
+ * Provides the context menus and colour schemes to use when viewing the all
+ * datasets tab.
+ * 
+ * @author Richard Holland <holland@ebi.ac.uk>
+ * @version 0.1.1, 20th June 2006
+ * @since 0.1
+ */
+public class AllDataSetsContext implements DiagramContext {
+	private MartTab martTab;
+
+	/**
+	 * Creates a new context which will pass any menu actions onto the given
+	 * dataset tabset.
+	 * 
+	 * @param martTab
+	 *            the mart tab which will receive any menu actions the user
+	 *            selects.
+	 */
+	public AllDataSetsContext(MartTab martTab) {
+		this.martTab = martTab;
+	}
+
+	/**
+	 * Obtain the mart tab to pass menu events onto.
+	 * 
+	 * @return the mart tab this context is attached to.
+	 */
+	protected MartTab getMartTab() {
+		return this.martTab;
+	}
+
+	public void populateContextMenu(JPopupMenu contextMenu, Object object) {
+
+		// The background area of the diagram has some simple menu items
+		// that refer to all schemas.
+		if (object == null) {
+
+			// Add a separator if the menu is not empty.
+			if (contextMenu.getComponentCount() > 0)
+				contextMenu.addSeparator();
+
+			// Synchronise all schemas in the mart.
+			JMenuItem syncAll = new JMenuItem(BuilderBundle
+					.getString("optimiseAllDataSetsTitle"));
+			syncAll.setMnemonic(BuilderBundle.getString(
+					"optimiseAllDataSetsMnemonic").charAt(0));
+			syncAll.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					martTab.getDataSetTabSet().requestOptimiseAllDataSets();
+				}
+			});
+			contextMenu.add(syncAll);
+		}
+
+		// DataSet objects have different menus to the background.
+		else if (object instanceof DataSet) {
+
+			// Add a separator if the menu is not already empty.
+			if (contextMenu.getComponentCount() > 0)
+				contextMenu.addSeparator();
+
+			// What schema is this?
+			final DataSet dataset = (DataSet) object;
+
+			// Add an option to rename this dataset.
+			JMenuItem rename = new JMenuItem(BuilderBundle
+					.getString("renameDataSetTitle"));
+			rename.setMnemonic(BuilderBundle.getString("renameDataSetMnemonic")
+					.charAt(0));
+			rename.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					martTab.getDataSetTabSet().requestRenameDataSet(dataset);
+				}
+			});
+			contextMenu.add(rename);
+
+			// Add an option to rename this dataset.
+			JMenuItem optimise = new JMenuItem(BuilderBundle
+					.getString("optimiseDataSetTitle"));
+			optimise.setMnemonic(BuilderBundle.getString(
+					"optimiseDataSetMnemonic").charAt(0));
+			optimise.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					martTab.getDataSetTabSet().requestOptimiseDataSet(dataset);
+				}
+			});
+			contextMenu.add(optimise);
+
+			// Option to remove the dataset from the mart.
+			JMenuItem remove = new JMenuItem(BuilderBundle
+					.getString("removeDataSetTitle"));
+			remove.setMnemonic(BuilderBundle.getString("removeDataSetMnemonic")
+					.charAt(0));
+			remove.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					martTab.getDataSetTabSet().requestRemoveDataSet(dataset);
+				}
+			});
+			contextMenu.add(remove);
+
+			// Option to create the DDL for the dataset.
+			JMenuItem createDDL = new JMenuItem(BuilderBundle
+					.getString("createDDLTitle"));
+			createDDL.setMnemonic(BuilderBundle.getString("createDDLMnemonic")
+					.charAt(0));
+			createDDL.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					getMartTab().getDataSetTabSet().requestCreateDDL(
+							dataset);
+				}
+			});
+			contextMenu.add(createDDL);
+		}
+	}
+
+	public void customiseAppearance(JComponent component, Object object) {
+		// Nothing needs doing here.
+	}
+}

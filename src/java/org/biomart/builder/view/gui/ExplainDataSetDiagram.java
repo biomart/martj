@@ -24,6 +24,7 @@ import java.util.Iterator;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * Displays the contents of a dataset, explaining the relations followed to
@@ -32,7 +33,7 @@ import org.biomart.builder.model.DataSet.DataSetTable;
  * not involved in the construction of the dataset or dataset table concerned.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 5th June 2006
+ * @version 0.1.6, 20th June 2006
  * @since 0.1
  */
 public class ExplainDataSetDiagram extends Diagram {
@@ -49,14 +50,13 @@ public class ExplainDataSetDiagram extends Diagram {
 	 * Creates a diagram explaining the underlying relations beneath a given
 	 * dataset table.
 	 * 
-	 * @param datasetTabSet
-	 *            the dataset tabset to pass menu events onto.
+	 * @param martTab
+	 *            the mart tab to pass menu events onto.
 	 * @param datasetTable
 	 *            the dataset table to explain.
 	 */
-	public ExplainDataSetDiagram(DataSetTabSet datasetTabSet,
-			DataSetTable datasetTable) {
-		super(datasetTabSet);
+	public ExplainDataSetDiagram(MartTab martTab, DataSetTable datasetTable) {
+		super(martTab);
 
 		// Set the background.
 		this.setBackground(ExplainDataSetDiagram.BACKGROUND_COLOUR);

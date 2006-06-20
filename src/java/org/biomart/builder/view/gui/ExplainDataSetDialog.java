@@ -29,6 +29,7 @@ import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * This simple dialog explains a dataset by drawing a big diagram of the
@@ -38,16 +39,16 @@ import org.biomart.builder.resources.BuilderBundle;
  * and relations not involved directly in this dataset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 16th May 2006
+ * @version 0.1.6, 20th June 2006
  * @since 0.1
  */
 public class ExplainDataSetDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	private ExplainDataSetDialog(SchemaTabSet schemaTabSet,
-			DataSetTable dsTable, DataSetColumn dsColumn) {
+	private ExplainDataSetDialog(MartTab martTab, DataSetTable dsTable,
+			DataSetColumn dsColumn) {
 		// Create the blank dialog, and give it an appropriate title.
-		super(schemaTabSet.getDataSetTabSet().getMartTabSet().getMartBuilder(),
+		super(martTab.getMartTabSet().getMartBuilder(),
 				(dsColumn == null ? BuilderBundle.getString(
 						"explainTableDialogTitle", dsTable.getName())
 						: BuilderBundle.getString("explainColumnDialogTitle",
@@ -59,10 +60,9 @@ public class ExplainDataSetDialog extends JDialog {
 		this.setContentPane(content);
 
 		// Compute the diagram, and assign it the appropriate context.
-		DataSetTabSet dsTabSet = schemaTabSet.getDataSetTabSet();
-		ExplainDataSetDiagram diagram = new ExplainDataSetDiagram(dsTabSet,
+		ExplainDataSetDiagram diagram = new ExplainDataSetDiagram(martTab,
 				dsTable);
-		ExplainDataSetContext context = new ExplainDataSetContext(dsTabSet,
+		ExplainDataSetContext context = new ExplainDataSetContext(martTab,
 				(DataSet) dsTable.getSchema());
 		diagram.setDiagramContext(context);
 
@@ -72,11 +72,11 @@ public class ExplainDataSetDialog extends JDialog {
 
 		// Tell the schema tabset about this, so that it gets updated if any
 		// changes are made elsewhere.
-		schemaTabSet.getDataSetTabSet().setCurrentExplanationDiagram(diagram);
+		martTab.getDataSetTabSet().setCurrentExplanationDiagram(diagram);
 
 		// Work out what size we want the diagram to be.
 		Dimension size = diagram.getPreferredSize();
-		Dimension maxSize = schemaTabSet.getSize();
+		Dimension maxSize = martTab.getSize();
 		size.width = Math.max(100, Math.min(size.width, maxSize.width));
 		size.height = Math.max(100, Math.min(size.height, maxSize.height));
 		content.setPreferredSize(size);
@@ -98,37 +98,34 @@ public class ExplainDataSetDialog extends JDialog {
 	 * Opens an explanation showing the underlying relations and tables behind a
 	 * specific dataset table.
 	 * 
-	 * @param schemaTabSet
-	 *            the schema tabset which will handle menu events.
+	 * @param martTab
+	 *            the mart tab which will handle menu events.
 	 * @param table
 	 *            the table to explain.
 	 */
-	public static void showTableExplanation(SchemaTabSet schemaTabSet,
-			DataSetTable table) {
-		ExplainDataSetDialog dialog = new ExplainDataSetDialog(schemaTabSet,
-				table, null);
-		dialog.setLocationRelativeTo(schemaTabSet.getDataSetTabSet()
-				.getMartTabSet().getMartBuilder());
+	public static void showTableExplanation(MartTab martTab, DataSetTable table) {
+		ExplainDataSetDialog dialog = new ExplainDataSetDialog(martTab, table,
+				null);
+		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
-		schemaTabSet.getDataSetTabSet().setCurrentExplanationDiagram(null);
+		martTab.getDataSetTabSet().setCurrentExplanationDiagram(null);
 	}
 
 	/**
 	 * Opens an explanation showing the underlying relations and tables behind a
 	 * specific dataset column.
 	 * 
-	 * @param schemaTabSet
-	 *            the schema tabset which will handle menu events.
+	 * @param martTab
+	 *            the mart tab which will handle menu events.
 	 * @param column
 	 *            the column to explain.
 	 */
-	public static void showColumnExplanation(SchemaTabSet schemaTabSet,
+	public static void showColumnExplanation(MartTab martTab,
 			DataSetColumn column) {
-		ExplainDataSetDialog dialog = new ExplainDataSetDialog(schemaTabSet,
+		ExplainDataSetDialog dialog = new ExplainDataSetDialog(martTab,
 				(DataSetTable) column.getTable(), column);
-		dialog.setLocationRelativeTo(schemaTabSet.getDataSetTabSet()
-				.getMartTabSet().getMartBuilder());
+		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
-		schemaTabSet.getDataSetTabSet().setCurrentExplanationDiagram(null);
+		martTab.getDataSetTabSet().setCurrentExplanationDiagram(null);
 	}
 }

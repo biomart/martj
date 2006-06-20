@@ -39,7 +39,6 @@ import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.GenericForeignKey;
 import org.biomart.builder.model.Key.GenericPrimaryKey;
 import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.model.MartConstructor.DummyMartConstructor;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Schema.GenericSchema;
@@ -83,8 +82,6 @@ public class DataSet extends GenericSchema {
 	private final List[] concatOnlyRelations = new List[] { new ArrayList(),
 			new ArrayList() };
 
-	private MartConstructor martConstructor;
-
 	private DataSetOptimiserType optimiser;
 
 	private boolean partitionOnSchema;
@@ -119,7 +116,6 @@ public class DataSet extends GenericSchema {
 		// Remember the settings and make some defaults.
 		this.mart = mart;
 		this.centralTable = centralTable;
-		this.martConstructor = new DummyMartConstructor(name);
 		this.optimiser = DataSetOptimiserType.NONE;
 		this.partitionOnSchema = false;
 
@@ -984,26 +980,6 @@ public class DataSet extends GenericSchema {
 	}
 
 	/**
-	 * Sets the constructor to use to build the final mart with.
-	 * 
-	 * @param martConstructor
-	 *            the constructor to use.
-	 */
-	public void setMartConstructor(MartConstructor martConstructor) {
-		// Do it.
-		this.martConstructor = martConstructor;
-	}
-
-	/**
-	 * Returns the constructor that will be used to build the final mart with.
-	 * 
-	 * @return the constructor that will be used.
-	 */
-	public MartConstructor getMartConstructor() {
-		return this.martConstructor;
-	}
-
-	/**
 	 * Sets the post-creation optimiser type this dataset will use.
 	 * 
 	 * @param optimiser
@@ -1021,16 +997,6 @@ public class DataSet extends GenericSchema {
 	 */
 	public DataSetOptimiserType getDataSetOptimiserType() {
 		return this.optimiser;
-	}
-
-	/**
-	 * Uses the mart constructor to construct the final mart.
-	 * 
-	 * @throws Exception
-	 *             if there was a problem constructing the mart.
-	 */
-	public void constructMart() throws Exception {
-		this.martConstructor.getConstructorRunnable(this);
 	}
 
 	public void addTable(Table table) throws AlreadyExistsException,

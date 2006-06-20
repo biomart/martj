@@ -38,6 +38,7 @@ import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * This context applies to the general schema view, as seen when a dataset tab
@@ -46,7 +47,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * rather than the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.15, 19th June 2006
+ * @version 0.1.16, 20th June 2006
  * @since 0.1
  */
 public class WindowContext extends SchemaContext {
@@ -58,13 +59,13 @@ public class WindowContext extends SchemaContext {
 	 * operations working with these datasets will be delegated to the methods
 	 * specified in the tabset.
 	 * 
-	 * @param datasetTabSet
-	 *            the dataset tabset that the schema window appears within.
+	 * @param martTab
+	 *            the mart tab that the schema window appears within.
 	 * @param dataset
 	 *            the dataset we are attached to.
 	 */
-	public WindowContext(DataSetTabSet datasetTabSet, DataSet dataset) {
-		super(datasetTabSet);
+	public WindowContext(MartTab martTab, DataSet dataset) {
+		super(martTab);
 		this.dataset = dataset;
 	}
 
@@ -95,7 +96,8 @@ public class WindowContext extends SchemaContext {
 					"optimiseDataSetMnemonic").charAt(0));
 			optimise.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestOptimiseDataSet(dataset);
+					getMartTab().getDataSetTabSet().requestOptimiseDataSet(
+							dataset);
 				}
 			});
 			contextMenu.add(optimise);
@@ -118,7 +120,8 @@ public class WindowContext extends SchemaContext {
 					.charAt(0));
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestMaskTable(dataset, table);
+					getMartTab().getDataSetTabSet().requestMaskTable(dataset,
+							table);
 				}
 			});
 			contextMenu.add(mask);
@@ -152,11 +155,11 @@ public class WindowContext extends SchemaContext {
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					if (mask.isSelected())
-						getDataSetTabSet().requestMaskRelation(dataset,
-								relation);
+						getMartTab().getDataSetTabSet().requestMaskRelation(
+								dataset, relation);
 					else
-						getDataSetTabSet().requestUnmaskRelation(dataset,
-								relation);
+						getMartTab().getDataSetTabSet().requestUnmaskRelation(
+								dataset, relation);
 				}
 			});
 			contextMenu.add(mask);
@@ -175,11 +178,11 @@ public class WindowContext extends SchemaContext {
 			subclass.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					if (subclass.isSelected())
-						getDataSetTabSet().requestSubclassRelation(dataset,
-								relation);
+						getMartTab().getDataSetTabSet()
+								.requestSubclassRelation(dataset, relation);
 					else
-						getDataSetTabSet().requestUnsubclassRelation(dataset,
-								relation);
+						getMartTab().getDataSetTabSet()
+								.requestUnsubclassRelation(dataset, relation);
 				}
 			});
 			contextMenu.add(subclass);
@@ -204,8 +207,8 @@ public class WindowContext extends SchemaContext {
 					.charAt(0));
 			none.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestUnconcatOnlyRelation(dataset,
-							relation);
+					getMartTab().getDataSetTabSet()
+							.requestUnconcatOnlyRelation(dataset, relation);
 				}
 			});
 			concatGroup.add(none);
@@ -221,8 +224,8 @@ public class WindowContext extends SchemaContext {
 					"commaCommaConcatMnemonic").charAt(0));
 			comma.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestConcatOnlyRelation(dataset,
-							relation, ConcatRelationType.COMMA_COMMA);
+					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
+							dataset, relation, ConcatRelationType.COMMA_COMMA);
 				}
 			});
 			concatGroup.add(comma);
@@ -240,8 +243,8 @@ public class WindowContext extends SchemaContext {
 					.charAt(0));
 			tab.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestConcatOnlyRelation(dataset,
-							relation, ConcatRelationType.COMMA_TAB);
+					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
+							dataset, relation, ConcatRelationType.COMMA_TAB);
 				}
 			});
 			concatGroup.add(tab);
@@ -259,8 +262,8 @@ public class WindowContext extends SchemaContext {
 					"commaSpaceConcatMnemonic").charAt(0));
 			space.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestConcatOnlyRelation(dataset,
-							relation, ConcatRelationType.COMMA_SPACE);
+					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
+							dataset, relation, ConcatRelationType.COMMA_SPACE);
 				}
 			});
 			concatGroup.add(space);
@@ -278,8 +281,8 @@ public class WindowContext extends SchemaContext {
 					"spaceCommaConcatMnemonic").charAt(0));
 			comma.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestConcatOnlyRelation(dataset,
-							relation, ConcatRelationType.SPACE_COMMA);
+					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
+							dataset, relation, ConcatRelationType.SPACE_COMMA);
 				}
 			});
 			concatGroup.add(comma);
@@ -297,8 +300,8 @@ public class WindowContext extends SchemaContext {
 					.charAt(0));
 			tab.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestConcatOnlyRelation(dataset,
-							relation, ConcatRelationType.SPACE_TAB);
+					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
+							dataset, relation, ConcatRelationType.SPACE_TAB);
 				}
 			});
 			concatGroup.add(tab);
@@ -316,8 +319,8 @@ public class WindowContext extends SchemaContext {
 					"spaceSpaceConcatMnemonic").charAt(0));
 			space.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestConcatOnlyRelation(dataset,
-							relation, ConcatRelationType.SPACE_SPACE);
+					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
+							dataset, relation, ConcatRelationType.SPACE_SPACE);
 				}
 			});
 			concatGroup.add(space);
@@ -335,8 +338,8 @@ public class WindowContext extends SchemaContext {
 					.charAt(0));
 			comma.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestConcatOnlyRelation(dataset,
-							relation, ConcatRelationType.TAB_COMMA);
+					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
+							dataset, relation, ConcatRelationType.TAB_COMMA);
 				}
 			});
 			concatGroup.add(comma);
@@ -354,8 +357,8 @@ public class WindowContext extends SchemaContext {
 					.charAt(0));
 			tab.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestConcatOnlyRelation(dataset,
-							relation, ConcatRelationType.TAB_TAB);
+					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
+							dataset, relation, ConcatRelationType.TAB_TAB);
 				}
 			});
 			concatGroup.add(tab);
@@ -373,8 +376,8 @@ public class WindowContext extends SchemaContext {
 					.charAt(0));
 			space.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getDataSetTabSet().requestConcatOnlyRelation(dataset,
-							relation, ConcatRelationType.TAB_SPACE);
+					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
+							dataset, relation, ConcatRelationType.TAB_SPACE);
 				}
 			});
 			concatGroup.add(space);

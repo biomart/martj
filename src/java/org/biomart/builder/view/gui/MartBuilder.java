@@ -44,7 +44,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * The main window housing the MartBuilder GUI.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 7th June 2006
+ * @version 0.1.12, 20th June 2006
  * @since 0.1
  */
 public class MartBuilder extends JFrame {
@@ -64,18 +64,18 @@ public class MartBuilder extends JFrame {
 
 		// Assign ourselves to the long-process hourglass container.
 		LongProcess.setContainer(this);
-		
+
 		// Set the look and feel to the one specified by the user, or the system
 		// default if not specified by the user. This may be null.
 		String lookAndFeelClass = System.getProperty("martbuilder.laf");
-		
+
 		try {
 			UIManager.setLookAndFeel(lookAndFeelClass);
 		} catch (Exception e) {
 			// Ignore, as we'll end up with the system one if this one doesn't
 			// work.
 			if (lookAndFeelClass != null) // only worry if we were actually
-											// given one.
+				// given one.
 				System.err.println(BuilderBundle.getString("badLookAndFeel",
 						lookAndFeelClass));
 			// Use system default.
@@ -192,6 +192,8 @@ public class MartBuilder extends JFrame {
 		private JMenuItem saveMart;
 
 		private JMenuItem saveMartAs;
+		
+		private JMenuItem createDDL;
 
 		private JMenuItem closeMart;
 
@@ -242,6 +244,13 @@ public class MartBuilder extends JFrame {
 					"saveMartAsMnemonic").charAt(0));
 			this.saveMartAs.addActionListener(this);
 
+			// Create DDL for current mart.
+			this.createDDL = new JMenuItem(BuilderBundle
+					.getString("createDDLTitle"));
+			this.createDDL.setMnemonic(BuilderBundle.getString(
+					"createDDLMnemonic").charAt(0));
+			this.createDDL.addActionListener(this);
+
 			// Close current mart.
 			this.closeMart = new JMenuItem(BuilderBundle
 					.getString("closeMartTitle"));
@@ -261,6 +270,7 @@ public class MartBuilder extends JFrame {
 			fileMenu.add(this.openMart);
 			fileMenu.add(this.saveMart);
 			fileMenu.add(this.saveMartAs);
+			fileMenu.add(this.createDDL);
 			fileMenu.add(this.closeMart);
 			fileMenu.addSeparator();
 			fileMenu.add(this.exit);
@@ -272,11 +282,12 @@ public class MartBuilder extends JFrame {
 			fileMenu.addMenuListener(new MenuListener() {
 				public void menuSelected(MenuEvent e) {
 					boolean hasMart = true;
-					if (martBuilder.martTabSet.getSelectedDataSetTabSet() == null)
+					if (martBuilder.martTabSet.getSelectedMartTab() == null)
 						hasMart = false;
 					saveMart.setEnabled(hasMart
 							&& martBuilder.martTabSet.getModifiedStatus());
 					saveMartAs.setEnabled(hasMart);
+					createDDL.setEnabled(hasMart);
 					closeMart.setEnabled(hasMart);
 				}
 
@@ -301,6 +312,8 @@ public class MartBuilder extends JFrame {
 				this.martBuilder.martTabSet.saveMart();
 			else if (e.getSource() == this.saveMartAs)
 				this.martBuilder.martTabSet.saveMartAs();
+			else if (e.getSource() == this.createDDL)
+				this.martBuilder.martTabSet.requestCreateDDL();
 			else if (e.getSource() == this.closeMart)
 				this.martBuilder.martTabSet.confirmCloseMart();
 			else if (e.getSource() == this.exit)
