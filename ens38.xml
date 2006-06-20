@@ -1798,7 +1798,7 @@
 	<relation id="1610" cardinality="M" firstKeyId="1158" secondKeyId="153" status="HANDMADE" alt="PK_homo_sapiens_core_38_36:translation_stable_id[translation_id]:FK_ensembl_compara_38:member[stable_id]"/>
 	<relation id="1611" cardinality="M" firstKeyId="1114" secondKeyId="1514" status="HANDMADE" alt="PK_homo_sapiens_core_38_36:transcript[transcript_id]:FK_homo_sapiens_variation_38_36:transcript_variation[transcript_id]"/>
 	<relation id="1612" cardinality="1" firstKeyId="391" secondKeyId="1189" status="HANDMADE" alt="FK_ensembl_go_38:term[acc]:FK_homo_sapiens_core_38_36:xref[dbprimary_acc]"/>
-	<dataset name="band_main" centralTableId="705" alt="homo_sapiens_core_38_36:karyotype" optimiser="NONE" martConstructorId="1" partitionOnSchema="false">
+	<dataset name="band" centralTableId="705" alt="homo_sapiens_core_38_36:karyotype" optimiser="NONE" martConstructorId="1" partitionOnSchema="false">
 		<table id="1613" name="karyotype" type="MAIN" underlyingTableId="705" underlyingRelationIds="1277,1216,1272,1274">
 			<column id="1614" name="attrib" underlyingRelationId="1216" alt="PK_homo_sapiens_core_38_36:coord_system[coord_system_id]:FK_homo_sapiens_core_38_36:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="542" wrappedColumnAlt="homo_sapiens_core_38_36:coord_system:attrib"/>
 			<column id="1615" name="band" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="706" wrappedColumnAlt="homo_sapiens_core_38_36:karyotype:band"/>
@@ -1816,10 +1816,10 @@
 			<column id="1627" name="sequence_2" underlyingRelationId="1274" alt="PK_homo_sapiens_core_38_36:seq_region[seq_region_id]:FK_homo_sapiens_core_38_36:dnac[seq_region_id]" type="wrapped" wrappedColumnId="599" wrappedColumnAlt="homo_sapiens_core_38_36:dnac:sequence"/>
 			<column id="1628" name="stain" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="711" wrappedColumnAlt="homo_sapiens_core_38_36:karyotype:stain"/>
 			<column id="1629" name="version" underlyingRelationId="1216" alt="PK_homo_sapiens_core_38_36:coord_system[coord_system_id]:FK_homo_sapiens_core_38_36:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="546" wrappedColumnAlt="homo_sapiens_core_38_36:coord_system:version"/>
-			<primaryKey id="1630" columnIds="1617" status="INFERRED" alt="PK_band_main:karyotype[karyotype_id]"/>
+			<primaryKey id="1630" columnIds="1617" status="INFERRED" alt="PK_band:karyotype[karyotype_id]"/>
 		</table>
 	</dataset>
-	<dataset name="encode_main" centralTableId="784" alt="homo_sapiens_core_38_36:misc_attrib" optimiser="NONE" martConstructorId="2" partitionOnSchema="false">
+	<dataset name="encode" centralTableId="784" alt="homo_sapiens_core_38_36:misc_attrib" optimiser="NONE" martConstructorId="2" partitionOnSchema="false">
 		<table id="1631" name="misc_attrib" type="MAIN" underlyingTableId="784" underlyingRelationIds="1210,1244,1279,1216,1272,1274">
 			<column id="1632" name="attrib" underlyingRelationId="1216" alt="PK_homo_sapiens_core_38_36:coord_system[coord_system_id]:FK_homo_sapiens_core_38_36:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="542" wrappedColumnAlt="homo_sapiens_core_38_36:coord_system:attrib"/>
 			<column id="1633" name="attrib_type_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="785" wrappedColumnAlt="homo_sapiens_core_38_36:misc_attrib:attrib_type_id"/>
@@ -1841,10 +1841,10 @@
 			<column id="1649" name="sequence_2" underlyingRelationId="1274" alt="PK_homo_sapiens_core_38_36:seq_region[seq_region_id]:FK_homo_sapiens_core_38_36:dnac[seq_region_id]" type="wrapped" wrappedColumnId="599" wrappedColumnAlt="homo_sapiens_core_38_36:dnac:sequence"/>
 			<column id="1650" name="value" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="787" wrappedColumnAlt="homo_sapiens_core_38_36:misc_attrib:value"/>
 			<column id="1651" name="version" underlyingRelationId="1216" alt="PK_homo_sapiens_core_38_36:coord_system[coord_system_id]:FK_homo_sapiens_core_38_36:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="546" wrappedColumnAlt="homo_sapiens_core_38_36:coord_system:version"/>
-			<primaryKey id="1652" columnIds="1632,1633,1634,1635,1636,1637,1638,1639,1640,1641,1642,1643,1644,1645,1646,1647,1648,1649,1650,1651" status="INFERRED" alt="PK_encode_main:misc_attrib[attrib, attrib_type_id, code, coord_system_id, description, length, misc_feature_id, n_line, name, name_2, name_3, rank, seq_region_end, seq_region_id, seq_region_start, seq_region_strand, sequence, sequence_2, value, version]"/>
+			<primaryKey id="1652" columnIds="1632,1633,1634,1635,1636,1637,1638,1639,1640,1641,1642,1643,1644,1645,1646,1647,1648,1649,1650,1651" status="INFERRED" alt="PK_encode:misc_attrib[attrib, attrib_type_id, code, coord_system_id, description, length, misc_feature_id, n_line, name, name_2, name_3, rank, seq_region_end, seq_region_id, seq_region_start, seq_region_strand, sequence, sequence_2, value, version]"/>
 		</table>
 	</dataset>
-	<dataset name="gene_main" centralTableId="1098" alt="homo_sapiens_core_38_36:transcript" optimiser="NONE" martConstructorId="3" partitionOnSchema="false">
+	<dataset name="gene" centralTableId="1098" alt="homo_sapiens_core_38_36:transcript" optimiser="NONE" martConstructorId="3" partitionOnSchema="false">
 		<subclassRelation relationId="1231" alt="PK_homo_sapiens_core_38_36:gene[gene_id]:FK_homo_sapiens_core_38_36:transcript[gene_id]"/>
 		<table id="1653" name="EnsemblTranscript" type="DIMENSION" underlyingTableId="1347" underlyingRelationIds="1608">
 			<column id="1654" name="ESTAccession" underlyingRelationId="1608" alt="PK_homo_sapiens_core_38_36:translation_stable_id[translation_id]:FK_homo_sapiens_core_expression_gnf_34_35g:EnsemblTranscript[Id]" type="wrapped" wrappedColumnId="1348" wrappedColumnAlt="homo_sapiens_core_expression_gnf_34_35g:EnsemblTranscript:ESTAccession"/>
@@ -1853,8 +1853,8 @@
 			<column id="1657" name="id_2" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="386" wrappedColumnAlt="ensembl_go_38:term:id"/>
 			<column id="1658" name="transcript_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="1109" wrappedColumnAlt="homo_sapiens_core_38_36:transcript:transcript_id"/>
 			<column id="1659" name="translation_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="1140" wrappedColumnAlt="homo_sapiens_core_38_36:translation:translation_id"/>
-			<foreignKey id="1660" nullable="false" columnIds="1655,1656,1657,1658,1659" status="INFERRED" alt="FK_gene_main:EnsemblTranscript[gene_id, id, id_2, transcript_id, translation_id]"/>
-			<primaryKey id="1661" columnIds="1655,1656,1657,1658,1659" status="INFERRED" alt="PK_gene_main:EnsemblTranscript[gene_id, id, id_2, transcript_id, translation_id]"/>
+			<foreignKey id="1660" nullable="false" columnIds="1655,1656,1657,1658,1659" status="INFERRED" alt="FK_gene:EnsemblTranscript[gene_id, id, id_2, transcript_id, translation_id]"/>
+			<primaryKey id="1661" columnIds="1655,1656,1657,1658,1659" status="INFERRED" alt="PK_gene:EnsemblTranscript[gene_id, id, id_2, transcript_id, translation_id]"/>
 		</table>
 		<table id="1662" name="EnsemblTranscript_2" type="DIMENSION" underlyingTableId="1318" underlyingRelationIds="1609">
 			<column id="1663" name="ESTAccession" underlyingRelationId="1609" alt="PK_homo_sapiens_core_38_36:translation_stable_id[translation_id]:FK_homo_sapiens_core_expression_est_34_35g:EnsemblTranscript[Id]" type="wrapped" wrappedColumnId="1319" wrappedColumnAlt="homo_sapiens_core_expression_est_34_35g:EnsemblTranscript:ESTAccession"/>
@@ -1863,15 +1863,15 @@
 			<column id="1666" name="id_2" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="386" wrappedColumnAlt="ensembl_go_38:term:id"/>
 			<column id="1667" name="transcript_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="1109" wrappedColumnAlt="homo_sapiens_core_38_36:transcript:transcript_id"/>
 			<column id="1668" name="translation_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="1140" wrappedColumnAlt="homo_sapiens_core_38_36:translation:translation_id"/>
-			<foreignKey id="1669" nullable="false" columnIds="1664,1665,1666,1667,1668" status="INFERRED" alt="FK_gene_main:EnsemblTranscript_2[gene_id, id, id_2, transcript_id, translation_id]"/>
-			<primaryKey id="1670" columnIds="1664,1665,1666,1667,1668" status="INFERRED" alt="PK_gene_main:EnsemblTranscript_2[gene_id, id, id_2, transcript_id, translation_id]"/>
+			<foreignKey id="1669" nullable="false" columnIds="1664,1665,1666,1667,1668" status="INFERRED" alt="FK_gene:EnsemblTranscript_2[gene_id, id, id_2, transcript_id, translation_id]"/>
+			<primaryKey id="1670" columnIds="1664,1665,1666,1667,1668" status="INFERRED" alt="PK_gene:EnsemblTranscript_2[gene_id, id, id_2, transcript_id, translation_id]"/>
 		</table>
 		<table id="1671" name="alt_allele" type="DIMENSION" underlyingTableId="456" underlyingRelationIds="1227">
 			<column id="1672" name="alt_allele_id" underlyingRelationId="1227" alt="PK_homo_sapiens_core_38_36:gene[gene_id]:FK_homo_sapiens_core_38_36:alt_allele[gene_id]" type="wrapped" wrappedColumnId="457" wrappedColumnAlt="homo_sapiens_core_38_36:alt_allele:alt_allele_id"/>
 			<column id="1673" name="gene_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="647" wrappedColumnAlt="homo_sapiens_core_38_36:gene:gene_id"/>
 			<column id="1674" name="id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="386" wrappedColumnAlt="ensembl_go_38:term:id"/>
-			<foreignKey id="1675" nullable="false" columnIds="1673,1674" status="INFERRED" alt="FK_gene_main:alt_allele[gene_id, id]"/>
-			<primaryKey id="1676" columnIds="1673,1674,1672" status="INFERRED" alt="PK_gene_main:alt_allele[gene_id, id, alt_allele_id]"/>
+			<foreignKey id="1675" nullable="false" columnIds="1673,1674" status="INFERRED" alt="FK_gene:alt_allele[gene_id, id]"/>
+			<primaryKey id="1676" columnIds="1673,1674,1672" status="INFERRED" alt="PK_gene:alt_allele[gene_id, id, alt_allele_id]"/>
 		</table>
 		<table id="1677" name="exon_transcript" type="DIMENSION" underlyingTableId="620" underlyingRelationIds="1295,1223,1222,1275,1216,1272,1274">
 			<column id="1678" name="attrib" underlyingRelationId="1216" alt="PK_homo_sapiens_core_38_36:coord_system[coord_system_id]:FK_homo_sapiens_core_38_36:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="542" wrappedColumnAlt="homo_sapiens_core_38_36:coord_system:attrib"/>
@@ -1901,8 +1901,8 @@
 			<column id="1702" name="translation_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="1140" wrappedColumnAlt="homo_sapiens_core_38_36:translation:translation_id"/>
 			<column id="1703" name="version" underlyingRelationId="1222" alt="PK_homo_sapiens_core_38_36:exon[exon_id]:FK_homo_sapiens_core_38_36:exon_stable_id[exon_id]" type="wrapped" wrappedColumnId="617" wrappedColumnAlt="homo_sapiens_core_38_36:exon_stable_id:version"/>
 			<column id="1704" name="version_2" underlyingRelationId="1216" alt="PK_homo_sapiens_core_38_36:coord_system[coord_system_id]:FK_homo_sapiens_core_38_36:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="546" wrappedColumnAlt="homo_sapiens_core_38_36:coord_system:version"/>
-			<foreignKey id="1705" nullable="false" columnIds="1683,1684,1685,1701,1702" status="INFERRED" alt="FK_gene_main:exon_transcript[gene_id, id, id_2, transcript_id, translation_id]"/>
-			<primaryKey id="1706" columnIds="1683,1684,1685,1701,1702,1682,1692" status="INFERRED" alt="PK_gene_main:exon_transcript[gene_id, id, id_2, transcript_id, translation_id, exon_id, rank]"/>
+			<foreignKey id="1705" nullable="false" columnIds="1683,1684,1685,1701,1702" status="INFERRED" alt="FK_gene:exon_transcript[gene_id, id, id_2, transcript_id, translation_id]"/>
+			<primaryKey id="1706" columnIds="1683,1684,1685,1701,1702,1682,1692" status="INFERRED" alt="PK_gene:exon_transcript[gene_id, id, id_2, transcript_id, translation_id, exon_id, rank]"/>
 		</table>
 		<table id="1707" name="gene" type="MAIN" underlyingTableId="642" underlyingRelationIds="1194,1229,1276,1306,1216,1272,1274,1612,1226">
 			<column id="1708" name="analysis_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="643" wrappedColumnAlt="homo_sapiens_core_38_36:gene:analysis_id"/>
@@ -1962,7 +1962,7 @@
 			<column id="1762" name="version" underlyingRelationId="1229" alt="PK_homo_sapiens_core_38_36:gene[gene_id]:FK_homo_sapiens_core_38_36:gene_stable_id[gene_id]" type="wrapped" wrappedColumnId="680" wrappedColumnAlt="homo_sapiens_core_38_36:gene_stable_id:version"/>
 			<column id="1763" name="version_2" underlyingRelationId="1306" alt="PK_homo_sapiens_core_38_36:xref[xref_id]:FK_homo_sapiens_core_38_36:gene[display_xref_id]" type="wrapped" wrappedColumnId="1186" wrappedColumnAlt="homo_sapiens_core_38_36:xref:version"/>
 			<column id="1764" name="version_3" underlyingRelationId="1216" alt="PK_homo_sapiens_core_38_36:coord_system[coord_system_id]:FK_homo_sapiens_core_38_36:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="546" wrappedColumnAlt="homo_sapiens_core_38_36:coord_system:version"/>
-			<primaryKey id="1765" columnIds="1728,1731" status="INFERRED" alt="PK_gene_main:gene[gene_id, id]"/>
+			<primaryKey id="1765" columnIds="1728,1731" status="INFERRED" alt="PK_gene:gene[gene_id, id]"/>
 		</table>
 		<table id="1766" name="gene_attrib" type="DIMENSION" underlyingTableId="669" underlyingRelationIds="1228,1209">
 			<column id="1767" name="attrib_type_id" underlyingRelationId="1228" alt="PK_homo_sapiens_core_38_36:gene[gene_id]:FK_homo_sapiens_core_38_36:gene_attrib[gene_id]" type="wrapped" wrappedColumnId="670" wrappedColumnAlt="homo_sapiens_core_38_36:gene_attrib:attrib_type_id"/>
@@ -1972,8 +1972,8 @@
 			<column id="1771" name="id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="386" wrappedColumnAlt="ensembl_go_38:term:id"/>
 			<column id="1772" name="name" underlyingRelationId="1209" alt="PK_homo_sapiens_core_38_36:attrib_type[attrib_type_id]:FK_homo_sapiens_core_38_36:gene_attrib[attrib_type_id]" type="wrapped" wrappedColumnId="517" wrappedColumnAlt="homo_sapiens_core_38_36:attrib_type:name"/>
 			<column id="1773" name="value" underlyingRelationId="1228" alt="PK_homo_sapiens_core_38_36:gene[gene_id]:FK_homo_sapiens_core_38_36:gene_attrib[gene_id]" type="wrapped" wrappedColumnId="672" wrappedColumnAlt="homo_sapiens_core_38_36:gene_attrib:value"/>
-			<foreignKey id="1774" nullable="false" columnIds="1770,1771" status="INFERRED" alt="FK_gene_main:gene_attrib[gene_id, id]"/>
-			<primaryKey id="1775" columnIds="1770,1771" status="INFERRED" alt="PK_gene_main:gene_attrib[gene_id, id]"/>
+			<foreignKey id="1774" nullable="false" columnIds="1770,1771" status="INFERRED" alt="FK_gene:gene_attrib[gene_id, id]"/>
+			<primaryKey id="1775" columnIds="1770,1771" status="INFERRED" alt="PK_gene:gene_attrib[gene_id, id]"/>
 		</table>
 		<table id="1776" name="member" type="DIMENSION" underlyingTableId="137" underlyingRelationIds="1610,229,245">
 			<column id="1777" name="assembly" underlyingRelationId="229" alt="PK_ensembl_compara_38:genome_db[genome_db_id]:FK_ensembl_compara_38:member[genome_db_id]" type="wrapped" wrappedColumnId="74" wrappedColumnAlt="ensembl_compara_38:genome_db:assembly"/>
@@ -2001,8 +2001,8 @@
 			<column id="1799" name="transcript_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="1109" wrappedColumnAlt="homo_sapiens_core_38_36:transcript:transcript_id"/>
 			<column id="1800" name="translation_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="1140" wrappedColumnAlt="homo_sapiens_core_38_36:translation:translation_id"/>
 			<column id="1801" name="version" underlyingRelationId="1610" alt="PK_homo_sapiens_core_38_36:translation_stable_id[translation_id]:FK_ensembl_compara_38:member[stable_id]" type="wrapped" wrappedColumnId="150" wrappedColumnAlt="ensembl_compara_38:member:version"/>
-			<foreignKey id="1802" nullable="false" columnIds="1784,1788,1789,1799,1800" status="INFERRED" alt="FK_gene_main:member[gene_id, id, id_2, transcript_id, translation_id]"/>
-			<primaryKey id="1803" columnIds="1784,1788,1789,1799,1800,1792" status="INFERRED" alt="PK_gene_main:member[gene_id, id, id_2, transcript_id, translation_id, member_id]"/>
+			<foreignKey id="1802" nullable="false" columnIds="1784,1788,1789,1799,1800" status="INFERRED" alt="FK_gene:member[gene_id, id, id_2, transcript_id, translation_id]"/>
+			<primaryKey id="1803" columnIds="1784,1788,1789,1799,1800,1792" status="INFERRED" alt="PK_gene:member[gene_id, id, id_2, transcript_id, translation_id, member_id]"/>
 		</table>
 		<table id="1804" name="object_xref" type="DIMENSION" underlyingTableId="811" underlyingRelationIds="1301,1253,1309,1195,1612,1226">
 			<column id="1805" name="analysis_id" underlyingRelationId="1253" alt="PK_homo_sapiens_core_38_36:object_xref[object_xref_id]:FK_homo_sapiens_core_38_36:identity_xref[object_xref_id]" type="wrapped" wrappedColumnId="688" wrappedColumnAlt="homo_sapiens_core_38_36:identity_xref:analysis_id"/>
@@ -2055,8 +2055,8 @@
 			<column id="1852" name="translation_start" underlyingRelationId="1253" alt="PK_homo_sapiens_core_38_36:object_xref[object_xref_id]:FK_homo_sapiens_core_38_36:identity_xref[object_xref_id]" type="wrapped" wrappedColumnId="698" wrappedColumnAlt="homo_sapiens_core_38_36:identity_xref:translation_start"/>
 			<column id="1853" name="version" underlyingRelationId="1309" alt="PK_homo_sapiens_core_38_36:xref[xref_id]:FK_homo_sapiens_core_38_36:object_xref[xref_id]" type="wrapped" wrappedColumnId="1186" wrappedColumnAlt="homo_sapiens_core_38_36:xref:version"/>
 			<column id="1854" name="xref_id" underlyingRelationId="1301" alt="PK_homo_sapiens_core_38_36:transcript[transcript_id]:FK_homo_sapiens_core_38_36:object_xref[ensembl_id]" type="wrapped" wrappedColumnId="815" wrappedColumnAlt="homo_sapiens_core_38_36:object_xref:xref_id"/>
-			<foreignKey id="1855" nullable="false" columnIds="1822,1827,1828,1849,1851" status="INFERRED" alt="FK_gene_main:object_xref[gene_id, id, id_2, transcript_id, translation_id]"/>
-			<primaryKey id="1856" columnIds="1822,1827,1828,1849,1851,1838,1829" status="INFERRED" alt="PK_gene_main:object_xref[gene_id, id, id_2, transcript_id, translation_id, object_xref_id, id_3]"/>
+			<foreignKey id="1855" nullable="false" columnIds="1822,1827,1828,1849,1851" status="INFERRED" alt="FK_gene:object_xref[gene_id, id, id_2, transcript_id, translation_id]"/>
+			<primaryKey id="1856" columnIds="1822,1827,1828,1849,1851,1838,1829" status="INFERRED" alt="PK_gene:object_xref[gene_id, id, id_2, transcript_id, translation_id, object_xref_id, id_3]"/>
 		</table>
 		<table id="1857" name="protein_feature" type="DIMENSION" underlyingTableId="933" underlyingRelationIds="1302,1201">
 			<column id="1858" name="analysis_id" underlyingRelationId="1302" alt="PK_homo_sapiens_core_38_36:translation[translation_id]:FK_homo_sapiens_core_38_36:protein_feature[translation_id]" type="wrapped" wrappedColumnId="934" wrappedColumnAlt="homo_sapiens_core_38_36:protein_feature:analysis_id"/>
@@ -2087,8 +2087,8 @@
 			<column id="1883" name="seq_start" underlyingRelationId="1302" alt="PK_homo_sapiens_core_38_36:translation[translation_id]:FK_homo_sapiens_core_38_36:protein_feature[translation_id]" type="wrapped" wrappedColumnId="943" wrappedColumnAlt="homo_sapiens_core_38_36:protein_feature:seq_start"/>
 			<column id="1884" name="transcript_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="1109" wrappedColumnAlt="homo_sapiens_core_38_36:transcript:transcript_id"/>
 			<column id="1885" name="translation_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="1140" wrappedColumnAlt="homo_sapiens_core_38_36:translation:translation_id"/>
-			<foreignKey id="1886" nullable="false" columnIds="1864,1870,1871,1884,1885" status="INFERRED" alt="FK_gene_main:protein_feature[gene_id, id, id_2, transcript_id, translation_id]"/>
-			<primaryKey id="1887" columnIds="1864,1870,1871,1884,1885,1880" status="INFERRED" alt="PK_gene_main:protein_feature[gene_id, id, id_2, transcript_id, translation_id, protein_feature_id]"/>
+			<foreignKey id="1886" nullable="false" columnIds="1864,1870,1871,1884,1885" status="INFERRED" alt="FK_gene:protein_feature[gene_id, id, id_2, transcript_id, translation_id]"/>
+			<primaryKey id="1887" columnIds="1864,1870,1871,1884,1885,1880" status="INFERRED" alt="PK_gene:protein_feature[gene_id, id, id_2, transcript_id, translation_id, protein_feature_id]"/>
 		</table>
 		<table id="1888" name="regulatory_factor_coding" type="DIMENSION" underlyingTableId="980" underlyingRelationIds="1296,1261,1230,1194,1229,1276,1306,1216,1272,1274,1612,1226">
 			<column id="1889" name="analysis_id" underlyingRelationId="1230" alt="PK_homo_sapiens_core_38_36:gene[gene_id]:FK_homo_sapiens_core_38_36:regulatory_factor_coding[gene_id]" type="wrapped" wrappedColumnId="643" wrappedColumnAlt="homo_sapiens_core_38_36:gene:analysis_id"/>
@@ -2156,8 +2156,8 @@
 			<column id="1951" name="version" underlyingRelationId="1229" alt="PK_homo_sapiens_core_38_36:gene[gene_id]:FK_homo_sapiens_core_38_36:gene_stable_id[gene_id]" type="wrapped" wrappedColumnId="680" wrappedColumnAlt="homo_sapiens_core_38_36:gene_stable_id:version"/>
 			<column id="1952" name="version_2" underlyingRelationId="1306" alt="PK_homo_sapiens_core_38_36:xref[xref_id]:FK_homo_sapiens_core_38_36:gene[display_xref_id]" type="wrapped" wrappedColumnId="1186" wrappedColumnAlt="homo_sapiens_core_38_36:xref:version"/>
 			<column id="1953" name="version_3" underlyingRelationId="1216" alt="PK_homo_sapiens_core_38_36:coord_system[coord_system_id]:FK_homo_sapiens_core_38_36:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="546" wrappedColumnAlt="homo_sapiens_core_38_36:coord_system:version"/>
-			<foreignKey id="1954" nullable="false" columnIds="1909,1913,1914,1948,1949" status="INFERRED" alt="FK_gene_main:regulatory_factor_coding[gene_id, id, id_2, transcript_id, translation_id]"/>
-			<primaryKey id="1955" columnIds="1909,1913,1914,1948,1949,1915" status="INFERRED" alt="PK_gene_main:regulatory_factor_coding[gene_id, id, id_2, transcript_id, translation_id, id_3]"/>
+			<foreignKey id="1954" nullable="false" columnIds="1909,1913,1914,1948,1949" status="INFERRED" alt="FK_gene:regulatory_factor_coding[gene_id, id, id_2, transcript_id, translation_id]"/>
+			<primaryKey id="1955" columnIds="1909,1913,1914,1948,1949,1915" status="INFERRED" alt="PK_gene:regulatory_factor_coding[gene_id, id, id_2, transcript_id, translation_id, id_3]"/>
 		</table>
 		<table id="1956" name="regulatory_factor_coding_2" type="DIMENSION" underlyingTableId="980" underlyingRelationIds="1230,1261,1296,1207,1300,1231,1307,1291,1298,1304,1221,1220,1229,1276,1306,1612,1226,1216,1272,1274,1222">
 			<column id="1957" name="analysis_id" underlyingRelationId="1296" alt="PK_homo_sapiens_core_38_36:transcript[transcript_id]:FK_homo_sapiens_core_38_36:regulatory_factor_coding[transcript_id]" type="wrapped" wrappedColumnId="1099" wrappedColumnAlt="homo_sapiens_core_38_36:transcript:analysis_id"/>
@@ -2271,8 +2271,8 @@
 			<column id="2065" name="version_5" underlyingRelationId="1306" alt="PK_homo_sapiens_core_38_36:xref[xref_id]:FK_homo_sapiens_core_38_36:gene[display_xref_id]" type="wrapped" wrappedColumnId="1186" wrappedColumnAlt="homo_sapiens_core_38_36:xref:version"/>
 			<column id="2066" name="version_6" underlyingRelationId="1216" alt="PK_homo_sapiens_core_38_36:coord_system[coord_system_id]:FK_homo_sapiens_core_38_36:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="546" wrappedColumnAlt="homo_sapiens_core_38_36:coord_system:version"/>
 			<column id="2067" name="version_7" underlyingRelationId="1222" alt="PK_homo_sapiens_core_38_36:exon[exon_id]:FK_homo_sapiens_core_38_36:exon_stable_id[exon_id]" type="wrapped" wrappedColumnId="617" wrappedColumnAlt="homo_sapiens_core_38_36:exon_stable_id:version"/>
-			<foreignKey id="2068" nullable="false" columnIds="1992,1996" status="INFERRED" alt="FK_gene_main:regulatory_factor_coding_2[gene_id, id]"/>
-			<primaryKey id="2069" columnIds="1992,1996,2059,1997" status="INFERRED" alt="PK_gene_main:regulatory_factor_coding_2[gene_id, id, translation_id, id_2]"/>
+			<foreignKey id="2068" nullable="false" columnIds="1992,1996" status="INFERRED" alt="FK_gene:regulatory_factor_coding_2[gene_id, id]"/>
+			<primaryKey id="2069" columnIds="1992,1996,2059,1997" status="INFERRED" alt="PK_gene:regulatory_factor_coding_2[gene_id, id, translation_id, id_2]"/>
 		</table>
 		<table id="2070" name="transcript" type="MAIN_SUBCLASS" underlyingTableId="1098" underlyingRelationIds="1231,1207,1300,1307,1291,1298,1304,1221,1220,1612,1226,1216,1272,1274,1222">
 			<column id="2071" name="analysis_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="643" wrappedColumnAlt="homo_sapiens_core_38_36:gene:analysis_id"/>
@@ -2413,8 +2413,8 @@
 			<column id="2206" name="version_6" underlyingRelationId="1304" alt="PK_homo_sapiens_core_38_36:translation[translation_id]:FK_homo_sapiens_core_38_36:translation_stable_id[translation_id]" type="wrapped" wrappedColumnId="1156" wrappedColumnAlt="homo_sapiens_core_38_36:translation_stable_id:version"/>
 			<column id="2207" name="version_7" underlyingRelationId="1216" alt="PK_homo_sapiens_core_38_36:coord_system[coord_system_id]:FK_homo_sapiens_core_38_36:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="546" wrappedColumnAlt="homo_sapiens_core_38_36:coord_system:version"/>
 			<column id="2208" name="version_8" underlyingRelationId="1222" alt="PK_homo_sapiens_core_38_36:exon[exon_id]:FK_homo_sapiens_core_38_36:exon_stable_id[exon_id]" type="wrapped" wrappedColumnId="617" wrappedColumnAlt="homo_sapiens_core_38_36:exon_stable_id:version"/>
-			<foreignKey id="2209" nullable="false" columnIds="2116,2121" status="INFERRED" alt="FK_gene_main:transcript[gene_id, id]"/>
-			<primaryKey id="2210" columnIds="2116,2121,2199,2200,2122" status="INFERRED" alt="PK_gene_main:transcript[gene_id, id, transcript_id, translation_id, id_2]"/>
+			<foreignKey id="2209" nullable="false" columnIds="2116,2121" status="INFERRED" alt="FK_gene:transcript[gene_id, id]"/>
+			<primaryKey id="2210" columnIds="2116,2121,2199,2200,2122" status="INFERRED" alt="PK_gene:transcript[gene_id, id, transcript_id, translation_id, id_2]"/>
 		</table>
 		<table id="2211" name="transcript_attrib" type="DIMENSION" underlyingTableId="1115" underlyingRelationIds="1297,1212">
 			<column id="2212" name="attrib_type_id" underlyingRelationId="1297" alt="PK_homo_sapiens_core_38_36:transcript[transcript_id]:FK_homo_sapiens_core_38_36:transcript_attrib[transcript_id]" type="wrapped" wrappedColumnId="1116" wrappedColumnAlt="homo_sapiens_core_38_36:transcript_attrib:attrib_type_id"/>
@@ -2427,8 +2427,8 @@
 			<column id="2219" name="transcript_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="1109" wrappedColumnAlt="homo_sapiens_core_38_36:transcript:transcript_id"/>
 			<column id="2220" name="translation_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="1140" wrappedColumnAlt="homo_sapiens_core_38_36:translation:translation_id"/>
 			<column id="2221" name="value" underlyingRelationId="1297" alt="PK_homo_sapiens_core_38_36:transcript[transcript_id]:FK_homo_sapiens_core_38_36:transcript_attrib[transcript_id]" type="wrapped" wrappedColumnId="1118" wrappedColumnAlt="homo_sapiens_core_38_36:transcript_attrib:value"/>
-			<foreignKey id="2222" nullable="false" columnIds="2215,2216,2217,2219,2220" status="INFERRED" alt="FK_gene_main:transcript_attrib[gene_id, id, id_2, transcript_id, translation_id]"/>
-			<primaryKey id="2223" columnIds="2215,2216,2217,2219,2220" status="INFERRED" alt="PK_gene_main:transcript_attrib[gene_id, id, id_2, transcript_id, translation_id]"/>
+			<foreignKey id="2222" nullable="false" columnIds="2215,2216,2217,2219,2220" status="INFERRED" alt="FK_gene:transcript_attrib[gene_id, id, id_2, transcript_id, translation_id]"/>
+			<primaryKey id="2223" columnIds="2215,2216,2217,2219,2220" status="INFERRED" alt="PK_gene:transcript_attrib[gene_id, id, id_2, transcript_id, translation_id]"/>
 		</table>
 		<table id="2224" name="transcript_supporting_feature" type="DIMENSION" underlyingTableId="1129" underlyingRelationIds="1299">
 			<column id="2225" name="feature_id" underlyingRelationId="1299" alt="PK_homo_sapiens_core_38_36:transcript[transcript_id]:FK_homo_sapiens_core_38_36:transcript_supporting_feature[transcript_id]" type="wrapped" wrappedColumnId="1130" wrappedColumnAlt="homo_sapiens_core_38_36:transcript_supporting_feature:feature_id"/>
@@ -2438,8 +2438,8 @@
 			<column id="2229" name="id_2" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="386" wrappedColumnAlt="ensembl_go_38:term:id"/>
 			<column id="2230" name="transcript_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="1109" wrappedColumnAlt="homo_sapiens_core_38_36:transcript:transcript_id"/>
 			<column id="2231" name="translation_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="1140" wrappedColumnAlt="homo_sapiens_core_38_36:translation:translation_id"/>
-			<foreignKey id="2232" nullable="false" columnIds="2227,2228,2229,2230,2231" status="INFERRED" alt="FK_gene_main:transcript_supporting_feature[gene_id, id, id_2, transcript_id, translation_id]"/>
-			<primaryKey id="2233" columnIds="2227,2228,2229,2230,2231" status="INFERRED" alt="PK_gene_main:transcript_supporting_feature[gene_id, id, id_2, transcript_id, translation_id]"/>
+			<foreignKey id="2232" nullable="false" columnIds="2227,2228,2229,2230,2231" status="INFERRED" alt="FK_gene:transcript_supporting_feature[gene_id, id, id_2, transcript_id, translation_id]"/>
+			<primaryKey id="2233" columnIds="2227,2228,2229,2230,2231" status="INFERRED" alt="PK_gene:transcript_supporting_feature[gene_id, id, id_2, transcript_id, translation_id]"/>
 		</table>
 		<table id="2234" name="transcript_variation" type="DIMENSION" underlyingTableId="1503" underlyingRelationIds="1611,1603,1591,1599,1596">
 			<column id="2235" name="allele_string" underlyingRelationId="1603" alt="PK_homo_sapiens_variation_38_36:variation_feature[variation_feature_id]:FK_homo_sapiens_variation_38_36:transcript_variation[variation_feature_id]" type="wrapped" wrappedColumnId="1525" wrappedColumnAlt="homo_sapiens_variation_38_36:variation_feature:allele_string"/>
@@ -2481,8 +2481,8 @@
 			<column id="2271" name="variation_id" underlyingRelationId="1603" alt="PK_homo_sapiens_variation_38_36:variation_feature[variation_feature_id]:FK_homo_sapiens_variation_38_36:transcript_variation[variation_feature_id]" type="wrapped" wrappedColumnId="1536" wrappedColumnAlt="homo_sapiens_variation_38_36:variation_feature:variation_id"/>
 			<column id="2272" name="variation_name" underlyingRelationId="1603" alt="PK_homo_sapiens_variation_38_36:variation_feature[variation_feature_id]:FK_homo_sapiens_variation_38_36:transcript_variation[variation_feature_id]" type="wrapped" wrappedColumnId="1537" wrappedColumnAlt="homo_sapiens_variation_38_36:variation_feature:variation_name"/>
 			<column id="2273" name="version" underlyingRelationId="1591" alt="PK_homo_sapiens_variation_38_36:source[source_id]:FK_homo_sapiens_variation_38_36:variation_feature[source_id]" type="wrapped" wrappedColumnId="1495" wrappedColumnAlt="homo_sapiens_variation_38_36:source:version"/>
-			<foreignKey id="2274" nullable="false" columnIds="2245,2246,2247,2260,2263" status="INFERRED" alt="FK_gene_main:transcript_variation[gene_id, id, id_2, transcript_id, translation_id]"/>
-			<primaryKey id="2275" columnIds="2245,2246,2247,2260,2263,2261" status="INFERRED" alt="PK_gene_main:transcript_variation[gene_id, id, id_2, transcript_id, translation_id, transcript_variation_id]"/>
+			<foreignKey id="2274" nullable="false" columnIds="2245,2246,2247,2260,2263" status="INFERRED" alt="FK_gene:transcript_variation[gene_id, id, id_2, transcript_id, translation_id]"/>
+			<primaryKey id="2275" columnIds="2245,2246,2247,2260,2263,2261" status="INFERRED" alt="PK_gene:transcript_variation[gene_id, id, id_2, transcript_id, translation_id, transcript_variation_id]"/>
 		</table>
 		<table id="2276" name="translation_attrib" type="DIMENSION" underlyingTableId="1145" underlyingRelationIds="1303,1213">
 			<column id="2277" name="attrib_type_id" underlyingRelationId="1303" alt="PK_homo_sapiens_core_38_36:translation[translation_id]:FK_homo_sapiens_core_38_36:translation_attrib[translation_id]" type="wrapped" wrappedColumnId="1146" wrappedColumnAlt="homo_sapiens_core_38_36:translation_attrib:attrib_type_id"/>
@@ -2495,26 +2495,26 @@
 			<column id="2284" name="transcript_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="1109" wrappedColumnAlt="homo_sapiens_core_38_36:transcript:transcript_id"/>
 			<column id="2285" name="translation_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="1140" wrappedColumnAlt="homo_sapiens_core_38_36:translation:translation_id"/>
 			<column id="2286" name="value" underlyingRelationId="1303" alt="PK_homo_sapiens_core_38_36:translation[translation_id]:FK_homo_sapiens_core_38_36:translation_attrib[translation_id]" type="wrapped" wrappedColumnId="1148" wrappedColumnAlt="homo_sapiens_core_38_36:translation_attrib:value"/>
-			<foreignKey id="2287" nullable="false" columnIds="2280,2281,2282,2284,2285" status="INFERRED" alt="FK_gene_main:translation_attrib[gene_id, id, id_2, transcript_id, translation_id]"/>
-			<primaryKey id="2288" columnIds="2280,2281,2282,2284,2285" status="INFERRED" alt="PK_gene_main:translation_attrib[gene_id, id, id_2, transcript_id, translation_id]"/>
+			<foreignKey id="2287" nullable="false" columnIds="2280,2281,2282,2284,2285" status="INFERRED" alt="FK_gene:translation_attrib[gene_id, id, id_2, transcript_id, translation_id]"/>
+			<primaryKey id="2288" columnIds="2280,2281,2282,2284,2285" status="INFERRED" alt="PK_gene:translation_attrib[gene_id, id, id_2, transcript_id, translation_id]"/>
 		</table>
-		<relation id="2289" cardinality="M" firstKeyId="1765" secondKeyId="2209" status="INFERRED" alt="PK_gene_main:gene[gene_id, id]:FK_gene_main:transcript[gene_id, id]"/>
-		<relation id="2290" cardinality="M" firstKeyId="1765" secondKeyId="1774" status="INFERRED" alt="PK_gene_main:gene[gene_id, id]:FK_gene_main:gene_attrib[gene_id, id]"/>
-		<relation id="2291" cardinality="M" firstKeyId="1765" secondKeyId="1675" status="INFERRED" alt="PK_gene_main:gene[gene_id, id]:FK_gene_main:alt_allele[gene_id, id]"/>
-		<relation id="2292" cardinality="M" firstKeyId="1765" secondKeyId="2068" status="INFERRED" alt="PK_gene_main:gene[gene_id, id]:FK_gene_main:regulatory_factor_coding_2[gene_id, id]"/>
-		<relation id="2293" cardinality="M" firstKeyId="2210" secondKeyId="2222" status="INFERRED" alt="PK_gene_main:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene_main:transcript_attrib[gene_id, id, id_2, transcript_id, translation_id]"/>
-		<relation id="2294" cardinality="M" firstKeyId="2210" secondKeyId="1855" status="INFERRED" alt="PK_gene_main:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene_main:object_xref[gene_id, id, id_2, transcript_id, translation_id]"/>
-		<relation id="2295" cardinality="M" firstKeyId="2210" secondKeyId="2232" status="INFERRED" alt="PK_gene_main:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene_main:transcript_supporting_feature[gene_id, id, id_2, transcript_id, translation_id]"/>
-		<relation id="2296" cardinality="M" firstKeyId="2210" secondKeyId="1705" status="INFERRED" alt="PK_gene_main:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene_main:exon_transcript[gene_id, id, id_2, transcript_id, translation_id]"/>
-		<relation id="2297" cardinality="M" firstKeyId="2210" secondKeyId="2274" status="INFERRED" alt="PK_gene_main:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene_main:transcript_variation[gene_id, id, id_2, transcript_id, translation_id]"/>
-		<relation id="2298" cardinality="M" firstKeyId="2210" secondKeyId="1954" status="INFERRED" alt="PK_gene_main:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene_main:regulatory_factor_coding[gene_id, id, id_2, transcript_id, translation_id]"/>
-		<relation id="2299" cardinality="M" firstKeyId="2210" secondKeyId="1886" status="INFERRED" alt="PK_gene_main:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene_main:protein_feature[gene_id, id, id_2, transcript_id, translation_id]"/>
-		<relation id="2300" cardinality="M" firstKeyId="2210" secondKeyId="2287" status="INFERRED" alt="PK_gene_main:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene_main:translation_attrib[gene_id, id, id_2, transcript_id, translation_id]"/>
-		<relation id="2301" cardinality="M" firstKeyId="2210" secondKeyId="1660" status="INFERRED" alt="PK_gene_main:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene_main:EnsemblTranscript[gene_id, id, id_2, transcript_id, translation_id]"/>
-		<relation id="2302" cardinality="M" firstKeyId="2210" secondKeyId="1802" status="INFERRED" alt="PK_gene_main:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene_main:member[gene_id, id, id_2, transcript_id, translation_id]"/>
-		<relation id="2303" cardinality="M" firstKeyId="2210" secondKeyId="1669" status="INFERRED" alt="PK_gene_main:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene_main:EnsemblTranscript_2[gene_id, id, id_2, transcript_id, translation_id]"/>
+		<relation id="2289" cardinality="M" firstKeyId="1765" secondKeyId="2209" status="INFERRED" alt="PK_gene:gene[gene_id, id]:FK_gene:transcript[gene_id, id]"/>
+		<relation id="2290" cardinality="M" firstKeyId="1765" secondKeyId="1774" status="INFERRED" alt="PK_gene:gene[gene_id, id]:FK_gene:gene_attrib[gene_id, id]"/>
+		<relation id="2291" cardinality="M" firstKeyId="1765" secondKeyId="1675" status="INFERRED" alt="PK_gene:gene[gene_id, id]:FK_gene:alt_allele[gene_id, id]"/>
+		<relation id="2292" cardinality="M" firstKeyId="1765" secondKeyId="2068" status="INFERRED" alt="PK_gene:gene[gene_id, id]:FK_gene:regulatory_factor_coding_2[gene_id, id]"/>
+		<relation id="2293" cardinality="M" firstKeyId="2210" secondKeyId="2222" status="INFERRED" alt="PK_gene:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene:transcript_attrib[gene_id, id, id_2, transcript_id, translation_id]"/>
+		<relation id="2294" cardinality="M" firstKeyId="2210" secondKeyId="1855" status="INFERRED" alt="PK_gene:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene:object_xref[gene_id, id, id_2, transcript_id, translation_id]"/>
+		<relation id="2295" cardinality="M" firstKeyId="2210" secondKeyId="2232" status="INFERRED" alt="PK_gene:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene:transcript_supporting_feature[gene_id, id, id_2, transcript_id, translation_id]"/>
+		<relation id="2296" cardinality="M" firstKeyId="2210" secondKeyId="1705" status="INFERRED" alt="PK_gene:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene:exon_transcript[gene_id, id, id_2, transcript_id, translation_id]"/>
+		<relation id="2297" cardinality="M" firstKeyId="2210" secondKeyId="2274" status="INFERRED" alt="PK_gene:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene:transcript_variation[gene_id, id, id_2, transcript_id, translation_id]"/>
+		<relation id="2298" cardinality="M" firstKeyId="2210" secondKeyId="1954" status="INFERRED" alt="PK_gene:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene:regulatory_factor_coding[gene_id, id, id_2, transcript_id, translation_id]"/>
+		<relation id="2299" cardinality="M" firstKeyId="2210" secondKeyId="1886" status="INFERRED" alt="PK_gene:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene:protein_feature[gene_id, id, id_2, transcript_id, translation_id]"/>
+		<relation id="2300" cardinality="M" firstKeyId="2210" secondKeyId="2287" status="INFERRED" alt="PK_gene:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene:translation_attrib[gene_id, id, id_2, transcript_id, translation_id]"/>
+		<relation id="2301" cardinality="M" firstKeyId="2210" secondKeyId="1660" status="INFERRED" alt="PK_gene:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene:EnsemblTranscript[gene_id, id, id_2, transcript_id, translation_id]"/>
+		<relation id="2302" cardinality="M" firstKeyId="2210" secondKeyId="1802" status="INFERRED" alt="PK_gene:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene:member[gene_id, id, id_2, transcript_id, translation_id]"/>
+		<relation id="2303" cardinality="M" firstKeyId="2210" secondKeyId="1669" status="INFERRED" alt="PK_gene:transcript[gene_id, id, transcript_id, translation_id, id_2]:FK_gene:EnsemblTranscript_2[gene_id, id, id_2, transcript_id, translation_id]"/>
 	</dataset>
-	<dataset name="go_main" centralTableId="683" alt="homo_sapiens_core_38_36:go_xref" optimiser="NONE" martConstructorId="4" partitionOnSchema="false">
+	<dataset name="go" centralTableId="683" alt="homo_sapiens_core_38_36:go_xref" optimiser="NONE" martConstructorId="4" partitionOnSchema="false">
 		<table id="2304" name="go_xref" type="MAIN" underlyingTableId="683" underlyingRelationIds="1252,1301,1253,1309,1207,1300,1231,1307,1291,1298,1195,1612,1226,1304,1221,1220,1229,1276,1216,1272,1274,1222">
 			<column id="2305" name="analysis_id" underlyingRelationId="1301" alt="PK_homo_sapiens_core_38_36:transcript[transcript_id]:FK_homo_sapiens_core_38_36:object_xref[ensembl_id]" type="wrapped" wrappedColumnId="1099" wrappedColumnAlt="homo_sapiens_core_38_36:transcript:analysis_id"/>
 			<column id="2306" name="analysis_id_2" underlyingRelationId="1253" alt="PK_homo_sapiens_core_38_36:object_xref[object_xref_id]:FK_homo_sapiens_core_38_36:identity_xref[object_xref_id]" type="wrapped" wrappedColumnId="688" wrappedColumnAlt="homo_sapiens_core_38_36:identity_xref:analysis_id"/>
@@ -2649,10 +2649,10 @@
 			<column id="2435" name="version_6" underlyingRelationId="1216" alt="PK_homo_sapiens_core_38_36:coord_system[coord_system_id]:FK_homo_sapiens_core_38_36:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="546" wrappedColumnAlt="homo_sapiens_core_38_36:coord_system:version"/>
 			<column id="2436" name="version_7" underlyingRelationId="1222" alt="PK_homo_sapiens_core_38_36:exon[exon_id]:FK_homo_sapiens_core_38_36:exon_stable_id[exon_id]" type="wrapped" wrappedColumnId="617" wrappedColumnAlt="homo_sapiens_core_38_36:exon_stable_id:version"/>
 			<column id="2437" name="xref_id" underlyingRelationId="1252" alt="PK_homo_sapiens_core_38_36:object_xref[object_xref_id]:FK_homo_sapiens_core_38_36:go_xref[object_xref_id]" type="wrapped" wrappedColumnId="815" wrappedColumnAlt="homo_sapiens_core_38_36:object_xref:xref_id"/>
-			<primaryKey id="2438" columnIds="2428,2356" status="INFERRED" alt="PK_go_main:go_xref[translation_id, id]"/>
+			<primaryKey id="2438" columnIds="2428,2356" status="INFERRED" alt="PK_go:go_xref[translation_id, id]"/>
 		</table>
 	</dataset>
-	<dataset name="marker_main" centralTableId="739" alt="homo_sapiens_core_38_36:marker_feature" optimiser="NONE" martConstructorId="5" partitionOnSchema="false">
+	<dataset name="marker" centralTableId="739" alt="homo_sapiens_core_38_36:marker_feature" optimiser="NONE" martConstructorId="5" partitionOnSchema="false">
 		<table id="2439" name="marker_feature" type="MAIN" underlyingTableId="739" underlyingRelationIds="1278,1238,1196,1216,1272,1274,1241">
 			<column id="2440" name="analysis_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="740" wrappedColumnAlt="homo_sapiens_core_38_36:marker_feature:analysis_id"/>
 			<column id="2441" name="attrib" underlyingRelationId="1216" alt="PK_homo_sapiens_core_38_36:coord_system[coord_system_id]:FK_homo_sapiens_core_38_36:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="542" wrappedColumnAlt="homo_sapiens_core_38_36:coord_system:attrib"/>
@@ -2694,10 +2694,10 @@
 			<column id="2477" name="source" underlyingRelationId="1241" alt="PK_homo_sapiens_core_38_36:marker_synonym[marker_synonym_id]:FK_homo_sapiens_core_38_36:marker[display_marker_synonym_id]" type="wrapped" wrappedColumnId="766" wrappedColumnAlt="homo_sapiens_core_38_36:marker_synonym:source"/>
 			<column id="2478" name="type" underlyingRelationId="1238" alt="PK_homo_sapiens_core_38_36:marker[marker_id]:FK_homo_sapiens_core_38_36:marker_feature[marker_id]" type="wrapped" wrappedColumnId="736" wrappedColumnAlt="homo_sapiens_core_38_36:marker:type"/>
 			<column id="2479" name="version" underlyingRelationId="1216" alt="PK_homo_sapiens_core_38_36:coord_system[coord_system_id]:FK_homo_sapiens_core_38_36:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="546" wrappedColumnAlt="homo_sapiens_core_38_36:coord_system:version"/>
-			<primaryKey id="2480" columnIds="2454" status="INFERRED" alt="PK_marker_main:marker_feature[marker_feature_id]"/>
+			<primaryKey id="2480" columnIds="2454" status="INFERRED" alt="PK_marker:marker_feature[marker_feature_id]"/>
 		</table>
 	</dataset>
-	<dataset name="qtl_main" centralTableId="959" alt="homo_sapiens_core_38_36:qtl_feature" optimiser="NONE" martConstructorId="6" partitionOnSchema="false">
+	<dataset name="qtl" centralTableId="959" alt="homo_sapiens_core_38_36:qtl_feature" optimiser="NONE" martConstructorId="6" partitionOnSchema="false">
 		<table id="2481" name="qtl_feature" type="MAIN" underlyingTableId="959" underlyingRelationIds="1202,1259,1285,1237,1236,1235,1216,1272,1274,1241">
 			<column id="2482" name="analysis_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="960" wrappedColumnAlt="homo_sapiens_core_38_36:qtl_feature:analysis_id"/>
 			<column id="2483" name="attrib" underlyingRelationId="1216" alt="PK_homo_sapiens_core_38_36:coord_system[coord_system_id]:FK_homo_sapiens_core_38_36:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="542" wrappedColumnAlt="homo_sapiens_core_38_36:coord_system:attrib"/>
@@ -2756,10 +2756,10 @@
 			<column id="2536" name="type_2" underlyingRelationId="1236" alt="PK_homo_sapiens_core_38_36:marker[marker_id]:FK_homo_sapiens_core_38_36:qtl[flank_marker_id_2]" type="wrapped" wrappedColumnId="736" wrappedColumnAlt="homo_sapiens_core_38_36:marker:type"/>
 			<column id="2537" name="type_3" underlyingRelationId="1235" alt="PK_homo_sapiens_core_38_36:marker[marker_id]:FK_homo_sapiens_core_38_36:qtl[flank_marker_id_1]" type="wrapped" wrappedColumnId="736" wrappedColumnAlt="homo_sapiens_core_38_36:marker:type"/>
 			<column id="2538" name="version" underlyingRelationId="1216" alt="PK_homo_sapiens_core_38_36:coord_system[coord_system_id]:FK_homo_sapiens_core_38_36:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="546" wrappedColumnAlt="homo_sapiens_core_38_36:coord_system:version"/>
-			<primaryKey id="2539" columnIds="2482,2483,2484,2485,2486,2487,2488,2489,2490,2491,2492,2493,2494,2495,2496,2497,2498,2499,2500,2501,2502,2503,2504,2505,2506,2507,2508,2509,2510,2511,2512,2513,2514,2515,2516,2517,2518,2519,2520,2521,2522,2523,2524,2525,2526,2527,2528,2529,2530,2531,2532,2533,2534,2535,2536,2537,2538" status="INFERRED" alt="PK_qtl_main:qtl_feature[analysis_id, attrib, coord_system_id, created, db, db_file, db_version, display_marker_synonym_id, display_marker_synonym_id_2, display_marker_synonym_id_3, flank_marker_id_1, flank_marker_id_2, gff_feature, gff_source, left_primer, left_primer_2, left_primer_3, length, lod_score, logic_name, marker_id, max_primer_dist, max_primer_dist_2, max_primer_dist_3, min_primer_dist, min_primer_dist_2, min_primer_dist_3, module, module_version, n_line, name, name_2, name_3, parameters, peak_marker_id, priority, priority_2, priority_3, program, program_file, program_version, qtl_id, rank, right_primer, right_primer_2, right_primer_3, seq_region_end, seq_region_id, seq_region_start, sequence, sequence_2, source, trait, type, type_2, type_3, version]"/>
+			<primaryKey id="2539" columnIds="2482,2483,2484,2485,2486,2487,2488,2489,2490,2491,2492,2493,2494,2495,2496,2497,2498,2499,2500,2501,2502,2503,2504,2505,2506,2507,2508,2509,2510,2511,2512,2513,2514,2515,2516,2517,2518,2519,2520,2521,2522,2523,2524,2525,2526,2527,2528,2529,2530,2531,2532,2533,2534,2535,2536,2537,2538" status="INFERRED" alt="PK_qtl:qtl_feature[analysis_id, attrib, coord_system_id, created, db, db_file, db_version, display_marker_synonym_id, display_marker_synonym_id_2, display_marker_synonym_id_3, flank_marker_id_1, flank_marker_id_2, gff_feature, gff_source, left_primer, left_primer_2, left_primer_3, length, lod_score, logic_name, marker_id, max_primer_dist, max_primer_dist_2, max_primer_dist_3, min_primer_dist, min_primer_dist_2, min_primer_dist_3, module, module_version, n_line, name, name_2, name_3, parameters, peak_marker_id, priority, priority_2, priority_3, program, program_file, program_version, qtl_id, rank, right_primer, right_primer_2, right_primer_3, seq_region_end, seq_region_id, seq_region_start, sequence, sequence_2, source, trait, type, type_2, type_3, version]"/>
 		</table>
 	</dataset>
-	<dataset name="structure_main" centralTableId="620" alt="homo_sapiens_core_38_36:exon_transcript" optimiser="NONE" martConstructorId="7" partitionOnSchema="false">
+	<dataset name="structure" centralTableId="620" alt="homo_sapiens_core_38_36:exon_transcript" optimiser="NONE" martConstructorId="7" partitionOnSchema="false">
 		<table id="2540" name="exon_transcript" type="MAIN" underlyingTableId="620" underlyingRelationIds="1295,1223,1207,1300,1231,1307,1291,1298,1222,1275,1304,1229,1276,1306,1612,1226,1216,1272,1274">
 			<column id="2541" name="analysis_id" underlyingRelationId="1295" alt="PK_homo_sapiens_core_38_36:transcript[transcript_id]:FK_homo_sapiens_core_38_36:exon_transcript[transcript_id]" type="wrapped" wrappedColumnId="1099" wrappedColumnAlt="homo_sapiens_core_38_36:transcript:analysis_id"/>
 			<column id="2542" name="analysis_id_2" underlyingRelationId="1231" alt="PK_homo_sapiens_core_38_36:gene[gene_id]:FK_homo_sapiens_core_38_36:transcript[gene_id]" type="wrapped" wrappedColumnId="643" wrappedColumnAlt="homo_sapiens_core_38_36:gene:analysis_id"/>
@@ -2866,7 +2866,7 @@
 			<column id="2643" name="version_5" underlyingRelationId="1229" alt="PK_homo_sapiens_core_38_36:gene[gene_id]:FK_homo_sapiens_core_38_36:gene_stable_id[gene_id]" type="wrapped" wrappedColumnId="680" wrappedColumnAlt="homo_sapiens_core_38_36:gene_stable_id:version"/>
 			<column id="2644" name="version_6" underlyingRelationId="1306" alt="PK_homo_sapiens_core_38_36:xref[xref_id]:FK_homo_sapiens_core_38_36:gene[display_xref_id]" type="wrapped" wrappedColumnId="1186" wrappedColumnAlt="homo_sapiens_core_38_36:xref:version"/>
 			<column id="2645" name="version_7" underlyingRelationId="1216" alt="PK_homo_sapiens_core_38_36:coord_system[coord_system_id]:FK_homo_sapiens_core_38_36:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="546" wrappedColumnAlt="homo_sapiens_core_38_36:coord_system:version"/>
-			<primaryKey id="2646" columnIds="2574,2609,2637,2638,2580" status="INFERRED" alt="PK_structure_main:exon_transcript[exon_id, rank, transcript_id, translation_id, id]"/>
+			<primaryKey id="2646" columnIds="2574,2609,2637,2638,2580" status="INFERRED" alt="PK_structure:exon_transcript[exon_id, rank, transcript_id, translation_id, id]"/>
 		</table>
 	</dataset>
 </mart>

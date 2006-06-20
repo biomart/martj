@@ -1142,7 +1142,7 @@
 		<relation id="1032" cardinality="M" firstKeyId="975" secondKeyId="990" status="INFERRED" alt="PK_variation39:variation_group[variation_group_id]:FK_variation39:variation_group_variation[variation_group_id]"/>
 	</jdbcSchema>
 	<relation id="1033" cardinality="M" firstKeyId="942" secondKeyId="627" status="HANDMADE" alt="FK_variation39:transcript_variation[transcript_id]:PK_ensembl39:transcript[transcript_id]"/>
-	<dataset name="population_main" centralTableId="895" alt="variation39:population_structure" optimiser="NONE" martConstructorId="1" partitionOnSchema="false">
+	<dataset name="population" centralTableId="895" alt="variation39:population_structure" optimiser="NONE" martConstructorId="1" partitionOnSchema="false">
 		<table id="1034" name="population_structure" type="MAIN" underlyingTableId="895" underlyingRelationIds="1011,1006,1004">
 			<column id="1035" name="description" underlyingRelationId="1011" alt="FK_variation39:population_structure[super_population_sample_id]:PK_variation39:sample[sample_id]" type="wrapped" wrappedColumnId="907" wrappedColumnAlt="variation39:sample:description"/>
 			<column id="1036" name="father_individual_sample_id" underlyingRelationId="1004" alt="PK_variation39:sample[sample_id]:FK_variation39:individual[sample_id]" type="wrapped" wrappedColumnId="855" wrappedColumnAlt="variation39:individual:father_individual_sample_id"/>
@@ -1153,10 +1153,10 @@
 			<column id="1041" name="size" underlyingRelationId="1011" alt="FK_variation39:population_structure[super_population_sample_id]:PK_variation39:sample[sample_id]" type="wrapped" wrappedColumnId="910" wrappedColumnAlt="variation39:sample:size"/>
 			<column id="1042" name="sub_population_sample_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="896" wrappedColumnAlt="variation39:population_structure:sub_population_sample_id"/>
 			<column id="1043" name="super_population_sample_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="897" wrappedColumnAlt="variation39:population_structure:super_population_sample_id"/>
-			<primaryKey id="1044" columnIds="1035,1036,1037,1038,1039,1040,1041,1042,1043" status="INFERRED" alt="PK_population_main:population_structure[description, father_individual_sample_id, gender, is_strain, mother_individual_sample_id, name, size, sub_population_sample_id, super_population_sample_id]"/>
+			<primaryKey id="1044" columnIds="1035,1036,1037,1038,1039,1040,1041,1042,1043" status="INFERRED" alt="PK_population:population_structure[description, father_individual_sample_id, gender, is_strain, mother_individual_sample_id, name, size, sub_population_sample_id, super_population_sample_id]"/>
 		</table>
 	</dataset>
-	<dataset name="snp_main" centralTableId="952" alt="variation39:variation_feature" optimiser="NONE" martConstructorId="2" partitionOnSchema="false">
+	<dataset name="snp" centralTableId="952" alt="variation39:variation_feature" optimiser="NONE" martConstructorId="2" partitionOnSchema="false">
 		<table id="1045" name="tagged_variation_feature" type="DIMENSION" underlyingTableId="925" underlyingRelationIds="1027,1010,1006,1004">
 			<column id="1046" name="description" underlyingRelationId="1010" alt="PK_variation39:sample[sample_id]:FK_variation39:tagged_variation_feature[sample_id]" type="wrapped" wrappedColumnId="907" wrappedColumnAlt="variation39:sample:description"/>
 			<column id="1047" name="father_individual_sample_id" underlyingRelationId="1004" alt="PK_variation39:sample[sample_id]:FK_variation39:individual[sample_id]" type="wrapped" wrappedColumnId="855" wrappedColumnAlt="variation39:individual:father_individual_sample_id"/>
@@ -1167,8 +1167,8 @@
 			<column id="1052" name="sample_id" underlyingRelationId="1027" alt="PK_variation39:variation_feature[variation_feature_id]:FK_variation39:tagged_variation_feature[variation_feature_id]" type="wrapped" wrappedColumnId="926" wrappedColumnAlt="variation39:tagged_variation_feature:sample_id"/>
 			<column id="1053" name="size" underlyingRelationId="1010" alt="PK_variation39:sample[sample_id]:FK_variation39:tagged_variation_feature[sample_id]" type="wrapped" wrappedColumnId="910" wrappedColumnAlt="variation39:sample:size"/>
 			<column id="1054" name="variation_feature_id" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="963" wrappedColumnAlt="variation39:variation_feature:variation_feature_id"/>
-			<foreignKey id="1055" nullable="false" columnIds="1054" status="INFERRED" alt="FK_snp_main:tagged_variation_feature[variation_feature_id]"/>
-			<primaryKey id="1056" columnIds="1054,1052" status="INFERRED" alt="PK_snp_main:tagged_variation_feature[variation_feature_id, sample_id]"/>
+			<foreignKey id="1055" nullable="false" columnIds="1054" status="INFERRED" alt="FK_snp:tagged_variation_feature[variation_feature_id]"/>
+			<primaryKey id="1056" columnIds="1054,1052" status="INFERRED" alt="PK_snp:tagged_variation_feature[variation_feature_id, sample_id]"/>
 		</table>
 		<table id="1057" name="transcript_variation" type="DIMENSION" underlyingTableId="931" underlyingRelationIds="1028,1033,738,791,787,717,736,770,704,726,766,768">
 			<column id="1058" name="analysis_id" underlyingRelationId="1033" alt="FK_variation39:transcript_variation[transcript_id]:PK_ensembl39:transcript[transcript_id]" type="wrapped" wrappedColumnId="612" wrappedColumnAlt="ensembl39:transcript:analysis_id"/>
@@ -1249,8 +1249,8 @@
 			<column id="1133" name="version" underlyingRelationId="791" alt="PK_ensembl39:transcript[transcript_id]:FK_ensembl39:transcript_stable_id[transcript_id]" type="wrapped" wrappedColumnId="639" wrappedColumnAlt="ensembl39:transcript_stable_id:version"/>
 			<column id="1134" name="version_2" underlyingRelationId="736" alt="PK_ensembl39:gene[gene_id]:FK_ensembl39:gene_stable_id[gene_id]" type="wrapped" wrappedColumnId="225" wrappedColumnAlt="ensembl39:gene_stable_id:version"/>
 			<column id="1135" name="version_3" underlyingRelationId="726" alt="PK_ensembl39:coord_system[coord_system_id]:FK_ensembl39:seq_region[coord_system_id]" type="wrapped" wrappedColumnId="90" wrappedColumnAlt="ensembl39:coord_system:version"/>
-			<foreignKey id="1136" nullable="false" columnIds="1132" status="INFERRED" alt="FK_snp_main:transcript_variation[variation_feature_id]"/>
-			<primaryKey id="1137" columnIds="1132,1129" status="INFERRED" alt="PK_snp_main:transcript_variation[variation_feature_id, transcript_variation_id]"/>
+			<foreignKey id="1136" nullable="false" columnIds="1132" status="INFERRED" alt="FK_snp:transcript_variation[variation_feature_id]"/>
+			<primaryKey id="1137" columnIds="1132,1129" status="INFERRED" alt="PK_snp:transcript_variation[variation_feature_id, transcript_variation_id]"/>
 		</table>
 		<table id="1138" name="variation_feature" type="MAIN" underlyingTableId="952" underlyingRelationIds="1024,1016,1015,1021">
 			<column id="1139" name="allele_string" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="953" wrappedColumnAlt="variation39:variation_feature:allele_string"/>
@@ -1282,9 +1282,9 @@
 			<column id="1165" name="variation_name" underlyingRelationId="null" alt="null" type="wrapped" wrappedColumnId="965" wrappedColumnAlt="variation39:variation_feature:variation_name"/>
 			<column id="1166" name="version" underlyingRelationId="1016" alt="PK_variation39:source[source_id]:FK_variation39:variation_feature[source_id]" type="wrapped" wrappedColumnId="923" wrappedColumnAlt="variation39:source:version"/>
 			<column id="1167" name="version_2" underlyingRelationId="1015" alt="PK_variation39:source[source_id]:FK_variation39:variation[source_id]" type="wrapped" wrappedColumnId="923" wrappedColumnAlt="variation39:source:version"/>
-			<primaryKey id="1168" columnIds="1163" status="INFERRED" alt="PK_snp_main:variation_feature[variation_feature_id]"/>
+			<primaryKey id="1168" columnIds="1163" status="INFERRED" alt="PK_snp:variation_feature[variation_feature_id]"/>
 		</table>
-		<relation id="1169" cardinality="M" firstKeyId="1168" secondKeyId="1136" status="INFERRED" alt="PK_snp_main:variation_feature[variation_feature_id]:FK_snp_main:transcript_variation[variation_feature_id]"/>
-		<relation id="1170" cardinality="M" firstKeyId="1168" secondKeyId="1055" status="INFERRED" alt="PK_snp_main:variation_feature[variation_feature_id]:FK_snp_main:tagged_variation_feature[variation_feature_id]"/>
+		<relation id="1169" cardinality="M" firstKeyId="1168" secondKeyId="1136" status="INFERRED" alt="PK_snp:variation_feature[variation_feature_id]:FK_snp:transcript_variation[variation_feature_id]"/>
+		<relation id="1170" cardinality="M" firstKeyId="1168" secondKeyId="1055" status="INFERRED" alt="PK_snp:variation_feature[variation_feature_id]:FK_snp:tagged_variation_feature[variation_feature_id]"/>
 	</dataset>
 </mart>
