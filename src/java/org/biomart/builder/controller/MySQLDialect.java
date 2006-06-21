@@ -288,7 +288,7 @@ public class MySQLDialect extends DatabaseDialect {
 			StringBuffer sbIndCols = new StringBuffer();
 			sbIndCols.append("(");
 			for (Iterator i = fromDSColumns.iterator(); i.hasNext();) {
-				sbJoin.append(((Column) i.next()).getName());
+				sbIndCols.append(((Column) i.next()).getName());
 				if (i.hasNext())
 					sbIndCols.append(",");
 			}
@@ -306,8 +306,9 @@ public class MySQLDialect extends DatabaseDialect {
 			sbJoin.append(".");
 			sbJoin.append(existingTableName);
 			sbJoin.append(" ");
+			sbJoin.append(" as a ");
 			sbJoin.append(joinKW);
-			sbJoin.append(" as a join ");
+			sbJoin.append(" join ");
 			sbJoin.append(targetSchemaName);
 			sbJoin.append(".");
 			sbJoin.append(targetTableName);

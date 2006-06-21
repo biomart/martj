@@ -95,7 +95,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	private String username;
 
 	private String password;
-	
+
 	private String schemaName;
 
 	/**
@@ -116,10 +116,10 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	 *            <tt>com.mysql.jdbc.Driver</tt>.
 	 * @param url
 	 *            the JDBC URL of the database server to connect to.
-	 *            @param schemaName
-	 *            the database schema name to read tables from. In MySQL
-	 *            this should be the same as the database name specified in the
-	 *            JDBC URL. In Oracle and PostgreSQL, it is a distinct entity.
+	 * @param schemaName
+	 *            the database schema name to read tables from. In MySQL this
+	 *            should be the same as the database name specified in the JDBC
+	 *            URL. In Oracle and PostgreSQL, it is a distinct entity.
 	 * @param username
 	 *            the username to connect as.
 	 * @param password
@@ -128,12 +128,12 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	 * @param name
 	 *            the name to give this schema after it has been created.
 	 * @param keyGuessing
-	 * 			  <tt>true</tt> if you want keyguessing enabled, <tt>false</tt>
-	 * 			  otherwise.
+	 *            <tt>true</tt> if you want keyguessing enabled,
+	 *            <tt>false</tt> otherwise.
 	 */
 	public JDBCSchema(File driverClassLocation, String driverClassName,
-			String url, String schemaName, String username, String password, String name,
-			boolean keyGuessing) {
+			String url, String schemaName, String username, String password,
+			String name, boolean keyGuessing) {
 		// Call the GenericSchema implementation first, to set up our name, and
 		// set up keyguessing.
 		super(name, keyGuessing);
@@ -154,8 +154,8 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	public Schema replicate(String newName) {
 		// Make an empty copy.
 		Schema newSchema = new JDBCSchema(this.driverClassLocation,
-				this.driverClassName, this.url, this.schemaName, this.username, this.password,
-				newName, this.getKeyGuessing());
+				this.driverClassName, this.url, this.schemaName, this.username,
+				this.password, newName, this.getKeyGuessing());
 
 		// Copy the contents over.
 		this.replicateContents(newSchema);
@@ -300,9 +300,36 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			return false;
 		JDBCDataLink partnerLink = (JDBCDataLink) partner;
 
-		// We can cohabit if the JDBC URLs and usernames are identical.
-		return (partnerLink.getJDBCURL().equals(this.getJDBCURL()) && partnerLink
-				.getUsername().equals(this.getUsername()));
+		// Work out the partner's catalogs and schemas.
+		List partnerSchemas = new ArrayList();
+		try {
+			DatabaseMetaData dmd = partnerLink.getConnection().getMetaData();
+			ResultSet schemas = dmd.getSchemas();
+			while (schemas.next())
+				partnerSchemas.add(schemas.getString("TABLE_CATALOG") + "."
+						+ schemas.getString("TABLE_SCHEM"));
+
+			// If we got results, then the database supports schemas within
+			// catalogs. Therefore, we can compare them.
+			if (!partnerSchemas.isEmpty())
+				return partnerSchemas.contains(this.getConnection()
+						.getCatalog()
+						+ "." + this.schemaName);
+
+			// If we didn't get results, then the database supports only
+			// catalogs and not schemas. So, we need to compare by catalog only.
+			else {
+				ResultSet catalogs = dmd.getCatalogs();
+				while (catalogs.next())
+					partnerSchemas.add(catalogs.getString("TABLE_CAT"));
+				return partnerSchemas.contains(this.getConnection()
+						.getCatalog());
+			}
+		} catch (Throwable t) {
+			// If get an error, assume can't find anything, thus assume
+			// incompatible.
+			return false;
+		}
 	}
 
 	public void synchronise() throws SQLException, BuilderException {
@@ -310,9 +337,9 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		DatabaseMetaData dmd = this.getConnection().getMetaData();
 		String catalog = this.getConnection().getCatalog();
 		String schema = this.schemaName;
-		
+
 		// This list will store all nullable columns we find.
-		List nullableCols = new ArrayList(); 
+		List nullableCols = new ArrayList();
 
 		// Create a list of existing tables. During this method, we remove from
 		// this list all tables that still exist in the database. At the end of
@@ -355,7 +382,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 				// What is the column called, and is it nullable?
 				String dbTblColName = dbTblCols.getString("COLUMN_NAME");
 				int nullable = dbTblCols.getInt("NULLABLE");
-				
+
 				// Look to see if the column already exists on this table. If it
 				// does, reuse it. Else, create it.
 				Column dbTblCol = dbTable.getColumnByName(dbTblColName);
@@ -367,8 +394,9 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 					}
 
 				// If the column is nullable, remember the fact.
-				if (nullable == DatabaseMetaData.attributeNullable) nullableCols.add(dbTblCol);
-					
+				if (nullable == DatabaseMetaData.attributeNullable)
+					nullableCols.add(dbTblCol);
+
 				// Column exists, so remove it from our list of columns to be
 				// dropped at the end of the loop.
 				colsToBeDropped.remove(dbTblCol);
@@ -503,24 +531,28 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 				continue;
 			k.destroy();
 		}
-		
+
 		// Iterate over the foreign keys that remain, and check all their
 		// columns. If every column in a key is nullable, then the key
 		// itself is nullable too.
-		for (Iterator i = this.tables.values().iterator(); i.hasNext(); ) {
-			Table t = (Table)i.next();
-			for (Iterator j = t.getForeignKeys().iterator(); j.hasNext(); ) {
-				ForeignKey fk = (ForeignKey)j.next();
+		for (Iterator i = this.tables.values().iterator(); i.hasNext();) {
+			Table t = (Table) i.next();
+			for (Iterator j = t.getForeignKeys().iterator(); j.hasNext();) {
+				ForeignKey fk = (ForeignKey) j.next();
 				// Skip any hand-made keys as we assume the user knows best.
-				if (fk.getStatus().equals(ComponentStatus.HANDMADE)) continue;
+				if (fk.getStatus().equals(ComponentStatus.HANDMADE))
+					continue;
 				// Check each column one-by-one.
 				boolean allColsNullable = true;
-				for (Iterator k = fk.getColumns().iterator(); k.hasNext() && allColsNullable; ) {
-					Column c = (Column)k.next();
-					if (!nullableCols.contains(c)) allColsNullable = false;
+				for (Iterator k = fk.getColumns().iterator(); k.hasNext()
+						&& allColsNullable;) {
+					Column c = (Column) k.next();
+					if (!nullableCols.contains(c))
+						allColsNullable = false;
 				}
 				// If all columns are nullable, the key is too.
-				if (allColsNullable) fk.setNullable(true);
+				if (allColsNullable)
+					fk.setNullable(true);
 			}
 		}
 	}

@@ -44,7 +44,6 @@ import javax.swing.SwingUtilities;
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
