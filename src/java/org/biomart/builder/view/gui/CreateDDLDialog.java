@@ -140,7 +140,8 @@ public class CreateDDLDialog extends JDialog {
 		this.datasetsList.setVisibleRowCount(4); // Arbitrary.
 		// Set the list to 30-characters wide. Longer than this and it will
 		// show a horizontal scrollbar.
-		this.datasetsList.setPrototypeCellValue("012345678901234567890123456789");
+		this.datasetsList
+				.setPrototypeCellValue("012345678901234567890123456789");
 
 		// Create a file chooser for finding the ZIP file where
 		// we will save.
@@ -299,6 +300,10 @@ public class CreateDDLDialog extends JDialog {
 							.getText(), selectedDataSets));
 		} catch (Throwable t) {
 			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			JOptionPane.showMessageDialog(this.martTab.getMartTabSet()
+					.getMartBuilder(), BuilderBundle
+					.getString("martConstructionFailed"), BuilderBundle
+					.getString("messageTitle"), JOptionPane.WARNING_MESSAGE);
 		}
 	}
 }
