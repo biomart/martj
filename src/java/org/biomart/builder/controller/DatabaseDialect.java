@@ -38,7 +38,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * can be used.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 19th June 2006
+ * @version 0.1.3, 21st June 2006
  * @since 0.1
  */
 public abstract class DatabaseDialect {
@@ -112,11 +112,14 @@ public abstract class DatabaseDialect {
 	 * 
 	 * @param action
 	 *            the action to translate into SQL (or DDL).
+	 * @param includeComments
+	 *            <tt>true</tt> if comments exlaining the statements should be
+	 *            embedded into the generated code, <tt>false</tt> if not.
 	 * @return the statement(s) that represent the action.
 	 * @throws ConstructorException
 	 *             if the action was not able to be converted into one or more
 	 *             SQL/DDL statements.
 	 */
-	public abstract String[] getStatementsForAction(MCAction action)
-			throws ConstructorException;
+	public abstract String[] getStatementsForAction(MCAction action,
+			boolean includeComments) throws ConstructorException;
 }

@@ -59,7 +59,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.18, 20th June 2006
+ * @version 0.1.19, 21st June 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -224,11 +224,11 @@ public class MartBuilderUtils {
 	 * previous concat-only and masked relation operations.
 	 * 
 	 * @param mart
-	 * the mart in which the datasets live.
+	 *            the mart in which the datasets live.
 	 */
 	public static void optimiseAllDataSets(Mart mart) {
-		for (Iterator i = mart.getDataSets().iterator(); i.hasNext(); )
-			((DataSet)i.next()).optimiseDataSet();
+		for (Iterator i = mart.getDataSets().iterator(); i.hasNext();)
+			((DataSet) i.next()).optimiseDataSet();
 	}
 
 	/**
@@ -347,6 +347,8 @@ public class MartBuilderUtils {
 	 *            <tt>com.mysql.jdbc.Driver</tt>
 	 * @param url
 	 *            the JDBC url to connect to.
+	 * @param schemaName
+	 *            the target schema to connect to.
 	 * @param username
 	 *            the username to connect with.
 	 * @param password
@@ -360,12 +362,12 @@ public class MartBuilderUtils {
 	 * @return the created schema.
 	 */
 	public static JDBCSchema createJDBCSchema(File driverClassLocation,
-			String driverClassName, String url, String username,
-			String password, String name, boolean keyGuessing) {
+			String driverClassName, String url, String schemaName,
+			String username, String password, String name, boolean keyGuessing) {
 		if (password != null && password.equals(""))
 			password = null;
 		return new JDBCSchema(driverClassLocation, driverClassName, url,
-				username, password, name, keyGuessing);
+				schemaName, username, password, name, keyGuessing);
 	}
 
 	/**
@@ -966,5 +968,27 @@ public class MartBuilderUtils {
 		Schema newSchema = schema.replicate(newName);
 		mart.addSchema(newSchema);
 		return newSchema;
+	}
+
+	/**
+	 * Creates an exact copy of a dataset within the mart, giving it the name
+	 * specified. All tables, keys and relations will be copied over, and have
+	 * the same statuses. Masked columns, partitions etc. will also be copied.
+	 * 
+	 * @param mart
+	 *            the mart to create the copy of the dataset in.
+	 * @param dataset
+	 *            the dataset to copy.
+	 * @param newName
+	 *            the name to give the copy of the dataset.
+	 * @return the copy of the dataset.
+	 * @throws AlreadyExistsException
+	 *             if another dataset with that name already exists.
+	 */
+	public static DataSet replicateDataSet(Mart mart, DataSet dataset,
+			String newName) throws AlreadyExistsException {
+		DataSet newDataSet = (DataSet) dataset.replicate(newName);
+		mart.addSchema(newDataSet);
+		return newDataSet;
 	}
 }

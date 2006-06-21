@@ -52,7 +52,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * with keeping track of the tables a schema provides.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 5th June 2006
+ * @version 0.1.13, 21st June 2006
  * @since 0.1
  */
 public interface Schema extends Comparable, DataLink {
@@ -371,7 +371,14 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public Schema replicate(String newName) {
-			return new GenericSchema(newName);
+			// Create a new schema.
+			Schema newSchema = new GenericSchema(newName);
+
+			// Copy the contents over.
+			this.replicateContents(newSchema);
+			
+			// Return.
+			return newSchema;
 		}
 
 		public void setKeyGuessing(boolean keyguessing) {

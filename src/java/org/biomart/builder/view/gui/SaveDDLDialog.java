@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -42,8 +43,8 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.filechooser.FileFilter;
 
-import org.biomart.builder.controller.ZippedDDLMartConstructor;
-import org.biomart.builder.controller.ZippedDDLMartConstructor.ZippedDDLGranularity;
+import org.biomart.builder.controller.SaveDDLMartConstructor;
+import org.biomart.builder.controller.SaveDDLMartConstructor.SaveDDLGranularity;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.MartConstructor;
 import org.biomart.builder.resources.BuilderBundle;
@@ -54,10 +55,10 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * a given set of datasets, then lets them actually do it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 20th June 2006
+ * @version 0.1.2, 21st June 2006
  * @since 0.1
  */
-public class CreateDDLDialog extends JDialog {
+public class SaveDDLDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
 	private MartTab martTab;
@@ -66,6 +67,8 @@ public class CreateDDLDialog extends JDialog {
 
 	private JFileChooser zipFileChooser;
 
+	private FileFilter zipFileFilter;
+	
 	private JTextField zipFileLocation;
 
 	private JTextField targetSchemaName;
@@ -75,6 +78,8 @@ public class CreateDDLDialog extends JDialog {
 	private JComboBox granularity;
 
 	private JButton zipFileLocationButton;
+	
+	private JCheckBox includeComments;
 
 	/**
 	 * Creates (but does not display) a dialog centred on the given tab, which
@@ -86,10 +91,10 @@ public class CreateDDLDialog extends JDialog {
 	 * @param datasets
 	 *            the datasets to list.
 	 */
-	public CreateDDLDialog(MartTab martTab, Collection datasets) {
+	public SaveDDLDialog(MartTab martTab, Collection datasets) {
 		// Create the base dialog.
 		super(martTab.getMartTabSet().getMartBuilder(), BuilderBundle
-				.getString("createDDLDialogTitle"), true);
+				.getString("saveDDLDialogTitle"), true);
 
 		// Remember the tabset that the schema we are working with is part of
 		// (or will be part of if it's not been created yet).
@@ -126,10 +131,12 @@ public class CreateDDLDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Create input fields for target schema name and granularity.
-		this.targetSchemaName = new JTextField(15);
+		this.targetSchemaName = new JTextField(20);
 		this.granularity = new JComboBox(new Object[] {
-				ZippedDDLGranularity.SINGLE, ZippedDDLGranularity.MART,
-				ZippedDDLGranularity.DATASET, ZippedDDLGranularity.STEP, });
+				SaveDDLGranularity.SINGLE, SaveDDLGranularity.MART,
+				SaveDDLGranularity.DATASET, SaveDDLGranularity.STEP, });
+		this.includeComments = new JCheckBox(BuilderBundle.getString("includeCommentsLabel"));
+		this.includeComments.setSelected(true);
 
 		// Create the list for choosing datasets.
 		this.datasetsList = new JList((DataSet[]) datasets
@@ -146,17 +153,23 @@ public class CreateDDLDialog extends JDialog {
 		// Create a file chooser for finding the ZIP file where
 		// we will save.
 		this.zipFileChooser = new JFileChooser();
-		this.zipFileChooser.setFileFilter(new FileFilter() {
+		this.zipFileFilter = new FileFilter() {
+			private boolean isZipped() {
+				SaveDDLGranularity gran = (SaveDDLGranularity)granularity.getSelectedItem();
+				return gran!=null && gran.getZipped();
+			}
+			
 			// Accepts only files ending in ".zip".
 			public boolean accept(File f) {
 				return (f.isDirectory() || f.getName().toLowerCase().endsWith(
-						".zip"));
+						this.isZipped()?".zip":".ddl"));
 			}
 
 			public String getDescription() {
-				return BuilderBundle.getString("ZipDDLFileFilterDescription");
+				return BuilderBundle.getString(this.isZipped()?"ZipDDLFileFilterDescription":"DDLFileFilterDescription");
 			}
-		});
+		};
+		this.zipFileChooser.setFileFilter(this.zipFileFilter);
 		this.zipFileLocation = new JTextField(20);
 		this.zipFileLocationButton = new JButton(BuilderBundle
 				.getString("browseButton"));
@@ -186,21 +199,27 @@ public class CreateDDLDialog extends JDialog {
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
-		// Add the target schema settings label and field, with
-		// the granularity beside it.
+		// Add the target schema settings label and field.
 		label = new JLabel(BuilderBundle.getString("targetSchemaLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		field = new JPanel();
 		field.add(this.targetSchemaName);
-		label = new JLabel(BuilderBundle.getString("granularityLabel"));
-		field.add(label);
-		field.add(this.granularity);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
+		// Add the granularity label and field, and the comments checkbox.
+		label = new JLabel(BuilderBundle.getString("granularityLabel"));
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		field = new JPanel();
+		field.add(this.granularity);
+		field.add(this.includeComments);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+		
 		// Add the zip DDL location label, field and file chooser button.
-		label = new JLabel(BuilderBundle.getString("zipFileLocationLabel"));
+		label = new JLabel(BuilderBundle.getString("saveDDLFileLocationLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		field = new JPanel();
@@ -269,7 +288,7 @@ public class CreateDDLDialog extends JDialog {
 		// Must have an output file.
 		if (this.isEmpty((String) this.zipFileLocation.getText()))
 			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
-					.getString("zipFileLocation")));
+					.getString("saveDDLFileLocation")));
 
 		// Must have at least one dataset selected.
 		if (this.datasetsList.getSelectedValues().length == 0)
@@ -291,9 +310,9 @@ public class CreateDDLDialog extends JDialog {
 	private void createDDL() {
 		List selectedDataSets = Arrays.asList(this.datasetsList
 				.getSelectedValues());
-		MartConstructor constructor = new ZippedDDLMartConstructor(
-				(ZippedDDLGranularity) this.granularity.getSelectedItem(),
-				new File(this.zipFileLocation.getText()));
+		MartConstructor constructor = new SaveDDLMartConstructor(
+				(SaveDDLGranularity) this.granularity.getSelectedItem(),
+				new File(this.zipFileLocation.getText()), this.includeComments.isSelected());
 		try {
 			this.martTab.getMartTabSet().requestMonitorConstructorRunnable(
 					constructor.getConstructorRunnable(this.targetSchemaName

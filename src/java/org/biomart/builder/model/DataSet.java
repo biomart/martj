@@ -123,6 +123,48 @@ public class DataSet extends GenericSchema {
 		mart.addDataSet(this);
 	}
 
+	public Schema replicate(String newName) {
+		try {
+			// Create the copy.
+			DataSet newDataSet = new DataSet(this.mart, this.centralTable,
+					newName);
+
+			// Copy everything. It doesn't matter that we're using the
+			// objects for columns from the original dataset, as during
+			// synchronisation these will be replaced with objects
+			// representing columns in the new one automatically.
+			newDataSet.setDataSetOptimiserType(this.optimiser);
+			newDataSet.setPartitionOnSchema(this.partitionOnSchema);
+			for (Iterator i = this.maskedRelations.iterator(); i.hasNext();)
+				newDataSet.maskRelation((Relation) i.next());
+			for (Iterator i = this.subclassedRelations.iterator(); i.hasNext();)
+				newDataSet.flagSubclassRelation((Relation) i.next());
+			for (Iterator i = this.maskedDataSetColumns.iterator(); i.hasNext();)
+				newDataSet.maskDataSetColumn((DataSetColumn) i.next());
+			for (int i = 0; i < this.concatOnlyRelations[0].size(); i++) {
+				Relation rel = (Relation) this.concatOnlyRelations[0].get(i);
+				ConcatRelationType type = (ConcatRelationType) this.concatOnlyRelations[1]
+						.get(i);
+				newDataSet.flagConcatOnlyRelation(rel, type);
+			}
+			for (int i = 0; i < this.partitionedWrappedColumns[0].size(); i++) {
+				WrappedColumn col = (WrappedColumn) this.partitionedWrappedColumns[0]
+						.get(i);
+				PartitionedColumnType type = (PartitionedColumnType) this.partitionedWrappedColumns[1]
+						.get(i);
+				newDataSet.flagPartitionedWrappedColumn(col, type);
+			}
+			
+			// Synchronise it.
+			newDataSet.synchronise();
+
+			// Return the copy.
+			return newDataSet;
+		} catch (Throwable t) {
+			throw new MartBuilderInternalError(t);
+		}
+	}
+
 	/**
 	 * <p>
 	 * This method removes all existing flags for masked and concat-only
@@ -139,7 +181,7 @@ public class DataSet extends GenericSchema {
 		this.maskedRelations.clear();
 		this.concatOnlyRelations[0].clear();
 		this.concatOnlyRelations[1].clear();
-		
+
 		// That's it! In future, more stuff may happen here.
 
 		// Regenerate the dataset.
@@ -948,14 +990,12 @@ public class DataSet extends GenericSchema {
 			// including dimensions, include them from the 1:1 as well.
 			// Otherwise, stop including dimensions on subsequent tables.
 			else
-				normalQ
-						.add(new Object[] {
-								r,
-								(r.getFirstKey().getTable().equals(mergeTable) ? r
-										.getSecondKey().getTable()
-										: r.getFirstKey().getTable()),
-								Boolean.valueOf(makeDimensions
-										&& r.isOneToOne()) });
+				normalQ.add(new Object[] {
+						r,
+						(r.getFirstKey().getTable().equals(mergeTable) ? r
+								.getSecondKey().getTable() : r.getFirstKey()
+								.getTable()),
+						Boolean.valueOf(makeDimensions && r.isOneToOne()) });
 		}
 	}
 
@@ -1133,63 +1173,72 @@ public class DataSet extends GenericSchema {
 		private final String recordSeparator;
 
 		/**
-		 * Use this constant to refer to value-separation by commas, and record-separation by commas.
+		 * Use this constant to refer to value-separation by commas, and
+		 * record-separation by commas.
 		 */
 		public static final ConcatRelationType COMMA_COMMA = new ConcatRelationType(
 				"COMMA_COMMA", ",", ",");
 
 		/**
-		 * Use this constant to refer to value-separation by commas, and record-separation by spaces.
+		 * Use this constant to refer to value-separation by commas, and
+		 * record-separation by spaces.
 		 */
 		public static final ConcatRelationType COMMA_SPACE = new ConcatRelationType(
 				"COMMA_SPACE", ",", " ");
 
 		/**
-		 * Use this constant to refer to value-separation by commas, and record-separation by tabs.
+		 * Use this constant to refer to value-separation by commas, and
+		 * record-separation by tabs.
 		 */
 		public static final ConcatRelationType COMMA_TAB = new ConcatRelationType(
 				"COMMA_TAB", ",", "\t");
 
 		/**
-		 * Use this constant to refer to value-separation by spaces, and record-separation by commas.
+		 * Use this constant to refer to value-separation by spaces, and
+		 * record-separation by commas.
 		 */
 		public static final ConcatRelationType SPACE_COMMA = new ConcatRelationType(
 				"SPACE_COMMA", " ", ",");
 
 		/**
-		 * Use this constant to refer to value-separation by spaces, and record-separation by spaces.
+		 * Use this constant to refer to value-separation by spaces, and
+		 * record-separation by spaces.
 		 */
 		public static final ConcatRelationType SPACE_SPACE = new ConcatRelationType(
 				"SPACE_SPACE", " ", " ");
 
 		/**
-		 * Use this constant to refer to value-separation by spaces, and record-separation by tabs.
+		 * Use this constant to refer to value-separation by spaces, and
+		 * record-separation by tabs.
 		 */
 		public static final ConcatRelationType SPACE_TAB = new ConcatRelationType(
 				"SPACE_TAB", " ", "\t");
 
 		/**
-		 * Use this constant to refer to value-separation by tabs, and record-separation by commas.
+		 * Use this constant to refer to value-separation by tabs, and
+		 * record-separation by commas.
 		 */
 		public static final ConcatRelationType TAB_COMMA = new ConcatRelationType(
 				"TAB_COMMA", "\t", ",");
 
 		/**
-		 * Use this constant to refer to value-separation by tabs, and record-separation by spaces.
+		 * Use this constant to refer to value-separation by tabs, and
+		 * record-separation by spaces.
 		 */
 		public static final ConcatRelationType TAB_SPACE = new ConcatRelationType(
 				"TAB_SPACE", "\t", " ");
 
 		/**
-		 * Use this constant to refer to value-separation by tabs, and record-separation by tabs.
+		 * Use this constant to refer to value-separation by tabs, and
+		 * record-separation by tabs.
 		 */
 		public static final ConcatRelationType TAB_TAB = new ConcatRelationType(
 				"TAB_TAB", "\t", "\t");
 
 		/**
-		 * The private constructor takes parameters which define the name
-		 * this concat type object will display when printed, and the separator
-		 * to use between values and records that have been concatenated.
+		 * The private constructor takes parameters which define the name this
+		 * concat type object will display when printed, and the separator to
+		 * use between values and records that have been concatenated.
 		 * 
 		 * @param name
 		 *            the name of the concat type.
@@ -1198,7 +1247,8 @@ public class DataSet extends GenericSchema {
 		 * @param recordSeparator
 		 *            the separator for records in this concat type.
 		 */
-		private ConcatRelationType(String name, String valueSeparator, String recordSeparator) {
+		private ConcatRelationType(String name, String valueSeparator,
+				String recordSeparator) {
 			this.name = name;
 			this.valueSeparator = valueSeparator;
 			this.recordSeparator = recordSeparator;

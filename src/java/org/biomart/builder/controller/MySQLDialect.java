@@ -51,7 +51,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Understands how to create SQL and DDL for a MySQL database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 20th June 2006
+ * @version 0.1.4, 21st June 2006
  * @since 0.1
  */
 public class MySQLDialect extends DatabaseDialect {
@@ -92,7 +92,7 @@ public class MySQLDialect extends DatabaseDialect {
 
 		// The simple case where we actually do a select distinct.
 		List results = new ArrayList();
-		String schemaName = schema.getName();
+		String schemaName = ((JDBCSchema) schema).getDatabaseSchema();
 		Connection conn = ((JDBCSchema) schema).getConnection();
 		ResultSet rs = conn.prepareStatement(
 				"select distinct " + colName + " from " + schemaName + "."
@@ -103,34 +103,44 @@ public class MySQLDialect extends DatabaseDialect {
 		return results;
 	}
 
-	public String[] getStatementsForAction(MCAction action)
-			throws ConstructorException {
+	public String[] getStatementsForAction(MCAction action,
+			boolean includeComments) throws ConstructorException {
 		try {
+			List statements = new ArrayList();
+
+			if (includeComments)
+				statements.add("#" + action.getStatusMessage());
+
 			if (action instanceof CreatePK)
-				return this.createPKStatements((CreatePK) action);
+				this.createPKStatements((CreatePK) action, statements);
 			else if (action instanceof CreateFK)
-				return this.createFKStatements((CreateFK) action);
+				this.createFKStatements((CreateFK) action, statements);
 			else if (action instanceof MergeTable)
-				return this.mergeTableStatements((MergeTable) action);
+				this.mergeTableStatements((MergeTable) action, statements);
 			else if (action instanceof CreateTable)
-				return this.createTableStatements((CreateTable) action);
+				this.createTableStatements((CreateTable) action, statements);
 			else if (action instanceof DropTable)
-				return this.dropTableStatements((DropTable) action);
+				this.dropTableStatements((DropTable) action, statements);
 			else if (action instanceof RenameTable)
-				return this.renameTableStatements((RenameTable) action);
+				this.renameTableStatements((RenameTable) action, statements);
 			else if (action instanceof RestrictTable)
-				return this.restrictTableStatements((RestrictTable) action);
+				this
+						.restrictTableStatements((RestrictTable) action,
+								statements);
 			else if (action instanceof UnionTables)
-				return this.unionTablesStatements((UnionTables) action);
+				this.unionTablesStatements((UnionTables) action, statements);
+			else
+				throw new ConstructorException(BuilderBundle
+						.getString("mcUnknownAction"));
+
+			return (String[]) statements.toArray(new String[0]);
 		} catch (Throwable t) {
 			throw new ConstructorException(t);
 		}
-
-		throw new ConstructorException(BuilderBundle
-				.getString("mcUnknownAction"));
 	}
 
-	private String[] createPKStatements(CreatePK action) throws Exception {
+	private void createPKStatements(CreatePK action, List statements)
+			throws Exception {
 		String schemaName = action.targetSchemaName;
 		String tableName = action.tableName;
 		StringBuffer sb = new StringBuffer();
@@ -140,13 +150,12 @@ public class MySQLDialect extends DatabaseDialect {
 			if (i.hasNext())
 				sb.append(",");
 		}
-		return new String[] {
-				"#" + action.getStatusMessage(),
-				"alter table " + schemaName + "." + tableName
-						+ " add primary key (" + sb.toString() + ")" };
+		statements.add("alter table " + schemaName + "." + tableName
+				+ " add primary key (" + sb.toString() + ")");
 	}
 
-	private String[] createFKStatements(CreateFK action) throws Exception {
+	private void createFKStatements(CreateFK action, List statements)
+			throws Exception {
 		String schemaName = action.targetSchemaName;
 		String fkTableName = action.tableName;
 		String pkTableName = action.parentTableName;
@@ -164,50 +173,50 @@ public class MySQLDialect extends DatabaseDialect {
 			if (i.hasNext())
 				sbPK.append(",");
 		}
-		return new String[] {
-				"#" + action.getStatusMessage(),
-				"alter table " + schemaName + "." + fkTableName
+		statements
+				.add("alter table " + schemaName + "." + fkTableName
 						+ " add foreign key (" + sbFK.toString()
 						+ ") references " + schemaName + "." + pkTableName
-						+ " (" + sbPK.toString() + ")" };
+						+ " (" + sbPK.toString() + ")");
 	}
 
-	private String[] dropTableStatements(DropTable action) throws Exception {
+	private void dropTableStatements(DropTable action, List statements)
+			throws Exception {
 		String schemaName = action.targetSchemaName;
 		String tableName = action.tableName;
-		return new String[] { "#" + action.getStatusMessage(),
-				"drop table " + schemaName + "." + tableName };
+		statements.add("drop table " + schemaName + "." + tableName);
 	}
 
-	private String[] renameTableStatements(RenameTable action) throws Exception {
+	private void renameTableStatements(RenameTable action, List statements)
+			throws Exception {
 		String schemaName = action.targetSchemaName;
 		String oldTableName = action.oldName;
 		String newTableName = action.newName;
-		return new String[] {
-				"#" + action.getStatusMessage(),
-				"rename table " + schemaName + "." + oldTableName + " to "
-						+ schemaName + "." + newTableName };
+		statements.add("rename table " + schemaName + "." + oldTableName
+				+ " to " + schemaName + "." + newTableName);
 	}
 
-	private String[] createTableStatements(CreateTable action) throws Exception {
-		return processTableStatements(action, action.targetSchemaName, ((JDBCSchema) action.schema)
-				.getConnection().getCatalog(), action.tableName, null,
-				action.realTable.getName(), action.dsColumns, null, null,
-				false, action.partitionColumn, action.partitionValue);
+	private void createTableStatements(CreateTable action, List statements)
+			throws Exception {
+		this.processTableStatements(action, action.targetSchemaName,
+				((JDBCSchema) action.schema).getDatabaseSchema(),
+				action.tableName, null, action.realTable.getName(),
+				action.dsColumns, null, null, false, action.partitionColumn,
+				action.partitionValue, statements);
 	}
 
-	private String[] mergeTableStatements(MergeTable action) throws Exception {
-		return this.processTableStatements(action,
-				action.targetSchemaName,
-				((JDBCSchema) action.schema).getConnection().getCatalog(),
+	private void mergeTableStatements(MergeTable action, List statements)
+			throws Exception {
+		this.processTableStatements(action, action.targetSchemaName,
+				((JDBCSchema) action.schema).getDatabaseSchema(),
 				action.tempTable, action.tableName, action.realTable.getName(),
 				action.dsColumns, action.fromDSColumns, action.toRealColumns,
-				action.leftJoin, action.partitionColumn, action.partitionValue);
+				action.leftJoin, action.partitionColumn, action.partitionValue,
+				statements);
 	}
 
-	private String[] restrictTableStatements(RestrictTable action)
+	private void restrictTableStatements(RestrictTable action, List statements)
 			throws Exception {
-		List commands = new ArrayList();
 		String schemaName = action.targetSchemaName;
 		String newTableName = action.newTableName;
 		String childTableName = action.oldTableName;
@@ -215,15 +224,18 @@ public class MySQLDialect extends DatabaseDialect {
 
 		// Create the necessary index on the child table.
 		StringBuffer isb = new StringBuffer();
+		isb.append("(");
 		for (Iterator i = action.childFKCols.iterator(); i.hasNext();) {
 			String colName = ((Column) i.next()).getName();
 			isb.append(colName);
 			if (i.hasNext())
 				isb.append(",");
 		}
-		commands.add("#" + action.getStatusMessage());
-		commands.add("create index " + childTableName + "_I on " + schemaName
-				+ "." + childTableName + "(" + isb.toString() + ")");
+		isb.append(")");
+		statements
+				.add("create index " + schemaName + "." + childTableName
+						+ "_I on " + schemaName + "." + childTableName
+						+ isb.toString());
 
 		// Restrict the table.
 		StringBuffer sb = new StringBuffer();
@@ -236,16 +248,14 @@ public class MySQLDialect extends DatabaseDialect {
 					.getName();
 			sb.append("a." + parentColName + " = b." + childColName);
 		}
-		commands.add("create table " + schemaName + "." + newTableName
+		statements.add("create table " + schemaName + "." + newTableName
 				+ " as select b.* " + "from " + schemaName + "."
 				+ parentTableName + " as a, " + schemaName + "."
 				+ childTableName + " as b where " + sb.toString());
-
-		// Return.
-		return (String[]) commands.toArray(new String[0]);
 	}
 
-	private String[] unionTablesStatements(UnionTables action) throws Exception {
+	private void unionTablesStatements(UnionTables action, List statements)
+			throws Exception {
 		String schemaName = action.targetSchemaName;
 		String tableName = action.tableName;
 		StringBuffer sb = new StringBuffer();
@@ -256,17 +266,15 @@ public class MySQLDialect extends DatabaseDialect {
 			if (i.hasNext())
 				sb.append(" union select * from ");
 		}
-		return new String[] { "#" + action.getStatusMessage(), sb.toString() };
+		statements.add(sb.toString());
 	}
 
-	private String[] processTableStatements(MCAction action,
-			String dsSchemaName, String targetSchemaName, String tempTableName,
+	private void processTableStatements(MCAction action, String dsSchemaName,
+			String targetSchemaName, String tempTableName,
 			String existingTableName, String targetTableName, List dsColumns,
 			List fromDSColumns, List toRealColumns, boolean leftJoin,
-			DataSetColumn partitionColumn, Object partitionValue)
-			throws Exception {
-
-		List commands = new ArrayList();
+			DataSetColumn partitionColumn, Object partitionValue,
+			List statements) throws Exception {
 
 		// We must assume the source schema is read-only, therefore
 		// we cannot make any temporary indexes on it even though
@@ -275,6 +283,19 @@ public class MySQLDialect extends DatabaseDialect {
 		// Join the table to the parent, if parent table not null.
 		StringBuffer sbJoin = new StringBuffer();
 		if (existingTableName != null) {
+
+			// Create an index on the existing table to use for the join.
+			StringBuffer sbIndCols = new StringBuffer();
+			sbIndCols.append("(");
+			for (Iterator i = fromDSColumns.iterator(); i.hasNext();) {
+				sbJoin.append(((Column) i.next()).getName());
+				if (i.hasNext())
+					sbIndCols.append(",");
+			}
+			sbIndCols.append(")");
+			statements.add("create index " + dsSchemaName + "."
+					+ existingTableName + "_I on " + dsSchemaName + "."
+					+ existingTableName + sbIndCols.toString());
 
 			// Work out what kind of join to use, if any.
 			String joinKW = (leftJoin && partitionColumn == null) ? "left"
@@ -367,27 +388,19 @@ public class MySQLDialect extends DatabaseDialect {
 		}
 
 		// Write the command.
-		commands.add("#" + action.getStatusMessage());
-		commands.add("create table " + dsSchemaName + "." + tempTableName
+		statements.add("create table " + dsSchemaName + "." + tempTableName
 				+ " as select " + sbCols.toString() + " from "
 				+ sbJoin.toString() + sbWhere.toString());
 
 		// If it has a parent table...
 		if (existingTableName != null) {
 			// Drop the parent table.
-			String[] dropBits = this.dropTableStatements(new DropTable(
-					action.targetSchemaName, existingTableName));
-			for (int i = 0; i < dropBits.length; i++)
-				commands.add(dropBits[i]);
+			this.dropTableStatements(new DropTable(action.targetSchemaName,
+					existingTableName), statements);
 
 			// Rename the child table.
-			String[] renameBits = this.renameTableStatements(new RenameTable(
-					action.targetSchemaName, tempTableName, existingTableName));
-			for (int i = 0; i < renameBits.length; i++)
-				commands.add(renameBits[i]);
+			this.renameTableStatements(new RenameTable(action.targetSchemaName,
+					tempTableName, existingTableName), statements);
 		}
-
-		// Return.
-		return (String[]) commands.toArray(new String[0]);
 	}
 }

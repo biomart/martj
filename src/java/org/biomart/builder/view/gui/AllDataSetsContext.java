@@ -34,7 +34,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * datasets tab.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 20th June 2006
+ * @version 0.1.2, 21st June 2006
  * @since 0.1
  */
 public class AllDataSetsContext implements DiagramContext {
@@ -94,17 +94,17 @@ public class AllDataSetsContext implements DiagramContext {
 			// What schema is this?
 			final DataSet dataset = (DataSet) object;
 
-			// Add an option to rename this dataset.
-			JMenuItem rename = new JMenuItem(BuilderBundle
-					.getString("renameDataSetTitle"));
-			rename.setMnemonic(BuilderBundle.getString("renameDataSetMnemonic")
+			// Option to remove the dataset from the mart.
+			JMenuItem remove = new JMenuItem(BuilderBundle
+					.getString("removeDataSetTitle"));
+			remove.setMnemonic(BuilderBundle.getString("removeDataSetMnemonic")
 					.charAt(0));
-			rename.addActionListener(new ActionListener() {
+			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					martTab.getDataSetTabSet().requestRenameDataSet(dataset);
+					martTab.getDataSetTabSet().requestRemoveDataSet(dataset);
 				}
 			});
-			contextMenu.add(rename);
+			contextMenu.add(remove);
 
 			// Add an option to rename this dataset.
 			JMenuItem optimise = new JMenuItem(BuilderBundle
@@ -118,30 +118,42 @@ public class AllDataSetsContext implements DiagramContext {
 			});
 			contextMenu.add(optimise);
 
-			// Option to remove the dataset from the mart.
-			JMenuItem remove = new JMenuItem(BuilderBundle
-					.getString("removeDataSetTitle"));
-			remove.setMnemonic(BuilderBundle.getString("removeDataSetMnemonic")
+			// Add an option to rename this dataset.
+			JMenuItem rename = new JMenuItem(BuilderBundle
+					.getString("renameDataSetTitle"));
+			rename.setMnemonic(BuilderBundle.getString("renameDataSetMnemonic")
 					.charAt(0));
-			remove.addActionListener(new ActionListener() {
+			rename.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					martTab.getDataSetTabSet().requestRemoveDataSet(dataset);
+					martTab.getDataSetTabSet().requestRenameDataSet(dataset);
 				}
 			});
-			contextMenu.add(remove);
+			contextMenu.add(rename);
+
+			// Add an option to replicate this dataset.
+			JMenuItem replicate = new JMenuItem(BuilderBundle
+					.getString("replicateDataSetTitle"));
+			replicate.setMnemonic(BuilderBundle.getString("replicateDataSetMnemonic")
+					.charAt(0));
+			replicate.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					martTab.getDataSetTabSet().requestReplicateDataSet(dataset);
+				}
+			});
+			contextMenu.add(replicate);
 
 			// Option to create the DDL for the dataset.
-			JMenuItem createDDL = new JMenuItem(BuilderBundle
-					.getString("createDDLTitle"));
-			createDDL.setMnemonic(BuilderBundle.getString("createDDLMnemonic")
+			JMenuItem saveDDL = new JMenuItem(BuilderBundle
+					.getString("saveDDLTitle"));
+			saveDDL.setMnemonic(BuilderBundle.getString("saveDDLMnemonic")
 					.charAt(0));
-			createDDL.addActionListener(new ActionListener() {
+			saveDDL.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestCreateDDL(
 							dataset);
 				}
 			});
-			contextMenu.add(createDDL);
+			contextMenu.add(saveDDL);
 		}
 	}
 

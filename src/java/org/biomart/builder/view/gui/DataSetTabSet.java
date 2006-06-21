@@ -44,6 +44,7 @@ import javax.swing.SwingUtilities;
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
@@ -62,7 +63,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.24, 20th June 2006
+ * @version 0.1.25, 21st June 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -383,6 +384,41 @@ public class DataSetTabSet extends JTabbedPane {
 			recalculateOverviewDiagram();
 
 			// Set the tabset as modified.
+			this.martTab.getMartTabSet().setModifiedStatus(true);
+		} catch (Throwable t) {
+			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+		}
+	}
+
+	/**
+	 * Asks user for a name to use, then creates an exact copy of the given
+	 * dataset, giving the copy the name they chose.
+	 * 
+	 * @param dataset
+	 *            the schema to dataset.
+	 */
+	public void requestReplicateDataSet(DataSet dataset) {
+		try {
+			// Ask user for the name to use for the copy.
+			String newName = this.askUserForName(BuilderBundle
+					.getString("requestDataSetName"), dataset.getName());
+
+			// No name entered? Or same name entered? Ignore the request.
+			if (newName == null || newName.trim().length() == 0
+					|| newName.equals(dataset.getName()))
+				return;
+
+			// Create the replicate.
+			DataSet newDataSet = MartBuilderUtils.replicateDataSet(this.martTab
+					.getMart(), dataset, newName);
+
+			// Add a tab to represent the replicate.
+			this.addDataSetTab(newDataSet);
+
+			// Update the overview diagram.
+			recalculateOverviewDiagram();
+
+			// Set the dataset tabset status as modified.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (Throwable t) {
 			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
@@ -1171,7 +1207,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestCreateDDL(DataSet dataset) {
 		// Open the DDL creation dialog and let it do it's stuff.
-		(new CreateDDLDialog(this.martTab, Collections.singleton(dataset)))
+		(new SaveDDLDialog(this.martTab, Collections.singleton(dataset)))
 				.show();
 	}
 

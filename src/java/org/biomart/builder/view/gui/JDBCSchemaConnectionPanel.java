@@ -116,6 +116,8 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 
 	private JFormattedTextField port;
 
+	private JTextField schemaName;
+
 	private JTextField database;
 
 	private JTextField username;
@@ -172,10 +174,11 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		this.driverClassLocationButton = new JButton(BuilderBundle
 				.getString("browseButton"));
 		this.jdbcURL = new JTextField(40);
-		this.host = new JTextField(10);
+		this.host = new JTextField(20);
 		this.port = new JFormattedTextField(new DecimalFormat("0"));
 		this.port.setColumns(4);
 		this.database = new JTextField(10);
+		this.schemaName = new JTextField(10);
 		this.username = new JTextField(10);
 		this.password = new JPasswordField(10);
 
@@ -239,11 +242,8 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		gridBag.setConstraints(label, labelConstraints);
 		this.add(label);
 		field = new JPanel();
-		field.add(this.driverClass);
-		label = new JLabel(BuilderBundle
-				.getString("predefinedDriverClassLabel"));
-		field.add(label);
 		field.add(this.predefinedDriverClass);
+		field.add(this.driverClass);
 		gridBag.setConstraints(field, fieldConstraints);
 		this.add(field);
 
@@ -257,9 +257,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		gridBag.setConstraints(field, fieldConstraints);
 		this.add(field);
 
-		// Add the host label, and the host field, port label, port field,
-		// database label, and database field in the space where the host
-		// field would normally go, to save space.
+		// Add the host label, and the host field, port label, port field.
 		label = new JLabel(BuilderBundle.getString("hostLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		this.add(label);
@@ -268,9 +266,18 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		label = new JLabel(BuilderBundle.getString("portLabel"));
 		field.add(label);
 		field.add(this.port);
+		gridBag.setConstraints(field, fieldConstraints);
+		this.add(field);
+		
+		// Add the database and schema fields.
 		label = new JLabel(BuilderBundle.getString("databaseLabel"));
-		field.add(label);
+		gridBag.setConstraints(label, labelConstraints);
+		this.add(label);
+		field = new JPanel();
 		field.add(this.database);
+		label = new JLabel(BuilderBundle.getString("schemaNameLabel"));
+		field.add(label);
+		field.add(this.schemaName);
 		gridBag.setConstraints(field, fieldConstraints);
 		this.add(field);
 
@@ -334,9 +341,13 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			this.host.setText(null);
 			this.port.setText(null);
 			this.database.setText(null);
+			this.schemaName.setText(null);
 			this.username.setText(null);
 			this.password.setText(null);
 		}
+		
+		// Make sure the right fields get enabled.
+		this.driverClassChanged();
 	}
 
 	private void copySettingsFrom(Schema template) {
@@ -353,6 +364,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			this.jdbcURL.setText(jdbcURL);
 			this.username.setText(jdbcSchema.getUsername());
 			this.password.setText(jdbcSchema.getPassword());
+			this.schemaName.setText(jdbcSchema.getDatabaseSchema());
 
 			// Parse the JDBC URL into host, port and database, if the
 			// driver is known to us (defined in the map at the start
@@ -422,6 +434,11 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 						BuilderBundle.getString("database")));
 		}
 
+		// Make sure they have given a schema name. 
+		if (this.isEmpty(this.schemaName.getText()))
+			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
+					.getString("schemaName")));
+
 		// Make sure they have given a username. (Password is optional as
 		// not all databases require one).
 		if (this.isEmpty(this.username.getText()))
@@ -479,7 +496,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				// Obtain the template and split it.
 				String[] parts = (String[]) JDBCSchemaConnectionPanel.DRIVER_MAP
 						.get(className);
-
+				
 				// The second part is the JDBC URL template itself. Remember
 				// which template was selected, then disable the JDBC URL
 				// field in the interface as its contents will now be
@@ -611,6 +628,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			String driverClassName = (String) this.driverClass.getText();
 			String driverClassLocation = this.driverClassLocation.getText();
 			String url = this.jdbcURL.getText();
+			String schemaName = this.schemaName.getText();
 			String username = this.username.getText();
 			String password = new String(this.password.getPassword());
 
@@ -618,7 +636,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			JDBCSchema schema = MartBuilderUtils.createJDBCSchema(
 					driverClassLocation == null ? null : new File(
 							driverClassLocation), driverClassName, url,
-					username, password, name, false);
+					schemaName, username, password, name, false);
 
 			// Return that schema.
 			return schema;
@@ -655,6 +673,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 						.setDriverClassLocation(driverClassLocation == null ? null
 								: new File(driverClassLocation));
 				jschema.setJDBCURL(this.jdbcURL.getText());
+				jschema.setDatabaseSchema(this.schemaName.getText());
 				jschema.setUsername(this.username.getText());
 				jschema.setPassword(new String(this.password.getPassword()));
 			} catch (Throwable t) {

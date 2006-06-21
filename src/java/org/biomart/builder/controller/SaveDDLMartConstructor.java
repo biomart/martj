@@ -52,15 +52,17 @@ import org.biomart.builder.resources.BuilderBundle;
  * @version 0.1.6, 21st June 2006
  * @since 0.1
  */
-public class ZippedDDLMartConstructor implements MartConstructor {
+public class SaveDDLMartConstructor implements MartConstructor {
 
-	private ZippedDDLGranularity granularity;
+	private SaveDDLGranularity granularity;
 
-	private File outputDDLZipFile;
+	private File outputFile;
+
+	private boolean includeComments;
 
 	/**
 	 * Creates a constructor that, when requested, will begin constructing a
-	 * mart and outputting zipped DDL.
+	 * mart and outputting DDL.
 	 * 
 	 * @param targetDBName
 	 *            the name of the target schema the DDL will be run against.
@@ -68,14 +70,18 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 	 *            the granularity to which the DDL will be broken down.
 	 * @param datasets
 	 *            the datasets to output.
-	 * @param outputDDLZipFile
+	 * @param outputFile
 	 *            the file to write the DDL to.
+	 * @param includeComments
+	 *            <tt>true</tt> if comments are to be included, <tt>false</tt>
+	 *            if not.
 	 */
-	public ZippedDDLMartConstructor(ZippedDDLGranularity granularity,
-			File outputDDLZipFile) {
+	public SaveDDLMartConstructor(SaveDDLGranularity granularity,
+			File outputFile, boolean includeComments) {
 		// Remember the settings.
 		this.granularity = granularity;
-		this.outputDDLZipFile = outputDDLZipFile;
+		this.outputFile = outputFile;
+		this.includeComments = includeComments;
 
 		// Register dialects.
 		DatabaseDialect.registerDialects();
@@ -85,14 +91,15 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 			Collection datasets) throws Exception {
 		// Work out what kind of helper to use.
 		DDLHelper helper;
-		if (this.granularity.equals(ZippedDDLGranularity.SINGLE))
-			helper = new SingleFileHelper(this.outputDDLZipFile);
-		else if (this.granularity.equals(ZippedDDLGranularity.MART))
-			helper = new MartAsFileHelper(this.outputDDLZipFile);
-		else if (this.granularity.equals(ZippedDDLGranularity.DATASET))
-			helper = new DataSetAsFileHelper(this.outputDDLZipFile);
+		if (this.granularity.equals(SaveDDLGranularity.SINGLE))
+			helper = new SingleFileHelper(this.outputFile, this.includeComments);
+		else if (this.granularity.equals(SaveDDLGranularity.MART))
+			helper = new MartAsFileHelper(this.outputFile, this.includeComments);
+		else if (this.granularity.equals(SaveDDLGranularity.DATASET))
+			helper = new DataSetAsFileHelper(this.outputFile,
+					this.includeComments);
 		else
-			helper = new StepAsFileHelper(this.outputDDLZipFile);
+			helper = new StepAsFileHelper(this.outputFile, this.includeComments);
 
 		// Check that all the input schemas have are cohabitable.
 		// First, make a set of all input schemas. Note that some
@@ -114,17 +121,17 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 
 		// Convert the set to a list.
 		List inputSchemaList = new ArrayList(inputSchemas);
-		
+
 		// Set the output dialect to match the first one in the list.
-		helper.setDialect(DatabaseDialect
-				.getDialect((Schema) inputSchemaList.get(0)));
-		
+		helper.setDialect(DatabaseDialect.getDialect((Schema) inputSchemaList
+				.get(0)));
+
 		// Then, check that the rest are compatible with the first one.
 		for (int i = 1; i < inputSchemaList.size(); i++) {
-			Schema schema = (Schema)inputSchemaList.get(i);
-			if (!schema.canCohabit((Schema)inputSchemaList.get(0)))
+			Schema schema = (Schema) inputSchemaList.get(i);
+			if (!schema.canCohabit((Schema) inputSchemaList.get(0)))
 				throw new ConstructorException(BuilderBundle
-						.getString("zipDDLMixedDataLinks"));
+						.getString("saveDDLMixedDataLinks"));
 		}
 
 		// Construct and return the runnable that uses the helper.
@@ -142,14 +149,20 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 
 		private File file;
 
+		private boolean includeComments;
+
 		/**
 		 * Constructs a DDL helper which writes to the given file.
 		 * 
 		 * @param file
 		 *            the file to write to.
+		 * @param includeComments
+		 *            <tt>true</tt> if comments are to be included,
+		 *            <tt>false</tt> if not.
 		 */
-		public DDLHelper(File file) {
+		public DDLHelper(File file, boolean includeComments) {
 			this.file = file;
+			this.includeComments = includeComments;
 		}
 
 		/**
@@ -191,7 +204,7 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 		 */
 		public String[] getStatementsForAction(MCAction action)
 				throws Exception {
-			return dialect.getStatementsForAction(action);
+			return dialect.getStatementsForAction(action, this.includeComments);
 		}
 	}
 
@@ -203,29 +216,23 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 
 		private FileOutputStream outputFileStream;
 
-		private ZipOutputStream outputZipStream;
-
-		private ZipEntry entry;
-
 		/**
 		 * Constructs a helper which will output all DDL into a single file
 		 * inside the given zip file.
 		 * 
-		 * @param outputZippedDDLFile
+		 * @param outputFile
 		 *            the zip file to write the DDL into.
+		 * @param includeComments
+		 *            <tt>true</tt> if comments are to be included,
+		 *            <tt>false</tt> if not.
 		 */
-		public SingleFileHelper(File outputZippedDDLFile) {
-			super(outputZippedDDLFile);
+		public SingleFileHelper(File outputFile, boolean includeComments) {
+			super(outputFile, includeComments);
 		}
 
 		public void startActions() throws Exception {
-			// Open the zip stream.
+			// Open the file stream.
 			this.outputFileStream = new FileOutputStream(this.getFile());
-			this.outputZipStream = new ZipOutputStream(this.outputFileStream);
-			this.outputZipStream.setMethod(ZipOutputStream.DEFLATED);
-			this.entry = new ZipEntry("ddl.sql");
-			entry.setTime(System.currentTimeMillis());
-			this.outputZipStream.putNextEntry(entry);
 		}
 
 		public void startActionsForMart(Mart mart) throws Exception {
@@ -241,10 +248,10 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 			String[] cmd = this.getStatementsForAction(action);
 			// Write the data.
 			for (int i = 0; i < cmd.length; i++) {
-				this.outputZipStream.write(cmd[i].getBytes());
-				this.outputZipStream.write(';');
-				this.outputZipStream.write(System.getProperty("line.separator")
-						.getBytes());
+				this.outputFileStream.write(cmd[i].getBytes());
+				this.outputFileStream.write(';');
+				this.outputFileStream.write(System
+						.getProperty("line.separator").getBytes());
 			}
 		}
 
@@ -257,10 +264,7 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 		}
 
 		public void endActions() throws Exception {
-			// Close the zip stream. Will also close the
-			// file output stream by default.
-			this.outputZipStream.closeEntry();
-			this.outputZipStream.finish();
+			// Close the file stream.
 			this.outputFileStream.flush();
 			this.outputFileStream.close();
 		}
@@ -284,11 +288,14 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 		 * Constructs a helper which will output all DDL into a single file per
 		 * mart inside the given zip file.
 		 * 
-		 * @param outputZippedDDLFile
+		 * @param outputFile
 		 *            the zip file to write the DDL into.
+		 * @param includeComments
+		 *            <tt>true</tt> if comments are to be included,
+		 *            <tt>false</tt> if not.
 		 */
-		public MartAsFileHelper(File outputZippedDDLFile) {
-			super(outputZippedDDLFile);
+		public MartAsFileHelper(File outputFile, boolean includeComments) {
+			super(outputFile, includeComments);
 			this.martSequence = 0;
 		}
 
@@ -360,11 +367,14 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 		 * Constructs a helper which will output all DDL into a single file per
 		 * dataset inside the given zip file.
 		 * 
-		 * @param outputZippedDDLFile
+		 * @param outputFile
 		 *            the zip file to write the DDL into.
+		 * @param includeComments
+		 *            <tt>true</tt> if comments are to be included,
+		 *            <tt>false</tt> if not.
 		 */
-		public DataSetAsFileHelper(File outputZippedDDLFile) {
-			super(outputZippedDDLFile);
+		public DataSetAsFileHelper(File outputFile, boolean includeComments) {
+			super(outputFile, includeComments);
 			this.martSequence = 0;
 			this.datasetSequence = 0;
 		}
@@ -434,11 +444,14 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 		 * Constructs a helper which will output all DDL into a structured
 		 * directory tree inside the given zip file.
 		 * 
-		 * @param outputZippedDDLFile
+		 * @param outputFile
 		 *            the zip file to write the DDL structured tree into.
+		 * @param includeComments
+		 *            <tt>true</tt> if comments are to be included,
+		 *            <tt>false</tt> if not.
 		 */
-		public StepAsFileHelper(File outputZippedDDLFile) {
-			super(outputZippedDDLFile);
+		public StepAsFileHelper(File outputFile, boolean includeComments) {
+			super(outputFile, includeComments);
 		}
 
 		public void startActions() throws Exception {
@@ -503,34 +516,36 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 	/**
 	 * Represents the name of various methods of constructing a DDL zip file.
 	 */
-	public static class ZippedDDLGranularity implements Comparable {
+	public static class SaveDDLGranularity implements Comparable {
 		private static final Map singletons = new HashMap();
 
 		private final String name;
 
+		private final boolean zipped;
+
 		/**
 		 * Use this constant to refer to single-file for all output.
 		 */
-		public static final ZippedDDLGranularity SINGLE = ZippedDDLGranularity
-				.get(BuilderBundle.getString("zippedDDLSingleGranularity"));
+		public static final SaveDDLGranularity SINGLE = SaveDDLGranularity.get(
+				BuilderBundle.getString("saveDDLSingleGranularity"), false);
 
 		/**
 		 * Use this constant to refer to file-per-mart output.
 		 */
-		public static final ZippedDDLGranularity MART = ZippedDDLGranularity
-				.get(BuilderBundle.getString("zippedDDLMartGranularity"));
+		public static final SaveDDLGranularity MART = SaveDDLGranularity.get(
+				BuilderBundle.getString("saveDDLMartGranularity"), true);
 
 		/**
 		 * Use this constant to refer to file-per-dataset output.
 		 */
-		public static final ZippedDDLGranularity DATASET = ZippedDDLGranularity
-				.get(BuilderBundle.getString("zippedDDLDataSetGranularity"));
+		public static final SaveDDLGranularity DATASET = SaveDDLGranularity
+				.get(BuilderBundle.getString("saveDDLDataSetGranularity"), true);
 
 		/**
 		 * Use this constant to refer to file-per-step output.
 		 */
-		public static final ZippedDDLGranularity STEP = ZippedDDLGranularity
-				.get(BuilderBundle.getString("zippedDDLStepGranularity"));
+		public static final SaveDDLGranularity STEP = SaveDDLGranularity.get(
+				BuilderBundle.getString("saveDDLStepGranularity"), true);
 
 		/**
 		 * The static factory method creates and returns a type with the given
@@ -539,16 +554,19 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 		 * 
 		 * @param name
 		 *            the name of the type object.
+		 * @param zipped
+		 *            <tt>true</tt> if this type outputs zip files,
+		 *            <tt>false</tt> if not.
 		 * @return the type object.
 		 */
-		public static ZippedDDLGranularity get(String name) {
+		public static SaveDDLGranularity get(String name, boolean zipped) {
 			// Do we already have this one?
 			// If so, then return it.
 			if (singletons.containsKey(name))
-				return (ZippedDDLGranularity) singletons.get(name);
+				return (SaveDDLGranularity) singletons.get(name);
 
 			// Otherwise, create it, remember it.
-			ZippedDDLGranularity t = new ZippedDDLGranularity(name);
+			SaveDDLGranularity t = new SaveDDLGranularity(name, zipped);
 			singletons.put(name, t);
 
 			// Return it.
@@ -561,9 +579,24 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 		 * 
 		 * @param name
 		 *            the name of the mart constructor type.
+		 * @param zipped
+		 *            <tt>true</tt> if this type outputs zip files,
+		 *            <tt>false</tt> if not.
 		 */
-		private ZippedDDLGranularity(String name) {
+		private SaveDDLGranularity(String name, boolean zipped) {
 			this.name = name;
+			this.zipped = zipped;
+		}
+
+		/**
+		 * Returns <tt>true</tt> if this type outputs zip files,
+		 * <tt>false</tt> otherwise.
+		 * 
+		 * @return <tt>true</tt> if output is zipped, <tt>false</tt>
+		 *         otherwise.
+		 */
+		public boolean getZipped() {
+			return this.zipped;
 		}
 
 		/**
@@ -584,7 +617,7 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 		}
 
 		public int compareTo(Object o) throws ClassCastException {
-			ZippedDDLGranularity t = (ZippedDDLGranularity) o;
+			SaveDDLGranularity t = (SaveDDLGranularity) o;
 			return this.toString().compareTo(t.toString());
 		}
 

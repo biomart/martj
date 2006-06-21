@@ -49,7 +49,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * provides the context menu for interacting with dataset diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.19, 20th June 2006
+ * @version 0.1.20, 21st June 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -114,6 +114,19 @@ public class DataSetContext extends WindowContext {
 				}
 			});
 			contextMenu.add(rename);
+
+			// Option to replicate the dataset from the mart.
+			JMenuItem replicate = new JMenuItem(BuilderBundle
+					.getString("replicateDataSetTitle"));
+			replicate.setMnemonic(BuilderBundle.getString(
+					"replicateDataSetMnemonic").charAt(0));
+			replicate.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					getMartTab().getDataSetTabSet().requestReplicateDataSet(
+							getDataSet());
+				}
+			});
+			contextMenu.add(replicate);
 
 			// The optimiser submenu allows the user to choose different
 			// post-construction optimiser types for the dataset.
@@ -197,17 +210,17 @@ public class DataSetContext extends WindowContext {
 			contextMenu.add(optimiserMenu);
 
 			// Option to create the DDL for the dataset.
-			JMenuItem createDDL = new JMenuItem(BuilderBundle
-					.getString("createDDLTitle"));
-			createDDL.setMnemonic(BuilderBundle.getString("createDDLMnemonic")
+			JMenuItem saveDDL = new JMenuItem(BuilderBundle
+					.getString("saveDDLTitle"));
+			saveDDL.setMnemonic(BuilderBundle.getString("saveDDLMnemonic")
 					.charAt(0));
-			createDDL.addActionListener(new ActionListener() {
+			saveDDL.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestCreateDDL(
 							getDataSet());
 				}
 			});
-			contextMenu.add(createDDL);
+			contextMenu.add(saveDDL);
 		}
 
 		// Did the user click on a dataset table?

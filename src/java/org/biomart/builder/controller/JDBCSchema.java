@@ -80,7 +80,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * or keys, or to reinstate any that have previously been marked as incorrect.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 13th June 2006
+ * @version 0.1.14, 21st June 2006
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -95,6 +95,8 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	private String username;
 
 	private String password;
+	
+	private String schemaName;
 
 	/**
 	 * <p>
@@ -114,6 +116,10 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	 *            <tt>com.mysql.jdbc.Driver</tt>.
 	 * @param url
 	 *            the JDBC URL of the database server to connect to.
+	 *            @param schemaName
+	 *            the database schema name to read tables from. In MySQL
+	 *            this should be the same as the database name specified in the
+	 *            JDBC URL. In Oracle and PostgreSQL, it is a distinct entity.
 	 * @param username
 	 *            the username to connect as.
 	 * @param password
@@ -126,7 +132,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	 * 			  otherwise.
 	 */
 	public JDBCSchema(File driverClassLocation, String driverClassName,
-			String url, String username, String password, String name,
+			String url, String schemaName, String username, String password, String name,
 			boolean keyGuessing) {
 		// Call the GenericSchema implementation first, to set up our name, and
 		// set up keyguessing.
@@ -142,12 +148,13 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		this.url = url;
 		this.username = username;
 		this.password = password;
+		this.schemaName = schemaName;
 	}
 
 	public Schema replicate(String newName) {
 		// Make an empty copy.
 		Schema newSchema = new JDBCSchema(this.driverClassLocation,
-				this.driverClassName, this.url, this.username, this.password,
+				this.driverClassName, this.url, this.schemaName, this.username, this.password,
 				newName, this.getKeyGuessing());
 
 		// Copy the contents over.
@@ -172,7 +179,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		// the connection fully without actually having to read anything from
 		// it.
 		String catalog = connection.getCatalog();
-		String schema = dmd.getUserName();
+		String schema = this.schemaName;
 		dmd.getTables(catalog, schema, "%", null).close();
 
 		// If we get here, it worked.
@@ -255,6 +262,14 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		this.url = url;
 	}
 
+	public String getDatabaseSchema() {
+		return this.schemaName;
+	}
+
+	public void setDatabaseSchema(String schemaName) {
+		this.schemaName = schemaName;
+	}
+
 	public String getUsername() {
 		return this.username;
 	}
@@ -294,7 +309,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		// Get database metadata, catalog, and schema details.
 		DatabaseMetaData dmd = this.getConnection().getMetaData();
 		String catalog = this.getConnection().getCatalog();
-		String schema = dmd.getUserName();
+		String schema = this.schemaName;
 		
 		// This list will store all nullable columns we find.
 		List nullableCols = new ArrayList(); 

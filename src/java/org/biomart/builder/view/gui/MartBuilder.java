@@ -44,7 +44,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * The main window housing the MartBuilder GUI.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 20th June 2006
+ * @version 0.1.13, 21st June 2006
  * @since 0.1
  */
 public class MartBuilder extends JFrame {
@@ -193,7 +193,7 @@ public class MartBuilder extends JFrame {
 
 		private JMenuItem saveMartAs;
 		
-		private JMenuItem createDDL;
+		private JMenuItem saveDDL;
 
 		private JMenuItem closeMart;
 
@@ -245,11 +245,11 @@ public class MartBuilder extends JFrame {
 			this.saveMartAs.addActionListener(this);
 
 			// Create DDL for current mart.
-			this.createDDL = new JMenuItem(BuilderBundle
-					.getString("createDDLTitle"));
-			this.createDDL.setMnemonic(BuilderBundle.getString(
-					"createDDLMnemonic").charAt(0));
-			this.createDDL.addActionListener(this);
+			this.saveDDL = new JMenuItem(BuilderBundle
+					.getString("saveDDLTitle"));
+			this.saveDDL.setMnemonic(BuilderBundle.getString(
+					"saveDDLMnemonic").charAt(0));
+			this.saveDDL.addActionListener(this);
 
 			// Close current mart.
 			this.closeMart = new JMenuItem(BuilderBundle
@@ -270,7 +270,7 @@ public class MartBuilder extends JFrame {
 			fileMenu.add(this.openMart);
 			fileMenu.add(this.saveMart);
 			fileMenu.add(this.saveMartAs);
-			fileMenu.add(this.createDDL);
+			fileMenu.add(this.saveDDL);
 			fileMenu.add(this.closeMart);
 			fileMenu.addSeparator();
 			fileMenu.add(this.exit);
@@ -287,7 +287,7 @@ public class MartBuilder extends JFrame {
 					saveMart.setEnabled(hasMart
 							&& martBuilder.martTabSet.getModifiedStatus());
 					saveMartAs.setEnabled(hasMart);
-					createDDL.setEnabled(hasMart);
+					saveDDL.setEnabled(hasMart);
 					closeMart.setEnabled(hasMart);
 				}
 
@@ -312,7 +312,7 @@ public class MartBuilder extends JFrame {
 				this.martBuilder.martTabSet.saveMart();
 			else if (e.getSource() == this.saveMartAs)
 				this.martBuilder.martTabSet.saveMartAs();
-			else if (e.getSource() == this.createDDL)
+			else if (e.getSource() == this.saveDDL)
 				this.martBuilder.martTabSet.requestCreateDDL();
 			else if (e.getSource() == this.closeMart)
 				this.martBuilder.martTabSet.confirmCloseMart();

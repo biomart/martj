@@ -51,7 +51,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * of the mart inside it, including all datasets and schemas.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 20th June 2006
+ * @version 0.1.11, 21st June 2006
  * @since 0.1
  */
 public class MartTabSet extends JTabbedPane {
@@ -266,7 +266,7 @@ public class MartTabSet extends JTabbedPane {
 		MartTab currentMartTab = this.getSelectedMartTab();
 
 		// Open the DDL creation dialog and let it do it's stuff.
-		(new CreateDDLDialog(currentMartTab, currentMartTab.getMart()
+		(new SaveDDLDialog(currentMartTab, currentMartTab.getMart()
 				.getDataSets())).show();
 	}
 
@@ -335,10 +335,15 @@ public class MartTabSet extends JTabbedPane {
 	private void addMartTab(Mart mart, File martXMLFile, boolean initialState) {
 		this.martXMLFile.put(mart, martXMLFile);
 		this.martModifiedStatus.put(mart, Boolean.valueOf(initialState));
-		this.addTab(this.suggestTabName(mart), new MartTab(this, mart));
+		MartTab martTab = new MartTab(this, mart);
+		this.addTab(this.suggestTabName(mart), martTab);
 
 		// Select the tab we just created.
 		this.setSelectedIndex(this.getTabCount() - 1);
+		
+		// Within that tab, select the all-schemas and all-datasets tabs.
+		martTab.getDataSetTabSet().setSelectedIndex(0);
+		martTab.getSchemaTabSet().setSelectedIndex(0);
 	}
 
 	/**
@@ -352,7 +357,7 @@ public class MartTabSet extends JTabbedPane {
 	 * Saves the current mart to the current file.
 	 */
 	public void saveMart() {
-		// If nothing selected, refise.
+		// If nothing selected, refuse.
 		if (this.getSelectedMartTab() == null)
 			return;
 

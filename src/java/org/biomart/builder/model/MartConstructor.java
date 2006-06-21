@@ -290,6 +290,9 @@ public interface MartConstructor {
 				// Begin.
 				helper.startActions();
 
+				// Work out how many datasets we have.
+				int totalDataSetCount = datasets.size();
+
 				// Loop over each mart.
 				for (Iterator j = martDataSets.keySet().iterator(); j.hasNext();) {
 					Mart mart = (Mart) j.next();
@@ -300,7 +303,7 @@ public interface MartConstructor {
 						// mart.
 						for (Iterator i = ((List) martDataSets.get(mart))
 								.iterator(); i.hasNext();)
-							this.doIt((DataSet) i.next());
+							this.doIt((DataSet) i.next(), totalDataSetCount);
 					} finally {
 						helper.endActionsForMart(mart);
 					}
@@ -321,7 +324,7 @@ public interface MartConstructor {
 			}
 		}
 
-		private void doIt(DataSet ds) throws Exception {
+		private void doIt(DataSet ds, int totalDataSetCount) throws Exception {
 			// Mart construction is done by processing the main table first,
 			// then the main dimension(s), then the subclass table(s), with
 			// subclass dimensions after the subclass table they belong to.
@@ -549,6 +552,9 @@ public interface MartConstructor {
 			// Work out the progress step size.
 			double stepPercent = 100.0 / (double) actionGraph.getActions()
 					.size();
+
+			// Divide the progress step size by the number of datasets.
+			stepPercent /= (double) totalDataSetCount;
 
 			// Initialize the helper, telling it we are about to start
 			// sending it actions to process.

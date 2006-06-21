@@ -96,7 +96,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 20th June 2006
+ * @version 0.1.18, 21st June 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -206,6 +206,7 @@ public class MartBuilderXML extends DefaultHandler {
 			// Load the compulsory attributes.
 			String driverClassName = (String) attributes.get("driverClassName");
 			String url = (String) attributes.get("url");
+			String schemaName = (String) attributes.get("schemaName");
 			String username = (String) attributes.get("username");
 			String name = (String) attributes.get("name");
 			boolean keyguessing = ((String) attributes.get("keyguessing"))
@@ -214,8 +215,8 @@ public class MartBuilderXML extends DefaultHandler {
 			// Construct the JDBC schema.
 			try {
 				Schema schema = new JDBCSchema(driverClassLocation,
-						driverClassName, url, username, password, name,
-						keyguessing);
+						driverClassName, url, schemaName, username, password,
+						name, keyguessing);
 				// Are we inside a schema group?
 				if (!this.objectStack.empty()
 						&& (this.objectStack.peek() instanceof SchemaGroup)) {
@@ -431,8 +432,9 @@ public class MartBuilderXML extends DefaultHandler {
 				// Work out what status it is.
 				ComponentStatus status = ComponentStatus
 						.get((String) attributes.get("status"));
-				if (attributes.containsKey("nullable")) 
-					nullable = Boolean.valueOf((String)attributes.get("nullable")).booleanValue();
+				if (attributes.containsKey("nullable"))
+					nullable = Boolean.valueOf(
+							(String) attributes.get("nullable")).booleanValue();
 
 				// Decode the column IDs from the comma-separated list.
 				String[] fkColIds = ((String) attributes.get("columnIds"))
@@ -857,6 +859,8 @@ public class MartBuilderXML extends DefaultHandler {
 			this.writeAttribute("driverClassName", jdbcSchema
 					.getDriverClassName(), xmlWriter);
 			this.writeAttribute("url", jdbcSchema.getJDBCURL(), xmlWriter);
+			this.writeAttribute("schemaName", jdbcSchema.getDatabaseSchema(),
+					xmlWriter);
 			this
 					.writeAttribute("username", jdbcSchema.getUsername(),
 							xmlWriter);
@@ -1020,7 +1024,8 @@ public class MartBuilderXML extends DefaultHandler {
 				this.openElement(elem, xmlWriter);
 				this.writeAttribute("id", keyMappedID, xmlWriter);
 				if (elem.equals("foreignKey"))
-					this.writeAttribute("nullable", ""+((ForeignKey)key).getNullable(), xmlWriter);
+					this.writeAttribute("nullable", ""
+							+ ((ForeignKey) key).getNullable(), xmlWriter);
 				List columnIds = new ArrayList();
 				for (Iterator kci = key.getColumns().iterator(); kci.hasNext();)
 					columnIds.add(this.reverseMappedObjects.get(kci.next()));

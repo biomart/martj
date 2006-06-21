@@ -29,7 +29,7 @@ import java.sql.SQLException;
  * the data is coming from.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 3rd April 2006
+ * @version 0.1.3, 21st June 2006
  * @since 0.1
  */
 public interface DataLink {
@@ -118,6 +118,21 @@ public interface DataLink {
 		 *            the JDBC url.
 		 */
 		public void setJDBCURL(String url);
+
+		/**
+		 * Gets the database schema name.
+		 * 
+		 * @return the database schema name.
+		 */
+		public String getDatabaseSchema();
+
+		/**
+		 * Sets the database schema name.
+		 * 
+		 * @param schemaName
+		 *            the database schema name.
+		 */
+		public void setDatabaseSchema(String schemaName);
 
 		/**
 		 * Gets the username.

@@ -33,7 +33,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * schemas, then a {@link RelationComponent} is drawn between them.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 20th June 2006
+ * @version 0.1.12, 21st June 2006
  * @since 0.1
  */
 public class AllSchemasDiagram extends Diagram {
@@ -42,7 +42,7 @@ public class AllSchemasDiagram extends Diagram {
 	/**
 	 * Static reference to the background colour to use for components.
 	 */
-	public static final Color BACKGROUND_COLOUR = Color.YELLOW;
+	public static final Color BACKGROUND_COLOUR = Color.WHITE;
 
 	/**
 	 * The constructor creates the diagram and associates it with a given
