@@ -52,7 +52,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 20th June 2006
+ * @version 0.1.13, 21st June 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -149,24 +149,38 @@ public interface MartConstructor {
 		public List listDistinctValues(Column col) throws SQLException;
 
 		/**
-		 * Flag that we are about to begin a mart.
+		 * Flag that we are about to begin outputting actions.
 		 * 
 		 * @throws Exception
 		 *             if anything went wrong. Usually this will be a
 		 *             {@link SQLException} or {@link IOException}, but may be
 		 *             others too.
 		 */
-		public void startActionsForMart() throws Exception;
+		public void startActions() throws Exception;
+
+		/**
+		 * Flag that we are about to begin a mart.
+		 * 
+		 * @param mart
+		 *            the mart we about to begin outputting actions for.
+		 * @throws Exception
+		 *             if anything went wrong. Usually this will be a
+		 *             {@link SQLException} or {@link IOException}, but may be
+		 *             others too.
+		 */
+		public void startActionsForMart(Mart mart) throws Exception;
 
 		/**
 		 * Flag that we are about to begin a dataset.
 		 * 
+		 * @param dataset
+		 *            the dataset we are about to begin outputting actions for.
 		 * @throws Exception
 		 *             if anything went wrong. Usually this will be a
 		 *             {@link SQLException} or {@link IOException}, but may be
 		 *             others too.
 		 */
-		public void startActionsForDataSet() throws Exception;
+		public void startActionsForDataSet(DataSet dataset) throws Exception;
 
 		/**
 		 * Given an action, executes it. The action level specifies how far down
@@ -188,22 +202,36 @@ public interface MartConstructor {
 		/**
 		 * Flag that we are about to end a dataset.
 		 * 
+		 * @param dataset
+		 *            the dataset we are ending.
 		 * @throws Exception
 		 *             if anything went wrong. Usually this will be a
 		 *             {@link SQLException} or {@link IOException}, but may be
 		 *             others too.
 		 */
-		public void endActionsForDataSet() throws Exception;
+		public void endActionsForDataSet(DataSet dataset) throws Exception;
 
 		/**
 		 * Flag that we are about to end a mart.
+		 * 
+		 * @param mart
+		 *            the mart we are ending.
+		 * @throws Exception
+		 *             if anything went wrong. Usually this will be a
+		 *             {@link SQLException} or {@link IOException}, but may be
+		 *             others too.
+		 */
+		public void endActionsForMart(Mart mart) throws Exception;
+
+		/**
+		 * Flag that we are about to end outputting actions.
 		 * 
 		 * @throws Exception
 		 *             if anything went wrong. Usually this will be a
 		 *             {@link SQLException} or {@link IOException}, but may be
 		 *             others too.
 		 */
-		public void endActionsForMart() throws Exception;
+		public void endActions() throws Exception;
 	}
 
 	/**
@@ -249,10 +277,34 @@ public interface MartConstructor {
 
 		public void run() {
 			try {
-				helper.startActionsForMart();
-				// Loop over all the datasets we want included.
-				for (Iterator i = this.datasets.iterator(); i.hasNext();)
-					this.doIt((DataSet) i.next());
+				// Split the datasets into groups by mart.
+				Map martDataSets = new HashMap();
+				for (Iterator i = this.datasets.iterator(); i.hasNext();) {
+					DataSet ds = (DataSet) i.next();
+					Mart mart = (Mart) ds.getMart();
+					if (!martDataSets.containsKey(mart))
+						martDataSets.put(mart, new ArrayList());
+					((List) martDataSets.get(mart)).add(ds);
+				}
+
+				// Begin.
+				helper.startActions();
+
+				// Loop over each mart.
+				for (Iterator j = martDataSets.keySet().iterator(); j.hasNext();) {
+					Mart mart = (Mart) j.next();
+					helper.startActionsForMart(mart);
+
+					try {
+						// Loop over all the datasets we want included from this
+						// mart.
+						for (Iterator i = ((List) martDataSets.get(mart))
+								.iterator(); i.hasNext();)
+							this.doIt((DataSet) i.next());
+					} finally {
+						helper.endActionsForMart(mart);
+					}
+				}
 			} catch (ConstructorException e) {
 				this.failure = e;
 			} catch (Throwable t) {
@@ -260,7 +312,7 @@ public interface MartConstructor {
 			} finally {
 				// Make sure the file is always closed properly.
 				try {
-					helper.endActionsForMart();
+					helper.endActions();
 				} catch (ConstructorException e) {
 					this.failure = e;
 				} catch (Throwable t) {
@@ -500,7 +552,7 @@ public interface MartConstructor {
 
 			// Initialize the helper, telling it we are about to start
 			// sending it actions to process.
-			helper.startActionsForDataSet();
+			helper.startActionsForDataSet(ds);
 
 			try {
 				// The action graph is tiered into several levels, called
@@ -539,7 +591,7 @@ public interface MartConstructor {
 				// Make sure the helper always gets a chance to tidy up,
 				// even if an exception is thrown.
 				// All done!
-				helper.endActionsForDataSet();
+				helper.endActionsForDataSet(ds);
 			}
 		}
 

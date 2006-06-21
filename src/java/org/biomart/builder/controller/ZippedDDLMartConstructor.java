@@ -21,6 +21,7 @@ package org.biomart.builder.controller;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,8 +32,10 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.MartConstructor;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
@@ -46,7 +49,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * use JDBC to fetch/retrieve data between two databases.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 20th June 2006
+ * @version 0.1.6, 21st June 2006
  * @since 0.1
  */
 public class ZippedDDLMartConstructor implements MartConstructor {
@@ -82,17 +85,19 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 			Collection datasets) throws Exception {
 		// Work out what kind of helper to use.
 		DDLHelper helper;
-		if (this.granularity.equals(ZippedDDLGranularity.MART))
+		if (this.granularity.equals(ZippedDDLGranularity.SINGLE))
+			helper = new SingleFileHelper(this.outputDDLZipFile);
+		else if (this.granularity.equals(ZippedDDLGranularity.MART))
 			helper = new MartAsFileHelper(this.outputDDLZipFile);
 		else if (this.granularity.equals(ZippedDDLGranularity.DATASET))
 			helper = new DataSetAsFileHelper(this.outputDDLZipFile);
 		else
 			helper = new StepAsFileHelper(this.outputDDLZipFile);
 
-		// Set the input and output dialects on the helper for each
-		// schema.
-
-		// Inputs first.
+		// Check that all the input schemas have are cohabitable.
+		// First, make a set of all input schemas. Note that some
+		// may be groups, but since canCohabit() works on groups
+		// we don't need to worry about this.
 		Set inputSchemas = new HashSet();
 		for (Iterator i = datasets.iterator(); i.hasNext();) {
 			for (Iterator j = ((DataSet) i.next()).getTables().iterator(); j
@@ -106,16 +111,21 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 				}
 			}
 		}
-		for (Iterator i = inputSchemas.iterator(); i.hasNext();) {
-			Schema s = (Schema) i.next();
-			helper.setInputDialect(s, DatabaseDialect.getDialect(s));
-		}
 
-		// Then the output - this is the same as the input, or has to be if
-		// we are to generate useful DDL, so we can just use the first input
-		// schema for this purpose.
-		helper.setOutputDialect(DatabaseDialect
-				.getDialect((Schema) inputSchemas.iterator().next()));
+		// Convert the set to a list.
+		List inputSchemaList = new ArrayList(inputSchemas);
+		
+		// Set the output dialect to match the first one in the list.
+		helper.setDialect(DatabaseDialect
+				.getDialect((Schema) inputSchemaList.get(0)));
+		
+		// Then, check that the rest are compatible with the first one.
+		for (int i = 1; i < inputSchemaList.size(); i++) {
+			Schema schema = (Schema)inputSchemaList.get(i);
+			if (!schema.canCohabit((Schema)inputSchemaList.get(0)))
+				throw new ConstructorException(BuilderBundle
+						.getString("zipDDLMixedDataLinks"));
+		}
 
 		// Construct and return the runnable that uses the helper.
 		return new GenericConstructorRunnable(targetSchemaName, datasets,
@@ -152,25 +162,12 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 		}
 
 		/**
-		 * Sets the dialect to use on tables which come from the given schema.
-		 * 
-		 * @param schema
-		 *            the schema to use the dialect on.
-		 * @param dialect
-		 *            the dialect to use for tables in that schema.
-		 */
-		public void setInputDialect(Schema schema, DatabaseDialect dialect) {
-			// Ignored as is not required - the input dialect is the
-			// same as the output dialect if we are to run DDL statements.
-		}
-
-		/**
-		 * Sets the dialect to use to create the output tables with.
+		 * Sets the dialect to use to create the output DDL with.
 		 * 
 		 * @param dialect
-		 *            the dialect to use when creating output tables.
+		 *            the dialect to use when creating output DDL.
 		 */
-		public void setOutputDialect(DatabaseDialect dialect) {
+		public void setDialect(DatabaseDialect dialect) {
 			this.dialect = dialect;
 		}
 
@@ -199,10 +196,10 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 	}
 
 	/**
-	 * MartAsFileHelper extends DDLHelper, saves statements. Statements are
+	 * SingleFileHelper extends DDLHelper, saves statements. Statements are
 	 * saved as a single SQL file inside a Zip file.
 	 */
-	public static class MartAsFileHelper extends DDLHelper {
+	public static class SingleFileHelper extends DDLHelper {
 
 		private FileOutputStream outputFileStream;
 
@@ -217,11 +214,11 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 		 * @param outputZippedDDLFile
 		 *            the zip file to write the DDL into.
 		 */
-		public MartAsFileHelper(File outputZippedDDLFile) {
+		public SingleFileHelper(File outputZippedDDLFile) {
 			super(outputZippedDDLFile);
 		}
 
-		public void startActionsForMart() throws Exception {
+		public void startActions() throws Exception {
 			// Open the zip stream.
 			this.outputFileStream = new FileOutputStream(this.getFile());
 			this.outputZipStream = new ZipOutputStream(this.outputFileStream);
@@ -231,7 +228,11 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 			this.outputZipStream.putNextEntry(entry);
 		}
 
-		public void startActionsForDataSet() throws Exception {
+		public void startActionsForMart(Mart mart) throws Exception {
+			// We don't care.
+		}
+
+		public void startActionsForDataSet(DataSet dataset) throws Exception {
 			// We don't care.
 		}
 
@@ -247,14 +248,92 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 			}
 		}
 
-		public void endActionsForDataSet() throws Exception {
+		public void endActionsForDataSet(DataSet dataset) throws Exception {
 			// We don't care.
 		}
 
-		public void endActionsForMart() throws Exception {
+		public void endActionsForMart(Mart mart) throws Exception {
+			// We don't care.
+		}
+
+		public void endActions() throws Exception {
 			// Close the zip stream. Will also close the
 			// file output stream by default.
 			this.outputZipStream.closeEntry();
+			this.outputZipStream.finish();
+			this.outputFileStream.flush();
+			this.outputFileStream.close();
+		}
+	}
+
+	/**
+	 * MartAsFileHelper extends DDLHelper, saves statements. Statements are
+	 * saved as a single SQL file per mart inside a Zip file.
+	 */
+	public static class MartAsFileHelper extends DDLHelper {
+
+		private FileOutputStream outputFileStream;
+
+		private ZipOutputStream outputZipStream;
+
+		private ZipEntry entry;
+
+		private int martSequence;
+
+		/**
+		 * Constructs a helper which will output all DDL into a single file per
+		 * mart inside the given zip file.
+		 * 
+		 * @param outputZippedDDLFile
+		 *            the zip file to write the DDL into.
+		 */
+		public MartAsFileHelper(File outputZippedDDLFile) {
+			super(outputZippedDDLFile);
+			this.martSequence = 0;
+		}
+
+		public void startActions() throws Exception {
+			// Open the zip stream.
+			this.outputFileStream = new FileOutputStream(this.getFile());
+			this.outputZipStream = new ZipOutputStream(this.outputFileStream);
+			this.outputZipStream.setMethod(ZipOutputStream.DEFLATED);
+		}
+
+		public void startActionsForMart(Mart mart) throws Exception {
+			this.entry = new ZipEntry(this.martSequence + ".sql");
+			entry.setTime(System.currentTimeMillis());
+			this.outputZipStream.putNextEntry(entry);
+		}
+
+		public void startActionsForDataSet(DataSet dataset) throws Exception {
+			// We don't care.
+		}
+
+		public void executeAction(MCAction action, int level) throws Exception {
+			// Convert the action to some DDL.
+			String[] cmd = this.getStatementsForAction(action);
+			// Write the data.
+			for (int i = 0; i < cmd.length; i++) {
+				this.outputZipStream.write(cmd[i].getBytes());
+				this.outputZipStream.write(';');
+				this.outputZipStream.write(System.getProperty("line.separator")
+						.getBytes());
+			}
+		}
+
+		public void endActionsForDataSet(DataSet dataset) throws Exception {
+			// We don't care.
+		}
+
+		public void endActionsForMart(Mart mart) throws Exception {
+			this.outputZipStream.closeEntry();
+			// Bump up the mart sequence.
+			this.martSequence++;
+		}
+
+		public void endActions() throws Exception {
+			// Close the zip stream. Will also close the
+			// file output stream by default.
 			this.outputZipStream.finish();
 			this.outputFileStream.flush();
 			this.outputFileStream.close();
@@ -273,7 +352,9 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 
 		private ZipEntry entry;
 
-		private int sequence;
+		private int martSequence;
+
+		private int datasetSequence;
 
 		/**
 		 * Constructs a helper which will output all DDL into a single file per
@@ -284,18 +365,24 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 		 */
 		public DataSetAsFileHelper(File outputZippedDDLFile) {
 			super(outputZippedDDLFile);
-			this.sequence = 0;
+			this.martSequence = 0;
+			this.datasetSequence = 0;
 		}
 
-		public void startActionsForMart() throws Exception {
+		public void startActions() throws Exception {
 			// Open the zip stream.
 			this.outputFileStream = new FileOutputStream(this.getFile());
 			this.outputZipStream = new ZipOutputStream(this.outputFileStream);
 			this.outputZipStream.setMethod(ZipOutputStream.DEFLATED);
 		}
 
-		public void startActionsForDataSet() throws Exception {
-			this.entry = new ZipEntry(this.sequence++ + ".sql");
+		public void startActionsForMart(Mart mart) throws Exception {
+			// Ignore.
+		}
+
+		public void startActionsForDataSet(DataSet dataset) throws Exception {
+			this.entry = new ZipEntry(this.martSequence + "/"
+					+ this.datasetSequence + ".sql");
 			entry.setTime(System.currentTimeMillis());
 			this.outputZipStream.putNextEntry(entry);
 		}
@@ -312,11 +399,18 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 			}
 		}
 
-		public void endActionsForDataSet() throws Exception {
+		public void endActionsForDataSet(DataSet dataset) throws Exception {
 			this.outputZipStream.closeEntry();
+			// Bump up the dataset count for the next one.
+			this.datasetSequence++;
 		}
 
-		public void endActionsForMart() throws Exception {
+		public void endActionsForMart(Mart mart) throws Exception {
+			// Bump up the mart count for the next one.
+			this.martSequence++;
+		}
+
+		public void endActions() throws Exception {
 			// Close the zip stream. Will also close the
 			// file output stream by default.
 			this.outputZipStream.finish();
@@ -347,14 +441,18 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 			super(outputZippedDDLFile);
 		}
 
-		public void startActionsForMart() throws Exception {
+		public void startActions() throws Exception {
 			// Open the zip stream.
 			this.outputFileStream = new FileOutputStream(this.getFile());
 			this.outputZipStream = new ZipOutputStream(this.outputFileStream);
 			this.outputZipStream.setMethod(ZipOutputStream.DEFLATED);
 		}
 
-		public void startActionsForDataSet() throws Exception {
+		public void startActionsForMart(Mart mart) throws Exception {
+			// We don't care.
+		}
+
+		public void startActionsForDataSet(DataSet dataset) throws Exception {
 			// We don't care.
 		}
 
@@ -385,11 +483,15 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 			}
 		}
 
-		public void endActionsForDataSet() throws Exception {
+		public void endActionsForDataSet(DataSet dataset) throws Exception {
 			// We don't care.
 		}
 
-		public void endActionsForMart() throws Exception {
+		public void endActionsForMart(Mart mart) throws Exception {
+			// We don't care.
+		}
+
+		public void endActions() throws Exception {
 			// Close the zip stream. Will also close the
 			// file output stream by default.
 			this.outputZipStream.finish();
@@ -407,19 +509,25 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 		private final String name;
 
 		/**
-		 * Use this constant to refer to in-database DDL execution.
+		 * Use this constant to refer to single-file for all output.
+		 */
+		public static final ZippedDDLGranularity SINGLE = ZippedDDLGranularity
+				.get(BuilderBundle.getString("zippedDDLSingleGranularity"));
+
+		/**
+		 * Use this constant to refer to file-per-mart output.
 		 */
 		public static final ZippedDDLGranularity MART = ZippedDDLGranularity
 				.get(BuilderBundle.getString("zippedDDLMartGranularity"));
 
 		/**
-		 * Use this constant to refer to creation via JDBC import/export.
+		 * Use this constant to refer to file-per-dataset output.
 		 */
 		public static final ZippedDDLGranularity DATASET = ZippedDDLGranularity
 				.get(BuilderBundle.getString("zippedDDLDataSetGranularity"));
 
 		/**
-		 * Use this constant to refer to generation of DDL in a file.
+		 * Use this constant to refer to file-per-step output.
 		 */
 		public static final ZippedDDLGranularity STEP = ZippedDDLGranularity
 				.get(BuilderBundle.getString("zippedDDLStepGranularity"));
@@ -427,16 +535,13 @@ public class ZippedDDLMartConstructor implements MartConstructor {
 		/**
 		 * The static factory method creates and returns a type with the given
 		 * name. It ensures the object returned is a singleton. Note that the
-		 * names of type objects are case-insensitive.
+		 * names of type objects are case-sensitive.
 		 * 
 		 * @param name
 		 *            the name of the type object.
 		 * @return the type object.
 		 */
 		public static ZippedDDLGranularity get(String name) {
-			// Convert to upper case.
-			name = name.toUpperCase();
-
 			// Do we already have this one?
 			// If so, then return it.
 			if (singletons.containsKey(name))

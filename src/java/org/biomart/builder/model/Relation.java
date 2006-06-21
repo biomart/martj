@@ -42,7 +42,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * outlined above.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 20th June 2006
+ * @version 0.1.12, 21st June 2006
  * @since 0.1
  */
 public interface Relation extends Comparable {
@@ -203,7 +203,7 @@ public interface Relation extends Comparable {
 	/**
 	 * This internal singleton class represents the cardinality of a foreign key
 	 * involved in a relation. Note that the names of cardinality objects are
-	 * case-insensitive.
+	 * case-sensitive.
 	 */
 	public class Cardinality implements Comparable {
 		private static final Map singletons = new HashMap();
@@ -223,16 +223,13 @@ public interface Relation extends Comparable {
 		/**
 		 * The static factory method creates and returns a cardinality with the
 		 * given name. It ensures the object returned is a singleton. Note that
-		 * the names of cardinality objects are case-insensitive.
+		 * the names of cardinality objects are case-sensitive.
 		 * 
 		 * @param name
 		 *            the name of the cardinality object.
 		 * @return the cardinality object.
 		 */
 		public static Cardinality get(String name) {
-			// Convert to upper case.
-			name = name.toUpperCase();
-
 			// Do we already have this one?
 			// If so, then return it.
 			if (singletons.containsKey(name))

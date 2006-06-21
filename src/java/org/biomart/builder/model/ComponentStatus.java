@@ -26,7 +26,7 @@ import java.util.Map;
  * how the system came to know about it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 28th March 2006
+ * @version 0.1.2, 21st June 2006
  * @since 0.1
  */
 public class ComponentStatus implements Comparable {
@@ -57,17 +57,13 @@ public class ComponentStatus implements Comparable {
 	/**
 	 * The static factory method creates and returns a status object with the
 	 * given name. It ensures the object returned is a singleton. Note that the
-	 * names of status objects are case-insensitive, and are all converted to
-	 * upper case.
+	 * names of status objects are case-sensitive.
 	 * 
 	 * @param name
 	 *            the name of the status object.
 	 * @return the status object.
 	 */
 	public static ComponentStatus get(String name) {
-		// Convert name to upper case.
-		name = name.toUpperCase();
-
 		// Do we already have this one?
 		// If so, then return it.
 		if (singletons.containsKey(name))

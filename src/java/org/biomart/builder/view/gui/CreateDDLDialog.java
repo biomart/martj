@@ -126,10 +126,10 @@ public class CreateDDLDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Create input fields for target schema name and granularity.
-		this.targetSchemaName = new JTextField(20);
+		this.targetSchemaName = new JTextField(15);
 		this.granularity = new JComboBox(new Object[] {
-				ZippedDDLGranularity.MART, ZippedDDLGranularity.DATASET,
-				ZippedDDLGranularity.STEP, });
+				ZippedDDLGranularity.SINGLE, ZippedDDLGranularity.MART,
+				ZippedDDLGranularity.DATASET, ZippedDDLGranularity.STEP, });
 
 		// Create the list for choosing datasets.
 		this.datasetsList = new JList((DataSet[]) datasets
@@ -137,6 +137,10 @@ public class CreateDDLDialog extends JDialog {
 		this.datasetsList
 				.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		this.datasetsList.setSelectionInterval(0, this.datasets.size() - 1);
+		this.datasetsList.setVisibleRowCount(4); // Arbitrary.
+		// Set the list to 30-characters wide. Longer than this and it will
+		// show a horizontal scrollbar.
+		this.datasetsList.setPrototypeCellValue("012345678901234567890123456789");
 
 		// Create a file chooser for finding the ZIP file where
 		// we will save.
@@ -156,45 +160,6 @@ public class CreateDDLDialog extends JDialog {
 		this.zipFileLocationButton = new JButton(BuilderBundle
 				.getString("browseButton"));
 
-		// Layout the window.
-
-		// Add the target schema settings label and field.
-		JLabel label = new JLabel(BuilderBundle.getString("targetSchemaLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
-		JPanel field = new JPanel();
-		field.add(this.targetSchemaName);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-
-		// Add the zip DDL location label, field and file chooser button.
-		label = new JLabel(BuilderBundle.getString("zipFileLocationLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
-		field = new JPanel();
-		field.add(this.zipFileLocation);
-		field.add(this.zipFileLocationButton);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-
-		// Add the dataset lists.
-		label = new JLabel(BuilderBundle.getString("selectedDataSetsLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
-		field = new JPanel();
-		field.add(new JScrollPane(this.datasetsList));
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-
-		// Add the granularity lists.
-		label = new JLabel(BuilderBundle.getString("granularityLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
-		field = new JPanel();
-		field.add(this.granularity);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-
 		// Attach the file chooser to the driver class location button.
 		this.zipFileLocationButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -207,6 +172,41 @@ public class CreateDDLDialog extends JDialog {
 				}
 			}
 		});
+
+		// Lay out the window.
+
+		// Add the dataset lists.
+		JLabel label = new JLabel(BuilderBundle
+				.getString("selectedDataSetsLabel"));
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		JPanel field = new JPanel();
+		field.add(new JScrollPane(this.datasetsList));
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+
+		// Add the target schema settings label and field, with
+		// the granularity beside it.
+		label = new JLabel(BuilderBundle.getString("targetSchemaLabel"));
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		field = new JPanel();
+		field.add(this.targetSchemaName);
+		label = new JLabel(BuilderBundle.getString("granularityLabel"));
+		field.add(label);
+		field.add(this.granularity);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+
+		// Add the zip DDL location label, field and file chooser button.
+		label = new JLabel(BuilderBundle.getString("zipFileLocationLabel"));
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		field = new JPanel();
+		field.add(this.zipFileLocation);
+		field.add(this.zipFileLocationButton);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
 
 		// The close and execute buttons.
 		JButton cancel = new JButton(BuilderBundle.getString("cancelButton"));
@@ -243,7 +243,7 @@ public class CreateDDLDialog extends JDialog {
 
 		// Make execute the default button.
 		this.getRootPane().setDefaultButton(execute);
-		
+
 		// Set size of window.
 		this.pack();
 
