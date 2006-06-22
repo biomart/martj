@@ -52,7 +52,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 21st June 2006
+ * @version 0.1.14, 22nd June 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -65,7 +65,7 @@ public interface MartConstructor {
 	 * calling {@link Thread#run()}. They can then monitor it using the methods
 	 * provided by the {@link ConstructorRunnable} interface.
 	 * 
-	 * @param targetSchemaName
+	 * @param datasetSchemaName
 	 *            the name of the schema to create the dataset tables in.
 	 * @param datasets
 	 *            a set of datasets to construct. An empty set means nothing
@@ -259,7 +259,7 @@ public interface MartConstructor {
 		 * Constructs a mart builder that will build the mart in the given
 		 * dataset, using the given helper.
 		 * 
-		 * @param targetSchemaName
+		 * @param datasetSchemaName
 		 *            the schema to which data created by this runnable will be
 		 *            written.
 		 * @param ds
@@ -645,9 +645,10 @@ public interface MartConstructor {
 			Collection partColValues = null;
 			for (Iterator i = dsTable.getColumns().iterator(); i.hasNext()
 					&& partitionColumn == null;) {
-				WrappedColumn c = (WrappedColumn) i.next();
-				if (partitionValues.containsKey(c))
-					partitionColumn = c;
+				Column c = (Column) i.next();
+				if ((c instanceof WrappedColumn)
+						&& partitionValues.containsKey(c))
+					partitionColumn = (WrappedColumn) c;
 			}
 
 			// If there was a partition column, store the values we should
@@ -958,6 +959,9 @@ public interface MartConstructor {
 				DataSetTable dsTable, Table startTable,
 				DataSetColumn partitionColumn, Object partitionValue,
 				String tempTableName) throws Exception {
+			// Keep a map to work out which columns we have seen before.
+			Map tblVisitCounter = new HashMap();
+
 			// Work out what dataset we are in.
 			DataSet ds = (DataSet) dsTable.getSchema();
 
@@ -986,14 +990,24 @@ public interface MartConstructor {
 				Key toKey = null;
 				if (!relationQueue.isEmpty()) {
 					relation = (Relation) relationQueue.get(relQueuePos++);
-					fromKey = mergedTables.contains(relation.getFirstKey()
-							.getTable()) ? relation.getFirstKey() : relation
-							.getSecondKey();
+					// Follow relation from end specified in underlying keys.
+					int relPos = dsTable.getUnderlyingRelations().indexOf(
+							relation);
+					fromKey = (Key) dsTable.getUnderlyingKeys().get(relPos);
 					toKey = relation.getOtherKey(fromKey);
 					realTable = toKey.getTable();
 				} else {
 					realTable = startTable;
 				}
+
+				// Update the visit count for this table.
+				int tblVisitCount;
+				if (!tblVisitCounter.containsKey(realTable))
+					tblVisitCount = 0;
+				else
+					tblVisitCount = ((Integer) tblVisitCounter.get(realTable))
+							.intValue() + 1;
+				tblVisitCounter.put(realTable, new Integer(tblVisitCount));
 
 				// Translate fromKey into related dataset columns.
 				List fromKeyDSColumns = new ArrayList();
@@ -1073,6 +1087,10 @@ public interface MartConstructor {
 				// Identify cols to include from this table.
 				List dsColumns = new ArrayList();
 
+				// Keep a map of unwrapped columns so we can count how many
+				// times we have seen them in this loop.
+				Map colVisitCounter = new HashMap();
+
 				// Now do the loop to find them.
 				for (Iterator i = dsTable.getColumns().iterator(); i.hasNext();) {
 					DataSetColumn dsCol = (DataSetColumn) i.next();
@@ -1080,25 +1098,60 @@ public interface MartConstructor {
 					// table this time round.
 					if (!ds.getMaskedDataSetColumns().contains(dsCol)) {
 
-						// Add it if it is a schema name column and this is
-						// the first table.
-						if (realTable == startTable
-								&& (dsCol instanceof SchemaNameColumn))
-							dsColumns.add(dsCol);
-
-						// Add it if it is a concat column on this relation.
-						else if ((dsCol instanceof ConcatRelationColumn)
-								&& (((ConcatRelationColumn) dsCol)
-										.getUnderlyingRelation()
-										.equals(relation)))
-							dsColumns.add(dsCol);
-
-						// Add it if it is a wrapped column on this table.
-						else if (dsCol instanceof WrappedColumn) {
-							Table unwrappedColTbl = ((WrappedColumn) dsCol)
-									.getWrappedColumn().getTable();
-							if (unwrappedColTbl.equals(realTable))
+						// For first time round only, we're also interested
+						// in schema columns and concat columns.
+						if (tblVisitCount == 0) {
+							// Add it if it is a schema name column and this is
+							// the first table.
+							if (tblVisitCount == 0
+									&& dsCol instanceof SchemaNameColumn)
 								dsColumns.add(dsCol);
+
+							// Add it if it is a concat column on this table.
+							else if ((dsCol instanceof ConcatRelationColumn)
+									&& (((ConcatRelationColumn) dsCol)
+											.getUnderlyingRelation()
+											.getOneKey().getTable()
+											.equals(realTable)))
+								dsColumns.add(dsCol);
+						}
+
+						// Add it if it is a wrapped column on this table,
+						// but if multiple columns on this table refer to
+						// the same real table, only take the column in line
+						// with the current visit count. ie. first column
+						// on first visit, second column on second etc.
+						if (dsCol instanceof WrappedColumn) {
+							Column unwrappedCol = ((WrappedColumn) dsCol)
+									.getWrappedColumn();
+							Table unwrappedColTbl = unwrappedCol.getTable();
+
+							// Is the column of interest?
+							if (unwrappedColTbl.equals(realTable)) {
+
+								// On the first visit, only take first ds column
+								// that mentions the first real column.
+								// Subsequently, take the second, third etc. ds
+								// column that mentions the first real column.
+								// If a ds column does not relate to a real
+								// column, only take it on the first visit.
+								// Visits are counted per table.
+
+								// Update the visit count for this column.
+								int colVisitCount;
+								if (!colVisitCounter.containsKey(unwrappedCol))
+									colVisitCount = 0;
+								else
+									colVisitCount = ((Integer) colVisitCounter
+											.get(unwrappedCol)).intValue() + 1;
+								colVisitCounter.put(unwrappedCol, new Integer(
+										colVisitCount));
+
+								// If this is the right visit number, add the
+								// column.
+								if (colVisitCount == tblVisitCount)
+									dsColumns.add(dsCol);
+							}
 						}
 					}
 				}
@@ -1133,18 +1186,19 @@ public interface MartConstructor {
 				// Add new relations to queue if not already in queue. We
 				// only need bother with relations that are in the
 				// underlying set of the dataset table in question.
-				for (Iterator i = dsTable.getUnderlyingRelations().iterator(); i
-						.hasNext();) {
-					Relation nextRel = (Relation) i.next();
+				for (int i = 0; i < dsTable.getUnderlyingKeys().size(); i++) {
 					// Only add relations that we haven't seen before, and
 					// that have one end attached to the current real table.
-					if (relationQueue.contains(nextRel)
-							|| !(nextRel.getFirstKey().getTable().equals(
-									realTable) || nextRel.getSecondKey()
-									.getTable().equals(realTable)))
+					Key key = (Key) dsTable.getUnderlyingKeys().get(i);
+					if (!key.getTable().equals(realTable))
 						continue;
-					else
-						relationQueue.add(nextRel);
+					Relation nextRel = (Relation) dsTable
+							.getUnderlyingRelations().get(i);
+					if (relationQueue.contains(nextRel))
+						continue;
+					// We got here because the key is on this table, and
+					// the relation has not been followed before.
+					relationQueue.add(nextRel);
 				}
 
 				// Remember which table we just came from.
@@ -1292,16 +1346,16 @@ public interface MartConstructor {
 
 		private static final String nextSequenceLock = "__SEQ_LOCK";
 
-		public final String targetSchemaName;
+		public final String datasetSchemaName;
 
 		/**
 		 * Sets up a node.
 		 * 
-		 * @param targetSchemaName
+		 * @param datasetSchemaName
 		 *            the name of the schema to create the dataset tables in.
 		 */
-		public MCAction(String targetSchemaName) {
-			this.targetSchemaName = targetSchemaName;
+		public MCAction(String datasetSchemaName) {
+			this.datasetSchemaName = datasetSchemaName;
 			this.depth = 0;
 			synchronized (nextSequenceLock) {
 				this.sequence = nextSequence++;
@@ -1412,7 +1466,7 @@ public interface MartConstructor {
 		/**
 		 * Constructs an action which represents the dropping of a table.
 		 * 
-		 * @param targetSchemaName
+		 * @param datasetSchemaName
 		 *            the name of the schema to create the dataset tables in.
 		 * @param tableName
 		 *            the name of the table to drop.
@@ -1444,7 +1498,7 @@ public interface MartConstructor {
 		/**
 		 * Constructs an action which represents the renaming of a table.
 		 * 
-		 * @param targetSchemaName
+		 * @param datasetSchemaName
 		 *            the name of the schema to create the dataset tables in.
 		 * @param oldName
 		 *            the existing table name.
@@ -1483,7 +1537,7 @@ public interface MartConstructor {
 		 * Constructs an action which represents the performing of a union over
 		 * a number of tables.
 		 * 
-		 * @param targetSchemaName
+		 * @param datasetSchemaName
 		 *            the name of the schema to create the dataset tables in.
 		 * @param tableName
 		 *            the name of the table to create.
@@ -1519,7 +1573,7 @@ public interface MartConstructor {
 		/**
 		 * Constructs an action which represents the creation of a primary key.
 		 * 
-		 * @param targetSchemaName
+		 * @param datasetSchemaName
 		 *            the name of the schema to create the dataset tables in.
 		 * @param tableName
 		 *            the name fo the table to create the key for.
@@ -1567,7 +1621,7 @@ public interface MartConstructor {
 		/**
 		 * Creates an action that represents the creation of a foreign key.
 		 * 
-		 * @param targetSchemaName
+		 * @param datasetSchemaName
 		 *            the name of the schema to create the dataset tables in.
 		 * @param tableName
 		 *            the table the foreign key is to be created on.
@@ -1633,7 +1687,7 @@ public interface MartConstructor {
 		/**
 		 * Creates an action that represents the creation of a new table.
 		 * 
-		 * @param targetSchemaName
+		 * @param datasetSchemaName
 		 *            the name of the schema to create the dataset tables in.
 		 * @param tableName
 		 *            the name of the table to create.
@@ -1697,7 +1751,7 @@ public interface MartConstructor {
 		 * Creates an action that represents the merging of a table with an
 		 * existing one.
 		 * 
-		 * @param targetSchemaName
+		 * @param datasetSchemaName
 		 *            the name of the schema to create the dataset tables in.
 		 * @param tableName
 		 *            the name of the table to create.
@@ -1779,7 +1833,7 @@ public interface MartConstructor {
 		/**
 		 * Creates an action which represents the restriction of a table.
 		 * 
-		 * @param targetSchemaName
+		 * @param datasetSchemaName
 		 *            the name of the schema to create the dataset tables in.
 		 * @param newTableName
 		 *            the name of the new table to create.

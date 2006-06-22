@@ -50,7 +50,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * but it does not provide any methods that process or analyse these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 5th June 2006
+ * @version 0.1.14, 22nd June 2006
  * @since 0.1
  */
 public interface Table extends Comparable {
@@ -60,6 +60,15 @@ public interface Table extends Comparable {
 	 * @return the name of this table.
 	 */
 	public String getName();
+	
+	/**
+	 * Returns the original name of this table. This is useful if the user
+	 * renames the table but you need to refer to it by the name it started
+	 * life out as.
+	 * 
+	 * @return the original name of this table.
+	 */
+	public String getOriginalName();
 
 	/**
 	 * Sets a new name for this table. This will also rename the table in the
@@ -71,6 +80,15 @@ public interface Table extends Comparable {
 	 *             if a table with that name already exists in this schema.
 	 */
 	public void setName(String newName) throws AlreadyExistsException;
+
+	/**
+	 * Use this to rename a table's original name. Use with extreme caution.
+	 * The owning schema doesn't need to know so won't be notified.
+	 * 
+	 * @param newName
+	 *            the new original name to give the table.
+	 */
+	public void setOriginalName(String newName) throws AlreadyExistsException;
 
 	/**
 	 * Returns the schema for this table.
@@ -236,6 +254,8 @@ public interface Table extends Comparable {
 
 		private final Map columns = new TreeMap();
 
+		private String originalName;
+
 		private String name;
 
 		/**
@@ -253,6 +273,7 @@ public interface Table extends Comparable {
 				throws AlreadyExistsException {
 			// Remember the values.
 			this.name = name;
+			this.originalName = name;
 			this.schema = schema;
 
 			// Add it to the schema.
@@ -266,6 +287,14 @@ public interface Table extends Comparable {
 
 		public String getName() {
 			return this.name;
+		}
+
+		public String getOriginalName() {
+			return this.originalName;
+		}
+
+		public void setOriginalName(String newName) throws AlreadyExistsException {
+			this.originalName = newName;
 		}
 
 		public void setName(String newName) throws AlreadyExistsException {

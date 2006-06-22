@@ -59,7 +59,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.19, 21st June 2006
+ * @version 0.1.20, 22nd June 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -504,10 +504,15 @@ public class MartBuilderUtils {
 	 *            the dataset to mask the relation in.
 	 * @param relation
 	 *            the relation to mask.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws BuilderException
+	 *             if the dataset could not be synchronised.
 	 */
-	public static void maskRelation(DataSet dataset, Relation relation) {
+	public static void maskRelation(DataSet dataset, Relation relation)
+			throws SQLException, BuilderException {
 		dataset.maskRelation(relation);
-		dataset.regenerate();
+		dataset.synchronise();
 	}
 
 	/**
@@ -518,11 +523,16 @@ public class MartBuilderUtils {
 	 *            the dataset to mask the table in.
 	 * @param table
 	 *            the table to mask all relations for.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws BuilderException
+	 *             if the dataset could not be synchronised.
 	 */
-	public static void maskTable(DataSet dataset, Table table) {
+	public static void maskTable(DataSet dataset, Table table)
+			throws SQLException, BuilderException {
 		for (Iterator i = table.getRelations().iterator(); i.hasNext();)
 			dataset.maskRelation((Relation) i.next());
-		dataset.regenerate();
+		dataset.synchronise();
 	}
 
 	/**
@@ -533,10 +543,15 @@ public class MartBuilderUtils {
 	 *            the dataset to unmask the relation in.
 	 * @param relation
 	 *            the relation to unmask.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws BuilderException
+	 *             if the dataset could not be synchronised.
 	 */
-	public static void unmaskRelation(DataSet dataset, Relation relation) {
+	public static void unmaskRelation(DataSet dataset, Relation relation)
+			throws SQLException, BuilderException {
 		dataset.unmaskRelation(relation);
-		dataset.regenerate();
+		dataset.synchronise();
 	}
 
 	/**
@@ -550,12 +565,16 @@ public class MartBuilderUtils {
 	 * @throws AssociationException
 	 *             if the relation is not permitted to be a subclass relation in
 	 *             this dataset, for whatever reason.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws BuilderException
+	 *             if the dataset could not be synchronised.
 	 */
 	public static void subclassRelation(DataSet dataset, Relation relation)
-			throws AssociationException {
+			throws AssociationException, SQLException, BuilderException {
 		dataset.flagSubclassRelation(relation);
 		dataset.unflagConcatOnlyRelation(relation);
-		dataset.regenerate();
+		dataset.synchronise();
 	}
 
 	/**
@@ -565,14 +584,19 @@ public class MartBuilderUtils {
 	 *            the dataset to unflag the relation in.
 	 * @param relation
 	 *            the relation to unflag.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws BuilderException
+	 *             if the dataset could not be synchronised.
 	 */
-	public static void unsubclassRelation(DataSet dataset, Relation relation) {
+	public static void unsubclassRelation(DataSet dataset, Relation relation)
+			throws SQLException, BuilderException {
 		dataset.unflagSubclassRelation(relation);
-		dataset.regenerate();
+		dataset.synchronise();
 	}
 
 	/**
-	 * Flags a relation as concat-only within a dataset, then regenerates the
+	 * Flags a relation as concat-only within a dataset, then synchronise the
 	 * dataset.
 	 * 
 	 * @param dataset
@@ -581,12 +605,19 @@ public class MartBuilderUtils {
 	 *            the relation to flag as concat-only.
 	 * @param type
 	 *            the type of concat-only relation this should be.
+	 * @throws AssociationException
+	 *             if the relation was not concat-able.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws BuilderException
+	 *             if the dataset could not be synchronised.
 	 */
 	public static void concatOnlyRelation(DataSet dataset, Relation relation,
-			ConcatRelationType type) {
+			ConcatRelationType type) throws AssociationException, SQLException,
+			BuilderException {
 		dataset.flagConcatOnlyRelation(relation, type);
 		dataset.unflagSubclassRelation(relation);
-		dataset.regenerate();
+		dataset.synchronise();
 	}
 
 	/**
@@ -597,10 +628,15 @@ public class MartBuilderUtils {
 	 *            the dataset to unflag the relation within.
 	 * @param relation
 	 *            the relation to unflag.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws BuilderException
+	 *             if the dataset could not be synchronised.
 	 */
-	public static void unconcatOnlyRelation(DataSet dataset, Relation relation) {
+	public static void unconcatOnlyRelation(DataSet dataset, Relation relation)
+			throws SQLException, BuilderException {
 		dataset.unflagConcatOnlyRelation(relation);
-		dataset.regenerate();
+		dataset.synchronise();
 	}
 
 	/**
@@ -712,11 +748,15 @@ public class MartBuilderUtils {
 	 *            the column to mask.
 	 * @throws AssociationException
 	 *             if the column is not maskable.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws BuilderException
+	 *             if the dataset could not be synchronised.
 	 */
 	public static void maskColumn(DataSet dataset, DataSetColumn column)
-			throws AssociationException {
+			throws AssociationException, SQLException, BuilderException {
 		dataset.maskDataSetColumn(column);
-		dataset.regenerate();
+		dataset.synchronise();
 	}
 
 	/**
@@ -726,10 +766,15 @@ public class MartBuilderUtils {
 	 *            the dataset to unmask the column in.
 	 * @param column
 	 *            the column to unmask.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws BuilderException
+	 *             if the dataset could not be synchronised.
 	 */
-	public static void unmaskColumn(DataSet dataset, DataSetColumn column) {
+	public static void unmaskColumn(DataSet dataset, DataSetColumn column)
+			throws SQLException, BuilderException {
 		dataset.unmaskDataSetColumn(column);
-		dataset.regenerate();
+		dataset.synchronise();
 	}
 
 	/**

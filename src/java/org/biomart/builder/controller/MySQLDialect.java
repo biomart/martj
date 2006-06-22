@@ -29,9 +29,12 @@ import java.util.Set;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataLink;
+import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
+import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
@@ -51,7 +54,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Understands how to create SQL and DDL for a MySQL database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 21st June 2006
+ * @version 0.1.5, 22nd June 2006
  * @since 0.1
  */
 public class MySQLDialect extends DatabaseDialect {
@@ -141,7 +144,7 @@ public class MySQLDialect extends DatabaseDialect {
 
 	private void createPKStatements(CreatePK action, List statements)
 			throws Exception {
-		String schemaName = action.targetSchemaName;
+		String schemaName = action.datasetSchemaName;
 		String tableName = action.tableName;
 		StringBuffer sb = new StringBuffer();
 		for (Iterator i = action.dsColumns.iterator(); i.hasNext();) {
@@ -156,7 +159,7 @@ public class MySQLDialect extends DatabaseDialect {
 
 	private void createFKStatements(CreateFK action, List statements)
 			throws Exception {
-		String schemaName = action.targetSchemaName;
+		String schemaName = action.datasetSchemaName;
 		String fkTableName = action.tableName;
 		String pkTableName = action.parentTableName;
 		StringBuffer sbFK = new StringBuffer();
@@ -182,14 +185,14 @@ public class MySQLDialect extends DatabaseDialect {
 
 	private void dropTableStatements(DropTable action, List statements)
 			throws Exception {
-		String schemaName = action.targetSchemaName;
+		String schemaName = action.datasetSchemaName;
 		String tableName = action.tableName;
 		statements.add("drop table " + schemaName + "." + tableName);
 	}
 
 	private void renameTableStatements(RenameTable action, List statements)
 			throws Exception {
-		String schemaName = action.targetSchemaName;
+		String schemaName = action.datasetSchemaName;
 		String oldTableName = action.oldName;
 		String newTableName = action.newName;
 		statements.add("rename table " + schemaName + "." + oldTableName
@@ -198,7 +201,7 @@ public class MySQLDialect extends DatabaseDialect {
 
 	private void createTableStatements(CreateTable action, List statements)
 			throws Exception {
-		this.processTableStatements(action, action.targetSchemaName,
+		this.processTableStatements(action, action.datasetSchemaName,
 				((JDBCSchema) action.schema).getDatabaseSchema(),
 				action.tableName, null, action.realTable.getName(),
 				action.dsColumns, null, null, false, action.partitionColumn,
@@ -207,7 +210,7 @@ public class MySQLDialect extends DatabaseDialect {
 
 	private void mergeTableStatements(MergeTable action, List statements)
 			throws Exception {
-		this.processTableStatements(action, action.targetSchemaName,
+		this.processTableStatements(action, action.datasetSchemaName,
 				((JDBCSchema) action.schema).getDatabaseSchema(),
 				action.tempTable, action.tableName, action.realTable.getName(),
 				action.dsColumns, action.fromDSColumns, action.toRealColumns,
@@ -217,25 +220,22 @@ public class MySQLDialect extends DatabaseDialect {
 
 	private void restrictTableStatements(RestrictTable action, List statements)
 			throws Exception {
-		String schemaName = action.targetSchemaName;
+		String schemaName = action.datasetSchemaName;
 		String newTableName = action.newTableName;
 		String childTableName = action.oldTableName;
 		String parentTableName = action.parentTableName;
 
 		// Create the necessary index on the child table.
 		StringBuffer isb = new StringBuffer();
-		isb.append("(");
 		for (Iterator i = action.childFKCols.iterator(); i.hasNext();) {
 			String colName = ((Column) i.next()).getName();
 			isb.append(colName);
 			if (i.hasNext())
 				isb.append(",");
 		}
-		isb.append(")");
-		statements
-				.add("create index " + schemaName + "." + childTableName
-						+ "_I on " + schemaName + "." + childTableName
-						+ isb.toString());
+		statements.add("create index " + schemaName + "." + childTableName
+				+ "_I on " + schemaName + "." + childTableName + "("
+				+ isb.toString() + ")");
 
 		// Restrict the table.
 		StringBuffer sb = new StringBuffer();
@@ -246,7 +246,7 @@ public class MySQLDialect extends DatabaseDialect {
 					.getName();
 			String childColName = ((Column) action.childFKCols.get(i))
 					.getName();
-			sb.append("a." + parentColName + " = b." + childColName);
+			sb.append("a." + parentColName + "=b." + childColName);
 		}
 		statements.add("create table " + schemaName + "." + newTableName
 				+ " as select b.* " + "from " + schemaName + "."
@@ -256,7 +256,7 @@ public class MySQLDialect extends DatabaseDialect {
 
 	private void unionTablesStatements(UnionTables action, List statements)
 			throws Exception {
-		String schemaName = action.targetSchemaName;
+		String schemaName = action.datasetSchemaName;
 		String tableName = action.tableName;
 		StringBuffer sb = new StringBuffer();
 		sb.append("create table " + schemaName + "." + tableName
@@ -280,22 +280,33 @@ public class MySQLDialect extends DatabaseDialect {
 		// we cannot make any temporary indexes on it even though
 		// we'd probably quite like to.
 
+		// Restrict to a particular partition.
+		String sbWhere = "";
+		if (partitionColumn != null) {
+			if (partitionValue == null)
+				sbWhere = "where b."
+						+ ((WrappedColumn) partitionColumn).getWrappedColumn()
+								.getName() + " is null";
+			else
+				sbWhere = "where b."
+						+ ((WrappedColumn) partitionColumn).getWrappedColumn()
+								.getName() + "='" + partitionValue + "'";
+		}
+
 		// Join the table to the parent, if parent table not null.
 		StringBuffer sbJoin = new StringBuffer();
 		if (existingTableName != null) {
 
 			// Create an index on the existing table to use for the join.
 			StringBuffer sbIndCols = new StringBuffer();
-			sbIndCols.append("(");
 			for (Iterator i = fromDSColumns.iterator(); i.hasNext();) {
 				sbIndCols.append(((Column) i.next()).getName());
 				if (i.hasNext())
 					sbIndCols.append(",");
 			}
-			sbIndCols.append(")");
 			statements.add("create index " + dsSchemaName + "."
 					+ existingTableName + "_I on " + dsSchemaName + "."
-					+ existingTableName + sbIndCols.toString());
+					+ existingTableName + "(" + sbIndCols.toString() + ")");
 
 			// Work out what kind of join to use, if any.
 			String joinKW = (leftJoin && partitionColumn == null) ? "left"
@@ -303,14 +314,13 @@ public class MySQLDialect extends DatabaseDialect {
 
 			// Do the join.
 			sbJoin.append(dsSchemaName);
-			sbJoin.append(".");
+			sbJoin.append('.');
 			sbJoin.append(existingTableName);
-			sbJoin.append(" ");
 			sbJoin.append(" as a ");
 			sbJoin.append(joinKW);
 			sbJoin.append(" join ");
 			sbJoin.append(targetSchemaName);
-			sbJoin.append(".");
+			sbJoin.append('.');
 			sbJoin.append(targetTableName);
 			sbJoin.append(" as b on (");
 			for (int i = 0; i < fromDSColumns.size(); i++) {
@@ -319,89 +329,209 @@ public class MySQLDialect extends DatabaseDialect {
 				String parentColName = ((Column) fromDSColumns.get(i))
 						.getName();
 				String childColName = ((Column) toRealColumns.get(i)).getName();
-				sbJoin.append("a." + parentColName + " = b." + childColName);
+				sbJoin.append("a.");
+				sbJoin.append(parentColName);
+				sbJoin.append("=b.");
+				sbJoin.append(childColName);
 			}
-			sbJoin.append(")");
+			sbJoin.append(')');
 		}
 		// Otherwise, just select from target table.
 		else {
 			sbJoin.append(targetSchemaName);
-			sbJoin.append(".");
+			sbJoin.append('.');
 			sbJoin.append(targetTableName);
-			sbJoin.append(" as b ");
+			sbJoin.append(" as b");
 		}
+
+		// Make a list to contain temporary concat table names.
+		List tempConcatTableNames = new ArrayList();
 
 		// Work out what columns to include.
 		StringBuffer sbCols = new StringBuffer();
+
+		// Include all columns from the existing table, if present.
 		if (existingTableName != null)
 			sbCols.append("a.*,");
+
+		// Set up the alias for the first concat table, if any.
+		char nextAlias = 'c';
+
+		// Add all the columns from the new table.
 		for (Iterator i = dsColumns.iterator(); i.hasNext();) {
 			DataSetColumn dsCol = (DataSetColumn) i.next();
 			if (dsCol instanceof WrappedColumn) {
 				WrappedColumn wc = (WrappedColumn) dsCol;
-				sbCols.append("b." + wc.getWrappedColumn().getName() + " as "
-						+ wc.getName());
+				sbCols.append("b.");
+				sbCols.append(wc.getWrappedColumn().getName());
+				sbCols.append(" as ");
+				sbCols.append(wc.getName());
 			} else if (dsCol instanceof SchemaNameColumn) {
 				SchemaNameColumn sn = (SchemaNameColumn) dsCol;
-				sbCols.append("'" + targetSchemaName + "' as " + sn.getName());
+				sbCols.append('\'');
+				sbCols.append(targetSchemaName);
+				sbCols.append("' as ");
+				sbCols.append(sn.getName());
 			} else if (dsCol instanceof ConcatRelationColumn) {
-				ConcatRelationColumn cr = (ConcatRelationColumn) dsCol;
+				ConcatRelationColumn crCol = (ConcatRelationColumn) dsCol;
+				ConcatRelationType crType = ((DataSet) dsCol.getTable()
+						.getSchema()).getConcatRelationType(crCol
+						.getUnderlyingRelation());
+				Key fromKey = crCol.getUnderlyingRelation().getOneKey();
+				Key toKey = crCol.getUnderlyingRelation().getManyKey();
+				Key concatPrimaryKey = toKey.getTable().getPrimaryKey();
 
-				// TODO : concat-relations. Do these by group-by all the columns
-				// on the original table, then adding an additional LEFT/INNER
-				// join
-				// per concat relation, and adding a GROUP_CONCAT(DISTINCT
-				// CONCAT_WS(
-				// valsep, ifnull(col1,''), ifnull(col2,''), ...,
-				// ifnull(colN,''))
-				// SEPARATOR rowsep) column as the concat column for that
-				// relation.
-				// The cols selected are the PK cols of the remote table. The
-				// join
-				// cols are obvious.
-				// Watch out for the MySQL property 'group_concat_max_len'. Also
-				// watch out for null being replaced with empty string in
-				// CONCAT_WS -
-				// alternative is to leave as null, then it will be skipped
-				// altogether
-				// and output will be missing one entire value including
-				// separator.
+				// Make a name for our temporary concat table.
+				String tempConcTabName = tempTableName + "_C" + nextAlias;
+				tempConcatTableNames.add(tempConcTabName);
 
-				sbCols.append("'concat' as " + cr.getName());
+				// Create a list of columns to include in the concat, using
+				// nextAlias.toKey, and using ifNull on each to prevent
+				// skipped columns (replace with '').
+				StringBuffer sbConcatCols = new StringBuffer();
+				for (Iterator j = concatPrimaryKey.getColumns().iterator(); j
+						.hasNext();) {
+					sbConcatCols.append("ifnull(");
+					sbConcatCols.append(nextAlias);
+					sbConcatCols.append('.');
+					sbConcatCols.append(((Column) j.next()).getName());
+					sbConcatCols.append(",'')");
+					if (j.hasNext())
+						sbConcatCols.append(',');
+				}
+
+				// 1. Create a list of columns to select for the concat, using
+				// fromKey.
+				// 2. Create a list of columns to join for the concat, using
+				// fromKey and toKey.
+				// 3. Create a list of columns to index in the concat, using
+				// fromKey.
+				// 4. Create a list of columns to link the concat to the
+				// table we are constructing, using fromKey.
+				StringBuffer sbConcatJoinCols = new StringBuffer();
+				StringBuffer sbConcatFromCols = new StringBuffer();
+				StringBuffer sbConcatIndCols = new StringBuffer();
+				StringBuffer sbConcatLinkCols = new StringBuffer();
+				for (int j = 0; j < fromKey.getColumns().size(); j++) {
+					if (j > 0) {
+						sbConcatJoinCols.append(',');
+						sbConcatFromCols.append(',');
+						sbConcatIndCols.append(',');
+						sbConcatLinkCols.append(" and ");
+					}
+					// join cols
+					sbConcatJoinCols.append("b.");
+					sbConcatJoinCols.append(((Column) fromKey.getColumns().get(
+							j)).getName());
+					sbConcatJoinCols.append('=');
+					sbConcatJoinCols.append(nextAlias);
+					sbConcatJoinCols.append('.');
+					sbConcatJoinCols
+							.append(((Column) toKey.getColumns().get(j))
+									.getName());
+					// from cols
+					sbConcatFromCols.append("b.");
+					sbConcatFromCols.append(((Column) fromKey.getColumns().get(
+							j)).getName());
+					// index cols
+					sbConcatIndCols.append(((Column) fromKey.getColumns()
+							.get(j)).getName());
+					// link cols
+					sbConcatLinkCols.append("b.");
+					sbConcatLinkCols.append(((Column) fromKey.getColumns().get(
+							j)).getName());
+					sbConcatLinkCols.append('=');
+					sbConcatLinkCols.append(nextAlias);
+					sbConcatLinkCols.append('.');
+					sbConcatLinkCols.append(((Column) fromKey.getColumns().get(
+							j)).getName());
+				}
+
+				// Construct the temporary concat table.
+				StringBuffer sbTempConc = new StringBuffer();
+				sbTempConc.append("create table ");
+				sbTempConc.append(dsSchemaName);
+				sbTempConc.append('.');
+				sbTempConc.append(tempConcTabName);
+				sbTempConc.append(" as select ");
+				sbTempConc.append(sbConcatFromCols.toString());
+				sbTempConc.append(", ");
+				sbTempConc.append("group_concat(distinct concat_ws('");
+				sbTempConc.append(crType.getValueSeparator());
+				sbTempConc.append("', ");
+				sbTempConc.append(sbConcatCols.toString());
+				sbTempConc.append(") separator '");
+				sbTempConc.append(crType.getRecordSeparator());
+				sbTempConc.append("'))");
+				sbTempConc.append(" from ");
+				sbTempConc.append(targetSchemaName);
+				sbTempConc.append('.');
+				sbTempConc.append(targetTableName);
+				sbTempConc.append(" as b inner join ");
+				sbTempConc.append(targetSchemaName);
+				sbTempConc.append('.');
+				sbTempConc.append(toKey.getTable().getName());
+				sbTempConc.append(" as ");
+				sbTempConc.append(nextAlias);
+				sbTempConc.append(" on (");
+				sbTempConc.append(sbConcatJoinCols.toString());
+				sbTempConc.append(") group by ");
+				sbTempConc.append(sbConcatFromCols.toString());
+				statements.add(sbTempConc.toString());
+
+				// Create an index on b.fromKey in the temporary concat table.
+				statements.add("create index " + dsSchemaName + "."
+						+ tempConcTabName + "_I on " + dsSchemaName + "."
+						+ tempConcTabName + "(" + sbConcatIndCols.toString()
+						+ ")");
+
+				// Add the 'concat' column from the temporary concat table to
+				// the list of columns to create for table b.
+				sbCols.append(nextAlias);
+				sbCols.append(".xconc as ");
+				sbCols.append(crCol.getName());
+
+				// Add an inner join from b.fromKey to equivalent b.fromKey in
+				// the temporary concat table.
+				sbJoin.append("left join ");
+				sbJoin.append(dsSchemaName);
+				sbJoin.append('.');
+				sbJoin.append(tempConcTabName);
+				sbJoin.append(" as ");
+				sbJoin.append(nextAlias);
+				sbJoin.append(" on (");
+				sbJoin.append(sbConcatLinkCols.toString());
+				sbJoin.append(')');
+
+				// Increment the alias for the next one, if any.
+				nextAlias++;
 			} else
 				throw new ConstructorException(BuilderBundle
 						.getString("mcUnknownDSCol"));
 			if (i.hasNext())
-				sbCols.append(",");
-		}
-
-		// Restrict to a particular partition.
-		StringBuffer sbWhere = new StringBuffer();
-		if (partitionColumn != null) {
-			if (partitionValue == null)
-				sbWhere.append(" where b."
-						+ ((WrappedColumn) partitionColumn).getWrappedColumn()
-								.getName() + " is null");
-			else
-				sbWhere.append(" where b."
-						+ ((WrappedColumn) partitionColumn).getWrappedColumn()
-								.getName() + " = '" + partitionValue + "'");
+				sbCols.append(',');
 		}
 
 		// Write the command.
 		statements.add("create table " + dsSchemaName + "." + tempTableName
 				+ " as select " + sbCols.toString() + " from "
-				+ sbJoin.toString() + sbWhere.toString());
+				+ sbJoin.toString() + " " + sbWhere);
 
 		// If it has a parent table...
 		if (existingTableName != null) {
 			// Drop the parent table.
-			this.dropTableStatements(new DropTable(action.targetSchemaName,
+			this.dropTableStatements(new DropTable(dsSchemaName,
 					existingTableName), statements);
 
 			// Rename the child table.
-			this.renameTableStatements(new RenameTable(action.targetSchemaName,
+			this.renameTableStatements(new RenameTable(dsSchemaName,
 					tempTableName, existingTableName), statements);
 		}
+
+		// Drop any temporary concat tables.
+		for (Iterator i = tempConcatTableNames.iterator(); i.hasNext();)
+			// Drop the parent table.
+			this.dropTableStatements(new DropTable(dsSchemaName, (String) i
+					.next()), statements);
 	}
 }

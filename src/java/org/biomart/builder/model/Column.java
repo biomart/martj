@@ -32,7 +32,7 @@ import org.biomart.builder.exceptions.MartBuilderInternalError;
  * name.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 1st June 2006
+ * @version 0.1.6, 22nd June 2006
  * @since 0.1
  */
 public interface Column extends Comparable {
@@ -42,6 +42,15 @@ public interface Column extends Comparable {
 	 * @return the name of this column.
 	 */
 	public String getName();
+	
+	/**
+	 * Retrieve the original name of this column, as it was first created.
+	 * This is useful when the user has renamed a column but you need to
+	 * know what it started out as for purposes of comparison.
+	 * 
+	 * @return the original name of this column.
+	 */
+	public String getOriginalName();
 
 	/**
 	 * Use this to rename a column. The table will be informed of the change
@@ -51,6 +60,15 @@ public interface Column extends Comparable {
 	 *            the new name to give the column.
 	 */
 	public void setName(String newName) throws AlreadyExistsException;
+
+	/**
+	 * Use this to rename a column's original name. Use with extreme caution.
+	 * The owning table doesn't need to know so won't be notified.
+	 * 
+	 * @param newName
+	 *            the new original name to give the column.
+	 */
+	public void setOriginalName(String newName) throws AlreadyExistsException;
 
 	/**
 	 * Retrieve the parent table of this column.
@@ -65,6 +83,8 @@ public interface Column extends Comparable {
 	 */
 	public class GenericColumn implements Column {
 		private final Table table;
+
+		private String originalName;
 
 		private String name;
 
@@ -84,6 +104,7 @@ public interface Column extends Comparable {
 				throws AlreadyExistsException {
 			// Remember the values.
 			this.name = name;
+			this.originalName = name;
 			this.table = table;
 
 			// Add it to the table - throws AssociationException and
@@ -99,6 +120,10 @@ public interface Column extends Comparable {
 			return this.name;
 		}
 
+		public String getOriginalName() {
+			return this.originalName;
+		}
+
 		public Table getTable() {
 			return this.table;
 		}
@@ -106,6 +131,10 @@ public interface Column extends Comparable {
 		public void setName(String newName) throws AlreadyExistsException {
 			this.getTable().changeColumnMapKey(this.name, newName);
 			this.name = newName;
+		}
+		
+		public void setOriginalName(String newName) throws AlreadyExistsException {
+			this.originalName = newName;
 		}
 
 		public String toString() {

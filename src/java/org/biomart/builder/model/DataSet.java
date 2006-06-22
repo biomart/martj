@@ -57,7 +57,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.28, 20th June 2006
+ * @version 0.1.29, 22nd June 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -154,7 +154,7 @@ public class DataSet extends GenericSchema {
 						.get(i);
 				newDataSet.flagPartitionedWrappedColumn(col, type);
 			}
-			
+
 			// Synchronise it.
 			newDataSet.synchronise();
 
@@ -530,7 +530,8 @@ public class DataSet extends GenericSchema {
 
 	/**
 	 * Mark a relation as concat-only. If previously marked concat-only, this
-	 * new call will override the previous request.
+	 * new call will override the previous request. If the relation is not 1:M,
+	 * or the M end does not have a primary key, the call will fail.
 	 * 
 	 * @param relation
 	 *            the relation to mark as concat-only.
@@ -538,7 +539,20 @@ public class DataSet extends GenericSchema {
 	 *            the concat type to use for the relation.
 	 */
 	public void flagConcatOnlyRelation(Relation relation,
-			ConcatRelationType type) {
+			ConcatRelationType type) throws AssociationException {
+
+		// Sanity check.
+		if (!relation.isOneToMany())
+			throw new AssociationException(BuilderBundle
+					.getString("cannotConcatNonOneMany"));
+		if (relation.getManyKey().getTable().getPrimaryKey() == null)
+			throw new AssociationException(BuilderBundle
+					.getString("cannotConcatManyWithoutPK"));
+		if (relation.isExternal())
+			throw new AssociationException(BuilderBundle
+					.getString("cannotConcatBetweenSchemas"));
+
+		// Do it.
 		int index = this.concatOnlyRelations[0].indexOf(relation);
 		if (index >= 0) {
 			this.concatOnlyRelations[0].set(index, relation);
@@ -630,8 +644,46 @@ public class DataSet extends GenericSchema {
 			this.unflagConcatOnlyRelation(r);
 		}
 
+		// Remember the names for renamed tables and columns.
+		List renamedColumns = new ArrayList();
+		List renamedTables = new ArrayList();
+		for (Iterator i = this.getTables().iterator(); i.hasNext();) {
+			Table tbl = (Table) i.next();
+			if (!tbl.getOriginalName().equals(tbl.getName()))
+				renamedTables.add(tbl);
+			for (Iterator j = tbl.getColumns().iterator(); j.hasNext();) {
+				Column col = (Column) j.next();
+				if (!col.getOriginalName().equals(col.getName()))
+					renamedColumns.add(col);
+			}
+		}
+
 		// Regenerate the dataset
 		this.regenerate();
+
+		// Reapply the names for renamed tables and columns. Look up using
+		// original names else they won't be found. Do columns first before
+		// table names have changed completely.
+		for (Iterator i = renamedColumns.iterator(); i.hasNext();) {
+			Column col = (Column) i.next();
+			Column newCol = this.getTableByName(
+					col.getTable().getOriginalName()).getColumnByName(
+					col.getOriginalName());
+			try {
+				newCol.setName(col.getName());
+			} catch (Throwable t) {
+				// Ignore, and leave the name as it is.
+			}
+		}
+		for (Iterator i = renamedTables.iterator(); i.hasNext();) {
+			Table tbl = (Table) i.next();
+			Table newTbl = this.getTableByName(tbl.getOriginalName());
+			try {
+				newTbl.setName(tbl.getName());
+			} catch (Throwable t) {
+				// Ignore, and leave the name as it is.
+			}
+		}
 	}
 
 	/**
@@ -898,13 +950,18 @@ public class DataSet extends GenericSchema {
 
 		// Did we get here via somewhere else?
 		if (sourceRelation != null) {
-			// Work out what key to ignore, if any.
+			// Work out what key to ignore.
 			ignoreKey = sourceRelation.getFirstKey().getTable().equals(
 					mergeTable) ? sourceRelation.getFirstKey() : sourceRelation
 					.getSecondKey();
 
 			// Add the relation to the list of relations followed for the table.
 			dsTable.getUnderlyingRelations().add(sourceRelation);
+
+			// Add the key we just came from to the list of keys followed for
+			// the table.
+			dsTable.getUnderlyingKeys().add(
+					sourceRelation.getOtherKey(ignoreKey));
 
 			// Mark the source relation as followed.
 			relationsFollowed.add(sourceRelation);
@@ -1302,11 +1359,14 @@ public class DataSet extends GenericSchema {
 
 	/**
 	 * This special table represents the merge of one or more other tables by
-	 * following a series of relations. As such it has no real columns of its
-	 * own, so every column is from another table and is given an alias.
+	 * following a series of relations rooted in a similar series of keys. As
+	 * such it has no real columns of its own, so every column is from another
+	 * table and is given an alias.
 	 */
 	public static class DataSetTable extends GenericTable {
 		private final List underlyingRelations = new ArrayList();
+
+		private final List underlyingKeys = new ArrayList();
 
 		private final DataSetTableType type;
 
@@ -1390,6 +1450,19 @@ public class DataSet extends GenericSchema {
 		}
 
 		/**
+		 * Sets the list of keys used to construct this table.
+		 * 
+		 * @param keys
+		 *            the list of keys of this table. May be empty but never
+		 *            null.
+		 */
+		public void setUnderlyingKeys(List keys) {
+			// Check the keys and save them.
+			this.underlyingKeys.clear();
+			this.underlyingKeys.addAll(keys);
+		}
+
+		/**
 		 * Returns the list of relations used to construct this table.
 		 * 
 		 * @return the list of relations of this table. May be empty but never
@@ -1397,6 +1470,17 @@ public class DataSet extends GenericSchema {
 		 */
 		public List getUnderlyingRelations() {
 			return this.underlyingRelations;
+		}
+
+		/**
+		 * Returns the list of keys used to construct this table. These keys are
+		 * in the same order as the relations, and indicate which key to root
+		 * each relation at.
+		 * 
+		 * @return the list of keys of this table. May be empty but never null.
+		 */
+		public List getUnderlyingKeys() {
+			return this.underlyingKeys;
 		}
 
 		public void addColumn(Column column) throws AlreadyExistsException,

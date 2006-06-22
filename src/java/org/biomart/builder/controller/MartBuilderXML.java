@@ -96,7 +96,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.18, 21st June 2006
+ * @version 0.1.19, 22nd June 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -245,9 +245,10 @@ public class MartBuilderXML extends DefaultHandler {
 			Schema schema = (Schema) this.objectStack.peek();
 
 			// Get the name and id as these are common features.
-			String name = (String) attributes.get("name");
 			String id = (String) attributes.get("id");
-
+			String name = (String) attributes.get("name");
+			String originalName = (String) attributes.get("originalName");
+			
 			// DataSet table provider?
 			if (schema instanceof DataSet) {
 				// Work out what type of dataset table it is.
@@ -276,6 +277,7 @@ public class MartBuilderXML extends DefaultHandler {
 					// Construct the dataset table.
 					DataSetTable dst = new DataSetTable(name, (DataSet) schema,
 							dsType, underlyingTable);
+					dst.setOriginalName(originalName);
 					element = dst;
 
 					// Read and set the underlying relations.
@@ -286,6 +288,15 @@ public class MartBuilderXML extends DefaultHandler {
 						underRels.add(this.mappedObjects
 								.get(underlyingRelationIds[i]));
 					dst.setUnderlyingRelations(underRels);
+
+					// Read and set the underlying keys.
+					String[] underlyingKeyIds = ((String) attributes
+							.get("underlyingKeyIds")).split("\\s*,\\s*");
+					List underKeys = new ArrayList();
+					for (int i = 0; i < underlyingKeyIds.length; i++)
+						underKeys.add(this.mappedObjects
+								.get(underlyingKeyIds[i]));
+					dst.setUnderlyingKeys(underKeys);
 				} catch (Exception e) {
 					throw new SAXException(e);
 				}
@@ -294,7 +305,9 @@ public class MartBuilderXML extends DefaultHandler {
 			// Generic schema?
 			else if (schema instanceof GenericSchema) {
 				try {
-					element = new GenericTable(name, schema);
+					Table table = new GenericTable(name, schema);
+					table.setOriginalName(originalName);
+					element = table;
 				} catch (Exception e) {
 					throw new SAXException(e);
 				}
@@ -321,7 +334,8 @@ public class MartBuilderXML extends DefaultHandler {
 			// Get the id and name as these are common features.
 			String id = (String) attributes.get("id");
 			String name = (String) attributes.get("name");
-
+			String originalName = (String) attributes.get("originalName");
+			
 			try {
 				// DataSet table column?
 				if (tbl instanceof DataSetTable) {
@@ -353,12 +367,15 @@ public class MartBuilderXML extends DefaultHandler {
 					// Override the name, to make sure we get the same alias as
 					// the original.
 					column.setName(name);
+					column.setOriginalName(originalName);
 					element = column;
 				}
 
 				// Generic column?
 				else if (tbl instanceof GenericTable) {
-					element = new GenericColumn(name, tbl);
+					Column column = new GenericColumn(name, tbl);
+					column.setOriginalName(originalName);
+					element = column;
 				}
 
 				// Others
@@ -556,13 +573,13 @@ public class MartBuilderXML extends DefaultHandler {
 					crType = ConcatRelationType.COMMA_SPACE;
 				else if (type.equals("COMMA_TAB"))
 					crType = ConcatRelationType.COMMA_TAB;
-				if (type.equals("SPACE_COMMA"))
+				else if (type.equals("SPACE_COMMA"))
 					crType = ConcatRelationType.SPACE_COMMA;
 				else if (type.equals("SPACE_SPACE"))
 					crType = ConcatRelationType.SPACE_SPACE;
 				else if (type.equals("SPACE_TAB"))
 					crType = ConcatRelationType.SPACE_TAB;
-				if (type.equals("TAB_COMMA"))
+				else if (type.equals("TAB_COMMA"))
 					crType = ConcatRelationType.TAB_COMMA;
 				else if (type.equals("TAB_SPACE"))
 					crType = ConcatRelationType.TAB_SPACE;
@@ -917,6 +934,8 @@ public class MartBuilderXML extends DefaultHandler {
 			this.openElement("table", xmlWriter);
 			this.writeAttribute("id", tableMappedID, xmlWriter);
 			this.writeAttribute("name", table.getName(), xmlWriter);
+			this.writeAttribute("originalName", table.getOriginalName(),
+					xmlWriter);
 
 			// A dataset table?
 			if (table instanceof DataSetTable) {
@@ -938,6 +957,14 @@ public class MartBuilderXML extends DefaultHandler {
 				this.writeAttribute("underlyingRelationIds",
 						(String[]) underRelIds.toArray(new String[0]),
 						xmlWriter);
+
+				// Write out the underlying keys.
+				List underKeyIds = new ArrayList();
+				for (Iterator i = ((DataSetTable) table).getUnderlyingKeys()
+						.iterator(); i.hasNext();)
+					underKeyIds.add(this.reverseMappedObjects.get(i.next()));
+				this.writeAttribute("underlyingKeyIds", (String[]) underKeyIds
+						.toArray(new String[0]), xmlWriter);
 			}
 
 			// Write out columns inside each table.
@@ -950,6 +977,8 @@ public class MartBuilderXML extends DefaultHandler {
 				this.openElement("column", xmlWriter);
 				this.writeAttribute("id", colMappedID, xmlWriter);
 				this.writeAttribute("name", col.getName(), xmlWriter);
+				this.writeAttribute("originalName", col.getOriginalName(),
+						xmlWriter);
 
 				// Dataset column?
 				if (col instanceof DataSetColumn) {

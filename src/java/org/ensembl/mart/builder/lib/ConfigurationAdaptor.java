@@ -327,13 +327,13 @@ public class ConfigurationAdaptor {
 		this.resolver = resolver;
 	}
 	/**
-	 * @return Returns the targetSchemaName.
+	 * @return Returns the datasetSchemaName.
 	 */
 	public String getTargetSchemaName() {
 		return targetSchemaName;
 	}
 	/**
-	 * @param targetSchemaName The targetSchemaName to set.
+	 * @param datasetSchemaName The datasetSchemaName to set.
 	 */
 	public void setTargetSchemaName(String targetSchemaName) {
 		this.targetSchemaName = targetSchemaName;
