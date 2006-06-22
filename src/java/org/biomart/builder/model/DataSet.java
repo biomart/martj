@@ -548,9 +548,6 @@ public class DataSet extends GenericSchema {
 		if (relation.getManyKey().getTable().getPrimaryKey() == null)
 			throw new AssociationException(BuilderBundle
 					.getString("cannotConcatManyWithoutPK"));
-		if (relation.isExternal())
-			throw new AssociationException(BuilderBundle
-					.getString("cannotConcatBetweenSchemas"));
 
 		// Do it.
 		int index = this.concatOnlyRelations[0].indexOf(relation);

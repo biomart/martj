@@ -33,6 +33,7 @@ import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
@@ -447,6 +448,14 @@ public class MySQLDialect extends DatabaseDialect {
 							j)).getName());
 				}
 
+				// Work out what schema the other end of the concat relation
+				// is in.
+				// FIXME: what to do if target real schema is a group, but
+				// not our group?
+				Table realTable = toKey.getTable();
+				String realSchemaName = 
+					(realTable.getSchema() instanceof SchemaGroup) ? targetSchemaName : realTable.getSchema().getName();
+				
 				// Construct the temporary concat table.
 				StringBuffer sbTempConc = new StringBuffer();
 				sbTempConc.append("create table ");
@@ -468,7 +477,7 @@ public class MySQLDialect extends DatabaseDialect {
 				sbTempConc.append('.');
 				sbTempConc.append(targetTableName);
 				sbTempConc.append(" as b inner join ");
-				sbTempConc.append(targetSchemaName);
+				sbTempConc.append(realSchemaName);
 				sbTempConc.append('.');
 				sbTempConc.append(toKey.getTable().getName());
 				sbTempConc.append(" as ");

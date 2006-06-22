@@ -253,7 +253,7 @@ public interface MartConstructor {
 
 		private Helper helper;
 
-		private String targetSchemaName;
+		private String datasetSchemaName;
 
 		/**
 		 * Constructs a mart builder that will build the mart in the given
@@ -272,7 +272,7 @@ public interface MartConstructor {
 			super();
 			this.datasets = datasets;
 			this.helper = helper;
-			this.targetSchemaName = targetSchemaName;
+			this.datasetSchemaName = targetSchemaName;
 		}
 
 		public void run() {
@@ -716,7 +716,7 @@ public interface MartConstructor {
 
 					// Union depends on final actions of each temporary
 					// table.
-					UnionTables union = new UnionTables(this.targetSchemaName,
+					UnionTables union = new UnionTables(this.datasetSchemaName,
 							targetTempTableName, tempTableNames.values());
 					for (Iterator i = lastActions.iterator(); i.hasNext();)
 						union.addParent((MCAction) i.next());
@@ -729,7 +729,7 @@ public interface MartConstructor {
 							.hasNext();) {
 						String tableName = (String) i.next();
 						MCAction dropTable = new DropTable(
-								this.targetSchemaName, tableName);
+								this.datasetSchemaName, tableName);
 						dropTable.addParent(lastAction);
 						actionGraph.addAction(dropTable);
 					}
@@ -810,7 +810,7 @@ public interface MartConstructor {
 							// Create a new temp table restricted by
 							// the parent relation.
 							RestrictTable restrict = new RestrictTable(
-									this.targetSchemaName, segmentTableName,
+									this.datasetSchemaName, segmentTableName,
 									targetTempTableName, parentTableName,
 									parentPK.getColumns(), childFK.getColumns());
 							restrict.addParent(lastAction);
@@ -818,7 +818,7 @@ public interface MartConstructor {
 
 							// Establish FK to PK relation on parent table.
 							CreateFK createFK = new CreateFK(
-									this.targetSchemaName, segmentTableName,
+									this.datasetSchemaName, segmentTableName,
 									childFK.getColumns(), parentTableName,
 									parentPK.getColumns());
 							createFK.addParent(restrict);
@@ -836,7 +836,7 @@ public interface MartConstructor {
 
 					// After last segment, drop original temp table
 					// (tempTableName) as it has now been split into pieces.
-					MCAction dropTable = new DropTable(this.targetSchemaName,
+					MCAction dropTable = new DropTable(this.datasetSchemaName,
 							targetTempTableName);
 					for (Iterator i = dropDependsOn.iterator(); i.hasNext();)
 						dropTable.addParent((MCAction) i.next());
@@ -894,7 +894,7 @@ public interface MartConstructor {
 						PrimaryKey pk = dsTable.getPrimaryKey();
 						if (pk != null) {
 							CreatePK createPK = new CreatePK(
-									this.targetSchemaName, tableName, pk
+									this.datasetSchemaName, tableName, pk
 											.getColumns());
 							createPK.addParent(lastAction);
 							actionGraph.addAction(createPK);
@@ -912,7 +912,7 @@ public interface MartConstructor {
 						// create PK action above, depending on whether a PK
 						// exists or not.
 						MCAction rename = new RenameTable(
-								this.targetSchemaName, tableName, finalName);
+								this.datasetSchemaName, tableName, finalName);
 						rename.addParent(lastAction);
 						actionGraph.addAction(rename);
 						lastRenameAction = rename;
@@ -1156,6 +1156,13 @@ public interface MartConstructor {
 					}
 				}
 
+				// What schema is the real table in? 
+				// FIXME: What to do if it is in a group, but that group is
+				// not the same as our group?
+				Schema realSchema = 
+					(realTable.getSchema() instanceof SchemaGroup)
+							? schema : realTable.getSchema();
+				
 				// If fromKey not null, merge temp using it and toKey,
 				// else create temp. Pass in the list of columns we want
 				// from this step as a parameter. Pass in the schema name.
@@ -1163,13 +1170,13 @@ public interface MartConstructor {
 				// Also pass in the partition dataset column and value.
 				MCAction tableAction = null;
 				if (fromKey == null)
-					tableAction = new CreateTable(this.targetSchemaName,
-							tempTableName, realTable, dsColumns, schema,
+					tableAction = new CreateTable(this.datasetSchemaName,
+							tempTableName, realTable, dsColumns, realSchema,
 							partitionColumn, partitionValue);
 				else
-					tableAction = new MergeTable(this.targetSchemaName,
+					tableAction = new MergeTable(this.datasetSchemaName,
 							tempTableName, realTable, helper
-									.getNewTempTableName(), dsColumns, schema,
+									.getNewTempTableName(), dsColumns, realSchema,
 							partitionColumn, partitionValue, fromKeyDSColumns,
 							toKey.getColumns(), relation.isOptional());
 
@@ -1471,8 +1478,8 @@ public interface MartConstructor {
 		 * @param tableName
 		 *            the name of the table to drop.
 		 */
-		public DropTable(String targetSchemaName, String tableName) {
-			super(targetSchemaName);
+		public DropTable(String datasetSchemaName, String tableName) {
+			super(datasetSchemaName);
 			this.tableName = tableName;
 		}
 
@@ -1505,9 +1512,9 @@ public interface MartConstructor {
 		 * @param newName
 		 *            the new name to give it.
 		 */
-		public RenameTable(String targetSchemaName, String oldName,
+		public RenameTable(String datasetSchemaName, String oldName,
 				String newName) {
-			super(targetSchemaName);
+			super(datasetSchemaName);
 			this.oldName = oldName;
 			this.newName = newName;
 		}
@@ -1544,9 +1551,9 @@ public interface MartConstructor {
 		 * @param tableNames
 		 *            the names of the tables to use in the union.
 		 */
-		public UnionTables(String targetSchemaName, String tableName,
+		public UnionTables(String datasetSchemaName, String tableName,
 				Collection tableNames) {
-			super(targetSchemaName);
+			super(datasetSchemaName);
 			this.tableName = tableName;
 			this.tableNames = tableNames;
 		}
@@ -1581,9 +1588,9 @@ public interface MartConstructor {
 		 *            the dataset columns, in order, which represent the colums
 		 *            to include in the key.
 		 */
-		public CreatePK(String targetSchemaName, String tableName,
+		public CreatePK(String datasetSchemaName, String tableName,
 				List dsColumns) {
-			super(targetSchemaName);
+			super(datasetSchemaName);
 			this.tableName = tableName;
 			this.dsColumns = dsColumns;
 		}
@@ -1634,9 +1641,9 @@ public interface MartConstructor {
 		 *            the dataset columns, in order, of the primary key that the
 		 *            foreign key refers to.
 		 */
-		public CreateFK(String targetSchemaName, String tableName,
+		public CreateFK(String datasetSchemaName, String tableName,
 				List dsColumns, String parentTableName, List parentDSColumns) {
-			super(targetSchemaName);
+			super(datasetSchemaName);
 			this.tableName = tableName;
 			this.dsColumns = dsColumns;
 			this.parentTableName = parentTableName;
@@ -1703,10 +1710,10 @@ public interface MartConstructor {
 		 * @param partitionValue
 		 *            the value to restrict the partition column by.
 		 */
-		public CreateTable(String targetSchemaName, String tableName,
+		public CreateTable(String datasetSchemaName, String tableName,
 				Table realTable, List dsColumns, Schema schema,
 				DataSetColumn partitionColumn, Object partitionValue) {
-			super(targetSchemaName);
+			super(datasetSchemaName);
 			this.tableName = tableName;
 			this.realTable = realTable;
 			this.dsColumns = dsColumns;
@@ -1778,12 +1785,12 @@ public interface MartConstructor {
 		 *            <tt>true</tt> if the join should be a left-join,
 		 *            <tt>false</tt> if it should be a natural-join.
 		 */
-		public MergeTable(String targetSchemaName, String tableName,
+		public MergeTable(String datasetSchemaName, String tableName,
 				Table realTable, String tempTable, List dsColumns,
 				Schema schema, DataSetColumn partitionColumn,
 				Object partitionValue, List fromDSColumns, List toRealColumns,
 				boolean leftJoin) {
-			super(targetSchemaName, tableName, realTable, dsColumns, schema,
+			super(datasetSchemaName, tableName, realTable, dsColumns, schema,
 					partitionColumn, partitionValue);
 			this.tempTable = tempTable;
 			this.fromDSColumns = fromDSColumns;
@@ -1848,10 +1855,10 @@ public interface MartConstructor {
 		 *            the foreign key of the table to be restricted which refers
 		 *            to the primary key of the restrictive table.
 		 */
-		public RestrictTable(String targetSchemaName, String newTableName,
+		public RestrictTable(String datasetSchemaName, String newTableName,
 				String oldTableName, String parentTableName, List parentPKCols,
 				List childFKCols) {
-			super(targetSchemaName);
+			super(datasetSchemaName);
 			this.newTableName = newTableName;
 			this.oldTableName = oldTableName;
 			this.parentTableName = parentTableName;
