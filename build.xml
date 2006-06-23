@@ -87,6 +87,7 @@
         <include name="xalan.jar" />
         <include name="p6spy.jar" />
         <include name="ojdbc14.jar" />
+       <include name="jline.jar" />
     </fileset>
 
     <!-- patternsets to use in various zip and tar filesets during the dist-* targets -->
@@ -118,7 +119,8 @@
         <include name="pg73jdbc3.jar"/>
         <include name="ojdbc14.jar" />
         <include name="p6spy.jar" />     
-        <include name="junit.jar" />     
+        <include name="junit.jar" />
+       <include name="jline.jar" />     
     </patternset>
 
     <!-- test distribution jars -->
@@ -133,6 +135,7 @@
         <exclude name="martj.jar" />
         <exclude name="mysql-connector-java-3.0.16-ga-bin.jar" />
         <exclude name="pg73jdbc3.jar"/>
+       <exclude name="jline.jar" />
     </patternset>
 
     <!-- readline platform dependant libraries -->
