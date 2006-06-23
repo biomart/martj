@@ -18,11 +18,13 @@
 
 package org.ensembl.mart.shell;
 
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -30,6 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.config.AttributeCollection;
@@ -39,9 +42,9 @@ import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.RegistryDSConfigAdaptor;
-import org.gnu.readline.Readline;
-import org.gnu.readline.ReadlineCompleter;
-
+//import org.gnu.readline.Readline;
+//import org.gnu.readline.ReadlineCompleter;
+import jline.*;
 /**
  * <p>ReadlineCompleter implimenting object allowing Mart - specific
  * behavior.  It provides command-completion choices that are based
@@ -71,8 +74,8 @@ import org.gnu.readline.ReadlineCompleter;
  * @see MartShellLib
  * @see org.ensembl.mart.lib.config.MartConfiguration
  */
-public class MartCompleter implements ReadlineCompleter {
-
+//public class MartCompleter implements ReadlineCompleter {
+public class MartCompleter implements Completor {
   /* (non-Javadoc)
    * @see org.gnu.readline.ReadlineCompleter#completer(java.lang.String, int)
    */
@@ -99,6 +102,7 @@ public class MartCompleter implements ReadlineCompleter {
   private SortedSet adaptorLocationSet = new TreeSet(); // will hold adaptor names for update and remove
   private SortedSet datasetConfigSet = new TreeSet();
   // will hold DatasetConfig names for use, set, remove, and describe
+  
 
   private final List NODATASETWARNING =
     Collections.unmodifiableList(Arrays.asList(new String[] { "No DatasetConfigs loaded", "!" }));
@@ -135,6 +139,13 @@ public class MartCompleter implements ReadlineCompleter {
   public int listLevel = 0;
   private String lastLine = null;
 
+  //////// New Declarataions
+  
+  	public Completor []			completors;
+	public final ArgumentDelimiter		delim;
+	public boolean						strict = true;
+
+  ///////////////////////////
   private Logger logger = Logger.getLogger(MartCompleter.class.getName());
 
   /**
@@ -142,9 +153,348 @@ public class MartCompleter implements ReadlineCompleter {
    * object, and stores important internal_names into the completion sets that are applicable to the given MartConfiguration object.
    * @param adaptorManager - a MartConfiguration Object
    */
-  public MartCompleter() {
+  public MartCompleter (final List completors)
+  {
+		this ((Completor [])completors.toArray (new Completor [completors.size ()]));
   }
+  public MartCompleter (final Completor completor)
+	{
+		this (new Completor [] { completor });
+	}
 
+
+	/**
+	 *  Constuctor: create a new completor with the default
+	 *  argument separator of " ".
+	 *
+	 *  @param  completors  the embedded argument completors
+	 */
+	public MartCompleter (final Completor [] completors)
+	{
+		this (completors, new WhitespaceArgumentDelimiter ());
+	}
+
+
+	/**
+	 *  Constuctor: create a new completor with the specified
+	 *  argument delimiter.
+	 *
+	 *  @param  completor	the embedded completor
+	 *  @param  delim		the delimiter for parsing arguments
+	 */
+	public MartCompleter (final Completor completor,
+		final ArgumentDelimiter delim)
+	{
+		this (new Completor [] { completor }, delim);
+	}
+
+
+	/**
+	 *  Constuctor: create a new completor with the specified
+	 *  argument delimiter.
+	 *
+	 *  @param  completors	the embedded completors
+	 *  @param  delim		the delimiter for parsing arguments
+	 */
+	public MartCompleter (final Completor [] completors,
+		final ArgumentDelimiter delim)
+	{
+		this.completors = completors;
+		this.delim = delim;
+	}
+
+
+	/**
+	 *  If true, a completion at argument index N will only succeed
+	 *  if all the completions from 0-(N-1) also succeed.
+	 */
+	public void setStrict (final boolean strict)
+	{
+		this.strict = strict;
+	}
+
+
+	/**
+	 *  Returns whether a completion at argument index N will succees
+	 *  if all the completions from arguments 0-(N-1) also succeed.
+	 */
+	public boolean getStrict ()
+	{
+		return this.strict;
+	}
+
+
+	
+
+	/**
+	 *  The {@link ArgumentCompletor.ArgumentDelimiter} allows custom
+	 *  breaking up of a {@link String} into individual arguments in
+	 *  order to dispatch the arguments to the nested {@link Completor}.
+	 *
+	 *  @author  <a href="mailto:mwp1@cornell.edu">Marc Prud'hommeaux</a>
+	 */
+	public static interface ArgumentDelimiter
+	{
+		/**
+		 *  Break the specified buffer into individual tokens
+		 *  that can be completed on their own.
+		 *
+		 *  @param  buffer			the buffer to split
+		 *  @param  argumentPosition	the current position of the
+		 *  						cursor in the buffer
+		 *  @return			the tokens
+		 */
+		ArgumentList delimit (String buffer, int argumentPosition);
+
+
+		/**
+		 *  Returns true if the specified character is a whitespace
+		 *  parameter.
+		 *
+		 *  @param  buffer	the complete command buffer
+		 *  @param  pos		the index of the character in the buffer
+		 *  @return			true if the character should be a delimiter
+		 */
+		boolean isDelimiter (String buffer, int pos);
+	}
+
+
+	/**
+	 *  Abstract implementation of a delimiter that uses the
+	 *  {@link #isDelimiter} method to determine if a particular
+	 *  character should be used as a delimiter.
+	 *
+	 *  @author  <a href="mailto:mwp1@cornell.edu">Marc Prud'hommeaux</a>
+	 */
+	public static abstract class AbstractArgumentDelimiter
+		implements ArgumentDelimiter
+	{
+		private char [] quoteChars = new char [] { '\'', '"' };
+		private char [] escapeChars = new char [] { '\\' };
+
+
+		public void setQuoteChars (final char [] quoteChars)
+		{
+			this.quoteChars = quoteChars;
+		}
+
+
+		public char [] getQuoteChars ()
+		{
+			return this.quoteChars;
+		}
+
+
+		public void setEscapeChars (final char [] escapeChars)
+		{
+			this.escapeChars = escapeChars;
+		}
+
+
+		public char [] getEscapeChars ()
+		{
+			return this.escapeChars;
+		}
+
+
+
+		public ArgumentList delimit (final String buffer, final int cursor)
+		{
+			List args = new LinkedList ();
+			StringBuffer arg = new StringBuffer ();
+			int argpos = -1;
+			int bindex = -1;
+
+			for (int i = 0; buffer != null && i <= buffer.length (); i++)
+			{
+				// once we reach the cursor, set the
+				// position of the selected index
+				if (i == cursor)
+				{
+					bindex = args.size ();
+					// the position in the current argument is just the
+					// length of the current argument
+					argpos = arg.length ();
+				}
+
+				if (i == buffer.length () || isDelimiter (buffer, i))
+				{
+					if (arg.length () > 0)
+					{
+						args.add (arg.toString ());
+						arg.setLength (0); // reset the arg
+					}
+				}
+				else
+				{
+					arg.append (buffer.charAt (i));
+				}
+			}
+
+			return new ArgumentList (
+				(String [])args.toArray (new String [args.size ()]),
+				bindex, argpos, cursor);
+		}
+
+
+		/**
+		 *  Returns true if the specified character is a whitespace
+		 *  parameter. Check to ensure that the character is not
+		 *  escaped by any of
+		 *  {@link #getQuoteChars}, and is not escaped by ant of the
+		 *  {@link #getEscapeChars}, and returns true from
+		 *  {@link #isDelimiterChar}.
+		 *
+		 *  @param  buffer	the complete command buffer
+		 *  @param  pos		the index of the character in the buffer
+		 *  @return			true if the character should be a delimiter
+		 */
+		public boolean isDelimiter (final String buffer, final int pos)
+		{
+			if (isQuoted (buffer, pos))
+				return false;
+			if (isEscaped (buffer, pos))
+				return false;
+
+			return isDelimiterChar (buffer, pos);
+		}
+
+
+		public boolean isQuoted (final String buffer, final int pos)
+		{
+			return false;
+		}
+
+
+		public boolean isEscaped (final String buffer, final int pos)
+		{
+			if (pos <= 0)
+				return false;
+
+			for (int i = 0; escapeChars != null && i < escapeChars.length; i++)
+			{
+				if (buffer.charAt (pos) == escapeChars [i])
+					return !isEscaped (buffer, pos - 1); // escape escape
+			}
+
+			return false;
+		}
+
+
+		/**
+		 *  Returns true if the character at the specified position
+		 *  if a delimiter. This method will only be called if the
+		 *  character is not enclosed in any of the
+		 *  {@link #getQuoteChars}, and is not escaped by ant of the
+		 *  {@link #getEscapeChars}. To perform escaping manually,
+		 *  override {@link #isDelimiter} instead.
+		 */
+		public abstract boolean isDelimiterChar (String buffer, int pos);
+	}
+
+
+	/**
+	 *  {@link ArgumentCompletor.ArgumentDelimiter}
+	 *  implementation that counts all
+	 *  whitespace (as reported by {@link Character#isWhitespace})
+	 *  as being a delimiter.
+	 *
+	 *  @author  <a href="mailto:mwp1@cornell.edu">Marc Prud'hommeaux</a>
+	 */
+	public static class WhitespaceArgumentDelimiter
+		extends AbstractArgumentDelimiter
+	{
+		/**
+		 *  The character is a delimiter if it is whitespace, and the
+		 *  preceeding character is not an escape character.
+		 */
+		public boolean isDelimiterChar (String buffer, int pos)
+		{
+			return Character.isWhitespace (buffer.charAt (pos));
+		}
+	}
+
+
+	/**
+	 *  The result of a delimited buffer.
+	 *
+	 *  @author  <a href="mailto:mwp1@cornell.edu">Marc Prud'hommeaux</a>
+	 */
+	public static class ArgumentList
+	{
+		private String [] arguments;
+		private int cursorArgumentIndex;
+		private int argumentPosition;
+		private int bufferPosition;
+		public ArgumentList (String [] arguments, int cursorArgumentIndex,
+			int argumentPosition, int bufferPosition)
+		{
+			this.arguments = arguments;
+			this.cursorArgumentIndex = cursorArgumentIndex;
+			this.argumentPosition = argumentPosition;
+			this.bufferPosition = bufferPosition;
+		}
+
+
+		public void setCursorArgumentIndex (int cursorArgumentIndex)
+		{
+			this.cursorArgumentIndex = cursorArgumentIndex;
+		}
+
+
+		public int getCursorArgumentIndex ()
+		{
+			return this.cursorArgumentIndex;
+		}
+
+
+		public String getCursorArgument ()
+		{
+			if (cursorArgumentIndex < 0
+				|| cursorArgumentIndex >= arguments.length)
+				return null;
+
+			return arguments [cursorArgumentIndex];
+		}
+
+
+		public void setArgumentPosition (int argumentPosition)
+		{
+			this.argumentPosition = argumentPosition;
+		}
+
+
+		public int getArgumentPosition ()
+		{
+			return this.argumentPosition;
+		}
+
+
+		public void setArguments (String [] arguments)
+		{
+			this.arguments = arguments;
+		}
+
+
+		public String [] getArguments ()
+		{
+			return this.arguments;
+		}
+
+
+		public void setBufferPosition (int bufferPosition)
+		{
+			this.bufferPosition = bufferPosition;
+		}
+
+
+		public int getBufferPosition ()
+		{
+			return this.bufferPosition;
+		}
+	}
+		
+  
   public void setController(MartShellLib msl) throws ConfigurationException {
     this.msl = msl;
     RegistryDSConfigAdaptor adaptorManager = msl.adaptorManager;
@@ -169,13 +519,22 @@ public class MartCompleter implements ReadlineCompleter {
    *   <li><p> If the word "where" is present, and occurs after all other keywords present, then Where Mode is chosen.</p>
    * </ul>
    */
+  /*
   public String completer(String text, int state) {
     if (state == 0) {
       // first call to completer(): initialize our choices-iterator
-      setModeForLine(Readline.getLineBuffer());
+    	//System.out.println("*STATE = 0*" + text);
+    	setModeForLine(Readline.getLineBuffer());
       possibleValues = currentSet.tailSet(text).iterator();
     }
-
+    
+    
+  //  Iterator temp= possibleValues;
+   // while(temp.hasNext())
+   // {
+    //	System.out.println("**: " + ((String) temp.next()));    	
+   // }   
+    
     if (possibleValues.hasNext()) {
       String nextKey = (String) possibleValues.next();
       if (nextKey.startsWith(text))
@@ -184,7 +543,68 @@ public class MartCompleter implements ReadlineCompleter {
 
     return null; // we reached the last choice.
   }
+*/
+  public int complete (final String buffer, final int cursor,	final List candidates)
+  {
+	  //	 TODO: Copy code from above and create a new SimpleCompletor each time as in your own example.
+	  ArgumentList list = delim.delimit (buffer, cursor);
+	  int argpos = list.getArgumentPosition ();
+	  int argIndex = list.getCursorArgumentIndex ();
+	  if (argIndex < 0)
+		   return -1;
 
+	  Completor comp;
+		
+	  setModeForLine(buffer);
+	  
+	  //////////// For making possible Values as variable possibleOptions String [] for SimpleCompletor
+	  Iterator temp = currentSet.iterator();
+	  List mylist = new LinkedList();
+	  while(temp.hasNext())
+	  {
+		  mylist.add(temp.next());
+	  }	  
+	  String [] possibleOptions = new String [mylist.size()];
+	  mylist.toArray(possibleOptions);
+	  /////////////////////////////////////////////////////////////////////
+	  
+	  comp = new SimpleCompletor (possibleOptions);
+		int ret = comp.complete (list.getCursorArgument (), argpos, candidates);
+		if (ret == -1)
+			return -1;
+
+		int pos = ret + (list.getBufferPosition () - argpos) + 1;
+
+		/**
+		 *	Special case: when completing in the middle of a line, and the
+		 *	area under the cursor is a delimiter, then trim any delimiters
+		 *	from the candidates, since we do not need to have an extra
+		 *	delimiter.
+		 *
+		 *	E.g., if we have a completion for "foo", and we
+		 *	enter "f bar" into the buffer, and move to after the "f"
+		 *	and hit TAB, we want "foo bar" instead of "foo  bar".
+		 */
+		if (cursor != buffer.length () && delim.isDelimiter (buffer, cursor))
+		{
+			for (int i = 0; i < candidates.size (); i++)
+			{
+				String val = candidates.get (i).toString ();
+				while (val.length () > 0 &&
+					delim.isDelimiter (val, val.length () - 1))
+					val = val.substring (0, val.length () - 1);
+
+				candidates.set (i, val);
+			}
+		}
+
+		ConsoleReader.debug ("Completing " + buffer + "(pos=" + cursor + ") "
+			+ "with: " + candidates + ": offset=" + pos);
+
+		return pos;	  
+  }
+  
+  
   public void setModeForLine(String currentCommand) {
     if (lastLine == null || !(lastLine.equals(currentCommand))) {
       if (currentCommand.startsWith(COUNTFOCUSC))
@@ -403,6 +823,7 @@ public class MartCompleter implements ReadlineCompleter {
       }
 
       lastLine = currentCommand;
+      
     }
   }
 
@@ -659,7 +1080,7 @@ public class MartCompleter implements ReadlineCompleter {
       }
     } catch (ConfigurationException e) {
       currentSet = new TreeSet();
-      setErrorMode("Couldng set describe dataset mode, caught Configuration Exception: " + e.getMessage() + "\n");
+      setErrorMode("Couldnot set describe dataset mode, caught Configuration Exception: " + e.getMessage() + "\n");
     }
   }
   

@@ -24,12 +24,18 @@ import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -39,6 +45,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -47,6 +54,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.Engine;
@@ -61,9 +69,10 @@ import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
-import org.gnu.readline.Readline;
-import org.gnu.readline.ReadlineLibrary;
-
+//import org.gnu.readline.Readline;
+//import org.gnu.readline.ReadlineLibrary;
+import jline.*;
+//import java.util.*;
 /**
  * <p>Interface to a Mart Database implimentation that provides commandline access using a SQL-like query language (see MartShellLib for a 
  *  description of the Mart Query Language). The system can be used to run script files containing valid Mart Query Language commands, 
@@ -113,6 +122,15 @@ public class MartShell {
   private static String mainBatchSeparator = null;
   private static String helpCommand = null;
   private static Logger mainLogger = Logger.getLogger(MartShell.class.getName());
+  
+  
+  /////// New Declarations for autocompletion
+  public ConsoleReader myreader;
+  public History hisObj;
+  public List completors;
+  public SimpleCompletor objSC;
+  //////
+  
 
   /**
    *  @return application usage instructions
@@ -492,10 +510,11 @@ public class MartShell {
    * the martshell prompt without exiting. 
    *
    */
-  public void RunInteractive() {
+  public void RunInteractive() 
+  {
     continueQuery = false;
     interactiveMode = true;
-    
+ /*   
     try {
       Readline.load(ReadlineLibrary.Getline);
       //		Getline doesnt support completion, or history manipulation/files
@@ -522,22 +541,43 @@ public class MartShell {
           completionOn = false;
           readlineLoaded = false;
           Readline.load(ReadlineLibrary.PureJava);
-        }
+        }	
       }
     }
-
+    //System.out.println("HELLO-BEFORE-1");
     Readline.initReadline("MartShell");
-
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-      public void run() {
-        Readline.cleanup();
-      }
-    });
+    //System.out.println("HELLO-BEFORE-2");
+     */
+    
+    
+    Runtime.getRuntime().addShutdownHook
+    (
+    	new Thread() {
+    		public void run() {
+    //			System.out.println("HELLO-BEFORE");
+    //			Readline.cleanup();
+    //			System.out.println("HELLO-AFTER");
+    		}
+    	}
+    );
 
     try {
-      // load help file
-      loadHelpFiles();
 
+//////////////////////////
+        historyOn = true;
+        completionOn = true;
+        readlineLoaded = true;
+        myreader = new ConsoleReader();
+    	myreader.setDebug (new PrintWriter (new FileWriter ("writer.debug", true)));
+    	completors = new LinkedList ();
+    	objSC= new SimpleCompletor (new String [] { "list", "add", "remove", "set", "unset", "help", "use", "using"});
+    	completors.add(objSC);
+    	hisObj = new History();
+    	
+    	////////////////////////
+    	// load help file
+       	loadHelpFiles();
+       		
       //display startup information
       System.out.println();
       System.out.println(supportHelp.getProperty(STARTUP));
@@ -556,9 +596,15 @@ public class MartShell {
       if (mainLogger.isLoggable(Level.INFO))
         mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
     }
+    catch (IOException ie1)
+    {
+    	System.err.println("Couldnt display startup information\n" + ie1.getMessage());
+    	System.out.println("IO EXception by Console reader where its renewed : From Code MartShell");
+    }
+    
 
     if (completionOn) {
-      mcl = new MartCompleter();
+      mcl = new MartCompleter(completors);
       try {
         mcl.setController(msl);
       } catch (ConfigurationException e) {
@@ -592,12 +638,14 @@ public class MartShell {
       updateCompleter();
       mcl.setCommandMode();
 
-      Readline.setCompleter(mcl);
+     // Readline.setCompleter(mcl);
+     myreader.addCompletor(this.mcl);
     }
 
     if (readlineLoaded && historyOn) {
-      try {
+/*      try {
         File histFile = new File(history_file);
+        histFile.
         if (!histFile.exists())
           histFile.createNewFile();
         else
@@ -606,13 +654,24 @@ public class MartShell {
         if (mainLogger.isLoggable(Level.FINE))
           mainLogger.fine("Could not load history: " + e1.getMessage() + "\n continuing to load!\n");
       }
+*/
+    	try {
+       	LoadScriptFromFile(history_file); // Loads History from a specified file if it exists
+    	}
+    	catch (Exception e1) {
+    		if (mainLogger.isLoggable(Level.FINE))
+    			mainLogger.fine("Could not load history: " + e1.getMessage() + "\n continuing to load!\n");
+    	}
     }
-
+    myreader.setHistory(hisObj);
+    
     String thisline = null;
     while (true) {
       try {
         thisline = Prompt();
-
+        
+        //System.out.println("\nSHAZI: " + thisline); // comes after the enter is pressed.
+        
         if (thisline != null) {
           if (thisline.equals(EXITC) || thisline.equals(QUITC))
             break;
@@ -847,12 +906,19 @@ public class MartShell {
   }
 
   private void ExitShell() throws IOException {
-    Readline.cleanup();
+    //Readline.cleanup();
 
     // if history and completion are on, save the history file
     if (readlineLoaded && historyOn)
-      Readline.writeHistoryFile(history_file);
-
+    {
+    		// Readline.writeHistoryFile(history_file); 
+    	// TODO: Logic of storing history to a file using the above sort of function
+    	// Nothing required as a history file gets associated automatically from
+    	// LoadScriptFromFile, and gets updated automatically each time.
+    }
+    
+    	
+    
     //  ensures that newline is printed before exit
     System.out.println();
     System.out.println();
@@ -882,12 +948,14 @@ public class MartShell {
     if (completionOn)
       mcl.setCommandMode();
 
-    line = Readline.readline(prompt, historyOn);
+    //line = Readline.readline(prompt, historyOn);
+    line = myreader.readLine(prompt);
     return line;
   }
 
   private String subPrompt() throws EOFException, UnsupportedEncodingException, IOException {
-    return Readline.readline("% ", historyOn);
+    //return Readline.readline("% ", historyOn);
+	  return myreader.readLine("% ");
   }
 
   private String normalizeCommand(String command) {
@@ -996,7 +1064,8 @@ public class MartShell {
       if (interactiveMode && (linesout > MAXLINECOUNT)) {
         linesout = 0;
         try {
-          String quit = Readline.readline("\n\nHit Enter to continue, q to return to prompt: ", false);
+          //String quit = Readline.readline("\n\nHit Enter to continue, q to return to prompt: ", false);
+        	String quit = myreader.readLine("\n\nHit Enter to continue, q to return to prompt: ");
           if (quit.equals("q")) {
             System.out.println();
             break;
@@ -1176,27 +1245,25 @@ public class MartShell {
 
       String thisLine = null;
 
-      List oldHistory = new Vector();
-      Readline.getHistory(oldHistory);
-      Readline.clearHistory();
+      //List oldHistory = new Vector();
+      //Readline.getHistory(oldHistory);
+      //Readline.clearHistory();
+      
       try {
-        if (lastDBSettings[HOSTITER] != null)
-          Readline.addToHistory(lastDBSettings[HOSTITER]);
+//        if (lastDBSettings[HOSTITER] != null)
+ //         Readline.addToHistory(lastDBSettings[HOSTITER]);
 
-        thisLine = Readline.readline("\nHost: ", false);
+   //     thisLine = Readline.readline("\nHost: ", false);
+    	  thisLine = myreader.readLine("\nHost: ");
         if (thisLine != null)
           martHost = thisLine;
 
-        Readline.clearHistory();
-        if (lastDBSettings[DBTYPEITER] != null)
-          Readline.addToHistory(lastDBSettings[DBTYPEITER]);
+        //Readline.clearHistory();
+       // if (lastDBSettings[DBTYPEITER] != null)
+       //   Readline.addToHistory(lastDBSettings[DBTYPEITER]);
 
-        thisLine =
-          Readline.readline(
-            "\nDatabase Type (default "
-              + DetailedDataSource.DEFAULTDATABASETYPE
-               +"): ",
-            false);
+        //thisLine =  Readline.readline( "\nDatabase Type (default " + DetailedDataSource.DEFAULTDATABASETYPE +"): ", false);
+        thisLine =  myreader.readLine( "\nDatabase Type (default " + DetailedDataSource.DEFAULTDATABASETYPE +"): ");
         if (thisLine != null)
           martDatabaseType = thisLine;
 
@@ -1220,77 +1287,71 @@ public class MartShell {
     
         
         
-        Readline.clearHistory();
-        if (lastDBSettings[PORTITER] != null)
-          Readline.addToHistory(lastDBSettings[PORTITER]);
+        //Readline.clearHistory();
+//        if (lastDBSettings[PORTITER] != null)
+//          Readline.addToHistory(lastDBSettings[PORTITER]);
 
-        thisLine =
-          Readline.readline(
-            "\nPort (default: "
-
-              + DetailedDataSource.DEFAULTPORT
-               +"): ",
-            false);
+        //thisLine =  Readline.readline( "\nPort (default: " + DetailedDataSource.DEFAULTPORT +"): ", false);
+        thisLine =  myreader.readLine( "\nPort (default: " + DetailedDataSource.DEFAULTPORT +"): ");
         if (thisLine != null)
           martPort = thisLine;
 
-        Readline.clearHistory();
-        if (lastDBSettings[USERITER] != null)
-          Readline.addToHistory(lastDBSettings[USERITER]);
+//        Readline.clearHistory();
+//       if (lastDBSettings[USERITER] != null)
+//          Readline.addToHistory(lastDBSettings[USERITER]);
 
-        thisLine = Readline.readline("\nUser: ", false);
+//        thisLine = Readline.readline("\nUser: ", false);
+        thisLine = myreader.readLine("\nUser: ");
         if (thisLine != null)
           martUser = thisLine;
 
-        Readline.clearHistory();
-        if (lastDBSettings[PASSITER] != null)
-          Readline.addToHistory(lastDBSettings[PASSITER]);
+//        Readline.clearHistory();
+//        if (lastDBSettings[PASSITER] != null)
+//          Readline.addToHistory(lastDBSettings[PASSITER]);
 
-        thisLine = Readline.readline("\nPassword: ", false);
+//        thisLine = Readline.readline("\nPassword: ", false);
+        thisLine = myreader.readLine("\nPassword: ");
         if (thisLine != null)
           martPass = thisLine;
 
-        Readline.clearHistory();
-        if (lastDBSettings[DBNAMEITER] != null)
-          Readline.addToHistory(lastDBSettings[DBNAMEITER]);
+//        Readline.clearHistory();
+//        if (lastDBSettings[DBNAMEITER] != null)
+//         Readline.addToHistory(lastDBSettings[DBNAMEITER]);
 
-        thisLine = Readline.readline("\nDatabase: ", false);
+//        thisLine = Readline.readline("\nDatabase: ", false);
+        thisLine = myreader.readLine("\nDatabase: ");
         if (thisLine != null)
           martDatabase = thisLine;
 
         
-        thisLine = Readline.readline("\nSchema: ", false);
+//        thisLine = Readline.readline("\nSchema: ", false);
+        thisLine = myreader.readLine("\nSchema: ");
         if (thisLine != null)
           martSchema = thisLine;
         
         
-        Readline.clearHistory();
-        if (lastDBSettings[SOURCEKEYITER] != null)
-          Readline.addToHistory(lastDBSettings[SOURCEKEYITER]);
+//        Readline.clearHistory();
+//        if (lastDBSettings[SOURCEKEYITER] != null)
+//          Readline.addToHistory(lastDBSettings[SOURCEKEYITER]);
 
-        thisLine =
-          Readline.readline(
-     		"\nConnection name (correspond to registry's entry 'name'. NO SPACES plz):  ",
-            false);
+//        thisLine = Readline.readline("\nConnection name (correspond to registry's entry 'name'. NO SPACES plz):  ", false);
+        thisLine = myreader.readLine("\nConnection name (correspond to registry's entry 'name'. NO SPACES plz):  ");        
         if (thisLine != null)
           sourceKey = msl.canonicalizeMartName(thisLine); // CHANGED, replace spaces with '_' to prevent having a name with sapces
 
       } catch (Exception e) {
         throw new InvalidQueryException("Problem reading input for mart connection settings: " + e.getMessage());
-      } finally {
+      } 
+      finally {
         //reset the history
-        Readline.clearHistory();
-        for (int i = 0, n = oldHistory.size(); i < n; i++) {
-          String hist = (String) oldHistory.get(i);
-          Readline.addToHistory(hist);
-        }
+//        Readline.clearHistory();
+//        for (int i = 0, n = oldHistory.size(); i < n; i++) {
+//         String hist = (String) oldHistory.get(i);
+//          Readline.addToHistory(hist);
+//        }
       }
     }
 
-    
-    
-    
-    
     
     
     if (martDatabaseType == null)
@@ -1641,13 +1702,15 @@ public class MartShell {
       try {
         String out = (sessionOutputFormat != null) ? sessionOutputFormat : DEFOUTPUTFORMAT;
         thisLine =
-          Readline.readline(
-            "\nPlease enter the format of the output (either 'tabulated' or 'fasta', enter '-' to use "
+//          Readline.readline(
+            myreader.readLine(
+        	"\nPlease enter the format of the output (either 'tabulated' or 'fasta', enter '-' to use "
               + DEFOUTPUTFORMAT
               + ", hit enter to leave as "
               + out
-              + "): ",
-            false);
+              + "): ");              
+//              + "): ",
+//            false);
         if (thisLine != null) {
           if (thisLine.equals("-"))
             sessionOutputFormat = DEFOUTPUTFORMAT;
@@ -1658,13 +1721,14 @@ public class MartShell {
         out = (sessionOutputFileName != null) ? sessionOutputFileName : DEFOUTPUTFILE;
         out = (appendToFile) ? ">>" + out : out;
         thisLine =
-          Readline.readline(
+//          Readline.readline(
+            myreader.readLine(        	
             "\nPlease enter the File to output all MQL commands (use '-' for "
               + DEFOUTPUTFILE
               + ", hit enter to leave as "
               + out
-              + ", prepend path with '>>' to append to an existing file): ",
-            false);
+              + ", prepend path with '>>' to append to an existing file): ");
+//          false);
         if (thisLine != null) {
           if (thisLine.equals("-")) {
             sessionOutput = DEFOUTPUT;
@@ -1683,13 +1747,15 @@ public class MartShell {
         out = (sessionOutputSeparator != null) ? sessionOutputSeparator : DEFOUTPUTSEPARATOR;
 
         thisLine =
-          Readline.readline(
+//        Readline.readline(
+            myreader.readLine(
             "\nPlease enter the record separator to use (use '-' for "
               + DEFOUTPUTSEPARATOR
               + ", hit enter to leave as "
               + out
-              + "): ",
-            false);
+              + "): ");              
+//              + "): ",
+//            false);
 
         if (thisLine != null) {
           if (thisLine.equals("-"))
@@ -1867,12 +1933,15 @@ public class MartShell {
       throw new InvalidQueryException("Sorry, histrory functions are not available on your terminal.\n");
     if (!historyOn)
       throw new InvalidQueryException("Sorry, histrory is not activated.\n");
-
-    try {
-      Readline.readHistoryFile(scriptFile);
-    } catch (Exception e) {
-      throw new InvalidQueryException(e.getMessage());
-    }
+    
+    File fobj = new File(scriptFile);
+	try{
+		hisObj.setHistoryFile(fobj);
+	}
+	catch (IOException e) {
+		System.out.println("LoadScriptFromFile: Unable to set history file");
+	}
+    
   }
 
   private void executeRequest(String command) throws InvalidQueryException {
@@ -1907,8 +1976,10 @@ public class MartShell {
         String thisline = lines[i];
 
         if (historyOn)
-          Readline.addToHistory(thisline);
-
+        {
+          //Readline.addToHistory(thisline);
+        	this.addToHistory(thisline);
+        }
         while (thisline != null)
           thisline = parseForCommands(thisline);
       }
@@ -1916,6 +1987,7 @@ public class MartShell {
       throw new InvalidQueryException("Could not execute history " + req + " " + e.getMessage(), e);
     }
   }
+  
 
   private void executeProcedure(StringTokenizer toks) throws InvalidQueryException {
     if (!toks.hasMoreTokens())
@@ -1990,8 +2062,10 @@ public class MartShell {
         line = line.trim();
         if (!line.startsWith("#")) {
           if (historyOn)
-            Readline.addToHistory(line);
-
+          {
+            //Readline.addToHistory(line);
+        	  this.addToHistory(line);
+          }
           parse(line);
         }
       }
@@ -2047,8 +2121,11 @@ public class MartShell {
       throw new InvalidQueryException("Sorry, histrory is not activated.\n");
 
     List lines = new ArrayList();
-    if (req == null)
-      Readline.getHistory(lines);
+    
+    if (req == null){
+      //Readline.getHistory(lines);
+    	lines = this.getHistory();
+    }
     else {
       int start = 0;
       int end = 0;
@@ -2074,7 +2151,8 @@ public class MartShell {
               end = Integer.parseInt(pos.nextToken());
             } else {
               start = Integer.parseInt(tmp) - 1;
-              end = Readline.getHistorySize();
+              //end = Readline.getHistorySize();
+              end = this.getHistorySize();
             }
           } catch (NumberFormatException nfe) {
             throw new InvalidQueryException(nfe.getMessage(), nfe);
@@ -2082,21 +2160,44 @@ public class MartShell {
         }
 
         for (int i = start; i < end; i++)
-          lines.add(Readline.getHistoryLine(i));
+        {
+        	//lines.add(Readline.getHistoryLine(i));
+        	lines.add(this.getHistoryLine(i));
+        }
       } else {
         try {
           start = Integer.parseInt(req) - 1;
         } catch (NumberFormatException nfe) {
           throw new InvalidQueryException(nfe.getMessage(), nfe);
         }
-        lines.add(Readline.getHistoryLine(start));
+        //lines.add(Readline.getHistoryLine(start));
+        lines.add(this.getHistoryLine(start));
       }
     }
     String[] ret = new String[lines.size()];
     lines.toArray(ret);
     return ret;
   }
-
+  
+  private void addToHistory(String line) {
+	  //TODO: ADD a single line to history of the current instance of console reader.
+	  hisObj.addToHistory(line);
+  }
+  private List getHistory() {
+	  //TODO: 
+	  return hisObj.getHistoryList();
+  }
+  private int getHistorySize() {
+	  //TODO: 
+	  return hisObj.size();	  
+  }
+  private Object getHistoryLine(int lno) {
+	  //TODO: 
+	  List lines =  new LinkedList(); 
+	  lines = hisObj.getHistoryList();
+	  return lines.get(lno);
+	  
+  }
   /**
    * Takes a String MQL line, and parses it for commands to execute.  If any
    * complete commands are found, they are executed.
