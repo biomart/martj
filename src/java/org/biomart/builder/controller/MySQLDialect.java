@@ -55,7 +55,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * Understands how to create SQL and DDL for a MySQL database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 22nd June 2006
+ * @version 0.1.6, 23rd June 2006
  * @since 0.1
  */
 public class MySQLDialect extends DatabaseDialect {
@@ -74,6 +74,10 @@ public class MySQLDialect extends DatabaseDialect {
 		} catch (SQLException e) {
 			throw new ConstructorException(e);
 		}
+	}
+	
+	public void reset() {
+		
 	}
 
 	public List executeSelectDistinct(Column col) throws SQLException {
@@ -109,6 +113,13 @@ public class MySQLDialect extends DatabaseDialect {
 
 	public String[] getStatementsForAction(MCAction action,
 			boolean includeComments) throws ConstructorException {
+		
+		// FIXME: This is not very nice code. When the graph nodes change
+		// if/when the stuff in MartConstructor.GenericConstructorRunnable
+		// is ever rewritten nicely, then this method and all the various
+		// methods it calls will also have to be rewritten, but I hope 
+		// in a much nicer way.
+		
 		try {
 			List statements = new ArrayList();
 

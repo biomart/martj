@@ -38,7 +38,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * can be used.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 21st June 2006
+ * @version 0.1.4, 23rd June 2006
  * @since 0.1
  */
 public abstract class DatabaseDialect {
@@ -122,4 +122,10 @@ public abstract class DatabaseDialect {
 	 */
 	public abstract String[] getStatementsForAction(MCAction action,
 			boolean includeComments) throws ConstructorException;
+	
+	/**
+	 * Call this method before using the dialect for anything. This is 
+	 * necessary in order to clear out any state it may be keeping track of.
+	 */
+	public abstract void reset();
 }

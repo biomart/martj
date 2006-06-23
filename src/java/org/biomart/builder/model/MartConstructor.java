@@ -52,7 +52,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 22nd June 2006
+ * @version 0.1.15, 23rd June 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -235,7 +235,11 @@ public interface MartConstructor {
 	}
 
 	/**
-	 * Defines the generic way of constructing a mart.
+	 * Defines the generic way of constructing a mart. FIXME: This is horrible.
+	 * The graph technique works nicely, but the nodes of the graph are poorly
+	 * defined, and the algorithm that constructs it is even worse. It works,
+	 * for now, but will need reworking in future to cope with use-cases outside
+	 * those seen in the Ensembl marts.
 	 */
 	public static class GenericConstructorRunnable implements
 			ConstructorRunnable {
@@ -465,85 +469,58 @@ public interface MartConstructor {
 						.iterator(); k.hasNext();) {
 
 					// Get the dimension relation.
-					Relation dimRel = (Relation) k.next();
+					Relation relation = (Relation) k.next();
 
-					// Work out the table it points to.
-					DataSetTable dimTableCandidate = (DataSetTable) dimRel
-							.getManyKey().getTable();
-
-					// Make sure it's not a subclass.
-					if (dimTableCandidate.getType().equals(
-							DataSetTableType.MAIN_SUBCLASS))
+					// It's not a dimension or subclass if it's 1:1.
+					if (relation.isOneToOne())
 						continue;
 
-					// Process the dimension table.
-					this.processTable(currSchema, actionGraph,
-							scAndMainDimDependsOn, dimTableCandidate,
-							dsTableNameNestedMap, dsTableLastActionMap, dimRel,
-							partitionValues, helper);
-
-					// Check not cancelled.
-					this.checkCancelled();
-				}
-
-				// Process all subclass tables.
-				for (Iterator j = mainTable.getPrimaryKey().getRelations()
-						.iterator(); j.hasNext();) {
-
-					// Get the subclass relation.
-					Relation scRel = (Relation) j.next();
-
 					// Work out the table it points to.
-					DataSetTable scTableCandidate = (DataSetTable) scRel
-							.getManyKey().getTable();
+					DataSetTable table = (DataSetTable) relation.getManyKey()
+							.getTable();
 
-					// Check that it is a subclass relation.
-					if (!scTableCandidate.getType().equals(
-							DataSetTableType.MAIN_SUBCLASS))
-						continue;
-
-					// Process subclass table.
+					// Process the table.
 					this.processTable(currSchema, actionGraph,
-							scAndMainDimDependsOn, scTableCandidate,
-							dsTableNameNestedMap, dsTableLastActionMap, scRel,
-							partitionValues, helper);
+							scAndMainDimDependsOn, table, dsTableNameNestedMap,
+							dsTableLastActionMap, relation, partitionValues,
+							helper);
 
 					// Check not cancelled.
 					this.checkCancelled();
 
-					// Subclass dimensions are dependent on last actions of
-					// subclass table.
-					MCAction scDimDependsOn = (MCAction) dsTableLastActionMap
-							.get(scTableCandidate);
+					// Subclass?
+					if (table.getType().equals(DataSetTableType.MAIN_SUBCLASS)) {
+						// Subclass dimensions are dependent on last actions of
+						// subclass table.
+						MCAction scDimDependsOn = (MCAction) dsTableLastActionMap
+								.get(table);
 
-					// Process all dimensions of subclass.
-					for (Iterator k = scTableCandidate.getPrimaryKey()
-							.getRelations().iterator(); k.hasNext();) {
+						// Process all dimensions of subclass.
+						for (Iterator l = table.getPrimaryKey().getRelations()
+								.iterator(); l.hasNext();) {
 
-						// Get the dimension relation.
-						Relation dimRel = (Relation) k.next();
+							// Get the dimension relation.
+							Relation dimRel = (Relation) l.next();
 
-						// Work out the table it points to.
-						DataSetTable dimTableCandidate = (DataSetTable) dimRel
-								.getManyKey().getTable();
+							// It's not a dimension or subclass if it's 1:1.
+							if (dimRel.isOneToOne())
+								continue;
 
-						// Process the subclass dimension.
-						this.processTable(currSchema, actionGraph,
-								scDimDependsOn, dimTableCandidate,
-								dsTableNameNestedMap, dsTableLastActionMap,
-								dimRel, partitionValues, helper);
+							// Work out the table it points to.
+							DataSetTable dimTable = (DataSetTable) dimRel
+									.getManyKey().getTable();
 
-						// Check not cancelled.
-						this.checkCancelled();
+							// Process the subclass dimension.
+							this.processTable(currSchema, actionGraph,
+									scDimDependsOn, dimTable,
+									dsTableNameNestedMap, dsTableLastActionMap,
+									dimRel, partitionValues, helper);
+
+							// Check not cancelled.
+							this.checkCancelled();
+						}
 					}
 				}
-
-				// TODO
-				// 2. Optimiser nodes. Adding 'has' columns/tables, etc.
-				// Optimiser nodes are dependent on last actions of all
-				// tables within same schema, using dsTableLastActionMap.
-				// Use the dsTableNameNestedMap to discover all the tables
-				// that need this doing.
 			}
 
 			// Check not cancelled.
@@ -754,7 +731,7 @@ public interface MartConstructor {
 				// parent partition value ->
 				// temp table name.
 				Map segmentTables = new HashMap();
-
+				
 				// If dataset table is dimension or subclass, link it to its
 				// parent. This may involve splitting it into segments.
 				if (parentRelation != null) {
@@ -826,11 +803,18 @@ public interface MartConstructor {
 
 							// Add FK to PK action to dropDependsOn.
 							dropDependsOn.add(createFK);
-
+							
 							// Update segment map.
 							((Map) segmentTables
 									.get(parentParentPartitionValue)).put(
-									parentPartitionValue, segmentTableName);
+									parentPartitionValue, segmentTableName);					
+							
+							// TODO If this is a dimension, optimise it.
+							// The parent table to link to is parentTableName,
+							// which refers to the DataSetTable parentDSTable.
+							// The table to optimise for is segmentTableName.
+							// which refers to the DataSetTable dsTable.
+							// PK and FK are parentPK and childFK.
 						}
 					}
 
@@ -877,7 +861,7 @@ public interface MartConstructor {
 
 					// Descend into second level of nesting, the
 					// individual parent's partition values. Get the
-					// actual table names from this.
+					// actual parent table names from this.
 					for (Iterator k = parentPartitionValueMap.keySet()
 							.iterator(); k.hasNext();) {
 						Object parentPartitionValue = k.next();
@@ -1156,13 +1140,12 @@ public interface MartConstructor {
 					}
 				}
 
-				// What schema is the real table in? 
+				// What schema is the real table in?
 				// FIXME: What to do if it is in a group, but that group is
 				// not the same as our group?
-				Schema realSchema = 
-					(realTable.getSchema() instanceof SchemaGroup)
-							? schema : realTable.getSchema();
-				
+				Schema realSchema = (realTable.getSchema() instanceof SchemaGroup) ? schema
+						: realTable.getSchema();
+
 				// If fromKey not null, merge temp using it and toKey,
 				// else create temp. Pass in the list of columns we want
 				// from this step as a parameter. Pass in the schema name.
@@ -1176,9 +1159,10 @@ public interface MartConstructor {
 				else
 					tableAction = new MergeTable(this.datasetSchemaName,
 							tempTableName, realTable, helper
-									.getNewTempTableName(), dsColumns, realSchema,
-							partitionColumn, partitionValue, fromKeyDSColumns,
-							toKey.getColumns(), relation.isOptional());
+									.getNewTempTableName(), dsColumns,
+							realSchema, partitionColumn, partitionValue,
+							fromKeyDSColumns, toKey.getColumns(), relation
+									.isOptional());
 
 				// Add this action to the graph.
 				actionGraph.addAction(tableAction);
@@ -1385,6 +1369,18 @@ public interface MartConstructor {
 		}
 
 		/**
+		 * Adds children to this node. Each child will have this node added as a
+		 * parent.
+		 * 
+		 * @param children
+		 *            the children to add to this node.
+		 */
+		public void addChildren(Collection children) {
+			for (Iterator i = children.iterator(); i.hasNext();)
+				this.addChild((MCAction) i.next());
+		}
+
+		/**
 		 * Adds a parent to this node. The parent will have this node added as a
 		 * child.
 		 * 
@@ -1395,6 +1391,18 @@ public interface MartConstructor {
 			this.parents.add(parent);
 			parent.children.add(this);
 			this.ensureDepth(parent.depth + 1);
+		}
+
+		/**
+		 * Adds parents to this node. Each parent will have this node added as a
+		 * child.
+		 * 
+		 * @param parents
+		 *            the parents to add to this node.
+		 */
+		public void addParents(Collection parents) {
+			for (Iterator i = parents.iterator(); i.hasNext();)
+				this.addParent((MCAction) i.next());
 		}
 
 		/**

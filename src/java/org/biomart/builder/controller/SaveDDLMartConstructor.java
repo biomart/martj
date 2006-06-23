@@ -49,7 +49,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * use JDBC to fetch/retrieve data between two databases.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 21st June 2006
+ * @version 0.1.7, 23rd June 2006
  * @since 0.1
  */
 public class SaveDDLMartConstructor implements MartConstructor {
@@ -121,7 +121,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		// Convert the set to a list.
 		List inputSchemaList = new ArrayList(inputSchemas);
-
+		
 		// Set the output dialect to match the first one in the list.
 		helper.setDialect(DatabaseDialect.getDialect((Schema) inputSchemaList
 				.get(0)));
@@ -176,12 +176,15 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		/**
 		 * Sets the dialect to use to create the output DDL with.
+		 * Also resets the dialect in order to remove any existing
+		 * state information.
 		 * 
 		 * @param dialect
 		 *            the dialect to use when creating output DDL.
 		 */
 		public void setDialect(DatabaseDialect dialect) {
 			this.dialect = dialect;
+			this.dialect.reset();
 		}
 
 		public String getNewTempTableName() {

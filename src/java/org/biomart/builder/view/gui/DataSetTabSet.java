@@ -1337,7 +1337,6 @@ public class DataSetTabSet extends JTabbedPane {
 					}
 				}
 			});
-			buttonsPanel.add(this.datasetButton);
 
 			// Create the button that selects the window card.
 			this.windowButton = new JRadioButton(BuilderBundle
@@ -1350,7 +1349,10 @@ public class DataSetTabSet extends JTabbedPane {
 					}
 				}
 			});
+			
+			// Add the card buttons to the panel.
 			buttonsPanel.add(windowButton);
+			buttonsPanel.add(this.datasetButton);
 
 			// Make buttons mutually exclusive.
 			ButtonGroup buttons = new ButtonGroup();
