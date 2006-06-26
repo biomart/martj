@@ -99,8 +99,10 @@
     </xsl:choose>
 
     <!-- create the autoCompletion attribute  -->
-    <xsl:attribute name="autoCompletion"></xsl:attribute>
-
+    <xsl:if test="count(@autoCompletion) = 0">
+		<xsl:attribute name="autoCompletion"></xsl:attribute>	   	
+    </xsl:if>
+ 
     <!-- add value options for boolean filters for display purposes  -->
     <xsl:if test="count(.//Option) = 0 and @type = 'boolean' or @type = 'boolean_num' " >
         <xsl:element name="Option">
