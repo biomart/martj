@@ -18,6 +18,7 @@
 
 package org.biomart.builder.view.gui;
 
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -33,6 +34,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -47,6 +49,7 @@ import org.biomart.builder.controller.SaveDDLMartConstructor;
 import org.biomart.builder.controller.SaveDDLMartConstructor.SaveDDLGranularity;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.MartConstructor;
+import org.biomart.builder.model.MartConstructorListener;
 import org.biomart.builder.resources.BuilderBundle;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
@@ -55,7 +58,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * a given set of datasets, then lets them actually do it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 21st June 2006
+ * @version 0.1.3, 26th June 2006
  * @since 0.1
  */
 public class SaveDDLDialog extends JDialog {
@@ -68,7 +71,7 @@ public class SaveDDLDialog extends JDialog {
 	private JFileChooser zipFileChooser;
 
 	private FileFilter zipFileFilter;
-	
+
 	private JTextField zipFileLocation;
 
 	private JTextField targetSchemaName;
@@ -78,8 +81,10 @@ public class SaveDDLDialog extends JDialog {
 	private JComboBox granularity;
 
 	private JButton zipFileLocationButton;
-	
+
 	private JCheckBox includeComments;
+
+	private JCheckBox viewDDL;
 
 	/**
 	 * Creates (but does not display) a dialog centred on the given tab, which
@@ -132,11 +137,14 @@ public class SaveDDLDialog extends JDialog {
 
 		// Create input fields for target schema name and granularity.
 		this.targetSchemaName = new JTextField(20);
+		this.includeComments = new JCheckBox(BuilderBundle
+				.getString("includeCommentsLabel"));
+		this.includeComments.setSelected(true);
+		this.viewDDL = new JCheckBox(BuilderBundle
+				.getString("viewDDLOnCompletion"));
 		this.granularity = new JComboBox(new Object[] {
 				SaveDDLGranularity.SINGLE, SaveDDLGranularity.MART,
 				SaveDDLGranularity.DATASET, SaveDDLGranularity.STEP, });
-		this.includeComments = new JCheckBox(BuilderBundle.getString("includeCommentsLabel"));
-		this.includeComments.setSelected(true);
 
 		// Create the list for choosing datasets.
 		this.datasetsList = new JList((DataSet[]) datasets
@@ -155,18 +163,21 @@ public class SaveDDLDialog extends JDialog {
 		this.zipFileChooser = new JFileChooser();
 		this.zipFileFilter = new FileFilter() {
 			private boolean isZipped() {
-				SaveDDLGranularity gran = (SaveDDLGranularity)granularity.getSelectedItem();
-				return gran!=null && gran.getZipped();
+				SaveDDLGranularity gran = (SaveDDLGranularity) granularity
+						.getSelectedItem();
+				return gran != null && gran.getZipped();
 			}
-			
+
 			// Accepts only files ending in ".zip".
 			public boolean accept(File f) {
 				return (f.isDirectory() || f.getName().toLowerCase().endsWith(
-						this.isZipped()?".zip":".ddl"));
+						this.isZipped() ? ".zip" : ".ddl"));
 			}
 
 			public String getDescription() {
-				return BuilderBundle.getString(this.isZipped()?"ZipDDLFileFilterDescription":"DDLFileFilterDescription");
+				return BuilderBundle
+						.getString(this.isZipped() ? "ZipDDLFileFilterDescription"
+								: "DDLFileFilterDescription");
 			}
 		};
 		this.zipFileChooser.setFileFilter(this.zipFileFilter);
@@ -186,6 +197,33 @@ public class SaveDDLDialog extends JDialog {
 				}
 			}
 		});
+
+		// Add listeners to view DDL and granularity.
+		this.viewDDL.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (viewDDL.isSelected()) {
+					zipFileLocation.setText(null);
+					zipFileLocation.setEnabled(false);
+					zipFileLocationButton.setEnabled(false);
+				} else {
+					zipFileLocation.setEnabled(true);
+					zipFileLocationButton.setEnabled(true);
+				}
+			}
+		});
+		this.granularity.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (granularity.getSelectedItem() != null
+						&& granularity.getSelectedItem().equals(
+								SaveDDLGranularity.SINGLE)) 
+					viewDDL.setEnabled(true);
+				else {
+					if (viewDDL.isSelected()) viewDDL.doClick();
+					viewDDL.setEnabled(false);
+				}
+			}
+		});
+		this.granularity.setSelectedItem(SaveDDLGranularity.SINGLE);
 
 		// Lay out the window.
 
@@ -217,7 +255,16 @@ public class SaveDDLDialog extends JDialog {
 		field.add(this.includeComments);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
-		
+
+		// Add the view DDL field.
+		label = new JLabel();
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		field = new JPanel();
+		field.add(this.viewDDL);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+
 		// Add the zip DDL location label, field and file chooser button.
 		label = new JLabel(BuilderBundle.getString("saveDDLFileLocationLabel"));
 		gridBag.setConstraints(label, labelConstraints);
@@ -286,7 +333,8 @@ public class SaveDDLDialog extends JDialog {
 					.getString("targetSchema")));
 
 		// Must have an output file.
-		if (this.isEmpty((String) this.zipFileLocation.getText()))
+		if (!this.viewDDL.isSelected()
+				&& this.isEmpty((String) this.zipFileLocation.getText()))
 			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
 					.getString("saveDDLFileLocation")));
 
@@ -310,13 +358,27 @@ public class SaveDDLDialog extends JDialog {
 	private void createDDL() {
 		List selectedDataSets = Arrays.asList(this.datasetsList
 				.getSelectedValues());
-		MartConstructor constructor = new SaveDDLMartConstructor(
-				(SaveDDLGranularity) this.granularity.getSelectedItem(),
-				new File(this.zipFileLocation.getText()), this.includeComments.isSelected());
+		final StringBuffer sb = new StringBuffer();
+		MartConstructor constructor;
+		if (this.viewDDL.isSelected())
+			constructor = new SaveDDLMartConstructor(
+					(SaveDDLGranularity) this.granularity.getSelectedItem(),
+					null, sb, this.includeComments.isSelected());
+		else
+			constructor = new SaveDDLMartConstructor(
+					(SaveDDLGranularity) this.granularity.getSelectedItem(),
+					new File(this.zipFileLocation.getText()), null,
+					this.includeComments.isSelected());
 		try {
 			this.martTab.getMartTabSet().requestMonitorConstructorRunnable(
 					constructor.getConstructorRunnable(this.targetSchemaName
-							.getText(), selectedDataSets));
+							.getText(), selectedDataSets),
+					new MartConstructorListener() {
+						public void mcEventOccurred(int event) {
+							if (event == MartConstructorListener.CONSTRUCTION_FINISHED)
+								displayTextPane(sb);
+						}
+					});
 		} catch (Throwable t) {
 			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 			JOptionPane.showMessageDialog(this.martTab.getMartTabSet()
@@ -324,5 +386,24 @@ public class SaveDDLDialog extends JDialog {
 					.getString("martConstructionFailed"), BuilderBundle
 					.getString("messageTitle"), JOptionPane.WARNING_MESSAGE);
 		}
+	}
+
+	private void displayTextPane(StringBuffer textBuffer) {
+		// Build the text pane.
+		JEditorPane editorPane = new JEditorPane("text/plain", textBuffer
+				.toString());
+
+		// Put the editor pane in a scroll pane.
+		JScrollPane editorScrollPane = new JScrollPane(editorPane);
+		editorScrollPane
+				.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+
+		// Arbitrarily resize the scrollpane.
+		editorScrollPane.setPreferredSize(new Dimension(600, 400));
+
+		// Show the output.
+		JOptionPane.showMessageDialog(this.martTab, editorScrollPane,
+				BuilderBundle.getString("mcViewDDLWindowTitle"),
+				JOptionPane.INFORMATION_MESSAGE);
 	}
 }

@@ -59,7 +59,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.20, 22nd June 2006
+ * @version 0.1.21, 23rd June 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -1033,7 +1033,6 @@ public class MartBuilderUtils {
 	public static DataSet replicateDataSet(Mart mart, DataSet dataset,
 			String newName) throws AlreadyExistsException {
 		DataSet newDataSet = (DataSet) dataset.replicate(newName);
-		mart.addSchema(newDataSet);
 		return newDataSet;
 	}
 }

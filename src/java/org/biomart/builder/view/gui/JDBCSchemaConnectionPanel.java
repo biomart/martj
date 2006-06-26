@@ -60,7 +60,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * {@link JDBCSchema} implementation which represents the connection.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 20th June 2006
+ * @version 0.1.5, 26th June 2006
  * @since 0.1
  */
 public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
@@ -236,17 +236,19 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		field.add(this.copysettings);
 		gridBag.setConstraints(field, fieldConstraints);
 		this.add(field);
-
+		
 		// Add the driver class label and field.
 		label = new JLabel(BuilderBundle.getString("driverClassLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		this.add(label);
 		field = new JPanel();
 		field.add(this.predefinedDriverClass);
-		field.add(this.driverClass);
+		// FIXME: Uncomment after Arek's demo.
+		// field.add(this.driverClass);
 		gridBag.setConstraints(field, fieldConstraints);
 		this.add(field);
-
+		
+		/* FIXME: Uncomment after Arek's demo.
 		// Add the driver location label, field and file chooser button.
 		label = new JLabel(BuilderBundle.getString("driverClassLocationLabel"));
 		gridBag.setConstraints(label, labelConstraints);
@@ -256,6 +258,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		field.add(this.driverClassLocationButton);
 		gridBag.setConstraints(field, fieldConstraints);
 		this.add(field);
+		*/
 
 		// Add the host label, and the host field, port label, port field.
 		label = new JLabel(BuilderBundle.getString("hostLabel"));
@@ -268,7 +271,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		field.add(this.port);
 		gridBag.setConstraints(field, fieldConstraints);
 		this.add(field);
-		
+
 		// Add the database and schema fields.
 		label = new JLabel(BuilderBundle.getString("databaseLabel"));
 		gridBag.setConstraints(label, labelConstraints);
@@ -345,7 +348,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			this.username.setText(null);
 			this.password.setText(null);
 		}
-		
+
 		// Make sure the right fields get enabled.
 		this.driverClassChanged();
 	}
@@ -434,7 +437,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 						BuilderBundle.getString("database")));
 		}
 
-		// Make sure they have given a schema name. 
+		// Make sure they have given a schema name.
 		if (this.isEmpty(this.schemaName.getText()))
 			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
 					.getString("schemaName")));
@@ -486,6 +489,16 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 
 		// If it's not empty...
 		if (!this.isEmpty(className)) {
+			// Is this a preset class?
+			for (Iterator i = JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
+					.keySet().iterator(); i.hasNext();) {
+				String mapName = (String) i.next();
+				String mapClassName = (String) JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
+						.get(mapName);
+				if (mapClassName.equals(className))
+					this.predefinedDriverClass.setSelectedItem(mapName);
+			}
+
 			// Do we know about this, as defined in the map at the start
 			// of this class?
 			if (JDBCSchemaConnectionPanel.DRIVER_MAP.containsKey(className)) {
@@ -496,7 +509,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				// Obtain the template and split it.
 				String[] parts = (String[]) JDBCSchemaConnectionPanel.DRIVER_MAP
 						.get(className);
-				
+
 				// The second part is the JDBC URL template itself. Remember
 				// which template was selected, then disable the JDBC URL
 				// field in the interface as its contents will now be
@@ -541,6 +554,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			// If not found, then the user needs to specify a location
 			// for the class too.
 			this.driverClassLocation.setEnabled(classNotFound);
+			this.driverClassLocationButton.setEnabled(classNotFound);
 		}
 
 		// If it's empty, disable the fields that depend on it.
@@ -602,10 +616,10 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			// Use it to look up the default class for that database,
 			// then reset the drop-down to nothing-selected.
 			if (!this.isEmpty(classType)) {
-				this.driverClass
-						.setText((String) JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
-								.get(classType));
-				this.predefinedDriverClass.setSelectedIndex(-1);
+				String driverClassName = (String) JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
+						.get(classType);
+				if (!this.driverClass.getText().equals(driverClassName))
+					this.driverClass.setText(driverClassName);
 			}
 		}
 	}

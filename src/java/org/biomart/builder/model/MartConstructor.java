@@ -815,6 +815,7 @@ public interface MartConstructor {
 							// The table to optimise for is segmentTableName.
 							// which refers to the DataSetTable dsTable.
 							// PK and FK are parentPK and childFK.
+							// Optimiser step depends on createFK step.
 						}
 					}
 

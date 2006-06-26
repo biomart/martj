@@ -49,7 +49,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * use JDBC to fetch/retrieve data between two databases.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 23rd June 2006
+ * @version 0.1.8, 26th June 2006
  * @since 0.1
  */
 public class SaveDDLMartConstructor implements MartConstructor {
@@ -57,6 +57,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	private SaveDDLGranularity granularity;
 
 	private File outputFile;
+
+	private StringBuffer outputStringBuffer;
 
 	private boolean includeComments;
 
@@ -71,16 +73,40 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 * @param datasets
 	 *            the datasets to output.
 	 * @param outputFile
-	 *            the file to write the DDL to.
+	 *            the file to write the DDL to. If null, then the
+	 *            <tt>outputStringBuffer</tt> parameter must not be null.
+	 * @param outputStringBuffer
+	 *            the string buffer to write the DDL to. If null, then the
+	 *            <tt>outputFile</tt> parameter must not be null. This
+	 *            parameter can only be used if writing to a single file for all
+	 *            DDL. Any other granularity will cause an exception.
 	 * @param includeComments
 	 *            <tt>true</tt> if comments are to be included, <tt>false</tt>
 	 *            if not.
+	 * @throws IllegalArgumentException
+	 *             if the combination of <tt>granularity</tt>,
+	 *             <tt>outputFile</tt> and <tt>outputStringBuffer</tt> do
+	 *             not make sense.
 	 */
 	public SaveDDLMartConstructor(SaveDDLGranularity granularity,
-			File outputFile, boolean includeComments) {
+			File outputFile, StringBuffer outputStringBuffer,
+			boolean includeComments) throws IllegalArgumentException {
+		// Check it's sensible.
+		if (outputStringBuffer != null
+				&& !granularity.equals(SaveDDLGranularity.SINGLE))
+			throw new IllegalArgumentException(BuilderBundle
+					.getString("mcDDLStringBufferSingleFileOnly"));
+		else if (outputStringBuffer == null && outputFile == null)
+			throw new IllegalArgumentException(BuilderBundle
+					.getString("mcDDLNoOutputSpecified"));
+		else if (outputStringBuffer != null && outputFile != null)
+			throw new IllegalArgumentException(BuilderBundle
+					.getString("mcDDLBothOutputsSpecified"));
+
 		// Remember the settings.
 		this.granularity = granularity;
 		this.outputFile = outputFile;
+		this.outputStringBuffer = outputStringBuffer;
 		this.includeComments = includeComments;
 
 		// Register dialects.
@@ -91,9 +117,14 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			Collection datasets) throws Exception {
 		// Work out what kind of helper to use.
 		DDLHelper helper;
-		if (this.granularity.equals(SaveDDLGranularity.SINGLE))
-			helper = new SingleFileHelper(this.outputFile, this.includeComments);
-		else if (this.granularity.equals(SaveDDLGranularity.MART))
+		if (this.granularity.equals(SaveDDLGranularity.SINGLE)) {
+			if (this.outputFile != null)
+				helper = new SingleFileHelper(this.outputFile,
+						this.includeComments);
+			else
+				helper = new SingleStringBufferHelper(this.outputStringBuffer,
+						this.includeComments);
+		} else if (this.granularity.equals(SaveDDLGranularity.MART))
 			helper = new MartAsFileHelper(this.outputFile, this.includeComments);
 		else if (this.granularity.equals(SaveDDLGranularity.DATASET))
 			helper = new DataSetAsFileHelper(this.outputFile,
@@ -121,7 +152,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		// Convert the set to a list.
 		List inputSchemaList = new ArrayList(inputSchemas);
-		
+
 		// Set the output dialect to match the first one in the list.
 		helper.setDialect(DatabaseDialect.getDialect((Schema) inputSchemaList
 				.get(0)));
@@ -152,6 +183,17 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		private boolean includeComments;
 
 		/**
+		 * Constructs a DDL helper.
+		 * 
+		 * @param includeComments
+		 *            <tt>true</tt> if comments are to be included,
+		 *            <tt>false</tt> if not.
+		 */
+		public DDLHelper(boolean includeComments) {
+			this.includeComments = includeComments;
+		}
+
+		/**
 		 * Constructs a DDL helper which writes to the given file.
 		 * 
 		 * @param file
@@ -175,9 +217,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		}
 
 		/**
-		 * Sets the dialect to use to create the output DDL with.
-		 * Also resets the dialect in order to remove any existing
-		 * state information.
+		 * Sets the dialect to use to create the output DDL with. Also resets
+		 * the dialect in order to remove any existing state information.
 		 * 
 		 * @param dialect
 		 *            the dialect to use when creating output DDL.
@@ -270,6 +311,65 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			// Close the file stream.
 			this.outputFileStream.flush();
 			this.outputFileStream.close();
+		}
+	}
+
+	/**
+	 * SingleStringBufferHelper extends DDLHelper, saves statements. Statements
+	 * are saved altogether inside a string buffer.
+	 */
+	public static class SingleStringBufferHelper extends DDLHelper {
+
+		private StringBuffer outputStringBuffer;
+
+		/**
+		 * Constructs a helper which will output all DDL into a single string
+		 * buffer.
+		 * 
+		 * @param outputStringBuffer
+		 *            the string buffer to write the DDL into.
+		 * @param includeComments
+		 *            <tt>true</tt> if comments are to be included,
+		 *            <tt>false</tt> if not.
+		 */
+		public SingleStringBufferHelper(StringBuffer outputStringBuffer,
+				boolean includeComments) {
+			super(includeComments);
+			this.outputStringBuffer = outputStringBuffer;
+		}
+
+		public void startActions() throws Exception {
+			// We don't care.
+		}
+
+		public void startActionsForMart(Mart mart) throws Exception {
+			// We don't care.
+		}
+
+		public void startActionsForDataSet(DataSet dataset) throws Exception {
+			// We don't care.
+		}
+
+		public void executeAction(MCAction action, int level) throws Exception {
+			// Convert the action to some DDL.
+			String[] cmd = this.getStatementsForAction(action);
+			// Write the data.
+			for (int i = 0; i < cmd.length; i++) {
+				this.outputStringBuffer.append(cmd[i]);
+				this.outputStringBuffer.append(";\n");
+			}
+		}
+
+		public void endActionsForDataSet(DataSet dataset) throws Exception {
+			// We don't care.
+		}
+
+		public void endActionsForMart(Mart mart) throws Exception {
+			// We don't care.
+		}
+
+		public void endActions() throws Exception {
+			// We don't care.
 		}
 	}
 
