@@ -19,6 +19,7 @@
 package org.biomart.builder.view.gui;
 
 import java.awt.Color;
+import java.awt.LayoutManager;
 import java.util.Iterator;
 
 import org.biomart.builder.model.Relation;
@@ -48,16 +49,38 @@ public class SchemaDiagram extends Diagram {
 
 	/**
 	 * Creates a new diagram that displays the tables and relations inside a
-	 * specific schema.
+	 * specific schema. Uses a default layout specified by {@link Diagram}.
 	 * 
 	 * @param martTab
-	 * 			  the tab within which this diagram appears.
+	 *            the tab within which this diagram appears.
 	 * @param schema
 	 *            the schema to draw in this diagram.
 	 */
 	public SchemaDiagram(MartTab martTab, Schema schema) {
 		// Call the general diagram constructor first.
 		super(martTab);
+
+		// Set up our background colour.
+		this.setBackground(SchemaDiagram.BACKGROUND_COLOUR);
+
+		// Remember the schema, then lay it out.
+		this.schema = schema;
+		this.recalculateDiagram();
+	}
+
+	/**
+	 * Creates a new diagram that displays the tables and relations inside a
+	 * specific schema.
+	 * 
+	 * @layout the layout manager to use to display the diagram.
+	 * @param martTab
+	 *            the tab within which this diagram appears.
+	 * @param schema
+	 *            the schema to draw in this diagram.
+	 */
+	public SchemaDiagram(LayoutManager layout, MartTab martTab, Schema schema) {
+		// Call the general diagram constructor first.
+		super(layout, martTab);
 
 		// Set up our background colour.
 		this.setBackground(SchemaDiagram.BACKGROUND_COLOUR);

@@ -62,7 +62,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.25, 21st June 2006
+ * @version 0.1.26, 26th June 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -1315,7 +1315,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// Dataset card first. Create a diagram, then place it inside
 			// a scrollpane. This scrollpane becomes the dataset card. Don't
 			// forget to set the context too.
-			this.datasetDiagram = new SchemaDiagram(martTab, dataset);
+			this.datasetDiagram = new DataSetDiagram(martTab, dataset);
 			this.datasetDiagram.setDiagramContext(new DataSetContext(
 					this.martTab, dataset));
 			JScrollPane scroller = new JScrollPane(this.datasetDiagram);

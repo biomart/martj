@@ -33,7 +33,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * schemas, then a {@link RelationComponent} is drawn between them.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 21st June 2006
+ * @version 0.1.13, 26th June 2006
  * @since 0.1
  */
 public class AllSchemasDiagram extends Diagram {
