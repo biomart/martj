@@ -60,7 +60,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * what those items should be.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.20, 20th June 2006
+ * @version 0.1.21, 26th June 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
@@ -84,8 +84,8 @@ public abstract class Diagram extends JPanel {
 	 *            send events.
 	 */
 	public Diagram(MartTab martTab) {
-		// Set us up with a nice circular layout.
-		super(new RadialLayout());
+		// Set us up with a nice linear layout.
+		super(new LinearLayout());
 
 		// Enable mouse events to be picked up all over the diagram.
 		this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
@@ -208,6 +208,16 @@ public abstract class Diagram extends JPanel {
 		// the absolute centre.
 		int newViewPointX = compCentre.x - (viewSize.width / 2);
 		int newViewPointY = compCentre.y - (viewSize.height / 2);
+		
+		// Move the scrollpoint if it goes off the top-left of the diagram.
+		if (newViewPointX - (viewSize.width/2)<0) newViewPointX = 0;
+		if (newViewPointY - (viewSize.height/2)<0) newViewPointY = 0;
+		
+		// Move the scrollpoint if it goes off the bottom-right.
+		if (newViewPointX + (viewSize.width/2) > parent.getWidth())
+			newViewPointX = parent.getWidth() - viewSize.width;
+		if (newViewPointY + (viewSize.height/2) > parent.getHeight())
+			newViewPointY = parent.getHeight() - viewSize.height;
 
 		// Scroll to that position.
 		viewport.setViewPosition(new Point(newViewPointX, newViewPointY));

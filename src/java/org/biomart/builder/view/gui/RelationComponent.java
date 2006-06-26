@@ -40,7 +40,7 @@ import org.biomart.builder.model.Relation;
  * The line is defined by the layout manager.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.15, 20th June 2006
+ * @version 0.1.16, 26th June 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
@@ -141,6 +141,10 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 
 	private Shape shape;
 
+	private Shape strokedShape;
+
+	private Stroke stroke;
+
 	private Diagram diagram;
 
 	private Relation relation;
@@ -170,6 +174,11 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		if (mod != null)
 			mod.customiseAppearance(this, this.getObject());
 		this.setBackground(this.getForeground());
+		if (this.shape != null && !this.getStroke().equals(this.stroke)) {
+			this.stroke = this.getStroke();
+			this.strokedShape = this.stroke.createStrokedShape(this.shape);
+			this.repaint();
+		}
 	}
 
 	public void recalculateDiagramComponent() {
@@ -223,15 +232,16 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	 *            the shape this relation should take on screen.
 	 */
 	public void setShape(Shape shape) {
-		Stroke stroke = this.getStroke();
-		this.shape = stroke.createStrokedShape(shape);
+		this.shape = shape;
+		this.stroke = null;
+		this.updateAppearance();
 	}
 
 	public boolean contains(int x, int y) {
 		// Clicks are on us if they are within a certain distance
 		// of the stroked shape.
-		return this.shape != null
-				&& this.shape.intersects(new Rectangle2D.Double(x
+		return this.strokedShape != null
+				&& this.strokedShape.intersects(new Rectangle2D.Double(x
 						- RelationComponent.RELATION_LINEWIDTH, y
 						- RelationComponent.RELATION_LINEWIDTH,
 						RelationComponent.RELATION_LINEWIDTH * 2,
@@ -295,10 +305,20 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		// Do painting of this component.
 		g2d.setColor(this.getForeground());
 		g2d.setStroke(this.getStroke());
-		g2d.draw(this.shape);
+		g2d.draw(this.strokedShape);
 		g2d.setColor(this.getBackground());
-		g2d.fill(this.shape);
+		g2d.fill(this.strokedShape);
 		// Clean up.
 		g2d.dispose();
+	}
+
+	public int hashCode() {
+		return this.getObject().hashCode();
+	}
+
+	public boolean equals(Object obj) {
+		return (obj instanceof DiagramComponent)
+				&& ((DiagramComponent) obj).getObject()
+						.equals(this.getObject());
 	}
 }

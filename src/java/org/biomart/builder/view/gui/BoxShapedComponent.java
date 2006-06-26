@@ -34,7 +34,7 @@ import javax.swing.JPopupMenu;
  * rather than exact component.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 20th June 2006
+ * @version 0.1.11, 26th June 2006
  * @since 0.1
  */
 public abstract class BoxShapedComponent extends JPanel implements
@@ -140,5 +140,15 @@ public abstract class BoxShapedComponent extends JPanel implements
 		// Pass it on up if we're not interested.
 		if (!eventProcessed)
 			super.processMouseEvent(evt);
+	}
+
+	public int hashCode() {
+		return this.getObject().hashCode();
+	}
+
+	public boolean equals(Object obj) {
+		return (obj instanceof DiagramComponent)
+				&& ((DiagramComponent) obj).getObject()
+						.equals(this.getObject());
 	}
 }
