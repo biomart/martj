@@ -20,9 +20,11 @@ package org.biomart.builder.view.gui;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.util.Iterator;
 
-import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.TransferHandler;
 
@@ -39,6 +41,10 @@ import org.biomart.builder.model.Key.PrimaryKey;
  */
 public class KeyComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
+	
+	private GridBagLayout layout;
+	
+	private GridBagConstraints constraints;
 
 	/**
 	 * Constant referring to normal key colour.
@@ -72,8 +78,16 @@ public class KeyComponent extends BoxShapedComponent {
 	public KeyComponent(Key key, Diagram diagram) {
 		super(key, diagram);
 
-		// Keys lay out their columns vertically.
-		this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+		// Key components are set out in a vertical list.
+		this.layout = new GridBagLayout();
+		this.setLayout(this.layout);
+
+		// Constraints for each field.
+		this.constraints = new GridBagConstraints();
+		this.constraints.gridwidth = GridBagConstraints.REMAINDER;
+		this.constraints.fill = GridBagConstraints.HORIZONTAL;
+		this.constraints.anchor = GridBagConstraints.CENTER;
+		this.constraints.insets = new Insets(0, 1, 0, 2);
 
 		// Calculate the component layout.
 		this.recalculateDiagramComponent();
@@ -97,6 +111,7 @@ public class KeyComponent extends BoxShapedComponent {
 		for (Iterator i = this.getKey().getColumns().iterator(); i.hasNext();) {
 			JLabel label = new JLabel(((Column) i.next()).getName());
 			label.setFont(Font.decode("Serif-ITALIC-10"));
+			this.layout.setConstraints(label, this.constraints);
 			this.add(label);
 		}
 	}

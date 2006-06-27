@@ -338,17 +338,11 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		String catalog = this.getConnection().getCatalog();
 		String schema = this.schemaName;
 
-		// This list will store all nullable columns we find.
-		List nullableCols = new ArrayList();
-
 		// Create a list of existing tables. During this method, we remove from
 		// this list all tables that still exist in the database. At the end of
 		// the method, the list contains only those tables which no longer
 		// exist, so they will be dropped.
 		List tablesToBeDropped = new ArrayList(this.tables.values());
-
-		// Create a similar list for foreign keys.
-		List fksToBeDropped = new ArrayList();
 
 		// Load tables and views from database, then loop over them.
 		ResultSet dbTables = dmd.getTables(catalog, schema, "%", new String[] {
@@ -394,8 +388,8 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 					}
 
 				// If the column is nullable, remember the fact.
-				if (nullable == DatabaseMetaData.attributeNullable)
-					nullableCols.add(dbTblCol);
+				dbTblCol
+						.setNullable(nullable == DatabaseMetaData.attributeNullable);
 
 				// Column exists, so remove it from our list of columns to be
 				// dropped at the end of the loop.
@@ -494,12 +488,6 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						throw new MartBuilderInternalError(t);
 					}
 			}
-
-			// For each table, note the foreign keys that already exist in the
-			// schema (not necessarily in the database), and add to the list to
-			// be dropped later if no equivalents are found in the database
-			// itself.
-			fksToBeDropped.addAll(dbTable.getForeignKeys());
 		}
 		dbTables.close();
 
@@ -512,17 +500,35 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			this.tables.remove(tableName);
 		}
 
+		// Synchronise the keys.
+		this.synchroniseKeys();
+	}
+
+	public void synchroniseKeys() throws BuilderException, SQLException {
+		// Get database metadata, catalog, and schema details.
+		DatabaseMetaData dmd = this.getConnection().getMetaData();
+		String catalog = this.getConnection().getCatalog();
+		String schema = this.schemaName;
+
+		// Work out a list of all foreign keys currently existing.
+		// Any remaining in this list later will be dropped.
+		List fksToBeDropped = new ArrayList();
+		for (Iterator i = this.tables.values().iterator(); i.hasNext();) {
+			Table t = (Table) i.next();
+			fksToBeDropped.addAll(t.getForeignKeys());
+		}
+
 		// Are we key-guessing? Key guess the foreign keys, passing in a
 		// reference to the list of existing foreign keys. After this call has
 		// completed, the list will contain all those foreign keys which no
 		// longer exist, and can safely be dropped.
 		if (this.getKeyGuessing())
-			this.synchroniseUsingKeyGuessing(fksToBeDropped);
+			this.synchroniseKeysUsingKeyGuessing(fksToBeDropped);
 		// Otherwise, use DMD to do the same, also passing in the list of
 		// existing foreign keys to be updated as the call progresses. Also pass
 		// in the DMD details so it doesn't have to work them out for itself.
 		else
-			this.synchroniseUsingDMD(fksToBeDropped, dmd, schema, catalog);
+			this.synchroniseKeysUsingDMD(fksToBeDropped, dmd, schema, catalog);
 
 		// Drop any foreign keys that are left over (but not handmade ones).
 		for (Iterator i = fksToBeDropped.iterator(); i.hasNext();) {
@@ -547,7 +553,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 				for (Iterator k = fk.getColumns().iterator(); k.hasNext()
 						&& allColsNullable;) {
 					Column c = (Column) k.next();
-					if (!nullableCols.contains(c))
+					if (!c.getNullable())
 						allColsNullable = false;
 				}
 				// If all columns are nullable, the key is too.
@@ -580,7 +586,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	 *             if there was a logical problem during construction of the set
 	 *             of foreign keys.
 	 */
-	private void synchroniseUsingKeyGuessing(Collection fksToBeDropped)
+	private void synchroniseKeysUsingKeyGuessing(Collection fksToBeDropped)
 			throws SQLException, BuilderException {
 		// Loop through all the tables in the database, which is the same
 		// as looping through all the primary keys.
@@ -854,7 +860,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	 *             if there was a logical problem during construction of the set
 	 *             of foreign keys.
 	 */
-	private void synchroniseUsingDMD(Collection fksToBeDropped,
+	private void synchroniseKeysUsingDMD(Collection fksToBeDropped,
 			DatabaseMetaData dmd, String schema, String catalog)
 			throws SQLException, BuilderException {
 		// Loop through all the tables in the database, which is the same

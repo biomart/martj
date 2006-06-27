@@ -59,7 +59,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * has the same context applied.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 20th June 2006
+ * @version 0.1.18, 27th June 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -121,7 +121,7 @@ public class SchemaTabSet extends JTabbedPane {
 	/**
 	 * Uses the mart to work out what schemas are available, then updates the
 	 * tabs that represent the individual schemas to make sure that they show
-	 * the same list.
+	 * the same list. Also updates the overview diagram.
 	 */
 	public void recalculateSchemaTabs() {
 		// Add all schemas in the mart that we don't have yet.
@@ -143,6 +143,9 @@ public class SchemaTabSet extends JTabbedPane {
 			if (!this.martTab.getMart().getSchemas().contains(schema))
 				this.removeSchemaTab(schema);
 		}
+		
+		// Update the overview diagram.
+		this.recalculateOverviewDiagram();
 	}
 
 	/**
@@ -229,10 +232,8 @@ public class SchemaTabSet extends JTabbedPane {
 					// we should turn keyguessing on. The user can always
 					// turn it off again later. We need to resynchronise the
 					// schema after turning it on.
-					if (schema.getInternalRelations().size() == 0) {
+					if (schema.getInternalRelations().size() == 0)
 						MartBuilderUtils.enableKeyGuessing(schema);
-						MartBuilderUtils.synchroniseSchema(schema);
-					}
 
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -338,6 +339,9 @@ public class SchemaTabSet extends JTabbedPane {
 									// it.
 									if (group.getSchemas().size() == 1)
 										addSchemaTab(group);
+									
+									// Recalculate the overview diagram.
+									recalculateOverviewDiagram();
 
 									// Some datasets may have referred to the
 									// individual
@@ -348,7 +352,7 @@ public class SchemaTabSet extends JTabbedPane {
 									// be recalculated.
 									martTab.getDataSetTabSet()
 											.recalculateDataSetTabs();
-
+									
 									// Set the dataset tabset status as
 									// modified.
 									martTab.getMartTabSet().setModifiedStatus(
@@ -540,11 +544,14 @@ public class SchemaTabSet extends JTabbedPane {
 						public void run() {
 							// Reinstate the tab for the individual schema.
 							addSchemaTab(schema);
-
+							
 							// If the group is now empty, remove the tab for it.
 							if (schemaGroup.getSchemas().size() == 0)
 								removeSchemaTab(schemaGroup);
 
+							// Recalculate the overview diagram.
+							recalculateOverviewDiagram();
+							
 							// Set the dataset tabset status as modified.
 							martTab.getMartTabSet().setModifiedStatus(true);
 						}
@@ -788,12 +795,48 @@ public class SchemaTabSet extends JTabbedPane {
 	 * @param schema
 	 *            the schema to turn keyguessing on for.
 	 */
-	public void requestEnableKeyGuessing(Schema schema) {
-		MartBuilderUtils.enableKeyGuessing(schema);
+	public void requestEnableKeyGuessing(final Schema schema) {
+		// In the background, do the synchronisation.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Do it.
+					MartBuilderUtils.enableKeyGuessing(schema);
 
-		// The schema needs resynchronising to reflect the newly
-		// guessed keys and relations.
-		this.requestSynchroniseSchema(schema);
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Recalculate the diagram.
+							recalculateSchemaDiagram(schema);
+
+							// As it may have lost or gained some external
+							// relations,
+							// the all-schemas diagram should also be
+							// recalculated.
+							recalculateOverviewDiagram();
+
+							// It may have disappeared altogether, or lost some
+							// table
+							// upon which a dataset was based, so the datasets
+							// may have
+							// changed. In which case, recalculate the dataset
+							// tabset
+							// to reflect this.
+							martTab.getDataSetTabSet().recalculateDataSetTabs();
+
+							// Update the dataset tabset status to modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
 	}
 
 	/**
@@ -802,12 +845,48 @@ public class SchemaTabSet extends JTabbedPane {
 	 * @param schema
 	 *            the schema to turn keyguessing off for.
 	 */
-	public void requestDisableKeyGuessing(Schema schema) {
-		MartBuilderUtils.disableKeyGuessing(schema);
+	public void requestDisableKeyGuessing(final Schema schema) {
+		// In the background, do the synchronisation.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Do it.
+					MartBuilderUtils.disableKeyGuessing(schema);
 
-		// The schema needs resynchronising to remove any
-		// guessed keys and relations.
-		this.requestSynchroniseSchema(schema);
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Recalculate the diagram.
+							recalculateSchemaDiagram(schema);
+
+							// As it may have lost or gained some external
+							// relations,
+							// the all-schemas diagram should also be
+							// recalculated.
+							recalculateOverviewDiagram();
+
+							// It may have disappeared altogether, or lost some
+							// table
+							// upon which a dataset was based, so the datasets
+							// may have
+							// changed. In which case, recalculate the dataset
+							// tabset
+							// to reflect this.
+							martTab.getDataSetTabSet().recalculateDataSetTabs();
+
+							// Update the dataset tabset status to modified.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
 	}
 
 	/**

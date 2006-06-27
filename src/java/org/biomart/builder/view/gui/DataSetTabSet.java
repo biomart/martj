@@ -62,7 +62,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.26, 26th June 2006
+ * @version 0.1.27, 27th June 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -105,6 +105,9 @@ public class DataSetTabSet extends JTabbedPane {
 
 		// Calculate the dataset tabs.
 		this.recalculateDataSetTabs();
+		
+		// Update the overview diagram.
+		this.recalculateOverviewDiagram();
 	}
 
 	/**

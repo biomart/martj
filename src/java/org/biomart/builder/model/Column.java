@@ -32,7 +32,7 @@ import org.biomart.builder.exceptions.MartBuilderInternalError;
  * name.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 22nd June 2006
+ * @version 0.1.7, 27th June 2006
  * @since 0.1
  */
 public interface Column extends Comparable {
@@ -42,19 +42,19 @@ public interface Column extends Comparable {
 	 * @return the name of this column.
 	 */
 	public String getName();
-	
+
 	/**
-	 * Retrieve the original name of this column, as it was first created.
-	 * This is useful when the user has renamed a column but you need to
-	 * know what it started out as for purposes of comparison.
+	 * Retrieve the original name of this column, as it was first created. This
+	 * is useful when the user has renamed a column but you need to know what it
+	 * started out as for purposes of comparison.
 	 * 
 	 * @return the original name of this column.
 	 */
 	public String getOriginalName();
 
 	/**
-	 * Use this to rename a column. The table will be informed of the change
-	 * as well.
+	 * Use this to rename a column. The table will be informed of the change as
+	 * well.
 	 * 
 	 * @param newName
 	 *            the new name to give the column.
@@ -78,6 +78,21 @@ public interface Column extends Comparable {
 	public Table getTable();
 
 	/**
+	 * Sets whether this column is nullable or not.
+	 * 
+	 * @param nullable
+	 *            <tt>true</tt> if it is nullable, <tt>false</tt> if not.
+	 */
+	public void setNullable(boolean nullable);
+
+	/**
+	 * Tests to see if this column is nullable or not.
+	 * 
+	 * @return <tt>true</tt> if it is nullable, <tt>false</tt> if not.
+	 */
+	public boolean getNullable();
+
+	/**
 	 * A generic implementation which provides the basic functionality required
 	 * for a column to function.
 	 */
@@ -87,6 +102,8 @@ public interface Column extends Comparable {
 		private String originalName;
 
 		private String name;
+
+		private boolean nullable;
 
 		/**
 		 * This constructor creates a column and remembers the name and parent
@@ -106,6 +123,7 @@ public interface Column extends Comparable {
 			this.name = name;
 			this.originalName = name;
 			this.table = table;
+			this.nullable = false;
 
 			// Add it to the table - throws AssociationException and
 			// AlreadyExistsException
@@ -127,14 +145,23 @@ public interface Column extends Comparable {
 		public Table getTable() {
 			return this.table;
 		}
-		
+
 		public void setName(String newName) throws AlreadyExistsException {
 			this.getTable().changeColumnMapKey(this.name, newName);
 			this.name = newName;
 		}
-		
-		public void setOriginalName(String newName) throws AlreadyExistsException {
+
+		public void setOriginalName(String newName)
+				throws AlreadyExistsException {
 			this.originalName = newName;
+		}
+
+		public boolean getNullable() {
+			return this.nullable;
+		}
+
+		public void setNullable(boolean nullable) {
+			this.nullable = nullable;
 		}
 
 		public String toString() {

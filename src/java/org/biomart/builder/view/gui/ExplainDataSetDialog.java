@@ -39,7 +39,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * and relations not involved directly in this dataset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 26th June 2006
+ * @version 0.1.8, 27th June 2006
  * @since 0.1
  */
 public class ExplainDataSetDialog extends JDialog {
@@ -77,9 +77,12 @@ public class ExplainDataSetDialog extends JDialog {
 		// Work out what size we want the diagram to be.
 		Dimension size = diagram.getPreferredSize();
 		Dimension maxSize = martTab.getSize();
-		// The +20s in the following are to cater for scrollbar widths.
-		size.width = Math.max(100, Math.min(size.width, maxSize.width) + 20);
-		size.height = Math.max(100, Math.min(size.height, maxSize.height) + 20);
+		// The +20s in the following are to cater for scrollbar widths
+		// and window borders.
+		size.width = Math.max(100, Math
+				.min(size.width + 20, maxSize.width - 20));
+		size.height = Math.max(100, Math.min(size.height + 20,
+				maxSize.height - 20));
 		content.setPreferredSize(size);
 
 		// Add the diagram to the pane.

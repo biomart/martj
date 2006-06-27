@@ -20,7 +20,9 @@ package org.biomart.builder.view.gui;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -33,14 +35,18 @@ import org.biomart.builder.resources.BuilderBundle;
 
 /**
  * A diagram component that represents a dataset. It usually only has a label in
- * it,.
+ * it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 20th June 2006
+ * @version 0.1.2, 27th June 2006
  * @since 0.1
  */
 public class DataSetComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
+	
+	private GridBagLayout layout;
+	
+	private GridBagConstraints constraints;
 
 	/**
 	 * Constructs a dataset diagram component in the given diagram that displays
@@ -55,7 +61,15 @@ public class DataSetComponent extends BoxShapedComponent {
 		super(dataset, diagram);
 
 		// Schema components are set out in a vertical list.
-		this.setLayout(new GridLayout(0, 1));
+		this.layout = new GridBagLayout();
+		this.setLayout(this.layout);
+
+		// Constraints for each field.
+		this.constraints = new GridBagConstraints();
+		this.constraints.gridwidth = GridBagConstraints.REMAINDER;
+		this.constraints.fill = GridBagConstraints.HORIZONTAL;
+		this.constraints.anchor = GridBagConstraints.CENTER;
+		this.constraints.insets = new Insets(5, 5, 5, 5);
 
 		// Calculate the components and add them to the list.
 		this.recalculateDiagramComponent();
@@ -66,11 +80,12 @@ public class DataSetComponent extends BoxShapedComponent {
 		this.removeAll();
 
 		// Set the background colour.
-		this.setBackground(Color.PINK);
-
+		this.setBackground(Color.LIGHT_GRAY);
+		
 		// Add the label for the schema name,
 		JLabel label = new JLabel(this.getDataSet().getName());
 		label.setFont(Font.decode("Serif-BOLD-10"));
+		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 	}
 

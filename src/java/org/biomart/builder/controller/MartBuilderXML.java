@@ -96,7 +96,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.19, 22nd June 2006
+ * @version 0.1.20, 27th June 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -209,8 +209,8 @@ public class MartBuilderXML extends DefaultHandler {
 			String schemaName = (String) attributes.get("schemaName");
 			String username = (String) attributes.get("username");
 			String name = (String) attributes.get("name");
-			boolean keyguessing = ((String) attributes.get("keyguessing"))
-					.equals("true");
+			boolean keyguessing = Boolean.valueOf(
+					(String) attributes.get("keyguessing")).booleanValue();
 
 			// Construct the JDBC schema.
 			try {
@@ -248,7 +248,7 @@ public class MartBuilderXML extends DefaultHandler {
 			String id = (String) attributes.get("id");
 			String name = (String) attributes.get("name");
 			String originalName = (String) attributes.get("originalName");
-			
+
 			// DataSet table provider?
 			if (schema instanceof DataSet) {
 				// Work out what type of dataset table it is.
@@ -335,7 +335,7 @@ public class MartBuilderXML extends DefaultHandler {
 			String id = (String) attributes.get("id");
 			String name = (String) attributes.get("name");
 			String originalName = (String) attributes.get("originalName");
-			
+
 			try {
 				// DataSet table column?
 				if (tbl instanceof DataSetTable) {
@@ -373,8 +373,12 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Generic column?
 				else if (tbl instanceof GenericTable) {
+					String nullable = (String) attributes.get("nullable");
 					Column column = new GenericColumn(name, tbl);
 					column.setOriginalName(originalName);
+					column
+							.setNullable(Boolean.valueOf(nullable)
+									.booleanValue());
 					element = column;
 				}
 
@@ -443,15 +447,13 @@ public class MartBuilderXML extends DefaultHandler {
 
 			// Get the ID and nullability.
 			String id = (String) attributes.get("id");
-			boolean nullable = false;
+			boolean nullable = Boolean.valueOf(
+					(String) attributes.get("nullable")).booleanValue();
 
 			try {
 				// Work out what status it is.
 				ComponentStatus status = ComponentStatus
 						.get((String) attributes.get("status"));
-				if (attributes.containsKey("nullable"))
-					nullable = Boolean.valueOf(
-							(String) attributes.get("nullable")).booleanValue();
 
 				// Decode the column IDs from the comma-separated list.
 				String[] fkColIds = ((String) attributes.get("columnIds"))
@@ -641,8 +643,8 @@ public class MartBuilderXML extends DefaultHandler {
 				PartitionedColumnType resolvedType = null;
 				if ("singleValue".equals(type)) {
 					String value = null;
-					boolean useNull = ((String) attributes.get("useNull"))
-							.equals("true");
+					boolean useNull = Boolean.valueOf(
+							(String) attributes.get("useNull")).booleanValue();
 					if (!useNull)
 						value = (String) attributes.get("value");
 					resolvedType = new SingleValue(value, useNull);
@@ -652,8 +654,8 @@ public class MartBuilderXML extends DefaultHandler {
 					if (attributes.containsKey("values"))
 						valueList.addAll(Arrays.asList(((String) attributes
 								.get("values")).split("\\s*,\\s*")));
-					boolean includeNull = ((String) attributes.get("useNull"))
-							.equals("true");
+					boolean includeNull = Boolean.valueOf(
+							(String) attributes.get("useNull")).booleanValue();
 					// Make the collection.
 					resolvedType = new ValueCollection(valueList, includeNull);
 				} else if ("uniqueValues".equals(type))
@@ -680,8 +682,9 @@ public class MartBuilderXML extends DefaultHandler {
 				// central table reference, and mart constructor reference.
 				// Resolve them all.
 				String name = (String) attributes.get("name");
-				Boolean partitionOnSchema = Boolean.valueOf((String) attributes
-						.get("partitionOnSchema"));
+				boolean partitionOnSchema = Boolean.valueOf(
+						(String) attributes.get("partitionOnSchema"))
+						.booleanValue();
 				Table centralTable = (Table) this.mappedObjects.get(attributes
 						.get("centralTableId"));
 				String optType = (String) attributes.get("optimiser");
@@ -707,8 +710,7 @@ public class MartBuilderXML extends DefaultHandler {
 				// Assign the mart constructor, optimiser, and partition on
 				// schema settings.
 				ds.setDataSetOptimiserType(opt);
-				if (partitionOnSchema != null)
-					ds.setPartitionOnSchema(partitionOnSchema.booleanValue());
+				ds.setPartitionOnSchema(partitionOnSchema);
 				element = ds;
 			} catch (Exception e) {
 				if (e instanceof SAXException)
@@ -885,8 +887,8 @@ public class MartBuilderXML extends DefaultHandler {
 				this.writeAttribute("password", jdbcSchema.getPassword(),
 						xmlWriter);
 			this.writeAttribute("name", jdbcSchema.getName(), xmlWriter);
-			this.writeAttribute("keyguessing",
-					jdbcSchema.getKeyGuessing() ? "true" : "false", xmlWriter);
+			this.writeAttribute("keyguessing", Boolean.toString(jdbcSchema
+					.getKeyGuessing()), xmlWriter);
 		}
 		// Other schema types are not recognised.
 		else
@@ -979,6 +981,8 @@ public class MartBuilderXML extends DefaultHandler {
 				this.writeAttribute("name", col.getName(), xmlWriter);
 				this.writeAttribute("originalName", col.getOriginalName(),
 						xmlWriter);
+				this.writeAttribute("nullable", Boolean.toString(col
+						.getNullable()), xmlWriter);
 
 				// Dataset column?
 				if (col instanceof DataSetColumn) {
@@ -1246,8 +1250,8 @@ public class MartBuilderXML extends DefaultHandler {
 					this.writeAttribute("partitionedColumnType", "singleValue",
 							xmlWriter);
 					String value = sv.getValue();
-					this.writeAttribute("useNull", sv.getIncludeNull() ? "true"
-							: "false", xmlWriter);
+					this.writeAttribute("useNull", Boolean.toString(sv
+							.getIncludeNull()), xmlWriter);
 					if (value != null)
 						this.writeAttribute("value", value, xmlWriter);
 				}
@@ -1263,8 +1267,8 @@ public class MartBuilderXML extends DefaultHandler {
 					// Values are comma-separated.
 					List valueList = new ArrayList();
 					valueList.addAll(vc.getValues());
-					this.writeAttribute("useNull", vc.getIncludeNull() ? "true"
-							: "false", xmlWriter);
+					this.writeAttribute("useNull", Boolean.toString(vc
+							.getIncludeNull()), xmlWriter);
 					if (!valueList.isEmpty())
 						this.writeAttribute("values", (String[]) valueList
 								.toArray(new String[0]), xmlWriter);

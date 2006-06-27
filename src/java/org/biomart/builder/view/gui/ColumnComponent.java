@@ -20,6 +20,9 @@ package org.biomart.builder.view.gui;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 import javax.swing.JLabel;
 
@@ -29,11 +32,15 @@ import org.biomart.builder.model.Column;
  * This simple component represents a single column within a table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 15th May 2006
+ * @version 0.1.5, 27th June 2006
  * @since 0.1
  */
 public class ColumnComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
+
+	private GridBagLayout layout;
+
+	private GridBagConstraints constraints;
 
 	/**
 	 * Constant referring to normal column colour.
@@ -62,6 +69,17 @@ public class ColumnComponent extends BoxShapedComponent {
 	public ColumnComponent(Column column, Diagram diagram) {
 		super(column, diagram);
 
+		// Column components are set out in a vertical list.
+		this.layout = new GridBagLayout();
+		this.setLayout(this.layout);
+
+		// Constraints for each field.
+		this.constraints = new GridBagConstraints();
+		this.constraints.gridwidth = GridBagConstraints.REMAINDER;
+		this.constraints.fill = GridBagConstraints.HORIZONTAL;
+		this.constraints.anchor = GridBagConstraints.CENTER;
+		this.constraints.insets = new Insets(0, 1, 0, 2);
+
 		// Calculate the diagram.
 		this.recalculateDiagramComponent();
 	}
@@ -76,6 +94,7 @@ public class ColumnComponent extends BoxShapedComponent {
 		// Add the label for the column name.
 		JLabel label = new JLabel(this.getColumn().getName());
 		label.setFont(Font.decode("Serif-ITALIC-10"));
+		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 	}
 

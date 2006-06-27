@@ -20,15 +20,17 @@ package org.biomart.builder.view.gui;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Iterator;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.Key;
@@ -42,11 +44,15 @@ import org.biomart.builder.resources.BuilderBundle;
  * a secondary label indicating which schema they belong to.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 22nd May 2006
+ * @version 0.1.11, 27th June 2006
  * @since 0.1
  */
 public class TableComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
+
+	private GridBagLayout layout;
+
+	private GridBagConstraints constraints;
 
 	private JButton showHide;
 
@@ -81,8 +87,16 @@ public class TableComponent extends BoxShapedComponent {
 	public TableComponent(Table table, Diagram diagram) {
 		super(table, diagram);
 
-		// Organise ourselves in a vertical box.
-		this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+		// Table components are set out in a vertical list.
+		this.layout = new GridBagLayout();
+		this.setLayout(this.layout);
+
+		// Constraints for each field.
+		this.constraints = new GridBagConstraints();
+		this.constraints.gridwidth = GridBagConstraints.REMAINDER;
+		this.constraints.fill = GridBagConstraints.HORIZONTAL;
+		this.constraints.anchor = GridBagConstraints.CENTER;
+		this.constraints.insets = new Insets(0, 1, 0, 2);
 
 		// Draw our contents.
 		this.recalculateDiagramComponent();
@@ -107,11 +121,13 @@ public class TableComponent extends BoxShapedComponent {
 		// Add the table name label.
 		JLabel label = new JLabel(this.getTable().getName());
 		label.setFont(Font.decode("Serif-BOLD-10"));
+		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 
 		// Add the schema name label below.
 		label = new JLabel(this.getTable().getSchema().getName());
 		label.setFont(Font.decode("Serif-PLAIN-10"));
+		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 
 		// Add a key component as a sub-component of this table
@@ -124,11 +140,14 @@ public class TableComponent extends BoxShapedComponent {
 			this.addSubComponent(key, keyComponent);
 
 			// Physically add it to the table component layout.
+			this.layout.setConstraints(keyComponent, this.constraints);
 			this.add(keyComponent);
 		}
 
 		// Now the columns, as a vertical list.
-		this.columnsListPanel = Box.createVerticalBox();
+		this.columnsListPanel = new JPanel();
+		GridBagLayout columnsListPanelLayout = new GridBagLayout();
+		this.columnsListPanel.setLayout(columnsListPanelLayout);
 
 		// Add columns to the list one by one, as column sub-components.
 		for (Iterator i = this.getTable().getColumns().iterator(); i.hasNext();) {
@@ -140,6 +159,8 @@ public class TableComponent extends BoxShapedComponent {
 			this.addSubComponent(col, colComponent);
 
 			// Physically add it to the list of columns.
+			columnsListPanelLayout.setConstraints(colComponent,
+					this.constraints);
 			columnsListPanel.add(colComponent);
 		}
 
@@ -147,8 +168,9 @@ public class TableComponent extends BoxShapedComponent {
 		this.showHide = new JButton(BuilderBundle
 				.getString("showColumnsButton"));
 		this.showHide.setFont(Font.decode("Serif-BOLD-10"));
-		this.add(showHide);
-		showHide.addActionListener(new ActionListener() {
+		this.layout.setConstraints(this.showHide, this.constraints);
+		this.add(this.showHide);
+		this.showHide.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (getState().equals(Boolean.TRUE))
 					setState(Boolean.FALSE);
@@ -173,8 +195,11 @@ public class TableComponent extends BoxShapedComponent {
 			// If the state has changed from FALSE to TRUE, show the columns
 			// and change the button to 'hide columns'.
 			if (this.getState() == null
-					|| !this.getState().equals(Boolean.TRUE))
+					|| !this.getState().equals(Boolean.TRUE)) {
+				this.layout.setConstraints(this.columnsListPanel,
+						this.constraints);
 				this.add(this.columnsListPanel);
+			}
 			this.showHide.setText(BuilderBundle.getString("hideColumnsButton"));
 		} else {
 			// If the state has changed from TRUE to FALSE, hide the columns

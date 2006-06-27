@@ -59,7 +59,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.21, 23rd June 2006
+ * @version 0.1.22, 27th June 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -832,8 +832,13 @@ public class MartBuilderUtils {
 	 * 
 	 * @param schema
 	 *            the schema to enable key-guessing in.
+	 * @throws SQLException
+	 *             if after keyguessing the key sync went wrong.
+	 * @throws BuilderException
+	 *             if after keyguessing the key sync went wrong.
 	 */
-	public static void enableKeyGuessing(Schema schema) {
+	public static void enableKeyGuessing(Schema schema)
+			throws BuilderException, SQLException {
 		schema.setKeyGuessing(true);
 	}
 
@@ -842,8 +847,13 @@ public class MartBuilderUtils {
 	 * 
 	 * @param schema
 	 *            the schema to disable key-guessing in.
+	 * @throws SQLException
+	 *             if after disabling keyguessing the key sync went wrong.
+	 * @throws BuilderException
+	 *             if after disabling keyguessing the key sync went wrong.
 	 */
-	public static void disableKeyGuessing(Schema schema) {
+	public static void disableKeyGuessing(Schema schema) throws SQLException,
+			BuilderException {
 		schema.setKeyGuessing(false);
 	}
 

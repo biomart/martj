@@ -20,7 +20,9 @@ package org.biomart.builder.view.gui;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Iterator;
@@ -42,11 +44,15 @@ import org.biomart.builder.resources.BuilderBundle;
  * relations will appear in full using {@link TableComponent}s.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 20th June 2006
+ * @version 0.1.12, 27th June 2006
  * @since 0.1
  */
 public class SchemaComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
+	
+	private GridBagLayout layout;
+	
+	private GridBagConstraints constraints;
 
 	/**
 	 * Constructs a schema diagram component in the given diagram that displays
@@ -61,7 +67,15 @@ public class SchemaComponent extends BoxShapedComponent {
 		super(schema, diagram);
 
 		// Schema components are set out in a vertical list.
-		this.setLayout(new GridLayout(0, 1));
+		this.layout = new GridBagLayout();
+		this.setLayout(this.layout);
+
+		// Constraints for each field.
+		this.constraints = new GridBagConstraints();
+		this.constraints.gridwidth = GridBagConstraints.REMAINDER;
+		this.constraints.fill = GridBagConstraints.HORIZONTAL;
+		this.constraints.anchor = GridBagConstraints.CENTER;
+		this.constraints.insets = new Insets(5, 5, 5, 5);
 
 		// Calculate the components and add them to the list.
 		this.recalculateDiagramComponent();
@@ -72,30 +86,31 @@ public class SchemaComponent extends BoxShapedComponent {
 		this.removeAll();
 
 		// Set the background colour.
-		this.setBackground(Color.PINK);
+		this.setBackground(Color.LIGHT_GRAY);
 
 		// Add the label for the schema name,
 		JLabel label = new JLabel(this.getSchema().getName());
 		label.setFont(Font.decode("Serif-BOLD-10"));
+		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 
 		// Is it a group?
 		if (this.getSchema() instanceof SchemaGroup) {
-			// Construct a string containing the names of all the child schemas.
-			StringBuffer sb = new StringBuffer();
-			sb.append(BuilderBundle.getString("schemaGroupContains"));
+			// Add a 'contains' label.
+			label = new JLabel(BuilderBundle.getString("schemaGroupContains"));
+			label.setFont(Font.decode("Serif-BOLDITALIC-10"));
+			this.layout.setConstraints(label, this.constraints);
+			this.add(label);
+			
+			// Add a label for each member of the group.
 			for (Iterator i = ((SchemaGroup) this.getSchema()).getSchemas()
 					.iterator(); i.hasNext();) {
 				Schema s = (Schema) i.next();
-				sb.append(s.getName());
-				if (i.hasNext())
-					sb.append(", ");
+				label = new JLabel(s.getName());
+				label.setFont(Font.decode("Serif-BOLDITALIC-10"));
+				this.layout.setConstraints(label, this.constraints);
+				this.add(label);
 			}
-
-			// Make a label containing these names.
-			label = new JLabel(sb.toString());
-			label.setFont(Font.decode("Serif-BOLDITALIC-10"));
-			this.add(label);
 		}
 
 		// Now add any tables with external relations. Loop through the
@@ -120,6 +135,7 @@ public class SchemaComponent extends BoxShapedComponent {
 						tableComponent.getSubComponents());
 
 				// Add the table component to our layout.
+				this.layout.setConstraints(tableComponent, this.constraints);
 				this.add(tableComponent);
 			}
 		}

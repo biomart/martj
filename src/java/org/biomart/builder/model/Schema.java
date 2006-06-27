@@ -52,7 +52,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * with keeping track of the tables a schema provides.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 21st June 2006
+ * @version 0.1.14, 27th June 2006
  * @since 0.1
  */
 public interface Schema extends Comparable, DataLink {
@@ -78,9 +78,8 @@ public interface Schema extends Comparable, DataLink {
 	 * drop/add any that have changed, then check each column. and key and
 	 * relation and update those too.
 	 * <p>
-	 * Any key or relation that was created by the user and is still valid, ie.
-	 * the underlying columns still exist, will not be affected by this
-	 * operation.
+	 * After this method completes, it will call {@link #synchroniseKeys()}
+	 * before returning.
 	 * 
 	 * @throws SQLException
 	 *             if there was a problem connecting to the data source.
@@ -88,6 +87,22 @@ public interface Schema extends Comparable, DataLink {
 	 *             if there was any other kind of logical problem.
 	 */
 	public void synchronise() throws SQLException, BuilderException;
+
+	/**
+	 * This method can be called at any time to recalculate the foreign keys and
+	 * relations in the schema.
+	 * <p>
+	 * Any key or relation that was created by the user and is still valid, ie.
+	 * the underlying columns still exist, will not be affected by this
+	 * operation.
+	 * 
+	 * @throws BuilderException
+	 *             if anything went wrong to do with the calculation of keys and
+	 *             relations.
+	 * @throws SQLException
+	 *             if anything went wrong whilst talking to the database.
+	 */
+	public void synchroniseKeys() throws SQLException, BuilderException;
 
 	/**
 	 * Adds a table to this schema. The table must not already exist (ie. with
@@ -162,12 +177,18 @@ public interface Schema extends Comparable, DataLink {
 	public Collection getInternalRelations();
 
 	/**
-	 * Enables or disables key-guessing on this schema.
+	 * Enables or disables key-guessing on this schema. Changing this value will
+	 * cause {@link #synchroniseKeys()} to be called.
 	 * 
 	 * @param keyguessing
 	 *            <tt>true</tt> to enable it, <tt>false</tt> to disable it.
+	 * @throws SQLException
+	 *             See {@link #synchroniseKeys()}.
+	 * @throws BuilderException
+	 *             See {@link #synchroniseKeys()}.
 	 */
-	public void setKeyGuessing(boolean keyguessing);
+	public void setKeyGuessing(boolean keyguessing) throws SQLException,
+			BuilderException;
 
 	/**
 	 * Checks whether this schema uses key-guessing or not.
@@ -315,7 +336,8 @@ public interface Schema extends Comparable, DataLink {
 				relations.addAll(table.getRelations());
 			}
 
-			// Iterate through all the relations we found and copy them too.
+			// Iterate through all the relations we found and
+			// copy them too.
 			for (Iterator i = relations.iterator(); i.hasNext();) {
 				Relation r = (Relation) i.next();
 
@@ -325,47 +347,82 @@ public interface Schema extends Comparable, DataLink {
 				Key secondKey = r.getSecondKey();
 				Cardinality card = r.getCardinality();
 
-				// Find the equivalent keys in the duplicate table
-				// by comparing table names and sets of column names.
-				Key newFirstKey = null;
-				for (Iterator j = targetSchema.getTableByName(
-						firstKey.getTable().getName()).getKeys().iterator(); j
-						.hasNext()
-						&& newFirstKey == null;) {
-					Key candidate = (Key) j.next();
-					if (candidate.getColumnNames().equals(
-							firstKey.getColumnNames()))
-						newFirstKey = candidate;
-				}
-				Key newSecondKey = null;
-				for (Iterator j = targetSchema.getTableByName(
-						secondKey.getTable().getName()).getKeys().iterator(); j
-						.hasNext()
-						&& newSecondKey == null;) {
-					Key candidate = (Key) j.next();
-					if (candidate.getColumnNames().equals(
-							secondKey.getColumnNames()))
-						newSecondKey = candidate;
-				}
-
-				// If one or the other is external, set the external key
-				// appropriately to the existing key.
+				// External relations need to identify which end is ours
+				// and which end is not.
 				if (r.isExternal()) {
-					if (newFirstKey == null)
-						newFirstKey = firstKey;
-					else
-						newSecondKey = secondKey;
+					// Which key is external?
+					Key externalKey = firstKey.getTable().getSchema().equals(
+							this) ? secondKey : firstKey;
+					Key internalKey = r.getOtherKey(externalKey);
+
+					// Find the equivalent keys in the duplicate table
+					// by comparing table names and sets of column names.
+					Key newInternalKey = null;
+					for (Iterator j = targetSchema.getTableByName(
+							internalKey.getTable().getName()).getKeys()
+							.iterator(); j.hasNext() && newInternalKey == null;) {
+						Key candidate = (Key) j.next();
+						if (candidate.getColumnNames().equals(
+								internalKey.getColumnNames()))
+							newInternalKey = candidate;
+					}
+
+					// Create the relation in the duplicate schema.
+					// If we are replicating a schema into a schema group, for
+					// the purposes of grouping, then drop the original relation
+					// first to prevent duplicate relation problems.
+					try {
+						if ((targetSchema instanceof SchemaGroup)
+								&& !(this instanceof SchemaGroup))
+							r.destroy();
+						Relation newRel = new GenericRelation(newInternalKey,
+								externalKey, card);
+						newRel.setStatus(r.getStatus());
+					} catch (Exception e) {
+						// Ignore. This can only happen if incorrect relations
+						// are
+						// copied across which have different-arity keys at each
+						// end, or if the foreign keys involved already have
+						// relations elsewhere.
+					}
 				}
 
-				// Create the relation in the duplicate schema.
-				try {
-					Relation newRel = new GenericRelation(newFirstKey,
-							newSecondKey, card);
-					newRel.setStatus(r.getStatus());
-				} catch (Exception e) {
-					// Ignore. This can only happen if incorrect relations are
-					// copied across
-					// which have different-arity keys at each end.
+				// Internal relations are easy - just copy.
+				else {
+					// Find the equivalent keys in the duplicate table
+					// by comparing table names and sets of column names.
+					Key newFirstKey = null;
+					for (Iterator j = targetSchema.getTableByName(
+							firstKey.getTable().getName()).getKeys().iterator(); j
+							.hasNext()
+							&& newFirstKey == null;) {
+						Key candidate = (Key) j.next();
+						if (candidate.getColumnNames().equals(
+								firstKey.getColumnNames()))
+							newFirstKey = candidate;
+					}
+					Key newSecondKey = null;
+					for (Iterator j = targetSchema.getTableByName(
+							secondKey.getTable().getName()).getKeys()
+							.iterator(); j.hasNext() && newSecondKey == null;) {
+						Key candidate = (Key) j.next();
+						if (candidate.getColumnNames().equals(
+								secondKey.getColumnNames()))
+							newSecondKey = candidate;
+					}
+
+					// Create the relation in the duplicate schema.
+					try {
+						Relation newRel = new GenericRelation(newFirstKey,
+								newSecondKey, card);
+						newRel.setStatus(r.getStatus());
+					} catch (Exception e) {
+						// Ignore. This can only happen if incorrect relations
+						// are
+						// copied across which have different-arity keys at each
+						// end, or if the foreign keys involved already have
+						// relations elsewhere.
+					}
 				}
 			}
 		}
@@ -376,13 +433,15 @@ public interface Schema extends Comparable, DataLink {
 
 			// Copy the contents over.
 			this.replicateContents(newSchema);
-			
+
 			// Return.
 			return newSchema;
 		}
 
-		public void setKeyGuessing(boolean keyguessing) {
+		public void setKeyGuessing(boolean keyguessing) throws SQLException,
+				BuilderException {
 			this.keyguessing = keyguessing;
+			this.synchroniseKeys();
 		}
 
 		public boolean getKeyGuessing() {
@@ -406,6 +465,10 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public void synchronise() throws SQLException, BuilderException {
+			this.synchroniseKeys();
+		}
+
+		public void synchroniseKeys() throws SQLException, BuilderException {
 		}
 
 		public void addTable(Table table) throws AlreadyExistsException,
