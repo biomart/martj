@@ -697,8 +697,6 @@ public class MartBuilderXML extends DefaultHandler {
 				DataSetOptimiserType opt = null;
 				if ("NONE".equals(optType))
 					opt = DataSetOptimiserType.NONE;
-				else if ("LEFTJOIN".equals(optType))
-					opt = DataSetOptimiserType.LEFTJOIN;
 				else if ("COLUMN".equals(optType))
 					opt = DataSetOptimiserType.COLUMN;
 				else if ("TABLE".equals(optType))

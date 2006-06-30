@@ -18,20 +18,18 @@
 
 package org.biomart.builder.model;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
@@ -41,8 +39,21 @@ import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.UniqueValues;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.ValueCollection;
-import org.biomart.builder.model.Key.ForeignKey;
-import org.biomart.builder.model.Key.PrimaryKey;
+import org.biomart.builder.model.MartConstructorAction.Concat;
+import org.biomart.builder.model.MartConstructorAction.Create;
+import org.biomart.builder.model.MartConstructorAction.Drop;
+import org.biomart.builder.model.MartConstructorAction.FK;
+import org.biomart.builder.model.MartConstructorAction.Index;
+import org.biomart.builder.model.MartConstructorAction.MartConstructorActionGraph;
+import org.biomart.builder.model.MartConstructorAction.Merge;
+import org.biomart.builder.model.MartConstructorAction.OptimiseAddColumn;
+import org.biomart.builder.model.MartConstructorAction.OptimiseUpdateColumn;
+import org.biomart.builder.model.MartConstructorAction.PK;
+import org.biomart.builder.model.MartConstructorAction.Partition;
+import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
+import org.biomart.builder.model.MartConstructorAction.Reduce;
+import org.biomart.builder.model.MartConstructorAction.Rename;
+import org.biomart.builder.model.MartConstructorAction.Union;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
@@ -52,7 +63,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.15, 23rd June 2006
+ * @version 0.1.16, 29th June 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -121,6 +132,74 @@ public interface MartConstructor {
 		 * just finished successfully without any warnings.
 		 */
 		public void cancel();
+
+		/**
+		 * This method adds a listener which will listen out for events emitted
+		 * by the constructor.
+		 * 
+		 * @param listener
+		 *            the listener to add.
+		 */
+		public void addMartConstructorListener(MartConstructorListener listener);
+	}
+
+	/**
+	 * This interface defines a listener which hears events about mart
+	 * construction. The events are defined as constants in this interface.
+	 */
+	public interface MartConstructorListener {
+		/**
+		 * This event will occur when mart construction begins.
+		 */
+		public static final int CONSTRUCTION_STARTED = 0;
+
+		/**
+		 * This event will occur when mart construction ends.
+		 */
+		public static final int CONSTRUCTION_ENDED = 1;
+
+		/**
+		 * This event will occur when an individual mart begins.
+		 */
+		public static final int MART_STARTED = 2;
+
+		/**
+		 * This event will occur when an individual mart ends.
+		 */
+		public static final int MART_ENDED = 3;
+
+		/**
+		 * This event will occur when an individual dataset begins.
+		 */
+		public static final int DATASET_STARTED = 4;
+
+		/**
+		 * This event will occur when an individual dataset ends.
+		 */
+		public static final int DATASET_ENDED = 5;
+
+		/**
+		 * This event will occur when an action needs performing, and will be
+		 * accompanied by a {@link MartConstructorAction} object describing what
+		 * needs doing.
+		 */
+		public static final int ACTION_EVENT = 6;
+
+		/**
+		 * This method will be called when an event occurs.
+		 * 
+		 * @param event
+		 *            the event that occurred. See the constants defined
+		 *            elsewhere in this interface for possible events.
+		 * @param action
+		 *            an action object that belongs to this event. Will be null
+		 *            in all cases except where the event is
+		 *            {@link #ACTION_EVENT}.
+		 * @throws Exception
+		 *             if anything goes wrong whilst handling the event.
+		 */
+		public void martConstructorEventOccurred(int event,
+				MartConstructorAction action) throws Exception;
 	}
 
 	/**
@@ -147,104 +226,13 @@ public interface MartConstructor {
 		 *             in case of problems.
 		 */
 		public List listDistinctValues(Column col) throws SQLException;
-
-		/**
-		 * Flag that we are about to begin outputting actions.
-		 * 
-		 * @throws Exception
-		 *             if anything went wrong. Usually this will be a
-		 *             {@link SQLException} or {@link IOException}, but may be
-		 *             others too.
-		 */
-		public void startActions() throws Exception;
-
-		/**
-		 * Flag that we are about to begin a mart.
-		 * 
-		 * @param mart
-		 *            the mart we about to begin outputting actions for.
-		 * @throws Exception
-		 *             if anything went wrong. Usually this will be a
-		 *             {@link SQLException} or {@link IOException}, but may be
-		 *             others too.
-		 */
-		public void startActionsForMart(Mart mart) throws Exception;
-
-		/**
-		 * Flag that we are about to begin a dataset.
-		 * 
-		 * @param dataset
-		 *            the dataset we are about to begin outputting actions for.
-		 * @throws Exception
-		 *             if anything went wrong. Usually this will be a
-		 *             {@link SQLException} or {@link IOException}, but may be
-		 *             others too.
-		 */
-		public void startActionsForDataSet(DataSet dataset) throws Exception;
-
-		/**
-		 * Given an action, executes it. The action level specifies how far down
-		 * the tree of actions we are. This may or may not be important.
-		 * 
-		 * @param action
-		 *            the action to handle.
-		 * @param level
-		 *            the level the action is at. Once a particular level is
-		 *            reached, this method should never be passed actions from
-		 *            preceding levels again.
-		 * @throws Exception
-		 *             if anything went wrong. Usually this will be a
-		 *             {@link SQLException} or {@link IOException}, but may be
-		 *             others too.
-		 */
-		public void executeAction(MCAction action, int level) throws Exception;
-
-		/**
-		 * Flag that we are about to end a dataset.
-		 * 
-		 * @param dataset
-		 *            the dataset we are ending.
-		 * @throws Exception
-		 *             if anything went wrong. Usually this will be a
-		 *             {@link SQLException} or {@link IOException}, but may be
-		 *             others too.
-		 */
-		public void endActionsForDataSet(DataSet dataset) throws Exception;
-
-		/**
-		 * Flag that we are about to end a mart.
-		 * 
-		 * @param mart
-		 *            the mart we are ending.
-		 * @throws Exception
-		 *             if anything went wrong. Usually this will be a
-		 *             {@link SQLException} or {@link IOException}, but may be
-		 *             others too.
-		 */
-		public void endActionsForMart(Mart mart) throws Exception;
-
-		/**
-		 * Flag that we are about to end outputting actions.
-		 * 
-		 * @throws Exception
-		 *             if anything went wrong. Usually this will be a
-		 *             {@link SQLException} or {@link IOException}, but may be
-		 *             others too.
-		 */
-		public void endActions() throws Exception;
 	}
 
 	/**
-	 * Defines the generic way of constructing a mart. FIXME: This is horrible.
-	 * The graph technique works nicely, but the nodes of the graph are poorly
-	 * defined, and the algorithm that constructs it is even worse. It works,
-	 * for now, but will need reworking in future to cope with use-cases outside
-	 * those seen in the Ensembl marts.
+	 * Defines the generic way of constructing a mart.
 	 */
 	public static class GenericConstructorRunnable implements
 			ConstructorRunnable {
-		private static final String DUMMY_KEY = "__generic_mc__dummy_map_key__";
-
 		private String statusMessage = "";
 
 		private double percentComplete = 0.0;
@@ -257,6 +245,8 @@ public interface MartConstructor {
 
 		private Helper helper;
 
+		private List martConstructorListeners;
+
 		private String datasetSchemaName;
 
 		/**
@@ -264,19 +254,36 @@ public interface MartConstructor {
 		 * dataset, using the given helper.
 		 * 
 		 * @param datasetSchemaName
-		 *            the schema to which data created by this runnable will be
-		 *            written.
+		 *            the name of the database schema into which the transformed
+		 *            dataset should be put.
 		 * @param ds
 		 *            the dataset(s) to transform into a mart.
 		 * @param helper
 		 *            the helper to use in the transformation.
 		 */
-		public GenericConstructorRunnable(String targetSchemaName,
+		public GenericConstructorRunnable(String datasetSchemaName,
 				Collection datasets, Helper helper) {
 			super();
 			this.datasets = datasets;
 			this.helper = helper;
-			this.datasetSchemaName = targetSchemaName;
+			this.martConstructorListeners = new ArrayList();
+			this.datasetSchemaName = datasetSchemaName;
+		}
+
+		public void addMartConstructorListener(MartConstructorListener listener) {
+			this.martConstructorListeners.add(listener);
+		}
+
+		private void issueListenerEvent(int event) throws Exception {
+			this.issueListenerEvent(event, null);
+		}
+
+		private void issueListenerEvent(int event, MartConstructorAction action)
+				throws Exception {
+			for (Iterator i = this.martConstructorListeners.iterator(); i
+					.hasNext();)
+				((MartConstructorListener) i.next())
+						.martConstructorEventOccurred(event, action);
 		}
 
 		public void run() {
@@ -292,7 +299,8 @@ public interface MartConstructor {
 				}
 
 				// Begin.
-				helper.startActions();
+				this
+						.issueListenerEvent(MartConstructorListener.CONSTRUCTION_STARTED);
 
 				// Work out how many datasets we have.
 				int totalDataSetCount = datasets.size();
@@ -300,7 +308,8 @@ public interface MartConstructor {
 				// Loop over each mart.
 				for (Iterator j = martDataSets.keySet().iterator(); j.hasNext();) {
 					Mart mart = (Mart) j.next();
-					helper.startActionsForMart(mart);
+					this
+							.issueListenerEvent(MartConstructorListener.MART_STARTED);
 
 					try {
 						// Loop over all the datasets we want included from this
@@ -309,7 +318,8 @@ public interface MartConstructor {
 								.iterator(); i.hasNext();)
 							this.doIt((DataSet) i.next(), totalDataSetCount);
 					} finally {
-						helper.endActionsForMart(mart);
+						this
+								.issueListenerEvent(MartConstructorListener.MART_ENDED);
 					}
 				}
 			} catch (ConstructorException e) {
@@ -317,9 +327,9 @@ public interface MartConstructor {
 			} catch (Throwable t) {
 				this.failure = new ConstructorException(t);
 			} finally {
-				// Make sure the file is always closed properly.
 				try {
-					helper.endActions();
+					this
+							.issueListenerEvent(MartConstructorListener.CONSTRUCTION_ENDED);
 				} catch (ConstructorException e) {
 					this.failure = e;
 				} catch (Throwable t) {
@@ -329,67 +339,6 @@ public interface MartConstructor {
 		}
 
 		private void doIt(DataSet ds, int totalDataSetCount) throws Exception {
-			// Mart construction is done by processing the main table first,
-			// then the main dimension(s), then the subclass table(s), with
-			// subclass dimensions after the subclass table they belong to.
-
-			// Before work starts, we need to construct a map of partition
-			// columns to the values we are going to partition those columns by.
-			this.statusMessage = BuilderBundle.getString("mcGettingPartitions");
-			Map partitionValues = new HashMap();
-
-			// Iterate over the tables. If the table has a partition column,
-			// add it to the map along with the values to use to partition
-			// that column.
-			for (Iterator i = ds.getTables().iterator(); i.hasNext();) {
-				Table t = (Table) i.next();
-
-				// Does it have any partition columns? The intersection
-				// of its columns with the set of partition columns
-				// will tell us all.
-				List tabCols = new ArrayList(t.getColumns());
-				tabCols.retainAll(ds.getPartitionedWrappedColumns());
-
-				// No columns left = no partition columns on this table.
-				if (tabCols.isEmpty())
-					continue;
-
-				// There should be only one column left per table.
-				// As we can only partition on wrapped columns,
-				// we can assume it will be a wrapped column.
-				WrappedColumn col = (WrappedColumn) tabCols.get(0);
-
-				// What kind of partition is this?
-				PartitionedColumnType type = ds
-						.getPartitionedWrappedColumnType(col);
-
-				// Unique values - one partition per value.
-				if (type instanceof UniqueValues) {
-					List values = helper.listDistinctValues(col
-							.getWrappedColumn());
-					partitionValues.put(col, values);
-				}
-
-				// Single value - one partition.
-				else if (type instanceof SingleValue) {
-					SingleValue sv = (SingleValue) type;
-					Object value = sv.getIncludeNull() ? null : sv.getValue();
-					partitionValues.put(col, Collections.singletonList(value));
-				}
-
-				// Select values - one partition per value.
-				else if (type instanceof ValueCollection) {
-					ValueCollection vc = (ValueCollection) type;
-					List values = new ArrayList(vc.getValues());
-					if (vc.getIncludeNull())
-						values.add(null);
-					partitionValues.put(col, values);
-				}
-			}
-
-			// Cancelled?
-			this.checkCancelled();
-
 			// Find the main table of the dataset.
 			DataSetTable mainTable = null;
 			for (Iterator i = ds.getTables().iterator(); i.hasNext()
@@ -399,15 +348,14 @@ public interface MartConstructor {
 					mainTable = table;
 			}
 
-			// Work out if we are going to partition by schema. If we are,
-			// then we make a list of the individual schema partitions. If
-			// not then we make a list containing just the original schema
-			// on its own. By making a list with just one entry we simplify
-			// the code later.
+			// Work out if we are dealing with a main table that is in a group
+			// schema. If it is, we make a list of all the schemas in the group,
+			// otherwise the list is a singleton list containing the schema of
+			// the main table. This list will be used later to merge schema
+			// results together, unless partitioning by schema.
 			Schema mainTableSchema = mainTable.getUnderlyingTable().getSchema();
 			Collection schemas = null;
-			if (ds.getPartitionOnSchema()
-					&& (mainTableSchema instanceof SchemaGroup))
+			if (mainTableSchema instanceof SchemaGroup)
 				schemas = ((SchemaGroup) mainTableSchema).getSchemas();
 			else
 				schemas = Collections.singletonList(mainTableSchema);
@@ -418,113 +366,526 @@ public interface MartConstructor {
 			// We have to make space to store the graph of actions we
 			// must carry out.
 			this.statusMessage = BuilderBundle.getString("mcCreatingGraph");
-			MCActionGraph actionGraph = new MCActionGraph();
+			MartConstructorActionGraph actionGraph = new MartConstructorActionGraph();
 
-			// For each schema partition, we process all the tables. If
-			// we are partitioning by schema, then this will result in
-			// multiple identical datasets based on data from different
-			// schemas. If not, then we will get a single dataset based
-			// on the results from the single source schema. If that
-			// single source schema is a group (but not partitioned), then
-			// the tables created will contain the combined results of all
-			// the members of the schema group.
+			// Establish a root action.
+			MartConstructorAction rootAction = new PlaceHolder(
+					this.datasetSchemaName);
+			actionGraph.addAction(rootAction);
+
+			// Make a list to hold the table representations.
+			List tables = new ArrayList();
+
+			// For each schema, we process all the tables.
 			for (Iterator i = schemas.iterator(); i.hasNext();) {
-				Schema currSchema = (Schema) i.next();
-				// Maintain a map that links each dataset table through
-				// the path of partition values affecting it to the actual
-				// final table names that represent that dataset table. There
-				// are many levels of partitioning, so the map is nested.
-				// Where values are not available, the dummy key is used
-				// to replace them and maintain the structure of the map.
-				// ds table ->
-				// schema ->
-				// parent table partition value ->
-				// partition value ->
-				// actual table name
-				Map dsTableNameNestedMap = new HashMap();
+				Schema schema = (Schema) i.next();
 
-				// Maintain a map that records the last action in the
-				// graph that is associated with each dataset table. This
-				// way we can make steps that occur after the creation of
-				// the dataset tables reliant on the completion of all
-				// the dataset tables before execution.
-				// ds table -> last action
-				Map dsTableLastActionMap = new HashMap();
+				// Make a list of tables for this schema.
+				List schemaTables = new ArrayList();
 
 				// Process the main table.
-				this.processTable(currSchema, actionGraph, null, mainTable,
-						dsTableNameNestedMap, dsTableLastActionMap, null,
-						partitionValues, helper);
+				MCDSTable table = new MCDSTable(mainTable, null);
+				this.processTable(rootAction, actionGraph, mainTableSchema,
+						schema, table);
+				schemaTables.add(table);
+				MartConstructorAction lastMainAction = table
+						.getLastActionPerformed();
 
 				// Check not cancelled.
 				this.checkCancelled();
 
-				// Subclass tables and main dimension tables are dependent
-				// on last actions of main table.
-				MCAction scAndMainDimDependsOn = (MCAction) dsTableLastActionMap
-						.get(mainTable);
-
-				// Process all dimensions of main.
-				for (Iterator k = mainTable.getPrimaryKey().getRelations()
-						.iterator(); k.hasNext();) {
-
-					// Get the dimension relation.
-					Relation relation = (Relation) k.next();
-
-					// It's not a dimension or subclass if it's 1:1.
-					if (relation.isOneToOne())
-						continue;
-
-					// Work out the table it points to.
-					DataSetTable table = (DataSetTable) relation.getManyKey()
-							.getTable();
-
-					// Process the table.
-					this.processTable(currSchema, actionGraph,
-							scAndMainDimDependsOn, table, dsTableNameNestedMap,
-							dsTableLastActionMap, relation, partitionValues,
-							helper);
+				// Process all main dimensions and subclasses.
+				for (Iterator j = mainTable.getPrimaryKey().getRelations()
+						.iterator(); j.hasNext();) {
+					Relation relation = (Relation) j.next();
+					DataSetTable targetTable = (DataSetTable) relation
+							.getManyKey().getTable();
+					table = new MCDSTable(targetTable, relation);
+					this.processTable(lastMainAction, actionGraph,
+							mainTableSchema, schema, table);
+					schemaTables.add(table);
 
 					// Check not cancelled.
 					this.checkCancelled();
 
-					// Subclass?
-					if (table.getType().equals(DataSetTableType.MAIN_SUBCLASS)) {
-						// Subclass dimensions are dependent on last actions of
-						// subclass table.
-						MCAction scDimDependsOn = (MCAction) dsTableLastActionMap
-								.get(table);
-
-						// Process all dimensions of subclass.
-						for (Iterator l = table.getPrimaryKey().getRelations()
-								.iterator(); l.hasNext();) {
-
-							// Get the dimension relation.
-							Relation dimRel = (Relation) l.next();
-
-							// It's not a dimension or subclass if it's 1:1.
-							if (dimRel.isOneToOne())
-								continue;
-
-							// Work out the table it points to.
-							DataSetTable dimTable = (DataSetTable) dimRel
+					// Process all subclass dimensions.
+					if (targetTable.getType().equals(
+							DataSetTableType.MAIN_SUBCLASS)) {
+						MartConstructorAction lastSCAction = table
+								.getLastActionPerformed();
+						for (Iterator k = targetTable.getPrimaryKey()
+								.getRelations().iterator(); k.hasNext();) {
+							Relation scRelation = (Relation) k.next();
+							DataSetTable scTargetTable = (DataSetTable) scRelation
 									.getManyKey().getTable();
-
-							// Process the subclass dimension.
-							this.processTable(currSchema, actionGraph,
-									scDimDependsOn, dimTable,
-									dsTableNameNestedMap, dsTableLastActionMap,
-									dimRel, partitionValues, helper);
+							table = new MCDSTable(scTargetTable, scRelation);
+							this.processTable(lastSCAction, actionGraph,
+									mainTableSchema, schema, table);
+							schemaTables.add(table);
 
 							// Check not cancelled.
 							this.checkCancelled();
 						}
 					}
 				}
+
+				// If partitioning by schema, add schema to partition
+				// values on each table representation in schemaTables.
+				if (ds.getPartitionOnSchema())
+					for (Iterator j = schemaTables.iterator(); j.hasNext();)
+						((MCDSTable) j.next()).getPartitionValues().add(
+								schema.getName());
+
+				// Add tables for this schema to list of all tables.
+				tables.addAll(schemaTables);
 			}
 
-			// Check not cancelled.
-			this.checkCancelled();
+			// Set up a break-point last action that waits for all
+			// tables to complete.
+			MartConstructorAction prePartitionAction = new PlaceHolder(
+					this.datasetSchemaName);
+			for (Iterator i = tables.iterator(); i.hasNext();)
+				prePartitionAction.addParent(((MCDSTable) i.next())
+						.getLastActionPerformed());
+			actionGraph.addAction(prePartitionAction);
+
+			// If not partitioning by schema, and main table schema is
+			// a schema group, do a union on all schemas for each table.
+			if (!ds.getPartitionOnSchema()
+					&& mainTableSchema instanceof SchemaGroup) {
+				// Merge each set of tables.
+				List unionTables = new ArrayList();
+				for (int i = 0; i < tables.size() / schemas.size(); i++) {
+					List tableSchemasToUnion = new ArrayList();
+					List tablesToUnion = new ArrayList();
+					for (int j = i; j < tables.size(); j += schemas.size()) {
+						tableSchemasToUnion.add(null);
+						tablesToUnion.add(tables.get(j));
+					}
+					// Create the MCDSTable entry for the union table.
+					MCDSTable unionTable = new MCDSTable(
+							((MCDSTable) tablesToUnion.get(0))
+									.getDataSetTable(),
+							((MCDSTable) tablesToUnion.get(0))
+									.getParentDataSetRelation());
+					// Create a new union table based on tablesToUnion.
+					// Action depends on prePartitionAction.
+					MartConstructorAction union = new Union(
+							this.datasetSchemaName, null, unionTable
+									.getTempTableName(), tableSchemasToUnion,
+							tablesToUnion);
+					actionGraph.addActionWithParent(union, prePartitionAction);
+					// Make the last action of the union table the
+					// union action.
+					unionTable.setLastActionPerformed(union);
+					// Add the union table to the list of unionTables.
+					unionTables.add(unionTable);
+					// Drop all previous tables in tablesToUnion.
+					for (int k = 0; k < tablesToUnion.size(); k++) {
+						Schema schema = (Schema) tableSchemasToUnion.get(k);
+						MCDSTable table = (MCDSTable) tablesToUnion.get(k);
+						// Drop table.
+						// Action depends on union action.
+						MartConstructorAction drop = new Drop(
+								this.datasetSchemaName, schema, table
+										.getTempTableName());
+						actionGraph.addActionWithParent(drop, union);
+					}
+				}
+				tables.clear();
+				tables.addAll(unionTables);
+
+				// Set up a break-point last action that waits again for all
+				// tables to complete.
+				prePartitionAction = new PlaceHolder(this.datasetSchemaName);
+				for (Iterator i = tables.iterator(); i.hasNext();)
+					prePartitionAction.addParent(((MCDSTable) i.next())
+							.getLastActionPerformed());
+				actionGraph.addAction(prePartitionAction);
+			}
+
+			// Partition all partitioned columns.
+			for (Iterator i = ds.getPartitionedWrappedColumns().iterator(); i
+					.hasNext();) {
+				WrappedColumn partCol = (WrappedColumn) i.next();
+
+				// Work out what partition values we will use.
+				PartitionedColumnType partColType = ds
+						.getPartitionedWrappedColumnType(partCol);
+				List partValues = new ArrayList();
+				if (partColType instanceof SingleValue) {
+					partValues.add(((SingleValue) partColType).getValue());
+				} else if (partColType instanceof ValueCollection) {
+					partValues.addAll(((ValueCollection) partColType)
+							.getValues());
+					if (((ValueCollection) partColType).getIncludeNull())
+						partValues.add(null);
+				} else if (partColType instanceof UniqueValues) {
+					partValues.addAll(this.helper.listDistinctValues(partCol
+							.getWrappedColumn()));
+				}
+
+				// Do the partitioning. First, partition the table the column
+				// belongs to. Then, partition every child, and every child
+				// of every child, and so on recursively.
+
+				// Look up the MCDSTable(s) containing the parent table.
+				DataSetTable parentDSTable = (DataSetTable) partCol.getTable();
+				List parentTables = new ArrayList();
+				for (Iterator j = tables.iterator(); j.hasNext();) {
+					MCDSTable table = (MCDSTable) j.next();
+					if (table.getDataSetTable().equals(parentDSTable))
+						parentTables.add(table);
+				}
+
+				// Construct the recursive list of child tables that will also
+				// require partitioning.
+				List tablesToPartition = new ArrayList();
+				tablesToPartition.add(parentDSTable);
+				for (int j = 0; j < tablesToPartition.size(); j++)
+					for (Iterator l = ((DataSetTable) tablesToPartition.get(j))
+							.getPrimaryKey().getRelations().iterator(); l
+							.hasNext();)
+						tablesToPartition.add((DataSetTable) ((Relation) l
+								.next()).getManyKey().getTable());
+
+				// Keep track of the last partition we do on this column.
+				MartConstructorAction lastPartitionAction = prePartitionAction;
+
+				// Find all child MCDSTables. Child MCDSTables are
+				// those where the dataset table matches any of the
+				// tablesToPartition. This will result in grouped schema
+				// tables being partitioned for every value in the group,
+				// regardless of the values in their individual schemas.
+				List tablesToReduce = new ArrayList();
+				for (Iterator j = tablesToPartition.iterator(); j.hasNext();) {
+					DataSetTable childDSTable = (DataSetTable) j.next();
+					for (Iterator l = tables.iterator(); l.hasNext();) {
+						MCDSTable childTable = (MCDSTable) l.next();
+						if (!childTable.getDataSetTable().equals(childDSTable))
+							continue;
+						tablesToReduce.add(childTable);
+						// Create an index over the foreign key columns of
+						// each child table.
+						MartConstructorAction index = new Index(
+								this.datasetSchemaName, null, childTable
+										.getTempTableName(), childTable
+										.getParentDataSetRelation()
+										.getManyKey().getColumns());
+						actionGraph.addActionWithParent(index,
+								lastPartitionAction);
+						lastPartitionAction = index;
+					}
+				}
+
+				// For each parent table to be partitioned...
+				for (Iterator j = parentTables.iterator(); j.hasNext();) {
+					MCDSTable parentTable = (MCDSTable) j.next();
+
+					// Index the column to be partitioned.
+					MartConstructorAction index = new Index(
+							this.datasetSchemaName, null, parentTable
+									.getTempTableName(), parentTable
+									.getDataSetTable().getPrimaryKey()
+									.getColumns());
+					actionGraph.addActionWithParent(index, lastPartitionAction);
+					lastPartitionAction = index;
+
+					// Partition the parent table.
+					// Do the partitioning, one table per value.
+					for (Iterator k = partValues.iterator(); k.hasNext();) {
+						Object partValue = k.next();
+						// Create an MCDSTable for the partitioned
+						// value table. Add it to the list of all tables.
+						MCDSTable partitionedTable = new MCDSTable(parentTable
+								.getDataSetTable(), parentTable
+								.getParentDataSetRelation());
+						partitionedTable.getPartitionValues().addAll(
+								parentTable.getPartitionValues());
+						partitionedTable.getPartitionValues().add(partValue);
+						tables.add(partitionedTable);
+						// Partition the parent table for this value.
+						// Make action depend on lastPartitionAction.
+						MartConstructorAction partition = new Partition(
+								this.datasetSchemaName, null, parentTable
+										.getTempTableName(), partCol.getName(),
+								partValue, null, partitionedTable
+										.getTempTableName());
+						actionGraph.addActionWithParent(partition,
+								lastPartitionAction);
+						lastPartitionAction = partition;
+						// Make the last action of each partitioned
+						// table the partition action.
+						partitionedTable.setLastActionPerformed(partition);
+
+						// Create an index over the primary key columns of
+						// the newly partitioned table.
+						index = new Index(this.datasetSchemaName, null,
+								partitionedTable.getTempTableName(),
+								parentTable.getDataSetTable().getPrimaryKey()
+										.getColumns());
+						actionGraph.addActionWithParent(index,
+								lastPartitionAction);
+						lastPartitionAction = index;
+
+						// For each child table, create a new MCDSTable
+						// and generate it by doing a Reduce action. Add
+						// the new MCDSTable to the list of all tables.
+						// Each reduce action depends on and updates the
+						// lastPartitionAction.
+						for (Iterator l = tablesToReduce.iterator(); l
+								.hasNext();) {
+							MCDSTable childTable = (MCDSTable) l.next();
+							// Create an MCDSTable for the partitioned
+							// child table. Add it to the list of all tables.
+							MCDSTable reducedTable = new MCDSTable(childTable
+									.getDataSetTable(), childTable
+									.getParentDataSetRelation());
+							reducedTable.getPartitionValues().addAll(
+									childTable.getPartitionValues());
+							reducedTable.getPartitionValues().add(partValue);
+							tables.add(reducedTable);
+							// Generate the table.
+							MartConstructorAction reduce = new Reduce(
+									this.datasetSchemaName, null, reducedTable
+											.getTempTableName(), null,
+									parentTable.getTempTableName(), parentTable
+											.getDataSetTable().getPrimaryKey()
+											.getColumns(), null, childTable
+											.getTempTableName(), childTable
+											.getParentDataSetRelation()
+											.getManyKey().getColumns());
+							actionGraph.addActionWithParent(reduce,
+									lastPartitionAction);
+							lastPartitionAction = reduce;
+						}
+					}
+					// Drop previous table. Action depends on all
+					// partition actions.
+					MartConstructorAction drop = new Drop(
+							this.datasetSchemaName, null, parentTable
+									.getTempTableName());
+					actionGraph.addActionWithParent(drop, lastPartitionAction);
+				}
+				tables.removeAll(parentTables);
+
+				// Drop original child tables. Reduced ones will have
+				// taken their place now.
+				for (Iterator j = tablesToReduce.iterator(); j.hasNext();) {
+					MCDSTable table = (MCDSTable) j.next();
+					MartConstructorAction drop = new Drop(
+							this.datasetSchemaName, null, table
+									.getTempTableName());
+					actionGraph.addActionWithParent(drop, lastPartitionAction);
+				}
+				tables.removeAll(tablesToReduce);
+			}
+
+			// Set up a break-point last action that waits again for all
+			// tables to complete.
+			MartConstructorAction prePKAction = new PlaceHolder(
+					this.datasetSchemaName);
+			for (Iterator i = tables.iterator(); i.hasNext();)
+				prePKAction.addParent(((MCDSTable) i.next())
+						.getLastActionPerformed());
+			actionGraph.addAction(prePKAction);
+
+			// Establish PKs and FKs.
+			List pkFkActions = new ArrayList();
+			for (Iterator i = tables.iterator(); i.hasNext();) {
+				MCDSTable parentTable = (MCDSTable) i.next();
+				List pkKeyCols = parentTable.getDataSetTable().getPrimaryKey()
+						.getColumns();
+				// Create a PK over pkKeyCols. Action depends on
+				// prePKAction.
+				MartConstructorAction pk = new PK(this.datasetSchemaName, null,
+						parentTable.getTempTableName(), pkKeyCols);
+				actionGraph.addActionWithParent(pk, prePKAction);
+				pkFkActions.add(pk);
+
+				// Iterate over foreign keys from this PK.
+				Key parentTablePK = parentTable.getDataSetTable().getPrimaryKey();
+				for (Iterator j = parentTablePK
+						.getRelations().iterator(); j.hasNext();) {
+					Relation pkRel = (Relation) j.next();
+					DataSetTable fkTable = (DataSetTable) pkRel.getOtherKey(parentTablePK)
+							.getTable();
+					// For each one, find all MCDSTables involved in
+					// that relation, and index and establish FK.
+					for (Iterator k = tables.iterator(); k.hasNext();) {
+						MCDSTable childTable = (MCDSTable) k.next();
+						if (!childTable.getDataSetTable().equals(fkTable))
+							continue;
+						List parentPartitionValues = parentTable
+								.getPartitionValues();
+						if (childTable.getPartitionValues().size() < parentPartitionValues
+								.size())
+							continue;
+						else if (!childTable.getPartitionValues().subList(0,
+								parentPartitionValues.size()).equals(
+								parentPartitionValues))
+							continue;
+						Key foreignKey = (Key) childTable.getDataSetTable()
+								.getForeignKeys().iterator().next();
+						List fkKeyCols = foreignKey.getColumns();
+
+						// Index fkKeyCols. Depends on pk action.
+						MartConstructorAction index = new Index(
+								this.datasetSchemaName, null, childTable
+										.getTempTableName(), fkKeyCols);
+						actionGraph.addActionWithParent(index, pk);
+						// Create a FK over fkKeyCols. Action depends on
+						// index action.
+						MartConstructorAction fk = new FK(
+								this.datasetSchemaName, null, childTable
+										.getTempTableName(), fkKeyCols, null,
+								parentTable.getTempTableName(), pkKeyCols);
+						actionGraph.addActionWithParent(fk, index);
+						// Add action to list of pkFkActions.
+						pkFkActions.add(fk);
+					}
+
+				}
+			}
+
+			// Set up a break-point last action that waits for all
+			// foreign keys to complete.
+			MartConstructorAction prePCOAction = new PlaceHolder(
+					this.datasetSchemaName);
+			for (Iterator i = pkFkActions.iterator(); i.hasNext();)
+				prePCOAction.addParent((MartConstructorAction) i.next());
+			actionGraph.addAction(prePCOAction);
+
+			// Post-construction optimisation, dependent on prePCOAction.
+			List optActions = new ArrayList();
+			DataSetOptimiserType optType = ds.getDataSetOptimiserType();
+			if (!optType.equals(DataSetOptimiserType.NONE)) {
+				List hasTables = new ArrayList();
+				// We only need optimise all main and subclass tables.
+				for (Iterator i = tables.iterator(); i.hasNext();) {
+					MCDSTable parentTable = (MCDSTable) i.next();
+					if (parentTable.getDataSetTable().getType().equals(
+							DataSetTableType.DIMENSION))
+						continue;
+					// Make the dimension optimisations dependent on the
+					// prePCOAction.
+					MartConstructorAction preDOAction = prePCOAction;
+					// If we are using column join, add columns to the
+					// main or subclass table directly.
+					MCDSTable hasTable = parentTable;
+					// But if we are using table join, create a 'has' table
+					// and add columns to that instead.
+					if (optType.equals(DataSetOptimiserType.TABLE)) {
+						hasTable = new MCDSHasTable(parentTable
+								.getDataSetTable(), parentTable
+								.getParentDataSetRelation());
+						hasTables.add(hasTable);
+						hasTable.getPartitionValues().addAll(
+								parentTable.getPartitionValues());
+						// Work out what columns to include from the
+						// main/subclass table.
+						List pkKeyCols = parentTable.getDataSetTable()
+								.getPrimaryKey().getColumns();
+						// Create the new 'has' table with the columns
+						// from the main/subclass table.
+						// Depends on preDOAction action.
+						MartConstructorAction create = new Create(
+								this.datasetSchemaName, null, hasTable
+										.getTempTableName(), null, parentTable
+										.getTempTableName(), pkKeyCols, false);
+						actionGraph.addActionWithParent(create, preDOAction);
+						// Create the PK on the 'has' table using the same
+						// columns. Depends on create action.
+						MartConstructorAction pk = new PK(
+								this.datasetSchemaName, null, hasTable
+										.getTempTableName(), pkKeyCols);
+						actionGraph.addActionWithParent(pk, create);
+						// Create the FK on the same columns relating back
+						// to the main/subclass table. Depends on pk action.
+						// Updates preDOAction.
+						MartConstructorAction fk = new FK(
+								this.datasetSchemaName, null, hasTable
+										.getTempTableName(), pkKeyCols, null,
+								parentTable.getTempTableName(), pkKeyCols);
+						actionGraph.addActionWithParent(fk, pk);
+						preDOAction = fk;
+					}
+					// For each main or subclass table, identify all dimensions.
+					for (Iterator j = tables.iterator(); j.hasNext();) {
+						MCDSTable childTable = (MCDSTable) j.next();
+						if (!childTable.getDataSetTable().getType().equals(
+								DataSetTableType.DIMENSION))
+							continue;
+						else if (!childTable.getParentDataSetRelation()
+								.getOneKey().getTable().equals(parentTable))
+							continue;
+						List parentPartitionValues = parentTable
+								.getPartitionValues();
+						if (childTable.getPartitionValues().size() < parentPartitionValues
+								.size())
+							continue;
+						else if (!childTable.getPartitionValues().subList(0,
+								parentPartitionValues.size()).equals(
+								parentPartitionValues))
+							continue;
+						// Work out has column name.
+						StringBuffer sb = new StringBuffer();
+						sb.append(childTable.createFinalName());
+						sb.append(BuilderBundle.getString("tablenameSep"));
+						sb.append(BuilderBundle.getString("hasSuffix"));
+						String hasColumnName = sb.toString();
+						// Add columns to the main or subclass table or
+						// 'has' table.
+						// Dependent on preDOAction.
+						MartConstructorAction optimiseAdd = new OptimiseAddColumn(
+								this.datasetSchemaName, null, childTable
+										.getTempTableName(), hasColumnName);
+						actionGraph.addActionWithParent(optimiseAdd,
+								preDOAction);
+						// Update those columns using inner join
+						// on has table PK to dimension table FK.
+						// Dependent on optimise action.
+						// Updates preDOAction.
+						MartConstructorAction optimiseUpd = new OptimiseUpdateColumn(
+								this.datasetSchemaName, null, childTable
+										.getTempTableName(), childTable
+										.getParentDataSetRelation()
+										.getManyKey().getColumns(), null,
+								parentTable.getTempTableName(), parentTable
+										.getDataSetTable().getPrimaryKey()
+										.getColumns(), hasColumnName);
+						actionGraph.addActionWithParent(optimiseUpd,
+								optimiseAdd);
+						preDOAction = optimiseUpd;
+					}
+					// Add final preDOAction to list of actions to wait for
+					// before doing renames later.
+					optActions.add(preDOAction);
+				}
+				tables.addAll(hasTables);
+			}
+
+			// Set up a break-point last action that waits for all
+			// optimisations to complete.
+			MartConstructorAction preRenameAction = new PlaceHolder(
+					this.datasetSchemaName);
+			for (Iterator i = optActions.iterator(); i.hasNext();)
+				preRenameAction.addParent((MartConstructorAction) i.next());
+			actionGraph.addAction(preRenameAction);
+
+			// Rename all tables.
+			for (Iterator i = tables.iterator(); i.hasNext();) {
+				MCDSTable table = (MCDSTable) i.next();
+				String realName = table.createFinalName();
+				String tempTableName = table.getTempTableName();
+				// Rename the table, dependent on preRenameAction.
+				MartConstructorAction rename = new Rename(
+						this.datasetSchemaName, null, tempTableName, realName);
+				actionGraph.addActionWithParent(rename, preRenameAction);
+			}
+
+			// Now we have constructed our action graph, issue events to
+			// get the work done!
 
 			// Work out the progress step size.
 			double stepPercent = 100.0 / (double) actionGraph.getActions()
@@ -535,27 +896,28 @@ public interface MartConstructor {
 
 			// Initialize the helper, telling it we are about to start
 			// sending it actions to process.
-			helper.startActionsForDataSet(ds);
+			this.issueListenerEvent(MartConstructorListener.DATASET_STARTED);
 
 			try {
 				// The action graph is tiered into several levels, called
 				// depths. These levels are assigned automatically according
 				// to the dependency of actions on other actions. We want
 				// to start at the first depth (0), process all actions
-				// there,
-				// then move on the next depth, and so on. Each depth is
-				// reliant on the previous depth completing before it can
+				// there, then move on the next depth, and so on. Each depth
+				// is reliant on the previous depth completing before it can
 				// begin processing.
 				int depth = 0;
 				Collection actions = actionGraph.getActionsAtDepth(depth);
 				while (!actions.isEmpty()) {
 					// Loop over all actions at current depth.
 					for (Iterator i = actions.iterator(); i.hasNext();) {
-						MCAction action = (MCAction) i.next();
+						MartConstructorAction action = (MartConstructorAction) i
+								.next();
 
 						// Execute the action.
 						this.statusMessage = action.getStatusMessage();
-						helper.executeAction(action, depth);
+						this.issueListenerEvent(
+								MartConstructorListener.ACTION_EVENT, action);
 
 						// Update the progress percentage.
 						this.percentComplete += stepPercent;
@@ -573,682 +935,296 @@ public interface MartConstructor {
 			} finally {
 				// Make sure the helper always gets a chance to tidy up,
 				// even if an exception is thrown.
-				// All done!
-				helper.endActionsForDataSet(ds);
+				this.issueListenerEvent(MartConstructorListener.DATASET_ENDED);
 			}
 		}
 
-		private void processTable(Schema schema, MCActionGraph actionGraph,
-				MCAction firstActionDependsOn, DataSetTable dsTable,
-				Map dsTableNameNestedMap, Map dsTableLastActionMap,
-				Relation parentRelation, Map partitionValues, Helper helper)
-				throws Exception {
-			// This method constructs one or more tables based on the
-			// dataset table. If the schema it is asked to retrieve data
-			// from is a group schema, then it does this once per schema
-			// then merges the results using a union statement at the end.
-			// Otherwise, it does this just once.
-			// If the table is partitioned, then one table is created for
-			// each partition value in the partitioned column.
-			// If the table is related to a parent dataset table, then
-			// that parent dataset table may have been split up itself
-			// depending on partition values and possibly even the partition
-			// values of the parent of the parent table (ie. the main table).
-			// If so, then after creation the table we just created is split
-			// into chunks, one per individual parent table we found.
-
-			// Work out if we have to do a multi-schema union, or a
-			// single-schema select. Store the result as a list where
-			// each member of the list represents one complete separate
-			// set of tables that need to be constructed.
-			Collection schemas = null;
-			if (schema instanceof SchemaGroup)
-				schemas = ((SchemaGroup) schema).getSchemas();
-			else
-				schemas = Collections.singletonList(schema);
+		private void processTable(MartConstructorAction firstActionDependsOn,
+				MartConstructorActionGraph actionGraph, Schema mainTableSchema,
+				Schema schema, MCDSTable table) throws Exception {
+			// A placeholder for the last action performed on this table.
+			MartConstructorAction lastActionPerformed = firstActionDependsOn;
 
 			// We now need to work out at which point to start the process
 			// of transforming the table. If it's a dimension or subclass,
-			// then this is the table the dimension or subclass is linked
+			// then this is the real table the dimension or subclass is linked
 			// to. Otherwise, it is the underlying table.
-			Table startTable = dsTable.getUnderlyingTable();
-			if (parentRelation != null)
-				startTable = ((DataSetTable) parentRelation.getOneKey()
-						.getTable()).getUnderlyingTable();
-
-			// Check to see if there is a partition column
-			// on this dataset table.
-			WrappedColumn partitionColumn = null;
-			Collection partColValues = null;
-			for (Iterator i = dsTable.getColumns().iterator(); i.hasNext()
-					&& partitionColumn == null;) {
-				Column c = (Column) i.next();
-				if ((c instanceof WrappedColumn)
-						&& partitionValues.containsKey(c))
-					partitionColumn = (WrappedColumn) c;
-			}
-
-			// If there was a partition column, store the values we should
-			// use for that column.
-			if (partitionColumn != null)
-				partColValues = (Collection) partitionValues
-						.get(partitionColumn);
-
-			// Otherwise, we specify the partition values
-			// as a single-value set containing the dummy key.
-			else
-				partColValues = Collections
-						.singleton(GenericConstructorRunnable.DUMMY_KEY);
-
-			// We need to keep track of the final action performed in
-			// the processing of this table, so that we can store it
-			// in the map indicating the end-point of each table processed.
-			// By default, the last action is the one this table
-			// depends on itself, but this will be overridden by any actual
-			// actions.
-			MCAction lastAction = firstActionDependsOn;
-
-			// Set up a map to hold the temp table names we make,
-			// and a list for the last actions associated with each temp table.
-			// The temp table names in the map are keyed by partition value.
-			Map tempTableNames = new HashMap();
-			List lastActions = new ArrayList();
+			Table firstTable = table.getRealTable();
+			if (!table.getDataSetTable().getUnderlyingKeys().isEmpty())
+				firstTable = ((Key) table.getDataSetTable().getUnderlyingKeys()
+						.get(0)).getTable();
 
 			// Placeholder for name of the target temp table that will
 			// contain the constructed table.
-			String targetTempTableName = null;
+			String tempTableName = this.helper.getNewTempTableName();
 
-			// Process dataset table once per partition value.
-			for (Iterator j = partColValues.iterator(); j.hasNext();) {
-				Object partitionValue = j.next();
+			// Work out what columns to include from the first table.
+			List firstDSCols = table.getDataSetColumns(table
+					.incrementRealTableCount(firstTable), firstTable);
 
-				// Process table once per schema. After this loop,
-				// if the schema was a single schema, targetTempTableName
-				// will contain the name of the temp table that is
-				// the constructed table. However, if the schema was
-				// a group schema, this will not be the case.
-				for (Iterator i = schemas.iterator(); i.hasNext();) {
-					Schema currSchema = (Schema) i.next();
-
-					// Come up with a new temp table name for this
-					// schema.
-					targetTempTableName = helper.getNewTempTableName();
-					tempTableNames.put(currSchema, targetTempTableName);
-
-					// Create the table for this partition.
-					lastActions.add(this.constructTable(currSchema,
-							actionGraph, firstActionDependsOn, dsTable,
-							startTable, partitionColumn, partitionValue,
-							targetTempTableName));
-				}
-
-				// At end, if dealing with multiple schemas, do a union on
-				// the temporary tables to create the final table, one per
-				// partition value. Last action is the union action. The
-				// target temp table name will be updated to contain the
-				// name of the temp table that contains the merged tables.
-				if (schemas.size() > 1) {
-					// Come up with a temp table name for the union table.
-					targetTempTableName = helper.getNewTempTableName();
-
-					// Union depends on final actions of each temporary
-					// table.
-					UnionTables union = new UnionTables(this.datasetSchemaName,
-							targetTempTableName, tempTableNames.values());
-					for (Iterator i = lastActions.iterator(); i.hasNext();)
-						union.addParent((MCAction) i.next());
-					actionGraph.addAction(union);
-					lastAction = union;
-
-					// Drop all the old temp tables that were combined in
-					// the union stage.
-					for (Iterator i = tempTableNames.values().iterator(); i
-							.hasNext();) {
-						String tableName = (String) i.next();
-						MCAction dropTable = new DropTable(
-								this.datasetSchemaName, tableName);
-						dropTable.addParent(lastAction);
-						actionGraph.addAction(dropTable);
-					}
-				}
-
-				// Otherwise, for a sinlge source schema, last action is
-				// the first (only) action in the last action list.
-				else
-					lastAction = (MCAction) lastActions.get(0);
-
-				// Maintain a map that will store each parent table partition,
-				// and parent table's parent table partition values. This
-				// is in order to keep track of how we split this target table
-				// into pieces, one for each parent table piece. The
-				// map is nested. If the parent table is a single table, then
-				// this will contain only one entry keyed by two levels of the
-				// dummy key. Where a parent table's parent is not partitioned,
-				// the first level key will be the dummy key. Where a parent
-				// table is not partitioned, but it's parent is, then the
-				// second level key will be the dummy key.
-				// parent table's parent partition value ->
-				// parent partition value ->
-				// temp table name.
-				Map segmentTables = new HashMap();
-				
-				// If dataset table is dimension or subclass, link it to its
-				// parent. This may involve splitting it into segments.
-				if (parentRelation != null) {
-
-					// Work out parent PK.
-					PrimaryKey parentPK = (PrimaryKey) parentRelation
-							.getOneKey();
-
-					// Work out child FK.
-					ForeignKey childFK = (ForeignKey) parentRelation
-							.getManyKey();
-
-					// Work out parent dataset table.
-					DataSetTable parentDSTable = (DataSetTable) parentPK
-							.getTable();
-
-					// Make a list to hold actions that final drop depends
-					// on.
-					List dropDependsOn = new ArrayList();
-
-					// Use dsTableNameNestedMap to identify parent partition
-					// values of parent table, in case parent itself was
-					// segmented.
-					Map parentVToV = (Map) ((Map) dsTableNameNestedMap
-							.get(parentDSTable)).get(schema);
-
-					// For each parent table's parent partition value, loop.
-					for (Iterator i = parentVToV.keySet().iterator(); i
-							.hasNext();) {
-						Object parentParentPartitionValue = i.next();
-
-						// Get the partition values for this parent
-						// table based on the current value of it's
-						// parent's partition.
-						Map vToName = (Map) parentVToV
-								.get(parentParentPartitionValue);
-						segmentTables.put(parentParentPartitionValue,
-								new HashMap());
-
-						// Loop over each parent's partition value and
-						// obtain actual parent table names.
-						for (Iterator k = vToName.keySet().iterator(); k
-								.hasNext();) {
-							Object parentPartitionValue = k.next();
-							String parentTableName = (String) vToName
-									.get(parentPartitionValue);
-
-							// Come up with a temp table name for the
-							// segment table.
-							String segmentTableName = helper
-									.getNewTempTableName();
-
-							// Create a new temp table restricted by
-							// the parent relation.
-							RestrictTable restrict = new RestrictTable(
-									this.datasetSchemaName, segmentTableName,
-									targetTempTableName, parentTableName,
-									parentPK.getColumns(), childFK.getColumns());
-							restrict.addParent(lastAction);
-							actionGraph.addAction(restrict);
-
-							// Establish FK to PK relation on parent table.
-							CreateFK createFK = new CreateFK(
-									this.datasetSchemaName, segmentTableName,
-									childFK.getColumns(), parentTableName,
-									parentPK.getColumns());
-							createFK.addParent(restrict);
-							actionGraph.addAction(createFK);
-
-							// Add FK to PK action to dropDependsOn.
-							dropDependsOn.add(createFK);
-							
-							// Update segment map.
-							((Map) segmentTables
-									.get(parentParentPartitionValue)).put(
-									parentPartitionValue, segmentTableName);					
-							
-							// TODO If this is a dimension, optimise it.
-							// The parent table to link to is parentTableName,
-							// which refers to the DataSetTable parentDSTable.
-							// The table to optimise for is segmentTableName.
-							// which refers to the DataSetTable dsTable.
-							// PK and FK are parentPK and childFK.
-							// Optimiser step depends on createFK step.
-						}
-					}
-
-					// After last segment, drop original temp table
-					// (tempTableName) as it has now been split into pieces.
-					MCAction dropTable = new DropTable(this.datasetSchemaName,
-							targetTempTableName);
-					for (Iterator i = dropDependsOn.iterator(); i.hasNext();)
-						dropTable.addParent((MCAction) i.next());
-					actionGraph.addAction(dropTable);
-
-					// Subsequent actions depend on the drop table action.
-					lastAction = dropTable;
-				}
-
-				// If this is not a dimension or subclass, then there
-				// is only one segment, which we have already made.
-				// Add it to the map using two levels of dummy keys.
-				else {
-					Map parentPartitionValueMap = new HashMap();
-					parentPartitionValueMap.put(
-							GenericConstructorRunnable.DUMMY_KEY,
-							targetTempTableName);
-					segmentTables.put(GenericConstructorRunnable.DUMMY_KEY,
-							parentPartitionValueMap);
-				}
-
-				// Remember the last action we did above, and create a
-				// place to remember the last rename action we are about
-				// to carry out below.
-				MCAction prePKAction = lastAction;
-				MCAction lastRenameAction = null;
-
-				// For each segment table, construct the PK and rename
-				// to the final name.
-
-				// Start by looping over the top-level keys in the segment
-				// map, ie. the parent's parent partition values.
-				for (Iterator i = segmentTables.keySet().iterator(); i
-						.hasNext();) {
-					Object parentParentPartitionValue = i.next();
-					Map parentPartitionValueMap = (Map) segmentTables
-							.get(parentParentPartitionValue);
-
-					// Descend into second level of nesting, the
-					// individual parent's partition values. Get the
-					// actual parent table names from this.
-					for (Iterator k = parentPartitionValueMap.keySet()
-							.iterator(); k.hasNext();) {
-						Object parentPartitionValue = k.next();
-						String tableName = (String) parentPartitionValueMap
-								.get(parentPartitionValue);
-
-						// Reset the last action to the one that happened
-						// just before this loop. This means that each
-						// PK action, or each rename action if no PK, can
-						// be run in parallel.
-						lastAction = prePKAction;
-
-						// Find PK columns and create the PK if present.
-						PrimaryKey pk = dsTable.getPrimaryKey();
-						if (pk != null) {
-							CreatePK createPK = new CreatePK(
-									this.datasetSchemaName, tableName, pk
-											.getColumns());
-							createPK.addParent(lastAction);
-							actionGraph.addAction(createPK);
-							lastAction = createPK;
-						}
-
-						// Make the final name for this table.
-						String finalName = this.createFinalName(dsTable,
-								schema, parentParentPartitionValue,
-								parentPartitionValue, partitionValue);
-
-						// Rename segment table to final name. Make this
-						// action dependent on the last action - which will
-						// either be the action before this loop, or the
-						// create PK action above, depending on whether a PK
-						// exists or not.
-						MCAction rename = new RenameTable(
-								this.datasetSchemaName, tableName, finalName);
-						rename.addParent(lastAction);
-						actionGraph.addAction(rename);
-						lastRenameAction = rename;
-
-						// Add final name to nested name map for this table.
-						// ds table ->
-						// schema ->
-						// parent partition value ->
-						// partition value ->
-						// actual table name.
-						Map schemaToParentV = (Map) dsTableNameNestedMap
-								.get(dsTable);
-						if (schemaToParentV == null) {
-							schemaToParentV = new HashMap();
-							dsTableNameNestedMap.put(dsTable, schemaToParentV);
-						}
-						Map parentVToV = (Map) schemaToParentV.get(schema);
-						if (parentVToV == null) {
-							parentVToV = new HashMap();
-							schemaToParentV.put(schema, parentVToV);
-						}
-						Map vToName = (Map) parentVToV
-								.get(parentPartitionValue);
-						if (vToName == null) {
-							vToName = new HashMap();
-							parentVToV.put(parentPartitionValue, vToName);
-						}
-						vToName.put(partitionValue, finalName);
-					}
-				}
-
-				// Set the last action for this table to be the
-				// last rename action we carry out.
-				lastAction = lastRenameAction;
+			// Include the schema name column if there is one.
+			for (Iterator i = table.getDataSetTable().getColumns().iterator(); i
+					.hasNext();) {
+				DataSetColumn dsCol = (DataSetColumn) i.next();
+				if (dsCol instanceof SchemaNameColumn)
+					firstDSCols.add(dsCol);
 			}
 
-			// Remember the last action that was carried out for this
-			// table by adding it to the appropriate map.
-			dsTableLastActionMap.put(dsTable, lastAction);
-		}
+			// Create the table based on firstTable, and selecting
+			// based on firstDSCols. Dependent on lastActionPerformed, and
+			// updates it.
+			MartConstructorAction create = new Create(this.datasetSchemaName,
+					null, tempTableName, schema, firstTable.getName(),
+					firstDSCols, true);
+			actionGraph.addActionWithParent(create, lastActionPerformed);
+			lastActionPerformed = create;
 
-		private MCAction constructTable(Schema schema,
-				MCActionGraph actionGraph, MCAction firstActionDependsOn,
-				DataSetTable dsTable, Table startTable,
-				DataSetColumn partitionColumn, Object partitionValue,
-				String tempTableName) throws Exception {
-			// Keep a map to work out which columns we have seen before.
-			Map tblVisitCounter = new HashMap();
-
-			// Work out what dataset we are in.
-			DataSet ds = (DataSet) dsTable.getSchema();
-
-			// Holder for the last action performed on this table.
-			// By default, the last action is the first, but this
-			// will be overridden by any actual actions.
-			MCAction lastAction = firstActionDependsOn;
-
-			// The relation queue stores relations we need to merge,
-			// in the order we need to merge them.
-			List relationQueue = new ArrayList();
-			int relQueuePos = 0;
-
-			// Loop over all relations in queue. Initially the queue will
-			// be empty, so make sure we loop at least once so the queue
-			// has a chance of being filled. Keep track of tables we have
-			// visited so that we know which ends of relations we need
-			// to follow.
-			Set mergedTables = new HashSet();
-			do {
-				// Get next relation (or if queue empty, use null)
-				// Also work out which table we are merging.
-				Relation relation = null;
-				Table realTable = null;
-				Key fromKey = null;
-				Key toKey = null;
-				if (!relationQueue.isEmpty()) {
-					relation = (Relation) relationQueue.get(relQueuePos++);
-					// Follow relation from end specified in underlying keys.
-					int relPos = dsTable.getUnderlyingRelations().indexOf(
-							relation);
-					fromKey = (Key) dsTable.getUnderlyingKeys().get(relPos);
-					toKey = relation.getOtherKey(fromKey);
-					realTable = toKey.getTable();
+			// Merge subsequent tables based on underlying relations.
+			for (int i = 0; i < table.getDataSetTable().getUnderlyingKeys()
+					.size(); i++) {
+				// What key was followed from the previous table?
+				Key sourceKey = (Key) table.getDataSetTable()
+						.getUnderlyingKeys().get(i);
+				// What relation was followed?
+				Relation relation = (Relation) table.getDataSetTable()
+						.getUnderlyingRelations().get(i);
+				// Left or inner join?
+				boolean useLeftJoin = relation.isOptional();
+				// What key did we reach by following the relation?
+				Key targetKey = relation.getOtherKey(sourceKey);
+				// What table did we reach, and therefore need to merge now?
+				Table targetTable = targetKey.getTable();
+				String targetTableName = targetTable.getName();
+				// Is the target table going to need a union merge?
+				boolean unionMerge = !targetTable.getSchema().equals(
+						mainTableSchema);
+				// What are the equivalent columns on the existing temp table
+				// that correspond to the key on the previous table?
+				List sourceDSKey = table.getDataSetColumns(0, sourceKey
+						.getColumns());
+				// What are the columns we should merge from this new table?
+				List targetDSCols = table.getDataSetColumns(table
+						.incrementRealTableCount(targetTable), targetTable);
+				// If targetTable is in a group schema that is not the
+				// same group schema we started with, create a union table
+				// containing all the targetTable copies, then merge with
+				// that instead.
+				Schema targetSchema;
+				if (unionMerge) {
+					// Build a list of schemas to union tables from.
+					List unionTableSchemas = new ArrayList();
+					List unionTableNames = new ArrayList();
+					if (targetTable.getSchema() instanceof SchemaGroup) {
+						for (Iterator j = ((SchemaGroup) targetTable
+								.getSchema()).getSchemas().iterator(); j
+								.hasNext();) {
+							Schema mergeSchema = (Schema) j.next();
+							unionTableSchemas.add(mergeSchema);
+							unionTableNames.add(targetTable.getName());
+						}
+					} else {
+						unionTableSchemas.add(targetTable.getSchema());
+						unionTableNames.add(targetTable.getName());
+					}
+					// Make name for union table, which is now the target table.
+					targetTableName = this.helper.getNewTempTableName();
+					// Create union table. Each table comes
+					// from one of the schemas in the group on the RHS.
+					// If the RHS is not a group, just use the single RHS
+					// schema instead. Dependent on lastActionPerformed, and
+					// updates it.
+					MartConstructorAction union = new Union(
+							this.datasetSchemaName, null, targetTableName,
+							unionTableSchemas, unionTableNames);
+					actionGraph.addActionWithParent(union, lastActionPerformed);
+					// Create index on targetKey on union table. Dependent
+					// on lastActionPerformed, and updates it.
+					MartConstructorAction index = new Index(
+							this.datasetSchemaName, null, targetTableName,
+							targetKey.getColumns());
+					actionGraph.addActionWithParent(index, union);
+					lastActionPerformed = index;
+					// Target schema is now the dataset schema. Null
+					// represents this.
+					targetSchema = null;
 				} else {
-					realTable = startTable;
+					// Target schema is same as source schema.
+					targetSchema = schema;
 				}
+				// Index sourceDSKey columns. Dependent on
+				// lastActionPerformed, and updates it.
+				MartConstructorAction index = new Index(this.datasetSchemaName,
+						null, tempTableName, sourceDSKey);
+				actionGraph.addActionWithParent(index, lastActionPerformed);
+				lastActionPerformed = index;
+				// Generate new temp table name for merged table.
+				String mergedTableName = this.helper.getNewTempTableName();
+				// Merge tables based on sourceDSKey -> targetKey,
+				// and selecting based on targetDSCols. Dependent on
+				// lastActionPerformed, and updates it.
+				MartConstructorAction merge = new Merge(this.datasetSchemaName,
+						null, mergedTableName, null, tempTableName,
+						sourceDSKey, useLeftJoin, targetSchema,
+						targetTableName, targetKey.getColumns(), targetDSCols,
+						true);
+				actionGraph.addActionWithParent(merge, lastActionPerformed);
+				lastActionPerformed = merge;
+				// Drop old temp table.
+				MartConstructorAction drop = new Drop(this.datasetSchemaName,
+						null, tempTableName);
+				actionGraph.addActionWithParent(drop, lastActionPerformed);
+				// Update temp table name to point to newly merged table.
+				tempTableName = mergedTableName;
+				// If targetTable was a union table, drop it.
+				if (unionMerge) {
+					// Drop union target table. Dependent on
+					// lastActionPerformed, but does not update it.
+					drop = new Drop(this.datasetSchemaName, null,
+							targetTableName);
+					actionGraph.addActionWithParent(drop, lastActionPerformed);
+				}
+			}
 
-				// Update the visit count for this table.
-				int tblVisitCount;
-				if (!tblVisitCounter.containsKey(realTable))
-					tblVisitCount = 0;
-				else
-					tblVisitCount = ((Integer) tblVisitCounter.get(realTable))
-							.intValue() + 1;
-				tblVisitCounter.put(realTable, new Integer(tblVisitCount));
-
-				// Translate fromKey into related dataset columns.
-				List fromKeyDSColumns = new ArrayList();
-
-				// Populate the from key translation with nulls to prevent
-				// index-out-of-bounds exceptions later.
-				if (fromKey != null) {
-					for (int i = 0; i < fromKey.getColumns().size(); i++)
-						fromKeyDSColumns.add(null);
-
-					// We can't guarantee that this exact key will be in the
-					// dataset table, because it may have used other columns
-					// which refer to this key instead. So, we have to find all
-					// keys in the already-merged tables which refer via a
-					// relation to the same columns as this key, and make a
-					// list of them. We run through that list until we find a
-					// key that we have already merged, and then we use that one
-					// instead. We can use the first one because it doesn't
-					// matter about second ones, as relations can only get
-					// followed once and so we will never be asked to do this
-					// for two different relations.
-					List potentialFromKeys = new ArrayList();
-					potentialFromKeys.add(fromKey);
-
-					for (Iterator j = mergedTables.iterator(); j.hasNext();) {
-						Table table = (Table) j.next();
-						for (Iterator k = table.getKeys().iterator(); k
+			// Add in all the concat-relation columns.
+			for (Iterator i = table.getDataSetTable().getColumns().iterator(); i
+					.hasNext();) {
+				DataSetColumn datasetColumn = (DataSetColumn) i.next();
+				if (!(datasetColumn instanceof ConcatRelationColumn))
+					continue;
+				ConcatRelationColumn concatColumn = (ConcatRelationColumn) datasetColumn;
+				// Where does the concat column point?
+				Relation concatRelation = concatColumn.getUnderlyingRelation();
+				// What key did it lead from?
+				Key sourceKey = concatRelation.getOneKey();
+				// What key does it go to?
+				Key targetKey = concatRelation.getManyKey();
+				// What is the table to be concatted?
+				Table targetTable = targetKey.getTable();
+				String targetTableName = targetTable.getName();
+				// Is the target table going to need a union merge?
+				boolean unionMerge = !targetTable.getSchema().equals(
+						mainTableSchema);
+				// What columns on the table should be concatted?
+				Key targetConcatKey = targetTable.getPrimaryKey();
+				// What are the equivalent columns on the existing temp table
+				// that correspond to the source key?
+				List sourceDSKey = table.getDataSetColumns(table
+						.incrementRelationCount(concatRelation), sourceKey
+						.getColumns());
+				// If concatColumn is in a table in a group schema
+				// that is not the same group schema we started with, create
+				// a union table containing all the concatTable copies, then
+				// concat that instead.
+				Schema targetSchema;
+				if (unionMerge) {
+					// Build a list of schemas to union tables from.
+					List unionTableSchemas = new ArrayList();
+					List unionTableNames = new ArrayList();
+					if (targetTable.getSchema() instanceof SchemaGroup) {
+						for (Iterator j = ((SchemaGroup) targetTable
+								.getSchema()).getSchemas().iterator(); j
 								.hasNext();) {
-							Key key = (Key) k.next();
-							for (Iterator r = key.getRelations().iterator(); r
-									.hasNext();) {
-								Relation rel = (Relation) r.next();
-								Key targetKey = rel.getOtherKey(key);
-								if (targetKey.getColumns().equals(
-										fromKey.getColumns())
-										&& !potentialFromKeys.contains(key))
-									potentialFromKeys.add(key);
-							}
+							Schema mergeSchema = (Schema) j.next();
+							unionTableSchemas.add(mergeSchema);
+							unionTableNames.add(targetTable.getName());
 						}
+					} else {
+						unionTableSchemas.add(targetTable.getSchema());
+						unionTableNames.add(targetTable.getName());
 					}
-
-					// Loop over the candidates till we find one that matches.
-					for (Iterator j = potentialFromKeys.iterator(); j.hasNext()
-							&& fromKeyDSColumns.get(0) == null;) {
-						Key candidateFromKey = (Key) j.next();
-
-						// Do the key translation loop.
-						for (Iterator i = dsTable.getColumns().iterator(); i
-								.hasNext();) {
-							DataSetColumn dsCol = (DataSetColumn) i.next();
-
-							// When searching for ds cols for a particular real
-							// col (for translating real relations+keys), just
-							// take first ds col found that mentions it, even if
-							// there are several matches. This is because a
-							// relation can only be followed once, so it doesn't
-							// matter about the extra copies, as they won't have
-							// any relations followed off them - only the first
-							// one will.
-							if (dsCol instanceof WrappedColumn) {
-								Column unwrappedCol = ((WrappedColumn) dsCol)
-										.getWrappedColumn();
-
-								// We want this column if it matches the fromKey
-								// column.
-								if (candidateFromKey.getColumns().contains(
-										unwrappedCol))
-									fromKeyDSColumns.set(
-											candidateFromKey.getColumns()
-													.indexOf(unwrappedCol),
-											dsCol);
-							}
-						}
-					}
+					// Make name for union table, which is now the target table.
+					targetTableName = this.helper.getNewTempTableName();
+					// Create union table. Each table comes
+					// from one of the schemas in the group on the RHS.
+					// If the RHS is not a group, just use the single RHS
+					// schema instead. Dependent on lastActionPerformed, and
+					// updates it.
+					MartConstructorAction union = new Union(
+							this.datasetSchemaName, null, targetTableName,
+							unionTableSchemas, unionTableNames);
+					actionGraph.addActionWithParent(union, lastActionPerformed);
+					// Create index on targetKey on union table. Dependent
+					// on lastActionPerformed, and updates it.
+					MartConstructorAction index = new Index(
+							this.datasetSchemaName, null, targetTableName,
+							targetKey.getColumns());
+					actionGraph.addActionWithParent(index, union);
+					lastActionPerformed = index;
+					// Target schema is now the dataset schema. Null
+					// represents this.
+					targetSchema = null;
+				} else {
+					// Target schema name is same as source schema.
+					targetSchema = schema;
 				}
-
-				// Identify cols to include from this table.
-				List dsColumns = new ArrayList();
-
-				// Keep a map of unwrapped columns so we can count how many
-				// times we have seen them in this loop.
-				Map colVisitCounter = new HashMap();
-
-				// Now do the loop to find them.
-				for (Iterator i = dsTable.getColumns().iterator(); i.hasNext();) {
-					DataSetColumn dsCol = (DataSetColumn) i.next();
-					// Only select non-masked columns for adding to the
-					// table this time round.
-					if (!ds.getMaskedDataSetColumns().contains(dsCol)) {
-
-						// For first time round only, we're also interested
-						// in schema columns and concat columns.
-						if (tblVisitCount == 0) {
-							// Add it if it is a schema name column and this is
-							// the first table.
-							if (tblVisitCount == 0
-									&& dsCol instanceof SchemaNameColumn)
-								dsColumns.add(dsCol);
-
-							// Add it if it is a concat column on this table.
-							else if ((dsCol instanceof ConcatRelationColumn)
-									&& (((ConcatRelationColumn) dsCol)
-											.getUnderlyingRelation()
-											.getOneKey().getTable()
-											.equals(realTable)))
-								dsColumns.add(dsCol);
-						}
-
-						// Add it if it is a wrapped column on this table,
-						// but if multiple columns on this table refer to
-						// the same real table, only take the column in line
-						// with the current visit count. ie. first column
-						// on first visit, second column on second etc.
-						if (dsCol instanceof WrappedColumn) {
-							Column unwrappedCol = ((WrappedColumn) dsCol)
-									.getWrappedColumn();
-							Table unwrappedColTbl = unwrappedCol.getTable();
-
-							// Is the column of interest?
-							if (unwrappedColTbl.equals(realTable)) {
-
-								// On the first visit, only take first ds column
-								// that mentions the first real column.
-								// Subsequently, take the second, third etc. ds
-								// column that mentions the first real column.
-								// If a ds column does not relate to a real
-								// column, only take it on the first visit.
-								// Visits are counted per table.
-
-								// Update the visit count for this column.
-								int colVisitCount;
-								if (!colVisitCounter.containsKey(unwrappedCol))
-									colVisitCount = 0;
-								else
-									colVisitCount = ((Integer) colVisitCounter
-											.get(unwrappedCol)).intValue() + 1;
-								colVisitCounter.put(unwrappedCol, new Integer(
-										colVisitCount));
-
-								// If this is the right visit number, add the
-								// column.
-								if (colVisitCount == tblVisitCount)
-									dsColumns.add(dsCol);
-							}
-						}
-					}
+				// Create the concat table by selecting sourceKey.
+				String concatTableName = this.helper.getNewTempTableName();
+				MartConstructorAction createCon = new Create(
+						this.datasetSchemaName, null, concatTableName, null,
+						tempTableName, sourceDSKey, false);
+				actionGraph.addActionWithParent(createCon, lastActionPerformed);
+				lastActionPerformed = createCon;
+				// Generate new temp table name for merged concat table.
+				String mergedConcatTableName = this.helper
+						.getNewTempTableName();
+				// Populate the concat table by selecting targetKey and
+				// concatting targetConcatKey into a column with the same
+				// name as concatColumn. Dependent on lastActionPerformed, and
+				// updates it.
+				MartConstructorAction concat = new Concat(
+						this.datasetSchemaName, null, mergedConcatTableName,
+						null, tempTableName, sourceDSKey, targetSchema,
+						targetTableName, targetKey.getColumns(),
+						targetConcatKey.getColumns(), concatColumn.getName(),
+						table.getDataSet()
+								.getConcatRelationType(concatRelation));
+				actionGraph.addActionWithParent(concat, lastActionPerformed);
+				lastActionPerformed = concat;
+				// Drop old concat temp table and replace with new one.
+				MartConstructorAction drop = new Drop(this.datasetSchemaName,
+						null, concatTableName);
+				actionGraph.addActionWithParent(drop, lastActionPerformed);
+				concatTableName = mergedConcatTableName;
+				// Index sourceDSKey columns. Dependent on lastActionPerformed,
+				// and updates it.
+				MartConstructorAction indexCon = new Index(
+						this.datasetSchemaName, null, concatTableName,
+						sourceDSKey);
+				actionGraph.addActionWithParent(indexCon, lastActionPerformed);
+				lastActionPerformed = indexCon;
+				// Generate new temp table name for merged table.
+				String mergedTableName = this.helper.getNewTempTableName();
+				// Merge with the concat table based on sourceDSKey ->
+				// sourceDSKey and selecting the column with the same name as
+				// concatColumn.
+				// Dependent on lastActionPerformed, and updates it.
+				MartConstructorAction merge = new Merge(this.datasetSchemaName,
+						null, mergedTableName, null, tempTableName,
+						sourceDSKey, true, null, concatTableName, sourceDSKey,
+						Collections.singletonList(concatColumn), false);
+				actionGraph.addActionWithParent(merge, lastActionPerformed);
+				lastActionPerformed = merge;
+				// Drop old temp table and replace with new one.
+				drop = new Drop(this.datasetSchemaName, null, tempTableName);
+				actionGraph.addActionWithParent(drop, lastActionPerformed);
+				tempTableName = mergedTableName;
+				// Drop concat table. Dependent on lastActionPerformed, but
+				// does not update it.
+				MartConstructorAction dropCon = new Drop(
+						this.datasetSchemaName, null, concatTableName);
+				actionGraph.addActionWithParent(dropCon, lastActionPerformed);
+				// If concat table was a union table, drop it.
+				if (unionMerge) {
+					// Drop union concat table. Dependent on
+					// lastActionPerformed, but does not update it.
+					drop = new Drop(this.datasetSchemaName, null,
+							targetTableName);
+					actionGraph.addActionWithParent(drop, lastActionPerformed);
 				}
-
-				// What schema is the real table in?
-				// FIXME: What to do if it is in a group, but that group is
-				// not the same as our group?
-				Schema realSchema = (realTable.getSchema() instanceof SchemaGroup) ? schema
-						: realTable.getSchema();
-
-				// If fromKey not null, merge temp using it and toKey,
-				// else create temp. Pass in the list of columns we want
-				// from this step as a parameter. Pass in the schema name.
-				// The Action will perform any concat columns required.
-				// Also pass in the partition dataset column and value.
-				MCAction tableAction = null;
-				if (fromKey == null)
-					tableAction = new CreateTable(this.datasetSchemaName,
-							tempTableName, realTable, dsColumns, realSchema,
-							partitionColumn, partitionValue);
-				else
-					tableAction = new MergeTable(this.datasetSchemaName,
-							tempTableName, realTable, helper
-									.getNewTempTableName(), dsColumns,
-							realSchema, partitionColumn, partitionValue,
-							fromKeyDSColumns, toKey.getColumns(), relation
-									.isOptional());
-
-				// Add this action to the graph.
-				actionGraph.addAction(tableAction);
-
-				// Make this action dependent on the last action performed
-				// (if there was one).
-				// Set this action as the last action performed.
-				if (lastAction != null)
-					tableAction.addParent(lastAction);
-				lastAction = tableAction;
-
-				// Add new relations to queue if not already in queue. We
-				// only need bother with relations that are in the
-				// underlying set of the dataset table in question.
-				for (int i = 0; i < dsTable.getUnderlyingKeys().size(); i++) {
-					// Only add relations that we haven't seen before, and
-					// that have one end attached to the current real table.
-					Key key = (Key) dsTable.getUnderlyingKeys().get(i);
-					if (!key.getTable().equals(realTable))
-						continue;
-					Relation nextRel = (Relation) dsTable
-							.getUnderlyingRelations().get(i);
-					if (relationQueue.contains(nextRel))
-						continue;
-					// We got here because the key is on this table, and
-					// the relation has not been followed before.
-					relationQueue.add(nextRel);
-				}
-
-				// Remember which table we just came from.
-				mergedTables.add(realTable);
-			} while (relQueuePos < relationQueue.size());
-
-			// Return last action performed.
-			return lastAction;
-		}
-
-		private String createFinalName(DataSetTable dsTable, Schema schema,
-				Object parentParentPartitionValue, Object parentPartitionValue,
-				Object partitionValue) {
-			// Work out what dataset we are in.
-			DataSet ds = (DataSet) dsTable.getSchema();
-
-			// TODO - come up with a better naming scheme
-			// Currently the name is:
-			// datasetname__\
-			// schema_parentparentpartitionvalue_parentpartitionvalue__\
-			// table_partitionvalue__\
-			// type
-
-			StringBuffer name = new StringBuffer();
-
-			// Dataset name.
-			name.append(ds.getName());
-
-			// Schema, parent parent partition, and parent partition.
-			name.append(BuilderBundle.getString("tablenameSep"));
-			name.append(schema.getName());
-			if (parentParentPartitionValue != GenericConstructorRunnable.DUMMY_KEY) {
-				name.append(BuilderBundle.getString("tablenameSubSep"));
-				name.append(parentParentPartitionValue.toString());
-			}
-			if (parentPartitionValue != GenericConstructorRunnable.DUMMY_KEY) {
-				name.append(BuilderBundle.getString("tablenameSubSep"));
-				name.append(parentPartitionValue.toString());
 			}
 
-			// Table name and partition.
-			name.append(BuilderBundle.getString("tablenameSep"));
-			name.append(dsTable.getName());
-			if (partitionValue != GenericConstructorRunnable.DUMMY_KEY) {
-				name.append(BuilderBundle.getString("tablenameSubSep"));
-				name.append(partitionValue.toString());
-			}
-
-			// Type stuff.
-			name.append(BuilderBundle.getString("tablenameSep"));
-			DataSetTableType type = dsTable.getType();
-			if (type.equals(DataSetTableType.MAIN))
-				name.append(BuilderBundle.getString("mainSuffix"));
-			else if (type.equals(DataSetTableType.MAIN_SUBCLASS))
-				name.append(BuilderBundle.getString("subclassSuffix"));
-			else if (type.equals(DataSetTableType.DIMENSION))
-				name.append(BuilderBundle.getString("dimensionSuffix"));
-			return name.toString();
+			// Return the last action performed to create this table.
+			table.setLastActionPerformed(lastActionPerformed);
 		}
 
 		public String getStatusMessage() {
@@ -1272,612 +1248,265 @@ public interface MartConstructor {
 				throw new ConstructorException(BuilderBundle
 						.getString("mcCancelled"));
 		}
-	}
 
-	/**
-	 * Represents the various tasks in the mart construction process and how
-	 * they should fit together.
-	 */
-	public class MCActionGraph {
-		private Collection actions = new HashSet();
+		// Internal use only, serves as a convenient wrapper for tracking
+		// info about a particular dataset table.
+		private class MCDSTable {
+			private DataSetTable datasetTable;
 
-		/**
-		 * Adds an action to the graph.
-		 * 
-		 * @param action
-		 *            the action to add.
-		 */
-		public void addAction(MCAction action) {
-			this.actions.add(action);
-		}
+			private Relation parentDataSetRelation;
 
-		/**
-		 * Returns a set of all actions in this graph.
-		 * 
-		 * @return all the actions in this graph.
-		 */
-		public Collection getActions() {
-			return this.actions;
-		}
+			private String tempTableName;
 
-		/**
-		 * Returns all the actions in this graph which are at a particular
-		 * depth.
-		 * 
-		 * @param depth
-		 *            the depth to search.
-		 * @return all the actions at that depth. It may return an empty set if
-		 *         there are none, but it will never return <tt>null</tt>.
-		 */
-		public Collection getActionsAtDepth(int depth) {
-			Collection matches = new HashSet();
-			for (Iterator i = this.actions.iterator(); i.hasNext();) {
-				MCAction action = (MCAction) i.next();
-				if (action.depth == depth)
-					matches.add(action);
+			private List partitionValues;
+
+			// Keeps track of how many times a real table has been included.
+			private Map realTableCounts;
+
+			// Keeps track of how many times a relation has been followed.
+			private Map relationCounts;
+
+			private MartConstructorAction lastActionPerformed;
+
+			/**
+			 * Constructor starts tracking a dataset table.
+			 * 
+			 * @param datasetTable
+			 *            the table to track.
+			 * @param parentDataSetRelation
+			 *            the relation between this dataset table and any parent
+			 *            table it belongs to, e.g. a main or a subclass.
+			 */
+			public MCDSTable(DataSetTable datasetTable,
+					Relation parentDataSetRelation) {
+				this.tempTableName = helper.getNewTempTableName();
+				this.datasetTable = datasetTable;
+				this.parentDataSetRelation = parentDataSetRelation;
+				this.partitionValues = new ArrayList();
+				this.realTableCounts = new HashMap();
+				this.relationCounts = new HashMap();
 			}
-			return matches;
-		}
-	}
 
-	/**
-	 * Represents one task in the grand scheme of constructing a mart.
-	 * Implementations of this abstract class will provide specific methods for
-	 * working with the various different stages of mart construction.
-	 */
-	public abstract class MCAction {
-		private Set parents;
-
-		private Set children;
-
-		private int depth;
-
-		private int sequence;
-
-		private static int nextSequence = 0;
-
-		private static final String nextSequenceLock = "__SEQ_LOCK";
-
-		public final String datasetSchemaName;
-
-		/**
-		 * Sets up a node.
-		 * 
-		 * @param datasetSchemaName
-		 *            the name of the schema to create the dataset tables in.
-		 */
-		public MCAction(String datasetSchemaName) {
-			this.datasetSchemaName = datasetSchemaName;
-			this.depth = 0;
-			synchronized (nextSequenceLock) {
-				this.sequence = nextSequence++;
+			public String getTempTableName() {
+				return this.tempTableName;
 			}
-			this.children = new HashSet();
-			this.parents = new HashSet();
-		}
 
-		/**
-		 * Adds a child to this node. The child will have this node added as a
-		 * parent.
-		 * 
-		 * @param child
-		 *            the child to add to this node.
-		 */
-		public void addChild(MCAction child) {
-			this.children.add(child);
-			child.parents.add(this);
-			child.ensureDepth(this.depth + 1);
-		}
+			public List getPartitionValues() {
+				return this.partitionValues;
+			}
 
-		/**
-		 * Adds children to this node. Each child will have this node added as a
-		 * parent.
-		 * 
-		 * @param children
-		 *            the children to add to this node.
-		 */
-		public void addChildren(Collection children) {
-			for (Iterator i = children.iterator(); i.hasNext();)
-				this.addChild((MCAction) i.next());
-		}
+			public int incrementRealTableCount(Table table) {
+				Integer i = (Integer) this.realTableCounts.get(table);
+				if (i == null)
+					i = new Integer(0);
+				else
+					i = new Integer(i.intValue() + 1);
+				this.realTableCounts.put(table, i);
+				return i.intValue();
+			}
 
-		/**
-		 * Adds a parent to this node. The parent will have this node added as a
-		 * child.
-		 * 
-		 * @param parent
-		 *            the parent to add to this node.
-		 */
-		public void addParent(MCAction parent) {
-			this.parents.add(parent);
-			parent.children.add(this);
-			this.ensureDepth(parent.depth + 1);
-		}
+			public int incrementRelationCount(Relation relation) {
+				Integer i = (Integer) this.relationCounts.get(relation);
+				if (i == null)
+					i = new Integer(0);
+				else
+					i = new Integer(i.intValue() + 1);
+				this.relationCounts.put(relation, i);
+				return i.intValue();
+			}
 
-		/**
-		 * Adds parents to this node. Each parent will have this node added as a
-		 * child.
-		 * 
-		 * @param parents
-		 *            the parents to add to this node.
-		 */
-		public void addParents(Collection parents) {
-			for (Iterator i = parents.iterator(); i.hasNext();)
-				this.addParent((MCAction) i.next());
-		}
+			public DataSetColumn getNthDataSetColumn(int n, Column column) {
+				// n is 0-indexed, so 0 = first instance, 1 = second, etc.
 
-		/**
-		 * Returns the children of this node.
-		 * 
-		 * @return the children of this node.
-		 */
-		public Collection getChildren() {
-			return this.children;
-		}
+				List candidates = new ArrayList();
+				candidates.add(column);
 
-		/**
-		 * Returns the parents of this node.
-		 * 
-		 * @return the parents of this node.
-		 */
-		public Collection getParents() {
-			return this.parents;
-		}
+				// For each one in the list, if found a dataset column that
+				// wraps it, return that.
+				for (int j = 0; j < candidates.size(); j++) {
+					int copyOfN = n;
+					Column candidate = (Column) candidates.get(j);
+					for (Iterator i = this.datasetTable.getColumns().iterator(); i
+							.hasNext();) {
+						DataSetColumn datasetColumn = (DataSetColumn) i.next();
+						if (!(datasetColumn instanceof WrappedColumn))
+							continue;
+						WrappedColumn wrappedColumn = (WrappedColumn) datasetColumn;
+						if (wrappedColumn.getWrappedColumn().equals(candidate)
+								&& copyOfN-- == 0) 
+							return wrappedColumn;
+					}
+					// Otherwise, find out what keys it is in, and insert
+					// opposing columns from those keys into the list, but not
+					// if they're already there.
+					for (Iterator i = candidate.getTable().getKeys().iterator(); i
+							.hasNext();) {
+						Key k = (Key) i.next();
+						int offset = k.getColumns().indexOf(candidate);
+						if (offset < 0)
+							continue;
+						for (Iterator l = k.getRelations().iterator(); l
+								.hasNext();) {
+							Relation rel = (Relation) l.next();
+							if (!this.datasetTable.getUnderlyingRelations()
+									.contains(rel))
+								continue;
+							Column nextCandidate = (Column) rel.getOtherKey(k)
+									.getColumns().get(offset);
+							if (!candidates.contains(nextCandidate)) 					
+								candidates.add(nextCandidate);
+						}
+					}
+				}
+				
+				// We need to see if there is a DS col with the same name
+				// on the DS table.
+				int copyOfN = n;
+				for (Iterator i = this.datasetTable.getColumns().iterator(); i
+						.hasNext();) {
+					DataSetColumn datasetColumn = (DataSetColumn) i.next();
+					if (!(datasetColumn instanceof WrappedColumn))
+						continue;
+					WrappedColumn wrappedColumn = (WrappedColumn) datasetColumn;
+					if (wrappedColumn.getWrappedColumn().getOriginalName().equals(column.getOriginalName())
+							&& copyOfN-- == 0) 
+						return wrappedColumn;
+				}
 
-		private void ensureDepth(int newDepth) {
-			// Is the new depth less than our current
-			// depth? If so, need do nothing.
-			if (this.depth >= newDepth)
-				return;
+				// Default case.
+				return null;
+			}
 
-			// Remember the new depth.
-			this.depth = newDepth;
+			public DataSet getDataSet() {
+				return (DataSet) this.datasetTable.getSchema();
+			}
 
-			// Ensure the child depths are at least one greater
-			// than our own new depth.
-			for (Iterator i = this.children.iterator(); i.hasNext();) {
-				MCAction child = (MCAction) i.next();
-				child.ensureDepth(this.depth + 1);
+			public DataSetTable getDataSetTable() {
+				return this.datasetTable;
+			}
+
+			public Table getRealTable() {
+				return this.datasetTable.getUnderlyingTable();
+			}
+
+			public Schema getRealSchema() {
+				return this.datasetTable.getUnderlyingTable().getSchema();
+			}
+
+			public Relation getParentDataSetRelation() {
+				return this.parentDataSetRelation;
+			}
+
+			public DataSetTable getParentDataSetTable() {
+				return (DataSetTable) this.parentDataSetRelation.getOneKey()
+						.getTable();
+			}
+
+			public List getDataSetColumns(int n, List columns) {
+				// We have been given a list of real columns, and want to find
+				// the nth set of them.
+				List list = new ArrayList();
+				for (Iterator i = columns.iterator(); i.hasNext();)
+					list.add(this.getNthDataSetColumn(n, (Column) i.next()));
+				return list;
+			}
+
+			public List getDataSetColumns(int n, Table table) {
+				// We have been given a table, and want to find the nth set
+				// of columns on this dataset table that appear in the table.
+				// If any columns are masked, don't include them.
+				List list = new ArrayList();
+				for (Iterator i = table.getColumns().iterator(); i.hasNext();) {
+					DataSetColumn candidate = this.getNthDataSetColumn(n,
+							(Column) i.next());
+					if (candidate != null
+							&& !this.getDataSet().getMaskedDataSetColumns()
+									.contains(candidate))
+						list.add(candidate);
+				}
+				return list;
+			}
+
+			public void setLastActionPerformed(
+					MartConstructorAction lastActionPerformed) {
+				this.lastActionPerformed = lastActionPerformed;
+			}
+
+			public MartConstructorAction getLastActionPerformed() {
+				return this.lastActionPerformed;
+			}
+
+			public String createFinalName() {
+				// TODO - come up with a better naming scheme
+				// Currently the name is:
+				// datasetname__\
+				// {partitionvalue{_partitionvalue}*}*__\
+				// tablename__\
+				// type
+
+				// Work out what dataset we are in.
+				DataSet dataset = this.getDataSet();
+				DataSetTable datasetTable = this.getDataSetTable();
+
+				StringBuffer name = new StringBuffer();
+
+				// Dataset name and __ separator.
+				name.append(dataset.getName());
+				name.append(BuilderBundle.getString("tablenameSep"));
+
+				// Partition values and __ separator with _ separator between.
+				List partitionValues = this.getPartitionValues();
+				for (Iterator j = partitionValues.iterator(); j.hasNext();) {
+					// Partition values may be null, so cannot use toString().
+					String partitionValue = "" + j.next();
+					name.append(partitionValue);
+					if (j.hasNext())
+						name.append(BuilderBundle.getString("tablenameSubSep"));
+				}
+				name.append(BuilderBundle.getString("tablenameSep"));
+
+				// Table name and __ separator.
+				name.append(datasetTable.getName());
+				name.append(BuilderBundle.getString("tablenameSep"));
+
+				// Type.
+				DataSetTableType type = datasetTable.getType();
+				if (type.equals(DataSetTableType.MAIN))
+					name.append(BuilderBundle.getString("mainSuffix"));
+				else if (type.equals(DataSetTableType.MAIN_SUBCLASS))
+					name.append(BuilderBundle.getString("subclassSuffix"));
+				else if (type.equals(DataSetTableType.DIMENSION))
+					name.append(BuilderBundle.getString("dimensionSuffix"));
+
+				return name.toString();
 			}
 		}
 
-		/**
-		 * Override this method to produce a message describing what this node
-		 * of the graph will do.
-		 * 
-		 * @return a description of what this node will do.
-		 */
-		public abstract String getStatusMessage();
+		// Internal use only, serves as a convenient wrapper for tracking
+		// info about a particular 'has' table.
+		private class MCDSHasTable extends MCDSTable {
+			/**
+			 * Constructor starts tracking a 'has' table that contains
+			 * optimisations for the given table.
+			 * 
+			 * @param datasetTable
+			 *            the table to contain optimisations for.
+			 * @param parentDataSetRelation
+			 *            the relation between the dataset table and any parent
+			 *            table it belongs to, e.g. a main or a subclass.
+			 */
+			public MCDSHasTable(DataSetTable datasetTable,
+					Relation parentDataSetRelation) {
+				super(datasetTable, parentDataSetRelation);
+			}
 
-		/**
-		 * Returns the order in which this action was created.
-		 * 
-		 * @return the order in which this action was created. 0 is the first.
-		 */
-		public int getSequence() {
-			return this.sequence;
-		}
-
-		public int hashCode() {
-			return this.sequence;
-		}
-
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			else
-				return (obj != null && (obj instanceof MCAction) && this.sequence == ((MCAction) obj).sequence);
-		}
-	}
-
-	/**
-	 * This action drops a table.
-	 */
-	public class DropTable extends MCAction {
-		/**
-		 * The table name to drop.
-		 */
-		public final String tableName;
-
-		/**
-		 * Constructs an action which represents the dropping of a table.
-		 * 
-		 * @param datasetSchemaName
-		 *            the name of the schema to create the dataset tables in.
-		 * @param tableName
-		 *            the name of the table to drop.
-		 */
-		public DropTable(String datasetSchemaName, String tableName) {
-			super(datasetSchemaName);
-			this.tableName = tableName;
-		}
-
-		public String getStatusMessage() {
-			return BuilderBundle.getString("mcDropTable", this.tableName);
-		}
-	}
-
-	/**
-	 * This action renames a table.
-	 */
-	public class RenameTable extends MCAction {
-		/**
-		 * The existing name of the table.
-		 */
-		public final String oldName;
-
-		/**
-		 * The new name for the table.
-		 */
-		public final String newName;
-
-		/**
-		 * Constructs an action which represents the renaming of a table.
-		 * 
-		 * @param datasetSchemaName
-		 *            the name of the schema to create the dataset tables in.
-		 * @param oldName
-		 *            the existing table name.
-		 * @param newName
-		 *            the new name to give it.
-		 */
-		public RenameTable(String datasetSchemaName, String oldName,
-				String newName) {
-			super(datasetSchemaName);
-			this.oldName = oldName;
-			this.newName = newName;
-		}
-
-		public String getStatusMessage() {
-			return BuilderBundle.getString("mcRenameTable", new String[] {
-					this.oldName, this.newName });
-		}
-	}
-
-	/**
-	 * This action creates a new table by performing a union on a number of
-	 * other tables.
-	 */
-	public class UnionTables extends MCAction {
-		/**
-		 * The name to give the new table resulting from the union.
-		 */
-		public final String tableName;
-
-		/**
-		 * The collection of table names to involve in the union.
-		 */
-		public final Collection tableNames;
-
-		/**
-		 * Constructs an action which represents the performing of a union over
-		 * a number of tables.
-		 * 
-		 * @param datasetSchemaName
-		 *            the name of the schema to create the dataset tables in.
-		 * @param tableName
-		 *            the name of the table to create.
-		 * @param tableNames
-		 *            the names of the tables to use in the union.
-		 */
-		public UnionTables(String datasetSchemaName, String tableName,
-				Collection tableNames) {
-			super(datasetSchemaName);
-			this.tableName = tableName;
-			this.tableNames = tableNames;
-		}
-
-		public String getStatusMessage() {
-			return BuilderBundle.getString("mcUnionTables", this.tableName);
-		}
-	}
-
-	/**
-	 * This action represents the creation of a primary key.
-	 */
-	public class CreatePK extends MCAction {
-		/**
-		 * The name of the table to create the key over.
-		 */
-		public final String tableName;
-
-		/**
-		 * The list of dataset columns to include in the key.
-		 */
-		public final List dsColumns;
-
-		/**
-		 * Constructs an action which represents the creation of a primary key.
-		 * 
-		 * @param datasetSchemaName
-		 *            the name of the schema to create the dataset tables in.
-		 * @param tableName
-		 *            the name fo the table to create the key for.
-		 * @param dsColumns
-		 *            the dataset columns, in order, which represent the colums
-		 *            to include in the key.
-		 */
-		public CreatePK(String datasetSchemaName, String tableName,
-				List dsColumns) {
-			super(datasetSchemaName);
-			this.tableName = tableName;
-			this.dsColumns = dsColumns;
-		}
-
-		public String getStatusMessage() {
-			return BuilderBundle.getString("mcCreatePK", this.tableName);
-		}
-	}
-
-	/**
-	 * This action represents the creation of a foreign key.
-	 */
-	public class CreateFK extends MCAction {
-		/**
-		 * The table to create the foreign key on.
-		 */
-		public final String tableName;
-
-		/**
-		 * The dataset columns (in order) representing the foreign key columns.
-		 */
-		public final List dsColumns;
-
-		/**
-		 * The foreign key refers to a primary key, which lives in this table.
-		 */
-		public final String parentTableName;
-
-		/**
-		 * The dataset columns representing the columns in the primary key that
-		 * this foreign key refers to.
-		 */
-		public final List parentDSColumns;
-
-		/**
-		 * Creates an action that represents the creation of a foreign key.
-		 * 
-		 * @param datasetSchemaName
-		 *            the name of the schema to create the dataset tables in.
-		 * @param tableName
-		 *            the table the foreign key is to be created on.
-		 * @param dsColumns
-		 *            the dataset columns, in order, to create the key with.
-		 * @param parentTableName
-		 *            the table that owns the primary key to which the foreign
-		 *            key refers.
-		 * @param parentDSColumns
-		 *            the dataset columns, in order, of the primary key that the
-		 *            foreign key refers to.
-		 */
-		public CreateFK(String datasetSchemaName, String tableName,
-				List dsColumns, String parentTableName, List parentDSColumns) {
-			super(datasetSchemaName);
-			this.tableName = tableName;
-			this.dsColumns = dsColumns;
-			this.parentTableName = parentTableName;
-			this.parentDSColumns = parentDSColumns;
-		}
-
-		public String getStatusMessage() {
-			return BuilderBundle.getString("mcCreateFK", this.tableName);
-		}
-	}
-
-	/**
-	 * Represents the creation of a new table.
-	 */
-	public class CreateTable extends MCAction {
-		/**
-		 * The name of the table to create.
-		 */
-		public final String tableName;
-
-		/**
-		 * The table from which columns should be selected to create this table.
-		 */
-		public final Table realTable;
-
-		/**
-		 * The list of dataset columns that this table should include.
-		 */
-		public final List dsColumns;
-
-		/**
-		 * The schema in which the table to select data from lives.
-		 */
-		public final Schema schema;
-
-		/**
-		 * The column this table should use when restricting data for the
-		 * purposes of creating a single partition. If null, then no restriction
-		 * is required.
-		 */
-		public final DataSetColumn partitionColumn;
-
-		/**
-		 * The value to restrict by when using a partition column
-		 */
-		public final Object partitionValue;
-
-		/**
-		 * Creates an action that represents the creation of a new table.
-		 * 
-		 * @param datasetSchemaName
-		 *            the name of the schema to create the dataset tables in.
-		 * @param tableName
-		 *            the name of the table to create.
-		 * @param realTable
-		 *            the table it is based on.
-		 * @param dsColumns
-		 *            the columns to include.
-		 * @param schema
-		 *            the schema in which the source table to select from lives.
-		 * @param partitionColumn
-		 *            the column to restrict on for partitioning, or null if not
-		 *            required.
-		 * @param partitionValue
-		 *            the value to restrict the partition column by.
-		 */
-		public CreateTable(String datasetSchemaName, String tableName,
-				Table realTable, List dsColumns, Schema schema,
-				DataSetColumn partitionColumn, Object partitionValue) {
-			super(datasetSchemaName);
-			this.tableName = tableName;
-			this.realTable = realTable;
-			this.dsColumns = dsColumns;
-			this.schema = schema;
-			this.partitionColumn = partitionColumn;
-			this.partitionValue = partitionValue;
-		}
-
-		public String getStatusMessage() {
-			return BuilderBundle.getString("mcCreateTable", new String[] {
-					this.tableName, "" + this.realTable });
-		}
-	}
-
-	/**
-	 * Represents the merging of another table into an existing table by joining
-	 * keys. May or may not also create and drop indexes.
-	 */
-	public class MergeTable extends CreateTable {
-		/**
-		 * The temp table to use whilst merging.
-		 */
-		public final String tempTable;
-
-		/**
-		 * The columns to use in the left-hand-side of the join.
-		 */
-		public final List fromDSColumns;
-
-		/**
-		 * The columns to use in the right-hand-side of the join.
-		 */
-		public final List toRealColumns;
-
-		/**
-		 * <tt>true</tt> if the join should be a left-join, <tt>false</tt>
-		 * if it should be a natural-join.
-		 */
-		public final boolean leftJoin;
-
-		/**
-		 * Creates an action that represents the merging of a table with an
-		 * existing one.
-		 * 
-		 * @param datasetSchemaName
-		 *            the name of the schema to create the dataset tables in.
-		 * @param tableName
-		 *            the name of the table to create.
-		 * @param realTable
-		 *            the table it is based on.
-		 * @param tempTable
-		 *            the temp table to use whilst merging.
-		 * @param dsColumns
-		 *            the columns to include.
-		 * @param schema
-		 *            the schema in which the source table to select from lives.
-		 * @param partitionColumn
-		 *            the column to restrict on for partitioning, or null if not
-		 *            required.
-		 * @param partitionValue
-		 *            the value to restrict the partition column by.
-		 * @param fromDSColumns
-		 *            the columns to use in the existing table on the
-		 *            left-hand-side of the join.
-		 * @param toDSColumns
-		 *            the columns to use in the realTable on the right-hand-side
-		 *            of the join.
-		 * @param leftJoin
-		 *            <tt>true</tt> if the join should be a left-join,
-		 *            <tt>false</tt> if it should be a natural-join.
-		 */
-		public MergeTable(String datasetSchemaName, String tableName,
-				Table realTable, String tempTable, List dsColumns,
-				Schema schema, DataSetColumn partitionColumn,
-				Object partitionValue, List fromDSColumns, List toRealColumns,
-				boolean leftJoin) {
-			super(datasetSchemaName, tableName, realTable, dsColumns, schema,
-					partitionColumn, partitionValue);
-			this.tempTable = tempTable;
-			this.fromDSColumns = fromDSColumns;
-			this.toRealColumns = toRealColumns;
-			this.leftJoin = leftJoin;
-		}
-
-		public String getStatusMessage() {
-			return BuilderBundle.getString("mcMergeTable", new String[] {
-					this.tableName, "" + this.realTable });
-		}
-	}
-
-	/**
-	 * This action represents the creation of a new table based on an existing
-	 * table joined (restricted) to some other table which provides no extra
-	 * columns, just a restrictive where clause. Use it to narrow dimension
-	 * tables or subclass tables after creation.
-	 */
-	public class RestrictTable extends MCAction {
-		/**
-		 * The name of the new table to create.
-		 */
-		public final String newTableName;
-
-		/**
-		 * The name of the table to copy and restrict.
-		 */
-		public final String oldTableName;
-
-		/**
-		 * The name of the table that is providing the restrictive where clause.
-		 */
-		public final String parentTableName;
-
-		/**
-		 * The primary key of the restrictive table.
-		 */
-		public final List parentPKCols;
-
-		/**
-		 * The foreign key of the table to be restricted which refers to the
-		 * primary key of the restrictive table.
-		 */
-		public final List childFKCols;
-
-		/**
-		 * Creates an action which represents the restriction of a table.
-		 * 
-		 * @param datasetSchemaName
-		 *            the name of the schema to create the dataset tables in.
-		 * @param newTableName
-		 *            the name of the new table to create.
-		 * @param oldTableName
-		 *            the name of the table to copy and restrict.
-		 * @param parentTableName
-		 *            the name of the table that is providing the restrictive
-		 *            where clause.
-		 * @param parentPKCols
-		 *            the primary key of the restrictive table.
-		 * @param childFKCols
-		 *            the foreign key of the table to be restricted which refers
-		 *            to the primary key of the restrictive table.
-		 */
-		public RestrictTable(String datasetSchemaName, String newTableName,
-				String oldTableName, String parentTableName, List parentPKCols,
-				List childFKCols) {
-			super(datasetSchemaName);
-			this.newTableName = newTableName;
-			this.oldTableName = oldTableName;
-			this.parentTableName = parentTableName;
-			this.parentPKCols = parentPKCols;
-			this.childFKCols = childFKCols;
-		}
-
-		public String getStatusMessage() {
-			return BuilderBundle.getString("mcRestrictTable", new String[] {
-					this.newTableName, this.oldTableName });
+			public String createFinalName() {
+				StringBuffer sb = new StringBuffer();
+				sb.append(super.createFinalName());
+				sb.append(BuilderBundle.getString("tablenameSep"));
+				sb.append(BuilderBundle.getString("hasSuffix"));
+				return sb.toString();
+			}
 		}
 	}
 }

@@ -49,7 +49,9 @@ import org.biomart.builder.controller.SaveDDLMartConstructor;
 import org.biomart.builder.controller.SaveDDLMartConstructor.SaveDDLGranularity;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.MartConstructor;
-import org.biomart.builder.model.MartConstructorListener;
+import org.biomart.builder.model.MartConstructorAction;
+import org.biomart.builder.model.MartConstructor.ConstructorRunnable;
+import org.biomart.builder.model.MartConstructor.MartConstructorListener;
 import org.biomart.builder.resources.BuilderBundle;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
@@ -58,7 +60,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * a given set of datasets, then lets them actually do it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 26th June 2006
+ * @version 0.1.5, 29th June 2006
  * @since 0.1
  */
 public class SaveDDLDialog extends JDialog {
@@ -215,10 +217,11 @@ public class SaveDDLDialog extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				if (granularity.getSelectedItem() != null
 						&& granularity.getSelectedItem().equals(
-								SaveDDLGranularity.SINGLE)) 
+								SaveDDLGranularity.SINGLE))
 					viewDDL.setEnabled(true);
 				else {
-					if (viewDDL.isSelected()) viewDDL.doClick();
+					if (viewDDL.isSelected())
+						viewDDL.doClick();
 					viewDDL.setEnabled(false);
 				}
 			}
@@ -370,15 +373,18 @@ public class SaveDDLDialog extends JDialog {
 					new File(this.zipFileLocation.getText()), null,
 					this.includeComments.isSelected());
 		try {
-			this.martTab.getMartTabSet().requestMonitorConstructorRunnable(
-					constructor.getConstructorRunnable(this.targetSchemaName
-							.getText(), selectedDataSets),
-					new MartConstructorListener() {
-						public void mcEventOccurred(int event) {
-							if (event == MartConstructorListener.CONSTRUCTION_FINISHED)
-								displayTextPane(sb);
-						}
-					});
+			final ConstructorRunnable cr = constructor.getConstructorRunnable(
+					this.targetSchemaName.getText(), selectedDataSets);
+			if (this.viewDDL.isSelected())
+				cr.addMartConstructorListener(new MartConstructorListener() {
+					public void martConstructorEventOccurred(int event,
+							MartConstructorAction action) throws Exception {
+						if (event == MartConstructorListener.CONSTRUCTION_ENDED
+								&& cr.getFailureException() == null)
+							displayTextPane(sb);
+					}
+				});
+			this.martTab.getMartTabSet().requestMonitorConstructorRunnable(cr);
 		} catch (Throwable t) {
 			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 			JOptionPane.showMessageDialog(this.martTab.getMartTabSet()

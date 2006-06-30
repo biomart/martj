@@ -155,23 +155,6 @@ public class DataSetContext extends WindowContext {
 					DataSetOptimiserType.NONE))
 				optNone.setSelected(true);
 
-			// The left-join option turns on left-join optimisation.
-			JRadioButtonMenuItem optLJ = new JRadioButtonMenuItem(BuilderBundle
-					.getString("optimiserLeftJoinTitle"));
-			optLJ.setMnemonic(BuilderBundle.getString(
-					"optimiserLeftJoinMnemonic").charAt(0));
-			optLJ.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestChangeOptimiserType(
-							getDataSet(), DataSetOptimiserType.LEFTJOIN);
-				}
-			});
-			optGroup.add(optLJ);
-			optimiserMenu.add(optLJ);
-			if (this.getDataSet().getDataSetOptimiserType().equals(
-					DataSetOptimiserType.LEFTJOIN))
-				optLJ.setSelected(true);
-
 			// The column option turns on has-column optimisation.
 			JRadioButtonMenuItem optCol = new JRadioButtonMenuItem(
 					BuilderBundle.getString("optimiserColumnTitle"));

@@ -787,7 +787,8 @@ public class DataSet extends GenericSchema {
 		// If the parent dataset table is not null, add columns from it
 		// as appropriate. Dimension tables get just the PK, and an
 		// FK linking them back. Subclass tables get all columns, plus
-		// the PK with FK link.
+		// the PK with FK link. Also add the relations we followed to
+		// get all these columns.
 		if (parentDSTable != null) {
 			// Make a list to hold the child table's FK cols.
 			List dsTableFKCols = new ArrayList();
@@ -920,8 +921,7 @@ public class DataSet extends GenericSchema {
 
 		// Process the dimension relations of this table. For 1:M it's easy.
 		// For M:M, we have to work out which end is connected to the real
-		// table,
-		// then process the table at the other end of the relation.
+		// table, then process the table at the other end of the relation.
 		for (int i = 0; i < dimensionQ.size(); i++) {
 			Relation dimensionRelation = (Relation) dimensionQ.get(i);
 			if (dimensionRelation.isOneToMany())
@@ -952,11 +952,8 @@ public class DataSet extends GenericSchema {
 					mergeTable) ? sourceRelation.getFirstKey() : sourceRelation
 					.getSecondKey();
 
-			// Add the relation to the list of relations followed for the table.
+			// Add the relation and key to the list followed for the table.
 			dsTable.getUnderlyingRelations().add(sourceRelation);
-
-			// Add the key we just came from to the list of keys followed for
-			// the table.
 			dsTable.getUnderlyingKeys().add(
 					sourceRelation.getOtherKey(ignoreKey));
 
@@ -1738,13 +1735,6 @@ public class DataSet extends GenericSchema {
 		 */
 		public static final DataSetOptimiserType NONE = new DataSetOptimiserType(
 				"NONE");
-
-		/**
-		 * Use this constant to refer to optimising by running a left join on
-		 * each dimension..
-		 */
-		public static final DataSetOptimiserType LEFTJOIN = new DataSetOptimiserType(
-				"LEFTJOIN");
 
 		/**
 		 * Use this constant to refer to optimising by including an extra column

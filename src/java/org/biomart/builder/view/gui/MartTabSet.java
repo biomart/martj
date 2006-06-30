@@ -43,7 +43,6 @@ import javax.swing.filechooser.FileFilter;
 
 import org.biomart.builder.controller.MartBuilderXML;
 import org.biomart.builder.model.Mart;
-import org.biomart.builder.model.MartConstructorListener;
 import org.biomart.builder.model.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.resources.BuilderBundle;
 
@@ -52,7 +51,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * of the mart inside it, including all datasets and schemas.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 26th June 2006
+ * @version 0.1.13, 28th June 2006
  * @since 0.1
  */
 public class MartTabSet extends JTabbedPane {
@@ -123,13 +122,9 @@ public class MartTabSet extends JTabbedPane {
 	 * 
 	 * @param constructorRunnable
 	 *            the constructor that will build a mart.
-	 * @param listener
-	 *            the listener that will hear events about the construction
-	 *            process.
 	 */
 	public void requestMonitorConstructorRunnable(
-			final ConstructorRunnable constructor,
-			final MartConstructorListener listener) {
+			final ConstructorRunnable constructor) {
 		// Create a progress monitor.
 		final ProgressMonitor progressMonitor = new ProgressMonitor(this
 				.getMartBuilder(), BuilderBundle.getString("creatingMart"), "",
@@ -143,9 +138,6 @@ public class MartTabSet extends JTabbedPane {
 		final Thread thread = new Thread(constructor);
 		thread.start();
 
-		// Notify the listener.
-		listener.mcEventOccurred(MartConstructorListener.CONSTRUCTION_STARTED);
-
 		// Create a timer thread that will update the progress dialog.
 		// We use the Swing Timer to make it Swing-thread-safe. (1000 millis
 		// equals 1 second.)
@@ -157,7 +149,7 @@ public class MartTabSet extends JTabbedPane {
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
 						monitorConstructionProgress(thread, timer,
-								progressMonitor, constructor, listener);
+								progressMonitor, constructor);
 					}
 				});
 			}
@@ -168,8 +160,7 @@ public class MartTabSet extends JTabbedPane {
 	}
 
 	private void monitorConstructionProgress(Thread thread, Timer timer,
-			ProgressMonitor progressMonitor, ConstructorRunnable constructor,
-			MartConstructorListener listener) {
+			ProgressMonitor progressMonitor, ConstructorRunnable constructor) {
 		// Did the job complete yet?
 		if (thread.isAlive() && !progressMonitor.isCanceled()) {
 			// If not, update the progress report.
@@ -198,9 +189,6 @@ public class MartTabSet extends JTabbedPane {
 						BuilderBundle.getString("martConstructionFailed"),
 						BuilderBundle.getString("messageTitle"),
 						JOptionPane.WARNING_MESSAGE);
-			// Notify the listener.
-			listener
-					.mcEventOccurred(MartConstructorListener.CONSTRUCTION_FINISHED);
 		}
 	}
 

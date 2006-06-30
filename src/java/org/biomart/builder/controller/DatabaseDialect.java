@@ -27,8 +27,8 @@ import java.util.Set;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataLink;
+import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.model.MartConstructor.MCAction;
 import org.biomart.builder.resources.BuilderBundle;
 
 /**
@@ -38,7 +38,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * can be used.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 23rd June 2006
+ * @version 0.1.5, 29th June 2006
  * @since 0.1
  */
 public abstract class DatabaseDialect {
@@ -120,7 +120,7 @@ public abstract class DatabaseDialect {
 	 *             if the action was not able to be converted into one or more
 	 *             SQL/DDL statements.
 	 */
-	public abstract String[] getStatementsForAction(MCAction action,
+	public abstract String[] getStatementsForAction(MartConstructorAction action,
 			boolean includeComments) throws ConstructorException;
 	
 	/**

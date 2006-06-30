@@ -35,8 +35,8 @@ import java.util.zip.ZipOutputStream;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.MartConstructor;
+import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
@@ -49,7 +49,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * use JDBC to fetch/retrieve data between two databases.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 26th June 2006
+ * @version 0.1.10, 29th June 2006
  * @since 0.1
  */
 public class SaveDDLMartConstructor implements MartConstructor {
@@ -166,14 +166,17 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		}
 
 		// Construct and return the runnable that uses the helper.
-		return new GenericConstructorRunnable(targetSchemaName, datasets,
-				helper);
+		ConstructorRunnable cr = new GenericConstructorRunnable(
+				targetSchemaName, datasets, helper);
+		cr.addMartConstructorListener(helper);
+		return cr;
 	}
 
 	/**
 	 * DDLHelper generates DDL statements for each step.
 	 */
-	public abstract static class DDLHelper implements Helper {
+	public abstract static class DDLHelper implements Helper,
+			MartConstructorListener {
 		private DatabaseDialect dialect;
 
 		private int tempTableSeq = 0;
@@ -238,7 +241,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		/**
 		 * Translates an action into commands, using
-		 * {@link DatabaseDialect#getStatementsForAction(MCAction)}
+		 * {@link DatabaseDialect#getStatementsForAction(MartConstructorAction)}
 		 * 
 		 * @param action
 		 *            the action to translate.
@@ -246,7 +249,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 * @throws Exception
 		 *             if anything went wrong.
 		 */
-		public String[] getStatementsForAction(MCAction action)
+		protected String[] getStatementsForAction(MartConstructorAction action)
 				throws Exception {
 			return dialect.getStatementsForAction(action, this.includeComments);
 		}
@@ -274,43 +277,24 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			super(outputFile, includeComments);
 		}
 
-		public void startActions() throws Exception {
-			// Open the file stream.
-			this.outputFileStream = new FileOutputStream(this.getFile());
-		}
-
-		public void startActionsForMart(Mart mart) throws Exception {
-			// We don't care.
-		}
-
-		public void startActionsForDataSet(DataSet dataset) throws Exception {
-			// We don't care.
-		}
-
-		public void executeAction(MCAction action, int level) throws Exception {
-			// Convert the action to some DDL.
-			String[] cmd = this.getStatementsForAction(action);
-			// Write the data.
-			for (int i = 0; i < cmd.length; i++) {
-				this.outputFileStream.write(cmd[i].getBytes());
-				this.outputFileStream.write(';');
-				this.outputFileStream.write(System
-						.getProperty("line.separator").getBytes());
+		public void martConstructorEventOccurred(int event,
+				MartConstructorAction action) throws Exception {
+			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
+				this.outputFileStream = new FileOutputStream(this.getFile());
+			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
+				this.outputFileStream.flush();
+				this.outputFileStream.close();
+			} else if (event == MartConstructorListener.ACTION_EVENT) {
+				// Convert the action to some DDL.
+				String[] cmd = this.getStatementsForAction(action);
+				// Write the data.
+				for (int i = 0; i < cmd.length; i++) {
+					this.outputFileStream.write(cmd[i].getBytes());
+					this.outputFileStream.write(';');
+					this.outputFileStream.write(System.getProperty(
+							"line.separator").getBytes());
+				}
 			}
-		}
-
-		public void endActionsForDataSet(DataSet dataset) throws Exception {
-			// We don't care.
-		}
-
-		public void endActionsForMart(Mart mart) throws Exception {
-			// We don't care.
-		}
-
-		public void endActions() throws Exception {
-			// Close the file stream.
-			this.outputFileStream.flush();
-			this.outputFileStream.close();
 		}
 	}
 
@@ -338,38 +322,17 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			this.outputStringBuffer = outputStringBuffer;
 		}
 
-		public void startActions() throws Exception {
-			// We don't care.
-		}
-
-		public void startActionsForMart(Mart mart) throws Exception {
-			// We don't care.
-		}
-
-		public void startActionsForDataSet(DataSet dataset) throws Exception {
-			// We don't care.
-		}
-
-		public void executeAction(MCAction action, int level) throws Exception {
-			// Convert the action to some DDL.
-			String[] cmd = this.getStatementsForAction(action);
-			// Write the data.
-			for (int i = 0; i < cmd.length; i++) {
-				this.outputStringBuffer.append(cmd[i]);
-				this.outputStringBuffer.append(";\n");
+		public void martConstructorEventOccurred(int event,
+				MartConstructorAction action) throws Exception {
+			if (event == MartConstructorListener.ACTION_EVENT) {
+				// Convert the action to some DDL.
+				String[] cmd = this.getStatementsForAction(action);
+				// Write the data.
+				for (int i = 0; i < cmd.length; i++) {
+					this.outputStringBuffer.append(cmd[i]);
+					this.outputStringBuffer.append(";\n");
+				}
 			}
-		}
-
-		public void endActionsForDataSet(DataSet dataset) throws Exception {
-			// We don't care.
-		}
-
-		public void endActionsForMart(Mart mart) throws Exception {
-			// We don't care.
-		}
-
-		public void endActions() throws Exception {
-			// We don't care.
 		}
 	}
 
@@ -402,51 +365,38 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			this.martSequence = 0;
 		}
 
-		public void startActions() throws Exception {
-			// Open the zip stream.
-			this.outputFileStream = new FileOutputStream(this.getFile());
-			this.outputZipStream = new ZipOutputStream(this.outputFileStream);
-			this.outputZipStream.setMethod(ZipOutputStream.DEFLATED);
-		}
-
-		public void startActionsForMart(Mart mart) throws Exception {
-			this.entry = new ZipEntry(this.martSequence + ".sql");
-			entry.setTime(System.currentTimeMillis());
-			this.outputZipStream.putNextEntry(entry);
-		}
-
-		public void startActionsForDataSet(DataSet dataset) throws Exception {
-			// We don't care.
-		}
-
-		public void executeAction(MCAction action, int level) throws Exception {
-			// Convert the action to some DDL.
-			String[] cmd = this.getStatementsForAction(action);
-			// Write the data.
-			for (int i = 0; i < cmd.length; i++) {
-				this.outputZipStream.write(cmd[i].getBytes());
-				this.outputZipStream.write(';');
-				this.outputZipStream.write(System.getProperty("line.separator")
-						.getBytes());
+		public void martConstructorEventOccurred(int event,
+				MartConstructorAction action) throws Exception {
+			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
+				this.outputFileStream = new FileOutputStream(this.getFile());
+				this.outputZipStream = new ZipOutputStream(
+						this.outputFileStream);
+				this.outputZipStream.setMethod(ZipOutputStream.DEFLATED);
+			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
+				// Close the zip stream. Will also close the
+				// file output stream by default.
+				this.outputZipStream.finish();
+				this.outputFileStream.flush();
+				this.outputFileStream.close();
+			} else if (event == MartConstructorListener.MART_STARTED) {
+				this.entry = new ZipEntry(this.martSequence + ".sql");
+				entry.setTime(System.currentTimeMillis());
+				this.outputZipStream.putNextEntry(entry);
+			} else if (event == MartConstructorListener.MART_ENDED) {
+				this.outputZipStream.closeEntry();
+				// Bump up the mart sequence.
+				this.martSequence++;
+			} else if (event == MartConstructorListener.ACTION_EVENT) {
+				// Convert the action to some DDL.
+				String[] cmd = this.getStatementsForAction(action);
+				// Write the data.
+				for (int i = 0; i < cmd.length; i++) {
+					this.outputZipStream.write(cmd[i].getBytes());
+					this.outputZipStream.write(';');
+					this.outputZipStream.write(System.getProperty(
+							"line.separator").getBytes());
+				}
 			}
-		}
-
-		public void endActionsForDataSet(DataSet dataset) throws Exception {
-			// We don't care.
-		}
-
-		public void endActionsForMart(Mart mart) throws Exception {
-			this.outputZipStream.closeEntry();
-			// Bump up the mart sequence.
-			this.martSequence++;
-		}
-
-		public void endActions() throws Exception {
-			// Close the zip stream. Will also close the
-			// file output stream by default.
-			this.outputZipStream.finish();
-			this.outputFileStream.flush();
-			this.outputFileStream.close();
 		}
 	}
 
@@ -482,53 +432,42 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			this.datasetSequence = 0;
 		}
 
-		public void startActions() throws Exception {
-			// Open the zip stream.
-			this.outputFileStream = new FileOutputStream(this.getFile());
-			this.outputZipStream = new ZipOutputStream(this.outputFileStream);
-			this.outputZipStream.setMethod(ZipOutputStream.DEFLATED);
-		}
-
-		public void startActionsForMart(Mart mart) throws Exception {
-			// Ignore.
-		}
-
-		public void startActionsForDataSet(DataSet dataset) throws Exception {
-			this.entry = new ZipEntry(this.martSequence + "/"
-					+ this.datasetSequence + ".sql");
-			entry.setTime(System.currentTimeMillis());
-			this.outputZipStream.putNextEntry(entry);
-		}
-
-		public void executeAction(MCAction action, int level) throws Exception {
-			// Convert the action to some DDL.
-			String[] cmd = this.getStatementsForAction(action);
-			// Write the data.
-			for (int i = 0; i < cmd.length; i++) {
-				this.outputZipStream.write(cmd[i].getBytes());
-				this.outputZipStream.write(';');
-				this.outputZipStream.write(System.getProperty("line.separator")
-						.getBytes());
+		public void martConstructorEventOccurred(int event,
+				MartConstructorAction action) throws Exception {
+			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
+				this.outputFileStream = new FileOutputStream(this.getFile());
+				this.outputZipStream = new ZipOutputStream(
+						this.outputFileStream);
+				this.outputZipStream.setMethod(ZipOutputStream.DEFLATED);
+			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
+				// Close the zip stream. Will also close the
+				// file output stream by default.
+				this.outputZipStream.finish();
+				this.outputFileStream.flush();
+				this.outputFileStream.close();
+			} else if (event == MartConstructorListener.DATASET_STARTED) {
+				this.entry = new ZipEntry(this.martSequence + "/"
+						+ this.datasetSequence + ".sql");
+				entry.setTime(System.currentTimeMillis());
+				this.outputZipStream.putNextEntry(entry);
+			} else if (event == MartConstructorListener.DATASET_ENDED) {
+				this.outputZipStream.closeEntry();
+				// Bump up the dataset count for the next one.
+				this.datasetSequence++;
+			} else if (event == MartConstructorListener.MART_ENDED) {
+				// Bump up the mart count for the next one.
+				this.martSequence++;
+			} else if (event == MartConstructorListener.ACTION_EVENT) {
+				// Convert the action to some DDL.
+				String[] cmd = this.getStatementsForAction(action);
+				// Write the data.
+				for (int i = 0; i < cmd.length; i++) {
+					this.outputZipStream.write(cmd[i].getBytes());
+					this.outputZipStream.write(';');
+					this.outputZipStream.write(System.getProperty(
+							"line.separator").getBytes());
+				}
 			}
-		}
-
-		public void endActionsForDataSet(DataSet dataset) throws Exception {
-			this.outputZipStream.closeEntry();
-			// Bump up the dataset count for the next one.
-			this.datasetSequence++;
-		}
-
-		public void endActionsForMart(Mart mart) throws Exception {
-			// Bump up the mart count for the next one.
-			this.martSequence++;
-		}
-
-		public void endActions() throws Exception {
-			// Close the zip stream. Will also close the
-			// file output stream by default.
-			this.outputZipStream.finish();
-			this.outputFileStream.flush();
-			this.outputFileStream.close();
 		}
 	}
 
@@ -564,55 +503,47 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			this.outputZipStream.setMethod(ZipOutputStream.DEFLATED);
 		}
 
-		public void startActionsForMart(Mart mart) throws Exception {
-			// We don't care.
-		}
-
-		public void startActionsForDataSet(DataSet dataset) throws Exception {
-			// We don't care.
-		}
-
-		public void executeAction(MCAction action, int level) throws Exception {
-			try {
-				// Writes the given action to file.
-				// Put the next entry to the zip file.
-				ZipEntry entry = new ZipEntry(level + "/" + level + "-"
-						+ action.getSequence() + ".sql");
-				entry.setTime(System.currentTimeMillis());
-				this.outputZipStream.putNextEntry(entry);
-				// Convert the action to some DDL.
-				String[] cmd = this.getStatementsForAction(action);
-				// Write the data.
-				for (int i = 0; i < cmd.length; i++) {
-					this.outputZipStream.write(cmd[i].getBytes());
-					this.outputZipStream.write(';');
-					this.outputZipStream.write(System.getProperty(
-							"line.separator").getBytes());
+		public void martConstructorEventOccurred(int event,
+				MartConstructorAction action) throws Exception {
+			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
+				this.outputFileStream = new FileOutputStream(this.getFile());
+				this.outputZipStream = new ZipOutputStream(
+						this.outputFileStream);
+				this.outputZipStream.setMethod(ZipOutputStream.DEFLATED);
+			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
+				// Close the zip stream. Will also close the
+				// file output stream by default.
+				this.outputZipStream.finish();
+				this.outputFileStream.flush();
+				this.outputFileStream.close();
+			} else if (event == MartConstructorListener.ACTION_EVENT) {
+				try {
+					// What level is this action? (ie. depth in graph)
+					int level = action.getDepth();
+					// Writes the given action to file.
+					// Put the next entry to the zip file.
+					ZipEntry entry = new ZipEntry(level + "/" + level + "-"
+							+ action.getSequence() + ".sql");
+					entry.setTime(System.currentTimeMillis());
+					this.outputZipStream.putNextEntry(entry);
+					// Convert the action to some DDL.
+					String[] cmd = this.getStatementsForAction(action);
+					// Write the data.
+					for (int i = 0; i < cmd.length; i++) {
+						this.outputZipStream.write(cmd[i].getBytes());
+						this.outputZipStream.write(';');
+						this.outputZipStream.write(System.getProperty(
+								"line.separator").getBytes());
+					}
+					// Close the entry.
+					this.outputZipStream.closeEntry();
+				} catch (Exception e) {
+					// Make sure we don't leave open entries lying around
+					// if exceptions get thrown.
+					this.outputZipStream.closeEntry();
+					throw e;
 				}
-				// Close the entry.
-				this.outputZipStream.closeEntry();
-			} catch (Exception e) {
-				// Make sure we don't leave open entries lying around
-				// if exceptions get thrown.
-				this.outputZipStream.closeEntry();
-				throw e;
 			}
-		}
-
-		public void endActionsForDataSet(DataSet dataset) throws Exception {
-			// We don't care.
-		}
-
-		public void endActionsForMart(Mart mart) throws Exception {
-			// We don't care.
-		}
-
-		public void endActions() throws Exception {
-			// Close the zip stream. Will also close the
-			// file output stream by default.
-			this.outputZipStream.finish();
-			this.outputFileStream.flush();
-			this.outputFileStream.close();
 		}
 	}
 

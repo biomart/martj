@@ -17,6 +17,8 @@
  */
 package org.biomart.builder.controller;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -27,29 +29,30 @@ import java.util.List;
 import java.util.Set;
 
 import org.biomart.builder.exceptions.ConstructorException;
+import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataLink;
-import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.Key;
+import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
-import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
-import org.biomart.builder.model.MartConstructor.CreateFK;
-import org.biomart.builder.model.MartConstructor.CreatePK;
-import org.biomart.builder.model.MartConstructor.CreateTable;
-import org.biomart.builder.model.MartConstructor.DropTable;
-import org.biomart.builder.model.MartConstructor.MCAction;
-import org.biomart.builder.model.MartConstructor.MergeTable;
-import org.biomart.builder.model.MartConstructor.RenameTable;
-import org.biomart.builder.model.MartConstructor.RestrictTable;
-import org.biomart.builder.model.MartConstructor.UnionTables;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.model.MartConstructorAction.Concat;
+import org.biomart.builder.model.MartConstructorAction.Create;
+import org.biomart.builder.model.MartConstructorAction.Drop;
+import org.biomart.builder.model.MartConstructorAction.FK;
+import org.biomart.builder.model.MartConstructorAction.Index;
+import org.biomart.builder.model.MartConstructorAction.Merge;
+import org.biomart.builder.model.MartConstructorAction.OptimiseAddColumn;
+import org.biomart.builder.model.MartConstructorAction.OptimiseUpdateColumn;
+import org.biomart.builder.model.MartConstructorAction.PK;
+import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
+import org.biomart.builder.model.MartConstructorAction.Reduce;
+import org.biomart.builder.model.MartConstructorAction.Rename;
+import org.biomart.builder.model.MartConstructorAction.Union;
 
 /**
  * Understands how to create SQL and DDL for a MySQL database.
@@ -75,9 +78,9 @@ public class MySQLDialect extends DatabaseDialect {
 			throw new ConstructorException(e);
 		}
 	}
-	
+
 	public void reset() {
-		
+
 	}
 
 	public List executeSelectDistinct(Column col) throws SQLException {
@@ -111,55 +114,43 @@ public class MySQLDialect extends DatabaseDialect {
 		return results;
 	}
 
-	public String[] getStatementsForAction(MCAction action,
+	public String[] getStatementsForAction(MartConstructorAction action,
 			boolean includeComments) throws ConstructorException {
-		
-		// FIXME: This is not very nice code. When the graph nodes change
-		// if/when the stuff in MartConstructor.GenericConstructorRunnable
-		// is ever rewritten nicely, then this method and all the various
-		// methods it calls will also have to be rewritten, but I hope 
-		// in a much nicer way.
-		
+
+		List statements = new ArrayList();
+
+		if (includeComments)
+			statements.add("#" + action.getStatusMessage());
+
 		try {
-			List statements = new ArrayList();
-
-			if (includeComments)
-				statements.add("#" + action.getStatusMessage());
-
-			if (action instanceof CreatePK)
-				this.createPKStatements((CreatePK) action, statements);
-			else if (action instanceof CreateFK)
-				this.createFKStatements((CreateFK) action, statements);
-			else if (action instanceof MergeTable)
-				this.mergeTableStatements((MergeTable) action, statements);
-			else if (action instanceof CreateTable)
-				this.createTableStatements((CreateTable) action, statements);
-			else if (action instanceof DropTable)
-				this.dropTableStatements((DropTable) action, statements);
-			else if (action instanceof RenameTable)
-				this.renameTableStatements((RenameTable) action, statements);
-			else if (action instanceof RestrictTable)
-				this
-						.restrictTableStatements((RestrictTable) action,
-								statements);
-			else if (action instanceof UnionTables)
-				this.unionTablesStatements((UnionTables) action, statements);
+			String className = action.getClass().getName();
+			String methodName = "do"
+					+ className.substring(className.lastIndexOf('$') + 1);
+			Method method = this.getClass().getMethod(methodName,
+					new Class[] { action.getClass(), List.class });
+			method.invoke(this, new Object[] { action, statements });
+		} catch (InvocationTargetException ite) {
+			Throwable t = ite.getCause();
+			if (t instanceof ConstructorException)
+				throw (ConstructorException) t;
 			else
-				throw new ConstructorException(BuilderBundle
-						.getString("mcUnknownAction"));
-
-			return (String[]) statements.toArray(new String[0]);
+				throw new ConstructorException(t);
 		} catch (Throwable t) {
-			throw new ConstructorException(t);
+			if (t instanceof ConstructorException)
+				throw (ConstructorException) t;
+			else
+				throw new ConstructorException(t);
 		}
+
+		return (String[]) statements.toArray(new String[0]);
 	}
 
-	private void createPKStatements(CreatePK action, List statements)
-			throws Exception {
-		String schemaName = action.datasetSchemaName;
-		String tableName = action.tableName;
+	public void doPK(PK action, List statements) throws Exception {
+		String schemaName = action.getPkTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getPkTableSchema().getName();
+		String tableName = action.getPkTableName();
 		StringBuffer sb = new StringBuffer();
-		for (Iterator i = action.dsColumns.iterator(); i.hasNext();) {
+		for (Iterator i = action.getPkColumns().iterator(); i.hasNext();) {
 			String colName = ((Column) i.next()).getName();
 			sb.append(colName);
 			if (i.hasNext())
@@ -169,389 +160,309 @@ public class MySQLDialect extends DatabaseDialect {
 				+ " add primary key (" + sb.toString() + ")");
 	}
 
-	private void createFKStatements(CreateFK action, List statements)
-			throws Exception {
-		String schemaName = action.datasetSchemaName;
-		String fkTableName = action.tableName;
-		String pkTableName = action.parentTableName;
+	public void doFK(FK action, List statements) throws Exception {
+		String pkSchemaName = action.getPkTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getPkTableSchema().getName();
+		String pkTableName = action.getPkTableName();
+		String fkSchemaName = action.getFkTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getFkTableSchema().getName();
+		String fkTableName = action.getFkTableName();
+
 		StringBuffer sbFK = new StringBuffer();
-		for (Iterator i = action.dsColumns.iterator(); i.hasNext();) {
+		for (Iterator i = action.getFkColumns().iterator(); i.hasNext();) {
 			String colName = ((Column) i.next()).getName();
 			sbFK.append(colName);
 			if (i.hasNext())
 				sbFK.append(",");
 		}
+
 		StringBuffer sbPK = new StringBuffer();
-		for (Iterator i = action.parentDSColumns.iterator(); i.hasNext();) {
+		for (Iterator i = action.getPkColumns().iterator(); i.hasNext();) {
 			String colName = ((Column) i.next()).getName();
 			sbPK.append(colName);
 			if (i.hasNext())
 				sbPK.append(",");
 		}
-		statements
-				.add("alter table " + schemaName + "." + fkTableName
-						+ " add foreign key (" + sbFK.toString()
-						+ ") references " + schemaName + "." + pkTableName
-						+ " (" + sbPK.toString() + ")");
+
+		statements.add("alter table " + fkSchemaName + "." + fkTableName
+				+ " add foreign key (" + sbFK.toString() + ") references "
+				+ pkSchemaName + "." + pkTableName + " (" + sbPK.toString()
+				+ ")");
 	}
 
-	private void dropTableStatements(DropTable action, List statements)
-			throws Exception {
-		String schemaName = action.datasetSchemaName;
-		String tableName = action.tableName;
+	public void doReduce(Reduce action, List statements) throws Exception {
+		String srcSchemaName = action.getSourceTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getSourceTableSchema()
+				.getName();
+		String srcTableName = action.getSourceTableName();
+		String trgtSchemaName = action.getTargetTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getTargetTableSchema()
+				.getName();
+		String trgtTableName = action.getTargetTableName();
+		String reduceSchemaName = action.getReducedTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: action.getReducedTableSchema().getName();
+		String reduceTableName = action.getReducedTableName();
+
+		StringBuffer sb = new StringBuffer();
+		sb.append("create table " + reduceSchemaName + "." + reduceTableName
+				+ " as select b.* from " + srcSchemaName + "." + srcTableName
+				+ " as a inner join " + trgtSchemaName + "." + trgtTableName
+				+ " as b using ");
+		for (int i = 0; i < action.getTargetTableKeyColumns().size(); i++) {
+			if (i > 0)
+				sb.append(',');
+			String pkColName = ((Column) action.getSourceTableKeyColumns().get(
+					i)).getName();
+			String fkColName = ((Column) action.getTargetTableKeyColumns().get(
+					i)).getName();
+			sb.append("a." + pkColName + "=b." + fkColName);
+		}
+
+		statements.add(sb.toString());
+	}
+
+	public void doDrop(Drop action, List statements) throws Exception {
+		String schemaName = action.getDropTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getDropTableSchema().getName();
+		String tableName = action.getDropTableName();
 		statements.add("drop table " + schemaName + "." + tableName);
 	}
 
-	private void renameTableStatements(RenameTable action, List statements)
-			throws Exception {
-		String schemaName = action.datasetSchemaName;
-		String oldTableName = action.oldName;
-		String newTableName = action.newName;
+	public void doRename(Rename action, List statements) throws Exception {
+		String schemaName = action.getRenameTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getRenameTableSchema()
+				.getName();
+		String oldTableName = action.getRenameTableOldName();
+		String newTableName = action.getRenameTableNewName();
 		statements.add("rename table " + schemaName + "." + oldTableName
 				+ " to " + schemaName + "." + newTableName);
 	}
 
-	private void createTableStatements(CreateTable action, List statements)
-			throws Exception {
-		this.processTableStatements(action, action.datasetSchemaName,
-				((JDBCSchema) action.schema).getDatabaseSchema(),
-				action.tableName, null, action.realTable.getName(),
-				action.dsColumns, null, null, false, action.partitionColumn,
-				action.partitionValue, statements);
-	}
-
-	private void mergeTableStatements(MergeTable action, List statements)
-			throws Exception {
-		this.processTableStatements(action, action.datasetSchemaName,
-				((JDBCSchema) action.schema).getDatabaseSchema(),
-				action.tempTable, action.tableName, action.realTable.getName(),
-				action.dsColumns, action.fromDSColumns, action.toRealColumns,
-				action.leftJoin, action.partitionColumn, action.partitionValue,
-				statements);
-	}
-
-	private void restrictTableStatements(RestrictTable action, List statements)
-			throws Exception {
-		String schemaName = action.datasetSchemaName;
-		String newTableName = action.newTableName;
-		String childTableName = action.oldTableName;
-		String parentTableName = action.parentTableName;
-
-		// Create the necessary index on the child table.
-		StringBuffer isb = new StringBuffer();
-		for (Iterator i = action.childFKCols.iterator(); i.hasNext();) {
-			String colName = ((Column) i.next()).getName();
-			isb.append(colName);
-			if (i.hasNext())
-				isb.append(",");
-		}
-		statements.add("create index " + schemaName + "." + childTableName
-				+ "_I on " + schemaName + "." + childTableName + "("
-				+ isb.toString() + ")");
-
-		// Restrict the table.
-		StringBuffer sb = new StringBuffer();
-		for (int i = 0; i < action.parentPKCols.size(); i++) {
-			if (i > 0)
-				sb.append(" and ");
-			String parentColName = ((Column) action.parentPKCols.get(i))
-					.getName();
-			String childColName = ((Column) action.childFKCols.get(i))
-					.getName();
-			sb.append("a." + parentColName + "=b." + childColName);
-		}
-		statements.add("create table " + schemaName + "." + newTableName
-				+ " as select b.* " + "from " + schemaName + "."
-				+ parentTableName + " as a, " + schemaName + "."
-				+ childTableName + " as b where " + sb.toString());
-	}
-
-	private void unionTablesStatements(UnionTables action, List statements)
-			throws Exception {
-		String schemaName = action.datasetSchemaName;
-		String tableName = action.tableName;
+	public void doUnion(Union action, List statements) throws Exception {
+		String schemaName = action.getUnionTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getUnionTableSchema()
+				.getName();
+		String tableName = action.getUnionTableName();
 		StringBuffer sb = new StringBuffer();
 		sb.append("create table " + schemaName + "." + tableName
 				+ " as select * from ");
-		for (Iterator i = action.tableNames.iterator(); i.hasNext();) {
-			sb.append((String) i.next());
-			if (i.hasNext())
+		for (int i = 0; i < action.getTargetTableSchemas().size(); i++) {
+			if (i > 0)
 				sb.append(" union select * from ");
+			String targetSchemaName = action.getTargetTableSchemas().get(i) == null ? action
+					.getDataSetSchemaName()
+					: ((Schema) action.getTargetTableSchemas().get(i))
+							.getName();
+			String targetTableName = (String) action.getTargetTableNames().get(
+					i);
+			sb.append(targetSchemaName);
+			sb.append('.');
+			sb.append(targetTableName);
 		}
 		statements.add(sb.toString());
 	}
 
-	private void processTableStatements(MCAction action, String dsSchemaName,
-			String targetSchemaName, String tempTableName,
-			String existingTableName, String targetTableName, List dsColumns,
-			List fromDSColumns, List toRealColumns, boolean leftJoin,
-			DataSetColumn partitionColumn, Object partitionValue,
-			List statements) throws Exception {
+	public void doPlaceHolder(PlaceHolder action, List statements) {
+		statements.add("#");
+	}
 
-		// We must assume the source schema is read-only, therefore
-		// we cannot make any temporary indexes on it even though
-		// we'd probably quite like to.
+	public void doIndex(Index action, List statements) {
+		String schemaName = action.getIndexTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getIndexTableSchema()
+				.getName();
+		String tableName = action.getIndexTableName();
+		StringBuffer sb = new StringBuffer();
 
-		// Restrict to a particular partition.
-		String sbWhere = "";
-		if (partitionColumn != null) {
-			if (partitionValue == null)
-				sbWhere = "where b."
-						+ ((WrappedColumn) partitionColumn).getWrappedColumn()
-								.getName() + " is null";
-			else
-				sbWhere = "where b."
-						+ ((WrappedColumn) partitionColumn).getWrappedColumn()
-								.getName() + "='" + partitionValue + "'";
-		}
-
-		// Join the table to the parent, if parent table not null.
-		StringBuffer sbJoin = new StringBuffer();
-		if (existingTableName != null) {
-
-			// Create an index on the existing table to use for the join.
-			StringBuffer sbIndCols = new StringBuffer();
-			for (Iterator i = fromDSColumns.iterator(); i.hasNext();) {
-				sbIndCols.append(((Column) i.next()).getName());
-				if (i.hasNext())
-					sbIndCols.append(",");
-			}
-			statements.add("create index " + dsSchemaName + "."
-					+ existingTableName + "_I on " + dsSchemaName + "."
-					+ existingTableName + "(" + sbIndCols.toString() + ")");
-
-			// Work out what kind of join to use, if any.
-			String joinKW = (leftJoin && partitionColumn == null) ? "left"
-					: "inner";
-
-			// Do the join.
-			sbJoin.append(dsSchemaName);
-			sbJoin.append('.');
-			sbJoin.append(existingTableName);
-			sbJoin.append(" as a ");
-			sbJoin.append(joinKW);
-			sbJoin.append(" join ");
-			sbJoin.append(targetSchemaName);
-			sbJoin.append('.');
-			sbJoin.append(targetTableName);
-			sbJoin.append(" as b on (");
-			for (int i = 0; i < fromDSColumns.size(); i++) {
-				if (i > 0)
-					sbJoin.append(" and ");
-				String parentColName = ((Column) fromDSColumns.get(i))
-						.getName();
-				String childColName = ((Column) toRealColumns.get(i)).getName();
-				sbJoin.append("a.");
-				sbJoin.append(parentColName);
-				sbJoin.append("=b.");
-				sbJoin.append(childColName);
-			}
-			sbJoin.append(')');
-		}
-		// Otherwise, just select from target table.
-		else {
-			sbJoin.append(targetSchemaName);
-			sbJoin.append('.');
-			sbJoin.append(targetTableName);
-			sbJoin.append(" as b");
-		}
-
-		// Make a list to contain temporary concat table names.
-		List tempConcatTableNames = new ArrayList();
-
-		// Work out what columns to include.
-		StringBuffer sbCols = new StringBuffer();
-
-		// Include all columns from the existing table, if present.
-		if (existingTableName != null)
-			sbCols.append("a.*,");
-
-		// Set up the alias for the first concat table, if any.
-		char nextAlias = 'c';
-
-		// Add all the columns from the new table.
-		for (Iterator i = dsColumns.iterator(); i.hasNext();) {
-			DataSetColumn dsCol = (DataSetColumn) i.next();
-			if (dsCol instanceof WrappedColumn) {
-				WrappedColumn wc = (WrappedColumn) dsCol;
-				sbCols.append("b.");
-				sbCols.append(wc.getWrappedColumn().getName());
-				sbCols.append(" as ");
-				sbCols.append(wc.getName());
-			} else if (dsCol instanceof SchemaNameColumn) {
-				SchemaNameColumn sn = (SchemaNameColumn) dsCol;
-				sbCols.append('\'');
-				sbCols.append(targetSchemaName);
-				sbCols.append("' as ");
-				sbCols.append(sn.getName());
-			} else if (dsCol instanceof ConcatRelationColumn) {
-				ConcatRelationColumn crCol = (ConcatRelationColumn) dsCol;
-				ConcatRelationType crType = ((DataSet) dsCol.getTable()
-						.getSchema()).getConcatRelationType(crCol
-						.getUnderlyingRelation());
-				Key fromKey = crCol.getUnderlyingRelation().getOneKey();
-				Key toKey = crCol.getUnderlyingRelation().getManyKey();
-				Key concatPrimaryKey = toKey.getTable().getPrimaryKey();
-
-				// Make a name for our temporary concat table.
-				String tempConcTabName = tempTableName + "_C" + nextAlias;
-				tempConcatTableNames.add(tempConcTabName);
-
-				// Create a list of columns to include in the concat, using
-				// nextAlias.toKey, and using ifNull on each to prevent
-				// skipped columns (replace with '').
-				StringBuffer sbConcatCols = new StringBuffer();
-				for (Iterator j = concatPrimaryKey.getColumns().iterator(); j
-						.hasNext();) {
-					sbConcatCols.append("ifnull(");
-					sbConcatCols.append(nextAlias);
-					sbConcatCols.append('.');
-					sbConcatCols.append(((Column) j.next()).getName());
-					sbConcatCols.append(",'')");
-					if (j.hasNext())
-						sbConcatCols.append(',');
-				}
-
-				// 1. Create a list of columns to select for the concat, using
-				// fromKey.
-				// 2. Create a list of columns to join for the concat, using
-				// fromKey and toKey.
-				// 3. Create a list of columns to index in the concat, using
-				// fromKey.
-				// 4. Create a list of columns to link the concat to the
-				// table we are constructing, using fromKey.
-				StringBuffer sbConcatJoinCols = new StringBuffer();
-				StringBuffer sbConcatFromCols = new StringBuffer();
-				StringBuffer sbConcatIndCols = new StringBuffer();
-				StringBuffer sbConcatLinkCols = new StringBuffer();
-				for (int j = 0; j < fromKey.getColumns().size(); j++) {
-					if (j > 0) {
-						sbConcatJoinCols.append(',');
-						sbConcatFromCols.append(',');
-						sbConcatIndCols.append(',');
-						sbConcatLinkCols.append(" and ");
-					}
-					// join cols
-					sbConcatJoinCols.append("b.");
-					sbConcatJoinCols.append(((Column) fromKey.getColumns().get(
-							j)).getName());
-					sbConcatJoinCols.append('=');
-					sbConcatJoinCols.append(nextAlias);
-					sbConcatJoinCols.append('.');
-					sbConcatJoinCols
-							.append(((Column) toKey.getColumns().get(j))
-									.getName());
-					// from cols
-					sbConcatFromCols.append("b.");
-					sbConcatFromCols.append(((Column) fromKey.getColumns().get(
-							j)).getName());
-					// index cols
-					sbConcatIndCols.append(((Column) fromKey.getColumns()
-							.get(j)).getName());
-					// link cols
-					sbConcatLinkCols.append("b.");
-					sbConcatLinkCols.append(((Column) fromKey.getColumns().get(
-							j)).getName());
-					sbConcatLinkCols.append('=');
-					sbConcatLinkCols.append(nextAlias);
-					sbConcatLinkCols.append('.');
-					sbConcatLinkCols.append(((Column) fromKey.getColumns().get(
-							j)).getName());
-				}
-
-				// Work out what schema the other end of the concat relation
-				// is in.
-				// FIXME: what to do if target real schema is a group, but
-				// not our group?
-				Table realTable = toKey.getTable();
-				String realSchemaName = 
-					(realTable.getSchema() instanceof SchemaGroup) ? targetSchemaName : realTable.getSchema().getName();
-				
-				// Construct the temporary concat table.
-				StringBuffer sbTempConc = new StringBuffer();
-				sbTempConc.append("create table ");
-				sbTempConc.append(dsSchemaName);
-				sbTempConc.append('.');
-				sbTempConc.append(tempConcTabName);
-				sbTempConc.append(" as select ");
-				sbTempConc.append(sbConcatFromCols.toString());
-				sbTempConc.append(", ");
-				sbTempConc.append("group_concat(distinct concat_ws('");
-				sbTempConc.append(crType.getValueSeparator());
-				sbTempConc.append("', ");
-				sbTempConc.append(sbConcatCols.toString());
-				sbTempConc.append(") separator '");
-				sbTempConc.append(crType.getRecordSeparator());
-				sbTempConc.append("'))");
-				sbTempConc.append(" from ");
-				sbTempConc.append(targetSchemaName);
-				sbTempConc.append('.');
-				sbTempConc.append(targetTableName);
-				sbTempConc.append(" as b inner join ");
-				sbTempConc.append(realSchemaName);
-				sbTempConc.append('.');
-				sbTempConc.append(toKey.getTable().getName());
-				sbTempConc.append(" as ");
-				sbTempConc.append(nextAlias);
-				sbTempConc.append(" on (");
-				sbTempConc.append(sbConcatJoinCols.toString());
-				sbTempConc.append(") group by ");
-				sbTempConc.append(sbConcatFromCols.toString());
-				statements.add(sbTempConc.toString());
-
-				// Create an index on b.fromKey in the temporary concat table.
-				statements.add("create index " + dsSchemaName + "."
-						+ tempConcTabName + "_I on " + dsSchemaName + "."
-						+ tempConcTabName + "(" + sbConcatIndCols.toString()
-						+ ")");
-
-				// Add the 'concat' column from the temporary concat table to
-				// the list of columns to create for table b.
-				sbCols.append(nextAlias);
-				sbCols.append(".xconc as ");
-				sbCols.append(crCol.getName());
-
-				// Add an inner join from b.fromKey to equivalent b.fromKey in
-				// the temporary concat table.
-				sbJoin.append("left join ");
-				sbJoin.append(dsSchemaName);
-				sbJoin.append('.');
-				sbJoin.append(tempConcTabName);
-				sbJoin.append(" as ");
-				sbJoin.append(nextAlias);
-				sbJoin.append(" on (");
-				sbJoin.append(sbConcatLinkCols.toString());
-				sbJoin.append(')');
-
-				// Increment the alias for the next one, if any.
-				nextAlias++;
-			} else
-				throw new ConstructorException(BuilderBundle
-						.getString("mcUnknownDSCol"));
+		sb.append("create index " + schemaName + "." + tableName + "_I on "
+				+ schemaName + "." + tableName + "(");
+		for (Iterator i = action.getIndexColumns().iterator(); i.hasNext();) {
+			Column col = (Column) i.next();
+			sb.append(col.getName());
 			if (i.hasNext())
-				sbCols.append(',');
+				sb.append(',');
+		}
+		sb.append(")");
+
+		statements.add(sb.toString());
+	}
+
+	public void doOptimiseAddColumn(OptimiseAddColumn action, List statements) {
+		String schemaName = action.getTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getTableSchema().getName();
+		String tableName = action.getTableName();
+		String colName = action.getColumnName();
+		statements.add("alter table " + schemaName + "." + tableName
+				+ " add column (" + colName + " smallint default value 0)");
+	}
+
+	public void doOptimiseUpdateColumn(OptimiseUpdateColumn action,
+			List statements) throws Exception {
+		String pkSchemaName = action.getPkTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getPkTableSchema().getName();
+		String pkTableName = action.getPkTableName();
+		String fkSchemaName = action.getFkTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getFkTableSchema().getName();
+		String fkTableName = action.getFkTableName();
+		String colName = action.getOptimiseColumnName();
+
+		StringBuffer sb = new StringBuffer();
+		sb.append("update table " + pkSchemaName + "." + pkTableName + " set "
+				+ colName + "=1 where (");
+		for (Iterator i = action.getPkTableColumns().iterator(); i.hasNext();) {
+			sb.append(((Column) i.next()).getName());
+			if (i.hasNext())
+				sb.append(',');
+		}
+		sb.append(") in (select ");
+		for (Iterator i = action.getFkTableColumns().iterator(); i.hasNext();) {
+			sb.append(((Column) i.next()).getName());
+			if (i.hasNext())
+				sb.append(',');
+		}
+		sb.append(" from " + fkSchemaName + "." + fkTableName + ")");
+
+		statements.add(sb.toString());
+	}
+
+	public void doCreate(Create action, List statements) {
+		String createTableSchema = action.getNewTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getNewTableSchema().getName();
+		String createTableName = action.getNewTableName();
+		String fromTableSchema = action.getSelectFromTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: action.getSelectFromTableSchema().getName();
+		String fromTableName = action.getSelectFromTableName();
+
+		StringBuffer sb = new StringBuffer();
+		sb.append("create table " + createTableSchema + "." + createTableName
+				+ " as select ");
+		for (Iterator i = action.getSelectFromColumns().iterator(); i.hasNext();) {
+			Column col = (Column) i.next();
+			if (action.isUseAliases()) {
+				DataSetColumn dsCol = (DataSetColumn) col;
+				if (dsCol instanceof WrappedColumn) {
+					sb.append(((WrappedColumn) dsCol).getWrappedColumn()
+							.getName());
+					sb.append(" as ");
+				} else if (dsCol instanceof SchemaNameColumn) {
+					sb.append('\'');
+					sb.append(fromTableSchema);
+					sb.append("' as ");
+				} else {
+					// Ouch!
+					throw new MartBuilderInternalError();
+				}
+			}
+			sb.append(col.getName());
+			if (i.hasNext())
+				sb.append(',');
+		}
+		sb.append(" from " + fromTableSchema + "." + fromTableName);
+
+		statements.add(sb.toString());
+	}
+
+	public void doMerge(Merge action, List statements) throws Exception {
+		String srcSchemaName = action.getSourceTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getSourceTableSchema()
+				.getName();
+		String srcTableName = action.getSourceTableName();
+		String trgtSchemaName = action.getTargetTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getTargetTableSchema()
+				.getName();
+		String trgtTableName = action.getTargetTableName();
+		String mergeSchemaName = action.getMergedTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getMergedTableSchema()
+				.getName();
+		String mergeTableName = action.getMergedTableName();
+
+		StringBuffer sb = new StringBuffer();
+		sb.append("create table " + mergeSchemaName + "." + mergeTableName
+				+ " as select a.*");
+		for (Iterator i = action.getTargetTableColumns().iterator(); i
+				.hasNext();) {
+			sb.append(",b.");
+			Column col = (Column) i.next();
+			if (action.isUseAliases()) {
+				DataSetColumn dsCol = (DataSetColumn) col;
+				if (dsCol instanceof WrappedColumn) {
+					sb.append(((WrappedColumn) dsCol).getWrappedColumn()
+							.getName());
+					sb.append(" as ");
+				} else if (dsCol instanceof SchemaNameColumn) {
+					sb.append('\'');
+					sb.append(trgtSchemaName);
+					sb.append("' as ");
+				} else {
+					// Ouch!
+					throw new MartBuilderInternalError();
+				}
+			}
+			sb.append(col.getName());
+			if (i.hasNext())
+				sb.append(',');
+		}
+		sb.append(" from " + srcSchemaName + "." + srcTableName + " as a "
+				+ (action.isUseLeftJoin() ? "left" : "inner") + " join "
+				+ trgtSchemaName + "." + trgtTableName + " as b using ");
+		for (int i = 0; i < action.getTargetTableKeyColumns().size(); i++) {
+			if (i > 0)
+				sb.append(',');
+			String pkColName = ((Column) action.getSourceTableKeyColumns().get(
+					i)).getName();
+			String fkColName = ((Column) action.getTargetTableKeyColumns().get(
+					i)).getName();
+			sb.append("a." + pkColName + "=b." + fkColName);
 		}
 
-		// Write the command.
-		statements.add("create table " + dsSchemaName + "." + tempTableName
-				+ " as select " + sbCols.toString() + " from "
-				+ sbJoin.toString() + " " + sbWhere);
+		statements.add(sb.toString());
+	}
 
-		// If it has a parent table...
-		if (existingTableName != null) {
-			// Drop the parent table.
-			this.dropTableStatements(new DropTable(dsSchemaName,
-					existingTableName), statements);
+	public void doConcat(Concat action, List statements) {
+		String srcSchemaName = action.getSourceTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getSourceTableSchema()
+				.getName();
+		String srcTableName = action.getSourceTableName();
+		String trgtSchemaName = action.getTargetTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getTargetTableSchema()
+				.getName();
+		String trgtTableName = action.getTargetTableName();
+		String concatSchemaName = action.getConcatTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: action.getConcatTableSchema().getName();
+		String concatTableName = action.getConcatTableName();
+		ConcatRelationType crType = action.getConcatRelationType();
 
-			// Rename the child table.
-			this.renameTableStatements(new RenameTable(dsSchemaName,
-					tempTableName, existingTableName), statements);
+		StringBuffer sb = new StringBuffer();
+		sb.append("create table " + concatSchemaName + "." + concatTableName
+				+ " as select a.*, group_concat(distinct concat_ws('");
+		sb.append(crType.getValueSeparator());
+		sb.append("'");
+		for (Iterator i = action.getTargetTableConcatColumns().iterator(); i
+				.hasNext();) {
+			sb.append(',');
+			Column col = (Column) i.next();
+			sb.append(col.getName());
 		}
+		sb.append(") separator '");
+		sb.append(crType.getRecordSeparator());
+		sb.append("'))");
 
-		// Drop any temporary concat tables.
-		for (Iterator i = tempConcatTableNames.iterator(); i.hasNext();)
-			// Drop the parent table.
-			this.dropTableStatements(new DropTable(dsSchemaName, (String) i
-					.next()), statements);
+		sb.append(" from " + srcSchemaName + "." + srcTableName
+				+ " as a inner join " + trgtSchemaName + "." + trgtTableName
+				+ " as b using ");
+		for (int i = 0; i < action.getTargetTableKeyColumns().size(); i++) {
+			if (i > 0)
+				sb.append(',');
+			String pkColName = ((Column) action.getSourceTableKeyColumns().get(
+					i)).getName();
+			String fkColName = ((Column) action.getTargetTableKeyColumns().get(
+					i)).getName();
+			sb.append("a." + pkColName + "=b." + fkColName);
+		}
+		// group by all a columns
+
+		statements.add(sb.toString());
 	}
 }

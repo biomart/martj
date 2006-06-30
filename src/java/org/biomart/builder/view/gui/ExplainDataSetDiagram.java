@@ -33,7 +33,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * not involved in the construction of the dataset or dataset table concerned.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 20th June 2006
+ * @version 0.1.7, 27th June 2006
  * @since 0.1
  */
 public class ExplainDataSetDiagram extends Diagram {
@@ -71,9 +71,8 @@ public class ExplainDataSetDiagram extends Diagram {
 		this.removeAll();
 
 		// Add a TableComponent for the main underlying table, if it exists.
-		Table underlyingTable = this.datasetTable.getUnderlyingTable();
-		if (underlyingTable != null)
-			this.addDiagramComponent(new TableComponent(underlyingTable, this));
+		this.addDiagramComponent(new TableComponent(this.datasetTable
+				.getUnderlyingTable(), this));
 
 		// Add a TableComponent for each other table involved in any relation
 		// underlying the dataset table.
