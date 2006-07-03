@@ -49,6 +49,7 @@ import org.biomart.builder.model.MartConstructorAction.Merge;
 import org.biomart.builder.model.MartConstructorAction.OptimiseAddColumn;
 import org.biomart.builder.model.MartConstructorAction.OptimiseUpdateColumn;
 import org.biomart.builder.model.MartConstructorAction.PK;
+import org.biomart.builder.model.MartConstructorAction.Partition;
 import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
 import org.biomart.builder.model.MartConstructorAction.Reduce;
 import org.biomart.builder.model.MartConstructorAction.Rename;
@@ -363,6 +364,30 @@ public class MySQLDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
+	public void doPartition(Partition action, List statements) {
+		String partTableSchema = action.getPartitionTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: action.getPartitionTableSchema().getName();
+		String partTableName = action.getPartitionTableName();
+		String fromTableSchema = action.getTargetTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getTargetTableSchema()
+				.getName();
+		String fromTableName = action.getTargetTableName();
+		String partColumnName = action.getPartitionColumnName();
+		Object partColumnValue = action.getPartitionColumnValue();
+		if (partColumnValue != null) {
+			// TODO Escape this partition value string.
+			statements.add("create table " + partTableSchema + "."
+					+ partTableName + " as select * from " + fromTableSchema
+					+ "." + fromTableName + " where " + partColumnName + "='"
+					+ partColumnValue + "'");
+		} else
+			statements.add("create table " + partTableSchema + "."
+					+ partTableName + " as select * from " + fromTableSchema
+					+ "." + fromTableName + " where " + partColumnName
+					+ " is null");
+	}
+
 	public void doMerge(Merge action, List statements) throws Exception {
 		String srcSchemaName = action.getSourceTableSchema() == null ? action
 				.getDataSetSchemaName() : action.getSourceTableSchema()
@@ -400,8 +425,6 @@ public class MySQLDialect extends DatabaseDialect {
 				}
 			}
 			sb.append(col.getName());
-			if (i.hasNext())
-				sb.append(',');
 		}
 		sb.append(" from " + srcSchemaName + "." + srcTableName + " as a "
 				+ (action.isUseLeftJoin() ? "left" : "inner") + " join "

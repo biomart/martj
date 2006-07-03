@@ -365,6 +365,10 @@ public abstract class MartConstructorAction {
 	 * the first table where a particular column has a given value.
 	 */
 	public static class Partition extends MartConstructorAction {
+		private Schema targetTableSchema;
+
+		private String targetTableName;
+		
 		private Schema partitionTableSchema;
 
 		private String partitionTableName;
@@ -373,21 +377,17 @@ public abstract class MartConstructorAction {
 
 		private Object partitionColumnValue;
 
-		private Schema targetTableSchema;
-
-		private String targetTableName;
-
-		public Partition(String datasetSchemaName, Schema partitionTableSchema,
+		public Partition(String datasetSchemaName, Schema targetTableSchema,
+				String targetTableName, Schema partitionTableSchema,
 				String partitionTableName, String partitionColumnName,
-				Object partitionColumnValue, Schema targetTableSchema,
-				String targetTableName) {
+				Object partitionColumnValue) {
 			super(datasetSchemaName);
+			this.targetTableSchema = targetTableSchema;
+			this.targetTableName = targetTableName;
 			this.partitionTableSchema = partitionTableSchema;
 			this.partitionTableName = partitionTableName;
 			this.partitionColumnName = partitionColumnName;
 			this.partitionColumnValue = partitionColumnValue;
-			this.targetTableSchema = targetTableSchema;
-			this.targetTableName = targetTableName;
 		}
 
 		public String getPartitionColumnName() {

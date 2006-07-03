@@ -781,6 +781,9 @@ public class DataSet extends GenericSchema {
 		List subclassQ = new ArrayList();
 		List dimensionQ = new ArrayList();
 
+		// Set up a set of relations that have been followed so far.
+		Set relationsFollowed = new HashSet();
+
 		// Set up a list to hold columns for this table's primary key.
 		List dsTablePKCols = new ArrayList();
 
@@ -792,6 +795,16 @@ public class DataSet extends GenericSchema {
 		if (parentDSTable != null) {
 			// Make a list to hold the child table's FK cols.
 			List dsTableFKCols = new ArrayList();
+
+			// Add the parent DS table's underlying keys and relations
+			// to the child.
+			dsTable.getUnderlyingKeys().addAll(
+					parentDSTable.getUnderlyingKeys());
+			dsTable.getUnderlyingRelations().addAll(
+					parentDSTable.getUnderlyingRelations());
+
+			// Don't follow these same relations again.
+			relationsFollowed.addAll(dsTable.getUnderlyingRelations());
 
 			// Get the primary key of the parent DS table.
 			PrimaryKey parentDSTablePK = parentDSTable.getPrimaryKey();
@@ -819,9 +832,9 @@ public class DataSet extends GenericSchema {
 					}
 				else if (parentDSCol instanceof WrappedColumn)
 					try {
-						dsTableCol = new WrappedColumn(
-								((WrappedColumn) parentDSCol)
-										.getWrappedColumn(), dsTable, null);
+						WrappedColumn wc = (WrappedColumn) parentDSCol;
+						dsTableCol = new WrappedColumn(wc.getWrappedColumn(),
+								dsTable, wc.getUnderlyingRelation());
 					} catch (Throwable t) {
 						throw new MartBuilderInternalError(t);
 					}
@@ -847,9 +860,6 @@ public class DataSet extends GenericSchema {
 				throw new MartBuilderInternalError(t);
 			}
 		}
-
-		// Set up a set of relations that have been followed so far.
-		Set relationsFollowed = new HashSet();
 
 		// Process the table. If a source relation was specified,
 		// ignore the cols in the key in the table that is part of that

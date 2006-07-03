@@ -607,10 +607,10 @@ public interface MartConstructor {
 						// Partition the parent table for this value.
 						// Make action depend on lastPartitionAction.
 						MartConstructorAction partition = new Partition(
-								this.datasetSchemaName, null, parentTable
+								this.datasetSchemaName, null, partitionedTable
+								.getTempTableName(), null, parentTable
 										.getTempTableName(), partCol.getName(),
-								partValue, null, partitionedTable
-										.getTempTableName());
+								partValue);
 						actionGraph.addActionWithParent(partition,
 								lastPartitionAction);
 						lastPartitionAction = partition;
@@ -704,12 +704,13 @@ public interface MartConstructor {
 				pkFkActions.add(pk);
 
 				// Iterate over foreign keys from this PK.
-				Key parentTablePK = parentTable.getDataSetTable().getPrimaryKey();
-				for (Iterator j = parentTablePK
-						.getRelations().iterator(); j.hasNext();) {
+				Key parentTablePK = parentTable.getDataSetTable()
+						.getPrimaryKey();
+				for (Iterator j = parentTablePK.getRelations().iterator(); j
+						.hasNext();) {
 					Relation pkRel = (Relation) j.next();
-					DataSetTable fkTable = (DataSetTable) pkRel.getOtherKey(parentTablePK)
-							.getTable();
+					DataSetTable fkTable = (DataSetTable) pkRel.getOtherKey(
+							parentTablePK).getTable();
 					// For each one, find all MCDSTables involved in
 					// that relation, and index and establish FK.
 					for (Iterator k = tables.iterator(); k.hasNext();) {
@@ -869,8 +870,11 @@ public interface MartConstructor {
 			// optimisations to complete.
 			MartConstructorAction preRenameAction = new PlaceHolder(
 					this.datasetSchemaName);
-			for (Iterator i = optActions.iterator(); i.hasNext();)
-				preRenameAction.addParent((MartConstructorAction) i.next());
+			if (!optActions.isEmpty())
+				for (Iterator i = optActions.iterator(); i.hasNext();)
+					preRenameAction.addParent((MartConstructorAction) i.next());
+			else
+				preRenameAction.addParent(prePCOAction);
 			actionGraph.addAction(preRenameAction);
 
 			// Rename all tables.
@@ -945,24 +949,23 @@ public interface MartConstructor {
 			// A placeholder for the last action performed on this table.
 			MartConstructorAction lastActionPerformed = firstActionDependsOn;
 
-			// We now need to work out at which point to start the process
-			// of transforming the table. If it's a dimension or subclass,
-			// then this is the real table the dimension or subclass is linked
-			// to. Otherwise, it is the underlying table.
-			Table firstTable = table.getRealTable();
-			if (!table.getDataSetTable().getUnderlyingKeys().isEmpty())
-				firstTable = ((Key) table.getDataSetTable().getUnderlyingKeys()
-						.get(0)).getTable();
-
 			// Placeholder for name of the target temp table that will
 			// contain the constructed table.
-			String tempTableName = this.helper.getNewTempTableName();
+			String tempTableName = table.getTempTableName();
+
+			// We now need to work out at which point to start the process
+			// of transforming the table.
+			Table firstTable = (table.getDataSetTable()
+					.getUnderlyingRelations().isEmpty()) ? table.getRealTable()
+					: ((Key) table.getDataSetTable().getUnderlyingKeys().get(0))
+							.getTable();
 
 			// Work out what columns to include from the first table.
-			List firstDSCols = table.getDataSetColumns(table
-					.incrementRealTableCount(firstTable), firstTable);
+			List firstDSCols = table.getDataSetColumns(firstTable.getColumns());
 
-			// Include the schema name column if there is one.
+			// Include the schema name column if there is one (don't need
+			// to do this for dimension/subclass tables as it will be part
+			// of the primary key inherited from the parent table).
 			for (Iterator i = table.getDataSetTable().getColumns().iterator(); i
 					.hasNext();) {
 				DataSetColumn dsCol = (DataSetColumn) i.next();
@@ -996,15 +999,22 @@ public interface MartConstructor {
 				Table targetTable = targetKey.getTable();
 				String targetTableName = targetTable.getName();
 				// Is the target table going to need a union merge?
-				boolean unionMerge = !targetTable.getSchema().equals(
-						mainTableSchema);
+				boolean unionMerge = (targetTable.getSchema() instanceof SchemaGroup)
+						&& !targetTable.getSchema().equals(mainTableSchema);
 				// What are the equivalent columns on the existing temp table
 				// that correspond to the key on the previous table?
-				List sourceDSKey = table.getDataSetColumns(0, sourceKey
+				List sourceDSKey = table.getDataSetColumns(sourceKey
 						.getColumns());
+				// If no columns are selected in the source key, we don't
+				// need to merge it, so we can skip it!
+				if (sourceDSKey.isEmpty())
+					continue;
 				// What are the columns we should merge from this new table?
-				List targetDSCols = table.getDataSetColumns(table
-						.incrementRealTableCount(targetTable), targetTable);
+				List targetDSCols = table.getDataSetColumns(relation);
+				// If no columns are selected in the target table, we don't
+				// need to merge it, so we can skip it!
+				if (targetDSCols.isEmpty())
+					continue;
 				// If targetTable is in a group schema that is not the
 				// same group schema we started with, create a union table
 				// containing all the targetTable copies, then merge with
@@ -1108,9 +1118,8 @@ public interface MartConstructor {
 				Key targetConcatKey = targetTable.getPrimaryKey();
 				// What are the equivalent columns on the existing temp table
 				// that correspond to the source key?
-				List sourceDSKey = table.getDataSetColumns(table
-						.incrementRelationCount(concatRelation), sourceKey
-						.getColumns());
+				List sourceDSKey = table.getNthDataSetColumns(sourceKey
+						.getColumns(), concatRelation);
 				// If concatColumn is in a table in a group schema
 				// that is not the same group schema we started with, create
 				// a union table containing all the concatTable copies, then
@@ -1223,6 +1232,9 @@ public interface MartConstructor {
 				}
 			}
 
+			// Update the temp table name.
+			table.setTempTableName(tempTableName);
+			
 			// Return the last action performed to create this table.
 			table.setLastActionPerformed(lastActionPerformed);
 		}
@@ -1260,14 +1272,10 @@ public interface MartConstructor {
 
 			private List partitionValues;
 
-			// Keeps track of how many times a real table has been included.
-			private Map realTableCounts;
-
-			// Keeps track of how many times a relation has been followed.
-			private Map relationCounts;
-
 			private MartConstructorAction lastActionPerformed;
 
+			private Map counter;
+			
 			/**
 			 * Constructor starts tracking a dataset table.
 			 * 
@@ -1283,98 +1291,19 @@ public interface MartConstructor {
 				this.datasetTable = datasetTable;
 				this.parentDataSetRelation = parentDataSetRelation;
 				this.partitionValues = new ArrayList();
-				this.realTableCounts = new HashMap();
-				this.relationCounts = new HashMap();
+				this.counter = new HashMap();
 			}
 
 			public String getTempTableName() {
 				return this.tempTableName;
 			}
 
+			public void setTempTableName(String tempTableName) {
+				this.tempTableName = tempTableName;
+			}
+
 			public List getPartitionValues() {
 				return this.partitionValues;
-			}
-
-			public int incrementRealTableCount(Table table) {
-				Integer i = (Integer) this.realTableCounts.get(table);
-				if (i == null)
-					i = new Integer(0);
-				else
-					i = new Integer(i.intValue() + 1);
-				this.realTableCounts.put(table, i);
-				return i.intValue();
-			}
-
-			public int incrementRelationCount(Relation relation) {
-				Integer i = (Integer) this.relationCounts.get(relation);
-				if (i == null)
-					i = new Integer(0);
-				else
-					i = new Integer(i.intValue() + 1);
-				this.relationCounts.put(relation, i);
-				return i.intValue();
-			}
-
-			public DataSetColumn getNthDataSetColumn(int n, Column column) {
-				// n is 0-indexed, so 0 = first instance, 1 = second, etc.
-
-				List candidates = new ArrayList();
-				candidates.add(column);
-
-				// For each one in the list, if found a dataset column that
-				// wraps it, return that.
-				for (int j = 0; j < candidates.size(); j++) {
-					int copyOfN = n;
-					Column candidate = (Column) candidates.get(j);
-					for (Iterator i = this.datasetTable.getColumns().iterator(); i
-							.hasNext();) {
-						DataSetColumn datasetColumn = (DataSetColumn) i.next();
-						if (!(datasetColumn instanceof WrappedColumn))
-							continue;
-						WrappedColumn wrappedColumn = (WrappedColumn) datasetColumn;
-						if (wrappedColumn.getWrappedColumn().equals(candidate)
-								&& copyOfN-- == 0) 
-							return wrappedColumn;
-					}
-					// Otherwise, find out what keys it is in, and insert
-					// opposing columns from those keys into the list, but not
-					// if they're already there.
-					for (Iterator i = candidate.getTable().getKeys().iterator(); i
-							.hasNext();) {
-						Key k = (Key) i.next();
-						int offset = k.getColumns().indexOf(candidate);
-						if (offset < 0)
-							continue;
-						for (Iterator l = k.getRelations().iterator(); l
-								.hasNext();) {
-							Relation rel = (Relation) l.next();
-							if (!this.datasetTable.getUnderlyingRelations()
-									.contains(rel))
-								continue;
-							Column nextCandidate = (Column) rel.getOtherKey(k)
-									.getColumns().get(offset);
-							if (!candidates.contains(nextCandidate)) 					
-								candidates.add(nextCandidate);
-						}
-					}
-				}
-				
-				// We need to see if there is a DS col with the same name
-				// on the DS table.
-				int copyOfN = n;
-				for (Iterator i = this.datasetTable.getColumns().iterator(); i
-						.hasNext();) {
-					DataSetColumn datasetColumn = (DataSetColumn) i.next();
-					if (!(datasetColumn instanceof WrappedColumn))
-						continue;
-					WrappedColumn wrappedColumn = (WrappedColumn) datasetColumn;
-					if (wrappedColumn.getWrappedColumn().getOriginalName().equals(column.getOriginalName())
-							&& copyOfN-- == 0) 
-						return wrappedColumn;
-				}
-
-				// Default case.
-				return null;
 			}
 
 			public DataSet getDataSet() {
@@ -1402,29 +1331,114 @@ public interface MartConstructor {
 						.getTable();
 			}
 
-			public List getDataSetColumns(int n, List columns) {
-				// We have been given a list of real columns, and want to find
-				// the nth set of them.
+			private DataSetColumn getDataSetColumn(int n, Column interestingColumn) {
+				// We must look not only for this column, but all columns
+				// involved in relations with it, because it could have been
+				// introduced via another route.
+				List candidates = new ArrayList();
+				candidates.add(interestingColumn);
+				for (int j = 0; j < candidates.size(); j++) {
+					Column searchColumn = (Column) candidates.get(j);
+					for (Iterator i = this.datasetTable.getColumns().iterator(); i
+							.hasNext();) {
+						DataSetColumn candidate = (DataSetColumn) i.next();
+						if (this.getDataSet().getMaskedDataSetColumns()
+								.contains(candidate))
+							continue;
+						if (!(candidate instanceof WrappedColumn))
+							continue;
+						WrappedColumn wc = (WrappedColumn) candidate;
+						if (searchColumn.equals(wc.getWrappedColumn()) && n--==0)
+							return candidate;
+					}
+					// If got here, didn't find this search candidate, so add
+					// all the related columns in other keys.
+					for (Iterator i = searchColumn.getTable().getKeys()
+							.iterator(); i.hasNext();) {
+						Key key = (Key) i.next();
+						int colIndex = key.getColumns().indexOf(searchColumn);
+						if (colIndex < 0)
+							continue;
+						for (Iterator k = key.getRelations().iterator(); k
+								.hasNext();) {
+							Relation rel = (Relation) k.next();
+							if (!this.getDataSetTable()
+									.getUnderlyingRelations().contains(rel))
+								continue;
+							Key otherKey = rel.getOtherKey(key);
+							Column nextCandidate = (Column) otherKey
+									.getColumns().get(colIndex);
+							if (!candidates.contains(nextCandidate))
+								candidates.add(nextCandidate);
+						}
+					}
+				}
+				// If we get here, it means the specified column is not part
+				// of the unmasked columns on this dataset table.
+				return null;
+			}
+
+			public List getDataSetColumns(Collection interestingColumns) {
 				List list = new ArrayList();
-				for (Iterator i = columns.iterator(); i.hasNext();)
-					list.add(this.getNthDataSetColumn(n, (Column) i.next()));
+				for (Iterator i = interestingColumns.iterator(); i.hasNext();) {
+					DataSetColumn col = this
+							.getDataSetColumn(0, (Column) i.next());
+					if (col != null)
+						list.add(col);
+				}
 				return list;
 			}
 
-			public List getDataSetColumns(int n, Table table) {
-				// We have been given a table, and want to find the nth set
-				// of columns on this dataset table that appear in the table.
-				// If any columns are masked, don't include them.
+			public List getDataSetColumns(int n, Collection interestingColumns) {
 				List list = new ArrayList();
-				for (Iterator i = table.getColumns().iterator(); i.hasNext();) {
-					DataSetColumn candidate = this.getNthDataSetColumn(n,
-							(Column) i.next());
-					if (candidate != null
-							&& !this.getDataSet().getMaskedDataSetColumns()
-									.contains(candidate))
+				for (Iterator i = interestingColumns.iterator(); i.hasNext();) {
+					DataSetColumn col = this
+							.getDataSetColumn(n, (Column) i.next());
+					if (col != null)
+						list.add(col);
+				}
+				return list;
+			}
+
+			public List getDataSetColumns(Relation underlyingRelation) {
+				List list = new ArrayList();
+				for (Iterator i = this.datasetTable.getColumns().iterator(); i
+						.hasNext();) {
+					DataSetColumn candidate = (DataSetColumn) i.next();
+					if (this.getDataSet().getMaskedDataSetColumns().contains(
+							candidate))
+						continue;
+					if (!(candidate instanceof WrappedColumn))
+						continue;
+					WrappedColumn wc = (WrappedColumn) candidate;
+					Relation wcRel = wc.getUnderlyingRelation();
+					if (wcRel == underlyingRelation)
+						list.add(candidate);
+					else if (wcRel != null
+							&& underlyingRelation != null
+							&& wc.getUnderlyingRelation().equals(
+									underlyingRelation))
 						list.add(candidate);
 				}
 				return list;
+			}
+			
+			public List getNthDataSetColumns(Collection interestingColumns, Object counter) {
+				int n = this.incrementCount(counter);
+				return this.getDataSetColumns(n, interestingColumns);
+			}
+			
+			private int incrementCount(Object counter) {
+				int count;
+				if (!this.counter.containsKey(counter)) {
+					count = 0;
+					this.counter.put(counter, new Integer(count));
+				} else {
+					count = ((Integer)this.counter.get(counter)).intValue();
+					count++;
+					this.counter.put(counter, new Integer(count));
+				}
+				return count;					
 			}
 
 			public void setLastActionPerformed(
