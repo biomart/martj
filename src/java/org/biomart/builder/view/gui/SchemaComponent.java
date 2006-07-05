@@ -36,7 +36,7 @@ import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 
 /**
  * A diagram component that represents a schema. It usually only has a label in
@@ -49,9 +49,9 @@ import org.biomart.builder.resources.BuilderBundle;
  */
 public class SchemaComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
-	
+
 	private GridBagLayout layout;
-	
+
 	private GridBagConstraints constraints;
 
 	/**
@@ -97,11 +97,11 @@ public class SchemaComponent extends BoxShapedComponent {
 		// Is it a group?
 		if (this.getSchema() instanceof SchemaGroup) {
 			// Add a 'contains' label.
-			label = new JLabel(BuilderBundle.getString("schemaGroupContains"));
+			label = new JLabel(Resources.get("schemaGroupContains"));
 			label.setFont(Font.decode("Serif-BOLDITALIC-10"));
 			this.layout.setConstraints(label, this.constraints);
 			this.add(label);
-			
+
 			// Add a label for each member of the group.
 			for (Iterator i = ((SchemaGroup) this.getSchema()).getSchemas()
 					.iterator(); i.hasNext();) {
@@ -173,16 +173,14 @@ public class SchemaComponent extends BoxShapedComponent {
 
 		// Add the 'show tables' option, which opens the tab representing
 		// this schema.
-		JMenuItem showTables = new JMenuItem(BuilderBundle
-				.getString("showTablesTitle"));
-		showTables.setMnemonic(BuilderBundle.getString("showTablesMnemonic")
-				.charAt(0));
+		JMenuItem showTables = new JMenuItem(Resources.get("showTablesTitle"));
+		showTables.setMnemonic(Resources.get("showTablesMnemonic").charAt(0));
 		showTables.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				int index = getDiagram().getMartTab().getSchemaTabSet()
 						.indexOfTab(schema.getName());
-				getDiagram().getMartTab().getSchemaTabSet()
-						.setSelectedIndex(index);
+				getDiagram().getMartTab().getSchemaTabSet().setSelectedIndex(
+						index);
 			}
 		});
 		contextMenu.add(showTables);
@@ -197,16 +195,14 @@ public class SchemaComponent extends BoxShapedComponent {
 
 		// Add the 'show tables' option, which opens the tab representing
 		// this schema.
-		JMenuItem showTables = new JMenuItem(BuilderBundle
-				.getString("showTablesTitle"));
-		showTables.setMnemonic(BuilderBundle.getString("showTablesMnemonic")
-				.charAt(0));
+		JMenuItem showTables = new JMenuItem(Resources.get("showTablesTitle"));
+		showTables.setMnemonic(Resources.get("showTablesMnemonic").charAt(0));
 		showTables.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				int index = getDiagram().getMartTab().getSchemaTabSet()
 						.indexOfTab(getSchemaGroup().getName());
-				getDiagram().getMartTab().getSchemaTabSet()
-						.setSelectedIndex(index);
+				getDiagram().getMartTab().getSchemaTabSet().setSelectedIndex(
+						index);
 			}
 		});
 		contextMenu.add(showTables);
@@ -215,10 +211,9 @@ public class SchemaComponent extends BoxShapedComponent {
 		// of these will have their own submenu providing the usual functions
 		// available as if they had schema objects which had been clicked on
 		// directly in the diagram.
-		JMenu groupMembers = new JMenu(BuilderBundle
-				.getString("groupMembersTitle"));
-		groupMembers.setMnemonic(BuilderBundle
-				.getString("groupMembersMnemonic").charAt(0));
+		JMenu groupMembers = new JMenu(Resources.get("groupMembersTitle"));
+		groupMembers.setMnemonic(Resources.get("groupMembersMnemonic")
+				.charAt(0));
 		contextMenu.add(groupMembers);
 
 		// Loop through the schemas in the group.
@@ -230,10 +225,11 @@ public class SchemaComponent extends BoxShapedComponent {
 			JMenu schemaMenu = new JMenu(schema.getName());
 
 			// Rename the schema within the group.
-			JMenuItem renameM = new JMenuItem(BuilderBundle
-					.getString("renameSchemaTitle"));
-			renameM.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic")
-					.charAt(0));
+			JMenuItem renameM = new JMenuItem(Resources
+					.get("renameSchemaTitle"));
+			renameM
+					.setMnemonic(Resources.get("renameSchemaMnemonic")
+							.charAt(0));
 			renameM.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getDiagram().getMartTab().getSchemaTabSet()
@@ -243,10 +239,11 @@ public class SchemaComponent extends BoxShapedComponent {
 			schemaMenu.add(renameM);
 
 			// Modify the schema.
-			JMenuItem modifyM = new JMenuItem(BuilderBundle
-					.getString("modifySchemaTitle"));
-			modifyM.setMnemonic(BuilderBundle.getString("modifySchemaMnemonic")
-					.charAt(0));
+			JMenuItem modifyM = new JMenuItem(Resources
+					.get("modifySchemaTitle"));
+			modifyM
+					.setMnemonic(Resources.get("modifySchemaMnemonic")
+							.charAt(0));
 			modifyM.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getDiagram().getMartTab().getSchemaTabSet()
@@ -256,10 +253,8 @@ public class SchemaComponent extends BoxShapedComponent {
 			schemaMenu.add(modifyM);
 
 			// Test the schema.
-			JMenuItem testM = new JMenuItem(BuilderBundle
-					.getString("testSchemaTitle"));
-			testM.setMnemonic(BuilderBundle.getString("testSchemaMnemonic")
-					.charAt(0));
+			JMenuItem testM = new JMenuItem(Resources.get("testSchemaTitle"));
+			testM.setMnemonic(Resources.get("testSchemaMnemonic").charAt(0));
 			testM.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getDiagram().getMartTab().getSchemaTabSet()
@@ -270,10 +265,10 @@ public class SchemaComponent extends BoxShapedComponent {
 
 			// Remove the schema from the group and reinstate as an individual
 			// schema.
-			JMenuItem unGroup = new JMenuItem(BuilderBundle
-					.getString("ungroupMemberTitle"));
-			unGroup.setMnemonic(BuilderBundle
-					.getString("ungroupMemberMnemonic").charAt(0));
+			JMenuItem unGroup = new JMenuItem(Resources
+					.get("ungroupMemberTitle"));
+			unGroup.setMnemonic(Resources.get("ungroupMemberMnemonic")
+					.charAt(0));
 			unGroup.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getDiagram().getMartTab().getSchemaTabSet()

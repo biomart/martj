@@ -37,15 +37,15 @@ import javax.swing.JTextField;
 import org.biomart.builder.controller.JDBCSchema;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.model.Schema;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * This dialog box allows the user to define or modify a schema, by giving it a
  * name, choosing a type, then displaying the appropriate
- * {@link SchemaConnectionPanel} according to the type chosen. The connection panel
- * then is given the job of actually creating or modifying the schema, before
- * the result is returned to the caller.
+ * {@link SchemaConnectionPanel} according to the type chosen. The connection
+ * panel then is given the job of actually creating or modifying the schema,
+ * before the result is returned to the caller.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.7, 20th June 2006
@@ -73,8 +73,7 @@ public class SchemaManagerDialog extends JDialog {
 	private SchemaManagerDialog(final MartTab martTab, String title,
 			String executeButtonText, final Schema template) {
 		// Create the basic dialog centred on the main mart builder window.
-		super(martTab.getMartTabSet().getMartBuilder(),
-				title, true);
+		super(martTab.getMartTabSet().getMartBuilder(), title, true);
 
 		// Remember the tabset that the schema we are working with is part of
 		// (or will be part of if it's not been created yet).
@@ -112,17 +111,15 @@ public class SchemaManagerDialog extends JDialog {
 		// Create the input fields for the name and type, and the
 		// holder for the connection panel details.
 		this.name = new JTextField(20);
-		this.type = new JComboBox(new String[] { BuilderBundle
-				.getString("jdbcSchema") });
+		this.type = new JComboBox(new String[] { Resources.get("jdbcSchema") });
 		final JPanel connectionPanelHolder = new JPanel();
 		this.type.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (type.getSelectedItem().equals(
-						BuilderBundle.getString("jdbcSchema"))) {
+				if (type.getSelectedItem().equals(Resources.get("jdbcSchema"))) {
 					if (!(connectionPanel instanceof JDBCSchemaConnectionPanel)) {
 						connectionPanelHolder.removeAll();
-						connectionPanel = new JDBCSchemaConnectionPanel(martTab, 
-								template);
+						connectionPanel = new JDBCSchemaConnectionPanel(
+								martTab, template);
 						connectionPanelHolder.add(connectionPanel);
 						pack();
 					}
@@ -134,15 +131,15 @@ public class SchemaManagerDialog extends JDialog {
 		// as it is the most obvious choice. We have to do something here else
 		// the
 		// box won't size properly without one.
-		this.type.setSelectedItem(BuilderBundle.getString("jdbcSchema"));
+		this.type.setSelectedItem(Resources.get("jdbcSchema"));
 
 		// Create buttons in dialog.
-		this.test = new JButton(BuilderBundle.getString("testButton"));
-		this.cancel = new JButton(BuilderBundle.getString("cancelButton"));
+		this.test = new JButton(Resources.get("testButton"));
+		this.cancel = new JButton(Resources.get("cancelButton"));
 		this.execute = new JButton(executeButtonText);
 
 		// Add the name label and name field.
-		JLabel label = new JLabel(BuilderBundle.getString("nameLabel"));
+		JLabel label = new JLabel(Resources.get("nameLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 
@@ -150,7 +147,7 @@ public class SchemaManagerDialog extends JDialog {
 		// space.
 		JPanel field = new JPanel();
 		field.add(this.name);
-		label = new JLabel(BuilderBundle.getString("typeLabel"));
+		label = new JLabel(Resources.get("typeLabel"));
 		field.add(label);
 		field.add(this.type);
 		gridBag.setConstraints(field, fieldConstraints);
@@ -218,8 +215,7 @@ public class SchemaManagerDialog extends JDialog {
 		if (template != null) {
 			// Select the schema type.
 			if (template instanceof JDBCSchema)
-				this.type
-						.setSelectedItem(BuilderBundle.getString("jdbcSchema"));
+				this.type.setSelectedItem(Resources.get("jdbcSchema"));
 
 			// Unknown schema type!
 			else
@@ -244,19 +240,17 @@ public class SchemaManagerDialog extends JDialog {
 
 		// We don't like missing names.
 		if (this.isEmpty(this.name.getText()))
-			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
-					.getString("name")));
+			messages.add(Resources.get("fieldIsEmpty", Resources.get("name")));
 
 		// We don't like missing types either.
 		if (this.type.getSelectedIndex() == -1)
-			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
-					.getString("type")));
+			messages.add(Resources.get("fieldIsEmpty", Resources.get("type")));
 
 		// If we have any messages, show them.
 		if (!messages.isEmpty())
 			JOptionPane.showMessageDialog(this,
-					messages.toArray(new String[0]), BuilderBundle
-							.getString("validationTitle"),
+					messages.toArray(new String[0]), Resources
+							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);
 
 		// If there were no messages, then validated OK if the connection
@@ -273,7 +267,7 @@ public class SchemaManagerDialog extends JDialog {
 			// Look up the type and use the appropriate schema type to
 			// actually create the object.
 			String type = (String) this.type.getSelectedItem();
-			if (type.equals(BuilderBundle.getString("jdbcSchema")))
+			if (type.equals(Resources.get("jdbcSchema")))
 				return ((JDBCSchemaConnectionPanel) this.connectionPanel)
 						.createSchema(this.name.getText());
 
@@ -281,8 +275,7 @@ public class SchemaManagerDialog extends JDialog {
 			else
 				throw new MartBuilderInternalError();
 		} catch (Throwable t) {
-			this.martTab.getMartTabSet()
-					.getMartBuilder().showStackTrace(t);
+			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 		}
 
 		// If we got here, something went wrong with creation, so we
@@ -304,11 +297,9 @@ public class SchemaManagerDialog extends JDialog {
 	 * @return the newly created schema, or null if it was cancelled.
 	 */
 	public static Schema createSchema(MartTab martTab) {
-		SchemaManagerDialog dialog = new SchemaManagerDialog(martTab,
-				BuilderBundle.getString("newSchemaDialogTitle"), BuilderBundle
-						.getString("addButton"), null);
-		dialog.setLocationRelativeTo(martTab
-				.getMartTabSet().getMartBuilder());
+		SchemaManagerDialog dialog = new SchemaManagerDialog(martTab, Resources
+				.get("newSchemaDialogTitle"), Resources.get("addButton"), null);
+		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
 		return dialog.schema;
 	}
@@ -325,11 +316,10 @@ public class SchemaManagerDialog extends JDialog {
 	 *         if not.
 	 */
 	public static boolean modifySchema(MartTab martTab, Schema schema) {
-		SchemaManagerDialog dialog = new SchemaManagerDialog(martTab,
-				BuilderBundle.getString("modifySchemaDialogTitle"),
-				BuilderBundle.getString("modifyButton"), schema);
-		dialog.setLocationRelativeTo(martTab
-				.getMartTabSet().getMartBuilder());
+		SchemaManagerDialog dialog = new SchemaManagerDialog(martTab, Resources
+				.get("modifySchemaDialogTitle"), Resources.get("modifyButton"),
+				schema);
+		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
 		if (dialog.schema != null && dialog.schema instanceof JDBCSchema) {
 			return (((JDBCSchemaConnectionPanel) dialog.connectionPanel)

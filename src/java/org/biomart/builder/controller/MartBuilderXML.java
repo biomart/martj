@@ -70,7 +70,7 @@ import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Schema.GenericSchema;
 import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
 import org.biomart.builder.model.Table.GenericTable;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -240,8 +240,7 @@ public class MartBuilderXML extends DefaultHandler {
 			// currently inside a schema.
 			if (this.objectStack.empty()
 					|| !(this.objectStack.peek() instanceof Schema))
-				throw new SAXException(BuilderBundle
-						.getString("tableOutsideSchema"));
+				throw new SAXException(Resources.get("tableOutsideSchema"));
 			Schema schema = (Schema) this.objectStack.peek();
 
 			// Get the name and id as these are common features.
@@ -261,7 +260,7 @@ public class MartBuilderXML extends DefaultHandler {
 				else if (type.equals("DIMENSION"))
 					dsType = DataSetTableType.DIMENSION;
 				else
-					throw new SAXException(BuilderBundle.getString(
+					throw new SAXException(Resources.get(
 							"unknownDatasetTableType", type));
 
 				// Work out the underlying table (if has one).
@@ -315,8 +314,8 @@ public class MartBuilderXML extends DefaultHandler {
 
 			// Others
 			else
-				throw new SAXException(BuilderBundle.getString(
-						"unknownSchemaType", schema.getClass().getName()));
+				throw new SAXException(Resources.get("unknownSchemaType",
+						schema.getClass().getName()));
 
 			// Store it in the map of IDed objects.
 			this.mappedObjects.put(id, element);
@@ -327,8 +326,7 @@ public class MartBuilderXML extends DefaultHandler {
 			// What table does it belong to? Throw a wobbly if not inside one.
 			if (this.objectStack.empty()
 					|| !(this.objectStack.peek() instanceof Table))
-				throw new SAXException(BuilderBundle
-						.getString("columnOutsideTable"));
+				throw new SAXException(Resources.get("columnOutsideTable"));
 			Table tbl = (Table) this.objectStack.peek();
 
 			// Get the id and name as these are common features.
@@ -361,7 +359,7 @@ public class MartBuilderXML extends DefaultHandler {
 						column = new WrappedColumn(wrappedCol,
 								(DataSetTable) tbl, underlyingRelation);
 					} else
-						throw new SAXException(BuilderBundle.getString(
+						throw new SAXException(Resources.get(
 								"unknownColumnType", type));
 
 					// Override the name, to make sure we get the same alias as
@@ -384,8 +382,8 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Others
 				else
-					throw new SAXException(BuilderBundle.getString(
-							"unknownTableType", tbl.getClass().getName()));
+					throw new SAXException(Resources.get("unknownTableType",
+							tbl.getClass().getName()));
 
 			} catch (Exception e) {
 				if (e instanceof SAXException)
@@ -441,8 +439,7 @@ public class MartBuilderXML extends DefaultHandler {
 			// What table does it belong to? Throw a wobbly if none.
 			if (this.objectStack.empty()
 					|| !(this.objectStack.peek() instanceof Table))
-				throw new SAXException(BuilderBundle
-						.getString("fkOutsideTable"));
+				throw new SAXException(Resources.get("fkOutsideTable"));
 			Table tbl = (Table) this.objectStack.peek();
 
 			// Get the ID and nullability.
@@ -513,8 +510,8 @@ public class MartBuilderXML extends DefaultHandler {
 			// What dataset does it belong to? Throw a wobbly if none.
 			if (this.objectStack.empty()
 					|| !(this.objectStack.peek() instanceof DataSet))
-				throw new SAXException(BuilderBundle
-						.getString("maskedRelationOutsideDataSet"));
+				throw new SAXException(Resources
+						.get("maskedRelationOutsideDataSet"));
 			DataSet w = (DataSet) this.objectStack.peek();
 
 			try {
@@ -535,8 +532,8 @@ public class MartBuilderXML extends DefaultHandler {
 			// What dataset does it belong to? Throw a wobbly if none.
 			if (this.objectStack.empty()
 					|| !(this.objectStack.peek() instanceof DataSet))
-				throw new SAXException(BuilderBundle
-						.getString("subclassRelationOutsideDataSet"));
+				throw new SAXException(Resources
+						.get("subclassRelationOutsideDataSet"));
 			DataSet w = (DataSet) this.objectStack.peek();
 
 			try {
@@ -557,8 +554,8 @@ public class MartBuilderXML extends DefaultHandler {
 			// What dataset does it belong to? Throw a wobbly if none.
 			if (this.objectStack.empty()
 					|| !(this.objectStack.peek() instanceof DataSet))
-				throw new SAXException(BuilderBundle
-						.getString("concatRelationOutsideDataSet"));
+				throw new SAXException(Resources
+						.get("concatRelationOutsideDataSet"));
 			DataSet w = (DataSet) this.objectStack.peek();
 
 			try {
@@ -588,7 +585,7 @@ public class MartBuilderXML extends DefaultHandler {
 				else if (type.equals("TAB_TAB"))
 					crType = ConcatRelationType.TAB_TAB;
 				else
-					throw new SAXException(BuilderBundle.getString(
+					throw new SAXException(Resources.get(
 							"unknownConcatRelationType", type));
 
 				// Flag it as concat-only.
@@ -607,8 +604,8 @@ public class MartBuilderXML extends DefaultHandler {
 			// What dataset does it belong to? Throw a wobbly if none.
 			if (this.objectStack.empty()
 					|| !(this.objectStack.peek() instanceof DataSet))
-				throw new SAXException(BuilderBundle
-						.getString("maskedColumnOutsideDataSet"));
+				throw new SAXException(Resources
+						.get("maskedColumnOutsideDataSet"));
 			DataSet w = (DataSet) this.objectStack.peek();
 
 			try {
@@ -629,8 +626,8 @@ public class MartBuilderXML extends DefaultHandler {
 			// What dataset does it belong to? Throw a wobbly if none.
 			if (this.objectStack.empty()
 					|| !(this.objectStack.peek() instanceof DataSet))
-				throw new SAXException(BuilderBundle
-						.getString("partitionColumnOutsideDataSet"));
+				throw new SAXException(Resources
+						.get("partitionColumnOutsideDataSet"));
 			DataSet w = (DataSet) this.objectStack.peek();
 
 			try {
@@ -661,7 +658,7 @@ public class MartBuilderXML extends DefaultHandler {
 				} else if ("uniqueValues".equals(type))
 					resolvedType = new UniqueValues();
 				else
-					throw new SAXException(BuilderBundle.getString(
+					throw new SAXException(Resources.get(
 							"unknownPartitionColumnType", type));
 
 				// Flag the column as partitioned.
@@ -702,7 +699,7 @@ public class MartBuilderXML extends DefaultHandler {
 				else if ("TABLE".equals(optType))
 					opt = DataSetOptimiserType.TABLE;
 				else
-					throw new SAXException(BuilderBundle.getString(
+					throw new SAXException(Resources.get(
 							"unknownOptimiserType", optType));
 
 				// Assign the mart constructor, optimiser, and partition on
@@ -720,7 +717,7 @@ public class MartBuilderXML extends DefaultHandler {
 
 		// Other tags are unknown.
 		else
-			throw new SAXException(BuilderBundle.getString("unknownTag", eName));
+			throw new SAXException(Resources.get("unknownTag", eName));
 
 		// Stick the element on the stack.
 		if (element != null)
@@ -890,8 +887,8 @@ public class MartBuilderXML extends DefaultHandler {
 		}
 		// Other schema types are not recognised.
 		else
-			throw new BuilderException(BuilderBundle.getString(
-					"unknownSchemaType", schema.getClass().getName()));
+			throw new BuilderException(Resources.get("unknownSchemaType",
+					schema.getClass().getName()));
 
 		// Write out the contents, and note the relations.
 		this.writeSchemaContents(schema, xmlWriter);
@@ -902,8 +899,8 @@ public class MartBuilderXML extends DefaultHandler {
 			this.closeElement("jdbcSchema", xmlWriter);
 		// Others?
 		else
-			throw new BuilderException(BuilderBundle.getString(
-					"unknownSchemaType", schema.getClass().getName()));
+			throw new BuilderException(Resources.get("unknownSchemaType",
+					schema.getClass().getName()));
 	}
 
 	/**
@@ -1019,7 +1016,7 @@ public class MartBuilderXML extends DefaultHandler {
 					}
 					// Others
 					else
-						throw new BuilderException(BuilderBundle.getString(
+						throw new BuilderException(Resources.get(
 								"unknownDatasetColumnType", dcol.getClass()
 										.getName()));
 				}
@@ -1029,7 +1026,7 @@ public class MartBuilderXML extends DefaultHandler {
 				}
 				// Others
 				else
-					throw new BuilderException(BuilderBundle.getString(
+					throw new BuilderException(Resources.get(
 							"unknownColumnType", col.getClass().getName()));
 
 				// Close off column element.
@@ -1049,8 +1046,8 @@ public class MartBuilderXML extends DefaultHandler {
 				else if (key instanceof ForeignKey)
 					elem = "foreignKey";
 				else
-					throw new BuilderException(BuilderBundle.getString(
-							"unknownKey", key.getClass().getName()));
+					throw new BuilderException(Resources.get("unknownKey", key
+							.getClass().getName()));
 
 				this.openElement(elem, xmlWriter);
 				this.writeAttribute("id", keyMappedID, xmlWriter);
@@ -1273,7 +1270,7 @@ public class MartBuilderXML extends DefaultHandler {
 				}
 				// Others.
 				else
-					throw new BuilderException(BuilderBundle.getString(
+					throw new BuilderException(Resources.get(
 							"unknownPartitionColumnType", ptc.getClass()
 									.getName()));
 
@@ -1316,18 +1313,16 @@ public class MartBuilderXML extends DefaultHandler {
 			SAXParser saxParser = factory.newSAXParser();
 			saxParser.parse(file, loader);
 		} catch (ParserConfigurationException e) {
-			throw new BuilderException(BuilderBundle
-					.getString("XMLConfigFailed"), e);
+			throw new BuilderException(Resources.get("XMLConfigFailed"), e);
 		} catch (SAXException e) {
-			throw new BuilderException(BuilderBundle
-					.getString("XMLUnparseable"), e);
+			throw new BuilderException(Resources.get("XMLUnparseable"), e);
 		}
 		// Get the constructed object.
 		Mart s = loader.constructedMart;
 		// Check that it is a schema.
 		if (s == null)
-			throw new BuilderException(BuilderBundle.getString(
-					"fileNotSchemaVersion", DTD_VERSION));
+			throw new BuilderException(Resources.get("fileNotSchemaVersion",
+					DTD_VERSION));
 		// Return.
 		return s;
 	}

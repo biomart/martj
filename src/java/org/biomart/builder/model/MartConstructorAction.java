@@ -26,7 +26,7 @@ import java.util.Set;
 
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 
 /**
  * Represents one task in the grand scheme of constructing a mart.
@@ -284,7 +284,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return BuilderBundle.getString("mcPlaceHolder");
+			return Resources.get("mcPlaceHolder");
 		}
 	}
 
@@ -328,7 +328,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return BuilderBundle.getString("mcUnion");
+			return Resources.get("mcUnion");
 		}
 	}
 
@@ -356,7 +356,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return BuilderBundle.getString("mcDrop");
+			return Resources.get("mcDrop");
 		}
 	}
 
@@ -368,7 +368,7 @@ public abstract class MartConstructorAction {
 		private Schema targetTableSchema;
 
 		private String targetTableName;
-		
+
 		private Schema partitionTableSchema;
 
 		private String partitionTableName;
@@ -439,7 +439,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return BuilderBundle.getString("mcPartition");
+			return Resources.get("mcPartition");
 		}
 	}
 
@@ -476,7 +476,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return BuilderBundle.getString("mcPK");
+			return Resources.get("mcPK");
 		}
 	}
 
@@ -513,7 +513,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return BuilderBundle.getString("mcIndex");
+			return Resources.get("mcIndex");
 		}
 	}
 
@@ -573,7 +573,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return BuilderBundle.getString("mcFK");
+			return Resources.get("mcFK");
 		}
 	}
 
@@ -608,7 +608,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return BuilderBundle.getString("mcRename");
+			return Resources.get("mcRename");
 		}
 	}
 
@@ -669,7 +669,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return BuilderBundle.getString("mcCreate");
+			return Resources.get("mcCreate");
 		}
 	}
 
@@ -717,7 +717,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return BuilderBundle.getString("mcOptimiseAdd");
+			return Resources.get("mcOptimiseAdd");
 		}
 	}
 
@@ -812,7 +812,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return BuilderBundle.getString("mcOptimiseUpdate");
+			return Resources.get("mcOptimiseUpdate");
 		}
 	}
 
@@ -912,7 +912,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return BuilderBundle.getString("mcMerge");
+			return Resources.get("mcMerge");
 		}
 	}
 
@@ -944,7 +944,7 @@ public abstract class MartConstructorAction {
 		private List targetTableConcatColumns;
 
 		private String targetConcatColumnName;
-		
+
 		private ConcatRelationType concatRelationType;
 
 		public Concat(String datasetSchemaName, Schema concatTableSchema,
@@ -952,7 +952,8 @@ public abstract class MartConstructorAction {
 				String sourceTableName, List sourceTableKeyColumns,
 				Schema targetTableSchema, String targetTableName,
 				List targetTableKeyColumns, List targetTableConcatColumns,
-				String targetConcatColumnName, ConcatRelationType concatRelationType) {
+				String targetConcatColumnName,
+				ConcatRelationType concatRelationType) {
 			super(datasetSchemaName);
 			this.concatTableSchema = concatTableSchema;
 			this.concatTableName = concatTableName;
@@ -1012,7 +1013,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return BuilderBundle.getString("mcConcat");
+			return Resources.get("mcConcat");
 		}
 	}
 
@@ -1087,7 +1088,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return BuilderBundle.getString("mcReduce");
+			return Resources.get("mcReduce");
 		}
 	}
 }

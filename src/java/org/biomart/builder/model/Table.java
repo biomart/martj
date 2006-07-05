@@ -37,7 +37,7 @@ import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 
 /**
  * <p>
@@ -60,11 +60,11 @@ public interface Table extends Comparable {
 	 * @return the name of this table.
 	 */
 	public String getName();
-	
+
 	/**
 	 * Returns the original name of this table. This is useful if the user
-	 * renames the table but you need to refer to it by the name it started
-	 * life out as.
+	 * renames the table but you need to refer to it by the name it started life
+	 * out as.
 	 * 
 	 * @return the original name of this table.
 	 */
@@ -82,8 +82,8 @@ public interface Table extends Comparable {
 	public void setName(String newName) throws AlreadyExistsException;
 
 	/**
-	 * Use this to rename a table's original name. Use with extreme caution.
-	 * The owning schema doesn't need to know so won't be notified.
+	 * Use this to rename a table's original name. Use with extreme caution. The
+	 * owning schema doesn't need to know so won't be notified.
 	 * 
 	 * @param newName
 	 *            the new original name to give the table.
@@ -293,7 +293,8 @@ public interface Table extends Comparable {
 			return this.originalName;
 		}
 
-		public void setOriginalName(String newName) throws AlreadyExistsException {
+		public void setOriginalName(String newName)
+				throws AlreadyExistsException {
 			this.originalName = newName;
 		}
 
@@ -318,8 +319,7 @@ public interface Table extends Comparable {
 				throws AssociationException {
 			// Check the key lives in this table first.
 			if (primaryKey != null && !primaryKey.getTable().equals(this))
-				throw new AssociationException(BuilderBundle
-						.getString("pkTableMismatch"));
+				throw new AssociationException(Resources.get("pkTableMismatch"));
 
 			// If the key is the same, do nothing.
 			if (primaryKey != null && this.primaryKey != null
@@ -349,8 +349,7 @@ public interface Table extends Comparable {
 				throws AssociationException {
 			// Check that the key lives in this table first.
 			if (this.foreignKeys.contains(foreignKey))
-				throw new AssociationException(BuilderBundle
-						.getString("fkAlreadyExists"));
+				throw new AssociationException(Resources.get("fkAlreadyExists"));
 
 			// Add the key.
 			this.foreignKeys.add(foreignKey);
@@ -418,14 +417,14 @@ public interface Table extends Comparable {
 				AssociationException {
 			// Refuse to do it if the column belongs to some other table.
 			if (column.getTable() != this)
-				throw new AssociationException(BuilderBundle
-						.getString("columnTableMismatch"));
+				throw new AssociationException(Resources
+						.get("columnTableMismatch"));
 
 			// Check there is no other column on this table with the same name.
 			String name = column.getName();
 			if (this.columns.containsKey(name))
-				throw new AlreadyExistsException(BuilderBundle
-						.getString("columnExists"), name);
+				throw new AlreadyExistsException(Resources.get("columnExists"),
+						name);
 
 			// Add it.
 			this.columns.put(name, column);
@@ -453,8 +452,8 @@ public interface Table extends Comparable {
 
 			// Refuse to do it if the new name has been used already.
 			if (this.columns.containsKey(newName))
-				throw new AlreadyExistsException(BuilderBundle
-						.getString("columnExists"), newName);
+				throw new AlreadyExistsException(Resources.get("columnExists"),
+						newName);
 
 			// Update our mapping but don't rename the columns themselves.
 			Column col = (Column) this.columns.get(oldName);

@@ -26,7 +26,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
@@ -72,10 +72,10 @@ public class AllDataSetsContext implements DiagramContext {
 				contextMenu.addSeparator();
 
 			// Synchronise all schemas in the mart.
-			JMenuItem syncAll = new JMenuItem(BuilderBundle
-					.getString("optimiseAllDataSetsTitle"));
-			syncAll.setMnemonic(BuilderBundle.getString(
-					"optimiseAllDataSetsMnemonic").charAt(0));
+			JMenuItem syncAll = new JMenuItem(Resources
+					.get("optimiseAllDataSetsTitle"));
+			syncAll.setMnemonic(Resources.get("optimiseAllDataSetsMnemonic")
+					.charAt(0));
 			syncAll.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getDataSetTabSet().requestOptimiseAllDataSets();
@@ -95,10 +95,11 @@ public class AllDataSetsContext implements DiagramContext {
 			final DataSet dataset = (DataSet) object;
 
 			// Option to remove the dataset from the mart.
-			JMenuItem remove = new JMenuItem(BuilderBundle
-					.getString("removeDataSetTitle"));
-			remove.setMnemonic(BuilderBundle.getString("removeDataSetMnemonic")
-					.charAt(0));
+			JMenuItem remove = new JMenuItem(Resources
+					.get("removeDataSetTitle"));
+			remove
+					.setMnemonic(Resources.get("removeDataSetMnemonic").charAt(
+							0));
 			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getDataSetTabSet().requestRemoveDataSet(dataset);
@@ -107,10 +108,10 @@ public class AllDataSetsContext implements DiagramContext {
 			contextMenu.add(remove);
 
 			// Add an option to rename this dataset.
-			JMenuItem optimise = new JMenuItem(BuilderBundle
-					.getString("optimiseDataSetTitle"));
-			optimise.setMnemonic(BuilderBundle.getString(
-					"optimiseDataSetMnemonic").charAt(0));
+			JMenuItem optimise = new JMenuItem(Resources
+					.get("optimiseDataSetTitle"));
+			optimise.setMnemonic(Resources.get("optimiseDataSetMnemonic")
+					.charAt(0));
 			optimise.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getDataSetTabSet().requestOptimiseDataSet(dataset);
@@ -119,10 +120,11 @@ public class AllDataSetsContext implements DiagramContext {
 			contextMenu.add(optimise);
 
 			// Add an option to rename this dataset.
-			JMenuItem rename = new JMenuItem(BuilderBundle
-					.getString("renameDataSetTitle"));
-			rename.setMnemonic(BuilderBundle.getString("renameDataSetMnemonic")
-					.charAt(0));
+			JMenuItem rename = new JMenuItem(Resources
+					.get("renameDataSetTitle"));
+			rename
+					.setMnemonic(Resources.get("renameDataSetMnemonic").charAt(
+							0));
 			rename.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getDataSetTabSet().requestRenameDataSet(dataset);
@@ -131,9 +133,9 @@ public class AllDataSetsContext implements DiagramContext {
 			contextMenu.add(rename);
 
 			// Add an option to replicate this dataset.
-			JMenuItem replicate = new JMenuItem(BuilderBundle
-					.getString("replicateDataSetTitle"));
-			replicate.setMnemonic(BuilderBundle.getString("replicateDataSetMnemonic")
+			JMenuItem replicate = new JMenuItem(Resources
+					.get("replicateDataSetTitle"));
+			replicate.setMnemonic(Resources.get("replicateDataSetMnemonic")
 					.charAt(0));
 			replicate.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
@@ -143,14 +145,11 @@ public class AllDataSetsContext implements DiagramContext {
 			contextMenu.add(replicate);
 
 			// Option to create the DDL for the dataset.
-			JMenuItem saveDDL = new JMenuItem(BuilderBundle
-					.getString("saveDDLTitle"));
-			saveDDL.setMnemonic(BuilderBundle.getString("saveDDLMnemonic")
-					.charAt(0));
+			JMenuItem saveDDL = new JMenuItem(Resources.get("saveDDLTitle"));
+			saveDDL.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
 			saveDDL.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestCreateDDL(
-							dataset);
+					getMartTab().getDataSetTabSet().requestCreateDDL(dataset);
 				}
 			});
 			contextMenu.add(saveDDL);

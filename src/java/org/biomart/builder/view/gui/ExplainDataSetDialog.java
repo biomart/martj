@@ -28,7 +28,7 @@ import javax.swing.JScrollPane;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
@@ -49,11 +49,10 @@ public class ExplainDataSetDialog extends JDialog {
 			DataSetColumn dsColumn) {
 		// Create the blank dialog, and give it an appropriate title.
 		super(martTab.getMartTabSet().getMartBuilder(),
-				(dsColumn == null ? BuilderBundle.getString(
-						"explainTableDialogTitle", dsTable.getName())
-						: BuilderBundle.getString("explainColumnDialogTitle",
-								new String[] { dsTable.getName(),
-										dsColumn.getName() })), true);
+				(dsColumn == null ? Resources.get("explainTableDialogTitle",
+						dsTable.getName()) : Resources.get(
+						"explainColumnDialogTitle", new String[] {
+								dsTable.getName(), dsColumn.getName() })), true);
 
 		// Make the content pane.
 		JPanel content = new JPanel(new BorderLayout());

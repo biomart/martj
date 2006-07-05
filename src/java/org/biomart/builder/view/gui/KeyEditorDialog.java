@@ -39,7 +39,7 @@ import javax.swing.border.EmptyBorder;
 
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Table;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
@@ -81,22 +81,20 @@ public class KeyEditorDialog extends JDialog {
 		}
 
 		// The close and execute buttons.
-		JButton close = new JButton(BuilderBundle.getString("closeButton"));
+		JButton close = new JButton(Resources.get("closeButton"));
 		JButton execute = new JButton(action);
 
 		// Create the table column list, and the buttons
 		// to move columns to/from the selected column list.
 		final JList tabColList = new JList(this.tableColumns);
-		JButton insertButton = new JButton(BuilderBundle
-				.getString("insertButton"));
-		JButton removeButton = new JButton(BuilderBundle
-				.getString("removeButton"));
+		JButton insertButton = new JButton(Resources.get("insertButton"));
+		JButton removeButton = new JButton(Resources.get("removeButton"));
 
 		// Create the key column list, and the buttons to
 		// move columns to/from the table columns list.
 		final JList keyColList = new JList(this.selectedColumns);
-		JButton upButton = new JButton(BuilderBundle.getString("upButton"));
-		JButton downButton = new JButton(BuilderBundle.getString("downButton"));
+		JButton upButton = new JButton(Resources.get("upButton"));
+		JButton downButton = new JButton(Resources.get("downButton"));
 
 		// Put the two halves of the dialog side-by-side in a horizontal box.
 		Box content = Box.createHorizontalBox();
@@ -105,8 +103,8 @@ public class KeyEditorDialog extends JDialog {
 		// Left-hand side goes the table columns that are unused.
 		JPanel leftPanel = new JPanel(new BorderLayout());
 		// Label at the top.
-		leftPanel.add(new JLabel(BuilderBundle
-				.getString("columnsAvailableLabel")), BorderLayout.PAGE_START);
+		leftPanel.add(new JLabel(Resources.get("columnsAvailableLabel")),
+				BorderLayout.PAGE_START);
 		// Table columns list in the middle.
 		leftPanel.add(new JScrollPane(tabColList), BorderLayout.CENTER);
 		leftPanel.setBorder(new EmptyBorder(2, 2, 2, 2));
@@ -121,7 +119,7 @@ public class KeyEditorDialog extends JDialog {
 		// Right-hand side goes the key columns that are used.
 		JPanel rightPanel = new JPanel(new BorderLayout());
 		// Label at the top.
-		rightPanel.add(new JLabel(BuilderBundle.getString("keyColumnsLabel")),
+		rightPanel.add(new JLabel(Resources.get("keyColumnsLabel")),
 				BorderLayout.PAGE_START);
 		// Key columns in the middle.
 		rightPanel.add(new JScrollPane(keyColList), BorderLayout.CENTER);
@@ -228,13 +226,13 @@ public class KeyEditorDialog extends JDialog {
 
 		// Must have at least one column selected.
 		if (this.selectedColumns.isEmpty())
-			messages.add(BuilderBundle.getString("keyColumnsEmpty"));
+			messages.add(Resources.get("keyColumnsEmpty"));
 
 		// Any messages to display? Show them.
 		if (!messages.isEmpty()) {
 			JOptionPane.showMessageDialog(this,
-					messages.toArray(new String[0]), BuilderBundle
-							.getString("validationTitle"),
+					messages.toArray(new String[0]), Resources
+							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);
 		}
 
@@ -253,9 +251,8 @@ public class KeyEditorDialog extends JDialog {
 	 * @return the list of columns the user selected.
 	 */
 	public static List createPrimaryKey(MartTab martTab, Table table) {
-		KeyEditorDialog dialog = new KeyEditorDialog(martTab, table,
-				BuilderBundle.getString("newPKDialogTitle"), BuilderBundle
-						.getString("addButton"), null);
+		KeyEditorDialog dialog = new KeyEditorDialog(martTab, table, Resources
+				.get("newPKDialogTitle"), Resources.get("addButton"), null);
 		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
 		return Arrays.asList(dialog.selectedColumns.toArray());
@@ -272,9 +269,8 @@ public class KeyEditorDialog extends JDialog {
 	 * @return the list of columns the user selected.
 	 */
 	public static List createForeignKey(MartTab martTab, Table table) {
-		KeyEditorDialog dialog = new KeyEditorDialog(martTab, table,
-				BuilderBundle.getString("newFKDialogTitle"), BuilderBundle
-						.getString("addButton"), null);
+		KeyEditorDialog dialog = new KeyEditorDialog(martTab, table, Resources
+				.get("newFKDialogTitle"), Resources.get("addButton"), null);
 		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
 		return Arrays.asList(dialog.selectedColumns.toArray());
@@ -292,8 +288,8 @@ public class KeyEditorDialog extends JDialog {
 	 */
 	public static List editKey(MartTab martTab, Key key) {
 		KeyEditorDialog dialog = new KeyEditorDialog(martTab, key.getTable(),
-				BuilderBundle.getString("editKeyDialogTitle"), BuilderBundle
-						.getString("modifyButton"), key.getColumns());
+				Resources.get("editKeyDialogTitle"), Resources
+						.get("modifyButton"), key.getColumns());
 		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
 		return Arrays.asList(dialog.selectedColumns.toArray());

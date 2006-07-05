@@ -40,7 +40,7 @@ import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 
 /**
  * This implementation of the {@link MartConstructor} interface connects to a
@@ -94,14 +94,14 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		// Check it's sensible.
 		if (outputStringBuffer != null
 				&& !granularity.equals(SaveDDLGranularity.SINGLE))
-			throw new IllegalArgumentException(BuilderBundle
-					.getString("mcDDLStringBufferSingleFileOnly"));
+			throw new IllegalArgumentException(Resources
+					.get("mcDDLStringBufferSingleFileOnly"));
 		else if (outputStringBuffer == null && outputFile == null)
-			throw new IllegalArgumentException(BuilderBundle
-					.getString("mcDDLNoOutputSpecified"));
+			throw new IllegalArgumentException(Resources
+					.get("mcDDLNoOutputSpecified"));
 		else if (outputStringBuffer != null && outputFile != null)
-			throw new IllegalArgumentException(BuilderBundle
-					.getString("mcDDLBothOutputsSpecified"));
+			throw new IllegalArgumentException(Resources
+					.get("mcDDLBothOutputsSpecified"));
 
 		// Remember the settings.
 		this.granularity = granularity;
@@ -161,8 +161,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		for (int i = 1; i < inputSchemaList.size(); i++) {
 			Schema schema = (Schema) inputSchemaList.get(i);
 			if (!schema.canCohabit((Schema) inputSchemaList.get(0)))
-				throw new ConstructorException(BuilderBundle
-						.getString("saveDDLMixedDataLinks"));
+				throw new ConstructorException(Resources
+						.get("saveDDLMixedDataLinks"));
 		}
 
 		// Construct and return the runnable that uses the helper.
@@ -561,25 +561,25 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 * Use this constant to refer to single-file for all output.
 		 */
 		public static final SaveDDLGranularity SINGLE = SaveDDLGranularity.get(
-				BuilderBundle.getString("saveDDLSingleGranularity"), false);
+				Resources.get("saveDDLSingleGranularity"), false);
 
 		/**
 		 * Use this constant to refer to file-per-mart output.
 		 */
 		public static final SaveDDLGranularity MART = SaveDDLGranularity.get(
-				BuilderBundle.getString("saveDDLMartGranularity"), true);
+				Resources.get("saveDDLMartGranularity"), true);
 
 		/**
 		 * Use this constant to refer to file-per-dataset output.
 		 */
 		public static final SaveDDLGranularity DATASET = SaveDDLGranularity
-				.get(BuilderBundle.getString("saveDDLDataSetGranularity"), true);
+				.get(Resources.get("saveDDLDataSetGranularity"), true);
 
 		/**
 		 * Use this constant to refer to file-per-step output.
 		 */
 		public static final SaveDDLGranularity STEP = SaveDDLGranularity.get(
-				BuilderBundle.getString("saveDDLStepGranularity"), true);
+				Resources.get("saveDDLStepGranularity"), true);
 
 		/**
 		 * The static factory method creates and returns a type with the given

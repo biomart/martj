@@ -28,7 +28,7 @@ import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 
 /**
  * <p>
@@ -137,11 +137,10 @@ public interface SchemaGroup extends Schema {
 				AssociationException {
 			// Check the schema doesn't already exist, and isn't a group itself.
 			if (this.schemas.contains(schema))
-				throw new AlreadyExistsException(BuilderBundle
-						.getString("schemaExists"), schema.getName());
+				throw new AlreadyExistsException(Resources.get("schemaExists"),
+						schema.getName());
 			if (schema instanceof SchemaGroup)
-				throw new AssociationException(BuilderBundle
-						.getString("nestedSchema"));
+				throw new AssociationException(Resources.get("nestedSchema"));
 
 			// Add it.
 			this.schemas.add(schema);

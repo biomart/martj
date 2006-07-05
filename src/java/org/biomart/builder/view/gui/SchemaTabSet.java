@@ -44,7 +44,7 @@ import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Relation.Cardinality;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
@@ -99,9 +99,7 @@ public class SchemaTabSet extends JTabbedPane {
 		JScrollPane scroller = new JScrollPane(this.allSchemasDiagram);
 		scroller.getViewport().setBackground(
 				this.allSchemasDiagram.getBackground());
-		this
-				.addTab(BuilderBundle.getString("multiSchemaOverviewTab"),
-						scroller);
+		this.addTab(Resources.get("multiSchemaOverviewTab"), scroller);
 
 		// Populate the map to hold the relation between schemas and the
 		// diagrams
@@ -143,7 +141,7 @@ public class SchemaTabSet extends JTabbedPane {
 			if (!this.martTab.getMart().getSchemas().contains(schema))
 				this.removeSchemaTab(schema);
 		}
-		
+
 		// Update the overview diagram.
 		this.recalculateOverviewDiagram();
 	}
@@ -278,15 +276,15 @@ public class SchemaTabSet extends JTabbedPane {
 		}
 
 		// Add an option to define a new group.
-		String newGroupName = BuilderBundle.getString("newSchemaGroup");
+		String newGroupName = Resources.get("newSchemaGroup");
 		groupSchemas.add(newGroupName);
 
 		// Ask use which group to use.
 		String groupName = (String) JOptionPane.showInputDialog(this.martTab
-				.getMartTabSet().getMartBuilder(), BuilderBundle
-				.getString("requestSchemaGroupName"), BuilderBundle
-				.getString("questionTitle"), JOptionPane.QUESTION_MESSAGE,
-				null, groupSchemas.toArray(), newGroupName);
+				.getMartTabSet().getMartBuilder(), Resources
+				.get("requestSchemaGroupName"), Resources.get("questionTitle"),
+				JOptionPane.QUESTION_MESSAGE, null, groupSchemas.toArray(),
+				newGroupName);
 
 		// If they cancelled the choice, cancel the add group request too.
 		if (groupName == null)
@@ -296,9 +294,9 @@ public class SchemaTabSet extends JTabbedPane {
 		// dialog.
 		if (groupName.equals(newGroupName)) {
 			groupName = (String) JOptionPane.showInputDialog(this.martTab
-					.getMartTabSet().getMartBuilder(), BuilderBundle
-					.getString("requestNewSchemaGroupName"), BuilderBundle
-					.getString("questionTitle"), JOptionPane.QUESTION_MESSAGE);
+					.getMartTabSet().getMartBuilder(), Resources
+					.get("requestNewSchemaGroupName"), Resources
+					.get("questionTitle"), JOptionPane.QUESTION_MESSAGE);
 		}
 
 		// If they cancelled the second dialog, cancel the add group request
@@ -310,8 +308,8 @@ public class SchemaTabSet extends JTabbedPane {
 		try {
 			// Make sure they actually entered something that wasn't empty.
 			if (groupName.trim().length() == 0)
-				throw new ValidationException(BuilderBundle
-						.getString("schemaGroupNameIsNull"));
+				throw new ValidationException(Resources
+						.get("schemaGroupNameIsNull"));
 			else {
 				// Make a final reference to the group name, as we can't make
 				// the name itself final, and we can't use non-final variables
@@ -339,7 +337,7 @@ public class SchemaTabSet extends JTabbedPane {
 									// it.
 									if (group.getSchemas().size() == 1)
 										addSchemaTab(group);
-									
+
 									// Recalculate the overview diagram.
 									recalculateOverviewDiagram();
 
@@ -352,7 +350,7 @@ public class SchemaTabSet extends JTabbedPane {
 									// be recalculated.
 									martTab.getDataSetTabSet()
 											.recalculateDataSetTabs();
-									
+
 									// Set the dataset tabset status as
 									// modified.
 									martTab.getMartTabSet().setModifiedStatus(
@@ -451,7 +449,7 @@ public class SchemaTabSet extends JTabbedPane {
 		// Update the all-schemas diagram so that it includes the new
 		// schema.
 		this.recalculateOverviewDiagram();
-		
+
 		// Select the new schema.
 		this.setSelectedIndex(this.indexOfComponent(scroller));
 		this.martTab.selectSchemaEditor();
@@ -465,9 +463,9 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestRemoveSchema(final Schema schema) {
 		// Confirm if the user really wants to do it.
-		int choice = JOptionPane.showConfirmDialog(this, BuilderBundle
-				.getString("confirmDelSchema"), BuilderBundle
-				.getString("questionTitle"), JOptionPane.YES_NO_OPTION);
+		int choice = JOptionPane.showConfirmDialog(this, Resources
+				.get("confirmDelSchema"), Resources.get("questionTitle"),
+				JOptionPane.YES_NO_OPTION);
 
 		// If they don't, cancel out.
 		if (choice != JOptionPane.YES_OPTION)
@@ -523,9 +521,9 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestRemoveSchemaFromSchemaGroup(final Schema schema,
 			final SchemaGroup schemaGroup) {
 		// Confirms with the user.
-		int choice = JOptionPane.showConfirmDialog(this, BuilderBundle
-				.getString("confirmUngroupSchema"), BuilderBundle
-				.getString("questionTitle"), JOptionPane.YES_NO_OPTION);
+		int choice = JOptionPane.showConfirmDialog(this, Resources
+				.get("confirmUngroupSchema"), Resources.get("questionTitle"),
+				JOptionPane.YES_NO_OPTION);
 
 		// If they didn't say yes, don't do it.
 		if (choice != JOptionPane.YES_OPTION)
@@ -544,14 +542,14 @@ public class SchemaTabSet extends JTabbedPane {
 						public void run() {
 							// Reinstate the tab for the individual schema.
 							addSchemaTab(schema);
-							
+
 							// If the group is now empty, remove the tab for it.
 							if (schemaGroup.getSchemas().size() == 0)
 								removeSchemaTab(schemaGroup);
 
 							// Recalculate the overview diagram.
 							recalculateOverviewDiagram();
-							
+
 							// Set the dataset tabset status as modified.
 							martTab.getMartTabSet().setModifiedStatus(true);
 						}
@@ -591,10 +589,9 @@ public class SchemaTabSet extends JTabbedPane {
 	private String askUserForSchemaName(String defaultResponse) {
 		// Ask user for a name, giving them the default suggestion.
 		String name = (String) JOptionPane.showInputDialog(this.martTab
-				.getMartTabSet().getMartBuilder(), BuilderBundle
-				.getString("requestSchemaName"), BuilderBundle
-				.getString("questionTitle"), JOptionPane.QUESTION_MESSAGE,
-				null, null, defaultResponse);
+				.getMartTabSet().getMartBuilder(), Resources
+				.get("requestSchemaName"), Resources.get("questionTitle"),
+				JOptionPane.QUESTION_MESSAGE, null, null, defaultResponse);
 
 		// If they didn't select anything, return null.
 		if (name == null)
@@ -780,13 +777,13 @@ public class SchemaTabSet extends JTabbedPane {
 
 		// Tell the user if we passed or failed.
 		if (passedTest)
-			JOptionPane.showMessageDialog(this, BuilderBundle
-					.getString("schemaTestPassed"), BuilderBundle
-					.getString("testTitle"), JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(this, Resources
+					.get("schemaTestPassed"), Resources.get("testTitle"),
+					JOptionPane.INFORMATION_MESSAGE);
 		else
-			JOptionPane.showMessageDialog(this, BuilderBundle
-					.getString("schemaTestFailed"), BuilderBundle
-					.getString("testTitle"), JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, Resources
+					.get("schemaTestFailed"), Resources.get("testTitle"),
+					JOptionPane.ERROR_MESSAGE);
 	}
 
 	/**
@@ -1455,10 +1452,10 @@ public class SchemaTabSet extends JTabbedPane {
 		// Put up a box asking which key to link this key to, based on the
 		// list of candidates we just made. Return the key that the user
 		// selects, or null if none was selected.
-		return (Key) JOptionPane.showInputDialog(this, BuilderBundle
-				.getString("whichKeyToLinkRelationTo"), BuilderBundle
-				.getString("questionTitle"), JOptionPane.QUESTION_MESSAGE,
-				null, candidates.toArray(), null);
+		return (Key) JOptionPane.showInputDialog(this, Resources
+				.get("whichKeyToLinkRelationTo"), Resources
+				.get("questionTitle"), JOptionPane.QUESTION_MESSAGE, null,
+				candidates.toArray(), null);
 	}
 
 	/**
@@ -1543,10 +1540,8 @@ public class SchemaTabSet extends JTabbedPane {
 
 		// Add an option to remove this schema tab, and the
 		// associated schema from the mart.
-		JMenuItem close = new JMenuItem(BuilderBundle
-				.getString("removeSchemaTitle"));
-		close.setMnemonic(BuilderBundle.getString("removeSchemaMnemonic")
-				.charAt(0));
+		JMenuItem close = new JMenuItem(Resources.get("removeSchemaTitle"));
+		close.setMnemonic(Resources.get("removeSchemaMnemonic").charAt(0));
 		close.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				requestRemoveSchema(schema);
@@ -1555,10 +1550,8 @@ public class SchemaTabSet extends JTabbedPane {
 		contextMenu.add(close);
 
 		// Add an option to rename this schema tab and associated schema.
-		JMenuItem rename = new JMenuItem(BuilderBundle
-				.getString("renameSchemaTitle"));
-		rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic")
-				.charAt(0));
+		JMenuItem rename = new JMenuItem(Resources.get("renameSchemaTitle"));
+		rename.setMnemonic(Resources.get("renameSchemaMnemonic").charAt(0));
 		rename.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				requestRenameSchema(schema, null);

@@ -44,7 +44,7 @@ import javax.swing.filechooser.FileFilter;
 import org.biomart.builder.controller.MartBuilderXML;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.MartConstructor.ConstructorRunnable;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 
 /**
  * Displays a set of tabs, one per mart currently loaded. Each tab keeps track
@@ -88,7 +88,7 @@ public class MartTabSet extends JTabbedPane {
 			}
 
 			public String getDescription() {
-				return BuilderBundle.getString("XMLFileFilterDescription");
+				return Resources.get("XMLFileFilterDescription");
 			}
 		});
 		this.xmlFileChooser.setMultiSelectionEnabled(true);
@@ -127,8 +127,7 @@ public class MartTabSet extends JTabbedPane {
 			final ConstructorRunnable constructor) {
 		// Create a progress monitor.
 		final ProgressMonitor progressMonitor = new ProgressMonitor(this
-				.getMartBuilder(), BuilderBundle.getString("creatingMart"), "",
-				0, 100);
+				.getMartBuilder(), Resources.get("creatingMart"), "", 0, 100);
 		progressMonitor.setProgress(0); // Start with 0% complete.
 		progressMonitor.setMillisToPopup(1000); // Open after 1 second.
 
@@ -180,15 +179,13 @@ public class MartTabSet extends JTabbedPane {
 				this.getMartBuilder().showStackTrace(failure);
 			// Inform user of success or otherwise.
 			if (failure == null)
-				JOptionPane.showMessageDialog(this.getMartBuilder(),
-						BuilderBundle.getString("martConstructionComplete"),
-						BuilderBundle.getString("messageTitle"),
-						JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(this.getMartBuilder(), Resources
+						.get("martConstructionComplete"), Resources
+						.get("messageTitle"), JOptionPane.INFORMATION_MESSAGE);
 			else
-				JOptionPane.showMessageDialog(this.getMartBuilder(),
-						BuilderBundle.getString("martConstructionFailed"),
-						BuilderBundle.getString("messageTitle"),
-						JOptionPane.WARNING_MESSAGE);
+				JOptionPane.showMessageDialog(this.getMartBuilder(), Resources
+						.get("martConstructionFailed"), Resources
+						.get("messageTitle"), JOptionPane.WARNING_MESSAGE);
 		}
 	}
 
@@ -204,9 +201,9 @@ public class MartTabSet extends JTabbedPane {
 		for (Iterator i = this.martModifiedStatus.values().iterator(); i
 				.hasNext();) {
 			if (i.next().equals(Boolean.TRUE)) {
-				int choice = JOptionPane.showConfirmDialog(this, BuilderBundle
-						.getString("okToCloseAll"), BuilderBundle
-						.getString("questionTitle"), JOptionPane.YES_NO_OPTION);
+				int choice = JOptionPane.showConfirmDialog(this, Resources
+						.get("okToCloseAll"), Resources.get("questionTitle"),
+						JOptionPane.YES_NO_OPTION);
 				return choice == JOptionPane.YES_OPTION;
 			}
 		}
@@ -231,9 +228,9 @@ public class MartTabSet extends JTabbedPane {
 		boolean canClose = true;
 		if (this.martModifiedStatus.get(currentMart).equals(Boolean.TRUE)) {
 			// Modified, so must confirm action first.
-			int choice = JOptionPane.showConfirmDialog(this, BuilderBundle
-					.getString("okToClose"), BuilderBundle
-					.getString("questionTitle"), JOptionPane.YES_NO_OPTION);
+			int choice = JOptionPane.showConfirmDialog(this, Resources
+					.get("okToClose"), Resources.get("questionTitle"),
+					JOptionPane.YES_NO_OPTION);
 			canClose = (choice == JOptionPane.YES_OPTION);
 		}
 
@@ -308,7 +305,7 @@ public class MartTabSet extends JTabbedPane {
 	private String suggestTabName(Mart mart) {
 
 		// Start with "unsaved".
-		String basename = BuilderBundle.getString("unsavedMart");
+		String basename = Resources.get("unsavedMart");
 
 		// See if this mart came from a file. If so, use the filename.
 		File filename = (File) this.martXMLFile.get(mart);
@@ -469,10 +466,8 @@ public class MartTabSet extends JTabbedPane {
 
 		// The close option closes the selected mart, confirming first
 		// that it's OK to do so.
-		JMenuItem close = new JMenuItem(BuilderBundle
-				.getString("closeMartTitle"));
-		close.setMnemonic(BuilderBundle.getString("closeMartMnemonic")
-				.charAt(0));
+		JMenuItem close = new JMenuItem(Resources.get("closeMartTitle"));
+		close.setMnemonic(Resources.get("closeMartMnemonic").charAt(0));
 		close.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				confirmCloseMart();
@@ -544,8 +539,8 @@ public class MartTabSet extends JTabbedPane {
 			// Create the button that selects the window card. It reattaches
 			// it every time in case it has been attached somewhere else
 			// whilst we weren't looking.
-			this.schemaButton = new JRadioButton(BuilderBundle
-					.getString("schemaEditorButtonName"));
+			this.schemaButton = new JRadioButton(Resources
+					.get("schemaEditorButtonName"));
 			final MartTab ourselves = this;
 			this.schemaButton.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
@@ -567,8 +562,8 @@ public class MartTabSet extends JTabbedPane {
 			this.displayArea.add(datasetTabSet, "DATASET_EDITOR_CARD");
 
 			// Create the button that selects the dataset card.
-			this.datasetButton = new JRadioButton(BuilderBundle
-					.getString("datasetEditorButtonName"));
+			this.datasetButton = new JRadioButton(Resources
+					.get("datasetEditorButtonName"));
 			this.datasetButton.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					if (e.getSource() == datasetButton) {

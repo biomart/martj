@@ -26,7 +26,7 @@ import java.util.List;
 
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 
 /**
  * <p>
@@ -215,8 +215,8 @@ public interface Key extends Comparable {
 		public void setColumns(List columns) throws AssociationException {
 			// Make sure we have at least one column.
 			if (columns.size() < 1)
-				throw new IllegalArgumentException(BuilderBundle
-						.getString("columnsIsEmpty"));
+				throw new IllegalArgumentException(Resources
+						.get("columnsIsEmpty"));
 
 			// Remove all existing columns.
 			this.columns.clear();
@@ -232,11 +232,11 @@ public interface Key extends Comparable {
 				// If the column doesn't match our table, or we already have
 				// the same column, throw a wobbly.
 				if (!column.getTable().equals(this.table))
-					throw new AssociationException(BuilderBundle
-							.getString("multiTableColumns"));
+					throw new AssociationException(Resources
+							.get("multiTableColumns"));
 				if (this.columns.contains(column))
-					throw new AssociationException(BuilderBundle
-							.getString("duplicateColumnsInKey"));
+					throw new AssociationException(Resources
+							.get("duplicateColumnsInKey"));
 
 				// Add the column.
 				this.columns.add(column);
@@ -299,8 +299,8 @@ public interface Key extends Comparable {
 				// Will throw an exception if we are not part of the relation.
 				relation.getOtherKey(this);
 			} catch (IllegalArgumentException e) {
-				throw new AssociationException(BuilderBundle
-						.getString("relationNotOfThisKey"));
+				throw new AssociationException(Resources
+						.get("relationNotOfThisKey"));
 			}
 
 			// Add it.
@@ -403,7 +403,7 @@ public interface Key extends Comparable {
 
 		public String getName() {
 			String supername = super.getName();
-			return BuilderBundle.getString("pkPrefix") + supername;
+			return Resources.get("pkPrefix") + supername;
 		}
 	}
 
@@ -431,7 +431,7 @@ public interface Key extends Comparable {
 
 		public String getName() {
 			String supername = super.getName();
-			return BuilderBundle.getString("fkPrefix") + supername;
+			return Resources.get("fkPrefix") + supername;
 		}
 
 		public void setNullable(boolean nullable) {

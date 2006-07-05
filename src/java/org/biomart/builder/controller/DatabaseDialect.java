@@ -29,7 +29,7 @@ import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 
 /**
  * DatabaseDialect provides methods which generate atomic DDL or SQL statements.
@@ -38,7 +38,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * can be used.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 29th June 2006
+ * @version 0.1.6, 4th July 2006
  * @since 0.1
  */
 public abstract class DatabaseDialect {
@@ -50,6 +50,7 @@ public abstract class DatabaseDialect {
 	 */
 	public static void registerDialects() {
 		dialects.add(new MySQLDialect());
+		dialects.add(new OracleDialect());
 	}
 
 	/**
@@ -68,8 +69,7 @@ public abstract class DatabaseDialect {
 			if (d.understandsDataLink(dataLink))
 				return d;
 		}
-		throw new ConstructorException(BuilderBundle
-				.getString("mcUnknownDataLink"));
+		throw new ConstructorException(Resources.get("mcUnknownDataLink"));
 	}
 
 	/**
@@ -120,12 +120,13 @@ public abstract class DatabaseDialect {
 	 *             if the action was not able to be converted into one or more
 	 *             SQL/DDL statements.
 	 */
-	public abstract String[] getStatementsForAction(MartConstructorAction action,
-			boolean includeComments) throws ConstructorException;
-	
+	public abstract String[] getStatementsForAction(
+			MartConstructorAction action, boolean includeComments)
+			throws ConstructorException;
+
 	/**
-	 * Call this method before using the dialect for anything. This is 
-	 * necessary in order to clear out any state it may be keeping track of.
+	 * Call this method before using the dialect for anything. This is necessary
+	 * in order to clear out any state it may be keeping track of.
 	 */
 	public abstract void reset();
 }

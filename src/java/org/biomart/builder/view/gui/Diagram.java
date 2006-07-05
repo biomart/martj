@@ -42,7 +42,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 
 import org.biomart.builder.model.Table;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
@@ -258,10 +258,9 @@ public abstract class Diagram extends JPanel {
 		// Now, create the choices box, display it, and return the one
 		// that the user selected. If the user didn't select anything, or
 		// cancelled the choice, this will return null.
-		return (Table) JOptionPane.showInputDialog(this.martTab, BuilderBundle
-				.getString("findTableName"), BuilderBundle
-				.getString("questionTitle"), JOptionPane.QUESTION_MESSAGE,
-				null, tables.toArray(), null);
+		return (Table) JOptionPane.showInputDialog(this.martTab, Resources
+				.get("findTableName"), Resources.get("questionTitle"),
+				JOptionPane.QUESTION_MESSAGE, null, tables.toArray(), null);
 	}
 
 	private JPopupMenu getContextMenu() {
@@ -273,11 +272,8 @@ public abstract class Diagram extends JPanel {
 
 		// Add an item that allows the user to search for a particular
 		// table in the diagram, and scroll to that table when selected.
-		JMenuItem find = new JMenuItem(BuilderBundle
-				.getString("findTableTitle"));
-		find
-				.setMnemonic(BuilderBundle.getString("findTableMnemonic")
-						.charAt(0));
+		JMenuItem find = new JMenuItem(Resources.get("findTableTitle"));
+		find.setMnemonic(Resources.get("findTableMnemonic").charAt(0));
 		find.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Table table = askUserForTable();

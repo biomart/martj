@@ -18,6 +18,7 @@
 
 package org.biomart.builder.resources;
 
+import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
 
@@ -25,10 +26,10 @@ import java.util.ResourceBundle;
  * Simple wrapper for resources.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 10th April 2006
+ * @version 0.1.2, 5th July 2006
  * @since 0.1
  */
-public class BuilderBundle {
+public class Resources {
 	private static ResourceBundle bundle = ResourceBundle
 			.getBundle("org/biomart/builder/resources/messages");
 
@@ -43,7 +44,7 @@ public class BuilderBundle {
 	 *            the key to look up.
 	 * @return the matching string.
 	 */
-	public static String getString(String key) {
+	public static String get(String key) {
 		return MessageFormat.format(bundle.getString(key), new Object[] {});
 	}
 
@@ -58,7 +59,7 @@ public class BuilderBundle {
 	 *            the key to look up.
 	 * @return the matching string.
 	 */
-	public static String getString(String key, String value) {
+	public static String get(String key, String value) {
 		return MessageFormat.format(bundle.getString(key),
 				new Object[] { value });
 	}
@@ -74,7 +75,23 @@ public class BuilderBundle {
 	 *            the key to look up.
 	 * @return the matching string.
 	 */
-	public static String getString(String key, String[] values) {
+	public static String get(String key, String[] values) {
 		return MessageFormat.format(bundle.getString(key), values);
+	}
+
+	/**
+	 * Given a resource name (a file inside some package somewhere), return a
+	 * stream that will read the contents of that file.
+	 * 
+	 * @param resource
+	 *            the classpath of the resource to lookup, e.g.
+	 *            "org/biomart/builder/resources/myfile.txt".
+	 * @return a stream that will read that file.
+	 */
+	public static InputStream getResource(String resource) {
+		ClassLoader cl = Resources.class.getClassLoader();
+		if (cl == null)
+			cl = ClassLoader.getSystemClassLoader();
+		return cl.getResourceAsStream(resource);
 	}
 }

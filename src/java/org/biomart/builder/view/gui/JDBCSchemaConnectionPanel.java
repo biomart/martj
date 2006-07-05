@@ -49,7 +49,7 @@ import javax.swing.filechooser.FileFilter;
 import org.biomart.builder.controller.JDBCSchema;
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.model.Schema;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
@@ -86,11 +86,11 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		DRIVER_MAP.put("org.postgresql.Driver", new String[] { "5432",
 				"jdbc:postgres://<HOST>:<PORT>/<DATABASE>" });
 		// Names.
-		DRIVER_NAME_MAP.put(BuilderBundle.getString("driverClassMySQL"),
+		DRIVER_NAME_MAP.put(Resources.get("driverClassMySQL"),
 				"com.mysql.jdbc.Driver");
-		DRIVER_NAME_MAP.put(BuilderBundle.getString("driverClassOracle"),
+		DRIVER_NAME_MAP.put(Resources.get("driverClassOracle"),
 				"oracle.jdbc.driver.OracleDriver");
-		DRIVER_NAME_MAP.put(BuilderBundle.getString("driverClassPostgreSQL"),
+		DRIVER_NAME_MAP.put(Resources.get("driverClassPostgreSQL"),
 				"org.postgresql.Driver");
 	}
 
@@ -171,8 +171,8 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 
 		// Create all the useful fields in the dialog box.
 		this.driverClassLocation = new JTextField(30);
-		this.driverClassLocationButton = new JButton(BuilderBundle
-				.getString("browseButton"));
+		this.driverClassLocationButton = new JButton(Resources
+				.get("browseButton"));
 		this.jdbcURL = new JTextField(40);
 		this.host = new JTextField(20);
 		this.port = new JFormattedTextField(new DecimalFormat("0"));
@@ -224,21 +224,21 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			}
 
 			public String getDescription() {
-				return BuilderBundle.getString("JARFileFilterDescription");
+				return Resources.get("JARFileFilterDescription");
 			}
 		});
 
 		// Add the copy settings label and drop-down menu.
-		JLabel label = new JLabel(BuilderBundle.getString("copySettingsLabel"));
+		JLabel label = new JLabel(Resources.get("copySettingsLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		this.add(label);
 		JPanel field = new JPanel();
 		field.add(this.copysettings);
 		gridBag.setConstraints(field, fieldConstraints);
 		this.add(field);
-		
+
 		// Add the driver class label and field.
-		label = new JLabel(BuilderBundle.getString("driverClassLabel"));
+		label = new JLabel(Resources.get("driverClassLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		this.add(label);
 		field = new JPanel();
@@ -247,45 +247,43 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		// field.add(this.driverClass);
 		gridBag.setConstraints(field, fieldConstraints);
 		this.add(field);
-		
-		/* FIXME: Uncomment after Arek's demo.
-		// Add the driver location label, field and file chooser button.
-		label = new JLabel(BuilderBundle.getString("driverClassLocationLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		this.add(label);
-		field = new JPanel();
-		field.add(this.driverClassLocation);
-		field.add(this.driverClassLocationButton);
-		gridBag.setConstraints(field, fieldConstraints);
-		this.add(field);
-		*/
+
+		/*
+		 * FIXME: Uncomment after Arek's demo. // Add the driver location label,
+		 * field and file chooser button. label = new
+		 * JLabel(Resources.getString("driverClassLocationLabel"));
+		 * gridBag.setConstraints(label, labelConstraints); this.add(label);
+		 * field = new JPanel(); field.add(this.driverClassLocation);
+		 * field.add(this.driverClassLocationButton);
+		 * gridBag.setConstraints(field, fieldConstraints); this.add(field);
+		 */
 
 		// Add the host label, and the host field, port label, port field.
-		label = new JLabel(BuilderBundle.getString("hostLabel"));
+		label = new JLabel(Resources.get("hostLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		this.add(label);
 		field = new JPanel();
 		field.add(this.host);
-		label = new JLabel(BuilderBundle.getString("portLabel"));
+		label = new JLabel(Resources.get("portLabel"));
 		field.add(label);
 		field.add(this.port);
 		gridBag.setConstraints(field, fieldConstraints);
 		this.add(field);
 
 		// Add the database and schema fields.
-		label = new JLabel(BuilderBundle.getString("databaseLabel"));
+		label = new JLabel(Resources.get("databaseLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		this.add(label);
 		field = new JPanel();
 		field.add(this.database);
-		label = new JLabel(BuilderBundle.getString("schemaNameLabel"));
+		label = new JLabel(Resources.get("schemaNameLabel"));
 		field.add(label);
 		field.add(this.schemaName);
 		gridBag.setConstraints(field, fieldConstraints);
 		this.add(field);
 
 		// Add the JDBC URL label and field.
-		label = new JLabel(BuilderBundle.getString("jdbcURLLabel"));
+		label = new JLabel(Resources.get("jdbcURLLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		this.add(label);
 		field = new JPanel();
@@ -296,12 +294,12 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		// Add the username label, and the username field, password
 		// label and password field across the username field space
 		// in order to save space.
-		label = new JLabel(BuilderBundle.getString("usernameLabel"));
+		label = new JLabel(Resources.get("usernameLabel"));
 		gridBag.setConstraints(label, labelLastRowConstraints);
 		this.add(label);
 		field = new JPanel();
 		field.add(this.username);
-		label = new JLabel(BuilderBundle.getString("passwordLabel"));
+		label = new JLabel(Resources.get("passwordLabel"));
 		field.add(label);
 		field.add(this.password);
 		gridBag.setConstraints(field, fieldLastRowConstraints);
@@ -405,54 +403,54 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 
 		// If we don't have a class, complain.
 		if (this.isEmpty((String) this.driverClass.getText()))
-			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
-					.getString("driverClass")));
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("driverClass")));
 
 		// If we do have a class, and we don't know where it lives, make
 		// sure the user has told us where it lives.
 		else if (this.driverClassLocation.isEnabled()
 				&& this.isEmpty(this.driverClassLocation.getText()))
-			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
-					.getString("driverClassLocation")));
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("driverClassLocation")));
 
 		// If the user had to specify their own JDBC URL, make sure
 		// they have done so.
 		if (this.jdbcURL.isEnabled()) {
 			if (this.isEmpty(this.jdbcURL.getText()))
-				messages.add(BuilderBundle.getString("fieldIsEmpty",
-						BuilderBundle.getString("jdbcURL")));
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("jdbcURL")));
 		}
 
 		// Otherwise, make sure they have specified all three of host, port
 		// and database.
 		else {
 			if (this.isEmpty(this.host.getText()))
-				messages.add(BuilderBundle.getString("fieldIsEmpty",
-						BuilderBundle.getString("host")));
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("host")));
 			if (this.isEmpty(this.port.getText()))
-				messages.add(BuilderBundle.getString("fieldIsEmpty",
-						BuilderBundle.getString("port")));
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("port")));
 			if (this.isEmpty(this.database.getText()))
-				messages.add(BuilderBundle.getString("fieldIsEmpty",
-						BuilderBundle.getString("database")));
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("database")));
 		}
 
 		// Make sure they have given a schema name.
 		if (this.isEmpty(this.schemaName.getText()))
-			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
-					.getString("schemaName")));
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("schemaName")));
 
 		// Make sure they have given a username. (Password is optional as
 		// not all databases require one).
 		if (this.isEmpty(this.username.getText()))
-			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
-					.getString("username")));
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("username")));
 
 		// If there any messages to show the user, show them.
 		if (!messages.isEmpty())
 			JOptionPane.showMessageDialog(this,
-					messages.toArray(new String[0]), BuilderBundle
-							.getString("validationTitle"),
+					messages.toArray(new String[0]), Resources
+							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);
 
 		// Validation succeeds if there were no messages.

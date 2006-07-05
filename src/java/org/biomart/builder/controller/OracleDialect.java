@@ -17,6 +17,9 @@
  */
 package org.biomart.builder.controller;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
@@ -54,15 +57,22 @@ import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
 import org.biomart.builder.model.MartConstructorAction.Reduce;
 import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Union;
+import org.biomart.builder.resources.Resources;
 
 /**
- * Understands how to create SQL and DDL for a MySQL database.
+ * Understands how to create SQL and DDL for an Oracle database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 5th July 2006
+ * @version 0.1.2, 5th July 2006
  * @since 0.1
  */
-public class MySQLDialect extends DatabaseDialect {
+public class OracleDialect extends DatabaseDialect {
+
+	// Count how many keys we've made.
+	private static int KEY_COUNTER;
+
+	// Check we only make the aggregate functions once.
+	private static boolean GROUP_CONCAT_CREATED;
 
 	public boolean understandsDataLink(DataLink dataLink)
 			throws ConstructorException {
@@ -74,14 +84,15 @@ public class MySQLDialect extends DatabaseDialect {
 
 		try {
 			return jddl.getConnection().getMetaData().getDatabaseProductName()
-					.equals("MySQL");
+					.equals("Oracle");
 		} catch (SQLException e) {
 			throw new ConstructorException(e);
 		}
 	}
 
 	public void reset() {
-
+		OracleDialect.KEY_COUNTER = 0;
+		OracleDialect.GROUP_CONCAT_CREATED = false;
 	}
 
 	public List executeSelectDistinct(Column col) throws SQLException {
@@ -121,7 +132,7 @@ public class MySQLDialect extends DatabaseDialect {
 		List statements = new ArrayList();
 
 		if (includeComments)
-			statements.add("#" + action.getStatusMessage());
+			statements.add("--" + action.getStatusMessage());
 
 		try {
 			String className = action.getClass().getName();
@@ -158,7 +169,9 @@ public class MySQLDialect extends DatabaseDialect {
 				sb.append(",");
 		}
 		statements.add("alter table " + schemaName + "." + tableName
-				+ " add primary key (" + sb.toString() + ")");
+				+ " add constraint " + tableName + "_PK"
+				+ (OracleDialect.KEY_COUNTER++) + " primary key ("
+				+ sb.toString() + ")");
 	}
 
 	public void doFK(FK action, List statements) throws Exception {
@@ -186,9 +199,10 @@ public class MySQLDialect extends DatabaseDialect {
 		}
 
 		statements.add("alter table " + fkSchemaName + "." + fkTableName
-				+ " add foreign key (" + sbFK.toString() + ") references "
-				+ pkSchemaName + "." + pkTableName + " (" + sbPK.toString()
-				+ ")");
+				+ " add constraint " + fkTableName + "_FK"
+				+ (OracleDialect.KEY_COUNTER++) + " foreign key ("
+				+ sbFK.toString() + ") references " + pkSchemaName + "."
+				+ pkTableName + " (" + sbPK.toString() + ")");
 	}
 
 	public void doReduce(Reduce action, List statements) throws Exception {
@@ -236,8 +250,8 @@ public class MySQLDialect extends DatabaseDialect {
 				.getName();
 		String oldTableName = action.getRenameTableOldName();
 		String newTableName = action.getRenameTableNewName();
-		statements.add("rename table " + schemaName + "." + oldTableName
-				+ " to " + schemaName + "." + newTableName);
+		statements.add("alter table table " + schemaName + "." + oldTableName
+				+ " rename to " + schemaName + "." + newTableName);
 	}
 
 	public void doUnion(Union action, List statements) throws Exception {
@@ -265,7 +279,7 @@ public class MySQLDialect extends DatabaseDialect {
 	}
 
 	public void doPlaceHolder(PlaceHolder action, List statements) {
-		statements.add("#");
+		statements.add("--");
 	}
 
 	public void doIndex(Index action, List statements) {
@@ -294,7 +308,7 @@ public class MySQLDialect extends DatabaseDialect {
 		String tableName = action.getTableName();
 		String colName = action.getColumnName();
 		statements.add("alter table " + schemaName + "." + tableName
-				+ " add column (" + colName + " smallint default 0)");
+				+ " add column (" + colName + " number(1) default 0)");
 	}
 
 	public void doOptimiseUpdateColumn(OptimiseUpdateColumn action,
@@ -460,17 +474,39 @@ public class MySQLDialect extends DatabaseDialect {
 		ConcatRelationType crType = action.getConcatRelationType();
 
 		StringBuffer sb = new StringBuffer();
+
+		// If we haven't defined the group_concat function yet, define it.
+		// Note limitation of total 32767 characters for group_concat result.
+		if (!OracleDialect.GROUP_CONCAT_CREATED) {
+			BufferedReader br = new BufferedReader(
+					new InputStreamReader(
+							Resources
+									.getResource("org/biomart/builder/resources/ora_group_concat.sql")));
+			try {
+				String line;
+				while ((line = br.readLine()) != null) {
+					sb.append(line);
+					sb.append(System.getProperty("line.separator"));
+				}
+			} catch (IOException e) {
+				throw new MartBuilderInternalError(e);
+			}
+			OracleDialect.GROUP_CONCAT_CREATED = true;
+		}
+
 		sb.append("create table " + concatSchemaName + "." + concatTableName
-				+ " as select a.*, group_concat(distinct concat_ws('");
-		sb.append(crType.getValueSeparator());
-		sb.append("'");
+				+ " as select a.*, group_concat(concat_expr(");
 		for (Iterator i = action.getTargetTableConcatColumns().iterator(); i
 				.hasNext();) {
-			sb.append(',');
 			Column col = (Column) i.next();
 			sb.append(col.getName());
+			if (i.hasNext()) {
+				sb.append("||'");
+				sb.append(crType.getValueSeparator());
+				sb.append("'||");
+			}
 		}
-		sb.append(") separator '");
+		sb.append(",'");
 		sb.append(crType.getRecordSeparator());
 		sb.append("')) as ");
 		sb.append(trgtColName);

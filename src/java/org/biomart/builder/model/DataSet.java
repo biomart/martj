@@ -43,7 +43,7 @@ import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Schema.GenericSchema;
 import org.biomart.builder.model.Table.GenericTable;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 
 /**
  * <p>
@@ -57,7 +57,7 @@ import org.biomart.builder.resources.BuilderBundle;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.29, 22nd June 2006
+ * @version 0.1.30, 4th July 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -110,8 +110,7 @@ public class DataSet extends GenericSchema {
 
 		// Sanity check to see if the table is in this mart or not.
 		if (!mart.getSchemas().contains(centralTable.getSchema()))
-			throw new AssociationException(BuilderBundle
-					.getString("tableMartMismatch"));
+			throw new AssociationException(Resources.get("tableMartMismatch"));
 
 		// Remember the settings and make some defaults.
 		this.mart = mart;
@@ -277,13 +276,13 @@ public class DataSet extends GenericSchema {
 		// Refuse to mask the column if it does not appear in the list of OK
 		// columns to mask.
 		if (!okToMask.contains(dsColumn))
-			throw new AssociationException(BuilderBundle
-					.getString("cannotMaskNecessaryColumn"));
+			throw new AssociationException(Resources
+					.get("cannotMaskNecessaryColumn"));
 
 		// Refuse to mask schema name columns.
 		else if (dsColumn instanceof SchemaNameColumn)
-			throw new AssociationException(BuilderBundle
-					.getString("cannotMaskSchemaNameColumn"));
+			throw new AssociationException(Resources
+					.get("cannotMaskSchemaNameColumn"));
 
 		// If concat-only, mask concat-only relation instead
 		else if (dsColumn instanceof ConcatRelationColumn)
@@ -371,16 +370,15 @@ public class DataSet extends GenericSchema {
 		// the central table and some other table.
 		if (!relation.isOneToMany()
 				|| relation.getCardinality().equals(Cardinality.ONE))
-			throw new AssociationException(BuilderBundle
-					.getString("subclassNotOneMany"));
+			throw new AssociationException(Resources.get("subclassNotOneMany"));
 		if (!(relation.getFirstKey().getTable().equals(this.centralTable) || relation
 				.getSecondKey().getTable().equals(this.centralTable)))
-			throw new AssociationException(BuilderBundle
-					.getString("subclassNotOnCentralTable"));
+			throw new AssociationException(Resources
+					.get("subclassNotOnCentralTable"));
 		if (relation.getFirstKey().getTable().equals(
 				relation.getSecondKey().getTable()))
-			throw new AssociationException(BuilderBundle
-					.getString("subclassNotBetweenTwoTables"));
+			throw new AssociationException(Resources
+					.get("subclassNotBetweenTwoTables"));
 
 		// Check to see if there is already a M:1 subclass relation on the
 		// central table.
@@ -396,8 +394,8 @@ public class DataSet extends GenericSchema {
 		// this new relation is M:1, throw a wobbly.
 		if (relation.getManyKey().getTable().equals(this.centralTable)
 				&& (containsM1 || this.subclassedRelations.size() != 0))
-			throw new AssociationException(BuilderBundle
-					.getString("mixedCardinalitySubclasses"));
+			throw new AssociationException(Resources
+					.get("mixedCardinalitySubclasses"));
 
 		// Mark the relation.
 		this.subclassedRelations.add(relation);
@@ -471,8 +469,8 @@ public class DataSet extends GenericSchema {
 		// If we do already have a partitioned column on this table, throw a
 		// wobbly.
 		if (alreadyHave)
-			throw new AssociationException(BuilderBundle
-					.getString("cannotPartitionMultiColumns"));
+			throw new AssociationException(Resources
+					.get("cannotPartitionMultiColumns"));
 
 		// Partition the colum. If the column has already been partitioned, this
 		// will override the type.
@@ -543,11 +541,11 @@ public class DataSet extends GenericSchema {
 
 		// Sanity check.
 		if (!relation.isOneToMany())
-			throw new AssociationException(BuilderBundle
-					.getString("cannotConcatNonOneMany"));
+			throw new AssociationException(Resources
+					.get("cannotConcatNonOneMany"));
 		if (relation.getManyKey().getTable().getPrimaryKey() == null)
-			throw new AssociationException(BuilderBundle
-					.getString("cannotConcatManyWithoutPK"));
+			throw new AssociationException(Resources
+					.get("cannotConcatManyWithoutPK"));
 
 		// Do it.
 		int index = this.concatOnlyRelations[0].indexOf(relation);
@@ -825,8 +823,8 @@ public class DataSet extends GenericSchema {
 				DataSetColumn dsTableCol = null;
 				if (parentDSCol instanceof SchemaNameColumn)
 					try {
-						dsTableCol = new SchemaNameColumn(BuilderBundle
-								.getString("schemaColumnName"), dsTable);
+						dsTableCol = new SchemaNameColumn(Resources
+								.get("schemaColumnName"), dsTable);
 					} catch (Throwable t) {
 						throw new MartBuilderInternalError(t);
 					}
@@ -907,8 +905,8 @@ public class DataSet extends GenericSchema {
 		if (type.equals(DataSetTableType.MAIN)
 				&& (realTable.getSchema() instanceof SchemaGroup))
 			try {
-				DataSetColumn schemaNameCol = new SchemaNameColumn(
-						BuilderBundle.getString("schemaColumnName"), dsTable);
+				DataSetColumn schemaNameCol = new SchemaNameColumn(Resources
+						.get("schemaColumnName"), dsTable);
 				if (!dsTablePKCols.isEmpty())
 					dsTablePKCols.add(schemaNameCol);
 			} catch (Throwable t) {
@@ -1025,8 +1023,8 @@ public class DataSet extends GenericSchema {
 				// Concatenate concat-only relations.
 				if (this.concatOnlyRelations[0].contains(r))
 					try {
-						new ConcatRelationColumn(BuilderBundle
-								.getString("concatColumnPrefix")
+						new ConcatRelationColumn(Resources
+								.get("concatColumnPrefix")
 								+ mergeTable.getName(), dsTable, r);
 					} catch (Throwable t) {
 						throw new MartBuilderInternalError(t);
@@ -1104,8 +1102,7 @@ public class DataSet extends GenericSchema {
 			AssociationException {
 		// We only accept dataset tables.
 		if (!(table instanceof DataSetTable))
-			throw new AssociationException(BuilderBundle
-					.getString("tableNotDSTable"));
+			throw new AssociationException(Resources.get("tableNotDSTable"));
 
 		// Call the super version to do the work.
 		super.addTable(table);
@@ -1491,8 +1488,8 @@ public class DataSet extends GenericSchema {
 				AssociationException {
 			// We only accept dataset columns.
 			if (!(column instanceof DataSetColumn))
-				throw new AssociationException(BuilderBundle
-						.getString("columnNotDatasetColumn"));
+				throw new AssociationException(Resources
+						.get("columnNotDatasetColumn"));
 
 			// Call the super to add it.
 			super.addColumn(column);
@@ -1639,8 +1636,8 @@ public class DataSet extends GenericSchema {
 				// Make sure it really is a concat relation.
 				if (!((DataSet) dsTable.getSchema()).getConcatOnlyRelations()
 						.contains(concatRelation))
-					throw new AssociationException(BuilderBundle
-							.getString("relationNotConcatRelation"));
+					throw new AssociationException(Resources
+							.get("relationNotConcatRelation"));
 			}
 		}
 

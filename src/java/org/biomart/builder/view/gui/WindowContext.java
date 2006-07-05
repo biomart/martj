@@ -37,7 +37,7 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
@@ -90,10 +90,10 @@ public class WindowContext extends SchemaContext {
 				contextMenu.addSeparator();
 
 			// A menu item which allows the schema to be optimised.
-			JMenuItem optimise = new JMenuItem(BuilderBundle
-					.getString("optimiseDataSetTitle"));
-			optimise.setMnemonic(BuilderBundle.getString(
-					"optimiseDataSetMnemonic").charAt(0));
+			JMenuItem optimise = new JMenuItem(Resources
+					.get("optimiseDataSetTitle"));
+			optimise.setMnemonic(Resources.get("optimiseDataSetMnemonic")
+					.charAt(0));
 			optimise.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestOptimiseDataSet(
@@ -114,10 +114,9 @@ public class WindowContext extends SchemaContext {
 
 			// The mask option allows the user to mask all
 			// relations on a table.
-			final JMenuItem mask = new JMenuItem(BuilderBundle
-					.getString("maskTableTitle"));
-			mask.setMnemonic(BuilderBundle.getString("maskTableMnemonic")
-					.charAt(0));
+			final JMenuItem mask = new JMenuItem(Resources
+					.get("maskTableTitle"));
+			mask.setMnemonic(Resources.get("maskTableMnemonic").charAt(0));
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestMaskTable(dataset,
@@ -148,10 +147,9 @@ public class WindowContext extends SchemaContext {
 					.contains(relation);
 
 			// The mask/unmask option allows the user to mask/unmask a relation.
-			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(BuilderBundle
-					.getString("maskRelationTitle"));
-			mask.setMnemonic(BuilderBundle.getString("maskRelationMnemonic")
-					.charAt(0));
+			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
+					.get("maskRelationTitle"));
+			mask.setMnemonic(Resources.get("maskRelationMnemonic").charAt(0));
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					if (mask.isSelected())
@@ -171,10 +169,10 @@ public class WindowContext extends SchemaContext {
 			// The subclass/unsubclass option allows subclassing, but is
 			// only selectable when the relation is unmasked and not
 			// incorrect or already flagged as being in any conflicting state.
-			final JCheckBoxMenuItem subclass = new JCheckBoxMenuItem(
-					BuilderBundle.getString("subclassRelationTitle"));
-			subclass.setMnemonic(BuilderBundle.getString(
-					"subclassRelationMnemonic").charAt(0));
+			final JCheckBoxMenuItem subclass = new JCheckBoxMenuItem(Resources
+					.get("subclassRelationTitle"));
+			subclass.setMnemonic(Resources.get("subclassRelationMnemonic")
+					.charAt(0));
 			subclass.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					if (subclass.isSelected())
@@ -193,18 +191,17 @@ public class WindowContext extends SchemaContext {
 				subclass.setEnabled(false);
 
 			// The concat-only submenu allows concat-only relations.
-			JMenu concatSubmenu = new JMenu(BuilderBundle
-					.getString("concatOnlyRelationTitle"));
-			concatSubmenu.setMnemonic(BuilderBundle.getString(
+			JMenu concatSubmenu = new JMenu(Resources
+					.get("concatOnlyRelationTitle"));
+			concatSubmenu.setMnemonic(Resources.get(
 					"concatOnlyRelationMnemonic").charAt(0));
 			ButtonGroup concatGroup = new ButtonGroup();
 
 			// This item in the concat-only relation submenu turns concat-only
 			// relations off.
-			JRadioButtonMenuItem none = new JRadioButtonMenuItem(BuilderBundle
-					.getString("noneConcatTitle"));
-			none.setMnemonic(BuilderBundle.getString("noneConcatMnemonic")
-					.charAt(0));
+			JRadioButtonMenuItem none = new JRadioButtonMenuItem(Resources
+					.get("noneConcatTitle"));
+			none.setMnemonic(Resources.get("noneConcatMnemonic").charAt(0));
 			none.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet()
@@ -218,10 +215,10 @@ public class WindowContext extends SchemaContext {
 
 			// This item in the concat-only relation submenu turns concat-only
 			// relations into ones separated by commas then commas.
-			JRadioButtonMenuItem comma = new JRadioButtonMenuItem(BuilderBundle
-					.getString("commaCommaConcatTitle"));
-			comma.setMnemonic(BuilderBundle.getString(
-					"commaCommaConcatMnemonic").charAt(0));
+			JRadioButtonMenuItem comma = new JRadioButtonMenuItem(Resources
+					.get("commaCommaConcatTitle"));
+			comma.setMnemonic(Resources.get("commaCommaConcatMnemonic").charAt(
+					0));
 			comma.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
@@ -237,10 +234,9 @@ public class WindowContext extends SchemaContext {
 
 			// This item in the concat-only relation submenu turns concat-only
 			// relations into ones separated by commas then tabs.
-			JRadioButtonMenuItem tab = new JRadioButtonMenuItem(BuilderBundle
-					.getString("commaTabConcatTitle"));
-			tab.setMnemonic(BuilderBundle.getString("commaTabConcatMnemonic")
-					.charAt(0));
+			JRadioButtonMenuItem tab = new JRadioButtonMenuItem(Resources
+					.get("commaTabConcatTitle"));
+			tab.setMnemonic(Resources.get("commaTabConcatMnemonic").charAt(0));
 			tab.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
@@ -256,10 +252,10 @@ public class WindowContext extends SchemaContext {
 
 			// This item in the concat-only relation submenu turns concat-only
 			// relations into ones separated by commas then spaces.
-			JRadioButtonMenuItem space = new JRadioButtonMenuItem(BuilderBundle
-					.getString("commaSpaceConcatTitle"));
-			space.setMnemonic(BuilderBundle.getString(
-					"commaSpaceConcatMnemonic").charAt(0));
+			JRadioButtonMenuItem space = new JRadioButtonMenuItem(Resources
+					.get("commaSpaceConcatTitle"));
+			space.setMnemonic(Resources.get("commaSpaceConcatMnemonic").charAt(
+					0));
 			space.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
@@ -275,10 +271,10 @@ public class WindowContext extends SchemaContext {
 
 			// This item in the concat-only relation submenu turns concat-only
 			// relations into ones separated by spaces then commas.
-			comma = new JRadioButtonMenuItem(BuilderBundle
-					.getString("spaceCommaConcatTitle"));
-			comma.setMnemonic(BuilderBundle.getString(
-					"spaceCommaConcatMnemonic").charAt(0));
+			comma = new JRadioButtonMenuItem(Resources
+					.get("spaceCommaConcatTitle"));
+			comma.setMnemonic(Resources.get("spaceCommaConcatMnemonic").charAt(
+					0));
 			comma.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
@@ -294,10 +290,8 @@ public class WindowContext extends SchemaContext {
 
 			// This item in the concat-only relation submenu turns concat-only
 			// relations into ones separated by spaces then tabs.
-			tab = new JRadioButtonMenuItem(BuilderBundle
-					.getString("spaceTabConcatTitle"));
-			tab.setMnemonic(BuilderBundle.getString("spaceTabConcatMnemonic")
-					.charAt(0));
+			tab = new JRadioButtonMenuItem(Resources.get("spaceTabConcatTitle"));
+			tab.setMnemonic(Resources.get("spaceTabConcatMnemonic").charAt(0));
 			tab.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
@@ -313,10 +307,10 @@ public class WindowContext extends SchemaContext {
 
 			// This item in the concat-only relation submenu turns concat-only
 			// relations into ones separated by spaces then spaces.
-			space = new JRadioButtonMenuItem(BuilderBundle
-					.getString("spaceSpaceConcatTitle"));
-			space.setMnemonic(BuilderBundle.getString(
-					"spaceSpaceConcatMnemonic").charAt(0));
+			space = new JRadioButtonMenuItem(Resources
+					.get("spaceSpaceConcatTitle"));
+			space.setMnemonic(Resources.get("spaceSpaceConcatMnemonic").charAt(
+					0));
 			space.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
@@ -332,10 +326,11 @@ public class WindowContext extends SchemaContext {
 
 			// This item in the concat-only relation submenu turns concat-only
 			// relations into ones separated by tabs then commas.
-			comma = new JRadioButtonMenuItem(BuilderBundle
-					.getString("tabCommaConcatTitle"));
-			comma.setMnemonic(BuilderBundle.getString("tabCommaConcatMnemonic")
-					.charAt(0));
+			comma = new JRadioButtonMenuItem(Resources
+					.get("tabCommaConcatTitle"));
+			comma
+					.setMnemonic(Resources.get("tabCommaConcatMnemonic")
+							.charAt(0));
 			comma.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
@@ -351,10 +346,8 @@ public class WindowContext extends SchemaContext {
 
 			// This item in the concat-only relation submenu turns concat-only
 			// relations into ones separated by tabs then tabs.
-			tab = new JRadioButtonMenuItem(BuilderBundle
-					.getString("tabTabConcatTitle"));
-			tab.setMnemonic(BuilderBundle.getString("tabTabConcatMnemonic")
-					.charAt(0));
+			tab = new JRadioButtonMenuItem(Resources.get("tabTabConcatTitle"));
+			tab.setMnemonic(Resources.get("tabTabConcatMnemonic").charAt(0));
 			tab.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
@@ -370,10 +363,11 @@ public class WindowContext extends SchemaContext {
 
 			// This item in the concat-only relation submenu turns concat-only
 			// relations into ones separated by tabs then spaces.
-			space = new JRadioButtonMenuItem(BuilderBundle
-					.getString("tabSpaceConcatTitle"));
-			space.setMnemonic(BuilderBundle.getString("tabSpaceConcatMnemonic")
-					.charAt(0));
+			space = new JRadioButtonMenuItem(Resources
+					.get("tabSpaceConcatTitle"));
+			space
+					.setMnemonic(Resources.get("tabSpaceConcatMnemonic")
+							.charAt(0));
 			space.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(

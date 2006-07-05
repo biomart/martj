@@ -51,7 +51,7 @@ import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
@@ -100,12 +100,11 @@ public class DataSetTabSet extends JTabbedPane {
 		JScrollPane scroller = new JScrollPane(this.allDataSetsDiagram);
 		scroller.getViewport().setBackground(
 				this.allDataSetsDiagram.getBackground());
-		this.addTab(BuilderBundle.getString("multiDataSetOverviewTab"),
-				scroller);
+		this.addTab(Resources.get("multiDataSetOverviewTab"), scroller);
 
 		// Calculate the dataset tabs.
 		this.recalculateDataSetTabs();
-		
+
 		// Update the overview diagram.
 		this.recalculateOverviewDiagram();
 	}
@@ -262,9 +261,9 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestRemoveDataSet(final DataSet dataset) {
 		// Confirm the decision first.
-		int choice = JOptionPane.showConfirmDialog(this, BuilderBundle
-				.getString("confirmDelDataset"), BuilderBundle
-				.getString("questionTitle"), JOptionPane.YES_NO_OPTION);
+		int choice = JOptionPane.showConfirmDialog(this, Resources
+				.get("confirmDelDataset"), Resources.get("questionTitle"),
+				JOptionPane.YES_NO_OPTION);
 
 		// Refuse to do it if they said no.
 		if (choice != JOptionPane.YES_OPTION)
@@ -338,9 +337,9 @@ public class DataSetTabSet extends JTabbedPane {
 		// Ask the user for a name. Use the default response
 		// as the default value in the input field.
 		String name = (String) JOptionPane.showInputDialog(this.martTab
-				.getMartTabSet().getMartBuilder(), message, BuilderBundle
-				.getString("questionTitle"), JOptionPane.QUESTION_MESSAGE,
-				null, null, defaultResponse);
+				.getMartTabSet().getMartBuilder(), message, Resources
+				.get("questionTitle"), JOptionPane.QUESTION_MESSAGE, null,
+				null, defaultResponse);
 
 		// If they cancelled the request, return null.
 		if (name == null)
@@ -364,8 +363,8 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestRenameDataSet(DataSet dataset) {
 		try {
 			// Ask user for the new name.
-			String newName = this.askUserForName(BuilderBundle
-					.getString("requestDataSetName"), dataset.getName());
+			String newName = this.askUserForName(Resources
+					.get("requestDataSetName"), dataset.getName());
 
 			// If the new name is null (user cancelled), or has
 			// not changed, don't rename it.
@@ -402,8 +401,8 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestReplicateDataSet(DataSet dataset) {
 		try {
 			// Ask user for the name to use for the copy.
-			String newName = this.askUserForName(BuilderBundle
-					.getString("requestDataSetName"), dataset.getName());
+			String newName = this.askUserForName(Resources
+					.get("requestDataSetName"), dataset.getName());
 
 			// No name entered? Or same name entered? Ignore the request.
 			if (newName == null || newName.trim().length() == 0
@@ -438,8 +437,8 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestRenameDataSetColumn(DataSetColumn dsColumn) {
 		try {
 			// Ask user for the new name.
-			String newName = this.askUserForName(BuilderBundle
-					.getString("requestDataSetColumnName"), dsColumn.getName());
+			String newName = this.askUserForName(Resources
+					.get("requestDataSetColumnName"), dsColumn.getName());
 
 			// If the new name is null (user cancelled), or has
 			// not changed, don't rename it.
@@ -472,8 +471,8 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestRenameDataSetTable(DataSetTable dsTable) {
 		try {
 			// Ask user for the new name.
-			String newName = this.askUserForName(BuilderBundle
-					.getString("requestDataSetTableName"), dsTable.getName());
+			String newName = this.askUserForName(Resources
+					.get("requestDataSetTableName"), dsTable.getName());
 
 			// If the new name is null (user cancelled), or has
 			// not changed, don't rename it.
@@ -503,8 +502,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestCreateDataSet(final Table table) {
 		// Ask user for a name to use.
-		final String name = this.askUserForName(BuilderBundle
-				.getString("requestDataSetName"), table.getName());
+		final String name = this.askUserForName(Resources
+				.get("requestDataSetName"), table.getName());
 
 		// If they cancelled it, cancel the operation.
 		if (name == null)
@@ -551,8 +550,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestSuggestDataSets(final Table table) {
 		// Ask the user for a name for the table.
-		final String name = this.askUserForName(BuilderBundle
-				.getString("requestDataSetName"), table.getName());
+		final String name = this.askUserForName(Resources
+				.get("requestDataSetName"), table.getName());
 
 		// If they cancelled it, return without doing anything.
 		if (name == null)
@@ -1218,10 +1217,8 @@ public class DataSetTabSet extends JTabbedPane {
 		JPopupMenu contextMenu = new JPopupMenu();
 
 		// This item allows the user to remove the dataset from the mart.
-		JMenuItem close = new JMenuItem(BuilderBundle
-				.getString("removeDataSetTitle"));
-		close.setMnemonic(BuilderBundle.getString("removeDataSetMnemonic")
-				.charAt(0));
+		JMenuItem close = new JMenuItem(Resources.get("removeDataSetTitle"));
+		close.setMnemonic(Resources.get("removeDataSetMnemonic").charAt(0));
 		close.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				requestRemoveDataSet(dataset);
@@ -1230,10 +1227,8 @@ public class DataSetTabSet extends JTabbedPane {
 		contextMenu.add(close);
 
 		// This item allows the user to rename the dataset.
-		JMenuItem rename = new JMenuItem(BuilderBundle
-				.getString("renameDataSetTitle"));
-		rename.setMnemonic(BuilderBundle.getString("renameDataSetMnemonic")
-				.charAt(0));
+		JMenuItem rename = new JMenuItem(Resources.get("renameDataSetTitle"));
+		rename.setMnemonic(Resources.get("renameDataSetMnemonic").charAt(0));
 		rename.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				requestRenameDataSet(dataset);
@@ -1330,8 +1325,8 @@ public class DataSetTabSet extends JTabbedPane {
 			JPanel buttonsPanel = new JPanel();
 
 			// Create the button that selects the dataset card.
-			this.datasetButton = new JRadioButton(BuilderBundle
-					.getString("datasetButtonName"));
+			this.datasetButton = new JRadioButton(Resources
+					.get("datasetButtonName"));
 			this.datasetButton.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					if (e.getSource() == datasetButton) {
@@ -1342,8 +1337,8 @@ public class DataSetTabSet extends JTabbedPane {
 			});
 
 			// Create the button that selects the window card.
-			this.windowButton = new JRadioButton(BuilderBundle
-					.getString("windowButtonName"));
+			this.windowButton = new JRadioButton(Resources
+					.get("windowButtonName"));
 			windowButton.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					if (e.getSource() == windowButton) {
@@ -1352,7 +1347,7 @@ public class DataSetTabSet extends JTabbedPane {
 					}
 				}
 			});
-			
+
 			// Add the card buttons to the panel.
 			buttonsPanel.add(windowButton);
 			buttonsPanel.add(this.datasetButton);

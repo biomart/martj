@@ -30,7 +30,7 @@ import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 
 /**
  * The mart contains the set of all schemas that are providing data to this
@@ -84,8 +84,8 @@ public class Mart {
 	public void addSchema(Schema schema) throws AlreadyExistsException {
 		// Check we don't have one by this name already.
 		if (this.schemas.containsKey(schema.getName()))
-			throw new AlreadyExistsException(BuilderBundle
-					.getString("schemaExists"), schema.getName());
+			throw new AlreadyExistsException(Resources.get("schemaExists"),
+					schema.getName());
 
 		// Add it.
 		this.schemas.put(schema.getName(), schema);
@@ -110,11 +110,10 @@ public class Mart {
 		// Check the schema belongs to us, and the new name has not
 		// already been used.
 		if (this.schemas.containsKey(name))
-			throw new AlreadyExistsException(BuilderBundle
-					.getString("schemaExists"), schema.getName());
+			throw new AlreadyExistsException(Resources.get("schemaExists"),
+					schema.getName());
 		if (!this.schemas.containsValue(schema))
-			throw new AssociationException(BuilderBundle
-					.getString("schemaMartMismatch"));
+			throw new AssociationException(Resources.get("schemaMartMismatch"));
 
 		// Rename it.
 		this.schemas.remove(schema.getName());
@@ -137,8 +136,8 @@ public class Mart {
 			if (ds.getCentralTable().getSchema().equals(schema))
 				this.removeDataSet(ds);
 		}
-		for (Iterator i = schema.getExternalRelations().iterator(); i.hasNext(); ) 
-			((Relation)i.next()).destroy();
+		for (Iterator i = schema.getExternalRelations().iterator(); i.hasNext();)
+			((Relation) i.next()).destroy();
 		this.schemas.remove(schema.getName());
 	}
 
@@ -174,8 +173,8 @@ public class Mart {
 	public void addDataSet(DataSet dataset) throws AlreadyExistsException {
 		// Check the dataset name has not already been used.
 		if (this.datasets.containsKey(dataset.getName()))
-			throw new AlreadyExistsException(BuilderBundle
-					.getString("datasetExists"), dataset.getName());
+			throw new AlreadyExistsException(Resources.get("datasetExists"),
+					dataset.getName());
 
 		// Add it.
 		this.datasets.put(dataset.getName(), dataset);
@@ -224,7 +223,7 @@ public class Mart {
 				if (r.isOneToMany()
 						&& !r.getOtherKey(k).getTable().equals(centralTable)) {
 					DataSet subclassedDS = new DataSet(this, centralTable, name
-							+ BuilderBundle.getString("subclassDataSetSuffix")
+							+ Resources.get("subclassDataSetSuffix")
 							+ (suffix++));
 					subclassedDS.flagSubclassRelation(r);
 					subclassedDS.optimiseDataSet();
@@ -254,11 +253,10 @@ public class Mart {
 			throws AlreadyExistsException, AssociationException {
 		// Check the dataset belongs to us and the new name is unique.
 		if (this.datasets.containsKey(name))
-			throw new AlreadyExistsException(BuilderBundle
-					.getString("datasetExists"), dataset.getName());
+			throw new AlreadyExistsException(Resources.get("datasetExists"),
+					dataset.getName());
 		if (!this.datasets.containsValue(dataset))
-			throw new AssociationException(BuilderBundle
-					.getString("datasetMartMismatch"));
+			throw new AssociationException(Resources.get("datasetMartMismatch"));
 
 		// Rename it.
 		this.datasets.remove(dataset.getName());

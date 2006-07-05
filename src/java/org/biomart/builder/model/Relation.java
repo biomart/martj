@@ -25,7 +25,7 @@ import java.util.Map;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 
 /**
  * <p>
@@ -320,8 +320,8 @@ public interface Relation extends Comparable {
 				Cardinality cardinality) throws AssociationException {
 			// Check the keys have the same number of columns.
 			if (firstKey.countColumns() != secondKey.countColumns())
-				throw new AssociationException(BuilderBundle
-						.getString("keyColumnCountMismatch"));
+				throw new AssociationException(Resources
+						.get("keyColumnCountMismatch"));
 
 			// Remember the keys etc.
 			this.firstKey = firstKey;
@@ -331,8 +331,8 @@ public interface Relation extends Comparable {
 
 			// Check the relation doesn't already exist.
 			if (firstKey.getRelations().contains(this))
-				throw new AssociationException(BuilderBundle
-						.getString("relationAlreadyExists"));
+				throw new AssociationException(Resources
+						.get("relationAlreadyExists"));
 
 			// Check that any foreign key doesn't have an active relation
 			// elsewhere.
@@ -356,8 +356,8 @@ public interface Relation extends Comparable {
 						fkHasOtherRel = true;
 				}
 			if (fkHasOtherRel)
-				throw new AssociationException(BuilderBundle
-						.getString("fkHasMultiplePKs"));
+				throw new AssociationException(Resources
+						.get("fkHasMultiplePKs"));
 
 			// Add ourselves to the keys at both ends.
 			firstKey.addRelation(this);
@@ -385,8 +385,8 @@ public interface Relation extends Comparable {
 				// Check both keys have same cardinality.
 				if (this.firstKey.countColumns() != this.secondKey
 						.countColumns())
-					throw new AssociationException(BuilderBundle
-							.getString("keyColumnCountMismatch"));
+					throw new AssociationException(Resources
+							.get("keyColumnCountMismatch"));
 			}
 
 			// Make the change.
@@ -416,8 +416,7 @@ public interface Relation extends Comparable {
 			else if (key.equals(this.secondKey))
 				return this.firstKey;
 			else
-				throw new IllegalArgumentException(BuilderBundle
-						.getString("keyNotInRel"));
+				throw new IllegalArgumentException(Resources.get("keyNotInRel"));
 		}
 
 		public Key getManyKey() {
@@ -466,14 +465,12 @@ public interface Relation extends Comparable {
 
 		public boolean isOneToMany() {
 			return this.cardinality.equals(Cardinality.MANY)
-					&& (this.firstKey instanceof PrimaryKey
-							|| this.secondKey instanceof PrimaryKey);
+					&& (this.firstKey instanceof PrimaryKey || this.secondKey instanceof PrimaryKey);
 		}
 
 		public boolean isManyToMany() {
 			return this.cardinality.equals(Cardinality.MANY)
-					&& !(this.firstKey instanceof PrimaryKey
-							|| this.secondKey instanceof PrimaryKey);
+					&& !(this.firstKey instanceof PrimaryKey || this.secondKey instanceof PrimaryKey);
 		}
 
 		public boolean isExternal() {

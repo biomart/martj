@@ -41,7 +41,7 @@ import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.Relation.Cardinality;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
@@ -77,10 +77,11 @@ public class DataSetContext extends WindowContext {
 				contextMenu.addSeparator();
 
 			// Option to remove the dataset from the mart.
-			JMenuItem remove = new JMenuItem(BuilderBundle
-					.getString("removeDataSetTitle"));
-			remove.setMnemonic(BuilderBundle.getString("removeDataSetMnemonic")
-					.charAt(0));
+			JMenuItem remove = new JMenuItem(Resources
+					.get("removeDataSetTitle"));
+			remove
+					.setMnemonic(Resources.get("removeDataSetMnemonic").charAt(
+							0));
 			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestRemoveDataSet(
@@ -90,10 +91,10 @@ public class DataSetContext extends WindowContext {
 			contextMenu.add(remove);
 
 			// Option to optimise the dataset.
-			JMenuItem optimise = new JMenuItem(BuilderBundle
-					.getString("optimiseDataSetTitle"));
-			optimise.setMnemonic(BuilderBundle.getString(
-					"optimiseDataSetMnemonic").charAt(0));
+			JMenuItem optimise = new JMenuItem(Resources
+					.get("optimiseDataSetTitle"));
+			optimise.setMnemonic(Resources.get("optimiseDataSetMnemonic")
+					.charAt(0));
 			optimise.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestOptimiseDataSet(
@@ -103,10 +104,11 @@ public class DataSetContext extends WindowContext {
 			contextMenu.add(optimise);
 
 			// Option to rename the dataset.
-			JMenuItem rename = new JMenuItem(BuilderBundle
-					.getString("renameDataSetTitle"));
-			rename.setMnemonic(BuilderBundle.getString("renameDataSetMnemonic")
-					.charAt(0));
+			JMenuItem rename = new JMenuItem(Resources
+					.get("renameDataSetTitle"));
+			rename
+					.setMnemonic(Resources.get("renameDataSetMnemonic").charAt(
+							0));
 			rename.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestRenameDataSet(
@@ -116,10 +118,10 @@ public class DataSetContext extends WindowContext {
 			contextMenu.add(rename);
 
 			// Option to replicate the dataset from the mart.
-			JMenuItem replicate = new JMenuItem(BuilderBundle
-					.getString("replicateDataSetTitle"));
-			replicate.setMnemonic(BuilderBundle.getString(
-					"replicateDataSetMnemonic").charAt(0));
+			JMenuItem replicate = new JMenuItem(Resources
+					.get("replicateDataSetTitle"));
+			replicate.setMnemonic(Resources.get("replicateDataSetMnemonic")
+					.charAt(0));
 			replicate.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestReplicateDataSet(
@@ -130,19 +132,18 @@ public class DataSetContext extends WindowContext {
 
 			// The optimiser submenu allows the user to choose different
 			// post-construction optimiser types for the dataset.
-			JMenu optimiserMenu = new JMenu(BuilderBundle
-					.getString("optimiserTypeTitle"));
-			optimiserMenu.setMnemonic(BuilderBundle.getString(
-					"optimiserTypeMnemonic").charAt(0));
+			JMenu optimiserMenu = new JMenu(Resources.get("optimiserTypeTitle"));
+			optimiserMenu.setMnemonic(Resources.get("optimiserTypeMnemonic")
+					.charAt(0));
 
 			// Make a group for the different optimiser types.
 			ButtonGroup optGroup = new ButtonGroup();
 
 			// The no-optimiser option turns post-construction optimisation off.
-			JRadioButtonMenuItem optNone = new JRadioButtonMenuItem(
-					BuilderBundle.getString("optimiserNoneTitle"));
-			optNone.setMnemonic(BuilderBundle
-					.getString("optimiserNoneMnemonic").charAt(0));
+			JRadioButtonMenuItem optNone = new JRadioButtonMenuItem(Resources
+					.get("optimiserNoneTitle"));
+			optNone.setMnemonic(Resources.get("optimiserNoneMnemonic")
+					.charAt(0));
 			optNone.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestChangeOptimiserType(
@@ -156,10 +157,10 @@ public class DataSetContext extends WindowContext {
 				optNone.setSelected(true);
 
 			// The column option turns on has-column optimisation.
-			JRadioButtonMenuItem optCol = new JRadioButtonMenuItem(
-					BuilderBundle.getString("optimiserColumnTitle"));
-			optCol.setMnemonic(BuilderBundle.getString(
-					"optimiserColumnMnemonic").charAt(0));
+			JRadioButtonMenuItem optCol = new JRadioButtonMenuItem(Resources
+					.get("optimiserColumnTitle"));
+			optCol.setMnemonic(Resources.get("optimiserColumnMnemonic").charAt(
+					0));
 			optCol.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestChangeOptimiserType(
@@ -173,10 +174,10 @@ public class DataSetContext extends WindowContext {
 				optCol.setSelected(true);
 
 			// The table option turns on table-of-has-column optimisation.
-			JRadioButtonMenuItem optTbl = new JRadioButtonMenuItem(
-					BuilderBundle.getString("optimiserTableTitle"));
-			optTbl.setMnemonic(BuilderBundle
-					.getString("optimiserTableMnemonic").charAt(0));
+			JRadioButtonMenuItem optTbl = new JRadioButtonMenuItem(Resources
+					.get("optimiserTableTitle"));
+			optTbl.setMnemonic(Resources.get("optimiserTableMnemonic")
+					.charAt(0));
 			optTbl.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestChangeOptimiserType(
@@ -193,10 +194,8 @@ public class DataSetContext extends WindowContext {
 			contextMenu.add(optimiserMenu);
 
 			// Option to create the DDL for the dataset.
-			JMenuItem saveDDL = new JMenuItem(BuilderBundle
-					.getString("saveDDLTitle"));
-			saveDDL.setMnemonic(BuilderBundle.getString("saveDDLMnemonic")
-					.charAt(0));
+			JMenuItem saveDDL = new JMenuItem(Resources.get("saveDDLTitle"));
+			saveDDL.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
 			saveDDL.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestCreateDDL(
@@ -218,10 +217,11 @@ public class DataSetContext extends WindowContext {
 			DataSetTableType tableType = table.getType();
 
 			// Option to explain how the table was constructed.
-			JMenuItem explain = new JMenuItem(BuilderBundle
-					.getString("explainTableTitle"));
-			explain.setMnemonic(BuilderBundle.getString("explainTableMnemonic")
-					.charAt(0));
+			JMenuItem explain = new JMenuItem(Resources
+					.get("explainTableTitle"));
+			explain
+					.setMnemonic(Resources.get("explainTableMnemonic")
+							.charAt(0));
 			explain.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestExplainTable(table);
@@ -230,10 +230,8 @@ public class DataSetContext extends WindowContext {
 			contextMenu.add(explain);
 
 			// Rename the column.
-			JMenuItem rename = new JMenuItem(BuilderBundle
-					.getString("renameTableTitle"));
-			rename.setMnemonic(BuilderBundle.getString("renameTableMnemonic")
-					.charAt(0));
+			JMenuItem rename = new JMenuItem(Resources.get("renameTableTitle"));
+			rename.setMnemonic(Resources.get("renameTableMnemonic").charAt(0));
 			rename.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestRenameDataSetTable(
@@ -247,10 +245,10 @@ public class DataSetContext extends WindowContext {
 
 				// The dimension can be removed by using this option. This
 				// simply masks the relation that caused the dimension to exist.
-				JMenuItem removeDM = new JMenuItem(BuilderBundle
-						.getString("removeDimensionTitle"));
-				removeDM.setMnemonic(BuilderBundle.getString(
-						"removeDimensionMnemonic").charAt(0));
+				JMenuItem removeDM = new JMenuItem(Resources
+						.get("removeDimensionTitle"));
+				removeDM.setMnemonic(Resources.get("removeDimensionMnemonic")
+						.charAt(0));
 				removeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						Relation relation = (Relation) table
@@ -264,10 +262,10 @@ public class DataSetContext extends WindowContext {
 				// The dimension can be merged by using this option. This
 				// changes the relation that caused the dimension to exist
 				// into a 1:1 relation.
-				JMenuItem mergeDM = new JMenuItem(BuilderBundle
-						.getString("mergeTableTitle"));
-				mergeDM.setMnemonic(BuilderBundle.getString(
-						"mergeTableMnemonic").charAt(0));
+				JMenuItem mergeDM = new JMenuItem(Resources
+						.get("mergeTableTitle"));
+				mergeDM.setMnemonic(Resources.get("mergeTableMnemonic").charAt(
+						0));
 				mergeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						Relation relation = (Relation) table
@@ -285,10 +283,10 @@ public class DataSetContext extends WindowContext {
 
 				// The subclass table can be removed by using this option. This
 				// simply masks the relation that caused the subclass to exist.
-				JMenuItem removeDM = new JMenuItem(BuilderBundle
-						.getString("removeSubclassTitle"));
-				removeDM.setMnemonic(BuilderBundle.getString(
-						"removeSubclassMnemonic").charAt(0));
+				JMenuItem removeDM = new JMenuItem(Resources
+						.get("removeSubclassTitle"));
+				removeDM.setMnemonic(Resources.get("removeSubclassMnemonic")
+						.charAt(0));
 				removeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						Relation relation = (Relation) table
@@ -303,10 +301,10 @@ public class DataSetContext extends WindowContext {
 				// The subclass table can be merged by using this option.
 				// This unflags the relation that caused the subclass to
 				// exist.
-				JMenuItem mergeDM = new JMenuItem(BuilderBundle
-						.getString("mergeTableTitle"));
-				mergeDM.setMnemonic(BuilderBundle.getString(
-						"mergeTableMnemonic").charAt(0));
+				JMenuItem mergeDM = new JMenuItem(Resources
+						.get("mergeTableTitle"));
+				mergeDM.setMnemonic(Resources.get("mergeTableMnemonic").charAt(
+						0));
 				mergeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						Relation relation = (Relation) table
@@ -342,10 +340,10 @@ public class DataSetContext extends WindowContext {
 			final DataSetColumn column = (DataSetColumn) object;
 
 			// Explain the column to the user.
-			JMenuItem explain = new JMenuItem(BuilderBundle
-					.getString("explainColumnTitle"));
-			explain.setMnemonic(BuilderBundle
-					.getString("explainColumnMnemonic").charAt(0));
+			JMenuItem explain = new JMenuItem(Resources
+					.get("explainColumnTitle"));
+			explain.setMnemonic(Resources.get("explainColumnMnemonic")
+					.charAt(0));
 			explain.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet()
@@ -355,10 +353,9 @@ public class DataSetContext extends WindowContext {
 			contextMenu.add(explain);
 
 			// Mask the column.
-			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(BuilderBundle
-					.getString("maskColumnTitle"));
-			mask.setMnemonic(BuilderBundle.getString("maskColumnMnemonic")
-					.charAt(0));
+			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
+					.get("maskColumnTitle"));
+			mask.setMnemonic(Resources.get("maskColumnMnemonic").charAt(0));
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					if (mask.isSelected())
@@ -374,10 +371,8 @@ public class DataSetContext extends WindowContext {
 				mask.setSelected(true);
 
 			// Rename the column.
-			JMenuItem rename = new JMenuItem(BuilderBundle
-					.getString("renameColumnTitle"));
-			rename.setMnemonic(BuilderBundle.getString("renameColumnMnemonic")
-					.charAt(0));
+			JMenuItem rename = new JMenuItem(Resources.get("renameColumnTitle"));
+			rename.setMnemonic(Resources.get("renameColumnMnemonic").charAt(0));
 			rename.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					getMartTab().getDataSetTabSet().requestRenameDataSetColumn(
@@ -392,9 +387,9 @@ public class DataSetContext extends WindowContext {
 				// Allow the user to partition, or unpartition, by schema in
 				// schema group.
 				final JCheckBoxMenuItem partition = new JCheckBoxMenuItem(
-						BuilderBundle.getString("partitionOnSchemaTitle"));
-				partition.setMnemonic(BuilderBundle.getString(
-						"partitionOnSchemaMnemonic").charAt(0));
+						Resources.get("partitionOnSchemaTitle"));
+				partition.setMnemonic(Resources
+						.get("partitionOnSchemaMnemonic").charAt(0));
 				partition.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						if (partition.isSelected())
@@ -423,15 +418,15 @@ public class DataSetContext extends WindowContext {
 				if (isPartitioned) {
 
 					// Set up the partitioning submenu.
-					JMenu partitionSubmenu = new JMenu(BuilderBundle
-							.getString("partitionColumnSMTitle"));
-					partitionSubmenu.setMnemonic(BuilderBundle.getString(
+					JMenu partitionSubmenu = new JMenu(Resources
+							.get("partitionColumnSMTitle"));
+					partitionSubmenu.setMnemonic(Resources.get(
 							"partitionColumnSMMnemonic").charAt(0));
 
 					// The option to change the partition type.
-					JMenuItem changepartition = new JMenuItem(BuilderBundle
-							.getString("changePartitionColumnTitle"));
-					changepartition.setMnemonic(BuilderBundle.getString(
+					JMenuItem changepartition = new JMenuItem(Resources
+							.get("changePartitionColumnTitle"));
+					changepartition.setMnemonic(Resources.get(
 							"changePartitionColumnMnemonic").charAt(0));
 					changepartition.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent evt) {
@@ -443,9 +438,9 @@ public class DataSetContext extends WindowContext {
 					partitionSubmenu.add(changepartition);
 
 					// The option to turn off partitioning.
-					JMenuItem unpartition = new JMenuItem(BuilderBundle
-							.getString("unpartitionColumnTitle"));
-					unpartition.setMnemonic(BuilderBundle.getString(
+					JMenuItem unpartition = new JMenuItem(Resources
+							.get("unpartitionColumnTitle"));
+					unpartition.setMnemonic(Resources.get(
 							"unpartitionColumnMnemonic").charAt(0));
 					unpartition.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent evt) {
@@ -465,9 +460,9 @@ public class DataSetContext extends WindowContext {
 				else {
 
 					// Option to enable partitioning.
-					JMenuItem partition = new JMenuItem(BuilderBundle
-							.getString("partitionColumnTitle"));
-					partition.setMnemonic(BuilderBundle.getString(
+					JMenuItem partition = new JMenuItem(Resources
+							.get("partitionColumnTitle"));
+					partition.setMnemonic(Resources.get(
 							"partitionColumnMnemonic").charAt(0));
 					partition.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent evt) {

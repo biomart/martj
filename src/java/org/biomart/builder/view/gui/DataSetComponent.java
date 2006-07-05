@@ -31,7 +31,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 
 /**
  * A diagram component that represents a dataset. It usually only has a label in
@@ -43,9 +43,9 @@ import org.biomart.builder.resources.BuilderBundle;
  */
 public class DataSetComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
-	
+
 	private GridBagLayout layout;
-	
+
 	private GridBagConstraints constraints;
 
 	/**
@@ -81,7 +81,7 @@ public class DataSetComponent extends BoxShapedComponent {
 
 		// Set the background colour.
 		this.setBackground(Color.LIGHT_GRAY);
-		
+
 		// Add the label for the schema name,
 		JLabel label = new JLabel(this.getDataSet().getName());
 		label.setFont(Font.decode("Serif-BOLD-10"));
@@ -99,10 +99,8 @@ public class DataSetComponent extends BoxShapedComponent {
 
 		// Add the 'show tables' option, which opens the tab representing
 		// this schema.
-		JMenuItem showTables = new JMenuItem(BuilderBundle
-				.getString("showTablesTitle"));
-		showTables.setMnemonic(BuilderBundle.getString("showTablesMnemonic")
-				.charAt(0));
+		JMenuItem showTables = new JMenuItem(Resources.get("showTablesTitle"));
+		showTables.setMnemonic(Resources.get("showTablesMnemonic").charAt(0));
 		showTables.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				int index = getDiagram().getMartTab().getDataSetTabSet()

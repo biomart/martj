@@ -40,7 +40,7 @@ import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Table.GenericTable;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 
 /**
  * <p>
@@ -475,11 +475,11 @@ public interface Schema extends Comparable, DataLink {
 				AssociationException {
 			// Check the table belongs to us, and has a unique name.
 			if (!table.getSchema().equals(this))
-				throw new AssociationException(BuilderBundle
-						.getString("tableSchemaMismatch"));
+				throw new AssociationException(Resources
+						.get("tableSchemaMismatch"));
 			if (this.tables.containsKey(table.getName()))
-				throw new AlreadyExistsException(BuilderBundle
-						.getString("tableExists"), table.getName());
+				throw new AlreadyExistsException(Resources.get("tableExists"),
+						table.getName());
 
 			// Add the table.
 			this.tables.put(table.getName(), table);
@@ -501,8 +501,8 @@ public interface Schema extends Comparable, DataLink {
 
 			// Refuse to do it if the new name has been used already.
 			if (this.tables.containsKey(newName))
-				throw new AlreadyExistsException(BuilderBundle
-						.getString("tableExists"), newName);
+				throw new AlreadyExistsException(Resources.get("tableExists"),
+						newName);
 
 			// Update our mapping but don't rename the columns themselves.
 			Table tbl = (Table) this.tables.get(oldName);

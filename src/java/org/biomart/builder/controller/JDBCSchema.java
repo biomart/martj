@@ -56,7 +56,7 @@ import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Schema.GenericSchema;
 import org.biomart.builder.model.Table.GenericTable;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 
 /**
  * <p>
@@ -223,8 +223,8 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 			// Check it really is an instance of Driver.
 			if (!Driver.class.isAssignableFrom(loadedDriverClass))
-				throw new ClassCastException(BuilderBundle
-						.getString("driverClassNotJDBCDriver"));
+				throw new ClassCastException(Resources
+						.get("driverClassNotJDBCDriver"));
 
 			// Connect!
 			Properties properties = new Properties();
@@ -436,7 +436,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 				// Try with '_id' appended if plain version turned up nothing.
 				if (candidateCol == null)
 					candidateCol = dbTable.getColumnByName(dbTableName
-							+ BuilderBundle.getString("primaryKeySuffix"));
+							+ Resources.get("primaryKeySuffix"));
 				// Found something? Add it to the primary key columns map, with
 				// a dummy key of 1. (Use Short for the key because that is what
 				// DMD would have used had it found anything itself).
@@ -622,12 +622,12 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// on its own. Any PK which does not have this property is skipped.
 			Column firstPKCol = (Column) pk.getColumns().get(0);
 			String firstPKColName = firstPKCol.getName();
-			int idPrefixIndex = firstPKColName.indexOf(BuilderBundle
-					.getString("primaryKeySuffix"));
+			int idPrefixIndex = firstPKColName.indexOf(Resources
+					.get("primaryKeySuffix"));
 			if (idPrefixIndex >= 0)
 				firstPKColName = firstPKColName.substring(0, idPrefixIndex);
 			if (!firstPKColName.equals(pkTable.getName())
-					&& !firstPKColName.equals(BuilderBundle.getString("idCol")))
+					&& !firstPKColName.equals(Resources.get("idCol")))
 				continue;
 
 			// Make a list of relations that already exist in this schema, from
@@ -665,7 +665,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 					Column candidateFKColumn = null;
 					// Don't try to find 'id' or 'id_key' columns as that
 					// would be silly and would probably match far too much.
-					if (!pkColumnName.equals(BuilderBundle.getString("idCol"))) {
+					if (!pkColumnName.equals(Resources.get("idCol"))) {
 						// Try equivalent name first.
 						candidateFKColumn = fkTable
 								.getColumnByName(pkColumnName);
@@ -673,8 +673,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						if (candidateFKColumn == null)
 							candidateFKColumn = fkTable
 									.getColumnByName(pkColumnName
-											+ BuilderBundle
-													.getString("foreignKeySuffix"));
+											+ Resources.get("foreignKeySuffix"));
 					}
 					// Then try with PK tablename+'_' prepended, if not found.
 					if (candidateFKColumn == null)

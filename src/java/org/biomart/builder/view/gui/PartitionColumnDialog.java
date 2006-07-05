@@ -43,7 +43,7 @@ import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.UniqueValues;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.ValueCollection;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
@@ -77,8 +77,8 @@ public class PartitionColumnDialog extends JDialog {
 	private PartitionColumnDialog(final MartTab martTab,
 			String executeButtonText, final PartitionedColumnType template) {
 		// Creates the basic dialog.
-		super(martTab.getMartTabSet().getMartBuilder(), BuilderBundle
-				.getString("partitionColumnDialogTitle"), true);
+		super(martTab.getMartTabSet().getMartBuilder(), Resources
+				.get("partitionColumnDialogTitle"), true);
 
 		// Remembers the dataset tabset this dialog is referring to.
 		this.martTab = martTab;
@@ -111,14 +111,13 @@ public class PartitionColumnDialog extends JDialog {
 
 		// Create the fields that will contain the user's choice and any
 		// values they may enter.
-		final JLabel valueLabel = new JLabel(BuilderBundle
-				.getString("valuesLabel"));
+		final JLabel valueLabel = new JLabel(Resources.get("valuesLabel"));
 		this.singleValue = new JTextField(30);
 		this.multiValue = new JTextArea(5, 30);
 		this.type = new JComboBox(new String[] {
-				BuilderBundle.getString("singlePartitionOption"),
-				BuilderBundle.getString("collectionPartitionOption"),
-				BuilderBundle.getString("uniquePartitionOption") });
+				Resources.get("singlePartitionOption"),
+				Resources.get("collectionPartitionOption"),
+				Resources.get("uniquePartitionOption") });
 		this.nullable = new JCheckBox();
 
 		// Make the drop-down type choice change which value and nullable
@@ -131,25 +130,23 @@ public class PartitionColumnDialog extends JDialog {
 
 				// Single partitions have a single value field, with a nullable
 				// box saying 'use null'.
-				if (selectedItem.equals(BuilderBundle
-						.getString("singlePartitionOption"))) {
+				if (selectedItem.equals(Resources.get("singlePartitionOption"))) {
 					valueLabel.setVisible(true);
 					singleValue.setVisible(true);
 					multiValue.setVisible(false);
-					nullable.setText(BuilderBundle.getString("useNullLabel"));
+					nullable.setText(Resources.get("useNullLabel"));
 					nullable.setVisible(true);
 				}
 
 				// Multi-value partitions have a multi value field, with a
 				// nullable
 				// box saying 'include null'.
-				else if (selectedItem.equals(BuilderBundle
-						.getString("collectionPartitionOption"))) {
+				else if (selectedItem.equals(Resources
+						.get("collectionPartitionOption"))) {
 					valueLabel.setVisible(true);
 					singleValue.setVisible(false);
 					multiValue.setVisible(true);
-					nullable.setText(BuilderBundle
-							.getString("includeNullLabel"));
+					nullable.setText(Resources.get("includeNullLabel"));
 					nullable.setVisible(true);
 				}
 
@@ -181,11 +178,11 @@ public class PartitionColumnDialog extends JDialog {
 		});
 
 		// Create the buttons.
-		this.cancel = new JButton(BuilderBundle.getString("cancelButton"));
+		this.cancel = new JButton(Resources.get("cancelButton"));
 		this.execute = new JButton(executeButtonText);
 
 		// Add the partition type label and field to the dialog.
-		JLabel label = new JLabel(BuilderBundle.getString("partitionTypeLabel"));
+		JLabel label = new JLabel(Resources.get("partitionTypeLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		JPanel field = new JPanel();
@@ -255,8 +252,7 @@ public class PartitionColumnDialog extends JDialog {
 		// its details into the box.
 		if (template instanceof SingleValue) {
 			SingleValue sv = (SingleValue) template;
-			this.type.setSelectedItem(BuilderBundle
-					.getString("singlePartitionOption"));
+			this.type.setSelectedItem(Resources.get("singlePartitionOption"));
 			this.singleValue.setText(sv.getValue());
 			if (sv.getIncludeNull())
 				this.nullable.doClick();
@@ -267,8 +263,8 @@ public class PartitionColumnDialog extends JDialog {
 			ValueCollection vc = (ValueCollection) template;
 			if (vc.getIncludeNull())
 				this.nullable.doClick();
-			this.type.setSelectedItem(BuilderBundle
-					.getString("collectionPartitionOption"));
+			this.type.setSelectedItem(Resources
+					.get("collectionPartitionOption"));
 			// Values appear one-per-line.
 			StringBuffer sb = new StringBuffer();
 			for (Iterator i = vc.getValues().iterator(); i.hasNext();) {
@@ -281,8 +277,7 @@ public class PartitionColumnDialog extends JDialog {
 
 		// Otherwise, select the unique partition option as default.
 		else
-			this.type.setSelectedItem(BuilderBundle
-					.getString("uniquePartitionOption"));
+			this.type.setSelectedItem(Resources.get("uniquePartitionOption"));
 	}
 
 	private boolean validateFields() {
@@ -291,37 +286,35 @@ public class PartitionColumnDialog extends JDialog {
 
 		// We must have a partition type!
 		if (this.type.getSelectedIndex() == -1)
-			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
-					.getString("type")));
+			messages.add(Resources.get("fieldIsEmpty", Resources.get("type")));
 
 		// Work out which partition type is currently selected.
 		String selectedItem = (String) this.type.getSelectedItem();
 
 		// If it's single...
-		if (selectedItem.equals(BuilderBundle
-				.getString("singlePartitionOption"))) {
+		if (selectedItem.equals(Resources.get("singlePartitionOption"))) {
 			// Check we have a value, or nullable is selected.
 			if (this.isEmpty(this.singleValue.getText())
 					&& !this.nullable.isSelected())
-				messages.add(BuilderBundle.getString("fieldIsEmpty",
-						BuilderBundle.getString("value")));
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("value")));
 		}
 
 		// If it's multi...
-		else if (selectedItem.equals(BuilderBundle
-				.getString("collectionPartitionOption"))) {
+		else if (selectedItem
+				.equals(Resources.get("collectionPartitionOption"))) {
 			// Check we have a value, or nullable is selected.
 			if (this.isEmpty(this.multiValue.getText())
 					&& !this.nullable.isSelected())
-				messages.add(BuilderBundle.getString("fieldIsEmpty",
-						BuilderBundle.getString("value")));
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("value")));
 		}
 
 		// If there any messages, display them.
 		if (!messages.isEmpty()) {
 			JOptionPane.showMessageDialog(this,
-					messages.toArray(new String[0]), BuilderBundle
-							.getString("validationTitle"),
+					messages.toArray(new String[0]), Resources
+							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);
 		}
 
@@ -339,13 +332,12 @@ public class PartitionColumnDialog extends JDialog {
 			String type = (String) this.type.getSelectedItem();
 
 			// Single-value uses the single value and/or nullable.
-			if (type.equals(BuilderBundle.getString("singlePartitionOption")))
+			if (type.equals(Resources.get("singlePartitionOption")))
 				return new SingleValue(this.singleValue.getText().trim(),
 						this.nullable.isSelected());
 
 			// Multi-value uses the multi values, and/or nullable.
-			else if (type.equals(BuilderBundle
-					.getString("collectionPartitionOption"))) {
+			else if (type.equals(Resources.get("collectionPartitionOption"))) {
 				String[] values = this.multiValue.getText().trim().split(
 						System.getProperty("line.separator"));
 				return new ValueCollection(Arrays.asList(values), this.nullable
@@ -353,8 +345,7 @@ public class PartitionColumnDialog extends JDialog {
 			}
 
 			// Unique values doesn't require anything.
-			else if (type.equals(BuilderBundle
-					.getString("uniquePartitionOption")))
+			else if (type.equals(Resources.get("uniquePartitionOption")))
 				return new UniqueValues();
 
 			// Eh? Don't know what this is!
@@ -385,7 +376,7 @@ public class PartitionColumnDialog extends JDialog {
 	public static PartitionedColumnType createPartitionedColumnType(
 			MartTab martTab) {
 		PartitionColumnDialog dialog = new PartitionColumnDialog(martTab,
-				BuilderBundle.getString("createPartitionButton"), null);
+				Resources.get("createPartitionButton"), null);
 		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
 		return dialog.partitionType;
@@ -406,7 +397,7 @@ public class PartitionColumnDialog extends JDialog {
 	public static PartitionedColumnType updatePartitionedColumnType(
 			MartTab martTab, PartitionedColumnType template) {
 		PartitionColumnDialog dialog = new PartitionColumnDialog(martTab,
-				BuilderBundle.getString("updatePartitionButton"), template);
+				Resources.get("updatePartitionButton"), template);
 		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
 		return dialog.partitionType;

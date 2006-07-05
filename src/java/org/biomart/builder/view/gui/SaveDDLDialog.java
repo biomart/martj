@@ -52,7 +52,7 @@ import org.biomart.builder.model.MartConstructor;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.model.MartConstructor.MartConstructorListener;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
@@ -100,8 +100,8 @@ public class SaveDDLDialog extends JDialog {
 	 */
 	public SaveDDLDialog(MartTab martTab, Collection datasets) {
 		// Create the base dialog.
-		super(martTab.getMartTabSet().getMartBuilder(), BuilderBundle
-				.getString("saveDDLDialogTitle"), true);
+		super(martTab.getMartTabSet().getMartBuilder(), Resources
+				.get("saveDDLDialogTitle"), true);
 
 		// Remember the tabset that the schema we are working with is part of
 		// (or will be part of if it's not been created yet).
@@ -139,11 +139,10 @@ public class SaveDDLDialog extends JDialog {
 
 		// Create input fields for target schema name and granularity.
 		this.targetSchemaName = new JTextField(20);
-		this.includeComments = new JCheckBox(BuilderBundle
-				.getString("includeCommentsLabel"));
+		this.includeComments = new JCheckBox(Resources
+				.get("includeCommentsLabel"));
 		this.includeComments.setSelected(true);
-		this.viewDDL = new JCheckBox(BuilderBundle
-				.getString("viewDDLOnCompletion"));
+		this.viewDDL = new JCheckBox(Resources.get("viewDDLOnCompletion"));
 		this.granularity = new JComboBox(new Object[] {
 				SaveDDLGranularity.SINGLE, SaveDDLGranularity.MART,
 				SaveDDLGranularity.DATASET, SaveDDLGranularity.STEP, });
@@ -177,15 +176,14 @@ public class SaveDDLDialog extends JDialog {
 			}
 
 			public String getDescription() {
-				return BuilderBundle
-						.getString(this.isZipped() ? "ZipDDLFileFilterDescription"
+				return Resources
+						.get(this.isZipped() ? "ZipDDLFileFilterDescription"
 								: "DDLFileFilterDescription");
 			}
 		};
 		this.zipFileChooser.setFileFilter(this.zipFileFilter);
 		this.zipFileLocation = new JTextField(20);
-		this.zipFileLocationButton = new JButton(BuilderBundle
-				.getString("browseButton"));
+		this.zipFileLocationButton = new JButton(Resources.get("browseButton"));
 
 		// Attach the file chooser to the driver class location button.
 		this.zipFileLocationButton.addActionListener(new ActionListener() {
@@ -231,8 +229,7 @@ public class SaveDDLDialog extends JDialog {
 		// Lay out the window.
 
 		// Add the dataset lists.
-		JLabel label = new JLabel(BuilderBundle
-				.getString("selectedDataSetsLabel"));
+		JLabel label = new JLabel(Resources.get("selectedDataSetsLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		JPanel field = new JPanel();
@@ -241,7 +238,7 @@ public class SaveDDLDialog extends JDialog {
 		content.add(field);
 
 		// Add the target schema settings label and field.
-		label = new JLabel(BuilderBundle.getString("targetSchemaLabel"));
+		label = new JLabel(Resources.get("targetSchemaLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		field = new JPanel();
@@ -250,7 +247,7 @@ public class SaveDDLDialog extends JDialog {
 		content.add(field);
 
 		// Add the granularity label and field, and the comments checkbox.
-		label = new JLabel(BuilderBundle.getString("granularityLabel"));
+		label = new JLabel(Resources.get("granularityLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		field = new JPanel();
@@ -269,7 +266,7 @@ public class SaveDDLDialog extends JDialog {
 		content.add(field);
 
 		// Add the zip DDL location label, field and file chooser button.
-		label = new JLabel(BuilderBundle.getString("saveDDLFileLocationLabel"));
+		label = new JLabel(Resources.get("saveDDLFileLocationLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		field = new JPanel();
@@ -279,8 +276,8 @@ public class SaveDDLDialog extends JDialog {
 		content.add(field);
 
 		// The close and execute buttons.
-		JButton cancel = new JButton(BuilderBundle.getString("cancelButton"));
-		JButton execute = new JButton(BuilderBundle.getString("saveDDLButton"));
+		JButton cancel = new JButton(Resources.get("cancelButton"));
+		JButton execute = new JButton(Resources.get("saveDDLButton"));
 
 		// Intercept the close button, which closes the dialog
 		// without taking any action.
@@ -332,25 +329,25 @@ public class SaveDDLDialog extends JDialog {
 
 		// Must have a target schema.
 		if (this.isEmpty((String) this.targetSchemaName.getText()))
-			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
-					.getString("targetSchema")));
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("targetSchema")));
 
 		// Must have an output file.
 		if (!this.viewDDL.isSelected()
 				&& this.isEmpty((String) this.zipFileLocation.getText()))
-			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
-					.getString("saveDDLFileLocation")));
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("saveDDLFileLocation")));
 
 		// Must have at least one dataset selected.
 		if (this.datasetsList.getSelectedValues().length == 0)
-			messages.add(BuilderBundle.getString("fieldIsEmpty", BuilderBundle
-					.getString("selectedDataSets")));
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("selectedDataSets")));
 
 		// Any messages to display? Show them.
 		if (!messages.isEmpty()) {
 			JOptionPane.showMessageDialog(this,
-					messages.toArray(new String[0]), BuilderBundle
-							.getString("validationTitle"),
+					messages.toArray(new String[0]), Resources
+							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);
 		}
 
@@ -388,9 +385,8 @@ public class SaveDDLDialog extends JDialog {
 		} catch (Throwable t) {
 			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 			JOptionPane.showMessageDialog(this.martTab.getMartTabSet()
-					.getMartBuilder(), BuilderBundle
-					.getString("martConstructionFailed"), BuilderBundle
-					.getString("messageTitle"), JOptionPane.WARNING_MESSAGE);
+					.getMartBuilder(), Resources.get("martConstructionFailed"),
+					Resources.get("messageTitle"), JOptionPane.WARNING_MESSAGE);
 		}
 	}
 
@@ -408,8 +404,7 @@ public class SaveDDLDialog extends JDialog {
 		editorScrollPane.setPreferredSize(new Dimension(600, 400));
 
 		// Show the output.
-		JOptionPane.showMessageDialog(this.martTab, editorScrollPane,
-				BuilderBundle.getString("mcViewDDLWindowTitle"),
-				JOptionPane.INFORMATION_MESSAGE);
+		JOptionPane.showMessageDialog(this.martTab, editorScrollPane, Resources
+				.get("mcViewDDLWindowTitle"), JOptionPane.INFORMATION_MESSAGE);
 	}
 }

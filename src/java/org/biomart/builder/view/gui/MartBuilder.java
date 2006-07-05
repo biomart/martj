@@ -38,7 +38,7 @@ import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
 import org.biomart.builder.controller.MartBuilderXML;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 
 /**
  * The main window housing the MartBuilder GUI.
@@ -60,7 +60,7 @@ public class MartBuilder extends JFrame {
 	 */
 	public MartBuilder() {
 		// Create the window.
-		super(BuilderBundle.getString("GUITitle", MartBuilderXML.DTD_VERSION));
+		super(Resources.get("GUITitle", MartBuilderXML.DTD_VERSION));
 
 		// Assign ourselves to the long-process hourglass container.
 		LongProcess.setContainer(this);
@@ -76,7 +76,7 @@ public class MartBuilder extends JFrame {
 			// work.
 			if (lookAndFeelClass != null) // only worry if we were actually
 				// given one.
-				System.err.println(BuilderBundle.getString("badLookAndFeel",
+				System.err.println(Resources.get("badLookAndFeel",
 						lookAndFeelClass));
 			// Use system default.
 			lookAndFeelClass = UIManager.getSystemLookAndFeelClassName();
@@ -85,7 +85,7 @@ public class MartBuilder extends JFrame {
 			} catch (Exception e2) {
 				// Ignore, as we'll end up with the cross-platform one if there
 				// is no system one.
-				System.err.println(BuilderBundle.getString("badLookAndFeel",
+				System.err.println(Resources.get("badLookAndFeel",
 						lookAndFeelClass));
 			}
 		}
@@ -139,14 +139,13 @@ public class MartBuilder extends JFrame {
 		// Ask if they want to see the full stack trace (show the first line of
 		// the stack trace as a hint).
 		int choice = JOptionPane.showConfirmDialog(this, new Object[] {
-				mainMessage, BuilderBundle.getString("stackTracePrompt") },
-				BuilderBundle.getString("stackTraceTitle"),
-				JOptionPane.YES_NO_OPTION);
+				mainMessage, Resources.get("stackTracePrompt") }, Resources
+				.get("stackTraceTitle"), JOptionPane.YES_NO_OPTION);
 
 		// Create and show the full stack trace dialog if they said yes.
 		if (choice == JOptionPane.YES_OPTION) {
-			JOptionPane.showMessageDialog(this, stackTraceText, BuilderBundle
-					.getString("stackTraceTitle"), messageClass);
+			JOptionPane.showMessageDialog(this, stackTraceText, Resources
+					.get("stackTraceTitle"), messageClass);
 		}
 	}
 
@@ -192,7 +191,7 @@ public class MartBuilder extends JFrame {
 		private JMenuItem saveMart;
 
 		private JMenuItem saveMartAs;
-		
+
 		private JMenuItem saveDDL;
 
 		private JMenuItem closeMart;
@@ -212,56 +211,48 @@ public class MartBuilder extends JFrame {
 			this.martBuilder = martBuilder;
 
 			// File menu.
-			JMenu fileMenu = new JMenu(BuilderBundle.getString("fileMenuTitle"));
-			fileMenu.setMnemonic(BuilderBundle.getString("fileMenuMnemonic")
-					.charAt(0));
+			JMenu fileMenu = new JMenu(Resources.get("fileMenuTitle"));
+			fileMenu.setMnemonic(Resources.get("fileMenuMnemonic").charAt(0));
 
 			// New mart.
-			this.newMart = new JMenuItem(BuilderBundle
-					.getString("newMartTitle"));
-			this.newMart.setMnemonic(BuilderBundle.getString("newMartMnemonic")
-					.charAt(0));
+			this.newMart = new JMenuItem(Resources.get("newMartTitle"));
+			this.newMart
+					.setMnemonic(Resources.get("newMartMnemonic").charAt(0));
 			this.newMart.addActionListener(this);
 
 			// Open existing mart.
-			this.openMart = new JMenuItem(BuilderBundle
-					.getString("openMartTitle"));
-			this.openMart.setMnemonic(BuilderBundle.getString(
-					"openMartMnemonic").charAt(0));
+			this.openMart = new JMenuItem(Resources.get("openMartTitle"));
+			this.openMart.setMnemonic(Resources.get("openMartMnemonic").charAt(
+					0));
 			this.openMart.addActionListener(this);
 
 			// Save current mart.
-			this.saveMart = new JMenuItem(BuilderBundle
-					.getString("saveMartTitle"));
-			this.saveMart.setMnemonic(BuilderBundle.getString(
-					"saveMartMnemonic").charAt(0));
+			this.saveMart = new JMenuItem(Resources.get("saveMartTitle"));
+			this.saveMart.setMnemonic(Resources.get("saveMartMnemonic").charAt(
+					0));
 			this.saveMart.addActionListener(this);
 
 			// Save current mart as.
-			this.saveMartAs = new JMenuItem(BuilderBundle
-					.getString("saveMartAsTitle"));
-			this.saveMartAs.setMnemonic(BuilderBundle.getString(
-					"saveMartAsMnemonic").charAt(0));
+			this.saveMartAs = new JMenuItem(Resources.get("saveMartAsTitle"));
+			this.saveMartAs.setMnemonic(Resources.get("saveMartAsMnemonic")
+					.charAt(0));
 			this.saveMartAs.addActionListener(this);
 
 			// Create DDL for current mart.
-			this.saveDDL = new JMenuItem(BuilderBundle
-					.getString("saveDDLTitle"));
-			this.saveDDL.setMnemonic(BuilderBundle.getString(
-					"saveDDLMnemonic").charAt(0));
+			this.saveDDL = new JMenuItem(Resources.get("saveDDLTitle"));
+			this.saveDDL
+					.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
 			this.saveDDL.addActionListener(this);
 
 			// Close current mart.
-			this.closeMart = new JMenuItem(BuilderBundle
-					.getString("closeMartTitle"));
-			this.closeMart.setMnemonic(BuilderBundle.getString(
-					"closeMartMnemonic").charAt(0));
+			this.closeMart = new JMenuItem(Resources.get("closeMartTitle"));
+			this.closeMart.setMnemonic(Resources.get("closeMartMnemonic")
+					.charAt(0));
 			this.closeMart.addActionListener(this);
 
 			// Exit MartBuilder.
-			this.exit = new JMenuItem(BuilderBundle.getString("exitTitle"));
-			this.exit.setMnemonic(BuilderBundle.getString("exitMnemonic")
-					.charAt(0));
+			this.exit = new JMenuItem(Resources.get("exitTitle"));
+			this.exit.setMnemonic(Resources.get("exitMnemonic").charAt(0));
 			this.exit.addActionListener(this);
 
 			// Construct the file menu.

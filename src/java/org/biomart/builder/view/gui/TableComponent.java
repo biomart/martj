@@ -35,7 +35,7 @@ import javax.swing.JPanel;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Table;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 
 /**
  * Table components are box-shaped, and represent an individual table. Inside
@@ -165,8 +165,7 @@ public class TableComponent extends BoxShapedComponent {
 		}
 
 		// Show/hide the columns panel with a button.
-		this.showHide = new JButton(BuilderBundle
-				.getString("showColumnsButton"));
+		this.showHide = new JButton(Resources.get("showColumnsButton"));
 		this.showHide.setFont(Font.decode("Serif-BOLD-10"));
 		this.layout.setConstraints(this.showHide, this.constraints);
 		this.add(this.showHide);
@@ -200,13 +199,13 @@ public class TableComponent extends BoxShapedComponent {
 						this.constraints);
 				this.add(this.columnsListPanel);
 			}
-			this.showHide.setText(BuilderBundle.getString("hideColumnsButton"));
+			this.showHide.setText(Resources.get("hideColumnsButton"));
 		} else {
 			// If the state has changed from TRUE to FALSE, hide the columns
 			// and change the button to 'show columns'.
 			if (this.getState() != null && this.getState().equals(Boolean.TRUE))
 				this.remove(this.columnsListPanel);
-			this.showHide.setText(BuilderBundle.getString("showColumnsButton"));
+			this.showHide.setText(Resources.get("showColumnsButton"));
 		}
 
 		// Delegate upwards, so that the state is remembered for later.

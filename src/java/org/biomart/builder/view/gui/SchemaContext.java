@@ -40,7 +40,7 @@ import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Relation.Cardinality;
-import org.biomart.builder.resources.BuilderBundle;
+import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
@@ -100,10 +100,10 @@ public class SchemaContext implements DiagramContext {
 				contextMenu.addSeparator();
 
 			// Synchronise all schemas in the mart.
-			JMenuItem syncAll = new JMenuItem(BuilderBundle
-					.getString("synchroniseAllSchemasTitle"));
-			syncAll.setMnemonic(BuilderBundle.getString(
-					"synchroniseAllSchemasMnemonic").charAt(0));
+			JMenuItem syncAll = new JMenuItem(Resources
+					.get("synchroniseAllSchemasTitle"));
+			syncAll.setMnemonic(Resources.get("synchroniseAllSchemasMnemonic")
+					.charAt(0));
 			syncAll.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestSynchroniseAllSchemas();
@@ -112,10 +112,8 @@ public class SchemaContext implements DiagramContext {
 			contextMenu.add(syncAll);
 
 			// Add a new schema to the mart.
-			JMenuItem add = new JMenuItem(BuilderBundle
-					.getString("addSchemaTitle"));
-			add.setMnemonic(BuilderBundle.getString("addSchemaMnemonic")
-					.charAt(0));
+			JMenuItem add = new JMenuItem(Resources.get("addSchemaTitle"));
+			add.setMnemonic(Resources.get("addSchemaMnemonic").charAt(0));
 			add.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestAddSchema();
@@ -136,10 +134,11 @@ public class SchemaContext implements DiagramContext {
 			final Table table = (Table) object;
 
 			// Menu option to create a dataset based around that table.
-			JMenuItem create = new JMenuItem(BuilderBundle.getString(
+			JMenuItem create = new JMenuItem(Resources.get(
 					"createDataSetTitle", table.getName()));
-			create.setMnemonic(BuilderBundle.getString("createDataSetMnemonic")
-					.charAt(0));
+			create
+					.setMnemonic(Resources.get("createDataSetMnemonic").charAt(
+							0));
 			create.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getDataSetTabSet().requestCreateDataSet(table);
@@ -149,10 +148,10 @@ public class SchemaContext implements DiagramContext {
 
 			// Menu option to suggest a bunch of datasets based around that
 			// table.
-			JMenuItem suggest = new JMenuItem(BuilderBundle.getString(
+			JMenuItem suggest = new JMenuItem(Resources.get(
 					"suggestDataSetsTitle", table.getName()));
-			suggest.setMnemonic(BuilderBundle.getString(
-					"suggestDataSetsMnemonic").charAt(0));
+			suggest.setMnemonic(Resources.get("suggestDataSetsMnemonic")
+					.charAt(0));
 			suggest.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getDataSetTabSet().requestSuggestDataSets(table);
@@ -165,10 +164,8 @@ public class SchemaContext implements DiagramContext {
 
 			// Menu item to create a primary key. If it already has one, disable
 			// the option.
-			JMenuItem pk = new JMenuItem(BuilderBundle
-					.getString("createPrimaryKeyTitle"));
-			pk.setMnemonic(BuilderBundle.getString("createPrimaryKeyMnemonic")
-					.charAt(0));
+			JMenuItem pk = new JMenuItem(Resources.get("createPrimaryKeyTitle"));
+			pk.setMnemonic(Resources.get("createPrimaryKeyMnemonic").charAt(0));
 			pk.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestCreatePrimaryKey(table);
@@ -179,10 +176,8 @@ public class SchemaContext implements DiagramContext {
 			contextMenu.add(pk);
 
 			// Menu item to create a foreign key.
-			JMenuItem fk = new JMenuItem(BuilderBundle
-					.getString("createForeignKeyTitle"));
-			fk.setMnemonic(BuilderBundle.getString("createForeignKeyMnemonic")
-					.charAt(0));
+			JMenuItem fk = new JMenuItem(Resources.get("createForeignKeyTitle"));
+			fk.setMnemonic(Resources.get("createForeignKeyMnemonic").charAt(0));
 			fk.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestCreateForeignKey(table);
@@ -202,10 +197,10 @@ public class SchemaContext implements DiagramContext {
 			final Schema schema = (Schema) object;
 
 			// Add a checkbox menu item to turn keyguessing on/off.
-			final JCheckBoxMenuItem keyguess = new JCheckBoxMenuItem(
-					BuilderBundle.getString("enableKeyGuessingTitle"));
-			keyguess.setMnemonic(BuilderBundle.getString(
-					"enableKeyGuessingMnemonic").charAt(0));
+			final JCheckBoxMenuItem keyguess = new JCheckBoxMenuItem(Resources
+					.get("enableKeyGuessingTitle"));
+			keyguess.setMnemonic(Resources.get("enableKeyGuessingMnemonic")
+					.charAt(0));
 			keyguess.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					if (keyguess.isSelected())
@@ -221,10 +216,8 @@ public class SchemaContext implements DiagramContext {
 				keyguess.setSelected(true);
 
 			// Add an option to rename this schema.
-			JMenuItem rename = new JMenuItem(BuilderBundle
-					.getString("renameSchemaTitle"));
-			rename.setMnemonic(BuilderBundle.getString("renameSchemaMnemonic")
-					.charAt(0));
+			JMenuItem rename = new JMenuItem(Resources.get("renameSchemaTitle"));
+			rename.setMnemonic(Resources.get("renameSchemaMnemonic").charAt(0));
 			rename.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestRenameSchema(schema, null);
@@ -234,10 +227,10 @@ public class SchemaContext implements DiagramContext {
 
 			// Add an option to synchronise this schema against it's datasource
 			// or database.
-			JMenuItem sync = new JMenuItem(BuilderBundle
-					.getString("synchroniseSchemaTitle"));
-			sync.setMnemonic(BuilderBundle.getString(
-					"synchroniseSchemaMnemonic").charAt(0));
+			JMenuItem sync = new JMenuItem(Resources
+					.get("synchroniseSchemaTitle"));
+			sync.setMnemonic(Resources.get("synchroniseSchemaMnemonic").charAt(
+					0));
 			sync.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestSynchroniseSchema(schema);
@@ -249,10 +242,10 @@ public class SchemaContext implements DiagramContext {
 			if (!(schema instanceof SchemaGroup)) {
 
 				// Option to modify the schema details.
-				JMenuItem modify = new JMenuItem(BuilderBundle
-						.getString("modifySchemaTitle"));
-				modify.setMnemonic(BuilderBundle.getString(
-						"modifySchemaMnemonic").charAt(0));
+				JMenuItem modify = new JMenuItem(Resources
+						.get("modifySchemaTitle"));
+				modify.setMnemonic(Resources.get("modifySchemaMnemonic")
+						.charAt(0));
 				modify.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						martTab.getSchemaTabSet().requestModifySchema(schema);
@@ -261,10 +254,8 @@ public class SchemaContext implements DiagramContext {
 				contextMenu.add(modify);
 
 				// Option to test the schema to see if it works.
-				JMenuItem test = new JMenuItem(BuilderBundle
-						.getString("testSchemaTitle"));
-				test.setMnemonic(BuilderBundle.getString("testSchemaMnemonic")
-						.charAt(0));
+				JMenuItem test = new JMenuItem(Resources.get("testSchemaTitle"));
+				test.setMnemonic(Resources.get("testSchemaMnemonic").charAt(0));
 				test.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						martTab.getSchemaTabSet().requestTestSchema(schema);
@@ -273,10 +264,10 @@ public class SchemaContext implements DiagramContext {
 				contextMenu.add(test);
 
 				// Option to remove the schema from the mart.
-				JMenuItem remove = new JMenuItem(BuilderBundle
-						.getString("removeSchemaTitle"));
-				remove.setMnemonic(BuilderBundle.getString(
-						"removeSchemaMnemonic").charAt(0));
+				JMenuItem remove = new JMenuItem(Resources
+						.get("removeSchemaTitle"));
+				remove.setMnemonic(Resources.get("removeSchemaMnemonic")
+						.charAt(0));
 				remove.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						martTab.getSchemaTabSet().requestRemoveSchema(schema);
@@ -285,10 +276,10 @@ public class SchemaContext implements DiagramContext {
 				contextMenu.add(remove);
 
 				// Option to replicate the schema.
-				JMenuItem replicate = new JMenuItem(BuilderBundle
-						.getString("replicateSchemaTitle"));
-				replicate.setMnemonic(BuilderBundle.getString(
-						"replicateSchemaMnemonic").charAt(0));
+				JMenuItem replicate = new JMenuItem(Resources
+						.get("replicateSchemaTitle"));
+				replicate.setMnemonic(Resources.get("replicateSchemaMnemonic")
+						.charAt(0));
 				replicate.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						martTab.getSchemaTabSet()
@@ -298,10 +289,10 @@ public class SchemaContext implements DiagramContext {
 				contextMenu.add(replicate);
 
 				// Option to add the schema to a schema group.
-				JMenuItem addToGroup = new JMenuItem(BuilderBundle
-						.getString("addToGroupTitle"));
-				addToGroup.setMnemonic(BuilderBundle.getString(
-						"addToGroupMnemonic").charAt(0));
+				JMenuItem addToGroup = new JMenuItem(Resources
+						.get("addToGroupTitle"));
+				addToGroup.setMnemonic(Resources.get("addToGroupMnemonic")
+						.charAt(0));
 				addToGroup.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						martTab.getSchemaTabSet()
@@ -328,10 +319,9 @@ public class SchemaContext implements DiagramContext {
 			ButtonGroup cardGroup = new ButtonGroup();
 
 			// Set the relation to be 1:1, but only if it is correct.
-			JRadioButtonMenuItem oneToOne = new JRadioButtonMenuItem(
-					BuilderBundle.getString("oneToOneTitle"));
-			oneToOne.setMnemonic(BuilderBundle.getString("oneToOneMnemonic")
-					.charAt(0));
+			JRadioButtonMenuItem oneToOne = new JRadioButtonMenuItem(Resources
+					.get("oneToOneTitle"));
+			oneToOne.setMnemonic(Resources.get("oneToOneMnemonic").charAt(0));
 			oneToOne.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestChangeRelationCardinality(
@@ -346,10 +336,9 @@ public class SchemaContext implements DiagramContext {
 				oneToOne.setSelected(true);
 
 			// Set the relation to be 1:M, but only if it is correct.
-			JRadioButtonMenuItem oneToMany = new JRadioButtonMenuItem(
-					BuilderBundle.getString("oneToManyTitle"));
-			oneToMany.setMnemonic(BuilderBundle.getString("oneToManyMnemonic")
-					.charAt(0));
+			JRadioButtonMenuItem oneToMany = new JRadioButtonMenuItem(Resources
+					.get("oneToManyTitle"));
+			oneToMany.setMnemonic(Resources.get("oneToManyMnemonic").charAt(0));
 			oneToMany.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestChangeRelationCardinality(
@@ -365,9 +354,9 @@ public class SchemaContext implements DiagramContext {
 
 			// Set the relation to be M:M, but only if it is correct.
 			JRadioButtonMenuItem manyToMany = new JRadioButtonMenuItem(
-					BuilderBundle.getString("manyToManyTitle"));
-			manyToMany.setMnemonic(BuilderBundle
-					.getString("manyToManyMnemonic").charAt(0));
+					Resources.get("manyToManyTitle"));
+			manyToMany.setMnemonic(Resources.get("manyToManyMnemonic")
+					.charAt(0));
 			manyToMany.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestChangeRelationCardinality(
@@ -388,10 +377,10 @@ public class SchemaContext implements DiagramContext {
 			ButtonGroup correctGroup = new ButtonGroup();
 
 			// Mark relation as correct, but only if not handmade.
-			JRadioButtonMenuItem correct = new JRadioButtonMenuItem(
-					BuilderBundle.getString("correctRelationTitle"));
-			correct.setMnemonic(BuilderBundle.getString(
-					"correctRelationMnemonic").charAt(0));
+			JRadioButtonMenuItem correct = new JRadioButtonMenuItem(Resources
+					.get("correctRelationTitle"));
+			correct.setMnemonic(Resources.get("correctRelationMnemonic")
+					.charAt(0));
 			correct.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestChangeRelationStatus(
@@ -406,10 +395,10 @@ public class SchemaContext implements DiagramContext {
 				correct.setEnabled(false);
 
 			// Mark relation as incorrect, but only if not handmade.
-			JRadioButtonMenuItem incorrect = new JRadioButtonMenuItem(
-					BuilderBundle.getString("incorrectRelationTitle"));
-			incorrect.setMnemonic(BuilderBundle.getString(
-					"incorrectRelationMnemonic").charAt(0));
+			JRadioButtonMenuItem incorrect = new JRadioButtonMenuItem(Resources
+					.get("incorrectRelationTitle"));
+			incorrect.setMnemonic(Resources.get("incorrectRelationMnemonic")
+					.charAt(0));
 			incorrect.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestChangeRelationStatus(
@@ -427,10 +416,10 @@ public class SchemaContext implements DiagramContext {
 			contextMenu.addSeparator();
 
 			// Remove the relation from the schema, but only if handmade.
-			JMenuItem remove = new JMenuItem(BuilderBundle
-					.getString("removeRelationTitle"));
-			remove.setMnemonic(BuilderBundle
-					.getString("removeRelationMnemonic").charAt(0));
+			JMenuItem remove = new JMenuItem(Resources
+					.get("removeRelationTitle"));
+			remove.setMnemonic(Resources.get("removeRelationMnemonic")
+					.charAt(0));
 			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestRemoveRelation(relation);
@@ -456,10 +445,8 @@ public class SchemaContext implements DiagramContext {
 				contextMenu.addSeparator();
 
 			// Option to edit an existing key.
-			JMenuItem editkey = new JMenuItem(BuilderBundle
-					.getString("editKeyTitle"));
-			editkey.setMnemonic(BuilderBundle.getString("editKeyMnemonic")
-					.charAt(0));
+			JMenuItem editkey = new JMenuItem(Resources.get("editKeyTitle"));
+			editkey.setMnemonic(Resources.get("editKeyMnemonic").charAt(0));
 			editkey.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestEditKey(key);
@@ -468,10 +455,10 @@ public class SchemaContext implements DiagramContext {
 			contextMenu.add(editkey);
 
 			// Add a checkbox menu item to turn nullability on/off.
-			final JCheckBoxMenuItem nullable = new JCheckBoxMenuItem(
-					BuilderBundle.getString("nullableForeignKeyTitle"));
-			nullable.setMnemonic(BuilderBundle.getString(
-					"nullableForeignKeyMnemonic").charAt(0));
+			final JCheckBoxMenuItem nullable = new JCheckBoxMenuItem(Resources
+					.get("nullableForeignKeyTitle"));
+			nullable.setMnemonic(Resources.get("nullableForeignKeyMnemonic")
+					.charAt(0));
 			nullable.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet()
@@ -489,10 +476,10 @@ public class SchemaContext implements DiagramContext {
 			}
 
 			// Option to establish a relation between this key and another.
-			JMenuItem createrel = new JMenuItem(BuilderBundle
-					.getString("createRelationTitle"));
-			createrel.setMnemonic(BuilderBundle.getString(
-					"createRelationMnemonic").charAt(0));
+			JMenuItem createrel = new JMenuItem(Resources
+					.get("createRelationTitle"));
+			createrel.setMnemonic(Resources.get("createRelationMnemonic")
+					.charAt(0));
 			createrel.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestCreateRelation(key);
@@ -509,10 +496,9 @@ public class SchemaContext implements DiagramContext {
 			ButtonGroup correctGroup = new ButtonGroup();
 
 			// Mark the key as correct, but not if handmade.
-			JRadioButtonMenuItem correct = new JRadioButtonMenuItem(
-					BuilderBundle.getString("correctKeyTitle"));
-			correct.setMnemonic(BuilderBundle.getString("correctKeyMnemonic")
-					.charAt(0));
+			JRadioButtonMenuItem correct = new JRadioButtonMenuItem(Resources
+					.get("correctKeyTitle"));
+			correct.setMnemonic(Resources.get("correctKeyMnemonic").charAt(0));
 			correct.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestChangeKeyStatus(key,
@@ -527,10 +513,10 @@ public class SchemaContext implements DiagramContext {
 				correct.setEnabled(false);
 
 			// Mark the key as incorrect, but not if handmade.
-			JRadioButtonMenuItem incorrect = new JRadioButtonMenuItem(
-					BuilderBundle.getString("incorrectKeyTitle"));
-			incorrect.setMnemonic(BuilderBundle.getString(
-					"incorrectKeyMnemonic").charAt(0));
+			JRadioButtonMenuItem incorrect = new JRadioButtonMenuItem(Resources
+					.get("incorrectKeyTitle"));
+			incorrect.setMnemonic(Resources.get("incorrectKeyMnemonic").charAt(
+					0));
 			incorrect.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestChangeKeyStatus(key,
@@ -548,10 +534,8 @@ public class SchemaContext implements DiagramContext {
 			contextMenu.addSeparator();
 
 			// Remove the key from the table, but only if handmade.
-			JMenuItem remove = new JMenuItem(BuilderBundle
-					.getString("removeKeyTitle"));
-			remove.setMnemonic(BuilderBundle.getString("removeKeyMnemonic")
-					.charAt(0));
+			JMenuItem remove = new JMenuItem(Resources.get("removeKeyTitle"));
+			remove.setMnemonic(Resources.get("removeKeyMnemonic").charAt(0));
 			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
 					martTab.getSchemaTabSet().requestRemoveKey(key);
