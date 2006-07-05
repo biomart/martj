@@ -34,7 +34,7 @@ import javax.swing.JPopupMenu;
  * rather than exact component.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 26th June 2006
+ * @version 0.1.12, 5th July 2006
  * @since 0.1
  */
 public abstract class BoxShapedComponent extends JPanel implements
@@ -67,6 +67,9 @@ public abstract class BoxShapedComponent extends JPanel implements
 		// Turn on the mouse.
 		this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
 
+		// Make sure we're not transparent.
+		this.setOpaque(true);
+		
 		// Repaint ourselves.
 		this.updateAppearance();
 	}

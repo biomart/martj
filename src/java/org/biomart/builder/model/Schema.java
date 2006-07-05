@@ -52,7 +52,7 @@ import org.biomart.builder.resources.Resources;
  * with keeping track of the tables a schema provides.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 27th June 2006
+ * @version 0.1.15, 7th July 2006
  * @since 0.1
  */
 public interface Schema extends Comparable, DataLink {
@@ -529,12 +529,10 @@ public interface Schema extends Comparable, DataLink {
 		public Collection getInternalRelations() {
 			// Relations are internal if both ends point to keys
 			// in this schema.
-			List relations = new ArrayList();
+			Set relations = new HashSet();
 			for (Iterator i = this.getTables().iterator(); i.hasNext();) {
 				Table table = (Table) i.next();
-				if (table.getPrimaryKey() == null)
-					continue;
-				for (Iterator j = table.getPrimaryKey().getRelations()
+				for (Iterator j = table.getRelations()
 						.iterator(); j.hasNext();) {
 					Relation relation = (Relation) j.next();
 					if (!relation.isExternal())
@@ -547,7 +545,7 @@ public interface Schema extends Comparable, DataLink {
 		public Collection getExternalRelations() {
 			// Relations are external if one end points to a key
 			// in a schema other than ourselves.
-			List relations = new ArrayList();
+			Set relations = new HashSet();
 			for (Iterator i = this.getTables().iterator(); i.hasNext();) {
 				Table table = (Table) i.next();
 				for (Iterator j = table.getKeys().iterator(); j.hasNext();) {
