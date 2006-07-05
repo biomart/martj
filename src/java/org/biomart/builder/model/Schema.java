@@ -209,7 +209,7 @@ public interface Schema extends Comparable, DataLink {
 
 	/**
 	 * Copies all the tables, keys and relations from this schema into the
-	 * target schema. Any relations which are
+	 * target schema. Reuses any which already exist. Any relations which are
 	 * {@link ComponentStatus#INFERRED_INCORRECT} and have keys with different
 	 * numbers of columns at either end will probably not be copied.
 	 * 
@@ -257,6 +257,12 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public void replicateContents(Schema targetSchema) {
+			// FIXME: Reuse existing objects. Properly destroy any that
+			// are not reused. Current situation is that objects just
+			// disappear, but if they are external objects then they still
+			// have references from elsewhere, so we get null pointer
+			// exceptions in the referring objects.
+			
 			// Remove all the tables from the target schema, in case
 			// there are any already.
 			targetSchema.getTables().clear();
@@ -368,16 +374,14 @@ public interface Schema extends Comparable, DataLink {
 					}
 
 					// Create the relation in the duplicate schema.
-					// If we are replicating a schema into a schema group, for
-					// the purposes of grouping, then drop the original relation
-					// first to prevent duplicate relation problems.
+					// Drop the original relation first to prevent duplicate 
+					// relation problems.
 					try {
-						if ((targetSchema instanceof SchemaGroup)
-								&& !(this instanceof SchemaGroup))
-							r.destroy();
+						ComponentStatus status = r.getStatus();
+						r.destroy();
 						Relation newRel = new GenericRelation(newInternalKey,
 								externalKey, card);
-						newRel.setStatus(r.getStatus());
+						newRel.setStatus(status);
 					} catch (Exception e) {
 						// Ignore. This can only happen if incorrect relations
 						// are

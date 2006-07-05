@@ -44,7 +44,7 @@ import org.biomart.builder.resources.Resources;
  * a secondary label indicating which schema they belong to.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 27th June 2006
+ * @version 0.1.12, 7th July 2006
  * @since 0.1
  */
 public class TableComponent extends BoxShapedComponent {
@@ -138,7 +138,9 @@ public class TableComponent extends BoxShapedComponent {
 
 			// Add it as a sub-component (internal representation only).
 			this.addSubComponent(key, keyComponent);
-
+			this.getSubComponents().putAll(
+					keyComponent.getSubComponents());
+			
 			// Physically add it to the table component layout.
 			this.layout.setConstraints(keyComponent, this.constraints);
 			this.add(keyComponent);
@@ -157,6 +159,8 @@ public class TableComponent extends BoxShapedComponent {
 
 			// Add it as a sub-component (internal representation only).
 			this.addSubComponent(col, colComponent);
+			this.getSubComponents().putAll(
+					colComponent.getSubComponents());
 
 			// Physically add it to the list of columns.
 			columnsListPanelLayout.setConstraints(colComponent,

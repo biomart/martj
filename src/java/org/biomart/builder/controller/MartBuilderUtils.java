@@ -59,7 +59,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.22, 27th June 2006
+ * @version 0.1.23, 7th July 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -407,9 +407,11 @@ public class MartBuilderUtils {
 		if (schemaGroup == null || !(schemaGroup instanceof SchemaGroup)) {
 			schemaGroup = new GenericSchemaGroup(groupName);
 			mart.addSchema(schemaGroup);
+			schemaGroup.addSchema(schema);
+			schemaGroup.synchronise();
+		} else {
+			schemaGroup.addSchema(schema);
 		}
-		schemaGroup.addSchema(schema);
-		schemaGroup.synchronise();
 		mart.removeSchema(schema);
 		return schemaGroup;
 	}
