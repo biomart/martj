@@ -47,7 +47,7 @@ import org.biomart.builder.resources.Resources;
  * structure in the first member schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 19th May 2006
+ * @version 0.1.9, 12th July 2006
  * @since 0.1
  */
 public interface SchemaGroup extends Schema {
@@ -102,14 +102,8 @@ public interface SchemaGroup extends Schema {
 		}
 
 		public Schema replicate(String newName) {
-			SchemaGroup newGroup = new GenericSchemaGroup(newName);
-			try {
-				for (Iterator i = this.schemas.iterator(); i.hasNext();)
-					newGroup.addSchema((Schema) i.next());
-			} catch (Throwable t) {
-				throw new MartBuilderInternalError(t);
-			}
-			return newGroup;
+			throw new MartBuilderInternalError(Resources
+					.get("noSchemaGroupReplication"));
 		}
 
 		/**

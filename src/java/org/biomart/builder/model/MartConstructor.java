@@ -63,7 +63,7 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 4th July 2006
+ * @version 0.1.18, 12th July 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -376,6 +376,12 @@ public interface MartConstructor {
 			// Make a list to hold the table representations.
 			List tables = new ArrayList();
 
+			// TODO Allow multiple cascading levels of subclassing.
+			// Implement this by establishing a queue of main/subclass
+			// tables to process. A parallel queue contains the relations
+			// leading to each one. Move along the queue and process each
+			// table and all its dimensions.
+			
 			// For each schema, we process all the tables.
 			for (Iterator i = schemas.iterator(); i.hasNext();) {
 				Schema schema = (Schema) i.next();

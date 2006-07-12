@@ -41,7 +41,7 @@ import org.biomart.builder.resources.Resources;
  * {@link ComponentStatus#INFERRED}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 5th June 2006
+ * @version 0.1.11, 12th July 2006
  * @since 0.1
  */
 public interface Key extends Comparable {
@@ -267,26 +267,30 @@ public interface Key extends Comparable {
 		public void setStatus(ComponentStatus status) {
 			this.status = status;
 
-			// Invalidate all relations associated with this key. This means
+			// If we are invalidating the key, then we must also
+			// invalidate all relations associated with this key. This means
 			// dropping all handmade relations, and marking all others as
 			// incorrect.
-			List deadRels = new ArrayList();
-			for (Iterator i = this.relations.iterator(); i.hasNext();) {
-				Relation r = (Relation) i.next();
-				if (r.getStatus().equals(ComponentStatus.HANDMADE))
-					deadRels.add(r);
-				else
-					try {
-						r.setStatus(ComponentStatus.INFERRED_INCORRECT);
-					} catch (Throwable t) {
-						throw new MartBuilderInternalError(t);
-					}
-			}
+			if (this.status.equals(ComponentStatus.INFERRED_INCORRECT)) {
+				List deadRels = new ArrayList();
+				for (Iterator i = this.relations.iterator(); i.hasNext();) {
+					Relation r = (Relation) i.next();
+					if (r.getStatus().equals(ComponentStatus.HANDMADE))
+						deadRels.add(r);
+					else
+						try {
+							r.setStatus(ComponentStatus.INFERRED_INCORRECT);
+						} catch (Throwable t) {
+							throw new MartBuilderInternalError(t);
+						}
+				}
 
-			// Drop the relations we identified as useless. We have to do this
-			// separately to prevent concurrent modification exceptions.
-			for (Iterator i = deadRels.iterator(); i.hasNext();)
-				((Relation) i.next()).destroy();
+				// Drop the relations we identified as useless. We have to do
+				// this
+				// separately to prevent concurrent modification exceptions.
+				for (Iterator i = deadRels.iterator(); i.hasNext();)
+					((Relation) i.next()).destroy();
+			}
 		}
 
 		public Collection getRelations() {

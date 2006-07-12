@@ -52,7 +52,7 @@ import org.biomart.builder.resources.Resources;
  * with keeping track of the tables a schema provides.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.15, 7th July 2006
+ * @version 0.1.16, 12th July 2006
  * @since 0.1
  */
 public interface Schema extends Comparable, DataLink {
@@ -257,15 +257,8 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public void replicateContents(Schema targetSchema) {
-			// FIXME: Reuse existing objects. Properly destroy any that
-			// are not reused. Current situation is that objects just
-			// disappear, but if they are external objects then they still
-			// have references from elsewhere, so we get null pointer
-			// exceptions in the referring objects.
-			
-			// Remove all the tables from the target schema, in case
-			// there are any already.
-			targetSchema.getTables().clear();
+			// List all the tables we should drop at the end.
+			List tablesToDrop = new ArrayList(targetSchema.getTables());
 
 			// Set up a set to contain all the relations to replicate.
 			Set relations = new HashSet();
@@ -274,22 +267,39 @@ public interface Schema extends Comparable, DataLink {
 			for (Iterator i = this.tables.values().iterator(); i.hasNext();) {
 				Table table = (Table) i.next();
 
-				// Create a copy of the table.
-				Table newTable;
-				try {
-					newTable = new GenericTable(table.getName(), targetSchema);
-				} catch (Throwable t) {
-					throw new MartBuilderInternalError(t);
-				}
+				// Create a copy of the table if it doesn't already exist.
+				Table newTable = targetSchema.getTableByName(table.getName());
+				if (newTable == null)
+					try {
+						newTable = new GenericTable(table.getName(),
+								targetSchema);
+					} catch (Throwable t) {
+						throw new MartBuilderInternalError(t);
+					}
+				else
+					tablesToDrop.remove(newTable);
+
+				// List all the columns we should drop at the end.
+				List colsToDrop = new ArrayList(newTable.getColumns());
 
 				// Iterate over all the columns and copy them too.
 				for (Iterator j = table.getColumns().iterator(); j.hasNext();) {
 					Column col = (Column) j.next();
-					try {
-						new GenericColumn(col.getName(), newTable);
-					} catch (Throwable t) {
-						throw new MartBuilderInternalError(t);
-					}
+					Column newCol = newTable.getColumnByName(col.getName());
+					if (newCol == null)
+						try {
+							newCol = new GenericColumn(col.getName(), newTable);
+						} catch (Throwable t) {
+							throw new MartBuilderInternalError(t);
+						}
+					else
+						colsToDrop.remove(newCol);
+				}
+
+				// Drop the columns that have disappeared.
+				for (Iterator j = colsToDrop.iterator(); j.hasNext();) {
+					Column col = (Column) j.next();
+					col.getTable().removeColumn(col);
 				}
 
 				// Copy the primary key, if it exists.
@@ -298,21 +308,35 @@ public interface Schema extends Comparable, DataLink {
 					// Find the equivalents of all the columns by name.
 					List columns = new ArrayList();
 					for (Iterator k = pk.getColumnNames().iterator(); k
-							.hasNext();) {
+							.hasNext();)
 						columns
 								.add(newTable
 										.getColumnByName((String) k.next()));
-					}
 
 					// Create the key.
 					try {
-						PrimaryKey newPK = new GenericPrimaryKey(columns);
+						// Check to see if PK already set.
+						PrimaryKey newPK = newTable.getPrimaryKey();
+						if (newPK == null
+								|| !newPK.getColumns().equals(columns)) {
+							newPK = new GenericPrimaryKey(columns);
+							newTable.setPrimaryKey(newPK);
+						}
 						newPK.setStatus(pk.getStatus());
-						newTable.setPrimaryKey(newPK);
 					} catch (Throwable t) {
 						throw new MartBuilderInternalError(t);
 					}
 				}
+				// Otherwise, drop the primary key.
+				else
+					try {
+						newTable.setPrimaryKey(null);
+					} catch (Throwable t) {
+						throw new MartBuilderInternalError(t);
+					}
+
+				// List all the foreign keys to be dropped later.
+				List fksToDrop = new ArrayList(newTable.getForeignKeys());
 
 				// Copy the foreign keys.
 				for (Iterator j = table.getForeignKeys().iterator(); j
@@ -322,25 +346,57 @@ public interface Schema extends Comparable, DataLink {
 					// Find the equivalents of all the columns by name.
 					List columns = new ArrayList();
 					for (Iterator k = fk.getColumnNames().iterator(); k
-							.hasNext();) {
+							.hasNext();)
 						columns
 								.add(newTable
 										.getColumnByName((String) k.next()));
-					}
 
 					// Create the key.
 					try {
-						ForeignKey newFK = new GenericForeignKey(columns);
+						ForeignKey newFK = null;
+						// Lookup existing key.
+						for (Iterator k = newTable.getForeignKeys().iterator(); k
+								.hasNext()
+								&& newFK == null;) {
+							ForeignKey candKey = (ForeignKey) k.next();
+							if (candKey.getColumns().equals(columns))
+								newFK = candKey;
+						}
+						// Reuse it, or create it?
+						if (newFK == null) {
+							newFK = new GenericForeignKey(columns);
+							newTable.addForeignKey(newFK);
+						} else {
+							fksToDrop.remove(newFK);
+						}
 						newFK.setStatus(fk.getStatus());
-						newTable.addForeignKey(newFK);
+						newFK.setNullable(fk.getNullable());
 					} catch (Throwable t) {
 						throw new MartBuilderInternalError(t);
 					}
 				}
 
+				// Drop all the unused foreign keys.
+				for (Iterator j = fksToDrop.iterator(); j.hasNext();)
+					((Key) j.next()).destroy();
+
 				// Remember the relations on this table for later.
 				relations.addAll(table.getRelations());
 			}
+
+			// Drop the tables that have disappeared.
+			for (Iterator j = tablesToDrop.iterator(); j.hasNext();)
+				((Table) j.next()).destroy();
+
+			// Copy internal and external relations. Drop any existing
+			// internal relations that were not copied. Do not drop existing
+			// external relations as the target schema may have them undefined
+			// to prevent multipled-relation-per-foreign-key exceptions.
+
+			// Make a list of all the existing internal relations that can
+			// be dropped.
+			List intRelsToDrop = new ArrayList(targetSchema
+					.getInternalRelations());
 
 			// Iterate through all the relations we found and
 			// copy them too.
@@ -352,6 +408,7 @@ public interface Schema extends Comparable, DataLink {
 				Key firstKey = r.getFirstKey();
 				Key secondKey = r.getSecondKey();
 				Cardinality card = r.getCardinality();
+				ComponentStatus status = r.getStatus();
 
 				// External relations need to identify which end is ours
 				// and which end is not.
@@ -369,25 +426,26 @@ public interface Schema extends Comparable, DataLink {
 							.iterator(); j.hasNext() && newInternalKey == null;) {
 						Key candidate = (Key) j.next();
 						if (candidate.getColumnNames().equals(
-								internalKey.getColumnNames()))
+								internalKey.getColumnNames())
+								&& candidate.getClass().equals(
+										internalKey.getClass()))
 							newInternalKey = candidate;
 					}
 
 					// Create the relation in the duplicate schema.
-					// Drop the original relation first to prevent duplicate 
+					// Drop the original relation first to prevent duplicate
 					// relation problems.
 					try {
-						ComponentStatus status = r.getStatus();
 						r.destroy();
 						Relation newRel = new GenericRelation(newInternalKey,
 								externalKey, card);
 						newRel.setStatus(status);
 					} catch (Exception e) {
 						// Ignore. This can only happen if incorrect relations
-						// are
-						// copied across which have different-arity keys at each
-						// end, or if the foreign keys involved already have
-						// relations elsewhere.
+						// are copied across which have different-arity keys at
+						// each end, or if the foreign keys involved already
+						// have relations elsewhere, or the relation already
+						// exists and therefore can be reused.
 					}
 				}
 
@@ -415,20 +473,46 @@ public interface Schema extends Comparable, DataLink {
 							newSecondKey = candidate;
 					}
 
-					// Create the relation in the duplicate schema.
-					try {
-						Relation newRel = new GenericRelation(newFirstKey,
-								newSecondKey, card);
-						newRel.setStatus(r.getStatus());
-					} catch (Exception e) {
-						// Ignore. This can only happen if incorrect relations
-						// are
-						// copied across which have different-arity keys at each
-						// end, or if the foreign keys involved already have
-						// relations elsewhere.
+					// Does the relation already exist? If so, reuse it.
+					Relation newRel = null;
+					for (Iterator j = newFirstKey.getRelations().iterator(); j
+							.hasNext()
+							&& newRel == null;) {
+						Relation candRel = (Relation) j.next();
+						if (candRel.getOtherKey(newFirstKey).equals(
+								newSecondKey))
+							newRel = candRel;
 					}
+					// Otherwise, create the relation in the duplicate schema.
+					if (newRel == null)
+						try {
+							newRel = new GenericRelation(newFirstKey,
+									newSecondKey, card);
+						} catch (Exception e) {
+							// Ignore. This can only happen if incorrect
+							// relations are copied across which have
+							// different-arity keys at each end, or if the
+							// foreign keys involved already have relations
+							// elsewhere.
+						}
+					else
+						intRelsToDrop.remove(newRel);
+					// Update the relation's status. Only do this if not null.
+					// May be null if the existing relation was not in a valid
+					// state for copying.
+					if (newRel != null)
+						try {
+							newRel.setCardinality(card);
+							newRel.setStatus(status);
+						} catch (Throwable t) {
+							throw new MartBuilderInternalError(t);
+						}
 				}
 			}
+
+			// Drop the redundant internal relations from the target schema.
+			for (Iterator j = intRelsToDrop.iterator(); j.hasNext();)
+				((Relation) j.next()).destroy();
 		}
 
 		public Schema replicate(String newName) {
@@ -536,8 +620,7 @@ public interface Schema extends Comparable, DataLink {
 			Set relations = new HashSet();
 			for (Iterator i = this.getTables().iterator(); i.hasNext();) {
 				Table table = (Table) i.next();
-				for (Iterator j = table.getRelations()
-						.iterator(); j.hasNext();) {
+				for (Iterator j = table.getRelations().iterator(); j.hasNext();) {
 					Relation relation = (Relation) j.next();
 					if (!relation.isExternal())
 						relations.add(relation);

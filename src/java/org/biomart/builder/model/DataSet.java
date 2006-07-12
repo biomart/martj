@@ -57,7 +57,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.30, 4th July 2006
+ * @version 0.1.31, 12th July 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -342,10 +342,6 @@ public class DataSet extends GenericSchema {
 	 * the parent table, but the parent table may not actually be the central
 	 * table in this dataset.
 	 * <p>
-	 * As subclasses can only apply to the central table, throw an
-	 * AssociationException if this is attempted on any table other than the
-	 * central table.
-	 * <p>
 	 * One further restriction is that a table can only have a single M:1
 	 * subclass relation, or multiple 1:M ones. It cannot have a mix of both,
 	 * nor can it have more than one M:1 subclass relation. In either case if
@@ -356,9 +352,10 @@ public class DataSet extends GenericSchema {
 	 *            is the parent table and the FK end is the subclass table.
 	 * @throws AssociationException
 	 *             if one end of the relation is not the central table for this
-	 *             window, or if both ends of the relation point to the same
-	 *             table, or if the rule about maximum numbers of subclass
-	 *             relations of certain types applies (see above).
+	 *             window, or is not another subclass table, or if both ends of
+	 *             the relation point to the same table, or if the rule about
+	 *             maximum numbers of subclass relations of certain types
+	 *             applies (see above).
 	 */
 	public void flagSubclassRelation(Relation relation)
 			throws AssociationException {
@@ -368,34 +365,39 @@ public class DataSet extends GenericSchema {
 
 		// Check that the relation is a 1:M relation and that it is between
 		// the central table and some other table.
-		if (!relation.isOneToMany()
-				|| relation.getCardinality().equals(Cardinality.ONE))
+		if (!relation.isOneToMany())
 			throw new AssociationException(Resources.get("subclassNotOneMany"));
-		if (!(relation.getFirstKey().getTable().equals(this.centralTable) || relation
-				.getSecondKey().getTable().equals(this.centralTable)))
-			throw new AssociationException(Resources
-					.get("subclassNotOnCentralTable"));
 		if (relation.getFirstKey().getTable().equals(
 				relation.getSecondKey().getTable()))
 			throw new AssociationException(Resources
 					.get("subclassNotBetweenTwoTables"));
 
-		// Check to see if there is already a M:1 subclass relation on the
-		// central table.
-		boolean containsM1 = false;
-		for (Iterator i = this.subclassedRelations.iterator(); i.hasNext()
-				&& !containsM1;) {
-			Relation r = (Relation) i.next();
-			if (r.getManyKey().getTable().equals(this.centralTable))
-				containsM1 = true;
-		}
+		// Work out the child end of the relation - the M end. The parent is
+		// the 1 end.
+		Table parentTable = relation.getOneKey().getTable();
+		Table childTable = relation.getManyKey().getTable();
 
-		// If an M:1 relation already exists, or any relation already exists and
-		// this new relation is M:1, throw a wobbly.
-		if (relation.getManyKey().getTable().equals(this.centralTable)
-				&& (containsM1 || this.subclassedRelations.size() != 0))
+		// If the child table is at the M end of another subclass relation,
+		// refuse to do it. Also check to see if the parent table is at the M
+		// end of an existing subclass relation at the same time.
+		boolean childHasM1 = false;
+		boolean parentHasM1 = false;
+		for (Iterator i = this.subclassedRelations.iterator(); i.hasNext();) {
+			Relation r = (Relation) i.next();
+			if (r.getManyKey().getTable().equals(childTable))
+				childHasM1 = true;
+			else if (r.getManyKey().getTable().equals(parentTable))
+				parentHasM1 = true;
+		}
+		if (childHasM1)
 			throw new AssociationException(Resources
 					.get("mixedCardinalitySubclasses"));
+
+		// Check to see that the child table is the central table or
+		// the parent is at the M end of an existing subclass relation.
+		if (!(childTable.equals(this.centralTable) || parentHasM1))
+			throw new AssociationException(Resources
+					.get("subclassNotOnCentralTable"));
 
 		// Mark the relation.
 		this.subclassedRelations.add(relation);
@@ -1031,9 +1033,10 @@ public class DataSet extends GenericSchema {
 					}
 
 				// Subclass subclassed relations, if we are currently
-				// building the main table of the dataset.
+				// not building a dimension table.
 				else if (this.subclassedRelations.contains(r)
-						&& dsTable.getType().equals(DataSetTableType.MAIN))
+						&& !dsTable.getType()
+								.equals(DataSetTableType.DIMENSION))
 					subclassQ.add(r);
 
 				// Dimensionize dimension relations, which are all other 1:M

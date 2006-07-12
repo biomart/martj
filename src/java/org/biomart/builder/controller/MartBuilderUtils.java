@@ -59,7 +59,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.23, 7th July 2006
+ * @version 0.1.24, 12th July 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -374,7 +374,8 @@ public class MartBuilderUtils {
 	 * This method takes a schema, removes it as an individual schema from a
 	 * mart, and adds it to a group instead. If the group with that name does
 	 * not exist yet, it is created first and added to the mart. The group will
-	 * be synchronised immediately after adding the schema to it.
+	 * be synchronised immediately after adding the schema to it. External
+	 * relations will be copied into the group.
 	 * 
 	 * @param mart
 	 *            the mart to remove the schema from, and which contains the
@@ -407,11 +408,9 @@ public class MartBuilderUtils {
 		if (schemaGroup == null || !(schemaGroup instanceof SchemaGroup)) {
 			schemaGroup = new GenericSchemaGroup(groupName);
 			mart.addSchema(schemaGroup);
-			schemaGroup.addSchema(schema);
-			schemaGroup.synchronise();
-		} else {
-			schemaGroup.addSchema(schema);
 		}
+		schemaGroup.addSchema(schema);
+		schemaGroup.synchronise();
 		mart.removeSchema(schema);
 		return schemaGroup;
 	}
@@ -420,7 +419,9 @@ public class MartBuilderUtils {
 	 * Removes a schema from a group and places it back into the mart as an
 	 * individual schema. If that was the last schema in the group, the group
 	 * itself is disbanded. Otherwise, the group is synchronised but the schema
-	 * itself is not.
+	 * itself is not. External relations will not be exported to the schema
+	 * unless it is the last schema in the group and the group is now
+	 * going to be disbanded.
 	 * 
 	 * @param mart
 	 *            the mart to add the schema to once it has been removed from
@@ -446,8 +447,10 @@ public class MartBuilderUtils {
 			SchemaGroup schemaGroup) throws AssociationException,
 			AlreadyExistsException, BuilderException, SQLException {
 		schemaGroup.removeSchema(schema);
-		if (schemaGroup.getSchemas().size() == 0)
+		if (schemaGroup.getSchemas().size() == 0) {
+			schemaGroup.replicateContents(schema);
 			mart.removeSchema(schemaGroup);
+		}
 		else
 			schemaGroup.synchronise();
 		mart.addSchema(schema);
