@@ -376,12 +376,6 @@ public interface MartConstructor {
 			// Make a list to hold the table representations.
 			List tables = new ArrayList();
 
-			// TODO Allow multiple cascading levels of subclassing.
-			// Implement this by establishing a queue of main/subclass
-			// tables to process. A parallel queue contains the relations
-			// leading to each one. Move along the queue and process each
-			// table and all its dimensions.
-			
 			// For each schema, we process all the tables.
 			for (Iterator i = schemas.iterator(); i.hasNext();) {
 				Schema schema = (Schema) i.next();
@@ -394,45 +388,44 @@ public interface MartConstructor {
 				this.processTable(rootAction, actionGraph, mainTableSchema,
 						schema, table);
 				schemaTables.add(table);
-				MartConstructorAction lastMainAction = table
-						.getLastActionPerformed();
 
 				// Check not cancelled.
 				this.checkCancelled();
 
+				// Set up a map to hold the last actions for each source table
+				// we encounter.
+				Map tableLastActions = new HashMap();
+				tableLastActions.put(mainTable, table.getLastActionPerformed());
+
+				// Set up a queue to hold all the subclass and dimension
+				// relations we encounter.
+				List relations = new ArrayList(mainTable.getPrimaryKey()
+						.getRelations());
+
 				// Process all main dimensions and subclasses.
-				for (Iterator j = mainTable.getPrimaryKey().getRelations()
-						.iterator(); j.hasNext();) {
-					Relation relation = (Relation) j.next();
-					DataSetTable targetTable = (DataSetTable) relation
+				for (int j = 0; j < relations.size(); j++) {
+					Relation sourceRelation = (Relation) relations.get(j);
+					DataSetTable sourceTable = (DataSetTable) sourceRelation
+							.getOneKey().getTable();
+					DataSetTable targetTable = (DataSetTable) sourceRelation
 							.getManyKey().getTable();
-					table = new MCDSTable(targetTable, relation);
-					this.processTable(lastMainAction, actionGraph,
-							mainTableSchema, schema, table);
+
+					// Create the subclass or dimension table.
+					table = new MCDSTable(targetTable, sourceRelation);
+					this.processTable((MartConstructorAction) tableLastActions
+							.get(sourceTable), actionGraph, mainTableSchema,
+							schema, table);
 					schemaTables.add(table);
+
+					// Add target table to definitions list.
+					tableLastActions.put(targetTable, table.getLastActionPerformed());
+
+					// Add further subclasses and dimensions to queue.
+					relations
+							.addAll(targetTable.getPrimaryKey().getRelations());
 
 					// Check not cancelled.
 					this.checkCancelled();
-
-					// Process all subclass dimensions.
-					if (targetTable.getType().equals(
-							DataSetTableType.MAIN_SUBCLASS)) {
-						MartConstructorAction lastSCAction = table
-								.getLastActionPerformed();
-						for (Iterator k = targetTable.getPrimaryKey()
-								.getRelations().iterator(); k.hasNext();) {
-							Relation scRelation = (Relation) k.next();
-							DataSetTable scTargetTable = (DataSetTable) scRelation
-									.getManyKey().getTable();
-							table = new MCDSTable(scTargetTable, scRelation);
-							this.processTable(lastSCAction, actionGraph,
-									mainTableSchema, schema, table);
-							schemaTables.add(table);
-
-							// Check not cancelled.
-							this.checkCancelled();
-						}
-					}
 				}
 
 				// If partitioning by schema, add schema name to partition

@@ -20,6 +20,7 @@ package org.biomart.builder.view.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Iterator;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBoxMenuItem;
@@ -40,7 +41,6 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
-import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
@@ -49,7 +49,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * provides the context menu for interacting with dataset diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.20, 21st June 2006
+ * @version 0.1.21, 13th July 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -254,28 +254,10 @@ public class DataSetContext extends WindowContext {
 						Relation relation = (Relation) table
 								.getUnderlyingRelations().get(0);
 						getMartTab().getDataSetTabSet().requestMaskRelation(
-								(DataSet) table.getSchema(), relation);
+								getDataSet(), relation);
 					}
 				});
 				contextMenu.add(removeDM);
-
-				// The dimension can be merged by using this option. This
-				// changes the relation that caused the dimension to exist
-				// into a 1:1 relation.
-				JMenuItem mergeDM = new JMenuItem(Resources
-						.get("mergeTableTitle"));
-				mergeDM.setMnemonic(Resources.get("mergeTableMnemonic").charAt(
-						0));
-				mergeDM.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						Relation relation = (Relation) table
-								.getUnderlyingRelations().get(0);
-						getMartTab().getSchemaTabSet()
-								.requestChangeRelationCardinality(relation,
-										Cardinality.ONE);
-					}
-				});
-				contextMenu.add(mergeDM);
 			}
 
 			// Subclass tables have their own options too.
@@ -289,32 +271,22 @@ public class DataSetContext extends WindowContext {
 						.charAt(0));
 				removeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
-						Relation relation = (Relation) table
-								.getUnderlyingRelations().get(0);
-						getMartTab().getDataSetTabSet()
-								.requestUnsubclassRelation(
-										(DataSet) table.getSchema(), relation);
-					}
-				});
-				contextMenu.add(removeDM);
-
-				// The subclass table can be merged by using this option.
-				// This unflags the relation that caused the subclass to
-				// exist.
-				JMenuItem mergeDM = new JMenuItem(Resources
-						.get("mergeTableTitle"));
-				mergeDM.setMnemonic(Resources.get("mergeTableMnemonic").charAt(
-						0));
-				mergeDM.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						Relation relation = (Relation) table
-								.getUnderlyingRelations().get(0);
+						Relation relation = null;
+						// Identify the last subclass relation in the chain.
+						for (Iterator i = table.getUnderlyingRelations()
+								.iterator(); i.hasNext();) {
+							Relation r = (Relation) i.next();
+							if (getDataSet().getSubclassedRelations().contains(
+									r))
+								relation = r;
+						}
+						// Unsubclass it.
 						getMartTab().getDataSetTabSet()
 								.requestUnsubclassRelation(getDataSet(),
 										relation);
 					}
 				});
-				contextMenu.add(mergeDM);
+				contextMenu.add(removeDM);
 			}
 		}
 
@@ -485,8 +457,12 @@ public class DataSetContext extends WindowContext {
 			// Which relation is it?
 			Relation relation = (Relation) object;
 
+			// What tables does it link?
+			DataSetTable target = (DataSetTable) relation.getManyKey()
+					.getTable();
+
 			// Highlight SUBCLASS relations.
-			if (this.getDataSet().getSubclassedRelations().contains(relation))
+			if (target.getType().equals(DataSetTableType.MAIN_SUBCLASS))
 				component.setForeground(RelationComponent.SUBCLASS_COLOUR);
 
 			// All the rest are normal.

@@ -336,16 +336,13 @@ public class DataSet extends GenericSchema {
 	}
 
 	/**
-	 * <p>
 	 * Mark a table as a subclass of another by marking the relation between
-	 * them. The FK end of the relation is the subclass table, and the PK end is
-	 * the parent table, but the parent table may not actually be the central
-	 * table in this dataset.
-	 * <p>
-	 * One further restriction is that a table can only have a single M:1
-	 * subclass relation, or multiple 1:M ones. It cannot have a mix of both,
-	 * nor can it have more than one M:1 subclass relation. In either case if
-	 * this is attempted an AssociationException will be thrown.
+	 * them. The M end of the relation is the child table, and the 1 end is the
+	 * parent table, but the parent table may not actually be the central table
+	 * in this dataset - instead it may be linked to that central table by an
+	 * existing chain of M:1 relations. The central table of the dataset may
+	 * have at most one M:1 relation, and/or as many 1:M relations as the user
+	 * wants.
 	 * 
 	 * @param relation
 	 *            the relation to mark as a subclass relation, where the PK end
@@ -377,40 +374,63 @@ public class DataSet extends GenericSchema {
 		Table parentTable = relation.getOneKey().getTable();
 		Table childTable = relation.getManyKey().getTable();
 
-		// If the child table is at the M end of another subclass relation,
-		// refuse to do it. Also check to see if the parent table is at the M
-		// end of an existing subclass relation at the same time.
-		boolean childHasM1 = false;
-		boolean parentHasM1 = false;
-		for (Iterator i = this.subclassedRelations.iterator(); i.hasNext();) {
-			Relation r = (Relation) i.next();
-			if (r.getManyKey().getTable().equals(childTable))
-				childHasM1 = true;
-			else if (r.getManyKey().getTable().equals(parentTable))
-				parentHasM1 = true;
+		// If there are no existing subclass relations and either the
+		// parent or the child is the central table, then it is OK to add it.
+		if (this.subclassedRelations.isEmpty()) {
+			if (!(parentTable.equals(this.centralTable) || childTable
+					.equals(this.centralTable)))
+				throw new AssociationException(Resources
+						.get("subclassNotOnCentralTable"));
 		}
-		if (childHasM1)
-			throw new AssociationException(Resources
-					.get("mixedCardinalitySubclasses"));
-
-		// Check to see that the child table is the central table or
-		// the parent is at the M end of an existing subclass relation.
-		if (!(childTable.equals(this.centralTable) || parentHasM1))
-			throw new AssociationException(Resources
-					.get("subclassNotOnCentralTable"));
+		// If the child table, the M end, is the central table, then it is
+		// OK to add this only if no other subclass relation has the M end
+		// at the central table.
+		else if (childTable.equals(this.centralTable)) {
+			boolean centralAlreadyHasM1 = false;
+			for (Iterator i = this.subclassedRelations.iterator(); i.hasNext()
+					&& !centralAlreadyHasM1;)
+				if (((Relation) i.next()).getManyKey().getTable().equals(
+						this.centralTable))
+					centralAlreadyHasM1 = true;
+			if (centralAlreadyHasM1)
+				throw new AssociationException(Resources
+						.get("mixedCardinalitySubclasses"));
+		}
+		// If the parent table is at the M end of a subclass relation chain
+		// from the central table, then it is OK to add the new one.
+		else {
+			boolean parentHasM1 = false;
+			for (Iterator i = this.subclassedRelations.iterator(); i.hasNext()
+					&& !parentHasM1;)
+				if (((Relation) i.next()).getManyKey().getTable().equals(
+						parentTable))
+					parentHasM1 = true;
+			if (!parentHasM1)
+				throw new AssociationException(Resources
+						.get("subclassNotOnCentralTable"));
+		}
 
 		// Mark the relation.
 		this.subclassedRelations.add(relation);
 	}
 
 	/**
-	 * Unmark a relation as a subclass relation.
+	 * Unmark a relation as a subclass relation. If this breaks a chain, then
+	 * all subsequent subclass relations having a 1:M from the M end of this
+	 * relation are also unmarked.
 	 * 
 	 * @param relation
 	 *            the relation to unmark.
 	 */
 	public void unflagSubclassRelation(Relation relation) {
 		this.subclassedRelations.remove(relation);
+		Table target = relation.getManyKey().getTable();
+		if (!target.equals(this.centralTable)) {
+			if (target.getPrimaryKey() != null)
+				for (Iterator i = target.getPrimaryKey().getRelations()
+						.iterator(); i.hasNext();)
+					this.unflagSubclassRelation((Relation) i.next());
+		}
 	}
 
 	/**
@@ -698,7 +718,7 @@ public class DataSet extends GenericSchema {
 
 		// Identify main table.
 		Table centralTable = this.getCentralTable();
-		// If central table has subclass relations and is at the foreign key
+		// If central table has subclass relations and is at the M key
 		// end, then follow them to the real central table.
 		boolean found = false;
 		for (Iterator i = centralTable.getRelations().iterator(); i.hasNext()
