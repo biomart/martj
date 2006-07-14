@@ -38,7 +38,7 @@ import org.biomart.builder.resources.Resources;
  * can be used.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 4th July 2006
+ * @version 0.1.7, 14th July 2006
  * @since 0.1
  */
 public abstract class DatabaseDialect {
@@ -51,6 +51,7 @@ public abstract class DatabaseDialect {
 	public static void registerDialects() {
 		dialects.add(new MySQLDialect());
 		dialects.add(new OracleDialect());
+		dialects.add(new PostgreSQLDialect());
 	}
 
 	/**

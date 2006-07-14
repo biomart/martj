@@ -56,16 +56,13 @@ import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Union;
 
 /**
- * Understands how to create SQL and DDL for a MySQL database.
+ * Understands how to create SQL and DDL for a PostgreSQL database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 14th July 2006
+ * @version 0.1.1, 14th July 2006
  * @since 0.1
  */
-public class MySQLDialect extends DatabaseDialect {
-
-	// Check we only set the group concat size once.
-	private static boolean GROUP_CONCAT_SIZED;
+public class PostgreSQLDialect extends DatabaseDialect {
 
 	public boolean understandsDataLink(DataLink dataLink)
 			throws ConstructorException {
@@ -77,14 +74,14 @@ public class MySQLDialect extends DatabaseDialect {
 
 		try {
 			return jddl.getConnection().getMetaData().getDatabaseProductName()
-					.equals("MySQL");
+					.equals("PostgreSQL");
 		} catch (SQLException e) {
 			throw new ConstructorException(e);
 		}
 	}
 
 	public void reset() {
-		MySQLDialect.GROUP_CONCAT_SIZED = false;
+
 	}
 
 	public List executeSelectDistinct(Column col) throws SQLException {
@@ -124,7 +121,7 @@ public class MySQLDialect extends DatabaseDialect {
 		List statements = new ArrayList();
 
 		if (includeComments)
-			statements.add("#" + action.getStatusMessage());
+			statements.add("--" + action.getStatusMessage());
 
 		try {
 			String className = action.getClass().getName();
@@ -239,8 +236,8 @@ public class MySQLDialect extends DatabaseDialect {
 				.getName();
 		String oldTableName = action.getRenameTableOldName();
 		String newTableName = action.getRenameTableNewName();
-		statements.add("rename table " + schemaName + "." + oldTableName
-				+ " to " + schemaName + "." + newTableName);
+		statements.add("alter table table " + schemaName + "." + oldTableName
+				+ " rename to " + schemaName + "." + newTableName);
 	}
 
 	public void doUnion(Union action, List statements) throws Exception {
@@ -268,7 +265,7 @@ public class MySQLDialect extends DatabaseDialect {
 	}
 
 	public void doPlaceHolder(PlaceHolder action, List statements) {
-		statements.add("#");
+		statements.add("--");
 	}
 
 	public void doIndex(Index action, List statements) {
@@ -297,7 +294,7 @@ public class MySQLDialect extends DatabaseDialect {
 		String tableName = action.getTableName();
 		String colName = action.getColumnName();
 		statements.add("alter table " + schemaName + "." + tableName
-				+ " add column (" + colName + " smallint default 0)");
+				+ " add column (" + colName + " number(1) default 0)");
 	}
 
 	public void doOptimiseUpdateColumn(OptimiseUpdateColumn action,
@@ -464,43 +461,38 @@ public class MySQLDialect extends DatabaseDialect {
 
 		StringBuffer sb = new StringBuffer();
 
-		// If we haven't defined the group_concat size yet, define it.
-		// Note limitation of total 18446744073709551616 characters for 
-		// group_concat result.
-		if (!MySQLDialect.GROUP_CONCAT_SIZED) {
-			sb.append("set group_concat_max_len=18446744073709551616");
-			sb.append(System.getProperty("line.separator"));				
-			MySQLDialect.GROUP_CONCAT_SIZED = true;
-		}
-		
 		sb.append("create table " + concatSchemaName + "." + concatTableName
-				+ " as select a.*, group_concat(distinct concat_ws('");
-		sb.append(crType.getValueSeparator());
-		sb.append("'");
+				+ " as select a.*, array_to_string(array(select ");
 		for (Iterator i = action.getTargetTableConcatColumns().iterator(); i
 				.hasNext();) {
-			sb.append(',');
 			Column col = (Column) i.next();
+			sb.append("b.");
 			sb.append(col.getName());
+			if (i.hasNext()) {
+				sb.append("||'");
+				sb.append(crType.getValueSeparator());
+				sb.append("'||");
+			}
 		}
-		sb.append(") separator '");
-		sb.append(crType.getRecordSeparator());
-		sb.append("')) as ");
-		sb.append(trgtColName);
-
-		sb.append(" from " + srcSchemaName + "." + srcTableName
-				+ " as a inner join " + trgtSchemaName + "." + trgtTableName
-				+ " as b using ");
+		sb.append(" from ");
+		sb.append(trgtSchemaName + "." + trgtTableName);
+		sb.append(" as b where ");
 		for (int i = 0; i < action.getTargetTableKeyColumns().size(); i++) {
 			if (i > 0)
-				sb.append(',');
+				sb.append(" and ");
 			String pkColName = ((Column) action.getSourceTableKeyColumns().get(
 					i)).getName();
 			String fkColName = ((Column) action.getTargetTableKeyColumns().get(
 					i)).getName();
 			sb.append("a." + pkColName + "=b." + fkColName);
 		}
-		sb.append(" group by ");
+		sb.append("),'");
+		sb.append(crType.getRecordSeparator());
+		sb.append("') as ");
+		sb.append(trgtColName);
+
+		sb.append(" from " + srcSchemaName + "." + srcTableName
+				+ " as a group by ");
 		for (Iterator i = srcTableKeyCols.iterator(); i.hasNext();) {
 			Column srcKeyCol = (Column) i.next();
 			sb.append("a.");
