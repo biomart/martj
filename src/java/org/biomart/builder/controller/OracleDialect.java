@@ -63,7 +63,7 @@ import org.biomart.builder.resources.Resources;
  * Understands how to create SQL and DDL for an Oracle database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 5th July 2006
+ * @version 0.1.3, 14th July 2006
  * @since 0.1
  */
 public class OracleDialect extends DatabaseDialect {
@@ -390,11 +390,13 @@ public class OracleDialect extends DatabaseDialect {
 		String partColumnName = action.getPartitionColumnName();
 		Object partColumnValue = action.getPartitionColumnValue();
 		if (partColumnValue != null) {
-			// TODO Escape this partition value string.
+			String escapedValue = partColumnValue.toString();
+			escapedValue = escapedValue.replaceAll("\\","\\\\");
+			escapedValue = escapedValue.replaceAll("'","\\'");	
 			statements.add("create table " + partTableSchema + "."
 					+ partTableName + " as select * from " + fromTableSchema
 					+ "." + fromTableName + " where " + partColumnName + "='"
-					+ partColumnValue + "'");
+					+ escapedValue + "'");
 		} else
 			statements.add("create table " + partTableSchema + "."
 					+ partTableName + " as select * from " + fromTableSchema

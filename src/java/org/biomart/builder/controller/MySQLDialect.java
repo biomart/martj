@@ -379,11 +379,13 @@ public class MySQLDialect extends DatabaseDialect {
 		String partColumnName = action.getPartitionColumnName();
 		Object partColumnValue = action.getPartitionColumnValue();
 		if (partColumnValue != null) {
-			// TODO Escape this partition value string.
+			String escapedValue = partColumnValue.toString();
+			escapedValue = escapedValue.replaceAll("\\","\\\\");
+			escapedValue = escapedValue.replaceAll("'","\\'");	
 			statements.add("create table " + partTableSchema + "."
 					+ partTableName + " as select * from " + fromTableSchema
 					+ "." + fromTableName + " where " + partColumnName + "='"
-					+ partColumnValue + "'");
+					+ escapedValue + "'");
 		} else
 			statements.add("create table " + partTableSchema + "."
 					+ partTableName + " as select * from " + fromTableSchema
