@@ -265,11 +265,11 @@ public class DataSetContext extends WindowContext {
 
 				// The subclass table can be removed by using this option. This
 				// simply masks the relation that caused the subclass to exist.
-				JMenuItem removeDM = new JMenuItem(Resources
+				JMenuItem unsubclass = new JMenuItem(Resources
 						.get("removeSubclassTitle"));
-				removeDM.setMnemonic(Resources.get("removeSubclassMnemonic")
+				unsubclass.setMnemonic(Resources.get("removeSubclassMnemonic")
 						.charAt(0));
-				removeDM.addActionListener(new ActionListener() {
+				unsubclass.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						Relation relation = null;
 						// Identify the last subclass relation in the chain.
@@ -286,7 +286,7 @@ public class DataSetContext extends WindowContext {
 										relation);
 					}
 				});
-				contextMenu.add(removeDM);
+				contextMenu.add(unsubclass);
 			}
 		}
 

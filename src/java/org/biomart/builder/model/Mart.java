@@ -384,8 +384,10 @@ public class Mart {
 			DataSet dataset = new DataSet(this, rootTable, name + "_"
 					+ (this.suffix++));
 			// Process it.
+			List tablesIncluded = new ArrayList();
+			tablesIncluded.add(rootTable);
 			suggestedDataSets.add(this.continueSubclassing(includeTables,
-					name, dataset, rootTable));
+					tablesIncluded, name, dataset, rootTable));
 		}
 		// Optimise all the results.
 		for (Iterator i = suggestedDataSets.iterator(); i.hasNext();)
@@ -395,6 +397,7 @@ public class Mart {
 	}
 
 	private DataSet continueSubclassing(Collection includeTables,
+			Collection tablesIncluded,
 			String name, DataSet dataset, Table table)
 			throws AssociationException {
 		// Make a list to hold the recursion tables, and the potential 1:M:1
@@ -417,6 +420,7 @@ public class Mart {
 			if (includeTables.contains(target)) {
 				dataset.flagSubclassRelation(r);
 				recursion.add(target);
+				tablesIncluded.add(target);
 			}
 			// If any of them point to a table that is not subclassed but has
 			// an M:1 to one that should be, mark the relation as potential 
@@ -442,7 +446,8 @@ public class Mart {
 						else if (fkr.getStatus().equals(
 								ComponentStatus.INFERRED_INCORRECT))
 							continue;
-						// This bit avoids 1:M:1 back to same table.
+						// This bit avoids 1:M:1 back to a table that
+						// we've already added.
 						else if (fkr.getOneKey().getTable().equals(r.getOneKey().getTable()))
 							continue;
 						else if (includeTables.contains(fkr.getOneKey().getTable()))
@@ -454,18 +459,19 @@ public class Mart {
 			}
 		}
 		// Check the potential 1:M:1 relations to make sure the target
-		// tables have not already been included (if they are, they'll be
-		// in the recursion set).
+		// tables have not already been included.
 		for (Iterator i = potential.iterator(); i.hasNext(); ) {
 			Object[] obj = (Object[])i.next();
 			Table potentialTable = (Table)obj[0];
 			Relation potentialRel = (Relation)obj[1];
-			if (!recursion.contains(potentialTable))
+			if (!tablesIncluded.contains(potentialTable)) {
 				dataset.flagSubclassRelation(potentialRel);
+				tablesIncluded.add(potentialTable);
+			}
 		}
 		// Do the recursion.
 		for (Iterator i = recursion.iterator(); i.hasNext();) 
-			this.continueSubclassing(includeTables, name, dataset, (Table) i.next());
+			this.continueSubclassing(includeTables, tablesIncluded, name, dataset, (Table) i.next());
 		// Return the resulting datasets.
 		return dataset;
 	}

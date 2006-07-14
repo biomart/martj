@@ -434,14 +434,18 @@ public class DataSet extends GenericSchema {
 	 *            the relation to unmark.
 	 */
 	public void unflagSubclassRelation(Relation relation) {
-		this.subclassedRelations.remove(relation);
+		// Break the chain first.
 		Table target = relation.getManyKey().getTable();
 		if (!target.equals(this.centralTable)) {
 			if (target.getPrimaryKey() != null)
 				for (Iterator i = target.getPrimaryKey().getRelations()
-						.iterator(); i.hasNext();)
-					this.unflagSubclassRelation((Relation) i.next());
+						.iterator(); i.hasNext();) {
+					Relation rel = (Relation)i.next();
+					if (rel.isOneToMany()) this.unflagSubclassRelation(rel);
+				}
 		}
+		// Then remove the head of the chain.
+		this.subclassedRelations.remove(relation);
 	}
 
 	/**
