@@ -54,6 +54,19 @@ import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.Mart.DataSetSuggestionMode;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.diagrams.AllDataSetsDiagram;
+import org.biomart.builder.view.gui.diagrams.DataSetDiagram;
+import org.biomart.builder.view.gui.diagrams.Diagram;
+import org.biomart.builder.view.gui.diagrams.SchemaDiagram;
+import org.biomart.builder.view.gui.diagrams.contexts.AllDataSetsContext;
+import org.biomart.builder.view.gui.diagrams.contexts.DataSetContext;
+import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
+import org.biomart.builder.view.gui.diagrams.contexts.WindowContext;
+import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
+import org.biomart.builder.view.gui.dialogs.PartitionColumnDialog;
+import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
+import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
+
 
 /**
  * This tabset contains most of the core functionality of the entire GUI. It has
@@ -141,7 +154,7 @@ public class DataSetTabSet extends JTabbedPane {
 		// done in order to get the diagram visible. If we do
 		// it later, having attempted to set up the diagram without
 		// making it visible first, we get weird null pointer
-		// exceptions from half-constructed diagrams.
+		// exceptions from half-constructed org.biomart.builder.view.gui.diagrams.
 		super.setSelectedIndex(selectedIndex);
 
 		// Then, work out which tab is currently being displayed.
@@ -219,7 +232,7 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks all dataset diagrams in all dataset tabs to recalculate themselves
+	 * Asks all dataset org.biomart.builder.view.gui.diagrams in all dataset tabs to recalculate themselves
 	 * to match the current contents of the datasets.
 	 */
 	public void recalculateAllDataSetDiagrams() {
@@ -228,7 +241,7 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks all dataset diagrams in all dataset tabs to repaint themselves, in
+	 * Asks all dataset org.biomart.builder.view.gui.diagrams in all dataset tabs to repaint themselves, in
 	 * case any components have changed appearance. Do not use this if the
 	 * components have changed size - use recalculate instead.
 	 */
@@ -572,7 +585,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							// Repaint the schema diagrams as they may be
+							// Repaint the schema org.biomart.builder.view.gui.diagrams as they may be
 							// currently
 							// in a window, and the colours for that window may
 							// have changed depending on optimisation results.
@@ -619,7 +632,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							// Repaint the schema diagrams as they may be
+							// Repaint the schema org.biomart.builder.view.gui.diagrams as they may be
 							// currently
 							// in a window, and the colours for that window may
 							// have changed depending on optimisation results.
@@ -1353,7 +1366,7 @@ public class DataSetTabSet extends JTabbedPane {
 		 * Attaches the schema tabset to this dataset. Attaching means that the
 		 * window card is created, and set to contain the schema tabset. The
 		 * schema tabset is then asked to use the {@link WindowContext} to
-		 * display its diagrams, instead of whatever context it was using
+		 * display its org.biomart.builder.view.gui.diagrams, instead of whatever context it was using
 		 * before. Be warned - once the schema tabset is attached here, it will
 		 * disappear from wherever it was before, because of the way that
 		 * JComponents can only have one parent.

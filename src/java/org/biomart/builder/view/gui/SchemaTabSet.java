@@ -46,6 +46,13 @@ import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.diagrams.AllSchemasDiagram;
+import org.biomart.builder.view.gui.diagrams.Diagram;
+import org.biomart.builder.view.gui.diagrams.SchemaDiagram;
+import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
+import org.biomart.builder.view.gui.dialogs.KeyEditorDialog;
+import org.biomart.builder.view.gui.dialogs.SchemaManagerDialog;
+
 
 /**
  * <p>
@@ -55,7 +62,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * can update itself based on the schemas in the mart on request.
  * <p>
  * Like a diagram, it can have a {@link DiagramContext} associated with it.
- * Whenever this context changes, all diagrams represented in each of the tabs
+ * Whenever this context changes, all org.biomart.builder.view.gui.diagrams represented in each of the tabs
  * has the same context applied.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
@@ -102,7 +109,7 @@ public class SchemaTabSet extends JTabbedPane {
 		this.addTab(Resources.get("multiSchemaOverviewTab"), scroller);
 
 		// Populate the map to hold the relation between schemas and the
-		// diagrams
+		// org.biomart.builder.view.gui.diagrams
 		// representing them.
 		this.recalculateSchemaTabs();
 	}
@@ -646,7 +653,7 @@ public class SchemaTabSet extends JTabbedPane {
 			// As the schema name has changed, the all-schemas diagram needs
 			// to be recalculated, as the schema representations may have
 			// changed size owing to the new name. The individual schema
-			// and dataset diagrams will also need to be recalculated.
+			// and dataset org.biomart.builder.view.gui.diagrams will also need to be recalculated.
 			this.recalculateOverviewDiagram();
 			this.recalculateSchemaDiagram(schema);
 			this.martTab.getDataSetTabSet().recalculateAllDataSetDiagrams();
@@ -721,7 +728,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							// Recalculate all schema diagrams.
+							// Recalculate all schema org.biomart.builder.view.gui.diagrams.
 							recalculateAllSchemaDiagrams();
 
 							// As schemas may have lost or gained some external
@@ -921,7 +928,7 @@ public class SchemaTabSet extends JTabbedPane {
 							// tables to
 							// appear in datasets referring to tables in this
 							// schema, so
-							// we need to recalculate all dataset diagrams just
+							// we need to recalculate all dataset org.biomart.builder.view.gui.diagrams just
 							// in case.
 							martTab.getDataSetTabSet()
 									.recalculateAllDataSetDiagrams();
@@ -977,7 +984,7 @@ public class SchemaTabSet extends JTabbedPane {
 							// tables to
 							// appear in datasets referring to tables in this
 							// schema, so
-							// we need to recalculate all dataset diagrams just
+							// we need to recalculate all dataset org.biomart.builder.view.gui.diagrams just
 							// in case.
 							martTab.getDataSetTabSet()
 									.recalculateAllDataSetDiagrams();
@@ -1030,7 +1037,7 @@ public class SchemaTabSet extends JTabbedPane {
 							// tables to
 							// appear in datasets referring to tables in this
 							// schema, so
-							// we need to recalculate all dataset diagrams just
+							// we need to recalculate all dataset org.biomart.builder.view.gui.diagrams just
 							// in case.
 							martTab.getDataSetTabSet()
 									.recalculateAllDataSetDiagrams();
@@ -1085,7 +1092,7 @@ public class SchemaTabSet extends JTabbedPane {
 							// tables to
 							// appear in datasets referring to tables in this
 							// schema, so
-							// we need to recalculate all dataset diagrams just
+							// we need to recalculate all dataset org.biomart.builder.view.gui.diagrams just
 							// in case.
 							martTab.getDataSetTabSet()
 									.recalculateAllDataSetDiagrams();
@@ -1145,7 +1152,7 @@ public class SchemaTabSet extends JTabbedPane {
 							// tables to
 							// appear in datasets referring to tables in this
 							// schema, so
-							// we need to recalculate all dataset diagrams just
+							// we need to recalculate all dataset org.biomart.builder.view.gui.diagrams just
 							// in case.
 							martTab.getDataSetTabSet()
 									.recalculateAllDataSetDiagrams();
@@ -1220,7 +1227,7 @@ public class SchemaTabSet extends JTabbedPane {
 							// tables to
 							// appear in datasets referring to tables in this
 							// schema, so
-							// we need to recalculate all dataset diagrams just
+							// we need to recalculate all dataset org.biomart.builder.view.gui.diagrams just
 							// in case.
 							martTab.getDataSetTabSet()
 									.recalculateAllDataSetDiagrams();
@@ -1409,7 +1416,7 @@ public class SchemaTabSet extends JTabbedPane {
 							// tables to
 							// appear in datasets referring to tables in this
 							// schema, so
-							// we need to recalculate all dataset diagrams just
+							// we need to recalculate all dataset org.biomart.builder.view.gui.diagrams just
 							// in case.
 							martTab.getDataSetTabSet()
 									.recalculateAllDataSetDiagrams();
@@ -1510,7 +1517,7 @@ public class SchemaTabSet extends JTabbedPane {
 							// This may have caused dimensions or subclasses to
 							// change
 							// in some datasets, so recalculate all the dataset
-							// diagrams
+							// org.biomart.builder.view.gui.diagrams
 							// too.
 							martTab.getDataSetTabSet()
 									.recalculateAllDataSetDiagrams();
@@ -1608,13 +1615,13 @@ public class SchemaTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Sets the diagram context to use for all diagrams inside this schema
+	 * Sets the diagram context to use for all org.biomart.builder.view.gui.diagrams inside this schema
 	 * tabset. Once set, {@link Diagram#setDiagramContext(DiagramContext)} is
 	 * called on each diagram in the tabset in turn so that they are all working
 	 * with the same context.
 	 * 
 	 * @param diagramContext
-	 *            the context to use for all diagrams in this schema tabset.
+	 *            the context to use for all org.biomart.builder.view.gui.diagrams in this schema tabset.
 	 */
 	public void setDiagramContext(DiagramContext diagramContext) {
 		this.diagramContext = diagramContext;
@@ -1626,7 +1633,7 @@ public class SchemaTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Returns the diagram context currently being used by diagrams in this
+	 * Returns the diagram context currently being used by org.biomart.builder.view.gui.diagrams in this
 	 * schema tabset.
 	 * 
 	 * @return the diagram context currently being used.

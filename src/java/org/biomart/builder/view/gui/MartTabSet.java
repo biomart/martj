@@ -45,6 +45,8 @@ import org.biomart.builder.controller.MartBuilderXML;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.resources.Resources;
+import org.biomart.builder.view.gui.diagrams.contexts.SchemaContext;
+import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 
 /**
  * Displays a set of tabs, one per mart currently loaded. Each tab keeps track
