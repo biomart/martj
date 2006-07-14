@@ -374,8 +374,8 @@ public class DataSet extends GenericSchema {
 		Table parentTable = relation.getOneKey().getTable();
 		Table childTable = relation.getManyKey().getTable();
 
-		// If there are no existing subclass relations and either the
-		// parent or the child is the central table, then it is OK to add it.
+		// If there are existing subclass relations and neither the
+		// parent or the child is the central table, then it is not OK to add it.
 		if (this.subclassedRelations.isEmpty()) {
 			if (!(parentTable.equals(this.centralTable) || childTable
 					.equals(this.centralTable)))
@@ -383,7 +383,7 @@ public class DataSet extends GenericSchema {
 						.get("subclassNotOnCentralTable"));
 		}
 		// If the child table, the M end, is the central table, then it is
-		// OK to add this only if no other subclass relation has the M end
+		// not OK to add this if another subclass relation has the M end
 		// at the central table.
 		else if (childTable.equals(this.centralTable)) {
 			boolean centralAlreadyHasM1 = false;
@@ -396,16 +396,27 @@ public class DataSet extends GenericSchema {
 				throw new AssociationException(Resources
 						.get("mixedCardinalitySubclasses"));
 		}
-		// If the parent table is at the M end of a subclass relation chain
-		// from the central table, then it is OK to add the new one.
+		// If the parent table is not at the M end of a subclass relation chain
+		// from the central table, or is not the central table, then it is not OK 
+		// to add the new one. Also, if the child table is at the M end of
+		// an existing subclass relation, that's not OK either.
 		else {
-			boolean parentHasM1 = false;
-			for (Iterator i = this.subclassedRelations.iterator(); i.hasNext()
-					&& !parentHasM1;)
-				if (((Relation) i.next()).getManyKey().getTable().equals(
+			// Start out - legal if parent is the central table.
+			boolean legal = parentTable.equals(this.centralTable);
+			// Ensure child is not the M end of an existing subclass, else
+			// if not legal to start with, it becomes legal if the parent
+			// is at the M end of an existing subclass.
+			for (Iterator i = this.subclassedRelations.iterator(); i.hasNext();) {
+				Relation r = (Relation)i.next();
+				if (!legal && r.getManyKey().getTable().equals(
 						parentTable))
-					parentHasM1 = true;
-			if (!parentHasM1)
+					legal = true;
+				else if (legal && !r.getOneKey().getTable().equals(parentTable) && r.getManyKey().getTable().equals(childTable)) {
+					legal = false;
+					break;
+				}
+			}
+			if (!legal)
 				throw new AssociationException(Resources
 						.get("subclassNotOnCentralTable"));
 		}

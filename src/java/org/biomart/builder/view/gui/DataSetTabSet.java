@@ -51,6 +51,7 @@ import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.Mart.DataSetSuggestionMode;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
@@ -62,7 +63,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.27, 27th June 2006
+ * @version 0.1.29, 14th July 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -494,64 +495,27 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Request that a single dataset be created, unoptimised, around the given
-	 * table.
-	 * 
-	 * @param table
-	 *            the table to create the dataset around.
-	 */
-	public void requestCreateDataSet(final Table table) {
-		// Ask user for a name to use.
-		final String name = this.askUserForName(Resources
-				.get("requestDataSetName"), table.getName());
-
-		// If they cancelled it, cancel the operation.
-		if (name == null)
-			return;
-
-		// In the background, do the dataset creation.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Create the dataset.
-					final DataSet dataset = MartBuilderUtils.createDataSet(
-							martTab.getMart(), table, name);
-
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							// Add a tab for it.
-							addDataSetTab(dataset);
-
-							// Update the overview diagram.
-							recalculateOverviewDiagram();
-
-							// Update the modified status.
-							martTab.getMartTabSet().setModifiedStatus(true);
-						}
-					});
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							martTab.getMartTabSet().getMartBuilder()
-									.showStackTrace(t);
-						}
-					});
-				}
-			}
-		});
-	}
-
-	/**
 	 * Given a table, suggest a series of optimised datasets that may be
 	 * possible for that table.
 	 * 
 	 * @param table
-	 *            the table to suggest datasets for.
+	 *            the table to suggest datasets for. If null, no default table
+	 *            is used.
 	 */
 	public void requestSuggestDataSets(final Table table) {
+		// Ask the user what tables they want to work with and what
+		// mode they want.
+		final ArrayList tables = new ArrayList();
+		final DataSetSuggestionMode mode = SuggestDataSetDialog.suggestDataSet(
+				this.getMartTab(), table, tables);
+
+		// If they cancelled it, return without doing anything.
+		if (mode == null)
+			return;
+
 		// Ask the user for a name for the table.
 		final String name = this.askUserForName(Resources
-				.get("requestDataSetName"), table.getName());
+				.get("requestDataSetName"), ((Table) tables.get(0)).getName());
 
 		// If they cancelled it, return without doing anything.
 		if (name == null)
@@ -563,7 +527,7 @@ public class DataSetTabSet extends JTabbedPane {
 				try {
 					// Suggest them.
 					final Collection dss = MartBuilderUtils.suggestDataSets(
-							martTab.getMart(), table, name);
+							martTab.getMart(), mode, tables, name);
 
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {

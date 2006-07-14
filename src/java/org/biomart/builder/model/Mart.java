@@ -21,9 +21,12 @@ package org.biomart.builder.model;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.biomart.builder.exceptions.AlreadyExistsException;
@@ -37,7 +40,7 @@ import org.biomart.builder.resources.Resources;
  * mart. It also has zero or more datasets based around these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 20th June 2006
+ * @version 0.1.14, 13th July 2006
  * @since 0.1
  */
 public class Mart {
@@ -48,6 +51,11 @@ public class Mart {
 	// OK to use map, as keys are strings and never change.
 	// Use tree map to keep them in alphabetical order.
 	private final Map datasets = new TreeMap();
+
+	// The suffix iterator generates suffix values for datasets.
+	// Care must be taken not to allow two datasets to be generated
+	// in parallel else the suffix iterator may get altered in odd ways.
+	private int suffix;
 
 	/**
 	 * Returns the set of schema objects which this mart includes when building
@@ -181,59 +189,285 @@ public class Mart {
 	}
 
 	/**
+	 * Given some tables and a mode, suggest some datasets for those tables. The
+	 * method is synchronized so that the static suffix counter is protected
+	 * over each iteration.
+	 * 
+	 * @param mode
+	 *            the mode for suggestion.
+	 * @param tables
+	 *            the tables to suggest datasets for.
+	 * @param name
+	 *            the name to give the suggested datasets.
+	 * @return the collection of datasets generated.
+	 * @throws SQLException
+	 *             if there is any problem talking to the source database whilst
+	 *             generating the dataset.
+	 * @throws AssociationException
+	 *             if any of the tables do not belong to this mart.
+	 * @throws AlreadyExistsException
+	 *             if a dataset already exists in this schema with the same name
+	 *             or any of the suffixed versions.
+	 */
+	public synchronized Collection suggestDataSets(DataSetSuggestionMode mode,
+			Collection tables, String name) throws SQLException,
+			AssociationException, AlreadyExistsException {
+		this.suffix = 1;
+		if (mode.equals(DataSetSuggestionMode.IDENTITY))
+			return this.suggestIdentityDataSets(tables, name);
+		else if (mode.equals(DataSetSuggestionMode.SIMPLE))
+			return this.suggestSimpleDataSets(tables, name);
+		else if (mode.equals(DataSetSuggestionMode.COMBINED))
+			return this.suggestCompoundDataSets(tables, name);
+		return Collections.EMPTY_LIST;
+	}
+
+	/**
+	 * Given a particular table, automatically create a number of datasets based
+	 * around that table. Each table created will be optimised automatically.
+	 * 
+	 * @param tables
+	 *            the tables to build predicted datasets around.
+	 * @param name
+	 *            the name to use for the datasets.
+	 * @return the newly created datasets, which will already have been added to
+	 *         the mart.
+	 * @throws SQLException
+	 *             if there is any problem talking to the source database whilst
+	 *             generating the dataset.
+	 * @throws AssociationException
+	 *             if any of the tables do not belong to this mart.
+	 * @throws AlreadyExistsException
+	 *             if a dataset already exists in this schema with the same name
+	 *             or any of the suffixed versions.
+	 */
+	private Collection suggestIdentityDataSets(Collection tables, String name)
+			throws SQLException, AssociationException, AlreadyExistsException {
+		// Make a list to hold the new datasets.
+		List newDataSets = new ArrayList();
+
+		// Do once for each table.
+		for (Iterator t = tables.iterator(); t.hasNext();) {
+			Table centralTable = (Table) t.next();
+
+			// Create the base-case no-subclass version.
+			DataSet basicDS = new DataSet(this, centralTable, name + "_"
+					+ (this.suffix++));
+			basicDS.optimiseDataSet();
+			newDataSets.add(basicDS);
+		}
+
+		// Return the set we just created.
+		return newDataSets;
+	}
+
+	/**
 	 * Given a particular table, automatically create a number of datasets based
 	 * around that table that represent the various possible subclassing
 	 * scenarios. It will always create one dataset (with the name given) that
 	 * doesn't subclass anything. For every M:1 relation leading off the table,
 	 * another dataset will be created containing that subclass relation. Each
 	 * subclass dataset choice will have a number appended to it after an
-	 * underscore, eg. '_SC1' ,'_SC2' etc. Each table created will be optimised
+	 * underscore, eg. '_1' ,'_2' etc. Each table created will be optimised
 	 * automatically.
 	 * 
-	 * @param centralTable
-	 *            the table to build predicted datasets around.
+	 * @param tables
+	 *            the tables to build predicted datasets around.
 	 * @param name
 	 *            the name to use for the datasets.
 	 * @return the newly created datasets, which will already have been added to
 	 *         the mart.
+	 * @throws SQLException
+	 *             if there is any problem talking to the source database whilst
+	 *             generating the dataset.
+	 * @throws AssociationException
+	 *             if any of the tables do not belong to this mart.
 	 * @throws AlreadyExistsException
 	 *             if a dataset already exists in this schema with the same name
 	 *             or any of the suffixed versions.
 	 */
-	public Collection suggestDataSets(Table centralTable, String name)
+	private Collection suggestSimpleDataSets(Collection tables, String name)
 			throws SQLException, AssociationException, AlreadyExistsException {
 		// Make a list to hold the new datasets.
 		List newDataSets = new ArrayList();
 
-		// Create the base-case no-subclass version.
-		DataSet basicDS = new DataSet(this, centralTable, name);
-		basicDS.optimiseDataSet();
-		newDataSets.add(basicDS);
+		// Do once for each table.
+		for (Iterator t = tables.iterator(); t.hasNext();) {
+			Table centralTable = (Table) t.next();
 
-		// Predict the subclass relations from the existing m:1 relations -
-		// simple guesser based
-		// on finding foreign keys in the central table.
-		int suffix = 1;
-		for (Iterator i = centralTable.getForeignKeys().iterator(); i.hasNext();) {
-			Key k = (Key) i.next();
-			for (Iterator j = k.getRelations().iterator(); j.hasNext();) {
-				Relation r = (Relation) j.next();
-				// Only flag potential M:1 subclass relations if they don't
-				// refer back to ourselves.
-				if (r.isOneToMany()
-						&& !r.getOtherKey(k).getTable().equals(centralTable)) {
-					DataSet subclassedDS = new DataSet(this, centralTable, name
-							+ Resources.get("subclassDataSetSuffix")
-							+ (suffix++));
-					subclassedDS.flagSubclassRelation(r);
-					subclassedDS.optimiseDataSet();
-					newDataSets.add(subclassedDS);
+			// Create the base-case no-subclass version.
+			DataSet basicDS = new DataSet(this, centralTable, name + "_"
+					+ (this.suffix++));
+			basicDS.optimiseDataSet();
+			newDataSets.add(basicDS);
+
+			// Predict the subclass relations from the existing m:1 relations -
+			// simple guesser based on finding foreign keys in the central
+			// table.
+			for (Iterator i = centralTable.getForeignKeys().iterator(); i
+					.hasNext();) {
+				Key k = (Key) i.next();
+				for (Iterator j = k.getRelations().iterator(); j.hasNext();) {
+					Relation r = (Relation) j.next();
+					// Only flag potential M:1 subclass relations if they don't
+					// refer back to ourselves.
+					if (r.isOneToMany()
+							&& !r.getOtherKey(k).getTable()
+									.equals(centralTable)) {
+						DataSet subclassedDS = new DataSet(this, centralTable,
+								name + "_" + (this.suffix++));
+						subclassedDS.flagSubclassRelation(r);
+						subclassedDS.optimiseDataSet();
+						newDataSets.add(subclassedDS);
+					}
 				}
 			}
 		}
 
 		// Return the set we just created.
 		return newDataSets;
+	}
+
+	/**
+	 * Given a set of tables, produce the minimal set of datasets which include
+	 * all the specified tables. Tables can be included in the same dataset if
+	 * they are linked by 1:M relations (1:M, 1:M in a chain), or if the table
+	 * is the last in the chain and is linked to the previous table by a pair of
+	 * 1:M and M:1 relations via a third table, simulating a M:M relation.
+	 * <p>
+	 * If the chains of tables the datasets are built from fork, then one
+	 * dataset is generated for each branch of the fork.
+	 * 
+	 * @param includeTables
+	 *            the tables that must appear in the final set of datasets.
+	 * @param name
+	 *            the name to give each dataset. As each dataset is generated
+	 *            beyond the first one, it will gain an '_x' suffix where 'x' is
+	 *            the sequence number of the additional dataset.
+	 * @return the collection of datasets generated.
+	 * @throws SQLException
+	 *             if there is any problem talking to the source database whilst
+	 *             generating the dataset.
+	 * @throws AssociationException
+	 *             if any of the tables do not belong to this mart.
+	 * @throws AlreadyExistsException
+	 *             if a dataset already exists in this schema with the same name
+	 *             or any of the suffixed versions.
+	 */
+	private Collection suggestCompoundDataSets(Collection includeTables,
+			String name) throws SQLException, AssociationException,
+			AlreadyExistsException {
+		// The root tables are all those which do not have a M:1 relation
+		// to another one of the initial set of tables. This means that
+		// extra datasets will be created for each table at the end of
+		// 1:M:1 relation, so that any further tables past it will still
+		// be included.
+		List rootTables = new ArrayList(includeTables);
+		for (Iterator i = includeTables.iterator(); i.hasNext();) {
+			Table candidate = (Table) i.next();
+			for (Iterator j = candidate.getRelations().iterator(); j.hasNext();) {
+				Relation rel = (Relation) j.next();
+				if (rel.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
+					continue;
+				if (!rel.isOneToMany())
+					continue;
+				if (!rel.getManyKey().getTable().equals(candidate))
+					continue;
+				if (includeTables.contains(rel.getOneKey().getTable()))
+					rootTables.remove(candidate);
+			}
+		}
+		// We construct one dataset per root table.
+		List suggestedDataSets = new ArrayList();
+		for (Iterator i = rootTables.iterator(); i.hasNext();) {
+			Table rootTable = (Table) i.next();
+			DataSet dataset = new DataSet(this, rootTable, name + "_"
+					+ (this.suffix++));
+			// Process it.
+			suggestedDataSets.add(this.continueSubclassing(includeTables,
+					name, dataset, rootTable));
+		}
+		// Optimise all the results.
+		for (Iterator i = suggestedDataSets.iterator(); i.hasNext();)
+			((DataSet) i.next()).optimiseDataSet();
+		// Return the final set of suggested datasets.
+		return suggestedDataSets;
+	}
+
+	private DataSet continueSubclassing(Collection includeTables,
+			String name, DataSet dataset, Table table)
+			throws AssociationException {
+		// Make a list to hold the recursion tables, and the potential 1:M:1
+		// table/relation pairs.
+		Set recursion = new HashSet();
+		List potential = new ArrayList();
+		// Find all 1:M relations starting from the given table.
+		Key pk = table.getPrimaryKey();
+		if (pk == null)
+			return dataset;
+		for (Iterator i = pk.getRelations().iterator(); i.hasNext();) {
+			Relation r = (Relation) i.next();
+			if (!r.isOneToMany())
+				continue;
+			else if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
+				continue;
+			// If any of them point to a table that should be subclassed,
+			// them mark the relation. Recurse to the next table, and continue.
+			Table target = r.getManyKey().getTable();
+			if (includeTables.contains(target)) {
+				dataset.flagSubclassRelation(r);
+				recursion.add(target);
+			}
+			// If any of them point to a table that is not subclassed but has
+			// an M:1 to one that should be, mark the relation as potential 
+			// but do not recurse down that path. This allows us to
+			// remove potential 1:M:1 relations if we find a direct 1:M that
+			// would do the job better.
+			else {
+				Table potential1M1Table = null;
+				for (Iterator j = target.getForeignKeys().iterator(); j
+						.hasNext()
+						&& potential1M1Table==null;) {
+					Key fk = (Key) j.next();
+					if (fk.getStatus().equals(
+							ComponentStatus.INFERRED_INCORRECT))
+						continue;
+					for (Iterator k = fk.getRelations().iterator(); k.hasNext()
+							&& potential1M1Table==null;) {
+						Relation fkr = (Relation) k.next();
+						if (fkr.equals(r)) 
+							continue;
+						else if (!fkr.isOneToMany())
+							continue;
+						else if (fkr.getStatus().equals(
+								ComponentStatus.INFERRED_INCORRECT))
+							continue;
+						// This bit avoids 1:M:1 back to same table.
+						else if (fkr.getOneKey().getTable().equals(r.getOneKey().getTable()))
+							continue;
+						else if (includeTables.contains(fkr.getOneKey().getTable()))
+							potential1M1Table = fkr.getOneKey().getTable();
+					}
+				}
+				if (potential1M1Table!=null) 
+					potential.add(new Object[]{potential1M1Table, r});
+			}
+		}
+		// Check the potential 1:M:1 relations to make sure the target
+		// tables have not already been included (if they are, they'll be
+		// in the recursion set).
+		for (Iterator i = potential.iterator(); i.hasNext(); ) {
+			Object[] obj = (Object[])i.next();
+			Table potentialTable = (Table)obj[0];
+			Relation potentialRel = (Relation)obj[1];
+			if (!recursion.contains(potentialTable))
+				dataset.flagSubclassRelation(potentialRel);
+		}
+		// Do the recursion.
+		for (Iterator i = recursion.iterator(); i.hasNext();) 
+			this.continueSubclassing(includeTables, name, dataset, (Table) i.next());
+		// Return the resulting datasets.
+		return dataset;
 	}
 
 	/**
@@ -316,5 +550,73 @@ public class Mart {
 		}
 		// Then, synchronise datasets.
 		this.synchroniseDataSets();
+	}
+
+	/**
+	 * This class defines the various different ways of suggesting a dataset.
+	 */
+	public static class DataSetSuggestionMode implements Comparable {
+
+		private final String name;
+
+		/**
+		 * Use this constant to refer to no optimisation.
+		 */
+		public static final DataSetSuggestionMode IDENTITY = new DataSetSuggestionMode(
+				"SIMPLE");
+
+		/**
+		 * Use this constant to refer to optimising by including an extra column
+		 * on the main table for each dimension and populating it with true or
+		 * false..
+		 */
+		public static final DataSetSuggestionMode SIMPLE = new DataSetSuggestionMode(
+				"SIMPLE");
+
+		/**
+		 * Use this constant to refer to no optimising by creating a separate
+		 * table linked on a 1:1 basis with the main table, with one column per
+		 * dimension populated with true or false.
+		 */
+		public static final DataSetSuggestionMode COMBINED = new DataSetSuggestionMode(
+				"COMBINED");
+
+		/**
+		 * The private constructor takes a single parameter, which defines the
+		 * name this suggestion mode object will display when printed.
+		 * 
+		 * @param name
+		 *            the name of the suggestion mode.
+		 */
+		private DataSetSuggestionMode(String name) {
+			this.name = name;
+		}
+
+		/**
+		 * Displays the name of this suggestion mode object.
+		 * 
+		 * @return the name of this suggestion mode object.
+		 */
+		public String getName() {
+			return this.name;
+		}
+
+		public String toString() {
+			return this.getName();
+		}
+
+		public int hashCode() {
+			return this.toString().hashCode();
+		}
+
+		public int compareTo(Object o) throws ClassCastException {
+			DataSetSuggestionMode c = (DataSetSuggestionMode) o;
+			return this.toString().compareTo(c.toString());
+		}
+
+		public boolean equals(Object o) {
+			// We are dealing with singletons so can use == happily.
+			return o == this;
+		}
 	}
 }

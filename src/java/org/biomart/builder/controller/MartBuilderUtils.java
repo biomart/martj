@@ -28,7 +28,6 @@ import java.util.List;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
-import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Key;
@@ -47,6 +46,7 @@ import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.GenericForeignKey;
 import org.biomart.builder.model.Key.GenericPrimaryKey;
 import org.biomart.builder.model.Key.PrimaryKey;
+import org.biomart.builder.model.Mart.DataSetSuggestionMode;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
@@ -59,7 +59,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.24, 12th July 2006
+ * @version 0.1.26, 14th July 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -145,53 +145,23 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Creates a new dataset within the mart, based around the specified central
-	 * table, and with the given name. The dataset will be synchronised.
-	 * Optimisation is <u>not</u> performed on the dataset, so you will need to
-	 * do this separately.
-	 * 
-	 * @param mart
-	 *            the mart to create the dataset in.
-	 * @param table
-	 *            the central table to focus the dataset on. Usually, this will
-	 *            end up being the main table of the dataset.
-	 * @param name
-	 *            the name to give the dataset.
-	 * @return the newly created dataset.
-	 * @throws AssociationException
-	 *             if the table specified is not part of any schema in the mart
-	 *             specified.
-	 * @throws AlreadyExistsException
-	 *             if a dataset with that name already exists.
-	 */
-	public static DataSet createDataSet(Mart mart, Table table, String name)
-			throws AssociationException, AlreadyExistsException {
-		DataSet dataset = new DataSet(mart, table, name);
-		try {
-			dataset.synchronise();
-		} catch (Throwable t) {
-			throw new MartBuilderInternalError(t);
-		}
-		return dataset;
-	}
-
-	/**
-	 * Given a particular table, this method suggests a bunch of datasets which
-	 * could be sensibly created from that table. Each suggestion is
-	 * synchronised <u>and</u> optimised before being returned.
+	 * Given a particular set of tables, this method suggests a bunch of
+	 * datasets which could be sensibly created. Each suggestion is synchronised
+	 * <u>and</u> optimised before being returned.
 	 * 
 	 * @param mart
 	 *            the mart to create the datasets in.
-	 * @param table
-	 *            the table to use as the central table for the set of suggested
-	 *            datasets.
+	 * @param mode
+	 *            the suggestion mode to use.
+	 * @param tables
+	 *            the tables to include in the set of suggested datasets.
 	 * @param name
 	 *            the base name to give the suggested datasets. The first one
-	 *            will use this name, and subsequent ones will have '_SCx'
+	 *            will use this name, and subsequent ones will have '_x'
 	 *            appended where 'x' is a number starting from 1.
 	 * @return the set of datasets, which will always have at least one member.
 	 * @throws AlreadyExistsException
-	 *             if a dataset with the specified name or any of the '_SCx'
+	 *             if a dataset with the specified name or any of the '_x'
 	 *             versions of the name already exists.
 	 * @throws AssociationException
 	 *             if the specified table is not part of the mart given.
@@ -199,9 +169,10 @@ public class MartBuilderUtils {
 	 *             if there is any trouble communicating with the data source or
 	 *             database during schema synchronisation.
 	 */
-	public static Collection suggestDataSets(Mart mart, Table table, String name)
+	public static Collection suggestDataSets(Mart mart,
+			DataSetSuggestionMode mode, Collection tables, String name)
 			throws SQLException, AssociationException, AlreadyExistsException {
-		return mart.suggestDataSets(table, name);
+		return mart.suggestDataSets(mode, tables, name);
 	}
 
 	/**
@@ -420,8 +391,8 @@ public class MartBuilderUtils {
 	 * individual schema. If that was the last schema in the group, the group
 	 * itself is disbanded. Otherwise, the group is synchronised but the schema
 	 * itself is not. External relations will not be exported to the schema
-	 * unless it is the last schema in the group and the group is now
-	 * going to be disbanded.
+	 * unless it is the last schema in the group and the group is now going to
+	 * be disbanded.
 	 * 
 	 * @param mart
 	 *            the mart to add the schema to once it has been removed from
@@ -450,8 +421,7 @@ public class MartBuilderUtils {
 		if (schemaGroup.getSchemas().size() == 0) {
 			schemaGroup.replicateContents(schema);
 			mart.removeSchema(schemaGroup);
-		}
-		else
+		} else
 			schemaGroup.synchronise();
 		mart.addSchema(schema);
 	}

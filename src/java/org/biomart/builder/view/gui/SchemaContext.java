@@ -49,7 +49,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * dataset onto a set of masked relations.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.19, 20th June 2006
+ * @version 0.1.20, 14th July 2006
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
@@ -121,6 +121,17 @@ public class SchemaContext implements DiagramContext {
 			});
 			contextMenu.add(add);
 
+			// Menu option to suggest a bunch of datasets.
+			JMenuItem suggest = new JMenuItem(Resources.get(
+					"suggestDataSetsTitle"));
+			suggest.setMnemonic(Resources.get("suggestDataSetsMnemonic")
+					.charAt(0));
+			suggest.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					martTab.getDataSetTabSet().requestSuggestDataSets(null);
+				}
+			});
+			contextMenu.add(suggest);
 		}
 
 		// Table objects have their own menus too.
@@ -133,24 +144,11 @@ public class SchemaContext implements DiagramContext {
 			// Work out what table we are using.
 			final Table table = (Table) object;
 
-			// Menu option to create a dataset based around that table.
-			JMenuItem create = new JMenuItem(Resources.get(
-					"createDataSetTitle", table.getName()));
-			create
-					.setMnemonic(Resources.get("createDataSetMnemonic").charAt(
-							0));
-			create.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					martTab.getDataSetTabSet().requestCreateDataSet(table);
-				}
-			});
-			contextMenu.add(create);
-
 			// Menu option to suggest a bunch of datasets based around that
 			// table.
 			JMenuItem suggest = new JMenuItem(Resources.get(
-					"suggestDataSetsTitle", table.getName()));
-			suggest.setMnemonic(Resources.get("suggestDataSetsMnemonic")
+					"suggestDataSetsTableTitle", table.getName()));
+			suggest.setMnemonic(Resources.get("suggestDataSetsTableMnemonic")
 					.charAt(0));
 			suggest.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent evt) {
@@ -300,6 +298,18 @@ public class SchemaContext implements DiagramContext {
 					}
 				});
 				contextMenu.add(addToGroup);
+
+				// Menu option to suggest a bunch of datasets.
+				JMenuItem suggest = new JMenuItem(Resources.get(
+						"suggestDataSetsTitle"));
+				suggest.setMnemonic(Resources.get("suggestDataSetsMnemonic")
+						.charAt(0));
+				suggest.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						martTab.getDataSetTabSet().requestSuggestDataSets(null);
+					}
+				});
+				contextMenu.add(suggest);
 			}
 		}
 
