@@ -38,6 +38,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
 import org.biomart.builder.model.Schema;
@@ -50,21 +51,23 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * This dialog asks users what kind of dataset suggestion they want to do.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 13th July 2006
+ * @version 0.1.2, 17th July 2006
  * @since 0.1
  */
 public class SuggestDataSetDialog extends JDialog {
 	private static final long serialVersionUID = 1;
-	
+
 	private DataSetSuggestionMode mode;
 
 	private MartTab martTab;
 
 	private JRadioButton identity;
-	
+
 	private JRadioButton simple;
 
 	private JRadioButton combined;
+
+	private JTextField datasetName;
 
 	private JList tables;
 
@@ -72,7 +75,16 @@ public class SuggestDataSetDialog extends JDialog {
 
 	private JButton execute;
 
-	private SuggestDataSetDialog(final MartTab martTab, Table initialTable) {
+	/**
+	 * Creates (but does not open) a dialog requesting details of dataset
+	 * suggestion.
+	 * 
+	 * @param martTab
+	 *            the mart tab set to centre ourselves over.
+	 * @param initialTable
+	 *            the initial table to select in the list of tables.
+	 */
+	public SuggestDataSetDialog(final MartTab martTab, Table initialTable) {
 		// Creates the basic dialog.
 		super(martTab.getMartTabSet().getMartBuilder(), Resources
 				.get("suggestDataSetDialogTitle"), true);
@@ -108,6 +120,7 @@ public class SuggestDataSetDialog extends JDialog {
 
 		// Create the fields that will contain the user's table choices
 		// and choice of suggestion scheme.
+		this.datasetName = new JTextField(30); // Arbitrary size.
 		this.identity = new JRadioButton(Resources
 				.get("suggestIdentityDataSetOption"));
 		this.simple = new JRadioButton(Resources
@@ -131,19 +144,20 @@ public class SuggestDataSetDialog extends JDialog {
 		// show a horizontal scrollbar.
 		this.tables
 				.setPrototypeCellValue("01234567890123456789012345678901234567890123456789");
-		this.tables.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		this.tables
+				.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
 		// Make the simple/combined choice change the selectability of the
 		// list of tables.
 		this.identity.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (identity.isSelected()) 
+				if (identity.isSelected())
 					mode = DataSetSuggestionMode.IDENTITY;
 			}
 		});
 		this.simple.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (simple.isSelected()) 
+				if (simple.isSelected())
 					mode = DataSetSuggestionMode.SIMPLE;
 			}
 		});
@@ -164,6 +178,15 @@ public class SuggestDataSetDialog extends JDialog {
 		content.add(label);
 		JPanel field = new JPanel();
 		field.add(new JScrollPane(this.tables));
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+
+		// Add the name option.
+		label = new JLabel(Resources.get("nameLabel"));
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		field = new JPanel();
+		field.add(this.datasetName);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
@@ -224,8 +247,15 @@ public class SuggestDataSetDialog extends JDialog {
 		// Set the size of the dialog.
 		this.pack();
 
+		// Centre ourselves.
+		this.setLocationRelativeTo(this.martTab.getMartTabSet()
+				.getMartBuilder());
+
 		// Activate the single-table option.
-		this.tables.setSelectedValue(initialTable, true);
+		if (initialTable != null) {
+			this.tables.setSelectedValue(initialTable, true);
+			this.datasetName.setText(initialTable.getName());
+		}
 		this.simple.doClick();
 	}
 
@@ -233,10 +263,13 @@ public class SuggestDataSetDialog extends JDialog {
 		// A placeholder to hold the validation messages, if any.
 		List messages = new ArrayList();
 
-		// We must have a partition type!
+		// We must have a selected table!
 		if (this.tables.getSelectedValues().length == 0)
-			messages
-					.add(Resources.get("suggestDSTablesEmpty"));
+			messages.add(Resources.get("suggestDSTablesEmpty"));
+
+		// We must have a name!
+		if (this.isEmpty(this.datasetName.getText()))
+			messages.add(Resources.get("fieldIsEmpty", Resources.get("name")));
 
 		// If there any messages, display them.
 		if (!messages.isEmpty()) {
@@ -250,36 +283,36 @@ public class SuggestDataSetDialog extends JDialog {
 		return messages.isEmpty();
 	}
 
-	private Collection getSelectedTables() {
+	private boolean isEmpty(String string) {
+		// Strings are empty if they are null or all whitespace.
+		return (string == null || string.trim().length() == 0);
+	}
+
+	/**
+	 * Return the set of tables the user selected.
+	 * 
+	 * @return the set of tables the user selected.
+	 */
+	public Collection getSelectedTables() {
 		return Arrays.asList(this.tables.getSelectedValues());
 	}
-	
-	private DataSetSuggestionMode getDataSetSuggestionMode() {
+
+	/**
+	 * Return the mode the user selected. If it is null, then the user cancelled
+	 * the box and no action should be taken.
+	 * 
+	 * @return the selected mode.
+	 */
+	public DataSetSuggestionMode getDataSetSuggestionMode() {
 		return this.mode;
 	}
 
 	/**
-	 * This opens a dialog in order for the user to select a suggestion mode and
-	 * one or more tables. It populates the selected table(s), and returns the
-	 * selection mode. If the user cancelled it, the mode will be null.
+	 * Return the name the user selected.
 	 * 
-	 * @param martTab
-	 *            the mart tab this dialog is creating a partition type for.
-	 * @param initialTable
-	 *            the table to select initially.
-	 * @param finalTables
-	 *            the final list of selected tables. This list will be populated
-	 *            by this method. 
-	 * @return the suggestion mode selected by the user, or null if they
-	 * cancelled it.
+	 * @return the selected name.
 	 */
-	public static DataSetSuggestionMode suggestDataSet(MartTab martTab, Table initialTable,
-			Collection finalTables) {
-		SuggestDataSetDialog dialog = new SuggestDataSetDialog(martTab,
-				initialTable);
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
-		dialog.show();
-		finalTables.addAll(dialog.getSelectedTables());
-		return dialog.getDataSetSuggestionMode();
+	public String getDataSetName() {
+		return this.datasetName.getText();
 	}
 }
