@@ -25,7 +25,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
@@ -33,6 +35,7 @@ import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.model.Column.GenericColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.Key.ForeignKey;
@@ -57,7 +60,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.31, 12th July 2006
+ * @version 0.1.32, 17th July 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -375,7 +378,8 @@ public class DataSet extends GenericSchema {
 		Table childTable = relation.getManyKey().getTable();
 
 		// If there are existing subclass relations and neither the
-		// parent or the child is the central table, then it is not OK to add it.
+		// parent or the child is the central table, then it is not OK to add
+		// it.
 		if (this.subclassedRelations.isEmpty()) {
 			if (!(parentTable.equals(this.centralTable) || childTable
 					.equals(this.centralTable)))
@@ -397,7 +401,8 @@ public class DataSet extends GenericSchema {
 						.get("mixedCardinalitySubclasses"));
 		}
 		// If the parent table is not at the M end of a subclass relation chain
-		// from the central table, or is not the central table, then it is not OK 
+		// from the central table, or is not the central table, then it is not
+		// OK
 		// to add the new one. Also, if the child table is at the M end of
 		// an existing subclass relation, that's not OK either.
 		else {
@@ -407,11 +412,11 @@ public class DataSet extends GenericSchema {
 			// if not legal to start with, it becomes legal if the parent
 			// is at the M end of an existing subclass.
 			for (Iterator i = this.subclassedRelations.iterator(); i.hasNext();) {
-				Relation r = (Relation)i.next();
-				if (!legal && r.getManyKey().getTable().equals(
-						parentTable))
+				Relation r = (Relation) i.next();
+				if (!legal && r.getManyKey().getTable().equals(parentTable))
 					legal = true;
-				else if (legal && !r.getOneKey().getTable().equals(parentTable) && r.getManyKey().getTable().equals(childTable)) {
+				else if (legal && !r.getOneKey().getTable().equals(parentTable)
+						&& r.getManyKey().getTable().equals(childTable)) {
 					legal = false;
 					break;
 				}
@@ -440,8 +445,9 @@ public class DataSet extends GenericSchema {
 			if (target.getPrimaryKey() != null)
 				for (Iterator i = target.getPrimaryKey().getRelations()
 						.iterator(); i.hasNext();) {
-					Relation rel = (Relation)i.next();
-					if (rel.isOneToMany()) this.unflagSubclassRelation(rel);
+					Relation rel = (Relation) i.next();
+					if (rel.isOneToMany())
+						this.unflagSubclassRelation(rel);
 				}
 		}
 		// Then remove the head of the chain.
@@ -690,6 +696,16 @@ public class DataSet extends GenericSchema {
 			}
 		}
 
+		// Remember all the ExpressionColumns
+		List expressionColumns = new ArrayList();
+		for (Iterator i = this.getTables().iterator(); i.hasNext();)
+			for (Iterator j = ((Table) i.next()).getColumns().iterator(); j
+					.hasNext();) {
+				Column col = (Column) j.next();
+				if (col instanceof ExpressionColumn)
+					expressionColumns.add(col);
+			}
+
 		// Regenerate the dataset
 		this.regenerate();
 
@@ -716,6 +732,43 @@ public class DataSet extends GenericSchema {
 				// Ignore, and leave the name as it is.
 			}
 		}
+
+		// Regenerate all the ExpressionColumns and mark all
+		// their dependencies again. Drop any that refer to columns
+		// that no longer exist.
+		for (Iterator i = expressionColumns.iterator(); i.hasNext();) {
+			ExpressionColumn oldExpCol = (ExpressionColumn) i.next();
+			// Work out what table it came from. Gone? Drop.
+			DataSetTable expColTable = (DataSetTable) this.getTableByName(oldExpCol
+					.getTable().getName());
+			if (expColTable == null)
+				continue;
+			// Get all the dependent columns. Any gone? Drop.
+			boolean allFound = true;
+			Map newDependencies = new TreeMap();
+			for (Iterator j = oldExpCol.getAliases().keySet().iterator(); j.hasNext();) {
+				WrappedColumn dependency = (WrappedColumn) expColTable
+						.getColumnByName(((WrappedColumn) j.next()).getName());
+				String alias = (String) oldExpCol.getAliases().get(dependency);
+				if (dependency == null)
+					allFound = false;
+				else
+					newDependencies.put(dependency, alias);
+			}
+			if (!allFound)
+				continue;
+			// Create a new ExpressionColumn based on the new columns.
+			try {
+				ExpressionColumn expCol = new ExpressionColumn(oldExpCol.getName(),
+						expColTable);
+				expCol.getAliases().putAll(newDependencies);
+				for (Iterator j = newDependencies.keySet().iterator(); j.hasNext(); )
+					((WrappedColumn)j.next()).setDependency(true);
+			} catch (Throwable t) {
+				// Should never happen!
+				throw new MartBuilderInternalError(t);
+			}
+		}
 	}
 
 	/**
@@ -730,7 +783,7 @@ public class DataSet extends GenericSchema {
 	public void regenerate() {
 		// Clear all our tables out as they will all be rebuilt.
 		this.tables.clear();
-
+		
 		// Identify main table.
 		Table centralTable = this.getCentralTable();
 		// If central table has subclass relations and is at the M key
@@ -1608,6 +1661,8 @@ public class DataSet extends GenericSchema {
 		public static class WrappedColumn extends DataSetColumn {
 			private final Column column;
 
+			private boolean dependency;
+
 			/**
 			 * This constructor wraps an existing column. It also assigns an
 			 * alias to the wrapped column if another one with the same name
@@ -1632,6 +1687,9 @@ public class DataSet extends GenericSchema {
 
 				// Remember the wrapped column.
 				this.column = column;
+
+				// Set up default dependency.
+				this.dependency = false;
 			}
 
 			/**
@@ -1641,6 +1699,31 @@ public class DataSet extends GenericSchema {
 			 */
 			public Column getWrappedColumn() {
 				return this.column;
+			}
+
+			/**
+			 * Changes the dependency flag on this column.
+			 * 
+			 * @param the
+			 *            new dependency flag. <tt>true</tt> indicates that
+			 *            this column is a dependency for an expression column.
+			 *            If this is the case, then the column will get selected
+			 *            regardless of it's masking flag. However, if it is
+			 *            masked, it will be removed again after the dependency
+			 *            is satisified.
+			 */
+			public void setDependency(boolean dependency) {
+				this.dependency = dependency;
+			}
+
+			/**
+			 * Retrieves the current dependency flag on this column.
+			 * 
+			 * @param <tt>true</tt> if this column is a dependency for another
+			 *            one.
+			 */
+			public boolean getDependency() {
+				return this.dependency;
 			}
 		}
 
@@ -1700,6 +1783,173 @@ public class DataSet extends GenericSchema {
 					throws AlreadyExistsException {
 				// The super constructor will make the alias for us.
 				super(name, dsTable, null);
+			}
+		}
+
+		/**
+		 * A column on a dataset table that is an expression bringing together
+		 * values from other columns. Those columns should be marked with a
+		 * dependency flag to indicate that they are still needed even if
+		 * otherwise masked. If this is the case, they can be dropped after the
+		 * dependent expression column has been added.
+		 * <p>
+		 * Note that all expression columns should be added in a single step.
+		 */
+		public static class ExpressionColumn extends DataSetColumn {
+
+			private String expr;
+
+			private Map aliases;
+
+			private String datatype;
+
+			private int datasize;
+
+			private boolean groupBy;
+
+			/**
+			 * This constructor gives the column a name. The underlying relation
+			 * is not required here.
+			 * 
+			 * @param name
+			 *            the name to give this column.
+			 * @param dsTable
+			 *            the dataset table to add the wrapped column to.
+			 * @throws AlreadyExistsException
+			 *             inherited from the super constructor, but should
+			 *             never get thrown.
+			 */
+			public ExpressionColumn(String name, DataSetTable dsTable)
+					throws AlreadyExistsException {
+				// The super constructor will make the alias for us.
+				super(name, dsTable, null);
+
+				// Set some defaults.
+				this.aliases = new TreeMap();
+				this.expr = "";
+				this.datatype = "";
+				this.datasize = 0;
+				this.groupBy = false;
+			}
+
+			/**
+			 * The actual expression. The values from the alias map will be used
+			 * to refer to various columns. This value is RDBMS-specific.
+			 * 
+			 * @param expr
+			 *            the actual expression to use.
+			 */
+			public void setExpression(String expr) {
+				this.expr = expr;
+			}
+
+			/**
+			 * Returns the expression, <i>without</i> substitution. This value
+			 * is RDBMS-specific.
+			 * 
+			 * @return the unsubstituted expression.
+			 */
+			public String getExpression() {
+				return this.expr;
+			}
+
+			/**
+			 * Returns the expression, <i>with</i> substitution. This value is
+			 * RDBMS-specific.
+			 * 
+			 * @return the substituted expression.
+			 */
+			public String getSubstitutedExpression() {
+				String sub = new String(this.expr);
+				for (Iterator i = this.aliases.keySet().iterator(); i.hasNext();) {
+					WrappedColumn wrapped = (WrappedColumn) i.next();
+					String alias = (String) this.aliases.get(wrapped);
+					sub.replaceAll(alias, wrapped.getName());
+				}
+				return sub;
+			}
+
+			/**
+			 * Returns the set of dependent columns.
+			 * 
+			 * @param the
+			 *            collection of dependent columns.
+			 */
+			public Collection getDependentColumns() {
+				return this.aliases.keySet();
+			}
+
+			/**
+			 * Retrieves the map used for setting up aliases.
+			 * 
+			 * @return the aliases map. Keys must be {@link WrappedColumn}
+			 *         instances, and values are aliases used in the expression.
+			 */
+			public Map getAliases() {
+				return this.aliases;
+			}
+
+			/**
+			 * Sets the datatype. This value is RDBMS-specific.
+			 * 
+			 * @param datatype
+			 *            the datatype to use.
+			 */
+			public void setDatatype(String datatype) {
+				this.datatype = datatype;
+			}
+
+			/**
+			 * Retrieves the datatype for this column. This value is
+			 * RDBMS-specific.
+			 * 
+			 * @return the datatype for this column.
+			 */
+			public String getDatatype() {
+				return this.datatype;
+			}
+
+			/**
+			 * Sets the size to allocate for this column.
+			 * 
+			 * @param datasize
+			 *            the size to allocate for this column in the database.
+			 */
+			public void setDatasize(int datasize) {
+				this.datasize = datasize;
+			}
+
+			/**
+			 * Gets the size allocated for this column.
+			 * 
+			 * @return the allocated size.
+			 */
+			public int getDatasize() {
+				return this.datasize;
+			}
+
+			/**
+			 * Sets the group-by requirement for this column. If set to
+			 * <tt>true</tt>, then the expression is an RDBMS call that
+			 * requires group-by to be set in the select statement. The group-by
+			 * should include all columns, except other expression columns and
+			 * those columns that any group-by expression column depends on.
+			 * 
+			 * @param groupBy
+			 *            the flag indicating the group-by requirement.
+			 */
+			public void setGroupBy(boolean groupBy) {
+				this.groupBy = groupBy;
+			}
+
+			/**
+			 * Returns the group-by requirement for this column. See
+			 * {@link #setGroupBy(boolean)} for details.
+			 * 
+			 * @return the flag indicating the group-by requirement.
+			 */
+			public boolean getGroupBy() {
+				return this.groupBy;
 			}
 		}
 	}

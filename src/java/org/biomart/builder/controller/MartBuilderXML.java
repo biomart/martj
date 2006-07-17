@@ -56,6 +56,7 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
@@ -96,7 +97,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.20, 27th June 2006
+ * @version 0.1.21, 17th July 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -157,7 +158,7 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Store the attribute and value.
 				String aValue = attrs.getValue(i);
-				attributes.put(aName, aValue);
+				attributes.put(aName, aValue.replaceAll("&quot;","\""));
 			}
 		}
 
@@ -358,6 +359,35 @@ public class MartBuilderXML extends DefaultHandler {
 								.get(attributes.get("wrappedColumnId"));
 						column = new WrappedColumn(wrappedCol,
 								(DataSetTable) tbl, underlyingRelation);
+						String dependency = (String) attributes
+								.get("dependency");
+						((WrappedColumn) column).setDependency(Boolean.valueOf(
+								dependency).booleanValue());
+					} else if ("expression".equals(type)) {
+						column = new ExpressionColumn(name, (DataSetTable) tbl);
+						// AliasCols, AliasNames - wrapped obj to string map
+						String[] aliasColumnIds = ((String) attributes
+								.get("aliasColumnIds")).split(",");
+						String[] aliasNames = ((String) attributes
+								.get("aliasNames")).split(",");
+						for (int i = 0; i < aliasColumnIds.length; i++) {
+							WrappedColumn wrapped = (WrappedColumn) this.mappedObjects
+									.get(aliasColumnIds[i]);
+							((ExpressionColumn) column).getAliases().put(
+									wrapped, aliasNames[i]);
+						}
+						// Other properties.
+						((ExpressionColumn) column)
+								.setExpression((String) attributes
+										.get("expression"));
+						((ExpressionColumn) column)
+								.setDatatype((String) attributes
+										.get("datatype"));
+						((ExpressionColumn) column).setDatasize(Integer
+								.parseInt((String) attributes.get("datasize")));
+						((ExpressionColumn) column).setGroupBy(Boolean.valueOf(
+								(String) attributes.get("groupBy"))
+								.booleanValue());
 					} else
 						throw new SAXException(Resources.get(
 								"unknownColumnType", type));
@@ -818,7 +848,7 @@ public class MartBuilderXML extends DefaultHandler {
 		xmlWriter.write(" ");
 		xmlWriter.write(name);
 		xmlWriter.write("=\"");
-		xmlWriter.write(value);
+		xmlWriter.write(value.replaceAll("\"","&quot;"));
 		xmlWriter.write("\"");
 	}
 
@@ -1013,7 +1043,48 @@ public class MartBuilderXML extends DefaultHandler {
 						this.writeAttribute("wrappedColumnAlt",
 								((WrappedColumn) dcol).getWrappedColumn()
 										.toString(), xmlWriter);
+						this.writeAttribute("dependency", Boolean
+								.toString(((WrappedColumn) dcol)
+										.getDependency()), xmlWriter);
 					}
+
+					// Expression column?
+					else if (dcol instanceof ExpressionColumn) {
+						this.writeAttribute("type", "expression", xmlWriter);
+
+						// AliasCols, AliasNames - wrapped obj to string map
+						StringBuffer aliasColumnIds = new StringBuffer();
+						StringBuffer aliasNames = new StringBuffer();
+						for (Iterator i = ((ExpressionColumn) dcol)
+								.getAliases().keySet().iterator(); i.hasNext();) {
+							WrappedColumn wrapped = (WrappedColumn) i.next();
+							String alias = (String) ((ExpressionColumn) dcol)
+									.getAliases().get(wrapped);
+							aliasColumnIds
+									.append((String) this.reverseMappedObjects
+											.get(wrapped));
+							aliasNames.append(alias);
+							if (i.hasNext()) {
+								aliasColumnIds.append(',');
+								aliasNames.append(',');
+							}
+						}
+
+						// Other properties.
+						this.writeAttribute("expression",
+								((ExpressionColumn) dcol).getExpression(),
+								xmlWriter);
+						this.writeAttribute("datatype",
+								((ExpressionColumn) dcol).getDatatype(),
+								xmlWriter);
+						this.writeAttribute("datasize", ""
+								+ ((ExpressionColumn) dcol).getDatasize(),
+								xmlWriter);
+						this.writeAttribute("groupBy", Boolean
+								.toString(((ExpressionColumn) dcol)
+										.getGroupBy()), xmlWriter);
+					}
+
 					// Others
 					else
 						throw new BuilderException(Resources.get(

@@ -40,7 +40,7 @@ import org.biomart.builder.resources.Resources;
  * mart. It also has zero or more datasets based around these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 13th July 2006
+ * @version 0.1.15, 17th July 2006
  * @since 0.1
  */
 public class Mart {
@@ -390,15 +390,15 @@ public class Mart {
 					tablesIncluded, name, dataset, rootTable));
 		}
 		// Optimise all the results.
-		for (Iterator i = suggestedDataSets.iterator(); i.hasNext();)
+		for (Iterator i = suggestedDataSets.iterator(); i.hasNext();) {
 			((DataSet) i.next()).optimiseDataSet();
+		}
 		// Return the final set of suggested datasets.
 		return suggestedDataSets;
 	}
 
 	private DataSet continueSubclassing(Collection includeTables,
-			Collection tablesIncluded,
-			String name, DataSet dataset, Table table)
+			Collection tablesIncluded, String name, DataSet dataset, Table table)
 			throws AssociationException {
 		// Make a list to hold the recursion tables, and the potential 1:M:1
 		// table/relation pairs.
@@ -415,15 +415,16 @@ public class Mart {
 			else if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
 				continue;
 			// If any of them point to a table that should be subclassed,
-			// them mark the relation. Recurse to the next table, and continue.
+			// then mark the relation. Recurse to the next table, and continue.
 			Table target = r.getManyKey().getTable();
-			if (includeTables.contains(target)) {
+			if (includeTables.contains(target)
+					&& !tablesIncluded.contains(target)) {
 				dataset.flagSubclassRelation(r);
 				recursion.add(target);
 				tablesIncluded.add(target);
 			}
 			// If any of them point to a table that is not subclassed but has
-			// an M:1 to one that should be, mark the relation as potential 
+			// an M:1 to one that should be, mark the relation as potential
 			// but do not recurse down that path. This allows us to
 			// remove potential 1:M:1 relations if we find a direct 1:M that
 			// would do the job better.
@@ -431,15 +432,15 @@ public class Mart {
 				Table potential1M1Table = null;
 				for (Iterator j = target.getForeignKeys().iterator(); j
 						.hasNext()
-						&& potential1M1Table==null;) {
+						&& potential1M1Table == null;) {
 					Key fk = (Key) j.next();
 					if (fk.getStatus().equals(
 							ComponentStatus.INFERRED_INCORRECT))
 						continue;
 					for (Iterator k = fk.getRelations().iterator(); k.hasNext()
-							&& potential1M1Table==null;) {
+							&& potential1M1Table == null;) {
 						Relation fkr = (Relation) k.next();
-						if (fkr.equals(r)) 
+						if (fkr.equals(r))
 							continue;
 						else if (!fkr.isOneToMany())
 							continue;
@@ -448,30 +449,33 @@ public class Mart {
 							continue;
 						// This bit avoids 1:M:1 back to a table that
 						// we've already added.
-						else if (fkr.getOneKey().getTable().equals(r.getOneKey().getTable()))
+						else if (fkr.getOneKey().getTable().equals(
+								r.getOneKey().getTable()))
 							continue;
-						else if (includeTables.contains(fkr.getOneKey().getTable()))
+						else if (includeTables.contains(fkr.getOneKey()
+								.getTable()))
 							potential1M1Table = fkr.getOneKey().getTable();
 					}
 				}
-				if (potential1M1Table!=null) 
-					potential.add(new Object[]{potential1M1Table, r});
+				if (potential1M1Table != null)
+					potential.add(new Object[] { potential1M1Table, r });
 			}
 		}
 		// Check the potential 1:M:1 relations to make sure the target
 		// tables have not already been included.
-		for (Iterator i = potential.iterator(); i.hasNext(); ) {
-			Object[] obj = (Object[])i.next();
-			Table potentialTable = (Table)obj[0];
-			Relation potentialRel = (Relation)obj[1];
+		for (Iterator i = potential.iterator(); i.hasNext();) {
+			Object[] obj = (Object[]) i.next();
+			Table potentialTable = (Table) obj[0];
+			Relation potentialRel = (Relation) obj[1];
 			if (!tablesIncluded.contains(potentialTable)) {
 				dataset.flagSubclassRelation(potentialRel);
 				tablesIncluded.add(potentialTable);
 			}
 		}
 		// Do the recursion.
-		for (Iterator i = recursion.iterator(); i.hasNext();) 
-			this.continueSubclassing(includeTables, tablesIncluded, name, dataset, (Table) i.next());
+		for (Iterator i = recursion.iterator(); i.hasNext();)
+			this.continueSubclassing(includeTables, tablesIncluded, name,
+					dataset, (Table) i.next());
 		// Return the resulting datasets.
 		return dataset;
 	}

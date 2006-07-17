@@ -37,7 +37,7 @@ import org.biomart.builder.resources.Resources;
  * schema instead, as specified by the datasetSchemaName parameter.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 29th June 2006
+ * @version 0.1.2, 17th July 2006
  * @since 0.1
  */
 public abstract class MartConstructorAction {
@@ -813,6 +813,27 @@ public abstract class MartConstructorAction {
 
 		public String getStatusMessage() {
 			return Resources.get("mcOptimiseUpdate");
+		}
+	}
+
+	/**
+	 * This action creates a new table containing the selected columns from the
+	 * old table plus all the expression columns, optionally grouping if any of
+	 * them are group-by expression columns.
+	 * 
+	 */
+	public static class ExpressionAddColumns extends MartConstructorAction {
+		public ExpressionAddColumns(String datasetSchemaName,
+				Schema sourceTableSchema, String sourceTableName,
+				Schema targetTableSchema, String targetTableName,
+				List sourceTableColumns, List expressionColumns,
+				boolean useGroupBy) {
+			super(datasetSchemaName);
+			// TODO: The rest!
+		}
+
+		public String getStatusMessage() {
+			return Resources.get("mcExpressionAdd");
 		}
 	}
 

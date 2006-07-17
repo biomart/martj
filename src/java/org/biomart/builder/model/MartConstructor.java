@@ -34,6 +34,7 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
@@ -42,6 +43,7 @@ import org.biomart.builder.model.DataSet.PartitionedColumnType.ValueCollection;
 import org.biomart.builder.model.MartConstructorAction.Concat;
 import org.biomart.builder.model.MartConstructorAction.Create;
 import org.biomart.builder.model.MartConstructorAction.Drop;
+import org.biomart.builder.model.MartConstructorAction.ExpressionAddColumns;
 import org.biomart.builder.model.MartConstructorAction.FK;
 import org.biomart.builder.model.MartConstructorAction.Index;
 import org.biomart.builder.model.MartConstructorAction.MartConstructorActionGraph;
@@ -418,7 +420,8 @@ public interface MartConstructor {
 					schemaTables.add(table);
 
 					// Add target table to definitions list.
-					tableLastActions.put(targetTable, table.getLastActionPerformed());
+					tableLastActions.put(targetTable, table
+							.getLastActionPerformed());
 
 					// Add further subclasses and dimensions to queue.
 					relations
@@ -1207,6 +1210,49 @@ public interface MartConstructor {
 				}
 			}
 
+			// Add all the expression columns.
+			List expressionColumns = new ArrayList();
+			List groupByDependentColumns = new ArrayList();
+			for (Iterator i = table.getDataSetTable().getColumns().iterator(); i
+					.hasNext();) {
+				Column col = (Column) i.next();
+				if (col instanceof ExpressionColumn) {
+					ExpressionColumn exp = (ExpressionColumn) col;
+					expressionColumns.add(exp);
+					if (exp.getGroupBy())
+						groupByDependentColumns.addAll(exp
+								.getDependentColumns());
+				}
+			}
+			if (!expressionColumns.isEmpty()) {
+				// Construct list of columns to select (and optionally
+				// group by). List contains all unmasked columns on table,
+				// minus expression columns, minus dependency columns from
+				// group-by expression columns.
+				List selectColumns = new ArrayList(table.getDataSetTable()
+						.getColumns());
+				selectColumns.removeAll(table.getDataSet()
+						.getMaskedDataSetColumns());
+				selectColumns.removeAll(expressionColumns);
+				selectColumns.removeAll(groupByDependentColumns);
+				// Generate new temp table name for merged table.
+				String mergedTableName = this.helper.getNewTempTableName();
+				// Create new table as select all from list
+				// plus all expression columns using literal expression,
+				// with optional group-by.
+				ExpressionAddColumns expr = new ExpressionAddColumns(
+						this.datasetSchemaName, null, tempTableName, null,
+						mergedTableName, selectColumns, expressionColumns,
+						!groupByDependentColumns.isEmpty());
+				actionGraph.addActionWithParent(expr, lastActionPerformed);
+				lastActionPerformed = expr;
+				// Drop previous table.
+				Drop drop = new Drop(this.datasetSchemaName, null,
+						tempTableName);
+				actionGraph.addActionWithParent(drop, expr);
+				tempTableName = mergedTableName;
+			}
+
 			// Update the temp table name.
 			table.setTempTableName(tempTableName);
 
@@ -1317,12 +1363,13 @@ public interface MartConstructor {
 					for (Iterator i = this.datasetTable.getColumns().iterator(); i
 							.hasNext();) {
 						DataSetColumn candidate = (DataSetColumn) i.next();
-						if (this.getDataSet().getMaskedDataSetColumns()
-								.contains(candidate))
-							continue;
 						if (!(candidate instanceof WrappedColumn))
 							continue;
 						WrappedColumn wc = (WrappedColumn) candidate;
+						if (this.getDataSet().getMaskedDataSetColumns()
+								.contains(wc)
+								&& !wc.getDependency())
+							continue;
 						if (searchColumn.equals(wc.getWrappedColumn())
 								&& n-- == 0)
 							return candidate;
@@ -1391,12 +1438,13 @@ public interface MartConstructor {
 				for (Iterator i = this.datasetTable.getColumns().iterator(); i
 						.hasNext();) {
 					DataSetColumn candidate = (DataSetColumn) i.next();
-					if (this.getDataSet().getMaskedDataSetColumns().contains(
-							candidate))
-						continue;
 					if (!(candidate instanceof WrappedColumn))
 						continue;
 					WrappedColumn wc = (WrappedColumn) candidate;
+					if (this.getDataSet().getMaskedDataSetColumns()
+							.contains(wc)
+							&& !wc.getDependency())
+						continue;
 					Relation wcRel = wc.getUnderlyingRelation();
 					if (wcRel == underlyingRelation)
 						list.add(candidate);
