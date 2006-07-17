@@ -48,7 +48,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * before the result is returned to the caller.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 20th June 2006
+ * @version 0.1.8, 27th July 2006
  * @since 0.1
  */
 public class SchemaManagerDialog extends JDialog {
@@ -118,8 +118,7 @@ public class SchemaManagerDialog extends JDialog {
 				if (type.getSelectedItem().equals(Resources.get("jdbcSchema"))) {
 					if (!(connectionPanel instanceof JDBCSchemaConnectionPanel)) {
 						connectionPanelHolder.removeAll();
-						connectionPanel = new JDBCSchemaConnectionPanel(
-								martTab, template);
+						connectionPanel = new JDBCSchemaConnectionPanel(martTab);
 						connectionPanelHolder.add(connectionPanel);
 						pack();
 					}
@@ -232,6 +231,9 @@ public class SchemaManagerDialog extends JDialog {
 			this.type.setSelectedIndex(0);
 			this.name.setText(null);
 		}
+		
+		// Update the connection panel.
+		this.connectionPanel.resetFields(template);
 	}
 
 	private boolean validateFields() {

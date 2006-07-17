@@ -60,7 +60,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * {@link JDBCSchema} implementation which represents the connection.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 26th June 2006
+ * @version 0.1.6, 17th July 2006
  * @since 0.1
  */
 public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
@@ -130,15 +130,16 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	 * passed in elsewhere. It optionally takes a template which is used to
 	 * populate the fields of the panel. If this template is null, then defaults
 	 * are used instead.
+	 * <p>
+	 * You must call {@link #resetFields(Schema)} before displaying this
+	 * panel, otherwise the values displayed are not defined and may result
+	 * in unpredictable behaviour.
 	 * 
 	 * @param martTab
 	 *            the mart tab to which the schema to be created or modified
 	 *            belongs.
-	 * @param template
-	 *            the template to use to fill the values in the panel with. If
-	 *            this is null, defaults are used.
 	 */
-	public JDBCSchemaConnectionPanel(final MartTab martTab, Schema template) {
+	public JDBCSchemaConnectionPanel(final MartTab martTab) {
 		super();
 
 		// Remember the schema tabset.
@@ -318,13 +319,9 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				}
 			}
 		});
-
-		// Reset the fields to their defaults, based on the
-		// template provided (if any).
-		this.resetFields(template);
 	}
 
-	private void resetFields(Schema template) {
+	public void resetFields(Schema template) {
 		// Set the copy-settings box to nothing-selected.
 		this.copysettings.setSelectedIndex(-1);
 		this.predefinedDriverClass.setSelectedIndex(-1);
@@ -338,6 +335,11 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		else {
 			this.driverClass.setText(null);
 			this.driverClassLocation.setText(null);
+
+			// Make sure the right fields get enabled.
+			this.driverClassChanged();
+			
+			// Carry on resetting.
 			this.jdbcURL.setText(null);
 			this.host.setText(null);
 			this.port.setText(null);
@@ -346,9 +348,6 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			this.username.setText(null);
 			this.password.setText(null);
 		}
-
-		// Make sure the right fields get enabled.
-		this.driverClassChanged();
 	}
 
 	private void copySettingsFrom(Schema template) {
@@ -361,6 +360,11 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			this.driverClassLocation.setText(jdbcSchema
 					.getDriverClassLocation() == null ? null : jdbcSchema
 					.getDriverClassLocation().toString());
+
+			// Make sure the right fields get enabled.
+			this.driverClassChanged();
+			
+			// Carry on copying.
 			String jdbcURL = jdbcSchema.getJDBCURL();
 			this.jdbcURL.setText(jdbcURL);
 			this.username.setText(jdbcSchema.getUsername());

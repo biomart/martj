@@ -29,7 +29,7 @@ import org.biomart.builder.model.Schema;
  * input, and can modify or create schemas based on the input.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 3rd May 2006
+ * @version 0.1.2, 17th July 2006
  * @since 0.1
  */
 public abstract class SchemaConnectionPanel extends JPanel {
@@ -60,4 +60,11 @@ public abstract class SchemaConnectionPanel extends JPanel {
 	 *         possible pop up some messages for the user to read en route.
 	 */
 	public abstract boolean validateFields();
+	
+	/**
+	 * Resets the fields based on a given template. Specify <tt>null</tt>
+	 * for the template if you want complete defaults.
+	 * @param template the template to reset the fields for.
+	 */
+	public abstract void resetFields(Schema template);
 }

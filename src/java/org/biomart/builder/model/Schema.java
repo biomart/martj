@@ -558,7 +558,7 @@ public interface Schema extends Comparable, DataLink {
 
 		public void synchroniseKeys() throws SQLException, BuilderException {
 		}
-
+		
 		public void addTable(Table table) throws AlreadyExistsException,
 				AssociationException {
 			// Check the table belongs to us, and has a unique name.
