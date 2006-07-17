@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.biomart.builder.controller.dialects.DatabaseDialect;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet;
