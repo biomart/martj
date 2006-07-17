@@ -80,7 +80,7 @@ import org.biomart.builder.resources.Resources;
  * or keys, or to reinstate any that have previously been marked as incorrect.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 21st June 2006
+ * @version 0.1.15, 17th July 2006
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -336,7 +336,6 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		// Get database metadata, catalog, and schema details.
 		DatabaseMetaData dmd = this.getConnection().getMetaData();
 		String catalog = this.getConnection().getCatalog();
-		String schema = this.schemaName;
 
 		// Create a list of existing tables. During this method, we remove from
 		// this list all tables that still exist in the database. At the end of
@@ -345,8 +344,22 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		List tablesToBeDropped = new ArrayList(this.tables.values());
 
 		// Load tables and views from database, then loop over them.
-		ResultSet dbTables = dmd.getTables(catalog, schema, "%", new String[] {
+		ResultSet dbTables = dmd.getTables(catalog, this.schemaName, "%", new String[] {
 				"TABLE", "VIEW" });
+		// Check for upper-case-sensitivity.
+		if (!dbTables.isBeforeFirst()) {
+			dbTables = dmd.getTables(catalog, this.schemaName.toUpperCase(), "%", new String[] {
+				"TABLE", "VIEW" });
+			if (dbTables.isBeforeFirst()) this.schemaName = this.schemaName.toUpperCase();
+		} 
+		// Check for lower-case-sensitivity.
+		if (!dbTables.isBeforeFirst()) {
+			dbTables = dmd.getTables(catalog, this.schemaName.toLowerCase(), "%", new String[] {
+				"TABLE", "VIEW" });
+			if (dbTables.isBeforeFirst()) this.schemaName = this.schemaName.toLowerCase();
+		}
+		
+		// Do the loop.
 		while (dbTables.next()) {
 			// What is the table called?
 			String dbTableName = dbTables.getString("TABLE_NAME");
@@ -370,7 +383,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			List colsToBeDropped = new ArrayList(dbTable.getColumns());
 
 			// Load the table columns from the database, then loop over them.
-			ResultSet dbTblCols = dmd.getColumns(catalog, schema, dbTableName,
+			ResultSet dbTblCols = dmd.getColumns(catalog, this.schemaName, dbTableName,
 					"%");
 			while (dbTblCols.next()) {
 				// What is the column called, and is it nullable?
@@ -407,7 +420,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// Obtain the primary key from the database. Even in databases
 			// without referential integrity, the primary key is still defined
 			// and can be obtained from the metadata.
-			ResultSet dbTblPKCols = dmd.getPrimaryKeys(catalog, schema,
+			ResultSet dbTblPKCols = dmd.getPrimaryKeys(catalog, this.schemaName,
 					dbTableName);
 
 			// Load the primary key columns into a map keyed by column position.
@@ -499,17 +512,16 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			existingTable.destroy();
 			this.tables.remove(tableName);
 		}
-
-		// Synchronise the keys.
+		
+		// Sync the keys.
 		this.synchroniseKeys();
 	}
-
-	public void synchroniseKeys() throws BuilderException, SQLException {
-		// Get database metadata, catalog, and schema details.
+	
+	public void synchroniseKeys() throws SQLException, BuilderException {
 		DatabaseMetaData dmd = this.getConnection().getMetaData();
 		String catalog = this.getConnection().getCatalog();
 		String schema = this.schemaName;
-
+		
 		// Work out a list of all foreign keys currently existing.
 		// Any remaining in this list later will be dropped.
 		List fksToBeDropped = new ArrayList();
