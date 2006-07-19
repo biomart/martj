@@ -29,21 +29,18 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
-import org.biomart.builder.model.Mart.DataSetSuggestionMode;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
@@ -51,21 +48,13 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * This dialog asks users what kind of dataset suggestion they want to do.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 17th July 2006
+ * @version 0.1.3, 19th July 2006
  * @since 0.1
  */
 public class SuggestDataSetDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	private DataSetSuggestionMode mode;
-
 	private MartTab martTab;
-
-	private JRadioButton identity;
-
-	private JRadioButton simple;
-
-	private JRadioButton combined;
 
 	private JTextField datasetName;
 
@@ -118,19 +107,8 @@ public class SuggestDataSetDialog extends JDialog {
 				.clone();
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
-		// Create the fields that will contain the user's table choices
-		// and choice of suggestion scheme.
+		// Create the fields that will contain the user's table choices.
 		this.datasetName = new JTextField(30); // Arbitrary size.
-		this.identity = new JRadioButton(Resources
-				.get("suggestIdentityDataSetOption"));
-		this.simple = new JRadioButton(Resources
-				.get("suggestSimpleDataSetOption"));
-		this.combined = new JRadioButton(Resources
-				.get("suggestCombinedDataSetOption"));
-		ButtonGroup radio = new ButtonGroup();
-		radio.add(identity);
-		radio.add(simple);
-		radio.add(combined);
 
 		List availableTables = new ArrayList();
 		for (Iterator i = this.martTab.getMart().getSchemas().iterator(); i
@@ -146,27 +124,6 @@ public class SuggestDataSetDialog extends JDialog {
 				.setPrototypeCellValue("01234567890123456789012345678901234567890123456789");
 		this.tables
 				.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-
-		// Make the simple/combined choice change the selectability of the
-		// list of tables.
-		this.identity.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (identity.isSelected())
-					mode = DataSetSuggestionMode.IDENTITY;
-			}
-		});
-		this.simple.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (simple.isSelected())
-					mode = DataSetSuggestionMode.SIMPLE;
-			}
-		});
-		this.combined.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (combined.isSelected())
-					mode = DataSetSuggestionMode.COMBINED;
-			}
-		});
 
 		// Create the buttons.
 		this.cancel = new JButton(Resources.get("cancelButton"));
@@ -190,29 +147,6 @@ public class SuggestDataSetDialog extends JDialog {
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
-		// Add the radios to the dialog.
-		label = new JLabel();
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
-		field = new JPanel();
-		field.add(this.identity);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-		label = new JLabel();
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
-		field = new JPanel();
-		field.add(this.simple);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-		label = new JLabel();
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
-		field = new JPanel();
-		field.add(this.combined);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-
 		// Add the buttons to the dialog.
 		label = new JLabel();
 		gridBag.setConstraints(label, labelLastRowConstraints);
@@ -227,7 +161,7 @@ public class SuggestDataSetDialog extends JDialog {
 		// dialog without making any changes.
 		this.cancel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				mode = null;
+				tables.clearSelection();
 				hide();
 			}
 		});
@@ -251,12 +185,11 @@ public class SuggestDataSetDialog extends JDialog {
 		this.setLocationRelativeTo(this.martTab.getMartTabSet()
 				.getMartBuilder());
 
-		// Activate the single-table option.
+		// Set some nice defaults.
 		if (initialTable != null) {
 			this.tables.setSelectedValue(initialTable, true);
 			this.datasetName.setText(initialTable.getName());
 		}
-		this.simple.doClick();
 	}
 
 	private boolean validateFields() {
@@ -295,16 +228,6 @@ public class SuggestDataSetDialog extends JDialog {
 	 */
 	public Collection getSelectedTables() {
 		return Arrays.asList(this.tables.getSelectedValues());
-	}
-
-	/**
-	 * Return the mode the user selected. If it is null, then the user cancelled
-	 * the box and no action should be taken.
-	 * 
-	 * @return the selected mode.
-	 */
-	public DataSetSuggestionMode getDataSetSuggestionMode() {
-		return this.mode;
 	}
 
 	/**

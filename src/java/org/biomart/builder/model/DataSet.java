@@ -60,7 +60,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.32, 17th July 2006
+ * @version 0.1.33, 19th July 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -739,14 +739,15 @@ public class DataSet extends GenericSchema {
 		for (Iterator i = expressionColumns.iterator(); i.hasNext();) {
 			ExpressionColumn oldExpCol = (ExpressionColumn) i.next();
 			// Work out what table it came from. Gone? Drop.
-			DataSetTable expColTable = (DataSetTable) this.getTableByName(oldExpCol
-					.getTable().getName());
+			DataSetTable expColTable = (DataSetTable) this
+					.getTableByName(oldExpCol.getTable().getName());
 			if (expColTable == null)
 				continue;
 			// Get all the dependent columns. Any gone? Drop.
 			boolean allFound = true;
 			Map newDependencies = new TreeMap();
-			for (Iterator j = oldExpCol.getAliases().keySet().iterator(); j.hasNext();) {
+			for (Iterator j = oldExpCol.getAliases().keySet().iterator(); j
+					.hasNext();) {
 				WrappedColumn dependency = (WrappedColumn) expColTable
 						.getColumnByName(((WrappedColumn) j.next()).getName());
 				String alias = (String) oldExpCol.getAliases().get(dependency);
@@ -759,11 +760,12 @@ public class DataSet extends GenericSchema {
 				continue;
 			// Create a new ExpressionColumn based on the new columns.
 			try {
-				ExpressionColumn expCol = new ExpressionColumn(oldExpCol.getName(),
-						expColTable);
+				ExpressionColumn expCol = new ExpressionColumn(oldExpCol
+						.getName(), expColTable);
 				expCol.getAliases().putAll(newDependencies);
-				for (Iterator j = newDependencies.keySet().iterator(); j.hasNext(); )
-					((WrappedColumn)j.next()).setDependency(true);
+				for (Iterator j = newDependencies.keySet().iterator(); j
+						.hasNext();)
+					((WrappedColumn) j.next()).setDependency(true);
 			} catch (Throwable t) {
 				// Should never happen!
 				throw new MartBuilderInternalError(t);
@@ -783,7 +785,7 @@ public class DataSet extends GenericSchema {
 	public void regenerate() {
 		// Clear all our tables out as they will all be rebuilt.
 		this.tables.clear();
-		
+
 		// Identify main table.
 		Table centralTable = this.getCentralTable();
 		// If central table has subclass relations and is at the M key
@@ -854,7 +856,7 @@ public class DataSet extends GenericSchema {
 		DataSetTable dsTable = null;
 		try {
 			dsTable = new DataSetTable(realTable.getName(), this, type,
-					realTable);
+					realTable, sourceRelation);
 		} catch (Throwable t) {
 			throw new MartBuilderInternalError(t);
 		}
@@ -1456,9 +1458,11 @@ public class DataSet extends GenericSchema {
 	 * table and is given an alias.
 	 */
 	public static class DataSetTable extends GenericTable {
-		private final List underlyingRelations = new ArrayList();
+		private final Relation sourceRelation;
 
-		private final List underlyingKeys = new ArrayList();
+		private final List underlyingRelations;
+
+		private final List underlyingKeys;
 
 		private final DataSetTableType type;
 
@@ -1475,18 +1479,25 @@ public class DataSet extends GenericSchema {
 		 *            the dataset to hold this table in.
 		 * @param type
 		 *            the type that best describes this table.
+		 * @param relation
+		 *            the relation that controls the existence of this table.
+		 *            Can be null.
 		 * @throws AlreadyExistsException
 		 *             this should never actually happen, but is required as the
 		 *             super constructor throws it.
 		 */
 		public DataSetTable(String name, DataSet ds, DataSetTableType type,
-				Table underlyingTable) throws AlreadyExistsException {
+				Table underlyingTable, Relation sourceRelation)
+				throws AlreadyExistsException {
 			// Super constructor first, using an alias to prevent duplicates.
 			super(generateAlias(name, ds), ds);
 
 			// Remember the other settings.
 			this.underlyingTable = underlyingTable;
 			this.type = type;
+			this.sourceRelation = sourceRelation;
+			this.underlyingRelations = new ArrayList();
+			this.underlyingKeys = new ArrayList();
 		}
 
 		/**
@@ -1573,6 +1584,17 @@ public class DataSet extends GenericSchema {
 		 */
 		public List getUnderlyingKeys() {
 			return this.underlyingKeys;
+		}
+
+		/**
+		 * Gets the relation which controls the existince of this table.
+		 * Modifying that relation will directly affect the structure or
+		 * existence of this table. It can be <tt>null</tt>.
+		 * 
+		 * @return the source relation.
+		 */
+		public Relation getSourceRelation() {
+			return this.sourceRelation;
 		}
 
 		public void addColumn(Column column) throws AlreadyExistsException,

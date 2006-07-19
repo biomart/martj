@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataLink;
@@ -38,7 +39,7 @@ import org.biomart.builder.resources.Resources;
  * can be used.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 14th July 2006
+ * @version 0.1.8, 19th July 2006
  * @since 0.1
  */
 public abstract class DatabaseDialect {
@@ -48,7 +49,7 @@ public abstract class DatabaseDialect {
 	 * Registers all known dialects for use with this system. Need only be
 	 * called once, but doesn't hurt to call multiple times.
 	 */
-	public static void registerDialects() {
+	static {
 		dialects.add(new MySQLDialect());
 		dialects.add(new OracleDialect());
 		dialects.add(new PostgreSQLDialect());
@@ -60,17 +61,17 @@ public abstract class DatabaseDialect {
 	 * @param dataLink
 	 *            the data link to work out the dialect for.
 	 * @return the appropriate DatabaseDialect.
-	 * @throws ConstructorException
+	 * @throws AssociationException
 	 *             if there is no appropriate dialect.
 	 */
 	public static DatabaseDialect getDialect(DataLink dataLink)
-			throws ConstructorException {
+			throws AssociationException {
 		for (Iterator i = dialects.iterator(); i.hasNext();) {
 			DatabaseDialect d = (DatabaseDialect) i.next();
 			if (d.understandsDataLink(dataLink))
 				return d;
 		}
-		throw new ConstructorException(Resources.get("mcUnknownDataLink"));
+		throw new AssociationException(Resources.get("mcUnknownDataLink"));
 	}
 
 	/**
@@ -81,12 +82,8 @@ public abstract class DatabaseDialect {
 	 * @param dataLink
 	 *            the data link to test compatibility with.
 	 * @return <tt>true</tt> if it understands it, <tt>false</tt> if not.
-	 * @throws ConstructorException
-	 *             if there was any problem trying to establish whether or not
-	 *             the data link is compatible with this dialect.
 	 */
-	public abstract boolean understandsDataLink(DataLink dataLink)
-			throws ConstructorException;
+	public abstract boolean understandsDataLink(DataLink dataLink);
 
 	/**
 	 * Gets the distinct values in the given column. This must be a real column,

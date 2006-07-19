@@ -23,6 +23,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -39,11 +40,13 @@ import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.MartConstructorAction.Concat;
 import org.biomart.builder.model.MartConstructorAction.Create;
 import org.biomart.builder.model.MartConstructorAction.Drop;
+import org.biomart.builder.model.MartConstructorAction.ExpressionAddColumns;
 import org.biomart.builder.model.MartConstructorAction.FK;
 import org.biomart.builder.model.MartConstructorAction.Index;
 import org.biomart.builder.model.MartConstructorAction.Merge;
@@ -60,7 +63,7 @@ import org.biomart.builder.model.MartConstructorAction.Union;
  * Understands how to create SQL and DDL for a MySQL database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 14th July 2006
+ * @version 0.1.10, 19th July 2006
  * @since 0.1
  */
 public class MySQLDialect extends DatabaseDialect {
@@ -68,8 +71,7 @@ public class MySQLDialect extends DatabaseDialect {
 	// Check we only set the group concat size once.
 	private static boolean GROUP_CONCAT_SIZED;
 
-	public boolean understandsDataLink(DataLink dataLink)
-			throws ConstructorException {
+	public boolean understandsDataLink(DataLink dataLink) {
 
 		// Convert to JDBC version.
 		if (!(dataLink instanceof JDBCDataLink))
@@ -80,7 +82,7 @@ public class MySQLDialect extends DatabaseDialect {
 			return jddl.getConnection().getMetaData().getDatabaseProductName()
 					.equals("MySQL");
 		} catch (SQLException e) {
-			throw new ConstructorException(e);
+			throw new MartBuilderInternalError(e);
 		}
 	}
 
@@ -381,8 +383,8 @@ public class MySQLDialect extends DatabaseDialect {
 		Object partColumnValue = action.getPartitionColumnValue();
 		if (partColumnValue != null) {
 			String escapedValue = partColumnValue.toString();
-			escapedValue = escapedValue.replaceAll("\\","\\\\");
-			escapedValue = escapedValue.replaceAll("'","\\'");	
+			escapedValue = escapedValue.replaceAll("\\", "\\\\");
+			escapedValue = escapedValue.replaceAll("'", "\\'");
 			statements.add("create table " + partTableSchema + "."
 					+ partTableName + " as select * from " + fromTableSchema
 					+ "." + fromTableName + " where " + partColumnName + "='"
@@ -448,6 +450,50 @@ public class MySQLDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
+	public void doExpressionAddColumns(ExpressionAddColumns action,
+			List statements) throws Exception {
+		String srcSchemaName = action.getSourceTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getSourceTableSchema()
+				.getName();
+		String srcTableName = action.getSourceTableName();
+		String trgtSchemaName = action.getTargetTableSchema() == null ? action
+				.getDataSetSchemaName() : action.getTargetTableSchema()
+				.getName();
+		String trgtTableName = action.getTargetTableName();
+		boolean useGroupBy = action.getUseGroupBy();
+		Collection selectCols = action.getSourceTableColumns();
+		Collection expressCols = action.getExpressionColumns();
+
+		StringBuffer sb = new StringBuffer();
+		sb.append("create table " + trgtSchemaName + "." + trgtTableName
+				+ " as select ");
+		for (Iterator i = selectCols.iterator(); i.hasNext();) {
+			Column col = (Column) i.next();
+			sb.append(col.getName());
+			if (i.hasNext())
+				sb.append(',');
+		}
+		for (Iterator i = expressCols.iterator(); i.hasNext();) {
+			ExpressionColumn col = (ExpressionColumn) i.next();
+			sb.append(col.getSubstitutedExpression());
+			sb.append(" as ");
+			sb.append(col.getName());
+			if (i.hasNext())
+				sb.append(',');
+		}
+		sb.append(" from " + srcSchemaName + "." + srcTableName);
+		if (useGroupBy) {
+			sb.append(" group by ");
+			for (Iterator i = selectCols.iterator(); i.hasNext();) {
+				Column col = (Column) i.next();
+				sb.append(col.getName());
+				if (i.hasNext())
+					sb.append(',');
+			}
+		}
+		statements.add(sb.toString());
+	}
+
 	public void doConcat(Concat action, List statements) {
 		String srcSchemaName = action.getSourceTableSchema() == null ? action
 				.getDataSetSchemaName() : action.getSourceTableSchema()
@@ -468,14 +514,14 @@ public class MySQLDialect extends DatabaseDialect {
 		StringBuffer sb = new StringBuffer();
 
 		// If we haven't defined the group_concat size yet, define it.
-		// Note limitation of total 18446744073709551616 characters for 
+		// Note limitation of total 18446744073709551616 characters for
 		// group_concat result.
 		if (!MySQLDialect.GROUP_CONCAT_SIZED) {
 			sb.append("set group_concat_max_len=18446744073709551616");
-			sb.append(System.getProperty("line.separator"));				
+			sb.append(System.getProperty("line.separator"));
 			MySQLDialect.GROUP_CONCAT_SIZED = true;
 		}
-		
+
 		sb.append("create table " + concatSchemaName + "." + concatTableName
 				+ " as select a.*, group_concat(distinct concat_ws('");
 		sb.append(crType.getValueSeparator());

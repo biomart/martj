@@ -37,7 +37,7 @@ import org.biomart.builder.resources.Resources;
  * schema instead, as specified by the datasetSchemaName parameter.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 17th July 2006
+ * @version 0.1.3, 19th July 2006
  * @since 0.1
  */
 public abstract class MartConstructorAction {
@@ -820,16 +820,102 @@ public abstract class MartConstructorAction {
 	 * This action creates a new table containing the selected columns from the
 	 * old table plus all the expression columns, optionally grouping if any of
 	 * them are group-by expression columns.
-	 * 
 	 */
 	public static class ExpressionAddColumns extends MartConstructorAction {
+		private String datasetSchemaName;
+
+		private Schema sourceTableSchema;
+
+		private String sourceTableName;
+
+		private Schema targetTableSchema;
+
+		private String targetTableName;
+
+		private List sourceTableColumns;
+
+		private List expressionColumns;
+
+		private boolean useGroupBy;
+
 		public ExpressionAddColumns(String datasetSchemaName,
 				Schema sourceTableSchema, String sourceTableName,
 				Schema targetTableSchema, String targetTableName,
 				List sourceTableColumns, List expressionColumns,
 				boolean useGroupBy) {
 			super(datasetSchemaName);
-			// TODO: The rest!
+			this.datasetSchemaName = datasetSchemaName;
+			this.sourceTableSchema = sourceTableSchema;
+			this.sourceTableName = sourceTableName;
+			this.targetTableSchema = targetTableSchema;
+			this.targetTableName = targetTableName;
+			this.sourceTableColumns = sourceTableColumns;
+			this.expressionColumns = expressionColumns;
+			this.useGroupBy = useGroupBy;
+		}
+
+		public String getDatasetSchemaName() {
+			return datasetSchemaName;
+		}
+
+		public void setDatasetSchemaName(String datasetSchemaName) {
+			this.datasetSchemaName = datasetSchemaName;
+		}
+
+		public List getExpressionColumns() {
+			return expressionColumns;
+		}
+
+		public void setExpressionColumns(List expressionColumns) {
+			this.expressionColumns = expressionColumns;
+		}
+
+		public List getSourceTableColumns() {
+			return sourceTableColumns;
+		}
+
+		public void setSourceTableColumns(List sourceTableColumns) {
+			this.sourceTableColumns = sourceTableColumns;
+		}
+
+		public String getSourceTableName() {
+			return sourceTableName;
+		}
+
+		public void setSourceTableName(String sourceTableName) {
+			this.sourceTableName = sourceTableName;
+		}
+
+		public Schema getSourceTableSchema() {
+			return sourceTableSchema;
+		}
+
+		public void setSourceTableSchema(Schema sourceTableSchema) {
+			this.sourceTableSchema = sourceTableSchema;
+		}
+
+		public String getTargetTableName() {
+			return targetTableName;
+		}
+
+		public void setTargetTableName(String targetTableName) {
+			this.targetTableName = targetTableName;
+		}
+
+		public Schema getTargetTableSchema() {
+			return targetTableSchema;
+		}
+
+		public void setTargetTableSchema(Schema targetTableSchema) {
+			this.targetTableSchema = targetTableSchema;
+		}
+
+		public boolean getUseGroupBy() {
+			return useGroupBy;
+		}
+
+		public void setUseGroupBy(boolean useGroupBy) {
+			this.useGroupBy = useGroupBy;
 		}
 
 		public String getStatusMessage() {

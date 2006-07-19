@@ -20,7 +20,6 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Iterator;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBoxMenuItem;
@@ -39,21 +38,23 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
+import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 
-
 /**
- * This context adapts dataset org.biomart.builder.view.gui.diagrams to display different colours, and
- * provides the context menu for interacting with dataset org.biomart.builder.view.gui.diagrams.
+ * This context adapts dataset org.biomart.builder.view.gui.diagrams to display
+ * different colours, and provides the context menu for interacting with dataset
+ * org.biomart.builder.view.gui.diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.21, 13th July 2006
+ * @version 0.1.22, 19th July 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -233,7 +234,7 @@ public class DataSetContext extends WindowContext {
 			});
 			contextMenu.add(explain);
 
-			// Rename the column.
+			// Rename the table.
 			JMenuItem rename = new JMenuItem(Resources.get("renameTableTitle"));
 			rename.setMnemonic(Resources.get("renameTableMnemonic").charAt(0));
 			rename.addActionListener(new ActionListener() {
@@ -243,6 +244,19 @@ public class DataSetContext extends WindowContext {
 				}
 			});
 			contextMenu.add(rename);
+
+			// Add an expression column.
+			JMenuItem expression = new JMenuItem(Resources
+					.get("addExpressionColumnTitle"));
+			expression.setMnemonic(Resources.get("addExpressionColumnMnemonic")
+					.charAt(0));
+			expression.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					getMartTab().getDataSetTabSet().requestAddExpressionColumn(
+							table);
+				}
+			});
+			contextMenu.add(expression);
 
 			// Dimension tables have their own options.
 			if (tableType.equals(DataSetTableType.DIMENSION)) {
@@ -255,13 +269,28 @@ public class DataSetContext extends WindowContext {
 						.charAt(0));
 				removeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
-						Relation relation = (Relation) table
-								.getUnderlyingRelations().get(0);
 						getMartTab().getDataSetTabSet().requestMaskRelation(
-								getDataSet(), relation);
+								getDataSet(), table.getSourceRelation());
 					}
 				});
 				contextMenu.add(removeDM);
+
+				// The dimension can be merged by using this option. This
+				// simply changes the relation cardinality to 1:1. This
+				// affects ALL datasets, not just this one!
+				JMenuItem mergeDM = new JMenuItem(Resources
+						.get("mergeDimensionTitle"));
+				mergeDM.setMnemonic(Resources.get("mergeDimensionMnemonic")
+						.charAt(0));
+				mergeDM.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						getMartTab().getSchemaTabSet()
+								.requestChangeRelationCardinality(
+										table.getSourceRelation(),
+										Cardinality.ONE);
+					}
+				});
+				contextMenu.add(mergeDM);
 			}
 
 			// Subclass tables have their own options too.
@@ -275,19 +304,9 @@ public class DataSetContext extends WindowContext {
 						.charAt(0));
 				unsubclass.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
-						Relation relation = null;
-						// Identify the last subclass relation in the chain.
-						for (Iterator i = table.getUnderlyingRelations()
-								.iterator(); i.hasNext();) {
-							Relation r = (Relation) i.next();
-							if (getDataSet().getSubclassedRelations().contains(
-									r))
-								relation = r;
-						}
-						// Unsubclass it.
 						getMartTab().getDataSetTabSet()
 								.requestUnsubclassRelation(getDataSet(),
-										relation);
+										table.getSourceRelation());
 					}
 				});
 				contextMenu.add(unsubclass);
@@ -450,6 +469,25 @@ public class DataSetContext extends WindowContext {
 					contextMenu.add(partition);
 				}
 			}
+
+			// Else, if it's an expression column...
+			else if (column instanceof ExpressionColumn) {
+
+				// Option to remove column.
+				JMenuItem remove = new JMenuItem(Resources
+						.get("removeExpressionColumnTitle"));
+				remove.setMnemonic(Resources.get(
+						"removeExpressionColumnMnemonic").charAt(0));
+				remove.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						getMartTab().getDataSetTabSet()
+								.requestRemoveExpressionColumn(getDataSet(),
+										(ExpressionColumn) column);
+					}
+				});
+				contextMenu.add(remove);
+
+			}
 		}
 	}
 
@@ -510,6 +548,10 @@ public class DataSetContext extends WindowContext {
 					|| ((column instanceof SchemaNameColumn) && this
 							.getDataSet().getPartitionOnSchema()))
 				component.setForeground(ColumnComponent.PARTITIONED_COLOUR);
+
+			// Magenta EXPRESSION columns.
+			else if (column instanceof ExpressionColumn)
+				component.setForeground(ColumnComponent.EXPRESSION_COLOUR);
 
 			// All others are normal.
 			else

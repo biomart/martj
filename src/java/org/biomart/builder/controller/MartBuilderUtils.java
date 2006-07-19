@@ -41,12 +41,12 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
+import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.GenericForeignKey;
 import org.biomart.builder.model.Key.GenericPrimaryKey;
 import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.model.Mart.DataSetSuggestionMode;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
@@ -59,7 +59,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.26, 14th July 2006
+ * @version 0.1.27, 19th July 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -69,7 +69,17 @@ public class MartBuilderUtils {
 	 */
 	private MartBuilderUtils() {
 	}
-
+	
+	/**
+	 * This method asks to remove a particular expression column.
+	 * @param column the expression column to remove.
+	 */
+	public static void removeExpressionColumn(ExpressionColumn column) {
+		column.getTable().removeColumn(column);
+	}
+	
+	// TODO the create expression column method.
+	
 	/**
 	 * This method asks the mart to synchronise all its schemas against the data
 	 * sources or databases they represent.
@@ -151,8 +161,6 @@ public class MartBuilderUtils {
 	 * 
 	 * @param mart
 	 *            the mart to create the datasets in.
-	 * @param mode
-	 *            the suggestion mode to use.
 	 * @param tables
 	 *            the tables to include in the set of suggested datasets.
 	 * @param name
@@ -169,10 +177,9 @@ public class MartBuilderUtils {
 	 *             if there is any trouble communicating with the data source or
 	 *             database during schema synchronisation.
 	 */
-	public static Collection suggestDataSets(Mart mart,
-			DataSetSuggestionMode mode, Collection tables, String name)
+	public static Collection suggestDataSets(Mart mart, Collection tables, String name)
 			throws SQLException, AssociationException, AlreadyExistsException {
-		return mart.suggestDataSets(mode, tables, name);
+		return mart.suggestDataSets(tables, name);
 	}
 
 	/**

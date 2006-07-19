@@ -50,8 +50,8 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
+import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
-import org.biomart.builder.model.Mart.DataSetSuggestionMode;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.AllDataSetsDiagram;
@@ -523,10 +523,9 @@ public class DataSetTabSet extends JTabbedPane {
 		final SuggestDataSetDialog dialog = new SuggestDataSetDialog(martTab,
 				table);
 		dialog.show();
-		final DataSetSuggestionMode mode = dialog.getDataSetSuggestionMode();
 
 		// If they cancelled it, return without doing anything.
-		if (mode == null)
+		if (dialog.getSelectedTables().isEmpty())
 			return;
 
 		// In the background, suggest the datasets.
@@ -535,7 +534,7 @@ public class DataSetTabSet extends JTabbedPane {
 				try {
 					// Suggest them.
 					final Collection dss = MartBuilderUtils
-							.suggestDataSets(martTab.getMart(), mode, dialog
+							.suggestDataSets(martTab.getMart(), dialog
 									.getSelectedTables(), dialog
 									.getDataSetName());
 
@@ -551,6 +550,55 @@ public class DataSetTabSet extends JTabbedPane {
 							recalculateOverviewDiagram();
 
 							// Update the modified status for this tabset.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Asks for an expression column to be added to the table.
+	 * 
+	 * @param table
+	 *            the table to add the expression column to.
+	 */
+	public void requestAddExpressionColumn(final DataSetTable table) {
+		// TODO
+	}
+
+	/**
+	 * Asks for an expression column to be removed from the table.
+	 * 
+	 * @param dataset
+	 *            the dataset we are working with.
+	 * @param column
+	 *            the expression column to remove.
+	 */
+	public void requestRemoveExpressionColumn(final DataSet dataset,
+			final ExpressionColumn column) {
+		// Do this in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Remove the column.
+					MartBuilderUtils.removeExpressionColumn(column);
+
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Recalculate the dataset diagram based on the
+							// newly modified dataset.
+							recalculateDataSetDiagram(dataset);
+
+							// Update the modified status for the tabset.
 							martTab.getMartTabSet().setModifiedStatus(true);
 						}
 					});

@@ -97,7 +97,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.21, 17th July 2006
+ * @version 0.1.22, 19th July 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -158,7 +158,7 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Store the attribute and value.
 				String aValue = attrs.getValue(i);
-				attributes.put(aName, aValue.replaceAll("&quot;","\""));
+				attributes.put(aName, aValue.replaceAll("&quot;", "\""));
 			}
 		}
 
@@ -273,10 +273,19 @@ public class MartBuilderXML extends DefaultHandler {
 					underlyingTable = (Table) this.mappedObjects
 							.get(underlyingTableId);
 
+				// Work out the source relation (if has one).
+				String sourceRelationId = (String) attributes
+						.get("sourceRelationId");
+				Relation sourceRelation = null;
+				if (sourceRelationId != null
+						&& sourceRelationId.trim().length() != 0)
+					sourceRelation = (Relation) this.mappedObjects
+							.get(sourceRelationId);
+
 				try {
 					// Construct the dataset table.
 					DataSetTable dst = new DataSetTable(name, (DataSet) schema,
-							dsType, underlyingTable);
+							dsType, underlyingTable, sourceRelation);
 					dst.setOriginalName(originalName);
 					element = dst;
 
@@ -848,7 +857,7 @@ public class MartBuilderXML extends DefaultHandler {
 		xmlWriter.write(" ");
 		xmlWriter.write(name);
 		xmlWriter.write("=\"");
-		xmlWriter.write(value.replaceAll("\"","&quot;"));
+		xmlWriter.write(value.replaceAll("\"", "&quot;"));
 		xmlWriter.write("\"");
 	}
 
@@ -992,6 +1001,14 @@ public class MartBuilderXML extends DefaultHandler {
 					underKeyIds.add(this.reverseMappedObjects.get(i.next()));
 				this.writeAttribute("underlyingKeyIds", (String[]) underKeyIds
 						.toArray(new String[0]), xmlWriter);
+
+				// Write out the source relation.
+				Relation sourceRelation = ((DataSetTable) table)
+						.getSourceRelation();
+				if (sourceRelation != null)
+					this.writeAttribute("sourceRelationId",
+							(String) this.reverseMappedObjects
+									.get(sourceRelation), xmlWriter);
 			}
 
 			// Write out columns inside each table.
