@@ -205,7 +205,7 @@ public class MartBuilderUtils {
 	/**
 	 * Given a particular set of tables, this method suggests a bunch of
 	 * datasets which could be sensibly created. Each suggestion is synchronised
-	 * <u>and</u> optimised before being returned.
+	 * before being returned.
 	 * 
 	 * @param mart
 	 *            the mart to create the datasets in.
@@ -224,10 +224,12 @@ public class MartBuilderUtils {
 	 * @throws SQLException
 	 *             if there is any trouble communicating with the data source or
 	 *             database during schema synchronisation.
+	 * @throws BuilderException
+	 *             if synchronisation fails.
 	 */
 	public static Collection suggestDataSets(Mart mart, Collection tables,
 			String name) throws SQLException, AssociationException,
-			AlreadyExistsException {
+			AlreadyExistsException, BuilderException {
 		return mart.suggestDataSets(tables, name);
 	}
 

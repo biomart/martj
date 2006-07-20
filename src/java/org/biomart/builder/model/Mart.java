@@ -196,6 +196,8 @@ public class Mart {
 	 * <p>
 	 * If the chains of tables the datasets are built from fork, then one
 	 * dataset is generated for each branch of the fork.
+	 * <p>
+	 * Every suggested dataset is synchronised before being returned.
 	 * 
 	 * @param includeTables
 	 *            the tables that must appear in the final set of datasets.
@@ -212,10 +214,12 @@ public class Mart {
 	 * @throws AlreadyExistsException
 	 *             if a dataset already exists in this schema with the same name
 	 *             or any of the suffixed versions.
+	 * @throws BuilderException
+	 *             if synchronisation fails.
 	 */
 	public Collection suggestDataSets(Collection includeTables,
 			String name) throws SQLException, AssociationException,
-			AlreadyExistsException {
+			AlreadyExistsException, BuilderException {
 		// The root tables are all those which do not have a M:1 relation
 		// to another one of the initial set of tables. This means that
 		// extra datasets will be created for each table at the end of
@@ -253,6 +257,9 @@ public class Mart {
 			DataSet ds = (DataSet)suggestedDataSets.get(0);
 			ds.getMart().renameDataSet(ds, name);
 		}
+		// Synchronise them all.
+		for (Iterator i = suggestedDataSets.iterator(); i.hasNext(); ) 
+			((DataSet)i.next()).synchronise();
 		// Return the final set of suggested datasets.
 		return suggestedDataSets;
 	}
