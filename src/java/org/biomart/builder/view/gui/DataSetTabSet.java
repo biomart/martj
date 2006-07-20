@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JMenuItem;
@@ -63,6 +64,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DataSetContext;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 import org.biomart.builder.view.gui.diagrams.contexts.WindowContext;
 import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
+import org.biomart.builder.view.gui.dialogs.ExpressionColumnDialog;
 import org.biomart.builder.view.gui.dialogs.PartitionColumnDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
@@ -75,7 +77,7 @@ import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.30, 17th July 2006
+ * @version 0.1.31, 20th July 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -533,10 +535,9 @@ public class DataSetTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Suggest them.
-					final Collection dss = MartBuilderUtils
-							.suggestDataSets(martTab.getMart(), dialog
-									.getSelectedTables(), dialog
-									.getDataSetName());
+					final Collection dss = MartBuilderUtils.suggestDataSets(
+							martTab.getMart(), dialog.getSelectedTables(),
+							dialog.getDataSetName());
 
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -572,7 +573,96 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the table to add the expression column to.
 	 */
 	public void requestAddExpressionColumn(final DataSetTable table) {
-		// TODO
+		ExpressionColumnDialog dialog = new ExpressionColumnDialog(
+				this.martTab, table, null);
+		dialog.show();
+		// Cancelled?
+		if (dialog.getCancelled())
+			return;
+		// Get the details.
+		final String columnName = dialog.getColumnName();
+		final Map columnAliases = dialog.getColumnAliases();
+		final String expression = dialog.getExpression();
+		final boolean groupBy = dialog.getGroupBy();
+		// Do this in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Remove the column.
+					MartBuilderUtils.addExpressionColumn(table, columnName,
+							columnAliases, expression, groupBy);
+
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Recalculate the dataset diagram based on the
+							// newly modified dataset.
+							recalculateDataSetDiagram((DataSet) table
+									.getSchema());
+
+							// Update the modified status for the tabset.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Asks for an expression column to be modified.
+	 * 
+	 * @param dataset
+	 *            the dataset we are working with.
+	 * @param column
+	 *            the expression column to modify.
+	 */
+	public void requestModifyExpressionColumn(final ExpressionColumn column) {
+		ExpressionColumnDialog dialog = new ExpressionColumnDialog(
+				this.martTab, (DataSetTable) column.getTable(), column);
+		dialog.show();
+		// Cancelled?
+		if (dialog.getCancelled())
+			return;
+		// Get updated details from the user.
+		final Map columnAliases = dialog.getColumnAliases();
+		final String expression = dialog.getExpression();
+		final boolean groupBy = dialog.getGroupBy();
+		// Do this in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Remove the column.
+					MartBuilderUtils.modifyExpressionColumn(column,
+							columnAliases, expression, groupBy);
+
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Recalculate the dataset diagram based on the
+							// newly modified dataset.
+							recalculateDataSetDiagram((DataSet) column
+									.getTable().getSchema());
+
+							// Update the modified status for the tabset.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
 	}
 
 	/**
@@ -583,8 +673,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param column
 	 *            the expression column to remove.
 	 */
-	public void requestRemoveExpressionColumn(final DataSet dataset,
-			final ExpressionColumn column) {
+	public void requestRemoveExpressionColumn(final ExpressionColumn column) {
 		// Do this in the background.
 		LongProcess.run(new Runnable() {
 			public void run() {
@@ -596,108 +685,8 @@ public class DataSetTabSet extends JTabbedPane {
 						public void run() {
 							// Recalculate the dataset diagram based on the
 							// newly modified dataset.
-							recalculateDataSetDiagram(dataset);
-
-							// Update the modified status for the tabset.
-							martTab.getMartTabSet().setModifiedStatus(true);
-						}
-					});
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							martTab.getMartTabSet().getMartBuilder()
-									.showStackTrace(t);
-						}
-					});
-				}
-			}
-		});
-	}
-
-	/**
-	 * Ask that a dataset be optimised.
-	 * 
-	 * @param dataset
-	 *            the dataset to optimise.
-	 */
-	public void requestOptimiseDataSet(final DataSet dataset) {
-		// Do this in the background.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Optimise the dataset.
-					MartBuilderUtils.optimiseDataSet(dataset);
-
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							// Repaint the schema
-							// org.biomart.builder.view.gui.diagrams as they may
-							// be
-							// currently
-							// in a window, and the colours for that window may
-							// have changed depending on optimisation results.
-							martTab.getSchemaTabSet()
-									.repaintAllSchemaDiagrams();
-
-							// Recalculate the dataset diagram based on the
-							// newly
-							// optimised dataset.
-							recalculateDataSetDiagram(dataset);
-
-							// If we are showing an explanation diagram, repaint
-							// that too for the same reasons as the schema
-							// diagram.
-							if (currentExplanationDiagram != null)
-								currentExplanationDiagram.repaintDiagram();
-
-							// Update the modified status for the tabset.
-							martTab.getMartTabSet().setModifiedStatus(true);
-						}
-					});
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							martTab.getMartTabSet().getMartBuilder()
-									.showStackTrace(t);
-						}
-					});
-				}
-			}
-		});
-	}
-
-	/**
-	 * Ask that all datasets be optimised.
-	 */
-	public void requestOptimiseAllDataSets() {
-		// Do this in the background.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Optimise the dataset.
-					MartBuilderUtils.optimiseAllDataSets(martTab.getMart());
-
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							// Repaint the schema
-							// org.biomart.builder.view.gui.diagrams as they may
-							// be
-							// currently
-							// in a window, and the colours for that window may
-							// have changed depending on optimisation results.
-							martTab.getSchemaTabSet()
-									.repaintAllSchemaDiagrams();
-
-							// Recalculate the dataset diagram based on the
-							// newly
-							// optimised dataset.
-							recalculateAllDataSetDiagrams();
-
-							// If we are showing an explanation diagram, repaint
-							// that too for the same reasons as the schema
-							// diagram.
-							if (currentExplanationDiagram != null)
-								currentExplanationDiagram.repaintDiagram();
+							recalculateDataSetDiagram((DataSet) column
+									.getTable().getSchema());
 
 							// Update the modified status for the tabset.
 							martTab.getMartTabSet().setModifiedStatus(true);

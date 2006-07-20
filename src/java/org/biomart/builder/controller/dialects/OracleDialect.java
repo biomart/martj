@@ -67,7 +67,7 @@ import org.biomart.builder.resources.Resources;
  * Understands how to create SQL and DDL for an Oracle database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 19th July 2006
+ * @version 0.1.5, 20th July 2006
  * @since 0.1
  */
 public class OracleDialect extends DatabaseDialect {
@@ -480,9 +480,8 @@ public class OracleDialect extends DatabaseDialect {
 				+ " as select ");
 		for (Iterator i = selectCols.iterator(); i.hasNext();) {
 			Column col = (Column) i.next();
-			sb.append(col.getName());
-			if (i.hasNext())
-				sb.append(',');
+			sb.append(col.getName());	
+			sb.append(',');
 		}
 		for (Iterator i = expressCols.iterator(); i.hasNext();) {
 			ExpressionColumn col = (ExpressionColumn) i.next();

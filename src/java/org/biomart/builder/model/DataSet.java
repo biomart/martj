@@ -60,7 +60,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.33, 19th July 2006
+ * @version 0.1.34, 20th July 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -165,29 +165,6 @@ public class DataSet extends GenericSchema {
 		} catch (Throwable t) {
 			throw new MartBuilderInternalError(t);
 		}
-	}
-
-	/**
-	 * <p>
-	 * This method removes all existing flags for masked and concat-only
-	 * relations.
-	 * <p>
-	 * In future, it may also suggest decent masking or concat-only candidates,
-	 * but this will not be done yet.
-	 * <p>
-	 * After all this, the dataset is regenerated so that it correctly reflects
-	 * the optimised relations.
-	 */
-	public void optimiseDataSet() {
-		// Clear out our previous predictions.
-		this.maskedRelations.clear();
-		this.concatOnlyRelations[0].clear();
-		this.concatOnlyRelations[1].clear();
-
-		// That's it! In future, more stuff may happen here.
-
-		// Regenerate the dataset.
-		this.regenerate();
 	}
 
 	/**
@@ -1823,10 +1800,6 @@ public class DataSet extends GenericSchema {
 
 			private Map aliases;
 
-			private String datatype;
-
-			private int datasize;
-
 			private boolean groupBy;
 
 			/**
@@ -1849,8 +1822,6 @@ public class DataSet extends GenericSchema {
 				// Set some defaults.
 				this.aliases = new TreeMap();
 				this.expr = "";
-				this.datatype = "";
-				this.datasize = 0;
 				this.groupBy = false;
 			}
 
@@ -1876,17 +1847,32 @@ public class DataSet extends GenericSchema {
 			}
 
 			/**
+			 * Drops all the unused aliases.
+			 */
+			public void dropUnusedAliases() {
+				List usedColumns = new ArrayList();
+				for (Iterator i = this.aliases.keySet().iterator(); i.hasNext();) {
+					WrappedColumn col = (WrappedColumn) i.next();
+					String alias = (String) this.aliases.get(col);
+					if (this.expr.indexOf(":" + alias) >= 0)
+						usedColumns.add(col);
+				}
+				// Drop the unused aliases.
+				this.aliases.keySet().retainAll(usedColumns);
+			}
+
+			/**
 			 * Returns the expression, <i>with</i> substitution. This value is
 			 * RDBMS-specific.
 			 * 
 			 * @return the substituted expression.
 			 */
 			public String getSubstitutedExpression() {
-				String sub = new String(this.expr);
+				String sub = this.expr;
 				for (Iterator i = this.aliases.keySet().iterator(); i.hasNext();) {
 					WrappedColumn wrapped = (WrappedColumn) i.next();
-					String alias = (String) this.aliases.get(wrapped);
-					sub.replaceAll(alias, wrapped.getName());
+					String alias = ":" + (String) this.aliases.get(wrapped);
+					sub = sub.replaceAll(alias, wrapped.getName());
 				}
 				return sub;
 			}
@@ -1909,45 +1895,6 @@ public class DataSet extends GenericSchema {
 			 */
 			public Map getAliases() {
 				return this.aliases;
-			}
-
-			/**
-			 * Sets the datatype. This value is RDBMS-specific.
-			 * 
-			 * @param datatype
-			 *            the datatype to use.
-			 */
-			public void setDatatype(String datatype) {
-				this.datatype = datatype;
-			}
-
-			/**
-			 * Retrieves the datatype for this column. This value is
-			 * RDBMS-specific.
-			 * 
-			 * @return the datatype for this column.
-			 */
-			public String getDatatype() {
-				return this.datatype;
-			}
-
-			/**
-			 * Sets the size to allocate for this column.
-			 * 
-			 * @param datasize
-			 *            the size to allocate for this column in the database.
-			 */
-			public void setDatasize(int datasize) {
-				this.datasize = datasize;
-			}
-
-			/**
-			 * Gets the size allocated for this column.
-			 * 
-			 * @return the allocated size.
-			 */
-			public int getDatasize() {
-				return this.datasize;
 			}
 
 			/**

@@ -50,7 +50,7 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
  * rather than the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.16, 20th June 2006
+ * @version 0.1.17, 20th July 2006
  * @since 0.1
  */
 public class WindowContext extends SchemaContext {
@@ -88,22 +88,8 @@ public class WindowContext extends SchemaContext {
 		// background behaves in the same way as the Schema objects in it.
 		if (object == null || (object instanceof Schema)) {
 
-			// Add a separator if there's other stuff before us.
-			if (contextMenu.getComponentCount() > 0)
-				contextMenu.addSeparator();
-
-			// A menu item which allows the schema to be optimised.
-			JMenuItem optimise = new JMenuItem(Resources
-					.get("optimiseDataSetTitle"));
-			optimise.setMnemonic(Resources.get("optimiseDataSetMnemonic")
-					.charAt(0));
-			optimise.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestOptimiseDataSet(
-							dataset);
-				}
-			});
-			contextMenu.add(optimise);
+			// None, yet.
+			
 		}
 
 		// This menu is attached to all table objects.

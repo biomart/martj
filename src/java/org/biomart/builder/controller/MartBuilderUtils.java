@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
@@ -59,7 +60,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.27, 19th July 2006
+ * @version 0.1.28, 20th July 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -69,17 +70,64 @@ public class MartBuilderUtils {
 	 */
 	private MartBuilderUtils() {
 	}
-	
+
 	/**
 	 * This method asks to remove a particular expression column.
-	 * @param column the expression column to remove.
+	 * 
+	 * @param column
+	 *            the expression column to remove.
 	 */
 	public static void removeExpressionColumn(ExpressionColumn column) {
 		column.getTable().removeColumn(column);
 	}
-	
-	// TODO the create expression column method.
-	
+
+	/**
+	 * This method asks to create a new expression column.
+	 * 
+	 * @param table
+	 *            the table to add the column to.
+	 * @param columnName
+	 *            the name to give the column.
+	 * @param columnAliases
+	 *            the map of columns on the table to labels in the expression.
+	 * @param expression
+	 *            the expression for the column.
+	 * @param groupBy
+	 *            whether this column requires a group-by statement. If it does,
+	 *            the group-by columns required will be worked out
+	 *            automatically.
+	 */
+	public static void addExpressionColumn(DataSetTable table,
+			String columnName, Map columnAliases, String expression,
+			boolean groupBy) throws AlreadyExistsException {
+		ExpressionColumn column = new ExpressionColumn(columnName, table);
+		column.getAliases().putAll(columnAliases);
+		column.setExpression(expression);
+		column.setGroupBy(groupBy);
+	}
+
+	/**
+	 * This method asks to modify an expression column.
+	 * 
+	 * @param column
+	 *            the column to modify.
+	 * @param columnAliases
+	 *            the map of columns on the table to labels in the expression.
+	 * @param expression
+	 *            the expression for the column.
+	 * @param groupBy
+	 *            whether this column requires a group-by statement. If it does,
+	 *            the group-by columns required will be worked out
+	 *            automatically.
+	 */
+	public static void modifyExpressionColumn(ExpressionColumn column,
+			Map columnAliases, String expression, boolean groupBy) throws AlreadyExistsException {
+		column.getAliases().clear();
+		column.getAliases().putAll(columnAliases);
+		column.setExpression(expression);
+		column.setGroupBy(groupBy);
+	}
+
 	/**
 	 * This method asks the mart to synchronise all its schemas against the data
 	 * sources or databases they represent.
@@ -177,36 +225,10 @@ public class MartBuilderUtils {
 	 *             if there is any trouble communicating with the data source or
 	 *             database during schema synchronisation.
 	 */
-	public static Collection suggestDataSets(Mart mart, Collection tables, String name)
-			throws SQLException, AssociationException, AlreadyExistsException {
+	public static Collection suggestDataSets(Mart mart, Collection tables,
+			String name) throws SQLException, AssociationException,
+			AlreadyExistsException {
 		return mart.suggestDataSets(tables, name);
-	}
-
-	/**
-	 * Optimises a dataset by going through and marking relations as
-	 * concat-only, or masking them, where they extend more than a certain
-	 * distance beyond the central table of the dataset. This will undo all
-	 * previous concat-only and masked relation operations.
-	 * 
-	 * @param dataset
-	 *            the dataset to optimise relations in.
-	 */
-	public static void optimiseDataSet(DataSet dataset) {
-		dataset.optimiseDataSet();
-	}
-
-	/**
-	 * Optimises all datasets by going through and marking relations as
-	 * concat-only, or masking them, where they extend more than a certain
-	 * distance beyond the central table of the dataset. This will undo all
-	 * previous concat-only and masked relation operations.
-	 * 
-	 * @param mart
-	 *            the mart in which the datasets live.
-	 */
-	public static void optimiseAllDataSets(Mart mart) {
-		for (Iterator i = mart.getDataSets().iterator(); i.hasNext();)
-			((DataSet) i.next()).optimiseDataSet();
 	}
 
 	/**

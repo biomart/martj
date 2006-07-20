@@ -65,7 +65,7 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.18, 12th July 2006
+ * @version 0.1.19, 20th July 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -1219,6 +1219,7 @@ public interface MartConstructor {
 				if (col instanceof ExpressionColumn) {
 					ExpressionColumn exp = (ExpressionColumn) col;
 					expressionColumns.add(exp);
+					exp.dropUnusedAliases();
 					if (exp.getGroupBy())
 						groupByDependentColumns.addAll(exp
 								.getDependentColumns());

@@ -34,7 +34,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * datasets tab.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 21st June 2006
+ * @version 0.1.3, 20th July 2006
  * @since 0.1
  */
 public class AllDataSetsContext implements DiagramContext {
@@ -67,21 +67,8 @@ public class AllDataSetsContext implements DiagramContext {
 		// that refer to all schemas.
 		if (object == null) {
 
-			// Add a separator if the menu is not empty.
-			if (contextMenu.getComponentCount() > 0)
-				contextMenu.addSeparator();
+			// Nothing, yet.
 
-			// Synchronise all schemas in the mart.
-			JMenuItem syncAll = new JMenuItem(Resources
-					.get("optimiseAllDataSetsTitle"));
-			syncAll.setMnemonic(Resources.get("optimiseAllDataSetsMnemonic")
-					.charAt(0));
-			syncAll.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					martTab.getDataSetTabSet().requestOptimiseAllDataSets();
-				}
-			});
-			contextMenu.add(syncAll);
 		}
 
 		// DataSet objects have different menus to the background.
@@ -106,18 +93,6 @@ public class AllDataSetsContext implements DiagramContext {
 				}
 			});
 			contextMenu.add(remove);
-
-			// Add an option to rename this dataset.
-			JMenuItem optimise = new JMenuItem(Resources
-					.get("optimiseDataSetTitle"));
-			optimise.setMnemonic(Resources.get("optimiseDataSetMnemonic")
-					.charAt(0));
-			optimise.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					martTab.getDataSetTabSet().requestOptimiseDataSet(dataset);
-				}
-			});
-			contextMenu.add(optimise);
 
 			// Add an option to rename this dataset.
 			JMenuItem rename = new JMenuItem(Resources

@@ -97,7 +97,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.22, 19th July 2006
+ * @version 0.1.23, 20th July 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -389,11 +389,6 @@ public class MartBuilderXML extends DefaultHandler {
 						((ExpressionColumn) column)
 								.setExpression((String) attributes
 										.get("expression"));
-						((ExpressionColumn) column)
-								.setDatatype((String) attributes
-										.get("datatype"));
-						((ExpressionColumn) column).setDatasize(Integer
-								.parseInt((String) attributes.get("datasize")));
 						((ExpressionColumn) column).setGroupBy(Boolean.valueOf(
 								(String) attributes.get("groupBy"))
 								.booleanValue());
@@ -1090,12 +1085,6 @@ public class MartBuilderXML extends DefaultHandler {
 						// Other properties.
 						this.writeAttribute("expression",
 								((ExpressionColumn) dcol).getExpression(),
-								xmlWriter);
-						this.writeAttribute("datatype",
-								((ExpressionColumn) dcol).getDatatype(),
-								xmlWriter);
-						this.writeAttribute("datasize", ""
-								+ ((ExpressionColumn) dcol).getDatasize(),
 								xmlWriter);
 						this.writeAttribute("groupBy", Boolean
 								.toString(((ExpressionColumn) dcol)

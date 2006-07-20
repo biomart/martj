@@ -39,7 +39,7 @@ import org.biomart.builder.resources.Resources;
  * mart. It also has zero or more datasets based around these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.16, 19th July 2006
+ * @version 0.1.17, 20th July 2006
  * @since 0.1
  */
 public class Mart {
@@ -247,10 +247,6 @@ public class Mart {
 			tablesIncluded.add(rootTable);
 			suggestedDataSets.add(this.continueSubclassing(includeTables,
 					tablesIncluded, name, dataset, rootTable));
-		}
-		// Optimise all the results.
-		for (Iterator i = suggestedDataSets.iterator(); i.hasNext();) {
-			((DataSet) i.next()).optimiseDataSet();
 		}
 		// If only one dataset in results, remove the _1 suffix.
 		if (suggestedDataSets.size()==1) {

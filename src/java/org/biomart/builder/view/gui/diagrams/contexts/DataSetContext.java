@@ -54,7 +54,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * org.biomart.builder.view.gui.diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.22, 19th July 2006
+ * @version 0.1.23, 20th July 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -94,19 +94,6 @@ public class DataSetContext extends WindowContext {
 				}
 			});
 			contextMenu.add(remove);
-
-			// Option to optimise the dataset.
-			JMenuItem optimise = new JMenuItem(Resources
-					.get("optimiseDataSetTitle"));
-			optimise.setMnemonic(Resources.get("optimiseDataSetMnemonic")
-					.charAt(0));
-			optimise.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestOptimiseDataSet(
-							getDataSet());
-				}
-			});
-			contextMenu.add(optimise);
 
 			// Option to rename the dataset.
 			JMenuItem rename = new JMenuItem(Resources
@@ -473,6 +460,19 @@ public class DataSetContext extends WindowContext {
 			// Else, if it's an expression column...
 			else if (column instanceof ExpressionColumn) {
 
+				// Option to modify column.
+				JMenuItem modify = new JMenuItem(Resources
+						.get("modifyExpressionColumnTitle"));
+				modify.setMnemonic(Resources.get(
+						"modifyExpressionColumnMnemonic").charAt(0));
+				modify.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						getMartTab().getDataSetTabSet()
+								.requestModifyExpressionColumn((ExpressionColumn) column);
+					}
+				});
+				contextMenu.add(modify);
+
 				// Option to remove column.
 				JMenuItem remove = new JMenuItem(Resources
 						.get("removeExpressionColumnTitle"));
@@ -481,8 +481,7 @@ public class DataSetContext extends WindowContext {
 				remove.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						getMartTab().getDataSetTabSet()
-								.requestRemoveExpressionColumn(getDataSet(),
-										(ExpressionColumn) column);
+								.requestRemoveExpressionColumn((ExpressionColumn) column);
 					}
 				});
 				contextMenu.add(remove);
