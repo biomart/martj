@@ -80,7 +80,7 @@ import org.biomart.builder.resources.Resources;
  * or keys, or to reinstate any that have previously been marked as incorrect.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.16, 19th July 2006
+ * @version 0.1.17, 21st July 2006
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -233,18 +233,20 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			if (this.password != null)
 				properties.setProperty("password", this.password);
 			this.connection = DriverManager.getConnection(this.url, properties);
-			
+
 			// Check the schema name.
 			DatabaseMetaData dmd = this.connection.getMetaData();
 			String catalog = this.connection.getCatalog();
 			ResultSet rs = dmd.getTables(catalog, this.schemaName, "%", null);
 			if (!rs.isBeforeFirst()) {
-				rs = dmd.getTables(catalog, this.schemaName.toUpperCase(), "%", null);
+				rs = dmd.getTables(catalog, this.schemaName.toUpperCase(), "%",
+						null);
 				if (rs.isBeforeFirst())
 					this.schemaName = this.schemaName.toUpperCase();
 			}
 			if (!rs.isBeforeFirst()) {
-				rs = dmd.getTables(catalog, this.schemaName.toUpperCase(), "%", null);
+				rs = dmd.getTables(catalog, this.schemaName.toUpperCase(), "%",
+						null);
 				if (rs.isBeforeFirst())
 					this.schemaName = this.schemaName.toLowerCase();
 			}
@@ -361,7 +363,8 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		List tablesToBeDropped = new ArrayList(this.tables.values());
 
 		// Load tables and views from database, then loop over them.
-		ResultSet dbTables = dmd.getTables(catalog, this.schemaName, "%", null);
+		ResultSet dbTables = dmd.getTables(catalog, this.schemaName, "%",
+				new String[] { "TABLE", "VIEW", "ALIAS", "SYNONYM" });
 
 		// Do the loop.
 		while (dbTables.next()) {

@@ -60,7 +60,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * {@link JDBCSchema} implementation which represents the connection.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 17th July 2006
+ * @version 0.1.7, 21st July 2006
  * @since 0.1
  */
 public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
@@ -84,7 +84,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		DRIVER_MAP.put("oracle.jdbc.driver.OracleDriver", new String[] {
 				"1531", "jdbc:oracle:thin:@<HOST>:<PORT>:<DATABASE>" });
 		DRIVER_MAP.put("org.postgresql.Driver", new String[] { "5432",
-				"jdbc:postgres://<HOST>:<PORT>/<DATABASE>" });
+				"jdbc:postgresql://<HOST>:<PORT>/<DATABASE>" });
 		// Names.
 		DRIVER_NAME_MAP.put(Resources.get("driverClassMySQL"),
 				"com.mysql.jdbc.Driver");
