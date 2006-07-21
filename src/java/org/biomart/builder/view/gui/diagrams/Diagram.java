@@ -43,10 +43,10 @@ import javax.swing.JViewport;
 
 import org.biomart.builder.model.Table;
 import org.biomart.builder.resources.Resources;
+import org.biomart.builder.view.gui.ComponentPrinter;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.DiagramComponent;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
-
 
 /**
  * <p>
@@ -64,7 +64,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * what those items should be.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.22, 14th July 2006
+ * @version 0.1.23, 21st July 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
@@ -266,6 +266,10 @@ public abstract class Diagram extends JPanel {
 				JOptionPane.QUESTION_MESSAGE, null, tables.toArray(), null);
 	}
 
+	private void printDiagram() {
+		new ComponentPrinter(this.getMartTab(), this).print();
+	}
+
 	private JPopupMenu getContextMenu() {
 		// This is the basic context menu that appears no matter where the user
 		// clicks.
@@ -285,6 +289,16 @@ public abstract class Diagram extends JPanel {
 			}
 		});
 		contextMenu.add(find);
+
+		// Add an item that allows the user to print this diagram.
+		JMenuItem print = new JMenuItem(Resources.get("printDiagramTitle"));
+		print.setMnemonic(Resources.get("printDiagramMnemonic").charAt(0));
+		print.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				printDiagram();
+			}
+		});
+		contextMenu.add(print);
 
 		// Return the completed context menu.
 		return contextMenu;

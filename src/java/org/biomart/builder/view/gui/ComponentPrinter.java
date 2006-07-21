@@ -1,0 +1,131 @@
+/*
+ Copyright (C) 2006 EBI
+ 
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+ 
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the itmplied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+ 
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+package org.biomart.builder.view.gui;
+
+import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
+
+import javax.swing.RepaintManager;
+import javax.swing.SwingUtilities;
+
+import org.biomart.builder.view.gui.MartTabSet.MartTab;
+
+/**
+ * Prints any given component.
+ * <p>
+ * Based on code from <a
+ * href="http://www.apl.jhu.edu/~hall/java/Swing-Tutorial/Swing-Tutorial-Printing.html">this
+ * Swing Tutorial</a>.
+ * 
+ * @author Richard Holland <holland@ebi.ac.uk>
+ * @version 0.1.1, 21st July 2006
+ * @since 0.1
+ */
+public class ComponentPrinter implements Printable {
+
+	private MartTab martTab;
+
+	private Component component;
+
+	/**
+	 * Constructs a component printer that is associated with the given mart
+	 * tab.
+	 * 
+	 * @param martTab
+	 *            the mart tab to associate it with.
+	 * @param component
+	 *            the component to print.
+	 */
+	public ComponentPrinter(MartTab martTab, Component component) {
+		this.component = component;
+		this.martTab = martTab;
+	}
+
+	/**
+	 * Pops up a printing dialog, and if the user completes it correctly, prints
+	 * the component.
+	 */
+	public void print() {
+		final PrinterJob printJob = PrinterJob.getPrinterJob();
+		printJob.setPrintable(this);
+		if (printJob.printDialog())
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					try {
+						printJob.print();
+					} catch (PrinterException pe) {
+						martTab.getMartTabSet().getMartBuilder()
+								.showStackTrace(pe);
+					}
+				}
+			});
+	}
+
+	public int print(Graphics g, PageFormat pageFormat, int pageIndex) {
+		// Work out the printable area.
+		Rectangle2D printableArea = new Rectangle2D.Double(pageFormat
+				.getImageableX(), pageFormat.getImageableY(), pageFormat
+				.getImageableWidth(), pageFormat.getImageableHeight());
+		// Simple scale to reduce component size.
+		double xscale = 0.5;
+		double yscale = 0.5;
+		// Work out pages required for the component we are drawing.
+		int pagesAcross = (int) Math.ceil((this.component.getWidth() * xscale)
+				/ printableArea.getWidth());
+		int pagesDown = (int) Math.ceil((this.component.getHeight() * yscale)
+				/ printableArea.getHeight());
+		int numPages = pagesAcross * pagesDown;
+		// If we are beyond the last page, we are done.
+		if (pageIndex >= numPages) {
+			// We only have one page, which contains the entire component.
+			return Printable.NO_SUCH_PAGE;
+		} else {
+			// Print the components.
+			Graphics2D g2d = (Graphics2D) g;
+			// Translate our output to the printable area.
+			g2d.translate(printableArea.getX(), printableArea.getY());
+			// What page are we being asked to print?
+			int pageXNum = pageIndex;
+			while (pageXNum >= pagesAcross)
+				pageXNum -= pagesAcross;
+			int pageYNum = pageIndex - pageXNum;
+			while (pageYNum >= pagesDown)
+				pageYNum -= pagesDown;
+			// Translate our output to focus on the required page.
+			g2d.translate(-printableArea.getWidth() * pageXNum * xscale,
+					-printableArea.getHeight() * pageYNum * yscale);
+			// Scale our output down a bit as otherwise the objects are
+			// huge on paper.
+			g2d.scale(xscale, yscale);
+			// Do the printing.
+			RepaintManager currentManager = RepaintManager
+					.currentManager(this.component);
+			currentManager.setDoubleBufferingEnabled(false);
+			this.component.printAll(g2d);
+			currentManager.setDoubleBufferingEnabled(true);
+			return Printable.PAGE_EXISTS;
+		}
+	}
+}
