@@ -41,7 +41,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * relations between them along fixed-space tracks between components.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 26th June 2006
+ * @version 0.1.2, 21st July 2006
  * @since 0.1
  */
 public class LinearLayout implements LayoutManager {
@@ -396,8 +396,8 @@ public class LinearLayout implements LayoutManager {
 				Rectangle bounds = new Rectangle(
 						(int) (x - LinearLayout.RELATION_SPACING),
 						(int) (y - LinearLayout.RELATION_SPACING),
-						(int) (width + LinearLayout.RELATION_SPACING),
-						(int) (height + LinearLayout.RELATION_SPACING));
+						(int) (width + LinearLayout.RELATION_SPACING * 2),
+						(int) (height + LinearLayout.RELATION_SPACING * 2));
 				comp.setBounds(bounds);
 
 				// Modify all the relation coords to be rooted at 0,0 of its
@@ -411,7 +411,7 @@ public class LinearLayout implements LayoutManager {
 				horizontalY -= bounds.y;
 
 				// Create a path to describe the relation shape.
-				GeneralPath path = new GeneralPath();
+				GeneralPath path = new GeneralPath(GeneralPath.WIND_EVEN_ODD, 6);
 
 				// Move to starting point at primary key.
 				path.moveTo(firstKeyX, firstKeyY);

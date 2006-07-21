@@ -19,6 +19,9 @@
 package org.biomart.builder.view.gui.diagrams.components;
 
 import java.awt.AWTEvent;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +32,6 @@ import javax.swing.JPopupMenu;
 
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
-
 
 /**
  * Any diagram component that is box-shaped is derived from this class. It
@@ -52,6 +54,8 @@ public abstract class BoxShapedComponent extends JPanel implements
 
 	private Object state;
 
+	private RenderingHints renderHints;
+
 	/**
 	 * Constructs a box-shaped component around the given model object to be
 	 * represented in the given diagram.
@@ -73,9 +77,21 @@ public abstract class BoxShapedComponent extends JPanel implements
 
 		// Make sure we're not transparent.
 		this.setOpaque(true);
-		
+
+		// Set-up rendering hints.
+		this.renderHints = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
+		this.renderHints.put(RenderingHints.KEY_RENDERING,
+				RenderingHints.VALUE_RENDER_QUALITY);
+
 		// Repaint ourselves.
 		this.updateAppearance();
+	}
+
+	public void paintComponent(Graphics g) {
+		Graphics2D g2d = (Graphics2D) g;
+		g2d.setRenderingHints(this.renderHints);
+		super.paintComponent(g2d);
 	}
 
 	public abstract void recalculateDiagramComponent();

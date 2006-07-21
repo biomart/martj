@@ -60,7 +60,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.34, 20th July 2006
+ * @version 0.1.35, 21st July 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -751,7 +751,6 @@ public class DataSet extends GenericSchema {
 	}
 
 	/**
-	 * <p>
 	 * This method recreates all the tables in the dataset, using the relation
 	 * flags as a guide as to how to treat each table it comes across in the
 	 * schema.
@@ -759,7 +758,7 @@ public class DataSet extends GenericSchema {
 	 * Columns that were masked or partitioned are preserved only if after
 	 * regeneration a column with the same name still exists in the same table.
 	 */
-	public void regenerate() {
+	private void regenerate() {
 		// Clear all our tables out as they will all be rebuilt.
 		this.tables.clear();
 

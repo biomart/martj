@@ -47,7 +47,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * circle around a centre point.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 27th June 2006
+ * @version 0.1.8, 21st July 2006
  * @since 0.1
  */
 public class RadialLayout implements LayoutManager {
@@ -346,47 +346,57 @@ public class RadialLayout implements LayoutManager {
 							+ (int) checkContainer.getY());
 					checkContainer = checkContainer.getParent();
 				}
-				
+
 				// Find midpoints of both keys.
-				Point firstKeyMidpoint = new Point(firstKeyRectangle.x + (firstKeyRectangle.width / 2),
-						firstKeyRectangle.y + (firstKeyRectangle.height / 2));
-				Point secondKeyMidpoint = new Point(secondKeyRectangle.x + (secondKeyRectangle.width / 2),
-						secondKeyRectangle.y + (secondKeyRectangle.height / 2));
-				
+				Point firstKeyMidpoint = new Point(firstKeyRectangle.x
+						+ (firstKeyRectangle.width / 2), firstKeyRectangle.y
+						+ (firstKeyRectangle.height / 2));
+				Point secondKeyMidpoint = new Point(secondKeyRectangle.x
+						+ (secondKeyRectangle.width / 2), secondKeyRectangle.y
+						+ (secondKeyRectangle.height / 2));
+
 				// Find average x-coord and y-coord of both midpoints.
 				int centreLineX = (firstKeyMidpoint.x + secondKeyMidpoint.x) / 2;
 				int centreLineY = (firstKeyMidpoint.y + secondKeyMidpoint.y) / 2;
-				
+
 				// Find start for first key, and tag position.
 				int firstY = firstKeyMidpoint.y;
 				int firstX;
 				int firstTagX;
-				if (Math.abs(firstKeyRectangle.x - centreLineX) < Math.abs(firstKeyRectangle.x+firstKeyRectangle.width - centreLineX)) {
+				if (Math.abs(firstKeyRectangle.x - centreLineX) < Math
+						.abs(firstKeyRectangle.x + firstKeyRectangle.width
+								- centreLineX)) {
 					firstX = firstKeyRectangle.x;
-					firstTagX = firstX - (int)RadialLayout.RELATION_TAGSIZE;
+					firstTagX = firstX - (int) RadialLayout.RELATION_TAGSIZE;
 				} else {
-					firstX = firstKeyRectangle.x+firstKeyRectangle.width;
-					firstTagX = firstX + (int)RadialLayout.RELATION_TAGSIZE;
+					firstX = firstKeyRectangle.x + firstKeyRectangle.width;
+					firstTagX = firstX + (int) RadialLayout.RELATION_TAGSIZE;
 				}
-				
+
 				// Find end for second key, and tag position.
 				int secondY = secondKeyMidpoint.y;
 				int secondX;
 				int secondTagX;
-				if (Math.abs(secondKeyRectangle.x - centreLineX) < Math.abs(secondKeyRectangle.x+secondKeyRectangle.width - centreLineX)) {
+				if (Math.abs(secondKeyRectangle.x - centreLineX) < Math
+						.abs(secondKeyRectangle.x + secondKeyRectangle.width
+								- centreLineX)) {
 					secondX = secondKeyRectangle.x;
-					secondTagX = secondX - (int)RadialLayout.RELATION_TAGSIZE;
+					secondTagX = secondX - (int) RadialLayout.RELATION_TAGSIZE;
 				} else {
-					secondX = secondKeyRectangle.x+secondKeyRectangle.width;
-					secondTagX = secondX + (int)RadialLayout.RELATION_TAGSIZE;
+					secondX = secondKeyRectangle.x + secondKeyRectangle.width;
+					secondTagX = secondX + (int) RadialLayout.RELATION_TAGSIZE;
 				}
-				
+
 				// Create a bounding box around the whole lot plus 1 step size
 				// each side for mouse-sensitivity's sake.
 				int x = Math.min(firstX, secondX);
 				int y = Math.min(firstY, secondY);
-				int width = Math.max(firstX+firstKeyRectangle.width, secondX+secondKeyRectangle.width) - x;
-				int height = Math.max(firstY+firstKeyRectangle.height, secondY+secondKeyRectangle.height) - y;
+				int width = Math.max(firstX + firstKeyRectangle.width, secondX
+						+ secondKeyRectangle.width)
+						- x;
+				int height = Math.max(firstY + firstKeyRectangle.height,
+						secondY + secondKeyRectangle.height)
+						- y;
 				Rectangle bounds = new Rectangle(x
 						- (int) RadialLayout.RELATION_TAGSIZE, y
 						- (int) RadialLayout.RELATION_TAGSIZE, width
@@ -406,7 +416,7 @@ public class RadialLayout implements LayoutManager {
 				secondY -= bounds.y;
 
 				// Create a path to describe the relation shape.
-				GeneralPath path = new GeneralPath();
+				GeneralPath path = new GeneralPath(GeneralPath.WIND_EVEN_ODD, 6);
 
 				// Move to starting point at primary key.
 				path.moveTo(firstX, firstY);

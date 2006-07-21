@@ -23,6 +23,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.event.MouseEvent;
@@ -42,7 +43,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * The line is defined by the layout manager.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.16, 26th June 2006
+ * @version 0.1.17, 21st July 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
@@ -56,7 +57,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	/**
 	 * Constant referring to the dash size of an optional relation line.
 	 */
-	public static final float RELATION_DASHSIZE = 5.0f; // 72 = 1 inch
+	public static final float RELATION_DASHSIZE = 7.0f; // 72 = 1 inch
 
 	/**
 	 * Constant referring to the mitre trim of a relation line.
@@ -143,15 +144,17 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 
 	private Shape shape;
 
-	private Shape strokedShape;
-
 	private Stroke stroke;
+
+	private Shape outline;
 
 	private Diagram diagram;
 
 	private Relation relation;
 
 	private Object state;
+
+	private RenderingHints renderHints;
 
 	/**
 	 * The constructor constructs an object around a given object, and
@@ -163,6 +166,13 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		this.diagram = diagram;
 		this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
 		this.recalculateDiagramComponent();
+
+		// Set-up rendering hints.
+		this.renderHints = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
+		this.renderHints.put(RenderingHints.KEY_RENDERING,
+				RenderingHints.VALUE_RENDER_QUALITY);
+
 		this.updateAppearance();
 	}
 
@@ -178,7 +188,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		this.setBackground(this.getForeground());
 		if (this.shape != null && !this.getStroke().equals(this.stroke)) {
 			this.stroke = this.getStroke();
-			this.strokedShape = this.stroke.createStrokedShape(this.shape);
+			this.outline = new BasicStroke().createStrokedShape(this.shape);
 			this.repaint();
 		}
 	}
@@ -242,12 +252,12 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	public boolean contains(int x, int y) {
 		// Clicks are on us if they are within a certain distance
 		// of the stroked shape.
-		return this.strokedShape != null
-				&& this.strokedShape.intersects(new Rectangle2D.Double(x
-						- RelationComponent.RELATION_LINEWIDTH, y
-						- RelationComponent.RELATION_LINEWIDTH,
-						RelationComponent.RELATION_LINEWIDTH * 2,
-						RelationComponent.RELATION_LINEWIDTH * 2));
+		return this.outline != null
+				&& this.outline.intersects(new Rectangle2D.Double(x
+						- RelationComponent.RELATION_LINEWIDTH * 2, y
+						- RelationComponent.RELATION_LINEWIDTH * 2,
+						RelationComponent.RELATION_LINEWIDTH * 4,
+						RelationComponent.RELATION_LINEWIDTH * 4));
 	}
 
 	public JPopupMenu getContextMenu() {
@@ -304,12 +314,13 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 
 	protected void paintComponent(Graphics g) {
 		Graphics2D g2d = (Graphics2D) g.create();
+		g2d.setRenderingHints(this.renderHints);
+		Shape clippingArea = g2d.getClip();
+		if (clippingArea!=null && !this.shape.intersects(clippingArea.getBounds2D())) return;
 		// Do painting of this component.
 		g2d.setColor(this.getForeground());
-		g2d.setStroke(this.getStroke());
-		g2d.draw(this.strokedShape);
-		g2d.setColor(this.getBackground());
-		g2d.fill(this.strokedShape);
+		g2d.setStroke(this.stroke);
+		g2d.draw(this.shape);
 		// Clean up.
 		g2d.dispose();
 	}
