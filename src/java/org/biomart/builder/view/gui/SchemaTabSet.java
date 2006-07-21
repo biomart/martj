@@ -66,7 +66,7 @@ import org.biomart.builder.view.gui.dialogs.SchemaManagerDialog;
  * has the same context applied.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.18, 27th June 2006
+ * @version 0.1.19, 21st July 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -239,7 +239,16 @@ public class SchemaTabSet extends JTabbedPane {
 					// schema after turning it on.
 					if (schema.getInternalRelations().size() == 0)
 						MartBuilderUtils.enableKeyGuessing(schema);
-
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
+				} finally {
+					// Must use a finally in case the schema gets created
+					// but won't sync.
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							// Create and add the tab representing this schema.
@@ -251,13 +260,6 @@ public class SchemaTabSet extends JTabbedPane {
 
 							// Set the dataset tabset status as modified.
 							martTab.getMartTabSet().setModifiedStatus(true);
-						}
-					});
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							martTab.getMartTabSet().getMartBuilder()
-									.showStackTrace(t);
 						}
 					});
 				}
@@ -339,9 +341,8 @@ public class SchemaTabSet extends JTabbedPane {
 									removeSchemaTab(schema);
 
 									// If the group is a new group, ie. contains
-									// only
-									// one schema, then add a tab to represent
-									// it.
+									// only one schema, then add a tab to 
+									// represent it.
 									if (group.getSchemas().size() == 1)
 										addSchemaTab(group);
 
@@ -349,12 +350,10 @@ public class SchemaTabSet extends JTabbedPane {
 									recalculateOverviewDiagram();
 
 									// Some datasets may have referred to the
-									// individual
-									// schema. As it is no longer individual,
-									// they will
-									// have been dropped, so the dataset tabset
-									// needs to
-									// be recalculated.
+									// individual schema. As it is no longer
+									// individual, they will have been dropped, 
+									// so the dataset tabset needs to be 
+									// recalculated.
 									martTab.getDataSetTabSet()
 											.recalculateDataSetTabs();
 

@@ -63,7 +63,7 @@ import org.biomart.builder.model.MartConstructorAction.Union;
  * Understands how to create SQL and DDL for a PostgreSQL database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 20th July 2006
+ * @version 0.1.4, 21st July 2006
  * @since 0.1
  */
 public class PostgreSQLDialect extends DatabaseDialect {
@@ -124,7 +124,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		List statements = new ArrayList();
 
 		if (includeComments)
-			statements.add("--" + action.getStatusMessage());
+			statements.add("# " + action.getStatusMessage());
 
 		try {
 			String className = action.getClass().getName();

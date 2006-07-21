@@ -179,16 +179,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		// the connection fully without actually having to read anything from
 		// it.
 		String catalog = connection.getCatalog();
-		String schema = this.schemaName;
-		ResultSet rs = dmd.getTables(catalog, schema, "%", null);
-		if (!rs.isBeforeFirst()) {
-			schema = schema.toUpperCase();
-			rs = dmd.getTables(catalog, schema, "%", null);
-		}
-		if (!rs.isBeforeFirst()) {
-			schema = schema.toLowerCase();
-			rs = dmd.getTables(catalog, schema, "%", null);
-		}
+		ResultSet rs = dmd.getTables(catalog, this.schemaName, "%", null);
 		boolean worked = rs.isBeforeFirst();
 		rs.close();
 
@@ -242,6 +233,22 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			if (this.password != null)
 				properties.setProperty("password", this.password);
 			this.connection = DriverManager.getConnection(this.url, properties);
+			
+			// Check the schema name.
+			DatabaseMetaData dmd = this.connection.getMetaData();
+			String catalog = this.connection.getCatalog();
+			ResultSet rs = dmd.getTables(catalog, this.schemaName, "%", null);
+			if (!rs.isBeforeFirst()) {
+				rs = dmd.getTables(catalog, this.schemaName.toUpperCase(), "%", null);
+				if (rs.isBeforeFirst())
+					this.schemaName = this.schemaName.toUpperCase();
+			}
+			if (!rs.isBeforeFirst()) {
+				rs = dmd.getTables(catalog, this.schemaName.toUpperCase(), "%", null);
+				if (rs.isBeforeFirst())
+					this.schemaName = this.schemaName.toLowerCase();
+			}
+			rs.close();
 		}
 
 		// Return the connection.
@@ -355,20 +362,6 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 		// Load tables and views from database, then loop over them.
 		ResultSet dbTables = dmd.getTables(catalog, this.schemaName, "%", null);
-		// Check for upper-case-sensitivity.
-		if (!dbTables.isBeforeFirst()) {
-			dbTables = dmd.getTables(catalog, this.schemaName.toUpperCase(),
-					"%", null);
-			if (dbTables.isBeforeFirst())
-				this.schemaName = this.schemaName.toUpperCase();
-		}
-		// Check for lower-case-sensitivity.
-		if (!dbTables.isBeforeFirst()) {
-			dbTables = dmd.getTables(catalog, this.schemaName.toLowerCase(),
-					"%", null);
-			if (dbTables.isBeforeFirst())
-				this.schemaName = this.schemaName.toLowerCase();
-		}
 
 		// Do the loop.
 		while (dbTables.next()) {

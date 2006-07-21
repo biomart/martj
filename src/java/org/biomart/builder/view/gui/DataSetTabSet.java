@@ -77,7 +77,7 @@ import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.31, 20th July 2006
+ * @version 0.1.32, 21st July 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -512,7 +512,7 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Given a table, suggest a series of optimised datasets that may be
+	 * Given a table, suggest a series of synchronised datasets that may be
 	 * possible for that table.
 	 * 
 	 * @param table
@@ -533,27 +533,13 @@ public class DataSetTabSet extends JTabbedPane {
 		// In the background, suggest the datasets.
 		LongProcess.run(new Runnable() {
 			public void run() {
+				Collection dss = null;
 				try {
 					// Suggest them.
-					final Collection dss = MartBuilderUtils.suggestDataSets(
-							martTab.getMart(), dialog.getSelectedTables(),
-							dialog.getDataSetName());
-
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							// For each one suggested, add a dataset tab for it.
-							for (Iterator i = dss.iterator(); i.hasNext();) {
-								DataSet dataset = (DataSet) i.next();
-								addDataSetTab(dataset);
-							}
-
-							// Update the overview diagram.
-							recalculateOverviewDiagram();
-
-							// Update the modified status for this tabset.
-							martTab.getMartTabSet().setModifiedStatus(true);
-						}
-					});
+					dss = MartBuilderUtils
+							.suggestDataSets(martTab.getMart(), dialog
+									.getSelectedTables(), dialog
+									.getDataSetName());
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -561,6 +547,28 @@ public class DataSetTabSet extends JTabbedPane {
 									.showStackTrace(t);
 						}
 					});
+				} finally {
+					// Must use a finally in case the dataset gets created
+					// but won't sync.
+					final Collection dssRef = dss;
+					if (dssRef != null)
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								// For each one suggested, add a dataset tab for
+								// it.
+								for (Iterator i = dssRef.iterator(); i
+										.hasNext();) {
+									DataSet dataset = (DataSet) i.next();
+									addDataSetTab(dataset);
+								}
+
+								// Update the overview diagram.
+								recalculateOverviewDiagram();
+
+								// Update the modified status for this tabset.
+								martTab.getMartTabSet().setModifiedStatus(true);
+							}
+						});
 				}
 			}
 		});
