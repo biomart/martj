@@ -49,6 +49,7 @@ import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
+import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
@@ -66,6 +67,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.WindowContext;
 import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.ExpressionColumnDialog;
 import org.biomart.builder.view.gui.dialogs.PartitionColumnDialog;
+import org.biomart.builder.view.gui.dialogs.RestrictedRelationDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
 
@@ -897,6 +899,197 @@ public class DataSetTabSet extends JTabbedPane {
 		} catch (Throwable t) {
 			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 		}
+	}
+
+	/**
+	 * Asks for a relation restriction to be added to the dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset we are dealing with.
+	 * @param relation
+	 *            the relation to add a restriction to.
+	 */
+	public void requestAddRelationRestriction(final DataSet dataset,
+			final Relation relation) {
+		RestrictedRelationDialog dialog = new RestrictedRelationDialog(
+				this.martTab, relation, null);
+		dialog.show();
+		// Cancelled?
+		if (dialog.getCancelled())
+			return;
+		// Get the details.
+		final Map firstColumnAliases = dialog.getFirstColumnAliases();
+		final Map secondColumnAliases = dialog.getSecondColumnAliases();
+		final String expression = dialog.getExpression();
+		// Do this in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Add the restriction.
+					MartBuilderUtils
+							.restrictRelation(dataset, relation, expression,
+									firstColumnAliases, secondColumnAliases);
+
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// If it is an internal relation, repaint the schema
+							// diagram.
+							if (!relation.isExternal())
+								martTab.getSchemaTabSet().repaintSchemaDiagram(
+										relation.getFirstKey().getTable()
+												.getSchema());
+
+							// Otherwise, it is external, so repaint the schema
+							// overview
+							// diagram.
+							else
+								martTab.getSchemaTabSet()
+										.repaintOverviewDiagram();
+
+							// Update the explanation diagram so that it
+							// correctly
+							// reflects the changed relation.
+							if (currentExplanationDiagram != null)
+								currentExplanationDiagram.repaintDiagram();
+
+							// Update the modified status for the tabset.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Asks for a relation restriction to be modified.
+	 * 
+	 * @param dataset
+	 *            the dataset we are working with.
+	 * @param relation
+	 *            the relation to modify the restriction for.
+	 * @param restriction
+	 *            the existing restriction.
+	 */
+	public void requestModifyRelationRestriction(final DataSet dataset,
+			final Relation relation, DataSetRelationRestriction restriction) {
+		RestrictedRelationDialog dialog = new RestrictedRelationDialog(
+				this.martTab, relation, restriction);
+		dialog.show();
+		// Cancelled?
+		if (dialog.getCancelled())
+			return;
+		// Get updated details from the user.
+		final Map firstColumnAliases = dialog.getFirstColumnAliases();
+		final Map secondColumnAliases = dialog.getSecondColumnAliases();
+		final String expression = dialog.getExpression();
+		// Do this in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Update the restriction.
+					MartBuilderUtils
+							.restrictRelation(dataset, relation, expression,
+									firstColumnAliases, secondColumnAliases);
+
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// If it is an internal relation, repaint the schema
+							// diagram.
+							if (!relation.isExternal())
+								martTab.getSchemaTabSet().repaintSchemaDiagram(
+										relation.getFirstKey().getTable()
+												.getSchema());
+
+							// Otherwise, it is external, so repaint the schema
+							// overview
+							// diagram.
+							else
+								martTab.getSchemaTabSet()
+										.repaintOverviewDiagram();
+
+							// Update the explanation diagram so that it
+							// correctly
+							// reflects the changed relation.
+							if (currentExplanationDiagram != null)
+								currentExplanationDiagram.repaintDiagram();
+
+							// Update the modified status for the tabset.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Asks for a relation restriction to be removed.
+	 * 
+	 * @param dataset
+	 *            the dataset we are working with.
+	 * @param relation
+	 *            the relation to unrestrict.
+	 */
+	public void requestRemoveRelationRestriction(final DataSet dataset,
+			final Relation relation) {
+		// Do this in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Remove the restriction.
+					MartBuilderUtils.unrestrictRelation(dataset, relation);
+
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// If it is an internal relation, repaint the schema
+							// diagram.
+							if (!relation.isExternal())
+								martTab.getSchemaTabSet().repaintSchemaDiagram(
+										relation.getFirstKey().getTable()
+												.getSchema());
+
+							// Otherwise, it is external, so repaint the schema
+							// overview
+							// diagram.
+							else
+								martTab.getSchemaTabSet()
+										.repaintOverviewDiagram();
+
+							// Update the explanation diagram so that it
+							// correctly
+							// reflects the changed relation.
+							if (currentExplanationDiagram != null)
+								currentExplanationDiagram.repaintDiagram();
+
+							// Update the modified status for the tabset.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
 	}
 
 	/**

@@ -43,6 +43,7 @@ import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
@@ -67,7 +68,7 @@ import org.biomart.builder.resources.Resources;
  * Understands how to create SQL and DDL for an Oracle database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 21st July 2006
+ * @version 0.1.7, 24th July 2006
  * @since 0.1
  */
 public class OracleDialect extends DatabaseDialect {
@@ -351,10 +352,12 @@ public class OracleDialect extends DatabaseDialect {
 				.getDataSetSchemaName()
 				: action.getSelectFromTableSchema().getName();
 		String fromTableName = action.getSelectFromTableName();
+		boolean useDistinct = action.isUseDistinct();
 
 		StringBuffer sb = new StringBuffer();
 		sb.append("create table " + createTableSchema + "." + createTableName
 				+ " as select ");
+		if (useDistinct) sb.append("distinct ");
 		for (Iterator i = action.getSelectFromColumns().iterator(); i.hasNext();) {
 			Column col = (Column) i.next();
 			if (action.isUseAliases()) {
@@ -420,10 +423,15 @@ public class OracleDialect extends DatabaseDialect {
 				.getDataSetSchemaName() : action.getMergedTableSchema()
 				.getName();
 		String mergeTableName = action.getMergedTableName();
+		DataSetRelationRestriction restriction = action.getRelationRestriction();
+		boolean firstIsSource = action.isFirstTableSourceTable();
+		boolean useDistinct = action.isUseDistinct();
 
 		StringBuffer sb = new StringBuffer();
 		sb.append("create table " + mergeSchemaName + "." + mergeTableName
-				+ " as select a.*");
+				+ " as select ");
+		if (useDistinct) sb.append("distinct ");
+		sb.append("a.*");
 		for (Iterator i = action.getTargetTableColumns().iterator(); i
 				.hasNext();) {
 			sb.append(",b.");
@@ -456,6 +464,12 @@ public class OracleDialect extends DatabaseDialect {
 			String fkColName = ((Column) action.getTargetTableKeyColumns().get(
 					i)).getName();
 			sb.append("a." + pkColName + "=b." + fkColName);
+		}
+		// Do restriction.
+		if (restriction!=null) {
+			sb.append(" where ");
+			sb.append(restriction.getSubstitutedExpression(
+					firstIsSource?"a":"b",firstIsSource?"b":"a"));
 		}
 
 		statements.add(sb.toString());
@@ -519,7 +533,9 @@ public class OracleDialect extends DatabaseDialect {
 				.getDataSetSchemaName()
 				: action.getConcatTableSchema().getName();
 		String concatTableName = action.getConcatTableName();
-		ConcatRelationType crType = action.getConcatRelationType();
+		ConcatRelationType crType = action.getConcatRelationType();	
+		DataSetRelationRestriction restriction = action.getRelationRestriction();
+		boolean firstIsSource = action.isFirstTableSourceTable();
 
 		StringBuffer sb = new StringBuffer();
 
@@ -571,6 +587,15 @@ public class OracleDialect extends DatabaseDialect {
 					i)).getName();
 			sb.append("a." + pkColName + "=b." + fkColName);
 		}
+		
+		// Do restriction.
+		if (restriction!=null) {
+			sb.append(" where ");
+			sb.append(restriction.getSubstitutedExpression(
+					firstIsSource?"a":"b",firstIsSource?"b":"a"));
+		}
+		
+		// Do group-by.
 		sb.append(" group by ");
 		for (Iterator i = srcTableKeyCols.iterator(); i.hasNext();) {
 			Column srcKeyCol = (Column) i.next();

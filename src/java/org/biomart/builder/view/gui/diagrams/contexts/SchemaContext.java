@@ -52,7 +52,7 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
  * dataset onto a set of masked relations.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.20, 14th July 2006
+ * @version 0.1.24, 24th July 2006
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
@@ -585,6 +585,24 @@ public class SchemaContext implements DiagramContext {
 			// All others are normal.
 			else
 				component.setForeground(RelationComponent.NORMAL_COLOUR);
+			
+			// Do the stroke.
+			RelationComponent relcomp = (RelationComponent)component;
+			if (relation.isOptional()) {
+				if (relation.isOneToOne())
+					relcomp.setStroke(RelationComponent.ONE_ONE_OPTIONAL);
+				else if (relation.isManyToMany())
+					relcomp.setStroke(RelationComponent.MANY_MANY_OPTIONAL);
+				else
+					relcomp.setStroke(RelationComponent.ONE_MANY_OPTIONAL);
+			} else {
+				if (relation.isOneToOne())
+					relcomp.setStroke(RelationComponent.ONE_ONE);
+				else if (relation.isManyToMany())
+					relcomp.setStroke(RelationComponent.MANY_MANY);
+				else
+					relcomp.setStroke(RelationComponent.ONE_MANY);
+			}
 		}
 
 		// Keys also get pretty colours for being incorrect or handmade.

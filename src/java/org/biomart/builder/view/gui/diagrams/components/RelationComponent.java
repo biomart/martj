@@ -43,7 +43,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * The line is defined by the layout manager.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 21st July 2006
+ * @version 0.1.18, 24th July 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
@@ -58,6 +58,11 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	 * Constant referring to the dash size of an optional relation line.
 	 */
 	public static final float RELATION_DASHSIZE = 7.0f; // 72 = 1 inch
+
+	/**
+	 * Constant referring to the dot size of a restricted relation line.
+	 */
+	public static final float RELATION_DOTSIZE = 3.0f; // 72 = 1 inch
 
 	/**
 	 * Constant referring to the mitre trim of a relation line.
@@ -142,6 +147,39 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 			new float[] { RelationComponent.RELATION_DASHSIZE,
 					RelationComponent.RELATION_DASHSIZE }, 0);
 
+	/**
+	 * Constant defining our restricted 1:M stroke.
+	 */
+	public static final Stroke ONE_MANY_RESTRICTED = new BasicStroke(
+			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
+			new float[] { RelationComponent.RELATION_DASHSIZE,
+					RelationComponent.RELATION_DOTSIZE,
+					RelationComponent.RELATION_DOTSIZE,
+					RelationComponent.RELATION_DOTSIZE }, 0);
+
+	/**
+	 * Constant defining our restricted 1:1 stroke.
+	 */
+	public static final Stroke ONE_ONE_RESTRICTED = new BasicStroke(
+			RelationComponent.RELATION_LINEWIDTH * 2.0f, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
+			new float[] { RelationComponent.RELATION_DASHSIZE,
+					RelationComponent.RELATION_DOTSIZE,
+					RelationComponent.RELATION_DOTSIZE,
+					RelationComponent.RELATION_DOTSIZE }, 0);
+
+	/**
+	 * Constant defining our restricted M:M stroke.
+	 */
+	public static final Stroke MANY_MANY_RESTRICTED = new BasicStroke(
+			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
+			new float[] { RelationComponent.RELATION_DASHSIZE,
+					RelationComponent.RELATION_DOTSIZE,
+					RelationComponent.RELATION_DOTSIZE,
+					RelationComponent.RELATION_DOTSIZE }, 0);
+
 	private Shape shape;
 
 	private Stroke stroke;
@@ -186,8 +224,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		if (mod != null)
 			mod.customiseAppearance(this, this.getObject());
 		this.setBackground(this.getForeground());
-		if (this.shape != null && !this.getStroke().equals(this.stroke)) {
-			this.stroke = this.getStroke();
+		if (this.stroke != null && this.shape != null) {
 			this.outline = new BasicStroke().createStrokedShape(this.shape);
 			this.repaint();
 		}
@@ -245,7 +282,6 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	 */
 	public void setShape(Shape shape) {
 		this.shape = shape;
-		this.stroke = null;
 		this.updateAppearance();
 	}
 
@@ -294,29 +330,21 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 			super.processMouseEvent(evt);
 	}
 
-	private Stroke getStroke() {
-		if (this.relation.isOptional()) {
-			if (this.relation.isOneToOne())
-				return RelationComponent.ONE_ONE_OPTIONAL;
-			else if (this.relation.isManyToMany())
-				return RelationComponent.MANY_MANY_OPTIONAL;
-			else
-				return RelationComponent.ONE_MANY_OPTIONAL;
-		} else {
-			if (this.relation.isOneToOne())
-				return RelationComponent.ONE_ONE;
-			else if (this.relation.isManyToMany())
-				return RelationComponent.MANY_MANY;
-			else
-				return RelationComponent.ONE_MANY;
-		}
+	/**
+	 * Updates the stroke of this relation.
+	 * @param stroke the stroke to use for this relation.
+	 */
+	public void setStroke(Stroke stroke) {
+		this.stroke = stroke;
 	}
-
+	
 	protected void paintComponent(Graphics g) {
 		Graphics2D g2d = (Graphics2D) g.create();
 		g2d.setRenderingHints(this.renderHints);
 		Shape clippingArea = g2d.getClip();
-		if (clippingArea!=null && !this.shape.intersects(clippingArea.getBounds2D())) return;
+		if (clippingArea != null
+				&& !this.shape.intersects(clippingArea.getBounds2D()))
+			return;
 		// Do painting of this component.
 		g2d.setColor(this.getForeground());
 		g2d.setStroke(this.stroke);

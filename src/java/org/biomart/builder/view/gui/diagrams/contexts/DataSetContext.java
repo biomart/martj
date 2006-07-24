@@ -54,7 +54,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * org.biomart.builder.view.gui.diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.23, 20th July 2006
+ * @version 0.1.24, 24th July 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -509,6 +509,10 @@ public class DataSetContext extends WindowContext {
 			// All the rest are normal.
 			else
 				component.setForeground(RelationComponent.NORMAL_COLOUR);
+			
+			// Do the stroke.
+			RelationComponent relcomp = (RelationComponent)component;
+			relcomp.setStroke(RelationComponent.ONE_MANY);
 		}
 
 		// Is it a table?

@@ -42,7 +42,6 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 
-
 /**
  * This context applies to the general schema view, as seen when a dataset tab
  * has been selected. It allows dataset-specific things such as masked relations
@@ -50,7 +49,7 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
  * rather than the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 20th July 2006
+ * @version 0.1.18, 24th July 2006
  * @since 0.1
  */
 public class WindowContext extends SchemaContext {
@@ -77,7 +76,7 @@ public class WindowContext extends SchemaContext {
 	 * 
 	 * @return our dataset.
 	 */
-	protected DataSet getDataSet() {
+	public DataSet getDataSet() {
 		return this.dataset;
 	}
 
@@ -89,7 +88,7 @@ public class WindowContext extends SchemaContext {
 		if (object == null || (object instanceof Schema)) {
 
 			// None, yet.
-			
+
 		}
 
 		// This menu is attached to all table objects.
@@ -378,6 +377,57 @@ public class WindowContext extends SchemaContext {
 			if (incorrect || relation.isOneToOne() || relationMasked
 					|| relationSubclassed)
 				concatSubmenu.setEnabled(false);
+
+			// If it's a restricted column...
+			if (this.dataset.getRestrictedRelations().contains(relation)) {
+
+				// Option to modify restriction.
+				JMenuItem modify = new JMenuItem(Resources
+						.get("modifyRelationRestrictionTitle"));
+				modify.setMnemonic(Resources.get(
+						"modifyRelationRestrictionMnemonic").charAt(0));
+				modify.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						getMartTab()
+								.getDataSetTabSet()
+								.requestModifyRelationRestriction(
+										dataset,
+										relation,
+										dataset
+												.getRestrictedRelationType(relation));
+					}
+				});
+				contextMenu.add(modify);
+
+				// Option to remove restriction.
+				JMenuItem remove = new JMenuItem(Resources
+						.get("removeRelationRestrictionTitle"));
+				remove.setMnemonic(Resources.get(
+						"removeRelationRestrictionMnemonic").charAt(0));
+				remove.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						getMartTab().getDataSetTabSet()
+								.requestRemoveRelationRestriction(dataset,
+										relation);
+					}
+				});
+				contextMenu.add(remove);
+
+			} else {
+
+				// Add a relation restriction.
+				JMenuItem restriction = new JMenuItem(Resources
+						.get("addRelationRestrictionTitle"));
+				restriction.setMnemonic(Resources.get(
+						"addRelationRestrictionMnemonic").charAt(0));
+				restriction.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						getMartTab().getDataSetTabSet()
+								.requestAddRelationRestriction(dataset, relation);
+					}
+				});
+				contextMenu.add(restriction);
+			}
 		}
 
 		// This submenu applies when keys are clicked on.
@@ -420,6 +470,31 @@ public class WindowContext extends SchemaContext {
 			// All others are normal.
 			else
 				component.setForeground(RelationComponent.NORMAL_COLOUR);
+
+			// Do the stroke.
+			RelationComponent relcomp = (RelationComponent) component;
+			if (relation.isOptional()) {
+				if (relation.isOneToOne())
+					relcomp.setStroke(RelationComponent.ONE_ONE_OPTIONAL);
+				else if (relation.isManyToMany())
+					relcomp.setStroke(RelationComponent.MANY_MANY_OPTIONAL);
+				else
+					relcomp.setStroke(RelationComponent.ONE_MANY_OPTIONAL);
+			} else if (this.dataset.getRestrictedRelations().contains(relation)) {
+				if (relation.isOneToOne())
+					relcomp.setStroke(RelationComponent.ONE_ONE_RESTRICTED);
+				else if (relation.isManyToMany())
+					relcomp.setStroke(RelationComponent.MANY_MANY_RESTRICTED);
+				else
+					relcomp.setStroke(RelationComponent.ONE_MANY_RESTRICTED);
+			} else {
+				if (relation.isOneToOne())
+					relcomp.setStroke(RelationComponent.ONE_ONE);
+				else if (relation.isManyToMany())
+					relcomp.setStroke(RelationComponent.MANY_MANY);
+				else
+					relcomp.setStroke(RelationComponent.ONE_MANY);
+			}
 		}
 
 		// This section customises the appearance of key objects within

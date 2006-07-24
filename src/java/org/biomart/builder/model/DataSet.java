@@ -60,7 +60,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.35, 21st July 2006
+ * @version 0.1.36, 24th July 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -83,6 +83,10 @@ public class DataSet extends GenericSchema {
 
 	// Use double-List to avoid problems with hashcodes changing.
 	private final List[] concatOnlyRelations = new List[] { new ArrayList(),
+			new ArrayList() };
+
+	// Use double-List to avoid problems with hashcodes changing.
+	private final List[] restrictedRelations = new List[] { new ArrayList(),
 			new ArrayList() };
 
 	private DataSetOptimiserType optimiser;
@@ -155,6 +159,12 @@ public class DataSet extends GenericSchema {
 				PartitionedColumnType type = (PartitionedColumnType) this.partitionedWrappedColumns[1]
 						.get(i);
 				newDataSet.flagPartitionedWrappedColumn(col, type);
+			}
+			for (int i = 0; i < this.restrictedRelations[0].size(); i++) {
+				Relation rel = (Relation) this.restrictedRelations[0].get(i);
+				DataSetRelationRestriction restriction = (DataSetRelationRestriction) this.restrictedRelations[1]
+						.get(i);
+				newDataSet.flagRestrictedRelation(rel, restriction);
 			}
 
 			// Synchronise it.
@@ -547,6 +557,71 @@ public class DataSet extends GenericSchema {
 	}
 
 	/**
+	 * Mark a relation as restricted. If previously marked as restricted, this
+	 * call will override the previous request.
+	 * 
+	 * @param relation
+	 *            the relation to mark as restricted.
+	 * @param restriction
+	 *            the restriction to use for the relation.
+	 */
+	public void flagRestrictedRelation(Relation relation,
+			DataSetRelationRestriction restriction) {
+		// Restrict the relation. If the relation has already been restricted,
+		// this will override the type.
+		int index = this.restrictedRelations[0].indexOf(relation);
+		if (index >= 0) {
+			this.restrictedRelations[0].set(index, relation);
+			this.restrictedRelations[1].set(index, restriction);
+		} else {
+			this.restrictedRelations[0].add(relation);
+			this.restrictedRelations[1].add(restriction);
+		}
+	}
+
+	/**
+	 * Unmark a relation as restricted.
+	 * 
+	 * @param relation
+	 *            the relation to unmark.
+	 */
+	public void unflagRestrictedRelation(Relation relation) {
+		int index = this.restrictedRelations[0].indexOf(relation);
+		if (index >= 0) {
+			this.restrictedRelations[0].remove(relation);
+			this.restrictedRelations[1].remove(relation);
+		}
+	}
+
+	/**
+	 * Return the set of restricted relations. It may be empty, but never null.
+	 * 
+	 * @return the set of restricted relations.
+	 */
+	public Collection getRestrictedRelations() {
+		return this.restrictedRelations[0];
+	}
+
+	/**
+	 * Return the restriction for a restricted relation. It will return null if
+	 * there is no such restricted relation.
+	 * 
+	 * @param relation
+	 *            the relation to check the restriction type for.
+	 * @return the restriction type of the relation, or null if it is not
+	 *         restricted.
+	 */
+	public DataSetRelationRestriction getRestrictedRelationType(
+			Relation relation) {
+		int index = this.restrictedRelations[0].indexOf(relation);
+		if (index >= 0)
+			return (DataSetRelationRestriction) this.restrictedRelations[1]
+					.get(index);
+		else
+			return null;
+	}
+
+	/**
 	 * Mark a relation as concat-only. If previously marked concat-only, this
 	 * new call will override the previous request. If the relation is not 1:M,
 	 * or the M end does not have a primary key, the call will fail.
@@ -638,6 +713,7 @@ public class DataSet extends GenericSchema {
 		Set deadRelations = new HashSet(this.maskedRelations);
 		deadRelations.addAll(this.subclassedRelations);
 		deadRelations.addAll(this.concatOnlyRelations[0]);
+		deadRelations.addAll(this.restrictedRelations[0]);
 
 		// Iterate through tables in each schema. For each table,
 		// find all the relations on that table and remove them
@@ -657,6 +733,7 @@ public class DataSet extends GenericSchema {
 			this.maskedRelations.remove(r);
 			this.unflagSubclassRelation(r);
 			this.unflagConcatOnlyRelation(r);
+			this.unflagRestrictedRelation(r);
 		}
 
 		// Remember the names for renamed tables and columns.
@@ -716,16 +793,16 @@ public class DataSet extends GenericSchema {
 		for (Iterator i = expressionColumns.iterator(); i.hasNext();) {
 			ExpressionColumn oldExpCol = (ExpressionColumn) i.next();
 			// Work out what table it came from. Gone? Drop.
-			DataSetTable expColTable = (DataSetTable) this
+			DataSetTable newExpColTable = (DataSetTable) this
 					.getTableByName(oldExpCol.getTable().getName());
-			if (expColTable == null)
+			if (newExpColTable == null)
 				continue;
 			// Get all the dependent columns. Any gone? Drop.
 			boolean allFound = true;
 			Map newDependencies = new TreeMap();
 			for (Iterator j = oldExpCol.getAliases().keySet().iterator(); j
 					.hasNext();) {
-				WrappedColumn dependency = (WrappedColumn) expColTable
+				WrappedColumn dependency = (WrappedColumn) newExpColTable
 						.getColumnByName(((WrappedColumn) j.next()).getName());
 				String alias = (String) oldExpCol.getAliases().get(dependency);
 				if (dependency == null)
@@ -737,9 +814,11 @@ public class DataSet extends GenericSchema {
 				continue;
 			// Create a new ExpressionColumn based on the new columns.
 			try {
-				ExpressionColumn expCol = new ExpressionColumn(oldExpCol
-						.getName(), expColTable);
-				expCol.getAliases().putAll(newDependencies);
+				ExpressionColumn newExpCol = new ExpressionColumn(oldExpCol
+						.getName(), newExpColTable);
+				newExpCol.getAliases().putAll(newDependencies);
+				newExpCol.setExpression(oldExpCol.getExpression());
+				newExpCol.setGroupBy(oldExpCol.getGroupBy());
 				for (Iterator j = newDependencies.keySet().iterator(); j
 						.hasNext();)
 					((WrappedColumn) j.next()).setDependency(true);
@@ -748,6 +827,69 @@ public class DataSet extends GenericSchema {
 				throw new MartBuilderInternalError(t);
 			}
 		}
+
+		// Regenerate all the columns in the restricted relations,
+		// and remove any restrictions that reference columns that
+		// no longer exist.
+		List deadRelationRestrictions = new ArrayList();
+		for (int i = 0; i < this.restrictedRelations[0].size(); i++) {
+			Relation rel = (Relation) this.restrictedRelations[0].get(i);
+			DataSetRelationRestriction restriction = (DataSetRelationRestriction) this.restrictedRelations[1]
+					.get(i);
+			// First table.
+			List oldAliases = new ArrayList(restriction.getFirstTableAliases()
+					.keySet());
+			boolean destroy = false;
+			for (Iterator j = oldAliases.iterator(); j.hasNext() && !destroy;) {
+				Column oldCol = (Column) j.next();
+				Table newTbl = oldCol.getTable().getSchema().getTableByName(
+						oldCol.getTable().getName());
+				if (newTbl == null)
+					destroy = true;
+				else {
+					String alias = (String) restriction.getFirstTableAliases()
+							.get(oldCol);
+					Column newCol = (Column) newTbl.getColumnByName(oldCol
+							.getName());
+					if (newCol == null)
+						destroy = true;
+					else {
+						restriction.getFirstTableAliases().remove(oldCol);
+						restriction.getFirstTableAliases().put(newCol, alias);
+					}
+				}
+			}
+			if (destroy)
+				deadRelationRestrictions.add(rel);
+			// Second table.
+			oldAliases = new ArrayList(restriction.getSecondTableAliases()
+					.keySet());
+			destroy = false;
+			for (Iterator j = oldAliases.iterator(); j.hasNext() && !destroy;) {
+				Column oldCol = (Column) j.next();
+				Table newTbl = oldCol.getTable().getSchema().getTableByName(
+						oldCol.getTable().getName());
+				if (newTbl == null)
+					destroy = true;
+				else {
+					String alias = (String) restriction.getSecondTableAliases()
+							.get(oldCol);
+					Column newCol = (Column) newTbl.getColumnByName(oldCol
+							.getName());
+					if (newCol == null)
+						destroy = true;
+					else {
+						restriction.getSecondTableAliases().remove(oldCol);
+						restriction.getSecondTableAliases().put(newCol, alias);
+					}
+				}
+			}
+			if (destroy)
+				deadRelationRestrictions.add(rel);
+		}
+		// Remove the dead ones that reference columns that no longer exist.
+		for (Iterator i = deadRelationRestrictions.iterator(); i.hasNext();)
+			this.unflagRestrictedRelation((Relation) i.next());
 	}
 
 	/**
@@ -2051,6 +2193,126 @@ public class DataSet extends GenericSchema {
 		public boolean equals(Object o) {
 			// We are dealing with singletons so can use == happily.
 			return o == this;
+		}
+	}
+
+	/**
+	 * Defines the restriction on a relation, ie. a where-clause.
+	 */
+	public static class DataSetRelationRestriction {
+
+		private String expr;
+
+		private Map firstTableAliases;
+
+		private Map secondTableAliases;
+
+		/**
+		 * This constructor gives the restriction an initial expression and two
+		 * sets of aliases. The expression may not be empty, and the combination
+		 * of the two alias maps may not be either.
+		 * 
+		 * @param expr
+		 *            the expression to define for this restriction.
+		 * @param firstTableAliases
+		 *            the aliases to use for columns in the first table of the
+		 *            relation this restriction refers to.
+		 * @param secondTableAliases
+		 *            the aliases to use for columns in the second table of the
+		 *            relation this restriction refers to.
+		 */
+		public DataSetRelationRestriction(String expr, Map firstTableAliases,
+				Map secondTableAliases) {
+			// Test for good arguments.
+			if (expr == null || expr.trim().length() == 0)
+				throw new IllegalArgumentException(Resources
+						.get("relRestrictMissingExpression"));
+			if (firstTableAliases == null || firstTableAliases.isEmpty()
+					|| secondTableAliases == null
+					|| secondTableAliases.isEmpty())
+				throw new IllegalArgumentException(Resources
+						.get("relRestrictMissingAliases"));
+
+			// Remember the settings.
+			this.firstTableAliases = new TreeMap();
+			this.firstTableAliases.putAll(firstTableAliases);
+			this.secondTableAliases = new TreeMap();
+			this.secondTableAliases.putAll(secondTableAliases);
+			this.expr = expr;
+		}
+
+		/**
+		 * The actual expression. The values from the alias maps will be used to
+		 * refer to various columns. This value is RDBMS-specific.
+		 * 
+		 * @param expr
+		 *            the actual expression to use.
+		 */
+		public void setExpression(String expr) {
+			this.expr = expr;
+		}
+
+		/**
+		 * Returns the expression, <i>without</i> substitution. This value is
+		 * RDBMS-specific.
+		 * 
+		 * @return the unsubstituted expression.
+		 */
+		public String getExpression() {
+			return this.expr;
+		}
+
+		/**
+		 * Returns the expression, <i>with</i> substitution. This value is
+		 * RDBMS-specific. The prefix map must contain two entries. Each entry
+		 * relates to one of the keys of a relation. The key of the map is the
+		 * key of the relation, and the value is the prefix to use in the
+		 * substituion, eg. "a" if columns for the table for that key should be
+		 * prefixed as "a.mycolumn".
+		 * 
+		 * @return the substituted expression.
+		 */
+		public String getSubstitutedExpression(String firstTablePrefix,
+				String secondTablePrefix) {
+			String sub = this.expr;
+			// First table first.
+			for (Iterator i = this.firstTableAliases.keySet().iterator(); i
+					.hasNext();) {
+				Column col = (Column) i.next();
+				String alias = ":" + (String) this.firstTableAliases.get(col);
+				sub = sub.replaceAll(alias, firstTablePrefix + "."
+						+ col.getName());
+			}
+			// Second table second.
+			for (Iterator i = this.secondTableAliases.keySet().iterator(); i
+					.hasNext();) {
+				Column col = (Column) i.next();
+				String alias = ":" + (String) this.secondTableAliases.get(col);
+				sub = sub.replaceAll(alias, secondTablePrefix + "."
+						+ col.getName());
+			}
+			// Return the substituted expression.
+			return sub;
+		}
+
+		/**
+		 * Retrieves the map used for setting up aliases in the first table.
+		 * 
+		 * @return the aliases map. Keys must be {@link Column} instances, and
+		 *         values are aliases used in the expression.
+		 */
+		public Map getFirstTableAliases() {
+			return this.firstTableAliases;
+		}
+
+		/**
+		 * Retrieves the map used for setting up aliases in the second table.
+		 * 
+		 * @return the aliases map. Keys must be {@link Column} instances, and
+		 *         values are aliases used in the expression.
+		 */
+		public Map getSecondTableAliases() {
+			return this.secondTableAliases;
 		}
 	}
 }

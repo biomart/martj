@@ -32,6 +32,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 
 /**
  * The explain-dataset context highlights relations and tables that explain how
@@ -40,7 +41,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * are the same in all cases.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 20th June 2006
+ * @version 0.1.7, 24th July 2006
  * @since 0.1
  */
 public class ExplainDataSetContext extends WindowContext {
@@ -55,7 +56,7 @@ public class ExplainDataSetContext extends WindowContext {
 	/**
 	 * Creates a new explanation diagram for a given dataset.
 	 * 
-	 * @param martTab 
+	 * @param martTab
 	 *            the mart tab that will handle menu events.
 	 * @param dataset
 	 *            the dataset we are explaning.
@@ -112,6 +113,34 @@ public class ExplainDataSetContext extends WindowContext {
 				// this relation out.
 				else
 					component.setForeground(ExplainDataSetContext.FADED_COLOUR);
+
+				// Do the stroke.
+				RelationComponent relcomp = (RelationComponent) component;
+				if (relation.isOptional()) {
+					if (relation.isOneToOne())
+						relcomp.setStroke(RelationComponent.ONE_ONE_OPTIONAL);
+					else if (relation.isManyToMany())
+						relcomp.setStroke(RelationComponent.MANY_MANY_OPTIONAL);
+					else
+						relcomp.setStroke(RelationComponent.ONE_MANY_OPTIONAL);
+				} else if (this.getDataSet().getRestrictedRelations().contains(
+						relation)) {
+					if (relation.isOneToOne())
+						relcomp.setStroke(RelationComponent.ONE_ONE_RESTRICTED);
+					else if (relation.isManyToMany())
+						relcomp
+								.setStroke(RelationComponent.MANY_MANY_RESTRICTED);
+					else
+						relcomp
+								.setStroke(RelationComponent.ONE_MANY_RESTRICTED);
+				} else {
+					if (relation.isOneToOne())
+						relcomp.setStroke(RelationComponent.ONE_ONE);
+					else if (relation.isManyToMany())
+						relcomp.setStroke(RelationComponent.MANY_MANY);
+					else
+						relcomp.setStroke(RelationComponent.ONE_MANY);
+				}
 			}
 
 			// Tables are highlighted if they contain the selected column.

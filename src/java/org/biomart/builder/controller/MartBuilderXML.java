@@ -52,6 +52,7 @@ import org.biomart.builder.model.Column.GenericColumn;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
+import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
@@ -97,7 +98,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.23, 20th July 2006
+ * @version 0.1.24, 24th July 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -158,7 +159,9 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Store the attribute and value.
 				String aValue = attrs.getValue(i);
-				attributes.put(aName, aValue.replaceAll("&quot;", "\""));
+				attributes.put(aName, aValue.replaceAll("&quot;", "\"")
+						.replaceAll("&lt;", "<").replaceAll("&gt;", ">")
+						.replaceAll("&amp;", "&"));
 			}
 		}
 
@@ -633,6 +636,60 @@ public class MartBuilderXML extends DefaultHandler {
 			}
 		}
 
+		// Restricted Relation (inside dataset).
+		else if ("restrictedRelation".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("restrictedRelationOutsideDataSet"));
+			DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the relation.
+				Relation rel = (Relation) this.mappedObjects.get(attributes
+						.get("relationId"));
+
+				// Get the expression to use.
+				String expr = (String) attributes.get("expression");
+
+				// Get the aliases to use for the first table.
+				Map first = new HashMap();
+				String[] firstTableAliasColumnIds = ((String) attributes
+						.get("firstTableAliasColumnIds")).split(",");
+				String[] firstTableAliasNames = ((String) attributes
+						.get("firstTableAliasNames")).split(",");
+				for (int i = 0; i < firstTableAliasColumnIds.length; i++) {
+					Column wrapped = (Column) this.mappedObjects
+							.get(firstTableAliasColumnIds[i]);
+					first.put(wrapped, firstTableAliasNames[i]);
+				}
+
+				// Get the aliases to use for the second table.
+				Map second = new HashMap();
+				String[] secondTableAliasColumnIds = ((String) attributes
+						.get("secondTableAliasColumnIds")).split(",");
+				String[] secondTableAliasNames = ((String) attributes
+						.get("secondTableAliasNames")).split(",");
+				for (int i = 0; i < secondTableAliasColumnIds.length; i++) {
+					Column wrapped = (Column) this.mappedObjects
+							.get(secondTableAliasColumnIds[i]);
+					second.put(wrapped, secondTableAliasNames[i]);
+				}
+
+				// Flag it as restricted
+				DataSetRelationRestriction restrict = new DataSetRelationRestriction(
+						expr, first, second);
+				w.flagRestrictedRelation(rel, restrict);
+				element = rel;
+			} catch (Exception e) {
+				if (e instanceof SAXException)
+					throw (SAXException) e;
+				else
+					throw new SAXException(e);
+			}
+		}
+
 		// Masked Column (inside dataset).
 		else if ("maskedColumn".equals(eName)) {
 			// What dataset does it belong to? Throw a wobbly if none.
@@ -852,7 +909,8 @@ public class MartBuilderXML extends DefaultHandler {
 		xmlWriter.write(" ");
 		xmlWriter.write(name);
 		xmlWriter.write("=\"");
-		xmlWriter.write(value.replaceAll("\"", "&quot;"));
+		xmlWriter.write(value.replaceAll("&", "&amp;").replaceAll("\"",
+				"&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
 		xmlWriter.write("\"");
 	}
 
@@ -1081,6 +1139,10 @@ public class MartBuilderXML extends DefaultHandler {
 								aliasNames.append(',');
 							}
 						}
+						this.writeAttribute("aliasColumnIds", aliasColumnIds
+								.toString(), xmlWriter);
+						this.writeAttribute("aliasNames",
+								aliasNames.toString(), xmlWriter);
 
 						// Other properties.
 						this.writeAttribute("expression",
@@ -1264,6 +1326,66 @@ public class MartBuilderXML extends DefaultHandler {
 						.getConcatRelationType(r).getName(), xmlWriter);
 				this.writeAttribute("alt", r.toString(), xmlWriter);
 				this.closeElement("concatRelation", xmlWriter);
+			}
+
+			// Write out restricted relations inside window.
+			for (Iterator x = ds.getRestrictedRelations().iterator(); x
+					.hasNext();) {
+				Relation r = (Relation) x.next();
+				DataSetRelationRestriction restrict = ds
+						.getRestrictedRelationType(r);
+				this.openElement("restrictedRelation", xmlWriter);
+				this.writeAttribute("relationId",
+						(String) this.reverseMappedObjects.get(r), xmlWriter);
+				this.writeAttribute("expression", restrict.getExpression(),
+						xmlWriter);
+
+				// First table aliases.
+				// AliasCols, AliasNames - wrapped obj to string map
+				StringBuffer firstAliasColumnIds = new StringBuffer();
+				StringBuffer firstAliasNames = new StringBuffer();
+				for (Iterator i = restrict.getFirstTableAliases().keySet()
+						.iterator(); i.hasNext();) {
+					Column col = (Column) i.next();
+					String alias = (String) restrict.getFirstTableAliases()
+							.get(col);
+					firstAliasColumnIds
+							.append((String) this.reverseMappedObjects.get(col));
+					firstAliasNames.append(alias);
+					if (i.hasNext()) {
+						firstAliasColumnIds.append(',');
+						firstAliasNames.append(',');
+					}
+				}
+				this.writeAttribute("firstTableAliasColumnIds", firstAliasColumnIds
+						.toString(), xmlWriter);
+				this.writeAttribute("firstTableAliasNames", firstAliasNames
+						.toString(), xmlWriter);
+
+				// Second table aliases.
+				// AliasCols, AliasNames - wrapped obj to string map
+				StringBuffer secondAliasColumnIds = new StringBuffer();
+				StringBuffer secondAliasNames = new StringBuffer();
+				for (Iterator i = restrict.getSecondTableAliases().keySet()
+						.iterator(); i.hasNext();) {
+					Column col = (Column) i.next();
+					String alias = (String) restrict.getSecondTableAliases()
+							.get(col);
+					secondAliasColumnIds
+							.append((String) this.reverseMappedObjects.get(col));
+					secondAliasNames.append(alias);
+					if (i.hasNext()) {
+						secondAliasColumnIds.append(',');
+						secondAliasNames.append(',');
+					}
+				}
+				this.writeAttribute("secondTableAliasColumnIds",
+						secondAliasColumnIds.toString(), xmlWriter);
+				this.writeAttribute("secondTableAliasNames", secondAliasNames
+						.toString(), xmlWriter);
+
+				this.writeAttribute("alt", r.toString(), xmlWriter);
+				this.closeElement("restrictedRelation", xmlWriter);
 			}
 
 			// Write out masked relations inside window. Can go before or after.

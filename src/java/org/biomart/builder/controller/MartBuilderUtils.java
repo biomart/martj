@@ -40,6 +40,7 @@ import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
+import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
@@ -60,7 +61,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.28, 20th July 2006
+ * @version 0.1.29, 24th July 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -121,7 +122,8 @@ public class MartBuilderUtils {
 	 *            automatically.
 	 */
 	public static void modifyExpressionColumn(ExpressionColumn column,
-			Map columnAliases, String expression, boolean groupBy) throws AlreadyExistsException {
+			Map columnAliases, String expression, boolean groupBy)
+			throws AlreadyExistsException {
 		column.getAliases().clear();
 		column.getAliases().putAll(columnAliases);
 		column.setExpression(expression);
@@ -643,6 +645,43 @@ public class MartBuilderUtils {
 			throws SQLException, BuilderException {
 		dataset.unflagConcatOnlyRelation(relation);
 		dataset.synchronise();
+	}
+
+	/**
+	 * Flags a relation as restricted within a dataset. If already flagged, this
+	 * updates the existing settings.
+	 * 
+	 * @param dataset
+	 *            the dataset to flag the relation in.
+	 * @param relation
+	 *            the relation to flag as restricted.
+	 * @param expression
+	 *            the expression to use for the restriction for the relation.
+	 * @param firstTableAliases
+	 *            the aliases to use for columns from the first table of the
+	 *            relation.
+	 * @param secondTableAliases
+	 *            the aliases to use for columns from the second table of the
+	 *            relation.
+	 */
+	public static void restrictRelation(DataSet dataset, Relation relation,
+			String expression, Map firstTableAliases, Map secondTableAliases) {
+		DataSetRelationRestriction restriction = new DataSetRelationRestriction(
+				expression, firstTableAliases, secondTableAliases);
+		dataset.flagRestrictedRelation(relation, restriction);
+	}
+
+	/**
+	 * Unflags a relation as restricted within a dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to unflag the relation within.
+	 * @param relation
+	 *            the relation to unflag.
+	 */
+	public static void unrestrictRelation(DataSet dataset, Relation relation)
+			throws SQLException, BuilderException {
+		dataset.unflagRestrictedRelation(relation);
 	}
 
 	/**

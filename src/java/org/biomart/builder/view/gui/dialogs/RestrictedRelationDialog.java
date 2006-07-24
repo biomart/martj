@@ -25,7 +25,6 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -33,7 +32,6 @@ import java.util.Map;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -42,73 +40,73 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
-import org.biomart.builder.model.Key;
-import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Table;
+import org.biomart.builder.model.Column.GenericColumn;
+import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
- * This dialog asks users to create or modify an expression column.
+ * This dialog asks users to create or modify a restriction over a particular
+ * relation for this dataset only.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 24th July 2006
+ * @version 0.1.1, 24th July 2006
  * @since 0.1
  */
-public class ExpressionColumnDialog extends JDialog {
+public class RestrictedRelationDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
 	private MartTab martTab;
 
-	private DataSetTable table;
-
 	private boolean cancelled;
 
-	private JTextField columnName;
+	private ColumnAliasTableModel firstColumnAliasModel;
 
-	private ColumnAliasTableModel columnAliasModel;
+	private JTable firstColumnAliasTable;
 
-	private JTable columnAliasTable;
+	private JButton firstInsert;
 
-	private JButton insert;
+	private JButton firstRemove;
 
-	private JButton remove;
+	private ColumnAliasTableModel secondColumnAliasModel;
+
+	private JTable secondColumnAliasTable;
+
+	private JButton secondInsert;
+
+	private JButton secondRemove;
 
 	private JTextArea expression;
-
-	private JCheckBox groupBy;
 
 	private JButton cancel;
 
 	private JButton execute;
 
 	/**
-	 * Creates (but does not open) a dialog requesting details of expression
-	 * column.
+	 * Creates (but does not open) a dialog requesting details of a restricted
+	 * relation.
 	 * 
 	 * @param martTab
 	 *            the mart tab set to centre ourselves over.
-	 * @param table
-	 *            the table to source columns from.
+	 * @param relation
+	 *            the relation to restrict.
 	 * @param template
-	 *            the column to use as a template, if any.
+	 *            the restriction to use as a template, if any.
 	 */
-	public ExpressionColumnDialog(final MartTab martTab, DataSetTable table,
-			ExpressionColumn template) {
+	public RestrictedRelationDialog(final MartTab martTab, Relation relation,
+			DataSetRelationRestriction template) {
 		// Creates the basic dialog.
 		super(martTab.getMartTabSet().getMartBuilder(),
-				template == null ? Resources.get("addExpColDialogTitle")
-						: Resources.get("modifyExpColDialogTitle"), true);
+				template == null ? Resources.get("addRelRestrictDialogTitle")
+						: Resources.get("modifyRelRestrictDialogTitle"), true);
 
 		// Remembers the dataset tabset this dialog is referring to.
 		this.martTab = martTab;
-		this.table = table;
 
 		// Create the content pane to store the create dialog panel.
 		GridBagLayout gridBag = new GridBagLayout();
@@ -138,85 +136,158 @@ public class ExpressionColumnDialog extends JDialog {
 
 		// Create the fields that will contain the user's table choices.
 		this.cancelled = false;
-		this.columnName = new JTextField(30); // Arbitrary size.
 		this.expression = new JTextArea(10, 40); // Arbitrary size.
-		this.columnAliasModel = new ColumnAliasTableModel(table, template);
-		this.columnAliasTable = new JTable(this.columnAliasModel);
-		this.columnAliasTable.setPreferredScrollableViewportSize(new Dimension(
-				400, 100)); // Arbitrary size.
-		this.insert = new JButton(Resources.get("insertAliasButton"));
-		this.remove = new JButton(Resources.get("removeAliasButton"));
-		this.groupBy = new JCheckBox(Resources.get("groupbyLabel"));
 
-		// Set the column-editor for the column column.
-		TableColumn columnColumn = this.columnAliasTable.getColumnModel()
+		// First table aliases.
+		this.firstColumnAliasModel = new ColumnAliasTableModel(relation
+				.getFirstKey().getTable(), template, true);
+		this.firstColumnAliasTable = new JTable(this.firstColumnAliasModel);
+		this.firstColumnAliasTable
+				.setPreferredScrollableViewportSize(new Dimension(400, 100));
+		// Arbitrary size.
+		this.firstInsert = new JButton(Resources.get("insertAliasButton"));
+		this.firstRemove = new JButton(Resources.get("removeAliasButton"));
+
+		// Second table aliases.
+		this.secondColumnAliasModel = new ColumnAliasTableModel(relation
+				.getSecondKey().getTable(), template, false);
+		this.secondColumnAliasTable = new JTable(this.secondColumnAliasModel);
+		this.secondColumnAliasTable
+				.setPreferredScrollableViewportSize(new Dimension(400, 100));
+		// Arbitrary size.
+		this.secondInsert = new JButton(Resources.get("insertAliasButton"));
+		this.secondRemove = new JButton(Resources.get("removeAliasButton"));
+
+		// Set the column-editor for the first column column.
+		TableColumn columnColumn = this.firstColumnAliasTable.getColumnModel()
 				.getColumn(0);
 		JComboBox columnEditor = new JComboBox();
-		for (Iterator i = this.table.getColumns().iterator(); i.hasNext();) {
-			DataSetColumn col = (DataSetColumn) i.next();
-			if (col instanceof WrappedColumn)
-				columnEditor.addItem(col);
-		}
+		for (Iterator i = relation.getFirstKey().getTable().getColumns()
+				.iterator(); i.hasNext();)
+			columnEditor.addItem((GenericColumn) i.next());
 		columnColumn.setCellEditor(new DefaultCellEditor(columnEditor));
 
-		// Size the table columns.
-		this.columnAliasTable.getColumnModel().getColumn(0).setPreferredWidth(
-				columnEditor.getPreferredSize().width);
-		this.columnAliasTable.getColumnModel().getColumn(1).setPreferredWidth(
-				this.columnAliasTable.getTableHeader().getDefaultRenderer()
-						.getTableCellRendererComponent(
-								null,
-								this.columnAliasTable.getColumnModel()
-										.getColumn(1).getHeaderValue(), false,
-								false, 0, 0).getPreferredSize().width);
+		// Size the first table columns.
+		this.firstColumnAliasTable.getColumnModel().getColumn(0)
+				.setPreferredWidth(columnEditor.getPreferredSize().width);
+		this.firstColumnAliasTable.getColumnModel().getColumn(1)
+				.setPreferredWidth(
+						this.firstColumnAliasTable.getTableHeader()
+								.getDefaultRenderer()
+								.getTableCellRendererComponent(
+										null,
+										this.firstColumnAliasTable
+												.getColumnModel().getColumn(1)
+												.getHeaderValue(), false,
+										false, 0, 0).getPreferredSize().width);
+
+		// Set the column-editor for the second column column.
+		columnColumn = this.secondColumnAliasTable.getColumnModel()
+				.getColumn(0);
+		columnEditor = new JComboBox();
+		for (Iterator i = relation.getSecondKey().getTable().getColumns()
+				.iterator(); i.hasNext();)
+			columnEditor.addItem((GenericColumn) i.next());
+		columnColumn.setCellEditor(new DefaultCellEditor(columnEditor));
+
+		// Size the second table columns.
+		this.secondColumnAliasTable.getColumnModel().getColumn(0)
+				.setPreferredWidth(columnEditor.getPreferredSize().width);
+		this.secondColumnAliasTable.getColumnModel().getColumn(1)
+				.setPreferredWidth(
+						this.secondColumnAliasTable.getTableHeader()
+								.getDefaultRenderer()
+								.getTableCellRendererComponent(
+										null,
+										this.secondColumnAliasTable
+												.getColumnModel().getColumn(1)
+												.getHeaderValue(), false,
+										false, 0, 0).getPreferredSize().width);
 
 		// Create the buttons.
 		this.cancel = new JButton(Resources.get("cancelButton"));
 		this.execute = template == null ? new JButton(Resources
 				.get("addButton")) : new JButton(Resources.get("modifyButton"));
 
-		// Listener for the insert button.
-		this.insert.addActionListener(new ActionListener() {
+		// Listener for the insert buttons.
+		this.firstInsert.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				columnAliasModel.insertRow(columnAliasModel.getRowCount(),
-						new Object[] { null, null });
+				firstColumnAliasModel.insertRow(firstColumnAliasModel
+						.getRowCount(), new Object[] { null, null });
+			}
+		});
+		this.secondInsert.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				secondColumnAliasModel.insertRow(secondColumnAliasModel
+						.getRowCount(), new Object[] { null, null });
 			}
 		});
 
-		// Listener for the remove button.
-		this.remove.addActionListener(new ActionListener() {
+		// Listener for the remove buttons.
+		this.firstRemove.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				int rows[] = columnAliasTable.getSelectedRows();
+				int rows[] = firstColumnAliasTable.getSelectedRows();
 				// Reverse order, so we don't end up with changing
 				// indices along the way.
 				for (int i = rows.length - 1; i >= 0; i--)
-					columnAliasModel.removeRow(rows[i]);
+					firstColumnAliasModel.removeRow(rows[i]);
+			}
+		});
+		this.secondRemove.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int rows[] = secondColumnAliasTable.getSelectedRows();
+				// Reverse order, so we don't end up with changing
+				// indices along the way.
+				for (int i = rows.length - 1; i >= 0; i--)
+					secondColumnAliasModel.removeRow(rows[i]);
 			}
 		});
 
-		// Add the name option.
-		JLabel label = new JLabel(Resources.get("nameLabel"));
+		// Add the first table aliases.
+		JLabel label = new JLabel(Resources.get("firstKeyLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		JPanel field = new JPanel();
-		field.add(this.columnName);
+		field.add(new JLabel(relation.getFirstKey().toString()));
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
-
-		// Add the column aliases table.
 		label = new JLabel(Resources.get("columnAliasLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		field = new JPanel();
-		field.add(new JScrollPane(this.columnAliasTable));
+		field.add(new JScrollPane(this.firstColumnAliasTable));
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 		label = new JLabel();
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		field = new JPanel();
-		field.add(this.insert);
-		field.add(this.remove);
+		field.add(this.firstInsert);
+		field.add(this.firstRemove);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+
+		// Add the second table aliases.
+		label = new JLabel(Resources.get("secondKeyLabel"));
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		field = new JPanel();
+		field.add(new JLabel(relation.getSecondKey().toString()));
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+		label = new JLabel(Resources.get("columnAliasLabel"));
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		field = new JPanel();
+		field.add(new JScrollPane(this.secondColumnAliasTable));
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+		label = new JLabel();
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		field = new JPanel();
+		field.add(this.secondInsert);
+		field.add(this.secondRemove);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
@@ -226,15 +297,6 @@ public class ExpressionColumnDialog extends JDialog {
 		content.add(label);
 		field = new JPanel();
 		field.add(new JScrollPane(this.expression));
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-
-		// Add the group-by option.
-		label = new JLabel();
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
-		field = new JPanel();
-		field.add(this.groupBy);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
@@ -278,9 +340,7 @@ public class ExpressionColumnDialog extends JDialog {
 
 		// Set some nice defaults.
 		if (template != null) {
-			this.columnName.setText(template.getName());
 			this.expression.setText(template.getExpression());
-			this.groupBy.setSelected(template.getGroupBy());
 			// Aliases were already copied in the JTable constructor above.
 		}
 	}
@@ -289,35 +349,15 @@ public class ExpressionColumnDialog extends JDialog {
 		// A placeholder to hold the validation messages, if any.
 		List messages = new ArrayList();
 
-		// We must have a name!
-		if (this.isEmpty(this.columnName.getText()))
-			messages.add(Resources.get("fieldIsEmpty", Resources.get("name")));
-
 		// We must have an expression!
 		if (this.isEmpty(this.expression.getText()))
 			messages.add(Resources.get("fieldIsEmpty", Resources
 					.get("expression")));
 
 		// Validate other fields.
-		if (this.columnAliasModel.getColumnAliases().isEmpty())
+		if (this.firstColumnAliasModel.getColumnAliases().isEmpty()
+				&& this.secondColumnAliasModel.getColumnAliases().isEmpty())
 			messages.add(Resources.get("columnAliasMissing"));
-
-		// If group-by is selected, we can't allow them to use columns
-		// involved in any keys.
-		if (this.getGroupBy()) {
-			Collection aliasCols = this.getColumnAliases().keySet();
-			boolean keyFree = true;
-			for (Iterator i = this.table.getKeys().iterator(); i.hasNext()
-					&& keyFree;) {
-				Key k = (Key) i.next();
-				for (Iterator j = k.getColumns().iterator(); j.hasNext()
-						&& keyFree;)
-					if (aliasCols.contains(j.next()))
-						keyFree = false;
-			}
-			if (!keyFree)
-				messages.add(Resources.get("columnAliasIncludesKeyCols"));
-		}
 
 		// If there any messages, display them.
 		if (!messages.isEmpty()) {
@@ -337,15 +377,6 @@ public class ExpressionColumnDialog extends JDialog {
 	}
 
 	/**
-	 * Return the name the user selected.
-	 * 
-	 * @return the selected name.
-	 */
-	public String getColumnName() {
-		return this.columnName.getText().trim();
-	}
-
-	/**
 	 * Return the expression the user selected.
 	 * 
 	 * @return the expression.
@@ -355,21 +386,21 @@ public class ExpressionColumnDialog extends JDialog {
 	}
 
 	/**
-	 * Return the column aliases the user selected.
+	 * Return the column aliases the user selected for the first table.
 	 * 
 	 * @return the aliases.
 	 */
-	public Map getColumnAliases() {
-		return this.columnAliasModel.getColumnAliases();
+	public Map getFirstColumnAliases() {
+		return this.firstColumnAliasModel.getColumnAliases();
 	}
 
 	/**
-	 * Return <tt>true</tt> if the user selected the group-by box.
+	 * Return the column aliases the user selected for the second table.
 	 * 
-	 * @return the group-by flag.
+	 * @return the aliases.
 	 */
-	public boolean getGroupBy() {
-		return this.groupBy.isSelected();
+	public Map getSecondColumnAliases() {
+		return this.secondColumnAliasModel.getColumnAliases();
 	}
 
 	/**
@@ -388,20 +419,22 @@ public class ExpressionColumnDialog extends JDialog {
 		private static final long serialVersionUID = 1;
 
 		private static final Class[] colClasses = new Class[] {
-				DataSetColumn.class, String.class };
+				GenericColumn.class, String.class };
 
-		public ColumnAliasTableModel(DataSetTable table,
-				ExpressionColumn template) {
+		public ColumnAliasTableModel(Table table,
+				DataSetRelationRestriction template, boolean first) {
 			super(new Object[] { Resources.get("columnAliasTableColHeader"),
 					Resources.get("columnAliasTableAliasHeader") }, 0);
 			// Populate columns, and aliases from template.
-			if (template != null)
-				for (Iterator i = template.getAliases().keySet().iterator(); i
-						.hasNext();) {
-					DataSetColumn col = (DataSetColumn) i.next();
+			if (template != null) {
+				Map aliases = first ? template.getFirstTableAliases()
+						: template.getSecondTableAliases();
+				for (Iterator i = aliases.keySet().iterator(); i.hasNext();) {
+					GenericColumn col = (GenericColumn) i.next();
 					this.insertRow(this.getRowCount(), new Object[] { col,
-							(String) template.getAliases().get(col) });
+							(String) aliases.get(col) });
 				}
+			}
 		}
 
 		public Class getColumnClass(int column) {
@@ -412,7 +445,7 @@ public class ExpressionColumnDialog extends JDialog {
 			// Return the map of column to alias.
 			HashMap aliases = new HashMap();
 			for (int i = 0; i < this.getRowCount(); i++) {
-				WrappedColumn col = (WrappedColumn) this.getValueAt(i, 0);
+				GenericColumn col = (GenericColumn) this.getValueAt(i, 0);
 				String alias = (String) this.getValueAt(i, 1);
 				if (col != null
 						&& !(alias == null || alias.trim().length() == 0))

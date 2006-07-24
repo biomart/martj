@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.resources.Resources;
 
 /**
@@ -37,7 +38,7 @@ import org.biomart.builder.resources.Resources;
  * schema instead, as specified by the datasetSchemaName parameter.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 19th July 2006
+ * @version 0.1.4, 24th July 2006
  * @since 0.1
  */
 public abstract class MartConstructorAction {
@@ -629,18 +630,21 @@ public abstract class MartConstructorAction {
 
 		private List selectFromColumns;
 
+		private boolean useDistinct;
+
 		private boolean useAliases;
 
 		public Create(String datasetSchemaName, Schema newTableSchema,
 				String newTableName, Schema selectFromTableSchema,
 				String selectFromTableName, List selectFromColumns,
-				boolean useAliases) {
+				boolean useDistinct, boolean useAliases) {
 			super(datasetSchemaName);
 			this.newTableSchema = newTableSchema;
 			this.newTableName = newTableName;
 			this.selectFromTableSchema = selectFromTableSchema;
 			this.selectFromTableName = selectFromTableName;
 			this.selectFromColumns = selectFromColumns;
+			this.useDistinct = useDistinct;
 			this.useAliases = useAliases;
 		}
 
@@ -662,6 +666,10 @@ public abstract class MartConstructorAction {
 
 		public Schema getSelectFromTableSchema() {
 			return selectFromTableSchema;
+		}
+
+		public boolean isUseDistinct() {
+			return useDistinct;
 		}
 
 		public boolean isUseAliases() {
@@ -952,6 +960,12 @@ public abstract class MartConstructorAction {
 
 		private List targetTableColumns;
 
+		private DataSetRelationRestriction relationRestriction;
+
+		private boolean firstTableSourceTable;
+
+		private boolean useDistinct;
+
 		private boolean useAliases;
 
 		public Merge(String datasetSchemaName, Schema mergedTableSchema,
@@ -959,18 +973,25 @@ public abstract class MartConstructorAction {
 				String sourceTableName, List sourceTableKeyColumns,
 				boolean useLeftJoin, Schema targetTableSchema,
 				String targetTableName, List targetTableKeyColumns,
-				List targetTableColumns, boolean useAliases) {
+				List targetTableColumns,
+				DataSetRelationRestriction relationRestriction,
+				boolean firstTableSourceTable, boolean useDistinct,
+				boolean useAliases) {
 			super(datasetSchemaName);
 			this.mergedTableSchema = mergedTableSchema;
 			this.mergedTableName = mergedTableName;
 			this.sourceTableSchema = sourceTableSchema;
 			this.sourceTableName = sourceTableName;
 			this.sourceTableKeyColumns = sourceTableKeyColumns;
-			this.useLeftJoin = useLeftJoin;
+			this.useLeftJoin = (relationRestriction != null) ? true
+					: useLeftJoin;
 			this.targetTableSchema = targetTableSchema;
 			this.targetTableName = targetTableName;
 			this.targetTableKeyColumns = targetTableKeyColumns;
 			this.targetTableColumns = targetTableColumns;
+			this.relationRestriction = relationRestriction;
+			this.firstTableSourceTable = firstTableSourceTable;
+			this.useDistinct = useDistinct;
 			this.useAliases = useAliases;
 		}
 
@@ -1010,12 +1031,24 @@ public abstract class MartConstructorAction {
 			return targetTableSchema;
 		}
 
+		public DataSetRelationRestriction getRelationRestriction() {
+			return relationRestriction;
+		}
+
 		public boolean isUseAliases() {
 			return useAliases;
 		}
 
 		public boolean isUseLeftJoin() {
 			return useLeftJoin;
+		}
+
+		public boolean isFirstTableSourceTable() {
+			return firstTableSourceTable;
+		}
+
+		public boolean isUseDistinct() {
+			return useDistinct;
 		}
 
 		public String getStatusMessage() {
@@ -1054,13 +1087,19 @@ public abstract class MartConstructorAction {
 
 		private ConcatRelationType concatRelationType;
 
+		private DataSetRelationRestriction relationRestriction;
+
+		private boolean firstTableSourceTable;
+
 		public Concat(String datasetSchemaName, Schema concatTableSchema,
 				String concatTableName, Schema sourceTableSchema,
 				String sourceTableName, List sourceTableKeyColumns,
 				Schema targetTableSchema, String targetTableName,
 				List targetTableKeyColumns, List targetTableConcatColumns,
 				String targetConcatColumnName,
-				ConcatRelationType concatRelationType) {
+				ConcatRelationType concatRelationType,
+				DataSetRelationRestriction relationRestriction,
+				boolean firstTableSourceTable) {
 			super(datasetSchemaName);
 			this.concatTableSchema = concatTableSchema;
 			this.concatTableName = concatTableName;
@@ -1073,6 +1112,8 @@ public abstract class MartConstructorAction {
 			this.targetTableConcatColumns = targetTableConcatColumns;
 			this.targetConcatColumnName = targetConcatColumnName;
 			this.concatRelationType = concatRelationType;
+			this.relationRestriction = relationRestriction;
+			this.firstTableSourceTable = firstTableSourceTable;
 		}
 
 		public String getConcatTableName() {
@@ -1117,6 +1158,14 @@ public abstract class MartConstructorAction {
 
 		public ConcatRelationType getConcatRelationType() {
 			return concatRelationType;
+		}
+
+		public DataSetRelationRestriction getRelationRestriction() {
+			return relationRestriction;
+		}
+
+		public boolean isFirstTableSourceTable() {
+			return firstTableSourceTable;
 		}
 
 		public String getStatusMessage() {
