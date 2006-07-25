@@ -43,6 +43,7 @@ import javax.swing.JViewport;
 
 import org.biomart.builder.model.Table;
 import org.biomart.builder.resources.Resources;
+import org.biomart.builder.view.gui.ComponentImageSaver;
 import org.biomart.builder.view.gui.ComponentPrinter;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.DiagramComponent;
@@ -64,7 +65,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * what those items should be.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.23, 21st July 2006
+ * @version 0.1.23, 25th July 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
@@ -270,6 +271,10 @@ public abstract class Diagram extends JPanel {
 		new ComponentPrinter(this.getMartTab(), this).print();
 	}
 
+	private void saveDiagram() {
+		new ComponentImageSaver(this.getMartTab(), this).save();
+	}
+
 	private JPopupMenu getContextMenu() {
 		// This is the basic context menu that appears no matter where the user
 		// clicks.
@@ -299,6 +304,16 @@ public abstract class Diagram extends JPanel {
 			}
 		});
 		contextMenu.add(print);
+
+		// Add an item that allows the user to save this diagram as an image.
+		JMenuItem save = new JMenuItem(Resources.get("saveDiagramTitle"));
+		save.setMnemonic(Resources.get("saveDiagramMnemonic").charAt(0));
+		save.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				saveDiagram();
+			}
+		});
+		contextMenu.add(save);
 
 		// Return the completed context menu.
 		return contextMenu;

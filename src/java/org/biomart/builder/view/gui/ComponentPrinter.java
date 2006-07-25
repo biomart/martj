@@ -28,7 +28,6 @@ import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 
 import javax.swing.RepaintManager;
-import javax.swing.SwingUtilities;
 
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
@@ -40,7 +39,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * Swing Tutorial</a>.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 21st July 2006
+ * @version 0.1.2, 25th July 2006
  * @since 0.1
  */
 public class ComponentPrinter implements Printable {
@@ -71,7 +70,7 @@ public class ComponentPrinter implements Printable {
 		final PrinterJob printJob = PrinterJob.getPrinterJob();
 		printJob.setPrintable(this);
 		if (printJob.printDialog())
-			SwingUtilities.invokeLater(new Runnable() {
+			LongProcess.run(new Runnable() {
 				public void run() {
 					try {
 						printJob.print();
