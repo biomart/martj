@@ -324,6 +324,56 @@ public class DataSetTabSet extends JTabbedPane {
 		});
 	}
 
+	/**
+	 * Asks the user if they are sure they want to remove all datasets, then
+	 * removes it from the mart (and the tabs) if they agree.
+	 */
+	public void requestRemoveAllDataSets() {
+		// Confirm the decision first.
+		int choice = JOptionPane.showConfirmDialog(this, Resources
+				.get("confirmDelAllDatasets"), Resources.get("questionTitle"),
+				JOptionPane.YES_NO_OPTION);
+
+		// Refuse to do it if they said no.
+		if (choice != JOptionPane.YES_OPTION)
+			return;
+
+		// Do it, but in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Remove the dataset from the mart.
+					final List datasets = new ArrayList(martTab.getMart()
+							.getDataSets());
+					for (Iterator i = datasets.iterator(); i.hasNext();)
+						MartBuilderUtils.removeDataSetFromMart(martTab
+								.getMart(), (DataSet) i.next());
+
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Remove the tab.
+							for (Iterator i = datasets.iterator(); i.hasNext();)
+								removeDataSetTab((DataSet) i.next());
+
+							// Update the overview diagram.
+							recalculateOverviewDiagram();
+
+							// Set our modified status to true.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
 	private void removeDataSetTab(DataSet dataset) {
 		// Work out the currently selected tab.
 		int currentTab = this.getSelectedIndex();
@@ -544,9 +594,8 @@ public class DataSetTabSet extends JTabbedPane {
 				Collection dss = null;
 				try {
 					// Suggest them.
-					dss = MartBuilderUtils
-							.suggestDataSets(martTab.getMart(), dialog
-									.getSelectedTables());
+					dss = MartBuilderUtils.suggestDataSets(martTab.getMart(),
+							dialog.getSelectedTables());
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {

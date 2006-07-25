@@ -34,7 +34,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * datasets tab.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 20th July 2006
+ * @version 0.1.4, 25th July 2006
  * @since 0.1
  */
 public class AllDataSetsContext implements DiagramContext {
@@ -67,7 +67,21 @@ public class AllDataSetsContext implements DiagramContext {
 		// that refer to all schemas.
 		if (object == null) {
 
-			// Nothing, yet.
+			// Add a separator if the menu is not already empty.
+			if (contextMenu.getComponentCount() > 0)
+				contextMenu.addSeparator();
+
+			// Option to remove all datasets from the mart.
+			JMenuItem remove = new JMenuItem(Resources
+					.get("removeAllDataSetsTitle"));
+			remove.setMnemonic(Resources.get("removeAllDataSetsMnemonic")
+					.charAt(0));
+			remove.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					martTab.getDataSetTabSet().requestRemoveAllDataSets();
+				}
+			});
+			contextMenu.add(remove);
 
 		}
 
