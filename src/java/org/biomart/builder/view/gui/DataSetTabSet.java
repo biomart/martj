@@ -668,7 +668,7 @@ public class DataSetTabSet extends JTabbedPane {
 		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
-					// Remove the column.
+					// Add the column.
 					MartBuilderUtils.addExpressionColumn(table, columnName,
 							columnAliases, expression, groupBy);
 
@@ -718,21 +718,12 @@ public class DataSetTabSet extends JTabbedPane {
 		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
-					// Remove the column.
+					// Modify the column.
 					MartBuilderUtils.modifyExpressionColumn(column,
 							columnAliases, expression, groupBy);
 
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							// Recalculate the dataset diagram based on the
-							// newly modified dataset.
-							recalculateDataSetDiagram((DataSet) column
-									.getTable().getSchema());
-
-							// Update the modified status for the tabset.
-							martTab.getMartTabSet().setModifiedStatus(true);
-						}
-					});
+					// Update the modified status for the tabset.
+					martTab.getMartTabSet().setModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1069,32 +1060,8 @@ public class DataSetTabSet extends JTabbedPane {
 							.restrictRelation(dataset, relation, expression,
 									firstColumnAliases, secondColumnAliases);
 
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							// If it is an internal relation, repaint the schema
-							// diagram.
-							if (!relation.isExternal())
-								martTab.getSchemaTabSet().repaintSchemaDiagram(
-										relation.getFirstKey().getTable()
-												.getSchema());
-
-							// Otherwise, it is external, so repaint the schema
-							// overview
-							// diagram.
-							else
-								martTab.getSchemaTabSet()
-										.repaintOverviewDiagram();
-
-							// Update the explanation diagram so that it
-							// correctly
-							// reflects the changed relation.
-							if (currentExplanationDiagram != null)
-								currentExplanationDiagram.repaintDiagram();
-
-							// Update the modified status for the tabset.
-							martTab.getMartTabSet().setModifiedStatus(true);
-						}
-					});
+					// Update the modified status for the tabset.
+					martTab.getMartTabSet().setModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
