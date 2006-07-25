@@ -65,7 +65,7 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.20, 24th July 2006
+ * @version 0.1.21, 25th July 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -784,7 +784,7 @@ public interface MartConstructor {
 								this.datasetSchemaName, null, hasTable
 										.getTempTableName(), null, parentTable
 										.getTempTableName(), pkKeyCols, false,
-								false);
+								null, false);
 						actionGraph.addActionWithParent(create, preDOAction);
 						// Create the PK on the 'has' table using the same
 						// columns.
@@ -969,7 +969,9 @@ public interface MartConstructor {
 			// based on firstDSCols.
 			MartConstructorAction create = new Create(this.datasetSchemaName,
 					null, tempTableName, schema, firstTable.getName(),
-					firstDSCols, firstTable.getPrimaryKey() == null, true);
+					firstDSCols, firstTable.getPrimaryKey() == null, table
+							.getDataSet().getRestrictedTableType(firstTable),
+					true);
 			actionGraph.addActionWithParent(create, lastActionPerformed);
 			// Update last action performed, in case there are no merges.
 			lastActionPerformed = create;
@@ -1064,7 +1066,8 @@ public interface MartConstructor {
 						targetTableName, targetKey.getColumns(), targetDSCols,
 						table.getDataSet().getRestrictedRelationType(relation),
 						targetTable.equals(relation.getSecondKey().getTable()),
-						relation.isManyToMany(), true);
+						relation.isManyToMany(), table.getDataSet()
+								.getRestrictedTableType(targetTable), true);
 				actionGraph.addActionWithParent(merge, index);
 				// Last action performed for this table is the merge, as
 				// the drop can be carried out later at any time.
@@ -1156,7 +1159,7 @@ public interface MartConstructor {
 				String concatTableName = this.helper.getNewTempTableName();
 				MartConstructorAction createCon = new Create(
 						this.datasetSchemaName, null, concatTableName, null,
-						tempTableName, sourceDSKey, false, false);
+						tempTableName, sourceDSKey, false, null, false);
 				actionGraph.addActionWithParent(createCon, lastActionPerformed);
 				// Generate new temp table name for merged concat table.
 				String mergedConcatTableName = this.helper
@@ -1175,7 +1178,8 @@ public interface MartConstructor {
 								.getDataSet().getRestrictedRelationType(
 										concatRelation), targetTable
 								.equals(concatRelation.getSecondKey()
-										.getTable()));
+										.getTable()), table.getDataSet()
+								.getRestrictedTableType(targetTable));
 				actionGraph.addActionWithParent(concat, createCon);
 				// Drop old concat temp table and replace with new one.
 				MartConstructorAction drop = new Drop(this.datasetSchemaName,
@@ -1196,7 +1200,7 @@ public interface MartConstructor {
 						null, mergedTableName, null, tempTableName,
 						sourceDSKey, true, null, concatTableName, sourceDSKey,
 						Collections.singletonList(concatColumn), null, false,
-						false, false);
+						false, null, false);
 				actionGraph.addActionWithParent(merge, indexCon);
 				lastActionPerformed = merge;
 				// Drop old temp table and replace with new one.

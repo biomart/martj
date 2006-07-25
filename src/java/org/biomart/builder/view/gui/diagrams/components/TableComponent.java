@@ -45,7 +45,7 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * a secondary label indicating which schema they belong to.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 7th July 2006
+ * @version 0.1.13, 25th July 2006
  * @since 0.1
  */
 public class TableComponent extends BoxShapedComponent {
@@ -73,7 +73,7 @@ public class TableComponent extends BoxShapedComponent {
 	 * Colour for all non-subclassed, non-dimension tables.
 	 */
 	public static final Color NORMAL_COLOUR = Color.BLACK;
-
+		
 	/**
 	 * This constructor makes a new table component, associated with a
 	 * particular table, and remembers that this component appears in a

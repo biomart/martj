@@ -42,6 +42,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
@@ -234,7 +235,7 @@ public class MartBuilderUtils {
 			AlreadyExistsException, BuilderException {
 		return mart.suggestDataSets(tables, name);
 	}
-	
+
 	/**
 	 * Given a dataset and a set of columns from one table upon which the main
 	 * table of that dataset is based, find all other tables which have similar
@@ -269,9 +270,10 @@ public class MartBuilderUtils {
 	 * @throws BuilderException
 	 *             if synchronisation fails.
 	 */
-	public static Collection suggestInvisibleDataSets(Mart mart, DataSet dataset,
-			Collection columns, String name) throws AssociationException,
-			AlreadyExistsException, BuilderException, SQLException {
+	public static Collection suggestInvisibleDataSets(Mart mart,
+			DataSet dataset, Collection columns, String name)
+			throws AssociationException, AlreadyExistsException,
+			BuilderException, SQLException {
 		return mart.suggestInvisibleDataSets(dataset, columns, name);
 	}
 
@@ -722,6 +724,39 @@ public class MartBuilderUtils {
 	public static void unrestrictRelation(DataSet dataset, Relation relation)
 			throws SQLException, BuilderException {
 		dataset.unflagRestrictedRelation(relation);
+	}
+
+	/**
+	 * Flags a table as restricted within a dataset. If already flagged, this
+	 * updates the existing settings.
+	 * 
+	 * @param dataset
+	 *            the dataset to flag the relation in.
+	 * @param table
+	 *            the table to flag as restricted.
+	 * @param expression
+	 *            the expression to use for the restriction for the relation.
+	 * @param aliases
+	 *            the aliases to use for columns.
+	 */
+	public static void restrictTable(DataSet dataset, Table table,
+			String expression, Map aliases) {
+		DataSetTableRestriction restriction = new DataSetTableRestriction(
+				expression, aliases);
+		dataset.flagRestrictedTable(table, restriction);
+	}
+
+	/**
+	 * Unflags a table as restricted within a dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to unflag the table within.
+	 * @param table
+	 *            the table to unflag.
+	 */
+	public static void unrestrictTable(DataSet dataset, Table table)
+			throws SQLException, BuilderException {
+		dataset.unflagRestrictedTable(table);
 	}
 
 	/**

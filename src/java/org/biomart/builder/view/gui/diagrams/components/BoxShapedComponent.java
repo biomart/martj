@@ -19,9 +19,11 @@
 package org.biomart.builder.view.gui.diagrams.components;
 
 import java.awt.AWTEvent;
+import java.awt.BasicStroke;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,11 +42,50 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * rather than exact component.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 5th July 2006
+ * @version 0.1.13, 25th July 2006
  * @since 0.1
  */
 public abstract class BoxShapedComponent extends JPanel implements
 		DiagramComponent {
+
+	/**
+	 * Constant referring to the normal width of a box outline.
+	 */
+	public static final float BOX_LINEWIDTH = 1.0f; // 72 = 1 inch
+
+	/**
+	 * Constant referring to the dash size of an optional box outline.
+	 */
+	public static final float BOX_DASHSIZE = 7.0f; // 72 = 1 inch
+
+	/**
+	 * Constant referring to the dot size of a restricted box outline.
+	 */
+	public static final float BOX_DOTSIZE = 3.0f; // 72 = 1 inch
+
+	/**
+	 * Constant referring to the mitre trim of a box outline.
+	 */
+	public static final float BOX_MITRE_TRIM = 10.0f; // 72 = 1 inch
+
+	/**
+	 * Constant defining our restricted stroke.
+	 */
+	public static final Stroke RESTRICTED_OUTLINE = new BasicStroke(
+			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, BoxShapedComponent.BOX_MITRE_TRIM,
+			new float[] { BoxShapedComponent.BOX_DASHSIZE,
+					BoxShapedComponent.BOX_DOTSIZE,
+					BoxShapedComponent.BOX_DOTSIZE,
+					BoxShapedComponent.BOX_DOTSIZE }, 0);
+
+	/**
+	 * Constant defining our normal stroke.
+	 */
+	public static final Stroke NORMAL_OUTLINE = new BasicStroke(
+			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, BoxShapedComponent.BOX_MITRE_TRIM);
+
 	private Diagram diagram;
 
 	private Object object;
@@ -55,6 +96,8 @@ public abstract class BoxShapedComponent extends JPanel implements
 	private Object state;
 
 	private RenderingHints renderHints;
+	
+	private Stroke stroke;
 
 	/**
 	 * Constructs a box-shaped component around the given model object to be
@@ -84,8 +127,19 @@ public abstract class BoxShapedComponent extends JPanel implements
 		this.renderHints.put(RenderingHints.KEY_RENDERING,
 				RenderingHints.VALUE_RENDER_QUALITY);
 
+		// Default stroke.
+		this.stroke = BoxShapedComponent.NORMAL_OUTLINE;
+		
 		// Repaint ourselves.
 		this.updateAppearance();
+	}
+	
+	/**
+	 * Set the stroke to use to outline this component.
+	 * @param stroke the stroke to use.
+	 */
+	public void setStroke(Stroke stroke) {
+		this.stroke = stroke;
 	}
 
 	public void paintComponent(Graphics g) {
@@ -124,9 +178,15 @@ public abstract class BoxShapedComponent extends JPanel implements
 		DiagramContext mod = this.getDiagram().getDiagramContext();
 		if (mod != null)
 			mod.customiseAppearance(this, this.getObject());
-
-		// Draws a border.
 		this.setBorder(BorderFactory.createLineBorder(this.getForeground()));
+	}
+	
+	protected void paintBorder(Graphics g) {
+	    Graphics2D g2 = (Graphics2D) g;
+	    Stroke oldStroke = g2.getStroke();
+	    g2.setStroke(this.stroke);
+	    super.paintBorder(g2);
+	    g2.setStroke(oldStroke);
 	}
 
 	public Diagram getDiagram() {

@@ -18,6 +18,7 @@
 
 package org.biomart.builder.view.gui.dialogs;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -55,7 +56,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * relation for this dataset only.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 24th July 2006
+ * @version 0.1.2, 25th July 2006
  * @since 0.1
  */
 public class RestrictedRelationDialog extends JDialog {
@@ -142,6 +143,7 @@ public class RestrictedRelationDialog extends JDialog {
 		this.firstColumnAliasModel = new ColumnAliasTableModel(relation
 				.getFirstKey().getTable(), template, true);
 		this.firstColumnAliasTable = new JTable(this.firstColumnAliasModel);
+		this.firstColumnAliasTable.setGridColor(Color.LIGHT_GRAY); // Mac OSX fix.
 		this.firstColumnAliasTable
 				.setPreferredScrollableViewportSize(new Dimension(400, 100));
 		// Arbitrary size.
@@ -152,6 +154,7 @@ public class RestrictedRelationDialog extends JDialog {
 		this.secondColumnAliasModel = new ColumnAliasTableModel(relation
 				.getSecondKey().getTable(), template, false);
 		this.secondColumnAliasTable = new JTable(this.secondColumnAliasModel);
+		this.secondColumnAliasTable.setGridColor(Color.LIGHT_GRAY); // Mac OSX fix.
 		this.secondColumnAliasTable
 				.setPreferredScrollableViewportSize(new Dimension(400, 100));
 		// Arbitrary size.
@@ -355,9 +358,10 @@ public class RestrictedRelationDialog extends JDialog {
 					.get("expression")));
 
 		// Validate other fields.
-		if (this.firstColumnAliasModel.getColumnAliases().isEmpty()
-				&& this.secondColumnAliasModel.getColumnAliases().isEmpty())
-			messages.add(Resources.get("columnAliasMissing"));
+		if (this.firstColumnAliasModel.getColumnAliases().isEmpty())
+			messages.add(Resources.get("columnFirstAliasMissing"));
+		if (this.secondColumnAliasModel.getColumnAliases().isEmpty())
+			messages.add(Resources.get("columnSecondAliasMissing"));
 
 		// If there any messages, display them.
 		if (!messages.isEmpty()) {

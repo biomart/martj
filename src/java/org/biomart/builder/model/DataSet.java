@@ -60,7 +60,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.36, 24th July 2006
+ * @version 0.1.37, 25th July 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -87,6 +87,10 @@ public class DataSet extends GenericSchema {
 
 	// Use double-List to avoid problems with hashcodes changing.
 	private final List[] restrictedRelations = new List[] { new ArrayList(),
+			new ArrayList() };
+
+	// Use double-List to avoid problems with hashcodes changing.
+	private final List[] restrictedTables = new List[] { new ArrayList(),
 			new ArrayList() };
 
 	private DataSetOptimiserType optimiser;
@@ -165,6 +169,12 @@ public class DataSet extends GenericSchema {
 				DataSetRelationRestriction restriction = (DataSetRelationRestriction) this.restrictedRelations[1]
 						.get(i);
 				newDataSet.flagRestrictedRelation(rel, restriction);
+			}
+			for (int i = 0; i < this.restrictedTables[0].size(); i++) {
+				Table tbl = (Table) this.restrictedTables[0].get(i);
+				DataSetTableRestriction restriction = (DataSetTableRestriction) this.restrictedTables[1]
+						.get(i);
+				newDataSet.flagRestrictedTable(tbl, restriction);
 			}
 
 			// Synchronise it.
@@ -588,8 +598,8 @@ public class DataSet extends GenericSchema {
 	public void unflagRestrictedRelation(Relation relation) {
 		int index = this.restrictedRelations[0].indexOf(relation);
 		if (index >= 0) {
-			this.restrictedRelations[0].remove(relation);
-			this.restrictedRelations[1].remove(relation);
+			this.restrictedRelations[0].remove(index);
+			this.restrictedRelations[1].remove(index);
 		}
 	}
 
@@ -616,6 +626,70 @@ public class DataSet extends GenericSchema {
 		int index = this.restrictedRelations[0].indexOf(relation);
 		if (index >= 0)
 			return (DataSetRelationRestriction) this.restrictedRelations[1]
+					.get(index);
+		else
+			return null;
+	}
+
+	/**
+	 * Mark a table as restricted. If previously marked as restricted, this call
+	 * will override the previous request.
+	 * 
+	 * @param table
+	 *            the table to mark as restricted.
+	 * @param restriction
+	 *            the restriction to use for the table.
+	 */
+	public void flagRestrictedTable(Table table,
+			DataSetTableRestriction restriction) {
+		// Restrict the table. If the table has already been restricted,
+		// this will override the type.
+		int index = this.restrictedTables[0].indexOf(table);
+		if (index >= 0) {
+			this.restrictedTables[0].set(index, table);
+			this.restrictedTables[1].set(index, restriction);
+		} else {
+			this.restrictedTables[0].add(table);
+			this.restrictedTables[1].add(restriction);
+		}
+	}
+
+	/**
+	 * Unmark a table as restricted.
+	 * 
+	 * @param table
+	 *            the table to unmark.
+	 */
+	public void unflagRestrictedTable(Table table) {
+		int index = this.restrictedTables[0].indexOf(table);
+		if (index >= 0) {
+			this.restrictedTables[0].remove(index);
+			this.restrictedTables[1].remove(index);
+		}
+	}
+
+	/**
+	 * Return the set of restricted tables. It may be empty, but never null.
+	 * 
+	 * @return the set of restricted tables.
+	 */
+	public Collection getRestrictedTables() {
+		return this.restrictedTables[0];
+	}
+
+	/**
+	 * Return the restriction for a restricted table. It will return null if
+	 * there is no such restricted table.
+	 * 
+	 * @param table
+	 *            the table to check the restriction type for.
+	 * @return the restriction type of the table, or null if it is not
+	 *         restricted.
+	 */
+	public DataSetTableRestriction getRestrictedTableType(Table table) {
+		int index = this.restrictedTables[0].indexOf(table);
+		if (index >= 0)
+			return (DataSetTableRestriction) this.restrictedTables[1]
 					.get(index);
 		else
 			return null;
@@ -2209,8 +2283,8 @@ public class DataSet extends GenericSchema {
 
 		/**
 		 * This constructor gives the restriction an initial expression and two
-		 * sets of aliases. The expression may not be empty, and the combination
-		 * of the two alias maps may not be either.
+		 * sets of aliases. The expression may not be empty, and neither of the
+		 * two alias maps may be either.
 		 * 
 		 * @param expr
 		 *            the expression to define for this restriction.
@@ -2227,11 +2301,12 @@ public class DataSet extends GenericSchema {
 			if (expr == null || expr.trim().length() == 0)
 				throw new IllegalArgumentException(Resources
 						.get("relRestrictMissingExpression"));
-			if (firstTableAliases == null || firstTableAliases.isEmpty()
-					|| secondTableAliases == null
-					|| secondTableAliases.isEmpty())
+			if (firstTableAliases == null || firstTableAliases.isEmpty())
 				throw new IllegalArgumentException(Resources
-						.get("relRestrictMissingAliases"));
+						.get("relRestrictMissingFirstAliases"));
+			if (secondTableAliases == null || secondTableAliases.isEmpty())
+				throw new IllegalArgumentException(Resources
+						.get("relRestrictMissingSecondAliases"));
 
 			// Remember the settings.
 			this.firstTableAliases = new TreeMap();
@@ -2313,6 +2388,93 @@ public class DataSet extends GenericSchema {
 		 */
 		public Map getSecondTableAliases() {
 			return this.secondTableAliases;
+		}
+	}
+
+	/**
+	 * Defines the restriction on a table, ie. a where-clause.
+	 */
+	public static class DataSetTableRestriction {
+
+		private String expr;
+
+		private Map aliases;
+
+		/**
+		 * This constructor gives the restriction an initial expression and a
+		 * set of aliases. The expression may not be empty, and neither can the
+		 * alias map.
+		 * 
+		 * @param expr
+		 *            the expression to define for this restriction.
+		 * @param aliases
+		 *            the aliases to use for columns.
+		 */
+		public DataSetTableRestriction(String expr, Map aliases) {
+			// Test for good arguments.
+			if (expr == null || expr.trim().length() == 0)
+				throw new IllegalArgumentException(Resources
+						.get("tblRestrictMissingExpression"));
+			if (aliases == null || aliases.isEmpty())
+				throw new IllegalArgumentException(Resources
+						.get("tblRestrictMissingAliases"));
+
+			// Remember the settings.
+			this.aliases = new TreeMap();
+			this.aliases.putAll(aliases);
+			this.expr = expr;
+		}
+
+		/**
+		 * The actual expression. The values from the alias maps will be used to
+		 * refer to various columns. This value is RDBMS-specific.
+		 * 
+		 * @param expr
+		 *            the actual expression to use.
+		 */
+		public void setExpression(String expr) {
+			this.expr = expr;
+		}
+
+		/**
+		 * Returns the expression, <i>without</i> substitution. This value is
+		 * RDBMS-specific.
+		 * 
+		 * @return the unsubstituted expression.
+		 */
+		public String getExpression() {
+			return this.expr;
+		}
+
+		/**
+		 * Returns the expression, <i>with</i> substitution. This value is
+		 * RDBMS-specific. The prefix map must contain two entries. Each entry
+		 * relates to one of the keys of a relation. The key of the map is the
+		 * key of the relation, and the value is the prefix to use in the
+		 * substituion, eg. "a" if columns for the table for that key should be
+		 * prefixed as "a.mycolumn".
+		 * 
+		 * @return the substituted expression.
+		 */
+		public String getSubstitutedExpression(String tablePrefix) {
+			String sub = this.expr;
+			for (Iterator i = this.aliases.keySet().iterator(); i.hasNext();) {
+				Column col = (Column) i.next();
+				String alias = ":" + (String) this.aliases.get(col);
+				sub = sub.replaceAll(alias, tablePrefix + "."
+						+ col.getName());
+			}
+			return sub;
+		}
+
+		/**
+		 * Retrieves the map used for setting up aliases.
+		 * 
+		 * @return the aliases map. Keys must be {@link Column} instances, and
+		 *         values are aliases used in the expression.
+		 */
+		public Map getAliases() {
+			return this.aliases;
 		}
 	}
 }

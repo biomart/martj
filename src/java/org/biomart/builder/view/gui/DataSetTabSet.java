@@ -51,6 +51,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
@@ -68,6 +69,7 @@ import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.ExpressionColumnDialog;
 import org.biomart.builder.view.gui.dialogs.PartitionColumnDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedRelationDialog;
+import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
@@ -325,7 +327,7 @@ public class DataSetTabSet extends JTabbedPane {
 	private void removeDataSetTab(DataSet dataset) {
 		// Work out the currently selected tab.
 		int currentTab = this.getSelectedIndex();
-		
+
 		// Work out which tab the dataset lives in.
 		int index = this.datasetToTab[0].indexOf(dataset);
 		DataSetTab datasetTab = (DataSetTab) this.datasetToTab[1].get(index);
@@ -340,7 +342,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 		// Fake a click on the last tab before this one to ensure
 		// at least one tab remains visible and up-to-date.
-		this.setSelectedIndex(currentTab==0?0:Math.max(tabIndex - 1, 0));
+		this.setSelectedIndex(currentTab == 0 ? 0 : Math.max(tabIndex - 1, 0));
 	}
 
 	private void addDataSetTab(DataSet dataset) {
@@ -960,6 +962,153 @@ public class DataSetTabSet extends JTabbedPane {
 		} catch (Throwable t) {
 			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 		}
+	}
+
+	/**
+	 * Asks for a table restriction to be added to the dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset we are dealing with.
+	 * @param table
+	 *            the table to add a restriction to.
+	 */
+	public void requestAddTableRestriction(final DataSet dataset,
+			final Table table) {
+		RestrictedTableDialog dialog = new RestrictedTableDialog(this.martTab,
+				table, null);
+		dialog.show();
+		// Cancelled?
+		if (dialog.getCancelled())
+			return;
+		// Get the details.
+		final Map aliases = dialog.getColumnAliases();
+		final String expression = dialog.getExpression();
+		// Do this in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Add the restriction.
+					MartBuilderUtils.restrictTable(dataset, table, expression,
+							aliases);
+
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the schema diagram.
+							martTab.getSchemaTabSet().repaintSchemaDiagram(
+									table.getSchema());
+
+							// Repaint the overview diagram too.
+							martTab.getSchemaTabSet().repaintOverviewDiagram();
+
+							// Update the explanation diagram so that it
+							// correctly reflects the changed table.
+							if (currentExplanationDiagram != null)
+								currentExplanationDiagram.repaintDiagram();
+
+							// Update the modified status for the tabset.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Asks for a table restriction to be modified.
+	 * 
+	 * @param dataset
+	 *            the dataset we are working with.
+	 * @param table
+	 *            the table to modify the restriction for.
+	 * @param restriction
+	 *            the existing restriction.
+	 */
+	public void requestModifyTableRestriction(final DataSet dataset,
+			final Table table, DataSetTableRestriction restriction) {
+		RestrictedTableDialog dialog = new RestrictedTableDialog(this.martTab,
+				table, restriction);
+		dialog.show();
+		// Cancelled?
+		if (dialog.getCancelled())
+			return;
+		// Get updated details from the user.
+		final Map aliases = dialog.getColumnAliases();
+		final String expression = dialog.getExpression();
+		// Do this in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Update the restriction.
+					MartBuilderUtils.restrictTable(dataset, table, expression,
+							aliases);
+
+					// Update the modified status for the tabset.
+					martTab.getMartTabSet().setModifiedStatus(true);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Asks for a table restriction to be removed.
+	 * 
+	 * @param dataset
+	 *            the dataset we are working with.
+	 * @param table
+	 *            the table to unrestrict.
+	 */
+	public void requestRemoveTableRestriction(final DataSet dataset,
+			final Table table) {
+		// Do this in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Remove the restriction.
+					MartBuilderUtils.unrestrictTable(dataset, table);
+
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the schema diagram.
+							martTab.getSchemaTabSet().repaintSchemaDiagram(
+									table.getSchema());
+
+							// Repaint the overview diagram too.
+							martTab.getSchemaTabSet().repaintOverviewDiagram();
+
+							// Update the explanation diagram so that it
+							// correctly reflects the changed table.
+							if (currentExplanationDiagram != null)
+								currentExplanationDiagram.repaintDiagram();
+
+							// Update the modified status for the tabset.
+							martTab.getMartTabSet().setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
 	}
 
 	/**

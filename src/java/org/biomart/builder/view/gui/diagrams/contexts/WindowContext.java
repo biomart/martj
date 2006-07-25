@@ -39,8 +39,10 @@ import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.diagrams.components.BoxShapedComponent;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
+import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 
 /**
  * This context applies to the general schema view, as seen when a dataset tab
@@ -49,7 +51,7 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
  * rather than the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.18, 24th July 2006
+ * @version 0.1.19, 25th July 2006
  * @since 0.1
  */
 public class WindowContext extends SchemaContext {
@@ -112,6 +114,52 @@ public class WindowContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(mask);
+
+			// If it's a restricted table...
+			if (this.dataset.getRestrictedTables().contains(table)) {
+
+				// Option to modify restriction.
+				JMenuItem modify = new JMenuItem(Resources
+						.get("modifyTableRestrictionTitle"));
+				modify.setMnemonic(Resources.get(
+						"modifyTableRestrictionMnemonic").charAt(0));
+				modify.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						getMartTab().getDataSetTabSet()
+								.requestModifyTableRestriction(dataset, table,
+										dataset.getRestrictedTableType(table));
+					}
+				});
+				contextMenu.add(modify);
+
+				// Option to remove restriction.
+				JMenuItem remove = new JMenuItem(Resources
+						.get("removeTableRestrictionTitle"));
+				remove.setMnemonic(Resources.get(
+						"removeTableRestrictionMnemonic").charAt(0));
+				remove.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						getMartTab().getDataSetTabSet()
+								.requestRemoveTableRestriction(dataset, table);
+					}
+				});
+				contextMenu.add(remove);
+
+			} else {
+
+				// Add a table restriction.
+				JMenuItem restriction = new JMenuItem(Resources
+						.get("addTableRestrictionTitle"));
+				restriction.setMnemonic(Resources.get(
+						"addTableRestrictionMnemonic").charAt(0));
+				restriction.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						getMartTab().getDataSetTabSet()
+								.requestAddTableRestriction(dataset, table);
+					}
+				});
+				contextMenu.add(restriction);
+			}
 		}
 
 		// This menu is attached to all the relation lines in the schema.
@@ -423,7 +471,8 @@ public class WindowContext extends SchemaContext {
 				restriction.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						getMartTab().getDataSetTabSet()
-								.requestAddRelationRestriction(dataset, relation);
+								.requestAddRelationRestriction(dataset,
+										relation);
 					}
 				});
 				contextMenu.add(restriction);
@@ -446,6 +495,18 @@ public class WindowContext extends SchemaContext {
 	}
 
 	public void customiseAppearance(JComponent component, Object object) {
+
+		// This bit adds a restricted outline to restricted tables.
+		if (object instanceof Table) {
+			Table table = (Table) object;
+			if (this.dataset.getRestrictedTables().contains(table))
+				((TableComponent) component)
+						.setStroke(BoxShapedComponent.RESTRICTED_OUTLINE);
+			else
+				((TableComponent) component)
+						.setStroke(BoxShapedComponent.NORMAL_OUTLINE);
+
+		}
 
 		// This section customises the appearance of relation lines within
 		// the window schema diagram.

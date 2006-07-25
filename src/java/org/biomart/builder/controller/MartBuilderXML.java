@@ -54,6 +54,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
@@ -98,7 +99,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.24, 24th July 2006
+ * @version 0.1.25, 25th July 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -682,6 +683,48 @@ public class MartBuilderXML extends DefaultHandler {
 						expr, first, second);
 				w.flagRestrictedRelation(rel, restrict);
 				element = rel;
+			} catch (Exception e) {
+				if (e instanceof SAXException)
+					throw (SAXException) e;
+				else
+					throw new SAXException(e);
+			}
+		}
+
+		// Restricted Table (inside dataset).
+		else if ("restrictedTable".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("restrictedRelationOutsideDataSet"));
+			DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the relation.
+				Table tbl = (Table) this.mappedObjects.get(attributes
+						.get("tableId"));
+
+				// Get the expression to use.
+				String expr = (String) attributes.get("expression");
+
+				// Get the aliases to use for the first table.
+				Map aliases = new HashMap();
+				String[] aliasColumnIds = ((String) attributes
+						.get("aliasColumnIds")).split(",");
+				String[] aliasNames = ((String) attributes.get("aliasNames"))
+						.split(",");
+				for (int i = 0; i < aliasColumnIds.length; i++) {
+					Column wrapped = (Column) this.mappedObjects
+							.get(aliasColumnIds[i]);
+					aliases.put(wrapped, aliasNames[i]);
+				}
+
+				// Flag it as restricted
+				DataSetTableRestriction restrict = new DataSetTableRestriction(
+						expr, aliases);
+				w.flagRestrictedTable(tbl, restrict);
+				element = tbl;
 			} catch (Exception e) {
 				if (e instanceof SAXException)
 					throw (SAXException) e;
@@ -1328,6 +1371,40 @@ public class MartBuilderXML extends DefaultHandler {
 				this.closeElement("concatRelation", xmlWriter);
 			}
 
+			// Write out restricted tables inside window.
+			for (Iterator x = ds.getRestrictedTables().iterator(); x.hasNext();) {
+				Table t = (Table) x.next();
+				DataSetTableRestriction restrict = ds.getRestrictedTableType(t);
+				this.openElement("restrictedTable", xmlWriter);
+				this.writeAttribute("tableId",
+						(String) this.reverseMappedObjects.get(t), xmlWriter);
+				this.writeAttribute("expression", restrict.getExpression(),
+						xmlWriter);
+
+				// AliasCols, AliasNames - wrapped obj to string map
+				StringBuffer aliasColumnIds = new StringBuffer();
+				StringBuffer aliasNames = new StringBuffer();
+				for (Iterator i = restrict.getAliases().keySet().iterator(); i
+						.hasNext();) {
+					Column col = (Column) i.next();
+					String alias = (String) restrict.getAliases().get(col);
+					aliasColumnIds.append((String) this.reverseMappedObjects
+							.get(col));
+					aliasNames.append(alias);
+					if (i.hasNext()) {
+						aliasColumnIds.append(',');
+						aliasNames.append(',');
+					}
+				}
+				this.writeAttribute("aliasColumnIds",
+						aliasColumnIds.toString(), xmlWriter);
+				this.writeAttribute("aliasNames", aliasNames.toString(),
+						xmlWriter);
+
+				this.writeAttribute("alt", t.toString(), xmlWriter);
+				this.closeElement("restrictedTable", xmlWriter);
+			}
+
 			// Write out restricted relations inside window.
 			for (Iterator x = ds.getRestrictedRelations().iterator(); x
 					.hasNext();) {
@@ -1357,8 +1434,8 @@ public class MartBuilderXML extends DefaultHandler {
 						firstAliasNames.append(',');
 					}
 				}
-				this.writeAttribute("firstTableAliasColumnIds", firstAliasColumnIds
-						.toString(), xmlWriter);
+				this.writeAttribute("firstTableAliasColumnIds",
+						firstAliasColumnIds.toString(), xmlWriter);
 				this.writeAttribute("firstTableAliasNames", firstAliasNames
 						.toString(), xmlWriter);
 

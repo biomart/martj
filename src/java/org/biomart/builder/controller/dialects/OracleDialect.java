@@ -44,6 +44,7 @@ import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
+import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
@@ -68,7 +69,7 @@ import org.biomart.builder.resources.Resources;
  * Understands how to create SQL and DDL for an Oracle database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 24th July 2006
+ * @version 0.1.8, 25th July 2006
  * @since 0.1
  */
 public class OracleDialect extends DatabaseDialect {
@@ -352,17 +353,20 @@ public class OracleDialect extends DatabaseDialect {
 				.getDataSetSchemaName()
 				: action.getSelectFromTableSchema().getName();
 		String fromTableName = action.getSelectFromTableName();
+		DataSetTableRestriction tblRestriction = action.getTableRestriction();
 		boolean useDistinct = action.isUseDistinct();
 
 		StringBuffer sb = new StringBuffer();
 		sb.append("create table " + createTableSchema + "." + createTableName
 				+ " as select ");
-		if (useDistinct) sb.append("distinct ");
+		if (useDistinct)
+			sb.append("distinct ");
 		for (Iterator i = action.getSelectFromColumns().iterator(); i.hasNext();) {
 			Column col = (Column) i.next();
 			if (action.isUseAliases()) {
 				DataSetColumn dsCol = (DataSetColumn) col;
 				if (dsCol instanceof WrappedColumn) {
+					sb.append("a.");
 					sb.append(((WrappedColumn) dsCol).getWrappedColumn()
 							.getName());
 					sb.append(" as ");
@@ -379,7 +383,13 @@ public class OracleDialect extends DatabaseDialect {
 			if (i.hasNext())
 				sb.append(',');
 		}
-		sb.append(" from " + fromTableSchema + "." + fromTableName);
+		sb.append(" from " + fromTableSchema + "." + fromTableName + " as a");
+
+		// Do restriction.
+		if (tblRestriction != null) {
+			sb.append(" where ");
+			sb.append(tblRestriction.getSubstitutedExpression("a"));
+		}
 
 		statements.add(sb.toString());
 	}
@@ -397,8 +407,8 @@ public class OracleDialect extends DatabaseDialect {
 		Object partColumnValue = action.getPartitionColumnValue();
 		if (partColumnValue != null) {
 			String escapedValue = partColumnValue.toString();
-			escapedValue = escapedValue.replaceAll("\\","\\\\");
-			escapedValue = escapedValue.replaceAll("'","\\'");	
+			escapedValue = escapedValue.replaceAll("\\", "\\\\");
+			escapedValue = escapedValue.replaceAll("'", "\\'");
 			statements.add("create table " + partTableSchema + "."
 					+ partTableName + " as select * from " + fromTableSchema
 					+ "." + fromTableName + " where " + partColumnName + "='"
@@ -423,14 +433,18 @@ public class OracleDialect extends DatabaseDialect {
 				.getDataSetSchemaName() : action.getMergedTableSchema()
 				.getName();
 		String mergeTableName = action.getMergedTableName();
-		DataSetRelationRestriction restriction = action.getRelationRestriction();
+		DataSetRelationRestriction relRestriction = action
+				.getRelationRestriction();
+		DataSetTableRestriction tblRestriction = action
+				.getTargetTableRestriction();
 		boolean firstIsSource = action.isFirstTableSourceTable();
 		boolean useDistinct = action.isUseDistinct();
 
 		StringBuffer sb = new StringBuffer();
 		sb.append("create table " + mergeSchemaName + "." + mergeTableName
 				+ " as select ");
-		if (useDistinct) sb.append("distinct ");
+		if (useDistinct)
+			sb.append("distinct ");
 		sb.append("a.*");
 		for (Iterator i = action.getTargetTableColumns().iterator(); i
 				.hasNext();) {
@@ -465,12 +479,17 @@ public class OracleDialect extends DatabaseDialect {
 					i)).getName();
 			sb.append("a." + pkColName + "=b." + fkColName);
 		}
+
 		// Do restriction.
-		if (restriction!=null) {
+		if (relRestriction != null || tblRestriction != null)
 			sb.append(" where ");
-			sb.append(restriction.getSubstitutedExpression(
-					firstIsSource?"a":"b",firstIsSource?"b":"a"));
-		}
+		if (relRestriction != null)
+			sb.append(relRestriction.getSubstitutedExpression(
+					firstIsSource ? "a" : "b", firstIsSource ? "b" : "a"));
+		if (relRestriction != null && tblRestriction != null)
+			sb.append(" and ");
+		if (tblRestriction != null)
+			sb.append(tblRestriction.getSubstitutedExpression("b"));
 
 		statements.add(sb.toString());
 	}
@@ -494,7 +513,7 @@ public class OracleDialect extends DatabaseDialect {
 				+ " as select ");
 		for (Iterator i = selectCols.iterator(); i.hasNext();) {
 			Column col = (Column) i.next();
-			sb.append(col.getName());	
+			sb.append(col.getName());
 			sb.append(',');
 		}
 		for (Iterator i = expressCols.iterator(); i.hasNext();) {
@@ -533,8 +552,11 @@ public class OracleDialect extends DatabaseDialect {
 				.getDataSetSchemaName()
 				: action.getConcatTableSchema().getName();
 		String concatTableName = action.getConcatTableName();
-		ConcatRelationType crType = action.getConcatRelationType();	
-		DataSetRelationRestriction restriction = action.getRelationRestriction();
+		ConcatRelationType crType = action.getConcatRelationType();
+		DataSetRelationRestriction relRestriction = action
+				.getRelationRestriction();
+		DataSetTableRestriction tblRestriction = action
+				.getTargetTableRestriction();
 		boolean firstIsSource = action.isFirstTableSourceTable();
 
 		StringBuffer sb = new StringBuffer();
@@ -587,14 +609,18 @@ public class OracleDialect extends DatabaseDialect {
 					i)).getName();
 			sb.append("a." + pkColName + "=b." + fkColName);
 		}
-		
+
 		// Do restriction.
-		if (restriction!=null) {
+		if (relRestriction != null || tblRestriction != null)
 			sb.append(" where ");
-			sb.append(restriction.getSubstitutedExpression(
-					firstIsSource?"a":"b",firstIsSource?"b":"a"));
-		}
-		
+		if (relRestriction != null)
+			sb.append(relRestriction.getSubstitutedExpression(
+					firstIsSource ? "a" : "b", firstIsSource ? "b" : "a"));
+		if (relRestriction != null && tblRestriction != null)
+			sb.append(" and ");
+		if (tblRestriction != null)
+			sb.append(tblRestriction.getSubstitutedExpression("b"));
+
 		// Do group-by.
 		sb.append(" group by ");
 		for (Iterator i = srcTableKeyCols.iterator(); i.hasNext();) {
