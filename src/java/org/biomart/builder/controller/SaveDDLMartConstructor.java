@@ -50,7 +50,7 @@ import org.biomart.builder.resources.Resources;
  * use JDBC to fetch/retrieve data between two databases.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 19th July 2006
+ * @version 0.1.12, 25th July 2006
  * @since 0.1
  */
 public class SaveDDLMartConstructor implements MartConstructor {
@@ -152,8 +152,12 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		List inputSchemaList = new ArrayList(inputSchemas);
 
 		// Set the output dialect to match the first one in the list.
-		helper.setDialect(DatabaseDialect.getDialect((Schema) inputSchemaList
-				.get(0)));
+		DatabaseDialect dd = DatabaseDialect
+				.getDialect((Schema) inputSchemaList.get(0));
+		if (dd == null)
+			throw new ConstructorException("unknownDialect");
+		else
+			helper.setDialect(dd);
 
 		// Then, check that the rest are compatible with the first one.
 		for (int i = 1; i < inputSchemaList.size(); i++) {

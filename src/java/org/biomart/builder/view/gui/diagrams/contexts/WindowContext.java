@@ -115,6 +115,19 @@ public class WindowContext extends SchemaContext {
 			});
 			contextMenu.add(mask);
 
+			// Show the first 10 rows on a table.
+			final JMenuItem showTen = new JMenuItem(Resources
+					.get("showFirstTenRowsTitle"));
+			showTen.setMnemonic(Resources.get("showFirstTenRowsMnemonic")
+					.charAt(0));
+			showTen.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					getMartTab().getSchemaTabSet()
+							.requestShowRows(table, 0, 10);
+				}
+			});
+			contextMenu.add(showTen);
+
 			// If it's a restricted table...
 			if (this.dataset.getRestrictedTables().contains(table)) {
 

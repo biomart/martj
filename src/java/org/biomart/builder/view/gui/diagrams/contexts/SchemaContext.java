@@ -45,14 +45,13 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 
-
 /**
  * Provides the context menus and colour schemes to use when viewing a schema in
  * its plain vanilla form, ie. not a dataset schema, and not a window from a
  * dataset onto a set of masked relations.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.24, 24th July 2006
+ * @version 0.1.25, 25th July 2006
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
@@ -125,8 +124,8 @@ public class SchemaContext implements DiagramContext {
 			contextMenu.add(add);
 
 			// Menu option to suggest a bunch of datasets.
-			JMenuItem suggest = new JMenuItem(Resources.get(
-					"suggestDataSetsTitle"));
+			JMenuItem suggest = new JMenuItem(Resources
+					.get("suggestDataSetsTitle"));
 			suggest.setMnemonic(Resources.get("suggestDataSetsMnemonic")
 					.charAt(0));
 			suggest.addActionListener(new ActionListener() {
@@ -185,6 +184,19 @@ public class SchemaContext implements DiagramContext {
 				}
 			});
 			contextMenu.add(fk);
+
+			// Show the first 10 rows on a table.
+			final JMenuItem showTen = new JMenuItem(Resources
+					.get("showFirstTenRowsTitle"));
+			showTen.setMnemonic(Resources.get("showFirstTenRowsMnemonic")
+					.charAt(0));
+			showTen.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					getMartTab().getSchemaTabSet()
+							.requestShowRows(table, 0, 10);
+				}
+			});
+			contextMenu.add(showTen);
 		}
 
 		// Schema objects have different menus to the background.
@@ -303,8 +315,8 @@ public class SchemaContext implements DiagramContext {
 				contextMenu.add(addToGroup);
 
 				// Menu option to suggest a bunch of datasets.
-				JMenuItem suggest = new JMenuItem(Resources.get(
-						"suggestDataSetsTitle"));
+				JMenuItem suggest = new JMenuItem(Resources
+						.get("suggestDataSetsTitle"));
 				suggest.setMnemonic(Resources.get("suggestDataSetsMnemonic")
 						.charAt(0));
 				suggest.addActionListener(new ActionListener() {
@@ -585,9 +597,9 @@ public class SchemaContext implements DiagramContext {
 			// All others are normal.
 			else
 				component.setForeground(RelationComponent.NORMAL_COLOUR);
-			
+
 			// Do the stroke.
-			RelationComponent relcomp = (RelationComponent)component;
+			RelationComponent relcomp = (RelationComponent) component;
 			if (relation.isOptional()) {
 				if (relation.isOneToOne())
 					relcomp.setStroke(RelationComponent.ONE_ONE_OPTIONAL);

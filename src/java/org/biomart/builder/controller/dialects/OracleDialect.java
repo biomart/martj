@@ -40,6 +40,7 @@ import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
@@ -127,6 +128,37 @@ public class OracleDialect extends DatabaseDialect {
 						+ tableName).executeQuery();
 		while (rs.next())
 			results.add(rs.getString(0));
+		rs.close();
+		return results;
+	}
+
+	public List executeSelectRows(Table table, int offset, int count)
+			throws SQLException {
+		String tableName = table.getName();
+		Schema schema = table.getSchema();
+
+		StringBuffer colNames = new StringBuffer();
+		for (Iterator i = table.getColumns().iterator(); i.hasNext();) {
+			colNames.append(((Column) i.next()).getName());
+			if (i.hasNext())
+				colNames.append(',');
+		}
+
+		List results = new ArrayList();
+		String schemaName = ((JDBCSchema) schema).getDatabaseSchema();
+		Connection conn = ((JDBCSchema) schema).getConnection();
+		ResultSet rs = conn.prepareStatement(
+				"select * from (select rownum as __seqnum,"
+						+ colNames.toString() + " from " + schemaName + "."
+						+ tableName + ") where __seqnum > " + offset
+						+ " and __seqnum <= " + (offset + count))
+				.executeQuery();
+		while (rs.next()) {
+			List values = new ArrayList();
+			for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) 
+				values.add(rs.getObject(i));
+			results.add(values);
+		}
 		rs.close();
 		return results;
 	}

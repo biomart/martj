@@ -24,13 +24,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.MartConstructorAction;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.resources.Resources;
+import org.biomart.builder.model.DataSet.DataSetTable;
 
 /**
  * DatabaseDialect provides methods which generate atomic DDL or SQL statements.
@@ -39,7 +39,7 @@ import org.biomart.builder.resources.Resources;
  * can be used.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 19th July 2006
+ * @version 0.1.9, 25th July 2006
  * @since 0.1
  */
 public abstract class DatabaseDialect {
@@ -60,18 +60,16 @@ public abstract class DatabaseDialect {
 	 * 
 	 * @param dataLink
 	 *            the data link to work out the dialect for.
-	 * @return the appropriate DatabaseDialect.
-	 * @throws AssociationException
-	 *             if there is no appropriate dialect.
+	 * @return the appropriate DatabaseDialect, or <tt>null</tt> if none
+	 *         found.
 	 */
-	public static DatabaseDialect getDialect(DataLink dataLink)
-			throws AssociationException {
+	public static DatabaseDialect getDialect(DataLink dataLink) {
 		for (Iterator i = dialects.iterator(); i.hasNext();) {
 			DatabaseDialect d = (DatabaseDialect) i.next();
 			if (d.understandsDataLink(dataLink))
 				return d;
 		}
-		throw new AssociationException(Resources.get("mcUnknownDataLink"));
+		return null;
 	}
 
 	/**
@@ -97,6 +95,30 @@ public abstract class DatabaseDialect {
 	 *             in case of problems.
 	 */
 	public abstract List executeSelectDistinct(Column col) throws SQLException;
+
+	/**
+	 * Gets rows from the given table. This must be a real table, not an
+	 * instance of {@link DataSetTable}. This method actually performs the
+	 * select and returns the results as a list, each entry in the list being
+	 * another list. The columns in the results are in the same order as the
+	 * columns were defined for the table itself.
+	 * <p>
+	 * Note that if the table belongs to a grouped schema, this function is
+	 * undefined.
+	 * 
+	 * @param table
+	 *            the table to get the rows from.
+	 * @param offset
+	 *            how far into the table to start. This value is 0-indexed, so
+	 *            the first row is row 0.
+	 * @param count
+	 *            how many rows to get.
+	 * @return the rows as a nested list.
+	 * @throws SQLException
+	 *             in case of problems.
+	 */
+	public abstract List executeSelectRows(Table table, int offset, int count)
+			throws SQLException;
 
 	/**
 	 * Given a particular action, return a SQL statement that will perform it.

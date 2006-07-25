@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.biomart.builder.controller.dialects.DatabaseDialect;
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
@@ -71,6 +72,48 @@ public class MartBuilderUtils {
 	 * The tools are static and not intended to be instantiated.
 	 */
 	private MartBuilderUtils() {
+	}
+
+	/**
+	 * This method returns the first few rows from a given offset in the given
+	 * table. The results are a nested list, where each item in the main list is
+	 * another list containing all the column values in the same order as they
+	 * appear in the method {@link Table#getColumns()}.
+	 * <p>
+	 * If the schema is a grouped schema, this method will return <i>n*m</i>
+	 * rows, where <i>n</i> is the number of rows requested and <i>m</i> is
+	 * the number of schemas in the group.
+	 * <p>
+	 * If any schema is unrecognised by
+	 * {@link DatabaseDialect#getDialect(DataLink)} then no rows are returned
+	 * for that schema.
+	 * 
+	 * @param table
+	 *            the table to get the rows for.
+	 * @param offset
+	 *            the offset to start at.
+	 * @param count
+	 *            the number of rows to get.
+	 */
+	public static List selectRows(Table table, int offset, int count)
+			throws SQLException {
+		Schema schema = table.getSchema();
+		List results = new ArrayList();
+		if (schema instanceof SchemaGroup) {
+			for (Iterator i = ((SchemaGroup) schema).getSchemas().iterator(); i
+					.hasNext();) {
+				Schema internalSchema = (Schema)i.next();
+				DatabaseDialect dd = DatabaseDialect.getDialect(internalSchema);
+				if (dd != null)
+					results.addAll(dd.executeSelectRows(internalSchema
+							.getTableByName(table.getName()), offset, count));
+			}
+		} else {
+			DatabaseDialect dd = DatabaseDialect.getDialect(schema);
+			if (dd != null)
+				results.addAll(dd.executeSelectRows(table, offset, count));
+		}
+		return results;
 	}
 
 	/**
