@@ -39,7 +39,6 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
 import org.biomart.builder.model.Column;
@@ -62,8 +61,6 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
 	private MartTab martTab;
-
-	private JTextField datasetName;
 
 	private JComboBox tables;
 
@@ -116,9 +113,6 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 		GridBagConstraints fieldLastRowConstraints = (GridBagConstraints) fieldConstraints
 				.clone();
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
-
-		// Create the fields that will contain the user's table choices.
-		this.datasetName = new JTextField(30); // Arbitrary size.
 
 		// Create a drop-down list of underlying tables.
 		Set underlyingTables = new TreeSet();
@@ -188,15 +182,6 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
-		// Add the name option.
-		label = new JLabel(Resources.get("nameLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
-		field = new JPanel();
-		field.add(this.datasetName);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-
 		// Add the buttons to the dialog.
 		label = new JLabel();
 		gridBag.setConstraints(label, labelLastRowConstraints);
@@ -234,9 +219,6 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 		// Centre ourselves.
 		this.setLocationRelativeTo(this.martTab.getMartTabSet()
 				.getMartBuilder());
-
-		// Set some nice defaults.
-		this.datasetName.setText(table.getSchema().getName());
 	}
 
 	private boolean validateFields() {
@@ -246,10 +228,6 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 		// We must have a selected column!
 		if (this.columns.getSelectedValues().length == 0)
 			messages.add(Resources.get("suggestDSColumnsEmpty"));
-
-		// We must have a name!
-		if (this.isEmpty(this.datasetName.getText()))
-			messages.add(Resources.get("fieldIsEmpty", Resources.get("name")));
 
 		// If there any messages, display them.
 		if (!messages.isEmpty()) {
@@ -263,11 +241,6 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 		return messages.isEmpty();
 	}
 
-	private boolean isEmpty(String string) {
-		// Strings are empty if they are null or all whitespace.
-		return (string == null || string.trim().length() == 0);
-	}
-
 	/**
 	 * Return the set of columns the user selected.
 	 * 
@@ -275,14 +248,5 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 	 */
 	public Collection getSelectedColumns() {
 		return Arrays.asList(this.columns.getSelectedValues());
-	}
-
-	/**
-	 * Return the name the user selected.
-	 * 
-	 * @return the selected name.
-	 */
-	public String getDataSetName() {
-		return this.datasetName.getText().trim();
 	}
 }

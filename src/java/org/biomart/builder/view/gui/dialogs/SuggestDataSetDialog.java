@@ -36,7 +36,6 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
 import org.biomart.builder.model.Schema;
@@ -48,15 +47,13 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * This dialog asks users what kind of dataset suggestion they want to do.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 20th July 2006
+ * @version 0.1.5, 25th July 2006
  * @since 0.1
  */
 public class SuggestDataSetDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
 	private MartTab martTab;
-
-	private JTextField datasetName;
 
 	private JList tables;
 
@@ -107,9 +104,6 @@ public class SuggestDataSetDialog extends JDialog {
 				.clone();
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
-		// Create the fields that will contain the user's table choices.
-		this.datasetName = new JTextField(30); // Arbitrary size.
-
 		List availableTables = new ArrayList();
 		for (Iterator i = this.martTab.getMart().getSchemas().iterator(); i
 				.hasNext();)
@@ -135,15 +129,6 @@ public class SuggestDataSetDialog extends JDialog {
 		content.add(label);
 		JPanel field = new JPanel();
 		field.add(new JScrollPane(this.tables));
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-
-		// Add the name option.
-		label = new JLabel(Resources.get("nameLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
-		field = new JPanel();
-		field.add(this.datasetName);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
@@ -186,10 +171,8 @@ public class SuggestDataSetDialog extends JDialog {
 				.getMartBuilder());
 
 		// Set some nice defaults.
-		if (initialTable != null) {
+		if (initialTable != null) 
 			this.tables.setSelectedValue(initialTable, true);
-			this.datasetName.setText(initialTable.getName());
-		}
 	}
 
 	private boolean validateFields() {
@@ -199,10 +182,6 @@ public class SuggestDataSetDialog extends JDialog {
 		// We must have a selected table!
 		if (this.tables.getSelectedValues().length == 0)
 			messages.add(Resources.get("suggestDSTablesEmpty"));
-
-		// We must have a name!
-		if (this.isEmpty(this.datasetName.getText()))
-			messages.add(Resources.get("fieldIsEmpty", Resources.get("name")));
 
 		// If there any messages, display them.
 		if (!messages.isEmpty()) {
@@ -216,11 +195,6 @@ public class SuggestDataSetDialog extends JDialog {
 		return messages.isEmpty();
 	}
 
-	private boolean isEmpty(String string) {
-		// Strings are empty if they are null or all whitespace.
-		return (string == null || string.trim().length() == 0);
-	}
-
 	/**
 	 * Return the set of tables the user selected.
 	 * 
@@ -228,14 +202,5 @@ public class SuggestDataSetDialog extends JDialog {
 	 */
 	public Collection getSelectedTables() {
 		return Arrays.asList(this.tables.getSelectedValues());
-	}
-
-	/**
-	 * Return the name the user selected.
-	 * 
-	 * @return the selected name.
-	 */
-	public String getDataSetName() {
-		return this.datasetName.getText().trim();
 	}
 }

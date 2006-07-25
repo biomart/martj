@@ -100,6 +100,9 @@ public class DataSet extends GenericSchema {
 	/**
 	 * The constructor creates a dataset around one central table and gives the
 	 * dataset a name. It adds itself to the specified mart automatically.
+	 * <p>
+	 * If the name already exists, an underscore and a sequence number will
+	 * be appended until the name is unique.
 	 * 
 	 * @param mart
 	 *            the mart this dataset will belong to.
@@ -111,8 +114,8 @@ public class DataSet extends GenericSchema {
 	 *             if the central table does not belong to any of the schema
 	 *             objects in the mart.
 	 * @throws AlreadyExistsException
-	 *             if another dataset with exactly the same name already exists
-	 *             in the specified mart.
+	 *             Should never happen. If it does, it was thrown by
+	 *             {@link Mart#addDataSet(DataSet));
 	 */
 	public DataSet(Mart mart, Table centralTable, String name)
 			throws AssociationException, AlreadyExistsException {
@@ -129,6 +132,13 @@ public class DataSet extends GenericSchema {
 		this.optimiser = DataSetOptimiserType.NONE;
 		this.partitionOnSchema = false;
 
+		// Rename ourselves if the name clashes.
+		String newName = name;
+		int suffix = 1;
+		while (mart.getDataSetByName(newName)!=null) 
+			newName = name+"_"+(suffix++);
+		if (!newName.equals(name)) this.setName(newName);
+		
 		// Add ourselves to the mart.
 		mart.addDataSet(this);
 	}

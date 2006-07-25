@@ -546,8 +546,7 @@ public class DataSetTabSet extends JTabbedPane {
 					// Suggest them.
 					dss = MartBuilderUtils
 							.suggestDataSets(martTab.getMart(), dialog
-									.getSelectedTables(), dialog
-									.getDataSetName());
+									.getSelectedTables());
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -612,8 +611,7 @@ public class DataSetTabSet extends JTabbedPane {
 				try {
 					// Suggest them.
 					dss = MartBuilderUtils.suggestInvisibleDataSets(martTab
-							.getMart(), dataset, dialog.getSelectedColumns(),
-							dialog.getDataSetName());
+							.getMart(), dataset, dialog.getSelectedColumns());
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {

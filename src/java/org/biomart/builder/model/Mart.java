@@ -40,7 +40,7 @@ import org.biomart.builder.resources.Resources;
  * mart. It also has zero or more datasets based around these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.18, 24th July 2006
+ * @version 0.1.19, 25th July 2006
  * @since 0.1
  */
 public class Mart {
@@ -51,11 +51,6 @@ public class Mart {
 	// OK to use map, as keys are strings and never change.
 	// Use tree map to keep them in alphabetical order.
 	private final Map datasets = new TreeMap();
-
-	// The suffix iterator generates suffix values for datasets.
-	// Care must be taken not to allow two datasets to be generated
-	// in parallel else the suffix iterator may get altered in odd ways.
-	private int suffix;
 
 	/**
 	 * Returns the set of schema objects which this mart includes when building
@@ -199,13 +194,13 @@ public class Mart {
 	 * dataset is generated for each branch of the fork.
 	 * <p>
 	 * Every suggested dataset is synchronised before being returned.
+	 * <p>
+	 * Datasets will be named after their central tables. If a dataset with that
+	 * name already exists, a '_' and sequence number will be appended to make
+	 * the new dataset name unique.
 	 * 
 	 * @param includeTables
 	 *            the tables that must appear in the final set of datasets.
-	 * @param name
-	 *            the name to give each dataset. As each dataset is generated
-	 *            beyond the first one, it will gain an '_x' suffix where 'x' is
-	 *            the sequence number of the additional dataset.
 	 * @return the collection of datasets generated.
 	 * @throws SQLException
 	 *             if there is any problem talking to the source database whilst
@@ -218,7 +213,7 @@ public class Mart {
 	 * @throws BuilderException
 	 *             if synchronisation fails.
 	 */
-	public Collection suggestDataSets(Collection includeTables, String name)
+	public Collection suggestDataSets(Collection includeTables)
 			throws SQLException, AssociationException, AlreadyExistsException,
 			BuilderException {
 		// The root tables are all those which do not have a M:1 relation
@@ -245,18 +240,12 @@ public class Mart {
 		List suggestedDataSets = new ArrayList();
 		for (Iterator i = rootTables.iterator(); i.hasNext();) {
 			Table rootTable = (Table) i.next();
-			DataSet dataset = new DataSet(this, rootTable, name + "_"
-					+ (this.suffix++));
+			DataSet dataset = new DataSet(this, rootTable, rootTable.getName());
 			// Process it.
 			List tablesIncluded = new ArrayList();
 			tablesIncluded.add(rootTable);
 			suggestedDataSets.add(this.continueSubclassing(includeTables,
-					tablesIncluded, name, dataset, rootTable));
-		}
-		// If only one dataset in results, remove the _1 suffix.
-		if (suggestedDataSets.size() == 1) {
-			DataSet ds = (DataSet) suggestedDataSets.get(0);
-			ds.getMart().renameDataSet(ds, name);
+					tablesIncluded, dataset, rootTable));
 		}
 		// Synchronise them all.
 		for (Iterator i = suggestedDataSets.iterator(); i.hasNext();)
@@ -266,7 +255,7 @@ public class Mart {
 	}
 
 	private DataSet continueSubclassing(Collection includeTables,
-			Collection tablesIncluded, String name, DataSet dataset, Table table)
+			Collection tablesIncluded, DataSet dataset, Table table)
 			throws AssociationException {
 		// Make a list to hold the recursion tables, and the potential 1:M:1
 		// table/relation pairs.
@@ -342,8 +331,8 @@ public class Mart {
 		}
 		// Do the recursion.
 		for (Iterator i = recursion.iterator(); i.hasNext();)
-			this.continueSubclassing(includeTables, tablesIncluded, name,
-					dataset, (Table) i.next());
+			this.continueSubclassing(includeTables, tablesIncluded, dataset,
+					(Table) i.next());
 		// Return the resulting datasets.
 		return dataset;
 	}
@@ -362,14 +351,15 @@ public class Mart {
 	 * appear elsewhere.
 	 * <p>
 	 * Datasets are synchronised before being returned.
+	 * <p>
+	 * Datasets will be named after their central tables. If a dataset with that
+	 * name already exists, a '_' and sequence number will be appended to make
+	 * the new dataset name unique.
 	 * 
 	 * @param dataset
 	 *            the dataset the columns were selected from.
 	 * @param columns
 	 *            the columns to search across.
-	 * @param name
-	 *            the name to use for the invisible datasets. Names will consist
-	 *            of this value plus "_i" plus a sequence number.
 	 * @return the resulting set of datasets.
 	 * @throws SQLException
 	 *             if there is any problem talking to the source database whilst
@@ -383,12 +373,13 @@ public class Mart {
 	 *             if synchronisation fails.
 	 */
 	public Collection suggestInvisibleDataSets(DataSet dataset,
-			Collection columns, String name) throws AssociationException,
+			Collection columns) throws AssociationException,
 			AlreadyExistsException, SQLException, BuilderException {
 		List invisibleDataSets = new ArrayList();
 		// Check the dataset belongs to us.
 		if (!this.datasets.values().contains(dataset))
-			throw new AssociationException(Resources.get("datasetSchemaMismatch"));
+			throw new AssociationException(Resources
+					.get("datasetSchemaMismatch"));
 		// Check all the columns are from the same table.
 		Table sourceTable = ((Column) columns.iterator().next()).getTable();
 		for (Iterator i = columns.iterator(); i.hasNext();)
@@ -418,11 +409,10 @@ public class Mart {
 		for (Iterator i = dataset.getTables().iterator(); i.hasNext();)
 			candidates.remove(((DataSetTable) i.next()).getUnderlyingTable());
 		// Generate the dataset for each.
-		int invisibleSuffix = 1;
-		for (Iterator i = candidates.iterator(); i.hasNext();)
-			invisibleDataSets.add(new DataSet(this, (Table) i.next(),
-					name + Resources.get("invisibleSuffix")
-							+ (invisibleSuffix++)));
+		for (Iterator i = candidates.iterator(); i.hasNext();) {
+			Table table = (Table) i.next();
+			invisibleDataSets.add(new DataSet(this, table, table.getName()));
+		}
 		// Synchronise them all.
 		for (Iterator i = invisibleDataSets.iterator(); i.hasNext();)
 			((DataSet) i.next()).synchronise();

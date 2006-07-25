@@ -214,14 +214,9 @@ public class MartBuilderUtils {
 	 *            the mart to create the datasets in.
 	 * @param tables
 	 *            the tables to include in the set of suggested datasets.
-	 * @param name
-	 *            the base name to give the suggested datasets. The first one
-	 *            will use this name, and subsequent ones will have '_x'
-	 *            appended where 'x' is a number starting from 1.
 	 * @return the set of datasets, which will always have at least one member.
 	 * @throws AlreadyExistsException
-	 *             if a dataset with the specified name or any of the '_x'
-	 *             versions of the name already exists.
+	 *             Should never happen.
 	 * @throws AssociationException
 	 *             if the specified table is not part of the mart given.
 	 * @throws SQLException
@@ -230,10 +225,10 @@ public class MartBuilderUtils {
 	 * @throws BuilderException
 	 *             if synchronisation fails.
 	 */
-	public static Collection suggestDataSets(Mart mart, Collection tables,
-			String name) throws SQLException, AssociationException,
-			AlreadyExistsException, BuilderException {
-		return mart.suggestDataSets(tables, name);
+	public static Collection suggestDataSets(Mart mart, Collection tables)
+			throws SQLException, AssociationException, AlreadyExistsException,
+			BuilderException {
+		return mart.suggestDataSets(tables);
 	}
 
 	/**
@@ -255,13 +250,9 @@ public class MartBuilderUtils {
 	 *            the dataset the columns were selected from.
 	 * @param columns
 	 *            the columns to search across.
-	 * @param name
-	 *            the name to use for the invisible datasets. Names will consist
-	 *            of this value plus "_i" plus a sequence number.
 	 * @return the resulting set of datasets.
 	 * @throws AlreadyExistsException
-	 *             if a dataset with the specified name or any of the '_i'
-	 *             versions of the name already exists.
+	 *             Should never happen.
 	 * @throws AssociationException
 	 *             if the specified table is not part of the mart given.
 	 * @throws SQLException
@@ -271,10 +262,9 @@ public class MartBuilderUtils {
 	 *             if synchronisation fails.
 	 */
 	public static Collection suggestInvisibleDataSets(Mart mart,
-			DataSet dataset, Collection columns, String name)
-			throws AssociationException, AlreadyExistsException,
-			BuilderException, SQLException {
-		return mart.suggestInvisibleDataSets(dataset, columns, name);
+			DataSet dataset, Collection columns) throws AssociationException,
+			AlreadyExistsException, BuilderException, SQLException {
+		return mart.suggestInvisibleDataSets(dataset, columns);
 	}
 
 	/**
