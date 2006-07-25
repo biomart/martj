@@ -298,6 +298,23 @@ public class DataSetContext extends WindowContext {
 				});
 				contextMenu.add(unsubclass);
 			}
+
+			// Main tables have their own stuff as well.
+			else if (tableType.equals(DataSetTableType.MAIN)) {
+				// Suggest invisible datasets.
+				JMenuItem invisible = new JMenuItem(Resources
+						.get("suggestInvisibleDatasetsTitle"));
+				invisible.setMnemonic(Resources.get(
+						"suggestInvisibleDatasetsMnemonic").charAt(0));
+				invisible.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						getMartTab().getDataSetTabSet()
+								.requestSuggestInvisibleDatasets(getDataSet(),
+										table);
+					}
+				});
+				contextMenu.add(invisible);
+			}
 		}
 
 		// Keys have menus too.
@@ -468,7 +485,8 @@ public class DataSetContext extends WindowContext {
 				modify.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						getMartTab().getDataSetTabSet()
-								.requestModifyExpressionColumn((ExpressionColumn) column);
+								.requestModifyExpressionColumn(
+										(ExpressionColumn) column);
 					}
 				});
 				contextMenu.add(modify);
@@ -481,7 +499,8 @@ public class DataSetContext extends WindowContext {
 				remove.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
 						getMartTab().getDataSetTabSet()
-								.requestRemoveExpressionColumn((ExpressionColumn) column);
+								.requestRemoveExpressionColumn(
+										(ExpressionColumn) column);
 					}
 				});
 				contextMenu.add(remove);
@@ -509,9 +528,9 @@ public class DataSetContext extends WindowContext {
 			// All the rest are normal.
 			else
 				component.setForeground(RelationComponent.NORMAL_COLOUR);
-			
+
 			// Do the stroke.
-			RelationComponent relcomp = (RelationComponent)component;
+			RelationComponent relcomp = (RelationComponent) component;
 			relcomp.setStroke(RelationComponent.ONE_MANY);
 		}
 

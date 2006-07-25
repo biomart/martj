@@ -32,6 +32,7 @@ import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
+import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.resources.Resources;
 
 /**
@@ -39,7 +40,7 @@ import org.biomart.builder.resources.Resources;
  * mart. It also has zero or more datasets based around these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 20th July 2006
+ * @version 0.1.18, 24th July 2006
  * @since 0.1
  */
 public class Mart {
@@ -186,7 +187,7 @@ public class Mart {
 		// Add it.
 		this.datasets.put(dataset.getName(), dataset);
 	}
-	
+
 	/**
 	 * Given a set of tables, produce the minimal set of datasets which include
 	 * all the specified tables. Tables can be included in the same dataset if
@@ -217,9 +218,9 @@ public class Mart {
 	 * @throws BuilderException
 	 *             if synchronisation fails.
 	 */
-	public Collection suggestDataSets(Collection includeTables,
-			String name) throws SQLException, AssociationException,
-			AlreadyExistsException, BuilderException {
+	public Collection suggestDataSets(Collection includeTables, String name)
+			throws SQLException, AssociationException, AlreadyExistsException,
+			BuilderException {
 		// The root tables are all those which do not have a M:1 relation
 		// to another one of the initial set of tables. This means that
 		// extra datasets will be created for each table at the end of
@@ -253,13 +254,13 @@ public class Mart {
 					tablesIncluded, name, dataset, rootTable));
 		}
 		// If only one dataset in results, remove the _1 suffix.
-		if (suggestedDataSets.size()==1) {
-			DataSet ds = (DataSet)suggestedDataSets.get(0);
+		if (suggestedDataSets.size() == 1) {
+			DataSet ds = (DataSet) suggestedDataSets.get(0);
 			ds.getMart().renameDataSet(ds, name);
 		}
 		// Synchronise them all.
-		for (Iterator i = suggestedDataSets.iterator(); i.hasNext(); ) 
-			((DataSet)i.next()).synchronise();
+		for (Iterator i = suggestedDataSets.iterator(); i.hasNext();)
+			((DataSet) i.next()).synchronise();
 		// Return the final set of suggested datasets.
 		return suggestedDataSets;
 	}
@@ -345,6 +346,88 @@ public class Mart {
 					dataset, (Table) i.next());
 		// Return the resulting datasets.
 		return dataset;
+	}
+
+	/**
+	 * Given a dataset and a set of columns from one table upon which the main
+	 * table of that dataset is based, find all other tables which have similar
+	 * columns, and create a new dataset for each one.
+	 * <p>
+	 * This method will not create datasets around tables which have already
+	 * been used as the underlying table in any dataset table in the existing
+	 * dataset. Neither will it create a dataset around the table from which the
+	 * original columns came.
+	 * <p>
+	 * There may be no datasets resulting from this, if the columns do not
+	 * appear elsewhere.
+	 * <p>
+	 * Datasets are synchronised before being returned.
+	 * 
+	 * @param dataset
+	 *            the dataset the columns were selected from.
+	 * @param columns
+	 *            the columns to search across.
+	 * @param name
+	 *            the name to use for the invisible datasets. Names will consist
+	 *            of this value plus "_i" plus a sequence number.
+	 * @return the resulting set of datasets.
+	 * @throws SQLException
+	 *             if there is any problem talking to the source database whilst
+	 *             generating the dataset.
+	 * @throws AssociationException
+	 *             if any of the tables do not belong to this mart.
+	 * @throws AlreadyExistsException
+	 *             if a dataset already exists in this schema with the same name
+	 *             or any of the suffixed versions.
+	 * @throws BuilderException
+	 *             if synchronisation fails.
+	 */
+	public Collection suggestInvisibleDataSets(DataSet dataset,
+			Collection columns, String name) throws AssociationException,
+			AlreadyExistsException, SQLException, BuilderException {
+		List invisibleDataSets = new ArrayList();
+		// Check the dataset belongs to us.
+		if (!this.datasets.values().contains(dataset))
+			throw new AssociationException(Resources.get("datasetSchemaMismatch"));
+		// Check all the columns are from the same table.
+		Table sourceTable = ((Column) columns.iterator().next()).getTable();
+		for (Iterator i = columns.iterator(); i.hasNext();)
+			if (!((Column) i.next()).getTable().equals(sourceTable))
+				throw new AssociationException(Resources
+						.get("invisibleNotAllSameTable"));
+		// Find all tables which mention them.
+		List candidates = new ArrayList();
+		for (Iterator i = this.schemas.values().iterator(); i.hasNext();)
+			for (Iterator j = ((Schema) i.next()).getTables().iterator(); j
+					.hasNext();) {
+				Table table = (Table) j.next();
+				int matchingColCount = 0;
+				for (Iterator k = columns.iterator(); k.hasNext();) {
+					Column col = (Column) k.next();
+					if (table.getColumnByName(col.getName()) != null
+							|| table.getColumnByName(col.getName()
+									+ Resources.get("foreignKeySuffix")) != null)
+						matchingColCount++;
+				}
+				if (matchingColCount == columns.size())
+					candidates.add(table);
+			}
+		// Remove from the found tables all those which are already
+		// used, and the one from which the original columns came.
+		candidates.remove(sourceTable);
+		for (Iterator i = dataset.getTables().iterator(); i.hasNext();)
+			candidates.remove(((DataSetTable) i.next()).getUnderlyingTable());
+		// Generate the dataset for each.
+		int invisibleSuffix = 1;
+		for (Iterator i = candidates.iterator(); i.hasNext();)
+			invisibleDataSets.add(new DataSet(this, (Table) i.next(),
+					name + Resources.get("invisibleSuffix")
+							+ (invisibleSuffix++)));
+		// Synchronise them all.
+		for (Iterator i = invisibleDataSets.iterator(); i.hasNext();)
+			((DataSet) i.next()).synchronise();
+		// Return the results.
+		return invisibleDataSets;
 	}
 
 	/**

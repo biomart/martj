@@ -66,7 +66,7 @@ import org.biomart.builder.view.gui.dialogs.SchemaManagerDialog;
  * has the same context applied.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.19, 21st July 2006
+ * @version 0.1.20, 25th July 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -573,6 +573,9 @@ public class SchemaTabSet extends JTabbedPane {
 	}
 
 	private void removeSchemaTab(Schema schema) {
+		// Work out the currently selected tab.
+		int currentTab = this.getSelectedIndex();
+		
 		// Work out which tab the schema lives in.
 		int index = this.schemaToDiagram[0].indexOf(schema);
 
@@ -583,6 +586,10 @@ public class SchemaTabSet extends JTabbedPane {
 		this.removeTabAt(tabIndex);
 		this.schemaToDiagram[0].remove(index);
 		this.schemaToDiagram[1].remove(index);
+
+		// Fake a click on the last tab before this one to ensure
+		// at least one tab remains visible and up-to-date.
+		this.setSelectedIndex(currentTab==0?0:Math.max(tabIndex - 1, 0));
 	}
 
 	/**

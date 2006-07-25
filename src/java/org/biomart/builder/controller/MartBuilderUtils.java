@@ -234,6 +234,46 @@ public class MartBuilderUtils {
 			AlreadyExistsException, BuilderException {
 		return mart.suggestDataSets(tables, name);
 	}
+	
+	/**
+	 * Given a dataset and a set of columns from one table upon which the main
+	 * table of that dataset is based, find all other tables which have similar
+	 * columns, and create a new dataset for each one.
+	 * <p>
+	 * This method will not create datasets around tables which have already
+	 * been used as the underlying table in any dataset table in the existing
+	 * dataset. Neither will it create a dataset around the table from which the
+	 * original columns came.
+	 * <p>
+	 * There may be no datasets resulting from this, if the columns do not
+	 * appear elsewhere.
+	 * 
+	 * @param mart
+	 *            the mart to create the datasets in.
+	 * @param dataset
+	 *            the dataset the columns were selected from.
+	 * @param columns
+	 *            the columns to search across.
+	 * @param name
+	 *            the name to use for the invisible datasets. Names will consist
+	 *            of this value plus "_i" plus a sequence number.
+	 * @return the resulting set of datasets.
+	 * @throws AlreadyExistsException
+	 *             if a dataset with the specified name or any of the '_i'
+	 *             versions of the name already exists.
+	 * @throws AssociationException
+	 *             if the specified table is not part of the mart given.
+	 * @throws SQLException
+	 *             if there is any trouble communicating with the data source or
+	 *             database during schema synchronisation.
+	 * @throws BuilderException
+	 *             if synchronisation fails.
+	 */
+	public static Collection suggestInvisibleDataSets(Mart mart, DataSet dataset,
+			Collection columns, String name) throws AssociationException,
+			AlreadyExistsException, BuilderException, SQLException {
+		return mart.suggestInvisibleDataSets(dataset, columns, name);
+	}
 
 	/**
 	 * Adds a schema to a mart.

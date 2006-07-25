@@ -70,6 +70,7 @@ import org.biomart.builder.view.gui.dialogs.PartitionColumnDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedRelationDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
+import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
 
 /**
  * This tabset contains most of the core functionality of the entire GUI. It has
@@ -79,7 +80,7 @@ import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.32, 21st July 2006
+ * @version 0.1.33, 25th July 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -322,6 +323,9 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	private void removeDataSetTab(DataSet dataset) {
+		// Work out the currently selected tab.
+		int currentTab = this.getSelectedIndex();
+		
 		// Work out which tab the dataset lives in.
 		int index = this.datasetToTab[0].indexOf(dataset);
 		DataSetTab datasetTab = (DataSetTab) this.datasetToTab[1].get(index);
@@ -336,7 +340,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 		// Fake a click on the last tab before this one to ensure
 		// at least one tab remains visible and up-to-date.
-		this.setSelectedIndex(Math.max(tabIndex - 1, 0));
+		this.setSelectedIndex(currentTab==0?0:Math.max(tabIndex - 1, 0));
 	}
 
 	private void addDataSetTab(DataSet dataset) {
@@ -542,6 +546,72 @@ public class DataSetTabSet extends JTabbedPane {
 							.suggestDataSets(martTab.getMart(), dialog
 									.getSelectedTables(), dialog
 									.getDataSetName());
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							martTab.getMartTabSet().getMartBuilder()
+									.showStackTrace(t);
+						}
+					});
+				} finally {
+					// Must use a finally in case the dataset gets created
+					// but won't sync.
+					final Collection dssRef = dss;
+					if (dssRef != null)
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								// For each one suggested, add a dataset tab for
+								// it.
+								for (Iterator i = dssRef.iterator(); i
+										.hasNext();) {
+									DataSet dataset = (DataSet) i.next();
+									addDataSetTab(dataset);
+								}
+
+								// Update the overview diagram.
+								recalculateOverviewDiagram();
+
+								// Update the modified status for this tabset.
+								martTab.getMartTabSet().setModifiedStatus(true);
+							}
+						});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Given a table, suggest a series of synchronised invisible datasets that
+	 * may be possible for that table. This requires a set of columns, for which
+	 * the user will be prompted as necessary.
+	 * 
+	 * @param dataset
+	 *            the dataset we are working with.
+	 * @param table
+	 *            the table to use to obtain columns to suggest invisible
+	 *            datasets for.
+	 */
+	public void requestSuggestInvisibleDatasets(final DataSet dataset,
+			final DataSetTable table) {
+		// Ask the user what tables they want to work with and what
+		// mode they want.
+		final SuggestInvisibleDataSetDialog dialog = new SuggestInvisibleDataSetDialog(
+				martTab, table);
+		dialog.show();
+
+		// If they cancelled it, return without doing anything.
+		if (dialog.getSelectedColumns().isEmpty())
+			return;
+
+		// In the background, suggest the datasets.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				Collection dss = null;
+				try {
+					// Suggest them.
+					dss = MartBuilderUtils.suggestInvisibleDataSets(martTab
+							.getMart(), dataset, dialog.getSelectedColumns(),
+							dialog.getDataSetName());
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
