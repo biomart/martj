@@ -1469,24 +1469,6 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Ask that an explanation dialog be opened that explains how the given
-	 * dataset column was constructed.
-	 * 
-	 * @param dsColumn
-	 *            the dataset column that needs to be explained.
-	 */
-	public void requestExplainColumn(DataSetColumn dsColumn) {
-		try {
-			// Open the dialog. The dialog will set a flag in this instance
-			// that contains a reference to its diagram, so that the diagram
-			// can be updated as the user edits the dataset.
-			ExplainDataSetDialog.showColumnExplanation(this.martTab, dsColumn);
-		} catch (Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
-		}
-	}
-
-	/**
 	 * This method is called by the {@link ExplainDataSetDialog} when it is
 	 * opened, and tells the dataset tabset about the diagram it is using. This
 	 * diagram is then updated whenever the dataset window is updated. It is

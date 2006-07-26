@@ -250,30 +250,42 @@ public class Mart {
 					tablesIncluded, dataset, rootTable));
 		}
 
-		// Remove all datasets that have all their subclassed relations
-		// also subclassed in some other dataset.
-		for (Iterator i = suggestedDataSets.iterator(); i.hasNext();) {
-			DataSet suggestedDataSet = (DataSet) i.next();
-			if (suggestedDataSet.getSubclassedRelations().isEmpty())
-				continue;
-			boolean subsumed = false;
-			for (Iterator j = suggestedDataSets.iterator(); j.hasNext()
-					&& !subsumed;) {
-				DataSet candidate = (DataSet) j.next();
-				if (candidate.equals(suggestedDataSet))
-					continue;
-				subsumed = candidate.getSubclassedRelations().containsAll(
-						suggestedDataSet.getSubclassedRelations());
-			}
-			if (subsumed) {
-				this.removeDataSet(suggestedDataSet);
-				i.remove();
-			}
-		}
-
 		// Synchronise them all.
 		for (Iterator i = suggestedDataSets.iterator(); i.hasNext();)
 			((DataSet) i.next()).synchronise();
+
+		// Do any of the resulting datasets contain all the tables
+		// exactly with subclass relations between each?
+		// If so, just use that one dataset and forget the rest.
+		DataSet perfectDS = null;
+		for (Iterator i = suggestedDataSets.iterator(); i.hasNext()
+				&& perfectDS == null;) {
+			DataSet candidate = (DataSet) i.next();
+			
+			// A candidate is a perfect match if the set of tables 
+			// covered by the subclass relations is the same as the
+			// original set of tables requested.
+			Set scTables = new HashSet();
+			for (Iterator j = candidate.getSubclassedRelations().iterator(); j.hasNext(); ) {
+				Relation r = (Relation)j.next();
+				scTables.add(r.getFirstKey().getTable());
+				scTables.add(r.getSecondKey().getTable());
+			}
+			if (scTables.size()==includeTables.size() && scTables.containsAll(includeTables))
+				perfectDS = candidate;
+		}
+		if (perfectDS != null) {
+			// Drop the others.
+			for (Iterator i = suggestedDataSets.iterator(); i.hasNext();) {
+				DataSet candidate = (DataSet) i.next();
+				if (!candidate.equals(perfectDS)) {
+					this.removeDataSet(candidate);
+					i.remove();
+				}
+			}
+			// Rename it to lose any extension it may have gained.
+			perfectDS.setName(perfectDS.getCentralTable().getName());
+		}
 
 		// Return the final set of suggested datasets.
 		return suggestedDataSets;
@@ -312,8 +324,9 @@ public class Mart {
 				if (includeTables.contains(target)
 						&& !localTablesIncluded.contains(target)) {
 					subclassedRelations.add(r);
-					List newRelationTablesIncluded = new ArrayList(tablesIncluded);
-					relationTablesIncluded.put(r,newRelationTablesIncluded);
+					List newRelationTablesIncluded = new ArrayList(
+							tablesIncluded);
+					relationTablesIncluded.put(r, newRelationTablesIncluded);
 					newRelationTablesIncluded.add(target);
 					localTablesIncluded.add(target);
 				}
@@ -352,8 +365,10 @@ public class Mart {
 						if (includeTables.contains(target)
 								&& !localTablesIncluded.contains(target)) {
 							subclassedRelations.add(firstRel);
-							List newRelationTablesIncluded = new ArrayList(tablesIncluded);
-							relationTablesIncluded.put(firstRel,newRelationTablesIncluded);
+							List newRelationTablesIncluded = new ArrayList(
+									tablesIncluded);
+							relationTablesIncluded.put(firstRel,
+									newRelationTablesIncluded);
 							newRelationTablesIncluded.add(target);
 							localTablesIncluded.add(target);
 						}
@@ -375,9 +390,9 @@ public class Mart {
 				suggestedDataSet = (DataSet) dataset.replicate(dataset
 						.getName());
 			suggestedDataSet.flagSubclassRelation(r);
-			suggestedDataSets.addAll(this
-					.continueSubclassing(includeTables, (List)relationTablesIncluded.get(r),
-							suggestedDataSet, r.getManyKey().getTable()));
+			suggestedDataSets.addAll(this.continueSubclassing(includeTables,
+					(List) relationTablesIncluded.get(r), suggestedDataSet, r
+							.getManyKey().getTable()));
 		}
 
 		// Return the resulting datasets.

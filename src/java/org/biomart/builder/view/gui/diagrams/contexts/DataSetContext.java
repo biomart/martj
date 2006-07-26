@@ -54,7 +54,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * org.biomart.builder.view.gui.diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.24, 24th July 2006
+ * @version 0.1.25, 26th July 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -337,19 +337,6 @@ public class DataSetContext extends WindowContext {
 
 			// Work out which column has been clicked.
 			final DataSetColumn column = (DataSetColumn) object;
-
-			// Explain the column to the user.
-			JMenuItem explain = new JMenuItem(Resources
-					.get("explainColumnTitle"));
-			explain.setMnemonic(Resources.get("explainColumnMnemonic")
-					.charAt(0));
-			explain.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet()
-							.requestExplainColumn(column);
-				}
-			});
-			contextMenu.add(explain);
 
 			// Mask the column.
 			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources

@@ -26,12 +26,11 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.ExplainDataSetDiagram;
-import org.biomart.builder.view.gui.diagrams.contexts.ExplainDataSetContext;
+import org.biomart.builder.view.gui.diagrams.contexts.WindowContext;
 
 
 /**
@@ -42,20 +41,17 @@ import org.biomart.builder.view.gui.diagrams.contexts.ExplainDataSetContext;
  * and relations not involved directly in this dataset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 27th June 2006
+ * @version 0.1.9, 26th July 2006
  * @since 0.1
  */
 public class ExplainDataSetDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	private ExplainDataSetDialog(MartTab martTab, DataSetTable dsTable,
-			DataSetColumn dsColumn) {
+	private ExplainDataSetDialog(MartTab martTab, DataSetTable dsTable) {
 		// Create the blank dialog, and give it an appropriate title.
 		super(martTab.getMartTabSet().getMartBuilder(),
-				(dsColumn == null ? Resources.get("explainTableDialogTitle",
-						dsTable.getName()) : Resources.get(
-						"explainColumnDialogTitle", new String[] {
-								dsTable.getName(), dsColumn.getName() })), true);
+				Resources.get("explainTableDialogTitle",
+						dsTable.getName()), true);
 
 		// Make the content pane.
 		JPanel content = new JPanel(new BorderLayout());
@@ -64,13 +60,9 @@ public class ExplainDataSetDialog extends JDialog {
 		// Compute the diagram, and assign it the appropriate context.
 		ExplainDataSetDiagram diagram = new ExplainDataSetDiagram(martTab,
 				dsTable);
-		ExplainDataSetContext context = new ExplainDataSetContext(martTab,
+		WindowContext context = new WindowContext(martTab,
 				(DataSet) dsTable.getSchema());
 		diagram.setDiagramContext(context);
-
-		// Select the column, if chosen.
-		if (dsColumn != null)
-			context.setSelectedColumn(dsColumn);
 
 		// Tell the schema tabset about this, so that it gets updated if any
 		// changes are made elsewhere.
@@ -94,10 +86,7 @@ public class ExplainDataSetDialog extends JDialog {
 		this.pack();
 
 		// Zoom to the selected column or table.
-		if (dsColumn != null)
-			diagram.findObject(dsColumn.getUnderlyingRelation());
-		else
-			diagram.findObject(dsTable.getUnderlyingTable());
+		diagram.findObject(dsTable.getUnderlyingTable());
 	}
 
 	/**
@@ -110,26 +99,7 @@ public class ExplainDataSetDialog extends JDialog {
 	 *            the table to explain.
 	 */
 	public static void showTableExplanation(MartTab martTab, DataSetTable table) {
-		ExplainDataSetDialog dialog = new ExplainDataSetDialog(martTab, table,
-				null);
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
-		dialog.show();
-		martTab.getDataSetTabSet().setCurrentExplanationDiagram(null);
-	}
-
-	/**
-	 * Opens an explanation showing the underlying relations and tables behind a
-	 * specific dataset column.
-	 * 
-	 * @param martTab
-	 *            the mart tab which will handle menu events.
-	 * @param column
-	 *            the column to explain.
-	 */
-	public static void showColumnExplanation(MartTab martTab,
-			DataSetColumn column) {
-		ExplainDataSetDialog dialog = new ExplainDataSetDialog(martTab,
-				(DataSetTable) column.getTable(), column);
+		ExplainDataSetDialog dialog = new ExplainDataSetDialog(martTab, table);
 		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
 		martTab.getDataSetTabSet().setCurrentExplanationDiagram(null);
