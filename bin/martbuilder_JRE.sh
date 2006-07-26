@@ -3,12 +3,11 @@
 # Note: /bin/sh doesn't work on Alphas (need to use bash thexre) but
 # works everywhere else.
 
-# Starts the MartExplorer GUI application.
+# Starts the MartBuilder GUI application.
 
 # Usage:
 #
-# prompt> bin/martgui.sh
-TMP_ROOT=`dirname $0`/..
+# prompt> bin/martbuilder_JRE.sh
 
 TMP_ROOT=`dirname $0`/..
  
@@ -42,4 +41,8 @@ case "$PLATFORM" in
 esac
 
 echo "Starting MartEditor please wait ... "
-$JAVA -ea -cp $TMP_CLASSPATH org.ensembl.mart.builder.MartBuilder
+
+# Note: If you get Java "Out of memory" errors, try increasing the numbers
+# in the -Xmx and -Xms parameters in the java command below. For performance
+# sake it is best if they are both the same value.
+$JAVA -Xm128m -Xms128m -ea -cp $TMP_CLASSPATH org.biomart.builder.view.gui.MartBuilder $@
