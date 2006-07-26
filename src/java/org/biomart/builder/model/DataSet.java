@@ -60,7 +60,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.37, 25th July 2006
+ * @version 0.1.38, 26th July 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -101,8 +101,8 @@ public class DataSet extends GenericSchema {
 	 * The constructor creates a dataset around one central table and gives the
 	 * dataset a name. It adds itself to the specified mart automatically.
 	 * <p>
-	 * If the name already exists, an underscore and a sequence number will
-	 * be appended until the name is unique.
+	 * If the name already exists, an underscore and a sequence number will be
+	 * appended until the name is unique.
 	 * 
 	 * @param mart
 	 *            the mart this dataset will belong to.
@@ -135,10 +135,11 @@ public class DataSet extends GenericSchema {
 		// Rename ourselves if the name clashes.
 		String newName = name;
 		int suffix = 1;
-		while (mart.getDataSetByName(newName)!=null) 
-			newName = name+"_"+(suffix++);
-		if (!newName.equals(name)) this.setName(newName);
-		
+		while (mart.getDataSetByName(newName) != null)
+			newName = name + "_" + (suffix++);
+		if (!newName.equals(name))
+			this.setName(newName);
+
 		// Add ourselves to the mart.
 		mart.addDataSet(this);
 	}
@@ -351,8 +352,7 @@ public class DataSet extends GenericSchema {
 	 * parent table, but the parent table may not actually be the central table
 	 * in this dataset - instead it may be linked to that central table by an
 	 * existing chain of M:1 relations. The central table of the dataset may
-	 * have at most one M:1 relation, and/or as many 1:M relations as the user
-	 * wants.
+	 * have at most one M:1 relation, and at most one 1:M relations.
 	 * 
 	 * @param relation
 	 *            the relation to mark as a subclass relation, where the PK end
@@ -370,8 +370,7 @@ public class DataSet extends GenericSchema {
 		if (this.subclassedRelations.contains(relation))
 			return;
 
-		// Check that the relation is a 1:M relation and that it is between
-		// the central table and some other table.
+		// Check that the relation is a 1:M relation and isn't a loop-back.
 		if (!relation.isOneToMany())
 			throw new AssociationException(Resources.get("subclassNotOneMany"));
 		if (relation.getFirstKey().getTable().equals(
@@ -384,51 +383,47 @@ public class DataSet extends GenericSchema {
 		Table parentTable = relation.getOneKey().getTable();
 		Table childTable = relation.getManyKey().getTable();
 
-		// If there are existing subclass relations and neither the
-		// parent or the child is the central table, then it is not OK to add
-		// it.
+		// If there are no existing subclass relations, then we only
+		// need to test that either the parent or the child is the central
+		// table.
 		if (this.subclassedRelations.isEmpty()) {
 			if (!(parentTable.equals(this.centralTable) || childTable
 					.equals(this.centralTable)))
 				throw new AssociationException(Resources
 						.get("subclassNotOnCentralTable"));
 		}
-		// If the child table, the M end, is the central table, then it is
-		// not OK to add this if another subclass relation has the M end
-		// at the central table.
-		else if (childTable.equals(this.centralTable)) {
-			boolean centralAlreadyHasM1 = false;
-			for (Iterator i = this.subclassedRelations.iterator(); i.hasNext()
-					&& !centralAlreadyHasM1;)
-				if (((Relation) i.next()).getManyKey().getTable().equals(
-						this.centralTable))
-					centralAlreadyHasM1 = true;
-			if (centralAlreadyHasM1)
+
+		// We have existing subclass relations.
+		else {
+			boolean parentIsCentral = parentTable.equals(this.centralTable);
+			boolean childIsCentral = parentTable.equals(this.centralTable);
+			boolean parentHasM1 = false;
+			boolean childHasM1 = false;
+			boolean parentHas1M = false;
+			boolean childHas1M = false;
+			// Check that child has no M:1s and parent has no 1:Ms already.
+			// Check that parent has M:1, and child has 1:M.
+			for (Iterator i = this.subclassedRelations.iterator(); i.hasNext();) {
+				Relation rel = (Relation) i.next();
+				if (rel.getOneKey().getTable().equals(parentTable))
+					parentHas1M = true;
+				else if (rel.getOneKey().getTable().equals(childTable))
+					childHas1M = true;
+				if (rel.getManyKey().getTable().equals(parentTable))
+					parentHasM1 = true;
+				else if (rel.getManyKey().getTable().equals(childTable))
+					childHasM1 = true;
+			}
+
+			// If child has M:1 or parent has 1:M, we cannot do this.
+			if (childHasM1 || parentHas1M)
 				throw new AssociationException(Resources
 						.get("mixedCardinalitySubclasses"));
-		}
-		// If the parent table is not at the M end of a subclass relation chain
-		// from the central table, or is not the central table, then it is not
-		// OK
-		// to add the new one. Also, if the child table is at the M end of
-		// an existing subclass relation, that's not OK either.
-		else {
-			// Start out - legal if parent is the central table.
-			boolean legal = parentTable.equals(this.centralTable);
-			// Ensure child is not the M end of an existing subclass, else
-			// if not legal to start with, it becomes legal if the parent
-			// is at the M end of an existing subclass.
-			for (Iterator i = this.subclassedRelations.iterator(); i.hasNext();) {
-				Relation r = (Relation) i.next();
-				if (!legal && r.getManyKey().getTable().equals(parentTable))
-					legal = true;
-				else if (legal && !r.getOneKey().getTable().equals(parentTable)
-						&& r.getManyKey().getTable().equals(childTable)) {
-					legal = false;
-					break;
-				}
-			}
-			if (!legal)
+
+			// If parent is not central or doesn't have M:1, and
+			// child is not central or doesn't have 1:M, we cannot do this.
+			if (!(parentIsCentral || childIsCentral)
+					&& !(parentHasM1 || childHas1M))
 				throw new AssociationException(Resources
 						.get("subclassNotOnCentralTable"));
 		}
@@ -992,16 +987,20 @@ public class DataSet extends GenericSchema {
 		Table centralTable = this.getCentralTable();
 		// If central table has subclass relations and is at the M key
 		// end, then follow them to the real central table.
-		boolean found = false;
-		for (Iterator i = centralTable.getRelations().iterator(); i.hasNext()
-				&& !found;) {
-			Relation r = (Relation) i.next();
-			if (this.getSubclassedRelations().contains(r)
-					&& r.getManyKey().getTable().equals(centralTable)) {
-				centralTable = r.getOneKey().getTable();
-				found = true;
+		boolean found;
+		do {
+			found = false;
+			for (Iterator i = centralTable.getRelations().iterator(); i
+					.hasNext()
+					&& !found;) {
+				Relation r = (Relation) i.next();
+				if (this.getSubclassedRelations().contains(r)
+						&& r.getManyKey().getTable().equals(centralTable)) {
+					centralTable = r.getOneKey().getTable();
+					found = true;
+				}
 			}
-		}
+		} while (found);
 
 		// Generate the main table. It will recursively generate all the others.
 		this.generateDataSetTable(DataSetTableType.MAIN, null, centralTable,
@@ -2471,8 +2470,7 @@ public class DataSet extends GenericSchema {
 			for (Iterator i = this.aliases.keySet().iterator(); i.hasNext();) {
 				Column col = (Column) i.next();
 				String alias = ":" + (String) this.aliases.get(col);
-				sub = sub.replaceAll(alias, tablePrefix + "."
-						+ col.getName());
+				sub = sub.replaceAll(alias, tablePrefix + "." + col.getName());
 			}
 			return sub;
 		}

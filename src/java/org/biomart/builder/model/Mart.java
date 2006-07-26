@@ -21,6 +21,8 @@ package org.biomart.builder.model;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -40,7 +42,7 @@ import org.biomart.builder.resources.Resources;
  * mart. It also has zero or more datasets based around these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.19, 25th July 2006
+ * @version 0.1.20, 26th July 2006
  * @since 0.1
  */
 public class Mart {
@@ -190,8 +192,8 @@ public class Mart {
 	 * is the last in the chain and is linked to the previous table by a pair of
 	 * 1:M and M:1 relations via a third table, simulating a M:M relation.
 	 * <p>
-	 * If the chains of tables the datasets are built from fork, then one
-	 * dataset is generated for each branch of the fork.
+	 * If the chains of tables fork, then one dataset is generated for each
+	 * branch of the fork.
 	 * <p>
 	 * Every suggested dataset is synchronised before being returned.
 	 * <p>
@@ -237,110 +239,155 @@ public class Mart {
 			}
 		}
 		// We construct one dataset per root table.
-		List suggestedDataSets = new ArrayList();
+		Set suggestedDataSets = new HashSet();
 		for (Iterator i = rootTables.iterator(); i.hasNext();) {
 			Table rootTable = (Table) i.next();
 			DataSet dataset = new DataSet(this, rootTable, rootTable.getName());
 			// Process it.
 			List tablesIncluded = new ArrayList();
 			tablesIncluded.add(rootTable);
-			suggestedDataSets.add(this.continueSubclassing(includeTables,
+			suggestedDataSets.addAll(this.continueSubclassing(includeTables,
 					tablesIncluded, dataset, rootTable));
 		}
+
+		// Remove all datasets that have all their subclassed relations
+		// also subclassed in some other dataset.
+		for (Iterator i = suggestedDataSets.iterator(); i.hasNext();) {
+			DataSet suggestedDataSet = (DataSet) i.next();
+			if (suggestedDataSet.getSubclassedRelations().isEmpty())
+				continue;
+			boolean subsumed = false;
+			for (Iterator j = suggestedDataSets.iterator(); j.hasNext()
+					&& !subsumed;) {
+				DataSet candidate = (DataSet) j.next();
+				if (candidate.equals(suggestedDataSet))
+					continue;
+				subsumed = candidate.getSubclassedRelations().containsAll(
+						suggestedDataSet.getSubclassedRelations());
+			}
+			if (subsumed) {
+				this.removeDataSet(suggestedDataSet);
+				i.remove();
+			}
+		}
+
 		// Synchronise them all.
 		for (Iterator i = suggestedDataSets.iterator(); i.hasNext();)
 			((DataSet) i.next()).synchronise();
+
 		// Return the final set of suggested datasets.
 		return suggestedDataSets;
 	}
 
-	private DataSet continueSubclassing(Collection includeTables,
+	private Collection continueSubclassing(Collection includeTables,
 			Collection tablesIncluded, DataSet dataset, Table table)
 			throws AssociationException {
-		// Make a list to hold the recursion tables, and the potential 1:M:1
-		// table/relation pairs.
-		Set recursion = new HashSet();
-		List potential = new ArrayList();
-		// Find all 1:M relations starting from the given table.
+		// Check table has a primary key.
 		Key pk = table.getPrimaryKey();
-		if (pk == null)
-			return dataset;
-		for (Iterator i = pk.getRelations().iterator(); i.hasNext();) {
-			Relation r = (Relation) i.next();
-			if (!r.isOneToMany())
-				continue;
-			else if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
-				continue;
-			// If any of them point to a table that should be subclassed,
-			// then mark the relation. Recurse to the next table, and continue.
-			Table target = r.getManyKey().getTable();
-			if (includeTables.contains(target)
-					&& !tablesIncluded.contains(target)) {
-				dataset.flagSubclassRelation(r);
-				recursion.add(target);
-				tablesIncluded.add(target);
+
+		// Make a unique set to hold all the resulting datasets. It
+		// is initially empty.
+		Set suggestedDataSets = new HashSet();
+		// Make a set to contain relations to subclass.
+		Set subclassedRelations = new HashSet();
+		// Make a map to hold tables included for each relation.
+		Map relationTablesIncluded = new HashMap();
+		// Make a list to hold all tables included at this level.
+		Set localTablesIncluded = new HashSet(tablesIncluded);
+
+		// Find all 1:M relations starting from the given table that point
+		// to another interesting table.
+		if (pk != null)
+			for (Iterator i = pk.getRelations().iterator(); i.hasNext();) {
+				Relation r = (Relation) i.next();
+				if (!r.isOneToMany())
+					continue;
+				else if (r.getStatus().equals(
+						ComponentStatus.INFERRED_INCORRECT))
+					continue;
+
+				// For each relation, if it points to another included
+				// table via 1:M we should subclass the relation.
+				Table target = r.getManyKey().getTable();
+				if (includeTables.contains(target)
+						&& !localTablesIncluded.contains(target)) {
+					subclassedRelations.add(r);
+					List newRelationTablesIncluded = new ArrayList(tablesIncluded);
+					relationTablesIncluded.put(r,newRelationTablesIncluded);
+					newRelationTablesIncluded.add(target);
+					localTablesIncluded.add(target);
+				}
 			}
-			// If any of them point to a table that is not subclassed but has
-			// an M:1 to one that should be, mark the relation as potential
-			// but do not recurse down that path. This allows us to
-			// remove potential 1:M:1 relations if we find a direct 1:M that
-			// would do the job better.
-			else {
-				Table potential1M1Table = null;
-				for (Iterator j = target.getForeignKeys().iterator(); j
-						.hasNext()
-						&& potential1M1Table == null;) {
+
+		// Find all 1:M:1 relations starting from the given table that point
+		// to another interesting table.
+		if (pk != null)
+			for (Iterator i = pk.getRelations().iterator(); i.hasNext();) {
+				Relation firstRel = (Relation) i.next();
+				if (!firstRel.isOneToMany())
+					continue;
+				else if (firstRel.getStatus().equals(
+						ComponentStatus.INFERRED_INCORRECT))
+					continue;
+
+				Table intermediate = firstRel.getManyKey().getTable();
+				for (Iterator j = intermediate.getForeignKeys().iterator(); j
+						.hasNext();) {
 					Key fk = (Key) j.next();
 					if (fk.getStatus().equals(
 							ComponentStatus.INFERRED_INCORRECT))
 						continue;
-					for (Iterator k = fk.getRelations().iterator(); k.hasNext()
-							&& potential1M1Table == null;) {
-						Relation fkr = (Relation) k.next();
-						if (fkr.equals(r))
+					for (Iterator k = fk.getRelations().iterator(); k.hasNext();) {
+						Relation secondRel = (Relation) k.next();
+						if (secondRel.equals(firstRel))
 							continue;
-						else if (!fkr.isOneToMany())
+						else if (!secondRel.isOneToMany())
 							continue;
-						else if (fkr.getStatus().equals(
+						else if (secondRel.getStatus().equals(
 								ComponentStatus.INFERRED_INCORRECT))
 							continue;
-						// This bit avoids 1:M:1 back to a table that
-						// we've already added.
-						else if (fkr.getOneKey().getTable().equals(
-								r.getOneKey().getTable()))
-							continue;
-						else if (includeTables.contains(fkr.getOneKey()
-								.getTable()))
-							potential1M1Table = fkr.getOneKey().getTable();
+						// For each relation, if it points to another included
+						// table via M:1 we should subclass the relation.
+						Table target = secondRel.getOneKey().getTable();
+						if (includeTables.contains(target)
+								&& !localTablesIncluded.contains(target)) {
+							subclassedRelations.add(firstRel);
+							List newRelationTablesIncluded = new ArrayList(tablesIncluded);
+							relationTablesIncluded.put(firstRel,newRelationTablesIncluded);
+							newRelationTablesIncluded.add(target);
+							localTablesIncluded.add(target);
+						}
 					}
 				}
-				if (potential1M1Table != null)
-					potential.add(new Object[] { potential1M1Table, r });
 			}
+
+		// No subclassing? Return a singleton.
+		if (subclassedRelations.isEmpty())
+			return Collections.singleton(dataset);
+
+		// Iterate through the relations we found and recurse.
+		// If not the last one, we copy the original dataset and
+		// work on the copy, otherwise we work on the original.
+		for (Iterator i = subclassedRelations.iterator(); i.hasNext();) {
+			Relation r = (Relation) i.next();
+			DataSet suggestedDataSet = dataset;
+			if (i.hasNext())
+				suggestedDataSet = (DataSet) dataset.replicate(dataset
+						.getName());
+			suggestedDataSet.flagSubclassRelation(r);
+			suggestedDataSets.addAll(this
+					.continueSubclassing(includeTables, (List)relationTablesIncluded.get(r),
+							suggestedDataSet, r.getManyKey().getTable()));
 		}
-		// Check the potential 1:M:1 relations to make sure the target
-		// tables have not already been included.
-		for (Iterator i = potential.iterator(); i.hasNext();) {
-			Object[] obj = (Object[]) i.next();
-			Table potentialTable = (Table) obj[0];
-			Relation potentialRel = (Relation) obj[1];
-			if (!tablesIncluded.contains(potentialTable)) {
-				dataset.flagSubclassRelation(potentialRel);
-				tablesIncluded.add(potentialTable);
-			}
-		}
-		// Do the recursion.
-		for (Iterator i = recursion.iterator(); i.hasNext();)
-			this.continueSubclassing(includeTables, tablesIncluded, dataset,
-					(Table) i.next());
+
 		// Return the resulting datasets.
-		return dataset;
+		return suggestedDataSets;
 	}
 
 	/**
-	 * Given a dataset and a set of columns from one table upon which the main
-	 * table of that dataset is based, find all other tables which have similar
-	 * columns, and create a new dataset for each one.
+	 * Given a dataset and a set of columns from one table upon which a table of
+	 * that dataset is based, find all other tables which have similar columns,
+	 * and create a new dataset for each one.
 	 * <p>
 	 * This method will not create datasets around tables which have already
 	 * been used as the underlying table in any dataset table in the existing
