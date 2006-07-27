@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
@@ -42,7 +43,7 @@ import org.biomart.builder.resources.Resources;
  * mart. It also has zero or more datasets based around these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.20, 26th July 2006
+ * @version 0.1.21, 27th July 2006
  * @since 0.1
  */
 public class Mart {
@@ -239,7 +240,7 @@ public class Mart {
 			}
 		}
 		// We construct one dataset per root table.
-		Set suggestedDataSets = new HashSet();
+		Set suggestedDataSets = new TreeSet();
 		for (Iterator i = rootTables.iterator(); i.hasNext();) {
 			Table rootTable = (Table) i.next();
 			DataSet dataset = new DataSet(this, rootTable, rootTable.getName());

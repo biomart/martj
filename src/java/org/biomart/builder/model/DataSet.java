@@ -60,7 +60,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.38, 26th July 2006
+ * @version 0.1.39, 27th July 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -1087,18 +1087,11 @@ public class DataSet extends GenericSchema {
 			// Make a list to hold the child table's FK cols.
 			List dsTableFKCols = new ArrayList();
 
-			// Add the parent DS table's underlying keys and relations
-			// to the child.
-			dsTable.getUnderlyingKeys().addAll(
-					parentDSTable.getUnderlyingKeys());
-			dsTable.getUnderlyingRelations().addAll(
-					parentDSTable.getUnderlyingRelations());
-
-			// Don't follow these same relations again.
-			relationsFollowed.addAll(dsTable.getUnderlyingRelations());
-
 			// Get the primary key of the parent DS table.
 			PrimaryKey parentDSTablePK = parentDSTable.getPrimaryKey();
+			
+			// Don't follow the parent's relations again.
+			relationsFollowed.addAll(parentDSTable.getUnderlyingRelations());
 
 			// Loop over each column in the parent table. If this is
 			// a subclass table, add it. If it is a dimension table,

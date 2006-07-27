@@ -65,7 +65,7 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.21, 25th July 2006
+ * @version 0.1.22, 27th July 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -943,14 +943,14 @@ public interface MartConstructor {
 			// contain the constructed table.
 			String tempTableName = table.getTempTableName();
 
+			// If the table is a MAIN table, then we can select columns
+			// directly from the underlying table. 
+			if (table.getDataSetTable().getType().equals(DataSetTableType.MAIN)) {
 			// We now need to work out at which point to start the process
 			// of transforming the table. That point is either the underlying
 			// table, or the first table in the list of underlying relations,
 			// if a list has been specified.
-			Table firstTable = (table.getDataSetTable()
-					.getUnderlyingRelations().isEmpty()) ? table.getRealTable()
-					: ((Key) table.getDataSetTable().getUnderlyingKeys().get(0))
-							.getTable();
+			Table firstTable = table.getRealTable();
 
 			// Work out what columns to include from the first table.
 			List firstDSCols = table.getDataSetColumns(firstTable.getColumns());
@@ -975,6 +975,26 @@ public interface MartConstructor {
 			actionGraph.addActionWithParent(create, lastActionPerformed);
 			// Update last action performed, in case there are no merges.
 			lastActionPerformed = create;
+			} 
+			
+			// Else, if the table is NOT a MAIN table, then we should select
+			// the primary key columns from the parent dataset table.
+			else {
+				// Work out the parent dataset table.
+				DataSetTable parentDSTable = (DataSetTable)((Relation)((Key)table.getDataSetTable().getForeignKeys().iterator().next()).getRelations().iterator().next()).getOneKey().getTable();
+				
+				// Work out what columns to include from the first table.
+				List firstDSCols = parentDSTable.getPrimaryKey().getColumns();
+
+				// Create the table based on firstTable, and selecting
+				// based on firstDSCols.
+				MartConstructorAction create = new Create(this.datasetSchemaName,
+						null, tempTableName, null, parentDSTable.getName(),
+						firstDSCols, false, null, false);
+				actionGraph.addActionWithParent(create, lastActionPerformed);
+				// Update last action performed, in case there are no merges.
+				lastActionPerformed = create;
+			}
 
 			// Merge subsequent tables based on underlying relations.
 			for (int i = 0; i < table.getDataSetTable().getUnderlyingKeys()
@@ -999,16 +1019,8 @@ public interface MartConstructor {
 				// that correspond to the key on the previous table?
 				List sourceDSKey = table.getDataSetColumns(sourceKey
 						.getColumns());
-				// If no columns are selected in the source key, we don't
-				// need to merge it, so we can skip it!
-				if (sourceDSKey.isEmpty())
-					continue;
 				// What are the columns we should merge from this new table?
 				List targetDSCols = table.getDataSetColumns(relation);
-				// If no columns are selected in the target table, we don't
-				// need to merge it, so we can skip it!
-				if (targetDSCols.isEmpty())
-					continue;
 				// If targetTable is in a group schema that is not the
 				// same group schema we started with, create a union table
 				// containing all the targetTable copies, then merge with
