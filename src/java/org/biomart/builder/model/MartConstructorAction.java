@@ -39,7 +39,7 @@ import org.biomart.builder.resources.Resources;
  * schema instead, as specified by the datasetSchemaName parameter.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 25th July 2006
+ * @version 0.1.6, 27th July 2006
  * @since 0.1
  */
 public abstract class MartConstructorAction {
@@ -53,16 +53,27 @@ public abstract class MartConstructorAction {
 
 	private String datasetSchemaName;
 
+	private String datasetTableName;
+
 	private static int nextSequence = 0;
 
 	private static final String nextSequenceLock = "__SEQ_LOCK";
 
 	/**
 	 * Sets up a node.
+	 * 
+	 * @param datasetSchemaName
+	 *            the name of the schema within which the dataset will be
+	 *            constructed.
+	 * @param datasetTableName
+	 *            the name of the table with which this action is associated as
+	 *            part of the transformation process.
 	 */
-	public MartConstructorAction(String datasetSchemaName) {
+	public MartConstructorAction(String datasetSchemaName,
+			String datasetTableName) {
 		this.depth = 0;
 		this.datasetSchemaName = datasetSchemaName;
+		this.datasetTableName = datasetTableName;
 		synchronized (nextSequenceLock) {
 			this.sequence = nextSequence++;
 		}
@@ -77,6 +88,15 @@ public abstract class MartConstructorAction {
 	 */
 	public String getDataSetSchemaName() {
 		return this.datasetSchemaName;
+	}
+
+	/**
+	 * Returns the dataset table name for this action.
+	 * 
+	 * @return the dataset table name.
+	 */
+	public String getDataSetTableName() {
+		return this.datasetTableName;
 	}
 
 	/**
@@ -282,7 +302,8 @@ public abstract class MartConstructorAction {
 	 */
 	public static class PlaceHolder extends MartConstructorAction {
 		public PlaceHolder(String datasetSchemaName) {
-			super(datasetSchemaName);
+			super(datasetSchemaName, Resources
+					.get("placeholderActionTableName"));
 		}
 
 		public String getStatusMessage() {
@@ -303,10 +324,10 @@ public abstract class MartConstructorAction {
 
 		private List targetTableNames;
 
-		public Union(String datasetSchemaName, Schema unionTableSchema,
-				String unionTableName, List targetTableSchemas,
-				List targetTableNames) {
-			super(datasetSchemaName);
+		public Union(String datasetSchemaName, String datasetTableName,
+				Schema unionTableSchema, String unionTableName,
+				List targetTableSchemas, List targetTableNames) {
+			super(datasetSchemaName, datasetTableName);
 			this.unionTableSchema = unionTableSchema;
 			this.unionTableName = unionTableName;
 			this.targetTableSchemas = targetTableSchemas;
@@ -342,9 +363,9 @@ public abstract class MartConstructorAction {
 
 		private String dropTableName;
 
-		public Drop(String datasetSchemaName, Schema dropTableSchema,
-				String dropTableName) {
-			super(datasetSchemaName);
+		public Drop(String datasetSchemaName, String datasetTableName,
+				Schema dropTableSchema, String dropTableName) {
+			super(datasetSchemaName, datasetTableName);
 			this.dropTableSchema = dropTableSchema;
 			this.dropTableName = dropTableName;
 		}
@@ -379,11 +400,11 @@ public abstract class MartConstructorAction {
 
 		private Object partitionColumnValue;
 
-		public Partition(String datasetSchemaName, Schema targetTableSchema,
-				String targetTableName, Schema partitionTableSchema,
-				String partitionTableName, String partitionColumnName,
-				Object partitionColumnValue) {
-			super(datasetSchemaName);
+		public Partition(String datasetSchemaName, String datasetTableName,
+				Schema targetTableSchema, String targetTableName,
+				Schema partitionTableSchema, String partitionTableName,
+				String partitionColumnName, Object partitionColumnValue) {
+			super(datasetSchemaName, datasetTableName);
 			this.targetTableSchema = targetTableSchema;
 			this.targetTableName = targetTableName;
 			this.partitionTableSchema = partitionTableSchema;
@@ -457,9 +478,9 @@ public abstract class MartConstructorAction {
 
 		private List pkColumns;
 
-		public PK(String datasetSchemaName, Schema pkTableSchema,
-				String pkTableName, List pkColumns) {
-			super(datasetSchemaName);
+		public PK(String datasetSchemaName, String datasetTableName,
+				Schema pkTableSchema, String pkTableName, List pkColumns) {
+			super(datasetSchemaName, datasetTableName);
 			this.pkTableSchema = pkTableSchema;
 			this.pkTableName = pkTableName;
 			this.pkColumns = pkColumns;
@@ -494,9 +515,10 @@ public abstract class MartConstructorAction {
 
 		private List indexColumns;
 
-		public Index(String datasetSchemaName, Schema indexTableSchema,
-				String indexTableName, List indexColumns) {
-			super(datasetSchemaName);
+		public Index(String datasetSchemaName, String datasetTableName,
+				Schema indexTableSchema, String indexTableName,
+				List indexColumns) {
+			super(datasetSchemaName, datasetTableName);
 			this.indexTableSchema = indexTableSchema;
 			this.indexTableName = indexTableName;
 			this.indexColumns = indexColumns;
@@ -538,10 +560,10 @@ public abstract class MartConstructorAction {
 
 		private List pkColumns;
 
-		public FK(String datasetSchemaName, Schema fkTableSchema,
-				String fkTableName, List fkColumns, Schema pkTableSchema,
-				String pkTableName, List pkColumns) {
-			super(datasetSchemaName);
+		public FK(String datasetSchemaName, String datasetTableName,
+				Schema fkTableSchema, String fkTableName, List fkColumns,
+				Schema pkTableSchema, String pkTableName, List pkColumns) {
+			super(datasetSchemaName, datasetTableName);
 			this.fkTableSchema = fkTableSchema;
 			this.fkTableName = fkTableName;
 			this.fkColumns = fkColumns;
@@ -589,9 +611,10 @@ public abstract class MartConstructorAction {
 
 		private String renameTableNewName;
 
-		public Rename(String datasetSchemaName, Schema renameTableSchema,
-				String renameTableOldName, String renameTableNewName) {
-			super(datasetSchemaName);
+		public Rename(String datasetSchemaName, String datasetTableName,
+				Schema renameTableSchema, String renameTableOldName,
+				String renameTableNewName) {
+			super(datasetSchemaName, datasetTableName);
 			this.renameTableSchema = renameTableSchema;
 			this.renameTableOldName = renameTableOldName;
 			this.renameTableNewName = renameTableNewName;
@@ -637,12 +660,12 @@ public abstract class MartConstructorAction {
 
 		private boolean useAliases;
 
-		public Create(String datasetSchemaName, Schema newTableSchema,
-				String newTableName, Schema selectFromTableSchema,
-				String selectFromTableName, List selectFromColumns,
-				boolean useDistinct, DataSetTableRestriction tableRestriction,
-				boolean useAliases) {
-			super(datasetSchemaName);
+		public Create(String datasetSchemaName, String datasetTableName,
+				Schema newTableSchema, String newTableName,
+				Schema selectFromTableSchema, String selectFromTableName,
+				List selectFromColumns, boolean useDistinct,
+				DataSetTableRestriction tableRestriction, boolean useAliases) {
+			super(datasetSchemaName, datasetTableName);
 			this.newTableSchema = newTableSchema;
 			this.newTableName = newTableName;
 			this.selectFromTableSchema = selectFromTableSchema;
@@ -701,9 +724,10 @@ public abstract class MartConstructorAction {
 
 		private String columnName;
 
-		public OptimiseAddColumn(String datasetSchemaName, Schema tableSchema,
-				String tableName, String columnName) {
-			super(datasetSchemaName);
+		public OptimiseAddColumn(String datasetSchemaName,
+				String datasetTableName, Schema tableSchema, String tableName,
+				String columnName) {
+			super(datasetSchemaName, datasetTableName);
 			this.tableSchema = tableSchema;
 			this.tableName = tableName;
 			this.columnName = columnName;
@@ -740,8 +764,7 @@ public abstract class MartConstructorAction {
 
 	/**
 	 * This class performs an in-place update that changes the value of every
-	 * row in the PK table which has a corresponding row in the FK table. e
-	 * left-join on a table.
+	 * row in the PK table which has a corresponding row in the FK table.
 	 */
 	public static class OptimiseUpdateColumn extends MartConstructorAction {
 		private Schema fkTableSchema;
@@ -759,10 +782,11 @@ public abstract class MartConstructorAction {
 		private String optimiseColumnName;
 
 		public OptimiseUpdateColumn(String datasetSchemaName,
-				Schema fkTableSchema, String fkTableName, List fkTableColumns,
-				Schema pkTableSchema, String pkTableName, List pkTableColumns,
+				String datasetTableName, Schema fkTableSchema,
+				String fkTableName, List fkTableColumns, Schema pkTableSchema,
+				String pkTableName, List pkTableColumns,
 				String optimiseColumnName) {
-			super(datasetSchemaName);
+			super(datasetSchemaName, datasetTableName);
 			this.fkTableSchema = fkTableSchema;
 			this.fkTableName = fkTableName;
 			this.fkTableColumns = fkTableColumns;
@@ -856,11 +880,11 @@ public abstract class MartConstructorAction {
 		private boolean useGroupBy;
 
 		public ExpressionAddColumns(String datasetSchemaName,
-				Schema sourceTableSchema, String sourceTableName,
-				Schema targetTableSchema, String targetTableName,
-				List sourceTableColumns, List expressionColumns,
-				boolean useGroupBy) {
-			super(datasetSchemaName);
+				String datasetTableName, Schema sourceTableSchema,
+				String sourceTableName, Schema targetTableSchema,
+				String targetTableName, List sourceTableColumns,
+				List expressionColumns, boolean useGroupBy) {
+			super(datasetSchemaName, datasetTableName);
 			this.datasetSchemaName = datasetSchemaName;
 			this.sourceTableSchema = sourceTableSchema;
 			this.sourceTableName = sourceTableName;
@@ -979,17 +1003,17 @@ public abstract class MartConstructorAction {
 
 		private boolean useAliases;
 
-		public Merge(String datasetSchemaName, Schema mergedTableSchema,
-				String mergedTableName, Schema sourceTableSchema,
-				String sourceTableName, List sourceTableKeyColumns,
-				boolean useLeftJoin, Schema targetTableSchema,
-				String targetTableName, List targetTableKeyColumns,
-				List targetTableColumns,
+		public Merge(String datasetSchemaName, String datasetTableName,
+				Schema mergedTableSchema, String mergedTableName,
+				Schema sourceTableSchema, String sourceTableName,
+				List sourceTableKeyColumns, boolean useLeftJoin,
+				Schema targetTableSchema, String targetTableName,
+				List targetTableKeyColumns, List targetTableColumns,
 				DataSetRelationRestriction relationRestriction,
 				boolean firstTableSourceTable, boolean useDistinct,
 				DataSetTableRestriction targetTableRestriction,
 				boolean useAliases) {
-			super(datasetSchemaName);
+			super(datasetSchemaName, datasetTableName);
 			this.mergedTableSchema = mergedTableSchema;
 			this.mergedTableName = mergedTableName;
 			this.sourceTableSchema = sourceTableSchema;
@@ -1110,17 +1134,17 @@ public abstract class MartConstructorAction {
 
 		private DataSetTableRestriction targetTableRestriction;
 
-		public Concat(String datasetSchemaName, Schema concatTableSchema,
-				String concatTableName, Schema sourceTableSchema,
-				String sourceTableName, List sourceTableKeyColumns,
-				Schema targetTableSchema, String targetTableName,
-				List targetTableKeyColumns, List targetTableConcatColumns,
-				String targetConcatColumnName,
+		public Concat(String datasetSchemaName, String datasetTableName,
+				Schema concatTableSchema, String concatTableName,
+				Schema sourceTableSchema, String sourceTableName,
+				List sourceTableKeyColumns, Schema targetTableSchema,
+				String targetTableName, List targetTableKeyColumns,
+				List targetTableConcatColumns, String targetConcatColumnName,
 				ConcatRelationType concatRelationType,
 				DataSetRelationRestriction relationRestriction,
 				boolean firstTableSourceTable,
 				DataSetTableRestriction targetTableRestriction) {
-			super(datasetSchemaName);
+			super(datasetSchemaName, datasetTableName);
 			this.concatTableSchema = concatTableSchema;
 			this.concatTableName = concatTableName;
 			this.sourceTableSchema = sourceTableSchema;
@@ -1220,12 +1244,12 @@ public abstract class MartConstructorAction {
 
 		private List targetTableKeyColumns;
 
-		public Reduce(String datasetSchemaName, Schema reducedTableSchema,
-				String reducedTableName, Schema sourceTableSchema,
-				String sourceTableName, List sourceTableKeyColumns,
-				Schema targetTableSchema, String targetTableName,
-				List targetTableKeyColumns) {
-			super(datasetSchemaName);
+		public Reduce(String datasetSchemaName, String datasetTableName,
+				Schema reducedTableSchema, String reducedTableName,
+				Schema sourceTableSchema, String sourceTableName,
+				List sourceTableKeyColumns, Schema targetTableSchema,
+				String targetTableName, List targetTableKeyColumns) {
+			super(datasetSchemaName, datasetTableName);
 			this.reducedTableSchema = reducedTableSchema;
 			this.reducedTableName = reducedTableName;
 			this.sourceTableSchema = sourceTableSchema;

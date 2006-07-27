@@ -473,8 +473,9 @@ public interface MartConstructor {
 					// Create a new union table based on tablesToUnion.
 					// Action depends on prePartitionAction.
 					MartConstructorAction union = new Union(
-							this.datasetSchemaName, null, unionTable
-									.getTempTableName(), tableSchemasToUnion,
+							this.datasetSchemaName, unionTable
+									.getDataSetTable().getName(), null,
+							unionTable.getTempTableName(), tableSchemasToUnion,
 							tablesToUnion);
 					actionGraph.addActionWithParent(union, prePartitionAction);
 					unionTable.setLastActionPerformed(union);
@@ -486,7 +487,8 @@ public interface MartConstructor {
 						MCDSTable table = (MCDSTable) tablesToUnion.get(k);
 						// Drop table.
 						MartConstructorAction drop = new Drop(
-								this.datasetSchemaName, schema, table
+								this.datasetSchemaName, table.getDataSetTable()
+										.getName(), schema, table
 										.getTempTableName());
 						actionGraph.addActionWithParent(drop, union);
 					}
@@ -568,8 +570,9 @@ public interface MartConstructor {
 						// Create an index over the foreign key columns of
 						// each child table.
 						MartConstructorAction index = new Index(
-								this.datasetSchemaName, null, childTable
-										.getTempTableName(), childTable
+								this.datasetSchemaName, childTable
+										.getDataSetTable().getName(), null,
+								childTable.getTempTableName(), childTable
 										.getParentDataSetRelation()
 										.getManyKey().getColumns());
 						actionGraph.addActionWithParent(index,
@@ -584,8 +587,9 @@ public interface MartConstructor {
 
 					// Index the column to be partitioned.
 					MartConstructorAction index = new Index(
-							this.datasetSchemaName, null, parentTable
-									.getTempTableName(), parentTable
+							this.datasetSchemaName, parentTable
+									.getDataSetTable().getName(), null,
+							parentTable.getTempTableName(), parentTable
 									.getDataSetTable().getPrimaryKey()
 									.getColumns());
 					actionGraph.addActionWithParent(index, lastPartitionAction);
@@ -607,10 +611,11 @@ public interface MartConstructor {
 						tables.add(partitionedTable);
 						// Partition the parent table for this value.
 						MartConstructorAction partition = new Partition(
-								this.datasetSchemaName, null, partitionedTable
-										.getTempTableName(), null, parentTable
-										.getTempTableName(), partCol.getName(),
-								partValue);
+								this.datasetSchemaName, partitionedTable
+										.getDataSetTable().getName(), null,
+								partitionedTable.getTempTableName(), null,
+								parentTable.getTempTableName(), partCol
+										.getName(), partValue);
 						actionGraph.addActionWithParent(partition,
 								lastPartitionAction);
 						// Make the last action of each partitioned
@@ -619,8 +624,9 @@ public interface MartConstructor {
 
 						// Create an index over the primary key columns of
 						// the newly partitioned table.
-						index = new Index(this.datasetSchemaName, null,
-								partitionedTable.getTempTableName(),
+						index = new Index(this.datasetSchemaName,
+								partitionedTable.getDataSetTable().getName(),
+								null, partitionedTable.getTempTableName(),
 								parentTable.getDataSetTable().getPrimaryKey()
 										.getColumns());
 						actionGraph.addActionWithParent(index, partition);
@@ -642,12 +648,13 @@ public interface MartConstructor {
 							tables.add(reducedTable);
 							// Generate the table.
 							MartConstructorAction reduce = new Reduce(
-									this.datasetSchemaName, null, reducedTable
-											.getTempTableName(), null,
+									this.datasetSchemaName, reducedTable
+											.getDataSetTable().getName(), null,
+									reducedTable.getTempTableName(), null,
 									parentTable.getTempTableName(), parentTable
 											.getDataSetTable().getPrimaryKey()
-											.getColumns(), null, childTable
-											.getTempTableName(), childTable
+											.getColumns(), null, reducedTable
+											.getTempTableName(), reducedTable
 											.getParentDataSetRelation()
 											.getManyKey().getColumns());
 							actionGraph.addActionWithParent(reduce, index);
@@ -656,8 +663,9 @@ public interface MartConstructor {
 					}
 					// Drop previous table.
 					MartConstructorAction drop = new Drop(
-							this.datasetSchemaName, null, parentTable
-									.getTempTableName());
+							this.datasetSchemaName, parentTable
+									.getDataSetTable().getName(), null,
+							parentTable.getTempTableName());
 					actionGraph.addActionWithParents(drop, reduceActions);
 					preDropChildActions.addAll(reduceActions);
 				}
@@ -668,8 +676,8 @@ public interface MartConstructor {
 				for (Iterator j = tablesToReduce.iterator(); j.hasNext();) {
 					MCDSTable table = (MCDSTable) j.next();
 					MartConstructorAction drop = new Drop(
-							this.datasetSchemaName, null, table
-									.getTempTableName());
+							this.datasetSchemaName, table.getDataSetTable()
+									.getName(), null, table.getTempTableName());
 					actionGraph.addActionWithParents(drop, preDropChildActions);
 				}
 				tables.removeAll(tablesToReduce);
@@ -691,7 +699,8 @@ public interface MartConstructor {
 				List pkKeyCols = parentTable.getDataSetTable().getPrimaryKey()
 						.getColumns();
 				// Create a PK over pkKeyCols.
-				MartConstructorAction pk = new PK(this.datasetSchemaName, null,
+				MartConstructorAction pk = new PK(this.datasetSchemaName,
+						parentTable.getDataSetTable().getName(), null,
 						parentTable.getTempTableName(), pkKeyCols);
 				actionGraph.addActionWithParent(pk, prePKAction);
 				pkFkActions.add(pk);
@@ -725,13 +734,15 @@ public interface MartConstructor {
 
 						// Index fkKeyCols.
 						MartConstructorAction index = new Index(
-								this.datasetSchemaName, null, childTable
-										.getTempTableName(), fkKeyCols);
+								this.datasetSchemaName, childTable
+										.getDataSetTable().getName(), null,
+								childTable.getTempTableName(), fkKeyCols);
 						actionGraph.addActionWithParent(index, pk);
 						// Create a FK over fkKeyCols.
 						MartConstructorAction fk = new FK(
-								this.datasetSchemaName, null, childTable
-										.getTempTableName(), fkKeyCols, null,
+								this.datasetSchemaName, childTable
+										.getDataSetTable().getName(), null,
+								childTable.getTempTableName(), fkKeyCols, null,
 								parentTable.getTempTableName(), pkKeyCols);
 						actionGraph.addActionWithParent(fk, index);
 						// Add action to list of pkFkActions.
@@ -781,22 +792,25 @@ public interface MartConstructor {
 						// Create the new 'has' table with the columns
 						// from the main/subclass table.
 						MartConstructorAction create = new Create(
-								this.datasetSchemaName, null, hasTable
-										.getTempTableName(), null, parentTable
+								this.datasetSchemaName, hasTable
+										.getDataSetTable().getName(), null,
+								hasTable.getTempTableName(), null, parentTable
 										.getTempTableName(), pkKeyCols, false,
 								null, false);
 						actionGraph.addActionWithParent(create, preDOAction);
 						// Create the PK on the 'has' table using the same
 						// columns.
 						MartConstructorAction pk = new PK(
-								this.datasetSchemaName, null, hasTable
-										.getTempTableName(), pkKeyCols);
+								this.datasetSchemaName, hasTable
+										.getDataSetTable().getName(), null,
+								hasTable.getTempTableName(), pkKeyCols);
 						actionGraph.addActionWithParent(pk, create);
 						// Create the FK on the same columns relating back
 						// to the main/subclass table.
 						MartConstructorAction fk = new FK(
-								this.datasetSchemaName, null, hasTable
-										.getTempTableName(), pkKeyCols, null,
+								this.datasetSchemaName, hasTable
+										.getDataSetTable().getName(), null,
+								hasTable.getTempTableName(), pkKeyCols, null,
 								parentTable.getTempTableName(), pkKeyCols);
 						actionGraph.addActionWithParent(fk, pk);
 						preDOAction = fk;
@@ -832,18 +846,20 @@ public interface MartConstructor {
 						// Add columns to the main or subclass table or
 						// 'has' table.
 						MartConstructorAction optimiseAdd = new OptimiseAddColumn(
-								this.datasetSchemaName, null, childTable
-										.getTempTableName(), hasColumnName);
+								this.datasetSchemaName, hasTable
+										.getDataSetTable().getName(), null,
+								hasTable.getTempTableName(), hasColumnName);
 						actionGraph.addActionWithParent(optimiseAdd,
 								preDOAction);
 						// Update those columns using inner join
 						// on has table PK to dimension table FK.
 						MartConstructorAction optimiseUpd = new OptimiseUpdateColumn(
-								this.datasetSchemaName, null, childTable
-										.getTempTableName(), childTable
+								this.datasetSchemaName, hasTable
+										.getDataSetTable().getName(), null,
+								childTable.getTempTableName(), childTable
 										.getParentDataSetRelation()
 										.getManyKey().getColumns(), null,
-								parentTable.getTempTableName(), parentTable
+								hasTable.getTempTableName(), hasTable
 										.getDataSetTable().getPrimaryKey()
 										.getColumns(), hasColumnName);
 						actionGraph.addActionWithParent(optimiseUpd,
@@ -874,7 +890,8 @@ public interface MartConstructor {
 				String tempTableName = table.getTempTableName();
 				// Rename the table.
 				MartConstructorAction rename = new Rename(
-						this.datasetSchemaName, null, tempTableName, realName);
+						this.datasetSchemaName, table.getDataSetTable()
+								.getName(), null, tempTableName, realName);
 				actionGraph.addActionWithParent(rename, preRenameAction);
 			}
 
@@ -944,53 +961,62 @@ public interface MartConstructor {
 			String tempTableName = table.getTempTableName();
 
 			// If the table is a MAIN table, then we can select columns
-			// directly from the underlying table. 
+			// directly from the underlying table.
 			if (table.getDataSetTable().getType().equals(DataSetTableType.MAIN)) {
-			// We now need to work out at which point to start the process
-			// of transforming the table. That point is either the underlying
-			// table, or the first table in the list of underlying relations,
-			// if a list has been specified.
-			Table firstTable = table.getRealTable();
+				// We now need to work out at which point to start the process
+				// of transforming the table. That point is either the
+				// underlying
+				// table, or the first table in the list of underlying
+				// relations,
+				// if a list has been specified.
+				Table firstTable = table.getRealTable();
 
-			// Work out what columns to include from the first table.
-			List firstDSCols = table.getDataSetColumns(firstTable.getColumns());
+				// Work out what columns to include from the first table.
+				List firstDSCols = table.getDataSetColumns(firstTable
+						.getColumns());
 
-			// Include the schema name column if there is one (don't need
-			// to do this for dimension/subclass tables as it will be part
-			// of the primary key inherited from the parent table).
-			for (Iterator i = table.getDataSetTable().getColumns().iterator(); i
-					.hasNext();) {
-				DataSetColumn dsCol = (DataSetColumn) i.next();
-				if (dsCol instanceof SchemaNameColumn)
-					firstDSCols.add(dsCol);
+				// Include the schema name column if there is one (don't need
+				// to do this for dimension/subclass tables as it will be part
+				// of the primary key inherited from the parent table).
+				for (Iterator i = table.getDataSetTable().getColumns()
+						.iterator(); i.hasNext();) {
+					DataSetColumn dsCol = (DataSetColumn) i.next();
+					if (dsCol instanceof SchemaNameColumn)
+						firstDSCols.add(dsCol);
+				}
+
+				// Create the table based on firstTable, and selecting
+				// based on firstDSCols.
+				MartConstructorAction create = new Create(
+						this.datasetSchemaName, table.getDataSetTable()
+								.getName(), null, tempTableName, schema,
+						firstTable.getName(), firstDSCols, firstTable
+								.getPrimaryKey() == null, table.getDataSet()
+								.getRestrictedTableType(firstTable), true);
+				actionGraph.addActionWithParent(create, lastActionPerformed);
+				// Update last action performed, in case there are no merges.
+				lastActionPerformed = create;
 			}
 
-			// Create the table based on firstTable, and selecting
-			// based on firstDSCols.
-			MartConstructorAction create = new Create(this.datasetSchemaName,
-					null, tempTableName, schema, firstTable.getName(),
-					firstDSCols, firstTable.getPrimaryKey() == null, table
-							.getDataSet().getRestrictedTableType(firstTable),
-					true);
-			actionGraph.addActionWithParent(create, lastActionPerformed);
-			// Update last action performed, in case there are no merges.
-			lastActionPerformed = create;
-			} 
-			
 			// Else, if the table is NOT a MAIN table, then we should select
 			// the primary key columns from the parent dataset table.
 			else {
 				// Work out the parent dataset table.
-				DataSetTable parentDSTable = (DataSetTable)((Relation)((Key)table.getDataSetTable().getForeignKeys().iterator().next()).getRelations().iterator().next()).getOneKey().getTable();
-				
+				DataSetTable parentDSTable = (DataSetTable) ((Relation) ((Key) table
+						.getDataSetTable().getForeignKeys().iterator().next())
+						.getRelations().iterator().next()).getOneKey()
+						.getTable();
+
 				// Work out what columns to include from the first table.
 				List firstDSCols = parentDSTable.getPrimaryKey().getColumns();
 
 				// Create the table based on firstTable, and selecting
 				// based on firstDSCols.
-				MartConstructorAction create = new Create(this.datasetSchemaName,
-						null, tempTableName, null, parentDSTable.getName(),
-						firstDSCols, false, null, false);
+				MartConstructorAction create = new Create(
+						this.datasetSchemaName, table.getDataSetTable()
+								.getName(), null, tempTableName, null,
+						parentDSTable.getName(), firstDSCols, false, null,
+						false);
 				actionGraph.addActionWithParent(create, lastActionPerformed);
 				// Update last action performed, in case there are no merges.
 				lastActionPerformed = create;
@@ -1046,12 +1072,14 @@ public interface MartConstructor {
 					targetTableName = this.helper.getNewTempTableName();
 					// Create union table.
 					MartConstructorAction union = new Union(
-							this.datasetSchemaName, null, targetTableName,
+							this.datasetSchemaName, table.getDataSetTable()
+									.getName(), null, targetTableName,
 							unionTableSchemas, unionTableNames);
 					actionGraph.addActionWithParent(union, lastActionPerformed);
 					// Create index on targetKey on union table.
 					MartConstructorAction index = new Index(
-							this.datasetSchemaName, null, targetTableName,
+							this.datasetSchemaName, table.getDataSetTable()
+									.getName(), null, targetTableName,
 							targetKey.getColumns());
 					actionGraph.addActionWithParent(index, union);
 					// Update the last action performed to reflect the index
@@ -1066,17 +1094,19 @@ public interface MartConstructor {
 				}
 				// Index sourceDSKey columns.
 				MartConstructorAction index = new Index(this.datasetSchemaName,
-						null, tempTableName, sourceDSKey);
+						table.getDataSetTable().getName(), null, tempTableName,
+						sourceDSKey);
 				actionGraph.addActionWithParent(index, lastActionPerformed);
 				// Generate new temp table name for merged table.
 				String mergedTableName = this.helper.getNewTempTableName();
 				// Merge tables based on sourceDSKey -> targetKey,
 				// and selecting based on targetDSCols.
 				MartConstructorAction merge = new Merge(this.datasetSchemaName,
-						null, mergedTableName, null, tempTableName,
-						sourceDSKey, useLeftJoin, targetSchema,
-						targetTableName, targetKey.getColumns(), targetDSCols,
-						table.getDataSet().getRestrictedRelationType(relation),
+						table.getDataSetTable().getName(), null,
+						mergedTableName, null, tempTableName, sourceDSKey,
+						useLeftJoin, targetSchema, targetTableName, targetKey
+								.getColumns(), targetDSCols, table.getDataSet()
+								.getRestrictedRelationType(relation),
 						targetTable.equals(relation.getSecondKey().getTable()),
 						relation.isManyToMany(), table.getDataSet()
 								.getRestrictedTableType(targetTable), true);
@@ -1086,7 +1116,7 @@ public interface MartConstructor {
 				lastActionPerformed = merge;
 				// Drop old temp table.
 				MartConstructorAction drop = new Drop(this.datasetSchemaName,
-						null, tempTableName);
+						table.getDataSetTable().getName(), null, tempTableName);
 				actionGraph.addActionWithParent(drop, merge);
 				// Update temp table name to point to newly merged table.
 				tempTableName = mergedTableName;
@@ -1094,8 +1124,8 @@ public interface MartConstructor {
 				if (unionMerge) {
 					// Drop union target table. Dependent on
 					// lastActionPerformed, but does not update it.
-					drop = new Drop(this.datasetSchemaName, null,
-							targetTableName);
+					drop = new Drop(this.datasetSchemaName, table
+							.getDataSetTable().getName(), null, targetTableName);
 					actionGraph.addActionWithParent(drop, merge);
 				}
 			}
@@ -1150,13 +1180,15 @@ public interface MartConstructor {
 					targetTableName = this.helper.getNewTempTableName();
 					// Create union table.
 					MartConstructorAction union = new Union(
-							this.datasetSchemaName, null, targetTableName,
+							this.datasetSchemaName, table.getDataSetTable()
+									.getName(), null, targetTableName,
 							unionTableSchemas, unionTableNames);
 					actionGraph.addActionWithParent(union, lastActionPerformed);
 					// Create index on targetKey on union table. Dependent
 					// on lastActionPerformed, and updates it.
 					MartConstructorAction index = new Index(
-							this.datasetSchemaName, null, targetTableName,
+							this.datasetSchemaName, table.getDataSetTable()
+									.getName(), null, targetTableName,
 							targetKey.getColumns());
 					actionGraph.addActionWithParent(index, union);
 					lastActionPerformed = index;
@@ -1170,7 +1202,8 @@ public interface MartConstructor {
 				// Create the concat table by selecting sourceKey.
 				String concatTableName = this.helper.getNewTempTableName();
 				MartConstructorAction createCon = new Create(
-						this.datasetSchemaName, null, concatTableName, null,
+						this.datasetSchemaName, table.getDataSetTable()
+								.getName(), null, concatTableName, null,
 						tempTableName, sourceDSKey, false, null, false);
 				actionGraph.addActionWithParent(createCon, lastActionPerformed);
 				// Generate new temp table name for merged concat table.
@@ -1181,8 +1214,9 @@ public interface MartConstructor {
 				// name as concatColumn. Dependent on lastActionPerformed, and
 				// updates it.
 				MartConstructorAction concat = new Concat(
-						this.datasetSchemaName, null, mergedConcatTableName,
-						null, tempTableName, sourceDSKey, targetSchema,
+						this.datasetSchemaName, table.getDataSetTable()
+								.getName(), null, mergedConcatTableName, null,
+						tempTableName, sourceDSKey, targetSchema,
 						targetTableName, targetKey.getColumns(),
 						targetConcatKey.getColumns(), concatColumn.getName(),
 						table.getDataSet()
@@ -1195,13 +1229,14 @@ public interface MartConstructor {
 				actionGraph.addActionWithParent(concat, createCon);
 				// Drop old concat temp table and replace with new one.
 				MartConstructorAction drop = new Drop(this.datasetSchemaName,
-						null, concatTableName);
+						table.getDataSetTable().getName(), null,
+						concatTableName);
 				actionGraph.addActionWithParent(drop, concat);
 				concatTableName = mergedConcatTableName;
 				// Index sourceDSKey columns.
 				MartConstructorAction indexCon = new Index(
-						this.datasetSchemaName, null, concatTableName,
-						sourceDSKey);
+						this.datasetSchemaName, table.getDataSetTable()
+								.getName(), null, concatTableName, sourceDSKey);
 				actionGraph.addActionWithParent(indexCon, concat);
 				// Generate new temp table name for merged table.
 				String mergedTableName = this.helper.getNewTempTableName();
@@ -1209,27 +1244,30 @@ public interface MartConstructor {
 				// sourceDSKey and selecting the column with the same name as
 				// concatColumn.
 				MartConstructorAction merge = new Merge(this.datasetSchemaName,
-						null, mergedTableName, null, tempTableName,
-						sourceDSKey, true, null, concatTableName, sourceDSKey,
-						Collections.singletonList(concatColumn), null, false,
+						table.getDataSetTable().getName(), null,
+						mergedTableName, null, tempTableName, sourceDSKey,
+						true, null, concatTableName, sourceDSKey, Collections
+								.singletonList(concatColumn), null, false,
 						false, null, false);
 				actionGraph.addActionWithParent(merge, indexCon);
 				lastActionPerformed = merge;
 				// Drop old temp table and replace with new one.
-				drop = new Drop(this.datasetSchemaName, null, tempTableName);
+				drop = new Drop(this.datasetSchemaName, table.getDataSetTable()
+						.getName(), null, tempTableName);
 				actionGraph.addActionWithParent(drop, merge);
 				tempTableName = mergedTableName;
 				// Drop concat table. Dependent on lastActionPerformed, but
 				// does not update it.
 				MartConstructorAction dropCon = new Drop(
-						this.datasetSchemaName, null, concatTableName);
+						this.datasetSchemaName, table.getDataSetTable()
+								.getName(), null, concatTableName);
 				actionGraph.addActionWithParent(dropCon, merge);
 				// If concat table was a union table, drop it.
 				if (unionMerge) {
 					// Drop union concat table. Dependent on
 					// lastActionPerformed, but does not update it.
-					drop = new Drop(this.datasetSchemaName, null,
-							targetTableName);
+					drop = new Drop(this.datasetSchemaName, table
+							.getDataSetTable().getName(), null, targetTableName);
 					actionGraph.addActionWithParent(drop, merge);
 				}
 			}
@@ -1266,14 +1304,15 @@ public interface MartConstructor {
 				// plus all expression columns using literal expression,
 				// with optional group-by.
 				ExpressionAddColumns expr = new ExpressionAddColumns(
-						this.datasetSchemaName, null, tempTableName, null,
+						this.datasetSchemaName, table.getDataSetTable()
+								.getName(), null, tempTableName, null,
 						mergedTableName, selectColumns, expressionColumns,
 						!groupByDependentColumns.isEmpty());
 				actionGraph.addActionWithParent(expr, lastActionPerformed);
 				lastActionPerformed = expr;
 				// Drop previous table.
-				Drop drop = new Drop(this.datasetSchemaName, null,
-						tempTableName);
+				Drop drop = new Drop(this.datasetSchemaName, table
+						.getDataSetTable().getName(), null, tempTableName);
 				actionGraph.addActionWithParent(drop, expr);
 				tempTableName = mergedTableName;
 			}

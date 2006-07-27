@@ -50,7 +50,7 @@ import org.biomart.builder.resources.Resources;
  * use JDBC to fetch/retrieve data between two databases.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 25th July 2006
+ * @version 0.1.13, 27th July 2006
  * @since 0.1
  */
 public class SaveDDLMartConstructor implements MartConstructor {
@@ -126,6 +126,9 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			helper = new MartAsFileHelper(this.outputFile, this.includeComments);
 		else if (this.granularity.equals(SaveDDLGranularity.DATASET))
 			helper = new DataSetAsFileHelper(this.outputFile,
+					this.includeComments);
+		else if (this.granularity.equals(SaveDDLGranularity.TABLE))
+			helper = new TableAsFileHelper(this.outputFile,
 					this.includeComments);
 		else
 			helper = new StepAsFileHelper(this.outputFile, this.includeComments);
@@ -474,6 +477,99 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	}
 
 	/**
+	 * TableAsFileHelper extends DDLHelper, saves statements. Statements are
+	 * saved as a single SQL file per table inside a Zip file.
+	 */
+	public static class TableAsFileHelper extends DDLHelper {
+
+		private FileOutputStream outputFileStream;
+
+		private ZipOutputStream outputZipStream;
+
+		private ZipEntry entry;
+
+		private int martSequence;
+
+		private int datasetSequence;
+
+		private Map actions;
+
+		/**
+		 * Constructs a helper which will output all DDL into a single file per
+		 * table inside the given zip file.
+		 * 
+		 * @param outputFile
+		 *            the zip file to write the DDL into.
+		 * @param includeComments
+		 *            <tt>true</tt> if comments are to be included,
+		 *            <tt>false</tt> if not.
+		 */
+		public TableAsFileHelper(File outputFile, boolean includeComments) {
+			super(outputFile, includeComments);
+			this.martSequence = 0;
+			this.datasetSequence = 0;
+			this.actions = new HashMap();
+		}
+
+		public void martConstructorEventOccurred(int event,
+				MartConstructorAction action) throws Exception {
+			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
+				this.outputFileStream = new FileOutputStream(this.getFile());
+				this.outputZipStream = new ZipOutputStream(
+						this.outputFileStream);
+				this.outputZipStream.setMethod(ZipOutputStream.DEFLATED);
+			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
+				// Close the zip stream. Will also close the
+				// file output stream by default.
+				this.outputZipStream.finish();
+				this.outputFileStream.flush();
+				this.outputFileStream.close();
+			} else if (event == MartConstructorListener.DATASET_STARTED) {
+				// Clear out action map ready for next dataset.
+				this.actions.clear();
+			} else if (event == MartConstructorListener.DATASET_ENDED) {
+				// Write out one file per table in action map.
+				for (Iterator i = this.actions.keySet().iterator(); i.hasNext();) {
+					String tableName = (String) i.next();
+					this.entry = new ZipEntry(this.martSequence + "/"
+							+ this.datasetSequence + "/" + tableName + ".sql");
+					entry.setTime(System.currentTimeMillis());
+					this.outputZipStream.putNextEntry(entry);
+					// Write the actions.
+					for (Iterator j = ((List) this.actions.get(tableName))
+							.iterator(); j.hasNext();) {
+						// Convert the action to some DDL.
+						String[] cmd = this
+								.getStatementsForAction((MartConstructorAction) j
+										.next());
+						// Write the data.
+						for (int k = 0; k < cmd.length; k++) {
+							this.outputZipStream.write(cmd[k].getBytes());
+							this.outputZipStream.write(';');
+							this.outputZipStream.write(System.getProperty(
+									"line.separator").getBytes());
+						}
+					}
+					// Done with this entry.
+					this.outputZipStream.closeEntry();
+				}
+				// Bump up the dataset count for the next one.
+				this.datasetSequence++;
+			} else if (event == MartConstructorListener.MART_ENDED) {
+				// Bump up the mart count for the next one.
+				this.martSequence++;
+			} else if (event == MartConstructorListener.ACTION_EVENT) {
+				// Add the action to the current map.
+				if (!this.actions.containsKey(action.getDataSetTableName()))
+					this.actions.put(action.getDataSetTableName(),
+							new ArrayList());
+				((ArrayList) this.actions.get(action.getDataSetTableName()))
+						.add(action);
+			}
+		}
+	}
+
+	/**
 	 * StepAsFileHelper extends DDLHelper, saves statements. Statements are
 	 * saved in folders. Folder 1 must be finished before folder 2, but files
 	 * within folder 1 can be executed in any order. And so on.
@@ -576,6 +672,12 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 */
 		public static final SaveDDLGranularity DATASET = SaveDDLGranularity
 				.get(Resources.get("saveDDLDataSetGranularity"), true);
+
+		/**
+		 * Use this constant to refer to file-per-tableoutput.
+		 */
+		public static final SaveDDLGranularity TABLE = SaveDDLGranularity.get(
+				Resources.get("saveDDLTableGranularity"), true);
 
 		/**
 		 * Use this constant to refer to file-per-step output.

@@ -60,7 +60,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * a given set of datasets, then lets them actually do it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 29th June 2006
+ * @version 0.1.6, 27th July 2006
  * @since 0.1
  */
 public class SaveDDLDialog extends JDialog {
@@ -145,7 +145,8 @@ public class SaveDDLDialog extends JDialog {
 		this.viewDDL = new JCheckBox(Resources.get("viewDDLOnCompletion"));
 		this.granularity = new JComboBox(new Object[] {
 				SaveDDLGranularity.SINGLE, SaveDDLGranularity.MART,
-				SaveDDLGranularity.DATASET, SaveDDLGranularity.STEP, });
+				SaveDDLGranularity.DATASET, SaveDDLGranularity.TABLE,
+				SaveDDLGranularity.STEP });
 
 		// Create the list for choosing datasets.
 		this.datasetsList = new JList((DataSet[]) datasets
