@@ -54,7 +54,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * org.biomart.builder.view.gui.diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.25, 26th July 2006
+ * @version 0.1.26, 27th July 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -388,7 +388,7 @@ public class DataSetContext extends WindowContext {
 				});
 				contextMenu.add(partition);
 				if (this.getDataSet().getPartitionOnSchema())
-					partition.setSelected(false);
+					partition.setSelected(true);
 			}
 
 			// Else, if it's a wrapped column...

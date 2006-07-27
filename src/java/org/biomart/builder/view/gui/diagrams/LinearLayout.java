@@ -41,7 +41,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * relations between them along fixed-space tracks between components.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 21st July 2006
+ * @version 0.1.3, 27th July 2006
  * @since 0.1
  */
 public class LinearLayout implements LayoutManager {
@@ -136,11 +136,19 @@ public class LinearLayout implements LayoutManager {
 				bothRows.add(comp);
 			}
 
-			// Split the row into top and bottom halves.
+			// Split the row into top and bottom halves if
+			// there are more than 4 objects.
+			if (bothRows.size()>4) {
 			int splitIndex = bothRows.size() / 2;
 			this.topRow.addAll(bothRows.subList(0, splitIndex));
 			this.bottomRow
 					.addAll(bothRows.subList(splitIndex, bothRows.size()));
+			} 
+			// Otherwise, if there are 4 or less objects,
+			// display all in one row.
+			else {
+				this.topRow.addAll(bothRows);
+			}
 
 			// Set up variables to hold the top and bottom row widths.
 			// Start both off with padding to the left.

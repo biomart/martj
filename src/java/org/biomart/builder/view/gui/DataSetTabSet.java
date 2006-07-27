@@ -82,7 +82,7 @@ import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.33, 25th July 2006
+ * @version 0.1.35, 27th July 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -93,7 +93,7 @@ public class DataSetTabSet extends JTabbedPane {
 	// Use double-list to prevent problems with hashcodes changing.
 	private List[] datasetToTab = new List[] { new ArrayList(), new ArrayList() };
 
-	private Diagram currentExplanationDiagram;
+	private ExplainDataSetDialog currentExplanationDialog;
 
 	private AllDataSetsDiagram allDataSetsDiagram;
 
@@ -191,21 +191,23 @@ public class DataSetTabSet extends JTabbedPane {
 			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 			return;
 		}
-
-		// Add all datasets that we don't have yet.
+		
+		// What datasets should we have?
 		List martDataSets = new ArrayList(this.martTab.getMart().getDataSets());
-		for (Iterator i = martDataSets.iterator(); i.hasNext();) {
-			DataSet dataset = (DataSet) i.next();
-			if (!datasetToTab[0].contains(dataset))
-				addDataSetTab(dataset);
-		}
-
+		
 		// Remove all the datasets in our tabs that are not in the mart.
 		List ourDataSets = new ArrayList(datasetToTab[0]);
 		for (Iterator i = ourDataSets.iterator(); i.hasNext();) {
 			DataSet dataset = (DataSet) i.next();
 			if (!martDataSets.contains(dataset))
 				removeDataSetTab(dataset);
+		}
+
+		// Add all datasets that we don't have yet.
+		for (Iterator i = martDataSets.iterator(); i.hasNext();) {
+			DataSet dataset = (DataSet) i.next();
+			if (!datasetToTab[0].contains(dataset))
+				addDataSetTab(dataset);
 		}
 	}
 
@@ -273,6 +275,24 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void recalculateOverviewDiagram() {
 		this.allDataSetsDiagram.recalculateDiagram();
+	}
+
+	/**
+	 * Causes {@link ExplainDataSetDialog#repaintDialog()} to be called on the
+	 * currently visible explanation dialog, if any.
+	 */
+	public void repaintExplanationDialog() {
+		if (this.currentExplanationDialog != null)
+			this.currentExplanationDialog.repaintDialog();
+	}
+
+	/**
+	 * Causes {@link ExplainDataSetDialog#recalculateDialog()} to be called on
+	 * the currently visible explanation dialog, if any.
+	 */
+	public void recalculateExplanationDialog() {
+		if (this.currentExplanationDialog != null)
+			this.currentExplanationDialog.recalculateDialog();
 	}
 
 	/**
@@ -390,6 +410,9 @@ public class DataSetTabSet extends JTabbedPane {
 		this.datasetToTab[0].remove(index);
 		this.datasetToTab[1].remove(index);
 
+		// Update the overview diagram.
+		this.recalculateOverviewDiagram();
+
 		// Fake a click on the last tab before this one to ensure
 		// at least one tab remains visible and up-to-date.
 		this.setSelectedIndex(currentTab == 0 ? 0 : Math.max(tabIndex - 1, 0));
@@ -403,6 +426,9 @@ public class DataSetTabSet extends JTabbedPane {
 		this.addTab(dataset.getName(), datasetTab);
 		this.datasetToTab[0].add(dataset);
 		this.datasetToTab[1].add(datasetTab);
+
+		// Update the overview diagram.
+		this.recalculateOverviewDiagram();
 
 		// Fake a click on the new tab.
 		this.setSelectedIndex(this.indexOfComponent(datasetTab));
@@ -457,8 +483,12 @@ public class DataSetTabSet extends JTabbedPane {
 			// Rename the tab displaying it.
 			this.setTitleAt(idx, dataset.getName());
 
-			// Update the overview diagram.
-			recalculateOverviewDiagram();
+			// Update the overview diagram. (Recalc not repaint
+			// as the name will have changed the size of components).
+			this.recalculateOverviewDiagram();
+
+			// And update the explanation diagram.
+			this.recalculateExplanationDialog();
 
 			// Set the tabset as modified.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -529,6 +559,9 @@ public class DataSetTabSet extends JTabbedPane {
 			this.recalculateDataSetDiagram((DataSet) dsColumn.getTable()
 					.getSchema());
 
+			// Recalc the explanation too.
+			this.recalculateExplanationDialog();
+
 			// Set the tabset as modified.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (Throwable t) {
@@ -561,6 +594,9 @@ public class DataSetTabSet extends JTabbedPane {
 			// Recalculate the dataset diagram as the table name will have
 			// caused the table to resize itself.
 			this.recalculateDataSetDiagram((DataSet) dsTable.getSchema());
+
+			// Recalc the explanation diagram too.
+			this.recalculateExplanationDialog();
 
 			// Set the tabset as modified.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -728,6 +764,9 @@ public class DataSetTabSet extends JTabbedPane {
 							recalculateDataSetDiagram((DataSet) table
 									.getSchema());
 
+							// Recalculate the explanation diagram too.
+							recalculateExplanationDialog();
+
 							// Update the modified status for the tabset.
 							martTab.getMartTabSet().setModifiedStatus(true);
 						}
@@ -808,6 +847,9 @@ public class DataSetTabSet extends JTabbedPane {
 							recalculateDataSetDiagram((DataSet) column
 									.getTable().getSchema());
 
+							// Recalculate the explanation diagram too.
+							recalculateExplanationDialog();
+
 							// Update the modified status for the tabset.
 							martTab.getMartTabSet().setModifiedStatus(true);
 						}
@@ -847,10 +889,9 @@ public class DataSetTabSet extends JTabbedPane {
 			// Recalculate the dataset diagram based on the modified dataset.
 			this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it correctly
-			// reflects the masked relation.
-			if (this.currentExplanationDiagram != null)
-				this.currentExplanationDiagram.repaintDiagram();
+			// Update the explanation diagram so that it
+			// correctly reflects the changed table.
+			this.recalculateExplanationDialog();
 
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -885,10 +926,9 @@ public class DataSetTabSet extends JTabbedPane {
 			// Recalculate the dataset diagram based on the modified dataset.
 			this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it correctly
-			// reflects the masked relation.
-			if (this.currentExplanationDiagram != null)
-				this.currentExplanationDiagram.repaintDiagram();
+			// Update the explanation diagram so that it
+			// correctly reflects the changed relation.
+			this.recalculateExplanationDialog();
 
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -923,10 +963,9 @@ public class DataSetTabSet extends JTabbedPane {
 			// Recalculate the dataset diagram based on the modified dataset.
 			this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it correctly
-			// reflects the masked relation.
-			if (this.currentExplanationDiagram != null)
-				this.currentExplanationDiagram.repaintDiagram();
+			// Update the explanation diagram so that it
+			// correctly reflects the changed relation.
+			this.recalculateExplanationDialog();
 
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -961,10 +1000,9 @@ public class DataSetTabSet extends JTabbedPane {
 			// Recalculate the dataset diagram based on the modified dataset.
 			this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it correctly
-			// reflects the masked relation.
-			if (this.currentExplanationDiagram != null)
-				this.currentExplanationDiagram.repaintDiagram();
+			// Update the explanation diagram so that it
+			// correctly reflects the changed relation.
+			this.recalculateExplanationDialog();
 
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -999,10 +1037,9 @@ public class DataSetTabSet extends JTabbedPane {
 			// Recalculate the dataset diagram based on the modified dataset.
 			this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it correctly
-			// reflects the masked relation.
-			if (this.currentExplanationDiagram != null)
-				this.currentExplanationDiagram.repaintDiagram();
+			// Update the explanation diagram so that it
+			// correctly reflects the changed relation.
+			this.recalculateExplanationDialog();
 
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -1049,8 +1086,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 							// Update the explanation diagram so that it
 							// correctly reflects the changed table.
-							if (currentExplanationDiagram != null)
-								currentExplanationDiagram.repaintDiagram();
+							repaintExplanationDialog();
 
 							// Update the modified status for the tabset.
 							martTab.getMartTabSet().setModifiedStatus(true);
@@ -1139,8 +1175,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 							// Update the explanation diagram so that it
 							// correctly reflects the changed table.
-							if (currentExplanationDiagram != null)
-								currentExplanationDiagram.repaintDiagram();
+							repaintExplanationDialog();
 
 							// Update the modified status for the tabset.
 							martTab.getMartTabSet().setModifiedStatus(true);
@@ -1197,17 +1232,14 @@ public class DataSetTabSet extends JTabbedPane {
 												.getSchema());
 
 							// Otherwise, it is external, so repaint the schema
-							// overview
-							// diagram.
+							// overview diagram.
 							else
 								martTab.getSchemaTabSet()
 										.repaintOverviewDiagram();
 
 							// Update the explanation diagram so that it
-							// correctly
-							// reflects the changed relation.
-							if (currentExplanationDiagram != null)
-								currentExplanationDiagram.repaintDiagram();
+							// correctly reflects the changed relation.
+							repaintExplanationDialog();
 
 							// Update the modified status for the tabset.
 							martTab.getMartTabSet().setModifiedStatus(true);
@@ -1297,17 +1329,14 @@ public class DataSetTabSet extends JTabbedPane {
 												.getSchema());
 
 							// Otherwise, it is external, so repaint the schema
-							// overview
-							// diagram.
+							// overview diagram.
 							else
 								martTab.getSchemaTabSet()
 										.repaintOverviewDiagram();
 
 							// Update the explanation diagram so that it
-							// correctly
-							// reflects the changed relation.
-							if (currentExplanationDiagram != null)
-								currentExplanationDiagram.repaintDiagram();
+							// correctly reflects the changed relation.
+							repaintExplanationDialog();
 
 							// Update the modified status for the tabset.
 							martTab.getMartTabSet().setModifiedStatus(true);
@@ -1354,10 +1383,9 @@ public class DataSetTabSet extends JTabbedPane {
 			// Recalculate the dataset diagram based on the modified dataset.
 			this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it correctly
-			// reflects the masked relation.
-			if (this.currentExplanationDiagram != null)
-				this.currentExplanationDiagram.repaintDiagram();
+			// Update the explanation diagram so that it
+			// correctly reflects the changed relation.
+			this.recalculateExplanationDialog();
 
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -1392,10 +1420,9 @@ public class DataSetTabSet extends JTabbedPane {
 			// Recalculate the dataset diagram based on the modified dataset.
 			this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it correctly
-			// reflects the masked relation.
-			if (this.currentExplanationDiagram != null)
-				this.currentExplanationDiagram.repaintDiagram();
+			// Update the explanation diagram so that it
+			// correctly reflects the changed relation.
+			this.recalculateExplanationDialog();
 
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -1420,6 +1447,9 @@ public class DataSetTabSet extends JTabbedPane {
 			// Recalculate the dataset diagram to reflect the changes.
 			this.recalculateDataSetDiagram(ds);
 
+			// Recalculate the overview too.
+			this.recalculateExplanationDialog();
+
 			// Update the modification status for this tabset.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (Throwable t) {
@@ -1441,7 +1471,10 @@ public class DataSetTabSet extends JTabbedPane {
 			MartBuilderUtils.unmaskColumn(ds, column);
 
 			// Recalculate the dataset diagram to reflect the changes.
-			this.recalculateDataSetDiagram(ds);
+			this.repaintDataSetDiagram(ds);
+
+			// Update the explanation too.
+			this.repaintExplanationDialog();
 
 			// Update the modification status for this tabset.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -1470,17 +1503,17 @@ public class DataSetTabSet extends JTabbedPane {
 
 	/**
 	 * This method is called by the {@link ExplainDataSetDialog} when it is
-	 * opened, and tells the dataset tabset about the diagram it is using. This
-	 * diagram is then updated whenever the dataset window is updated. It is
-	 * called again, with a null value, when the dialog is closed.
+	 * opened, and tells the dataset tabset about itself. This dialog is then
+	 * updated whenever the dataset window is updated. It is called again, with
+	 * a null value, when the dialog is closed.
 	 * 
-	 * @param diagram
-	 *            the diagram being displayed by the current
+	 * @param dialog
+	 *            the dialog being displayed by the current
 	 *            {@link ExplainDataSetDialog}, or null if none is currently
 	 *            being displayed.
 	 */
-	public void setCurrentExplanationDiagram(Diagram diagram) {
-		this.currentExplanationDiagram = diagram;
+	public void setCurrentExplanationDialog(ExplainDataSetDialog dialog) {
+		this.currentExplanationDialog = dialog;
 	}
 
 	/**
@@ -1496,6 +1529,9 @@ public class DataSetTabSet extends JTabbedPane {
 		// Repaint the dataset diagram, as the schema name
 		// column will have changed colour.
 		this.repaintDataSetDiagram(dataset);
+
+		// Repaint the explanation too.
+		this.repaintExplanationDialog();
 
 		// Update the modified status.
 		this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -1514,6 +1550,9 @@ public class DataSetTabSet extends JTabbedPane {
 		// Repaint the dataset diagram, as the schema name
 		// column will have changed colour.
 		this.repaintDataSetDiagram(dataset);
+
+		// Repaint the explanation too.
+		this.repaintExplanationDialog();
 
 		// Update the modified status.
 		this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -1585,6 +1624,9 @@ public class DataSetTabSet extends JTabbedPane {
 			// will have changed colour.
 			this.repaintDataSetDiagram(dataset);
 
+			// Repaint the explanation, too.
+			this.repaintExplanationDialog();
+
 			// Update the modified status on this tabset.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (Throwable t) {
@@ -1607,6 +1649,9 @@ public class DataSetTabSet extends JTabbedPane {
 		// Repaint the dataset, as the partitioned column
 		// will have changed colour.
 		this.repaintDataSetDiagram(dataset);
+
+		// Repaint the explanation too.
+		this.repaintExplanationDialog();
 
 		// Update the modified status on this tabset.
 		this.martTab.getMartTabSet().setModifiedStatus(true);
