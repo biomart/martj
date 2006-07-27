@@ -122,6 +122,25 @@ public class DataSetContext extends WindowContext {
 			});
 			contextMenu.add(replicate);
 
+			// Add an option to make this dataset invisible.
+			final JCheckBoxMenuItem invisible = new JCheckBoxMenuItem(Resources
+					.get("invisibleDataSetTitle"));
+			invisible.setMnemonic(Resources.get("invisibleDataSetMnemonic")
+					.charAt(0));
+			invisible.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					if (invisible.isSelected())
+						getMartTab().getDataSetTabSet()
+								.requestInvisibleDataSet(getDataSet());
+					else
+						getMartTab().getDataSetTabSet().requestVisibleDataSet(
+								getDataSet());
+				}
+			});
+			if (this.getDataSet().getInvisible())
+				invisible.setSelected(true);
+			contextMenu.add(invisible);
+
 			// The optimiser submenu allows the user to choose different
 			// post-construction optimiser types for the dataset.
 			JMenu optimiserMenu = new JMenu(Resources.get("optimiserTypeTitle"));

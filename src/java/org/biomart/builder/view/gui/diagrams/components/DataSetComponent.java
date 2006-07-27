@@ -39,10 +39,23 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 27th June 2006
+ * @version 0.1.3, 27th July 2006
  * @since 0.1
  */
 public class DataSetComponent extends BoxShapedComponent {
+	
+	/**
+	 * This color is the one used for the background of
+	 * invisible datasets.
+	 */
+	public static final Color INVISIBLE_BACKGROUND = Color.WHITE;
+
+	/**
+	 * This color is the one used for the background of
+	 * visible datasets.
+	 */
+	public static final Color VISIBLE_BACKGROUND = Color.LIGHT_GRAY;
+	
 	private static final long serialVersionUID = 1;
 
 	private GridBagLayout layout;

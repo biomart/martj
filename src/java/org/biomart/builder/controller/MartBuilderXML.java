@@ -99,7 +99,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.25, 25th July 2006
+ * @version 0.1.26, 27th July 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -816,6 +816,9 @@ public class MartBuilderXML extends DefaultHandler {
 				boolean partitionOnSchema = Boolean.valueOf(
 						(String) attributes.get("partitionOnSchema"))
 						.booleanValue();
+				boolean invisible = Boolean.valueOf(
+						(String) attributes.get("invisible"))
+						.booleanValue();
 				Table centralTable = (Table) this.mappedObjects.get(attributes
 						.get("centralTableId"));
 				String optType = (String) attributes.get("optimiser");
@@ -840,6 +843,7 @@ public class MartBuilderXML extends DefaultHandler {
 				// schema settings.
 				ds.setDataSetOptimiserType(opt);
 				ds.setPartitionOnSchema(partitionOnSchema);
+				ds.setInvisible(invisible);
 				element = ds;
 			} catch (Exception e) {
 				if (e instanceof SAXException)
@@ -1355,6 +1359,8 @@ public class MartBuilderXML extends DefaultHandler {
 					.getName(), xmlWriter);
 			this.writeAttribute("partitionOnSchema", Boolean.toString(ds
 					.getPartitionOnSchema()), xmlWriter);
+			this.writeAttribute("invisible", Boolean.toString(ds
+					.getInvisible()), xmlWriter);
 
 			// Write out concat relations inside window. MUST come first else
 			// the dataset concat-only cols will complain about not having a

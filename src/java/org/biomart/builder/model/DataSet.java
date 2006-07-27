@@ -97,6 +97,8 @@ public class DataSet extends GenericSchema {
 
 	private boolean partitionOnSchema;
 
+	private boolean invisible;
+
 	/**
 	 * The constructor creates a dataset around one central table and gives the
 	 * dataset a name. It adds itself to the specified mart automatically.
@@ -127,6 +129,7 @@ public class DataSet extends GenericSchema {
 			throw new AssociationException(Resources.get("tableMartMismatch"));
 
 		// Remember the settings and make some defaults.
+		this.invisible = false;
 		this.mart = mart;
 		this.centralTable = centralTable;
 		this.optimiser = DataSetOptimiserType.NONE;
@@ -214,6 +217,26 @@ public class DataSet extends GenericSchema {
 	 */
 	public Table getCentralTable() {
 		return this.centralTable;
+	}
+
+	/**
+	 * Test to see if this dataset is invisible.
+	 * 
+	 * @return <tt>true</tt> if it is invisible, <tt>false</tt> otherwise.
+	 */
+	public boolean getInvisible() {
+		return this.invisible;
+	}
+
+	/**
+	 * Sets the inivisibility of this dataset.
+	 * 
+	 * @param invisible
+	 *            <tt>true</tt> if it is invisible, <tt>false</tt>
+	 *            otherwise.
+	 */
+	public void setInvisible(boolean invisible) {
+		this.invisible = invisible;
 	}
 
 	/**
@@ -1089,7 +1112,7 @@ public class DataSet extends GenericSchema {
 
 			// Get the primary key of the parent DS table.
 			PrimaryKey parentDSTablePK = parentDSTable.getPrimaryKey();
-			
+
 			// Don't follow the parent's relations again.
 			relationsFollowed.addAll(parentDSTable.getUnderlyingRelations());
 

@@ -63,7 +63,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.29, 24th July 2006
+ * @version 0.1.30, 27th July 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -978,6 +978,26 @@ public class MartBuilderUtils {
 	 */
 	public static void unpartitionByColumn(DataSet dataset, WrappedColumn column) {
 		dataset.unflagPartitionedWrappedColumn(column);
+	}
+
+	/**
+	 * Turns invisibility on in a given dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to enable invisibility in.
+	 */
+	public static void invisibleDataSet(DataSet dataset) {
+		dataset.setInvisible(true);
+	}
+
+	/**
+	 * Turns invisibility off in a given dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to disable invisibility in.
+	 */
+	public static void visibleDataSet(DataSet dataset) {
+		dataset.setInvisible(false);
 	}
 
 	/**

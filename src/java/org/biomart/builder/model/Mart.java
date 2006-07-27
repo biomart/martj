@@ -476,9 +476,12 @@ public class Mart {
 			Table table = (Table) i.next();
 			invisibleDataSets.add(new DataSet(this, table, table.getName()));
 		}
-		// Synchronise them all.
-		for (Iterator i = invisibleDataSets.iterator(); i.hasNext();)
-			((DataSet) i.next()).synchronise();
+		// Synchronise them all and make them all invisible.
+		for (Iterator i = invisibleDataSets.iterator(); i.hasNext();) {
+			DataSet ds = (DataSet)i.next();
+			ds.setInvisible(true);
+			ds.synchronise();
+		}
 		// Return the results.
 		return invisibleDataSets;
 	}

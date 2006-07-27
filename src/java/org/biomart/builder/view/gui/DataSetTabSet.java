@@ -1517,6 +1517,40 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Requests that the dataset be made invisible.
+	 * 
+	 * @param dataset
+	 *            the dataset to make invisible.
+	 */
+	public void requestInvisibleDataSet(DataSet dataset) {
+		// Do the invisibility.
+		MartBuilderUtils.invisibleDataSet(dataset);
+
+		// Repaint the dataset overview diagram.
+		this.repaintOverviewDiagram();
+
+		// Update the modified status.
+		this.martTab.getMartTabSet().setModifiedStatus(true);
+	}
+
+	/**
+	 * Requests that the dataset be made visible.
+	 * 
+	 * @param dataset
+	 *            the dataset to make visible.
+	 */
+	public void requestVisibleDataSet(DataSet dataset) {
+		// Do the visibility.
+		MartBuilderUtils.visibleDataSet(dataset);
+
+		// Repaint the dataset overview diagram.
+		this.repaintOverviewDiagram();
+
+		// Update the modified status.
+		this.martTab.getMartTabSet().setModifiedStatus(true);
+	}
+
+	/**
 	 * Requests that the dataset be partitioned by schema.
 	 * 
 	 * @param dataset

@@ -21,6 +21,7 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -28,13 +29,14 @@ import javax.swing.JPopupMenu;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
 
 /**
  * Provides the context menus and colour schemes to use when viewing the all
  * datasets tab.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 25th July 2006
+ * @version 0.1.5, 27th July 2006
  * @since 0.1
  */
 public class AllDataSetsContext implements DiagramContext {
@@ -133,6 +135,25 @@ public class AllDataSetsContext implements DiagramContext {
 			});
 			contextMenu.add(replicate);
 
+			// Add an option to make this dataset invisible.
+			final JCheckBoxMenuItem invisible = new JCheckBoxMenuItem(Resources
+					.get("invisibleDataSetTitle"));
+			invisible.setMnemonic(Resources.get("invisibleDataSetMnemonic")
+					.charAt(0));
+			invisible.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					if (invisible.isSelected())
+						martTab.getDataSetTabSet().requestInvisibleDataSet(
+								dataset);
+					else
+						martTab.getDataSetTabSet().requestVisibleDataSet(
+								dataset);
+				}
+			});
+			if (dataset.getInvisible())
+				invisible.setSelected(true);
+			contextMenu.add(invisible);
+
 			// Option to create the DDL for the dataset.
 			JMenuItem saveDDL = new JMenuItem(Resources.get("saveDDLTitle"));
 			saveDDL.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
@@ -146,6 +167,13 @@ public class AllDataSetsContext implements DiagramContext {
 	}
 
 	public void customiseAppearance(JComponent component, Object object) {
-		// Nothing needs doing here.
+		// Only worried about visible/invisible datasets.
+		if (object instanceof DataSet) {
+			DataSet ds = (DataSet) object;
+			if (ds.getInvisible())
+				component.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
+			else
+				component.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
+		}
 	}
 }

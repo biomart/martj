@@ -229,7 +229,7 @@ public class ExplainDataSetDialog extends JDialog {
 			gridBag.setConstraints(field, fieldConstraints);
 			this.transformation.add(field);
 			stepNumber++;
-		}
+		}	
 
 		// Show underlying key/relation pairs.
 		for (int i = 0; i < this.dsTable.getUnderlyingKeys().size(); i++) {
