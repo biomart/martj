@@ -39,8 +39,7 @@ import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
@@ -357,6 +356,17 @@ public class DataSetContext extends WindowContext {
 			// Work out which column has been clicked.
 			final DataSetColumn column = (DataSetColumn) object;
 
+			// Rename the column.
+			JMenuItem rename = new JMenuItem(Resources.get("renameColumnTitle"));
+			rename.setMnemonic(Resources.get("renameColumnMnemonic").charAt(0));
+			rename.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent evt) {
+					getMartTab().getDataSetTabSet().requestRenameDataSetColumn(
+							column);
+				}
+			});
+			contextMenu.add(rename);
+
 			// Mask the column.
 			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
 					.get("maskColumnTitle"));
@@ -375,113 +385,71 @@ public class DataSetContext extends WindowContext {
 			if (this.getDataSet().getMaskedDataSetColumns().contains(column))
 				mask.setSelected(true);
 
-			// Rename the column.
-			JMenuItem rename = new JMenuItem(Resources.get("renameColumnTitle"));
-			rename.setMnemonic(Resources.get("renameColumnMnemonic").charAt(0));
-			rename.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestRenameDataSetColumn(
-							column);
-				}
-			});
-			contextMenu.add(rename);
+			// Which column is it? And is it already partitioned?
+			boolean isPartitioned = this.getDataSet()
+					.getPartitionedDataSetColumns().contains(column);
 
-			// If it's a schema name column...
-			if (column instanceof SchemaNameColumn) {
+			// If it is partitioned, make a submenu to change the partition
+			// type.
+			if (isPartitioned) {
 
-				// Allow the user to partition, or unpartition, by schema in
-				// schema group.
-				final JCheckBoxMenuItem partition = new JCheckBoxMenuItem(
-						Resources.get("partitionOnSchemaTitle"));
-				partition.setMnemonic(Resources
-						.get("partitionOnSchemaMnemonic").charAt(0));
+				// Set up the partitioning submenu.
+				JMenu partitionSubmenu = new JMenu(Resources
+						.get("partitionColumnSMTitle"));
+				partitionSubmenu.setMnemonic(Resources.get(
+						"partitionColumnSMMnemonic").charAt(0));
+
+				// The option to change the partition type.
+				JMenuItem changepartition = new JMenuItem(Resources
+						.get("changePartitionColumnTitle"));
+				changepartition.setMnemonic(Resources.get(
+						"changePartitionColumnMnemonic").charAt(0));
+				changepartition.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						getMartTab().getDataSetTabSet()
+								.requestPartitionByColumn(getDataSet(), column);
+					}
+				});
+				partitionSubmenu.add(changepartition);
+
+				// The option to turn off partitioning.
+				JMenuItem unpartition = new JMenuItem(Resources
+						.get("unpartitionColumnTitle"));
+				unpartition.setMnemonic(Resources.get(
+						"unpartitionColumnMnemonic").charAt(0));
+				unpartition.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						getMartTab().getDataSetTabSet()
+								.requestUnpartitionByColumn(getDataSet(),
+										column);
+					}
+				});
+				partitionSubmenu.add(unpartition);
+
+				// Add the submenu to the context menu.
+				contextMenu.add(partitionSubmenu);
+			}
+
+			// If it is not partitioned, allow the user to turn partitioning
+			// on.
+			else {
+
+				// Option to enable partitioning.
+				JMenuItem partition = new JMenuItem(Resources
+						.get("partitionColumnTitle"));
+				partition.setMnemonic(Resources.get("partitionColumnMnemonic")
+						.charAt(0));
 				partition.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
-						if (partition.isSelected())
-							getMartTab().getDataSetTabSet()
-									.requestPartitionBySchema(getDataSet());
-						else
-							getMartTab().getDataSetTabSet()
-									.requestUnpartitionBySchema(getDataSet());
+						getMartTab().getDataSetTabSet()
+								.requestPartitionByColumn(getDataSet(), column);
 					}
 				});
 				contextMenu.add(partition);
-				if (this.getDataSet().getPartitionOnSchema())
-					partition.setSelected(true);
-			}
-
-			// Else, if it's a wrapped column...
-			else if (column instanceof WrappedColumn) {
-
-				// Which column is it? And is it already partitioned?
-				final WrappedColumn wrappedCol = (WrappedColumn) column;
-				boolean isPartitioned = this.getDataSet()
-						.getPartitionedWrappedColumns().contains(column);
-
-				// If it is partitioned, make a submenu to change the partition
-				// type.
-				if (isPartitioned) {
-
-					// Set up the partitioning submenu.
-					JMenu partitionSubmenu = new JMenu(Resources
-							.get("partitionColumnSMTitle"));
-					partitionSubmenu.setMnemonic(Resources.get(
-							"partitionColumnSMMnemonic").charAt(0));
-
-					// The option to change the partition type.
-					JMenuItem changepartition = new JMenuItem(Resources
-							.get("changePartitionColumnTitle"));
-					changepartition.setMnemonic(Resources.get(
-							"changePartitionColumnMnemonic").charAt(0));
-					changepartition.addActionListener(new ActionListener() {
-						public void actionPerformed(ActionEvent evt) {
-							getMartTab().getDataSetTabSet()
-									.requestPartitionByColumn(getDataSet(),
-											wrappedCol);
-						}
-					});
-					partitionSubmenu.add(changepartition);
-
-					// The option to turn off partitioning.
-					JMenuItem unpartition = new JMenuItem(Resources
-							.get("unpartitionColumnTitle"));
-					unpartition.setMnemonic(Resources.get(
-							"unpartitionColumnMnemonic").charAt(0));
-					unpartition.addActionListener(new ActionListener() {
-						public void actionPerformed(ActionEvent evt) {
-							getMartTab().getDataSetTabSet()
-									.requestUnpartitionByColumn(getDataSet(),
-											wrappedCol);
-						}
-					});
-					partitionSubmenu.add(unpartition);
-
-					// Add the submenu to the context menu.
-					contextMenu.add(partitionSubmenu);
-				}
-
-				// If it is not partitioned, allow the user to turn partitioning
-				// on.
-				else {
-
-					// Option to enable partitioning.
-					JMenuItem partition = new JMenuItem(Resources
-							.get("partitionColumnTitle"));
-					partition.setMnemonic(Resources.get(
-							"partitionColumnMnemonic").charAt(0));
-					partition.addActionListener(new ActionListener() {
-						public void actionPerformed(ActionEvent evt) {
-							getMartTab().getDataSetTabSet()
-									.requestPartitionByColumn(getDataSet(),
-											wrappedCol);
-						}
-					});
-					contextMenu.add(partition);
-				}
 			}
 
 			// Else, if it's an expression column...
-			else if (column instanceof ExpressionColumn) {
+			if (column instanceof ExpressionColumn) {
 
 				// Option to modify column.
 				JMenuItem modify = new JMenuItem(Resources
@@ -565,16 +533,17 @@ public class DataSetContext extends WindowContext {
 			// Which column is it?
 			Column column = (Column) object;
 
+			// Magenta EXPRESSION columns.
+			if (column instanceof InheritedColumn)
+				component.setForeground(ColumnComponent.INHERITED_COLOUR);
+
 			// Fade out all MASKED columns.
-			if (this.getDataSet().getMaskedDataSetColumns().contains(column))
+			else if (this.getDataSet().getMaskedDataSetColumns().contains(column))
 				component.setForeground(ColumnComponent.FADED_COLOUR);
 
-			// Blue PARTITIONED columns and the schema name if partition on
-			// dataset.
-			else if (this.getDataSet().getPartitionedWrappedColumns().contains(
-					column)
-					|| ((column instanceof SchemaNameColumn) && this
-							.getDataSet().getPartitionOnSchema()))
+			// Blue PARTITIONED columns.
+			else if (this.getDataSet().getPartitionedDataSetColumns().contains(
+					column))
 				component.setForeground(ColumnComponent.PARTITIONED_COLOUR);
 
 			// Magenta EXPRESSION columns.

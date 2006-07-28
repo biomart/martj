@@ -66,7 +66,7 @@ import org.biomart.builder.model.MartConstructorAction.Union;
  * Understands how to create SQL and DDL for a PostgreSQL database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 25th July 2006
+ * @version 0.1.7, 28th July 2006
  * @since 0.1
  */
 public class PostgreSQLDialect extends DatabaseDialect {
@@ -116,7 +116,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				"select distinct " + colName + " from " + schemaName + "."
 						+ tableName).executeQuery();
 		while (rs.next())
-			results.add(rs.getString(0));
+			results.add(rs.getString(1));
 		rs.close();
 		return results;
 	}
@@ -425,7 +425,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		Object partColumnValue = action.getPartitionColumnValue();
 		if (partColumnValue != null) {
 			String escapedValue = partColumnValue.toString();
-			escapedValue = escapedValue.replaceAll("\\", "\\\\");
+			escapedValue = escapedValue.replaceAll("\\\\", "\\\\");
 			escapedValue = escapedValue.replaceAll("'", "\\'");
 			statements.add("create table " + partTableSchema + "."
 					+ partTableName + " as select * from " + fromTableSchema

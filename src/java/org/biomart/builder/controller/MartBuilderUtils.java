@@ -31,6 +31,7 @@ import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.model.ComponentStatus;
+import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Mart;
@@ -46,7 +47,6 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.GenericForeignKey;
 import org.biomart.builder.model.Key.GenericPrimaryKey;
@@ -63,7 +63,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.30, 27th July 2006
+ * @version 0.1.31, 28th July 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -102,7 +102,7 @@ public class MartBuilderUtils {
 		if (schema instanceof SchemaGroup) {
 			for (Iterator i = ((SchemaGroup) schema).getSchemas().iterator(); i
 					.hasNext();) {
-				Schema internalSchema = (Schema)i.next();
+				Schema internalSchema = (Schema) i.next();
 				DatabaseDialect dd = DatabaseDialect.getDialect(internalSchema);
 				if (dd != null)
 					results.addAll(dd.executeSelectRows(internalSchema
@@ -141,6 +141,8 @@ public class MartBuilderUtils {
 	 *            whether this column requires a group-by statement. If it does,
 	 *            the group-by columns required will be worked out
 	 *            automatically.
+	 * @throws AlreadyExistsException
+	 *             if the chosen column name already exists.
 	 */
 	public static void addExpressionColumn(DataSetTable table,
 			String columnName, Map columnAliases, String expression,
@@ -931,26 +933,6 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Sets the partition-by-schema flag to on in a given dataset.
-	 * 
-	 * @param dataset
-	 *            the dataset to turn the partition-by-schema flag on for.
-	 */
-	public static void partitionBySchema(DataSet dataset) {
-		dataset.setPartitionOnSchema(true);
-	}
-
-	/**
-	 * Sets the partition-by-schema flag to off in a given dataset.
-	 * 
-	 * @param dataset
-	 *            the dataset to turn the partition-by-schema flag off for.
-	 */
-	public static void unpartitionBySchema(DataSet dataset) {
-		dataset.setPartitionOnSchema(false);
-	}
-
-	/**
 	 * Asks a dataset to partition tables by the values in the specified column.
 	 * 
 	 * @param dataset
@@ -963,9 +945,11 @@ public class MartBuilderUtils {
 	 *             if the column could not be used for partitioning, for
 	 *             whatever reason.
 	 */
-	public static void partitionByColumn(DataSet dataset, WrappedColumn column,
-			PartitionedColumnType type) throws AssociationException {
-		dataset.flagPartitionedWrappedColumn(column, type);
+	public static void partitionByColumn(DataSet dataset, DataSetColumn column,
+			PartitionedColumnType type) throws AssociationException,
+			BuilderException, SQLException {
+		dataset.flagPartitionedDataSetColumn(column, type);
+		dataset.synchronise();
 	}
 
 	/**
@@ -976,8 +960,10 @@ public class MartBuilderUtils {
 	 * @param column
 	 *            the column to turn off partitioning for.
 	 */
-	public static void unpartitionByColumn(DataSet dataset, WrappedColumn column) {
-		dataset.unflagPartitionedWrappedColumn(column);
+	public static void unpartitionByColumn(DataSet dataset, DataSetColumn column)
+			throws BuilderException, SQLException {
+		dataset.unflagPartitionedDataSetColumn(column);
+		dataset.synchronise();
 	}
 
 	/**

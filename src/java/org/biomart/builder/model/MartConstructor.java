@@ -23,11 +23,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.biomart.builder.exceptions.ConstructorException;
+import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
@@ -35,6 +38,7 @@ import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
@@ -65,7 +69,7 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.22, 27th July 2006
+ * @version 0.1.23, 28th July 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -431,13 +435,6 @@ public interface MartConstructor {
 					this.checkCancelled();
 				}
 
-				// If partitioning by schema, add schema name to partition
-				// values on each table representation in schemaTables.
-				if (ds.getPartitionOnSchema())
-					for (Iterator j = schemaTables.iterator(); j.hasNext();)
-						((MCDSTable) j.next()).getPartitionValues().add(
-								schema.getName());
-
 				// Add tables for this schema to list of all tables.
 				tables.addAll(schemaTables);
 			}
@@ -451,10 +448,9 @@ public interface MartConstructor {
 						.getLastActionPerformed());
 			actionGraph.addAction(prePartitionAction);
 
-			// If not partitioning by schema, and main table schema is
-			// a schema group, do a union on all schemas for each table.
-			if (!ds.getPartitionOnSchema()
-					&& mainTableSchema instanceof SchemaGroup) {
+			// If main table schema is a schema group, do a union on all schemas
+			// for each table.
+			if (mainTableSchema instanceof SchemaGroup) {
 				// Merge each set of tables.
 				List unionTables = new ArrayList();
 				for (int i = 0; i < tables.size() / schemas.size(); i++) {
@@ -506,30 +502,10 @@ public interface MartConstructor {
 			}
 
 			// Partition all partitioned columns.
-			for (Iterator i = ds.getPartitionedWrappedColumns().iterator(); i
+			for (Iterator i = ds.getPartitionedDataSetColumns().iterator(); i
 					.hasNext();) {
 				List preDropChildActions = new ArrayList();
-				WrappedColumn partCol = (WrappedColumn) i.next();
-
-				// Work out what partition values we will use.
-				PartitionedColumnType partColType = ds
-						.getPartitionedWrappedColumnType(partCol);
-				List partValues = new ArrayList();
-				if (partColType instanceof SingleValue) {
-					partValues.add(((SingleValue) partColType).getValue());
-				} else if (partColType instanceof ValueCollection) {
-					partValues.addAll(((ValueCollection) partColType)
-							.getValues());
-					if (((ValueCollection) partColType).getIncludeNull())
-						partValues.add(null);
-				} else if (partColType instanceof UniqueValues) {
-					partValues.addAll(this.helper.listDistinctValues(partCol
-							.getWrappedColumn()));
-				}
-
-				// Do the partitioning. First, partition the table the column
-				// belongs to. Then, partition every child, and every child
-				// of every child, and so on recursively.
+				DataSetColumn partCol = (DataSetColumn) i.next();
 
 				// Look up the MCDSTable(s) containing the parent table.
 				DataSetTable parentDSTable = (DataSetTable) partCol.getTable();
@@ -539,6 +515,50 @@ public interface MartConstructor {
 					if (table.getDataSetTable().equals(parentDSTable))
 						parentTables.add(table);
 				}
+
+				// Work out what partition values we will use.
+				PartitionedColumnType partColType = ds
+						.getPartitionedDataSetColumnType(partCol);
+				Set partValues = new HashSet();
+				if (partColType instanceof SingleValue) {
+					partValues.add(((SingleValue) partColType).getValue());
+				} else if (partColType instanceof ValueCollection) {
+					partValues.addAll(((ValueCollection) partColType)
+							.getValues());
+					if (((ValueCollection) partColType).getIncludeNull())
+						partValues.add(null);
+				} else if (partColType instanceof UniqueValues) {
+					if (partCol instanceof WrappedColumn) {
+						partValues.addAll(this.helper
+								.listDistinctValues(((WrappedColumn) partCol)
+										.getWrappedColumn()));
+					} else if (partCol instanceof SchemaNameColumn) {
+						for (Iterator j = parentTables.iterator(); j.hasNext();) {
+							MCDSTable table = (MCDSTable) j.next();
+							for (Iterator k = table.getDataSet().getTables()
+									.iterator(); k.hasNext();) {
+								for (Iterator l = ((DataSetTable) k.next())
+										.getUnderlyingKeys().iterator(); l
+										.hasNext();) {
+									Key key = (Key) l.next();
+									Schema sc = key.getTable().getSchema();
+									Collection schs;
+									if (sc instanceof SchemaGroup)
+										schs = ((SchemaGroup) sc).getSchemas();
+									else
+										schs = Collections.singleton(sc);
+									partValues.addAll(schs);
+								}
+							}
+						}
+					} else
+						// Other column types not supported.
+						throw new MartBuilderInternalError();
+				}
+
+				// Do the partitioning. First, partition the table the column
+				// belongs to. Then, partition every child, and every child
+				// of every child, and so on recursively.
 
 				// Construct the recursive list of child tables that will also
 				// require partitioning.
@@ -562,6 +582,8 @@ public interface MartConstructor {
 				List tablesToReduce = new ArrayList();
 				for (Iterator j = tablesToPartition.iterator(); j.hasNext();) {
 					DataSetTable childDSTable = (DataSetTable) j.next();
+					if (childDSTable.equals(parentDSTable))
+						continue;
 					for (Iterator l = tables.iterator(); l.hasNext();) {
 						MCDSTable childTable = (MCDSTable) l.next();
 						if (!childTable.getDataSetTable().equals(childDSTable))
@@ -651,14 +673,15 @@ public interface MartConstructor {
 									this.datasetSchemaName, reducedTable
 											.getDataSetTable().getName(), null,
 									reducedTable.getTempTableName(), null,
-									parentTable.getTempTableName(), parentTable
-											.getDataSetTable().getPrimaryKey()
-											.getColumns(), null, reducedTable
-											.getTempTableName(), reducedTable
+									partitionedTable.getTempTableName(),
+									childTable.getParentDataSetRelation()
+											.getOneKey().getColumns(), null,
+									childTable.getTempTableName(), childTable
 											.getParentDataSetRelation()
 											.getManyKey().getColumns());
 							actionGraph.addActionWithParent(reduce, index);
 							reduceActions.add(reduce);
+							reducedTable.setLastActionPerformed(reduce);
 						}
 					}
 					// Drop previous table.
@@ -999,7 +1022,7 @@ public interface MartConstructor {
 			}
 
 			// Else, if the table is NOT a MAIN table, then we should select
-			// the primary key columns from the parent dataset table.
+			// the inherited columns from the parent dataset table.
 			else {
 				// Work out the parent dataset table.
 				DataSetTable parentDSTable = (DataSetTable) ((Relation) ((Key) table
@@ -1008,7 +1031,17 @@ public interface MartConstructor {
 						.getTable();
 
 				// Work out what columns to include from the first table.
-				List firstDSCols = parentDSTable.getPrimaryKey().getColumns();
+				List firstDSCols = new ArrayList();
+				for (Iterator i = table.getDataSetTable().getColumns()
+						.iterator(); i.hasNext();) {
+					DataSetColumn col = (DataSetColumn) i.next();
+					if (col instanceof InheritedColumn) {
+						InheritedColumn icol = (InheritedColumn) col;
+						if (!table.getDataSet().getMaskedDataSetColumns()
+								.contains(icol))
+							firstDSCols.add(icol);
+					}
+				}
 
 				// Create the table based on firstTable, and selecting
 				// based on firstDSCols.
@@ -1044,7 +1077,7 @@ public interface MartConstructor {
 				// What are the equivalent columns on the existing temp table
 				// that correspond to the key on the previous table?
 				List sourceDSKey = table.getDataSetColumns(sourceKey
-						.getColumns());
+						.getColumns()); // FIXME
 				// What are the columns we should merge from this new table?
 				List targetDSCols = table.getDataSetColumns(relation);
 				// If targetTable is in a group schema that is not the
@@ -1427,9 +1460,13 @@ public interface MartConstructor {
 					for (Iterator i = this.datasetTable.getColumns().iterator(); i
 							.hasNext();) {
 						DataSetColumn candidate = (DataSetColumn) i.next();
-						if (!(candidate instanceof WrappedColumn))
+						DataSetColumn test = candidate;
+						if (test instanceof InheritedColumn) // FIXME
+							test = ((InheritedColumn) candidate)
+									.getInheritedColumn();
+						if (!(test instanceof WrappedColumn))
 							continue;
-						WrappedColumn wc = (WrappedColumn) candidate;
+						WrappedColumn wc = (WrappedColumn) test;
 						if (this.getDataSet().getMaskedDataSetColumns()
 								.contains(wc)
 								&& !wc.getDependency())
@@ -1449,9 +1486,6 @@ public interface MartConstructor {
 						for (Iterator k = key.getRelations().iterator(); k
 								.hasNext();) {
 							Relation rel = (Relation) k.next();
-							if (!this.getDataSetTable()
-									.getUnderlyingRelations().contains(rel))
-								continue;
 							Key otherKey = rel.getOtherKey(key);
 							Column nextCandidate = (Column) otherKey
 									.getColumns().get(colIndex);
@@ -1598,7 +1632,7 @@ public interface MartConstructor {
 				// TODO - come up with a better naming scheme
 				// Currently the name is:
 				// datasetname__\
-				// {partitionvalue{_partitionvalue}*}*__\
+				// {{partitionvalue{_partitionvalue}*}__}+\
 				// tablename__\
 				// type
 
@@ -1614,14 +1648,17 @@ public interface MartConstructor {
 
 				// Partition values and __ separator with _ separator between.
 				List partitionValues = this.getPartitionValues();
-				for (Iterator j = partitionValues.iterator(); j.hasNext();) {
-					// Partition values may be null, so cannot use toString().
-					String partitionValue = "" + j.next();
-					name.append(partitionValue);
-					if (j.hasNext())
-						name.append(Resources.get("tablenameSubSep"));
+				if (!partitionValues.isEmpty()) {
+					for (Iterator j = partitionValues.iterator(); j.hasNext();) {
+						// Partition values may be null, so cannot use
+						// toString().
+						String partitionValue = "" + j.next();
+						name.append(partitionValue);
+						if (j.hasNext())
+							name.append(Resources.get("tablenameSubSep"));
+					}
+					name.append(Resources.get("tablenameSep"));
 				}
-				name.append(Resources.get("tablenameSep"));
 
 				// Table name and __ separator.
 				name.append(datasetTable.getName());

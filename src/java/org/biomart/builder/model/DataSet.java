@@ -36,6 +36,7 @@ import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.model.Column.GenericColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.Key.ForeignKey;
@@ -60,7 +61,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.39, 27th July 2006
+ * @version 0.1.40, 28th July 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -75,7 +76,7 @@ public class DataSet extends GenericSchema {
 	private final List maskedDataSetColumns = new ArrayList();
 
 	// Use double-List to avoid problems with hashcodes changing.
-	private final List[] partitionedWrappedColumns = new List[] {
+	private final List[] partitionedDataSetColumns = new List[] {
 			new ArrayList(), new ArrayList() };
 
 	// Use List to avoid problems with hashcodes changing.
@@ -94,8 +95,6 @@ public class DataSet extends GenericSchema {
 			new ArrayList() };
 
 	private DataSetOptimiserType optimiser;
-
-	private boolean partitionOnSchema;
 
 	private boolean invisible;
 
@@ -133,7 +132,6 @@ public class DataSet extends GenericSchema {
 		this.mart = mart;
 		this.centralTable = centralTable;
 		this.optimiser = DataSetOptimiserType.NONE;
-		this.partitionOnSchema = false;
 
 		// Rename ourselves if the name clashes.
 		String newName = name;
@@ -158,7 +156,6 @@ public class DataSet extends GenericSchema {
 			// synchronisation these will be replaced with objects
 			// representing columns in the new one automatically.
 			newDataSet.setDataSetOptimiserType(this.optimiser);
-			newDataSet.setPartitionOnSchema(this.partitionOnSchema);
 			for (Iterator i = this.maskedRelations.iterator(); i.hasNext();)
 				newDataSet.maskRelation((Relation) i.next());
 			for (Iterator i = this.subclassedRelations.iterator(); i.hasNext();)
@@ -171,12 +168,12 @@ public class DataSet extends GenericSchema {
 						.get(i);
 				newDataSet.flagConcatOnlyRelation(rel, type);
 			}
-			for (int i = 0; i < this.partitionedWrappedColumns[0].size(); i++) {
-				WrappedColumn col = (WrappedColumn) this.partitionedWrappedColumns[0]
+			for (int i = 0; i < this.partitionedDataSetColumns[0].size(); i++) {
+				WrappedColumn col = (WrappedColumn) this.partitionedDataSetColumns[0]
 						.get(i);
-				PartitionedColumnType type = (PartitionedColumnType) this.partitionedWrappedColumns[1]
+				PartitionedColumnType type = (PartitionedColumnType) this.partitionedDataSetColumns[1]
 						.get(i);
-				newDataSet.flagPartitionedWrappedColumn(col, type);
+				newDataSet.flagPartitionedDataSetColumn(col, type);
 			}
 			for (int i = 0; i < this.restrictedRelations[0].size(); i++) {
 				Relation rel = (Relation) this.restrictedRelations[0].get(i);
@@ -317,6 +314,15 @@ public class DataSet extends GenericSchema {
 		else if (dsColumn instanceof SchemaNameColumn)
 			throw new AssociationException(Resources
 					.get("cannotMaskSchemaNameColumn"));
+
+		// Refuse to mask inherited columns.
+		else if (dsColumn instanceof InheritedColumn)
+			throw new AssociationException(Resources
+					.get("cannotMaskInheritedColumn"));
+
+		// Refuse to mask inherited columns.
+		else if (dsColumn instanceof ExpressionColumn)
+			((DataSetTable) dsColumn.getTable()).removeColumn(dsColumn);
 
 		// If concat-only, mask concat-only relation instead
 		else if (dsColumn instanceof ConcatRelationColumn)
@@ -489,27 +495,6 @@ public class DataSet extends GenericSchema {
 	}
 
 	/**
-	 * Check to see if this dataset is set to partition by schema or not.
-	 * 
-	 * @return <tt>true</tt> if partition by schema is enabled, <tt>false</tt>
-	 *         if not.
-	 */
-	public boolean getPartitionOnSchema() {
-		return this.partitionOnSchema;
-	}
-
-	/**
-	 * Sets the partition-on-schema flag for this dataset.
-	 * 
-	 * @param partitionOnSchema
-	 *            <tt>true</tt> to enable partitioning by schema,
-	 *            <tt>false</tt> to disable it.
-	 */
-	public void setPartitionOnSchema(boolean partitionOnSchema) {
-		this.partitionOnSchema = partitionOnSchema;
-	}
-
-	/**
 	 * Mark a column as partitioned. If previously marked as partitioned, this
 	 * call will override the previous request.
 	 * 
@@ -520,15 +505,21 @@ public class DataSet extends GenericSchema {
 	 * @throws AssociationException
 	 *             if there is already a partitioned column on this table.
 	 */
-	public void flagPartitionedWrappedColumn(WrappedColumn column,
+	public void flagPartitionedDataSetColumn(DataSetColumn column,
 			PartitionedColumnType type) throws AssociationException {
+		// If we do already have a partitioned column on this table, throw a
+		// wobbly.
+		if (!(column instanceof WrappedColumn || column instanceof SchemaNameColumn))
+			throw new AssociationException(Resources
+					.get("cannotPartitionNonWrapSchColumns"));
+
 		// Check to see if we already have a partitioned column in this table,
 		// that is not the same column as this one.
 		boolean alreadyHave = false;
-		for (Iterator i = this.partitionedWrappedColumns[0].iterator(); i
+		for (Iterator i = this.partitionedDataSetColumns[0].iterator(); i
 				.hasNext()
 				&& !alreadyHave;) {
-			WrappedColumn testCol = (WrappedColumn) i.next();
+			DataSetColumn testCol = (DataSetColumn) i.next();
 			if (testCol.getTable().equals(column.getTable())
 					&& !testCol.equals(column))
 				alreadyHave = true;
@@ -542,13 +533,13 @@ public class DataSet extends GenericSchema {
 
 		// Partition the colum. If the column has already been partitioned, this
 		// will override the type.
-		int index = this.partitionedWrappedColumns[0].indexOf(column);
+		int index = this.partitionedDataSetColumns[0].indexOf(column);
 		if (index >= 0) {
-			this.partitionedWrappedColumns[0].set(index, column);
-			this.partitionedWrappedColumns[1].set(index, type);
+			this.partitionedDataSetColumns[0].set(index, column);
+			this.partitionedDataSetColumns[1].set(index, type);
 		} else {
-			this.partitionedWrappedColumns[0].add(column);
-			this.partitionedWrappedColumns[1].add(type);
+			this.partitionedDataSetColumns[0].add(column);
+			this.partitionedDataSetColumns[1].add(type);
 		}
 	}
 
@@ -558,11 +549,11 @@ public class DataSet extends GenericSchema {
 	 * @param column
 	 *            the column to unmark.
 	 */
-	public void unflagPartitionedWrappedColumn(WrappedColumn column) {
-		int index = this.partitionedWrappedColumns[0].indexOf(column);
+	public void unflagPartitionedDataSetColumn(DataSetColumn column) {
+		int index = this.partitionedDataSetColumns[0].indexOf(column);
 		if (index >= 0) {
-			this.partitionedWrappedColumns[0].remove(index);
-			this.partitionedWrappedColumns[1].remove(index);
+			this.partitionedDataSetColumns[0].remove(index);
+			this.partitionedDataSetColumns[1].remove(index);
 		}
 	}
 
@@ -571,8 +562,8 @@ public class DataSet extends GenericSchema {
 	 * 
 	 * @return the set of partitioned columns.
 	 */
-	public Collection getPartitionedWrappedColumns() {
-		return this.partitionedWrappedColumns[0];
+	public Collection getPartitionedDataSetColumns() {
+		return this.partitionedDataSetColumns[0];
 	}
 
 	/**
@@ -584,11 +575,11 @@ public class DataSet extends GenericSchema {
 	 * @return the partition type of the column, or null if it is not
 	 *         partitioned.
 	 */
-	public PartitionedColumnType getPartitionedWrappedColumnType(
-			WrappedColumn column) {
-		int index = this.partitionedWrappedColumns[0].indexOf(column);
+	public PartitionedColumnType getPartitionedDataSetColumnType(
+			DataSetColumn column) {
+		int index = this.partitionedDataSetColumns[0].indexOf(column);
 		if (index >= 0)
-			return (PartitionedColumnType) this.partitionedWrappedColumns[1]
+			return (PartitionedColumnType) this.partitionedDataSetColumns[1]
 					.get(index);
 		else
 			return null;
@@ -904,8 +895,8 @@ public class DataSet extends GenericSchema {
 			Map newDependencies = new TreeMap();
 			for (Iterator j = oldExpCol.getAliases().keySet().iterator(); j
 					.hasNext();) {
-				WrappedColumn dependency = (WrappedColumn) newExpColTable
-						.getColumnByName(((WrappedColumn) j.next()).getName());
+				DataSetColumn dependency = (DataSetColumn) newExpColTable
+						.getColumnByName(((DataSetColumn) j.next()).getName());
 				String alias = (String) oldExpCol.getAliases().get(dependency);
 				if (dependency == null)
 					allFound = false;
@@ -923,7 +914,7 @@ public class DataSet extends GenericSchema {
 				newExpCol.setGroupBy(oldExpCol.getGroupBy());
 				for (Iterator j = newDependencies.keySet().iterator(); j
 						.hasNext();)
-					((WrappedColumn) j.next()).setDependency(true);
+					((DataSetColumn) j.next()).setDependency(true);
 			} catch (Throwable t) {
 				// Should never happen!
 				throw new MartBuilderInternalError(t);
@@ -1055,7 +1046,7 @@ public class DataSet extends GenericSchema {
 		// columns. Once the set is constructed, use it to replace the old
 		// set of partitioned columns.
 		Collection newPartDSCols = new ArrayList();
-		for (Iterator i = this.partitionedWrappedColumns[0].iterator(); i
+		for (Iterator i = this.partitionedDataSetColumns[0].iterator(); i
 				.hasNext();) {
 			WrappedColumn col = (WrappedColumn) i.next();
 			if (this.getTables().contains(col.getTable())) {
@@ -1068,7 +1059,7 @@ public class DataSet extends GenericSchema {
 					newPartDSCols.add(newCol);
 			}
 		}
-		for (Iterator i = this.partitionedWrappedColumns[0].iterator(); i
+		for (Iterator i = this.partitionedDataSetColumns[0].iterator(); i
 				.hasNext();)
 			if (!newPartDSCols.contains(i.next()))
 				i.remove();
@@ -1129,30 +1120,22 @@ public class DataSet extends GenericSchema {
 						&& !type.equals(DataSetTableType.MAIN_SUBCLASS))
 					continue;
 				// Otherwise, create a copy of the column.
-				DataSetColumn dsTableCol = null;
-				if (parentDSCol instanceof SchemaNameColumn)
-					try {
-						dsTableCol = new SchemaNameColumn(Resources
-								.get("schemaColumnName"), dsTable);
-					} catch (Throwable t) {
-						throw new MartBuilderInternalError(t);
+				try {
+					DataSetColumn dsTableCol;
+					if (parentDSCol instanceof InheritedColumn)
+						dsTableCol = new InheritedColumn(dsTable,
+								((InheritedColumn) parentDSCol)
+										.getInheritedColumn());
+					else
+						dsTableCol = new InheritedColumn(dsTable, parentDSCol);
+					// Add the column to the child's PK and FK, if it was in
+					// the parent PK only.
+					if (parentDSTablePK.getColumns().contains(parentDSCol)) {
+						dsTablePKCols.add(dsTableCol);
+						dsTableFKCols.add(dsTableCol);
 					}
-				else if (parentDSCol instanceof WrappedColumn)
-					try {
-						WrappedColumn wc = (WrappedColumn) parentDSCol;
-						dsTableCol = new WrappedColumn(wc.getWrappedColumn(),
-								dsTable, wc.getUnderlyingRelation());
-					} catch (Throwable t) {
-						throw new MartBuilderInternalError(t);
-					}
-				else
-					// Eh??? Don't know what kind of column this is.
-					throw new MartBuilderInternalError();
-				// Add the column to the child's PK and FK, if it was in
-				// the parent PK only.
-				if (parentDSTablePK.getColumns().contains(parentDSCol)) {
-					dsTablePKCols.add(dsTableCol);
-					dsTableFKCols.add(dsTableCol);
+				} catch (AlreadyExistsException e) {
+					throw new MartBuilderInternalError(e);
 				}
 			}
 
@@ -1197,7 +1180,7 @@ public class DataSet extends GenericSchema {
 		// unique rows.
 		if (dsTablePKCols.isEmpty()) {
 			// Create the PK by adding every wrapped column in the
-			// dataset table. We don't care about concat-only columns
+			// dataset table. We don't care about other columns
 			// as that would create primary key update hell.
 			for (Iterator i = dsTable.getColumns().iterator(); i.hasNext();) {
 				DataSetColumn dsCol = (DataSetColumn) i.next();
@@ -1834,6 +1817,8 @@ public class DataSet extends GenericSchema {
 	public static class DataSetColumn extends GenericColumn {
 		private final Relation underlyingRelation;
 
+		private boolean dependency;
+
 		/**
 		 * This constructor gives the column a name.
 		 * 
@@ -1858,6 +1843,9 @@ public class DataSet extends GenericSchema {
 
 			// Remember the rest.
 			this.underlyingRelation = underlyingRelation;
+
+			// Set up default dependency.
+			this.dependency = false;
 		}
 
 		/**
@@ -1893,14 +1881,35 @@ public class DataSet extends GenericSchema {
 		}
 
 		/**
+		 * Changes the dependency flag on this column.
+		 * 
+		 * @param the
+		 *            new dependency flag. <tt>true</tt> indicates that this
+		 *            column is a dependency for an expression column. If this
+		 *            is the case, then the column will get selected regardless
+		 *            of it's masking flag. However, if it is masked, it will be
+		 *            removed again after the dependency is satisified.
+		 */
+		public void setDependency(boolean dependency) {
+			this.dependency = dependency;
+		}
+
+		/**
+		 * Retrieves the current dependency flag on this column.
+		 * 
+		 * @param <tt>true</tt> if this column is a dependency for another one.
+		 */
+		public boolean getDependency() {
+			return this.dependency;
+		}
+
+		/**
 		 * A column on a dataset table that wraps an existing column but is
 		 * otherwise identical to a normal column. It assigns itself an alias if
 		 * the original name is already used in the dataset table.
 		 */
 		public static class WrappedColumn extends DataSetColumn {
 			private final Column column;
-
-			private boolean dependency;
 
 			/**
 			 * This constructor wraps an existing column. It also assigns an
@@ -1926,9 +1935,6 @@ public class DataSet extends GenericSchema {
 
 				// Remember the wrapped column.
 				this.column = column;
-
-				// Set up default dependency.
-				this.dependency = false;
 			}
 
 			/**
@@ -1938,31 +1944,6 @@ public class DataSet extends GenericSchema {
 			 */
 			public Column getWrappedColumn() {
 				return this.column;
-			}
-
-			/**
-			 * Changes the dependency flag on this column.
-			 * 
-			 * @param the
-			 *            new dependency flag. <tt>true</tt> indicates that
-			 *            this column is a dependency for an expression column.
-			 *            If this is the case, then the column will get selected
-			 *            regardless of it's masking flag. However, if it is
-			 *            masked, it will be removed again after the dependency
-			 *            is satisified.
-			 */
-			public void setDependency(boolean dependency) {
-				this.dependency = dependency;
-			}
-
-			/**
-			 * Retrieves the current dependency flag on this column.
-			 * 
-			 * @param <tt>true</tt> if this column is a dependency for another
-			 *            one.
-			 */
-			public boolean getDependency() {
-				return this.dependency;
 			}
 		}
 
@@ -2022,6 +2003,43 @@ public class DataSet extends GenericSchema {
 					throws AlreadyExistsException {
 				// The super constructor will make the alias for us.
 				super(name, dsTable, null);
+			}
+		}
+
+		/**
+		 * A column on a dataset table that is inherited from a parent dataset
+		 * table.
+		 */
+		public static class InheritedColumn extends DataSetColumn {
+			private DataSetColumn dsColumn;
+
+			/**
+			 * This constructor gives the column a name. The underlying relation
+			 * is not required here. The name is inherited from the column too.
+			 * 
+			 * @param dsTable
+			 *            the dataset table to add the wrapped column to.
+			 * @param dsColumn
+			 *            the column to inherit.
+			 * @throws AlreadyExistsException
+			 *             inherited from the super constructor, but should
+			 *             never get thrown.
+			 */
+			public InheritedColumn(DataSetTable dsTable, DataSetColumn dsColumn)
+					throws AlreadyExistsException {
+				// The super constructor will make the alias for us.
+				super(dsColumn.getName(), dsTable, null);
+				// Remember the inherited column.
+				this.dsColumn = dsColumn;
+			}
+
+			/**
+			 * Returns the column that has been inherited by this column.
+			 * 
+			 * @return the inherited column.
+			 */
+			public DataSetColumn getInheritedColumn() {
+				return this.dsColumn;
 			}
 		}
 
@@ -2092,7 +2110,7 @@ public class DataSet extends GenericSchema {
 			public void dropUnusedAliases() {
 				List usedColumns = new ArrayList();
 				for (Iterator i = this.aliases.keySet().iterator(); i.hasNext();) {
-					WrappedColumn col = (WrappedColumn) i.next();
+					DataSetColumn col = (DataSetColumn) i.next();
 					String alias = (String) this.aliases.get(col);
 					if (this.expr.indexOf(":" + alias) >= 0)
 						usedColumns.add(col);
@@ -2110,7 +2128,7 @@ public class DataSet extends GenericSchema {
 			public String getSubstitutedExpression() {
 				String sub = this.expr;
 				for (Iterator i = this.aliases.keySet().iterator(); i.hasNext();) {
-					WrappedColumn wrapped = (WrappedColumn) i.next();
+					DataSetColumn wrapped = (DataSetColumn) i.next();
 					String alias = ":" + (String) this.aliases.get(wrapped);
 					sub = sub.replaceAll(alias, wrapped.getName());
 				}
@@ -2130,7 +2148,7 @@ public class DataSet extends GenericSchema {
 			/**
 			 * Retrieves the map used for setting up aliases.
 			 * 
-			 * @return the aliases map. Keys must be {@link WrappedColumn}
+			 * @return the aliases map. Keys must be {@link DataSetColumn}
 			 *         instances, and values are aliases used in the expression.
 			 */
 			public Map getAliases() {

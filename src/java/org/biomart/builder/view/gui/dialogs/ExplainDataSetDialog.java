@@ -27,6 +27,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -44,7 +45,9 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.Diagram;
@@ -60,7 +63,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.WindowContext;
  * and relations not involved directly in this dataset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 27th July 2006
+ * @version 0.1.11, 28th July 2006
  * @since 0.1
  */
 public class ExplainDataSetDialog extends JDialog {
@@ -186,9 +189,12 @@ public class ExplainDataSetDialog extends JDialog {
 		size.height = Math.max(100, Math.min(size.height + 20,
 				maxSize.height - 20));
 		content.setPreferredSize(size);
-		
+
 		// Calculate the transform.
 		this.recalculateTransformation();
+
+		// Pack the window.
+		this.pack();
 
 		// Select the default button (which shows the diagram card).
 		// We must physically click on it to make the card show.
@@ -217,19 +223,52 @@ public class ExplainDataSetDialog extends JDialog {
 		// If main table, show underlying table first.
 		if (this.dsTable.getType().equals(DataSetTableType.MAIN)) {
 			label = new JLabel(Resources.get("stepTableLabel", new String[] {
-					"" + stepNumber,
-					stepNumber == 1 ? Resources.get("explainSelectLabel")
-							: Resources.get("explainMergeLabel") }));
+					"" + stepNumber, Resources.get("explainSelectLabel") }));
 			gridBag.setConstraints(label, labelConstraints);
 			this.transformation.add(label);
 			field = new JPanel();
 			diagram = new ExplainTransformationDiagram(this.martTab,
 					this.dataset, this.dsTable.getUnderlyingTable());
 			field.add(new JScrollPane(diagram));
+			List includeCols = new ArrayList();
+			for (Iterator i = this.dsTable.getColumns().iterator(); i.hasNext();) {
+				Column col = (Column) i.next();
+				if (col instanceof SchemaNameColumn)
+					includeCols.add(col);
+				else if (col instanceof WrappedColumn) {
+					WrappedColumn wcol = (WrappedColumn) col;
+					if (wcol.getWrappedColumn().getTable().equals(
+							this.dsTable.getUnderlyingTable()))
+						includeCols.add(wcol);
+				}
+			}
+			diagram = new ExplainTransformationDiagram(this.martTab,
+					this.dataset, includeCols);
+			field.add(new JScrollPane(diagram));
 			gridBag.setConstraints(field, fieldConstraints);
 			this.transformation.add(field);
 			stepNumber++;
-		}	
+		}
+		// Otherwise, show inherited columns.
+		else {
+			label = new JLabel(Resources.get("stepTableLabel", new String[] {
+					"" + stepNumber, Resources.get("explainInheritLabel") }));
+			gridBag.setConstraints(label, labelConstraints);
+			this.transformation.add(label);
+			field = new JPanel();
+			List includeCols = new ArrayList();
+			for (Iterator j = this.dsTable.getColumns().iterator(); j.hasNext();) {
+				Column col = (Column) j.next();
+				if (col instanceof InheritedColumn) 
+					includeCols.add(col);
+			}
+			diagram = new ExplainTransformationDiagram(this.martTab,
+					this.dataset, includeCols);
+			field.add(new JScrollPane(diagram));
+			gridBag.setConstraints(field, fieldConstraints);
+			this.transformation.add(field);
+			stepNumber++;
+		}
 
 		// Show underlying key/relation pairs.
 		for (int i = 0; i < this.dsTable.getUnderlyingKeys().size(); i++) {
@@ -237,14 +276,24 @@ public class ExplainDataSetDialog extends JDialog {
 			Relation r = (Relation) this.dsTable.getUnderlyingRelations()
 					.get(i);
 			label = new JLabel(Resources.get("stepTableLabel", new String[] {
-					"" + stepNumber,
-					stepNumber == 1 ? Resources.get("explainSelectLabel")
-							: Resources.get("explainMergeLabel") }));
+					"" + stepNumber, Resources.get("explainMergeLabel") }));
 			gridBag.setConstraints(label, labelConstraints);
 			this.transformation.add(label);
 			field = new JPanel();
 			diagram = new ExplainTransformationDiagram(this.martTab,
 					this.dataset, k, r);
+			field.add(new JScrollPane(diagram));
+			List includeCols = new ArrayList();
+			for (Iterator j = this.dsTable.getColumns().iterator(); j.hasNext();) {
+				Column col = (Column) j.next();
+				if (col instanceof WrappedColumn) {
+					WrappedColumn wcol = (WrappedColumn) col;
+					if (wcol.getUnderlyingRelation().equals(r))
+						includeCols.add(wcol);
+				}
+			}
+			diagram = new ExplainTransformationDiagram(this.martTab,
+					this.dataset, includeCols);
 			field.add(new JScrollPane(diagram));
 			gridBag.setConstraints(field, fieldConstraints);
 			this.transformation.add(field);
@@ -258,14 +307,8 @@ public class ExplainDataSetDialog extends JDialog {
 			if (c instanceof ExpressionColumn)
 				expressionCols.add(c);
 		}
-		List partCols = new ArrayList(((DataSet) this.dsTable.getSchema())
-				.getPartitionedWrappedColumns());
-		if (((DataSet) this.dsTable.getSchema()).getPartitionOnSchema())
-			for (Iterator i = this.dsTable.getColumns().iterator(); i.hasNext();) {
-				Column c = (Column) i.next();
-				if (c instanceof SchemaNameColumn)
-					partCols.add(c);
-			}
+		Collection partCols = ((DataSet) this.dsTable.getSchema())
+				.getPartitionedDataSetColumns();
 
 		// Show expression columns.
 		if (!expressionCols.isEmpty()) {
@@ -301,9 +344,6 @@ public class ExplainDataSetDialog extends JDialog {
 			this.transformation.add(field);
 			stepNumber++;
 		}
-		
-		// Repack the window.
-		this.pack();
 	}
 
 	/**

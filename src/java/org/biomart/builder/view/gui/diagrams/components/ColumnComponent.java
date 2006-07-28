@@ -33,7 +33,7 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * This simple component represents a single column within a table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 19th July 2006
+ * @version 0.1.7, 28th July 2006
  * @since 0.1
  */
 public class ColumnComponent extends BoxShapedComponent {
@@ -62,6 +62,11 @@ public class ColumnComponent extends BoxShapedComponent {
 	 * Constant referring to expression column colour.
 	 */
 	public static final Color EXPRESSION_COLOUR = Color.MAGENTA;
+
+	/**
+	 * Constant referring to inherited column colour.
+	 */
+	public static final Color INHERITED_COLOUR = Color.RED;
 
 	/**
 	 * The constructor creates a new column component representing the given

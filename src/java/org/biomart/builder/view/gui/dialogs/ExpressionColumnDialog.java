@@ -51,7 +51,6 @@ import org.biomart.builder.model.Key;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
@@ -59,7 +58,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * This dialog asks users to create or modify an expression column.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 25th July 2006
+ * @version 0.1.5, 28th July 2006
  * @since 0.1
  */
 public class ExpressionColumnDialog extends JDialog {
@@ -156,7 +155,7 @@ public class ExpressionColumnDialog extends JDialog {
 		JComboBox columnEditor = new JComboBox();
 		for (Iterator i = this.table.getColumns().iterator(); i.hasNext();) {
 			DataSetColumn col = (DataSetColumn) i.next();
-			if (col instanceof WrappedColumn)
+			if (!(col instanceof ExpressionColumn))
 				columnEditor.addItem(col);
 		}
 		columnColumn.setCellEditor(new DefaultCellEditor(columnEditor));
@@ -414,7 +413,7 @@ public class ExpressionColumnDialog extends JDialog {
 			// Return the map of column to alias.
 			HashMap aliases = new HashMap();
 			for (int i = 0; i < this.getRowCount(); i++) {
-				WrappedColumn col = (WrappedColumn) this.getValueAt(i, 0);
+				DataSetColumn col = (DataSetColumn) this.getValueAt(i, 0);
 				String alias = (String) this.getValueAt(i, 1);
 				if (col != null
 						&& !(alias == null || alias.trim().length() == 0))

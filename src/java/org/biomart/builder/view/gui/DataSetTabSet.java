@@ -54,7 +54,6 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.AllDataSetsDiagram;
@@ -82,7 +81,7 @@ import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.35, 27th July 2006
+ * @version 0.1.36, 28th July 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -191,10 +190,10 @@ public class DataSetTabSet extends JTabbedPane {
 			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 			return;
 		}
-		
+
 		// What datasets should we have?
 		List martDataSets = new ArrayList(this.martTab.getMart().getDataSets());
-		
+
 		// Remove all the datasets in our tabs that are not in the mart.
 		List ourDataSets = new ArrayList(datasetToTab[0]);
 		for (Iterator i = ourDataSets.iterator(); i.hasNext();) {
@@ -1551,48 +1550,6 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Requests that the dataset be partitioned by schema.
-	 * 
-	 * @param dataset
-	 *            the dataset to partition.
-	 */
-	public void requestPartitionBySchema(DataSet dataset) {
-		// Do the partitioning.
-		MartBuilderUtils.partitionBySchema(dataset);
-
-		// Repaint the dataset diagram, as the schema name
-		// column will have changed colour.
-		this.repaintDataSetDiagram(dataset);
-
-		// Repaint the explanation too.
-		this.repaintExplanationDialog();
-
-		// Update the modified status.
-		this.martTab.getMartTabSet().setModifiedStatus(true);
-	}
-
-	/**
-	 * Requests that the dataset should not be partitioned by schema.
-	 * 
-	 * @param dataset
-	 *            the dataset to not partition.
-	 */
-	public void requestUnpartitionBySchema(DataSet dataset) {
-		// Do the unpartitioning.
-		MartBuilderUtils.unpartitionBySchema(dataset);
-
-		// Repaint the dataset diagram, as the schema name
-		// column will have changed colour.
-		this.repaintDataSetDiagram(dataset);
-
-		// Repaint the explanation too.
-		this.repaintExplanationDialog();
-
-		// Update the modified status.
-		this.martTab.getMartTabSet().setModifiedStatus(true);
-	}
-
-	/**
 	 * Requests that the dataset should be partitioned by the contents of the
 	 * specified column. A dialog is put up asking the user how to partition
 	 * this column. If it is already partitioned, the dialog will explain how
@@ -1605,14 +1562,14 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param column
 	 *            the column to partition.
 	 */
-	public void requestPartitionByColumn(DataSet dataset, WrappedColumn column) {
+	public void requestPartitionByColumn(DataSet dataset, DataSetColumn column) {
 		PartitionedColumnType type;
 
 		// If the column is already partitioned, open a dialog
 		// explaining this and asking the user to edit the settings.
-		if (dataset.getPartitionedWrappedColumns().contains(column)) {
+		if (dataset.getPartitionedDataSetColumns().contains(column)) {
 			PartitionedColumnType oldType = dataset
-					.getPartitionedWrappedColumnType(column);
+					.getPartitionedDataSetColumnType(column);
 			type = PartitionColumnDialog.updatePartitionedColumnType(
 					this.martTab, oldType);
 
@@ -1648,7 +1605,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param type
 	 *            how to partition it.
 	 */
-	public void requestPartitionByColumn(DataSet dataset, WrappedColumn column,
+	public void requestPartitionByColumn(DataSet dataset, DataSetColumn column,
 			PartitionedColumnType type) {
 		try {
 			// Do the partitioning.
@@ -1676,19 +1633,23 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param column
 	 *            the column to turn partioning off for.
 	 */
-	public void requestUnpartitionByColumn(DataSet dataset, WrappedColumn column) {
-		// Unpartition the column.
-		MartBuilderUtils.unpartitionByColumn(dataset, column);
+	public void requestUnpartitionByColumn(DataSet dataset, DataSetColumn column) {
+		try {
+			// Unpartition the column.
+			MartBuilderUtils.unpartitionByColumn(dataset, column);
 
-		// Repaint the dataset, as the partitioned column
-		// will have changed colour.
-		this.repaintDataSetDiagram(dataset);
+			// Repaint the dataset, as the partitioned column
+			// will have changed colour.
+			this.repaintDataSetDiagram(dataset);
 
-		// Repaint the explanation too.
-		this.repaintExplanationDialog();
+			// Repaint the explanation too.
+			this.repaintExplanationDialog();
 
-		// Update the modified status on this tabset.
-		this.martTab.getMartTabSet().setModifiedStatus(true);
+			// Update the modified status on this tabset.
+			this.martTab.getMartTabSet().setModifiedStatus(true);
+		} catch (Throwable t) {
+			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+		}
 	}
 
 	/**

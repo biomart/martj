@@ -59,6 +59,7 @@ import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
@@ -99,7 +100,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.26, 27th July 2006
+ * @version 0.1.27, 28th July 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -358,6 +359,9 @@ public class MartBuilderXML extends DefaultHandler {
 					if (!"null".equals(underlyingRelationId))
 						underlyingRelation = (Relation) this.mappedObjects
 								.get(underlyingRelationId);
+					boolean dependency = Boolean.valueOf(
+							(String) attributes.get("dependency"))
+							.booleanValue();
 
 					// Work out type and construct appropriate column.
 					String type = (String) attributes.get("type");
@@ -372,10 +376,11 @@ public class MartBuilderXML extends DefaultHandler {
 								.get(attributes.get("wrappedColumnId"));
 						column = new WrappedColumn(wrappedCol,
 								(DataSetTable) tbl, underlyingRelation);
-						String dependency = (String) attributes
-								.get("dependency");
-						((WrappedColumn) column).setDependency(Boolean.valueOf(
-								dependency).booleanValue());
+					} else if ("inherited".equals(type)) {
+						DataSetColumn inheritedCol = (DataSetColumn) this.mappedObjects
+								.get(attributes.get("inheritedColumnId"));
+						column = new InheritedColumn((DataSetTable) tbl,
+								inheritedCol);
 					} else if ("expression".equals(type)) {
 						column = new ExpressionColumn(name, (DataSetTable) tbl);
 						// AliasCols, AliasNames - wrapped obj to string map
@@ -404,6 +409,7 @@ public class MartBuilderXML extends DefaultHandler {
 					// the original.
 					column.setName(name);
 					column.setOriginalName(originalName);
+					column.setDependency(dependency);
 					element = column;
 				}
 
@@ -766,7 +772,7 @@ public class MartBuilderXML extends DefaultHandler {
 
 			try {
 				// Look up the column.
-				WrappedColumn col = (WrappedColumn) this.mappedObjects
+				DataSetColumn col = (DataSetColumn) this.mappedObjects
 						.get(attributes.get("columnId"));
 
 				// Work out the partition type.
@@ -796,7 +802,7 @@ public class MartBuilderXML extends DefaultHandler {
 							"unknownPartitionColumnType", type));
 
 				// Flag the column as partitioned.
-				w.flagPartitionedWrappedColumn(col, resolvedType);
+				w.flagPartitionedDataSetColumn(col, resolvedType);
 				element = col;
 			} catch (Exception e) {
 				if (e instanceof SAXException)
@@ -813,12 +819,8 @@ public class MartBuilderXML extends DefaultHandler {
 				// central table reference, and mart constructor reference.
 				// Resolve them all.
 				String name = (String) attributes.get("name");
-				boolean partitionOnSchema = Boolean.valueOf(
-						(String) attributes.get("partitionOnSchema"))
-						.booleanValue();
 				boolean invisible = Boolean.valueOf(
-						(String) attributes.get("invisible"))
-						.booleanValue();
+						(String) attributes.get("invisible")).booleanValue();
 				Table centralTable = (Table) this.mappedObjects.get(attributes
 						.get("centralTableId"));
 				String optType = (String) attributes.get("optimiser");
@@ -842,7 +844,6 @@ public class MartBuilderXML extends DefaultHandler {
 				// Assign the mart constructor, optimiser, and partition on
 				// schema settings.
 				ds.setDataSetOptimiserType(opt);
-				ds.setPartitionOnSchema(partitionOnSchema);
 				ds.setInvisible(invisible);
 				element = ds;
 			} catch (Exception e) {
@@ -1060,8 +1061,28 @@ public class MartBuilderXML extends DefaultHandler {
 	 */
 	private void writeSchemaContents(Schema schema, Writer xmlWriter)
 			throws IOException, BuilderException {
+		// What tables to write? The order is important for datasets
+		// only. This is to allow inherited columns to reference
+		// earlier columns.
+		List tables = new ArrayList();
+		if (schema instanceof DataSet) {
+			// Add the main table first.
+			for (Iterator i = schema.getTables().iterator(); i.hasNext();) {
+				DataSetTable dsTab = (DataSetTable) i.next();
+				if (dsTab.getType().equals(DataSetTableType.MAIN))
+					tables.add(dsTab);
+			}
+			// Recursively add child tables.
+			for (int i = 0; i < tables.size(); i++) {
+				DataSetTable dsTab = (DataSetTable) tables.get(i);
+				for (Iterator j = dsTab.getPrimaryKey().getRelations()
+						.iterator(); j.hasNext();)
+					tables.add(((Relation) j.next()).getManyKey().getTable());
+			}
+		} else
+			tables.addAll(schema.getTables());
 		// Write out tables inside each schema.
-		for (Iterator ti = schema.getTables().iterator(); ti.hasNext();) {
+		for (Iterator ti = tables.iterator(); ti.hasNext();) {
 			Table table = (Table) ti.next();
 			String tableMappedID = "" + this.currentElementID++;
 			this.reverseMappedObjects.put(table, tableMappedID);
@@ -1136,6 +1157,9 @@ public class MartBuilderXML extends DefaultHandler {
 								.get(underlyingRelation);
 					this.writeAttribute("underlyingRelationId",
 							underlyingRelationId, xmlWriter);
+					this.writeAttribute("dependency", Boolean
+							.toString(((DataSetColumn) dcol).getDependency()),
+							xmlWriter);
 					this.writeAttribute("alt",
 							underlyingRelation == null ? "null"
 									: underlyingRelation.toString(), xmlWriter);
@@ -1160,9 +1184,19 @@ public class MartBuilderXML extends DefaultHandler {
 						this.writeAttribute("wrappedColumnAlt",
 								((WrappedColumn) dcol).getWrappedColumn()
 										.toString(), xmlWriter);
-						this.writeAttribute("dependency", Boolean
-								.toString(((WrappedColumn) dcol)
-										.getDependency()), xmlWriter);
+					}
+
+					// Inherited column?
+					else if (dcol instanceof InheritedColumn) {
+						this.writeAttribute("type", "inherited", xmlWriter);
+						this.writeAttribute("inheritedColumnId",
+								(String) this.reverseMappedObjects
+										.get(((InheritedColumn) dcol)
+												.getInheritedColumn()),
+								xmlWriter);
+						this.writeAttribute("inheritedColumnAlt",
+								((InheritedColumn) dcol).getInheritedColumn()
+										.toString(), xmlWriter);
 					}
 
 					// Expression column?
@@ -1174,7 +1208,7 @@ public class MartBuilderXML extends DefaultHandler {
 						StringBuffer aliasNames = new StringBuffer();
 						for (Iterator i = ((ExpressionColumn) dcol)
 								.getAliases().keySet().iterator(); i.hasNext();) {
-							WrappedColumn wrapped = (WrappedColumn) i.next();
+							DataSetColumn wrapped = (DataSetColumn) i.next();
 							String alias = (String) ((ExpressionColumn) dcol)
 									.getAliases().get(wrapped);
 							aliasColumnIds
@@ -1357,10 +1391,8 @@ public class MartBuilderXML extends DefaultHandler {
 					xmlWriter);
 			this.writeAttribute("optimiser", ds.getDataSetOptimiserType()
 					.getName(), xmlWriter);
-			this.writeAttribute("partitionOnSchema", Boolean.toString(ds
-					.getPartitionOnSchema()), xmlWriter);
-			this.writeAttribute("invisible", Boolean.toString(ds
-					.getInvisible()), xmlWriter);
+			this.writeAttribute("invisible", Boolean
+					.toString(ds.getInvisible()), xmlWriter);
 
 			// Write out concat relations inside window. MUST come first else
 			// the dataset concat-only cols will complain about not having a
@@ -1511,14 +1543,14 @@ public class MartBuilderXML extends DefaultHandler {
 
 			// Write out partitioned columns inside window. MUST go after else
 			// will not have dataset cols to refer to.
-			for (Iterator x = ds.getPartitionedWrappedColumns().iterator(); x
+			for (Iterator x = ds.getPartitionedDataSetColumns().iterator(); x
 					.hasNext();) {
 				WrappedColumn c = (WrappedColumn) x.next();
 				this.openElement("partitionColumn", xmlWriter);
 				this.writeAttribute("columnId",
 						(String) this.reverseMappedObjects.get(c), xmlWriter);
 				PartitionedColumnType ptc = ds
-						.getPartitionedWrappedColumnType(c);
+						.getPartitionedDataSetColumnType(c);
 
 				// What kind of partition is it?
 				// Single value partition?
