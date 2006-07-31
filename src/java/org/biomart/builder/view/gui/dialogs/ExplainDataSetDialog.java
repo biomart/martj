@@ -288,7 +288,7 @@ public class ExplainDataSetDialog extends JDialog {
 				Column col = (Column) j.next();
 				if (col instanceof WrappedColumn) {
 					WrappedColumn wcol = (WrappedColumn) col;
-					if (wcol.getUnderlyingRelation().equals(r))
+					if (r.equals(wcol.getUnderlyingRelation()))
 						includeCols.add(wcol);
 				}
 			}

@@ -70,7 +70,7 @@ import org.biomart.builder.resources.Resources;
  * Understands how to create SQL and DDL for an Oracle database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 28th July 2006
+ * @version 0.1.11, 31st July 2006
  * @since 0.1
  */
 public class OracleDialect extends DatabaseDialect {
@@ -197,7 +197,8 @@ public class OracleDialect extends DatabaseDialect {
 
 	public void doPK(PK action, List statements) throws Exception {
 		String schemaName = action.getPkTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getPkTableSchema().getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getPkTableSchema()).getDatabaseSchema();
 		String tableName = action.getPkTableName();
 		StringBuffer sb = new StringBuffer();
 		for (Iterator i = action.getPkColumns().iterator(); i.hasNext();) {
@@ -214,10 +215,12 @@ public class OracleDialect extends DatabaseDialect {
 
 	public void doFK(FK action, List statements) throws Exception {
 		String pkSchemaName = action.getPkTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getPkTableSchema().getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getPkTableSchema()).getDatabaseSchema();
 		String pkTableName = action.getPkTableName();
 		String fkSchemaName = action.getFkTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getFkTableSchema().getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getFkTableSchema()).getDatabaseSchema();
 		String fkTableName = action.getFkTableName();
 
 		StringBuffer sbFK = new StringBuffer();
@@ -245,23 +248,24 @@ public class OracleDialect extends DatabaseDialect {
 
 	public void doReduce(Reduce action, List statements) throws Exception {
 		String srcSchemaName = action.getSourceTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getSourceTableSchema()
-				.getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getSourceTableSchema()).getDatabaseSchema();
 		String srcTableName = action.getSourceTableName();
 		String trgtSchemaName = action.getTargetTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getTargetTableSchema()
-				.getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getTargetTableSchema()).getDatabaseSchema();
 		String trgtTableName = action.getTargetTableName();
 		String reduceSchemaName = action.getReducedTableSchema() == null ? action
 				.getDataSetSchemaName()
-				: action.getReducedTableSchema().getName();
+				: ((JDBCSchema) action.getReducedTableSchema())
+						.getDatabaseSchema();
 		String reduceTableName = action.getReducedTableName();
 
 		StringBuffer sb = new StringBuffer();
 		sb.append("create table " + reduceSchemaName + "." + reduceTableName
 				+ " as select b.* from " + srcSchemaName + "." + srcTableName
-				+ " as a inner join " + trgtSchemaName + "." + trgtTableName
-				+ " as b using ");
+				+ " a inner join " + trgtSchemaName + "." + trgtTableName
+				+ " b on ");
 		for (int i = 0; i < action.getTargetTableKeyColumns().size(); i++) {
 			if (i > 0)
 				sb.append(',');
@@ -277,25 +281,26 @@ public class OracleDialect extends DatabaseDialect {
 
 	public void doDrop(Drop action, List statements) throws Exception {
 		String schemaName = action.getDropTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getDropTableSchema().getName();
-		String tableName = action.getDropTableName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getDropTableSchema()).getDatabaseSchema();
+				String tableName = action.getDropTableName();
 		statements.add("drop table " + schemaName + "." + tableName);
 	}
 
 	public void doRename(Rename action, List statements) throws Exception {
 		String schemaName = action.getRenameTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getRenameTableSchema()
-				.getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getRenameTableSchema()).getDatabaseSchema();
 		String oldTableName = action.getRenameTableOldName();
 		String newTableName = action.getRenameTableNewName();
-		statements.add("alter table table " + schemaName + "." + oldTableName
-				+ " rename to " + schemaName + "." + newTableName);
+		statements.add("alter table " + schemaName + "." + oldTableName
+				+ " rename to " + newTableName);
 	}
 
 	public void doUnion(Union action, List statements) throws Exception {
 		String schemaName = action.getUnionTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getUnionTableSchema()
-				.getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getUnionTableSchema()).getDatabaseSchema();
 		String tableName = action.getUnionTableName();
 		StringBuffer sb = new StringBuffer();
 		sb.append("create table " + schemaName + "." + tableName
@@ -322,8 +327,8 @@ public class OracleDialect extends DatabaseDialect {
 
 	public void doIndex(Index action, List statements) {
 		String schemaName = action.getIndexTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getIndexTableSchema()
-				.getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getIndexTableSchema()).getDatabaseSchema();
 		String tableName = action.getIndexTableName();
 		StringBuffer sb = new StringBuffer();
 
@@ -342,7 +347,8 @@ public class OracleDialect extends DatabaseDialect {
 
 	public void doOptimiseAddColumn(OptimiseAddColumn action, List statements) {
 		String schemaName = action.getTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getTableSchema().getName();
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getTableSchema()).getDatabaseSchema();
 		String tableName = action.getTableName();
 		String colName = action.getColumnName();
 		statements.add("alter table " + schemaName + "." + tableName
@@ -352,10 +358,12 @@ public class OracleDialect extends DatabaseDialect {
 	public void doOptimiseUpdateColumn(OptimiseUpdateColumn action,
 			List statements) throws Exception {
 		String pkSchemaName = action.getPkTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getPkTableSchema().getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getPkTableSchema()).getDatabaseSchema();
 		String pkTableName = action.getPkTableName();
 		String fkSchemaName = action.getFkTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getFkTableSchema().getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getFkTableSchema()).getDatabaseSchema();
 		String fkTableName = action.getFkTableName();
 		String colName = action.getOptimiseColumnName();
 
@@ -380,11 +388,13 @@ public class OracleDialect extends DatabaseDialect {
 
 	public void doCreate(Create action, List statements) {
 		String createTableSchema = action.getNewTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getNewTableSchema().getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getNewTableSchema()).getDatabaseSchema();
 		String createTableName = action.getNewTableName();
 		String fromTableSchema = action.getSelectFromTableSchema() == null ? action
 				.getDataSetSchemaName()
-				: action.getSelectFromTableSchema().getName();
+				: ((JDBCSchema) action.getSelectFromTableSchema())
+						.getDatabaseSchema();
 		String fromTableName = action.getSelectFromTableName();
 		DataSetTableRestriction tblRestriction = action.getTableRestriction();
 		boolean useDistinct = action.isUseDistinct();
@@ -416,7 +426,7 @@ public class OracleDialect extends DatabaseDialect {
 			if (i.hasNext())
 				sb.append(',');
 		}
-		sb.append(" from " + fromTableSchema + "." + fromTableName + " as a");
+		sb.append(" from " + fromTableSchema + "." + fromTableName + " a");
 
 		// Do restriction.
 		if (tblRestriction != null) {
@@ -430,11 +440,12 @@ public class OracleDialect extends DatabaseDialect {
 	public void doPartition(Partition action, List statements) {
 		String partTableSchema = action.getPartitionTableSchema() == null ? action
 				.getDataSetSchemaName()
-				: action.getPartitionTableSchema().getName();
+				: ((JDBCSchema) action.getPartitionTableSchema())
+						.getDatabaseSchema();
 		String partTableName = action.getPartitionTableName();
 		String fromTableSchema = action.getTargetTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getTargetTableSchema()
-				.getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getTargetTableSchema()).getDatabaseSchema();
 		String fromTableName = action.getTargetTableName();
 		String partColumnName = action.getPartitionColumnName();
 		Object partColumnValue = action.getPartitionColumnValue();
@@ -455,16 +466,16 @@ public class OracleDialect extends DatabaseDialect {
 
 	public void doMerge(Merge action, List statements) throws Exception {
 		String srcSchemaName = action.getSourceTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getSourceTableSchema()
-				.getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getSourceTableSchema()).getDatabaseSchema();
 		String srcTableName = action.getSourceTableName();
 		String trgtSchemaName = action.getTargetTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getTargetTableSchema()
-				.getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getTargetTableSchema()).getDatabaseSchema();
 		String trgtTableName = action.getTargetTableName();
 		String mergeSchemaName = action.getMergedTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getMergedTableSchema()
-				.getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getMergedTableSchema()).getDatabaseSchema();
 		String mergeTableName = action.getMergedTableName();
 		DataSetRelationRestriction relRestriction = action
 				.getRelationRestriction();
@@ -500,9 +511,9 @@ public class OracleDialect extends DatabaseDialect {
 			}
 			sb.append(col.getName());
 		}
-		sb.append(" from " + srcSchemaName + "." + srcTableName + " as a "
+		sb.append(" from " + srcSchemaName + "." + srcTableName + " a "
 				+ (action.isUseLeftJoin() ? "left" : "inner") + " join "
-				+ trgtSchemaName + "." + trgtTableName + " as b using ");
+				+ trgtSchemaName + "." + trgtTableName + " b on ");
 		for (int i = 0; i < action.getTargetTableKeyColumns().size(); i++) {
 			if (i > 0)
 				sb.append(',');
@@ -530,12 +541,12 @@ public class OracleDialect extends DatabaseDialect {
 	public void doExpressionAddColumns(ExpressionAddColumns action,
 			List statements) throws Exception {
 		String srcSchemaName = action.getSourceTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getSourceTableSchema()
-				.getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getSourceTableSchema()).getDatabaseSchema();
 		String srcTableName = action.getSourceTableName();
 		String trgtSchemaName = action.getTargetTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getTargetTableSchema()
-				.getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getTargetTableSchema()).getDatabaseSchema();
 		String trgtTableName = action.getTargetTableName();
 		boolean useGroupBy = action.getUseGroupBy();
 		Collection selectCols = action.getSourceTableColumns();
@@ -572,18 +583,19 @@ public class OracleDialect extends DatabaseDialect {
 
 	public void doConcat(Concat action, List statements) {
 		String srcSchemaName = action.getSourceTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getSourceTableSchema()
-				.getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getSourceTableSchema()).getDatabaseSchema();
 		String srcTableName = action.getSourceTableName();
 		List srcTableKeyCols = action.getSourceTableKeyColumns();
 		String trgtSchemaName = action.getTargetTableSchema() == null ? action
-				.getDataSetSchemaName() : action.getTargetTableSchema()
-				.getName();
+				.getDataSetSchemaName() : ((JDBCSchema) action
+				.getTargetTableSchema()).getDatabaseSchema();
 		String trgtTableName = action.getTargetTableName();
 		String trgtColName = action.getTargetConcatColumnName();
 		String concatSchemaName = action.getConcatTableSchema() == null ? action
 				.getDataSetSchemaName()
-				: action.getConcatTableSchema().getName();
+				: ((JDBCSchema) action.getConcatTableSchema())
+						.getDatabaseSchema();
 		String concatTableName = action.getConcatTableName();
 		ConcatRelationType crType = action.getConcatRelationType();
 		DataSetRelationRestriction relRestriction = action
@@ -631,8 +643,8 @@ public class OracleDialect extends DatabaseDialect {
 		sb.append(trgtColName);
 
 		sb.append(" from " + srcSchemaName + "." + srcTableName
-				+ " as a inner join " + trgtSchemaName + "." + trgtTableName
-				+ " as b using ");
+				+ " a inner join " + trgtSchemaName + "." + trgtTableName
+				+ " b on ");
 		for (int i = 0; i < action.getTargetTableKeyColumns().size(); i++) {
 			if (i > 0)
 				sb.append(',');

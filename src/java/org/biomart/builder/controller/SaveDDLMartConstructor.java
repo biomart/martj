@@ -237,7 +237,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		}
 
 		public String getNewTempTableName() {
-			return "__JDBCMART_TEMP__" + this.tempTableSeq++;
+			return "TEMP__" + this.tempTableSeq++;
 		}
 
 		public List listDistinctValues(Column col) throws SQLException {

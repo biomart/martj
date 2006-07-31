@@ -391,7 +391,7 @@ public interface MartConstructor {
 
 				// Process the main table.
 				MCDSTable table = new MCDSTable(mainTable, null);
-				this.processTable(rootAction, actionGraph, mainTableSchema,
+				this.processTable(null, rootAction, actionGraph, mainTableSchema,
 						schema, table);
 				schemaTables.add(table);
 
@@ -407,9 +407,13 @@ public interface MartConstructor {
 				// relations we encounter.
 				List relations = new ArrayList(mainTable.getPrimaryKey()
 						.getRelations());
+				List parents = new ArrayList();
+				for (int x = 0; x < relations.size(); x++)
+					parents.add(table);
 
 				// Process all main dimensions and subclasses.
 				for (int j = 0; j < relations.size(); j++) {
+					MCDSTable parent = (MCDSTable)parents.get(j);
 					Relation sourceRelation = (Relation) relations.get(j);
 					DataSetTable sourceTable = (DataSetTable) sourceRelation
 							.getOneKey().getTable();
@@ -418,7 +422,7 @@ public interface MartConstructor {
 
 					// Create the subclass or dimension table.
 					table = new MCDSTable(targetTable, sourceRelation);
-					this.processTable((MartConstructorAction) tableLastActions
+					this.processTable(parent, (MartConstructorAction) tableLastActions
 							.get(sourceTable), actionGraph, mainTableSchema,
 							schema, table);
 					schemaTables.add(table);
@@ -428,8 +432,11 @@ public interface MartConstructor {
 							.getLastActionPerformed());
 
 					// Add further subclasses and dimensions to queue.
+					Collection newRels = targetTable.getPrimaryKey().getRelations();
 					relations
-							.addAll(targetTable.getPrimaryKey().getRelations());
+							.addAll(newRels);
+					for (int x = 0; x < newRels.size(); x++)
+						parents.add(table);
 
 					// Check not cancelled.
 					this.checkCancelled();
@@ -973,7 +980,7 @@ public interface MartConstructor {
 			}
 		}
 
-		private void processTable(MartConstructorAction firstActionDependsOn,
+		private void processTable(MCDSTable parent, MartConstructorAction firstActionDependsOn,
 				MartConstructorActionGraph actionGraph, Schema mainTableSchema,
 				Schema schema, MCDSTable table) throws Exception {
 			// A placeholder for the last action performed on this table.
@@ -1024,12 +1031,6 @@ public interface MartConstructor {
 			// Else, if the table is NOT a MAIN table, then we should select
 			// the inherited columns from the parent dataset table.
 			else {
-				// Work out the parent dataset table.
-				DataSetTable parentDSTable = (DataSetTable) ((Relation) ((Key) table
-						.getDataSetTable().getForeignKeys().iterator().next())
-						.getRelations().iterator().next()).getOneKey()
-						.getTable();
-
 				// Work out what columns to include from the first table.
 				List firstDSCols = new ArrayList();
 				for (Iterator i = table.getDataSetTable().getColumns()
@@ -1048,7 +1049,7 @@ public interface MartConstructor {
 				MartConstructorAction create = new Create(
 						this.datasetSchemaName, table.getDataSetTable()
 								.getName(), null, tempTableName, null,
-						parentDSTable.getName(), firstDSCols, false, null,
+						parent.getTempTableName(), firstDSCols, false, null,
 						false);
 				actionGraph.addActionWithParent(create, lastActionPerformed);
 				// Update last action performed, in case there are no merges.
