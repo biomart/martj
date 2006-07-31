@@ -56,7 +56,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * relation for this dataset only.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 25th July 2006
+ * @version 0.1.3, 31st July 2006
  * @since 0.1
  */
 public class RestrictedRelationDialog extends JDialog {
@@ -143,7 +143,8 @@ public class RestrictedRelationDialog extends JDialog {
 		this.firstColumnAliasModel = new ColumnAliasTableModel(relation
 				.getFirstKey().getTable(), template, true);
 		this.firstColumnAliasTable = new JTable(this.firstColumnAliasModel);
-		this.firstColumnAliasTable.setGridColor(Color.LIGHT_GRAY); // Mac OSX fix.
+		this.firstColumnAliasTable.setGridColor(Color.LIGHT_GRAY); // Mac OSX
+																	// fix.
 		this.firstColumnAliasTable
 				.setPreferredScrollableViewportSize(new Dimension(400, 100));
 		// Arbitrary size.
@@ -154,7 +155,8 @@ public class RestrictedRelationDialog extends JDialog {
 		this.secondColumnAliasModel = new ColumnAliasTableModel(relation
 				.getSecondKey().getTable(), template, false);
 		this.secondColumnAliasTable = new JTable(this.secondColumnAliasModel);
-		this.secondColumnAliasTable.setGridColor(Color.LIGHT_GRAY); // Mac OSX fix.
+		this.secondColumnAliasTable.setGridColor(Color.LIGHT_GRAY); // Mac OSX
+																	// fix.
 		this.secondColumnAliasTable
 				.setPreferredScrollableViewportSize(new Dimension(400, 100));
 		// Arbitrary size.
@@ -433,10 +435,11 @@ public class RestrictedRelationDialog extends JDialog {
 			if (template != null) {
 				Map aliases = first ? template.getFirstTableAliases()
 						: template.getSecondTableAliases();
-				for (Iterator i = aliases.keySet().iterator(); i.hasNext();) {
-					GenericColumn col = (GenericColumn) i.next();
+				for (Iterator i = aliases.entrySet().iterator(); i.hasNext();) {
+					Map.Entry entry = (Map.Entry) i.next();
+					GenericColumn col = (GenericColumn) entry.getKey();
 					this.insertRow(this.getRowCount(), new Object[] { col,
-							(String) aliases.get(col) });
+							(String) entry.getValue() });
 				}
 			}
 		}

@@ -80,7 +80,7 @@ import org.biomart.builder.resources.Resources;
  * or keys, or to reinstate any that have previously been marked as incorrect.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 21st July 2006
+ * @version 0.1.18, 31st July 2006
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -946,13 +946,13 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 					// For each FK column name, look up the actual column in the
 					// table.
-					for (Iterator k = dbFKs.keySet().iterator(); k.hasNext();) {
-						Short keySeq = (Short) k.next();
+					for (Iterator k = dbFKs.entrySet().iterator(); k.hasNext();) {
+						Map.Entry entry = (Map.Entry)k.next();
+						Short keySeq = (Short) entry.getKey();
 						// Convert the db-specific column index to a 0-indexed
 						// figure for the array of fk columns.
 						int fkColSeq = keySeq.intValue() - firstColSeq;
-						candidateFKColumns[fkColSeq] = (Column) ((List) dbFKs
-								.get(keySeq)).get(j);
+						candidateFKColumns[fkColSeq] = (Column) ((List) entry.getValue()).get(j);
 					}
 
 					// Create a template foreign key based around the set

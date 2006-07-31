@@ -61,7 +61,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.40, 28th July 2006
+ * @version 0.1.41, 31st July 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -893,11 +893,13 @@ public class DataSet extends GenericSchema {
 			// Get all the dependent columns. Any gone? Drop.
 			boolean allFound = true;
 			Map newDependencies = new TreeMap();
-			for (Iterator j = oldExpCol.getAliases().keySet().iterator(); j
+			for (Iterator j = oldExpCol.getAliases().entrySet().iterator(); j
 					.hasNext();) {
+				Map.Entry entry = (Map.Entry) j.next();
 				DataSetColumn dependency = (DataSetColumn) newExpColTable
-						.getColumnByName(((DataSetColumn) j.next()).getName());
-				String alias = (String) oldExpCol.getAliases().get(dependency);
+						.getColumnByName(((DataSetColumn) entry.getKey())
+								.getName());
+				String alias = (String) entry.getValue();
 				if (dependency == null)
 					allFound = false;
 				else
@@ -1208,10 +1210,10 @@ public class DataSet extends GenericSchema {
 		// Create the primary key on this table. First check that
 		// all columns end in '_key'. If they don't make it so.
 		try {
-			for (Iterator i = dsTablePKCols.iterator(); i.hasNext(); ) {
-				DataSetColumn col = (DataSetColumn)i.next();
+			for (Iterator i = dsTablePKCols.iterator(); i.hasNext();) {
+				DataSetColumn col = (DataSetColumn) i.next();
 				if (!col.getName().endsWith(Resources.get("pkSuffix")))
-					col.setName(col.getName()+Resources.get("pkSuffix"));
+					col.setName(col.getName() + Resources.get("pkSuffix"));
 			}
 			dsTable.setPrimaryKey(new GenericPrimaryKey(dsTablePKCols));
 		} catch (Throwable t) {
@@ -2115,9 +2117,11 @@ public class DataSet extends GenericSchema {
 			 */
 			public void dropUnusedAliases() {
 				List usedColumns = new ArrayList();
-				for (Iterator i = this.aliases.keySet().iterator(); i.hasNext();) {
-					DataSetColumn col = (DataSetColumn) i.next();
-					String alias = (String) this.aliases.get(col);
+				for (Iterator i = this.aliases.entrySet().iterator(); i
+						.hasNext();) {
+					Map.Entry entry = (Map.Entry) i.next();
+					DataSetColumn col = (DataSetColumn) entry.getKey();
+					String alias = (String) entry.getValue();
 					if (this.expr.indexOf(":" + alias) >= 0)
 						usedColumns.add(col);
 				}
@@ -2133,9 +2137,11 @@ public class DataSet extends GenericSchema {
 			 */
 			public String getSubstitutedExpression() {
 				String sub = this.expr;
-				for (Iterator i = this.aliases.keySet().iterator(); i.hasNext();) {
-					DataSetColumn wrapped = (DataSetColumn) i.next();
-					String alias = ":" + (String) this.aliases.get(wrapped);
+				for (Iterator i = this.aliases.entrySet().iterator(); i
+						.hasNext();) {
+					Map.Entry entry = (Map.Entry) i.next();
+					DataSetColumn wrapped = (DataSetColumn) entry.getKey();
+					String alias = ":" + (String) entry.getValue();
 					sub = sub.replaceAll(alias, wrapped.getName());
 				}
 				return sub;
@@ -2400,10 +2406,11 @@ public class DataSet extends GenericSchema {
 				String secondTablePrefix) {
 			String sub = this.expr;
 			// First table first.
-			for (Iterator i = this.firstTableAliases.keySet().iterator(); i
+			for (Iterator i = this.firstTableAliases.entrySet().iterator(); i
 					.hasNext();) {
-				Column col = (Column) i.next();
-				String alias = ":" + (String) this.firstTableAliases.get(col);
+				Map.Entry entry = (Map.Entry) i.next();
+				Column col = (Column) entry.getKey();
+				String alias = ":" + (String) entry.getValue();
 				sub = sub.replaceAll(alias, firstTablePrefix + "."
 						+ col.getName());
 			}
@@ -2507,9 +2514,10 @@ public class DataSet extends GenericSchema {
 		 */
 		public String getSubstitutedExpression(String tablePrefix) {
 			String sub = this.expr;
-			for (Iterator i = this.aliases.keySet().iterator(); i.hasNext();) {
-				Column col = (Column) i.next();
-				String alias = ":" + (String) this.aliases.get(col);
+			for (Iterator i = this.aliases.entrySet().iterator(); i.hasNext();) {
+				Map.Entry entry = (Map.Entry) i.next();
+				Column col = (Column) entry.getKey();
+				String alias = ":" + (String) entry.getValue();
 				sub = sub.replaceAll(alias, tablePrefix + "." + col.getName());
 			}
 			return sub;

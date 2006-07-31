@@ -50,7 +50,7 @@ import org.biomart.builder.resources.Resources;
  * use JDBC to fetch/retrieve data between two databases.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 27th July 2006
+ * @version 0.1.14, 31st July 2006
  * @since 0.1
  */
 public class SaveDDLMartConstructor implements MartConstructor {
@@ -529,14 +529,16 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.actions.clear();
 			} else if (event == MartConstructorListener.DATASET_ENDED) {
 				// Write out one file per table in action map.
-				for (Iterator i = this.actions.keySet().iterator(); i.hasNext();) {
-					String tableName = (String) i.next();
+				for (Iterator i = this.actions.entrySet().iterator(); i
+						.hasNext();) {
+					Map.Entry actionEntry = (Map.Entry) i.next();
+					String tableName = (String) actionEntry.getValue();
 					this.entry = new ZipEntry(this.martSequence + "/"
 							+ this.datasetSequence + "/" + tableName + ".sql");
 					entry.setTime(System.currentTimeMillis());
 					this.outputZipStream.putNextEntry(entry);
 					// Write the actions.
-					for (Iterator j = ((List) this.actions.get(tableName))
+					for (Iterator j = ((List) actionEntry.getValue())
 							.iterator(); j.hasNext();) {
 						// Convert the action to some DDL.
 						String[] cmd = this

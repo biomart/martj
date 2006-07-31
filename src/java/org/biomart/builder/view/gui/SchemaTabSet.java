@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.Vector;
 
 import javax.swing.JMenuItem;
@@ -37,6 +38,7 @@ import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
+import org.biomart.builder.controller.JDBCSchema;
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.Column;
@@ -462,6 +464,23 @@ public class SchemaTabSet extends JTabbedPane {
 		// Select the new schema.
 		this.setSelectedIndex(this.indexOfComponent(scroller));
 		this.martTab.selectSchemaEditor();
+
+		// Store the settings in the history file.
+		if (schema instanceof JDBCSchema) {
+			JDBCSchema jschema = (JDBCSchema) schema;
+			Properties history = new Properties();
+			history.setProperty("driverClass", jschema.getDriverClassName());
+			history.setProperty("driverClassLocation", jschema
+					.getDriverClassLocation() == null ? "" : jschema
+					.getDriverClassLocation().toString());
+			history.setProperty("jdbcURL", jschema.getJDBCURL());
+			history.setProperty("username", jschema.getUsername());
+			history.setProperty("password", jschema.getPassword() == null ? ""
+					: jschema.getPassword());
+			history.setProperty("schema", jschema.getDatabaseSchema());
+			SettingsCache.saveHistoryProperties(JDBCSchema.class, schema
+					.getName(), history);
+		}
 	}
 
 	/**
@@ -589,7 +608,7 @@ public class SchemaTabSet extends JTabbedPane {
 		this.removeTabAt(tabIndex);
 		this.schemaToDiagram[0].remove(index);
 		this.schemaToDiagram[1].remove(index);
-		
+
 		// Update the overview diagram.
 		this.recalculateOverviewDiagram();
 

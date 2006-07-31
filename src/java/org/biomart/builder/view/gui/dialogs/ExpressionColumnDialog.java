@@ -58,7 +58,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * This dialog asks users to create or modify an expression column.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 28th July 2006
+ * @version 0.1.6, 31st July 2006
  * @since 0.1
  */
 public class ExpressionColumnDialog extends JDialog {
@@ -397,11 +397,12 @@ public class ExpressionColumnDialog extends JDialog {
 					Resources.get("columnAliasTableAliasHeader") }, 0);
 			// Populate columns, and aliases from template.
 			if (template != null)
-				for (Iterator i = template.getAliases().keySet().iterator(); i
+				for (Iterator i = template.getAliases().entrySet().iterator(); i
 						.hasNext();) {
-					DataSetColumn col = (DataSetColumn) i.next();
+					Map.Entry entry = (Map.Entry) i.next();
+					DataSetColumn col = (DataSetColumn) entry.getKey();
 					this.insertRow(this.getRowCount(), new Object[] { col,
-							(String) template.getAliases().get(col) });
+							(String) entry.getValue() });
 				}
 		}
 

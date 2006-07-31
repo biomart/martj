@@ -69,7 +69,7 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.23, 28th July 2006
+ * @version 0.1.24, 31st July 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -312,16 +312,15 @@ public interface MartConstructor {
 				int totalDataSetCount = datasets.size();
 
 				// Loop over each mart.
-				for (Iterator j = martDataSets.keySet().iterator(); j.hasNext();) {
-					Mart mart = (Mart) j.next();
+				for (Iterator j = martDataSets.values().iterator(); j.hasNext();) {
 					this
 							.issueListenerEvent(MartConstructorListener.MART_STARTED);
 
 					try {
 						// Loop over all the datasets we want included from this
 						// mart.
-						for (Iterator i = ((List) martDataSets.get(mart))
-								.iterator(); i.hasNext();)
+						for (Iterator i = ((List) j.next()).iterator(); i
+								.hasNext();)
 							this.doIt((DataSet) i.next(), totalDataSetCount);
 					} finally {
 						this
@@ -391,8 +390,8 @@ public interface MartConstructor {
 
 				// Process the main table.
 				MCDSTable table = new MCDSTable(mainTable, null);
-				this.processTable(null, rootAction, actionGraph, mainTableSchema,
-						schema, table);
+				this.processTable(null, rootAction, actionGraph,
+						mainTableSchema, schema, table);
 				schemaTables.add(table);
 
 				// Check not cancelled.
@@ -413,7 +412,7 @@ public interface MartConstructor {
 
 				// Process all main dimensions and subclasses.
 				for (int j = 0; j < relations.size(); j++) {
-					MCDSTable parent = (MCDSTable)parents.get(j);
+					MCDSTable parent = (MCDSTable) parents.get(j);
 					Relation sourceRelation = (Relation) relations.get(j);
 					DataSetTable sourceTable = (DataSetTable) sourceRelation
 							.getOneKey().getTable();
@@ -422,9 +421,10 @@ public interface MartConstructor {
 
 					// Create the subclass or dimension table.
 					table = new MCDSTable(targetTable, sourceRelation);
-					this.processTable(parent, (MartConstructorAction) tableLastActions
-							.get(sourceTable), actionGraph, mainTableSchema,
-							schema, table);
+					this.processTable(parent,
+							(MartConstructorAction) tableLastActions
+									.get(sourceTable), actionGraph,
+							mainTableSchema, schema, table);
 					schemaTables.add(table);
 
 					// Add target table to definitions list.
@@ -432,9 +432,9 @@ public interface MartConstructor {
 							.getLastActionPerformed());
 
 					// Add further subclasses and dimensions to queue.
-					Collection newRels = targetTable.getPrimaryKey().getRelations();
-					relations
-							.addAll(newRels);
+					Collection newRels = targetTable.getPrimaryKey()
+							.getRelations();
+					relations.addAll(newRels);
 					for (int x = 0; x < newRels.size(); x++)
 						parents.add(table);
 
@@ -980,7 +980,8 @@ public interface MartConstructor {
 			}
 		}
 
-		private void processTable(MCDSTable parent, MartConstructorAction firstActionDependsOn,
+		private void processTable(MCDSTable parent,
+				MartConstructorAction firstActionDependsOn,
 				MartConstructorActionGraph actionGraph, Schema mainTableSchema,
 				Schema schema, MCDSTable table) throws Exception {
 			// A placeholder for the last action performed on this table.
@@ -1048,8 +1049,8 @@ public interface MartConstructor {
 				// based on firstDSCols.
 				MartConstructorAction create = new Create(
 						this.datasetSchemaName, table.getDataSetTable()
-								.getName(), null, tempTableName, null,
-						parent.getTempTableName(), firstDSCols, false, null,
+								.getName(), null, tempTableName, null, parent
+								.getTempTableName(), firstDSCols, false, null,
 						false);
 				actionGraph.addActionWithParent(create, lastActionPerformed);
 				// Update last action performed, in case there are no merges.

@@ -100,7 +100,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.27, 28th July 2006
+ * @version 0.1.28, 31st July 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -1207,10 +1207,12 @@ public class MartBuilderXML extends DefaultHandler {
 						StringBuffer aliasColumnIds = new StringBuffer();
 						StringBuffer aliasNames = new StringBuffer();
 						for (Iterator i = ((ExpressionColumn) dcol)
-								.getAliases().keySet().iterator(); i.hasNext();) {
-							DataSetColumn wrapped = (DataSetColumn) i.next();
-							String alias = (String) ((ExpressionColumn) dcol)
-									.getAliases().get(wrapped);
+								.getAliases().entrySet().iterator(); i
+								.hasNext();) {
+							Map.Entry entry = (Map.Entry) i.next();
+							DataSetColumn wrapped = (DataSetColumn) entry
+									.getKey();
+							String alias = (String) entry.getValue();
 							aliasColumnIds
 									.append((String) this.reverseMappedObjects
 											.get(wrapped));
@@ -1422,10 +1424,11 @@ public class MartBuilderXML extends DefaultHandler {
 				// AliasCols, AliasNames - wrapped obj to string map
 				StringBuffer aliasColumnIds = new StringBuffer();
 				StringBuffer aliasNames = new StringBuffer();
-				for (Iterator i = restrict.getAliases().keySet().iterator(); i
+				for (Iterator i = restrict.getAliases().entrySet().iterator(); i
 						.hasNext();) {
-					Column col = (Column) i.next();
-					String alias = (String) restrict.getAliases().get(col);
+					Map.Entry entry = (Map.Entry) i.next();
+					Column col = (Column) entry.getKey();
+					String alias = (String) entry.getValue();
 					aliasColumnIds.append((String) this.reverseMappedObjects
 							.get(col));
 					aliasNames.append(alias);
@@ -1459,11 +1462,11 @@ public class MartBuilderXML extends DefaultHandler {
 				// AliasCols, AliasNames - wrapped obj to string map
 				StringBuffer firstAliasColumnIds = new StringBuffer();
 				StringBuffer firstAliasNames = new StringBuffer();
-				for (Iterator i = restrict.getFirstTableAliases().keySet()
+				for (Iterator i = restrict.getFirstTableAliases().entrySet()
 						.iterator(); i.hasNext();) {
-					Column col = (Column) i.next();
-					String alias = (String) restrict.getFirstTableAliases()
-							.get(col);
+					Map.Entry entry = (Map.Entry) i.next();
+					Column col = (Column) entry.getKey();
+					String alias = (String) entry.getValue();
 					firstAliasColumnIds
 							.append((String) this.reverseMappedObjects.get(col));
 					firstAliasNames.append(alias);
@@ -1481,11 +1484,11 @@ public class MartBuilderXML extends DefaultHandler {
 				// AliasCols, AliasNames - wrapped obj to string map
 				StringBuffer secondAliasColumnIds = new StringBuffer();
 				StringBuffer secondAliasNames = new StringBuffer();
-				for (Iterator i = restrict.getSecondTableAliases().keySet()
+				for (Iterator i = restrict.getSecondTableAliases().entrySet()
 						.iterator(); i.hasNext();) {
-					Column col = (Column) i.next();
-					String alias = (String) restrict.getSecondTableAliases()
-							.get(col);
+					Map.Entry entry = (Map.Entry) i.next();
+					Column col = (Column) entry.getKey();
+					String alias = (String) entry.getValue();
 					secondAliasColumnIds
 							.append((String) this.reverseMappedObjects.get(col));
 					secondAliasNames.append(alias);

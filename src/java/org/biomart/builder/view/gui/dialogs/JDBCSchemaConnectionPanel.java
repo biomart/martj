@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,6 +51,7 @@ import org.biomart.builder.controller.JDBCSchema;
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.resources.Resources;
+import org.biomart.builder.view.gui.SettingsCache;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
@@ -60,7 +62,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * {@link JDBCSchema} implementation which represents the connection.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 21st July 2006
+ * @version 0.1.8, 31st July 2006
  * @since 0.1
  */
 public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
@@ -131,9 +133,9 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	 * populate the fields of the panel. If this template is null, then defaults
 	 * are used instead.
 	 * <p>
-	 * You must call {@link #resetFields(Schema)} before displaying this
-	 * panel, otherwise the values displayed are not defined and may result
-	 * in unpredictable behaviour.
+	 * You must call {@link #resetFields(Schema)} before displaying this panel,
+	 * otherwise the values displayed are not defined and may result in
+	 * unpredictable behaviour.
 	 * 
 	 * @param martTab
 	 *            the mart tab to which the schema to be created or modified
@@ -199,12 +201,9 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		// Build a combo box that lists all other JDBCSchema instances in
 		// the mart, and allows the user to copy settings from them.
 		this.copysettings = new JComboBox();
-		for (Iterator i = this.martTab.getMart().getSchemas().iterator(); i
-				.hasNext();) {
-			Schema s = (Schema) i.next();
-			if (s instanceof JDBCSchema)
-				this.copysettings.addItem(s);
-		}
+		for (Iterator i = SettingsCache.getHistoryNamesForClass(
+				JDBCSchema.class).iterator(); i.hasNext();)
+			this.copysettings.addItem(i.next());
 		this.copysettings.addActionListener(this);
 
 		// Create a listener that listens for changes on the host, port
@@ -338,7 +337,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 
 			// Make sure the right fields get enabled.
 			this.driverClassChanged();
-			
+
 			// Carry on resetting.
 			this.jdbcURL.setText(null);
 			this.host.setText(null);
@@ -363,7 +362,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 
 			// Make sure the right fields get enabled.
 			this.driverClassChanged();
-			
+
 			// Carry on copying.
 			String jdbcURL = jdbcSchema.getJDBCURL();
 			this.jdbcURL.setText(jdbcURL);
@@ -393,6 +392,46 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				this.port.setText(matcher.group(2));
 				this.database.setText(matcher.group(3));
 			}
+		}
+	}
+
+	private void copySettingsFrom(Properties template) {
+		// If it is, copy everything over from it.
+		this.driverClass.setText(template.getProperty("driverClass"));
+		this.driverClassLocation.setText(template
+				.getProperty("driverClassLocation"));
+
+		// Make sure the right fields get enabled.
+		this.driverClassChanged();
+
+		// Carry on copying.
+		String jdbcURL = template.getProperty("jdbcURL");
+		this.jdbcURL.setText(jdbcURL);
+		this.username.setText(template.getProperty("username"));
+		this.password.setText(template.getProperty("password"));
+		this.schemaName.setText(template.getProperty("schema"));
+
+		// Parse the JDBC URL into host, port and database, if the
+		// driver is known to us (defined in the map at the start
+		// of this class).
+		String regexURL = this.currentJDBCURLTemplate;
+
+		// Replace the three placeholders in the JDBC URL template
+		// with regex patterns. Obviously, this depends on the
+		// three placeholders appearing in the correct order.
+		// If they don't, then you're stuffed.
+		regexURL = regexURL.replaceAll("<HOST>", "(.*)");
+		regexURL = regexURL.replaceAll("<PORT>", "(.*)");
+		regexURL = regexURL.replaceAll("<DATABASE>", "(.*)");
+
+		// Use the regex to parse out the host, port and database
+		// from the JDBC URL.
+		Pattern regex = Pattern.compile(regexURL);
+		Matcher matcher = regex.matcher(jdbcURL);
+		if (matcher.matches()) {
+			this.host.setText(matcher.group(1));
+			this.port.setText(matcher.group(2));
+			this.database.setText(matcher.group(3));
 		}
 	}
 
@@ -493,10 +532,10 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		if (!this.isEmpty(className)) {
 			// Is this a preset class?
 			for (Iterator i = JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
-					.keySet().iterator(); i.hasNext();) {
-				String mapName = (String) i.next();
-				String mapClassName = (String) JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
-						.get(mapName);
+					.entrySet().iterator(); i.hasNext();) {
+				Map.Entry entry = (Map.Entry) i.next();
+				String mapName = (String) entry.getKey();
+				String mapClassName = (String) entry.getValue();
 				if (mapClassName.equals(className))
 					this.predefinedDriverClass.setSelectedItem(mapName);
 			}
@@ -605,8 +644,13 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			Object obj = this.copysettings.getSelectedItem();
 
 			// If one was actually seleted, copy the settings from it.
-			if (obj != null)
-				this.copySettingsFrom((Schema) obj);
+			if (obj != null) {
+				// Load the schema settings from our history.
+				Properties historyProps = SettingsCache.getHistoryProperties(
+						JDBCSchema.class, (String) obj);
+				// Copy the settings.
+				this.copySettingsFrom(historyProps);
+			}
 		}
 
 		// Driver class field changed?
@@ -683,7 +727,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				// Use the user input to update the fields on
 				// the existing schema object.
 				JDBCSchema jschema = (JDBCSchema) schema;
-				jschema.setDriverClassName((String) this.driverClass.getText());
+				jschema.setDriverClassName(this.driverClass.getText());
 				String driverClassLocation = this.driverClassLocation.getText();
 				jschema
 						.setDriverClassLocation(driverClassLocation == null ? null
@@ -692,6 +736,19 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				jschema.setDatabaseSchema(this.schemaName.getText());
 				jschema.setUsername(this.username.getText());
 				jschema.setPassword(new String(this.password.getPassword()));
+
+				// Update the settings in the history file.
+				Properties history = new Properties();
+				history.setProperty("driverClass", this.driverClass.getText());
+				history.setProperty("driverClassLocation",
+						this.driverClassLocation.getText());
+				history.setProperty("jdbcURL", this.jdbcURL.getText());
+				history.setProperty("username", this.username.getText());
+				history.setProperty("password", new String(this.password
+						.getPassword()));
+				history.setProperty("schema", this.schemaName.getText());
+				SettingsCache.saveHistoryProperties(JDBCSchema.class, schema
+						.getName(), history);
 			} catch (Throwable t) {
 				this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 			}

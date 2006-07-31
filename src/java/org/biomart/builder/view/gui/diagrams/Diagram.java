@@ -65,7 +65,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * what those items should be.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.24, 27th July 2006
+ * @version 0.1.25, 31st July 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
@@ -397,10 +397,10 @@ public abstract class Diagram extends JPanel {
 	public void recalculateDiagram() {
 		// Remember all the existing diagram component states.
 		Map states = new HashMap();
-		for (Iterator i = this.componentMap.keySet().iterator(); i.hasNext();) {
-			Object object = i.next();
-			DiagramComponent comp = (DiagramComponent) this.componentMap
-					.get(object);
+		for (Iterator i = this.componentMap.entrySet().iterator(); i.hasNext();) {
+			Map.Entry entry = (Map.Entry) i.next();
+			Object object = entry.getKey();
+			DiagramComponent comp = (DiagramComponent) entry.getValue();
 
 			// If the component actually exists, which it may not if the
 			// diagram has been dynamically updated elsewhere, remember the
@@ -419,17 +419,17 @@ public abstract class Diagram extends JPanel {
 		// to compare objects, so any objects in the new diagram which match
 		// the old objects in the old diagram will inherit the state from the
 		// old objects.
-		for (Iterator i = states.keySet().iterator(); i.hasNext();) {
-			Object object = i.next();
-			DiagramComponent comp = (DiagramComponent) this.componentMap
-					.get(object);
+		for (Iterator i = states.entrySet().iterator(); i.hasNext();) {
+			Map.Entry entry = (Map.Entry) i.next();
+			Object object = entry.getKey();
+			DiagramComponent comp = (DiagramComponent) entry.getValue();
 			if (comp != null)
 				comp.setState(states.get(object));
 		}
 
 		// Update appearances of components.
 		this.repaintDiagram();
-		
+
 		// Finally, repaint it as by default a component only repaints
 		// the area uncovered by the last action, but we have changed
 		// the entire visible area, so need the entire visible area to

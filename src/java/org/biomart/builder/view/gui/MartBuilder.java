@@ -44,7 +44,7 @@ import org.biomart.builder.resources.Resources;
  * The main window housing the MartBuilder GUI.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 21st June 2006
+ * @version 0.1.14, 31st July 2006
  * @since 0.1
  */
 public class MartBuilder extends JFrame {
@@ -64,10 +64,13 @@ public class MartBuilder extends JFrame {
 
 		// Assign ourselves to the long-process hourglass container.
 		LongProcess.setContainer(this);
+		
+		// Load our cache of settings.
+		SettingsCache.load();
 
 		// Set the look and feel to the one specified by the user, or the system
 		// default if not specified by the user. This may be null.
-		String lookAndFeelClass = System.getProperty("martbuilder.laf");
+		String lookAndFeelClass = SettingsCache.getProperty("lookandfeel");
 
 		try {
 			UIManager.setLookAndFeel(lookAndFeelClass);
