@@ -1205,8 +1205,14 @@ public class DataSet extends GenericSchema {
 				throw new MartBuilderInternalError(t);
 			}
 
-		// Create the primary key on this table.
+		// Create the primary key on this table. First check that
+		// all columns end in '_key'. If they don't make it so.
 		try {
+			for (Iterator i = dsTablePKCols.iterator(); i.hasNext(); ) {
+				DataSetColumn col = (DataSetColumn)i.next();
+				if (!col.getName().endsWith(Resources.get("pkSuffix")))
+					col.setName(col.getName()+Resources.get("pkSuffix"));
+			}
 			dsTable.setPrimaryKey(new GenericPrimaryKey(dsTablePKCols));
 		} catch (Throwable t) {
 			throw new MartBuilderInternalError(t);
