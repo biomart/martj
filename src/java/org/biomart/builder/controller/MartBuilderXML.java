@@ -100,7 +100,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.28, 31st July 2006
+ * @version 0.1.29, 1st August 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -1075,9 +1075,11 @@ public class MartBuilderXML extends DefaultHandler {
 			// Recursively add child tables.
 			for (int i = 0; i < tables.size(); i++) {
 				DataSetTable dsTab = (DataSetTable) tables.get(i);
-				for (Iterator j = dsTab.getPrimaryKey().getRelations()
-						.iterator(); j.hasNext();)
-					tables.add(((Relation) j.next()).getManyKey().getTable());
+				if (dsTab.getPrimaryKey() != null)
+					for (Iterator j = dsTab.getPrimaryKey().getRelations()
+							.iterator(); j.hasNext();)
+						tables.add(((Relation) j.next()).getManyKey()
+								.getTable());
 			}
 		} else
 			tables.addAll(schema.getTables());

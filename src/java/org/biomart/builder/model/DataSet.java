@@ -61,7 +61,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.41, 31st July 2006
+ * @version 0.1.42, 1st August 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -1208,12 +1208,14 @@ public class DataSet extends GenericSchema {
 			}
 
 		// Create the primary key on this table. First check that
-		// all columns end in '_key'. If they don't make it so.
+		// all columns end in '_key'. If they don't, make it so.
 		try {
 			for (Iterator i = dsTablePKCols.iterator(); i.hasNext();) {
 				DataSetColumn col = (DataSetColumn) i.next();
-				if (!col.getName().endsWith(Resources.get("pkSuffix")))
-					col.setName(col.getName() + Resources.get("pkSuffix"));
+				// FIXME : Work out how to append '_key' to column names
+				// without causing duplicate column errors. 
+				//if (!col.getName().endsWith(Resources.get("pkSuffix")))
+				//	col.setName(col.getName() + Resources.get("pkSuffix"));
 			}
 			dsTable.setPrimaryKey(new GenericPrimaryKey(dsTablePKCols));
 		} catch (Throwable t) {

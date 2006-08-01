@@ -65,7 +65,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * what those items should be.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.25, 31st July 2006
+ * @version 0.1.26, 1st August 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
@@ -422,9 +422,9 @@ public abstract class Diagram extends JPanel {
 		for (Iterator i = states.entrySet().iterator(); i.hasNext();) {
 			Map.Entry entry = (Map.Entry) i.next();
 			Object object = entry.getKey();
-			DiagramComponent comp = (DiagramComponent) entry.getValue();
+			DiagramComponent comp = (DiagramComponent) this.componentMap.get(object);
 			if (comp != null)
-				comp.setState(states.get(object));
+				comp.setState(entry.getValue());
 		}
 
 		// Update appearances of components.
