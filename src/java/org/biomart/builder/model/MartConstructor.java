@@ -1085,7 +1085,7 @@ public interface MartConstructor {
 				// What are the equivalent columns on the existing temp table
 				// that correspond to the key on the previous table?
 				List sourceDSKey = table.getDataSetColumns(sourceKey
-						.getColumns()); // FIXME
+						.getColumns()); 
 				// What are the columns we should merge from this new table?
 				List targetDSCols = table.getDataSetColumns(relation);
 				// If targetTable is in a group schema that is not the
@@ -1469,7 +1469,7 @@ public interface MartConstructor {
 							.hasNext();) {
 						DataSetColumn candidate = (DataSetColumn) i.next();
 						DataSetColumn test = candidate;
-						if (test instanceof InheritedColumn) // FIXME
+						if (test instanceof InheritedColumn)
 							test = ((InheritedColumn) candidate)
 									.getInheritedColumn();
 						if (!(test instanceof WrappedColumn))

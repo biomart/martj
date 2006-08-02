@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.view.gui;
+package org.biomart.builder.resources;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -37,7 +38,7 @@ import org.biomart.builder.resources.Resources;
  * Manages the on-disk cache of user settings.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 31st July 2006
+ * @version 0.1.2, 2nd August 2006
  * @since 0.1
  */
 public class SettingsCache {
@@ -209,7 +210,7 @@ public class SettingsCache {
 	 */
 	public static Collection getHistoryNamesForClass(Class clazz) {
 		Map map = (Map) classCache.get(clazz);
-		return map == null ? null : map.keySet();
+		return map == null ? Collections.EMPTY_SET : map.keySet();
 	}
 
 	/**

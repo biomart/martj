@@ -51,6 +51,7 @@ import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.Resources;
+import org.biomart.builder.resources.SettingsCache;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.AllSchemasDiagram;
 import org.biomart.builder.view.gui.diagrams.Diagram;

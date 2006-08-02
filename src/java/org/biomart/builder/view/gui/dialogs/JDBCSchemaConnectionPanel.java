@@ -51,7 +51,7 @@ import org.biomart.builder.controller.JDBCSchema;
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.resources.Resources;
-import org.biomart.builder.view.gui.SettingsCache;
+import org.biomart.builder.resources.SettingsCache;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
@@ -62,7 +62,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * {@link JDBCSchema} implementation which represents the connection.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 31st July 2006
+ * @version 0.1.9, 2nd August 2006
  * @since 0.1
  */
 public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
