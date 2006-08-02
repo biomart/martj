@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
@@ -52,7 +51,7 @@ import org.biomart.builder.resources.Resources;
  * with keeping track of the tables a schema provides.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.16, 12th July 2006
+ * @version 0.1.17, 2nd August 2006
  * @since 0.1
  */
 public interface Schema extends Comparable, DataLink {
@@ -110,13 +109,10 @@ public interface Schema extends Comparable, DataLink {
 	 * 
 	 * @param table
 	 *            the table to add.
-	 * @throws AlreadyExistsException
-	 *             if another one with the same name already exists.
 	 * @throws AssociationException
 	 *             if the table doesn't claim that it belongs to this schema.
 	 */
-	public void addTable(Table table) throws AlreadyExistsException,
-			AssociationException;
+	public void addTable(Table table) throws AssociationException;
 
 	/**
 	 * Returns all the tables this schema provides. The set returned may be
@@ -146,11 +142,9 @@ public interface Schema extends Comparable, DataLink {
 	 *            the old name of the table.
 	 * @param newName
 	 *            the new name of the table.
-	 * @throws AlreadyExistsException
-	 *             if the new name has already been used elsewhere.
+	 * @return the new name of the table. It may be different!
 	 */
-	public void changeTableMapKey(String oldName, String newName)
-			throws AlreadyExistsException;
+	public String changeTableMapKey(String oldName, String newName);
 
 	/**
 	 * Returns a collection of all the keys in this schema which have relations
@@ -558,19 +552,19 @@ public interface Schema extends Comparable, DataLink {
 
 		public void synchroniseKeys() throws SQLException, BuilderException {
 		}
-		
-		public void addTable(Table table) throws AlreadyExistsException,
-				AssociationException {
+
+		public void addTable(Table table) throws AssociationException {
 			// Check the table belongs to us, and has a unique name.
 			if (!table.getSchema().equals(this))
 				throw new AssociationException(Resources
 						.get("tableSchemaMismatch"));
-			if (this.tables.containsKey(table.getName()))
-				throw new AlreadyExistsException(Resources.get("tableExists"),
-						table.getName());
-
+			String name = table.getName();
+			String baseName = name;
+			for (int i = 1; this.tables.containsKey(name); name = baseName
+					+ "_" + i)
+				;
 			// Add the table.
-			this.tables.put(table.getName(), table);
+			this.tables.put(name, table);
 		}
 
 		public Collection getTables() {
@@ -581,21 +575,19 @@ public interface Schema extends Comparable, DataLink {
 			return (Table) this.tables.get(name);
 		}
 
-		public void changeTableMapKey(String oldName, String newName)
-				throws AlreadyExistsException {
+		public String changeTableMapKey(String oldName, String newName) {
 			// If the names are the same, do nothing.
 			if (oldName.equals(newName))
-				return;
-
-			// Refuse to do it if the new name has been used already.
-			if (this.tables.containsKey(newName))
-				throw new AlreadyExistsException(Resources.get("tableExists"),
-						newName);
-
+				return newName;
+			String baseName = newName;
+			for (int i = 1; this.tables.containsKey(newName); newName = baseName
+					+ "_" + i)
+				;
 			// Update our mapping but don't rename the columns themselves.
 			Table tbl = (Table) this.tables.get(oldName);
 			this.tables.put(newName, tbl);
 			this.tables.remove(oldName);
+			return newName;
 		}
 
 		public Collection getExternalKeys() {

@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.biomart.builder.controller.dialects.DatabaseDialect;
-import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.model.ComponentStatus;
@@ -63,7 +62,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.31, 28th July 2006
+ * @version 0.1.32, 2nd August 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -141,12 +140,10 @@ public class MartBuilderUtils {
 	 *            whether this column requires a group-by statement. If it does,
 	 *            the group-by columns required will be worked out
 	 *            automatically.
-	 * @throws AlreadyExistsException
-	 *             if the chosen column name already exists.
 	 */
 	public static void addExpressionColumn(DataSetTable table,
 			String columnName, Map columnAliases, String expression,
-			boolean groupBy) throws AlreadyExistsException {
+			boolean groupBy) {
 		ExpressionColumn column = new ExpressionColumn(columnName, table);
 		column.getAliases().putAll(columnAliases);
 		column.setExpression(expression);
@@ -168,8 +165,7 @@ public class MartBuilderUtils {
 	 *            automatically.
 	 */
 	public static void modifyExpressionColumn(ExpressionColumn column,
-			Map columnAliases, String expression, boolean groupBy)
-			throws AlreadyExistsException {
+			Map columnAliases, String expression, boolean groupBy) {
 		column.getAliases().clear();
 		column.getAliases().putAll(columnAliases);
 		column.setExpression(expression);
@@ -239,14 +235,8 @@ public class MartBuilderUtils {
 	 * @param newName
 	 *            the new name to give the dataset. If it is the same as the old
 	 *            name, no action is taken.
-	 * @throws AlreadyExistsException
-	 *             if the new name has already been used by another dataset in
-	 *             this mart.
-	 * @throws AssociationException
-	 *             if the dataset is not part of this mart.
 	 */
-	public static void renameDataSet(Mart mart, DataSet dataset, String newName)
-			throws AlreadyExistsException, AssociationException {
+	public static void renameDataSet(Mart mart, DataSet dataset, String newName) {
 		mart.renameDataSet(dataset, newName);
 	}
 
@@ -260,8 +250,6 @@ public class MartBuilderUtils {
 	 * @param tables
 	 *            the tables to include in the set of suggested datasets.
 	 * @return the set of datasets, which will always have at least one member.
-	 * @throws AlreadyExistsException
-	 *             Should never happen.
 	 * @throws AssociationException
 	 *             if the specified table is not part of the mart given.
 	 * @throws SQLException
@@ -271,8 +259,7 @@ public class MartBuilderUtils {
 	 *             if synchronisation fails.
 	 */
 	public static Collection suggestDataSets(Mart mart, Collection tables)
-			throws SQLException, AssociationException, AlreadyExistsException,
-			BuilderException {
+			throws SQLException, AssociationException, BuilderException {
 		return mart.suggestDataSets(tables);
 	}
 
@@ -296,8 +283,6 @@ public class MartBuilderUtils {
 	 * @param columns
 	 *            the columns to search across.
 	 * @return the resulting set of datasets.
-	 * @throws AlreadyExistsException
-	 *             Should never happen.
 	 * @throws AssociationException
 	 *             if the specified table is not part of the mart given.
 	 * @throws SQLException
@@ -308,7 +293,7 @@ public class MartBuilderUtils {
 	 */
 	public static Collection suggestInvisibleDataSets(Mart mart,
 			DataSet dataset, Collection columns) throws AssociationException,
-			AlreadyExistsException, BuilderException, SQLException {
+			BuilderException, SQLException {
 		return mart.suggestInvisibleDataSets(dataset, columns);
 	}
 
@@ -319,11 +304,8 @@ public class MartBuilderUtils {
 	 *            the mart to add the schema to.
 	 * @param schema
 	 *            the schema to add to the mart.
-	 * @throws AlreadyExistsException
-	 *             if a schema with that name already exists in this mart.
 	 */
-	public static void addSchemaToMart(Mart mart, Schema schema)
-			throws AlreadyExistsException {
+	public static void addSchemaToMart(Mart mart, Schema schema) {
 		mart.addSchema(schema);
 	}
 
@@ -350,13 +332,8 @@ public class MartBuilderUtils {
 	 *            the schema to rename.
 	 * @param newName
 	 *            the new name to give the schema.
-	 * @throws AlreadyExistsException
-	 *             if another schema in this mart already has the new name.
-	 * @throws AssociationException
-	 *             if the schema is not part of this mart.
 	 */
-	public static void renameSchema(Mart mart, Schema schema, String newName)
-			throws AlreadyExistsException, AssociationException {
+	public static void renameSchema(Mart mart, Schema schema, String newName) {
 		mart.renameSchema(schema, newName);
 	}
 
@@ -470,10 +447,6 @@ public class MartBuilderUtils {
 	 * @return the group that the schema was added to.
 	 * @throws AssociationException
 	 *             if the schema is not part of the mart specified.
-	 * @throws AlreadyExistsException
-	 *             if a schema already exists in that group with the same name,
-	 *             or if a schema already exists in the mart with the same name
-	 *             as the group.
 	 * @throws BuilderException
 	 *             if there was any logical problem constructing a new group to
 	 *             place the schema in.
@@ -483,8 +456,8 @@ public class MartBuilderUtils {
 	 *             added schema.
 	 */
 	public static SchemaGroup addSchemaToSchemaGroup(Mart mart, Schema schema,
-			String groupName) throws AssociationException,
-			AlreadyExistsException, BuilderException, SQLException {
+			String groupName) throws AssociationException, BuilderException,
+			SQLException {
 		SchemaGroup schemaGroup = (SchemaGroup) mart.getSchemaByName(groupName);
 		if (schemaGroup == null || !(schemaGroup instanceof SchemaGroup)) {
 			schemaGroup = new GenericSchemaGroup(groupName);
@@ -514,9 +487,6 @@ public class MartBuilderUtils {
 	 * @throws AssociationException
 	 *             if the schema is not part of the group, or the group is not
 	 *             part of the mart.
-	 * @throws AlreadyExistsException
-	 *             if another schema with the same name as the extracted one
-	 *             already exists in the mart.
 	 * @throws BuilderException
 	 *             if there was any logical problem during synchronisation of
 	 *             the group after removal of the schema.
@@ -526,7 +496,7 @@ public class MartBuilderUtils {
 	 */
 	public static void removeSchemaFromSchemaGroup(Mart mart, Schema schema,
 			SchemaGroup schemaGroup) throws AssociationException,
-			AlreadyExistsException, BuilderException, SQLException {
+			BuilderException, SQLException {
 		schemaGroup.removeSchema(schema);
 		if (schemaGroup.getSchemas().size() == 0) {
 			schemaGroup.replicateContents(schema);
@@ -823,11 +793,8 @@ public class MartBuilderUtils {
 	 * @param newName
 	 *            the new name to give it. If the name is the same as the
 	 *            existing one, no action is taken.
-	 * @throws AlreadyExistsException
-	 *             if the dataset already has another table with that name.
 	 */
-	public static void renameDataSetTable(DataSetTable tbl, String newName)
-			throws AlreadyExistsException {
+	public static void renameDataSetTable(DataSetTable tbl, String newName) {
 		tbl.setName(newName);
 	}
 
@@ -840,12 +807,8 @@ public class MartBuilderUtils {
 	 * @param newName
 	 *            the new name to give it. If the name is the same as the
 	 *            existing one, no action is taken.
-	 * @throws AlreadyExistsException
-	 *             if the dataset table already has another column with that
-	 *             name.
 	 */
-	public static void renameDataSetColumn(DataSetColumn col, String newName)
-			throws AlreadyExistsException {
+	public static void renameDataSetColumn(DataSetColumn col, String newName) {
 		// If the new name is the same as the old, ignore the request.
 		if (newName.equals(col.getName()))
 			return;
@@ -887,9 +850,9 @@ public class MartBuilderUtils {
 				// Rename both ends using recursion. This works because this
 				// method skips the rename process if the names already match.
 				renameDataSetColumn((DataSetColumn) r.getFirstKey()
-						.getColumns().get(colIndex), newName);
+						.getColumns().get(colIndex), col.getName());
 				renameDataSetColumn((DataSetColumn) r.getSecondKey()
-						.getColumns().get(colIndex), newName);
+						.getColumns().get(colIndex), col.getName());
 			}
 		}
 	}
@@ -1174,11 +1137,9 @@ public class MartBuilderUtils {
 	 * @param newName
 	 *            the name to give the copy of the schema.
 	 * @return the copy of the schema.
-	 * @throws AlreadyExistsException
-	 *             if another schema with that name already exists.
 	 */
 	public static Schema replicateSchema(Mart mart, Schema schema,
-			String newName) throws AlreadyExistsException {
+			String newName) {
 		Schema newSchema = schema.replicate(newName);
 		mart.addSchema(newSchema);
 		return newSchema;
@@ -1196,11 +1157,9 @@ public class MartBuilderUtils {
 	 * @param newName
 	 *            the name to give the copy of the dataset.
 	 * @return the copy of the dataset.
-	 * @throws AlreadyExistsException
-	 *             if another dataset with that name already exists.
 	 */
 	public static DataSet replicateDataSet(Mart mart, DataSet dataset,
-			String newName) throws AlreadyExistsException {
+			String newName) {
 		DataSet newDataSet = (DataSet) dataset.replicate(newName);
 		return newDataSet;
 	}

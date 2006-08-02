@@ -63,7 +63,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.WindowContext;
  * and relations not involved directly in this dataset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 28th July 2006
+ * @version 0.1.12, 2nd August 2006
  * @since 0.1
  */
 public class ExplainDataSetDialog extends JDialog {
@@ -259,7 +259,7 @@ public class ExplainDataSetDialog extends JDialog {
 			List includeCols = new ArrayList();
 			for (Iterator j = this.dsTable.getColumns().iterator(); j.hasNext();) {
 				Column col = (Column) j.next();
-				if (col instanceof InheritedColumn) 
+				if (col instanceof InheritedColumn)
 					includeCols.add(col);
 			}
 			diagram = new ExplainTransformationDiagram(this.martTab,
@@ -380,8 +380,8 @@ public class ExplainDataSetDialog extends JDialog {
 	public static void showTableExplanation(MartTab martTab, DataSetTable table) {
 		ExplainDataSetDialog dialog = new ExplainDataSetDialog(martTab, table);
 		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
-		martTab.getDataSetTabSet().setCurrentExplanationDialog(dialog);
+		martTab.getDataSetTabSet().addCurrentExplanationDialog(dialog);
 		dialog.show();
-		martTab.getDataSetTabSet().setCurrentExplanationDialog(null);
+		martTab.getDataSetTabSet().removeCurrentExplanationDialog(dialog);
 	}
 }

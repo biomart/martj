@@ -19,12 +19,11 @@
 package org.biomart.builder.model;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
-import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
@@ -47,7 +46,7 @@ import org.biomart.builder.resources.Resources;
  * structure in the first member schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 12th July 2006
+ * @version 0.1.10, 2nd August 2006
  * @since 0.1
  */
 public interface SchemaGroup extends Schema {
@@ -67,13 +66,10 @@ public interface SchemaGroup extends Schema {
 	 * 
 	 * @param schema
 	 *            the {@link Schema to add as a new partition.
-	 * @throws AlreadyExistsException
-	 *             if the schema has already been added here.
 	 * @throws AssociationException
 	 *             if the schema to be added is a schema group.
 	 */
-	public void addSchema(Schema schema) throws AlreadyExistsException,
-			AssociationException;
+	public void addSchema(Schema schema) throws AssociationException;
 
 	/**
 	 * Removes the schema from this group.
@@ -89,7 +85,7 @@ public interface SchemaGroup extends Schema {
 	 */
 	public class GenericSchemaGroup extends GenericSchema implements
 			SchemaGroup {
-		private final List schemas = new ArrayList();
+		private final Set schemas = new HashSet();
 
 		/**
 		 * The constructor creates a schema group with the given name.
@@ -120,19 +116,16 @@ public interface SchemaGroup extends Schema {
 			}
 			// Update our own list by using replication.
 			if (!this.schemas.isEmpty())
-				((Schema) this.schemas.get(0)).replicateContents(this);
+				((Schema) this.schemas.iterator().next())
+						.replicateContents(this);
 		}
 
 		public Collection getSchemas() {
 			return this.schemas;
 		}
 
-		public void addSchema(Schema schema) throws AlreadyExistsException,
-				AssociationException {
-			// Check the schema doesn't already exist, and isn't a group itself.
-			if (this.schemas.contains(schema))
-				throw new AlreadyExistsException(Resources.get("schemaExists"),
-						schema.getName());
+		public void addSchema(Schema schema) throws AssociationException {
+			// Check the schema isn't a group itself.
 			if (schema instanceof SchemaGroup)
 				throw new AssociationException(Resources.get("nestedSchema"));
 

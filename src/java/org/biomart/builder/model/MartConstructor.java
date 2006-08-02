@@ -894,9 +894,15 @@ public interface MartConstructor {
 										.getColumns(), hasColumnName);
 						actionGraph.addActionWithParent(optimiseUpd,
 								optimiseAdd);
-						// Add final update to list of actions to wait for
+						// Index the has-column.
+						MartConstructorAction optimiseInd = new Index(this.datasetSchemaName, hasTable
+								.getDataSetTable().getName(), null,
+								hasTable.getTempTableName(), Collections.singletonList(hasColumnName));
+						actionGraph.addActionWithParent(optimiseInd,
+								optimiseUpd);
+						// Add final index to list of actions to wait for
 						// before doing renames later.
-						optActions.add(optimiseUpd);
+						optActions.add(optimiseInd);
 					}
 				}
 				tables.addAll(hasTables);

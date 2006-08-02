@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
@@ -61,7 +60,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.42, 1st August 2006
+ * @version 0.1.43, 2nd August 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -114,12 +113,9 @@ public class DataSet extends GenericSchema {
 	 * @throws AssociationException
 	 *             if the central table does not belong to any of the schema
 	 *             objects in the mart.
-	 * @throws AlreadyExistsException
-	 *             Should never happen. If it does, it was thrown by
-	 *             {@link Mart#addDataSet(DataSet));
 	 */
 	public DataSet(Mart mart, Table centralTable, String name)
-			throws AssociationException, AlreadyExistsException {
+			throws AssociationException {
 		// Super first, to set the name.
 		super(name);
 
@@ -132,14 +128,6 @@ public class DataSet extends GenericSchema {
 		this.mart = mart;
 		this.centralTable = centralTable;
 		this.optimiser = DataSetOptimiserType.NONE;
-
-		// Rename ourselves if the name clashes.
-		String newName = name;
-		int suffix = 1;
-		while (mart.getDataSetByName(newName) != null)
-			newName = name + "_" + (suffix++);
-		if (!newName.equals(name))
-			this.setName(newName);
 
 		// Add ourselves to the mart.
 		mart.addDataSet(this);
@@ -1122,22 +1110,18 @@ public class DataSet extends GenericSchema {
 						&& !type.equals(DataSetTableType.MAIN_SUBCLASS))
 					continue;
 				// Otherwise, create a copy of the column.
-				try {
-					DataSetColumn dsTableCol;
-					if (parentDSCol instanceof InheritedColumn)
-						dsTableCol = new InheritedColumn(dsTable,
-								((InheritedColumn) parentDSCol)
-										.getInheritedColumn());
-					else
-						dsTableCol = new InheritedColumn(dsTable, parentDSCol);
-					// Add the column to the child's PK and FK, if it was in
-					// the parent PK only.
-					if (parentDSTablePK.getColumns().contains(parentDSCol)) {
-						dsTablePKCols.add(dsTableCol);
-						dsTableFKCols.add(dsTableCol);
-					}
-				} catch (AlreadyExistsException e) {
-					throw new MartBuilderInternalError(e);
+				DataSetColumn dsTableCol;
+				if (parentDSCol instanceof InheritedColumn)
+					dsTableCol = new InheritedColumn(dsTable,
+							((InheritedColumn) parentDSCol)
+									.getInheritedColumn());
+				else
+					dsTableCol = new InheritedColumn(dsTable, parentDSCol);
+				// Add the column to the child's PK and FK, if it was in
+				// the parent PK only.
+				if (parentDSTablePK.getColumns().contains(parentDSCol)) {
+					dsTablePKCols.add(dsTableCol);
+					dsTableFKCols.add(dsTableCol);
 				}
 			}
 
@@ -1212,10 +1196,8 @@ public class DataSet extends GenericSchema {
 		try {
 			for (Iterator i = dsTablePKCols.iterator(); i.hasNext();) {
 				DataSetColumn col = (DataSetColumn) i.next();
-				// FIXME : Work out how to append '_key' to column names
-				// without causing duplicate column errors. 
-				//if (!col.getName().endsWith(Resources.get("pkSuffix")))
-				//	col.setName(col.getName() + Resources.get("pkSuffix"));
+				if (!col.getName().endsWith(Resources.get("pkSuffix")))
+					col.setName(col.getName() + Resources.get("pkSuffix"));
 			}
 			dsTable.setPrimaryKey(new GenericPrimaryKey(dsTablePKCols));
 		} catch (Throwable t) {
@@ -1401,8 +1383,7 @@ public class DataSet extends GenericSchema {
 		return this.optimiser;
 	}
 
-	public void addTable(Table table) throws AlreadyExistsException,
-			AssociationException {
+	public void addTable(Table table) throws AssociationException {
 		// We only accept dataset tables.
 		if (!(table instanceof DataSetTable))
 			throw new AssociationException(Resources.get("tableNotDSTable"));
@@ -1692,15 +1673,11 @@ public class DataSet extends GenericSchema {
 		 * @param relation
 		 *            the relation that controls the existence of this table.
 		 *            Can be null.
-		 * @throws AlreadyExistsException
-		 *             this should never actually happen, but is required as the
-		 *             super constructor throws it.
 		 */
 		public DataSetTable(String name, DataSet ds, DataSetTableType type,
-				Table underlyingTable, Relation sourceRelation)
-				throws AlreadyExistsException {
+				Table underlyingTable, Relation sourceRelation) {
 			// Super constructor first, using an alias to prevent duplicates.
-			super(generateAlias(name, ds), ds);
+			super(name, ds);
 
 			// Remember the other settings.
 			this.underlyingTable = underlyingTable;
@@ -1717,27 +1694,6 @@ public class DataSet extends GenericSchema {
 		 */
 		public Table getUnderlyingTable() {
 			return this.underlyingTable;
-		}
-
-		/**
-		 * Internal method that generates a safe alias/name for a table. The
-		 * first try is always the original table name, followed by attempts
-		 * with an underscore and a sequence number appended.
-		 * 
-		 * @param name
-		 *            the first name to try.
-		 * @param ds
-		 *            the dataset that this table is being added to.
-		 * @return the resulting safe alias/name.
-		 */
-		protected static String generateAlias(String name, DataSet ds) {
-			String alias = name;
-			int aliasNumber = 2;
-			while (ds.getTableByName(alias) != null) {
-				// Alias is original name appended with _2, _3, _4 etc.
-				alias = name + "_" + (aliasNumber++);
-			}
-			return alias;
 		}
 
 		/**
@@ -1807,8 +1763,7 @@ public class DataSet extends GenericSchema {
 			return this.sourceRelation;
 		}
 
-		public void addColumn(Column column) throws AlreadyExistsException,
-				AssociationException {
+		public void addColumn(Column column) throws AssociationException {
 			// We only accept dataset columns.
 			if (!(column instanceof DataSetColumn))
 				throw new AssociationException(Resources
@@ -1841,42 +1796,18 @@ public class DataSet extends GenericSchema {
 		 *            relation can be null in only one case - when the table is
 		 *            a {@link DataSetTableType#MAIN} table. It is also null for
 		 *            {@link SchemaNameColumn} instances.
-		 * @throws AlreadyExistsException
-		 *             inherited from the super constructor, but should never
-		 *             get thrown.
 		 */
 		public DataSetColumn(String name, DataSetTable dsTable,
-				Relation underlyingRelation) throws AlreadyExistsException {
+				Relation underlyingRelation) {
 			// Call the super constructor using the alias generator to
 			// ensure we have a unique name.
-			super(generateAlias(name, dsTable), dsTable);
+			super(name, dsTable);
 
 			// Remember the rest.
 			this.underlyingRelation = underlyingRelation;
 
 			// Set up default dependency.
 			this.dependency = false;
-		}
-
-		/**
-		 * Internal method that generates a safe alias/name for a column. The
-		 * first try is always the original column name, followed by attempts
-		 * with an underscore and a sequence number appended.
-		 * 
-		 * @param name
-		 *            the first name to try.
-		 * @param dsTable
-		 *            the dataset table that this column is being added to.
-		 * @return the result.
-		 */
-		protected static String generateAlias(String name, DataSetTable dsTable) {
-			String alias = name;
-			int aliasNumber = 2;
-			while (dsTable.getColumnByName(alias) != null) {
-				// Alias is original name appended with _2, _3, _4 etc.
-				alias = name + "_" + (aliasNumber++);
-			}
-			return alias;
 		}
 
 		/**
@@ -1934,12 +1865,9 @@ public class DataSet extends GenericSchema {
 			 *            the relation that provided this column. The underlying
 			 *            relation can be null in only one case - when the table
 			 *            is a {@link DataSetTableType#MAIN} table.
-			 * @throws AlreadyExistsException
-			 *             inherited from the super constructor, but should
-			 *             never get thrown.
 			 */
 			public WrappedColumn(Column column, DataSetTable dsTable,
-					Relation underlyingRelation) throws AlreadyExistsException {
+					Relation underlyingRelation) {
 				// Call the parent which will use the alias generator for us.
 				super(column.getName(), dsTable, underlyingRelation);
 
@@ -1973,14 +1901,10 @@ public class DataSet extends GenericSchema {
 			 * @param dsTable
 			 *            the dataset table to add the wrapped column to.
 			 * @param underlyingRelation
-			 *            the concat-only relation that provided this column. *
-			 * @throws AlreadyExistsException
-			 *             inherited from the super constructor, but should
-			 *             never get thrown.
+			 *            the concat-only relation that provided this column.
 			 */
 			public ConcatRelationColumn(String name, DataSetTable dsTable,
-					Relation concatRelation) throws AlreadyExistsException,
-					AssociationException {
+					Relation concatRelation) throws AssociationException {
 				// Super first, which will do the alias generation for us.
 				super(name, dsTable, concatRelation);
 
@@ -2005,12 +1929,8 @@ public class DataSet extends GenericSchema {
 			 *            the name to give this column.
 			 * @param dsTable
 			 *            the dataset table to add the wrapped column to.
-			 * @throws AlreadyExistsException
-			 *             inherited from the super constructor, but should
-			 *             never get thrown.
 			 */
-			public SchemaNameColumn(String name, DataSetTable dsTable)
-					throws AlreadyExistsException {
+			public SchemaNameColumn(String name, DataSetTable dsTable) {
 				// The super constructor will make the alias for us.
 				super(name, dsTable, null);
 			}
@@ -2031,12 +1951,8 @@ public class DataSet extends GenericSchema {
 			 *            the dataset table to add the wrapped column to.
 			 * @param dsColumn
 			 *            the column to inherit.
-			 * @throws AlreadyExistsException
-			 *             inherited from the super constructor, but should
-			 *             never get thrown.
 			 */
-			public InheritedColumn(DataSetTable dsTable, DataSetColumn dsColumn)
-					throws AlreadyExistsException {
+			public InheritedColumn(DataSetTable dsTable, DataSetColumn dsColumn) {
 				// The super constructor will make the alias for us.
 				super(dsColumn.getName(), dsTable, null);
 				// Remember the inherited column.
@@ -2078,12 +1994,8 @@ public class DataSet extends GenericSchema {
 			 *            the name to give this column.
 			 * @param dsTable
 			 *            the dataset table to add the wrapped column to.
-			 * @throws AlreadyExistsException
-			 *             inherited from the super constructor, but should
-			 *             never get thrown.
 			 */
-			public ExpressionColumn(String name, DataSetTable dsTable)
-					throws AlreadyExistsException {
+			public ExpressionColumn(String name, DataSetTable dsTable) {
 				// The super constructor will make the alias for us.
 				super(name, dsTable, null);
 

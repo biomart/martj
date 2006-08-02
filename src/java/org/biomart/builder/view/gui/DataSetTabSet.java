@@ -81,7 +81,7 @@ import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.36, 28th July 2006
+ * @version 0.1.37, 2nd August 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -92,7 +92,7 @@ public class DataSetTabSet extends JTabbedPane {
 	// Use double-list to prevent problems with hashcodes changing.
 	private List[] datasetToTab = new List[] { new ArrayList(), new ArrayList() };
 
-	private ExplainDataSetDialog currentExplanationDialog;
+	private List currentExplanationDialogs = new ArrayList();
 
 	private AllDataSetsDiagram allDataSetsDiagram;
 
@@ -281,8 +281,9 @@ public class DataSetTabSet extends JTabbedPane {
 	 * currently visible explanation dialog, if any.
 	 */
 	public void repaintExplanationDialog() {
-		if (this.currentExplanationDialog != null)
-			this.currentExplanationDialog.repaintDialog();
+		for (Iterator i = this.currentExplanationDialogs.iterator(); i
+				.hasNext();)
+			((ExplainDataSetDialog) i.next()).repaintDialog();
 	}
 
 	/**
@@ -290,8 +291,9 @@ public class DataSetTabSet extends JTabbedPane {
 	 * the currently visible explanation dialog, if any.
 	 */
 	public void recalculateExplanationDialog() {
-		if (this.currentExplanationDialog != null)
-			this.currentExplanationDialog.recalculateDialog();
+		for (Iterator i = this.currentExplanationDialogs.iterator(); i
+				.hasNext();)
+			((ExplainDataSetDialog) i.next()).recalculateDialog();
 	}
 
 	/**
@@ -462,38 +464,34 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset to rename.
 	 */
 	public void requestRenameDataSet(DataSet dataset) {
-		try {
-			// Ask user for the new name.
-			String newName = this.askUserForName(Resources
-					.get("requestDataSetName"), dataset.getName());
+		// Ask user for the new name.
+		String newName = this.askUserForName(Resources
+				.get("requestDataSetName"), dataset.getName());
 
-			// If the new name is null (user cancelled), or has
-			// not changed, don't rename it.
-			if (newName == null || newName.equals(dataset.getName()))
-				return;
+		// If the new name is null (user cancelled), or has
+		// not changed, don't rename it.
+		if (newName == null || newName.equals(dataset.getName()))
+			return;
 
-			// Work out which tab the dataset is in.
-			int idx = this.indexOfTab(dataset.getName());
+		// Work out which tab the dataset is in.
+		int idx = this.indexOfTab(dataset.getName());
 
-			// Rename the dataset.
-			MartBuilderUtils.renameDataSet(this.martTab.getMart(), dataset,
-					newName);
+		// Rename the dataset.
+		MartBuilderUtils
+				.renameDataSet(this.martTab.getMart(), dataset, newName);
 
-			// Rename the tab displaying it.
-			this.setTitleAt(idx, dataset.getName());
+		// Rename the tab displaying it.
+		this.setTitleAt(idx, dataset.getName());
 
-			// Update the overview diagram. (Recalc not repaint
-			// as the name will have changed the size of components).
-			this.recalculateOverviewDiagram();
+		// Update the overview diagram. (Recalc not repaint
+		// as the name will have changed the size of components).
+		this.recalculateOverviewDiagram();
 
-			// And update the explanation diagram.
-			this.recalculateExplanationDialog();
+		// And update the explanation diagram.
+		this.recalculateExplanationDialog();
 
-			// Set the tabset as modified.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
-		}
+		// Set the tabset as modified.
+		this.martTab.getMartTabSet().setModifiedStatus(true);
 	}
 
 	/**
@@ -540,32 +538,28 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the column to rename.
 	 */
 	public void requestRenameDataSetColumn(DataSetColumn dsColumn) {
-		try {
-			// Ask user for the new name.
-			String newName = this.askUserForName(Resources
-					.get("requestDataSetColumnName"), dsColumn.getName());
+		// Ask user for the new name.
+		String newName = this.askUserForName(Resources
+				.get("requestDataSetColumnName"), dsColumn.getName());
 
-			// If the new name is null (user cancelled), or has
-			// not changed, don't rename it.
-			if (newName == null || newName.equals(dsColumn.getName()))
-				return;
+		// If the new name is null (user cancelled), or has
+		// not changed, don't rename it.
+		if (newName == null || newName.equals(dsColumn.getName()))
+			return;
 
-			// Rename the dataset.
-			MartBuilderUtils.renameDataSetColumn(dsColumn, newName);
+		// Rename the dataset.
+		MartBuilderUtils.renameDataSetColumn(dsColumn, newName);
 
-			// Recalculate the dataset diagram as the column name will have
-			// caused the column and the table to resize themselves.
-			this.recalculateDataSetDiagram((DataSet) dsColumn.getTable()
-					.getSchema());
+		// Recalculate the dataset diagram as the column name will have
+		// caused the column and the table to resize themselves.
+		this.recalculateDataSetDiagram((DataSet) dsColumn.getTable()
+				.getSchema());
 
-			// Recalc the explanation too.
-			this.recalculateExplanationDialog();
+		// Recalc the explanation too.
+		this.recalculateExplanationDialog();
 
-			// Set the tabset as modified.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
-		}
+		// Set the tabset as modified.
+		this.martTab.getMartTabSet().setModifiedStatus(true);
 	}
 
 	/**
@@ -577,31 +571,27 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the table to rename.
 	 */
 	public void requestRenameDataSetTable(DataSetTable dsTable) {
-		try {
-			// Ask user for the new name.
-			String newName = this.askUserForName(Resources
-					.get("requestDataSetTableName"), dsTable.getName());
+		// Ask user for the new name.
+		String newName = this.askUserForName(Resources
+				.get("requestDataSetTableName"), dsTable.getName());
 
-			// If the new name is null (user cancelled), or has
-			// not changed, don't rename it.
-			if (newName == null || newName.equals(dsTable.getName()))
-				return;
+		// If the new name is null (user cancelled), or has
+		// not changed, don't rename it.
+		if (newName == null || newName.equals(dsTable.getName()))
+			return;
 
-			// Rename the dataset.
-			MartBuilderUtils.renameDataSetTable(dsTable, newName);
+		// Rename the dataset.
+		MartBuilderUtils.renameDataSetTable(dsTable, newName);
 
-			// Recalculate the dataset diagram as the table name will have
-			// caused the table to resize itself.
-			this.recalculateDataSetDiagram((DataSet) dsTable.getSchema());
+		// Recalculate the dataset diagram as the table name will have
+		// caused the table to resize itself.
+		this.recalculateDataSetDiagram((DataSet) dsTable.getSchema());
 
-			// Recalc the explanation diagram too.
-			this.recalculateExplanationDialog();
+		// Recalc the explanation diagram too.
+		this.recalculateExplanationDialog();
 
-			// Set the tabset as modified.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
-		}
+		// Set the tabset as modified.
+		this.martTab.getMartTabSet().setModifiedStatus(true);
 	}
 
 	/**
@@ -1502,17 +1492,27 @@ public class DataSetTabSet extends JTabbedPane {
 
 	/**
 	 * This method is called by the {@link ExplainDataSetDialog} when it is
-	 * opened, and tells the dataset tabset about itself. This dialog is then
-	 * updated whenever the dataset window is updated. It is called again, with
-	 * a null value, when the dialog is closed.
+	 * opened. This dialog is then updated whenever the dataset window is
+	 * updated.
 	 * 
 	 * @param dialog
-	 *            the dialog being displayed by the current
-	 *            {@link ExplainDataSetDialog}, or null if none is currently
-	 *            being displayed.
+	 *            the dialog being displayed by a current
+	 *            {@link ExplainDataSetDialog}.
 	 */
-	public void setCurrentExplanationDialog(ExplainDataSetDialog dialog) {
-		this.currentExplanationDialog = dialog;
+	public void addCurrentExplanationDialog(ExplainDataSetDialog dialog) {
+		this.currentExplanationDialogs.add(dialog);
+	}
+
+	/**
+	 * This method is called by the {@link ExplainDataSetDialog} when it is
+	 * closed.
+	 * 
+	 * @param dialog
+	 *            the dialog being closed by a current
+	 *            {@link ExplainDataSetDialog}.
+	 */
+	public void removeCurrentExplanationDialog(ExplainDataSetDialog dialog) {
+		this.currentExplanationDialogs.remove(dialog);
 	}
 
 	/**

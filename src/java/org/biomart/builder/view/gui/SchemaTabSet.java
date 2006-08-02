@@ -71,7 +71,7 @@ import org.biomart.builder.view.gui.dialogs.SchemaManagerDialog;
  * represented in each of the tabs has the same context applied.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.21, 27th July 2006
+ * @version 0.1.22, 2nd August 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -656,45 +656,41 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            schema is living.
 	 */
 	public void requestRenameSchema(Schema schema, Schema schemaGroup) {
-		try {
-			// Ask for a new name, suggesting the schema's existing name
-			// as the default response.
-			String newName = this.askUserForSchemaName(schema.getName());
+		// Ask for a new name, suggesting the schema's existing name
+		// as the default response.
+		String newName = this.askUserForSchemaName(schema.getName());
 
-			// If they cancelled or entered the same name, ignore the request.
-			if (newName == null || newName.equals(schema.getName()))
-				return;
+		// If they cancelled or entered the same name, ignore the request.
+		if (newName == null || newName.equals(schema.getName()))
+			return;
 
-			// Was the schema in a group? Rename it within the group.
-			if (schemaGroup != null)
-				// Rename it within the group.
-				MartBuilderUtils.renameSchemaInSchemaGroup(schema, newName);
-			else {
-				// Work out which tab the schema is in.
-				int idx = this.indexOfTab(schema.getName());
+		// Was the schema in a group? Rename it within the group.
+		if (schemaGroup != null)
+			// Rename it within the group.
+			MartBuilderUtils.renameSchemaInSchemaGroup(schema, newName);
+		else {
+			// Work out which tab the schema is in.
+			int idx = this.indexOfTab(schema.getName());
 
-				// Rename the schema.
-				MartBuilderUtils.renameSchema(this.martTab.getMart(), schema,
-						newName);
+			// Rename the schema.
+			MartBuilderUtils.renameSchema(this.martTab.getMart(), schema,
+					newName);
 
-				// Rename the tab displaying it.
-				this.setTitleAt(idx, schema.getName());
-			}
-
-			// As the schema name has changed, the all-schemas diagram needs
-			// to be recalculated, as the schema representations may have
-			// changed size owing to the new name. The individual schema
-			// and dataset org.biomart.builder.view.gui.diagrams will also need
-			// to be recalculated.
-			this.recalculateOverviewDiagram();
-			this.recalculateSchemaDiagram(schema);
-			this.martTab.getDataSetTabSet().recalculateAllDataSetDiagrams();
-
-			// Set the dataset tabset status to modified.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			// Rename the tab displaying it.
+			this.setTitleAt(idx, schema.getName());
 		}
+
+		// As the schema name has changed, the all-schemas diagram needs
+		// to be recalculated, as the schema representations may have
+		// changed size owing to the new name. The individual schema
+		// and dataset org.biomart.builder.view.gui.diagrams will also need
+		// to be recalculated.
+		this.recalculateOverviewDiagram();
+		this.recalculateSchemaDiagram(schema);
+		this.martTab.getDataSetTabSet().recalculateAllDataSetDiagrams();
+
+		// Set the dataset tabset status to modified.
+		this.martTab.getMartTabSet().setModifiedStatus(true);
 	}
 
 	/**

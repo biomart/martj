@@ -31,7 +31,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
@@ -43,7 +42,7 @@ import org.biomart.builder.resources.Resources;
  * mart. It also has zero or more datasets based around these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.21, 27th July 2006
+ * @version 0.1.22, 2nd August 2006
  * @since 0.1
  */
 public class Mart {
@@ -84,17 +83,16 @@ public class Mart {
 	 * 
 	 * @param schema
 	 *            the schema to add.
-	 * @throws AlreadyExistsException
-	 *             if the schema is already in this mart.
 	 */
-	public void addSchema(Schema schema) throws AlreadyExistsException {
-		// Check we don't have one by this name already.
-		if (this.schemas.containsKey(schema.getName()))
-			throw new AlreadyExistsException(Resources.get("schemaExists"),
-					schema.getName());
-
+	public void addSchema(Schema schema) {
+		String name = schema.getName();
+		String baseName = schema.getName();
+		// Check we don't have one by this name already. Alias if we do.
+		for (int i = 1; this.schemas.containsKey(name); name = baseName + "_"
+				+ i)
+			;
 		// Add it.
-		this.schemas.put(schema.getName(), schema);
+		this.schemas.put(name, schema);
 	}
 
 	/**
@@ -106,21 +104,13 @@ public class Mart {
 	 *            the schema to rename.
 	 * @param name
 	 *            the new name for it.
-	 * @throws AlreadyExistsException
-	 *             if the schema name is already in this mart.
-	 * @throws AssociationException
-	 *             if the schema does not belong to us.
 	 */
-	public void renameSchema(Schema schema, String name)
-			throws AlreadyExistsException, AssociationException {
-		// Check the schema belongs to us, and the new name has not
-		// already been used.
-		if (this.schemas.containsKey(name))
-			throw new AlreadyExistsException(Resources.get("schemaExists"),
-					schema.getName());
-		if (!this.schemas.containsValue(schema))
-			throw new AssociationException(Resources.get("schemaMartMismatch"));
-
+	public void renameSchema(Schema schema, String name) {
+		String baseName = name;
+		// Check we don't have one by this name already. Alias if we do.
+		for (int i = 1; this.datasets.containsKey(name); name = baseName + "_"
+				+ i)
+			;
 		// Rename it.
 		this.schemas.remove(schema.getName());
 		schema.setName(name);
@@ -173,15 +163,14 @@ public class Mart {
 	 * 
 	 * @param dataset
 	 *            the dataset to add.
-	 * @throws AlreadyExistsException
-	 *             if the dataset is already in this schema with the same name.
 	 */
-	public void addDataSet(DataSet dataset) throws AlreadyExistsException {
-		// Check the dataset name has not already been used.
-		if (this.datasets.containsKey(dataset.getName()))
-			throw new AlreadyExistsException(Resources.get("datasetExists"),
-					dataset.getName());
-
+	public void addDataSet(DataSet dataset) {
+		String name = dataset.getName();
+		String baseName = dataset.getName();
+		// Check we don't have one by this name already. Alias if we do.
+		for (int i = 1; this.datasets.containsKey(name); name = baseName + "_"
+				+ i)
+			;
 		// Add it.
 		this.datasets.put(dataset.getName(), dataset);
 	}
@@ -210,15 +199,11 @@ public class Mart {
 	 *             generating the dataset.
 	 * @throws AssociationException
 	 *             if any of the tables do not belong to this mart.
-	 * @throws AlreadyExistsException
-	 *             if a dataset already exists in this schema with the same name
-	 *             or any of the suffixed versions.
 	 * @throws BuilderException
 	 *             if synchronisation fails.
 	 */
 	public Collection suggestDataSets(Collection includeTables)
-			throws SQLException, AssociationException, AlreadyExistsException,
-			BuilderException {
+			throws SQLException, AssociationException, BuilderException {
 		// The root tables are all those which do not have a M:1 relation
 		// to another one of the initial set of tables. This means that
 		// extra datasets will be created for each table at the end of
@@ -262,17 +247,19 @@ public class Mart {
 		for (Iterator i = suggestedDataSets.iterator(); i.hasNext()
 				&& perfectDS == null;) {
 			DataSet candidate = (DataSet) i.next();
-			
-			// A candidate is a perfect match if the set of tables 
+
+			// A candidate is a perfect match if the set of tables
 			// covered by the subclass relations is the same as the
 			// original set of tables requested.
 			Set scTables = new HashSet();
-			for (Iterator j = candidate.getSubclassedRelations().iterator(); j.hasNext(); ) {
-				Relation r = (Relation)j.next();
+			for (Iterator j = candidate.getSubclassedRelations().iterator(); j
+					.hasNext();) {
+				Relation r = (Relation) j.next();
 				scTables.add(r.getFirstKey().getTable());
 				scTables.add(r.getSecondKey().getTable());
 			}
-			if (scTables.size()==includeTables.size() && scTables.containsAll(includeTables))
+			if (scTables.size() == includeTables.size()
+					&& scTables.containsAll(includeTables))
 				perfectDS = candidate;
 		}
 		if (perfectDS != null) {
@@ -429,15 +416,12 @@ public class Mart {
 	 *             generating the dataset.
 	 * @throws AssociationException
 	 *             if any of the tables do not belong to this mart.
-	 * @throws AlreadyExistsException
-	 *             if a dataset already exists in this schema with the same name
-	 *             or any of the suffixed versions.
 	 * @throws BuilderException
 	 *             if synchronisation fails.
 	 */
 	public Collection suggestInvisibleDataSets(DataSet dataset,
-			Collection columns) throws AssociationException,
-			AlreadyExistsException, SQLException, BuilderException {
+			Collection columns) throws AssociationException, SQLException,
+			BuilderException {
 		List invisibleDataSets = new ArrayList();
 		// Check the dataset belongs to us.
 		if (!this.datasets.values().contains(dataset))
@@ -478,7 +462,7 @@ public class Mart {
 		}
 		// Synchronise them all and make them all invisible.
 		for (Iterator i = invisibleDataSets.iterator(); i.hasNext();) {
-			DataSet ds = (DataSet)i.next();
+			DataSet ds = (DataSet) i.next();
 			ds.setInvisible(true);
 			ds.synchronise();
 		}
@@ -494,20 +478,13 @@ public class Mart {
 	 *            the dataset to rename.
 	 * @param name
 	 *            the new name for it.
-	 * @throws AlreadyExistsException
-	 *             if the dataset name is already in this mart.
-	 * @throws AssociationException
-	 *             if the dataset does not belong to us.
 	 */
-	public void renameDataSet(DataSet dataset, String name)
-			throws AlreadyExistsException, AssociationException {
-		// Check the dataset belongs to us and the new name is unique.
-		if (this.datasets.containsKey(name))
-			throw new AlreadyExistsException(Resources.get("datasetExists"),
-					dataset.getName());
-		if (!this.datasets.containsValue(dataset))
-			throw new AssociationException(Resources.get("datasetMartMismatch"));
-
+	public void renameDataSet(DataSet dataset, String name) {
+		String baseName = name;
+		// Check we don't have one by this name already. Alias if we do.
+		for (int i = 1; this.datasets.containsKey(name); name = baseName + "_"
+				+ i)
+			;
 		// Rename it.
 		this.datasets.remove(dataset.getName());
 		dataset.setName(name);

@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.biomart.builder.exceptions.AlreadyExistsException;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.model.Key.ForeignKey;
@@ -76,10 +75,8 @@ public interface Table extends Comparable {
 	 * 
 	 * @param newName
 	 *            the new name.
-	 * @throws AlreadyExistsException
-	 *             if a table with that name already exists in this schema.
 	 */
-	public void setName(String newName) throws AlreadyExistsException;
+	public void setName(String newName);
 
 	/**
 	 * Use this to rename a table's original name. Use with extreme caution. The
@@ -88,7 +85,7 @@ public interface Table extends Comparable {
 	 * @param newName
 	 *            the new original name to give the table.
 	 */
-	public void setOriginalName(String newName) throws AlreadyExistsException;
+	public void setOriginalName(String newName);
 
 	/**
 	 * Returns the schema for this table.
@@ -200,14 +197,11 @@ public interface Table extends Comparable {
 	 * 
 	 * @param column
 	 *            the column to add.
-	 * @throws AlreadyExistsException
-	 *             if the column name has already been used on this table.
 	 * @throws AssociationException
 	 *             if the table parameter of the column does not match this
 	 *             table.
 	 */
-	public void addColumn(Column column) throws AlreadyExistsException,
-			AssociationException;
+	public void addColumn(Column column) throws AssociationException;
 
 	/**
 	 * Attempts to remove a column from this table. If the column does not exist
@@ -229,11 +223,9 @@ public interface Table extends Comparable {
 	 *            the old name of the column.
 	 * @param newName
 	 *            the new name of the column.
-	 * @throws AlreadyExistsException
-	 *             if the new name has already been used elsewhere.
+	 * @return the new name of the column. Watch out, it may be different!
 	 */
-	public void changeColumnMapKey(String oldName, String newName)
-			throws AlreadyExistsException;
+	public String changeColumnMapKey(String oldName, String newName);
 
 	/**
 	 * Drops all columns on a table so that it can safely be dropped itself.
@@ -269,8 +261,7 @@ public interface Table extends Comparable {
 		 * @throws AlreadyExistsException
 		 *             if a table with that name already exists in the schema.
 		 */
-		public GenericTable(String name, Schema schema)
-				throws AlreadyExistsException {
+		public GenericTable(String name, Schema schema) {
 			// Remember the values.
 			this.name = name;
 			this.originalName = name;
@@ -293,12 +284,11 @@ public interface Table extends Comparable {
 			return this.originalName;
 		}
 
-		public void setOriginalName(String newName)
-				throws AlreadyExistsException {
+		public void setOriginalName(String newName) {
 			this.originalName = newName;
 		}
 
-		public void setName(String newName) throws AlreadyExistsException {
+		public void setName(String newName) {
 			// Sanity check.
 			if (newName.equals(this.name))
 				return; // Skip unnecessary change.
@@ -413,19 +403,17 @@ public interface Table extends Comparable {
 			return (Column) this.columns.get(name);
 		}
 
-		public void addColumn(Column column) throws AlreadyExistsException,
-				AssociationException {
+		public void addColumn(Column column) throws AssociationException {
 			// Refuse to do it if the column belongs to some other table.
 			if (column.getTable() != this)
 				throw new AssociationException(Resources
 						.get("columnTableMismatch"));
-
-			// Check there is no other column on this table with the same name.
 			String name = column.getName();
-			if (this.columns.containsKey(name))
-				throw new AlreadyExistsException(Resources.get("columnExists"),
-						name);
-
+			String baseName = name;
+			// Check there is no other column on this table with the same name.
+			for (int i = 1; this.columns.containsKey(name); name = baseName
+					+ "_" + i)
+				;
 			// Add it.
 			this.columns.put(name, column);
 		}
@@ -444,21 +432,20 @@ public interface Table extends Comparable {
 			this.columns.remove(column.getName());
 		}
 
-		public void changeColumnMapKey(String oldName, String newName)
-				throws AlreadyExistsException {
+		public String changeColumnMapKey(String oldName, String newName) {
 			// If the names are the same, do nothing.
 			if (oldName.equals(newName))
-				return;
-
-			// Refuse to do it if the new name has been used already.
-			if (this.columns.containsKey(newName))
-				throw new AlreadyExistsException(Resources.get("columnExists"),
-						newName);
-
+				return newName;
+			String baseName = name;
+			// Check there is no other column on this table with the same name.
+			for (int i = 1; this.columns.containsKey(newName); newName = baseName
+					+ "_" + i)
+				;
 			// Update our mapping but don't rename the columns themselves.
 			Column col = (Column) this.columns.get(oldName);
 			this.columns.put(newName, col);
 			this.columns.remove(oldName);
+			return newName;
 		}
 
 		public void destroy() {

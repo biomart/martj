@@ -70,7 +70,7 @@ import org.biomart.builder.resources.Resources;
  * Understands how to create SQL and DDL for an Oracle database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 31st July 2006
+ * @version 0.1.12, 2nd August 2006
  * @since 0.1
  */
 public class OracleDialect extends DatabaseDialect {
@@ -335,8 +335,14 @@ public class OracleDialect extends DatabaseDialect {
 		sb.append("create index " + schemaName + "." + tableName + "_I on "
 				+ schemaName + "." + tableName + "(");
 		for (Iterator i = action.getIndexColumns().iterator(); i.hasNext();) {
-			Column col = (Column) i.next();
-			sb.append(col.getName());
+			Object obj = i.next();
+			if (obj instanceof Column) {
+				Column col = (Column) obj;
+				sb.append(col.getName());
+			} else if (obj instanceof String) {
+				sb.append(obj);
+			} else
+				throw new MartBuilderInternalError();
 			if (i.hasNext())
 				sb.append(',');
 		}

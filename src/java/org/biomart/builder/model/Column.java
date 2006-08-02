@@ -18,7 +18,7 @@
 
 package org.biomart.builder.model;
 
-import org.biomart.builder.exceptions.AlreadyExistsException;
+import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
 
 /**
@@ -32,7 +32,7 @@ import org.biomart.builder.exceptions.MartBuilderInternalError;
  * name.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 27th June 2006
+ * @version 0.1.8, 2nd August 2006
  * @since 0.1
  */
 public interface Column extends Comparable {
@@ -59,7 +59,7 @@ public interface Column extends Comparable {
 	 * @param newName
 	 *            the new name to give the column.
 	 */
-	public void setName(String newName) throws AlreadyExistsException;
+	public void setName(String newName);
 
 	/**
 	 * Use this to rename a column's original name. Use with extreme caution.
@@ -68,7 +68,7 @@ public interface Column extends Comparable {
 	 * @param newName
 	 *            the new original name to give the column.
 	 */
-	public void setOriginalName(String newName) throws AlreadyExistsException;
+	public void setOriginalName(String newName);
 
 	/**
 	 * Retrieve the parent table of this column.
@@ -117,20 +117,18 @@ public interface Column extends Comparable {
 		 *             if it was unable to add the column to the parent table
 		 *             because a column with that name already exists.
 		 */
-		public GenericColumn(String name, Table table)
-				throws AlreadyExistsException {
+		public GenericColumn(String name, Table table) {
 			// Remember the values.
 			this.name = name;
 			this.originalName = name;
 			this.table = table;
 			this.nullable = false;
 
-			// Add it to the table - throws AssociationException and
-			// AlreadyExistsException
+			// Add it to the table - throws AssociationException.
 			try {
 				table.addColumn(this);
-			} catch (Throwable t) {
-				throw new MartBuilderInternalError(t);
+			} catch (AssociationException e) {
+				throw new MartBuilderInternalError(e);
 			}
 		}
 
@@ -146,13 +144,12 @@ public interface Column extends Comparable {
 			return this.table;
 		}
 
-		public void setName(String newName) throws AlreadyExistsException {
+		public void setName(String newName) {
 			this.getTable().changeColumnMapKey(this.name, newName);
 			this.name = newName;
 		}
 
-		public void setOriginalName(String newName)
-				throws AlreadyExistsException {
+		public void setOriginalName(String newName) {
 			this.originalName = newName;
 		}
 
