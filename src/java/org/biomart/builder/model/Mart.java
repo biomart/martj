@@ -89,7 +89,7 @@ public class Mart {
 		String baseName = schema.getName();
 		// Check we don't have one by this name already. Alias if we do.
 		for (int i = 1; this.schemas.containsKey(name); name = baseName + "_"
-				+ i)
+				+ (i++))
 			;
 		// Add it.
 		this.schemas.put(name, schema);
@@ -109,7 +109,7 @@ public class Mart {
 		String baseName = name;
 		// Check we don't have one by this name already. Alias if we do.
 		for (int i = 1; this.datasets.containsKey(name); name = baseName + "_"
-				+ i)
+				+ (i++))
 			;
 		// Rename it.
 		this.schemas.remove(schema.getName());
@@ -169,7 +169,7 @@ public class Mart {
 		String baseName = dataset.getName();
 		// Check we don't have one by this name already. Alias if we do.
 		for (int i = 1; this.datasets.containsKey(name); name = baseName + "_"
-				+ i)
+				+ (i++))
 			;
 		// Add it.
 		this.datasets.put(dataset.getName(), dataset);
@@ -483,7 +483,7 @@ public class Mart {
 		String baseName = name;
 		// Check we don't have one by this name already. Alias if we do.
 		for (int i = 1; this.datasets.containsKey(name); name = baseName + "_"
-				+ i)
+				+ (i++))
 			;
 		// Rename it.
 		this.datasets.remove(dataset.getName());

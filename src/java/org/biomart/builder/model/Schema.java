@@ -142,9 +142,8 @@ public interface Schema extends Comparable, DataLink {
 	 *            the old name of the table.
 	 * @param newName
 	 *            the new name of the table.
-	 * @return the new name of the table. It may be different!
 	 */
-	public String changeTableMapKey(String oldName, String newName);
+	public void changeTableMapKey(String oldName, String newName);
 
 	/**
 	 * Returns a collection of all the keys in this schema which have relations
@@ -535,6 +534,9 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public void setName(String name) {
+			// Don't duplicate effort.
+			if (name.equals(this.name))
+				return;
 			this.name = name;
 		}
 
@@ -558,13 +560,8 @@ public interface Schema extends Comparable, DataLink {
 			if (!table.getSchema().equals(this))
 				throw new AssociationException(Resources
 						.get("tableSchemaMismatch"));
-			String name = table.getName();
-			String baseName = name;
-			for (int i = 1; this.tables.containsKey(name); name = baseName
-					+ "_" + i)
-				;
 			// Add the table.
-			this.tables.put(name, table);
+			this.tables.put(table.getName(), table);
 		}
 
 		public Collection getTables() {
@@ -575,19 +572,14 @@ public interface Schema extends Comparable, DataLink {
 			return (Table) this.tables.get(name);
 		}
 
-		public String changeTableMapKey(String oldName, String newName) {
+		public void changeTableMapKey(String oldName, String newName) {
 			// If the names are the same, do nothing.
 			if (oldName.equals(newName))
-				return newName;
-			String baseName = newName;
-			for (int i = 1; this.tables.containsKey(newName); newName = baseName
-					+ "_" + i)
-				;
+				return;
 			// Update our mapping but don't rename the columns themselves.
 			Table tbl = (Table) this.tables.get(oldName);
 			this.tables.put(newName, tbl);
 			this.tables.remove(oldName);
-			return newName;
 		}
 
 		public Collection getExternalKeys() {

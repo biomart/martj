@@ -223,9 +223,8 @@ public interface Table extends Comparable {
 	 *            the old name of the column.
 	 * @param newName
 	 *            the new name of the column.
-	 * @return the new name of the column. Watch out, it may be different!
 	 */
-	public String changeColumnMapKey(String oldName, String newName);
+	public void changeColumnMapKey(String oldName, String newName);
 
 	/**
 	 * Drops all columns on a table so that it can safely be dropped itself.
@@ -263,10 +262,14 @@ public interface Table extends Comparable {
 		 */
 		public GenericTable(String name, Schema schema) {
 			// Remember the values.
-			this.name = name;
 			this.originalName = name;
 			this.schema = schema;
-
+			// Make the name unique.
+			String baseName = name;
+			for (int i = 1; schema.getTableByName(name)!=null; name = baseName
+					+ "_" + (i++))
+				;
+			this.name = name;
 			// Add it to the schema.
 			try {
 				schema.addTable(this);
@@ -292,6 +295,11 @@ public interface Table extends Comparable {
 			// Sanity check.
 			if (newName.equals(this.name))
 				return; // Skip unnecessary change.
+			// Make the name unique.
+			String baseName = newName;
+			for (int i = 1; schema.getTableByName(newName)!=null; newName = baseName
+					+ "_" + (i++))
+				;
 			// Do it.
 			this.getSchema().changeTableMapKey(this.name, newName);
 			this.name = newName;
@@ -408,14 +416,8 @@ public interface Table extends Comparable {
 			if (column.getTable() != this)
 				throw new AssociationException(Resources
 						.get("columnTableMismatch"));
-			String name = column.getName();
-			String baseName = name;
-			// Check there is no other column on this table with the same name.
-			for (int i = 1; this.columns.containsKey(name); name = baseName
-					+ "_" + i)
-				;
 			// Add it.
-			this.columns.put(name, column);
+			this.columns.put(column.getName(), column);
 		}
 
 		public void removeColumn(Column column) {
@@ -432,20 +434,14 @@ public interface Table extends Comparable {
 			this.columns.remove(column.getName());
 		}
 
-		public String changeColumnMapKey(String oldName, String newName) {
+		public void changeColumnMapKey(String oldName, String newName) {
 			// If the names are the same, do nothing.
 			if (oldName.equals(newName))
-				return newName;
-			String baseName = name;
-			// Check there is no other column on this table with the same name.
-			for (int i = 1; this.columns.containsKey(newName); newName = baseName
-					+ "_" + i)
-				;
+				return;
 			// Update our mapping but don't rename the columns themselves.
 			Column col = (Column) this.columns.get(oldName);
 			this.columns.put(newName, col);
 			this.columns.remove(oldName);
-			return newName;
 		}
 
 		public void destroy() {
