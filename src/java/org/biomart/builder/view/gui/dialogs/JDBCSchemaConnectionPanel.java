@@ -76,24 +76,27 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	// Within the URL, the keywords <HOSTNAME>, <PORT> and <DATABASE> must all
 	// appear in the order mentioned. Any other order will break the regex
 	// replacement function elsewhere in this class.
-	private static Map DRIVER_MAP = new HashMap();
+	private static final Map DRIVER_MAP = new HashMap();
 
-	private static Map DRIVER_NAME_MAP = new HashMap();
+	private static final Map DRIVER_NAME_MAP = new HashMap();
 	static {
 		// JDBC URL formats.
-		DRIVER_MAP.put("com.mysql.jdbc.Driver", new String[] { "3306",
-				"jdbc:mysql://<HOST>:<PORT>/<DATABASE>" });
-		DRIVER_MAP.put("oracle.jdbc.driver.OracleDriver", new String[] {
-				"1531", "jdbc:oracle:thin:@<HOST>:<PORT>:<DATABASE>" });
-		DRIVER_MAP.put("org.postgresql.Driver", new String[] { "5432",
-				"jdbc:postgresql://<HOST>:<PORT>/<DATABASE>" });
+		JDBCSchemaConnectionPanel.DRIVER_MAP
+				.put("com.mysql.jdbc.Driver", new String[] { "3306",
+						"jdbc:mysql://<HOST>:<PORT>/<DATABASE>" });
+		JDBCSchemaConnectionPanel.DRIVER_MAP.put(
+				"oracle.jdbc.driver.OracleDriver", new String[] { "1531",
+						"jdbc:oracle:thin:@<HOST>:<PORT>:<DATABASE>" });
+		JDBCSchemaConnectionPanel.DRIVER_MAP.put("org.postgresql.Driver",
+				new String[] { "5432",
+						"jdbc:postgresql://<HOST>:<PORT>/<DATABASE>" });
 		// Names.
-		DRIVER_NAME_MAP.put(Resources.get("driverClassMySQL"),
-				"com.mysql.jdbc.Driver");
-		DRIVER_NAME_MAP.put(Resources.get("driverClassOracle"),
-				"oracle.jdbc.driver.OracleDriver");
-		DRIVER_NAME_MAP.put(Resources.get("driverClassPostgreSQL"),
-				"org.postgresql.Driver");
+		JDBCSchemaConnectionPanel.DRIVER_NAME_MAP.put(Resources
+				.get("driverClassMySQL"), "com.mysql.jdbc.Driver");
+		JDBCSchemaConnectionPanel.DRIVER_NAME_MAP.put(Resources
+				.get("driverClassOracle"), "oracle.jdbc.driver.OracleDriver");
+		JDBCSchemaConnectionPanel.DRIVER_NAME_MAP.put(Resources
+				.get("driverClassPostgreSQL"), "org.postgresql.Driver");
 	}
 
 	private String currentJDBCURLTemplate;
@@ -148,27 +151,27 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		this.martTab = martTab;
 
 		// Create the layout manager for this panel.
-		GridBagLayout gridBag = new GridBagLayout();
+		final GridBagLayout gridBag = new GridBagLayout();
 		this.setLayout(gridBag);
 
 		// Create constraints for labels that are not in the last row.
-		GridBagConstraints labelConstraints = new GridBagConstraints();
+		final GridBagConstraints labelConstraints = new GridBagConstraints();
 		labelConstraints.gridwidth = GridBagConstraints.RELATIVE;
 		labelConstraints.fill = GridBagConstraints.HORIZONTAL;
 		labelConstraints.anchor = GridBagConstraints.LINE_END;
 		labelConstraints.insets = new Insets(0, 2, 0, 0);
 		// Create constraints for fields that are not in the last row.
-		GridBagConstraints fieldConstraints = new GridBagConstraints();
+		final GridBagConstraints fieldConstraints = new GridBagConstraints();
 		fieldConstraints.gridwidth = GridBagConstraints.REMAINDER;
 		fieldConstraints.fill = GridBagConstraints.NONE;
 		fieldConstraints.anchor = GridBagConstraints.LINE_START;
 		fieldConstraints.insets = new Insets(0, 1, 0, 2);
 		// Create constraints for labels that are in the last row.
-		GridBagConstraints labelLastRowConstraints = (GridBagConstraints) labelConstraints
+		final GridBagConstraints labelLastRowConstraints = (GridBagConstraints) labelConstraints
 				.clone();
 		labelLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 		// Create constraints for fields that are in the last row.
-		GridBagConstraints fieldLastRowConstraints = (GridBagConstraints) fieldConstraints
+		final GridBagConstraints fieldLastRowConstraints = (GridBagConstraints) fieldConstraints
 				.clone();
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
@@ -194,14 +197,14 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		// The predefined driver class box displays everything we know
 		// about by default, as defined by the map at the start of this class.
 		this.predefinedDriverClass = new JComboBox(
-				(String[]) JDBCSchemaConnectionPanel.DRIVER_NAME_MAP.keySet()
-						.toArray(new String[0]));
+				JDBCSchemaConnectionPanel.DRIVER_NAME_MAP.keySet().toArray(
+						new String[0]));
 		this.predefinedDriverClass.addActionListener(this);
 
 		// Build a combo box that lists all other JDBCSchema instances in
 		// the mart, and allows the user to copy settings from them.
 		this.copysettings = new JComboBox();
-		for (Iterator i = SettingsCache.getHistoryNamesForClass(
+		for (final Iterator i = SettingsCache.getHistoryNamesForClass(
 				JDBCSchema.class).iterator(); i.hasNext();)
 			this.copysettings.addItem(i.next());
 		this.copysettings.addActionListener(this);
@@ -218,9 +221,9 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		this.jarFileChooser = new JFileChooser();
 		this.jarFileChooser.setFileFilter(new FileFilter() {
 			// Accepts only files ending in ".jar".
-			public boolean accept(File f) {
-				return (f.isDirectory() || f.getName().toLowerCase().endsWith(
-						".jar"));
+			public boolean accept(final File f) {
+				return f.isDirectory()
+						|| f.getName().toLowerCase().endsWith(".jar");
 			}
 
 			public String getDescription() {
@@ -308,19 +311,22 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		// Attach the file chooser to the driver class location button.
 		final JPanel panel = this;
 		this.driverClassLocationButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (jarFileChooser.showOpenDialog(panel) == JFileChooser.APPROVE_OPTION) {
-					File file = jarFileChooser.getSelectedFile();
+			public void actionPerformed(final ActionEvent e) {
+				if (JDBCSchemaConnectionPanel.this.jarFileChooser
+						.showOpenDialog(panel) == JFileChooser.APPROVE_OPTION) {
+					final File file = JDBCSchemaConnectionPanel.this.jarFileChooser
+							.getSelectedFile();
 					// When a file is chosen, put its name in the driver
 					// class location field.
 					if (file != null)
-						driverClassLocation.setText(file.toString());
+						JDBCSchemaConnectionPanel.this.driverClassLocation
+								.setText(file.toString());
 				}
 			}
 		});
 	}
 
-	public void resetFields(Schema template) {
+	public void resetFields(final Schema template) {
 		// Set the copy-settings box to nothing-selected.
 		this.copysettings.setSelectedIndex(-1);
 		this.predefinedDriverClass.setSelectedIndex(-1);
@@ -349,10 +355,10 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		}
 	}
 
-	private void copySettingsFrom(Schema template) {
+	private void copySettingsFrom(final Schema template) {
 		// Test to make sure the template is a JDBC Schema.
 		if (template instanceof JDBCSchema) {
-			JDBCSchema jdbcSchema = (JDBCSchema) template;
+			final JDBCSchema jdbcSchema = (JDBCSchema) template;
 
 			// If it is, copy everything over from it.
 			this.driverClass.setText(jdbcSchema.getDriverClassName());
@@ -364,7 +370,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			this.driverClassChanged();
 
 			// Carry on copying.
-			String jdbcURL = jdbcSchema.getJDBCURL();
+			final String jdbcURL = jdbcSchema.getJDBCURL();
 			this.jdbcURL.setText(jdbcURL);
 			this.username.setText(jdbcSchema.getUsername());
 			this.password.setText(jdbcSchema.getPassword());
@@ -385,8 +391,8 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 
 			// Use the regex to parse out the host, port and database
 			// from the JDBC URL.
-			Pattern regex = Pattern.compile(regexURL);
-			Matcher matcher = regex.matcher(jdbcURL);
+			final Pattern regex = Pattern.compile(regexURL);
+			final Matcher matcher = regex.matcher(jdbcURL);
 			if (matcher.matches()) {
 				this.host.setText(matcher.group(1));
 				this.port.setText(matcher.group(2));
@@ -395,7 +401,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		}
 	}
 
-	private void copySettingsFrom(Properties template) {
+	private void copySettingsFrom(final Properties template) {
 		// If it is, copy everything over from it.
 		this.driverClass.setText(template.getProperty("driverClass"));
 		this.driverClassLocation.setText(template
@@ -405,7 +411,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		this.driverClassChanged();
 
 		// Carry on copying.
-		String jdbcURL = template.getProperty("jdbcURL");
+		final String jdbcURL = template.getProperty("jdbcURL");
 		this.jdbcURL.setText(jdbcURL);
 		this.username.setText(template.getProperty("username"));
 		this.password.setText(template.getProperty("password"));
@@ -426,8 +432,8 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 
 		// Use the regex to parse out the host, port and database
 		// from the JDBC URL.
-		Pattern regex = Pattern.compile(regexURL);
-		Matcher matcher = regex.matcher(jdbcURL);
+		final Pattern regex = Pattern.compile(regexURL);
+		final Matcher matcher = regex.matcher(jdbcURL);
 		if (matcher.matches()) {
 			this.host.setText(matcher.group(1));
 			this.port.setText(matcher.group(2));
@@ -442,10 +448,10 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	 */
 	public boolean validateFields() {
 		// Make a list to hold any validation messages that may occur.
-		List messages = new ArrayList();
+		final List messages = new ArrayList();
 
 		// If we don't have a class, complain.
-		if (this.isEmpty((String) this.driverClass.getText()))
+		if (this.isEmpty(this.driverClass.getText()))
 			messages.add(Resources.get("fieldIsEmpty", Resources
 					.get("driverClass")));
 
@@ -500,24 +506,24 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		return messages.isEmpty();
 	}
 
-	private boolean isEmpty(String string) {
+	private boolean isEmpty(final String string) {
 		// Strings are empty if they are null or all whitespace.
-		return (string == null || string.trim().length() == 0);
+		return string == null || string.trim().length() == 0;
 	}
 
-	public void insertUpdate(DocumentEvent e) {
+	public void insertUpdate(final DocumentEvent e) {
 		this.documentEvent(e);
 	}
 
-	public void removeUpdate(DocumentEvent e) {
+	public void removeUpdate(final DocumentEvent e) {
 		this.documentEvent(e);
 	}
 
-	public void changedUpdate(DocumentEvent e) {
+	public void changedUpdate(final DocumentEvent e) {
 		this.documentEvent(e);
 	}
 
-	private void documentEvent(DocumentEvent e) {
+	private void documentEvent(final DocumentEvent e) {
 		if (e.getDocument().equals(this.driverClass.getDocument()))
 			this.driverClassChanged();
 		else
@@ -526,16 +532,16 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 
 	private void driverClassChanged() {
 		// Work out which class we should try out.
-		String className = this.driverClass.getText();
+		final String className = this.driverClass.getText();
 
 		// If it's not empty...
 		if (!this.isEmpty(className)) {
 			// Is this a preset class?
-			for (Iterator i = JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
+			for (final Iterator i = JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
 					.entrySet().iterator(); i.hasNext();) {
-				Map.Entry entry = (Map.Entry) i.next();
-				String mapName = (String) entry.getKey();
-				String mapClassName = (String) entry.getValue();
+				final Map.Entry entry = (Map.Entry) i.next();
+				final String mapName = (String) entry.getKey();
+				final String mapClassName = (String) entry.getValue();
 				if (mapClassName.equals(className))
 					this.predefinedDriverClass.setSelectedItem(mapName);
 			}
@@ -548,7 +554,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				// placed as required.
 
 				// Obtain the template and split it.
-				String[] parts = (String[]) JDBCSchemaConnectionPanel.DRIVER_MAP
+				final String[] parts = (String[]) JDBCSchemaConnectionPanel.DRIVER_MAP
 						.get(className);
 
 				// The second part is the JDBC URL template itself. Remember
@@ -588,7 +594,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			try {
 				Class.forName(className);
 				classNotFound = false;
-			} catch (Throwable t) {
+			} catch (final Throwable t) {
 				classNotFound = true;
 			}
 
@@ -610,7 +616,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	private void updateJDBCURL() {
 		// If we don't have a current template, we can't parse it,
 		// so don't even attempt to do so.
-		if (currentJDBCURLTemplate == null)
+		if (this.currentJDBCURLTemplate == null)
 			return;
 
 		// Update the JDBC URL based on our current settings. Do this
@@ -618,19 +624,19 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		// current values of the host/port/database fields. If there
 		// are no values in these fields, leave the placeholders
 		// as they are.
-		String newURL = currentJDBCURLTemplate;
-		if (!isEmpty(this.host.getText()))
+		String newURL = this.currentJDBCURLTemplate;
+		if (!this.isEmpty(this.host.getText()))
 			newURL = newURL.replaceAll("<HOST>", this.host.getText());
-		if (!isEmpty(this.port.getText()))
+		if (!this.isEmpty(this.port.getText()))
 			newURL = newURL.replaceAll("<PORT>", this.port.getText());
-		if (!isEmpty(this.database.getText()))
+		if (!this.isEmpty(this.database.getText()))
 			newURL = newURL.replaceAll("<DATABASE>", this.database.getText());
 
 		// Set the JDBC URL field to contain the URL we constructed.
 		this.jdbcURL.setText(newURL);
 	}
 
-	public void actionPerformed(ActionEvent e) {
+	public void actionPerformed(final ActionEvent e) {
 		// This method is called when the driver class field is
 		// changed, either by the user typing in it, or using
 		// the drop-down to select a predefine value.
@@ -641,13 +647,13 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		// Copy settings box selected?
 		if (e.getSource() == this.copysettings) {
 			// Identify which schema to copy settings from.
-			Object obj = this.copysettings.getSelectedItem();
+			final Object obj = this.copysettings.getSelectedItem();
 
 			// If one was actually seleted, copy the settings from it.
 			if (obj != null) {
 				// Load the schema settings from our history.
-				Properties historyProps = SettingsCache.getHistoryProperties(
-						JDBCSchema.class, (String) obj);
+				final Properties historyProps = SettingsCache
+						.getHistoryProperties(JDBCSchema.class, (String) obj);
 				// Copy the settings.
 				this.copySettingsFrom(historyProps);
 			}
@@ -656,13 +662,13 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		// Driver class field changed?
 		else if (e.getSource() == this.predefinedDriverClass) {
 			// Work out which database was selected.
-			String classType = (String) this.predefinedDriverClass
+			final String classType = (String) this.predefinedDriverClass
 					.getSelectedItem();
 
 			// Use it to look up the default class for that database,
 			// then reset the drop-down to nothing-selected.
 			if (!this.isEmpty(classType)) {
-				String driverClassName = (String) JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
+				final String driverClassName = (String) JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
 						.get(classType);
 				if (!this.driverClass.getText().equals(driverClassName))
 					this.driverClass.setText(driverClassName);
@@ -678,29 +684,30 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	 *            the name to give the schema.
 	 * @return the created schema.
 	 */
-	public Schema createSchema(String name) {
+	public Schema createSchema(final String name) {
 		// If the fields aren't valid, we can't create it.
 		if (!this.validateFields())
 			return null;
 
 		try {
 			// Record the user's specifications.
-			String driverClassName = (String) this.driverClass.getText();
-			String driverClassLocation = this.driverClassLocation.getText();
-			String url = this.jdbcURL.getText();
-			String schemaName = this.schemaName.getText();
-			String username = this.username.getText();
-			String password = new String(this.password.getPassword());
+			final String driverClassName = this.driverClass.getText();
+			final String driverClassLocation = this.driverClassLocation
+					.getText();
+			final String url = this.jdbcURL.getText();
+			final String schemaName = this.schemaName.getText();
+			final String username = this.username.getText();
+			final String password = new String(this.password.getPassword());
 
 			// Construct a JDBCSchema based on them.
-			JDBCSchema schema = MartBuilderUtils.createJDBCSchema(
+			final JDBCSchema schema = MartBuilderUtils.createJDBCSchema(
 					driverClassLocation == null ? null : new File(
 							driverClassLocation), driverClassName, url,
 					schemaName, username, password, name, false);
 
 			// Return that schema.
 			return schema;
-		} catch (Throwable t) {
+		} catch (final Throwable t) {
 			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 		}
 
@@ -716,7 +723,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	 *            the schema to update.
 	 * @return the updated schema, or null if it was not updated.
 	 */
-	public Schema modifySchema(Schema schema) {
+	public Schema modifySchema(final Schema schema) {
 		// If the fields are not valid, we can't modify it.
 		if (!this.validateFields())
 			return null;
@@ -726,9 +733,10 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			try {
 				// Use the user input to update the fields on
 				// the existing schema object.
-				JDBCSchema jschema = (JDBCSchema) schema;
+				final JDBCSchema jschema = (JDBCSchema) schema;
 				jschema.setDriverClassName(this.driverClass.getText());
-				String driverClassLocation = this.driverClassLocation.getText();
+				final String driverClassLocation = this.driverClassLocation
+						.getText();
 				jschema
 						.setDriverClassLocation(driverClassLocation == null ? null
 								: new File(driverClassLocation));
@@ -738,7 +746,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				jschema.setPassword(new String(this.password.getPassword()));
 
 				// Update the settings in the history file.
-				Properties history = new Properties();
+				final Properties history = new Properties();
 				history.setProperty("driverClass", this.driverClass.getText());
 				history.setProperty("driverClassLocation",
 						this.driverClassLocation.getText());
@@ -749,7 +757,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				history.setProperty("schema", this.schemaName.getText());
 				SettingsCache.saveHistoryProperties(JDBCSchema.class, schema
 						.getName(), history);
-			} catch (Throwable t) {
+			} catch (final Throwable t) {
 				this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 			}
 

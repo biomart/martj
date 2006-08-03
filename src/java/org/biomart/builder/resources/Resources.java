@@ -30,7 +30,7 @@ import java.util.ResourceBundle;
  * @since 0.1
  */
 public class Resources {
-	private static ResourceBundle bundle = ResourceBundle
+	private static final ResourceBundle bundle = ResourceBundle
 			.getBundle("org/biomart/builder/resources/messages");
 
 	/**
@@ -44,8 +44,9 @@ public class Resources {
 	 *            the key to look up.
 	 * @return the matching string.
 	 */
-	public static String get(String key) {
-		return MessageFormat.format(bundle.getString(key), new Object[] {});
+	public static String get(final String key) {
+		return MessageFormat.format(Resources.bundle.getString(key),
+				new Object[] {});
 	}
 
 	/**
@@ -57,10 +58,13 @@ public class Resources {
 	 * 
 	 * @param key
 	 *            the key to look up.
+	 * @param value
+	 *            the value to substitute in the first placeholder of the string
+	 *            we looked up.
 	 * @return the matching string.
 	 */
-	public static String get(String key, String value) {
-		return MessageFormat.format(bundle.getString(key),
+	public static String get(final String key, final String value) {
+		return MessageFormat.format(Resources.bundle.getString(key),
 				new Object[] { value });
 	}
 
@@ -73,10 +77,14 @@ public class Resources {
 	 * 
 	 * @param key
 	 *            the key to look up.
+	 * @param values
+	 *            the values to substitute in the placeholders in the looked-up
+	 *            string. There should be the same number of values as there are
+	 *            placeholders.
 	 * @return the matching string.
 	 */
-	public static String get(String key, String[] values) {
-		return MessageFormat.format(bundle.getString(key), values);
+	public static String get(final String key, final String[] values) {
+		return MessageFormat.format(Resources.bundle.getString(key), values);
 	}
 
 	/**
@@ -88,7 +96,7 @@ public class Resources {
 	 *            "org/biomart/builder/resources/myfile.txt".
 	 * @return a stream that will read that file.
 	 */
-	public static InputStream getResource(String resource) {
+	public static InputStream getResource(final String resource) {
 		ClassLoader cl = Resources.class.getClassLoader();
 		if (cl == null)
 			cl = ClassLoader.getSystemClassLoader();

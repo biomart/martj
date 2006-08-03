@@ -28,7 +28,7 @@ import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
 
 /**
  * This diagram draws a box for each dataset in the mart, as a
- * {@link SchemaComponent}. 
+ * {@link SchemaComponent}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.2, 21st June 2006
@@ -43,15 +43,14 @@ public class AllDataSetsDiagram extends Diagram {
 	public static final Color BACKGROUND_COLOUR = Color.WHITE;
 
 	/**
-	 * The constructor creates the diagram and associates it with a given
-	 * mart tab.
+	 * The constructor creates the diagram and associates it with a given mart
+	 * tab.
 	 * 
 	 * @param martTab
-	 *            the mart tab to associate with this dataset. It will
-	 *            be used to work out who receives all user menu events, 
-	 *            etc.
+	 *            the mart tab to associate with this dataset. It will be used
+	 *            to work out who receives all user menu events, etc.
 	 */
-	public AllDataSetsDiagram(MartTab martTab) {
+	public AllDataSetsDiagram(final MartTab martTab) {
 		super(martTab);
 
 		// Set the background.
@@ -66,10 +65,10 @@ public class AllDataSetsDiagram extends Diagram {
 		this.removeAll();
 
 		// Add a SchemaComponent for each dataset.
-		for (Iterator i = this.getMartTab().getMart().getDataSets()
+		for (final Iterator i = this.getMartTab().getMart().getDataSets()
 				.iterator(); i.hasNext();) {
-			DataSet ds = (DataSet) i.next();
-			DataSetComponent dsComponent = new DataSetComponent(ds, this);
+			final DataSet ds = (DataSet) i.next();
+			final DataSetComponent dsComponent = new DataSetComponent(ds, this);
 			this.addDiagramComponent(dsComponent);
 		}
 

@@ -50,7 +50,7 @@ import org.biomart.builder.resources.Resources;
  * use JDBC to fetch/retrieve data between two databases.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 31st July 2006
+ * @version 0.1.15, 2nd August 2006
  * @since 0.1
  */
 public class SaveDDLMartConstructor implements MartConstructor {
@@ -67,12 +67,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 * Creates a constructor that, when requested, will begin constructing a
 	 * mart and outputting DDL.
 	 * 
-	 * @param targetDBName
-	 *            the name of the target schema the DDL will be run against.
 	 * @param granularity
 	 *            the granularity to which the DDL will be broken down.
-	 * @param datasets
-	 *            the datasets to output.
 	 * @param outputFile
 	 *            the file to write the DDL to. If null, then the
 	 *            <tt>outputStringBuffer</tt> parameter must not be null.
@@ -89,9 +85,9 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 *             <tt>outputFile</tt> and <tt>outputStringBuffer</tt> do
 	 *             not make sense.
 	 */
-	public SaveDDLMartConstructor(SaveDDLGranularity granularity,
-			File outputFile, StringBuffer outputStringBuffer,
-			boolean includeComments) throws IllegalArgumentException {
+	public SaveDDLMartConstructor(final SaveDDLGranularity granularity,
+			final File outputFile, final StringBuffer outputStringBuffer,
+			final boolean includeComments) throws IllegalArgumentException {
 		// Check it's sensible.
 		if (outputStringBuffer != null
 				&& !granularity.equals(SaveDDLGranularity.SINGLE))
@@ -111,8 +107,9 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		this.includeComments = includeComments;
 	}
 
-	public ConstructorRunnable getConstructorRunnable(String targetSchemaName,
-			Collection datasets) throws Exception {
+	public ConstructorRunnable getConstructorRunnable(
+			final String targetSchemaName, final Collection datasets)
+			throws Exception {
 		// Work out what kind of helper to use.
 		DDLHelper helper;
 		if (this.granularity.equals(SaveDDLGranularity.SINGLE)) {
@@ -137,25 +134,24 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		// First, make a set of all input schemas. Note that some
 		// may be groups, but since canCohabit() works on groups
 		// we don't need to worry about this.
-		Set inputSchemas = new HashSet();
-		for (Iterator i = datasets.iterator(); i.hasNext();) {
-			for (Iterator j = ((DataSet) i.next()).getTables().iterator(); j
+		final Set inputSchemas = new HashSet();
+		for (final Iterator i = datasets.iterator(); i.hasNext();)
+			for (final Iterator j = ((DataSet) i.next()).getTables().iterator(); j
 					.hasNext();) {
-				Table t = (Table) j.next();
-				for (Iterator k = t.getColumns().iterator(); k.hasNext();) {
-					Column c = (Column) k.next();
+				final Table t = (Table) j.next();
+				for (final Iterator k = t.getColumns().iterator(); k.hasNext();) {
+					final Column c = (Column) k.next();
 					if (c instanceof WrappedColumn)
 						inputSchemas.add(((WrappedColumn) c).getWrappedColumn()
 								.getTable().getSchema());
 				}
 			}
-		}
 
 		// Convert the set to a list.
-		List inputSchemaList = new ArrayList(inputSchemas);
+		final List inputSchemaList = new ArrayList(inputSchemas);
 
 		// Set the output dialect to match the first one in the list.
-		DatabaseDialect dd = DatabaseDialect
+		final DatabaseDialect dd = DatabaseDialect
 				.getDialect((Schema) inputSchemaList.get(0));
 		if (dd == null)
 			throw new ConstructorException("unknownDialect");
@@ -164,14 +160,14 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		// Then, check that the rest are compatible with the first one.
 		for (int i = 1; i < inputSchemaList.size(); i++) {
-			Schema schema = (Schema) inputSchemaList.get(i);
+			final Schema schema = (Schema) inputSchemaList.get(i);
 			if (!schema.canCohabit((Schema) inputSchemaList.get(0)))
 				throw new ConstructorException(Resources
 						.get("saveDDLMixedDataLinks"));
 		}
 
 		// Construct and return the runnable that uses the helper.
-		ConstructorRunnable cr = new GenericConstructorRunnable(
+		final ConstructorRunnable cr = new GenericConstructorRunnable(
 				targetSchemaName, datasets, helper);
 		cr.addMartConstructorListener(helper);
 		return cr;
@@ -197,7 +193,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            <tt>true</tt> if comments are to be included,
 		 *            <tt>false</tt> if not.
 		 */
-		public DDLHelper(boolean includeComments) {
+		public DDLHelper(final boolean includeComments) {
 			this.includeComments = includeComments;
 		}
 
@@ -210,7 +206,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            <tt>true</tt> if comments are to be included,
 		 *            <tt>false</tt> if not.
 		 */
-		public DDLHelper(File file, boolean includeComments) {
+		public DDLHelper(final File file, final boolean includeComments) {
 			this.file = file;
 			this.includeComments = includeComments;
 		}
@@ -231,7 +227,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 * @param dialect
 		 *            the dialect to use when creating output DDL.
 		 */
-		public void setDialect(DatabaseDialect dialect) {
+		public void setDialect(final DatabaseDialect dialect) {
 			this.dialect = dialect;
 			this.dialect.reset();
 		}
@@ -240,13 +236,13 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			return "TEMP__" + this.tempTableSeq++;
 		}
 
-		public List listDistinctValues(Column col) throws SQLException {
+		public List listDistinctValues(final Column col) throws SQLException {
 			return this.dialect.executeSelectDistinct(col);
 		}
 
 		/**
 		 * Translates an action into commands, using
-		 * {@link DatabaseDialect#getStatementsForAction(MartConstructorAction)}
+		 * {@link DatabaseDialect#getStatementsForAction(MartConstructorAction, boolean)}
 		 * 
 		 * @param action
 		 *            the action to translate.
@@ -254,9 +250,10 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 * @throws Exception
 		 *             if anything went wrong.
 		 */
-		protected String[] getStatementsForAction(MartConstructorAction action)
-				throws Exception {
-			return dialect.getStatementsForAction(action, this.includeComments);
+		protected String[] getStatementsForAction(
+				final MartConstructorAction action) throws Exception {
+			return this.dialect.getStatementsForAction(action,
+					this.includeComments);
 		}
 	}
 
@@ -278,20 +275,21 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            <tt>true</tt> if comments are to be included,
 		 *            <tt>false</tt> if not.
 		 */
-		public SingleFileHelper(File outputFile, boolean includeComments) {
+		public SingleFileHelper(final File outputFile,
+				final boolean includeComments) {
 			super(outputFile, includeComments);
 		}
 
-		public void martConstructorEventOccurred(int event,
-				MartConstructorAction action) throws Exception {
-			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
+		public void martConstructorEventOccurred(final int event,
+				final MartConstructorAction action) throws Exception {
+			if (event == MartConstructorListener.CONSTRUCTION_STARTED)
 				this.outputFileStream = new FileOutputStream(this.getFile());
-			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
+			else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
 				this.outputFileStream.flush();
 				this.outputFileStream.close();
 			} else if (event == MartConstructorListener.ACTION_EVENT) {
 				// Convert the action to some DDL.
-				String[] cmd = this.getStatementsForAction(action);
+				final String[] cmd = this.getStatementsForAction(action);
 				// Write the data.
 				for (int i = 0; i < cmd.length; i++) {
 					this.outputFileStream.write(cmd[i].getBytes());
@@ -321,17 +319,17 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            <tt>true</tt> if comments are to be included,
 		 *            <tt>false</tt> if not.
 		 */
-		public SingleStringBufferHelper(StringBuffer outputStringBuffer,
-				boolean includeComments) {
+		public SingleStringBufferHelper(final StringBuffer outputStringBuffer,
+				final boolean includeComments) {
 			super(includeComments);
 			this.outputStringBuffer = outputStringBuffer;
 		}
 
-		public void martConstructorEventOccurred(int event,
-				MartConstructorAction action) throws Exception {
+		public void martConstructorEventOccurred(final int event,
+				final MartConstructorAction action) throws Exception {
 			if (event == MartConstructorListener.ACTION_EVENT) {
 				// Convert the action to some DDL.
-				String[] cmd = this.getStatementsForAction(action);
+				final String[] cmd = this.getStatementsForAction(action);
 				// Write the data.
 				for (int i = 0; i < cmd.length; i++) {
 					this.outputStringBuffer.append(cmd[i]);
@@ -365,13 +363,14 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            <tt>true</tt> if comments are to be included,
 		 *            <tt>false</tt> if not.
 		 */
-		public MartAsFileHelper(File outputFile, boolean includeComments) {
+		public MartAsFileHelper(final File outputFile,
+				final boolean includeComments) {
 			super(outputFile, includeComments);
 			this.martSequence = 0;
 		}
 
-		public void martConstructorEventOccurred(int event,
-				MartConstructorAction action) throws Exception {
+		public void martConstructorEventOccurred(final int event,
+				final MartConstructorAction action) throws Exception {
 			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
 				this.outputFileStream = new FileOutputStream(this.getFile());
 				this.outputZipStream = new ZipOutputStream(
@@ -385,15 +384,15 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.outputFileStream.close();
 			} else if (event == MartConstructorListener.MART_STARTED) {
 				this.entry = new ZipEntry(this.martSequence + ".sql");
-				entry.setTime(System.currentTimeMillis());
-				this.outputZipStream.putNextEntry(entry);
+				this.entry.setTime(System.currentTimeMillis());
+				this.outputZipStream.putNextEntry(this.entry);
 			} else if (event == MartConstructorListener.MART_ENDED) {
 				this.outputZipStream.closeEntry();
 				// Bump up the mart sequence.
 				this.martSequence++;
 			} else if (event == MartConstructorListener.ACTION_EVENT) {
 				// Convert the action to some DDL.
-				String[] cmd = this.getStatementsForAction(action);
+				final String[] cmd = this.getStatementsForAction(action);
 				// Write the data.
 				for (int i = 0; i < cmd.length; i++) {
 					this.outputZipStream.write(cmd[i].getBytes());
@@ -431,14 +430,15 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            <tt>true</tt> if comments are to be included,
 		 *            <tt>false</tt> if not.
 		 */
-		public DataSetAsFileHelper(File outputFile, boolean includeComments) {
+		public DataSetAsFileHelper(final File outputFile,
+				final boolean includeComments) {
 			super(outputFile, includeComments);
 			this.martSequence = 0;
 			this.datasetSequence = 0;
 		}
 
-		public void martConstructorEventOccurred(int event,
-				MartConstructorAction action) throws Exception {
+		public void martConstructorEventOccurred(final int event,
+				final MartConstructorAction action) throws Exception {
 			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
 				this.outputFileStream = new FileOutputStream(this.getFile());
 				this.outputZipStream = new ZipOutputStream(
@@ -453,18 +453,18 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			} else if (event == MartConstructorListener.DATASET_STARTED) {
 				this.entry = new ZipEntry(this.martSequence + "/"
 						+ this.datasetSequence + ".sql");
-				entry.setTime(System.currentTimeMillis());
-				this.outputZipStream.putNextEntry(entry);
+				this.entry.setTime(System.currentTimeMillis());
+				this.outputZipStream.putNextEntry(this.entry);
 			} else if (event == MartConstructorListener.DATASET_ENDED) {
 				this.outputZipStream.closeEntry();
 				// Bump up the dataset count for the next one.
 				this.datasetSequence++;
-			} else if (event == MartConstructorListener.MART_ENDED) {
+			} else if (event == MartConstructorListener.MART_ENDED)
 				// Bump up the mart count for the next one.
 				this.martSequence++;
-			} else if (event == MartConstructorListener.ACTION_EVENT) {
+			else if (event == MartConstructorListener.ACTION_EVENT) {
 				// Convert the action to some DDL.
-				String[] cmd = this.getStatementsForAction(action);
+				final String[] cmd = this.getStatementsForAction(action);
 				// Write the data.
 				for (int i = 0; i < cmd.length; i++) {
 					this.outputZipStream.write(cmd[i].getBytes());
@@ -504,15 +504,16 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            <tt>true</tt> if comments are to be included,
 		 *            <tt>false</tt> if not.
 		 */
-		public TableAsFileHelper(File outputFile, boolean includeComments) {
+		public TableAsFileHelper(final File outputFile,
+				final boolean includeComments) {
 			super(outputFile, includeComments);
 			this.martSequence = 0;
 			this.datasetSequence = 0;
 			this.actions = new HashMap();
 		}
 
-		public void martConstructorEventOccurred(int event,
-				MartConstructorAction action) throws Exception {
+		public void martConstructorEventOccurred(final int event,
+				final MartConstructorAction action) throws Exception {
 			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
 				this.outputFileStream = new FileOutputStream(this.getFile());
 				this.outputZipStream = new ZipOutputStream(
@@ -524,24 +525,24 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.outputZipStream.finish();
 				this.outputFileStream.flush();
 				this.outputFileStream.close();
-			} else if (event == MartConstructorListener.DATASET_STARTED) {
+			} else if (event == MartConstructorListener.DATASET_STARTED)
 				// Clear out action map ready for next dataset.
 				this.actions.clear();
-			} else if (event == MartConstructorListener.DATASET_ENDED) {
+			else if (event == MartConstructorListener.DATASET_ENDED) {
 				// Write out one file per table in action map.
-				for (Iterator i = this.actions.entrySet().iterator(); i
+				for (final Iterator i = this.actions.entrySet().iterator(); i
 						.hasNext();) {
-					Map.Entry actionEntry = (Map.Entry) i.next();
-					String tableName = (String) actionEntry.getValue();
+					final Map.Entry actionEntry = (Map.Entry) i.next();
+					final String tableName = (String) actionEntry.getValue();
 					this.entry = new ZipEntry(this.martSequence + "/"
 							+ this.datasetSequence + "/" + tableName + ".sql");
-					entry.setTime(System.currentTimeMillis());
-					this.outputZipStream.putNextEntry(entry);
+					this.entry.setTime(System.currentTimeMillis());
+					this.outputZipStream.putNextEntry(this.entry);
 					// Write the actions.
-					for (Iterator j = ((List) actionEntry.getValue())
+					for (final Iterator j = ((List) actionEntry.getValue())
 							.iterator(); j.hasNext();) {
 						// Convert the action to some DDL.
-						String[] cmd = this
+						final String[] cmd = this
 								.getStatementsForAction((MartConstructorAction) j
 										.next());
 						// Write the data.
@@ -557,10 +558,10 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				}
 				// Bump up the dataset count for the next one.
 				this.datasetSequence++;
-			} else if (event == MartConstructorListener.MART_ENDED) {
+			} else if (event == MartConstructorListener.MART_ENDED)
 				// Bump up the mart count for the next one.
 				this.martSequence++;
-			} else if (event == MartConstructorListener.ACTION_EVENT) {
+			else if (event == MartConstructorListener.ACTION_EVENT) {
 				// Add the action to the current map.
 				if (!this.actions.containsKey(action.getDataSetTableName()))
 					this.actions.put(action.getDataSetTableName(),
@@ -592,19 +593,13 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            <tt>true</tt> if comments are to be included,
 		 *            <tt>false</tt> if not.
 		 */
-		public StepAsFileHelper(File outputFile, boolean includeComments) {
+		public StepAsFileHelper(final File outputFile,
+				final boolean includeComments) {
 			super(outputFile, includeComments);
 		}
 
-		public void startActions() throws Exception {
-			// Open the zip stream.
-			this.outputFileStream = new FileOutputStream(this.getFile());
-			this.outputZipStream = new ZipOutputStream(this.outputFileStream);
-			this.outputZipStream.setMethod(ZipOutputStream.DEFLATED);
-		}
-
-		public void martConstructorEventOccurred(int event,
-				MartConstructorAction action) throws Exception {
+		public void martConstructorEventOccurred(final int event,
+				final MartConstructorAction action) throws Exception {
 			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
 				this.outputFileStream = new FileOutputStream(this.getFile());
 				this.outputZipStream = new ZipOutputStream(
@@ -616,18 +611,18 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.outputZipStream.finish();
 				this.outputFileStream.flush();
 				this.outputFileStream.close();
-			} else if (event == MartConstructorListener.ACTION_EVENT) {
+			} else if (event == MartConstructorListener.ACTION_EVENT)
 				try {
 					// What level is this action? (ie. depth in graph)
-					int level = action.getDepth();
+					final int level = action.getDepth();
 					// Writes the given action to file.
 					// Put the next entry to the zip file.
-					ZipEntry entry = new ZipEntry(level + "/" + level + "-"
-							+ action.getSequence() + ".sql");
+					final ZipEntry entry = new ZipEntry(level + "/" + level
+							+ "-" + action.getSequence() + ".sql");
 					entry.setTime(System.currentTimeMillis());
 					this.outputZipStream.putNextEntry(entry);
 					// Convert the action to some DDL.
-					String[] cmd = this.getStatementsForAction(action);
+					final String[] cmd = this.getStatementsForAction(action);
 					// Write the data.
 					for (int i = 0; i < cmd.length; i++) {
 						this.outputZipStream.write(cmd[i].getBytes());
@@ -637,13 +632,12 @@ public class SaveDDLMartConstructor implements MartConstructor {
 					}
 					// Close the entry.
 					this.outputZipStream.closeEntry();
-				} catch (Exception e) {
+				} catch (final Exception e) {
 					// Make sure we don't leave open entries lying around
 					// if exceptions get thrown.
 					this.outputZipStream.closeEntry();
 					throw e;
 				}
-			}
 		}
 	}
 
@@ -699,15 +693,17 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            <tt>false</tt> if not.
 		 * @return the type object.
 		 */
-		public static SaveDDLGranularity get(String name, boolean zipped) {
+		public static SaveDDLGranularity get(final String name,
+				final boolean zipped) {
 			// Do we already have this one?
 			// If so, then return it.
-			if (singletons.containsKey(name))
-				return (SaveDDLGranularity) singletons.get(name);
+			if (SaveDDLGranularity.singletons.containsKey(name))
+				return (SaveDDLGranularity) SaveDDLGranularity.singletons
+						.get(name);
 
 			// Otherwise, create it, remember it.
-			SaveDDLGranularity t = new SaveDDLGranularity(name, zipped);
-			singletons.put(name, t);
+			final SaveDDLGranularity t = new SaveDDLGranularity(name, zipped);
+			SaveDDLGranularity.singletons.put(name, t);
 
 			// Return it.
 			return t;
@@ -723,7 +719,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            <tt>true</tt> if this type outputs zip files,
 		 *            <tt>false</tt> if not.
 		 */
-		private SaveDDLGranularity(String name, boolean zipped) {
+		private SaveDDLGranularity(final String name, final boolean zipped) {
 			this.name = name;
 			this.zipped = zipped;
 		}
@@ -756,12 +752,12 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			return this.toString().hashCode();
 		}
 
-		public int compareTo(Object o) throws ClassCastException {
-			SaveDDLGranularity t = (SaveDDLGranularity) o;
+		public int compareTo(final Object o) throws ClassCastException {
+			final SaveDDLGranularity t = (SaveDDLGranularity) o;
 			return this.toString().compareTo(t.toString());
 		}
 
-		public boolean equals(Object o) {
+		public boolean equals(final Object o) {
 			// We are dealing with singletons so can use == happily.
 			return o == this;
 		}

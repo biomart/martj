@@ -54,7 +54,7 @@ public class ComponentImageSaver {
 	 * @param component
 	 *            the component to save.
 	 */
-	public ComponentImageSaver(MartTab martTab, Component component) {
+	public ComponentImageSaver(final MartTab martTab, final Component component) {
 		this.component = component;
 		this.martTab = martTab;
 	}
@@ -78,25 +78,27 @@ public class ComponentImageSaver {
 			LongProcess.run(new Runnable() {
 				public void run() {
 					try {
-						save(fileChooser.getSelectedFile(),
+						ComponentImageSaver.this.save(fileChooser
+								.getSelectedFile(),
 								(ImageSaverFilter) fileChooser.getFileFilter());
-					} catch (IOException e) {
-						martTab.getMartTabSet().getMartBuilder()
-								.showStackTrace(e);
+					} catch (final IOException e) {
+						ComponentImageSaver.this.martTab.getMartTabSet()
+								.getMartBuilder().showStackTrace(e);
 					}
 				}
 			});
 	}
 
-	public void save(File file, ImageSaverFilter format) throws IOException {
+	private void save(final File file, final ImageSaverFilter format)
+			throws IOException {
 		// Create an image the same size as the component.
-		BufferedImage image = GraphicsEnvironment.getLocalGraphicsEnvironment()
-				.getDefaultScreenDevice().getDefaultConfiguration()
-				.createCompatibleImage(this.component.getWidth(),
-						this.component.getHeight());
+		final BufferedImage image = GraphicsEnvironment
+				.getLocalGraphicsEnvironment().getDefaultScreenDevice()
+				.getDefaultConfiguration().createCompatibleImage(
+						this.component.getWidth(), this.component.getHeight());
 		// Render the component onto the image.
-		Graphics2D g2d = image.createGraphics();
-		RepaintManager currentManager = RepaintManager
+		final Graphics2D g2d = image.createGraphics();
+		final RepaintManager currentManager = RepaintManager
 				.currentManager(this.component);
 		currentManager.setDoubleBufferingEnabled(false);
 		this.component.paintAll(g2d);
@@ -124,25 +126,30 @@ public class ComponentImageSaver {
 		 *            the format name.
 		 * @param description
 		 *            the description to put in the file chooser.
-		 * @param the
-		 *            list of matching extensions.
+		 * @param extensions
+		 *            the list of matching extensions.
 		 */
-		public ImageSaverFilter(String format, String description,
-				String[] extensions) {
+		public ImageSaverFilter(final String format, final String description,
+				final String[] extensions) {
 			this.format = format;
 			this.description = description;
 			this.extensions = extensions;
 		}
 
+		/**
+		 * Find out what image format this filter represents.
+		 * 
+		 * @return the format this filter represents.
+		 */
 		public String getFormat() {
 			return this.format;
 		}
 
-		public boolean accept(File f) {
+		public boolean accept(final File f) {
 			if (f.isDirectory())
 				return true;
 			else {
-				String name = f.getName().toLowerCase();
+				final String name = f.getName().toLowerCase();
 				for (int i = 0; i < this.extensions.length; i++)
 					if (name.endsWith(this.extensions[i]))
 						return true;

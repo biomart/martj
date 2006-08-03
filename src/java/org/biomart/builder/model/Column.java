@@ -114,11 +114,8 @@ public interface Column extends Comparable {
 		 *            the name of the column to create.
 		 * @param table
 		 *            the parent table.
-		 * @throws AlreadyExistsException
-		 *             if it was unable to add the column to the parent table
-		 *             because a column with that name already exists.
 		 */
-		public GenericColumn(String name, Table table) {
+		public GenericColumn(String name, final Table table) {
 			// Remember the values.
 			this.table = table;
 			this.nullable = false;
@@ -130,15 +127,15 @@ public interface Column extends Comparable {
 			else
 				suffix = "";
 			// Check there is no other column on this table with the same name.
-			for (int i = 1; table.getColumnByName(name)!=null; name = baseName
-					+ "_" + (i++) + suffix)
+			for (int i = 1; table.getColumnByName(name) != null; name = baseName
+					+ "_" + i++ + suffix)
 				;
 			this.name = name;
 			this.originalName = name;
 			// Add it to the table - throws AssociationException.
 			try {
 				table.addColumn(this);
-			} catch (AssociationException e) {
+			} catch (final AssociationException e) {
 				throw new MartBuilderInternalError(e);
 			}
 		}
@@ -167,14 +164,14 @@ public interface Column extends Comparable {
 			else
 				suffix = "";
 			// Check there is no other column on this table with the same name.
-			for (int i = 1; table.getColumnByName(newName)!=null; newName = baseName
-					+ "_" + (i++) + suffix)
+			for (int i = 1; this.table.getColumnByName(newName) != null; newName = baseName
+					+ "_" + i++ + suffix)
 				;
 			this.getTable().changeColumnMapKey(this.name, newName);
 			this.name = newName;
 		}
 
-		public void setOriginalName(String newName) {
+		public void setOriginalName(final String newName) {
 			this.originalName = newName;
 		}
 
@@ -182,7 +179,7 @@ public interface Column extends Comparable {
 			return this.nullable;
 		}
 
-		public void setNullable(boolean nullable) {
+		public void setNullable(final boolean nullable) {
 			this.nullable = nullable;
 		}
 
@@ -194,15 +191,15 @@ public interface Column extends Comparable {
 			return this.toString().hashCode();
 		}
 
-		public int compareTo(Object o) throws ClassCastException {
-			Column c = (Column) o;
+		public int compareTo(final Object o) throws ClassCastException {
+			final Column c = (Column) o;
 			return this.toString().compareTo(c.toString());
 		}
 
-		public boolean equals(Object o) {
+		public boolean equals(final Object o) {
 			if (o == null || !(o instanceof Column))
 				return false;
-			Column c = (Column) o;
+			final Column c = (Column) o;
 			return c.toString().equals(this.toString());
 		}
 	}

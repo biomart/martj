@@ -99,8 +99,8 @@ public class ExpressionColumnDialog extends JDialog {
 	 * @param template
 	 *            the column to use as a template, if any.
 	 */
-	public ExpressionColumnDialog(final MartTab martTab, DataSetTable table,
-			ExpressionColumn template) {
+	public ExpressionColumnDialog(final MartTab martTab,
+			final DataSetTable table, final ExpressionColumn template) {
 		// Creates the basic dialog.
 		super(martTab.getMartTabSet().getMartBuilder(),
 				template == null ? Resources.get("addExpColDialogTitle")
@@ -111,28 +111,28 @@ public class ExpressionColumnDialog extends JDialog {
 		this.table = table;
 
 		// Create the content pane to store the create dialog panel.
-		GridBagLayout gridBag = new GridBagLayout();
+		final GridBagLayout gridBag = new GridBagLayout();
 		final JPanel content = new JPanel(gridBag);
 		this.setContentPane(content);
 
 		// Create constraints for labels that are not in the last row.
-		GridBagConstraints labelConstraints = new GridBagConstraints();
+		final GridBagConstraints labelConstraints = new GridBagConstraints();
 		labelConstraints.gridwidth = GridBagConstraints.RELATIVE;
 		labelConstraints.fill = GridBagConstraints.HORIZONTAL;
 		labelConstraints.anchor = GridBagConstraints.LINE_END;
 		labelConstraints.insets = new Insets(0, 2, 0, 0);
 		// Create constraints for fields that are not in the last row.
-		GridBagConstraints fieldConstraints = new GridBagConstraints();
+		final GridBagConstraints fieldConstraints = new GridBagConstraints();
 		fieldConstraints.gridwidth = GridBagConstraints.REMAINDER;
 		fieldConstraints.fill = GridBagConstraints.NONE;
 		fieldConstraints.anchor = GridBagConstraints.LINE_START;
 		fieldConstraints.insets = new Insets(0, 1, 0, 2);
 		// Create constraints for labels that are in the last row.
-		GridBagConstraints labelLastRowConstraints = (GridBagConstraints) labelConstraints
+		final GridBagConstraints labelLastRowConstraints = (GridBagConstraints) labelConstraints
 				.clone();
 		labelLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 		// Create constraints for fields that are in the last row.
-		GridBagConstraints fieldLastRowConstraints = (GridBagConstraints) fieldConstraints
+		final GridBagConstraints fieldLastRowConstraints = (GridBagConstraints) fieldConstraints
 				.clone();
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
@@ -150,11 +150,11 @@ public class ExpressionColumnDialog extends JDialog {
 		this.groupBy = new JCheckBox(Resources.get("groupbyLabel"));
 
 		// Set the column-editor for the column column.
-		TableColumn columnColumn = this.columnAliasTable.getColumnModel()
+		final TableColumn columnColumn = this.columnAliasTable.getColumnModel()
 				.getColumn(0);
-		JComboBox columnEditor = new JComboBox();
-		for (Iterator i = this.table.getColumns().iterator(); i.hasNext();) {
-			DataSetColumn col = (DataSetColumn) i.next();
+		final JComboBox columnEditor = new JComboBox();
+		for (final Iterator i = this.table.getColumns().iterator(); i.hasNext();) {
+			final DataSetColumn col = (DataSetColumn) i.next();
 			if (!(col instanceof ExpressionColumn))
 				columnEditor.addItem(col);
 		}
@@ -178,20 +178,23 @@ public class ExpressionColumnDialog extends JDialog {
 
 		// Listener for the insert button.
 		this.insert.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				columnAliasModel.insertRow(columnAliasModel.getRowCount(),
-						new Object[] { null, null });
+			public void actionPerformed(final ActionEvent e) {
+				ExpressionColumnDialog.this.columnAliasModel.insertRow(
+						ExpressionColumnDialog.this.columnAliasModel
+								.getRowCount(), new Object[] { null, null });
 			}
 		});
 
 		// Listener for the remove button.
 		this.remove.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int rows[] = columnAliasTable.getSelectedRows();
+			public void actionPerformed(final ActionEvent e) {
+				final int rows[] = ExpressionColumnDialog.this.columnAliasTable
+						.getSelectedRows();
 				// Reverse order, so we don't end up with changing
 				// indices along the way.
 				for (int i = rows.length - 1; i >= 0; i--)
-					columnAliasModel.removeRow(rows[i]);
+					ExpressionColumnDialog.this.columnAliasModel
+							.removeRow(rows[i]);
 			}
 		});
 
@@ -252,23 +255,23 @@ public class ExpressionColumnDialog extends JDialog {
 		// Intercept the cancel button and use it to close this
 		// dialog without making any changes.
 		this.cancel.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				cancelled = true;
-				hide();
+			public void actionPerformed(final ActionEvent e) {
+				ExpressionColumnDialog.this.cancelled = true;
+				ExpressionColumnDialog.this.hide();
 			}
 		});
 
 		// Intercept the execute button and use it to create
 		// the appropriate partition type, then close the dialog.
 		this.execute.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (validateFields())
-					hide();
+			public void actionPerformed(final ActionEvent e) {
+				if (ExpressionColumnDialog.this.validateFields())
+					ExpressionColumnDialog.this.hide();
 			}
 		});
 
 		// Make the execute button the default button.
-		this.getRootPane().setDefaultButton(execute);
+		this.getRootPane().setDefaultButton(this.execute);
 
 		// Set the size of the dialog.
 		this.pack();
@@ -288,7 +291,7 @@ public class ExpressionColumnDialog extends JDialog {
 
 	private boolean validateFields() {
 		// A placeholder to hold the validation messages, if any.
-		List messages = new ArrayList();
+		final List messages = new ArrayList();
 
 		// We must have a name!
 		if (this.isEmpty(this.columnName.getText()))
@@ -306,12 +309,13 @@ public class ExpressionColumnDialog extends JDialog {
 		// If group-by is selected, we can't allow them to use columns
 		// involved in any keys.
 		if (this.getGroupBy()) {
-			Collection aliasCols = this.getColumnAliases().keySet();
+			final Collection aliasCols = this.getColumnAliases().keySet();
 			boolean keyFree = true;
-			for (Iterator i = this.table.getKeys().iterator(); i.hasNext()
+			for (final Iterator i = this.table.getKeys().iterator(); i
+					.hasNext()
 					&& keyFree;) {
-				Key k = (Key) i.next();
-				for (Iterator j = k.getColumns().iterator(); j.hasNext()
+				final Key k = (Key) i.next();
+				for (final Iterator j = k.getColumns().iterator(); j.hasNext()
 						&& keyFree;)
 					if (aliasCols.contains(j.next()))
 						keyFree = false;
@@ -321,20 +325,19 @@ public class ExpressionColumnDialog extends JDialog {
 		}
 
 		// If there any messages, display them.
-		if (!messages.isEmpty()) {
+		if (!messages.isEmpty())
 			JOptionPane.showMessageDialog(this,
 					messages.toArray(new String[0]), Resources
 							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);
-		}
 
 		// Validation succeeds if there are no messages.
 		return messages.isEmpty();
 	}
 
-	private boolean isEmpty(String string) {
+	private boolean isEmpty(final String string) {
 		// Strings are empty if they are null or all whitespace.
-		return (string == null || string.trim().length() == 0);
+		return string == null || string.trim().length() == 0;
 	}
 
 	/**
@@ -391,31 +394,45 @@ public class ExpressionColumnDialog extends JDialog {
 		private static final Class[] colClasses = new Class[] {
 				DataSetColumn.class, String.class };
 
-		public ColumnAliasTableModel(DataSetTable table,
-				ExpressionColumn template) {
+		/**
+		 * Construct a model of aliases for the given table, and copy any
+		 * existing aliases from the given template.
+		 * 
+		 * @param table
+		 *            the table we are showing columns for.
+		 * @param template
+		 *            the existing alises to copy.
+		 */
+		public ColumnAliasTableModel(final DataSetTable table,
+				final ExpressionColumn template) {
 			super(new Object[] { Resources.get("columnAliasTableColHeader"),
 					Resources.get("columnAliasTableAliasHeader") }, 0);
 			// Populate columns, and aliases from template.
 			if (template != null)
-				for (Iterator i = template.getAliases().entrySet().iterator(); i
-						.hasNext();) {
-					Map.Entry entry = (Map.Entry) i.next();
-					DataSetColumn col = (DataSetColumn) entry.getKey();
+				for (final Iterator i = template.getAliases().entrySet()
+						.iterator(); i.hasNext();) {
+					final Map.Entry entry = (Map.Entry) i.next();
+					final DataSetColumn col = (DataSetColumn) entry.getKey();
 					this.insertRow(this.getRowCount(), new Object[] { col,
 							(String) entry.getValue() });
 				}
 		}
 
-		public Class getColumnClass(int column) {
+		public Class getColumnClass(final int column) {
 			return ColumnAliasTableModel.colClasses[column];
 		}
 
+		/**
+		 * Find out what aliases the user has defined.
+		 * 
+		 * @return a map where the keys are columns and the values are aliases.
+		 */
 		public Map getColumnAliases() {
 			// Return the map of column to alias.
-			HashMap aliases = new HashMap();
+			final HashMap aliases = new HashMap();
 			for (int i = 0; i < this.getRowCount(); i++) {
-				DataSetColumn col = (DataSetColumn) this.getValueAt(i, 0);
-				String alias = (String) this.getValueAt(i, 1);
+				final DataSetColumn col = (DataSetColumn) this.getValueAt(i, 0);
+				final String alias = (String) this.getValueAt(i, 1);
 				if (col != null
 						&& !(alias == null || alias.trim().length() == 0))
 					aliases.put(col, alias);

@@ -31,7 +31,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 /**
  * Displays the contents of a dataset, explaining the relations followed to
  * reach each table used in the dataset tables. It is pretty much the same as a
- * {@link WindowDiagram}, except that it doesn't show any tables or relations
+ * {@link SchemaDiagram}, except that it doesn't show any tables or relations
  * not involved in the construction of the dataset or dataset table concerned.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
@@ -57,7 +57,8 @@ public class ExplainDataSetDiagram extends Diagram {
 	 * @param datasetTable
 	 *            the dataset table to explain.
 	 */
-	public ExplainDataSetDiagram(MartTab martTab, DataSetTable datasetTable) {
+	public ExplainDataSetDiagram(final MartTab martTab,
+			final DataSetTable datasetTable) {
 		super(martTab);
 
 		// Set the background.
@@ -78,30 +79,30 @@ public class ExplainDataSetDiagram extends Diagram {
 
 		// Add a TableComponent for each other table involved in any relation
 		// underlying the dataset table.
-		for (Iterator i = this.datasetTable.getUnderlyingRelations().iterator(); i
-				.hasNext();) {
-			Relation relation = (Relation) i.next();
+		for (final Iterator i = this.datasetTable.getUnderlyingRelations()
+				.iterator(); i.hasNext();) {
+			final Relation relation = (Relation) i.next();
 
 			// Add the two ends of the relation, only if not done so before.
-			Table firstTable = relation.getFirstKey().getTable();
+			final Table firstTable = relation.getFirstKey().getTable();
 			if (this.getDiagramComponent(firstTable) == null) {
-				TableComponent tableComponent = new TableComponent(firstTable,
-						this);
+				final TableComponent tableComponent = new TableComponent(
+						firstTable, this);
 				this.addDiagramComponent(tableComponent);
 			}
-			Table secondTable = relation.getSecondKey().getTable();
+			final Table secondTable = relation.getSecondKey().getTable();
 			if (this.getDiagramComponent(secondTable) == null) {
-				TableComponent tableComponent = new TableComponent(secondTable,
-						this);
+				final TableComponent tableComponent = new TableComponent(
+						secondTable, this);
 				this.addDiagramComponent(tableComponent);
 			}
 		}
 
 		// Add Relations last to prevent overlapping with other components.
-		for (Iterator i = this.datasetTable.getUnderlyingRelations().iterator(); i
-				.hasNext();) {
-			Relation relation = (Relation) i.next();
-			RelationComponent relationComponent = new RelationComponent(
+		for (final Iterator i = this.datasetTable.getUnderlyingRelations()
+				.iterator(); i.hasNext();) {
+			final Relation relation = (Relation) i.next();
+			final RelationComponent relationComponent = new RelationComponent(
 					relation, this);
 			this.addDiagramComponent(relationComponent);
 		}

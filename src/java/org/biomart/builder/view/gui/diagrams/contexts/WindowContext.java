@@ -68,7 +68,7 @@ public class WindowContext extends SchemaContext {
 	 * @param dataset
 	 *            the dataset we are attached to.
 	 */
-	public WindowContext(MartTab martTab, DataSet dataset) {
+	public WindowContext(final MartTab martTab, final DataSet dataset) {
 		super(martTab);
 		this.dataset = dataset;
 	}
@@ -82,12 +82,13 @@ public class WindowContext extends SchemaContext {
 		return this.dataset;
 	}
 
-	public void populateContextMenu(JPopupMenu contextMenu, Object object) {
+	public void populateContextMenu(final JPopupMenu contextMenu,
+			final Object object) {
 
 		// This menu applies to the background area (null) of the window,
 		// plus all Schema objects displayed in it. In other words, the
 		// background behaves in the same way as the Schema objects in it.
-		if (object == null || (object instanceof Schema)) {
+		if (object == null || object instanceof Schema) {
 
 			// None, yet.
 
@@ -108,9 +109,11 @@ public class WindowContext extends SchemaContext {
 					.get("maskTableTitle"));
 			mask.setMnemonic(Resources.get("maskTableMnemonic").charAt(0));
 			mask.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestMaskTable(dataset,
-							table);
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this
+							.getMartTab()
+							.getDataSetTabSet()
+							.requestMaskTable(WindowContext.this.dataset, table);
 				}
 			});
 			contextMenu.add(mask);
@@ -121,8 +124,8 @@ public class WindowContext extends SchemaContext {
 			showTen.setMnemonic(Resources.get("showFirstTenRowsMnemonic")
 					.charAt(0));
 			showTen.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getSchemaTabSet()
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this.getMartTab().getSchemaTabSet()
 							.requestShowRows(table, 0, 10);
 				}
 			});
@@ -132,28 +135,32 @@ public class WindowContext extends SchemaContext {
 			if (this.dataset.getRestrictedTables().contains(table)) {
 
 				// Option to modify restriction.
-				JMenuItem modify = new JMenuItem(Resources
+				final JMenuItem modify = new JMenuItem(Resources
 						.get("modifyTableRestrictionTitle"));
 				modify.setMnemonic(Resources.get(
 						"modifyTableRestrictionMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						getMartTab().getDataSetTabSet()
-								.requestModifyTableRestriction(dataset, table,
-										dataset.getRestrictedTableType(table));
+					public void actionPerformed(final ActionEvent evt) {
+						WindowContext.this.getMartTab().getDataSetTabSet()
+								.requestModifyTableRestriction(
+										WindowContext.this.dataset,
+										table,
+										WindowContext.this.dataset
+												.getRestrictedTableType(table));
 					}
 				});
 				contextMenu.add(modify);
 
 				// Option to remove restriction.
-				JMenuItem remove = new JMenuItem(Resources
+				final JMenuItem remove = new JMenuItem(Resources
 						.get("removeTableRestrictionTitle"));
 				remove.setMnemonic(Resources.get(
 						"removeTableRestrictionMnemonic").charAt(0));
 				remove.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						getMartTab().getDataSetTabSet()
-								.requestRemoveTableRestriction(dataset, table);
+					public void actionPerformed(final ActionEvent evt) {
+						WindowContext.this.getMartTab().getDataSetTabSet()
+								.requestRemoveTableRestriction(
+										WindowContext.this.dataset, table);
 					}
 				});
 				contextMenu.add(remove);
@@ -161,14 +168,15 @@ public class WindowContext extends SchemaContext {
 			} else {
 
 				// Add a table restriction.
-				JMenuItem restriction = new JMenuItem(Resources
+				final JMenuItem restriction = new JMenuItem(Resources
 						.get("addTableRestrictionTitle"));
 				restriction.setMnemonic(Resources.get(
 						"addTableRestrictionMnemonic").charAt(0));
 				restriction.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						getMartTab().getDataSetTabSet()
-								.requestAddTableRestriction(dataset, table);
+					public void actionPerformed(final ActionEvent evt) {
+						WindowContext.this.getMartTab().getDataSetTabSet()
+								.requestAddTableRestriction(
+										WindowContext.this.dataset, table);
 					}
 				});
 				contextMenu.add(restriction);
@@ -186,27 +194,29 @@ public class WindowContext extends SchemaContext {
 			final Relation relation = (Relation) object;
 
 			// Work out what state the relation is already in.
-			boolean incorrect = relation.getStatus().equals(
+			final boolean incorrect = relation.getStatus().equals(
 					ComponentStatus.INFERRED_INCORRECT);
-			boolean relationMasked = this.dataset.getMaskedRelations()
+			final boolean relationMasked = this.dataset.getMaskedRelations()
 					.contains(relation);
-			boolean relationConcated = this.dataset.getConcatOnlyRelations()
-					.contains(relation);
-			boolean relationSubclassed = this.dataset.getSubclassedRelations()
-					.contains(relation);
+			final boolean relationConcated = this.dataset
+					.getConcatOnlyRelations().contains(relation);
+			final boolean relationSubclassed = this.dataset
+					.getSubclassedRelations().contains(relation);
 
 			// The mask/unmask option allows the user to mask/unmask a relation.
 			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
 					.get("maskRelationTitle"));
 			mask.setMnemonic(Resources.get("maskRelationMnemonic").charAt(0));
 			mask.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
+				public void actionPerformed(final ActionEvent evt) {
 					if (mask.isSelected())
-						getMartTab().getDataSetTabSet().requestMaskRelation(
-								dataset, relation);
+						WindowContext.this.getMartTab().getDataSetTabSet()
+								.requestMaskRelation(
+										WindowContext.this.dataset, relation);
 					else
-						getMartTab().getDataSetTabSet().requestUnmaskRelation(
-								dataset, relation);
+						WindowContext.this.getMartTab().getDataSetTabSet()
+								.requestUnmaskRelation(
+										WindowContext.this.dataset, relation);
 				}
 			});
 			contextMenu.add(mask);
@@ -223,13 +233,15 @@ public class WindowContext extends SchemaContext {
 			subclass.setMnemonic(Resources.get("subclassRelationMnemonic")
 					.charAt(0));
 			subclass.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
+				public void actionPerformed(final ActionEvent evt) {
 					if (subclass.isSelected())
-						getMartTab().getDataSetTabSet()
-								.requestSubclassRelation(dataset, relation);
+						WindowContext.this.getMartTab().getDataSetTabSet()
+								.requestSubclassRelation(
+										WindowContext.this.dataset, relation);
 					else
-						getMartTab().getDataSetTabSet()
-								.requestUnsubclassRelation(dataset, relation);
+						WindowContext.this.getMartTab().getDataSetTabSet()
+								.requestUnsubclassRelation(
+										WindowContext.this.dataset, relation);
 				}
 			});
 			contextMenu.add(subclass);
@@ -240,21 +252,22 @@ public class WindowContext extends SchemaContext {
 				subclass.setEnabled(false);
 
 			// The concat-only submenu allows concat-only relations.
-			JMenu concatSubmenu = new JMenu(Resources
+			final JMenu concatSubmenu = new JMenu(Resources
 					.get("concatOnlyRelationTitle"));
 			concatSubmenu.setMnemonic(Resources.get(
 					"concatOnlyRelationMnemonic").charAt(0));
-			ButtonGroup concatGroup = new ButtonGroup();
+			final ButtonGroup concatGroup = new ButtonGroup();
 
 			// This item in the concat-only relation submenu turns concat-only
 			// relations off.
-			JRadioButtonMenuItem none = new JRadioButtonMenuItem(Resources
-					.get("noneConcatTitle"));
+			final JRadioButtonMenuItem none = new JRadioButtonMenuItem(
+					Resources.get("noneConcatTitle"));
 			none.setMnemonic(Resources.get("noneConcatMnemonic").charAt(0));
 			none.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet()
-							.requestUnconcatOnlyRelation(dataset, relation);
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this.getMartTab().getDataSetTabSet()
+							.requestUnconcatOnlyRelation(
+									WindowContext.this.dataset, relation);
 				}
 			});
 			concatGroup.add(none);
@@ -269,15 +282,17 @@ public class WindowContext extends SchemaContext {
 			comma.setMnemonic(Resources.get("commaCommaConcatMnemonic").charAt(
 					0));
 			comma.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
-							dataset, relation, ConcatRelationType.COMMA_COMMA);
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this.getMartTab().getDataSetTabSet()
+							.requestConcatOnlyRelation(
+									WindowContext.this.dataset, relation,
+									ConcatRelationType.COMMA_COMMA);
 				}
 			});
 			concatGroup.add(comma);
 			concatSubmenu.add(comma);
 			if (this.dataset.getConcatRelationType(relation) != null
-					&& dataset.getConcatRelationType(relation).equals(
+					&& this.dataset.getConcatRelationType(relation).equals(
 							ConcatRelationType.COMMA_COMMA))
 				comma.setSelected(true);
 
@@ -287,15 +302,17 @@ public class WindowContext extends SchemaContext {
 					.get("commaTabConcatTitle"));
 			tab.setMnemonic(Resources.get("commaTabConcatMnemonic").charAt(0));
 			tab.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
-							dataset, relation, ConcatRelationType.COMMA_TAB);
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this.getMartTab().getDataSetTabSet()
+							.requestConcatOnlyRelation(
+									WindowContext.this.dataset, relation,
+									ConcatRelationType.COMMA_TAB);
 				}
 			});
 			concatGroup.add(tab);
 			concatSubmenu.add(tab);
 			if (this.dataset.getConcatRelationType(relation) != null
-					&& dataset.getConcatRelationType(relation).equals(
+					&& this.dataset.getConcatRelationType(relation).equals(
 							ConcatRelationType.COMMA_TAB))
 				tab.setSelected(true);
 
@@ -306,15 +323,17 @@ public class WindowContext extends SchemaContext {
 			space.setMnemonic(Resources.get("commaSpaceConcatMnemonic").charAt(
 					0));
 			space.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
-							dataset, relation, ConcatRelationType.COMMA_SPACE);
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this.getMartTab().getDataSetTabSet()
+							.requestConcatOnlyRelation(
+									WindowContext.this.dataset, relation,
+									ConcatRelationType.COMMA_SPACE);
 				}
 			});
 			concatGroup.add(space);
 			concatSubmenu.add(space);
 			if (this.dataset.getConcatRelationType(relation) != null
-					&& dataset.getConcatRelationType(relation).equals(
+					&& this.dataset.getConcatRelationType(relation).equals(
 							ConcatRelationType.COMMA_SPACE))
 				space.setSelected(true);
 
@@ -325,15 +344,17 @@ public class WindowContext extends SchemaContext {
 			comma.setMnemonic(Resources.get("spaceCommaConcatMnemonic").charAt(
 					0));
 			comma.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
-							dataset, relation, ConcatRelationType.SPACE_COMMA);
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this.getMartTab().getDataSetTabSet()
+							.requestConcatOnlyRelation(
+									WindowContext.this.dataset, relation,
+									ConcatRelationType.SPACE_COMMA);
 				}
 			});
 			concatGroup.add(comma);
 			concatSubmenu.add(comma);
 			if (this.dataset.getConcatRelationType(relation) != null
-					&& dataset.getConcatRelationType(relation).equals(
+					&& this.dataset.getConcatRelationType(relation).equals(
 							ConcatRelationType.SPACE_COMMA))
 				comma.setSelected(true);
 
@@ -342,15 +363,17 @@ public class WindowContext extends SchemaContext {
 			tab = new JRadioButtonMenuItem(Resources.get("spaceTabConcatTitle"));
 			tab.setMnemonic(Resources.get("spaceTabConcatMnemonic").charAt(0));
 			tab.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
-							dataset, relation, ConcatRelationType.SPACE_TAB);
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this.getMartTab().getDataSetTabSet()
+							.requestConcatOnlyRelation(
+									WindowContext.this.dataset, relation,
+									ConcatRelationType.SPACE_TAB);
 				}
 			});
 			concatGroup.add(tab);
 			concatSubmenu.add(tab);
 			if (this.dataset.getConcatRelationType(relation) != null
-					&& dataset.getConcatRelationType(relation).equals(
+					&& this.dataset.getConcatRelationType(relation).equals(
 							ConcatRelationType.SPACE_TAB))
 				tab.setSelected(true);
 
@@ -361,15 +384,17 @@ public class WindowContext extends SchemaContext {
 			space.setMnemonic(Resources.get("spaceSpaceConcatMnemonic").charAt(
 					0));
 			space.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
-							dataset, relation, ConcatRelationType.SPACE_SPACE);
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this.getMartTab().getDataSetTabSet()
+							.requestConcatOnlyRelation(
+									WindowContext.this.dataset, relation,
+									ConcatRelationType.SPACE_SPACE);
 				}
 			});
 			concatGroup.add(space);
 			concatSubmenu.add(space);
 			if (this.dataset.getConcatRelationType(relation) != null
-					&& dataset.getConcatRelationType(relation).equals(
+					&& this.dataset.getConcatRelationType(relation).equals(
 							ConcatRelationType.SPACE_SPACE))
 				space.setSelected(true);
 
@@ -381,15 +406,17 @@ public class WindowContext extends SchemaContext {
 					.setMnemonic(Resources.get("tabCommaConcatMnemonic")
 							.charAt(0));
 			comma.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
-							dataset, relation, ConcatRelationType.TAB_COMMA);
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this.getMartTab().getDataSetTabSet()
+							.requestConcatOnlyRelation(
+									WindowContext.this.dataset, relation,
+									ConcatRelationType.TAB_COMMA);
 				}
 			});
 			concatGroup.add(comma);
 			concatSubmenu.add(comma);
 			if (this.dataset.getConcatRelationType(relation) != null
-					&& dataset.getConcatRelationType(relation).equals(
+					&& this.dataset.getConcatRelationType(relation).equals(
 							ConcatRelationType.TAB_COMMA))
 				comma.setSelected(true);
 
@@ -398,15 +425,17 @@ public class WindowContext extends SchemaContext {
 			tab = new JRadioButtonMenuItem(Resources.get("tabTabConcatTitle"));
 			tab.setMnemonic(Resources.get("tabTabConcatMnemonic").charAt(0));
 			tab.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
-							dataset, relation, ConcatRelationType.TAB_TAB);
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this.getMartTab().getDataSetTabSet()
+							.requestConcatOnlyRelation(
+									WindowContext.this.dataset, relation,
+									ConcatRelationType.TAB_TAB);
 				}
 			});
 			concatGroup.add(tab);
 			concatSubmenu.add(tab);
 			if (this.dataset.getConcatRelationType(relation) != null
-					&& dataset.getConcatRelationType(relation).equals(
+					&& this.dataset.getConcatRelationType(relation).equals(
 							ConcatRelationType.TAB_TAB))
 				tab.setSelected(true);
 
@@ -418,15 +447,17 @@ public class WindowContext extends SchemaContext {
 					.setMnemonic(Resources.get("tabSpaceConcatMnemonic")
 							.charAt(0));
 			space.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestConcatOnlyRelation(
-							dataset, relation, ConcatRelationType.TAB_SPACE);
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this.getMartTab().getDataSetTabSet()
+							.requestConcatOnlyRelation(
+									WindowContext.this.dataset, relation,
+									ConcatRelationType.TAB_SPACE);
 				}
 			});
 			concatGroup.add(space);
 			concatSubmenu.add(space);
 			if (this.dataset.getConcatRelationType(relation) != null
-					&& dataset.getConcatRelationType(relation).equals(
+					&& this.dataset.getConcatRelationType(relation).equals(
 							ConcatRelationType.TAB_SPACE))
 				space.setSelected(true);
 
@@ -443,33 +474,34 @@ public class WindowContext extends SchemaContext {
 			if (this.dataset.getRestrictedRelations().contains(relation)) {
 
 				// Option to modify restriction.
-				JMenuItem modify = new JMenuItem(Resources
+				final JMenuItem modify = new JMenuItem(Resources
 						.get("modifyRelationRestrictionTitle"));
 				modify.setMnemonic(Resources.get(
 						"modifyRelationRestrictionMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						getMartTab()
+					public void actionPerformed(final ActionEvent evt) {
+						WindowContext.this
+								.getMartTab()
 								.getDataSetTabSet()
 								.requestModifyRelationRestriction(
-										dataset,
+										WindowContext.this.dataset,
 										relation,
-										dataset
+										WindowContext.this.dataset
 												.getRestrictedRelationType(relation));
 					}
 				});
 				contextMenu.add(modify);
 
 				// Option to remove restriction.
-				JMenuItem remove = new JMenuItem(Resources
+				final JMenuItem remove = new JMenuItem(Resources
 						.get("removeRelationRestrictionTitle"));
 				remove.setMnemonic(Resources.get(
 						"removeRelationRestrictionMnemonic").charAt(0));
 				remove.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						getMartTab().getDataSetTabSet()
-								.requestRemoveRelationRestriction(dataset,
-										relation);
+					public void actionPerformed(final ActionEvent evt) {
+						WindowContext.this.getMartTab().getDataSetTabSet()
+								.requestRemoveRelationRestriction(
+										WindowContext.this.dataset, relation);
 					}
 				});
 				contextMenu.add(remove);
@@ -477,15 +509,15 @@ public class WindowContext extends SchemaContext {
 			} else {
 
 				// Add a relation restriction.
-				JMenuItem restriction = new JMenuItem(Resources
+				final JMenuItem restriction = new JMenuItem(Resources
 						.get("addRelationRestrictionTitle"));
 				restriction.setMnemonic(Resources.get(
 						"addRelationRestrictionMnemonic").charAt(0));
 				restriction.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						getMartTab().getDataSetTabSet()
-								.requestAddRelationRestriction(dataset,
-										relation);
+					public void actionPerformed(final ActionEvent evt) {
+						WindowContext.this.getMartTab().getDataSetTabSet()
+								.requestAddRelationRestriction(
+										WindowContext.this.dataset, relation);
 					}
 				});
 				contextMenu.add(restriction);
@@ -495,23 +527,24 @@ public class WindowContext extends SchemaContext {
 		// This submenu applies when keys are clicked on.
 		else if (object instanceof Key) {
 			// Keys simply show the menu for the table they are in.
-			Table table = ((Key) object).getTable();
+			final Table table = ((Key) object).getTable();
 			this.populateContextMenu(contextMenu, table);
 		}
 
 		// This submenu applies when columns are clicked on.
 		else if (object instanceof Column) {
 			// Columns simply show the menu for the table they are in.
-			Table table = ((Column) object).getTable();
+			final Table table = ((Column) object).getTable();
 			this.populateContextMenu(contextMenu, table);
 		}
 	}
 
-	public void customiseAppearance(JComponent component, Object object) {
+	public void customiseAppearance(final JComponent component,
+			final Object object) {
 
 		// This bit adds a restricted outline to restricted tables.
 		if (object instanceof Table) {
-			Table table = (Table) object;
+			final Table table = (Table) object;
 			if (this.dataset.getRestrictedTables().contains(table))
 				((TableComponent) component)
 						.setStroke(BoxShapedComponent.RESTRICTED_OUTLINE);
@@ -526,7 +559,7 @@ public class WindowContext extends SchemaContext {
 		if (object instanceof Relation) {
 
 			// Work out what relation we are dealing with.
-			Relation relation = (Relation) object;
+			final Relation relation = (Relation) object;
 
 			// Fade out all INFERRED_INCORRECT and MASKED relations.
 			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
@@ -546,7 +579,7 @@ public class WindowContext extends SchemaContext {
 				component.setForeground(RelationComponent.NORMAL_COLOUR);
 
 			// Do the stroke.
-			RelationComponent relcomp = (RelationComponent) component;
+			final RelationComponent relcomp = (RelationComponent) component;
 			if (relation.isOptional()) {
 				if (relation.isOneToOne())
 					relcomp.setStroke(RelationComponent.ONE_ONE_OPTIONAL);
@@ -561,14 +594,12 @@ public class WindowContext extends SchemaContext {
 					relcomp.setStroke(RelationComponent.MANY_MANY_RESTRICTED);
 				else
 					relcomp.setStroke(RelationComponent.ONE_MANY_RESTRICTED);
-			} else {
-				if (relation.isOneToOne())
-					relcomp.setStroke(RelationComponent.ONE_ONE);
-				else if (relation.isManyToMany())
-					relcomp.setStroke(RelationComponent.MANY_MANY);
-				else
-					relcomp.setStroke(RelationComponent.ONE_MANY);
-			}
+			} else if (relation.isOneToOne())
+				relcomp.setStroke(RelationComponent.ONE_ONE);
+			else if (relation.isManyToMany())
+				relcomp.setStroke(RelationComponent.MANY_MANY);
+			else
+				relcomp.setStroke(RelationComponent.ONE_MANY);
 		}
 
 		// This section customises the appearance of key objects within
@@ -576,7 +607,7 @@ public class WindowContext extends SchemaContext {
 		else if (object instanceof Key) {
 
 			// Work out what key we are dealing with.
-			Key key = (Key) object;
+			final Key key = (Key) object;
 
 			// Fade out all INFERRED_INCORRECT keys.
 			if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))

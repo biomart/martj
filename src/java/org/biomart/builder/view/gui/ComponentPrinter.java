@@ -57,7 +57,7 @@ public class ComponentPrinter implements Printable {
 	 * @param component
 	 *            the component to print.
 	 */
-	public ComponentPrinter(MartTab martTab, Component component) {
+	public ComponentPrinter(final MartTab martTab, final Component component) {
 		this.component = component;
 		this.martTab = martTab;
 	}
@@ -74,35 +74,36 @@ public class ComponentPrinter implements Printable {
 				public void run() {
 					try {
 						printJob.print();
-					} catch (PrinterException pe) {
-						martTab.getMartTabSet().getMartBuilder()
-								.showStackTrace(pe);
+					} catch (final PrinterException pe) {
+						ComponentPrinter.this.martTab.getMartTabSet()
+								.getMartBuilder().showStackTrace(pe);
 					}
 				}
 			});
 	}
 
-	public int print(Graphics g, PageFormat pageFormat, int pageIndex) {
+	public int print(final Graphics g, final PageFormat pageFormat,
+			final int pageIndex) {
 		// Work out the printable area.
-		Rectangle2D printableArea = new Rectangle2D.Double(pageFormat
+		final Rectangle2D printableArea = new Rectangle2D.Double(pageFormat
 				.getImageableX(), pageFormat.getImageableY(), pageFormat
 				.getImageableWidth(), pageFormat.getImageableHeight());
 		// Simple scale to reduce component size.
-		double xscale = 0.5;
-		double yscale = 0.5;
+		final double xscale = 0.5;
+		final double yscale = 0.5;
 		// Work out pages required for the component we are drawing.
-		int pagesAcross = (int) Math.ceil((this.component.getWidth() * xscale)
-				/ printableArea.getWidth());
-		int pagesDown = (int) Math.ceil((this.component.getHeight() * yscale)
-				/ printableArea.getHeight());
-		int numPages = pagesAcross * pagesDown;
+		final int pagesAcross = (int) Math.ceil(this.component.getWidth()
+				* xscale / printableArea.getWidth());
+		final int pagesDown = (int) Math.ceil(this.component.getHeight()
+				* yscale / printableArea.getHeight());
+		final int numPages = pagesAcross * pagesDown;
 		// If we are beyond the last page, we are done.
-		if (pageIndex >= numPages) {
+		if (pageIndex >= numPages)
 			// We only have one page, which contains the entire component.
 			return Printable.NO_SUCH_PAGE;
-		} else {
+		else {
 			// Print the components.
-			Graphics2D g2d = (Graphics2D) g;
+			final Graphics2D g2d = (Graphics2D) g;
 			// Translate our output to the printable area.
 			g2d.translate(printableArea.getX(), printableArea.getY());
 			// What page are we being asked to print?
@@ -119,7 +120,7 @@ public class ComponentPrinter implements Printable {
 			// huge on paper.
 			g2d.scale(xscale, yscale);
 			// Do the printing.
-			RepaintManager currentManager = RepaintManager
+			final RepaintManager currentManager = RepaintManager
 					.currentManager(this.component);
 			currentManager.setDoubleBufferingEnabled(false);
 			this.component.printAll(g2d);

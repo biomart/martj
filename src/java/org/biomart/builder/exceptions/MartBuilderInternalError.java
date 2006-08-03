@@ -43,7 +43,7 @@ public class MartBuilderInternalError extends Error {
 	 * @param msg
 	 *            the detail message.
 	 */
-	public MartBuilderInternalError(String msg) {
+	public MartBuilderInternalError(final String msg) {
 		super(msg);
 	}
 
@@ -56,7 +56,7 @@ public class MartBuilderInternalError extends Error {
 	 * @param t
 	 *            the underlying cause.
 	 */
-	public MartBuilderInternalError(String msg, Throwable t) {
+	public MartBuilderInternalError(final String msg, final Throwable t) {
 		super(msg, t);
 	}
 
@@ -67,7 +67,7 @@ public class MartBuilderInternalError extends Error {
 	 * @param t
 	 *            the underlying cause.
 	 */
-	public MartBuilderInternalError(Throwable t) {
+	public MartBuilderInternalError(final Throwable t) {
 		super(t);
 	}
 }

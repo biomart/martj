@@ -58,7 +58,7 @@ public class SchemaDiagram extends Diagram {
 	 * @param schema
 	 *            the schema to draw in this diagram.
 	 */
-	public SchemaDiagram(MartTab martTab, Schema schema) {
+	public SchemaDiagram(final MartTab martTab, final Schema schema) {
 		// Call the general diagram constructor first.
 		super(martTab);
 
@@ -74,13 +74,15 @@ public class SchemaDiagram extends Diagram {
 	 * Creates a new diagram that displays the tables and relations inside a
 	 * specific schema.
 	 * 
-	 * @layout the layout manager to use to display the diagram.
+	 * @param layout
+	 *            the layout manager to use to display the diagram.
 	 * @param martTab
 	 *            the tab within which this diagram appears.
 	 * @param schema
 	 *            the schema to draw in this diagram.
 	 */
-	public SchemaDiagram(LayoutManager layout, MartTab martTab, Schema schema) {
+	public SchemaDiagram(final LayoutManager layout, final MartTab martTab,
+			final Schema schema) {
 		// Call the general diagram constructor first.
 		super(layout, martTab);
 
@@ -114,7 +116,8 @@ public class SchemaDiagram extends Diagram {
 		this.removeAll();
 
 		// Add a TableComponent for each table.
-		for (Iterator i = this.getSchema().getTables().iterator(); i.hasNext();)
+		for (final Iterator i = this.getSchema().getTables().iterator(); i
+				.hasNext();)
 			this
 					.addDiagramComponent(new TableComponent((Table) i.next(),
 							this));
@@ -122,10 +125,10 @@ public class SchemaDiagram extends Diagram {
 		// Add a RelationComponent for each relation. We only work with
 		// internal relations because we can't correctly display external ones
 		// as they have ends in other schemas.
-		for (Iterator i = this.getSchema().getInternalRelations().iterator(); i
-				.hasNext();) {
-			Relation relation = (Relation) i.next();
-			RelationComponent relationComponent = new RelationComponent(
+		for (final Iterator i = this.getSchema().getInternalRelations()
+				.iterator(); i.hasNext();) {
+			final Relation relation = (Relation) i.next();
+			final RelationComponent relationComponent = new RelationComponent(
 					relation, this);
 			this.addDiagramComponent(relationComponent);
 		}

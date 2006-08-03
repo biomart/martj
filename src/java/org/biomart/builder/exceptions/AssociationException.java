@@ -36,7 +36,7 @@ public class AssociationException extends Exception {
 	 * @param msg
 	 *            the detail message.
 	 */
-	public AssociationException(String msg) {
+	public AssociationException(final String msg) {
 		super(msg);
 	}
 
@@ -49,7 +49,7 @@ public class AssociationException extends Exception {
 	 * @param t
 	 *            the initial cause.
 	 */
-	public AssociationException(String msg, Throwable t) {
+	public AssociationException(final String msg, final Throwable t) {
 		super(msg, t);
 	}
 }

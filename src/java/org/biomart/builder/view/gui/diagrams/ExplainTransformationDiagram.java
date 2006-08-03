@@ -75,8 +75,8 @@ public class ExplainTransformationDiagram extends Diagram {
 	 * @param datasetTable
 	 *            the dataset table to explain.
 	 */
-	public ExplainTransformationDiagram(MartTab martTab, DataSet dataset,
-			DataSetTable datasetTable) {
+	public ExplainTransformationDiagram(final MartTab martTab,
+			final DataSet dataset, final DataSetTable datasetTable) {
 		super(martTab);
 
 		// Set the background.
@@ -98,8 +98,8 @@ public class ExplainTransformationDiagram extends Diagram {
 	 * @param table
 	 *            the table to explain.
 	 */
-	public ExplainTransformationDiagram(MartTab martTab, DataSet dataset,
-			Table table) {
+	public ExplainTransformationDiagram(final MartTab martTab,
+			final DataSet dataset, final Table table) {
 		super(martTab);
 
 		// Set the background.
@@ -123,8 +123,8 @@ public class ExplainTransformationDiagram extends Diagram {
 	 * @param relation
 	 *            the relation to explain.
 	 */
-	public ExplainTransformationDiagram(MartTab martTab, DataSet dataset,
-			Key key, Relation relation) {
+	public ExplainTransformationDiagram(final MartTab martTab,
+			final DataSet dataset, final Key key, final Relation relation) {
 		super(martTab);
 
 		// Set the background.
@@ -147,8 +147,8 @@ public class ExplainTransformationDiagram extends Diagram {
 	 * @param columns
 	 *            the columns to explain.
 	 */
-	public ExplainTransformationDiagram(MartTab martTab, DataSet dataset,
-			Collection columns) {
+	public ExplainTransformationDiagram(final MartTab martTab,
+			final DataSet dataset, final Collection columns) {
 		super(martTab);
 
 		// Set the background.
@@ -181,7 +181,7 @@ public class ExplainTransformationDiagram extends Diagram {
 							this));
 			// Add parent relation, if any.
 			if (parentRelation != null) {
-				RelationComponent relationComponent = new RelationComponent(
+				final RelationComponent relationComponent = new RelationComponent(
 						parentRelation, this);
 				this.addDiagramComponent(relationComponent);
 			}
@@ -200,13 +200,13 @@ public class ExplainTransformationDiagram extends Diagram {
 
 		// Explain a key/relation pair?
 		else if (this.key != null && this.relation != null) {
-			Table source = this.key.getTable();
-			Table target = this.relation.getOtherKey(this.key).getTable();
+			final Table source = this.key.getTable();
+			final Table target = this.relation.getOtherKey(this.key).getTable();
 			// Add source and target tables.
 			this.addDiagramComponent(new TableComponent(source, this));
 			this.addDiagramComponent(new TableComponent(target, this));
 			// Add relation.
-			RelationComponent relationComponent = new RelationComponent(
+			final RelationComponent relationComponent = new RelationComponent(
 					this.relation, this);
 			this.addDiagramComponent(relationComponent);
 			// Set the context.
@@ -216,8 +216,8 @@ public class ExplainTransformationDiagram extends Diagram {
 
 		// Explain a set of columns?
 		else if (this.columns != null) {
-			for (Iterator i = this.columns.iterator(); i.hasNext();) {
-				ColumnComponent columnComponent = new ColumnComponent(
+			for (final Iterator i = this.columns.iterator(); i.hasNext();) {
+				final ColumnComponent columnComponent = new ColumnComponent(
 						(Column) i.next(), this);
 				this.addDiagramComponent(columnComponent);
 			}

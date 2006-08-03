@@ -43,6 +43,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.filechooser.FileFilter;
 
 import org.biomart.builder.controller.SaveDDLMartConstructor;
@@ -98,7 +99,7 @@ public class SaveDDLDialog extends JDialog {
 	 * @param datasets
 	 *            the datasets to list.
 	 */
-	public SaveDDLDialog(MartTab martTab, Collection datasets) {
+	public SaveDDLDialog(final MartTab martTab, final Collection datasets) {
 		// Create the base dialog.
 		super(martTab.getMartTabSet().getMartBuilder(), Resources
 				.get("saveDDLDialogTitle"), true);
@@ -110,30 +111,30 @@ public class SaveDDLDialog extends JDialog {
 
 		// Create the content pane for the dialog, ie. the bit that will hold
 		// all the various questions and answers.
-		GridBagLayout gridBag = new GridBagLayout();
+		final GridBagLayout gridBag = new GridBagLayout();
 		final JPanel content = new JPanel(gridBag);
 		this.setContentPane(content);
 
 		// Create some constraints for labels, except those on the last row
 		// of the dialog.
-		GridBagConstraints labelConstraints = new GridBagConstraints();
+		final GridBagConstraints labelConstraints = new GridBagConstraints();
 		labelConstraints.gridwidth = GridBagConstraints.RELATIVE;
 		labelConstraints.fill = GridBagConstraints.HORIZONTAL;
 		labelConstraints.anchor = GridBagConstraints.LINE_END;
 		labelConstraints.insets = new Insets(0, 2, 0, 0);
 		// Create some constraints for fields, except those on the last row
 		// of the dialog.
-		GridBagConstraints fieldConstraints = new GridBagConstraints();
+		final GridBagConstraints fieldConstraints = new GridBagConstraints();
 		fieldConstraints.gridwidth = GridBagConstraints.REMAINDER;
 		fieldConstraints.fill = GridBagConstraints.NONE;
 		fieldConstraints.anchor = GridBagConstraints.LINE_START;
 		fieldConstraints.insets = new Insets(0, 1, 0, 2);
 		// Create some constraints for labels on the last row of the dialog.
-		GridBagConstraints labelLastRowConstraints = (GridBagConstraints) labelConstraints
+		final GridBagConstraints labelLastRowConstraints = (GridBagConstraints) labelConstraints
 				.clone();
 		labelLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 		// Create some constraints for fields on the last row of the dialog.
-		GridBagConstraints fieldLastRowConstraints = (GridBagConstraints) fieldConstraints
+		final GridBagConstraints fieldLastRowConstraints = (GridBagConstraints) fieldConstraints
 				.clone();
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
@@ -149,8 +150,7 @@ public class SaveDDLDialog extends JDialog {
 				SaveDDLGranularity.STEP });
 
 		// Create the list for choosing datasets.
-		this.datasetsList = new JList((DataSet[]) datasets
-				.toArray(new DataSet[0]));
+		this.datasetsList = new JList(datasets.toArray(new DataSet[0]));
 		this.datasetsList
 				.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		this.datasetsList.setSelectionInterval(0, this.datasets.size() - 1);
@@ -165,15 +165,16 @@ public class SaveDDLDialog extends JDialog {
 		this.zipFileChooser = new JFileChooser();
 		this.zipFileFilter = new FileFilter() {
 			private boolean isZipped() {
-				SaveDDLGranularity gran = (SaveDDLGranularity) granularity
+				final SaveDDLGranularity gran = (SaveDDLGranularity) SaveDDLDialog.this.granularity
 						.getSelectedItem();
 				return gran != null && gran.getZipped();
 			}
 
 			// Accepts only files ending in ".zip".
-			public boolean accept(File f) {
-				return (f.isDirectory() || f.getName().toLowerCase().endsWith(
-						this.isZipped() ? ".zip" : ".ddl"));
+			public boolean accept(final File f) {
+				return f.isDirectory()
+						|| f.getName().toLowerCase().endsWith(
+								this.isZipped() ? ".zip" : ".ddl");
 			}
 
 			public String getDescription() {
@@ -188,40 +189,42 @@ public class SaveDDLDialog extends JDialog {
 
 		// Attach the file chooser to the driver class location button.
 		this.zipFileLocationButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (zipFileChooser.showSaveDialog(content) == JFileChooser.APPROVE_OPTION) {
-					File file = zipFileChooser.getSelectedFile();
+			public void actionPerformed(final ActionEvent e) {
+				if (SaveDDLDialog.this.zipFileChooser.showSaveDialog(content) == JFileChooser.APPROVE_OPTION) {
+					final File file = SaveDDLDialog.this.zipFileChooser
+							.getSelectedFile();
 					// When a file is chosen, put its name in the driver
 					// class location field.
 					if (file != null)
-						zipFileLocation.setText(file.toString());
+						SaveDDLDialog.this.zipFileLocation.setText(file
+								.toString());
 				}
 			}
 		});
 
 		// Add listeners to view DDL and granularity.
 		this.viewDDL.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (viewDDL.isSelected()) {
-					zipFileLocation.setText(null);
-					zipFileLocation.setEnabled(false);
-					zipFileLocationButton.setEnabled(false);
+			public void actionPerformed(final ActionEvent e) {
+				if (SaveDDLDialog.this.viewDDL.isSelected()) {
+					SaveDDLDialog.this.zipFileLocation.setText(null);
+					SaveDDLDialog.this.zipFileLocation.setEnabled(false);
+					SaveDDLDialog.this.zipFileLocationButton.setEnabled(false);
 				} else {
-					zipFileLocation.setEnabled(true);
-					zipFileLocationButton.setEnabled(true);
+					SaveDDLDialog.this.zipFileLocation.setEnabled(true);
+					SaveDDLDialog.this.zipFileLocationButton.setEnabled(true);
 				}
 			}
 		});
 		this.granularity.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (granularity.getSelectedItem() != null
-						&& granularity.getSelectedItem().equals(
-								SaveDDLGranularity.SINGLE))
-					viewDDL.setEnabled(true);
+			public void actionPerformed(final ActionEvent e) {
+				if (SaveDDLDialog.this.granularity.getSelectedItem() != null
+						&& SaveDDLDialog.this.granularity.getSelectedItem()
+								.equals(SaveDDLGranularity.SINGLE))
+					SaveDDLDialog.this.viewDDL.setEnabled(true);
 				else {
-					if (viewDDL.isSelected())
-						viewDDL.doClick();
-					viewDDL.setEnabled(false);
+					if (SaveDDLDialog.this.viewDDL.isSelected())
+						SaveDDLDialog.this.viewDDL.doClick();
+					SaveDDLDialog.this.viewDDL.setEnabled(false);
 				}
 			}
 		});
@@ -277,24 +280,24 @@ public class SaveDDLDialog extends JDialog {
 		content.add(field);
 
 		// The close and execute buttons.
-		JButton cancel = new JButton(Resources.get("cancelButton"));
-		JButton execute = new JButton(Resources.get("saveDDLButton"));
+		final JButton cancel = new JButton(Resources.get("cancelButton"));
+		final JButton execute = new JButton(Resources.get("saveDDLButton"));
 
 		// Intercept the close button, which closes the dialog
 		// without taking any action.
 		cancel.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				hide();
+			public void actionPerformed(final ActionEvent e) {
+				SaveDDLDialog.this.hide();
 			}
 		});
 
 		// Intercept the execute button, which validates the fields
 		// then closes the dialog.
 		execute.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (validateFields()) {
-					createDDL();
-					hide();
+			public void actionPerformed(final ActionEvent e) {
+				if (SaveDDLDialog.this.validateFields()) {
+					SaveDDLDialog.this.createDDL();
+					SaveDDLDialog.this.hide();
 				}
 			}
 		});
@@ -319,23 +322,23 @@ public class SaveDDLDialog extends JDialog {
 		this.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 	}
 
-	private boolean isEmpty(String string) {
+	private boolean isEmpty(final String string) {
 		// Strings are empty if they are null or all whitespace.
-		return (string == null || string.trim().length() == 0);
+		return string == null || string.trim().length() == 0;
 	}
 
 	private boolean validateFields() {
 		// List of messages to display, if any are necessary.
-		List messages = new ArrayList();
+		final List messages = new ArrayList();
 
 		// Must have a target schema.
-		if (this.isEmpty((String) this.targetSchemaName.getText()))
+		if (this.isEmpty(this.targetSchemaName.getText()))
 			messages.add(Resources.get("fieldIsEmpty", Resources
 					.get("targetSchema")));
 
 		// Must have an output file.
 		if (!this.viewDDL.isSelected()
-				&& this.isEmpty((String) this.zipFileLocation.getText()))
+				&& this.isEmpty(this.zipFileLocation.getText()))
 			messages.add(Resources.get("fieldIsEmpty", Resources
 					.get("saveDDLFileLocation")));
 
@@ -345,19 +348,18 @@ public class SaveDDLDialog extends JDialog {
 					.get("selectedDataSets")));
 
 		// Any messages to display? Show them.
-		if (!messages.isEmpty()) {
+		if (!messages.isEmpty())
 			JOptionPane.showMessageDialog(this,
 					messages.toArray(new String[0]), Resources
 							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);
-		}
 
 		// Validation succeeds if there are no messages.
 		return messages.isEmpty();
 	}
 
 	private void createDDL() {
-		List selectedDataSets = Arrays.asList(this.datasetsList
+		final List selectedDataSets = Arrays.asList(this.datasetsList
 				.getSelectedValues());
 		final StringBuffer sb = new StringBuffer();
 		MartConstructor constructor;
@@ -375,15 +377,16 @@ public class SaveDDLDialog extends JDialog {
 					this.targetSchemaName.getText(), selectedDataSets);
 			if (this.viewDDL.isSelected())
 				cr.addMartConstructorListener(new MartConstructorListener() {
-					public void martConstructorEventOccurred(int event,
-							MartConstructorAction action) throws Exception {
+					public void martConstructorEventOccurred(final int event,
+							final MartConstructorAction action)
+							throws Exception {
 						if (event == MartConstructorListener.CONSTRUCTION_ENDED
 								&& cr.getFailureException() == null)
-							displayTextPane(sb);
+							SaveDDLDialog.this.displayTextPane(sb);
 					}
 				});
 			this.martTab.getMartTabSet().requestMonitorConstructorRunnable(cr);
-		} catch (Throwable t) {
+		} catch (final Throwable t) {
 			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 			JOptionPane.showMessageDialog(this.martTab.getMartTabSet()
 					.getMartBuilder(), Resources.get("martConstructionFailed"),
@@ -391,15 +394,15 @@ public class SaveDDLDialog extends JDialog {
 		}
 	}
 
-	private void displayTextPane(StringBuffer textBuffer) {
+	private void displayTextPane(final StringBuffer textBuffer) {
 		// Build the text pane.
-		JEditorPane editorPane = new JEditorPane("text/plain", textBuffer
+		final JEditorPane editorPane = new JEditorPane("text/plain", textBuffer
 				.toString());
 
 		// Put the editor pane in a scroll pane.
-		JScrollPane editorScrollPane = new JScrollPane(editorPane);
+		final JScrollPane editorScrollPane = new JScrollPane(editorPane);
 		editorScrollPane
-				.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+				.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
 		// Arbitrarily resize the scrollpane.
 		editorScrollPane.setPreferredSize(new Dimension(600, 400));

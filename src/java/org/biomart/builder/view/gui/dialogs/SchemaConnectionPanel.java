@@ -60,11 +60,13 @@ public abstract class SchemaConnectionPanel extends JPanel {
 	 *         possible pop up some messages for the user to read en route.
 	 */
 	public abstract boolean validateFields();
-	
+
 	/**
-	 * Resets the fields based on a given template. Specify <tt>null</tt>
-	 * for the template if you want complete defaults.
-	 * @param template the template to reset the fields for.
+	 * Resets the fields based on a given template. Specify <tt>null</tt> for
+	 * the template if you want complete defaults.
+	 * 
+	 * @param template
+	 *            the template to reset the fields for.
 	 */
 	public abstract void resetFields(Schema template);
 }

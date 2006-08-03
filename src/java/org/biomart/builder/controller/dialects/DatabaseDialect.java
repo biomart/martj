@@ -34,12 +34,11 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 
 /**
  * DatabaseDialect provides methods which generate atomic DDL or SQL statements.
- * Each implementation should register itself with
- * {@link #registerDialect(DatabaseDialect)} in a static initializer so that it
- * can be used.
+ * Each implementation should register itself with the static initializer so
+ * that it can be used.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 25th July 2006
+ * @version 0.1.10, 3rd August 2006
  * @since 0.1
  */
 public abstract class DatabaseDialect {
@@ -50,9 +49,9 @@ public abstract class DatabaseDialect {
 	 * called once, but doesn't hurt to call multiple times.
 	 */
 	static {
-		dialects.add(new MySQLDialect());
-		dialects.add(new OracleDialect());
-		dialects.add(new PostgreSQLDialect());
+		DatabaseDialect.dialects.add(new MySQLDialect());
+		DatabaseDialect.dialects.add(new OracleDialect());
+		DatabaseDialect.dialects.add(new PostgreSQLDialect());
 	}
 
 	/**
@@ -63,9 +62,10 @@ public abstract class DatabaseDialect {
 	 * @return the appropriate DatabaseDialect, or <tt>null</tt> if none
 	 *         found.
 	 */
-	public static DatabaseDialect getDialect(DataLink dataLink) {
-		for (Iterator i = dialects.iterator(); i.hasNext();) {
-			DatabaseDialect d = (DatabaseDialect) i.next();
+	public static DatabaseDialect getDialect(final DataLink dataLink) {
+		for (final Iterator i = DatabaseDialect.dialects.iterator(); i
+				.hasNext();) {
+			final DatabaseDialect d = (DatabaseDialect) i.next();
 			if (d.understandsDataLink(dataLink))
 				return d;
 		}

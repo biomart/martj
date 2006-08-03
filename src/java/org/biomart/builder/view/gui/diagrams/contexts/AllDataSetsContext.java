@@ -50,7 +50,7 @@ public class AllDataSetsContext implements DiagramContext {
 	 *            the mart tab which will receive any menu actions the user
 	 *            selects.
 	 */
-	public AllDataSetsContext(MartTab martTab) {
+	public AllDataSetsContext(final MartTab martTab) {
 		this.martTab = martTab;
 	}
 
@@ -63,7 +63,8 @@ public class AllDataSetsContext implements DiagramContext {
 		return this.martTab;
 	}
 
-	public void populateContextMenu(JPopupMenu contextMenu, Object object) {
+	public void populateContextMenu(final JPopupMenu contextMenu,
+			final Object object) {
 
 		// The background area of the diagram has some simple menu items
 		// that refer to all schemas.
@@ -74,13 +75,14 @@ public class AllDataSetsContext implements DiagramContext {
 				contextMenu.addSeparator();
 
 			// Option to remove all datasets from the mart.
-			JMenuItem remove = new JMenuItem(Resources
+			final JMenuItem remove = new JMenuItem(Resources
 					.get("removeAllDataSetsTitle"));
 			remove.setMnemonic(Resources.get("removeAllDataSetsMnemonic")
 					.charAt(0));
 			remove.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					martTab.getDataSetTabSet().requestRemoveAllDataSets();
+				public void actionPerformed(final ActionEvent evt) {
+					AllDataSetsContext.this.martTab.getDataSetTabSet()
+							.requestRemoveAllDataSets();
 				}
 			});
 			contextMenu.add(remove);
@@ -98,39 +100,42 @@ public class AllDataSetsContext implements DiagramContext {
 			final DataSet dataset = (DataSet) object;
 
 			// Option to remove the dataset from the mart.
-			JMenuItem remove = new JMenuItem(Resources
+			final JMenuItem remove = new JMenuItem(Resources
 					.get("removeDataSetTitle"));
 			remove
 					.setMnemonic(Resources.get("removeDataSetMnemonic").charAt(
 							0));
 			remove.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					martTab.getDataSetTabSet().requestRemoveDataSet(dataset);
+				public void actionPerformed(final ActionEvent evt) {
+					AllDataSetsContext.this.martTab.getDataSetTabSet()
+							.requestRemoveDataSet(dataset);
 				}
 			});
 			contextMenu.add(remove);
 
 			// Add an option to rename this dataset.
-			JMenuItem rename = new JMenuItem(Resources
+			final JMenuItem rename = new JMenuItem(Resources
 					.get("renameDataSetTitle"));
 			rename
 					.setMnemonic(Resources.get("renameDataSetMnemonic").charAt(
 							0));
 			rename.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					martTab.getDataSetTabSet().requestRenameDataSet(dataset);
+				public void actionPerformed(final ActionEvent evt) {
+					AllDataSetsContext.this.martTab.getDataSetTabSet()
+							.requestRenameDataSet(dataset);
 				}
 			});
 			contextMenu.add(rename);
 
 			// Add an option to replicate this dataset.
-			JMenuItem replicate = new JMenuItem(Resources
+			final JMenuItem replicate = new JMenuItem(Resources
 					.get("replicateDataSetTitle"));
 			replicate.setMnemonic(Resources.get("replicateDataSetMnemonic")
 					.charAt(0));
 			replicate.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					martTab.getDataSetTabSet().requestReplicateDataSet(dataset);
+				public void actionPerformed(final ActionEvent evt) {
+					AllDataSetsContext.this.martTab.getDataSetTabSet()
+							.requestReplicateDataSet(dataset);
 				}
 			});
 			contextMenu.add(replicate);
@@ -141,13 +146,13 @@ public class AllDataSetsContext implements DiagramContext {
 			invisible.setMnemonic(Resources.get("invisibleDataSetMnemonic")
 					.charAt(0));
 			invisible.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
+				public void actionPerformed(final ActionEvent evt) {
 					if (invisible.isSelected())
-						martTab.getDataSetTabSet().requestInvisibleDataSet(
-								dataset);
+						AllDataSetsContext.this.martTab.getDataSetTabSet()
+								.requestInvisibleDataSet(dataset);
 					else
-						martTab.getDataSetTabSet().requestVisibleDataSet(
-								dataset);
+						AllDataSetsContext.this.martTab.getDataSetTabSet()
+								.requestVisibleDataSet(dataset);
 				}
 			});
 			if (dataset.getInvisible())
@@ -155,21 +160,24 @@ public class AllDataSetsContext implements DiagramContext {
 			contextMenu.add(invisible);
 
 			// Option to create the DDL for the dataset.
-			JMenuItem saveDDL = new JMenuItem(Resources.get("saveDDLTitle"));
+			final JMenuItem saveDDL = new JMenuItem(Resources
+					.get("saveDDLTitle"));
 			saveDDL.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
 			saveDDL.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestCreateDDL(dataset);
+				public void actionPerformed(final ActionEvent evt) {
+					AllDataSetsContext.this.getMartTab().getDataSetTabSet()
+							.requestCreateDDL(dataset);
 				}
 			});
 			contextMenu.add(saveDDL);
 		}
 	}
 
-	public void customiseAppearance(JComponent component, Object object) {
+	public void customiseAppearance(final JComponent component,
+			final Object object) {
 		// Only worried about visible/invisible datasets.
 		if (object instanceof DataSet) {
-			DataSet ds = (DataSet) object;
+			final DataSet ds = (DataSet) object;
 			if (ds.getInvisible())
 				component.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
 			else

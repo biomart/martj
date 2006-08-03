@@ -89,7 +89,8 @@ public class ExplainDataSetDialog extends JDialog {
 
 	private DataSetTable dsTable;
 
-	private ExplainDataSetDialog(MartTab martTab, DataSetTable dsTable) {
+	private ExplainDataSetDialog(final MartTab martTab,
+			final DataSetTable dsTable) {
 		// Create the blank dialog, and give it an appropriate title.
 		super(martTab.getMartTabSet().getMartBuilder(), Resources.get(
 				"explainTableDialogTitle", dsTable.getName()), true);
@@ -102,10 +103,10 @@ public class ExplainDataSetDialog extends JDialog {
 
 		// Compute the diagram, and assign it the appropriate context.
 		this.diagram = new ExplainDataSetDiagram(this.martTab, this.dsTable);
-		WindowContext context = new WindowContext(this.martTab,
+		final WindowContext context = new WindowContext(this.martTab,
 				(DataSet) this.dsTable.getSchema());
-		diagram.setDiagramContext(context);
-		displayArea.add(new JScrollPane(diagram), "WINDOW_CARD");
+		this.diagram.setDiagramContext(context);
+		displayArea.add(new JScrollPane(this.diagram), "WINDOW_CARD");
 
 		// Create the content pane to store the create dialog panel.
 		this.gridBag = new GridBagLayout();
@@ -133,18 +134,20 @@ public class ExplainDataSetDialog extends JDialog {
 
 		// Compute the transformation diagram.
 		this.transformation = new JPanel(this.gridBag);
-		displayArea.add(new JScrollPane(transformation), "TRANSFORMATION_CARD");
+		displayArea.add(new JScrollPane(this.transformation),
+				"TRANSFORMATION_CARD");
 
 		// Create panel which contains the buttons.
-		JPanel buttonsPanel = new JPanel();
+		final JPanel buttonsPanel = new JPanel();
 
 		// Create the button that selects the dataset card.
 		final JRadioButton windowButton = new JRadioButton(Resources
 				.get("windowButtonName"));
 		windowButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(final ActionEvent e) {
 				if (e.getSource() == windowButton) {
-					CardLayout cards = (CardLayout) displayArea.getLayout();
+					final CardLayout cards = (CardLayout) displayArea
+							.getLayout();
 					cards.show(displayArea, "WINDOW_CARD");
 				}
 			}
@@ -154,9 +157,10 @@ public class ExplainDataSetDialog extends JDialog {
 		final JRadioButton transformationButton = new JRadioButton(Resources
 				.get("transformationButtonName"));
 		transformationButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(final ActionEvent e) {
 				if (e.getSource() == transformationButton) {
-					CardLayout cards = (CardLayout) displayArea.getLayout();
+					final CardLayout cards = (CardLayout) displayArea
+							.getLayout();
 					cards.show(displayArea, "TRANSFORMATION_CARD");
 				}
 			}
@@ -167,12 +171,12 @@ public class ExplainDataSetDialog extends JDialog {
 		buttonsPanel.add(transformationButton);
 
 		// Make buttons mutually exclusive.
-		ButtonGroup buttons = new ButtonGroup();
+		final ButtonGroup buttons = new ButtonGroup();
 		buttons.add(windowButton);
 		buttons.add(transformationButton);
 
 		// Set up our content pane.
-		JPanel content = new JPanel(new BorderLayout());
+		final JPanel content = new JPanel(new BorderLayout());
 		this.setContentPane(content);
 
 		// Add the display area to the pane.
@@ -180,8 +184,8 @@ public class ExplainDataSetDialog extends JDialog {
 		content.add(displayArea, BorderLayout.CENTER);
 
 		// Work out what size we want the diagram to be.
-		Dimension size = this.diagram.getPreferredSize();
-		Dimension maxSize = this.martTab.getSize();
+		final Dimension size = this.diagram.getPreferredSize();
+		final Dimension maxSize = this.martTab.getSize();
 		// The +20s in the following are to cater for scrollbar widths
 		// and window borders.
 		size.width = Math.max(100, Math
@@ -208,13 +212,13 @@ public class ExplainDataSetDialog extends JDialog {
 
 		// Add the table definition at the top.
 		JLabel label = new JLabel(Resources.get("targetTableLabel"));
-		gridBag.setConstraints(label, labelConstraints);
+		this.gridBag.setConstraints(label, this.labelConstraints);
 		this.transformation.add(label);
 		JPanel field = new JPanel();
 		Diagram diagram = new ExplainTransformationDiagram(this.martTab,
 				this.dataset, this.dsTable);
 		field.add(new JScrollPane(diagram));
-		gridBag.setConstraints(field, fieldConstraints);
+		this.gridBag.setConstraints(field, this.fieldConstraints);
 		this.transformation.add(field);
 
 		// Count our steps.
@@ -224,19 +228,20 @@ public class ExplainDataSetDialog extends JDialog {
 		if (this.dsTable.getType().equals(DataSetTableType.MAIN)) {
 			label = new JLabel(Resources.get("stepTableLabel", new String[] {
 					"" + stepNumber, Resources.get("explainSelectLabel") }));
-			gridBag.setConstraints(label, labelConstraints);
+			this.gridBag.setConstraints(label, this.labelConstraints);
 			this.transformation.add(label);
 			field = new JPanel();
 			diagram = new ExplainTransformationDiagram(this.martTab,
 					this.dataset, this.dsTable.getUnderlyingTable());
 			field.add(new JScrollPane(diagram));
-			List includeCols = new ArrayList();
-			for (Iterator i = this.dsTable.getColumns().iterator(); i.hasNext();) {
-				Column col = (Column) i.next();
+			final List includeCols = new ArrayList();
+			for (final Iterator i = this.dsTable.getColumns().iterator(); i
+					.hasNext();) {
+				final Column col = (Column) i.next();
 				if (col instanceof SchemaNameColumn)
 					includeCols.add(col);
 				else if (col instanceof WrappedColumn) {
-					WrappedColumn wcol = (WrappedColumn) col;
+					final WrappedColumn wcol = (WrappedColumn) col;
 					if (wcol.getWrappedColumn().getTable().equals(
 							this.dsTable.getUnderlyingTable()))
 						includeCols.add(wcol);
@@ -245,7 +250,7 @@ public class ExplainDataSetDialog extends JDialog {
 			diagram = new ExplainTransformationDiagram(this.martTab,
 					this.dataset, includeCols);
 			field.add(new JScrollPane(diagram));
-			gridBag.setConstraints(field, fieldConstraints);
+			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
 			stepNumber++;
 		}
@@ -253,41 +258,43 @@ public class ExplainDataSetDialog extends JDialog {
 		else {
 			label = new JLabel(Resources.get("stepTableLabel", new String[] {
 					"" + stepNumber, Resources.get("explainInheritLabel") }));
-			gridBag.setConstraints(label, labelConstraints);
+			this.gridBag.setConstraints(label, this.labelConstraints);
 			this.transformation.add(label);
 			field = new JPanel();
-			List includeCols = new ArrayList();
-			for (Iterator j = this.dsTable.getColumns().iterator(); j.hasNext();) {
-				Column col = (Column) j.next();
+			final List includeCols = new ArrayList();
+			for (final Iterator j = this.dsTable.getColumns().iterator(); j
+					.hasNext();) {
+				final Column col = (Column) j.next();
 				if (col instanceof InheritedColumn)
 					includeCols.add(col);
 			}
 			diagram = new ExplainTransformationDiagram(this.martTab,
 					this.dataset, includeCols);
 			field.add(new JScrollPane(diagram));
-			gridBag.setConstraints(field, fieldConstraints);
+			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
 			stepNumber++;
 		}
 
 		// Show underlying key/relation pairs.
 		for (int i = 0; i < this.dsTable.getUnderlyingKeys().size(); i++) {
-			Key k = (Key) this.dsTable.getUnderlyingKeys().get(i);
-			Relation r = (Relation) this.dsTable.getUnderlyingRelations()
+			final Key k = (Key) this.dsTable.getUnderlyingKeys().get(i);
+			final Relation r = (Relation) this.dsTable.getUnderlyingRelations()
 					.get(i);
 			label = new JLabel(Resources.get("stepTableLabel", new String[] {
 					"" + stepNumber, Resources.get("explainMergeLabel") }));
-			gridBag.setConstraints(label, labelConstraints);
+			this.gridBag.setConstraints(label, this.labelConstraints);
 			this.transformation.add(label);
 			field = new JPanel();
 			diagram = new ExplainTransformationDiagram(this.martTab,
 					this.dataset, k, r);
 			field.add(new JScrollPane(diagram));
-			List includeCols = new ArrayList();
-			for (Iterator j = this.dsTable.getColumns().iterator(); j.hasNext();) {
-				Column col = (Column) j.next();
+			final List includeCols = new ArrayList();
+			for (final Iterator j = this.dsTable.getColumns().iterator(); j
+					.hasNext();) {
+				final Column col = (Column) j.next();
 				if (col instanceof WrappedColumn) {
-					WrappedColumn wcol = (WrappedColumn) col;
+					final WrappedColumn wcol = (WrappedColumn) col;
 					if (r.equals(wcol.getUnderlyingRelation()))
 						includeCols.add(wcol);
 				}
@@ -295,19 +302,20 @@ public class ExplainDataSetDialog extends JDialog {
 			diagram = new ExplainTransformationDiagram(this.martTab,
 					this.dataset, includeCols);
 			field.add(new JScrollPane(diagram));
-			gridBag.setConstraints(field, fieldConstraints);
+			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
 			stepNumber++;
 		}
 
 		// Work out expression and partitioned columns.
-		List expressionCols = new ArrayList();
-		for (Iterator i = this.dsTable.getColumns().iterator(); i.hasNext();) {
-			Column c = (Column) i.next();
+		final List expressionCols = new ArrayList();
+		for (final Iterator i = this.dsTable.getColumns().iterator(); i
+				.hasNext();) {
+			final Column c = (Column) i.next();
 			if (c instanceof ExpressionColumn)
 				expressionCols.add(c);
 		}
-		Collection partCols = ((DataSet) this.dsTable.getSchema())
+		final Collection partCols = ((DataSet) this.dsTable.getSchema())
 				.getPartitionedDataSetColumns();
 
 		// Show expression columns.
@@ -315,17 +323,17 @@ public class ExplainDataSetDialog extends JDialog {
 			label = new JLabel(Resources
 					.get("stepTableLabel", new String[] { "" + stepNumber,
 							Resources.get("explainExpressionsLabel") }));
-			gridBag.setConstraints(label,
-					partCols.isEmpty() ? labelLastRowConstraints
-							: labelConstraints);
+			this.gridBag.setConstraints(label,
+					partCols.isEmpty() ? this.labelLastRowConstraints
+							: this.labelConstraints);
 			this.transformation.add(label);
 			field = new JPanel();
 			diagram = new ExplainTransformationDiagram(this.martTab,
 					this.dataset, expressionCols);
 			field.add(new JScrollPane(diagram));
-			gridBag.setConstraints(field,
-					partCols.isEmpty() ? fieldLastRowConstraints
-							: fieldConstraints);
+			this.gridBag.setConstraints(field,
+					partCols.isEmpty() ? this.fieldLastRowConstraints
+							: this.fieldConstraints);
 			this.transformation.add(field);
 			stepNumber++;
 		}
@@ -334,13 +342,13 @@ public class ExplainDataSetDialog extends JDialog {
 		if (!partCols.isEmpty()) {
 			label = new JLabel(Resources.get("stepTableLabel", new String[] {
 					"" + stepNumber, Resources.get("explainPartitionsLabel") }));
-			gridBag.setConstraints(label, labelLastRowConstraints);
+			this.gridBag.setConstraints(label, this.labelLastRowConstraints);
 			this.transformation.add(label);
 			field = new JPanel();
 			diagram = new ExplainTransformationDiagram(this.martTab,
 					this.dataset, partCols);
 			field.add(new JScrollPane(diagram));
-			gridBag.setConstraints(field, fieldLastRowConstraints);
+			this.gridBag.setConstraints(field, this.fieldLastRowConstraints);
 			this.transformation.add(field);
 			stepNumber++;
 		}
@@ -377,8 +385,10 @@ public class ExplainDataSetDialog extends JDialog {
 	 * @param table
 	 *            the table to explain.
 	 */
-	public static void showTableExplanation(MartTab martTab, DataSetTable table) {
-		ExplainDataSetDialog dialog = new ExplainDataSetDialog(martTab, table);
+	public static void showTableExplanation(final MartTab martTab,
+			final DataSetTable table) {
+		final ExplainDataSetDialog dialog = new ExplainDataSetDialog(martTab,
+				table);
 		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		martTab.getDataSetTabSet().addCurrentExplanationDialog(dialog);
 		dialog.show();

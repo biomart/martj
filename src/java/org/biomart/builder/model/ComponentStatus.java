@@ -22,8 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Represents the status of any component with regard to
- * how the system came to know about it.
+ * Represents the status of any component with regard to how the system came to
+ * know about it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.2, 21st June 2006
@@ -63,15 +63,15 @@ public class ComponentStatus implements Comparable {
 	 *            the name of the status object.
 	 * @return the status object.
 	 */
-	public static ComponentStatus get(String name) {
+	public static ComponentStatus get(final String name) {
 		// Do we already have this one?
 		// If so, then return it.
-		if (singletons.containsKey(name))
-			return (ComponentStatus) singletons.get(name);
+		if (ComponentStatus.singletons.containsKey(name))
+			return (ComponentStatus) ComponentStatus.singletons.get(name);
 
 		// Otherwise, create it, remember it.
-		ComponentStatus s = new ComponentStatus(name);
-		singletons.put(name, s);
+		final ComponentStatus s = new ComponentStatus(name);
+		ComponentStatus.singletons.put(name, s);
 
 		// Return it.
 		return s;
@@ -84,7 +84,7 @@ public class ComponentStatus implements Comparable {
 	 * @param name
 	 *            the name of the status.
 	 */
-	private ComponentStatus(String name) {
+	private ComponentStatus(final String name) {
 		this.name = name;
 	}
 
@@ -105,12 +105,12 @@ public class ComponentStatus implements Comparable {
 		return this.toString().hashCode();
 	}
 
-	public int compareTo(Object o) throws ClassCastException {
-		ComponentStatus c = (ComponentStatus) o;
+	public int compareTo(final Object o) throws ClassCastException {
+		final ComponentStatus c = (ComponentStatus) o;
 		return this.toString().compareTo(c.toString());
 	}
 
-	public boolean equals(Object o) {
+	public boolean equals(final Object o) {
 		// We are dealing with singletons so can use == happily.
 		return o == this;
 	}

@@ -23,9 +23,9 @@ import javax.swing.JPopupMenu;
 
 /**
  * The diagram context received notification to populate context menus in
- * org.biomart.builder.view.gui.diagrams, or to change the colours of objects displayed in the diagram. All
- * objects in the diagram are passed to both methods at some point, so anything
- * displayed can be customised.
+ * org.biomart.builder.view.gui.diagrams, or to change the colours of objects
+ * displayed in the diagram. All objects in the diagram are passed to both
+ * methods at some point, so anything displayed can be customised.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.9, 16th May 2006

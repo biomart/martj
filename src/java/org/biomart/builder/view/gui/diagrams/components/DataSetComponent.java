@@ -43,19 +43,17 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * @since 0.1
  */
 public class DataSetComponent extends BoxShapedComponent {
-	
+
 	/**
-	 * This color is the one used for the background of
-	 * invisible datasets.
+	 * This color is the one used for the background of invisible datasets.
 	 */
 	public static final Color INVISIBLE_BACKGROUND = Color.WHITE;
 
 	/**
-	 * This color is the one used for the background of
-	 * visible datasets.
+	 * This color is the one used for the background of visible datasets.
 	 */
 	public static final Color VISIBLE_BACKGROUND = Color.LIGHT_GRAY;
-	
+
 	private static final long serialVersionUID = 1;
 
 	private GridBagLayout layout;
@@ -71,7 +69,7 @@ public class DataSetComponent extends BoxShapedComponent {
 	 * @param diagram
 	 *            the diagram to display the details in.
 	 */
-	public DataSetComponent(DataSet dataset, Diagram diagram) {
+	public DataSetComponent(final DataSet dataset, final Diagram diagram) {
 		super(dataset, diagram);
 
 		// Schema components are set out in a vertical list.
@@ -97,7 +95,7 @@ public class DataSetComponent extends BoxShapedComponent {
 		this.setBackground(Color.LIGHT_GRAY);
 
 		// Add the label for the schema name,
-		JLabel label = new JLabel(this.getDataSet().getName());
+		final JLabel label = new JLabel(this.getDataSet().getName());
 		label.setFont(Font.decode("Serif-BOLD-10"));
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
@@ -109,18 +107,20 @@ public class DataSetComponent extends BoxShapedComponent {
 
 	public JPopupMenu getContextMenu() {
 		// First of all, work out what would have been shown by default.
-		JPopupMenu contextMenu = super.getContextMenu();
+		final JPopupMenu contextMenu = super.getContextMenu();
 
 		// Add the 'show tables' option, which opens the tab representing
 		// this schema.
-		JMenuItem showTables = new JMenuItem(Resources.get("showTablesTitle"));
+		final JMenuItem showTables = new JMenuItem(Resources
+				.get("showTablesTitle"));
 		showTables.setMnemonic(Resources.get("showTablesMnemonic").charAt(0));
 		showTables.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				int index = getDiagram().getMartTab().getDataSetTabSet()
-						.indexOfTab(getDataSet().getName());
-				getDiagram().getMartTab().getDataSetTabSet().setSelectedIndex(
-						index);
+			public void actionPerformed(final ActionEvent evt) {
+				final int index = DataSetComponent.this.getDiagram()
+						.getMartTab().getDataSetTabSet().indexOfTab(
+								DataSetComponent.this.getDataSet().getName());
+				DataSetComponent.this.getDiagram().getMartTab()
+						.getDataSetTabSet().setSelectedIndex(index);
 			}
 		});
 		contextMenu.add(showTables);

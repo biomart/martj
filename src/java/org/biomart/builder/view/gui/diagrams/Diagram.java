@@ -76,7 +76,7 @@ public abstract class Diagram extends JPanel {
 	private MartTab martTab;
 
 	// OK to use maps as it gets cleared out each time, the keys never change.
-	private Map componentMap = new HashMap();
+	private final Map componentMap = new HashMap();
 
 	/**
 	 * Creates a new diagram which belongs inside the given mart tab. The tab
@@ -88,7 +88,7 @@ public abstract class Diagram extends JPanel {
 	 *            the mart tab this diagram will use when working out where to
 	 *            send events.
 	 */
-	public Diagram(MartTab martTab) {
+	public Diagram(final MartTab martTab) {
 		this(new LinearLayout(), martTab);
 	}
 
@@ -104,7 +104,7 @@ public abstract class Diagram extends JPanel {
 	 *            the mart tab this diagram will use when working out where to
 	 *            send events.
 	 */
-	public Diagram(LayoutManager layout, MartTab martTab) {
+	public Diagram(final LayoutManager layout, final MartTab martTab) {
 		// Set us up with a nice layout.
 		super(layout);
 
@@ -141,7 +141,7 @@ public abstract class Diagram extends JPanel {
 	 * @param comp
 	 *            the component to add.
 	 */
-	public void addDiagramComponent(DiagramComponent comp) {
+	public void addDiagramComponent(final DiagramComponent comp) {
 		this.componentMap.put(comp.getObject(), comp);
 		this.componentMap.putAll(comp.getSubComponents());
 		super.add((JComponent) comp);
@@ -158,7 +158,7 @@ public abstract class Diagram extends JPanel {
 	 *         diagram, or null if that model object is not in this diagram at
 	 *         all.
 	 */
-	public DiagramComponent getDiagramComponent(Object object) {
+	public DiagramComponent getDiagramComponent(final Object object) {
 		return (DiagramComponent) this.componentMap.get(object);
 	}
 
@@ -185,7 +185,7 @@ public abstract class Diagram extends JPanel {
 	 * @param object
 	 *            the model object to locate and scroll to.
 	 */
-	public void findObject(Object object) {
+	public void findObject(final Object object) {
 		// Don't do it if the object is null.
 		if (object == null)
 			return;
@@ -194,52 +194,52 @@ public abstract class Diagram extends JPanel {
 		this.resizeDiagram();
 
 		// Obtain the scrollpane view of this diagram.
-		JViewport viewport = (JViewport) this.getParent();
+		final JViewport viewport = (JViewport) this.getParent();
 
 		// Look up the diagram component for the model object.
-		JComponent comp = (JComponent) this.getDiagramComponent(object);
+		final JComponent comp = (JComponent) this.getDiagramComponent(object);
 
 		// If the model object is not in this diagram, don't scroll to it!
 		if (comp == null)
 			return;
 
 		// Work out the location of the diagram component.
-		Point compLocation = comp.getLocation();
-		Dimension compSize = comp.getPreferredSize();
+		final Point compLocation = comp.getLocation();
+		final Dimension compSize = comp.getPreferredSize();
 
 		// Recursively add on the parent components to the location, until
 		// the location coordinates become relevant to the diagram itself.
 		Container parent = comp.getParent();
 		while (parent != this) {
-			compLocation.setLocation(compLocation.x + (int) parent.getX(),
-					compLocation.y + (int) parent.getY());
+			compLocation.setLocation(compLocation.x + parent.getX(),
+					compLocation.y + parent.getY());
 			parent = parent.getParent();
 		}
 
 		// Work out the centre point of the diagram component, based on its
 		// location.
-		Point compCentre = new Point(compLocation.x + (compSize.width / 2),
-				compLocation.y + (compSize.height / 2));
+		final Point compCentre = new Point(compLocation.x + compSize.width / 2,
+				compLocation.y + compSize.height / 2);
 
 		// How big is the scrollpane view we are being seen through?
-		Dimension viewSize = viewport.getExtentSize();
+		final Dimension viewSize = viewport.getExtentSize();
 
 		// Work out the top-left coordinate of the area of diagram that should
 		// appear in the scrollpane if this diagram component is to appear in
 		// the absolute centre.
-		int newViewPointX = compCentre.x - (viewSize.width / 2);
-		int newViewPointY = compCentre.y - (viewSize.height / 2);
+		int newViewPointX = compCentre.x - viewSize.width / 2;
+		int newViewPointY = compCentre.y - viewSize.height / 2;
 
 		// Move the scrollpoint if it goes off the top-left of the diagram.
-		if (newViewPointX - (viewSize.width / 2) < 0)
+		if (newViewPointX - viewSize.width / 2 < 0)
 			newViewPointX = 0;
-		if (newViewPointY - (viewSize.height / 2) < 0)
+		if (newViewPointY - viewSize.height / 2 < 0)
 			newViewPointY = 0;
 
 		// Move the scrollpoint if it goes off the bottom-right.
-		if (newViewPointX + (viewSize.width / 2) > parent.getWidth())
+		if (newViewPointX + viewSize.width / 2 > parent.getWidth())
 			newViewPointX = parent.getWidth() - viewSize.width;
-		if (newViewPointY + (viewSize.height / 2) > parent.getHeight())
+		if (newViewPointY + viewSize.height / 2 > parent.getHeight())
 			newViewPointY = parent.getHeight() - viewSize.height;
 
 		// Scroll to that position.
@@ -252,9 +252,10 @@ public abstract class Diagram extends JPanel {
 		// appear.
 
 		// First, work out what tables are in this diagram.
-		Set tables = new TreeSet();
-		for (Iterator i = this.componentMap.keySet().iterator(); i.hasNext();) {
-			Object o = i.next();
+		final Set tables = new TreeSet();
+		for (final Iterator i = this.componentMap.keySet().iterator(); i
+				.hasNext();) {
+			final Object o = i.next();
 			if (o instanceof Table)
 				tables.add(o);
 		}
@@ -280,37 +281,38 @@ public abstract class Diagram extends JPanel {
 		// clicks.
 
 		// Create an empty context menu to start with.
-		JPopupMenu contextMenu = new JPopupMenu();
+		final JPopupMenu contextMenu = new JPopupMenu();
 
 		// Add an item that allows the user to search for a particular
 		// table in the diagram, and scroll to that table when selected.
-		JMenuItem find = new JMenuItem(Resources.get("findTableTitle"));
+		final JMenuItem find = new JMenuItem(Resources.get("findTableTitle"));
 		find.setMnemonic(Resources.get("findTableMnemonic").charAt(0));
 		find.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				Table table = askUserForTable();
+			public void actionPerformed(final ActionEvent e) {
+				final Table table = Diagram.this.askUserForTable();
 				if (table != null)
-					findObject(table);
+					Diagram.this.findObject(table);
 			}
 		});
 		contextMenu.add(find);
 
 		// Add an item that allows the user to print this diagram.
-		JMenuItem print = new JMenuItem(Resources.get("printDiagramTitle"));
+		final JMenuItem print = new JMenuItem(Resources
+				.get("printDiagramTitle"));
 		print.setMnemonic(Resources.get("printDiagramMnemonic").charAt(0));
 		print.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				printDiagram();
+			public void actionPerformed(final ActionEvent e) {
+				Diagram.this.printDiagram();
 			}
 		});
 		contextMenu.add(print);
 
 		// Add an item that allows the user to save this diagram as an image.
-		JMenuItem save = new JMenuItem(Resources.get("saveDiagramTitle"));
+		final JMenuItem save = new JMenuItem(Resources.get("saveDiagramTitle"));
 		save.setMnemonic(Resources.get("saveDiagramMnemonic").charAt(0));
 		save.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				saveDiagram();
+			public void actionPerformed(final ActionEvent e) {
+				Diagram.this.saveDiagram();
 			}
 		});
 		contextMenu.add(save);
@@ -319,7 +321,7 @@ public abstract class Diagram extends JPanel {
 		return contextMenu;
 	}
 
-	protected void processMouseEvent(MouseEvent evt) {
+	protected void processMouseEvent(final MouseEvent evt) {
 		boolean eventProcessed = false;
 
 		// Is it a right-click?
@@ -327,7 +329,7 @@ public abstract class Diagram extends JPanel {
 
 			// Obtain the basic context menu for this diagram, that appears no
 			// matter where the user clicked.
-			JPopupMenu contextMenu = this.getContextMenu();
+			final JPopupMenu contextMenu = this.getContextMenu();
 
 			// Extend the basic diagram by delegating to the context, using the
 			// basic background object of this diagram to provide the options.
@@ -355,13 +357,13 @@ public abstract class Diagram extends JPanel {
 	 * @param diagramContext
 	 *            the diagram context to use.
 	 */
-	public void setDiagramContext(DiagramContext diagramContext) {
+	public void setDiagramContext(final DiagramContext diagramContext) {
 		// Apply it to ourselves.
 		this.diagramContext = diagramContext;
 		this.contextChanged = true;
 	}
 
-	protected void paintComponent(Graphics g) {
+	protected void paintComponent(final Graphics g) {
 		// If the context has changed since last time we
 		// painted anything, update all our components
 		// appearance first.
@@ -377,8 +379,7 @@ public abstract class Diagram extends JPanel {
 	 * Returns the diagram context that is being used to customise colours and
 	 * context menus for this diagram.
 	 * 
-	 * @param diagramContext
-	 *            the diagram context that is being used.
+	 * @return the diagram context that is being used.
 	 */
 	public DiagramContext getDiagramContext() {
 		return this.diagramContext;
@@ -396,11 +397,12 @@ public abstract class Diagram extends JPanel {
 	 */
 	public void recalculateDiagram() {
 		// Remember all the existing diagram component states.
-		Map states = new HashMap();
-		for (Iterator i = this.componentMap.entrySet().iterator(); i.hasNext();) {
-			Map.Entry entry = (Map.Entry) i.next();
-			Object object = entry.getKey();
-			DiagramComponent comp = (DiagramComponent) entry.getValue();
+		final Map states = new HashMap();
+		for (final Iterator i = this.componentMap.entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			final Object object = entry.getKey();
+			final DiagramComponent comp = (DiagramComponent) entry.getValue();
 
 			// If the component actually exists, which it may not if the
 			// diagram has been dynamically updated elsewhere, remember the
@@ -419,10 +421,11 @@ public abstract class Diagram extends JPanel {
 		// to compare objects, so any objects in the new diagram which match
 		// the old objects in the old diagram will inherit the state from the
 		// old objects.
-		for (Iterator i = states.entrySet().iterator(); i.hasNext();) {
-			Map.Entry entry = (Map.Entry) i.next();
-			Object object = entry.getKey();
-			DiagramComponent comp = (DiagramComponent) this.componentMap.get(object);
+		for (final Iterator i = states.entrySet().iterator(); i.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			final Object object = entry.getKey();
+			final DiagramComponent comp = (DiagramComponent) this.componentMap
+					.get(object);
 			if (comp != null)
 				comp.setState(entry.getValue());
 		}
@@ -460,7 +463,8 @@ public abstract class Diagram extends JPanel {
 	 * on a table).
 	 */
 	public void repaintDiagram() {
-		for (Iterator i = this.componentMap.values().iterator(); i.hasNext();)
+		for (final Iterator i = this.componentMap.values().iterator(); i
+				.hasNext();)
 			((DiagramComponent) i.next()).updateAppearance();
 	}
 

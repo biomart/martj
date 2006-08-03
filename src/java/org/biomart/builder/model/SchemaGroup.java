@@ -65,7 +65,7 @@ public interface SchemaGroup extends Schema {
 	 * ones.
 	 * 
 	 * @param schema
-	 *            the {@link Schema to add as a new partition.
+	 *            the schema to add as a new partition.
 	 * @throws AssociationException
 	 *             if the schema to be added is a schema group.
 	 */
@@ -93,11 +93,11 @@ public interface SchemaGroup extends Schema {
 		 * @param name
 		 *            the name for this new schema group.
 		 */
-		public GenericSchemaGroup(String name) {
+		public GenericSchemaGroup(final String name) {
 			super(name);
 		}
 
-		public Schema replicate(String newName) {
+		public Schema replicate(final String newName) {
 			throw new MartBuilderInternalError(Resources
 					.get("noSchemaGroupReplication"));
 		}
@@ -111,9 +111,8 @@ public interface SchemaGroup extends Schema {
 		 */
 		public void synchronise() throws SQLException, BuilderException {
 			// Synchronise our members.
-			for (Iterator i = this.schemas.iterator(); i.hasNext();) {
+			for (final Iterator i = this.schemas.iterator(); i.hasNext();)
 				((Schema) i.next()).synchronise();
-			}
 			// Update our own list by using replication.
 			if (!this.schemas.isEmpty())
 				((Schema) this.schemas.iterator().next())
@@ -124,7 +123,7 @@ public interface SchemaGroup extends Schema {
 			return this.schemas;
 		}
 
-		public void addSchema(Schema schema) throws AssociationException {
+		public void addSchema(final Schema schema) throws AssociationException {
 			// Check the schema isn't a group itself.
 			if (schema instanceof SchemaGroup)
 				throw new AssociationException(Resources.get("nestedSchema"));
@@ -133,7 +132,7 @@ public interface SchemaGroup extends Schema {
 			this.schemas.add(schema);
 		}
 
-		public void removeSchema(Schema schema) {
+		public void removeSchema(final Schema schema) {
 			this.schemas.remove(schema);
 		}
 	}

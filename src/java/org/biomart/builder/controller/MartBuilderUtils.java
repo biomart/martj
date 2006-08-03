@@ -93,22 +93,26 @@ public class MartBuilderUtils {
 	 *            the offset to start at.
 	 * @param count
 	 *            the number of rows to get.
+	 * @return the rows.
+	 * @throws SQLException
+	 *             if anything goes wrong whilst fetching the rows.
 	 */
-	public static List selectRows(Table table, int offset, int count)
-			throws SQLException {
-		Schema schema = table.getSchema();
-		List results = new ArrayList();
-		if (schema instanceof SchemaGroup) {
-			for (Iterator i = ((SchemaGroup) schema).getSchemas().iterator(); i
-					.hasNext();) {
-				Schema internalSchema = (Schema) i.next();
-				DatabaseDialect dd = DatabaseDialect.getDialect(internalSchema);
+	public static List selectRows(final Table table, final int offset,
+			final int count) throws SQLException {
+		final Schema schema = table.getSchema();
+		final List results = new ArrayList();
+		if (schema instanceof SchemaGroup)
+			for (final Iterator i = ((SchemaGroup) schema).getSchemas()
+					.iterator(); i.hasNext();) {
+				final Schema internalSchema = (Schema) i.next();
+				final DatabaseDialect dd = DatabaseDialect
+						.getDialect(internalSchema);
 				if (dd != null)
 					results.addAll(dd.executeSelectRows(internalSchema
 							.getTableByName(table.getName()), offset, count));
 			}
-		} else {
-			DatabaseDialect dd = DatabaseDialect.getDialect(schema);
+		else {
+			final DatabaseDialect dd = DatabaseDialect.getDialect(schema);
 			if (dd != null)
 				results.addAll(dd.executeSelectRows(table, offset, count));
 		}
@@ -121,7 +125,7 @@ public class MartBuilderUtils {
 	 * @param column
 	 *            the expression column to remove.
 	 */
-	public static void removeExpressionColumn(ExpressionColumn column) {
+	public static void removeExpressionColumn(final ExpressionColumn column) {
 		column.getTable().removeColumn(column);
 	}
 
@@ -141,10 +145,10 @@ public class MartBuilderUtils {
 	 *            the group-by columns required will be worked out
 	 *            automatically.
 	 */
-	public static void addExpressionColumn(DataSetTable table,
-			String columnName, Map columnAliases, String expression,
-			boolean groupBy) {
-		ExpressionColumn column = new ExpressionColumn(columnName, table);
+	public static void addExpressionColumn(final DataSetTable table,
+			final String columnName, final Map columnAliases,
+			final String expression, final boolean groupBy) {
+		final ExpressionColumn column = new ExpressionColumn(columnName, table);
 		column.getAliases().putAll(columnAliases);
 		column.setExpression(expression);
 		column.setGroupBy(groupBy);
@@ -164,8 +168,9 @@ public class MartBuilderUtils {
 	 *            the group-by columns required will be worked out
 	 *            automatically.
 	 */
-	public static void modifyExpressionColumn(ExpressionColumn column,
-			Map columnAliases, String expression, boolean groupBy) {
+	public static void modifyExpressionColumn(final ExpressionColumn column,
+			final Map columnAliases, final String expression,
+			final boolean groupBy) {
 		column.getAliases().clear();
 		column.getAliases().putAll(columnAliases);
 		column.setExpression(expression);
@@ -185,8 +190,8 @@ public class MartBuilderUtils {
 	 *             if any of them find logical problems during the
 	 *             synchronisation process.
 	 */
-	public static void synchroniseMartSchemas(Mart mart) throws SQLException,
-			BuilderException {
+	public static void synchroniseMartSchemas(final Mart mart)
+			throws SQLException, BuilderException {
 		mart.synchroniseSchemas();
 	}
 
@@ -196,17 +201,8 @@ public class MartBuilderUtils {
 	 * 
 	 * @param mart
 	 *            the mart you wish to synchronise all the datasets in.
-	 * @throws SQLException
-	 *             if any of them have problems communicating with their
-	 *             schemas. Technically this should never happen, but the
-	 *             exception is part of the interface specification for datasets
-	 *             (which are types of schema themselves), so must be thrown
-	 *             here too.
-	 * @throws BuilderException
-	 *             if any logical problems are found within the schemas or
-	 *             datasets.
 	 */
-	public static void synchroniseMartDataSets(Mart mart) {
+	public static void synchroniseMartDataSets(final Mart mart) {
 		mart.synchroniseDataSets();
 	}
 
@@ -220,7 +216,8 @@ public class MartBuilderUtils {
 	 * @param dataset
 	 *            the dataset to drop.
 	 */
-	public static void removeDataSetFromMart(Mart mart, DataSet dataset) {
+	public static void removeDataSetFromMart(final Mart mart,
+			final DataSet dataset) {
 		mart.removeDataSet(dataset);
 	}
 
@@ -236,7 +233,8 @@ public class MartBuilderUtils {
 	 *            the new name to give the dataset. If it is the same as the old
 	 *            name, no action is taken.
 	 */
-	public static void renameDataSet(Mart mart, DataSet dataset, String newName) {
+	public static void renameDataSet(final Mart mart, final DataSet dataset,
+			final String newName) {
 		mart.renameDataSet(dataset, newName);
 	}
 
@@ -258,8 +256,9 @@ public class MartBuilderUtils {
 	 * @throws BuilderException
 	 *             if synchronisation fails.
 	 */
-	public static Collection suggestDataSets(Mart mart, Collection tables)
-			throws SQLException, AssociationException, BuilderException {
+	public static Collection suggestDataSets(final Mart mart,
+			final Collection tables) throws SQLException, AssociationException,
+			BuilderException {
 		return mart.suggestDataSets(tables);
 	}
 
@@ -291,9 +290,9 @@ public class MartBuilderUtils {
 	 * @throws BuilderException
 	 *             if synchronisation fails.
 	 */
-	public static Collection suggestInvisibleDataSets(Mart mart,
-			DataSet dataset, Collection columns) throws AssociationException,
-			BuilderException, SQLException {
+	public static Collection suggestInvisibleDataSets(final Mart mart,
+			final DataSet dataset, final Collection columns)
+			throws AssociationException, BuilderException, SQLException {
 		return mart.suggestInvisibleDataSets(dataset, columns);
 	}
 
@@ -305,7 +304,7 @@ public class MartBuilderUtils {
 	 * @param schema
 	 *            the schema to add to the mart.
 	 */
-	public static void addSchemaToMart(Mart mart, Schema schema) {
+	public static void addSchemaToMart(final Mart mart, final Schema schema) {
 		mart.addSchema(schema);
 	}
 
@@ -319,7 +318,7 @@ public class MartBuilderUtils {
 	 * @param schema
 	 *            the schema to remove from the mart.
 	 */
-	public static void removeSchemaFromMart(Mart mart, Schema schema) {
+	public static void removeSchemaFromMart(final Mart mart, final Schema schema) {
 		mart.removeSchema(schema);
 	}
 
@@ -333,7 +332,8 @@ public class MartBuilderUtils {
 	 * @param newName
 	 *            the new name to give the schema.
 	 */
-	public static void renameSchema(Mart mart, Schema schema, String newName) {
+	public static void renameSchema(final Mart mart, final Schema schema,
+			final String newName) {
 		mart.renameSchema(schema, newName);
 	}
 
@@ -350,7 +350,8 @@ public class MartBuilderUtils {
 	 * @param newName
 	 *            the new name to give the schema.
 	 */
-	public static void renameSchemaInSchemaGroup(Schema schema, String newName) {
+	public static void renameSchemaInSchemaGroup(final Schema schema,
+			final String newName) {
 		schema.setName(newName);
 	}
 
@@ -366,8 +367,8 @@ public class MartBuilderUtils {
 	 * @throws BuilderException
 	 *             if there were any logical problems with synchronisation.
 	 */
-	public static void synchroniseSchema(Schema schema) throws SQLException,
-			BuilderException {
+	public static void synchroniseSchema(final Schema schema)
+			throws SQLException, BuilderException {
 		schema.synchronise();
 	}
 
@@ -386,7 +387,7 @@ public class MartBuilderUtils {
 	 *             if it failed the test. The exception will describe the reason
 	 *             for failure.
 	 */
-	public static boolean testSchema(Schema schema) throws Exception {
+	public static boolean testSchema(final Schema schema) throws Exception {
 		return schema.test();
 	}
 
@@ -419,9 +420,10 @@ public class MartBuilderUtils {
 	 *            schema or not. This can always be changed later.
 	 * @return the created schema.
 	 */
-	public static JDBCSchema createJDBCSchema(File driverClassLocation,
-			String driverClassName, String url, String schemaName,
-			String username, String password, String name, boolean keyGuessing) {
+	public static JDBCSchema createJDBCSchema(final File driverClassLocation,
+			final String driverClassName, final String url,
+			final String schemaName, final String username, String password,
+			final String name, final boolean keyGuessing) {
 		if (password != null && password.equals(""))
 			password = null;
 		return new JDBCSchema(driverClassLocation, driverClassName, url,
@@ -455,9 +457,9 @@ public class MartBuilderUtils {
 	 *             communicating with the data source or database of the newly
 	 *             added schema.
 	 */
-	public static SchemaGroup addSchemaToSchemaGroup(Mart mart, Schema schema,
-			String groupName) throws AssociationException, BuilderException,
-			SQLException {
+	public static SchemaGroup addSchemaToSchemaGroup(final Mart mart,
+			final Schema schema, final String groupName)
+			throws AssociationException, BuilderException, SQLException {
 		SchemaGroup schemaGroup = (SchemaGroup) mart.getSchemaByName(groupName);
 		if (schemaGroup == null || !(schemaGroup instanceof SchemaGroup)) {
 			schemaGroup = new GenericSchemaGroup(groupName);
@@ -494,9 +496,9 @@ public class MartBuilderUtils {
 	 *             if there was any problem connecting to a data source or
 	 *             database during synchronisation of the group.
 	 */
-	public static void removeSchemaFromSchemaGroup(Mart mart, Schema schema,
-			SchemaGroup schemaGroup) throws AssociationException,
-			BuilderException, SQLException {
+	public static void removeSchemaFromSchemaGroup(final Mart mart,
+			final Schema schema, final SchemaGroup schemaGroup)
+			throws AssociationException, BuilderException, SQLException {
 		schemaGroup.removeSchema(schema);
 		if (schemaGroup.getSchemas().size() == 0) {
 			schemaGroup.replicateContents(schema);
@@ -519,16 +521,16 @@ public class MartBuilderUtils {
 	 * @param cardinality
 	 *            the new cardinality to give the relation.
 	 */
-	public static void changeRelationCardinality(Mart mart, Relation relation,
-			Cardinality cardinality) {
+	public static void changeRelationCardinality(final Mart mart,
+			final Relation relation, final Cardinality cardinality) {
 		// Change the cardinality.
 		relation.setCardinality(cardinality);
 
 		// If 1:1, make sure it isn't used as a subclass or concat-only relation
 		// in any dataset.
 		if (relation.isOneToOne())
-			for (Iterator i = mart.getDataSets().iterator(); i.hasNext();) {
-				DataSet ds = (DataSet) i.next();
+			for (final Iterator i = mart.getDataSets().iterator(); i.hasNext();) {
+				final DataSet ds = (DataSet) i.next();
 				ds.unflagSubclassRelation(relation);
 				ds.unflagConcatOnlyRelation(relation);
 			}
@@ -547,7 +549,7 @@ public class MartBuilderUtils {
 	 * @param relation
 	 *            the relation to remove.
 	 */
-	public static void removeRelation(Mart mart, Relation relation) {
+	public static void removeRelation(final Mart mart, final Relation relation) {
 		relation.destroy();
 		mart.synchroniseDataSets();
 	}
@@ -564,8 +566,8 @@ public class MartBuilderUtils {
 	 * @throws BuilderException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void maskRelation(DataSet dataset, Relation relation)
-			throws SQLException, BuilderException {
+	public static void maskRelation(final DataSet dataset,
+			final Relation relation) throws SQLException, BuilderException {
 		dataset.maskRelation(relation);
 		dataset.synchronise();
 	}
@@ -583,9 +585,9 @@ public class MartBuilderUtils {
 	 * @throws BuilderException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void maskTable(DataSet dataset, Table table)
+	public static void maskTable(final DataSet dataset, final Table table)
 			throws SQLException, BuilderException {
-		for (Iterator i = table.getRelations().iterator(); i.hasNext();)
+		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
 			dataset.maskRelation((Relation) i.next());
 		dataset.synchronise();
 	}
@@ -603,8 +605,8 @@ public class MartBuilderUtils {
 	 * @throws BuilderException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void unmaskRelation(DataSet dataset, Relation relation)
-			throws SQLException, BuilderException {
+	public static void unmaskRelation(final DataSet dataset,
+			final Relation relation) throws SQLException, BuilderException {
 		dataset.unmaskRelation(relation);
 		dataset.synchronise();
 	}
@@ -625,8 +627,9 @@ public class MartBuilderUtils {
 	 * @throws BuilderException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void subclassRelation(DataSet dataset, Relation relation)
-			throws AssociationException, SQLException, BuilderException {
+	public static void subclassRelation(final DataSet dataset,
+			final Relation relation) throws AssociationException, SQLException,
+			BuilderException {
 		dataset.flagSubclassRelation(relation);
 		dataset.unflagConcatOnlyRelation(relation);
 		dataset.synchronise();
@@ -644,8 +647,8 @@ public class MartBuilderUtils {
 	 * @throws BuilderException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void unsubclassRelation(DataSet dataset, Relation relation)
-			throws SQLException, BuilderException {
+	public static void unsubclassRelation(final DataSet dataset,
+			final Relation relation) throws SQLException, BuilderException {
 		dataset.unflagSubclassRelation(relation);
 		dataset.synchronise();
 	}
@@ -667,9 +670,9 @@ public class MartBuilderUtils {
 	 * @throws BuilderException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void concatOnlyRelation(DataSet dataset, Relation relation,
-			ConcatRelationType type) throws AssociationException, SQLException,
-			BuilderException {
+	public static void concatOnlyRelation(final DataSet dataset,
+			final Relation relation, final ConcatRelationType type)
+			throws AssociationException, SQLException, BuilderException {
 		dataset.flagConcatOnlyRelation(relation, type);
 		dataset.unflagSubclassRelation(relation);
 		dataset.synchronise();
@@ -688,8 +691,8 @@ public class MartBuilderUtils {
 	 * @throws BuilderException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void unconcatOnlyRelation(DataSet dataset, Relation relation)
-			throws SQLException, BuilderException {
+	public static void unconcatOnlyRelation(final DataSet dataset,
+			final Relation relation) throws SQLException, BuilderException {
 		dataset.unflagConcatOnlyRelation(relation);
 		dataset.synchronise();
 	}
@@ -711,9 +714,10 @@ public class MartBuilderUtils {
 	 *            the aliases to use for columns from the second table of the
 	 *            relation.
 	 */
-	public static void restrictRelation(DataSet dataset, Relation relation,
-			String expression, Map firstTableAliases, Map secondTableAliases) {
-		DataSetRelationRestriction restriction = new DataSetRelationRestriction(
+	public static void restrictRelation(final DataSet dataset,
+			final Relation relation, final String expression,
+			final Map firstTableAliases, final Map secondTableAliases) {
+		final DataSetRelationRestriction restriction = new DataSetRelationRestriction(
 				expression, firstTableAliases, secondTableAliases);
 		dataset.flagRestrictedRelation(relation, restriction);
 	}
@@ -726,8 +730,8 @@ public class MartBuilderUtils {
 	 * @param relation
 	 *            the relation to unflag.
 	 */
-	public static void unrestrictRelation(DataSet dataset, Relation relation)
-			throws SQLException, BuilderException {
+	public static void unrestrictRelation(final DataSet dataset,
+			final Relation relation) {
 		dataset.unflagRestrictedRelation(relation);
 	}
 
@@ -744,9 +748,9 @@ public class MartBuilderUtils {
 	 * @param aliases
 	 *            the aliases to use for columns.
 	 */
-	public static void restrictTable(DataSet dataset, Table table,
-			String expression, Map aliases) {
-		DataSetTableRestriction restriction = new DataSetTableRestriction(
+	public static void restrictTable(final DataSet dataset, final Table table,
+			final String expression, final Map aliases) {
+		final DataSetTableRestriction restriction = new DataSetTableRestriction(
 				expression, aliases);
 		dataset.flagRestrictedTable(table, restriction);
 	}
@@ -759,8 +763,7 @@ public class MartBuilderUtils {
 	 * @param table
 	 *            the table to unflag.
 	 */
-	public static void unrestrictTable(DataSet dataset, Table table)
-			throws SQLException, BuilderException {
+	public static void unrestrictTable(final DataSet dataset, final Table table) {
 		dataset.unflagRestrictedTable(table);
 	}
 
@@ -779,8 +782,9 @@ public class MartBuilderUtils {
 	 *             either end do not have the same number of columns as each
 	 *             other, then this exception will be thrown to tell you so.
 	 */
-	public static void changeRelationStatus(Mart mart, Relation relation,
-			ComponentStatus status) throws AssociationException {
+	public static void changeRelationStatus(final Mart mart,
+			final Relation relation, final ComponentStatus status)
+			throws AssociationException {
 		relation.setStatus(status);
 		mart.synchroniseDataSets();
 	}
@@ -794,7 +798,8 @@ public class MartBuilderUtils {
 	 *            the new name to give it. If the name is the same as the
 	 *            existing one, no action is taken.
 	 */
-	public static void renameDataSetTable(DataSetTable tbl, String newName) {
+	public static void renameDataSetTable(final DataSetTable tbl,
+			final String newName) {
 		tbl.setName(newName);
 	}
 
@@ -808,7 +813,8 @@ public class MartBuilderUtils {
 	 *            the new name to give it. If the name is the same as the
 	 *            existing one, no action is taken.
 	 */
-	public static void renameDataSetColumn(DataSetColumn col, String newName) {
+	public static void renameDataSetColumn(final DataSetColumn col,
+			final String newName) {
 		// If the new name is the same as the old, ignore the request.
 		if (newName.equals(col.getName()))
 			return;
@@ -818,11 +824,12 @@ public class MartBuilderUtils {
 
 		// Make a list of relations involving this column. It
 		// is empty to start with.
-		List relations = new ArrayList();
+		final List relations = new ArrayList();
 
 		// Is it in any of the keys on this table?
-		for (Iterator i = col.getTable().getKeys().iterator(); i.hasNext();) {
-			Key k = (Key) i.next();
+		for (final Iterator i = col.getTable().getKeys().iterator(); i
+				.hasNext();) {
+			final Key k = (Key) i.next();
 
 			// Is the column in this key?
 			if (k.getColumns().contains(col))
@@ -837,22 +844,25 @@ public class MartBuilderUtils {
 
 		// For each group of relations involving this column, iterate over
 		// each relation and rename the column in the keys at both ends.
-		for (Iterator i = relations.iterator(); i.hasNext();) {
-			Object[] obj = (Object[]) i.next();
+		for (final Iterator i = relations.iterator(); i.hasNext();) {
+			final Object[] obj = (Object[]) i.next();
 
 			// What index in the key is the column to rename?
-			int colIndex = ((Integer) obj[0]).intValue();
+			final int colIndex = ((Integer) obj[0]).intValue();
 
 			// Loop over all the relations using that key.
-			for (Iterator j = ((Collection) obj[1]).iterator(); j.hasNext();) {
-				Relation r = (Relation) j.next();
+			for (final Iterator j = ((Collection) obj[1]).iterator(); j
+					.hasNext();) {
+				final Relation r = (Relation) j.next();
 
 				// Rename both ends using recursion. This works because this
 				// method skips the rename process if the names already match.
-				renameDataSetColumn((DataSetColumn) r.getFirstKey()
-						.getColumns().get(colIndex), col.getName());
-				renameDataSetColumn((DataSetColumn) r.getSecondKey()
-						.getColumns().get(colIndex), col.getName());
+				MartBuilderUtils.renameDataSetColumn((DataSetColumn) r
+						.getFirstKey().getColumns().get(colIndex), col
+						.getName());
+				MartBuilderUtils.renameDataSetColumn((DataSetColumn) r
+						.getSecondKey().getColumns().get(colIndex), col
+						.getName());
 			}
 		}
 	}
@@ -871,8 +881,9 @@ public class MartBuilderUtils {
 	 * @throws BuilderException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void maskColumn(DataSet dataset, DataSetColumn column)
-			throws AssociationException, SQLException, BuilderException {
+	public static void maskColumn(final DataSet dataset,
+			final DataSetColumn column) throws AssociationException,
+			SQLException, BuilderException {
 		dataset.maskDataSetColumn(column);
 		dataset.synchronise();
 	}
@@ -889,8 +900,8 @@ public class MartBuilderUtils {
 	 * @throws BuilderException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void unmaskColumn(DataSet dataset, DataSetColumn column)
-			throws SQLException, BuilderException {
+	public static void unmaskColumn(final DataSet dataset,
+			final DataSetColumn column) throws SQLException, BuilderException {
 		dataset.unmaskDataSetColumn(column);
 		dataset.synchronise();
 	}
@@ -907,10 +918,14 @@ public class MartBuilderUtils {
 	 * @throws AssociationException
 	 *             if the column could not be used for partitioning, for
 	 *             whatever reason.
+	 * @throws BuilderException
+	 *             if anything goes wrong during subsequent synchronisation.
+	 * @throws SQLException
+	 *             if anything goes wrong during subsequent synchronisation.
 	 */
-	public static void partitionByColumn(DataSet dataset, DataSetColumn column,
-			PartitionedColumnType type) throws AssociationException,
-			BuilderException, SQLException {
+	public static void partitionByColumn(final DataSet dataset,
+			final DataSetColumn column, final PartitionedColumnType type)
+			throws AssociationException, BuilderException, SQLException {
 		dataset.flagPartitionedDataSetColumn(column, type);
 		dataset.synchronise();
 	}
@@ -922,9 +937,13 @@ public class MartBuilderUtils {
 	 *            the dataset to turn off partitioning for on this column.
 	 * @param column
 	 *            the column to turn off partitioning for.
+	 * @throws BuilderException
+	 *             if anything goes wrong during subsequent synchronisation.
+	 * @throws SQLException
+	 *             if anything goes wrong during subsequent synchronisation.
 	 */
-	public static void unpartitionByColumn(DataSet dataset, DataSetColumn column)
-			throws BuilderException, SQLException {
+	public static void unpartitionByColumn(final DataSet dataset,
+			final DataSetColumn column) throws BuilderException, SQLException {
 		dataset.unflagPartitionedDataSetColumn(column);
 		dataset.synchronise();
 	}
@@ -935,7 +954,7 @@ public class MartBuilderUtils {
 	 * @param dataset
 	 *            the dataset to enable invisibility in.
 	 */
-	public static void invisibleDataSet(DataSet dataset) {
+	public static void invisibleDataSet(final DataSet dataset) {
 		dataset.setInvisible(true);
 	}
 
@@ -945,7 +964,7 @@ public class MartBuilderUtils {
 	 * @param dataset
 	 *            the dataset to disable invisibility in.
 	 */
-	public static void visibleDataSet(DataSet dataset) {
+	public static void visibleDataSet(final DataSet dataset) {
 		dataset.setInvisible(false);
 	}
 
@@ -959,7 +978,7 @@ public class MartBuilderUtils {
 	 * @throws BuilderException
 	 *             if after keyguessing the key sync went wrong.
 	 */
-	public static void enableKeyGuessing(Schema schema)
+	public static void enableKeyGuessing(final Schema schema)
 			throws BuilderException, SQLException {
 		schema.setKeyGuessing(true);
 	}
@@ -974,8 +993,8 @@ public class MartBuilderUtils {
 	 * @throws BuilderException
 	 *             if after disabling keyguessing the key sync went wrong.
 	 */
-	public static void disableKeyGuessing(Schema schema) throws SQLException,
-			BuilderException {
+	public static void disableKeyGuessing(final Schema schema)
+			throws SQLException, BuilderException {
 		schema.setKeyGuessing(false);
 	}
 
@@ -992,9 +1011,9 @@ public class MartBuilderUtils {
 	 *             if any of the columns in the key are not part of the
 	 *             specified table.
 	 */
-	public static void createPrimaryKey(Table table, List columns)
+	public static void createPrimaryKey(final Table table, final List columns)
 			throws AssociationException {
-		PrimaryKey pk = new GenericPrimaryKey(columns);
+		final PrimaryKey pk = new GenericPrimaryKey(columns);
 		pk.setStatus(ComponentStatus.HANDMADE);
 		table.setPrimaryKey(pk);
 	}
@@ -1011,9 +1030,9 @@ public class MartBuilderUtils {
 	 *             if any of the columns in the key are not part of the
 	 *             specified table.
 	 */
-	public static void createForeignKey(Table table, List columns)
+	public static void createForeignKey(final Table table, final List columns)
 			throws AssociationException {
-		ForeignKey fk = new GenericForeignKey(columns);
+		final ForeignKey fk = new GenericForeignKey(columns);
 		fk.setStatus(ComponentStatus.HANDMADE);
 		table.addForeignKey(fk);
 	}
@@ -1034,10 +1053,10 @@ public class MartBuilderUtils {
 	 *             if any of the columns in the key are not part of the
 	 *             specified table.
 	 */
-	public static void editKeyColumns(Mart mart, Key key, List columns)
-			throws AssociationException {
+	public static void editKeyColumns(final Mart mart, final Key key,
+			final List columns) throws AssociationException {
 		key.setColumns(columns);
-		changeKeyStatus(mart, key, ComponentStatus.HANDMADE);
+		MartBuilderUtils.changeKeyStatus(mart, key, ComponentStatus.HANDMADE);
 		mart.synchroniseDataSets();
 	}
 
@@ -1049,7 +1068,7 @@ public class MartBuilderUtils {
 	 * @param key
 	 *            the key to remove.
 	 */
-	public static void removeKey(Mart mart, Key key) {
+	public static void removeKey(final Mart mart, final Key key) {
 		key.destroy();
 		mart.synchroniseDataSets();
 	}
@@ -1065,8 +1084,8 @@ public class MartBuilderUtils {
 	 * @param status
 	 *            the new status to give the key.
 	 */
-	public static void changeKeyStatus(Mart mart, Key key,
-			ComponentStatus status) {
+	public static void changeKeyStatus(final Mart mart, final Key key,
+			final ComponentStatus status) {
 		key.setStatus(status);
 		mart.synchroniseDataSets();
 	}
@@ -1080,8 +1099,8 @@ public class MartBuilderUtils {
 	 *            the new nullable status to give the key. <tt>true</tt> means
 	 *            it is nullable, <tt>false</tt> means it is not.
 	 */
-	public static void changeForeignKeyNullability(ForeignKey key,
-			boolean nullable) {
+	public static void changeForeignKeyNullability(final ForeignKey key,
+			final boolean nullable) {
 		key.setNullable(nullable);
 	}
 
@@ -1099,11 +1118,11 @@ public class MartBuilderUtils {
 	 * @throws AssociationException
 	 *             if the relation could not be established.
 	 */
-	public static void createRelation(Mart mart, Key from, Key to)
-			throws AssociationException {
+	public static void createRelation(final Mart mart, final Key from,
+			final Key to) throws AssociationException {
 
 		// Create the relation.
-		Relation r = new GenericRelation(from, to, Cardinality.MANY);
+		final Relation r = new GenericRelation(from, to, Cardinality.MANY);
 		r.setStatus(ComponentStatus.HANDMADE);
 
 		// Synchronise the datasets.
@@ -1118,8 +1137,8 @@ public class MartBuilderUtils {
 	 * @param type
 	 *            the new optimiser type to use.
 	 */
-	public static void changeOptimiserType(DataSet dataset,
-			DataSetOptimiserType type) {
+	public static void changeOptimiserType(final DataSet dataset,
+			final DataSetOptimiserType type) {
 		dataset.setDataSetOptimiserType(type);
 	}
 
@@ -1138,9 +1157,9 @@ public class MartBuilderUtils {
 	 *            the name to give the copy of the schema.
 	 * @return the copy of the schema.
 	 */
-	public static Schema replicateSchema(Mart mart, Schema schema,
-			String newName) {
-		Schema newSchema = schema.replicate(newName);
+	public static Schema replicateSchema(final Mart mart, final Schema schema,
+			final String newName) {
+		final Schema newSchema = schema.replicate(newName);
 		mart.addSchema(newSchema);
 		return newSchema;
 	}
@@ -1158,9 +1177,9 @@ public class MartBuilderUtils {
 	 *            the name to give the copy of the dataset.
 	 * @return the copy of the dataset.
 	 */
-	public static DataSet replicateDataSet(Mart mart, DataSet dataset,
-			String newName) {
-		DataSet newDataSet = (DataSet) dataset.replicate(newName);
+	public static DataSet replicateDataSet(final Mart mart,
+			final DataSet dataset, final String newName) {
+		final DataSet newDataSet = (DataSet) dataset.replicate(newName);
 		return newDataSet;
 	}
 }

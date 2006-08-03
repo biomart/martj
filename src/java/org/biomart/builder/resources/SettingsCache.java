@@ -32,8 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.biomart.builder.resources.Resources;
-
 /**
  * Manages the on-disk cache of user settings.
  * 
@@ -45,18 +43,20 @@ public class SettingsCache {
 
 	private static boolean initialising = true;
 
-	private static File homeDir = new File(System.getProperty("user.home"),
-			".martbuilder");
+	private static final File homeDir = new File(System
+			.getProperty("user.home"), ".martbuilder");
 
 	private static int classCacheSize = 10;
 
-	private static File propertiesFile = new File(homeDir, "properties");
+	private static final File propertiesFile = new File(SettingsCache.homeDir,
+			"properties");
 
-	private static Properties properties = new Properties();
+	private static final Properties properties = new Properties();
 
-	private static File classCacheDir = new File(homeDir, "cache");
+	private static final File classCacheDir = new File(SettingsCache.homeDir,
+			"cache");
 
-	private static Map classCache = new HashMap();
+	private static final Map classCache = new HashMap();
 
 	// Private means that this class is a static singleton.
 	private SettingsCache() {
@@ -65,13 +65,13 @@ public class SettingsCache {
 	// Create the bits we need on start-up.
 	static {
 		try {
-			if (!homeDir.exists())
-				homeDir.mkdir();
-			if (!classCacheDir.exists())
-				classCacheDir.mkdir();
-			if (!propertiesFile.exists())
-				propertiesFile.createNewFile();
-		} catch (Throwable t) {
+			if (!SettingsCache.homeDir.exists())
+				SettingsCache.homeDir.mkdir();
+			if (!SettingsCache.classCacheDir.exists())
+				SettingsCache.classCacheDir.mkdir();
+			if (!SettingsCache.propertiesFile.exists())
+				SettingsCache.propertiesFile.createNewFile();
+		} catch (final Throwable t) {
 			System.err.println(Resources.get("settingsCacheInitFailed"));
 			t.printStackTrace(System.err);
 		}
@@ -82,49 +82,53 @@ public class SettingsCache {
 	 * <tt>~/.martbuilder</tt>.
 	 */
 	public static synchronized void load() {
-		initialising = true;
+		SettingsCache.initialising = true;
 
 		try {
-			properties.load(new FileInputStream(propertiesFile));
-		} catch (Throwable t) {
+			SettingsCache.properties.load(new FileInputStream(
+					SettingsCache.propertiesFile));
+		} catch (final Throwable t) {
 			System.err.println(Resources.get("settingsCacheLoadFailed"));
 			t.printStackTrace(System.err);
 		}
 
-		String newClassCacheSize = properties.getProperty("classCacheSize");
+		final String newClassCacheSize = SettingsCache.properties
+				.getProperty("classCacheSize");
 		try {
-			classCacheSize = Integer.parseInt(newClassCacheSize);
-		} catch (NumberFormatException e) {
+			SettingsCache.classCacheSize = Integer.parseInt(newClassCacheSize);
+		} catch (final NumberFormatException e) {
 			// Ignore and use the default.
-			classCacheSize = 10;
-			setProperty("classCacheSize", "" + classCacheSize);
+			SettingsCache.classCacheSize = 10;
+			SettingsCache.setProperty("classCacheSize", ""
+					+ SettingsCache.classCacheSize);
 		}
 
 		// Loop over classCacheDir to find classes.
-		String[] classes = classCacheDir.list();
+		final String[] classes = SettingsCache.classCacheDir.list();
 		if (classes != null)
-			for (int i = 0; i < classes.length; i++) {
+			for (int i = 0; i < classes.length; i++)
 				try {
-					Class clazz = Class.forName(classes[i]);
-					File classDir = new File(classCacheDir, classes[i]);
-					String[] entries = classDir.list();
+					final Class clazz = Class.forName(classes[i]);
+					final File classDir = new File(SettingsCache.classCacheDir,
+							classes[i]);
+					final String[] entries = classDir.list();
 					for (int j = 0; j < entries.length; j++) {
-						Properties props = new Properties();
+						final Properties props = new Properties();
 						props.load(new FileInputStream(new File(classDir,
 								entries[j])));
-						saveHistoryProperties(clazz, entries[j], props);
+						SettingsCache.saveHistoryProperties(clazz, entries[j],
+								props);
 					}
-				} catch (Throwable t) {
+				} catch (final Throwable t) {
 					System.err
 							.println(Resources.get("settingsCacheLoadFailed"));
 					t.printStackTrace(System.err);
 				}
-			}
 
-		initialising = false;
+		SettingsCache.initialising = false;
 	}
 
-	private static Object SAVE_LOCK = new String("__SAVE__LOCK");
+	private static final Object SAVE_LOCK = new String("__SAVE__LOCK");
 
 	/**
 	 * Saves the current cache of settings to disk as a set of files at
@@ -132,42 +136,46 @@ public class SettingsCache {
 	 */
 	private static void save() {
 		// Don't save if we're still loading.
-		if (initialising)
+		if (SettingsCache.initialising)
 			return;
 
-		synchronized (SAVE_LOCK) {
+		synchronized (SettingsCache.SAVE_LOCK) {
 
 			try {
-				properties.store(new FileOutputStream(propertiesFile),
-						Resources.get("settingsCacheHeader"));
+				SettingsCache.properties.store(new FileOutputStream(
+						SettingsCache.propertiesFile), Resources
+						.get("settingsCacheHeader"));
 				// Save the class-by-class properties.
-				for (Iterator i = classCache.entrySet().iterator(); i.hasNext();) {
-					Map.Entry classCacheEntry = (Map.Entry) i.next();
-					Class clazz = (Class) classCacheEntry.getKey();
-					File classDir = new File(classCacheDir, clazz.getName());
+				for (final Iterator i = SettingsCache.classCache.entrySet()
+						.iterator(); i.hasNext();) {
+					final Map.Entry classCacheEntry = (Map.Entry) i.next();
+					final Class clazz = (Class) classCacheEntry.getKey();
+					final File classDir = new File(SettingsCache.classCacheDir,
+							clazz.getName());
 					classDir.mkdir();
 					// List existing ones.
-					String[] files = classDir.list();
-					List existingFiles = files == null ? new ArrayList()
+					final String[] files = classDir.list();
+					final List existingFiles = files == null ? new ArrayList()
 							: new ArrayList(Arrays.asList(files));
 					// Save current set. Must use Map.Entry else each
 					// call for map keys and values will change the
 					// structure of the LRU cache map, and hence cause
 					// ConcurrentModificationExceptions.
-					for (Iterator j = ((Map) classCacheEntry.getValue())
+					for (final Iterator j = ((Map) classCacheEntry.getValue())
 							.entrySet().iterator(); j.hasNext();) {
-						Map.Entry entry = (Map.Entry) j.next();
-						String name = (String) entry.getKey();
+						final Map.Entry entry = (Map.Entry) j.next();
+						final String name = (String) entry.getKey();
 						existingFiles.remove(name);
-						Properties props = (Properties) entry.getValue();
+						final Properties props = (Properties) entry.getValue();
 						props.store(new FileOutputStream(new File(classDir,
 								name)), Resources.get("settingsCacheHeader"));
 					}
 					// Remove old files that were not updated.
-					for (Iterator j = existingFiles.iterator(); j.hasNext();)
+					for (final Iterator j = existingFiles.iterator(); j
+							.hasNext();)
 						(new File(classDir, (String) j.next())).delete();
 				}
-			} catch (Throwable t) {
+			} catch (final Throwable t) {
 				System.err.println(Resources.get("settingsCacheSaveFailed"));
 				t.printStackTrace(System.err);
 			}
@@ -182,8 +190,8 @@ public class SettingsCache {
 	 *            the property name to look up.
 	 * @return the value, or <tt>null</tt> if not found.
 	 */
-	public static String getProperty(String property) {
-		return properties.getProperty(property);
+	public static String getProperty(final String property) {
+		return SettingsCache.properties.getProperty(property);
 	}
 
 	/**
@@ -194,9 +202,9 @@ public class SettingsCache {
 	 * @param value
 	 *            the value to give it.
 	 */
-	public static void setProperty(String property, String value) {
-		properties.setProperty(property, value);
-		save();
+	public static void setProperty(final String property, final String value) {
+		SettingsCache.properties.setProperty(property, value);
+		SettingsCache.save();
 	}
 
 	/**
@@ -208,8 +216,8 @@ public class SettingsCache {
 	 * @return the names of the properties sets in the history that match that
 	 *         class. May be empty but never <tt>null</tt>.
 	 */
-	public static Collection getHistoryNamesForClass(Class clazz) {
-		Map map = (Map) classCache.get(clazz);
+	public static Collection getHistoryNamesForClass(final Class clazz) {
+		final Map map = (Map) SettingsCache.classCache.get(clazz);
 		return map == null ? Collections.EMPTY_SET : map.keySet();
 	}
 
@@ -223,8 +231,9 @@ public class SettingsCache {
 	 *            the name of the property set in the history.
 	 * @return the properties that match. May be empty but never <tt>null</tt>.
 	 */
-	public static Properties getHistoryProperties(Class clazz, String name) {
-		Map map = (Map) classCache.get(clazz);
+	public static Properties getHistoryProperties(final Class clazz,
+			final String name) {
+		final Map map = (Map) SettingsCache.classCache.get(clazz);
 		return map == null ? new Properties() : (Properties) map.get(name);
 	}
 
@@ -239,20 +248,20 @@ public class SettingsCache {
 	 * @param properties
 	 *            the properties to store.
 	 */
-	public static void saveHistoryProperties(Class clazz, String name,
-			Properties properties) {
-		if (!classCache.containsKey(clazz)) {
-			LinkedHashMap history = new LinkedHashMap(classCacheSize, 0.75f,
-					true) {
+	public static void saveHistoryProperties(final Class clazz,
+			final String name, final Properties properties) {
+		if (!SettingsCache.classCache.containsKey(clazz)) {
+			final LinkedHashMap history = new LinkedHashMap(
+					SettingsCache.classCacheSize, 0.75f, true) {
 				private static final long serialVersionUID = 1;
 
 				protected boolean removeEldestEntry(Map.Entry eldest) {
-					return size() > classCacheSize;
+					return this.size() > SettingsCache.classCacheSize;
 				}
 			};
-			classCache.put(clazz, history);
+			SettingsCache.classCache.put(clazz, history);
 		}
-		((Map) classCache.get(clazz)).put(name, properties);
-		save();
+		((Map) SettingsCache.classCache.get(clazz)).put(name, properties);
+		SettingsCache.save();
 	}
 }

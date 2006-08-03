@@ -57,8 +57,8 @@ public abstract class LongProcess {
 	 *            the container over which the mouse will transform into an
 	 *            hourglass.
 	 */
-	public static void setContainer(Container newContainer) {
-		container = newContainer;
+	public static void setContainer(final Container newContainer) {
+		LongProcess.container = newContainer;
 	}
 
 	/**
@@ -74,46 +74,44 @@ public abstract class LongProcess {
 			public void run() {
 				try {
 					// Update the number of processes currently running.
-					synchronized (lockObject) {
+					synchronized (LongProcess.lockObject) {
 						LongProcess.longProcessCount++;
 					}
 
 					// If this is the first process to start, open the
 					// hourglass.
-					if (LongProcess.longProcessCount == 1) {
+					if (LongProcess.longProcessCount == 1)
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
-								Cursor normalCursor = new Cursor(
+								final Cursor normalCursor = new Cursor(
 										Cursor.WAIT_CURSOR);
-								container.setCursor(normalCursor);
+								LongProcess.container.setCursor(normalCursor);
 							}
 						});
-					}
 
 					// Let the process run.
 					try {
 						process.run();
-					} catch (Exception e) {
+					} catch (final Exception e) {
 						throw new MartBuilderInternalError(e);
 					}
-				} catch (Error e) {
+				} catch (final Error e) {
 					throw e;
 				} finally {
 					// Decrease the number of processes currently running.
-					synchronized (lockObject) {
+					synchronized (LongProcess.lockObject) {
 						LongProcess.longProcessCount--;
 					}
 
 					// If that was the last one, stop the hourglass.
-					if (LongProcess.longProcessCount == 0) {
+					if (LongProcess.longProcessCount == 0)
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
-								Cursor normalCursor = new Cursor(
+								final Cursor normalCursor = new Cursor(
 										Cursor.DEFAULT_CURSOR);
-								container.setCursor(normalCursor);
+								LongProcess.container.setCursor(normalCursor);
 							}
 						});
-					}
 				}
 			}
 		}).start();

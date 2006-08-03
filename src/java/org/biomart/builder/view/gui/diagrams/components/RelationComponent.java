@@ -197,8 +197,13 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	/**
 	 * The constructor constructs an object around a given object, and
 	 * associates with a given display.
+	 * 
+	 * @param relation
+	 *            the relation to show in the component.
+	 * @param diagram
+	 *            the diagram to show this component in.
 	 */
-	public RelationComponent(Relation relation, Diagram diagram) {
+	public RelationComponent(final Relation relation, final Diagram diagram) {
 		super();
 		this.relation = relation;
 		this.diagram = diagram;
@@ -220,7 +225,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	}
 
 	public void updateAppearance() {
-		DiagramContext mod = this.getDiagram().getDiagramContext();
+		final DiagramContext mod = this.getDiagram().getDiagramContext();
 		if (mod != null)
 			mod.customiseAppearance(this, this.getObject());
 		this.setBackground(this.getForeground());
@@ -239,7 +244,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		return this.state;
 	}
 
-	public void setState(Object state) {
+	public void setState(final Object state) {
 		this.state = state;
 	}
 
@@ -280,12 +285,12 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	 * @param shape
 	 *            the shape this relation should take on screen.
 	 */
-	public void setShape(Shape shape) {
+	public void setShape(final Shape shape) {
 		this.shape = shape;
 		this.updateAppearance();
 	}
 
-	public boolean contains(int x, int y) {
+	public boolean contains(final int x, final int y) {
 		// Clicks are on us if they are within a certain distance
 		// of the stroked shape.
 		return this.outline != null
@@ -297,20 +302,20 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	}
 
 	public JPopupMenu getContextMenu() {
-		JPopupMenu contextMenu = new JPopupMenu();
+		final JPopupMenu contextMenu = new JPopupMenu();
 		// No additional entries for us yet.
 		// Return it.
 		return contextMenu;
 	}
 
-	protected void processMouseEvent(MouseEvent evt) {
+	protected void processMouseEvent(final MouseEvent evt) {
 		boolean eventProcessed = false;
 
 		// Is it a right-click?
 		if (evt.isPopupTrigger()) {
 
 			// Build the basic menu.
-			JPopupMenu contextMenu = this.getContextMenu();
+			final JPopupMenu contextMenu = this.getContextMenu();
 
 			// Customise it using the diagram context.
 			if (this.getDiagram().getDiagramContext() != null)
@@ -332,16 +337,18 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 
 	/**
 	 * Updates the stroke of this relation.
-	 * @param stroke the stroke to use for this relation.
+	 * 
+	 * @param stroke
+	 *            the stroke to use for this relation.
 	 */
-	public void setStroke(Stroke stroke) {
+	public void setStroke(final Stroke stroke) {
 		this.stroke = stroke;
 	}
-	
-	protected void paintComponent(Graphics g) {
-		Graphics2D g2d = (Graphics2D) g.create();
+
+	protected void paintComponent(final Graphics g) {
+		final Graphics2D g2d = (Graphics2D) g.create();
 		g2d.setRenderingHints(this.renderHints);
-		Shape clippingArea = g2d.getClip();
+		final Shape clippingArea = g2d.getClip();
 		if (clippingArea != null
 				&& !this.shape.intersects(clippingArea.getBounds2D()))
 			return;
@@ -357,8 +364,8 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		return this.getObject().hashCode();
 	}
 
-	public boolean equals(Object obj) {
-		return (obj instanceof DiagramComponent)
+	public boolean equals(final Object obj) {
+		return obj instanceof DiagramComponent
 				&& ((DiagramComponent) obj).getObject()
 						.equals(this.getObject());
 	}

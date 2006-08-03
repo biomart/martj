@@ -229,15 +229,15 @@ public interface Relation extends Comparable {
 		 *            the name of the cardinality object.
 		 * @return the cardinality object.
 		 */
-		public static Cardinality get(String name) {
+		public static Cardinality get(final String name) {
 			// Do we already have this one?
 			// If so, then return it.
-			if (singletons.containsKey(name))
-				return (Cardinality) singletons.get(name);
+			if (Cardinality.singletons.containsKey(name))
+				return (Cardinality) Cardinality.singletons.get(name);
 
 			// Otherwise, create it, remember it.
-			Cardinality c = new Cardinality(name);
-			singletons.put(name, c);
+			final Cardinality c = new Cardinality(name);
+			Cardinality.singletons.put(name, c);
 
 			// Return it.
 			return c;
@@ -250,7 +250,7 @@ public interface Relation extends Comparable {
 		 * @param name
 		 *            the name of the cardinality.
 		 */
-		private Cardinality(String name) {
+		private Cardinality(final String name) {
 			this.name = name;
 		}
 
@@ -271,12 +271,12 @@ public interface Relation extends Comparable {
 			return this.toString().hashCode();
 		}
 
-		public int compareTo(Object o) throws ClassCastException {
-			Cardinality c = (Cardinality) o;
+		public int compareTo(final Object o) throws ClassCastException {
+			final Cardinality c = (Cardinality) o;
 			return this.toString().compareTo(c.toString());
 		}
 
-		public boolean equals(Object o) {
+		public boolean equals(final Object o) {
 			// We are dealing with singletons so can use == happily.
 			return o == this;
 		}
@@ -300,9 +300,9 @@ public interface Relation extends Comparable {
 		 * the same number of columns. The default constructor sets the status
 		 * to {@link ComponentStatus#INFERRED}.
 		 * 
-		 * @param key
+		 * @param firstKey
 		 *            the first key.
-		 * @param key
+		 * @param secondKey
 		 *            the second key.
 		 * @param cardinality
 		 *            the cardinality of the foreign key end of this relation.
@@ -316,8 +316,8 @@ public interface Relation extends Comparable {
 		 *             the relation already exists, or if one of the keys is a
 		 *             foreign key which already has a valid relation elsewhere.
 		 */
-		public GenericRelation(Key firstKey, Key secondKey,
-				Cardinality cardinality) throws AssociationException {
+		public GenericRelation(final Key firstKey, final Key secondKey,
+				final Cardinality cardinality) throws AssociationException {
 			// Check the keys have the same number of columns.
 			if (firstKey.countColumns() != secondKey.countColumns())
 				throw new AssociationException(Resources
@@ -338,19 +338,19 @@ public interface Relation extends Comparable {
 			// elsewhere.
 			boolean fkHasOtherRel = false;
 			if (firstKey instanceof ForeignKey)
-				for (Iterator i = firstKey.getRelations().iterator(); i
+				for (final Iterator i = firstKey.getRelations().iterator(); i
 						.hasNext()
 						&& !fkHasOtherRel;) {
-					Relation r = (Relation) i.next();
+					final Relation r = (Relation) i.next();
 					if (!r.getStatus().equals(
 							ComponentStatus.INFERRED_INCORRECT))
 						fkHasOtherRel = true;
 				}
 			if (secondKey instanceof ForeignKey)
-				for (Iterator i = secondKey.getRelations().iterator(); i
+				for (final Iterator i = secondKey.getRelations().iterator(); i
 						.hasNext()
 						&& !fkHasOtherRel;) {
-					Relation r = (Relation) i.next();
+					final Relation r = (Relation) i.next();
 					if (!r.getStatus().equals(
 							ComponentStatus.INFERRED_INCORRECT))
 						fkHasOtherRel = true;
@@ -365,7 +365,7 @@ public interface Relation extends Comparable {
 		}
 
 		public String getName() {
-			StringBuffer sb = new StringBuffer();
+			final StringBuffer sb = new StringBuffer();
 			sb.append(this.getFirstKey().toString());
 			sb.append(":");
 			sb.append(this.getSecondKey().toString());
@@ -376,18 +376,17 @@ public interface Relation extends Comparable {
 			return this.status;
 		}
 
-		public void setStatus(ComponentStatus status)
+		public void setStatus(final ComponentStatus status)
 				throws AssociationException {
 			// If the new status is not incorrect, we need to make sure we
 			// can legally do this, ie. the two keys have the same number of
 			// columns each.
-			if (!status.equals(ComponentStatus.INFERRED_INCORRECT)) {
+			if (!status.equals(ComponentStatus.INFERRED_INCORRECT))
 				// Check both keys have same cardinality.
 				if (this.firstKey.countColumns() != this.secondKey
 						.countColumns())
 					throw new AssociationException(Resources
 							.get("keyColumnCountMismatch"));
-			}
 
 			// Make the change.
 			this.status = status;
@@ -410,7 +409,7 @@ public interface Relation extends Comparable {
 				return false;
 		}
 
-		public Key getOtherKey(Key key) throws IllegalArgumentException {
+		public Key getOtherKey(final Key key) throws IllegalArgumentException {
 			if (key.equals(this.firstKey))
 				return this.secondKey;
 			else if (key.equals(this.secondKey))
@@ -423,7 +422,7 @@ public interface Relation extends Comparable {
 			if (!this.isOneToMany())
 				return null;
 			// The many end is the foreign key end.
-			return (this.firstKey instanceof ForeignKey) ? this.firstKey
+			return this.firstKey instanceof ForeignKey ? this.firstKey
 					: this.secondKey;
 		}
 
@@ -431,7 +430,7 @@ public interface Relation extends Comparable {
 			if (!this.isOneToMany())
 				return null;
 			// The one end is the primary key end.
-			return (this.firstKey instanceof PrimaryKey) ? this.firstKey
+			return this.firstKey instanceof PrimaryKey ? this.firstKey
 					: this.secondKey;
 		}
 
@@ -440,8 +439,8 @@ public interface Relation extends Comparable {
 		}
 
 		public void setCardinality(Cardinality cardinality) {
-			if ((this.firstKey instanceof PrimaryKey)
-					&& (this.secondKey instanceof PrimaryKey))
+			if (this.firstKey instanceof PrimaryKey
+					&& this.secondKey instanceof PrimaryKey)
 				cardinality = Cardinality.ONE;
 			this.cardinality = cardinality;
 		}
@@ -451,7 +450,8 @@ public interface Relation extends Comparable {
 		}
 
 		public boolean isManyToManyAllowed() {
-			return ((this.firstKey instanceof ForeignKey) && (this.secondKey instanceof ForeignKey));
+			return this.firstKey instanceof ForeignKey
+					&& this.secondKey instanceof ForeignKey;
 		}
 
 		public void destroy() {
@@ -486,15 +486,15 @@ public interface Relation extends Comparable {
 			return this.toString().hashCode();
 		}
 
-		public int compareTo(Object o) throws ClassCastException {
-			Relation r = (Relation) o;
+		public int compareTo(final Object o) throws ClassCastException {
+			final Relation r = (Relation) o;
 			return this.toString().compareTo(r.toString());
 		}
 
-		public boolean equals(Object o) {
+		public boolean equals(final Object o) {
 			if (o == null || !(o instanceof Relation))
 				return false;
-			Relation r = (Relation) o;
+			final Relation r = (Relation) o;
 			return r.toString().equals(this.toString());
 		}
 	}

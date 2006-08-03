@@ -131,9 +131,9 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	 *            <tt>true</tt> if you want keyguessing enabled,
 	 *            <tt>false</tt> otherwise.
 	 */
-	public JDBCSchema(File driverClassLocation, String driverClassName,
-			String url, String schemaName, String username, String password,
-			String name, boolean keyGuessing) {
+	public JDBCSchema(File driverClassLocation, final String driverClassName,
+			final String url, final String schemaName, final String username,
+			final String password, final String name, final boolean keyGuessing) {
 		// Call the GenericSchema implementation first, to set up our name, and
 		// set up keyguessing.
 		super(name, keyGuessing);
@@ -151,9 +151,9 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		this.schemaName = schemaName;
 	}
 
-	public Schema replicate(String newName) {
+	public Schema replicate(final String newName) {
 		// Make an empty copy.
-		Schema newSchema = new JDBCSchema(this.driverClassLocation,
+		final Schema newSchema = new JDBCSchema(this.driverClassLocation,
 				this.driverClassName, this.url, this.schemaName, this.username,
 				this.password, newName, this.getKeyGuessing());
 
@@ -167,20 +167,20 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	public boolean test() throws Exception {
 		// Establish the JDBC connection. May throw an exception of its own,
 		// which is fine, just let it go.
-		Connection connection = this.getConnection();
+		final Connection connection = this.getConnection();
 		// If we have no connection, we can't test it!
 		if (connection == null)
 			return false;
 
 		// Get the metadata.
-		DatabaseMetaData dmd = connection.getMetaData();
+		final DatabaseMetaData dmd = connection.getMetaData();
 
 		// By opening, executing, then closing a DMD query we will test
 		// the connection fully without actually having to read anything from
 		// it.
-		String catalog = connection.getCatalog();
-		ResultSet rs = dmd.getTables(catalog, this.schemaName, "%", null);
-		boolean worked = rs.isBeforeFirst();
+		final String catalog = connection.getCatalog();
+		final ResultSet rs = dmd.getTables(catalog, this.schemaName, "%", null);
+		final boolean worked = rs.isBeforeFirst();
 		rs.close();
 
 		// If we get here, it worked.
@@ -198,16 +198,16 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			if (this.driverClassLocation != null
 					&& this.driverClassLocation.exists())
 				try {
-					ClassLoader classLoader = URLClassLoader
+					final ClassLoader classLoader = URLClassLoader
 							.newInstance(new URL[] { this.driverClassLocation
 									.toURL() });
 					loadedDriverClass = classLoader
 							.loadClass(this.driverClassName);
-				} catch (ClassNotFoundException e) {
-					SQLException e2 = new SQLException();
+				} catch (final ClassNotFoundException e) {
+					final SQLException e2 = new SQLException();
 					e2.initCause(e);
 					throw e2;
-				} catch (MalformedURLException e) {
+				} catch (final MalformedURLException e) {
 					throw new MartBuilderInternalError(e);
 				}
 
@@ -216,8 +216,8 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			if (loadedDriverClass == null)
 				try {
 					loadedDriverClass = Class.forName(this.driverClassName);
-				} catch (ClassNotFoundException e) {
-					SQLException e2 = new SQLException();
+				} catch (final ClassNotFoundException e) {
+					final SQLException e2 = new SQLException();
 					e2.initCause(e);
 					throw e2;
 				}
@@ -228,15 +228,15 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						.get("driverClassNotJDBCDriver"));
 
 			// Connect!
-			Properties properties = new Properties();
+			final Properties properties = new Properties();
 			properties.setProperty("user", this.username);
 			if (this.password != null)
 				properties.setProperty("password", this.password);
 			this.connection = DriverManager.getConnection(this.url, properties);
 
 			// Check the schema name.
-			DatabaseMetaData dmd = this.connection.getMetaData();
-			String catalog = this.connection.getCatalog();
+			final DatabaseMetaData dmd = this.connection.getMetaData();
+			final String catalog = this.connection.getCatalog();
 			ResultSet rs = dmd.getTables(catalog, this.schemaName, "%", null);
 			if (!rs.isBeforeFirst()) {
 				rs = dmd.getTables(catalog, this.schemaName.toUpperCase(), "%",
@@ -261,7 +261,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		return this.driverClassName;
 	}
 
-	public void setDriverClassName(String driverClassName) {
+	public void setDriverClassName(final String driverClassName) {
 		this.driverClassName = driverClassName;
 	}
 
@@ -269,7 +269,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		return this.driverClassLocation;
 	}
 
-	public void setDriverClassLocation(File driverClassLocation) {
+	public void setDriverClassLocation(final File driverClassLocation) {
 		this.driverClassLocation = driverClassLocation;
 	}
 
@@ -277,7 +277,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		return this.url;
 	}
 
-	public void setJDBCURL(String url) {
+	public void setJDBCURL(final String url) {
 		this.url = url;
 	}
 
@@ -285,7 +285,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		return this.schemaName;
 	}
 
-	public void setDatabaseSchema(String schemaName) {
+	public void setDatabaseSchema(final String schemaName) {
 		this.schemaName = schemaName;
 	}
 
@@ -293,7 +293,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		return this.username;
 	}
 
-	public void setUsername(String username) {
+	public void setUsername(final String username) {
 		this.username = username;
 	}
 
@@ -301,7 +301,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		return this.password;
 	}
 
-	public void setPassword(String password) {
+	public void setPassword(final String password) {
 		this.password = password;
 	}
 
@@ -313,17 +313,18 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	 * database server listening on the same port and connected with the same
 	 * username.
 	 */
-	public boolean canCohabit(DataLink partner) {
+	public boolean canCohabit(final DataLink partner) {
 		// We can't cohabit with non-JDBCDataLink partners.
 		if (!(partner instanceof JDBCDataLink))
 			return false;
-		JDBCDataLink partnerLink = (JDBCDataLink) partner;
+		final JDBCDataLink partnerLink = (JDBCDataLink) partner;
 
 		// Work out the partner's catalogs and schemas.
-		List partnerSchemas = new ArrayList();
+		final List partnerSchemas = new ArrayList();
 		try {
-			DatabaseMetaData dmd = partnerLink.getConnection().getMetaData();
-			ResultSet schemas = dmd.getSchemas();
+			final DatabaseMetaData dmd = partnerLink.getConnection()
+					.getMetaData();
+			final ResultSet schemas = dmd.getSchemas();
 			while (schemas.next())
 				partnerSchemas.add(schemas.getString("TABLE_CATALOG") + "."
 						+ schemas.getString("TABLE_SCHEM"));
@@ -338,13 +339,13 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// If we didn't get results, then the database supports only
 			// catalogs and not schemas. So, we need to compare by catalog only.
 			else {
-				ResultSet catalogs = dmd.getCatalogs();
+				final ResultSet catalogs = dmd.getCatalogs();
 				while (catalogs.next())
 					partnerSchemas.add(catalogs.getString("TABLE_CAT"));
 				return partnerSchemas.contains(this.getConnection()
 						.getCatalog());
 			}
-		} catch (Throwable t) {
+		} catch (final Throwable t) {
 			// If get an error, assume can't find anything, thus assume
 			// incompatible.
 			return false;
@@ -353,23 +354,23 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 	public void synchronise() throws SQLException, BuilderException {
 		// Get database metadata, catalog, and schema details.
-		DatabaseMetaData dmd = this.getConnection().getMetaData();
-		String catalog = this.getConnection().getCatalog();
+		final DatabaseMetaData dmd = this.getConnection().getMetaData();
+		final String catalog = this.getConnection().getCatalog();
 
 		// Create a list of existing tables. During this method, we remove from
 		// this list all tables that still exist in the database. At the end of
 		// the method, the list contains only those tables which no longer
 		// exist, so they will be dropped.
-		List tablesToBeDropped = new ArrayList(this.tables.values());
+		final List tablesToBeDropped = new ArrayList(this.tables.values());
 
 		// Load tables and views from database, then loop over them.
-		ResultSet dbTables = dmd.getTables(catalog, this.schemaName, "%",
+		final ResultSet dbTables = dmd.getTables(catalog, this.schemaName, "%",
 				new String[] { "TABLE", "VIEW", "ALIAS", "SYNONYM" });
 
 		// Do the loop.
 		while (dbTables.next()) {
 			// What is the table called?
-			String dbTableName = dbTables.getString("TABLE_NAME");
+			final String dbTableName = dbTables.getString("TABLE_NAME");
 
 			// Look to see if we already have a table by this name defined. If
 			// we do, reuse it. If not, create a new table.
@@ -377,7 +378,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			if (dbTable == null)
 				try {
 					dbTable = new GenericTable(dbTableName, this);
-				} catch (Throwable t) {
+				} catch (final Throwable t) {
 					throw new MartBuilderInternalError(t);
 				}
 
@@ -387,17 +388,17 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 			// Make a list of all the columns in the table. Any columns
 			// remaining in this list by the end of the loop will be dropped.
-			List colsToBeDropped = new ArrayList(dbTable.getColumns());
+			final List colsToBeDropped = new ArrayList(dbTable.getColumns());
 
 			// Load the table columns from the database, then loop over them.
-			ResultSet dbTblCols = dmd.getColumns(catalog, this.schemaName,
-					dbTableName, "%");
+			final ResultSet dbTblCols = dmd.getColumns(catalog,
+					this.schemaName, dbTableName, "%");
 			// FIXME: When using Oracle, if the table is a synonym then the
 			// above call returns no results.
 			while (dbTblCols.next()) {
 				// What is the column called, and is it nullable?
-				String dbTblColName = dbTblCols.getString("COLUMN_NAME");
-				int nullable = dbTblCols.getInt("NULLABLE");
+				final String dbTblColName = dbTblCols.getString("COLUMN_NAME");
+				final int nullable = dbTblCols.getInt("NULLABLE");
 
 				// Look to see if the column already exists on this table. If it
 				// does, reuse it. Else, create it.
@@ -405,7 +406,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 				if (dbTblCol == null)
 					try {
 						dbTblCol = new GenericColumn(dbTblColName, dbTable);
-					} catch (Throwable t) {
+					} catch (final Throwable t) {
 						throw new MartBuilderInternalError(t);
 					}
 
@@ -421,15 +422,15 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 			// Drop all columns that are left in the list, as they no longer
 			// exist in the database.
-			for (Iterator i = colsToBeDropped.iterator(); i.hasNext();) {
-				Column column = (Column) i.next();
+			for (final Iterator i = colsToBeDropped.iterator(); i.hasNext();) {
+				final Column column = (Column) i.next();
 				dbTable.removeColumn(column);
 			}
 
 			// Obtain the primary key from the database. Even in databases
 			// without referential integrity, the primary key is still defined
 			// and can be obtained from the metadata.
-			ResultSet dbTblPKCols = dmd.getPrimaryKeys(catalog,
+			final ResultSet dbTblPKCols = dmd.getPrimaryKeys(catalog,
 					this.schemaName, dbTableName);
 
 			// Load the primary key columns into a map keyed by column position.
@@ -439,10 +440,11 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// map
 			// sorted, so that when we iterate over it later we get back the
 			// columns in the correct order.
-			Map pkCols = new TreeMap();
+			final Map pkCols = new TreeMap();
 			while (dbTblPKCols.next()) {
-				String pkColName = dbTblPKCols.getString("COLUMN_NAME");
-				Short pkColPosition = new Short(dbTblPKCols.getShort("KEY_SEQ"));
+				final String pkColName = dbTblPKCols.getString("COLUMN_NAME");
+				final Short pkColPosition = new Short(dbTblPKCols
+						.getShort("KEY_SEQ"));
 				pkCols.put(pkColPosition, dbTable.getColumnByName(pkColName));
 			}
 			dbTblPKCols.close();
@@ -468,7 +470,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 			// Obtain the existing primary key on the table, if the table
 			// previously existed and even had one in the first place.
-			PrimaryKey existingPK = dbTable.getPrimaryKey();
+			final PrimaryKey existingPK = dbTable.getPrimaryKey();
 
 			// Did we find a PK on the database copy of the table?
 			if (!pkCols.isEmpty()) {
@@ -478,7 +480,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 				try {
 					candidatePK = new GenericPrimaryKey(new ArrayList(pkCols
 							.values()));
-				} catch (Throwable t) {
+				} catch (final Throwable t) {
 					throw new MartBuilderInternalError(t);
 				}
 
@@ -488,36 +490,36 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 				// preserve any existing handmade PKs, and don't override any
 				// marked as incorrect.
 				if (existingPK == null
-						|| (existingPK.equals(candidatePK) && existingPK
-								.getStatus().equals(ComponentStatus.HANDMADE))
-						|| (!existingPK.equals(candidatePK) && !existingPK
-								.getStatus().equals(ComponentStatus.HANDMADE)))
-					try {
-						dbTable.setPrimaryKey(candidatePK);
-					} catch (Throwable t) {
-						throw new MartBuilderInternalError(t);
-					}
-			} else {
-				// No, we did not find a PK on the database copy of the table,
-				// so that table should not have a PK at all. So if the existing
-				// table has a PK which is not handmade, remove it.
-				if (existingPK != null
+						|| existingPK.equals(candidatePK)
+						&& existingPK.getStatus().equals(
+								ComponentStatus.HANDMADE)
+						|| !existingPK.equals(candidatePK)
 						&& !existingPK.getStatus().equals(
 								ComponentStatus.HANDMADE))
 					try {
-						dbTable.setPrimaryKey(null);
-					} catch (Throwable t) {
+						dbTable.setPrimaryKey(candidatePK);
+					} catch (final Throwable t) {
 						throw new MartBuilderInternalError(t);
 					}
-			}
+			} else // No, we did not find a PK on the database copy of the
+					// table,
+			// so that table should not have a PK at all. So if the existing
+			// table has a PK which is not handmade, remove it.
+			if (existingPK != null
+					&& !existingPK.getStatus().equals(ComponentStatus.HANDMADE))
+				try {
+					dbTable.setPrimaryKey(null);
+				} catch (final Throwable t) {
+					throw new MartBuilderInternalError(t);
+				}
 		}
 		dbTables.close();
 
 		// Remove from schema all tables not found in the database, using the
 		// list we constructed above.
-		for (Iterator i = tablesToBeDropped.iterator(); i.hasNext();) {
-			Table existingTable = (Table) i.next();
-			String tableName = existingTable.getName();
+		for (final Iterator i = tablesToBeDropped.iterator(); i.hasNext();) {
+			final Table existingTable = (Table) i.next();
+			final String tableName = existingTable.getName();
 			existingTable.destroy();
 			this.tables.remove(tableName);
 		}
@@ -527,15 +529,15 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	}
 
 	public void synchroniseKeys() throws SQLException, BuilderException {
-		DatabaseMetaData dmd = this.getConnection().getMetaData();
-		String catalog = this.getConnection().getCatalog();
-		String schema = this.schemaName;
+		final DatabaseMetaData dmd = this.getConnection().getMetaData();
+		final String catalog = this.getConnection().getCatalog();
+		final String schema = this.schemaName;
 
 		// Work out a list of all foreign keys currently existing.
 		// Any remaining in this list later will be dropped.
-		List fksToBeDropped = new ArrayList();
-		for (Iterator i = this.tables.values().iterator(); i.hasNext();) {
-			Table t = (Table) i.next();
+		final List fksToBeDropped = new ArrayList();
+		for (final Iterator i = this.tables.values().iterator(); i.hasNext();) {
+			final Table t = (Table) i.next();
 			fksToBeDropped.addAll(t.getForeignKeys());
 		}
 
@@ -552,8 +554,8 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			this.synchroniseKeysUsingDMD(fksToBeDropped, dmd, schema, catalog);
 
 		// Drop any foreign keys that are left over (but not handmade ones).
-		for (Iterator i = fksToBeDropped.iterator(); i.hasNext();) {
-			Key k = (Key) i.next();
+		for (final Iterator i = fksToBeDropped.iterator(); i.hasNext();) {
+			final Key k = (Key) i.next();
 			if (k.getStatus().equals(ComponentStatus.HANDMADE))
 				continue;
 			k.destroy();
@@ -562,18 +564,18 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		// Iterate over the foreign keys that remain, and check all their
 		// columns. If every column in a key is nullable, then the key
 		// itself is nullable too.
-		for (Iterator i = this.tables.values().iterator(); i.hasNext();) {
-			Table t = (Table) i.next();
-			for (Iterator j = t.getForeignKeys().iterator(); j.hasNext();) {
-				ForeignKey fk = (ForeignKey) j.next();
+		for (final Iterator i = this.tables.values().iterator(); i.hasNext();) {
+			final Table t = (Table) i.next();
+			for (final Iterator j = t.getForeignKeys().iterator(); j.hasNext();) {
+				final ForeignKey fk = (ForeignKey) j.next();
 				// Skip any hand-made keys as we assume the user knows best.
 				if (fk.getStatus().equals(ComponentStatus.HANDMADE))
 					continue;
 				// Check each column one-by-one.
 				boolean allColsNullable = true;
-				for (Iterator k = fk.getColumns().iterator(); k.hasNext()
+				for (final Iterator k = fk.getColumns().iterator(); k.hasNext()
 						&& allColsNullable;) {
-					Column c = (Column) k.next();
+					final Column c = (Column) k.next();
 					if (!c.getNullable())
 						allColsNullable = false;
 				}
@@ -607,14 +609,14 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	 *             if there was a logical problem during construction of the set
 	 *             of foreign keys.
 	 */
-	private void synchroniseKeysUsingKeyGuessing(Collection fksToBeDropped)
+	private void synchroniseKeysUsingKeyGuessing(final Collection fksToBeDropped)
 			throws SQLException, BuilderException {
 		// Loop through all the tables in the database, which is the same
 		// as looping through all the primary keys.
-		for (Iterator i = this.tables.values().iterator(); i.hasNext();) {
+		for (final Iterator i = this.tables.values().iterator(); i.hasNext();) {
 			// Obtain the table and its primary key.
-			Table pkTable = (Table) i.next();
-			PrimaryKey pk = pkTable.getPrimaryKey();
+			final Table pkTable = (Table) i.next();
+			final PrimaryKey pk = pkTable.getPrimaryKey();
 			// Skip all tables which have no primary key.
 			if (pk == null)
 				continue;
@@ -627,9 +629,10 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// established from that other table instead. So, we skip this
 			// table.
 			boolean pkIsAlsoAnFK = false;
-			for (Iterator j = pkTable.getForeignKeys().iterator(); j.hasNext()
+			for (final Iterator j = pkTable.getForeignKeys().iterator(); j
+					.hasNext()
 					&& !pkIsAlsoAnFK;) {
-				Key fk = (Key) j.next();
+				final Key fk = (Key) j.next();
 				if (fk.getColumns().equals(pk.getColumns()))
 					pkIsAlsoAnFK = true;
 			}
@@ -641,9 +644,9 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// some other table) if the first column in the PK has the same name
 			// as the table it is in, or with '_id' appended, or is just 'id'
 			// on its own. Any PK which does not have this property is skipped.
-			Column firstPKCol = (Column) pk.getColumns().get(0);
+			final Column firstPKCol = (Column) pk.getColumns().get(0);
 			String firstPKColName = firstPKCol.getName();
-			int idPrefixIndex = firstPKColName.indexOf(Resources
+			final int idPrefixIndex = firstPKColName.indexOf(Resources
 					.get("primaryKeySuffix"));
 			if (idPrefixIndex >= 0)
 				firstPKColName = firstPKColName.substring(0, idPrefixIndex);
@@ -655,23 +658,25 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// some previous run. Any relations that are left in this list by
 			// the end of the loop for this table no longer exist in the
 			// database, and will be dropped.
-			List relationsToBeDropped = new ArrayList(pk.getRelations());
+			final List relationsToBeDropped = new ArrayList(pk.getRelations());
 
 			// Now we know that we can use this PK for certain, look for all
 			// other tables (other than the one the PK itself belongs to), for
 			// sets of columns with identical names, or with '_key' appended.
 			// Any set that we find is going to be an FK with a relation back to
 			// this PK.
-			for (Iterator l = this.tables.values().iterator(); l.hasNext();) {
+			for (final Iterator l = this.tables.values().iterator(); l
+					.hasNext();) {
 				// Obtain the next table to look at.
-				Table fkTable = (Table) l.next();
+				final Table fkTable = (Table) l.next();
 
 				// Make sure the table is not the same as the PK table.
 				if (fkTable.equals(pkTable))
 					continue;
 
 				// Set up an empty list for the matching columns.
-				Column[] candidateFKColumns = new Column[pk.countColumns()];
+				final Column[] candidateFKColumns = new Column[pk
+						.countColumns()];
 				int matchingColumnCount = 0;
 
 				// Iterate through the PK columns and find a column in the
@@ -680,7 +685,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 				// If found, add that target column to the candidate FK column
 				// set.
 				for (int columnIndex = 0; columnIndex < pk.countColumns(); columnIndex++) {
-					String pkColumnName = ((Column) pk.getColumns().get(
+					final String pkColumnName = ((Column) pk.getColumns().get(
 							columnIndex)).getName();
 					// Start out by assuming no match.
 					Column candidateFKColumn = null;
@@ -716,17 +721,17 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 					try {
 						fk = new GenericForeignKey(Arrays
 								.asList(candidateFKColumns));
-					} catch (Throwable t) {
+					} catch (final Throwable t) {
 						throw new MartBuilderInternalError(t);
 					}
 
 					// If any FK already exists on the target table with the
 					// same columns in the same order, then reuse it.
 					boolean fkAlreadyExists = false;
-					for (Iterator f = fkTable.getForeignKeys().iterator(); f
+					for (final Iterator f = fkTable.getForeignKeys().iterator(); f
 							.hasNext()
 							&& !fkAlreadyExists;) {
-						ForeignKey candidateFK = (ForeignKey) f.next();
+						final ForeignKey candidateFK = (ForeignKey) f.next();
 						if (candidateFK.equals(fk)) {
 							// Found one. Reuse it!
 							fk = candidateFK;
@@ -748,7 +753,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						// Its brand new, so go ahead and make the relation.
 						try {
 							fkTable.addForeignKey(fk);
-						} catch (Throwable t) {
+						} catch (final Throwable t) {
 							throw new MartBuilderInternalError(t);
 						}
 
@@ -758,7 +763,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						// identical columns to the FK, in which case it is 1:1,
 						// as the FK is unique.
 						Cardinality card = Cardinality.MANY;
-						PrimaryKey fkPK = fkTable.getPrimaryKey();
+						final PrimaryKey fkPK = fkTable.getPrimaryKey();
 						if (fkPK != null
 								&& fk.getColumns().equals(fkPK.getColumns()))
 							card = Cardinality.ONE;
@@ -766,7 +771,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						// Establish the relation.
 						try {
 							new GenericRelation(pk, fk, card);
-						} catch (Throwable t) {
+						} catch (final Throwable t) {
 							throw new MartBuilderInternalError(t);
 						}
 					} else {
@@ -782,11 +787,11 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 						// Iterate through the existing relations on the key.
 						boolean relationExists = false;
-						for (Iterator f = fk.getRelations().iterator(); f
+						for (final Iterator f = fk.getRelations().iterator(); f
 								.hasNext()
 								&& !relationExists;) {
 							// Obtain the next relation.
-							Relation candidateRel = (Relation) f.next();
+							final Relation candidateRel = (Relation) f.next();
 
 							// a) a relation already exists between the FK and
 							// the PK.
@@ -798,7 +803,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 									try {
 										candidateRel
 												.setStatus(ComponentStatus.INFERRED);
-									} catch (Throwable t) {
+									} catch (final Throwable t) {
 										throw new MartBuilderInternalError(t);
 									}
 								// Don't drop it at the end of the loop.
@@ -833,7 +838,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 							// a PK with identical columns to the FK, in which
 							// case it is 1:1, as the FK is unique.
 							Cardinality card = Cardinality.MANY;
-							PrimaryKey fkPK = fkTable.getPrimaryKey();
+							final PrimaryKey fkPK = fkTable.getPrimaryKey();
 							if (fkPK != null
 									&& fk.getColumns()
 											.equals(fkPK.getColumns()))
@@ -842,7 +847,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 							// Establish the relation.
 							try {
 								new GenericRelation(pk, fk, card);
-							} catch (Throwable t) {
+							} catch (final Throwable t) {
 								throw new MartBuilderInternalError(t);
 							}
 						}
@@ -852,8 +857,9 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 			// Remove any relations that we didn't find in the database (but
 			// leave the handmade ones behind).
-			for (Iterator j = relationsToBeDropped.iterator(); j.hasNext();) {
-				Relation r = (Relation) j.next();
+			for (final Iterator j = relationsToBeDropped.iterator(); j
+					.hasNext();) {
+				final Relation r = (Relation) j.next();
 				if (r.getStatus().equals(ComponentStatus.HANDMADE))
 					continue;
 				r.destroy();
@@ -880,15 +886,15 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	 *             if there was a logical problem during construction of the set
 	 *             of foreign keys.
 	 */
-	private void synchroniseKeysUsingDMD(Collection fksToBeDropped,
-			DatabaseMetaData dmd, String schema, String catalog)
-			throws SQLException, BuilderException {
+	private void synchroniseKeysUsingDMD(final Collection fksToBeDropped,
+			final DatabaseMetaData dmd, final String schema,
+			final String catalog) throws SQLException, BuilderException {
 		// Loop through all the tables in the database, which is the same
 		// as looping through all the primary keys.
-		for (Iterator i = this.tables.values().iterator(); i.hasNext();) {
+		for (final Iterator i = this.tables.values().iterator(); i.hasNext();) {
 			// Obtain the table and its primary key.
-			Table pkTable = (Table) i.next();
-			PrimaryKey pk = pkTable.getPrimaryKey();
+			final Table pkTable = (Table) i.next();
+			final PrimaryKey pk = pkTable.getPrimaryKey();
 			// Skip all tables which have no primary key.
 			if (pk == null)
 				continue;
@@ -897,11 +903,11 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// some previous run. Any relations that are left in this list by
 			// the end of the loop for this table no longer exist in the
 			// database, and will be dropped.
-			List relationsToBeDropped = new ArrayList(pk.getRelations());
+			final List relationsToBeDropped = new ArrayList(pk.getRelations());
 
 			// Identify all foreign keys in the database metadata that refer
 			// to the current primary key.
-			ResultSet dbTblFKCols = dmd.getExportedKeys(catalog, schema,
+			final ResultSet dbTblFKCols = dmd.getExportedKeys(catalog, schema,
 					pkTable.getName());
 
 			// Loop through the results. There will be one result row per column
@@ -914,11 +920,12 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// individual FK. In all cases, FK columns are assumed to be in the
 			// same order as the PK columns. The map is sorted by key column
 			// position.
-			TreeMap dbFKs = new TreeMap();
+			final TreeMap dbFKs = new TreeMap();
 			while (dbTblFKCols.next()) {
-				String fkTblName = dbTblFKCols.getString("FKTABLE_NAME");
-				String fkColName = dbTblFKCols.getString("FKCOLUMN_NAME");
-				Short fkColSeq = new Short(dbTblFKCols.getShort("KEY_SEQ"));
+				final String fkTblName = dbTblFKCols.getString("FKTABLE_NAME");
+				final String fkColName = dbTblFKCols.getString("FKCOLUMN_NAME");
+				final Short fkColSeq = new Short(dbTblFKCols
+						.getShort("KEY_SEQ"));
 				// Note the column.
 				if (!dbFKs.containsKey(fkColSeq))
 					dbFKs.put(fkColSeq, new ArrayList());
@@ -931,28 +938,30 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			if (!dbFKs.isEmpty()) {
 				// Identify the sequence of the first column, which may be 0 or
 				// 1, depending on database implementation.
-				int firstColSeq = ((Short) dbFKs.firstKey()).intValue();
+				final int firstColSeq = ((Short) dbFKs.firstKey()).intValue();
 
 				// How many columns are in the PK?
-				int pkColCount = pkTable.getPrimaryKey().countColumns();
+				final int pkColCount = pkTable.getPrimaryKey().countColumns();
 
 				// How many FKs do we have?
-				int fkCount = ((List) dbFKs.get(dbFKs.firstKey())).size();
+				final int fkCount = ((List) dbFKs.get(dbFKs.firstKey())).size();
 
 				// Loop through the FKs, and construct each one at a time.
 				for (int j = 0; j < fkCount; j++) {
 					// Set up an array to hold the FK columns.
-					Column[] candidateFKColumns = new Column[pkColCount];
+					final Column[] candidateFKColumns = new Column[pkColCount];
 
 					// For each FK column name, look up the actual column in the
 					// table.
-					for (Iterator k = dbFKs.entrySet().iterator(); k.hasNext();) {
-						Map.Entry entry = (Map.Entry)k.next();
-						Short keySeq = (Short) entry.getKey();
+					for (final Iterator k = dbFKs.entrySet().iterator(); k
+							.hasNext();) {
+						final Map.Entry entry = (Map.Entry) k.next();
+						final Short keySeq = (Short) entry.getKey();
 						// Convert the db-specific column index to a 0-indexed
 						// figure for the array of fk columns.
-						int fkColSeq = keySeq.intValue() - firstColSeq;
-						candidateFKColumns[fkColSeq] = (Column) ((List) entry.getValue()).get(j);
+						final int fkColSeq = keySeq.intValue() - firstColSeq;
+						candidateFKColumns[fkColSeq] = (Column) ((List) entry
+								.getValue()).get(j);
 					}
 
 					// Create a template foreign key based around the set
@@ -961,18 +970,18 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 					try {
 						fk = new GenericForeignKey(Arrays
 								.asList(candidateFKColumns));
-					} catch (Throwable t) {
+					} catch (final Throwable t) {
 						throw new MartBuilderInternalError(t);
 					}
-					Table fkTable = fk.getTable();
+					final Table fkTable = fk.getTable();
 
 					// If any FK already exists on the target table with the
 					// same columns in the same order, then reuse it.
 					boolean fkAlreadyExists = false;
-					for (Iterator f = fkTable.getForeignKeys().iterator(); f
+					for (final Iterator f = fkTable.getForeignKeys().iterator(); f
 							.hasNext()
 							&& !fkAlreadyExists;) {
-						ForeignKey candidateFK = (ForeignKey) f.next();
+						final ForeignKey candidateFK = (ForeignKey) f.next();
 						if (candidateFK.equals(fk)) {
 							// Found one. Reuse it!
 							fk = candidateFK;
@@ -994,7 +1003,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						// Its brand new, so go ahead and make the relation.
 						try {
 							fkTable.addForeignKey(fk);
-						} catch (Throwable t) {
+						} catch (final Throwable t) {
 							throw new MartBuilderInternalError(t);
 						}
 
@@ -1004,7 +1013,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						// identical columns to the FK, in which case it is 1:1,
 						// as the FK is unique.
 						Cardinality card = Cardinality.MANY;
-						PrimaryKey fkPK = fkTable.getPrimaryKey();
+						final PrimaryKey fkPK = fkTable.getPrimaryKey();
 						if (fkPK != null
 								&& fk.getColumns().equals(fkPK.getColumns()))
 							card = Cardinality.ONE;
@@ -1012,7 +1021,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						// Establish the relation.
 						try {
 							new GenericRelation(pk, fk, card);
-						} catch (Throwable t) {
+						} catch (final Throwable t) {
 							throw new MartBuilderInternalError(t);
 						}
 					} else {
@@ -1028,11 +1037,11 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 						// Iterate through the existing relations on the key.
 						boolean relationExists = false;
-						for (Iterator f = fk.getRelations().iterator(); f
+						for (final Iterator f = fk.getRelations().iterator(); f
 								.hasNext()
 								&& !relationExists;) {
 							// Obtain the next relation.
-							Relation candidateRel = (Relation) f.next();
+							final Relation candidateRel = (Relation) f.next();
 
 							// a) a relation already exists between the FK and
 							// the PK.
@@ -1044,7 +1053,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 									try {
 										candidateRel
 												.setStatus(ComponentStatus.INFERRED);
-									} catch (Throwable t) {
+									} catch (final Throwable t) {
 										throw new MartBuilderInternalError(t);
 									}
 								// Don't drop it at the end of the loop.
@@ -1078,7 +1087,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 							// a PK with identical columns to the FK, in which
 							// case it is 1:1, as the FK is unique.
 							Cardinality card = Cardinality.MANY;
-							PrimaryKey fkPK = fkTable.getPrimaryKey();
+							final PrimaryKey fkPK = fkTable.getPrimaryKey();
 							if (fkPK != null
 									&& fk.getColumns()
 											.equals(fkPK.getColumns()))
@@ -1087,7 +1096,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 							// Establish the relation.
 							try {
 								new GenericRelation(pk, fk, card);
-							} catch (Throwable t) {
+							} catch (final Throwable t) {
 								throw new MartBuilderInternalError(t);
 							}
 						}
@@ -1097,8 +1106,9 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 			// Remove any relations that we didn't find in the database (but
 			// leave the handmade ones behind).
-			for (Iterator j = relationsToBeDropped.iterator(); j.hasNext();) {
-				Relation r = (Relation) j.next();
+			for (final Iterator j = relationsToBeDropped.iterator(); j
+					.hasNext();) {
+				final Relation r = (Relation) j.next();
 				if (r.getStatus().equals(ComponentStatus.HANDMADE))
 					continue;
 				r.destroy();

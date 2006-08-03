@@ -19,7 +19,8 @@
 package org.biomart.builder.exceptions;
 
 /**
- * This is a basic {@link Exception} for all non-specific MartBuilder exceptions.
+ * This is a basic {@link Exception} for all non-specific MartBuilder
+ * exceptions.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.1, 23rd March 2006
@@ -37,37 +38,37 @@ public class BuilderException extends Exception {
 	}
 
 	/**
-	 * Constructs an instance of <tt>BuilderException</tt> with the
-	 * specified detail message.
+	 * Constructs an instance of <tt>BuilderException</tt> with the specified
+	 * detail message.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 */
-	public BuilderException(String msg) {
+	public BuilderException(final String msg) {
 		super(msg);
 	}
 
 	/**
-	 * Constructs an instance of <tt>BuilderException</tt> with the
-	 * specified detail message and cause.
+	 * Constructs an instance of <tt>BuilderException</tt> with the specified
+	 * detail message and cause.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 * @param t
 	 *            the underlying cause.
 	 */
-	public BuilderException(String msg, Throwable t) {
+	public BuilderException(final String msg, final Throwable t) {
 		super(msg, t);
 	}
 
 	/**
-	 * Constructs an instance of <tt>BuilderException</tt> with the
-	 * specified cause.
+	 * Constructs an instance of <tt>BuilderException</tt> with the specified
+	 * cause.
 	 * 
 	 * @param t
 	 *            the underlying cause.
 	 */
-	public BuilderException(Throwable t) {
+	public BuilderException(final Throwable t) {
 		super(t);
 	}
 }

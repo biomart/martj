@@ -42,9 +42,9 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  */
 public class KeyComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
-	
+
 	private GridBagLayout layout;
-	
+
 	private GridBagConstraints constraints;
 
 	/**
@@ -76,7 +76,7 @@ public class KeyComponent extends BoxShapedComponent {
 	 * @param diagram
 	 *            the diagram to draw the key on.
 	 */
-	public KeyComponent(Key key, Diagram diagram) {
+	public KeyComponent(final Key key, final Diagram diagram) {
 		super(key, diagram);
 
 		// Key components are set out in a vertical list.
@@ -109,8 +109,9 @@ public class KeyComponent extends BoxShapedComponent {
 			this.setBackground(Color.GREEN);
 
 		// Add the labels for each column.
-		for (Iterator i = this.getKey().getColumns().iterator(); i.hasNext();) {
-			JLabel label = new JLabel(((Column) i.next()).getName());
+		for (final Iterator i = this.getKey().getColumns().iterator(); i
+				.hasNext();) {
+			final JLabel label = new JLabel(((Column) i.next()).getName());
 			label.setFont(Font.decode("Serif-ITALIC-10"));
 			this.layout.setConstraints(label, this.constraints);
 			this.add(label);
@@ -138,7 +139,7 @@ public class KeyComponent extends BoxShapedComponent {
 	 * @param key
 	 *            the key the user dropped on us with the mouse.
 	 */
-	public void setDraggedKey(Key key) {
+	public void setDraggedKey(final Key key) {
 		// Refuse to do it to ourselves.
 		if (!key.equals(this))
 			this.getDiagram().getMartTab().getSchemaTabSet()

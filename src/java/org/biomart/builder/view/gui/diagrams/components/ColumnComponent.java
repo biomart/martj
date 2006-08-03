@@ -77,7 +77,7 @@ public class ColumnComponent extends BoxShapedComponent {
 	 * @param diagram
 	 *            the diagram to display it in.
 	 */
-	public ColumnComponent(Column column, Diagram diagram) {
+	public ColumnComponent(final Column column, final Diagram diagram) {
 		super(column, diagram);
 
 		// Column components are set out in a vertical list.
@@ -103,7 +103,7 @@ public class ColumnComponent extends BoxShapedComponent {
 		this.setBackground(Color.ORANGE);
 
 		// Add the label for the column name.
-		JLabel label = new JLabel(this.getColumn().getName());
+		final JLabel label = new JLabel(this.getColumn().getName());
 		label.setFont(Font.decode("Serif-ITALIC-10"));
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);

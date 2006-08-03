@@ -67,11 +67,12 @@ public class DataSetContext extends WindowContext {
 	 *            the dataset this context will use for customising menus and
 	 *            colours.
 	 */
-	public DataSetContext(MartTab martTab, DataSet dataset) {
+	public DataSetContext(final MartTab martTab, final DataSet dataset) {
 		super(martTab, dataset);
 	}
 
-	public void populateContextMenu(JPopupMenu contextMenu, Object object) {
+	public void populateContextMenu(final JPopupMenu contextMenu,
+			final Object object) {
 
 		// Did the user click on a dataset object?
 		if (object instanceof DataSet) {
@@ -81,42 +82,45 @@ public class DataSetContext extends WindowContext {
 				contextMenu.addSeparator();
 
 			// Option to remove the dataset from the mart.
-			JMenuItem remove = new JMenuItem(Resources
+			final JMenuItem remove = new JMenuItem(Resources
 					.get("removeDataSetTitle"));
 			remove
 					.setMnemonic(Resources.get("removeDataSetMnemonic").charAt(
 							0));
 			remove.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestRemoveDataSet(
-							getDataSet());
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestRemoveDataSet(
+									DataSetContext.this.getDataSet());
 				}
 			});
 			contextMenu.add(remove);
 
 			// Option to rename the dataset.
-			JMenuItem rename = new JMenuItem(Resources
+			final JMenuItem rename = new JMenuItem(Resources
 					.get("renameDataSetTitle"));
 			rename
 					.setMnemonic(Resources.get("renameDataSetMnemonic").charAt(
 							0));
 			rename.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestRenameDataSet(
-							getDataSet());
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestRenameDataSet(
+									DataSetContext.this.getDataSet());
 				}
 			});
 			contextMenu.add(rename);
 
 			// Option to replicate the dataset from the mart.
-			JMenuItem replicate = new JMenuItem(Resources
+			final JMenuItem replicate = new JMenuItem(Resources
 					.get("replicateDataSetTitle"));
 			replicate.setMnemonic(Resources.get("replicateDataSetMnemonic")
 					.charAt(0));
 			replicate.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestReplicateDataSet(
-							getDataSet());
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestReplicateDataSet(
+									DataSetContext.this.getDataSet());
 				}
 			});
 			contextMenu.add(replicate);
@@ -127,13 +131,15 @@ public class DataSetContext extends WindowContext {
 			invisible.setMnemonic(Resources.get("invisibleDataSetMnemonic")
 					.charAt(0));
 			invisible.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
+				public void actionPerformed(final ActionEvent evt) {
 					if (invisible.isSelected())
-						getMartTab().getDataSetTabSet()
-								.requestInvisibleDataSet(getDataSet());
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestInvisibleDataSet(
+										DataSetContext.this.getDataSet());
 					else
-						getMartTab().getDataSetTabSet().requestVisibleDataSet(
-								getDataSet());
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestVisibleDataSet(
+										DataSetContext.this.getDataSet());
 				}
 			});
 			if (this.getDataSet().getInvisible())
@@ -142,22 +148,25 @@ public class DataSetContext extends WindowContext {
 
 			// The optimiser submenu allows the user to choose different
 			// post-construction optimiser types for the dataset.
-			JMenu optimiserMenu = new JMenu(Resources.get("optimiserTypeTitle"));
+			final JMenu optimiserMenu = new JMenu(Resources
+					.get("optimiserTypeTitle"));
 			optimiserMenu.setMnemonic(Resources.get("optimiserTypeMnemonic")
 					.charAt(0));
 
 			// Make a group for the different optimiser types.
-			ButtonGroup optGroup = new ButtonGroup();
+			final ButtonGroup optGroup = new ButtonGroup();
 
 			// The no-optimiser option turns post-construction optimisation off.
-			JRadioButtonMenuItem optNone = new JRadioButtonMenuItem(Resources
-					.get("optimiserNoneTitle"));
+			final JRadioButtonMenuItem optNone = new JRadioButtonMenuItem(
+					Resources.get("optimiserNoneTitle"));
 			optNone.setMnemonic(Resources.get("optimiserNoneMnemonic")
 					.charAt(0));
 			optNone.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestChangeOptimiserType(
-							getDataSet(), DataSetOptimiserType.NONE);
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestChangeOptimiserType(
+									DataSetContext.this.getDataSet(),
+									DataSetOptimiserType.NONE);
 				}
 			});
 			optGroup.add(optNone);
@@ -167,14 +176,16 @@ public class DataSetContext extends WindowContext {
 				optNone.setSelected(true);
 
 			// The column option turns on has-column optimisation.
-			JRadioButtonMenuItem optCol = new JRadioButtonMenuItem(Resources
-					.get("optimiserColumnTitle"));
+			final JRadioButtonMenuItem optCol = new JRadioButtonMenuItem(
+					Resources.get("optimiserColumnTitle"));
 			optCol.setMnemonic(Resources.get("optimiserColumnMnemonic").charAt(
 					0));
 			optCol.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestChangeOptimiserType(
-							getDataSet(), DataSetOptimiserType.COLUMN);
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestChangeOptimiserType(
+									DataSetContext.this.getDataSet(),
+									DataSetOptimiserType.COLUMN);
 				}
 			});
 			optGroup.add(optCol);
@@ -184,14 +195,16 @@ public class DataSetContext extends WindowContext {
 				optCol.setSelected(true);
 
 			// The table option turns on table-of-has-column optimisation.
-			JRadioButtonMenuItem optTbl = new JRadioButtonMenuItem(Resources
-					.get("optimiserTableTitle"));
+			final JRadioButtonMenuItem optTbl = new JRadioButtonMenuItem(
+					Resources.get("optimiserTableTitle"));
 			optTbl.setMnemonic(Resources.get("optimiserTableMnemonic")
 					.charAt(0));
 			optTbl.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestChangeOptimiserType(
-							getDataSet(), DataSetOptimiserType.TABLE);
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestChangeOptimiserType(
+									DataSetContext.this.getDataSet(),
+									DataSetOptimiserType.TABLE);
 				}
 			});
 			optGroup.add(optTbl);
@@ -204,12 +217,13 @@ public class DataSetContext extends WindowContext {
 			contextMenu.add(optimiserMenu);
 
 			// Option to create the DDL for the dataset.
-			JMenuItem saveDDL = new JMenuItem(Resources.get("saveDDLTitle"));
+			final JMenuItem saveDDL = new JMenuItem(Resources
+					.get("saveDDLTitle"));
 			saveDDL.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
 			saveDDL.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestCreateDDL(
-							getDataSet());
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestCreateDDL(DataSetContext.this.getDataSet());
 				}
 			});
 			contextMenu.add(saveDDL);
@@ -224,41 +238,43 @@ public class DataSetContext extends WindowContext {
 
 			// Work out which table we are dealing with, and what type it is.
 			final DataSetTable table = (DataSetTable) object;
-			DataSetTableType tableType = table.getType();
+			final DataSetTableType tableType = table.getType();
 
 			// Option to explain how the table was constructed.
-			JMenuItem explain = new JMenuItem(Resources
+			final JMenuItem explain = new JMenuItem(Resources
 					.get("explainTableTitle"));
 			explain
 					.setMnemonic(Resources.get("explainTableMnemonic")
 							.charAt(0));
 			explain.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestExplainTable(table);
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestExplainTable(table);
 				}
 			});
 			contextMenu.add(explain);
 
 			// Rename the table.
-			JMenuItem rename = new JMenuItem(Resources.get("renameTableTitle"));
+			final JMenuItem rename = new JMenuItem(Resources
+					.get("renameTableTitle"));
 			rename.setMnemonic(Resources.get("renameTableMnemonic").charAt(0));
 			rename.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestRenameDataSetTable(
-							table);
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestRenameDataSetTable(table);
 				}
 			});
 			contextMenu.add(rename);
 
 			// Add an expression column.
-			JMenuItem expression = new JMenuItem(Resources
+			final JMenuItem expression = new JMenuItem(Resources
 					.get("addExpressionColumnTitle"));
 			expression.setMnemonic(Resources.get("addExpressionColumnMnemonic")
 					.charAt(0));
 			expression.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestAddExpressionColumn(
-							table);
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestAddExpressionColumn(table);
 				}
 			});
 			contextMenu.add(expression);
@@ -268,14 +284,16 @@ public class DataSetContext extends WindowContext {
 
 				// The dimension can be removed by using this option. This
 				// simply masks the relation that caused the dimension to exist.
-				JMenuItem removeDM = new JMenuItem(Resources
+				final JMenuItem removeDM = new JMenuItem(Resources
 						.get("removeDimensionTitle"));
 				removeDM.setMnemonic(Resources.get("removeDimensionMnemonic")
 						.charAt(0));
 				removeDM.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						getMartTab().getDataSetTabSet().requestMaskRelation(
-								getDataSet(), table.getSourceRelation());
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestMaskRelation(
+										DataSetContext.this.getDataSet(),
+										table.getSourceRelation());
 					}
 				});
 				contextMenu.add(removeDM);
@@ -283,13 +301,13 @@ public class DataSetContext extends WindowContext {
 				// The dimension can be merged by using this option. This
 				// simply changes the relation cardinality to 1:1. This
 				// affects ALL datasets, not just this one!
-				JMenuItem mergeDM = new JMenuItem(Resources
+				final JMenuItem mergeDM = new JMenuItem(Resources
 						.get("mergeDimensionTitle"));
 				mergeDM.setMnemonic(Resources.get("mergeDimensionMnemonic")
 						.charAt(0));
 				mergeDM.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						getMartTab().getSchemaTabSet()
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getSchemaTabSet()
 								.requestChangeRelationCardinality(
 										table.getSourceRelation(),
 										Cardinality.ONE);
@@ -303,14 +321,15 @@ public class DataSetContext extends WindowContext {
 
 				// The subclass table can be removed by using this option. This
 				// simply masks the relation that caused the subclass to exist.
-				JMenuItem unsubclass = new JMenuItem(Resources
+				final JMenuItem unsubclass = new JMenuItem(Resources
 						.get("removeSubclassTitle"));
 				unsubclass.setMnemonic(Resources.get("removeSubclassMnemonic")
 						.charAt(0));
 				unsubclass.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						getMartTab().getDataSetTabSet()
-								.requestUnsubclassRelation(getDataSet(),
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestUnsubclassRelation(
+										DataSetContext.this.getDataSet(),
 										table.getSourceRelation());
 					}
 				});
@@ -320,15 +339,17 @@ public class DataSetContext extends WindowContext {
 			// Main tables have their own stuff as well.
 			else if (tableType.equals(DataSetTableType.MAIN)) {
 				// Suggest invisible datasets.
-				JMenuItem invisible = new JMenuItem(Resources
+				final JMenuItem invisible = new JMenuItem(Resources
 						.get("suggestInvisibleDatasetsTitle"));
 				invisible.setMnemonic(Resources.get(
 						"suggestInvisibleDatasetsMnemonic").charAt(0));
 				invisible.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						getMartTab().getDataSetTabSet()
-								.requestSuggestInvisibleDatasets(getDataSet(),
-										table);
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this
+								.getMartTab()
+								.getDataSetTabSet()
+								.requestSuggestInvisibleDatasets(
+										DataSetContext.this.getDataSet(), table);
 					}
 				});
 				contextMenu.add(invisible);
@@ -338,7 +359,7 @@ public class DataSetContext extends WindowContext {
 		// Keys have menus too.
 		else if (object instanceof Key) {
 			// Keys behave as though the table had been clicked on.
-			Table table = ((Key) object).getTable();
+			final Table table = ((Key) object).getTable();
 			this.populateContextMenu(contextMenu, table);
 		}
 
@@ -346,7 +367,7 @@ public class DataSetContext extends WindowContext {
 		else if (object instanceof DataSetColumn) {
 			// Columns first show the stuff that would have showed
 			// had the table been clicked on.
-			Table table = ((DataSetColumn) object).getTable();
+			final Table table = ((DataSetColumn) object).getTable();
 			this.populateContextMenu(contextMenu, table);
 
 			// Add separator if the menu is not empty.
@@ -357,12 +378,13 @@ public class DataSetContext extends WindowContext {
 			final DataSetColumn column = (DataSetColumn) object;
 
 			// Rename the column.
-			JMenuItem rename = new JMenuItem(Resources.get("renameColumnTitle"));
+			final JMenuItem rename = new JMenuItem(Resources
+					.get("renameColumnTitle"));
 			rename.setMnemonic(Resources.get("renameColumnMnemonic").charAt(0));
 			rename.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getMartTab().getDataSetTabSet().requestRenameDataSetColumn(
-							column);
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestRenameDataSetColumn(column);
 				}
 			});
 			contextMenu.add(rename);
@@ -372,13 +394,17 @@ public class DataSetContext extends WindowContext {
 					.get("maskColumnTitle"));
 			mask.setMnemonic(Resources.get("maskColumnMnemonic").charAt(0));
 			mask.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
+				public void actionPerformed(final ActionEvent evt) {
 					if (mask.isSelected())
-						getMartTab().getDataSetTabSet().requestMaskColumn(
-								getDataSet(), column);
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestMaskColumn(
+										DataSetContext.this.getDataSet(),
+										column);
 					else
-						getMartTab().getDataSetTabSet().requestUnmaskColumn(
-								getDataSet(), column);
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestUnmaskColumn(
+										DataSetContext.this.getDataSet(),
+										column);
 				}
 			});
 			contextMenu.add(mask);
@@ -386,7 +412,7 @@ public class DataSetContext extends WindowContext {
 				mask.setSelected(true);
 
 			// Which column is it? And is it already partitioned?
-			boolean isPartitioned = this.getDataSet()
+			final boolean isPartitioned = this.getDataSet()
 					.getPartitionedDataSetColumns().contains(column);
 
 			// If it is partitioned, make a submenu to change the partition
@@ -394,33 +420,36 @@ public class DataSetContext extends WindowContext {
 			if (isPartitioned) {
 
 				// Set up the partitioning submenu.
-				JMenu partitionSubmenu = new JMenu(Resources
+				final JMenu partitionSubmenu = new JMenu(Resources
 						.get("partitionColumnSMTitle"));
 				partitionSubmenu.setMnemonic(Resources.get(
 						"partitionColumnSMMnemonic").charAt(0));
 
 				// The option to change the partition type.
-				JMenuItem changepartition = new JMenuItem(Resources
+				final JMenuItem changepartition = new JMenuItem(Resources
 						.get("changePartitionColumnTitle"));
 				changepartition.setMnemonic(Resources.get(
 						"changePartitionColumnMnemonic").charAt(0));
 				changepartition.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						getMartTab().getDataSetTabSet()
-								.requestPartitionByColumn(getDataSet(), column);
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestPartitionByColumn(
+										DataSetContext.this.getDataSet(),
+										column);
 					}
 				});
 				partitionSubmenu.add(changepartition);
 
 				// The option to turn off partitioning.
-				JMenuItem unpartition = new JMenuItem(Resources
+				final JMenuItem unpartition = new JMenuItem(Resources
 						.get("unpartitionColumnTitle"));
 				unpartition.setMnemonic(Resources.get(
 						"unpartitionColumnMnemonic").charAt(0));
 				unpartition.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						getMartTab().getDataSetTabSet()
-								.requestUnpartitionByColumn(getDataSet(),
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestUnpartitionByColumn(
+										DataSetContext.this.getDataSet(),
 										column);
 					}
 				});
@@ -451,13 +480,13 @@ public class DataSetContext extends WindowContext {
 			if (column instanceof ExpressionColumn) {
 
 				// Option to modify column.
-				JMenuItem modify = new JMenuItem(Resources
+				final JMenuItem modify = new JMenuItem(Resources
 						.get("modifyExpressionColumnTitle"));
 				modify.setMnemonic(Resources.get(
 						"modifyExpressionColumnMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						getMartTab().getDataSetTabSet()
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestModifyExpressionColumn(
 										(ExpressionColumn) column);
 					}
@@ -465,13 +494,13 @@ public class DataSetContext extends WindowContext {
 				contextMenu.add(modify);
 
 				// Option to remove column.
-				JMenuItem remove = new JMenuItem(Resources
+				final JMenuItem remove = new JMenuItem(Resources
 						.get("removeExpressionColumnTitle"));
 				remove.setMnemonic(Resources.get(
 						"removeExpressionColumnMnemonic").charAt(0));
 				remove.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						getMartTab().getDataSetTabSet()
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestRemoveExpressionColumn(
 										(ExpressionColumn) column);
 					}
@@ -482,16 +511,17 @@ public class DataSetContext extends WindowContext {
 		}
 	}
 
-	public void customiseAppearance(JComponent component, Object object) {
+	public void customiseAppearance(final JComponent component,
+			final Object object) {
 
 		// Is it a relation?
 		if (object instanceof Relation) {
 
 			// Which relation is it?
-			Relation relation = (Relation) object;
+			final Relation relation = (Relation) object;
 
 			// What tables does it link?
-			DataSetTable target = (DataSetTable) relation.getManyKey()
+			final DataSetTable target = (DataSetTable) relation.getManyKey()
 					.getTable();
 
 			// Highlight SUBCLASS relations.
@@ -503,7 +533,7 @@ public class DataSetContext extends WindowContext {
 				component.setForeground(RelationComponent.NORMAL_COLOUR);
 
 			// Do the stroke.
-			RelationComponent relcomp = (RelationComponent) component;
+			final RelationComponent relcomp = (RelationComponent) component;
 			relcomp.setStroke(RelationComponent.ONE_MANY);
 		}
 
@@ -511,7 +541,8 @@ public class DataSetContext extends WindowContext {
 		else if (object instanceof DataSetTable) {
 
 			// Which table is it?
-			DataSetTableType tableType = ((DataSetTable) object).getType();
+			final DataSetTableType tableType = ((DataSetTable) object)
+					.getType();
 
 			// Highlight SUBCLASS tables.
 			if (tableType.equals(DataSetTableType.MAIN_SUBCLASS))
@@ -530,7 +561,7 @@ public class DataSetContext extends WindowContext {
 		else if (object instanceof Column) {
 
 			// Which column is it?
-			Column column = (Column) object;
+			final Column column = (Column) object;
 
 			// Magenta EXPRESSION columns.
 			if (column instanceof InheritedColumn)

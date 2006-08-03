@@ -72,7 +72,7 @@ public class Mart {
 	 *            the name to look for.
 	 * @return a schema object matching the specified name.
 	 */
-	public Schema getSchemaByName(String name) {
+	public Schema getSchemaByName(final String name) {
 		return (Schema) this.schemas.get(name);
 	}
 
@@ -84,12 +84,12 @@ public class Mart {
 	 * @param schema
 	 *            the schema to add.
 	 */
-	public void addSchema(Schema schema) {
+	public void addSchema(final Schema schema) {
 		String name = schema.getName();
-		String baseName = schema.getName();
+		final String baseName = schema.getName();
 		// Check we don't have one by this name already. Alias if we do.
 		for (int i = 1; this.schemas.containsKey(name); name = baseName + "_"
-				+ (i++))
+				+ i++)
 			;
 		// Add it.
 		this.schemas.put(name, schema);
@@ -105,11 +105,11 @@ public class Mart {
 	 * @param name
 	 *            the new name for it.
 	 */
-	public void renameSchema(Schema schema, String name) {
-		String baseName = name;
+	public void renameSchema(final Schema schema, String name) {
+		final String baseName = name;
 		// Check we don't have one by this name already. Alias if we do.
 		for (int i = 1; this.datasets.containsKey(name); name = baseName + "_"
-				+ (i++))
+				+ i++)
 			;
 		// Rename it.
 		this.schemas.remove(schema.getName());
@@ -125,14 +125,15 @@ public class Mart {
 	 * @param schema
 	 *            the schema to remove.
 	 */
-	public void removeSchema(Schema schema) {
-		List datasets = new ArrayList(this.getDataSets());
-		for (Iterator i = datasets.iterator(); i.hasNext();) {
-			DataSet ds = (DataSet) i.next();
+	public void removeSchema(final Schema schema) {
+		final List datasets = new ArrayList(this.getDataSets());
+		for (final Iterator i = datasets.iterator(); i.hasNext();) {
+			final DataSet ds = (DataSet) i.next();
 			if (ds.getCentralTable().getSchema().equals(schema))
 				this.removeDataSet(ds);
 		}
-		for (Iterator i = schema.getExternalRelations().iterator(); i.hasNext();)
+		for (final Iterator i = schema.getExternalRelations().iterator(); i
+				.hasNext();)
 			((Relation) i.next()).destroy();
 		this.schemas.remove(schema.getName());
 	}
@@ -154,7 +155,7 @@ public class Mart {
 	 *            the name to look for.
 	 * @return a dataset object matching the specified name.
 	 */
-	public DataSet getDataSetByName(String name) {
+	public DataSet getDataSetByName(final String name) {
 		return (DataSet) this.datasets.get(name);
 	}
 
@@ -164,12 +165,12 @@ public class Mart {
 	 * @param dataset
 	 *            the dataset to add.
 	 */
-	public void addDataSet(DataSet dataset) {
+	public void addDataSet(final DataSet dataset) {
 		String name = dataset.getName();
-		String baseName = dataset.getName();
+		final String baseName = dataset.getName();
 		// Check we don't have one by this name already. Alias if we do.
 		for (int i = 1; this.datasets.containsKey(name); name = baseName + "_"
-				+ (i++))
+				+ i++)
 			;
 		// Add it.
 		this.datasets.put(dataset.getName(), dataset);
@@ -202,18 +203,19 @@ public class Mart {
 	 * @throws BuilderException
 	 *             if synchronisation fails.
 	 */
-	public Collection suggestDataSets(Collection includeTables)
+	public Collection suggestDataSets(final Collection includeTables)
 			throws SQLException, AssociationException, BuilderException {
 		// The root tables are all those which do not have a M:1 relation
 		// to another one of the initial set of tables. This means that
 		// extra datasets will be created for each table at the end of
 		// 1:M:1 relation, so that any further tables past it will still
 		// be included.
-		List rootTables = new ArrayList(includeTables);
-		for (Iterator i = includeTables.iterator(); i.hasNext();) {
-			Table candidate = (Table) i.next();
-			for (Iterator j = candidate.getRelations().iterator(); j.hasNext();) {
-				Relation rel = (Relation) j.next();
+		final List rootTables = new ArrayList(includeTables);
+		for (final Iterator i = includeTables.iterator(); i.hasNext();) {
+			final Table candidate = (Table) i.next();
+			for (final Iterator j = candidate.getRelations().iterator(); j
+					.hasNext();) {
+				final Relation rel = (Relation) j.next();
 				if (rel.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
 					continue;
 				if (!rel.isOneToMany())
@@ -225,36 +227,37 @@ public class Mart {
 			}
 		}
 		// We construct one dataset per root table.
-		Set suggestedDataSets = new TreeSet();
-		for (Iterator i = rootTables.iterator(); i.hasNext();) {
-			Table rootTable = (Table) i.next();
-			DataSet dataset = new DataSet(this, rootTable, rootTable.getName());
+		final Set suggestedDataSets = new TreeSet();
+		for (final Iterator i = rootTables.iterator(); i.hasNext();) {
+			final Table rootTable = (Table) i.next();
+			final DataSet dataset = new DataSet(this, rootTable, rootTable
+					.getName());
 			// Process it.
-			List tablesIncluded = new ArrayList();
+			final List tablesIncluded = new ArrayList();
 			tablesIncluded.add(rootTable);
 			suggestedDataSets.addAll(this.continueSubclassing(includeTables,
 					tablesIncluded, dataset, rootTable));
 		}
 
 		// Synchronise them all.
-		for (Iterator i = suggestedDataSets.iterator(); i.hasNext();)
+		for (final Iterator i = suggestedDataSets.iterator(); i.hasNext();)
 			((DataSet) i.next()).synchronise();
 
 		// Do any of the resulting datasets contain all the tables
 		// exactly with subclass relations between each?
 		// If so, just use that one dataset and forget the rest.
 		DataSet perfectDS = null;
-		for (Iterator i = suggestedDataSets.iterator(); i.hasNext()
+		for (final Iterator i = suggestedDataSets.iterator(); i.hasNext()
 				&& perfectDS == null;) {
-			DataSet candidate = (DataSet) i.next();
+			final DataSet candidate = (DataSet) i.next();
 
 			// A candidate is a perfect match if the set of tables
 			// covered by the subclass relations is the same as the
 			// original set of tables requested.
-			Set scTables = new HashSet();
-			for (Iterator j = candidate.getSubclassedRelations().iterator(); j
-					.hasNext();) {
-				Relation r = (Relation) j.next();
+			final Set scTables = new HashSet();
+			for (final Iterator j = candidate.getSubclassedRelations()
+					.iterator(); j.hasNext();) {
+				final Relation r = (Relation) j.next();
 				scTables.add(r.getFirstKey().getTable());
 				scTables.add(r.getSecondKey().getTable());
 			}
@@ -264,8 +267,8 @@ public class Mart {
 		}
 		if (perfectDS != null) {
 			// Drop the others.
-			for (Iterator i = suggestedDataSets.iterator(); i.hasNext();) {
-				DataSet candidate = (DataSet) i.next();
+			for (final Iterator i = suggestedDataSets.iterator(); i.hasNext();) {
+				final DataSet candidate = (DataSet) i.next();
 				if (!candidate.equals(perfectDS)) {
 					this.removeDataSet(candidate);
 					i.remove();
@@ -279,27 +282,27 @@ public class Mart {
 		return suggestedDataSets;
 	}
 
-	private Collection continueSubclassing(Collection includeTables,
-			Collection tablesIncluded, DataSet dataset, Table table)
-			throws AssociationException {
+	private Collection continueSubclassing(final Collection includeTables,
+			final Collection tablesIncluded, final DataSet dataset,
+			final Table table) throws AssociationException {
 		// Check table has a primary key.
-		Key pk = table.getPrimaryKey();
+		final Key pk = table.getPrimaryKey();
 
 		// Make a unique set to hold all the resulting datasets. It
 		// is initially empty.
-		Set suggestedDataSets = new HashSet();
+		final Set suggestedDataSets = new HashSet();
 		// Make a set to contain relations to subclass.
-		Set subclassedRelations = new HashSet();
+		final Set subclassedRelations = new HashSet();
 		// Make a map to hold tables included for each relation.
-		Map relationTablesIncluded = new HashMap();
+		final Map relationTablesIncluded = new HashMap();
 		// Make a list to hold all tables included at this level.
-		Set localTablesIncluded = new HashSet(tablesIncluded);
+		final Set localTablesIncluded = new HashSet(tablesIncluded);
 
 		// Find all 1:M relations starting from the given table that point
 		// to another interesting table.
 		if (pk != null)
-			for (Iterator i = pk.getRelations().iterator(); i.hasNext();) {
-				Relation r = (Relation) i.next();
+			for (final Iterator i = pk.getRelations().iterator(); i.hasNext();) {
+				final Relation r = (Relation) i.next();
 				if (!r.isOneToMany())
 					continue;
 				else if (r.getStatus().equals(
@@ -308,11 +311,11 @@ public class Mart {
 
 				// For each relation, if it points to another included
 				// table via 1:M we should subclass the relation.
-				Table target = r.getManyKey().getTable();
+				final Table target = r.getManyKey().getTable();
 				if (includeTables.contains(target)
 						&& !localTablesIncluded.contains(target)) {
 					subclassedRelations.add(r);
-					List newRelationTablesIncluded = new ArrayList(
+					final List newRelationTablesIncluded = new ArrayList(
 							tablesIncluded);
 					relationTablesIncluded.put(r, newRelationTablesIncluded);
 					newRelationTablesIncluded.add(target);
@@ -323,23 +326,24 @@ public class Mart {
 		// Find all 1:M:1 relations starting from the given table that point
 		// to another interesting table.
 		if (pk != null)
-			for (Iterator i = pk.getRelations().iterator(); i.hasNext();) {
-				Relation firstRel = (Relation) i.next();
+			for (final Iterator i = pk.getRelations().iterator(); i.hasNext();) {
+				final Relation firstRel = (Relation) i.next();
 				if (!firstRel.isOneToMany())
 					continue;
 				else if (firstRel.getStatus().equals(
 						ComponentStatus.INFERRED_INCORRECT))
 					continue;
 
-				Table intermediate = firstRel.getManyKey().getTable();
-				for (Iterator j = intermediate.getForeignKeys().iterator(); j
-						.hasNext();) {
-					Key fk = (Key) j.next();
+				final Table intermediate = firstRel.getManyKey().getTable();
+				for (final Iterator j = intermediate.getForeignKeys()
+						.iterator(); j.hasNext();) {
+					final Key fk = (Key) j.next();
 					if (fk.getStatus().equals(
 							ComponentStatus.INFERRED_INCORRECT))
 						continue;
-					for (Iterator k = fk.getRelations().iterator(); k.hasNext();) {
-						Relation secondRel = (Relation) k.next();
+					for (final Iterator k = fk.getRelations().iterator(); k
+							.hasNext();) {
+						final Relation secondRel = (Relation) k.next();
 						if (secondRel.equals(firstRel))
 							continue;
 						else if (!secondRel.isOneToMany())
@@ -349,11 +353,11 @@ public class Mart {
 							continue;
 						// For each relation, if it points to another included
 						// table via M:1 we should subclass the relation.
-						Table target = secondRel.getOneKey().getTable();
+						final Table target = secondRel.getOneKey().getTable();
 						if (includeTables.contains(target)
 								&& !localTablesIncluded.contains(target)) {
 							subclassedRelations.add(firstRel);
-							List newRelationTablesIncluded = new ArrayList(
+							final List newRelationTablesIncluded = new ArrayList(
 									tablesIncluded);
 							relationTablesIncluded.put(firstRel,
 									newRelationTablesIncluded);
@@ -371,8 +375,8 @@ public class Mart {
 		// Iterate through the relations we found and recurse.
 		// If not the last one, we copy the original dataset and
 		// work on the copy, otherwise we work on the original.
-		for (Iterator i = subclassedRelations.iterator(); i.hasNext();) {
-			Relation r = (Relation) i.next();
+		for (final Iterator i = subclassedRelations.iterator(); i.hasNext();) {
+			final Relation r = (Relation) i.next();
 			DataSet suggestedDataSet = dataset;
 			if (i.hasNext())
 				suggestedDataSet = (DataSet) dataset.replicate(dataset
@@ -419,29 +423,30 @@ public class Mart {
 	 * @throws BuilderException
 	 *             if synchronisation fails.
 	 */
-	public Collection suggestInvisibleDataSets(DataSet dataset,
-			Collection columns) throws AssociationException, SQLException,
-			BuilderException {
-		List invisibleDataSets = new ArrayList();
+	public Collection suggestInvisibleDataSets(final DataSet dataset,
+			final Collection columns) throws AssociationException,
+			SQLException, BuilderException {
+		final List invisibleDataSets = new ArrayList();
 		// Check the dataset belongs to us.
 		if (!this.datasets.values().contains(dataset))
 			throw new AssociationException(Resources
 					.get("datasetSchemaMismatch"));
 		// Check all the columns are from the same table.
-		Table sourceTable = ((Column) columns.iterator().next()).getTable();
-		for (Iterator i = columns.iterator(); i.hasNext();)
+		final Table sourceTable = ((Column) columns.iterator().next())
+				.getTable();
+		for (final Iterator i = columns.iterator(); i.hasNext();)
 			if (!((Column) i.next()).getTable().equals(sourceTable))
 				throw new AssociationException(Resources
 						.get("invisibleNotAllSameTable"));
 		// Find all tables which mention them.
-		List candidates = new ArrayList();
-		for (Iterator i = this.schemas.values().iterator(); i.hasNext();)
-			for (Iterator j = ((Schema) i.next()).getTables().iterator(); j
+		final List candidates = new ArrayList();
+		for (final Iterator i = this.schemas.values().iterator(); i.hasNext();)
+			for (final Iterator j = ((Schema) i.next()).getTables().iterator(); j
 					.hasNext();) {
-				Table table = (Table) j.next();
+				final Table table = (Table) j.next();
 				int matchingColCount = 0;
-				for (Iterator k = columns.iterator(); k.hasNext();) {
-					Column col = (Column) k.next();
+				for (final Iterator k = columns.iterator(); k.hasNext();) {
+					final Column col = (Column) k.next();
 					if (table.getColumnByName(col.getName()) != null
 							|| table.getColumnByName(col.getName()
 									+ Resources.get("foreignKeySuffix")) != null)
@@ -453,16 +458,16 @@ public class Mart {
 		// Remove from the found tables all those which are already
 		// used, and the one from which the original columns came.
 		candidates.remove(sourceTable);
-		for (Iterator i = dataset.getTables().iterator(); i.hasNext();)
+		for (final Iterator i = dataset.getTables().iterator(); i.hasNext();)
 			candidates.remove(((DataSetTable) i.next()).getUnderlyingTable());
 		// Generate the dataset for each.
-		for (Iterator i = candidates.iterator(); i.hasNext();) {
-			Table table = (Table) i.next();
+		for (final Iterator i = candidates.iterator(); i.hasNext();) {
+			final Table table = (Table) i.next();
 			invisibleDataSets.add(new DataSet(this, table, table.getName()));
 		}
 		// Synchronise them all and make them all invisible.
-		for (Iterator i = invisibleDataSets.iterator(); i.hasNext();) {
-			DataSet ds = (DataSet) i.next();
+		for (final Iterator i = invisibleDataSets.iterator(); i.hasNext();) {
+			final DataSet ds = (DataSet) i.next();
 			ds.setInvisible(true);
 			ds.synchronise();
 		}
@@ -479,11 +484,11 @@ public class Mart {
 	 * @param name
 	 *            the new name for it.
 	 */
-	public void renameDataSet(DataSet dataset, String name) {
-		String baseName = name;
+	public void renameDataSet(final DataSet dataset, String name) {
+		final String baseName = name;
 		// Check we don't have one by this name already. Alias if we do.
 		for (int i = 1; this.datasets.containsKey(name); name = baseName + "_"
-				+ (i++))
+				+ i++)
 			;
 		// Rename it.
 		this.datasets.remove(dataset.getName());
@@ -497,7 +502,7 @@ public class Mart {
 	 * @param dataset
 	 *            the dataset to remove.
 	 */
-	public void removeDataSet(DataSet dataset) {
+	public void removeDataSet(final DataSet dataset) {
 		this.datasets.remove(dataset.getName());
 	}
 
@@ -508,8 +513,8 @@ public class Mart {
 	 * does no real work itself.
 	 */
 	public void synchroniseDataSets() {
-		for (Iterator i = this.datasets.values().iterator(); i.hasNext();) {
-			DataSet ds = (DataSet) i.next();
+		for (final Iterator i = this.datasets.values().iterator(); i.hasNext();) {
+			final DataSet ds = (DataSet) i.next();
 
 			// Has the table gone?
 			if (!this.getSchemas().contains(ds.getCentralTable().getSchema()))
@@ -519,7 +524,7 @@ public class Mart {
 			else
 				try {
 					ds.synchronise();
-				} catch (Throwable t) {
+				} catch (final Throwable t) {
 					throw new MartBuilderInternalError(t);
 				}
 		}
@@ -537,8 +542,8 @@ public class Mart {
 	 */
 	public void synchroniseSchemas() throws SQLException, BuilderException {
 		// Schemas first
-		for (Iterator i = this.schemas.values().iterator(); i.hasNext();) {
-			Schema s = (Schema) i.next();
+		for (final Iterator i = this.schemas.values().iterator(); i.hasNext();) {
+			final Schema s = (Schema) i.next();
 			s.synchronise();
 		}
 		// Then, synchronise datasets.

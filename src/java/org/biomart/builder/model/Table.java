@@ -257,23 +257,21 @@ public interface Table extends Comparable {
 		 *            the table name.
 		 * @param schema
 		 *            the schema this table is associated with.
-		 * @throws AlreadyExistsException
-		 *             if a table with that name already exists in the schema.
 		 */
-		public GenericTable(String name, Schema schema) {
+		public GenericTable(String name, final Schema schema) {
 			// Remember the values.
 			this.originalName = name;
 			this.schema = schema;
 			// Make the name unique.
-			String baseName = name;
-			for (int i = 1; schema.getTableByName(name)!=null; name = baseName
-					+ "_" + (i++))
+			final String baseName = name;
+			for (int i = 1; schema.getTableByName(name) != null; name = baseName
+					+ "_" + i++)
 				;
 			this.name = name;
 			// Add it to the schema.
 			try {
 				schema.addTable(this);
-			} catch (AssociationException e) {
+			} catch (final AssociationException e) {
 				// Should never happen, as it is only thrown if schema!=schema.
 				throw new MartBuilderInternalError(e);
 			}
@@ -287,7 +285,7 @@ public interface Table extends Comparable {
 			return this.originalName;
 		}
 
-		public void setOriginalName(String newName) {
+		public void setOriginalName(final String newName) {
 			this.originalName = newName;
 		}
 
@@ -296,9 +294,9 @@ public interface Table extends Comparable {
 			if (newName.equals(this.name))
 				return; // Skip unnecessary change.
 			// Make the name unique.
-			String baseName = newName;
-			for (int i = 1; schema.getTableByName(newName)!=null; newName = baseName
-					+ "_" + (i++))
+			final String baseName = newName;
+			for (int i = 1; this.schema.getTableByName(newName) != null; newName = baseName
+					+ "_" + i++)
 				;
 			// Do it.
 			this.getSchema().changeTableMapKey(this.name, newName);
@@ -313,7 +311,7 @@ public interface Table extends Comparable {
 			return this.primaryKey;
 		}
 
-		public void setPrimaryKey(PrimaryKey primaryKey)
+		public void setPrimaryKey(final PrimaryKey primaryKey)
 				throws AssociationException {
 			// Check the key lives in this table first.
 			if (primaryKey != null && !primaryKey.getTable().equals(this))
@@ -328,9 +326,10 @@ public interface Table extends Comparable {
 			if (this.primaryKey != null) {
 				// Destroy relations on the old primary key.
 				// Must use a copy else get concurrent-modification problems.
-				List relations = new ArrayList(this.primaryKey.getRelations());
-				for (Iterator i = relations.iterator(); i.hasNext();) {
-					Relation r = (Relation) i.next();
+				final List relations = new ArrayList(this.primaryKey
+						.getRelations());
+				for (final Iterator i = relations.iterator(); i.hasNext();) {
+					final Relation r = (Relation) i.next();
 					r.destroy();
 				}
 			}
@@ -343,7 +342,7 @@ public interface Table extends Comparable {
 			return this.foreignKeys;
 		}
 
-		public void addForeignKey(ForeignKey foreignKey)
+		public void addForeignKey(final ForeignKey foreignKey)
 				throws AssociationException {
 			// Check that the key lives in this table first.
 			if (this.foreignKeys.contains(foreignKey))
@@ -353,46 +352,48 @@ public interface Table extends Comparable {
 			this.foreignKeys.add(foreignKey);
 		}
 
-		public void removeForeignKey(ForeignKey foreignKey) {
+		public void removeForeignKey(final ForeignKey foreignKey) {
 			this.foreignKeys.remove(foreignKey);
 		}
 
 		public Collection getKeys() {
-			List allKeys = new ArrayList(this.foreignKeys);
+			final List allKeys = new ArrayList(this.foreignKeys);
 			if (this.primaryKey != null)
 				allKeys.add(this.primaryKey);
 			return allKeys;
 		}
 
 		public Collection getRelations() {
-			Set allRels = new HashSet(); // enforce uniqueness
-			for (Iterator i = this.getKeys().iterator(); i.hasNext();) {
-				Key k = (Key) i.next();
+			final Set allRels = new HashSet(); // enforce uniqueness
+			for (final Iterator i = this.getKeys().iterator(); i.hasNext();) {
+				final Key k = (Key) i.next();
 				allRels.addAll(k.getRelations());
 			}
 			return allRels;
 		}
 
 		public Collection getInternalRelations() {
-			Set relations = new HashSet(); // enforce uniqueness
+			final Set relations = new HashSet(); // enforce uniqueness
 
 			// Try the primary key relations first.
 			if (this.getPrimaryKey() != null)
-				for (Iterator j = this.getPrimaryKey().getRelations()
+				for (final Iterator j = this.getPrimaryKey().getRelations()
 						.iterator(); j.hasNext();) {
 					// Add all where the FK is the same schema as us.
-					Relation relation = (Relation) j.next();
+					final Relation relation = (Relation) j.next();
 					if (relation.getOtherKey(this.getPrimaryKey()).getTable()
 							.getSchema().equals(this.getSchema()))
 						relations.add(relation);
 				}
 
 			// Now do the FK relations.
-			for (Iterator i = this.getForeignKeys().iterator(); i.hasNext();) {
-				Key fk = (Key) i.next();
-				for (Iterator j = fk.getRelations().iterator(); j.hasNext();) {
+			for (final Iterator i = this.getForeignKeys().iterator(); i
+					.hasNext();) {
+				final Key fk = (Key) i.next();
+				for (final Iterator j = fk.getRelations().iterator(); j
+						.hasNext();) {
 					// Add all where the PK is the same schema as us.
-					Relation relation = (Relation) j.next();
+					final Relation relation = (Relation) j.next();
 					if (relation.getOtherKey(fk).getTable().getSchema().equals(
 							this.getSchema()))
 						relations.add(relation);
@@ -407,11 +408,11 @@ public interface Table extends Comparable {
 			return this.columns.values();
 		}
 
-		public Column getColumnByName(String name) {
+		public Column getColumnByName(final String name) {
 			return (Column) this.columns.get(name);
 		}
 
-		public void addColumn(Column column) throws AssociationException {
+		public void addColumn(final Column column) throws AssociationException {
 			// Refuse to do it if the column belongs to some other table.
 			if (column.getTable() != this)
 				throw new AssociationException(Resources
@@ -420,10 +421,10 @@ public interface Table extends Comparable {
 			this.columns.put(column.getName(), column);
 		}
 
-		public void removeColumn(Column column) {
+		public void removeColumn(final Column column) {
 			// Remove all keys involving this column
-			for (Iterator i = this.getKeys().iterator(); i.hasNext();) {
-				Key k = (Key) i.next();
+			for (final Iterator i = this.getKeys().iterator(); i.hasNext();) {
+				final Key k = (Key) i.next();
 				if (k.getColumns().contains(column)) {
 					k.destroy();
 					i.remove(); // to make sure
@@ -434,12 +435,13 @@ public interface Table extends Comparable {
 			this.columns.remove(column.getName());
 		}
 
-		public void changeColumnMapKey(String oldName, String newName) {
+		public void changeColumnMapKey(final String oldName,
+				final String newName) {
 			// If the names are the same, do nothing.
 			if (oldName.equals(newName))
 				return;
 			// Update our mapping but don't rename the columns themselves.
-			Column col = (Column) this.columns.get(oldName);
+			final Column col = (Column) this.columns.get(oldName);
 			this.columns.put(newName, col);
 			this.columns.remove(oldName);
 		}
@@ -448,9 +450,9 @@ public interface Table extends Comparable {
 			// Remove each column we have. This will recursively cause
 			// keys etc. to be removed.
 			// Must use a copy else we'll get concurrent modification problems.
-			Set allCols = new HashSet(this.columns.values());
-			for (Iterator i = allCols.iterator(); i.hasNext();) {
-				Column c = (Column) i.next();
+			final Set allCols = new HashSet(this.columns.values());
+			for (final Iterator i = allCols.iterator(); i.hasNext();) {
+				final Column c = (Column) i.next();
 				this.removeColumn(c);
 			}
 		}
@@ -463,15 +465,15 @@ public interface Table extends Comparable {
 			return this.toString().hashCode();
 		}
 
-		public int compareTo(Object o) throws ClassCastException {
-			Table t = (Table) o;
+		public int compareTo(final Object o) throws ClassCastException {
+			final Table t = (Table) o;
 			return this.toString().compareTo(t.toString());
 		}
 
-		public boolean equals(Object o) {
+		public boolean equals(final Object o) {
 			if (o == null || !(o instanceof Table))
 				return false;
-			Table t = (Table) o;
+			final Table t = (Table) o;
 			return t.toString().equals(this.toString());
 		}
 	}

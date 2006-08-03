@@ -91,12 +91,12 @@ public abstract class BoxShapedComponent extends JPanel implements
 	private Object object;
 
 	// OK to use map, as the components are recreated, not changed.
-	private Map subComponents = new HashMap();
+	private final Map subComponents = new HashMap();
 
 	private Object state;
 
 	private RenderingHints renderHints;
-	
+
 	private Stroke stroke;
 
 	/**
@@ -108,7 +108,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 	 * @param diagram
 	 *            the diagram to display ourselves in.
 	 */
-	public BoxShapedComponent(Object object, Diagram diagram) {
+	public BoxShapedComponent(final Object object, final Diagram diagram) {
 		super();
 
 		// Remember settings.
@@ -129,21 +129,23 @@ public abstract class BoxShapedComponent extends JPanel implements
 
 		// Default stroke.
 		this.stroke = BoxShapedComponent.NORMAL_OUTLINE;
-		
+
 		// Repaint ourselves.
 		this.updateAppearance();
 	}
-	
+
 	/**
 	 * Set the stroke to use to outline this component.
-	 * @param stroke the stroke to use.
+	 * 
+	 * @param stroke
+	 *            the stroke to use.
 	 */
-	public void setStroke(Stroke stroke) {
+	public void setStroke(final Stroke stroke) {
 		this.stroke = stroke;
 	}
 
-	public void paintComponent(Graphics g) {
-		Graphics2D g2d = (Graphics2D) g;
+	public void paintComponent(final Graphics g) {
+		final Graphics2D g2d = (Graphics2D) g;
 		g2d.setRenderingHints(this.renderHints);
 		super.paintComponent(g2d);
 	}
@@ -162,7 +164,8 @@ public abstract class BoxShapedComponent extends JPanel implements
 	 * @param component
 	 *            the component representing the model object.
 	 */
-	protected void addSubComponent(Object object, DiagramComponent component) {
+	protected void addSubComponent(final Object object,
+			final DiagramComponent component) {
 		this.subComponents.put(object, component);
 	}
 
@@ -170,23 +173,23 @@ public abstract class BoxShapedComponent extends JPanel implements
 		return this.state;
 	}
 
-	public void setState(Object state) {
+	public void setState(final Object state) {
 		this.state = state;
 	}
 
 	public void updateAppearance() {
-		DiagramContext mod = this.getDiagram().getDiagramContext();
+		final DiagramContext mod = this.getDiagram().getDiagramContext();
 		if (mod != null)
 			mod.customiseAppearance(this, this.getObject());
 		this.setBorder(BorderFactory.createLineBorder(this.getForeground()));
 	}
-	
-	protected void paintBorder(Graphics g) {
-	    Graphics2D g2 = (Graphics2D) g;
-	    Stroke oldStroke = g2.getStroke();
-	    g2.setStroke(this.stroke);
-	    super.paintBorder(g2);
-	    g2.setStroke(oldStroke);
+
+	protected void paintBorder(final Graphics g) {
+		final Graphics2D g2 = (Graphics2D) g;
+		final Stroke oldStroke = g2.getStroke();
+		g2.setStroke(this.stroke);
+		super.paintBorder(g2);
+		g2.setStroke(oldStroke);
 	}
 
 	public Diagram getDiagram() {
@@ -198,18 +201,18 @@ public abstract class BoxShapedComponent extends JPanel implements
 	}
 
 	public JPopupMenu getContextMenu() {
-		JPopupMenu contextMenu = new JPopupMenu();
+		final JPopupMenu contextMenu = new JPopupMenu();
 		// No additional entries for us yet.
 		// Return it.
 		return contextMenu;
 	}
 
-	protected void processMouseEvent(MouseEvent evt) {
+	protected void processMouseEvent(final MouseEvent evt) {
 		boolean eventProcessed = false;
 		// Is it a right-click?
 		if (evt.isPopupTrigger()) {
 			// Build the basic menu.
-			JPopupMenu contextMenu = this.getContextMenu();
+			final JPopupMenu contextMenu = this.getContextMenu();
 			// Customise the context menu for this box's model object.
 			if (this.getDiagram().getDiagramContext() != null)
 				this.getDiagram().getDiagramContext().populateContextMenu(
@@ -229,8 +232,8 @@ public abstract class BoxShapedComponent extends JPanel implements
 		return this.getObject().hashCode();
 	}
 
-	public boolean equals(Object obj) {
-		return (obj instanceof DiagramComponent)
+	public boolean equals(final Object obj) {
+		return obj instanceof DiagramComponent
 				&& ((DiagramComponent) obj).getObject()
 						.equals(this.getObject());
 	}

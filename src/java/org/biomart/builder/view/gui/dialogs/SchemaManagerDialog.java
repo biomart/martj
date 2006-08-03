@@ -70,8 +70,8 @@ public class SchemaManagerDialog extends JDialog {
 
 	private JButton execute;
 
-	private SchemaManagerDialog(final MartTab martTab, String title,
-			String executeButtonText, final Schema template) {
+	private SchemaManagerDialog(final MartTab martTab, final String title,
+			final String executeButtonText, final Schema template) {
 		// Create the basic dialog centred on the main mart builder window.
 		super(martTab.getMartTabSet().getMartBuilder(), title, true);
 
@@ -81,30 +81,30 @@ public class SchemaManagerDialog extends JDialog {
 
 		// Create the content pane for the dialog, ie. the bit that will hold
 		// all the various questions and answers.
-		GridBagLayout gridBag = new GridBagLayout();
+		final GridBagLayout gridBag = new GridBagLayout();
 		final JPanel content = new JPanel(gridBag);
 		this.setContentPane(content);
 
 		// Create some constraints for labels, except those on the last row
 		// of the dialog.
-		GridBagConstraints labelConstraints = new GridBagConstraints();
+		final GridBagConstraints labelConstraints = new GridBagConstraints();
 		labelConstraints.gridwidth = GridBagConstraints.RELATIVE;
 		labelConstraints.fill = GridBagConstraints.HORIZONTAL;
 		labelConstraints.anchor = GridBagConstraints.LINE_END;
 		labelConstraints.insets = new Insets(0, 2, 0, 0);
 		// Create some constraints for fields, except those on the last row
 		// of the dialog.
-		GridBagConstraints fieldConstraints = new GridBagConstraints();
+		final GridBagConstraints fieldConstraints = new GridBagConstraints();
 		fieldConstraints.gridwidth = GridBagConstraints.REMAINDER;
 		fieldConstraints.fill = GridBagConstraints.NONE;
 		fieldConstraints.anchor = GridBagConstraints.LINE_START;
 		fieldConstraints.insets = new Insets(0, 1, 0, 2);
 		// Create some constraints for labels on the last row of the dialog.
-		GridBagConstraints labelLastRowConstraints = (GridBagConstraints) labelConstraints
+		final GridBagConstraints labelLastRowConstraints = (GridBagConstraints) labelConstraints
 				.clone();
 		labelLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 		// Create some constraints for fields on the last row of the dialog.
-		GridBagConstraints fieldLastRowConstraints = (GridBagConstraints) fieldConstraints
+		final GridBagConstraints fieldLastRowConstraints = (GridBagConstraints) fieldConstraints
 				.clone();
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
@@ -114,15 +114,17 @@ public class SchemaManagerDialog extends JDialog {
 		this.type = new JComboBox(new String[] { Resources.get("jdbcSchema") });
 		final JPanel connectionPanelHolder = new JPanel();
 		this.type.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (type.getSelectedItem().equals(Resources.get("jdbcSchema"))) {
-					if (!(connectionPanel instanceof JDBCSchemaConnectionPanel)) {
+			public void actionPerformed(final ActionEvent e) {
+				if (SchemaManagerDialog.this.type.getSelectedItem().equals(
+						Resources.get("jdbcSchema")))
+					if (!(SchemaManagerDialog.this.connectionPanel instanceof JDBCSchemaConnectionPanel)) {
 						connectionPanelHolder.removeAll();
-						connectionPanel = new JDBCSchemaConnectionPanel(martTab);
-						connectionPanelHolder.add(connectionPanel);
-						pack();
+						SchemaManagerDialog.this.connectionPanel = new JDBCSchemaConnectionPanel(
+								martTab);
+						connectionPanelHolder
+								.add(SchemaManagerDialog.this.connectionPanel);
+						SchemaManagerDialog.this.pack();
 					}
-				}
 			}
 		});
 
@@ -170,9 +172,9 @@ public class SchemaManagerDialog extends JDialog {
 		// Intercept the cancel button, which closes the dialog
 		// without taking any action.
 		this.cancel.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				schema = null;
-				hide();
+			public void actionPerformed(final ActionEvent e) {
+				SchemaManagerDialog.this.schema = null;
+				SchemaManagerDialog.this.hide();
 			}
 		});
 
@@ -180,8 +182,9 @@ public class SchemaManagerDialog extends JDialog {
 		// details as currently entered to be used to create
 		// a temporary schema object, which is then tested.
 		this.test.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				Schema testSchema = createSchema();
+			public void actionPerformed(final ActionEvent e) {
+				final Schema testSchema = SchemaManagerDialog.this
+						.createSchema();
 				if (testSchema != null)
 					martTab.getSchemaTabSet().requestTestSchema(testSchema);
 			}
@@ -191,15 +194,16 @@ public class SchemaManagerDialog extends JDialog {
 		// schema to be created as a temporary schema object. If
 		// successful, the dialog closes.
 		this.execute.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				schema = createSchema();
-				if (schema != null)
-					hide();
+			public void actionPerformed(final ActionEvent e) {
+				SchemaManagerDialog.this.schema = SchemaManagerDialog.this
+						.createSchema();
+				if (SchemaManagerDialog.this.schema != null)
+					SchemaManagerDialog.this.hide();
 			}
 		});
 
 		// Make the execute button the default button.
-		this.getRootPane().setDefaultButton(execute);
+		this.getRootPane().setDefaultButton(this.execute);
 
 		// Reset the fields to their default values.
 		this.resetFields(template);
@@ -208,7 +212,7 @@ public class SchemaManagerDialog extends JDialog {
 		this.pack();
 	}
 
-	private void resetFields(Schema template) {
+	private void resetFields(final Schema template) {
 		// If we are modifying something, use it to fill the details
 		// in the dialog.
 		if (template != null) {
@@ -231,14 +235,14 @@ public class SchemaManagerDialog extends JDialog {
 			this.type.setSelectedIndex(0);
 			this.name.setText(null);
 		}
-		
+
 		// Update the connection panel.
 		this.connectionPanel.resetFields(template);
 	}
 
 	private boolean validateFields() {
 		// Make a list to hold messages.
-		List messages = new ArrayList();
+		final List messages = new ArrayList();
 
 		// We don't like missing names.
 		if (this.isEmpty(this.name.getText()))
@@ -268,7 +272,7 @@ public class SchemaManagerDialog extends JDialog {
 		try {
 			// Look up the type and use the appropriate schema type to
 			// actually create the object.
-			String type = (String) this.type.getSelectedItem();
+			final String type = (String) this.type.getSelectedItem();
 			if (type.equals(Resources.get("jdbcSchema")))
 				return ((JDBCSchemaConnectionPanel) this.connectionPanel)
 						.createSchema(this.name.getText());
@@ -276,7 +280,7 @@ public class SchemaManagerDialog extends JDialog {
 			// What kind of type is it then??
 			else
 				throw new MartBuilderInternalError();
-		} catch (Throwable t) {
+		} catch (final Throwable t) {
 			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
 		}
 
@@ -285,9 +289,9 @@ public class SchemaManagerDialog extends JDialog {
 		return null;
 	}
 
-	private boolean isEmpty(String string) {
+	private boolean isEmpty(final String string) {
 		// Return true if the string is null or empty.
-		return (string == null || string.trim().length() == 0);
+		return string == null || string.trim().length() == 0;
 	}
 
 	/**
@@ -298,9 +302,10 @@ public class SchemaManagerDialog extends JDialog {
 	 *            the mart tab to use when creating the schema.
 	 * @return the newly created schema, or null if it was cancelled.
 	 */
-	public static Schema createSchema(MartTab martTab) {
-		SchemaManagerDialog dialog = new SchemaManagerDialog(martTab, Resources
-				.get("newSchemaDialogTitle"), Resources.get("addButton"), null);
+	public static Schema createSchema(final MartTab martTab) {
+		final SchemaManagerDialog dialog = new SchemaManagerDialog(martTab,
+				Resources.get("newSchemaDialogTitle"), Resources
+						.get("addButton"), null);
 		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
 		return dialog.schema;
@@ -317,17 +322,17 @@ public class SchemaManagerDialog extends JDialog {
 	 * @return <tt>true</tt> if modification was successful, <tt>false</tt>
 	 *         if not.
 	 */
-	public static boolean modifySchema(MartTab martTab, Schema schema) {
-		SchemaManagerDialog dialog = new SchemaManagerDialog(martTab, Resources
-				.get("modifySchemaDialogTitle"), Resources.get("modifyButton"),
-				schema);
+	public static boolean modifySchema(final MartTab martTab,
+			final Schema schema) {
+		final SchemaManagerDialog dialog = new SchemaManagerDialog(martTab,
+				Resources.get("modifySchemaDialogTitle"), Resources
+						.get("modifyButton"), schema);
 		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 		dialog.show();
-		if (dialog.schema != null && dialog.schema instanceof JDBCSchema) {
-			return (((JDBCSchemaConnectionPanel) dialog.connectionPanel)
-					.modifySchema(schema) != null);
-		} else {
+		if (dialog.schema != null && dialog.schema instanceof JDBCSchema)
+			return ((JDBCSchemaConnectionPanel) dialog.connectionPanel)
+					.modifySchema(schema) != null;
+		else
 			return false;
-		}
 	}
 }

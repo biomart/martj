@@ -99,8 +99,8 @@ public class RestrictedRelationDialog extends JDialog {
 	 * @param template
 	 *            the restriction to use as a template, if any.
 	 */
-	public RestrictedRelationDialog(final MartTab martTab, Relation relation,
-			DataSetRelationRestriction template) {
+	public RestrictedRelationDialog(final MartTab martTab,
+			final Relation relation, final DataSetRelationRestriction template) {
 		// Creates the basic dialog.
 		super(martTab.getMartTabSet().getMartBuilder(),
 				template == null ? Resources.get("addRelRestrictDialogTitle")
@@ -110,28 +110,28 @@ public class RestrictedRelationDialog extends JDialog {
 		this.martTab = martTab;
 
 		// Create the content pane to store the create dialog panel.
-		GridBagLayout gridBag = new GridBagLayout();
+		final GridBagLayout gridBag = new GridBagLayout();
 		final JPanel content = new JPanel(gridBag);
 		this.setContentPane(content);
 
 		// Create constraints for labels that are not in the last row.
-		GridBagConstraints labelConstraints = new GridBagConstraints();
+		final GridBagConstraints labelConstraints = new GridBagConstraints();
 		labelConstraints.gridwidth = GridBagConstraints.RELATIVE;
 		labelConstraints.fill = GridBagConstraints.HORIZONTAL;
 		labelConstraints.anchor = GridBagConstraints.LINE_END;
 		labelConstraints.insets = new Insets(0, 2, 0, 0);
 		// Create constraints for fields that are not in the last row.
-		GridBagConstraints fieldConstraints = new GridBagConstraints();
+		final GridBagConstraints fieldConstraints = new GridBagConstraints();
 		fieldConstraints.gridwidth = GridBagConstraints.REMAINDER;
 		fieldConstraints.fill = GridBagConstraints.NONE;
 		fieldConstraints.anchor = GridBagConstraints.LINE_START;
 		fieldConstraints.insets = new Insets(0, 1, 0, 2);
 		// Create constraints for labels that are in the last row.
-		GridBagConstraints labelLastRowConstraints = (GridBagConstraints) labelConstraints
+		final GridBagConstraints labelLastRowConstraints = (GridBagConstraints) labelConstraints
 				.clone();
 		labelLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 		// Create constraints for fields that are in the last row.
-		GridBagConstraints fieldLastRowConstraints = (GridBagConstraints) fieldConstraints
+		final GridBagConstraints fieldLastRowConstraints = (GridBagConstraints) fieldConstraints
 				.clone();
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
@@ -144,7 +144,7 @@ public class RestrictedRelationDialog extends JDialog {
 				.getFirstKey().getTable(), template, true);
 		this.firstColumnAliasTable = new JTable(this.firstColumnAliasModel);
 		this.firstColumnAliasTable.setGridColor(Color.LIGHT_GRAY); // Mac OSX
-																	// fix.
+		// fix.
 		this.firstColumnAliasTable
 				.setPreferredScrollableViewportSize(new Dimension(400, 100));
 		// Arbitrary size.
@@ -156,7 +156,7 @@ public class RestrictedRelationDialog extends JDialog {
 				.getSecondKey().getTable(), template, false);
 		this.secondColumnAliasTable = new JTable(this.secondColumnAliasModel);
 		this.secondColumnAliasTable.setGridColor(Color.LIGHT_GRAY); // Mac OSX
-																	// fix.
+		// fix.
 		this.secondColumnAliasTable
 				.setPreferredScrollableViewportSize(new Dimension(400, 100));
 		// Arbitrary size.
@@ -167,9 +167,9 @@ public class RestrictedRelationDialog extends JDialog {
 		TableColumn columnColumn = this.firstColumnAliasTable.getColumnModel()
 				.getColumn(0);
 		JComboBox columnEditor = new JComboBox();
-		for (Iterator i = relation.getFirstKey().getTable().getColumns()
+		for (final Iterator i = relation.getFirstKey().getTable().getColumns()
 				.iterator(); i.hasNext();)
-			columnEditor.addItem((GenericColumn) i.next());
+			columnEditor.addItem(i.next());
 		columnColumn.setCellEditor(new DefaultCellEditor(columnEditor));
 
 		// Size the first table columns.
@@ -190,9 +190,9 @@ public class RestrictedRelationDialog extends JDialog {
 		columnColumn = this.secondColumnAliasTable.getColumnModel()
 				.getColumn(0);
 		columnEditor = new JComboBox();
-		for (Iterator i = relation.getSecondKey().getTable().getColumns()
+		for (final Iterator i = relation.getSecondKey().getTable().getColumns()
 				.iterator(); i.hasNext();)
-			columnEditor.addItem((GenericColumn) i.next());
+			columnEditor.addItem(i.next());
 		columnColumn.setCellEditor(new DefaultCellEditor(columnEditor));
 
 		// Size the second table columns.
@@ -216,35 +216,41 @@ public class RestrictedRelationDialog extends JDialog {
 
 		// Listener for the insert buttons.
 		this.firstInsert.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				firstColumnAliasModel.insertRow(firstColumnAliasModel
-						.getRowCount(), new Object[] { null, null });
+			public void actionPerformed(final ActionEvent e) {
+				RestrictedRelationDialog.this.firstColumnAliasModel.insertRow(
+						RestrictedRelationDialog.this.firstColumnAliasModel
+								.getRowCount(), new Object[] { null, null });
 			}
 		});
 		this.secondInsert.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				secondColumnAliasModel.insertRow(secondColumnAliasModel
-						.getRowCount(), new Object[] { null, null });
+			public void actionPerformed(final ActionEvent e) {
+				RestrictedRelationDialog.this.secondColumnAliasModel.insertRow(
+						RestrictedRelationDialog.this.secondColumnAliasModel
+								.getRowCount(), new Object[] { null, null });
 			}
 		});
 
 		// Listener for the remove buttons.
 		this.firstRemove.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int rows[] = firstColumnAliasTable.getSelectedRows();
+			public void actionPerformed(final ActionEvent e) {
+				final int rows[] = RestrictedRelationDialog.this.firstColumnAliasTable
+						.getSelectedRows();
 				// Reverse order, so we don't end up with changing
 				// indices along the way.
 				for (int i = rows.length - 1; i >= 0; i--)
-					firstColumnAliasModel.removeRow(rows[i]);
+					RestrictedRelationDialog.this.firstColumnAliasModel
+							.removeRow(rows[i]);
 			}
 		});
 		this.secondRemove.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int rows[] = secondColumnAliasTable.getSelectedRows();
+			public void actionPerformed(final ActionEvent e) {
+				final int rows[] = RestrictedRelationDialog.this.secondColumnAliasTable
+						.getSelectedRows();
 				// Reverse order, so we don't end up with changing
 				// indices along the way.
 				for (int i = rows.length - 1; i >= 0; i--)
-					secondColumnAliasModel.removeRow(rows[i]);
+					RestrictedRelationDialog.this.secondColumnAliasModel
+							.removeRow(rows[i]);
 			}
 		});
 
@@ -318,23 +324,23 @@ public class RestrictedRelationDialog extends JDialog {
 		// Intercept the cancel button and use it to close this
 		// dialog without making any changes.
 		this.cancel.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				cancelled = true;
-				hide();
+			public void actionPerformed(final ActionEvent e) {
+				RestrictedRelationDialog.this.cancelled = true;
+				RestrictedRelationDialog.this.hide();
 			}
 		});
 
 		// Intercept the execute button and use it to create
 		// the appropriate partition type, then close the dialog.
 		this.execute.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (validateFields())
-					hide();
+			public void actionPerformed(final ActionEvent e) {
+				if (RestrictedRelationDialog.this.validateFields())
+					RestrictedRelationDialog.this.hide();
 			}
 		});
 
 		// Make the execute button the default button.
-		this.getRootPane().setDefaultButton(execute);
+		this.getRootPane().setDefaultButton(this.execute);
 
 		// Set the size of the dialog.
 		this.pack();
@@ -344,15 +350,14 @@ public class RestrictedRelationDialog extends JDialog {
 				.getMartBuilder());
 
 		// Set some nice defaults.
-		if (template != null) {
+		if (template != null)
 			this.expression.setText(template.getExpression());
-			// Aliases were already copied in the JTable constructor above.
-		}
+		// Aliases were already copied in the JTable constructor above.
 	}
 
 	private boolean validateFields() {
 		// A placeholder to hold the validation messages, if any.
-		List messages = new ArrayList();
+		final List messages = new ArrayList();
 
 		// We must have an expression!
 		if (this.isEmpty(this.expression.getText()))
@@ -366,20 +371,19 @@ public class RestrictedRelationDialog extends JDialog {
 			messages.add(Resources.get("columnSecondAliasMissing"));
 
 		// If there any messages, display them.
-		if (!messages.isEmpty()) {
+		if (!messages.isEmpty())
 			JOptionPane.showMessageDialog(this,
 					messages.toArray(new String[0]), Resources
 							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);
-		}
 
 		// Validation succeeds if there are no messages.
 		return messages.isEmpty();
 	}
 
-	private boolean isEmpty(String string) {
+	private boolean isEmpty(final String string) {
 		// Strings are empty if they are null or all whitespace.
-		return (string == null || string.trim().length() == 0);
+		return string == null || string.trim().length() == 0;
 	}
 
 	/**
@@ -427,33 +431,51 @@ public class RestrictedRelationDialog extends JDialog {
 		private static final Class[] colClasses = new Class[] {
 				GenericColumn.class, String.class };
 
-		public ColumnAliasTableModel(Table table,
-				DataSetRelationRestriction template, boolean first) {
+		/**
+		 * Construct a model and use the given settings to populate it if
+		 * provided.
+		 * 
+		 * @param table
+		 *            the table we are showing columns from.
+		 * @param template
+		 *            the model of existing aliases to copy.
+		 * @param first
+		 *            <tt>true</tt> if this is table 1 in the dialog,
+		 *            <tt>false</tt> if it is table 2.
+		 */
+		public ColumnAliasTableModel(final Table table,
+				final DataSetRelationRestriction template, final boolean first) {
 			super(new Object[] { Resources.get("columnAliasTableColHeader"),
 					Resources.get("columnAliasTableAliasHeader") }, 0);
 			// Populate columns, and aliases from template.
 			if (template != null) {
-				Map aliases = first ? template.getFirstTableAliases()
+				final Map aliases = first ? template.getFirstTableAliases()
 						: template.getSecondTableAliases();
-				for (Iterator i = aliases.entrySet().iterator(); i.hasNext();) {
-					Map.Entry entry = (Map.Entry) i.next();
-					GenericColumn col = (GenericColumn) entry.getKey();
+				for (final Iterator i = aliases.entrySet().iterator(); i
+						.hasNext();) {
+					final Map.Entry entry = (Map.Entry) i.next();
+					final GenericColumn col = (GenericColumn) entry.getKey();
 					this.insertRow(this.getRowCount(), new Object[] { col,
 							(String) entry.getValue() });
 				}
 			}
 		}
 
-		public Class getColumnClass(int column) {
+		public Class getColumnClass(final int column) {
 			return ColumnAliasTableModel.colClasses[column];
 		}
 
+		/**
+		 * Find out what aliases the user defined.
+		 * 
+		 * @return a map where the keys are columns, and the values are aliases.
+		 */
 		public Map getColumnAliases() {
 			// Return the map of column to alias.
-			HashMap aliases = new HashMap();
+			final HashMap aliases = new HashMap();
 			for (int i = 0; i < this.getRowCount(); i++) {
-				GenericColumn col = (GenericColumn) this.getValueAt(i, 0);
-				String alias = (String) this.getValueAt(i, 1);
+				final GenericColumn col = (GenericColumn) this.getValueAt(i, 0);
+				final String alias = (String) this.getValueAt(i, 1);
 				if (col != null
 						&& !(alias == null || alias.trim().length() == 0))
 					aliases.put(col, alias);

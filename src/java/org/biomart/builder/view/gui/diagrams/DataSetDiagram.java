@@ -24,8 +24,8 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 
 /**
- * Displays the contents of a dataset within a standard diagram object. It adds a
- * series of {@link TableComponent} and {@link RelationComponent} objects when
+ * Displays the contents of a dataset within a standard diagram object. It adds
+ * a series of {@link TableComponent} and {@link RelationComponent} objects when
  * the diagram is recalculated, and treats the schema object it represents as
  * the basic background object of the diagram.
  * 
@@ -41,11 +41,11 @@ public class DataSetDiagram extends SchemaDiagram {
 	 * specific dataset.
 	 * 
 	 * @param martTab
-	 * 			  the tab within which this diagram appears.
+	 *            the tab within which this diagram appears.
 	 * @param dataset
 	 *            the dataset to draw in this diagram.
 	 */
-	public DataSetDiagram(MartTab martTab, DataSet dataset) {
+	public DataSetDiagram(final MartTab martTab, final DataSet dataset) {
 		// Call the general diagram constructor first.
 		super(new RadialLayout(), martTab, dataset);
 	}
@@ -56,6 +56,6 @@ public class DataSetDiagram extends SchemaDiagram {
 	 * @return the dataset this diagram represents.
 	 */
 	public DataSet getDataSet() {
-		return (DataSet)this.getSchema();
+		return (DataSet) this.getSchema();
 	}
 }

@@ -34,6 +34,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
@@ -65,7 +66,7 @@ public class MartBuilder extends JFrame {
 
 		// Assign ourselves to the long-process hourglass container.
 		LongProcess.setContainer(this);
-		
+
 		// Load our cache of settings.
 		SettingsCache.load();
 
@@ -75,7 +76,7 @@ public class MartBuilder extends JFrame {
 
 		try {
 			UIManager.setLookAndFeel(lookAndFeelClass);
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			// Ignore, as we'll end up with the system one if this one doesn't
 			// work.
 			if (lookAndFeelClass != null) // only worry if we were actually
@@ -86,7 +87,7 @@ public class MartBuilder extends JFrame {
 			lookAndFeelClass = UIManager.getSystemLookAndFeelClassName();
 			try {
 				UIManager.setLookAndFeel(lookAndFeelClass);
-			} catch (Exception e2) {
+			} catch (final Exception e2) {
 				// Ignore, as we'll end up with the cross-platform one if there
 				// is no system one.
 				System.err.println(Resources.get("badLookAndFeel",
@@ -105,12 +106,12 @@ public class MartBuilder extends JFrame {
 		// Set up window listener and use it to handle windows closing.
 		final MartBuilder mb = this;
 		this.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
+			public void windowClosing(final WindowEvent e) {
 				if (e.getWindow() == mb)
-					requestExitApp();
+					MartBuilder.this.requestExitApp();
 			}
 		});
-		this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
 		// Make a menu bar and add it.
 		this.setJMenuBar(new MartBuilderMenuBar(this));
@@ -129,28 +130,27 @@ public class MartBuilder extends JFrame {
 	 * @param t
 	 *            the throwable to display the stack trace for.
 	 */
-	public void showStackTrace(Throwable t) {
+	public void showStackTrace(final Throwable t) {
 		// Create the main message.
-		int messageClass = (t instanceof Error) ? JOptionPane.ERROR_MESSAGE
+		final int messageClass = t instanceof Error ? JOptionPane.ERROR_MESSAGE
 				: JOptionPane.WARNING_MESSAGE;
-		String mainMessage = t.getLocalizedMessage();
+		final String mainMessage = t.getLocalizedMessage();
 
 		// Extract the full stack trace.
-		StringWriter sw = new StringWriter();
+		final StringWriter sw = new StringWriter();
 		t.printStackTrace(new PrintWriter(sw));
-		String stackTraceText = sw.toString();
+		final String stackTraceText = sw.toString();
 
 		// Ask if they want to see the full stack trace (show the first line of
 		// the stack trace as a hint).
-		int choice = JOptionPane.showConfirmDialog(this, new Object[] {
+		final int choice = JOptionPane.showConfirmDialog(this, new Object[] {
 				mainMessage, Resources.get("stackTracePrompt") }, Resources
 				.get("stackTraceTitle"), JOptionPane.YES_NO_OPTION);
 
 		// Create and show the full stack trace dialog if they said yes.
-		if (choice == JOptionPane.YES_OPTION) {
+		if (choice == JOptionPane.YES_OPTION)
 			JOptionPane.showMessageDialog(this, stackTraceText, Resources
 					.get("stackTraceTitle"), messageClass);
-		}
 	}
 
 	/**
@@ -168,12 +168,20 @@ public class MartBuilder extends JFrame {
 		return new Dimension(400, 400);
 	}
 
-	public static void main(String[] args) {
+	/**
+	 * Run this application and open the main window. The window stays open and
+	 * the application keeps running until the window is closed.
+	 * 
+	 * @param args
+	 *            any command line arguments that the user specified will be in
+	 *            this array.
+	 */
+	public static void main(final String[] args) {
 		// Start the application.
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				// Create it.
-				MartBuilder mb = new MartBuilder();
+				final MartBuilder mb = new MartBuilder();
 				// Centre it.
 				mb.setLocationRelativeTo(null);
 				// Open it.
@@ -215,7 +223,7 @@ public class MartBuilder extends JFrame {
 			this.martBuilder = martBuilder;
 
 			// File menu.
-			JMenu fileMenu = new JMenu(Resources.get("fileMenuTitle"));
+			final JMenu fileMenu = new JMenu(Resources.get("fileMenuTitle"));
 			fileMenu.setMnemonic(Resources.get("fileMenuMnemonic").charAt(0));
 
 			// New mart.
@@ -275,21 +283,21 @@ public class MartBuilder extends JFrame {
 			// save and close will be disabled, and if the current mart is not
 			// modified, save will be disabled.
 			fileMenu.addMenuListener(new MenuListener() {
-				public void menuSelected(MenuEvent e) {
+				public void menuSelected(final MenuEvent e) {
 					boolean hasMart = true;
 					if (martBuilder.martTabSet.getSelectedMartTab() == null)
 						hasMart = false;
-					saveMart.setEnabled(hasMart
+					MartBuilderMenuBar.this.saveMart.setEnabled(hasMart
 							&& martBuilder.martTabSet.getModifiedStatus());
-					saveMartAs.setEnabled(hasMart);
-					saveDDL.setEnabled(hasMart);
-					closeMart.setEnabled(hasMart);
+					MartBuilderMenuBar.this.saveMartAs.setEnabled(hasMart);
+					MartBuilderMenuBar.this.saveDDL.setEnabled(hasMart);
+					MartBuilderMenuBar.this.closeMart.setEnabled(hasMart);
 				}
 
-				public void menuDeselected(MenuEvent e) {
+				public void menuDeselected(final MenuEvent e) {
 				} // Interface requirement.
 
-				public void menuCanceled(MenuEvent e) {
+				public void menuCanceled(final MenuEvent e) {
 				} // Interface requirement.
 			});
 
@@ -297,7 +305,7 @@ public class MartBuilder extends JFrame {
 			this.add(fileMenu);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void actionPerformed(final ActionEvent e) {
 			// File menu.
 			if (e.getSource() == this.newMart)
 				this.martBuilder.martTabSet.requestNewMart();

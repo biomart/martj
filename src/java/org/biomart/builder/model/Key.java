@@ -193,10 +193,11 @@ public interface Key extends Comparable {
 		 * @param columns
 		 *            the set of columns to form the key over.
 		 * @throws AssociationException
-		 *             if any of the columns do not belong to the table
-		 *             specified, or if there is less than one column.
+		 *             if the set is empty or contains columns which cannot be
+		 *             combined into a single key. See
+		 *             {@link Key#setColumns(List)}.
 		 */
-		public GenericKey(List columns) throws AssociationException {
+		public GenericKey(final List columns) throws AssociationException {
 			this.status = ComponentStatus.INFERRED;
 			this.setColumns(columns);
 		}
@@ -207,12 +208,15 @@ public interface Key extends Comparable {
 		 * 
 		 * @param column
 		 *            the column to form the key over.
+		 * @throws AssociationException
+		 *             if the column cannot be combined into a single key. See
+		 *             {@link Key#setColumns(List)}.
 		 */
-		public GenericKey(Column column) throws AssociationException {
+		public GenericKey(final Column column) throws AssociationException {
 			this(Collections.singletonList(column));
 		}
 
-		public void setColumns(List columns) throws AssociationException {
+		public void setColumns(final List columns) throws AssociationException {
 			// Make sure we have at least one column.
 			if (columns.size() < 1)
 				throw new IllegalArgumentException(Resources
@@ -222,8 +226,8 @@ public interface Key extends Comparable {
 			this.columns.clear();
 
 			// Iterate over the new set of columns.
-			for (Iterator i = columns.iterator(); i.hasNext();) {
-				Column column = (Column) i.next();
+			for (final Iterator i = columns.iterator(); i.hasNext();) {
+				final Column column = (Column) i.next();
 
 				// Make our table the table of the first column we find.
 				if (this.table == null)
@@ -245,9 +249,9 @@ public interface Key extends Comparable {
 			// Invalidate all relations associated with this key. This means
 			// dropping all handmade relations, and marking all others as
 			// incorrect.
-			List deadRels = new ArrayList();
-			for (Iterator i = this.relations.iterator(); i.hasNext();) {
-				Relation r = (Relation) i.next();
+			final List deadRels = new ArrayList();
+			for (final Iterator i = this.relations.iterator(); i.hasNext();) {
+				final Relation r = (Relation) i.next();
 				if (r.getStatus().equals(ComponentStatus.HANDMADE))
 					deadRels.add(r);
 				else
@@ -256,7 +260,7 @@ public interface Key extends Comparable {
 
 			// Drop the relations we identified as useless. We have to do this
 			// separately to prevent concurrent modification exceptions.
-			for (Iterator i = deadRels.iterator(); i.hasNext();)
+			for (final Iterator i = deadRels.iterator(); i.hasNext();)
 				((Relation) i.next()).destroy();
 		}
 
@@ -264,7 +268,7 @@ public interface Key extends Comparable {
 			return this.status;
 		}
 
-		public void setStatus(ComponentStatus status) {
+		public void setStatus(final ComponentStatus status) {
 			this.status = status;
 
 			// If we are invalidating the key, then we must also
@@ -272,15 +276,15 @@ public interface Key extends Comparable {
 			// dropping all handmade relations, and marking all others as
 			// incorrect.
 			if (this.status.equals(ComponentStatus.INFERRED_INCORRECT)) {
-				List deadRels = new ArrayList();
-				for (Iterator i = this.relations.iterator(); i.hasNext();) {
-					Relation r = (Relation) i.next();
+				final List deadRels = new ArrayList();
+				for (final Iterator i = this.relations.iterator(); i.hasNext();) {
+					final Relation r = (Relation) i.next();
 					if (r.getStatus().equals(ComponentStatus.HANDMADE))
 						deadRels.add(r);
 					else
 						try {
 							r.setStatus(ComponentStatus.INFERRED_INCORRECT);
-						} catch (Throwable t) {
+						} catch (final Throwable t) {
 							throw new MartBuilderInternalError(t);
 						}
 				}
@@ -288,7 +292,7 @@ public interface Key extends Comparable {
 				// Drop the relations we identified as useless. We have to do
 				// this
 				// separately to prevent concurrent modification exceptions.
-				for (Iterator i = deadRels.iterator(); i.hasNext();)
+				for (final Iterator i = deadRels.iterator(); i.hasNext();)
 					((Relation) i.next()).destroy();
 			}
 		}
@@ -297,12 +301,13 @@ public interface Key extends Comparable {
 			return this.relations;
 		}
 
-		public void addRelation(Relation relation) throws AssociationException {
+		public void addRelation(final Relation relation)
+				throws AssociationException {
 			// Does it refer to us?
 			try {
 				// Will throw an exception if we are not part of the relation.
 				relation.getOtherKey(this);
-			} catch (IllegalArgumentException e) {
+			} catch (final IllegalArgumentException e) {
 				throw new AssociationException(Resources
 						.get("relationNotOfThisKey"));
 			}
@@ -311,7 +316,7 @@ public interface Key extends Comparable {
 			this.relations.add(relation);
 		}
 
-		public void removeRelation(Relation relation) {
+		public void removeRelation(final Relation relation) {
 			this.relations.remove(relation);
 		}
 
@@ -330,9 +335,9 @@ public interface Key extends Comparable {
 		public void destroy() {
 			// Destroy all the relations. Work from a copy to prevent
 			// concurrent modification exceptions.
-			List relationsCopy = new ArrayList(this.relations);
-			for (Iterator i = relationsCopy.iterator(); i.hasNext();) {
-				Relation r = (Relation) i.next();
+			final List relationsCopy = new ArrayList(this.relations);
+			for (final Iterator i = relationsCopy.iterator(); i.hasNext();) {
+				final Relation r = (Relation) i.next();
 				r.destroy();
 			}
 
@@ -340,7 +345,7 @@ public interface Key extends Comparable {
 			if (this instanceof PrimaryKey)
 				try {
 					this.getTable().setPrimaryKey(null);
-				} catch (Throwable t) {
+				} catch (final Throwable t) {
 					throw new MartBuilderInternalError(t);
 				}
 			else if (this instanceof ForeignKey)
@@ -351,16 +356,16 @@ public interface Key extends Comparable {
 		}
 
 		public Collection getColumnNames() {
-			List names = new ArrayList();
-			for (Iterator i = this.columns.iterator(); i.hasNext();) {
-				Column c = (Column) i.next();
+			final List names = new ArrayList();
+			for (final Iterator i = this.columns.iterator(); i.hasNext();) {
+				final Column c = (Column) i.next();
 				names.add(c.getName());
 			}
 			return names;
 		}
 
 		public String getName() {
-			StringBuffer sb = new StringBuffer();
+			final StringBuffer sb = new StringBuffer();
 			sb.append(this.getTable().toString());
 			sb.append(this.getColumnNames().toString());
 			return sb.toString();
@@ -374,15 +379,15 @@ public interface Key extends Comparable {
 			return this.toString().hashCode();
 		}
 
-		public int compareTo(Object o) throws ClassCastException {
-			Key k = (Key) o;
+		public int compareTo(final Object o) throws ClassCastException {
+			final Key k = (Key) o;
 			return this.toString().compareTo(k.toString());
 		}
 
-		public boolean equals(Object o) {
+		public boolean equals(final Object o) {
 			if (o == null || !(o instanceof Key))
 				return false;
-			Key k = (Key) o;
+			final Key k = (Key) o;
 			return k.toString().equals(this.toString());
 		}
 	}
@@ -401,12 +406,13 @@ public interface Key extends Comparable {
 		 *             if any of the columns do not belong to the table
 		 *             specified.
 		 */
-		public GenericPrimaryKey(List columns) throws AssociationException {
+		public GenericPrimaryKey(final List columns)
+				throws AssociationException {
 			super(columns);
 		}
 
 		public String getName() {
-			String supername = super.getName();
+			final String supername = super.getName();
 			return Resources.get("pkPrefix") + supername;
 		}
 	}
@@ -429,16 +435,17 @@ public interface Key extends Comparable {
 		 *             if any of the columns do not belong to the table
 		 *             specified.
 		 */
-		public GenericForeignKey(List columns) throws AssociationException {
+		public GenericForeignKey(final List columns)
+				throws AssociationException {
 			super(columns);
 		}
 
 		public String getName() {
-			String supername = super.getName();
+			final String supername = super.getName();
 			return Resources.get("fkPrefix") + supername;
 		}
 
-		public void setNullable(boolean nullable) {
+		public void setNullable(final boolean nullable) {
 			this.nullable = nullable;
 		}
 

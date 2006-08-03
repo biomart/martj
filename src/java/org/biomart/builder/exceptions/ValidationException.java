@@ -36,7 +36,7 @@ public class ValidationException extends Exception {
 	 * @param msg
 	 *            the detail message.
 	 */
-	public ValidationException(String msg) {
+	public ValidationException(final String msg) {
 		super(msg);
 	}
 
@@ -49,7 +49,7 @@ public class ValidationException extends Exception {
 	 * @param t
 	 *            the initial cause.
 	 */
-	public ValidationException(String msg, Throwable t) {
+	public ValidationException(final String msg, final Throwable t) {
 		super(msg, t);
 	}
 }

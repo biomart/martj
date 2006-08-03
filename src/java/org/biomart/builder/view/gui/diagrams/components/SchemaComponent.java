@@ -64,7 +64,7 @@ public class SchemaComponent extends BoxShapedComponent {
 	 * @param diagram
 	 *            the diagram to display the details in.
 	 */
-	public SchemaComponent(Schema schema, Diagram diagram) {
+	public SchemaComponent(final Schema schema, final Diagram diagram) {
 		super(schema, diagram);
 
 		// Schema components are set out in a vertical list.
@@ -104,9 +104,9 @@ public class SchemaComponent extends BoxShapedComponent {
 			this.add(label);
 
 			// Add a label for each member of the group.
-			for (Iterator i = ((SchemaGroup) this.getSchema()).getSchemas()
-					.iterator(); i.hasNext();) {
-				Schema s = (Schema) i.next();
+			for (final Iterator i = ((SchemaGroup) this.getSchema())
+					.getSchemas().iterator(); i.hasNext();) {
+				final Schema s = (Schema) i.next();
 				label = new JLabel(s.getName());
 				label.setFont(Font.decode("Serif-BOLDITALIC-10"));
 				this.layout.setConstraints(label, this.constraints);
@@ -116,17 +116,17 @@ public class SchemaComponent extends BoxShapedComponent {
 
 		// Now add any tables with external relations. Loop through the
 		// external keys to identify the tables to do this.
-		for (Iterator i = this.getSchema().getExternalKeys().iterator(); i
+		for (final Iterator i = this.getSchema().getExternalKeys().iterator(); i
 				.hasNext();) {
-			Key key = (Key) i.next();
-			Table table = key.getTable();
+			final Key key = (Key) i.next();
+			final Table table = key.getTable();
 
 			// Only add the table if it's not already added!
 			if (!this.getSubComponents().containsKey(table)) {
 
 				// Create the table component that represents this table.
-				TableComponent tableComponent = new TableComponent(table, this
-						.getDiagram());
+				final TableComponent tableComponent = new TableComponent(table,
+						this.getDiagram());
 
 				// Remember, internally, the subcomponents of this table, as
 				// well as the table itself as a subcomponent.
@@ -169,18 +169,20 @@ public class SchemaComponent extends BoxShapedComponent {
 
 	private JPopupMenu getSingleContextMenu(final Schema schema) {
 		// First of all, work out what would have been shown by default.
-		JPopupMenu contextMenu = super.getContextMenu();
+		final JPopupMenu contextMenu = super.getContextMenu();
 
 		// Add the 'show tables' option, which opens the tab representing
 		// this schema.
-		JMenuItem showTables = new JMenuItem(Resources.get("showTablesTitle"));
+		final JMenuItem showTables = new JMenuItem(Resources
+				.get("showTablesTitle"));
 		showTables.setMnemonic(Resources.get("showTablesMnemonic").charAt(0));
 		showTables.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				int index = getDiagram().getMartTab().getSchemaTabSet()
-						.indexOfTab(schema.getName());
-				getDiagram().getMartTab().getSchemaTabSet().setSelectedIndex(
-						index);
+			public void actionPerformed(final ActionEvent evt) {
+				final int index = SchemaComponent.this.getDiagram()
+						.getMartTab().getSchemaTabSet().indexOfTab(
+								schema.getName());
+				SchemaComponent.this.getDiagram().getMartTab()
+						.getSchemaTabSet().setSelectedIndex(index);
 			}
 		});
 		contextMenu.add(showTables);
@@ -191,18 +193,23 @@ public class SchemaComponent extends BoxShapedComponent {
 
 	private JPopupMenu getGroupContextMenu() {
 		// First of all, work out what would have been shown by default.
-		JPopupMenu contextMenu = super.getContextMenu();
+		final JPopupMenu contextMenu = super.getContextMenu();
 
 		// Add the 'show tables' option, which opens the tab representing
 		// this schema.
-		JMenuItem showTables = new JMenuItem(Resources.get("showTablesTitle"));
+		final JMenuItem showTables = new JMenuItem(Resources
+				.get("showTablesTitle"));
 		showTables.setMnemonic(Resources.get("showTablesMnemonic").charAt(0));
 		showTables.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				int index = getDiagram().getMartTab().getSchemaTabSet()
-						.indexOfTab(getSchemaGroup().getName());
-				getDiagram().getMartTab().getSchemaTabSet().setSelectedIndex(
-						index);
+			public void actionPerformed(final ActionEvent evt) {
+				final int index = SchemaComponent.this
+						.getDiagram()
+						.getMartTab()
+						.getSchemaTabSet()
+						.indexOfTab(
+								SchemaComponent.this.getSchemaGroup().getName());
+				SchemaComponent.this.getDiagram().getMartTab()
+						.getSchemaTabSet().setSelectedIndex(index);
 			}
 		});
 		contextMenu.add(showTables);
@@ -211,69 +218,72 @@ public class SchemaComponent extends BoxShapedComponent {
 		// of these will have their own submenu providing the usual functions
 		// available as if they had schema objects which had been clicked on
 		// directly in the diagram.
-		JMenu groupMembers = new JMenu(Resources.get("groupMembersTitle"));
+		final JMenu groupMembers = new JMenu(Resources.get("groupMembersTitle"));
 		groupMembers.setMnemonic(Resources.get("groupMembersMnemonic")
 				.charAt(0));
 		contextMenu.add(groupMembers);
 
 		// Loop through the schemas in the group.
-		for (Iterator i = this.getSchemaGroup().getSchemas().iterator(); i
+		for (final Iterator i = this.getSchemaGroup().getSchemas().iterator(); i
 				.hasNext();) {
 			final Schema schema = (Schema) i.next();
 
 			// Name the menu after the schema.
-			JMenu schemaMenu = new JMenu(schema.getName());
+			final JMenu schemaMenu = new JMenu(schema.getName());
 
 			// Rename the schema within the group.
-			JMenuItem renameM = new JMenuItem(Resources
+			final JMenuItem renameM = new JMenuItem(Resources
 					.get("renameSchemaTitle"));
 			renameM
 					.setMnemonic(Resources.get("renameSchemaMnemonic")
 							.charAt(0));
 			renameM.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getDiagram().getMartTab().getSchemaTabSet()
-							.requestRenameSchema(schema, getSchemaGroup());
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaComponent.this.getDiagram().getMartTab()
+							.getSchemaTabSet().requestRenameSchema(schema,
+									SchemaComponent.this.getSchemaGroup());
 				}
 			});
 			schemaMenu.add(renameM);
 
 			// Modify the schema.
-			JMenuItem modifyM = new JMenuItem(Resources
+			final JMenuItem modifyM = new JMenuItem(Resources
 					.get("modifySchemaTitle"));
 			modifyM
 					.setMnemonic(Resources.get("modifySchemaMnemonic")
 							.charAt(0));
 			modifyM.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getDiagram().getMartTab().getSchemaTabSet()
-							.requestModifySchema(schema);
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaComponent.this.getDiagram().getMartTab()
+							.getSchemaTabSet().requestModifySchema(schema);
 				}
 			});
 			schemaMenu.add(modifyM);
 
 			// Test the schema.
-			JMenuItem testM = new JMenuItem(Resources.get("testSchemaTitle"));
+			final JMenuItem testM = new JMenuItem(Resources
+					.get("testSchemaTitle"));
 			testM.setMnemonic(Resources.get("testSchemaMnemonic").charAt(0));
 			testM.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getDiagram().getMartTab().getSchemaTabSet()
-							.requestTestSchema(schema);
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaComponent.this.getDiagram().getMartTab()
+							.getSchemaTabSet().requestTestSchema(schema);
 				}
 			});
 			schemaMenu.add(testM);
 
 			// Remove the schema from the group and reinstate as an individual
 			// schema.
-			JMenuItem unGroup = new JMenuItem(Resources
+			final JMenuItem unGroup = new JMenuItem(Resources
 					.get("ungroupMemberTitle"));
 			unGroup.setMnemonic(Resources.get("ungroupMemberMnemonic")
 					.charAt(0));
 			unGroup.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent evt) {
-					getDiagram().getMartTab().getSchemaTabSet()
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaComponent.this.getDiagram().getMartTab()
+							.getSchemaTabSet()
 							.requestRemoveSchemaFromSchemaGroup(schema,
-									getSchemaGroup());
+									SchemaComponent.this.getSchemaGroup());
 				}
 			});
 			schemaMenu.add(unGroup);

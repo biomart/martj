@@ -28,6 +28,8 @@ import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
+import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.resources.Resources;
 
 /**
@@ -64,18 +66,19 @@ public abstract class MartConstructorAction {
 	 * 
 	 * @param datasetSchemaName
 	 *            the name of the schema within which the dataset will be
-	 *            constructed.
+	 *            constructed. Wherever other schemas in actions are specified
+	 *            as null, this schema will be used in place.
 	 * @param datasetTableName
 	 *            the name of the table with which this action is associated as
 	 *            part of the transformation process.
 	 */
-	public MartConstructorAction(String datasetSchemaName,
-			String datasetTableName) {
+	public MartConstructorAction(final String datasetSchemaName,
+			final String datasetTableName) {
 		this.depth = 0;
 		this.datasetSchemaName = datasetSchemaName;
 		this.datasetTableName = datasetTableName;
-		synchronized (nextSequenceLock) {
-			this.sequence = nextSequence++;
+		synchronized (MartConstructorAction.nextSequenceLock) {
+			this.sequence = MartConstructorAction.nextSequence++;
 		}
 		this.children = new HashSet();
 		this.parents = new HashSet();
@@ -106,7 +109,7 @@ public abstract class MartConstructorAction {
 	 * @param child
 	 *            the child to add to this node.
 	 */
-	public void addChild(MartConstructorAction child) {
+	public void addChild(final MartConstructorAction child) {
 		this.children.add(child);
 		child.parents.add(this);
 		child.ensureDepth(this.depth + 1);
@@ -119,8 +122,8 @@ public abstract class MartConstructorAction {
 	 * @param children
 	 *            the children to add to this node.
 	 */
-	public void addChildren(Collection children) {
-		for (Iterator i = children.iterator(); i.hasNext();)
+	public void addChildren(final Collection children) {
+		for (final Iterator i = children.iterator(); i.hasNext();)
 			this.addChild((MartConstructorAction) i.next());
 	}
 
@@ -131,7 +134,7 @@ public abstract class MartConstructorAction {
 	 * @param parent
 	 *            the parent to add to this node.
 	 */
-	public void addParent(MartConstructorAction parent) {
+	public void addParent(final MartConstructorAction parent) {
 		this.parents.add(parent);
 		parent.children.add(this);
 		this.ensureDepth(parent.depth + 1);
@@ -144,8 +147,8 @@ public abstract class MartConstructorAction {
 	 * @param parents
 	 *            the parents to add to this node.
 	 */
-	public void addParents(Collection parents) {
-		for (Iterator i = parents.iterator(); i.hasNext();)
+	public void addParents(final Collection parents) {
+		for (final Iterator i = parents.iterator(); i.hasNext();)
 			this.addParent((MartConstructorAction) i.next());
 	}
 
@@ -167,7 +170,7 @@ public abstract class MartConstructorAction {
 		return this.parents;
 	}
 
-	private void ensureDepth(int newDepth) {
+	private void ensureDepth(final int newDepth) {
 		// Is the new depth less than our current
 		// depth? If so, need do nothing.
 		if (this.depth >= newDepth)
@@ -178,8 +181,9 @@ public abstract class MartConstructorAction {
 
 		// Ensure the child depths are at least one greater
 		// than our own new depth.
-		for (Iterator i = this.children.iterator(); i.hasNext();) {
-			MartConstructorAction child = (MartConstructorAction) i.next();
+		for (final Iterator i = this.children.iterator(); i.hasNext();) {
+			final MartConstructorAction child = (MartConstructorAction) i
+					.next();
 			child.ensureDepth(this.depth + 1);
 		}
 	}
@@ -187,7 +191,7 @@ public abstract class MartConstructorAction {
 	/**
 	 * Returns the current depth (level) of the graph at which this action lies.
 	 * 
-	 * @retun the current depth, 0-indexed.
+	 * @return the current depth, 0-indexed.
 	 */
 	public int getDepth() {
 		return this.depth;
@@ -214,11 +218,12 @@ public abstract class MartConstructorAction {
 		return this.sequence;
 	}
 
-	public boolean equals(Object obj) {
+	public boolean equals(final Object obj) {
 		if (this == obj)
 			return true;
 		else
-			return (obj != null && (obj instanceof MartConstructorAction) && this.sequence == ((MartConstructorAction) obj).sequence);
+			return obj != null && obj instanceof MartConstructorAction
+					&& this.sequence == ((MartConstructorAction) obj).sequence;
 	}
 
 	/**
@@ -226,7 +231,7 @@ public abstract class MartConstructorAction {
 	 * they should fit together.
 	 */
 	public static class MartConstructorActionGraph {
-		private Collection actions = new HashSet();
+		private final Collection actions = new HashSet();
 
 		/**
 		 * Adds an action to the graph.
@@ -234,7 +239,7 @@ public abstract class MartConstructorAction {
 		 * @param action
 		 *            the action to add.
 		 */
-		public void addAction(MartConstructorAction action) {
+		public void addAction(final MartConstructorAction action) {
 			this.actions.add(action);
 		}
 
@@ -246,8 +251,8 @@ public abstract class MartConstructorAction {
 		 * @param parent
 		 *            the parent to attach it to.
 		 */
-		public void addActionWithParent(MartConstructorAction action,
-				MartConstructorAction parent) {
+		public void addActionWithParent(final MartConstructorAction action,
+				final MartConstructorAction parent) {
 			action.addParent(parent);
 			this.actions.add(action);
 		}
@@ -260,9 +265,9 @@ public abstract class MartConstructorAction {
 		 * @param parents
 		 *            the parents to attach it to.
 		 */
-		public void addActionWithParents(MartConstructorAction action,
-				Collection parents) {
-			for (Iterator i = parents.iterator(); i.hasNext();)
+		public void addActionWithParents(final MartConstructorAction action,
+				final Collection parents) {
+			for (final Iterator i = parents.iterator(); i.hasNext();)
 				action.addParent((MartConstructorAction) i.next());
 			this.actions.add(action);
 		}
@@ -285,10 +290,11 @@ public abstract class MartConstructorAction {
 		 * @return all the actions at that depth. It may return an empty set if
 		 *         there are none, but it will never return <tt>null</tt>.
 		 */
-		public Collection getActionsAtDepth(int depth) {
-			Collection matches = new HashSet();
-			for (Iterator i = this.actions.iterator(); i.hasNext();) {
-				MartConstructorAction action = (MartConstructorAction) i.next();
+		public Collection getActionsAtDepth(final int depth) {
+			final Collection matches = new HashSet();
+			for (final Iterator i = this.actions.iterator(); i.hasNext();) {
+				final MartConstructorAction action = (MartConstructorAction) i
+						.next();
 				if (action.depth == depth)
 					matches.add(action);
 			}
@@ -301,9 +307,15 @@ public abstract class MartConstructorAction {
 	 * caught up.
 	 */
 	public static class PlaceHolder extends MartConstructorAction {
-		public PlaceHolder(String datasetSchemaName) {
-			super(datasetSchemaName, Resources
-					.get("placeholderActionTableName"));
+		/**
+		 * The placeholder action requires only the name of the dataset schema
+		 * in order to pass it up to the parent constructor.
+		 * 
+		 * @param dsSchemaName
+		 *            the name of the dataset schema to use by default.
+		 */
+		public PlaceHolder(final String dsSchemaName) {
+			super(dsSchemaName, Resources.get("placeholderActionTableName"));
 		}
 
 		public String getStatusMessage() {
@@ -324,10 +336,31 @@ public abstract class MartConstructorAction {
 
 		private List targetTableNames;
 
-		public Union(String datasetSchemaName, String datasetTableName,
-				Schema unionTableSchema, String unionTableName,
-				List targetTableSchemas, List targetTableNames) {
-			super(datasetSchemaName, datasetTableName);
+		/**
+		 * Construct an action which creates a new table in the specified schema
+		 * based on the union of all the target tables in all the target
+		 * schemas.
+		 * 
+		 * @param dsSchemaName
+		 *            the dataset schema name to use by default.
+		 * @param dsTableName
+		 *            the dataset table this action is associated with.
+		 * @param unionTableSchema
+		 *            the schema in which to create the union table.
+		 * @param unionTableName
+		 *            the name of the union table to create.
+		 * @param targetTableSchemas
+		 *            the schemas from which to obtain the tables to perform a
+		 *            union on (in a 1:1 correlation with targetTableNames).
+		 *            Contents must be {@link Schema} objects.
+		 * @param targetTableNames
+		 *            the tables to union (in a 1:1 correlation with
+		 *            targetTableSchemas). Contents must be strings.
+		 */
+		public Union(final String dsSchemaName, final String dsTableName,
+				final Schema unionTableSchema, final String unionTableName,
+				final List targetTableSchemas, final List targetTableNames) {
+			super(dsSchemaName, dsTableName);
 			this.unionTableSchema = unionTableSchema;
 			this.unionTableName = unionTableName;
 			this.targetTableSchemas = targetTableSchemas;
@@ -335,19 +368,19 @@ public abstract class MartConstructorAction {
 		}
 
 		public List getTargetTableNames() {
-			return targetTableNames;
+			return this.targetTableNames;
 		}
 
 		public List getTargetTableSchemas() {
-			return targetTableSchemas;
+			return this.targetTableSchemas;
 		}
 
 		public String getUnionTableName() {
-			return unionTableName;
+			return this.unionTableName;
 		}
 
 		public Schema getUnionTableSchema() {
-			return unionTableSchema;
+			return this.unionTableSchema;
 		}
 
 		public String getStatusMessage() {
@@ -363,19 +396,31 @@ public abstract class MartConstructorAction {
 
 		private String dropTableName;
 
-		public Drop(String datasetSchemaName, String datasetTableName,
-				Schema dropTableSchema, String dropTableName) {
-			super(datasetSchemaName, datasetTableName);
+		/**
+		 * Drops a table.
+		 * 
+		 * @param dsSchemaName
+		 *            the dataset schema name to use by default.
+		 * @param dsTableName
+		 *            the dataset table this action is associated with.
+		 * @param dropTableSchema
+		 *            the schema to drop the table from.
+		 * @param dropTableName
+		 *            the name of the table to drop.
+		 */
+		public Drop(final String dsSchemaName, final String dsTableName,
+				final Schema dropTableSchema, final String dropTableName) {
+			super(dsSchemaName, dsTableName);
 			this.dropTableSchema = dropTableSchema;
 			this.dropTableName = dropTableName;
 		}
 
 		public String getDropTableName() {
-			return dropTableName;
+			return this.dropTableName;
 		}
 
 		public Schema getDropTableSchema() {
-			return dropTableSchema;
+			return this.dropTableSchema;
 		}
 
 		public String getStatusMessage() {
@@ -388,79 +433,83 @@ public abstract class MartConstructorAction {
 	 * the first table where a particular column has a given value.
 	 */
 	public static class Partition extends MartConstructorAction {
-		private Schema targetTableSchema;
-
-		private String targetTableName;
-
 		private Schema partitionTableSchema;
 
 		private String partitionTableName;
+
+		private Schema targetTableSchema;
+
+		private String targetTableName;
 
 		private String partitionColumnName;
 
 		private Object partitionColumnValue;
 
-		public Partition(String datasetSchemaName, String datasetTableName,
-				Schema targetTableSchema, String targetTableName,
-				Schema partitionTableSchema, String partitionTableName,
-				String partitionColumnName, Object partitionColumnValue) {
-			super(datasetSchemaName, datasetTableName);
-			this.targetTableSchema = targetTableSchema;
-			this.targetTableName = targetTableName;
+		/**
+		 * Partitions a table. The partition table and schema define the table
+		 * which will be partitioned. The target table and schema define the
+		 * table which will be created as a result of the partitioning. The
+		 * partition column name and value define the column from which to
+		 * restrict values for the partitioning, and the value to restrict that
+		 * column by.
+		 * 
+		 * @param dsSchemaName
+		 *            the dataset schema name to use by default.
+		 * @param dsTableName
+		 *            the dataset table this action is associated with.
+		 * @param targetTableSchema
+		 *            the schema from which to select data.
+		 * @param targetTableName
+		 *            the table from which to select data.
+		 * @param partitionTableSchema
+		 *            the schema in which the newly partitioned table will be
+		 *            created.
+		 * @param partitionTableName
+		 *            the name of the newly partitioned table to create.
+		 * @param partitionColumnName
+		 *            the name of the column to use for the partitioning.
+		 * @param partitionColumnValue
+		 *            the value to restrict the partitioned column by.
+		 */
+		public Partition(final String dsSchemaName, final String dsTableName,
+				final Schema partitionTableSchema,
+				final String partitionTableName,
+				final Schema targetTableSchema, final String targetTableName,
+				final String partitionColumnName,
+				final Object partitionColumnValue) {
+			super(dsSchemaName, dsTableName);
 			this.partitionTableSchema = partitionTableSchema;
 			this.partitionTableName = partitionTableName;
+			this.targetTableSchema = targetTableSchema;
+			this.targetTableName = targetTableName;
 			this.partitionColumnName = partitionColumnName;
 			this.partitionColumnValue = partitionColumnValue;
 		}
 
 		public String getPartitionColumnName() {
-			return partitionColumnName;
-		}
-
-		public void setPartitionColumnName(String partitionColumnName) {
-			this.partitionColumnName = partitionColumnName;
+			return this.partitionColumnName;
 		}
 
 		public Object getPartitionColumnValue() {
-			return partitionColumnValue;
-		}
-
-		public void setPartitionColumnValue(Object partitionColumnValue) {
-			this.partitionColumnValue = partitionColumnValue;
-		}
-
-		public String getPartitionTableName() {
-			return partitionTableName;
-		}
-
-		public void setPartitionTableName(String partitionTableName) {
-			this.partitionTableName = partitionTableName;
-		}
-
-		public Schema getPartitionTableSchema() {
-			return partitionTableSchema;
-		}
-
-		public void setPartitionTableSchema(Schema partitionTableSchema) {
-			this.partitionTableSchema = partitionTableSchema;
+			return this.partitionColumnValue;
 		}
 
 		public String getTargetTableName() {
-			return targetTableName;
-		}
-
-		public void setTargetTableName(String targetTableName) {
-			this.targetTableName = targetTableName;
+			return this.targetTableName;
 		}
 
 		public Schema getTargetTableSchema() {
-			return targetTableSchema;
+			return this.targetTableSchema;
 		}
 
-		public void setTargetTableSchema(Schema targetTableSchema) {
-			this.targetTableSchema = targetTableSchema;
+		public String getPartitionTableName() {
+			return this.partitionTableName;
 		}
 
+		public Schema getPartitionTableSchema() {
+			return this.partitionTableSchema;
+		}
+		
 		public String getStatusMessage() {
 			return Resources.get("mcPartition");
 		}
@@ -478,24 +527,40 @@ public abstract class MartConstructorAction {
 
 		private List pkColumns;
 
-		public PK(String datasetSchemaName, String datasetTableName,
-				Schema pkTableSchema, String pkTableName, List pkColumns) {
-			super(datasetSchemaName, datasetTableName);
+		/**
+		 * Creates a primary key.
+		 * 
+		 * @param dsSchemaName
+		 *            the dataset schema name to use by default.
+		 * @param dsTableName
+		 *            the dataset table this action is associated with.
+		 * @param pkTableSchema
+		 *            the schema holding the table to create the key for.
+		 * @param pkTableName
+		 *            the table to create the key for.
+		 * @param pkColumns
+		 *            the column names to include in the key. Items in this list
+		 *            are {@link Column} instances.
+		 */
+		public PK(final String dsSchemaName, final String dsTableName,
+				final Schema pkTableSchema, final String pkTableName,
+				final List pkColumns) {
+			super(dsSchemaName, dsTableName);
 			this.pkTableSchema = pkTableSchema;
 			this.pkTableName = pkTableName;
 			this.pkColumns = pkColumns;
 		}
 
 		public List getPkColumns() {
-			return pkColumns;
+			return this.pkColumns;
 		}
 
 		public String getPkTableName() {
-			return pkTableName;
+			return this.pkTableName;
 		}
 
 		public Schema getPkTableSchema() {
-			return pkTableSchema;
+			return this.pkTableSchema;
 		}
 
 		public String getStatusMessage() {
@@ -515,25 +580,41 @@ public abstract class MartConstructorAction {
 
 		private List indexColumns;
 
-		public Index(String datasetSchemaName, String datasetTableName,
-				Schema indexTableSchema, String indexTableName,
-				List indexColumns) {
-			super(datasetSchemaName, datasetTableName);
+		/**
+		 * Creates an index.
+		 * 
+		 * @param dsSchemaName
+		 *            the dataset schema name to use by default.
+		 * @param dsTableName
+		 *            the dataset table this action is associated with.
+		 * @param indexTableSchema
+		 *            the schema holding the table to create the index for.
+		 * @param indexTableName
+		 *            the table to create the index for.
+		 * @param indexColumns
+		 *            the column names to include in the index . Items in this
+		 *            list are either {@link Column} instances, or plain
+		 *            strings, or a mix of both.
+		 */
+		public Index(final String dsSchemaName, final String dsTableName,
+				final Schema indexTableSchema, final String indexTableName,
+				final List indexColumns) {
+			super(dsSchemaName, dsTableName);
 			this.indexTableSchema = indexTableSchema;
 			this.indexTableName = indexTableName;
 			this.indexColumns = indexColumns;
 		}
 
 		public List getIndexColumns() {
-			return indexColumns;
+			return this.indexColumns;
 		}
 
 		public String getIndexTableName() {
-			return indexTableName;
+			return this.indexTableName;
 		}
 
 		public Schema getIndexTableSchema() {
-			return indexTableSchema;
+			return this.indexTableSchema;
 		}
 
 		public String getStatusMessage() {
@@ -560,10 +641,35 @@ public abstract class MartConstructorAction {
 
 		private List pkColumns;
 
-		public FK(String datasetSchemaName, String datasetTableName,
-				Schema fkTableSchema, String fkTableName, List fkColumns,
-				Schema pkTableSchema, String pkTableName, List pkColumns) {
-			super(datasetSchemaName, datasetTableName);
+		/**
+		 * Establishes a foreign key.
+		 * 
+		 * @param dsSchemaName
+		 *            the dataset schema name to use by default.
+		 * @param dsTableName
+		 *            the dataset table this action is associated with.
+		 * @param fkTableSchema
+		 *            the schema holding the table that will have the key.
+		 * @param fkTableName
+		 *            the table that will have the key.
+		 * @param fkColumns
+		 *            the columns to include in that key. Items in this list are
+		 *            {@link Column} instances.
+		 * @param pkTableSchema
+		 *            the schema in which the table whose primary key this
+		 *            foreign key refers to lives.
+		 * @param pkTableName
+		 *            the table whose primary key this foreign key refers to.
+		 * @param pkColumns
+		 *            the columns in the primary key that this foreign key
+		 *            refers to. Items in this list are {@link Column}
+		 *            instances.
+		 */
+		public FK(final String dsSchemaName, final String dsTableName,
+				final Schema fkTableSchema, final String fkTableName,
+				final List fkColumns, final Schema pkTableSchema,
+				final String pkTableName, final List pkColumns) {
+			super(dsSchemaName, dsTableName);
 			this.fkTableSchema = fkTableSchema;
 			this.fkTableName = fkTableName;
 			this.fkColumns = fkColumns;
@@ -573,27 +679,27 @@ public abstract class MartConstructorAction {
 		}
 
 		public List getPkColumns() {
-			return pkColumns;
+			return this.pkColumns;
 		}
 
 		public String getPkTableName() {
-			return pkTableName;
+			return this.pkTableName;
 		}
 
 		public Schema getPkTableSchema() {
-			return pkTableSchema;
+			return this.pkTableSchema;
 		}
 
 		public List getFkColumns() {
-			return fkColumns;
+			return this.fkColumns;
 		}
 
 		public String getFkTableName() {
-			return fkTableName;
+			return this.fkTableName;
 		}
 
 		public Schema getFkTableSchema() {
-			return fkTableSchema;
+			return this.fkTableSchema;
 		}
 
 		public String getStatusMessage() {
@@ -611,25 +717,39 @@ public abstract class MartConstructorAction {
 
 		private String renameTableNewName;
 
-		public Rename(String datasetSchemaName, String datasetTableName,
-				Schema renameTableSchema, String renameTableOldName,
-				String renameTableNewName) {
-			super(datasetSchemaName, datasetTableName);
+		/**
+		 * Renames a table.
+		 * 
+		 * @param dsSchemaName
+		 *            the dataset schema name to use by default.
+		 * @param dsTableName
+		 *            the dataset table this action is associated with.
+		 * @param renameTableSchema
+		 *            the schema in which the table lives.
+		 * @param renameTableOldName
+		 *            the old name of the table.
+		 * @param renameTableNewName
+		 *            the new name of the table.
+		 */
+		public Rename(final String dsSchemaName, final String dsTableName,
+				final Schema renameTableSchema,
+				final String renameTableOldName, final String renameTableNewName) {
+			super(dsSchemaName, dsTableName);
 			this.renameTableSchema = renameTableSchema;
 			this.renameTableOldName = renameTableOldName;
 			this.renameTableNewName = renameTableNewName;
 		}
 
 		public String getRenameTableNewName() {
-			return renameTableNewName;
+			return this.renameTableNewName;
 		}
 
 		public String getRenameTableOldName() {
-			return renameTableOldName;
+			return this.renameTableOldName;
 		}
 
 		public Schema getRenameTableSchema() {
-			return renameTableSchema;
+			return this.renameTableSchema;
 		}
 
 		public String getStatusMessage() {
@@ -660,12 +780,46 @@ public abstract class MartConstructorAction {
 
 		private boolean useAliases;
 
-		public Create(String datasetSchemaName, String datasetTableName,
-				Schema newTableSchema, String newTableName,
-				Schema selectFromTableSchema, String selectFromTableName,
-				List selectFromColumns, boolean useDistinct,
-				DataSetTableRestriction tableRestriction, boolean useAliases) {
-			super(datasetSchemaName, datasetTableName);
+		/**
+		 * Creates a new table by selecting from an existing table.
+		 * 
+		 * @param dsSchemaName
+		 *            the dataset schema name to use by default.
+		 * @param dsTableName
+		 *            the dataset table this action is associated with.
+		 * @param newTableSchema
+		 *            the schema to create the table in.
+		 * @param newTableName
+		 *            the name of the new table to create.
+		 * @param selectFromTableSchema
+		 *            the schema to select data for the table from.
+		 * @param selectFromTableName
+		 *            the table to select data from.
+		 * @param selectFromColumns
+		 *            the columns to select data from. Items in this list are
+		 *            {@link Column} instances.
+		 * @param useDistinct
+		 *            if <tt>true</tt>, then a select distinct is performed.
+		 * @param tableRestriction
+		 *            any restrictions to place upon the selection from the
+		 *            table.
+		 * @param useAliases
+		 *            if <tt>true</tt>, then the items in selectFromColumns
+		 *            are expected to be {@link WrappedColumn} or
+		 *            {@link SchemaNameColumn} instances, and the names used are
+		 *            the names of the real {@link Column} instances which these
+		 *            columns wrap. Otherwise, the names used are those returned
+		 *            by the {@link Column#getName()} function on each column in
+		 *            the list.
+		 */
+		public Create(final String dsSchemaName, final String dsTableName,
+				final Schema newTableSchema, final String newTableName,
+				final Schema selectFromTableSchema,
+				final String selectFromTableName, final List selectFromColumns,
+				final boolean useDistinct,
+				final DataSetTableRestriction tableRestriction,
+				final boolean useAliases) {
+			super(dsSchemaName, dsTableName);
 			this.newTableSchema = newTableSchema;
 			this.newTableName = newTableName;
 			this.selectFromTableSchema = selectFromTableSchema;
@@ -677,35 +831,35 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getNewTableName() {
-			return newTableName;
+			return this.newTableName;
 		}
 
 		public Schema getNewTableSchema() {
-			return newTableSchema;
+			return this.newTableSchema;
 		}
 
 		public List getSelectFromColumns() {
-			return selectFromColumns;
+			return this.selectFromColumns;
 		}
 
 		public String getSelectFromTableName() {
-			return selectFromTableName;
+			return this.selectFromTableName;
 		}
 
 		public Schema getSelectFromTableSchema() {
-			return selectFromTableSchema;
+			return this.selectFromTableSchema;
 		}
 
 		public boolean isUseDistinct() {
-			return useDistinct;
+			return this.useDistinct;
 		}
 
 		public DataSetTableRestriction getTableRestriction() {
-			return tableRestriction;
+			return this.tableRestriction;
 		}
 
 		public boolean isUseAliases() {
-			return useAliases;
+			return this.useAliases;
 		}
 
 		public String getStatusMessage() {
@@ -724,37 +878,39 @@ public abstract class MartConstructorAction {
 
 		private String columnName;
 
-		public OptimiseAddColumn(String datasetSchemaName,
-				String datasetTableName, Schema tableSchema, String tableName,
-				String columnName) {
-			super(datasetSchemaName, datasetTableName);
+		/**
+		 * Adds a column for the purposes of optimisation (a 'has' column).
+		 * 
+		 * @param dsSchemaName
+		 *            the dataset schema name to use by default.
+		 * @param dsTableName
+		 *            the dataset table this action is associated with.
+		 * @param tableSchema
+		 *            the schema the table lives in.
+		 * @param tableName
+		 *            the name of the table to add the column to.
+		 * @param columnName
+		 *            the name of the column to add.
+		 */
+		public OptimiseAddColumn(final String dsSchemaName,
+				final String dsTableName, final Schema tableSchema,
+				final String tableName, final String columnName) {
+			super(dsSchemaName, dsTableName);
 			this.tableSchema = tableSchema;
 			this.tableName = tableName;
 			this.columnName = columnName;
 		}
 
 		public String getColumnName() {
-			return columnName;
-		}
-
-		public void setColumnName(String columnName) {
-			this.columnName = columnName;
+			return this.columnName;
 		}
 
 		public String getTableName() {
-			return tableName;
-		}
-
-		public void setTableName(String tableName) {
-			this.tableName = tableName;
+			return this.tableName;
 		}
 
 		public Schema getTableSchema() {
-			return tableSchema;
-		}
-
-		public void setTableSchema(Schema tableSchema) {
-			this.tableSchema = tableSchema;
+			return this.tableSchema;
 		}
 
 		public String getStatusMessage() {
@@ -771,85 +927,86 @@ public abstract class MartConstructorAction {
 
 		private String fkTableName;
 
-		private List fkTableColumns;
+		private List fkColumns;
 
 		private Schema pkTableSchema;
 
 		private String pkTableName;
 
-		private List pkTableColumns;
+		private List pkColumns;
 
 		private String optimiseColumnName;
 
-		public OptimiseUpdateColumn(String datasetSchemaName,
-				String datasetTableName, Schema fkTableSchema,
-				String fkTableName, List fkTableColumns, Schema pkTableSchema,
-				String pkTableName, List pkTableColumns,
-				String optimiseColumnName) {
-			super(datasetSchemaName, datasetTableName);
+		/**
+		 * Updates an optimisation column ('has' column) based on whether or not
+		 * rows exist in the fkTable that match the rows in the pkTable.
+		 * 
+		 * @param dsSchemaName
+		 *            the dataset schema name to use by default.
+		 * @param dsTableName
+		 *            the dataset table this action is associated with.
+		 * @param fkTableSchema
+		 *            the schema the fkTable lives in.
+		 * @param fkTableName
+		 *            the name of the fkTable. This table is the one which
+		 *            contains child rows to the parent pkTable.
+		 * @param fkColumns
+		 *            the columns of the foreign key. Items are {@link Column}
+		 *            instances.
+		 * @param pkTableSchema
+		 *            the schema the pkTable lives in.
+		 * @param pkTableName
+		 *            the name of the pkTable. This is the one that has the
+		 *            optimiser column attached which needs updating based on
+		 *            the presence or absence of corresponding fkTable entries.
+		 * @param pkColumns
+		 *            the columns of the primary key. Items are {@link Column}
+		 *            instances.
+		 * @param optimiseColumnName
+		 *            the name of the optimiser column which needs to be
+		 *            updated.
+		 */
+		public OptimiseUpdateColumn(final String dsSchemaName,
+				final String dsTableName, final Schema fkTableSchema,
+				final String fkTableName, final List fkColumns,
+				final Schema pkTableSchema, final String pkTableName,
+				final List pkColumns, final String optimiseColumnName) {
+			super(dsSchemaName, dsTableName);
 			this.fkTableSchema = fkTableSchema;
 			this.fkTableName = fkTableName;
-			this.fkTableColumns = fkTableColumns;
+			this.fkColumns = fkColumns;
 			this.pkTableSchema = pkTableSchema;
 			this.pkTableName = pkTableName;
-			this.pkTableColumns = pkTableColumns;
+			this.pkColumns = pkColumns;
 			this.optimiseColumnName = optimiseColumnName;
 		}
 
-		public List getFkTableColumns() {
-			return fkTableColumns;
-		}
-
-		public void setFkTableColumns(List fkTableColumns) {
-			this.fkTableColumns = fkTableColumns;
+		public List getFkColumns() {
+			return this.fkColumns;
 		}
 
 		public String getFkTableName() {
-			return fkTableName;
-		}
-
-		public void setFkTableName(String fkTableName) {
-			this.fkTableName = fkTableName;
+			return this.fkTableName;
 		}
 
 		public Schema getFkTableSchema() {
-			return fkTableSchema;
+			return this.fkTableSchema;
 		}
 
-		public void setFkTableSchema(Schema fkTableSchema) {
-			this.fkTableSchema = fkTableSchema;
-		}
-
-		public List getPkTableColumns() {
-			return pkTableColumns;
-		}
-
-		public void setPkTableColumns(List pkTableColumns) {
-			this.pkTableColumns = pkTableColumns;
+		public List getPkColumns() {
+			return this.pkColumns;
 		}
 
 		public String getPkTableName() {
-			return pkTableName;
-		}
-
-		public void setPkTableName(String pkTableName) {
-			this.pkTableName = pkTableName;
+			return this.pkTableName;
 		}
 
 		public Schema getPkTableSchema() {
-			return pkTableSchema;
-		}
-
-		public void setPkTableSchema(Schema pkTableSchema) {
-			this.pkTableSchema = pkTableSchema;
+			return this.pkTableSchema;
 		}
 
 		public String getOptimiseColumnName() {
-			return optimiseColumnName;
-		}
-
-		public void setOptimiseColumnName(String optimiseColumnName) {
-			this.optimiseColumnName = optimiseColumnName;
+			return this.optimiseColumnName;
 		}
 
 		public String getStatusMessage() {
@@ -863,8 +1020,6 @@ public abstract class MartConstructorAction {
 	 * them are group-by expression columns.
 	 */
 	public static class ExpressionAddColumns extends MartConstructorAction {
-		private String datasetSchemaName;
-
 		private Schema sourceTableSchema;
 
 		private String sourceTableName;
@@ -879,13 +1034,40 @@ public abstract class MartConstructorAction {
 
 		private boolean useGroupBy;
 
-		public ExpressionAddColumns(String datasetSchemaName,
-				String datasetTableName, Schema sourceTableSchema,
-				String sourceTableName, Schema targetTableSchema,
-				String targetTableName, List sourceTableColumns,
-				List expressionColumns, boolean useGroupBy) {
-			super(datasetSchemaName, datasetTableName);
-			this.datasetSchemaName = datasetSchemaName;
+		/**
+		 * Adds a set of expressions to the table by creating a new table with
+		 * all the old table plus the columns for the expressions.
+		 * 
+		 * @param dsSchemaName
+		 *            the dataset schema name to use by default.
+		 * @param dsTableName
+		 *            the dataset table this action is associated with.
+		 * @param sourceTableSchema
+		 *            the schema containing the table to select data from.
+		 * @param sourceTableName
+		 *            the table to select data from.
+		 * @param targetTableSchema
+		 *            the schema to create the new table in.
+		 * @param targetTableName
+		 *            the name of the new table.
+		 * @param sourceTableColumns
+		 *            a list of {@link Column} instances describing which of the
+		 *            columns from the source table should be kept in the new
+		 *            table after the expressions are added.
+		 * @param expressionColumns
+		 *            the list of {@link ExpressionColumn} instances describing
+		 *            the expressions to add.
+		 * @param useGroupBy
+		 *            <tt>true</tt> if a group by clause should be included.
+		 *            The group by clause will include all columns in
+		 *            sourceTableColumns.
+		 */
+		public ExpressionAddColumns(final String dsSchemaName,
+				final String dsTableName, final Schema sourceTableSchema,
+				final String sourceTableName, final Schema targetTableSchema,
+				final String targetTableName, final List sourceTableColumns,
+				final List expressionColumns, final boolean useGroupBy) {
+			super(dsSchemaName, dsTableName);
 			this.sourceTableSchema = sourceTableSchema;
 			this.sourceTableName = sourceTableName;
 			this.targetTableSchema = targetTableSchema;
@@ -893,70 +1075,34 @@ public abstract class MartConstructorAction {
 			this.sourceTableColumns = sourceTableColumns;
 			this.expressionColumns = expressionColumns;
 			this.useGroupBy = useGroupBy;
-		}
-
-		public String getDatasetSchemaName() {
-			return datasetSchemaName;
-		}
-
-		public void setDatasetSchemaName(String datasetSchemaName) {
-			this.datasetSchemaName = datasetSchemaName;
 		}
 
 		public List getExpressionColumns() {
-			return expressionColumns;
-		}
-
-		public void setExpressionColumns(List expressionColumns) {
-			this.expressionColumns = expressionColumns;
+			return this.expressionColumns;
 		}
 
 		public List getSourceTableColumns() {
-			return sourceTableColumns;
-		}
-
-		public void setSourceTableColumns(List sourceTableColumns) {
-			this.sourceTableColumns = sourceTableColumns;
+			return this.sourceTableColumns;
 		}
 
 		public String getSourceTableName() {
-			return sourceTableName;
-		}
-
-		public void setSourceTableName(String sourceTableName) {
-			this.sourceTableName = sourceTableName;
+			return this.sourceTableName;
 		}
 
 		public Schema getSourceTableSchema() {
-			return sourceTableSchema;
-		}
-
-		public void setSourceTableSchema(Schema sourceTableSchema) {
-			this.sourceTableSchema = sourceTableSchema;
+			return this.sourceTableSchema;
 		}
 
 		public String getTargetTableName() {
-			return targetTableName;
-		}
-
-		public void setTargetTableName(String targetTableName) {
-			this.targetTableName = targetTableName;
+			return this.targetTableName;
 		}
 
 		public Schema getTargetTableSchema() {
-			return targetTableSchema;
-		}
-
-		public void setTargetTableSchema(Schema targetTableSchema) {
-			this.targetTableSchema = targetTableSchema;
+			return this.targetTableSchema;
 		}
 
 		public boolean getUseGroupBy() {
-			return useGroupBy;
-		}
-
-		public void setUseGroupBy(boolean useGroupBy) {
-			this.useGroupBy = useGroupBy;
+			return this.useGroupBy;
 		}
 
 		public String getStatusMessage() {
@@ -1003,24 +1149,71 @@ public abstract class MartConstructorAction {
 
 		private boolean useAliases;
 
-		public Merge(String datasetSchemaName, String datasetTableName,
-				Schema mergedTableSchema, String mergedTableName,
-				Schema sourceTableSchema, String sourceTableName,
-				List sourceTableKeyColumns, boolean useLeftJoin,
-				Schema targetTableSchema, String targetTableName,
-				List targetTableKeyColumns, List targetTableColumns,
-				DataSetRelationRestriction relationRestriction,
-				boolean firstTableSourceTable, boolean useDistinct,
-				DataSetTableRestriction targetTableRestriction,
-				boolean useAliases) {
-			super(datasetSchemaName, datasetTableName);
+		/**
+		 * Creates a new table by merging two existing ones together.
+		 * 
+		 * @param dsSchemaName
+		 *            the dataset schema name to use by default.
+		 * @param dsTableName
+		 *            the dataset table this action is associated with.
+		 * @param mergedTableSchema
+		 *            the schema to create the merged table in.
+		 * @param mergedTableName
+		 *            the name to give the merged table.
+		 * @param sourceTableSchema
+		 *            the schema the LHS of the join lives in.
+		 * @param sourceTableName
+		 *            the table on the LHS of the join.
+		 * @param sourceTableKeyColumns
+		 *            the columns on the LHS to use to make the join.
+		 * @param useLeftJoin
+		 *            <tt>true</tt> if the join should be a left join,
+		 *            <tt>false</tt> for an inner join.
+		 * @param targetTableSchema
+		 *            the schema the RHS of the join lives in.
+		 * @param targetTableName
+		 *            the table on the RHS of the join.
+		 * @param targetTableKeyColumns
+		 *            the columns on the RHS to use to make the join.
+		 * @param targetTableColumns
+		 *            the columns to select from the RHS of the join.
+		 * @param relationRestriction
+		 *            a restriction to place on the join.
+		 * @param firstTableSourceTable
+		 *            <tt>true</tt> if the first table of the relation
+		 *            restriction is the LHS side, <tt>false</tt> if it is the
+		 *            RHS side.
+		 * @param useDistinct
+		 *            <tt>true</tt> if a select distinct should be used.
+		 * @param targetTableRestriction
+		 *            a restriction to place on the RHS table.
+		 * @param useAliases
+		 *            if <tt>true</tt>, then the items in selectFromColumns
+		 *            are expected to be {@link WrappedColumn} or
+		 *            {@link SchemaNameColumn} instances, and the names used are
+		 *            the names of the real {@link Column} instances which these
+		 *            columns wrap. Otherwise, the names used are those returned
+		 *            by the {@link Column#getName()} function on each column in
+		 *            the list.
+		 */
+		public Merge(final String dsSchemaName, final String dsTableName,
+				final Schema mergedTableSchema, final String mergedTableName,
+				final Schema sourceTableSchema, final String sourceTableName,
+				final List sourceTableKeyColumns, final boolean useLeftJoin,
+				final Schema targetTableSchema, final String targetTableName,
+				final List targetTableKeyColumns,
+				final List targetTableColumns,
+				final DataSetRelationRestriction relationRestriction,
+				final boolean firstTableSourceTable, final boolean useDistinct,
+				final DataSetTableRestriction targetTableRestriction,
+				final boolean useAliases) {
+			super(dsSchemaName, dsTableName);
 			this.mergedTableSchema = mergedTableSchema;
 			this.mergedTableName = mergedTableName;
 			this.sourceTableSchema = sourceTableSchema;
 			this.sourceTableName = sourceTableName;
 			this.sourceTableKeyColumns = sourceTableKeyColumns;
-			this.useLeftJoin = (relationRestriction != null) ? true
-					: useLeftJoin;
+			this.useLeftJoin = relationRestriction != null ? true : useLeftJoin;
 			this.targetTableSchema = targetTableSchema;
 			this.targetTableName = targetTableName;
 			this.targetTableKeyColumns = targetTableKeyColumns;
@@ -1033,63 +1226,63 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getMergedTableName() {
-			return mergedTableName;
+			return this.mergedTableName;
 		}
 
 		public Schema getMergedTableSchema() {
-			return mergedTableSchema;
+			return this.mergedTableSchema;
 		}
 
 		public List getSourceTableKeyColumns() {
-			return sourceTableKeyColumns;
+			return this.sourceTableKeyColumns;
 		}
 
 		public String getSourceTableName() {
-			return sourceTableName;
+			return this.sourceTableName;
 		}
 
 		public Schema getSourceTableSchema() {
-			return sourceTableSchema;
+			return this.sourceTableSchema;
 		}
 
 		public List getTargetTableColumns() {
-			return targetTableColumns;
+			return this.targetTableColumns;
 		}
 
 		public List getTargetTableKeyColumns() {
-			return targetTableKeyColumns;
+			return this.targetTableKeyColumns;
 		}
 
 		public String getTargetTableName() {
-			return targetTableName;
+			return this.targetTableName;
 		}
 
 		public Schema getTargetTableSchema() {
-			return targetTableSchema;
+			return this.targetTableSchema;
 		}
 
 		public DataSetRelationRestriction getRelationRestriction() {
-			return relationRestriction;
+			return this.relationRestriction;
 		}
 
 		public boolean isUseAliases() {
-			return useAliases;
+			return this.useAliases;
 		}
 
 		public boolean isUseLeftJoin() {
-			return useLeftJoin;
+			return this.useLeftJoin;
 		}
 
 		public boolean isFirstTableSourceTable() {
-			return firstTableSourceTable;
+			return this.firstTableSourceTable;
 		}
 
 		public boolean isUseDistinct() {
-			return useDistinct;
+			return this.useDistinct;
 		}
 
 		public DataSetTableRestriction getTargetTableRestriction() {
-			return targetTableRestriction;
+			return this.targetTableRestriction;
 		}
 
 		public String getStatusMessage() {
@@ -1124,7 +1317,7 @@ public abstract class MartConstructorAction {
 
 		private List targetTableConcatColumns;
 
-		private String targetConcatColumnName;
+		private String concatColumnName;
 
 		private ConcatRelationType concatRelationType;
 
@@ -1134,17 +1327,60 @@ public abstract class MartConstructorAction {
 
 		private DataSetTableRestriction targetTableRestriction;
 
-		public Concat(String datasetSchemaName, String datasetTableName,
-				Schema concatTableSchema, String concatTableName,
-				Schema sourceTableSchema, String sourceTableName,
-				List sourceTableKeyColumns, Schema targetTableSchema,
-				String targetTableName, List targetTableKeyColumns,
-				List targetTableConcatColumns, String targetConcatColumnName,
-				ConcatRelationType concatRelationType,
-				DataSetRelationRestriction relationRestriction,
-				boolean firstTableSourceTable,
-				DataSetTableRestriction targetTableRestriction) {
-			super(datasetSchemaName, datasetTableName);
+		/**
+		 * Creates a new table by concatting together all rows in the target
+		 * table which match each entry in the source table.
+		 * 
+		 * @param dsSchemaName
+		 *            the dataset schema name to use by default.
+		 * @param dsTableName
+		 *            the dataset table this action is associated with.
+		 * @param concatTableSchema
+		 *            the schema to create the new table in.
+		 * @param concatTableName
+		 *            the name of the table to create.
+		 * @param sourceTableSchema
+		 *            the schema on the LHS side of the join.
+		 * @param sourceTableName
+		 *            the table on the LHS side of the join.
+		 * @param sourceTableKeyColumns
+		 *            the columns to use to make the LHS side of the join.
+		 * @param targetTableSchema
+		 *            the schema on the RHS (concat) side of the join.
+		 * @param targetTableName
+		 *            the name of the table on the RHS (concat) side.
+		 * @param targetTableKeyColumns
+		 *            the columns to join on on the RHS (concat) side.
+		 * @param targetTableConcatColumns
+		 *            the columns to concatenate together from the RHS (concat)
+		 *            side.
+		 * @param concatColumnName
+		 *            the name of the column which will hold the concatenated
+		 *            values.
+		 * @param concatRelationType
+		 *            the type of concatenation to perform.
+		 * @param relationRestriction
+		 *            a restriction to place on the join.
+		 * @param firstTableSourceTable
+		 *            <tt>true</tt> if the first table of the relation
+		 *            restriction is the LHS side, <tt>false</tt> if it is the
+		 *            RHS side.
+		 * @param targetTableRestriction
+		 *            a restriction to place on the RHS table.
+		 */
+		public Concat(final String dsSchemaName, final String dsTableName,
+				final Schema concatTableSchema, final String concatTableName,
+				final Schema sourceTableSchema, final String sourceTableName,
+				final List sourceTableKeyColumns,
+				final Schema targetTableSchema, final String targetTableName,
+				final List targetTableKeyColumns,
+				final List targetTableConcatColumns,
+				final String concatColumnName,
+				final ConcatRelationType concatRelationType,
+				final DataSetRelationRestriction relationRestriction,
+				final boolean firstTableSourceTable,
+				final DataSetTableRestriction targetTableRestriction) {
+			super(dsSchemaName, dsTableName);
 			this.concatTableSchema = concatTableSchema;
 			this.concatTableName = concatTableName;
 			this.sourceTableSchema = sourceTableSchema;
@@ -1154,7 +1390,7 @@ public abstract class MartConstructorAction {
 			this.targetTableName = targetTableName;
 			this.targetTableKeyColumns = targetTableKeyColumns;
 			this.targetTableConcatColumns = targetTableConcatColumns;
-			this.targetConcatColumnName = targetConcatColumnName;
+			this.concatColumnName = concatColumnName;
 			this.concatRelationType = concatRelationType;
 			this.relationRestriction = relationRestriction;
 			this.firstTableSourceTable = firstTableSourceTable;
@@ -1162,59 +1398,59 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getConcatTableName() {
-			return concatTableName;
+			return this.concatTableName;
 		}
 
 		public Schema getConcatTableSchema() {
-			return concatTableSchema;
+			return this.concatTableSchema;
 		}
 
 		public List getSourceTableKeyColumns() {
-			return sourceTableKeyColumns;
+			return this.sourceTableKeyColumns;
 		}
 
 		public String getSourceTableName() {
-			return sourceTableName;
+			return this.sourceTableName;
 		}
 
 		public Schema getSourceTableSchema() {
-			return sourceTableSchema;
+			return this.sourceTableSchema;
 		}
 
 		public List getTargetTableConcatColumns() {
-			return targetTableConcatColumns;
+			return this.targetTableConcatColumns;
 		}
 
 		public List getTargetTableKeyColumns() {
-			return targetTableKeyColumns;
+			return this.targetTableKeyColumns;
 		}
 
 		public String getTargetTableName() {
-			return targetTableName;
+			return this.targetTableName;
 		}
 
 		public Schema getTargetTableSchema() {
-			return targetTableSchema;
+			return this.targetTableSchema;
 		}
 
-		public String getTargetConcatColumnName() {
-			return targetConcatColumnName;
+		public String getConcatColumnName() {
+			return this.concatColumnName;
 		}
 
 		public ConcatRelationType getConcatRelationType() {
-			return concatRelationType;
+			return this.concatRelationType;
 		}
 
 		public DataSetRelationRestriction getRelationRestriction() {
-			return relationRestriction;
+			return this.relationRestriction;
 		}
 
 		public boolean isFirstTableSourceTable() {
-			return firstTableSourceTable;
+			return this.firstTableSourceTable;
 		}
 
 		public DataSetTableRestriction getTargetTableRestriction() {
-			return targetTableRestriction;
+			return this.targetTableRestriction;
 		}
 
 		public String getStatusMessage() {
@@ -1244,11 +1480,41 @@ public abstract class MartConstructorAction {
 
 		private List targetTableKeyColumns;
 
-		public Reduce(String datasetSchemaName, String datasetTableName,
-				Schema reducedTableSchema, String reducedTableName,
-				Schema sourceTableSchema, String sourceTableName,
-				List sourceTableKeyColumns, Schema targetTableSchema,
-				String targetTableName, List targetTableKeyColumns) {
+		/**
+		 * Creates a new table that contains everything from the old table which
+		 * is associated with some other table. The join is an inner join.
+		 * 
+		 * @param dsSchemaName
+		 *            the dataset schema name to use by default.
+		 * @param dsTableName
+		 *            the dataset table this action is associated with.
+		 * @param reducedTableSchema
+		 *            the schema to create the new table in.
+		 * @param reducedTableName
+		 *            the name of the new table to create.
+		 * @param sourceTableSchema
+		 *            the schema on the LHS of the join.
+		 * @param sourceTableName
+		 *            the table on the LHS of the join.
+		 * @param sourceTableKeyColumns
+		 *            the columns to use as a key on the LHS side. Items in this
+		 *            list are {@link Column} instances.
+		 * @param targetTableSchema
+		 *            the schema on the RHS of the join.
+		 * @param targetTableName
+		 *            the table from which data will be selected on the RHS
+		 *            side. Only rows where the targetTableKeyColumns match the
+		 *            sourceTableKeyColumns will be included.
+		 * @param targetTableKeyColumns
+		 *            the columns to use as a key on the RHS side. Items in this
+		 *            list are {@link Column} instances.
+		 */
+		public Reduce(final String datasetSchemaName,
+				final String datasetTableName, final Schema reducedTableSchema,
+				final String reducedTableName, final Schema sourceTableSchema,
+				final String sourceTableName, final List sourceTableKeyColumns,
+				final Schema targetTableSchema, final String targetTableName,
+				final List targetTableKeyColumns) {
 			super(datasetSchemaName, datasetTableName);
 			this.reducedTableSchema = reducedTableSchema;
 			this.reducedTableName = reducedTableName;
@@ -1261,35 +1527,35 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getReducedTableName() {
-			return reducedTableName;
+			return this.reducedTableName;
 		}
 
 		public Schema getReducedTableSchema() {
-			return reducedTableSchema;
+			return this.reducedTableSchema;
 		}
 
 		public List getSourceTableKeyColumns() {
-			return sourceTableKeyColumns;
+			return this.sourceTableKeyColumns;
 		}
 
 		public String getSourceTableName() {
-			return sourceTableName;
+			return this.sourceTableName;
 		}
 
 		public Schema getSourceTableSchema() {
-			return sourceTableSchema;
+			return this.sourceTableSchema;
 		}
 
 		public List getTargetTableKeyColumns() {
-			return targetTableKeyColumns;
+			return this.targetTableKeyColumns;
 		}
 
 		public String getTargetTableName() {
-			return targetTableName;
+			return this.targetTableName;
 		}
 
 		public Schema getTargetTableSchema() {
-			return targetTableSchema;
+			return this.targetTableSchema;
 		}
 
 		public String getStatusMessage() {

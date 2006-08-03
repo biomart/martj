@@ -25,7 +25,6 @@ import javax.swing.JPopupMenu;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 
-
 /**
  * An element that can be drawn on a diagram. It can provide a context menu for
  * itself, the diagram it belongs to, its current state (and allow its state to

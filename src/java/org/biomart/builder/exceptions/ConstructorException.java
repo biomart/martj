@@ -19,8 +19,8 @@
 package org.biomart.builder.exceptions;
 
 /**
- * This is a basic {@link Exception} for all non-specific exceptions during
- * mart construction.
+ * This is a basic {@link Exception} for all non-specific exceptions during mart
+ * construction.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.1, 2nd June 2006
@@ -44,7 +44,7 @@ public class ConstructorException extends Exception {
 	 * @param msg
 	 *            the detail message.
 	 */
-	public ConstructorException(String msg) {
+	public ConstructorException(final String msg) {
 		super(msg);
 	}
 
@@ -57,7 +57,7 @@ public class ConstructorException extends Exception {
 	 * @param t
 	 *            the underlying cause.
 	 */
-	public ConstructorException(String msg, Throwable t) {
+	public ConstructorException(final String msg, final Throwable t) {
 		super(msg, t);
 	}
 
@@ -68,7 +68,7 @@ public class ConstructorException extends Exception {
 	 * @param t
 	 *            the underlying cause.
 	 */
-	public ConstructorException(Throwable t) {
+	public ConstructorException(final Throwable t) {
 		super(t);
 	}
 }

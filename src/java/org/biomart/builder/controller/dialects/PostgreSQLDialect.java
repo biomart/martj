@@ -73,17 +73,17 @@ public class PostgreSQLDialect extends DatabaseDialect {
 
 	private boolean cleanState;
 
-	public boolean understandsDataLink(DataLink dataLink) {
+	public boolean understandsDataLink(final DataLink dataLink) {
 
 		// Convert to JDBC version.
 		if (!(dataLink instanceof JDBCDataLink))
 			return false;
-		JDBCDataLink jddl = (JDBCDataLink) dataLink;
+		final JDBCDataLink jddl = (JDBCDataLink) dataLink;
 
 		try {
 			return jddl.getConnection().getMetaData().getDatabaseProductName()
 					.equals("PostgreSQL");
-		} catch (SQLException e) {
+		} catch (final SQLException e) {
 			throw new MartBuilderInternalError(e);
 		}
 	}
@@ -92,18 +92,18 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		this.cleanState = true;
 	}
 
-	public List executeSelectDistinct(Column col) throws SQLException {
-		String colName = col.getName();
-		String tableName = col.getTable().getName();
-		Schema schema = col.getTable().getSchema();
+	public List executeSelectDistinct(final Column col) throws SQLException {
+		final String colName = col.getName();
+		final String tableName = col.getTable().getName();
+		final Schema schema = col.getTable().getSchema();
 
 		// The complex case - where we need to do a union of
 		// select distincts.
 		if (schema instanceof SchemaGroup) {
-			Set results = new HashSet();
-			for (Iterator i = ((SchemaGroup) schema).getSchemas().iterator(); i
-					.hasNext();) {
-				Schema member = (Schema) i.next();
+			final Set results = new HashSet();
+			for (final Iterator i = ((SchemaGroup) schema).getSchemas()
+					.iterator(); i.hasNext();) {
+				final Schema member = (Schema) i.next();
 				results.addAll(this.executeSelectDistinct(member
 						.getTableByName(tableName).getColumnByName(colName)));
 			}
@@ -111,10 +111,10 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		}
 
 		// The simple case where we actually do a select distinct.
-		List results = new ArrayList();
-		String schemaName = ((JDBCSchema) schema).getDatabaseSchema();
-		Connection conn = ((JDBCSchema) schema).getConnection();
-		ResultSet rs = conn.prepareStatement(
+		final List results = new ArrayList();
+		final String schemaName = ((JDBCSchema) schema).getDatabaseSchema();
+		final Connection conn = ((JDBCSchema) schema).getConnection();
+		final ResultSet rs = conn.prepareStatement(
 				"select distinct " + colName + " from " + schemaName + "."
 						+ tableName).executeQuery();
 		while (rs.next())
@@ -123,29 +123,29 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		return results;
 	}
 
-	public List executeSelectRows(Table table, int offset, int count)
-			throws SQLException {
-		String tableName = table.getName();
-		Schema schema = table.getSchema();
+	public List executeSelectRows(final Table table, final int offset,
+			final int count) throws SQLException {
+		final String tableName = table.getName();
+		final Schema schema = table.getSchema();
 
 		// Build up a list of column names.
-		StringBuffer colNames = new StringBuffer();
-		for (Iterator i = table.getColumns().iterator(); i.hasNext();) {
+		final StringBuffer colNames = new StringBuffer();
+		for (final Iterator i = table.getColumns().iterator(); i.hasNext();) {
 			colNames.append(((Column) i.next()).getName());
 			if (i.hasNext())
 				colNames.append(',');
 		}
 
 		// The simple case where we actually do a select.
-		List results = new ArrayList();
-		String schemaName = ((JDBCSchema) schema).getDatabaseSchema();
-		Connection conn = ((JDBCSchema) schema).getConnection();
-		ResultSet rs = conn.prepareStatement(
+		final List results = new ArrayList();
+		final String schemaName = ((JDBCSchema) schema).getDatabaseSchema();
+		final Connection conn = ((JDBCSchema) schema).getConnection();
+		final ResultSet rs = conn.prepareStatement(
 				"select " + colNames.toString() + " from " + schemaName + "."
 						+ tableName + " limit " + count + " offset " + count)
 				.executeQuery();
 		while (rs.next()) {
-			List values = new ArrayList();
+			final List values = new ArrayList();
 			for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++)
 				values.add(rs.getObject(i));
 			results.add(values);
@@ -154,10 +154,10 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		return results;
 	}
 
-	public String[] getStatementsForAction(MartConstructorAction action,
-			boolean includeComments) throws ConstructorException {
+	public String[] getStatementsForAction(final MartConstructorAction action,
+			final boolean includeComments) throws ConstructorException {
 
-		List statements = new ArrayList();
+		final List statements = new ArrayList();
 
 		// Initial schema creation step.
 		if (this.cleanState)
@@ -168,19 +168,19 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			statements.add("-- " + action.getStatusMessage());
 
 		try {
-			String className = action.getClass().getName();
-			String methodName = "do"
+			final String className = action.getClass().getName();
+			final String methodName = "do"
 					+ className.substring(className.lastIndexOf('$') + 1);
-			Method method = this.getClass().getMethod(methodName,
+			final Method method = this.getClass().getMethod(methodName,
 					new Class[] { action.getClass(), List.class });
 			method.invoke(this, new Object[] { action, statements });
-		} catch (InvocationTargetException ite) {
-			Throwable t = ite.getCause();
+		} catch (final InvocationTargetException ite) {
+			final Throwable t = ite.getCause();
 			if (t instanceof ConstructorException)
 				throw (ConstructorException) t;
 			else
 				throw new ConstructorException(t);
-		} catch (Throwable t) {
+		} catch (final Throwable t) {
 			if (t instanceof ConstructorException)
 				throw (ConstructorException) t;
 			else
@@ -190,18 +190,18 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		return (String[]) statements.toArray(new String[0]);
 	}
 
-	public void doPK(PK action, List statements) throws Exception {
-		String schemaName = action.getPkTableSchema() == null ? action
+	public void doPK(final PK action, final List statements) throws Exception {
+		final String schemaName = action.getPkTableSchema() == null ? action
 				.getDataSetSchemaName() : ((JDBCSchema) action
 				.getPkTableSchema()).getDatabaseSchema();
-		String tableName = action.getPkTableName();
+		final String tableName = action.getPkTableName();
 
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
 				+ schemaName + ",pg_catalog");
 
-		StringBuffer sb = new StringBuffer();
-		for (Iterator i = action.getPkColumns().iterator(); i.hasNext();) {
-			String colName = ((Column) i.next()).getName();
+		final StringBuffer sb = new StringBuffer();
+		for (final Iterator i = action.getPkColumns().iterator(); i.hasNext();) {
+			final String colName = ((Column) i.next()).getName();
 			sb.append(colName);
 			if (i.hasNext())
 				sb.append(",");
@@ -210,30 +210,30 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				+ " add primary key (" + sb.toString() + ")");
 	}
 
-	public void doFK(FK action, List statements) throws Exception {
-		String pkSchemaName = action.getPkTableSchema() == null ? action
+	public void doFK(final FK action, final List statements) throws Exception {
+		final String pkSchemaName = action.getPkTableSchema() == null ? action
 				.getDataSetSchemaName() : ((JDBCSchema) action
 				.getPkTableSchema()).getDatabaseSchema();
-		String pkTableName = action.getPkTableName();
-		String fkSchemaName = action.getFkTableSchema() == null ? action
+		final String pkTableName = action.getPkTableName();
+		final String fkSchemaName = action.getFkTableSchema() == null ? action
 				.getDataSetSchemaName() : ((JDBCSchema) action
 				.getFkTableSchema()).getDatabaseSchema();
-		String fkTableName = action.getFkTableName();
+		final String fkTableName = action.getFkTableName();
 
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
 				+ pkSchemaName + "," + fkSchemaName + ",pg_catalog");
 
-		StringBuffer sbFK = new StringBuffer();
-		for (Iterator i = action.getFkColumns().iterator(); i.hasNext();) {
-			String colName = ((Column) i.next()).getName();
+		final StringBuffer sbFK = new StringBuffer();
+		for (final Iterator i = action.getFkColumns().iterator(); i.hasNext();) {
+			final String colName = ((Column) i.next()).getName();
 			sbFK.append(colName);
 			if (i.hasNext())
 				sbFK.append(",");
 		}
 
-		StringBuffer sbPK = new StringBuffer();
-		for (Iterator i = action.getPkColumns().iterator(); i.hasNext();) {
-			String colName = ((Column) i.next()).getName();
+		final StringBuffer sbPK = new StringBuffer();
+		for (final Iterator i = action.getPkColumns().iterator(); i.hasNext();) {
+			final String colName = ((Column) i.next()).getName();
 			sbPK.append(colName);
 			if (i.hasNext())
 				sbPK.append(",");
@@ -245,26 +245,29 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				+ ")");
 	}
 
-	public void doReduce(Reduce action, List statements) throws Exception {
-		String srcSchemaName = action.getSourceTableSchema() == null ? action
-				.getDataSetSchemaName() : ((JDBCSchema) action
-				.getSourceTableSchema()).getDatabaseSchema();
-		String srcTableName = action.getSourceTableName();
-		String trgtSchemaName = action.getTargetTableSchema() == null ? action
-				.getDataSetSchemaName() : ((JDBCSchema) action
-				.getTargetTableSchema()).getDatabaseSchema();
-		String trgtTableName = action.getTargetTableName();
-		String reduceSchemaName = action.getReducedTableSchema() == null ? action
+	public void doReduce(final Reduce action, final List statements)
+			throws Exception {
+		final String srcSchemaName = action.getSourceTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getSourceTableSchema())
+						.getDatabaseSchema();
+		final String srcTableName = action.getSourceTableName();
+		final String trgtSchemaName = action.getTargetTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getTargetTableSchema())
+						.getDatabaseSchema();
+		final String trgtTableName = action.getTargetTableName();
+		final String reduceSchemaName = action.getReducedTableSchema() == null ? action
 				.getDataSetSchemaName()
 				: ((JDBCSchema) action.getReducedTableSchema())
 						.getDatabaseSchema();
-		String reduceTableName = action.getReducedTableName();
+		final String reduceTableName = action.getReducedTableName();
 
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
 				+ srcSchemaName + "," + trgtSchemaName + "," + reduceSchemaName
 				+ ",pg_catalog");
 
-		StringBuffer sb = new StringBuffer();
+		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + reduceSchemaName + "." + reduceTableName
 				+ " as select b.* from " + srcSchemaName + "." + srcTableName
 				+ " as a inner join " + trgtSchemaName + "." + trgtTableName
@@ -272,21 +275,22 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		for (int i = 0; i < action.getTargetTableKeyColumns().size(); i++) {
 			if (i > 0)
 				sb.append(',');
-			String pkColName = ((Column) action.getSourceTableKeyColumns().get(
-					i)).getName();
-			String fkColName = ((Column) action.getTargetTableKeyColumns().get(
-					i)).getName();
+			final String pkColName = ((Column) action
+					.getSourceTableKeyColumns().get(i)).getName();
+			final String fkColName = ((Column) action
+					.getTargetTableKeyColumns().get(i)).getName();
 			sb.append("a." + pkColName + "=b." + fkColName);
 		}
 
 		statements.add(sb.toString());
 	}
 
-	public void doDrop(Drop action, List statements) throws Exception {
-		String schemaName = action.getDropTableSchema() == null ? action
+	public void doDrop(final Drop action, final List statements)
+			throws Exception {
+		final String schemaName = action.getDropTableSchema() == null ? action
 				.getDataSetSchemaName() : ((JDBCSchema) action
 				.getDropTableSchema()).getDatabaseSchema();
-		String tableName = action.getDropTableName();
+		final String tableName = action.getDropTableName();
 
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
 				+ schemaName + ",pg_catalog");
@@ -294,12 +298,14 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		statements.add("drop table " + schemaName + "." + tableName);
 	}
 
-	public void doRename(Rename action, List statements) throws Exception {
-		String schemaName = action.getRenameTableSchema() == null ? action
-				.getDataSetSchemaName() : ((JDBCSchema) action
-				.getRenameTableSchema()).getDatabaseSchema();
-		String oldTableName = action.getRenameTableOldName();
-		String newTableName = action.getRenameTableNewName();
+	public void doRename(final Rename action, final List statements)
+			throws Exception {
+		final String schemaName = action.getRenameTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getRenameTableSchema())
+						.getDatabaseSchema();
+		final String oldTableName = action.getRenameTableOldName();
+		final String newTableName = action.getRenameTableNewName();
 
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
 				+ schemaName + ",pg_catalog");
@@ -308,12 +314,13 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				+ " rename to " + newTableName);
 	}
 
-	public void doUnion(Union action, List statements) throws Exception {
-		String schemaName = action.getUnionTableSchema() == null ? action
+	public void doUnion(final Union action, final List statements)
+			throws Exception {
+		final String schemaName = action.getUnionTableSchema() == null ? action
 				.getDataSetSchemaName() : ((JDBCSchema) action
 				.getUnionTableSchema()).getDatabaseSchema();
-		String tableName = action.getUnionTableName();
-		StringBuffer sb = new StringBuffer();
+		final String tableName = action.getUnionTableName();
+		final StringBuffer sb = new StringBuffer();
 
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
 				+ schemaName + ",pg_catalog");
@@ -323,12 +330,12 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		for (int i = 0; i < action.getTargetTableSchemas().size(); i++) {
 			if (i > 0)
 				sb.append(" union select * from ");
-			String targetSchemaName = action.getTargetTableSchemas().get(i) == null ? action
-					.getDataSetSchemaName()
+			final String targetSchemaName = action.getTargetTableSchemas().get(
+					i) == null ? action.getDataSetSchemaName()
 					: ((Schema) action.getTargetTableSchemas().get(i))
 							.getName();
-			String targetTableName = (String) action.getTargetTableNames().get(
-					i);
+			final String targetTableName = (String) action
+					.getTargetTableNames().get(i);
 			sb.append(targetSchemaName);
 			sb.append('.');
 			sb.append(targetTableName);
@@ -336,30 +343,31 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
-	public void doPlaceHolder(PlaceHolder action, List statements) {
+	public void doPlaceHolder(final PlaceHolder action, final List statements) {
 		statements.add("--");
 	}
 
-	public void doIndex(Index action, List statements) {
-		String schemaName = action.getIndexTableSchema() == null ? action
+	public void doIndex(final Index action, final List statements) {
+		final String schemaName = action.getIndexTableSchema() == null ? action
 				.getDataSetSchemaName() : ((JDBCSchema) action
 				.getIndexTableSchema()).getDatabaseSchema();
-		String tableName = action.getIndexTableName();
-		StringBuffer sb = new StringBuffer();
+		final String tableName = action.getIndexTableName();
+		final StringBuffer sb = new StringBuffer();
 
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
 				+ schemaName + ",pg_catalog");
 
 		sb.append("create index " + tableName + "_I on " + schemaName + "."
 				+ tableName + "(");
-		for (Iterator i = action.getIndexColumns().iterator(); i.hasNext();) {
-			Object obj = i.next();
+		for (final Iterator i = action.getIndexColumns().iterator(); i
+				.hasNext();) {
+			final Object obj = i.next();
 			if (obj instanceof Column) {
-				Column col = (Column) obj;
+				final Column col = (Column) obj;
 				sb.append(col.getName());
-			} else if (obj instanceof String) {
+			} else if (obj instanceof String)
 				sb.append(obj);
-			} else
+			else
 				throw new MartBuilderInternalError();
 			if (i.hasNext())
 				sb.append(',');
@@ -369,12 +377,13 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
-	public void doOptimiseAddColumn(OptimiseAddColumn action, List statements) {
-		String schemaName = action.getTableSchema() == null ? action
+	public void doOptimiseAddColumn(final OptimiseAddColumn action,
+			final List statements) {
+		final String schemaName = action.getTableSchema() == null ? action
 				.getDataSetSchemaName()
 				: ((JDBCSchema) action.getTableSchema()).getDatabaseSchema();
-		String tableName = action.getTableName();
-		String colName = action.getColumnName();
+		final String tableName = action.getTableName();
+		final String colName = action.getColumnName();
 
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
 				+ schemaName + ",pg_catalog");
@@ -383,31 +392,33 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				+ " add column (" + colName + " number(1) default 0)");
 	}
 
-	public void doOptimiseUpdateColumn(OptimiseUpdateColumn action,
-			List statements) throws Exception {
-		String pkSchemaName = action.getPkTableSchema() == null ? action
+	public void doOptimiseUpdateColumn(final OptimiseUpdateColumn action,
+			final List statements) throws Exception {
+		final String pkSchemaName = action.getPkTableSchema() == null ? action
 				.getDataSetSchemaName() : ((JDBCSchema) action
 				.getPkTableSchema()).getDatabaseSchema();
-		String pkTableName = action.getPkTableName();
-		String fkSchemaName = action.getFkTableSchema() == null ? action
+		final String pkTableName = action.getPkTableName();
+		final String fkSchemaName = action.getFkTableSchema() == null ? action
 				.getDataSetSchemaName() : ((JDBCSchema) action
 				.getFkTableSchema()).getDatabaseSchema();
-		String fkTableName = action.getFkTableName();
-		String colName = action.getOptimiseColumnName();
+		final String fkTableName = action.getFkTableName();
+		final String colName = action.getOptimiseColumnName();
 
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
 				+ pkSchemaName + "," + fkSchemaName + ",pg_catalog");
 
-		StringBuffer sb = new StringBuffer();
+		final StringBuffer sb = new StringBuffer();
 		sb.append("update table " + pkSchemaName + "." + pkTableName + " set "
 				+ colName + "=1 where (");
-		for (Iterator i = action.getPkTableColumns().iterator(); i.hasNext();) {
+		for (final Iterator i = action.getPkColumns().iterator(); i
+				.hasNext();) {
 			sb.append(((Column) i.next()).getName());
 			if (i.hasNext())
 				sb.append(',');
 		}
 		sb.append(") in (select ");
-		for (Iterator i = action.getFkTableColumns().iterator(); i.hasNext();) {
+		for (final Iterator i = action.getFkColumns().iterator(); i
+				.hasNext();) {
 			sb.append(((Column) i.next()).getName());
 			if (i.hasNext())
 				sb.append(',');
@@ -417,31 +428,33 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
-	public void doCreate(Create action, List statements) {
-		String createTableSchema = action.getNewTableSchema() == null ? action
-				.getDataSetSchemaName() : ((JDBCSchema) action
-				.getNewTableSchema()).getDatabaseSchema();
-		String createTableName = action.getNewTableName();
-		String fromTableSchema = action.getSelectFromTableSchema() == null ? action
+	public void doCreate(final Create action, final List statements) {
+		final String createTableSchema = action.getNewTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getNewTableSchema()).getDatabaseSchema();
+		final String createTableName = action.getNewTableName();
+		final String fromTableSchema = action.getSelectFromTableSchema() == null ? action
 				.getDataSetSchemaName()
 				: ((JDBCSchema) action.getSelectFromTableSchema())
 						.getDatabaseSchema();
-		String fromTableName = action.getSelectFromTableName();
-		DataSetTableRestriction tblRestriction = action.getTableRestriction();
-		boolean useDistinct = action.isUseDistinct();
+		final String fromTableName = action.getSelectFromTableName();
+		final DataSetTableRestriction tblRestriction = action
+				.getTableRestriction();
+		final boolean useDistinct = action.isUseDistinct();
 
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
 				+ createTableSchema + "," + fromTableSchema + ",pg_catalog");
 
-		StringBuffer sb = new StringBuffer();
+		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + createTableSchema + "." + createTableName
 				+ " as select ");
 		if (useDistinct)
 			sb.append("distinct ");
-		for (Iterator i = action.getSelectFromColumns().iterator(); i.hasNext();) {
-			Column col = (Column) i.next();
+		for (final Iterator i = action.getSelectFromColumns().iterator(); i
+				.hasNext();) {
+			final Column col = (Column) i.next();
 			if (action.isUseAliases()) {
-				DataSetColumn dsCol = (DataSetColumn) col;
+				final DataSetColumn dsCol = (DataSetColumn) col;
 				if (dsCol instanceof WrappedColumn) {
 					sb.append("a.");
 					sb.append(((WrappedColumn) dsCol).getWrappedColumn()
@@ -451,10 +464,9 @@ public class PostgreSQLDialect extends DatabaseDialect {
 					sb.append('\'');
 					sb.append(fromTableSchema);
 					sb.append("' as ");
-				} else {
+				} else
 					// Ouch!
 					throw new MartBuilderInternalError();
-				}
 			}
 			sb.append(col.getName());
 			if (i.hasNext())
@@ -471,18 +483,19 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
-	public void doPartition(Partition action, List statements) {
-		String partTableSchema = action.getPartitionTableSchema() == null ? action
+	public void doPartition(final Partition action, final List statements) {
+		final String partTableSchema = action.getTargetTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getTargetTableSchema())
+						.getDatabaseSchema();
+		final String partTableName = action.getTargetTableName();
+		final String fromTableSchema = action.getPartitionTableSchema() == null ? action
 				.getDataSetSchemaName()
 				: ((JDBCSchema) action.getPartitionTableSchema())
 						.getDatabaseSchema();
-		String partTableName = action.getPartitionTableName();
-		String fromTableSchema = action.getTargetTableSchema() == null ? action
-				.getDataSetSchemaName() : ((JDBCSchema) action
-				.getTargetTableSchema()).getDatabaseSchema();
-		String fromTableName = action.getTargetTableName();
-		String partColumnName = action.getPartitionColumnName();
-		Object partColumnValue = action.getPartitionColumnValue();
+		final String fromTableName = action.getPartitionTableName();
+		final String partColumnName = action.getPartitionColumnName();
+		final Object partColumnValue = action.getPartitionColumnValue();
 
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
 				+ partTableSchema + "," + fromTableSchema + ",pg_catalog");
@@ -502,42 +515,46 @@ public class PostgreSQLDialect extends DatabaseDialect {
 					+ " is null");
 	}
 
-	public void doMerge(Merge action, List statements) throws Exception {
-		String srcSchemaName = action.getSourceTableSchema() == null ? action
-				.getDataSetSchemaName() : ((JDBCSchema) action
-				.getSourceTableSchema()).getDatabaseSchema();
-		String srcTableName = action.getSourceTableName();
-		String trgtSchemaName = action.getTargetTableSchema() == null ? action
-				.getDataSetSchemaName() : ((JDBCSchema) action
-				.getTargetTableSchema()).getDatabaseSchema();
-		String trgtTableName = action.getTargetTableName();
-		String mergeSchemaName = action.getMergedTableSchema() == null ? action
-				.getDataSetSchemaName() : ((JDBCSchema) action
-				.getMergedTableSchema()).getDatabaseSchema();
-		String mergeTableName = action.getMergedTableName();
-		DataSetRelationRestriction relRestriction = action
+	public void doMerge(final Merge action, final List statements)
+			throws Exception {
+		final String srcSchemaName = action.getSourceTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getSourceTableSchema())
+						.getDatabaseSchema();
+		final String srcTableName = action.getSourceTableName();
+		final String trgtSchemaName = action.getTargetTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getTargetTableSchema())
+						.getDatabaseSchema();
+		final String trgtTableName = action.getTargetTableName();
+		final String mergeSchemaName = action.getMergedTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getMergedTableSchema())
+						.getDatabaseSchema();
+		final String mergeTableName = action.getMergedTableName();
+		final DataSetRelationRestriction relRestriction = action
 				.getRelationRestriction();
-		DataSetTableRestriction tblRestriction = action
+		final DataSetTableRestriction tblRestriction = action
 				.getTargetTableRestriction();
-		boolean firstIsSource = action.isFirstTableSourceTable();
-		boolean useDistinct = action.isUseDistinct();
+		final boolean firstIsSource = action.isFirstTableSourceTable();
+		final boolean useDistinct = action.isUseDistinct();
 
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
 				+ srcSchemaName + "," + trgtSchemaName + "," + mergeSchemaName
 				+ ",pg_catalog");
 
-		StringBuffer sb = new StringBuffer();
+		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + mergeSchemaName + "." + mergeTableName
 				+ " as select ");
 		if (useDistinct)
 			sb.append("distinct ");
 		sb.append("a.*");
-		for (Iterator i = action.getTargetTableColumns().iterator(); i
+		for (final Iterator i = action.getTargetTableColumns().iterator(); i
 				.hasNext();) {
 			sb.append(",b.");
-			Column col = (Column) i.next();
+			final Column col = (Column) i.next();
 			if (action.isUseAliases()) {
-				DataSetColumn dsCol = (DataSetColumn) col;
+				final DataSetColumn dsCol = (DataSetColumn) col;
 				if (dsCol instanceof WrappedColumn) {
 					sb.append(((WrappedColumn) dsCol).getWrappedColumn()
 							.getName());
@@ -546,10 +563,9 @@ public class PostgreSQLDialect extends DatabaseDialect {
 					sb.append('\'');
 					sb.append(trgtSchemaName);
 					sb.append("' as ");
-				} else {
+				} else
 					// Ouch!
 					throw new MartBuilderInternalError();
-				}
 			}
 			sb.append(col.getName());
 		}
@@ -559,10 +575,10 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		for (int i = 0; i < action.getTargetTableKeyColumns().size(); i++) {
 			if (i > 0)
 				sb.append(',');
-			String pkColName = ((Column) action.getSourceTableKeyColumns().get(
-					i)).getName();
-			String fkColName = ((Column) action.getTargetTableKeyColumns().get(
-					i)).getName();
+			final String pkColName = ((Column) action
+					.getSourceTableKeyColumns().get(i)).getName();
+			final String fkColName = ((Column) action
+					.getTargetTableKeyColumns().get(i)).getName();
 			sb.append("a." + pkColName + "=b." + fkColName);
 		}
 
@@ -580,33 +596,35 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
-	public void doExpressionAddColumns(ExpressionAddColumns action,
-			List statements) throws Exception {
-		String srcSchemaName = action.getSourceTableSchema() == null ? action
-				.getDataSetSchemaName() : ((JDBCSchema) action
-				.getSourceTableSchema()).getDatabaseSchema();
-		String srcTableName = action.getSourceTableName();
-		String trgtSchemaName = action.getTargetTableSchema() == null ? action
-				.getDataSetSchemaName() : ((JDBCSchema) action
-				.getTargetTableSchema()).getDatabaseSchema();
-		String trgtTableName = action.getTargetTableName();
-		boolean useGroupBy = action.getUseGroupBy();
-		Collection selectCols = action.getSourceTableColumns();
-		Collection expressCols = action.getExpressionColumns();
+	public void doExpressionAddColumns(final ExpressionAddColumns action,
+			final List statements) throws Exception {
+		final String srcSchemaName = action.getSourceTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getSourceTableSchema())
+						.getDatabaseSchema();
+		final String srcTableName = action.getSourceTableName();
+		final String trgtSchemaName = action.getTargetTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getTargetTableSchema())
+						.getDatabaseSchema();
+		final String trgtTableName = action.getTargetTableName();
+		final boolean useGroupBy = action.getUseGroupBy();
+		final Collection selectCols = action.getSourceTableColumns();
+		final Collection expressCols = action.getExpressionColumns();
 
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
 				+ srcSchemaName + "," + trgtSchemaName + ",pg_catalog");
 
-		StringBuffer sb = new StringBuffer();
+		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + trgtSchemaName + "." + trgtTableName
 				+ " as select ");
-		for (Iterator i = selectCols.iterator(); i.hasNext();) {
-			Column col = (Column) i.next();
+		for (final Iterator i = selectCols.iterator(); i.hasNext();) {
+			final Column col = (Column) i.next();
 			sb.append(col.getName());
 			sb.append(',');
 		}
-		for (Iterator i = expressCols.iterator(); i.hasNext();) {
-			ExpressionColumn col = (ExpressionColumn) i.next();
+		for (final Iterator i = expressCols.iterator(); i.hasNext();) {
+			final ExpressionColumn col = (ExpressionColumn) i.next();
 			sb.append(col.getSubstitutedExpression());
 			sb.append(" as ");
 			sb.append(col.getName());
@@ -616,8 +634,8 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		sb.append(" from " + srcSchemaName + "." + srcTableName);
 		if (useGroupBy) {
 			sb.append(" group by ");
-			for (Iterator i = selectCols.iterator(); i.hasNext();) {
-				Column col = (Column) i.next();
+			for (final Iterator i = selectCols.iterator(); i.hasNext();) {
+				final Column col = (Column) i.next();
 				sb.append(col.getName());
 				if (i.hasNext())
 					sb.append(',');
@@ -626,40 +644,42 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
-	public void doConcat(Concat action, List statements) {
-		String srcSchemaName = action.getSourceTableSchema() == null ? action
-				.getDataSetSchemaName() : ((JDBCSchema) action
-				.getSourceTableSchema()).getDatabaseSchema();
-		String srcTableName = action.getSourceTableName();
-		List srcTableKeyCols = action.getSourceTableKeyColumns();
-		String trgtSchemaName = action.getTargetTableSchema() == null ? action
-				.getDataSetSchemaName() : ((JDBCSchema) action
-				.getTargetTableSchema()).getDatabaseSchema();
-		String trgtTableName = action.getTargetTableName();
-		String trgtColName = action.getTargetConcatColumnName();
-		String concatSchemaName = action.getConcatTableSchema() == null ? action
+	public void doConcat(final Concat action, final List statements) {
+		final String srcSchemaName = action.getSourceTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getSourceTableSchema())
+						.getDatabaseSchema();
+		final String srcTableName = action.getSourceTableName();
+		final List srcTableKeyCols = action.getSourceTableKeyColumns();
+		final String trgtSchemaName = action.getTargetTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getTargetTableSchema())
+						.getDatabaseSchema();
+		final String trgtTableName = action.getTargetTableName();
+		final String trgtColName = action.getConcatColumnName();
+		final String concatSchemaName = action.getConcatTableSchema() == null ? action
 				.getDataSetSchemaName()
 				: ((JDBCSchema) action.getConcatTableSchema())
 						.getDatabaseSchema();
-		String concatTableName = action.getConcatTableName();
-		ConcatRelationType crType = action.getConcatRelationType();
-		DataSetRelationRestriction relRestriction = action
+		final String concatTableName = action.getConcatTableName();
+		final ConcatRelationType crType = action.getConcatRelationType();
+		final DataSetRelationRestriction relRestriction = action
 				.getRelationRestriction();
-		DataSetTableRestriction tblRestriction = action
+		final DataSetTableRestriction tblRestriction = action
 				.getTargetTableRestriction();
-		boolean firstIsSource = action.isFirstTableSourceTable();
+		final boolean firstIsSource = action.isFirstTableSourceTable();
 
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
 				+ srcSchemaName + "," + trgtSchemaName + "," + concatSchemaName
 				+ ",pg_catalog");
 
-		StringBuffer sb = new StringBuffer();
+		final StringBuffer sb = new StringBuffer();
 
 		sb.append("create table " + concatSchemaName + "." + concatTableName
 				+ " as select a.*, array_to_string(array(select ");
-		for (Iterator i = action.getTargetTableConcatColumns().iterator(); i
+		for (final Iterator i = action.getTargetTableConcatColumns().iterator(); i
 				.hasNext();) {
-			Column col = (Column) i.next();
+			final Column col = (Column) i.next();
 			sb.append("b.");
 			sb.append(col.getName());
 			if (i.hasNext()) {
@@ -674,10 +694,10 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		for (int i = 0; i < action.getTargetTableKeyColumns().size(); i++) {
 			if (i > 0)
 				sb.append(" and ");
-			String pkColName = ((Column) action.getSourceTableKeyColumns().get(
-					i)).getName();
-			String fkColName = ((Column) action.getTargetTableKeyColumns().get(
-					i)).getName();
+			final String pkColName = ((Column) action
+					.getSourceTableKeyColumns().get(i)).getName();
+			final String fkColName = ((Column) action
+					.getTargetTableKeyColumns().get(i)).getName();
 			sb.append("a." + pkColName + "=b." + fkColName);
 		}
 
@@ -701,8 +721,8 @@ public class PostgreSQLDialect extends DatabaseDialect {
 
 		// Do group-by.
 		sb.append(" group by ");
-		for (Iterator i = srcTableKeyCols.iterator(); i.hasNext();) {
-			Column srcKeyCol = (Column) i.next();
+		for (final Iterator i = srcTableKeyCols.iterator(); i.hasNext();) {
+			final Column srcKeyCol = (Column) i.next();
 			sb.append("a.");
 			sb.append(srcKeyCol.getName());
 			if (i.hasNext())

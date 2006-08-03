@@ -217,6 +217,11 @@ public interface Schema extends Comparable, DataLink {
 	 * simple lookups for them.
 	 */
 	public class GenericSchema implements Schema {
+		/** 
+		 * Try not to use this unless absolutely necessary. The keys of
+		 * this map are table names, and the values are actual table objects.
+		 * It is protected to allow subclasses direct access for efficiency.
+		 */
 		protected final Map tables = new TreeMap();
 
 		private String name;
@@ -230,7 +235,7 @@ public interface Schema extends Comparable, DataLink {
 		 * @param name
 		 *            the name for this new schema.
 		 */
-		public GenericSchema(String name) {
+		public GenericSchema(final String name) {
 			this(name, false);
 		}
 
@@ -244,21 +249,22 @@ public interface Schema extends Comparable, DataLink {
 		 *            <tt>true</tt>if you want keyguessing, <tt>false</tt>
 		 *            if not.
 		 */
-		public GenericSchema(String name, boolean keyguessing) {
+		public GenericSchema(final String name, final boolean keyguessing) {
 			this.name = name;
 			this.keyguessing = keyguessing;
 		}
 
-		public void replicateContents(Schema targetSchema) {
+		public void replicateContents(final Schema targetSchema) {
 			// List all the tables we should drop at the end.
-			List tablesToDrop = new ArrayList(targetSchema.getTables());
+			final List tablesToDrop = new ArrayList(targetSchema.getTables());
 
 			// Set up a set to contain all the relations to replicate.
-			Set relations = new HashSet();
+			final Set relations = new HashSet();
 
 			// Iterate over all the tables, and copy each one.
-			for (Iterator i = this.tables.values().iterator(); i.hasNext();) {
-				Table table = (Table) i.next();
+			for (final Iterator i = this.tables.values().iterator(); i
+					.hasNext();) {
+				final Table table = (Table) i.next();
 
 				// Create a copy of the table if it doesn't already exist.
 				Table newTable = targetSchema.getTableByName(table.getName());
@@ -266,23 +272,24 @@ public interface Schema extends Comparable, DataLink {
 					try {
 						newTable = new GenericTable(table.getName(),
 								targetSchema);
-					} catch (Throwable t) {
+					} catch (final Throwable t) {
 						throw new MartBuilderInternalError(t);
 					}
 				else
 					tablesToDrop.remove(newTable);
 
 				// List all the columns we should drop at the end.
-				List colsToDrop = new ArrayList(newTable.getColumns());
+				final List colsToDrop = new ArrayList(newTable.getColumns());
 
 				// Iterate over all the columns and copy them too.
-				for (Iterator j = table.getColumns().iterator(); j.hasNext();) {
-					Column col = (Column) j.next();
+				for (final Iterator j = table.getColumns().iterator(); j
+						.hasNext();) {
+					final Column col = (Column) j.next();
 					Column newCol = newTable.getColumnByName(col.getName());
 					if (newCol == null)
 						try {
 							newCol = new GenericColumn(col.getName(), newTable);
-						} catch (Throwable t) {
+						} catch (final Throwable t) {
 							throw new MartBuilderInternalError(t);
 						}
 					else
@@ -290,17 +297,17 @@ public interface Schema extends Comparable, DataLink {
 				}
 
 				// Drop the columns that have disappeared.
-				for (Iterator j = colsToDrop.iterator(); j.hasNext();) {
-					Column col = (Column) j.next();
+				for (final Iterator j = colsToDrop.iterator(); j.hasNext();) {
+					final Column col = (Column) j.next();
 					col.getTable().removeColumn(col);
 				}
 
 				// Copy the primary key, if it exists.
-				PrimaryKey pk = table.getPrimaryKey();
+				final PrimaryKey pk = table.getPrimaryKey();
 				if (pk != null) {
 					// Find the equivalents of all the columns by name.
-					List columns = new ArrayList();
-					for (Iterator k = pk.getColumnNames().iterator(); k
+					final List columns = new ArrayList();
+					for (final Iterator k = pk.getColumnNames().iterator(); k
 							.hasNext();)
 						columns
 								.add(newTable
@@ -316,7 +323,7 @@ public interface Schema extends Comparable, DataLink {
 							newTable.setPrimaryKey(newPK);
 						}
 						newPK.setStatus(pk.getStatus());
-					} catch (Throwable t) {
+					} catch (final Throwable t) {
 						throw new MartBuilderInternalError(t);
 					}
 				}
@@ -324,21 +331,21 @@ public interface Schema extends Comparable, DataLink {
 				else
 					try {
 						newTable.setPrimaryKey(null);
-					} catch (Throwable t) {
+					} catch (final Throwable t) {
 						throw new MartBuilderInternalError(t);
 					}
 
 				// List all the foreign keys to be dropped later.
-				List fksToDrop = new ArrayList(newTable.getForeignKeys());
+				final List fksToDrop = new ArrayList(newTable.getForeignKeys());
 
 				// Copy the foreign keys.
-				for (Iterator j = table.getForeignKeys().iterator(); j
+				for (final Iterator j = table.getForeignKeys().iterator(); j
 						.hasNext();) {
-					ForeignKey fk = (ForeignKey) j.next();
+					final ForeignKey fk = (ForeignKey) j.next();
 
 					// Find the equivalents of all the columns by name.
-					List columns = new ArrayList();
-					for (Iterator k = fk.getColumnNames().iterator(); k
+					final List columns = new ArrayList();
+					for (final Iterator k = fk.getColumnNames().iterator(); k
 							.hasNext();)
 						columns
 								.add(newTable
@@ -348,10 +355,9 @@ public interface Schema extends Comparable, DataLink {
 					try {
 						ForeignKey newFK = null;
 						// Lookup existing key.
-						for (Iterator k = newTable.getForeignKeys().iterator(); k
-								.hasNext()
-								&& newFK == null;) {
-							ForeignKey candKey = (ForeignKey) k.next();
+						for (final Iterator k = newTable.getForeignKeys()
+								.iterator(); k.hasNext() && newFK == null;) {
+							final ForeignKey candKey = (ForeignKey) k.next();
 							if (candKey.getColumns().equals(columns))
 								newFK = candKey;
 						}
@@ -359,18 +365,17 @@ public interface Schema extends Comparable, DataLink {
 						if (newFK == null) {
 							newFK = new GenericForeignKey(columns);
 							newTable.addForeignKey(newFK);
-						} else {
+						} else
 							fksToDrop.remove(newFK);
-						}
 						newFK.setStatus(fk.getStatus());
 						newFK.setNullable(fk.getNullable());
-					} catch (Throwable t) {
+					} catch (final Throwable t) {
 						throw new MartBuilderInternalError(t);
 					}
 				}
 
 				// Drop all the unused foreign keys.
-				for (Iterator j = fksToDrop.iterator(); j.hasNext();)
+				for (final Iterator j = fksToDrop.iterator(); j.hasNext();)
 					((Key) j.next()).destroy();
 
 				// Remember the relations on this table for later.
@@ -378,7 +383,7 @@ public interface Schema extends Comparable, DataLink {
 			}
 
 			// Drop the tables that have disappeared.
-			for (Iterator j = tablesToDrop.iterator(); j.hasNext();)
+			for (final Iterator j = tablesToDrop.iterator(); j.hasNext();)
 				((Table) j.next()).destroy();
 
 			// Copy internal and external relations. Drop any existing
@@ -388,36 +393,36 @@ public interface Schema extends Comparable, DataLink {
 
 			// Make a list of all the existing internal relations that can
 			// be dropped.
-			List intRelsToDrop = new ArrayList(targetSchema
+			final List intRelsToDrop = new ArrayList(targetSchema
 					.getInternalRelations());
 
 			// Iterate through all the relations we found and
 			// copy them too.
-			for (Iterator i = relations.iterator(); i.hasNext();) {
-				Relation r = (Relation) i.next();
+			for (final Iterator i = relations.iterator(); i.hasNext();) {
+				final Relation r = (Relation) i.next();
 
 				// Work out the keys and cardinality of
 				// the existing relation.
-				Key firstKey = r.getFirstKey();
-				Key secondKey = r.getSecondKey();
-				Cardinality card = r.getCardinality();
-				ComponentStatus status = r.getStatus();
+				final Key firstKey = r.getFirstKey();
+				final Key secondKey = r.getSecondKey();
+				final Cardinality card = r.getCardinality();
+				final ComponentStatus status = r.getStatus();
 
 				// External relations need to identify which end is ours
 				// and which end is not.
 				if (r.isExternal()) {
 					// Which key is external?
-					Key externalKey = firstKey.getTable().getSchema().equals(
-							this) ? secondKey : firstKey;
-					Key internalKey = r.getOtherKey(externalKey);
+					final Key externalKey = firstKey.getTable().getSchema()
+							.equals(this) ? secondKey : firstKey;
+					final Key internalKey = r.getOtherKey(externalKey);
 
 					// Find the equivalent keys in the duplicate table
 					// by comparing table names and sets of column names.
 					Key newInternalKey = null;
-					for (Iterator j = targetSchema.getTableByName(
+					for (final Iterator j = targetSchema.getTableByName(
 							internalKey.getTable().getName()).getKeys()
 							.iterator(); j.hasNext() && newInternalKey == null;) {
-						Key candidate = (Key) j.next();
+						final Key candidate = (Key) j.next();
 						if (candidate.getColumnNames().equals(
 								internalKey.getColumnNames())
 								&& candidate.getClass().equals(
@@ -430,10 +435,10 @@ public interface Schema extends Comparable, DataLink {
 					// relation problems.
 					try {
 						r.destroy();
-						Relation newRel = new GenericRelation(newInternalKey,
-								externalKey, card);
+						final Relation newRel = new GenericRelation(
+								newInternalKey, externalKey, card);
 						newRel.setStatus(status);
-					} catch (Exception e) {
+					} catch (final Exception e) {
 						// Ignore. This can only happen if incorrect relations
 						// are copied across which have different-arity keys at
 						// each end, or if the foreign keys involved already
@@ -447,20 +452,20 @@ public interface Schema extends Comparable, DataLink {
 					// Find the equivalent keys in the duplicate table
 					// by comparing table names and sets of column names.
 					Key newFirstKey = null;
-					for (Iterator j = targetSchema.getTableByName(
+					for (final Iterator j = targetSchema.getTableByName(
 							firstKey.getTable().getName()).getKeys().iterator(); j
 							.hasNext()
 							&& newFirstKey == null;) {
-						Key candidate = (Key) j.next();
+						final Key candidate = (Key) j.next();
 						if (candidate.getColumnNames().equals(
 								firstKey.getColumnNames()))
 							newFirstKey = candidate;
 					}
 					Key newSecondKey = null;
-					for (Iterator j = targetSchema.getTableByName(
+					for (final Iterator j = targetSchema.getTableByName(
 							secondKey.getTable().getName()).getKeys()
 							.iterator(); j.hasNext() && newSecondKey == null;) {
-						Key candidate = (Key) j.next();
+						final Key candidate = (Key) j.next();
 						if (candidate.getColumnNames().equals(
 								secondKey.getColumnNames()))
 							newSecondKey = candidate;
@@ -468,10 +473,9 @@ public interface Schema extends Comparable, DataLink {
 
 					// Does the relation already exist? If so, reuse it.
 					Relation newRel = null;
-					for (Iterator j = newFirstKey.getRelations().iterator(); j
-							.hasNext()
-							&& newRel == null;) {
-						Relation candRel = (Relation) j.next();
+					for (final Iterator j = newFirstKey.getRelations()
+							.iterator(); j.hasNext() && newRel == null;) {
+						final Relation candRel = (Relation) j.next();
 						if (candRel.getOtherKey(newFirstKey).equals(
 								newSecondKey))
 							newRel = candRel;
@@ -481,7 +485,7 @@ public interface Schema extends Comparable, DataLink {
 						try {
 							newRel = new GenericRelation(newFirstKey,
 									newSecondKey, card);
-						} catch (Exception e) {
+						} catch (final Exception e) {
 							// Ignore. This can only happen if incorrect
 							// relations are copied across which have
 							// different-arity keys at each end, or if the
@@ -497,20 +501,20 @@ public interface Schema extends Comparable, DataLink {
 						try {
 							newRel.setCardinality(card);
 							newRel.setStatus(status);
-						} catch (Throwable t) {
+						} catch (final Throwable t) {
 							throw new MartBuilderInternalError(t);
 						}
 				}
 			}
 
 			// Drop the redundant internal relations from the target schema.
-			for (Iterator j = intRelsToDrop.iterator(); j.hasNext();)
+			for (final Iterator j = intRelsToDrop.iterator(); j.hasNext();)
 				((Relation) j.next()).destroy();
 		}
 
-		public Schema replicate(String newName) {
+		public Schema replicate(final String newName) {
 			// Create a new schema.
-			Schema newSchema = new GenericSchema(newName);
+			final Schema newSchema = new GenericSchema(newName);
 
 			// Copy the contents over.
 			this.replicateContents(newSchema);
@@ -519,8 +523,8 @@ public interface Schema extends Comparable, DataLink {
 			return newSchema;
 		}
 
-		public void setKeyGuessing(boolean keyguessing) throws SQLException,
-				BuilderException {
+		public void setKeyGuessing(final boolean keyguessing)
+				throws SQLException, BuilderException {
 			this.keyguessing = keyguessing;
 			this.synchroniseKeys();
 		}
@@ -533,14 +537,14 @@ public interface Schema extends Comparable, DataLink {
 			return this.name;
 		}
 
-		public void setName(String name) {
+		public void setName(final String name) {
 			// Don't duplicate effort.
 			if (name.equals(this.name))
 				return;
 			this.name = name;
 		}
 
-		public boolean canCohabit(DataLink partner) {
+		public boolean canCohabit(final DataLink partner) {
 			return false;
 		}
 
@@ -555,7 +559,7 @@ public interface Schema extends Comparable, DataLink {
 		public void synchroniseKeys() throws SQLException, BuilderException {
 		}
 
-		public void addTable(Table table) throws AssociationException {
+		public void addTable(final Table table) throws AssociationException {
 			// Check the table belongs to us, and has a unique name.
 			if (!table.getSchema().equals(this))
 				throw new AssociationException(Resources
@@ -568,16 +572,16 @@ public interface Schema extends Comparable, DataLink {
 			return this.tables.values();
 		}
 
-		public Table getTableByName(String name) {
+		public Table getTableByName(final String name) {
 			return (Table) this.tables.get(name);
 		}
 
-		public void changeTableMapKey(String oldName, String newName) {
+		public void changeTableMapKey(final String oldName, final String newName) {
 			// If the names are the same, do nothing.
 			if (oldName.equals(newName))
 				return;
 			// Update our mapping but don't rename the columns themselves.
-			Table tbl = (Table) this.tables.get(oldName);
+			final Table tbl = (Table) this.tables.get(oldName);
 			this.tables.put(newName, tbl);
 			this.tables.remove(oldName);
 		}
@@ -586,10 +590,10 @@ public interface Schema extends Comparable, DataLink {
 			// Keys are external if they have a relation which
 			// points, at the other end, to a key in some schema
 			// other than ourselves.
-			List keys = new ArrayList();
-			Collection relations = this.getExternalRelations();
-			for (Iterator i = relations.iterator(); i.hasNext();) {
-				Relation relation = (Relation) i.next();
+			final List keys = new ArrayList();
+			final Collection relations = this.getExternalRelations();
+			for (final Iterator i = relations.iterator(); i.hasNext();) {
+				final Relation relation = (Relation) i.next();
 				if (relation.getFirstKey().getTable().getSchema().equals(this))
 					keys.add(relation.getFirstKey());
 				else
@@ -601,11 +605,12 @@ public interface Schema extends Comparable, DataLink {
 		public Collection getInternalRelations() {
 			// Relations are internal if both ends point to keys
 			// in this schema.
-			Set relations = new HashSet();
-			for (Iterator i = this.getTables().iterator(); i.hasNext();) {
-				Table table = (Table) i.next();
-				for (Iterator j = table.getRelations().iterator(); j.hasNext();) {
-					Relation relation = (Relation) j.next();
+			final Set relations = new HashSet();
+			for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
+				final Table table = (Table) i.next();
+				for (final Iterator j = table.getRelations().iterator(); j
+						.hasNext();) {
+					final Relation relation = (Relation) j.next();
 					if (!relation.isExternal())
 						relations.add(relation);
 				}
@@ -616,14 +621,14 @@ public interface Schema extends Comparable, DataLink {
 		public Collection getExternalRelations() {
 			// Relations are external if one end points to a key
 			// in a schema other than ourselves.
-			Set relations = new HashSet();
-			for (Iterator i = this.getTables().iterator(); i.hasNext();) {
-				Table table = (Table) i.next();
-				for (Iterator j = table.getKeys().iterator(); j.hasNext();) {
-					Key key = (Key) j.next();
-					for (Iterator l = key.getRelations().iterator(); l
+			final Set relations = new HashSet();
+			for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
+				final Table table = (Table) i.next();
+				for (final Iterator j = table.getKeys().iterator(); j.hasNext();) {
+					final Key key = (Key) j.next();
+					for (final Iterator l = key.getRelations().iterator(); l
 							.hasNext();) {
-						Relation relation = (Relation) l.next();
+						final Relation relation = (Relation) l.next();
 						if (relation.isExternal())
 							relations.add(relation);
 					}
@@ -640,15 +645,15 @@ public interface Schema extends Comparable, DataLink {
 			return this.toString().hashCode();
 		}
 
-		public int compareTo(Object o) throws ClassCastException {
-			Schema t = (Schema) o;
+		public int compareTo(final Object o) throws ClassCastException {
+			final Schema t = (Schema) o;
 			return this.toString().compareTo(t.toString());
 		}
 
-		public boolean equals(Object o) {
+		public boolean equals(final Object o) {
 			if (o == null || !(o instanceof Schema))
 				return false;
-			Schema t = (Schema) o;
+			final Schema t = (Schema) o;
 			return t.toString().equals(this.toString());
 		}
 	}

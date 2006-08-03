@@ -55,11 +55,11 @@ public class LinearLayout implements LayoutManager {
 
 	private boolean sizeUnknown;
 
-	private List topRow = new ArrayList();
+	private final List topRow = new ArrayList();
 
-	private List bottomRow = new ArrayList();
+	private final List bottomRow = new ArrayList();
 
-	private List relations = new ArrayList();
+	private final List relations = new ArrayList();
 
 	private double topRowHeight;
 
@@ -72,24 +72,24 @@ public class LinearLayout implements LayoutManager {
 		this.sizeUnknown = true;
 	}
 
-	public Dimension preferredLayoutSize(Container parent) {
+	public Dimension preferredLayoutSize(final Container parent) {
 		synchronized (parent.getTreeLock()) {
 			// Our preferred size is our minimum size.
 			return this.minimumLayoutSize(parent);
 		}
 	}
 
-	public Dimension minimumLayoutSize(Container parent) {
+	public Dimension minimumLayoutSize(final Container parent) {
 		synchronized (parent.getTreeLock()) {
 			// Work out how big we are.
 			this.setSizes(parent);
 
 			// Work out our parent's insets.
-			Insets insets = parent.getInsets();
+			final Insets insets = parent.getInsets();
 
 			// The minimum size is our size plus our
 			// parent's insets size.
-			Dimension dim = new Dimension(0, 0);
+			final Dimension dim = new Dimension(0, 0);
 			dim.width = this.minWidth + insets.left + insets.right;
 			dim.height = this.minHeight + insets.top + insets.bottom;
 
@@ -98,7 +98,7 @@ public class LinearLayout implements LayoutManager {
 		}
 	}
 
-	private void setSizes(Container parent) {
+	private void setSizes(final Container parent) {
 		// This method works out how big each component should be, and
 		// then works out in total how much space to allocate to the diagram.
 		synchronized (parent.getTreeLock()) {
@@ -110,18 +110,18 @@ public class LinearLayout implements LayoutManager {
 			this.relations.clear();
 
 			// Make one big list to hold them all for now.
-			List bothRows = new ArrayList();
+			final List bothRows = new ArrayList();
 
 			// Reset the heights of the top and bottom rows.
 			this.topRowHeight = 0.0;
 			this.bottomRowHeight = 0.0;
 
 			// How many components do we have?
-			int nComps = parent.getComponentCount();
+			final int nComps = parent.getComponentCount();
 
 			// Loop through those components.
 			for (int i = 0; i < nComps; i++) {
-				Component comp = parent.getComponent(i);
+				final Component comp = parent.getComponent(i);
 
 				// We're only interested in visible non-RelationComponents at
 				// this stage.
@@ -138,17 +138,13 @@ public class LinearLayout implements LayoutManager {
 
 			// Split the row into top and bottom halves if
 			// there are more than 4 objects.
-			if (bothRows.size()>4) {
-			int splitIndex = bothRows.size() / 2;
-			this.topRow.addAll(bothRows.subList(0, splitIndex));
-			this.bottomRow
-					.addAll(bothRows.subList(splitIndex, bothRows.size()));
-			} 
-			// Otherwise, if there are 4 or less objects,
-			// display all in one row.
-			else {
+			if (bothRows.size() > 4) {
+				final int splitIndex = bothRows.size() / 2;
+				this.topRow.addAll(bothRows.subList(0, splitIndex));
+				this.bottomRow.addAll(bothRows.subList(splitIndex, bothRows
+						.size()));
+			} else
 				this.topRow.addAll(bothRows);
-			}
 
 			// Set up variables to hold the top and bottom row widths.
 			// Start both off with padding to the left.
@@ -156,9 +152,9 @@ public class LinearLayout implements LayoutManager {
 			double bottomRowWidth = LinearLayout.TABLE_PADDING;
 
 			// Work out the heights and widths for top row.
-			for (Iterator i = this.topRow.iterator(); i.hasNext();) {
+			for (final Iterator i = this.topRow.iterator(); i.hasNext();) {
 				// Get the component.
-				Component comp = (Component) i.next();
+				final Component comp = (Component) i.next();
 
 				// Work out how many relations lead off this component.
 				// If not a TableComponent or SchemaComponent, it's zero.
@@ -171,7 +167,7 @@ public class LinearLayout implements LayoutManager {
 							.countExternalRelations();
 
 				// How big is this component?
-				Dimension compSize = comp.getPreferredSize();
+				final Dimension compSize = comp.getPreferredSize();
 
 				// Work out the maximum height for the top row.
 				this.topRowHeight = Math.max(this.topRowHeight, compSize
@@ -180,16 +176,15 @@ public class LinearLayout implements LayoutManager {
 				// Add up the width for this row, including padding
 				// and space for relations. Double padding = padding before
 				// and after relations segment.
-				topRowWidth += compSize.getWidth()
-						+ (2.0 * LinearLayout.TABLE_PADDING);
-				topRowWidth += ((double) relationCount)
-						* LinearLayout.RELATION_SPACING;
+				topRowWidth += compSize.getWidth() + 2.0
+						* LinearLayout.TABLE_PADDING;
+				topRowWidth += relationCount * LinearLayout.RELATION_SPACING;
 			}
 
 			// Do the same for the bottom row.
-			for (Iterator i = this.bottomRow.iterator(); i.hasNext();) {
+			for (final Iterator i = this.bottomRow.iterator(); i.hasNext();) {
 				// Get the component.
-				Component comp = (Component) i.next();
+				final Component comp = (Component) i.next();
 
 				// Work out how many relations lead off this component.
 				// If not a TableComponent or SchemaComponent, it's zero.
@@ -202,7 +197,7 @@ public class LinearLayout implements LayoutManager {
 							.countExternalRelations();
 
 				// How big is this component?
-				Dimension compSize = comp.getPreferredSize();
+				final Dimension compSize = comp.getPreferredSize();
 
 				// Work out the maximum height for the top row.
 				this.bottomRowHeight = Math.max(this.bottomRowHeight, compSize
@@ -211,10 +206,9 @@ public class LinearLayout implements LayoutManager {
 				// Add up the width for this row, including padding
 				// and space for relations. Double padding = padding before
 				// and after relations segment.
-				bottomRowWidth += compSize.getWidth()
-						+ (2.0 * LinearLayout.TABLE_PADDING);
-				bottomRowWidth += ((double) relationCount)
-						* LinearLayout.RELATION_SPACING;
+				bottomRowWidth += compSize.getWidth() + 2.0
+						* LinearLayout.TABLE_PADDING;
+				bottomRowWidth += relationCount * LinearLayout.RELATION_SPACING;
 			}
 
 			// The width of this diagram is equal to the maximum width of
@@ -225,15 +219,15 @@ public class LinearLayout implements LayoutManager {
 			// of the top and bottom rows, plus four times table padding
 			// (above and below each row), plus space for all relations.
 			this.minHeight = (int) (this.topRowHeight + this.bottomRowHeight
-					+ (4.0 * LinearLayout.TABLE_PADDING) + (((double) this.relations
-					.size()) * LinearLayout.RELATION_SPACING));
+					+ 4.0 * LinearLayout.TABLE_PADDING + this.relations.size()
+					* LinearLayout.RELATION_SPACING);
 
 			// All done.
 			this.sizeUnknown = false;
 		}
 	}
 
-	public void layoutContainer(Container parent) {
+	public void layoutContainer(final Container parent) {
 		synchronized (parent.getTreeLock()) {
 			// Calculate our size first using the method above.
 			if (this.sizeUnknown)
@@ -241,16 +235,16 @@ public class LinearLayout implements LayoutManager {
 
 			// A map is kept for each table indicating which vertical track for
 			// that table the next relation linking to it must go on.
-			Map nextVerticalTrackX = new HashMap();
+			final Map nextVerticalTrackX = new HashMap();
 
 			// Lay out the top row of tables.
 			double nextX = LinearLayout.TABLE_PADDING;
 			double nextY = this.topRowHeight + LinearLayout.TABLE_PADDING;
-			for (Iterator i = this.topRow.iterator(); i.hasNext();) {
-				Component comp = (Component) i.next();
+			for (final Iterator i = this.topRow.iterator(); i.hasNext();) {
+				final Component comp = (Component) i.next();
 
 				// Work out how big this component would like to be.
-				Dimension compSize = comp.getPreferredSize();
+				final Dimension compSize = comp.getPreferredSize();
 
 				// Place component using offsets.
 				comp.setBounds((int) nextX,
@@ -274,8 +268,7 @@ public class LinearLayout implements LayoutManager {
 							.countExternalRelations();
 
 				// Leave space for the vertical relations.
-				nextX += ((double) relationCount)
-						* LinearLayout.RELATION_SPACING;
+				nextX += relationCount * LinearLayout.RELATION_SPACING;
 
 				// Make the component update its children (necessary for laying
 				// out relations later).
@@ -287,14 +280,13 @@ public class LinearLayout implements LayoutManager {
 
 			// Lay out the bottom row.
 			nextX = LinearLayout.TABLE_PADDING;
-			nextY = this.topRowHeight
-					+ (3.0 * LinearLayout.TABLE_PADDING)
-					+ (((double) this.relations.size()) * LinearLayout.RELATION_SPACING);
-			for (Iterator i = this.bottomRow.iterator(); i.hasNext();) {
-				Component comp = (Component) i.next();
+			nextY = this.topRowHeight + 3.0 * LinearLayout.TABLE_PADDING
+					+ this.relations.size() * LinearLayout.RELATION_SPACING;
+			for (final Iterator i = this.bottomRow.iterator(); i.hasNext();) {
+				final Component comp = (Component) i.next();
 
 				// Work out how big this component would like to be.
-				Dimension compSize = comp.getPreferredSize();
+				final Dimension compSize = comp.getPreferredSize();
 
 				// Place component using offsets.
 				comp.setBounds((int) nextX, (int) nextY, (int) compSize
@@ -317,8 +309,7 @@ public class LinearLayout implements LayoutManager {
 							.countExternalRelations();
 
 				// Leave space for the vertical relations.
-				nextX += ((double) relationCount)
-						* LinearLayout.RELATION_SPACING;
+				nextX += relationCount * LinearLayout.RELATION_SPACING;
 
 				// Make the component update its children (necessary for laying
 				// out relations later).
@@ -330,38 +321,38 @@ public class LinearLayout implements LayoutManager {
 
 			// Lay out the relations. The first relation goes on the first
 			// horizontal track, the second on the second, etc.
-			double nextHorizontalY = (2.0 * LinearLayout.TABLE_PADDING)
+			double nextHorizontalY = 2.0 * LinearLayout.TABLE_PADDING
 					+ this.topRowHeight;
-			for (Iterator i = this.relations.iterator(); i.hasNext();) {
-				RelationComponent comp = (RelationComponent) i.next();
+			for (final Iterator i = this.relations.iterator(); i.hasNext();) {
+				final RelationComponent comp = (RelationComponent) i.next();
 
 				// Obtain first key and work out position relative to
 				// diagram.
-				KeyComponent firstKey = comp.getFirstKeyComponent();
-				Rectangle firstKeyRectangle = firstKey.getBounds();
+				final KeyComponent firstKey = comp.getFirstKeyComponent();
+				final Rectangle firstKeyRectangle = firstKey.getBounds();
 				Container firstKeyContainer = firstKey;
 				Container checkContainer = firstKey.getParent();
 				while (checkContainer != parent) {
 					firstKeyRectangle.setLocation(firstKeyRectangle.x
-							+ (int) checkContainer.getX(), firstKeyRectangle.y
-							+ (int) checkContainer.getY());
-					if ((checkContainer instanceof TableComponent)
-							|| (checkContainer instanceof SchemaComponent))
+							+ checkContainer.getX(), firstKeyRectangle.y
+							+ checkContainer.getY());
+					if (checkContainer instanceof TableComponent
+							|| checkContainer instanceof SchemaComponent)
 						firstKeyContainer = checkContainer;
 					checkContainer = checkContainer.getParent();
 				}
 
 				// Do the same for the second key.
-				KeyComponent secondKey = comp.getSecondKeyComponent();
-				Rectangle secondKeyRectangle = secondKey.getBounds();
+				final KeyComponent secondKey = comp.getSecondKeyComponent();
+				final Rectangle secondKeyRectangle = secondKey.getBounds();
 				Container secondKeyContainer = secondKey;
 				checkContainer = secondKey.getParent();
 				while (checkContainer != parent) {
 					secondKeyRectangle.setLocation(secondKeyRectangle.x
-							+ (int) checkContainer.getX(), secondKeyRectangle.y
-							+ (int) checkContainer.getY());
-					if ((checkContainer instanceof TableComponent)
-							|| (checkContainer instanceof SchemaComponent))
+							+ checkContainer.getX(), secondKeyRectangle.y
+							+ checkContainer.getY());
+					if (checkContainer instanceof TableComponent
+							|| checkContainer instanceof SchemaComponent)
 						secondKeyContainer = checkContainer;
 					checkContainer = checkContainer.getParent();
 				}
@@ -371,22 +362,22 @@ public class LinearLayout implements LayoutManager {
 				int firstKeyX = firstKeyRectangle.x + firstKeyRectangle.width;
 				int secondKeyX = secondKeyRectangle.x
 						+ secondKeyRectangle.width;
-				int firstKeyY = firstKeyRectangle.y
-						+ (firstKeyRectangle.height / 2);
+				int firstKeyY = firstKeyRectangle.y + firstKeyRectangle.height
+						/ 2;
 				int secondKeyY = secondKeyRectangle.y
-						+ (secondKeyRectangle.height / 2);
+						+ secondKeyRectangle.height / 2;
 
 				// Work out which vertical track at the first key end the
 				// relation fits into, and update the map for the next one.
-				int firstVerticalX = (int) (((Double) nextVerticalTrackX
-						.get(firstKeyContainer)).doubleValue());
+				int firstVerticalX = (int) ((Double) nextVerticalTrackX
+						.get(firstKeyContainer)).doubleValue();
 				nextVerticalTrackX.put(firstKeyContainer, new Double(
 						firstVerticalX + LinearLayout.RELATION_SPACING));
 
 				// Work out which vertical track at the second key end the
 				// relation fits into.
-				int secondVerticalX = (int) (((Double) nextVerticalTrackX
-						.get(secondKeyContainer)).doubleValue());
+				int secondVerticalX = (int) ((Double) nextVerticalTrackX
+						.get(secondKeyContainer)).doubleValue();
 				nextVerticalTrackX.put(secondKeyContainer, new Double(
 						secondVerticalX + LinearLayout.RELATION_SPACING));
 
@@ -395,13 +386,14 @@ public class LinearLayout implements LayoutManager {
 
 				// Create a bounding box around which covers the
 				// whole relation area.
-				int x = Math.min(firstKeyX, secondKeyX);
-				int y = Math.min(horizontalY, Math.min(firstKeyY, secondKeyY));
-				int width = Math.max(firstVerticalX, secondVerticalX) - x;
-				int height = Math.max(horizontalY, Math.max(firstKeyY,
+				final int x = Math.min(firstKeyX, secondKeyX);
+				final int y = Math.min(horizontalY, Math.min(firstKeyY,
+						secondKeyY));
+				final int width = Math.max(firstVerticalX, secondVerticalX) - x;
+				final int height = Math.max(horizontalY, Math.max(firstKeyY,
 						secondKeyY))
 						- y;
-				Rectangle bounds = new Rectangle(
+				final Rectangle bounds = new Rectangle(
 						(int) (x - LinearLayout.RELATION_SPACING),
 						(int) (y - LinearLayout.RELATION_SPACING),
 						(int) (width + LinearLayout.RELATION_SPACING * 2),
@@ -419,7 +411,8 @@ public class LinearLayout implements LayoutManager {
 				horizontalY -= bounds.y;
 
 				// Create a path to describe the relation shape.
-				GeneralPath path = new GeneralPath(GeneralPath.WIND_EVEN_ODD, 6);
+				final GeneralPath path = new GeneralPath(
+						GeneralPath.WIND_EVEN_ODD, 6);
 
 				// Move to starting point at primary key.
 				path.moveTo(firstKeyX, firstKeyY);
@@ -451,11 +444,11 @@ public class LinearLayout implements LayoutManager {
 		}
 	}
 
-	public void addLayoutComponent(String name, Component comp) {
+	public void addLayoutComponent(final String name, final Component comp) {
 		// Ignore.
 	}
 
-	public void removeLayoutComponent(Component comp) {
+	public void removeLayoutComponent(final Component comp) {
 		// Ignore.
 	}
 }

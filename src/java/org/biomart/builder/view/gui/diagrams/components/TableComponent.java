@@ -73,7 +73,7 @@ public class TableComponent extends BoxShapedComponent {
 	 * Colour for all non-subclassed, non-dimension tables.
 	 */
 	public static final Color NORMAL_COLOUR = Color.BLACK;
-		
+
 	/**
 	 * This constructor makes a new table component, associated with a
 	 * particular table, and remembers that this component appears in a
@@ -85,7 +85,7 @@ public class TableComponent extends BoxShapedComponent {
 	 * @param diagram
 	 *            the diagram we wish to make the table appear in.
 	 */
-	public TableComponent(Table table, Diagram diagram) {
+	public TableComponent(final Table table, final Diagram diagram) {
 		super(table, diagram);
 
 		// Table components are set out in a vertical list.
@@ -133,15 +133,16 @@ public class TableComponent extends BoxShapedComponent {
 
 		// Add a key component as a sub-component of this table
 		// for each of the keys in the table.
-		for (Iterator i = this.getTable().getKeys().iterator(); i.hasNext();) {
-			Key key = (Key) i.next();
-			KeyComponent keyComponent = new KeyComponent(key, this.getDiagram());
+		for (final Iterator i = this.getTable().getKeys().iterator(); i
+				.hasNext();) {
+			final Key key = (Key) i.next();
+			final KeyComponent keyComponent = new KeyComponent(key, this
+					.getDiagram());
 
 			// Add it as a sub-component (internal representation only).
 			this.addSubComponent(key, keyComponent);
-			this.getSubComponents().putAll(
-					keyComponent.getSubComponents());
-			
+			this.getSubComponents().putAll(keyComponent.getSubComponents());
+
 			// Physically add it to the table component layout.
 			this.layout.setConstraints(keyComponent, this.constraints);
 			this.add(keyComponent);
@@ -149,24 +150,24 @@ public class TableComponent extends BoxShapedComponent {
 
 		// Now the columns, as a vertical list.
 		this.columnsListPanel = new JPanel();
-		GridBagLayout columnsListPanelLayout = new GridBagLayout();
+		final GridBagLayout columnsListPanelLayout = new GridBagLayout();
 		this.columnsListPanel.setLayout(columnsListPanelLayout);
 
 		// Add columns to the list one by one, as column sub-components.
-		for (Iterator i = this.getTable().getColumns().iterator(); i.hasNext();) {
-			Column col = (Column) i.next();
-			ColumnComponent colComponent = new ColumnComponent(col, this
+		for (final Iterator i = this.getTable().getColumns().iterator(); i
+				.hasNext();) {
+			final Column col = (Column) i.next();
+			final ColumnComponent colComponent = new ColumnComponent(col, this
 					.getDiagram());
 
 			// Add it as a sub-component (internal representation only).
 			this.addSubComponent(col, colComponent);
-			this.getSubComponents().putAll(
-					colComponent.getSubComponents());
+			this.getSubComponents().putAll(colComponent.getSubComponents());
 
 			// Physically add it to the list of columns.
 			columnsListPanelLayout.setConstraints(colComponent,
 					this.constraints);
-			columnsListPanel.add(colComponent);
+			this.columnsListPanel.add(colComponent);
 		}
 
 		// Show/hide the columns panel with a button.
@@ -175,15 +176,16 @@ public class TableComponent extends BoxShapedComponent {
 		this.layout.setConstraints(this.showHide, this.constraints);
 		this.add(this.showHide);
 		this.showHide.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (getState().equals(Boolean.TRUE))
-					setState(Boolean.FALSE);
+			public void actionPerformed(final ActionEvent e) {
+				if (TableComponent.this.getState().equals(Boolean.TRUE))
+					TableComponent.this.setState(Boolean.FALSE);
 				else
-					setState(Boolean.TRUE);
+					TableComponent.this.setState(Boolean.TRUE);
 				// Recalculate the diagram.
-				getDiagram().recalculateDiagram();
+				TableComponent.this.getDiagram().recalculateDiagram();
 				// Zoom to this table so that the user doesn't get lost.
-				getDiagram().findObject(getTable());
+				TableComponent.this.getDiagram().findObject(
+						TableComponent.this.getTable());
 			}
 		});
 
@@ -192,7 +194,7 @@ public class TableComponent extends BoxShapedComponent {
 		this.setState(Boolean.FALSE);
 	}
 
-	public void setState(Object state) {
+	public void setState(final Object state) {
 		// For us, state is TRUE if we want the columns panel hidden, FALSE if
 		// not.
 		if (state != null && state.equals(Boolean.TRUE)) {

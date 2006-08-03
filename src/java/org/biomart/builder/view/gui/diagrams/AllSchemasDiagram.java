@@ -47,15 +47,14 @@ public class AllSchemasDiagram extends Diagram {
 	public static final Color BACKGROUND_COLOUR = Color.WHITE;
 
 	/**
-	 * The constructor creates the diagram and associates it with a given
-	 * mart tab.
+	 * The constructor creates the diagram and associates it with a given mart
+	 * tab.
 	 * 
 	 * @param martTab
-	 *            the mart tab to associate with this schema. It will
-	 *            be used to work out who receives all user menu events, 
-	 *            etc.
+	 *            the mart tab to associate with this schema. It will be used to
+	 *            work out who receives all user menu events, etc.
 	 */
-	public AllSchemasDiagram(MartTab martTab) {
+	public AllSchemasDiagram(final MartTab martTab) {
 		super(martTab);
 
 		// Set the background.
@@ -70,22 +69,23 @@ public class AllSchemasDiagram extends Diagram {
 		this.removeAll();
 
 		// Make a set to hold all external relations on this diagram.
-		Set relations = new HashSet();
+		final Set relations = new HashSet();
 
 		// Add a SchemaComponent for each schema.
-		for (Iterator i = this.getMartTab().getMart().getSchemas()
+		for (final Iterator i = this.getMartTab().getMart().getSchemas()
 				.iterator(); i.hasNext();) {
-			Schema schema = (Schema) i.next();
-			SchemaComponent schemaComponent = new SchemaComponent(schema, this);
+			final Schema schema = (Schema) i.next();
+			final SchemaComponent schemaComponent = new SchemaComponent(schema,
+					this);
 			this.addDiagramComponent(schemaComponent);
 			// Remember the external relations.
 			relations.addAll(schema.getExternalRelations());
 		}
 
 		// Add a RelationComponent for each external relation.
-		for (Iterator i = relations.iterator(); i.hasNext();) {
-			Relation relation = (Relation) i.next();
-			RelationComponent relationComponent = new RelationComponent(
+		for (final Iterator i = relations.iterator(); i.hasNext();) {
+			final Relation relation = (Relation) i.next();
+			final RelationComponent relationComponent = new RelationComponent(
 					relation, this);
 			this.addDiagramComponent(relationComponent);
 		}
