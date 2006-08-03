@@ -462,19 +462,23 @@ public class DataSetContext extends WindowContext {
 			// If it is not partitioned, allow the user to turn partitioning
 			// on.
 			else {
-				
+
+				/**
+				 * Disabled until we've decided on a partitioned table
+				 * naming convention.
+				 */
 				// Option to enable partitioning.
-				final JMenuItem partition = new JMenuItem(Resources
-						.get("partitionColumnTitle"));
-				partition.setMnemonic(Resources.get("partitionColumnMnemonic")
-						.charAt(0));
-				partition.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestPartitionByColumn(DataSetContext.this.getDataSet(), column);
-					}
-				});
-				contextMenu.add(partition);
+				//final JMenuItem partition = new JMenuItem(Resources
+				//		.get("partitionColumnTitle"));
+				//partition.setMnemonic(Resources.get("partitionColumnMnemonic")
+				//		.charAt(0));
+				//partition.addActionListener(new ActionListener() {
+				//	public void actionPerformed(ActionEvent evt) {
+				//		DataSetContext.this.getMartTab().getDataSetTabSet()
+				//				.requestPartitionByColumn(DataSetContext.this.getDataSet(), column);
+				//	}
+				//});
+				//contextMenu.add(partition);
 			}
 
 			// Else, if it's an expression column...
