@@ -51,7 +51,7 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
  * dataset onto a set of masked relations.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.26, 2nd August 2006
+ * @version 0.1.27, 3rd August 2006
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
@@ -317,17 +317,18 @@ public class SchemaContext implements DiagramContext {
 				});
 				contextMenu.add(replicate);
 
-				/**
-				 * Uncomment when we are ready to support this. // Option to add
-				 * the schema to a schema group. JMenuItem addToGroup = new
-				 * JMenuItem(Resources .get("addToGroupTitle"));
-				 * addToGroup.setMnemonic(Resources.get("addToGroupMnemonic")
-				 * .charAt(0)); addToGroup.addActionListener(new
-				 * ActionListener() { public void actionPerformed(ActionEvent
-				 * evt) { martTab.getSchemaTabSet()
-				 * .requestAddSchemaToSchemaGroup(schema); } });
-				 * contextMenu.add(addToGroup);
-				 */
+				// Option to add the schema to a schema group.
+				final JMenuItem addToGroup = new JMenuItem(Resources
+						.get("addToGroupTitle"));
+				addToGroup.setMnemonic(Resources.get("addToGroupMnemonic")
+						.charAt(0));
+				addToGroup.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						SchemaContext.this.martTab.getSchemaTabSet()
+								.requestAddSchemaToSchemaGroup(schema);
+					}
+				});
+				contextMenu.add(addToGroup);
 
 				// Menu option to suggest a bunch of datasets.
 				final JMenuItem suggest = new JMenuItem(Resources

@@ -66,7 +66,7 @@ import org.biomart.builder.model.MartConstructorAction.Union;
  * Understands how to create SQL and DDL for a PostgreSQL database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 2nd August 2006
+ * @version 0.1.10, 3rd August 2006
  * @since 0.1
  */
 public class PostgreSQLDialect extends DatabaseDialect {
@@ -389,7 +389,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				+ schemaName + ",pg_catalog");
 
 		statements.add("alter table " + schemaName + "." + tableName
-				+ " add column (" + colName + " number(1) default 0)");
+				+ " add column (" + colName + " number default 0)");
 	}
 
 	public void doOptimiseUpdateColumn(final OptimiseUpdateColumn action,
@@ -408,22 +408,19 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				+ pkSchemaName + "," + fkSchemaName + ",pg_catalog");
 
 		final StringBuffer sb = new StringBuffer();
-		sb.append("update table " + pkSchemaName + "." + pkTableName + " set "
-				+ colName + "=1 where (");
-		for (final Iterator i = action.getPkColumns().iterator(); i
-				.hasNext();) {
-			sb.append(((Column) i.next()).getName());
-			if (i.hasNext())
-				sb.append(',');
+		sb.append("update table " + pkSchemaName + "." + pkTableName + " a set "
+				+ colName + "=(select count(1) from " + fkSchemaName + "." + fkTableName + " b where ");
+		for (int i = 0; i < action.getPkColumns().size(); i++) {
+			if (i>0)
+				sb.append(" and ");
+			Column pkCol = (Column)action.getPkColumns().get(i);
+			Column fkCol = (Column)action.getFkColumns().get(i);
+			sb.append("a.");
+			sb.append(pkCol.getName());
+			sb.append("=b.");
+			sb.append(fkCol.getName());
 		}
-		sb.append(") in (select ");
-		for (final Iterator i = action.getFkColumns().iterator(); i
-				.hasNext();) {
-			sb.append(((Column) i.next()).getName());
-			if (i.hasNext())
-				sb.append(',');
-		}
-		sb.append(" from " + fkSchemaName + "." + fkTableName + ")");
+		sb.append(')');
 
 		statements.add(sb.toString());
 	}

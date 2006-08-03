@@ -53,7 +53,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * org.biomart.builder.view.gui.diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.27, 2nd August 2006
+ * @version 0.1.28, 3rd August 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -462,18 +462,19 @@ public class DataSetContext extends WindowContext {
 			// If it is not partitioned, allow the user to turn partitioning
 			// on.
 			else {
-
-				/**
-				 * Uncomment when we are ready to support this. // Option to
-				 * enable partitioning. JMenuItem partition = new
-				 * JMenuItem(Resources .get("partitionColumnTitle"));
-				 * partition.setMnemonic(Resources.get("partitionColumnMnemonic")
-				 * .charAt(0)); partition.addActionListener(new ActionListener() {
-				 * public void actionPerformed(ActionEvent evt) {
-				 * getMartTab().getDataSetTabSet()
-				 * .requestPartitionByColumn(getDataSet(), column); } });
-				 * contextMenu.add(partition);
-				 */
+				
+				// Option to enable partitioning.
+				final JMenuItem partition = new JMenuItem(Resources
+						.get("partitionColumnTitle"));
+				partition.setMnemonic(Resources.get("partitionColumnMnemonic")
+						.charAt(0));
+				partition.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestPartitionByColumn(DataSetContext.this.getDataSet(), column);
+					}
+				});
+				contextMenu.add(partition);
 			}
 
 			// Else, if it's an expression column...

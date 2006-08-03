@@ -70,7 +70,7 @@ import org.biomart.builder.resources.Resources;
  * Understands how to create SQL and DDL for an Oracle database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 2nd August 2006
+ * @version 0.1.13, 3rd August 2006
  * @since 0.1
  */
 public class OracleDialect extends DatabaseDialect {
@@ -367,7 +367,7 @@ public class OracleDialect extends DatabaseDialect {
 		final String tableName = action.getTableName();
 		final String colName = action.getColumnName();
 		statements.add("alter table " + schemaName + "." + tableName
-				+ " add column (" + colName + " number(1) default 0)");
+				+ " add column (" + colName + " number default 0)");
 	}
 
 	public void doOptimiseUpdateColumn(final OptimiseUpdateColumn action,
@@ -383,23 +383,20 @@ public class OracleDialect extends DatabaseDialect {
 		final String colName = action.getOptimiseColumnName();
 
 		final StringBuffer sb = new StringBuffer();
-		sb.append("update table " + pkSchemaName + "." + pkTableName + " set "
-				+ colName + "=1 where (");
-		for (final Iterator i = action.getPkColumns().iterator(); i
-				.hasNext();) {
-			sb.append(((Column) i.next()).getName());
-			if (i.hasNext())
-				sb.append(',');
+		sb.append("update table " + pkSchemaName + "." + pkTableName + " a set "
+				+ colName + "=(select count(1) from " + fkSchemaName + "." + fkTableName + " b where ");
+		for (int i = 0; i < action.getPkColumns().size(); i++) {
+			if (i>0)
+				sb.append(" and ");
+			Column pkCol = (Column)action.getPkColumns().get(i);
+			Column fkCol = (Column)action.getFkColumns().get(i);
+			sb.append("a.");
+			sb.append(pkCol.getName());
+			sb.append("=b.");
+			sb.append(fkCol.getName());
 		}
-		sb.append(") in (select ");
-		for (final Iterator i = action.getFkColumns().iterator(); i
-				.hasNext();) {
-			sb.append(((Column) i.next()).getName());
-			if (i.hasNext())
-				sb.append(',');
-		}
-		sb.append(" from " + fkSchemaName + "." + fkTableName + ")");
-
+		sb.append(')');
+		
 		statements.add(sb.toString());
 	}
 
