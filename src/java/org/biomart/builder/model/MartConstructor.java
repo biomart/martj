@@ -1074,9 +1074,7 @@ public interface MartConstructor {
 							dsTableFirstCols.add(dsInheritedCol);
 					}
 				}
-
-				// Create the table based on firstTable, and selecting
-				// based on firstDSCols.
+				
 				final MartConstructorAction create = new Create(
 						this.datasetSchemaName, vConstructionTable
 								.getDataSetTable().getName(), null,
@@ -1088,18 +1086,18 @@ public interface MartConstructor {
 			}
 
 			// Merge subsequent tables based on underlying relations.
-			for (int i = 0; i < vConstructionTable.getDataSetTable()
-					.getUnderlyingKeys().size(); i++) {
+			for (int i = 0; i < vConstructionTable
+					.getDataSetTable().getUnderlyingKeys().size(); i++) {
 				// What key was followed from the previous table?
 				final Key dsSourceKey = (Key) vConstructionTable
 						.getDataSetTable().getUnderlyingKeys().get(i);
 				// What relation was followed?
-				final Relation dsSourceRelation = (Relation) vConstructionTable
+				final Relation rSourceRelation = (Relation) vConstructionTable
 						.getDataSetTable().getUnderlyingRelations().get(i);
 				// Left or inner join?
-				final boolean useLeftJoin = dsSourceRelation.isOptional();
+				final boolean useLeftJoin = rSourceRelation.isOptional();
 				// What key did we reach by following the relation?
-				final Key dsTargetKey = dsSourceRelation
+				final Key dsTargetKey = rSourceRelation
 						.getOtherKey(dsSourceKey);
 				// What table did we reach, and therefore need to merge now?
 				final Table dsTargetTable = dsTargetKey.getTable();
@@ -1113,7 +1111,7 @@ public interface MartConstructor {
 						.getDataSetColumns(dsSourceKey.getColumns());
 				// What are the columns we should merge from this new table?
 				final List dsTargetIncludeCols = vConstructionTable
-						.getDataSetColumns(dsSourceRelation);
+						.getDataSetColumns(rSourceRelation);
 				// If targetTable is in a group schema that is not the
 				// same group schema we started with, create a union table
 				// containing all the targetTable copies, then merge with
@@ -1176,9 +1174,9 @@ public interface MartConstructor {
 						dsSourceKeyCols, useLeftJoin, rTargetSchema,
 						dsTargetTableName, dsTargetKey.getColumns(),
 						dsTargetIncludeCols, vConstructionTable.getDataSet()
-								.getRestrictedRelationType(dsSourceRelation),
-						dsTargetTable.equals(dsSourceRelation.getSecondKey()
-								.getTable()), dsSourceRelation.isManyToMany(),
+								.getRestrictedRelationType(rSourceRelation),
+						dsTargetTable.equals(rSourceRelation.getSecondKey()
+								.getTable()), rSourceRelation.isManyToMany(),
 						vConstructionTable.getDataSet().getRestrictedTableType(
 								dsTargetTable), true);
 				actionGraph.addActionWithParent(merge, index);

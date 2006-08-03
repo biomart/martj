@@ -60,7 +60,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.43, 2nd August 2006
+ * @version 0.1.44, 3rd August 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -472,15 +472,18 @@ public class DataSet extends GenericSchema {
 	 */
 	public void unflagSubclassRelation(final Relation relation) {
 		// Break the chain first.
-		final Table target = relation.getManyKey().getTable();
-		if (!target.equals(this.centralTable))
-			if (target.getPrimaryKey() != null)
-				for (final Iterator i = target.getPrimaryKey().getRelations()
-						.iterator(); i.hasNext();) {
-					final Relation rel = (Relation) i.next();
-					if (rel.isOneToMany())
-						this.unflagSubclassRelation(rel);
-				}
+		final Key key = relation.getManyKey();
+		if (key != null) {
+			final Table target = key.getTable();
+			if (!target.equals(this.centralTable))
+				if (target.getPrimaryKey() != null)
+					for (final Iterator i = target.getPrimaryKey()
+							.getRelations().iterator(); i.hasNext();) {
+						final Relation rel = (Relation) i.next();
+						if (rel.isOneToMany())
+							this.unflagSubclassRelation(rel);
+					}
+		}
 		// Then remove the head of the chain.
 		this.subclassedRelations.remove(relation);
 	}
@@ -899,9 +902,10 @@ public class DataSet extends GenericSchema {
 			for (final Iterator j = oldExpCol.getAliases().entrySet()
 					.iterator(); j.hasNext();) {
 				final Map.Entry entry = (Map.Entry) j.next();
+				final DataSetColumn origDependency = (DataSetColumn) entry
+						.getKey();
 				final DataSetColumn dependency = (DataSetColumn) newExpColTable
-						.getColumnByName(((DataSetColumn) entry.getKey())
-								.getName());
+						.getColumnByName(origDependency.getName());
 				final String alias = (String) entry.getValue();
 				if (dependency == null)
 					allFound = false;
@@ -1108,7 +1112,8 @@ public class DataSet extends GenericSchema {
 		// as appropriate. Dimension tables get just the PK, and an
 		// FK linking them back. Subclass tables get all columns, plus
 		// the PK with FK link. Also add the relations we followed to
-		// get all these columns.
+		// get all these columns. AND add all columns from the parent table
+		// which are part of restrictions on this relation.
 		if (parentDSTable != null) {
 			// Make a list to hold the child table's FK cols.
 			final List dsTableFKCols = new ArrayList();
@@ -1119,6 +1124,10 @@ public class DataSet extends GenericSchema {
 			// Don't follow the parent's relations again.
 			relationsFollowed.addAll(parentDSTable.getUnderlyingRelations());
 
+			// Work out restrictions on the source relation.
+			DataSetRelationRestriction restriction = this
+					.getRestrictedRelationType(sourceRelation);
+
 			// Loop over each column in the parent table. If this is
 			// a subclass table, add it. If it is a dimension table,
 			// only add it if it is in the PK. In either case, if it
@@ -1126,11 +1135,21 @@ public class DataSet extends GenericSchema {
 			for (final Iterator i = parentDSTable.getColumns().iterator(); i
 					.hasNext();) {
 				final DataSetColumn parentDSCol = (DataSetColumn) i.next();
-				// Skip columns that are not in the primary key, if
-				// we are not making a subclass table.
-				if (!parentDSTablePK.getColumns().contains(parentDSCol)
-						&& !type.equals(DataSetTableType.MAIN_SUBCLASS))
-					continue;
+				// If this is not a subclass table, we need to filter columns.
+				if (!type.equals(DataSetTableType.MAIN_SUBCLASS)) {
+					// Skip columns that are not in the primary key and not in
+					// the relation restriction.
+					boolean inRestriction = restriction != null
+							&& parentDSCol instanceof WrappedColumn
+							&& restriction.getFirstTableAliases().keySet()
+									.contains(
+											((WrappedColumn) parentDSCol)
+													.getWrappedColumn());
+					boolean inPK = parentDSTablePK.getColumns().contains(
+							parentDSCol);
+					if (!inRestriction && !inPK)
+						continue;
+				}
 				// Otherwise, create a copy of the column.
 				DataSetColumn dsTableCol;
 				if (parentDSCol instanceof InheritedColumn)
@@ -2468,7 +2487,7 @@ public class DataSet extends GenericSchema {
 		 * prefixed as "a.mycolumn".
 		 * 
 		 * @param tablePrefix
-		 *            the prefix to use for the table in the expression. 
+		 *            the prefix to use for the table in the expression.
 		 * @return the substituted expression.
 		 */
 		public String getSubstitutedExpression(final String tablePrefix) {

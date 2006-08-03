@@ -100,7 +100,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.29, 1st August 2006
+ * @version 0.1.30, 3rd August 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -1132,10 +1132,21 @@ public class MartBuilderXML extends DefaultHandler {
 									.get(sourceRelation), xmlWriter);
 			}
 
+			// Make a place to store expression columns, which must come last
+			// in case they reference columns that come after them.
+			List expressionColumns = new ArrayList();
+
 			// Write out columns inside each table.
 			for (final Iterator ci = table.getColumns().iterator(); ci
 					.hasNext();) {
 				final Column col = (Column) ci.next();
+				// Skip expression columns till later.
+				if (col instanceof ExpressionColumn) {
+					expressionColumns.add(col);
+					continue;
+				}
+
+				// Otherwise continue as normal.
 				final String colMappedID = "" + this.currentElementID++;
 				this.reverseMappedObjects.put(col, colMappedID);
 
@@ -1201,43 +1212,6 @@ public class MartBuilderXML extends DefaultHandler {
 										.toString(), xmlWriter);
 					}
 
-					// Expression column?
-					else if (dcol instanceof ExpressionColumn) {
-						this.writeAttribute("type", "expression", xmlWriter);
-
-						// AliasCols, AliasNames - wrapped obj to string map
-						final StringBuffer aliasColumnIds = new StringBuffer();
-						final StringBuffer aliasNames = new StringBuffer();
-						for (final Iterator i = ((ExpressionColumn) dcol)
-								.getAliases().entrySet().iterator(); i
-								.hasNext();) {
-							final Map.Entry entry = (Map.Entry) i.next();
-							final DataSetColumn wrapped = (DataSetColumn) entry
-									.getKey();
-							final String alias = (String) entry.getValue();
-							aliasColumnIds
-									.append((String) this.reverseMappedObjects
-											.get(wrapped));
-							aliasNames.append(alias);
-							if (i.hasNext()) {
-								aliasColumnIds.append(',');
-								aliasNames.append(',');
-							}
-						}
-						this.writeAttribute("aliasColumnIds", aliasColumnIds
-								.toString(), xmlWriter);
-						this.writeAttribute("aliasNames",
-								aliasNames.toString(), xmlWriter);
-
-						// Other properties.
-						this.writeAttribute("expression",
-								((ExpressionColumn) dcol).getExpression(),
-								xmlWriter);
-						this.writeAttribute("groupBy", Boolean
-								.toString(((ExpressionColumn) dcol)
-										.getGroupBy()), xmlWriter);
-					}
-
 					// Others
 					else
 						throw new BuilderException(Resources.get(
@@ -1252,6 +1226,68 @@ public class MartBuilderXML extends DefaultHandler {
 				else
 					throw new BuilderException(Resources.get(
 							"unknownColumnType", col.getClass().getName()));
+
+				// Close off column element.
+				this.closeElement("column", xmlWriter);
+			}
+
+			// Write out expression columns, if any.
+			for (Iterator i = expressionColumns.iterator(); i.hasNext();) {
+				ExpressionColumn col = (ExpressionColumn) i.next();
+				final String colMappedID = "" + this.currentElementID++;
+				this.reverseMappedObjects.put(col, colMappedID);
+
+				// Start column.
+				this.openElement("column", xmlWriter);
+				this.writeAttribute("id", colMappedID, xmlWriter);
+				this.writeAttribute("name", col.getName(), xmlWriter);
+				this.writeAttribute("originalName", col.getOriginalName(),
+						xmlWriter);
+				this.writeAttribute("nullable", Boolean.toString(col
+						.getNullable()), xmlWriter);
+
+				final Relation underlyingRelation = col.getUnderlyingRelation();
+				String underlyingRelationId = "null";
+				if (underlyingRelation != null)
+					underlyingRelationId = (String) this.reverseMappedObjects
+							.get(underlyingRelation);
+				this.writeAttribute("underlyingRelationId",
+						underlyingRelationId, xmlWriter);
+				this.writeAttribute("dependency", Boolean
+						.toString(((DataSetColumn) col).getDependency()),
+						xmlWriter);
+				this.writeAttribute("alt", underlyingRelation == null ? "null"
+						: underlyingRelation.toString(), xmlWriter);
+
+				this.writeAttribute("type", "expression", xmlWriter);
+
+				// AliasCols, AliasNames - wrapped obj to string map
+				final StringBuffer aliasColumnIds = new StringBuffer();
+				final StringBuffer aliasNames = new StringBuffer();
+				for (final Iterator j = col.getAliases().entrySet().iterator(); j
+						.hasNext();) {
+					final Map.Entry entry = (Map.Entry) j.next();
+					final DataSetColumn wrapped = (DataSetColumn) entry
+							.getKey();
+					final String alias = (String) entry.getValue();
+					aliasColumnIds.append((String) this.reverseMappedObjects
+							.get(wrapped));
+					aliasNames.append(alias);
+					if (j.hasNext()) {
+						aliasColumnIds.append(',');
+						aliasNames.append(',');
+					}
+				}
+				this.writeAttribute("aliasColumnIds",
+						aliasColumnIds.toString(), xmlWriter);
+				this.writeAttribute("aliasNames", aliasNames.toString(),
+						xmlWriter);
+
+				// Other properties.
+				this.writeAttribute("expression", col.getExpression(),
+						xmlWriter);
+				this.writeAttribute("groupBy", Boolean.toString(col
+						.getGroupBy()), xmlWriter);
 
 				// Close off column element.
 				this.closeElement("column", xmlWriter);

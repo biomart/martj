@@ -41,7 +41,7 @@ import org.biomart.builder.resources.Resources;
  * schema instead, as specified by the datasetSchemaName parameter.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 27th July 2006
+ * @version 0.1.7, 3rd August 2006
  * @since 0.1
  */
 public abstract class MartConstructorAction {
@@ -509,7 +509,7 @@ public abstract class MartConstructorAction {
 		public Schema getPartitionTableSchema() {
 			return this.partitionTableSchema;
 		}
-		
+
 		public String getStatusMessage() {
 			return Resources.get("mcPartition");
 		}
@@ -1236,7 +1236,7 @@ public abstract class MartConstructorAction {
 		public List getSourceTableKeyColumns() {
 			return this.sourceTableKeyColumns;
 		}
-
+		
 		public String getSourceTableName() {
 			return this.sourceTableName;
 		}

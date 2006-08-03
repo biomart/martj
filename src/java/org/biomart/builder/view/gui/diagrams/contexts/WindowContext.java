@@ -51,7 +51,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * rather than the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.19, 25th July 2006
+ * @version 0.1.20, 3rd August 2006
  * @since 0.1
  */
 public class WindowContext extends SchemaContext {
@@ -580,20 +580,20 @@ public class WindowContext extends SchemaContext {
 
 			// Do the stroke.
 			final RelationComponent relcomp = (RelationComponent) component;
-			if (relation.isOptional()) {
-				if (relation.isOneToOne())
-					relcomp.setStroke(RelationComponent.ONE_ONE_OPTIONAL);
-				else if (relation.isManyToMany())
-					relcomp.setStroke(RelationComponent.MANY_MANY_OPTIONAL);
-				else
-					relcomp.setStroke(RelationComponent.ONE_MANY_OPTIONAL);
-			} else if (this.dataset.getRestrictedRelations().contains(relation)) {
+			if (this.dataset.getRestrictedRelations().contains(relation)) {
 				if (relation.isOneToOne())
 					relcomp.setStroke(RelationComponent.ONE_ONE_RESTRICTED);
 				else if (relation.isManyToMany())
 					relcomp.setStroke(RelationComponent.MANY_MANY_RESTRICTED);
 				else
 					relcomp.setStroke(RelationComponent.ONE_MANY_RESTRICTED);
+			} else if (relation.isOptional()) {
+				if (relation.isOneToOne())
+					relcomp.setStroke(RelationComponent.ONE_ONE_OPTIONAL);
+				else if (relation.isManyToMany())
+					relcomp.setStroke(RelationComponent.MANY_MANY_OPTIONAL);
+				else
+					relcomp.setStroke(RelationComponent.ONE_MANY_OPTIONAL);
 			} else if (relation.isOneToOne())
 				relcomp.setStroke(RelationComponent.ONE_ONE);
 			else if (relation.isManyToMany())
