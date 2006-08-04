@@ -70,7 +70,7 @@ import org.biomart.builder.resources.Resources;
  * Understands how to create SQL and DDL for an Oracle database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 3rd August 2006
+ * @version 0.1.14, 4th August 2006
  * @since 0.1
  */
 public class OracleDialect extends DatabaseDialect {
@@ -80,6 +80,8 @@ public class OracleDialect extends DatabaseDialect {
 
 	// Check we only make the aggregate functions once.
 	private static boolean GROUP_CONCAT_CREATED;
+
+	private int indexCount;
 
 	public boolean understandsDataLink(final DataLink dataLink) {
 
@@ -339,8 +341,9 @@ public class OracleDialect extends DatabaseDialect {
 		final String tableName = action.getIndexTableName();
 		final StringBuffer sb = new StringBuffer();
 
-		sb.append("create index " + schemaName + "." + tableName + "_I on "
-				+ schemaName + "." + tableName + "(");
+		sb.append("create index " + schemaName + "." + tableName + "_I_"
+				+ this.indexCount++ + " on " + schemaName + "." + tableName
+				+ "(");
 		for (final Iterator i = action.getIndexColumns().iterator(); i
 				.hasNext();) {
 			final Object obj = i.next();
@@ -367,7 +370,7 @@ public class OracleDialect extends DatabaseDialect {
 		final String tableName = action.getTableName();
 		final String colName = action.getColumnName();
 		statements.add("alter table " + schemaName + "." + tableName
-				+ " add column (" + colName + " number default 0)");
+				+ " add (" + colName + " number default 0)");
 	}
 
 	public void doOptimiseUpdateColumn(final OptimiseUpdateColumn action,
@@ -383,20 +386,21 @@ public class OracleDialect extends DatabaseDialect {
 		final String colName = action.getOptimiseColumnName();
 
 		final StringBuffer sb = new StringBuffer();
-		sb.append("update table " + pkSchemaName + "." + pkTableName + " a set "
-				+ colName + "=(select count(1) from " + fkSchemaName + "." + fkTableName + " b where ");
+		sb.append("update " + pkSchemaName + "." + pkTableName + " a set "
+				+ colName + "=(select count(1) from " + fkSchemaName + "."
+				+ fkTableName + " b where ");
 		for (int i = 0; i < action.getPkColumns().size(); i++) {
-			if (i>0)
+			if (i > 0)
 				sb.append(" and ");
-			Column pkCol = (Column)action.getPkColumns().get(i);
-			Column fkCol = (Column)action.getFkColumns().get(i);
+			final Column pkCol = (Column) action.getPkColumns().get(i);
+			final Column fkCol = (Column) action.getFkColumns().get(i);
 			sb.append("a.");
 			sb.append(pkCol.getName());
 			sb.append("=b.");
 			sb.append(fkCol.getName());
 		}
 		sb.append(')');
-		
+
 		statements.add(sb.toString());
 	}
 

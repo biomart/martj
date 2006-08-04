@@ -66,13 +66,15 @@ import org.biomart.builder.model.MartConstructorAction.Union;
  * Understands how to create SQL and DDL for a PostgreSQL database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 3rd August 2006
+ * @version 0.1.11, 4th August 2006
  * @since 0.1
  */
 public class PostgreSQLDialect extends DatabaseDialect {
 
 	private boolean cleanState;
 
+	private int indexCount;
+	
 	public boolean understandsDataLink(final DataLink dataLink) {
 
 		// Convert to JDBC version.
@@ -90,7 +92,8 @@ public class PostgreSQLDialect extends DatabaseDialect {
 
 	public void reset() {
 		this.cleanState = true;
-	}
+		this.indexCount=0;
+		}
 
 	public List executeSelectDistinct(final Column col) throws SQLException {
 		final String colName = col.getName();
@@ -357,7 +360,8 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
 				+ schemaName + ",pg_catalog");
 
-		sb.append("create index " + tableName + "_I on " + schemaName + "."
+		sb.append("create index " + tableName + "_I_" + this.indexCount++
+				+ " on " + schemaName + "."
 				+ tableName + "(");
 		for (final Iterator i = action.getIndexColumns().iterator(); i
 				.hasNext();) {
@@ -389,7 +393,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				+ schemaName + ",pg_catalog");
 
 		statements.add("alter table " + schemaName + "." + tableName
-				+ " add column (" + colName + " number default 0)");
+				+ " add column " + colName + " integer default 0");
 	}
 
 	public void doOptimiseUpdateColumn(final OptimiseUpdateColumn action,
@@ -408,14 +412,14 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				+ pkSchemaName + "," + fkSchemaName + ",pg_catalog");
 
 		final StringBuffer sb = new StringBuffer();
-		sb.append("update table " + pkSchemaName + "." + pkTableName + " a set "
+		sb.append("update " + pkSchemaName + "." + pkTableName + " set "
 				+ colName + "=(select count(1) from " + fkSchemaName + "." + fkTableName + " b where ");
 		for (int i = 0; i < action.getPkColumns().size(); i++) {
 			if (i>0)
 				sb.append(" and ");
-			Column pkCol = (Column)action.getPkColumns().get(i);
-			Column fkCol = (Column)action.getFkColumns().get(i);
-			sb.append("a.");
+			final Column pkCol = (Column)action.getPkColumns().get(i);
+			final Column fkCol = (Column)action.getFkColumns().get(i);
+			sb.append(pkSchemaName+"."+pkTableName+".");
 			sb.append(pkCol.getName());
 			sb.append("=b.");
 			sb.append(fkCol.getName());

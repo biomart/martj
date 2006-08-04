@@ -863,6 +863,7 @@ public interface MartConstructor {
 						actionGraph.addActionWithParent(fk, pk);
 						preDOAction = fk;
 					}
+					// FIXME - Not adding any columns!
 					// For each main or subclass table, identify all dimensions.
 					for (final Iterator j = vTables.iterator(); j.hasNext();) {
 						final VirtualTable vChildTable = (VirtualTable) j
@@ -871,7 +872,7 @@ public interface MartConstructor {
 								DataSetTableType.DIMENSION))
 							continue;
 						else if (!vChildTable.getParentDataSetRelation()
-								.getOneKey().getTable().equals(vParentTable))
+								.getOneKey().getTable().equals(vParentTable.getDataSetTable()))
 							continue;
 						// Child tables are tables that have the same child
 						// dataset table, and start with the same sequence
