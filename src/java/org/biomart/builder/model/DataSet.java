@@ -867,10 +867,10 @@ public class DataSet extends GenericSchema {
 		// table names have changed completely.
 		for (final Iterator i = renamedColumns.iterator(); i.hasNext();) {
 			final Column col = (Column) i.next();
-			final Column newCol = this.getTableByName(
-					col.getTable().getOriginalName()).getColumnByName(
-					col.getOriginalName());
 			try {
+				final Column newCol = this.getTableByName(
+						col.getTable().getOriginalName()).getColumnByName(
+						col.getOriginalName());
 				newCol.setName(col.getName());
 			} catch (final Throwable t) {
 				// Ignore, and leave the name as it is.
@@ -878,8 +878,8 @@ public class DataSet extends GenericSchema {
 		}
 		for (final Iterator i = renamedTables.iterator(); i.hasNext();) {
 			final Table tbl = (Table) i.next();
-			final Table newTbl = this.getTableByName(tbl.getOriginalName());
 			try {
+				final Table newTbl = this.getTableByName(tbl.getOriginalName());
 				newTbl.setName(tbl.getName());
 			} catch (final Throwable t) {
 				// Ignore, and leave the name as it is.
