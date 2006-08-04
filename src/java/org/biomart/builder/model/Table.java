@@ -49,7 +49,7 @@ import org.biomart.builder.resources.Resources;
  * but it does not provide any methods that process or analyse these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 22nd June 2006
+ * @version 0.1.15, 4th August 2006
  * @since 0.1
  */
 public interface Table extends Comparable {
@@ -260,7 +260,6 @@ public interface Table extends Comparable {
 		 */
 		public GenericTable(String name, final Schema schema) {
 			// Remember the values.
-			this.originalName = name;
 			this.schema = schema;
 			// Make the name unique.
 			final String baseName = name;
@@ -268,6 +267,7 @@ public interface Table extends Comparable {
 					+ "_" + i++)
 				;
 			this.name = name;
+			this.originalName = name;
 			// Add it to the schema.
 			try {
 				schema.addTable(this);

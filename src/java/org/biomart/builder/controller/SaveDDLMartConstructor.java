@@ -50,7 +50,7 @@ import org.biomart.builder.resources.Resources;
  * use JDBC to fetch/retrieve data between two databases.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.15, 2nd August 2006
+ * @version 0.1.16, 4th August 2006
  * @since 0.1
  */
 public class SaveDDLMartConstructor implements MartConstructor {
@@ -533,7 +533,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				for (final Iterator i = this.actions.entrySet().iterator(); i
 						.hasNext();) {
 					final Map.Entry actionEntry = (Map.Entry) i.next();
-					final String tableName = (String) actionEntry.getValue();
+					final String tableName = (String) actionEntry.getKey();
 					this.entry = new ZipEntry(this.martSequence + "/"
 							+ this.datasetSequence + "/" + tableName + ".sql");
 					this.entry.setTime(System.currentTimeMillis());

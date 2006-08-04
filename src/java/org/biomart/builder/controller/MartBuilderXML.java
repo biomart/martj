@@ -100,7 +100,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.30, 3rd August 2006
+ * @version 0.1.31, 4th August 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -401,9 +401,7 @@ public class MartBuilderXML extends DefaultHandler {
 						throw new SAXException(Resources.get(
 								"unknownColumnType", type));
 
-					// Override the name, to make sure we get the same alias as
-					// the original.
-					column.setName(name);
+					// Update remaining settings.
 					column.setOriginalName(originalName);
 					column.setDependency(dependency);
 					element = column;
