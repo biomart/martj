@@ -80,7 +80,7 @@ import org.biomart.builder.resources.Resources;
  * or keys, or to reinstate any that have previously been marked as incorrect.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.18, 31st July 2006
+ * @version 0.1.19, 4th August 2006
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -324,27 +324,11 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		try {
 			final DatabaseMetaData dmd = partnerLink.getConnection()
 					.getMetaData();
-			final ResultSet schemas = dmd.getSchemas();
-			while (schemas.next())
-				partnerSchemas.add(schemas.getString("TABLE_CATALOG") + "."
-						+ schemas.getString("TABLE_SCHEM"));
-
-			// If we got results, then the database supports schemas within
-			// catalogs. Therefore, we can compare them.
-			if (!partnerSchemas.isEmpty())
-				return partnerSchemas.contains(this.getConnection()
-						.getCatalog()
-						+ "." + this.schemaName);
-
-			// If we didn't get results, then the database supports only
-			// catalogs and not schemas. So, we need to compare by catalog only.
-			else {
-				final ResultSet catalogs = dmd.getCatalogs();
-				while (catalogs.next())
-					partnerSchemas.add(catalogs.getString("TABLE_CAT"));
-				return partnerSchemas.contains(this.getConnection()
-						.getCatalog());
-			}
+			// We need to compare by catalog only.
+			final ResultSet catalogs = dmd.getCatalogs();
+			while (catalogs.next())
+				partnerSchemas.add(catalogs.getString("TABLE_CAT"));
+			return partnerSchemas.contains(this.getConnection().getCatalog());
 		} catch (final Throwable t) {
 			// If get an error, assume can't find anything, thus assume
 			// incompatible.
@@ -502,7 +486,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						throw new MartBuilderInternalError(t);
 					}
 			} else // No, we did not find a PK on the database copy of the
-					// table,
+			// table,
 			// so that table should not have a PK at all. So if the existing
 			// table has a PK which is not handmade, remove it.
 			if (existingPK != null
