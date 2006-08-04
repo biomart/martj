@@ -53,7 +53,7 @@ import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
  * of the mart inside it, including all datasets and schemas.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 28th June 2006
+ * @version 0.1.14, 4th August 2006
  * @since 0.1
  */
 public class MartTabSet extends JTabbedPane {
@@ -81,7 +81,20 @@ public class MartTabSet extends JTabbedPane {
 		super();
 
 		// Create the file chooser.
-		this.xmlFileChooser = new JFileChooser();
+		this.xmlFileChooser = new JFileChooser() {
+			private static final long serialVersionUID = 1L;
+
+			public File getSelectedFile() {
+				File file = super.getSelectedFile();
+				if (file!=null && !file.exists()) {
+					String filename = file.getName();
+					String extension = ".xml";
+					if (!filename.endsWith(extension) && filename.indexOf('.')<0)
+						file = new File(file.getParentFile(), filename+extension);
+				}
+				return file;
+			}
+		};
 		this.xmlFileChooser.setFileFilter(new FileFilter() {
 			// Accepts only files ending in ".xml".
 			public boolean accept(final File f) {

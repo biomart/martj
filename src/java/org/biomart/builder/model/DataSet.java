@@ -60,7 +60,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.44, 3rd August 2006
+ * @version 0.1.45, 4th August 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -1125,7 +1125,7 @@ public class DataSet extends GenericSchema {
 			relationsFollowed.addAll(parentDSTable.getUnderlyingRelations());
 
 			// Work out restrictions on the source relation.
-			DataSetRelationRestriction restriction = this
+			final DataSetRelationRestriction restriction = this
 					.getRestrictedRelationType(sourceRelation);
 
 			// Loop over each column in the parent table. If this is
@@ -1314,8 +1314,13 @@ public class DataSet extends GenericSchema {
 						sourceRelation);
 
 				// If the column was in the merge table's PK, add it to the ds
-				// tables's PK too.
+				// tables's PK too, but only if M:M or not at the 1 end of 1:M.
 				if (mergeTablePK != null
+						&& (sourceRelation == null
+								|| sourceRelation.isManyToMany() || sourceRelation
+								.isOneToMany()
+								&& !sourceRelation.getOneKey().equals(
+										mergeTablePK))
 						&& mergeTablePK.getColumns().contains(c))
 					dsTablePKCols.add(wc);
 			} catch (final Throwable t) {

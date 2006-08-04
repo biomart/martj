@@ -61,7 +61,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * a given set of datasets, then lets them actually do it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 27th July 2006
+ * @version 0.1.7, 4th August 2006
  * @since 0.1
  */
 public class SaveDDLDialog extends JDialog {
@@ -162,7 +162,25 @@ public class SaveDDLDialog extends JDialog {
 
 		// Create a file chooser for finding the ZIP file where
 		// we will save.
-		this.zipFileChooser = new JFileChooser();
+		this.zipFileChooser = new JFileChooser() {
+			private static final long serialVersionUID = 1L;
+
+			public File getSelectedFile() {
+				File file = super.getSelectedFile();
+				if (file!=null && !file.exists()) {
+					final String filename = file.getName();
+					final SaveDDLGranularity gran = (SaveDDLGranularity) SaveDDLDialog.this.granularity
+							.getSelectedItem();
+					final String extension = gran != null && gran.getZipped() ? ".zip"
+							: ".ddl";
+					if (!filename.endsWith(extension)
+							&& filename.indexOf('.') < 0)
+						file = new File(file.getParentFile(), filename
+								+ extension);
+				}
+				return file;
+			}
+		};
 		this.zipFileFilter = new FileFilter() {
 			private boolean isZipped() {
 				final SaveDDLGranularity gran = (SaveDDLGranularity) SaveDDLDialog.this.granularity
