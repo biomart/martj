@@ -1314,10 +1314,10 @@ public class DataSet extends GenericSchema {
 						sourceRelation);
 
 				// If the column was in the merge table's PK, add it to the ds
-				// tables's PK too, but only if M:M or not at the 1 end of 1:M.
+				// tables's PK too, but only if not at the 1 end of 1:M.
 				if (mergeTablePK != null
 						&& (sourceRelation == null
-								|| sourceRelation.isManyToMany() || sourceRelation
+								|| !sourceRelation.isOneToMany() || sourceRelation
 								.isOneToMany()
 								&& !sourceRelation.getOneKey().equals(
 										mergeTablePK))

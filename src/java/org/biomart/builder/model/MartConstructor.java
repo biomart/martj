@@ -69,7 +69,7 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.24, 31st July 2006
+ * @version 0.1.25, 4th August 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -1090,7 +1090,7 @@ public interface MartConstructor {
 			for (int i = 0; i < vConstructionTable
 					.getDataSetTable().getUnderlyingKeys().size(); i++) {
 				// What key was followed from the previous table?
-				final Key dsSourceKey = (Key) vConstructionTable
+				final Key rSourceKey = (Key) vConstructionTable
 						.getDataSetTable().getUnderlyingKeys().get(i);
 				// What relation was followed?
 				final Relation rSourceRelation = (Relation) vConstructionTable
@@ -1098,18 +1098,19 @@ public interface MartConstructor {
 				// Left or inner join?
 				final boolean useLeftJoin = rSourceRelation.isOptional();
 				// What key did we reach by following the relation?
-				final Key dsTargetKey = rSourceRelation
-						.getOtherKey(dsSourceKey);
+				final Key rTargetKey = rSourceRelation
+						.getOtherKey(rSourceKey);
 				// What table did we reach, and therefore need to merge now?
-				final Table dsTargetTable = dsTargetKey.getTable();
-				String dsTargetTableName = dsTargetTable.getName();
+				final Table rTargetTable = rTargetKey.getTable();
+				String rTargetTableName = rTargetTable.getName();
+				Schema rTargetSchema = rTargetTable.getSchema();
 				// Is the target table going to need a union merge?
-				final boolean useUnionMerge = dsTargetTable.getSchema() instanceof SchemaGroup
-						&& !dsTargetTable.getSchema().equals(rMainTableSchema);
+				final boolean useUnionMerge = rTargetSchema instanceof SchemaGroup
+						&& !rTargetSchema.equals(rMainTableSchema);
 				// What are the equivalent columns on the existing temp table
 				// that correspond to the key on the previous table?
 				final List dsSourceKeyCols = vConstructionTable
-						.getDataSetColumns(dsSourceKey.getColumns());
+						.getDataSetColumns(rSourceKey.getColumns());
 				// What are the columns we should merge from this new table?
 				final List dsTargetIncludeCols = vConstructionTable
 						.getDataSetColumns(rSourceRelation);
@@ -1117,36 +1118,30 @@ public interface MartConstructor {
 				// same group schema we started with, create a union table
 				// containing all the targetTable copies, then merge with
 				// that instead.
-				Schema rTargetSchema;
 				if (useUnionMerge) {
 					// Build a list of schemas to union tables from.
 					final List rUnionSchemas = new ArrayList();
 					final List rUnionTableNames = new ArrayList();
-					if (dsTargetTable.getSchema() instanceof SchemaGroup)
-						for (final Iterator j = ((SchemaGroup) dsTargetTable
+						for (final Iterator j = ((SchemaGroup) rTargetTable
 								.getSchema()).getSchemas().iterator(); j
 								.hasNext();) {
 							final Schema rUnionSchema = (Schema) j.next();
 							rUnionSchemas.add(rUnionSchema);
-							rUnionTableNames.add(dsTargetTable.getName());
+							rUnionTableNames.add(rTargetTableName);
 						}
-					else {
-						rUnionSchemas.add(dsTargetTable.getSchema());
-						rUnionTableNames.add(dsTargetTable.getName());
-					}
 					// Make name for union table, which is now the target table.
-					dsTargetTableName = this.helper.getNewTempTableName();
+					rTargetTableName = this.helper.getNewTempTableName();
 					// Create union table.
 					final MartConstructorAction union = new Union(
 							this.datasetSchemaName, vConstructionTable
 									.getDataSetTable().getName(), null,
-							dsTargetTableName, rUnionSchemas, rUnionTableNames);
+							rTargetTableName, rUnionSchemas, rUnionTableNames);
 					actionGraph.addActionWithParent(union, lastActionPerformed);
 					// Create index on targetKey on union table.
 					final MartConstructorAction index = new Index(
 							this.datasetSchemaName, vConstructionTable
 									.getDataSetTable().getName(), null,
-							dsTargetTableName, dsTargetKey.getColumns());
+							rTargetTableName, rTargetKey.getColumns());
 					actionGraph.addActionWithParent(index, union);
 					// Update the last action performed to reflect the index
 					// of the union table.
@@ -1154,9 +1149,7 @@ public interface MartConstructor {
 					// Target schema is now the dataset schema. Null
 					// represents this.
 					rTargetSchema = null;
-				} else
-					// Target schema is same as source schema.
-					rTargetSchema = rSchema;
+				}
 				// Index sourceDSKey columns.
 				final MartConstructorAction index = new Index(
 						this.datasetSchemaName, vConstructionTable
@@ -1173,13 +1166,13 @@ public interface MartConstructor {
 								.getDataSetTable().getName(), null,
 						vMergedTableTempName, null, vTableTempName,
 						dsSourceKeyCols, useLeftJoin, rTargetSchema,
-						dsTargetTableName, dsTargetKey.getColumns(),
+						rTargetTableName, rTargetKey.getColumns(),
 						dsTargetIncludeCols, vConstructionTable.getDataSet()
 								.getRestrictedRelationType(rSourceRelation),
-						dsTargetTable.equals(rSourceRelation.getSecondKey()
+						rTargetTable.equals(rSourceRelation.getSecondKey()
 								.getTable()), rSourceRelation.isManyToMany(),
 						vConstructionTable.getDataSet().getRestrictedTableType(
-								dsTargetTable), true);
+								rTargetTable), true);
 				actionGraph.addActionWithParent(merge, index);
 				// Last action performed for this table is the merge, as
 				// the drop can be carried out later at any time.
@@ -1197,7 +1190,7 @@ public interface MartConstructor {
 					// lastActionPerformed, but does not update it.
 					drop = new Drop(this.datasetSchemaName, vConstructionTable
 							.getDataSetTable().getName(), null,
-							dsTargetTableName);
+							rTargetTableName);
 					actionGraph.addActionWithParent(drop, merge);
 				}
 			}
