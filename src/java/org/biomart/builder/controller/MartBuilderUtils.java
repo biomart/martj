@@ -62,7 +62,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.32, 2nd August 2006
+ * @version 0.1.33, 8th August 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -815,56 +815,7 @@ public class MartBuilderUtils {
 	 */
 	public static void renameDataSetColumn(final DataSetColumn col,
 			final String newName) {
-		// If the new name is the same as the old, ignore the request.
-		if (newName.equals(col.getName()))
-			return;
-
-		// Rename the column.
 		col.setName(newName);
-
-		// Make a list of relations involving this column. It
-		// is empty to start with.
-		final List relations = new ArrayList();
-
-		// Is it in any of the keys on this table?
-		for (final Iterator i = col.getTable().getKeys().iterator(); i
-				.hasNext();) {
-			final Key k = (Key) i.next();
-
-			// Is the column in this key?
-			if (k.getColumns().contains(col))
-				// Add the relations on the key to the list to process.
-				// The first half of the object in the list is the position
-				// of the column in the key. The second half is all relations
-				// involving that object.
-				relations.add(new Object[] {
-						new Integer(k.getColumns().indexOf(col)),
-						k.getRelations() });
-		}
-
-		// For each group of relations involving this column, iterate over
-		// each relation and rename the column in the keys at both ends.
-		for (final Iterator i = relations.iterator(); i.hasNext();) {
-			final Object[] obj = (Object[]) i.next();
-
-			// What index in the key is the column to rename?
-			final int colIndex = ((Integer) obj[0]).intValue();
-
-			// Loop over all the relations using that key.
-			for (final Iterator j = ((Collection) obj[1]).iterator(); j
-					.hasNext();) {
-				final Relation r = (Relation) j.next();
-
-				// Rename both ends using recursion. This works because this
-				// method skips the rename process if the names already match.
-				MartBuilderUtils.renameDataSetColumn((DataSetColumn) r
-						.getFirstKey().getColumns().get(colIndex), col
-						.getName());
-				MartBuilderUtils.renameDataSetColumn((DataSetColumn) r
-						.getSecondKey().getColumns().get(colIndex), col
-						.getName());
-			}
-		}
 	}
 
 	/**

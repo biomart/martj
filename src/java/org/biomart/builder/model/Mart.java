@@ -42,7 +42,7 @@ import org.biomart.builder.resources.Resources;
  * mart. It also has zero or more datasets based around these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.22, 2nd August 2006
+ * @version 0.1.23, 8th August 2006
  * @since 0.1
  */
 public class Mart {
@@ -91,6 +91,7 @@ public class Mart {
 		for (int i = 1; this.schemas.containsKey(name); name = baseName + "_"
 				+ i++)
 			;
+		schema.setName(name);
 		// Add it.
 		this.schemas.put(name, schema);
 	}
@@ -172,6 +173,7 @@ public class Mart {
 		for (int i = 1; this.datasets.containsKey(name); name = baseName + "_"
 				+ i++)
 			;
+		dataset.setName(name);
 		// Add it.
 		this.datasets.put(dataset.getName(), dataset);
 	}

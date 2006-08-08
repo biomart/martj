@@ -60,7 +60,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.45, 4th August 2006
+ * @version 0.1.46, 8th August 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -1151,18 +1151,20 @@ public class DataSet extends GenericSchema {
 						continue;
 				}
 				// Otherwise, create a copy of the column.
-				DataSetColumn dsTableCol;
+				DataSetColumn dsCol;
 				if (parentDSCol instanceof InheritedColumn)
-					dsTableCol = new InheritedColumn(dsTable,
+					dsCol = new InheritedColumn(dsTable,
 							((InheritedColumn) parentDSCol)
 									.getInheritedColumn());
 				else
-					dsTableCol = new InheritedColumn(dsTable, parentDSCol);
+					dsCol = new InheritedColumn(dsTable, parentDSCol);
+				// Copy the name, too.
+				dsCol.setName(parentDSCol.getName());
 				// Add the column to the child's PK and FK, if it was in
 				// the parent PK only.
 				if (parentDSTablePK.getColumns().contains(parentDSCol)) {
-					dsTablePKCols.add(dsTableCol);
-					dsTableFKCols.add(dsTableCol);
+					dsTablePKCols.add(dsCol);
+					dsTableFKCols.add(dsCol);
 				}
 			}
 
@@ -1861,6 +1863,43 @@ public class DataSet extends GenericSchema {
 
 			// Set up default dependency.
 			this.dependency = false;
+		}
+
+		/**
+		 * Renames the column, then renames all referring columns to match so
+		 * that we don't get different names for the same column in different
+		 * places.
+		 * 
+		 * @param name
+		 *            the new name to give the column. See
+		 *            {@link GenericColumn#setName(String)} for how this will be
+		 *            used.
+		 */
+		public void setName(final String name) {
+			// Skip if this would result in duplicated effort.
+			if (name.equals(this.getName()))
+				return;
+
+			// Rename the column.
+			super.setName(name);
+
+			// Is it in any of the keys on this table?
+			for (final Iterator i = this.getTable().getKeys().iterator(); i
+					.hasNext();) {
+				final Key k = (Key) i.next();
+
+				// Is the column in this key?
+				if (k.getColumns().contains(this)) 
+					// Iterate over the relations.
+					for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
+						Key targetKey = ((Relation)j.next()).getOtherKey(k);
+					// What is the target column?
+					DataSetColumn targetCol = (DataSetColumn)targetKey.
+					getColumns().get(k.getColumns().indexOf(this));
+					// Rename it.
+					targetCol.setName(this.getName());
+				}
+			}
 		}
 
 		/**

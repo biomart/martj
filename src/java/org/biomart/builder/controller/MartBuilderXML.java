@@ -100,7 +100,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.31, 4th August 2006
+ * @version 0.1.32, 8th August 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -372,11 +372,17 @@ public class MartBuilderXML extends DefaultHandler {
 								.get(attributes.get("wrappedColumnId"));
 						column = new WrappedColumn(wrappedCol,
 								(DataSetTable) tbl, underlyingRelation);
+						// Update name to ensure we have the same name
+						// the file specified.
+						column.setName(name);
 					} else if ("inherited".equals(type)) {
 						final DataSetColumn inheritedCol = (DataSetColumn) this.mappedObjects
 								.get(attributes.get("inheritedColumnId"));
 						column = new InheritedColumn((DataSetTable) tbl,
 								inheritedCol);
+						// Update name to ensure we have the same name
+						// the file specified.
+						column.setName(name);
 					} else if ("expression".equals(type)) {
 						column = new ExpressionColumn(name, (DataSetTable) tbl);
 						// AliasCols, AliasNames - wrapped obj to string map
@@ -401,7 +407,7 @@ public class MartBuilderXML extends DefaultHandler {
 						throw new SAXException(Resources.get(
 								"unknownColumnType", type));
 
-					// Update remaining settings.
+					// Update remaining settings. 
 					column.setOriginalName(originalName);
 					column.setDependency(dependency);
 					element = column;
