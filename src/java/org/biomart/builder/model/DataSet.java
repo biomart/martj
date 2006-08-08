@@ -886,6 +886,57 @@ public class DataSet extends GenericSchema {
 			}
 		}
 
+		// Attempt to reuse existing masked columns.
+		// Do this by first creating a set of columns from the new tables
+		// with identical table and column names to the old set of masked
+		// columns. Once the set is constructed, use it to replace the old
+		// set of masked columns.
+		final Collection newMaskedCols = new ArrayList();
+		for (final Iterator i = this.maskedDataSetColumns.iterator(); i
+				.hasNext();) {
+			final DataSetColumn col = (DataSetColumn) i.next();
+			if (this.getTables().contains(col.getTable())) {
+				// Find the new column with the same name.
+				final Table newTable = this.getTableByName(col.getTable()
+						.getName());
+				final Column newCol = newTable.getColumnByName(col.getName());
+
+				// If found, mask the column.
+				if (newCol != null)
+					newMaskedCols.add(newCol);
+			}
+		}
+		this.maskedDataSetColumns.clear();
+		this.maskedDataSetColumns.addAll(newMaskedCols);
+
+		// Attempt to reuse existing partitioned columns.
+		// Do this by first creating a set of columns from the new tables
+		// with identical table and column names to the old set of 
+		// columns. Once the set is constructed, use it to replace the old
+		// set of partitioned columns.
+		final Collection newPartDSCols = new ArrayList();
+		for (final Iterator i = this.partitionedDataSetColumns[0].iterator(); i
+				.hasNext();) {
+			final WrappedColumn col = (WrappedColumn) i.next();
+			if (this.getTables().contains(col.getTable())) {
+				// Find the new column with the same name.
+				final Table newTable = this.getTableByName(col.getTable()
+						.getName());
+				final Column newCol = newTable.getColumnByName(col.getName());
+
+				// If found, partition the column.
+				if (newCol != null)
+					newPartDSCols.add(newCol);
+			}
+		}
+		for (int i = 0; i < this.partitionedDataSetColumns[0].size(); i++) {
+			if (!newPartDSCols.contains(this.partitionedDataSetColumns[0].get(i))) {
+				this.partitionedDataSetColumns[0].remove(i);
+				this.partitionedDataSetColumns[1].remove(i);
+				i--;
+			}
+		}
+
 		// Regenerate all the ExpressionColumns and mark all
 		// their dependencies again. Drop any that refer to columns
 		// that no longer exist.
@@ -1031,53 +1082,6 @@ public class DataSet extends GenericSchema {
 		// Generate the main table. It will recursively generate all the others.
 		this.generateDataSetTable(DataSetTableType.MAIN, null, centralTable,
 				null);
-
-		// Attempt to reuse existing masked columns.
-		// Do this by first creating a set of columns from the new tables
-		// with identical table and column names to the old set of masked
-		// columns. Once the set is constructed, use it to replace the old
-		// set of masked columns.
-		final Collection newMaskedWrappedCols = new ArrayList();
-		for (final Iterator i = this.maskedDataSetColumns.iterator(); i
-				.hasNext();) {
-			final DataSetColumn col = (DataSetColumn) i.next();
-			if (this.getTables().contains(col.getTable())) {
-				// Find the new column with the same name.
-				final Table newTable = this.getTableByName(col.getTable()
-						.getName());
-				final Column newCol = newTable.getColumnByName(col.getName());
-
-				// If found, mask the column.
-				if (newCol != null)
-					newMaskedWrappedCols.add(newCol);
-			}
-		}
-		this.maskedDataSetColumns.retainAll(newMaskedWrappedCols);
-
-		// Attempt to reuse existing partitioned columns.
-		// Do this by first creating a set of columns from the new tables
-		// with identical table and column names to the old set of masked
-		// columns. Once the set is constructed, use it to replace the old
-		// set of partitioned columns.
-		final Collection newPartDSCols = new ArrayList();
-		for (final Iterator i = this.partitionedDataSetColumns[0].iterator(); i
-				.hasNext();) {
-			final WrappedColumn col = (WrappedColumn) i.next();
-			if (this.getTables().contains(col.getTable())) {
-				// Find the new column with the same name.
-				final Table newTable = this.getTableByName(col.getTable()
-						.getName());
-				final Column newCol = newTable.getColumnByName(col.getName());
-
-				// If found, partition the column.
-				if (newCol != null)
-					newPartDSCols.add(newCol);
-			}
-		}
-		for (final Iterator i = this.partitionedDataSetColumns[0].iterator(); i
-				.hasNext();)
-			if (!newPartDSCols.contains(i.next()))
-				i.remove();
 	}
 
 	private void generateDataSetTable(final DataSetTableType type,
@@ -1205,20 +1209,6 @@ public class DataSet extends GenericSchema {
 					relationsFollowed, makeDimensions);
 		}
 
-		// If the primary key is empty, then we must create one, else we
-		// will run into trouble later. Therefore, all tables must contain
-		// unique rows.
-		if (dsTablePKCols.isEmpty())
-			// Create the PK by adding every wrapped column in the
-			// dataset table. We don't care about other columns
-			// as that would create primary key update hell.
-			for (final Iterator i = dsTable.getColumns().iterator(); i
-					.hasNext();) {
-				final DataSetColumn dsCol = (DataSetColumn) i.next();
-				if (dsCol instanceof WrappedColumn)
-					dsTablePKCols.add(dsCol);
-			}
-
 		// Add a schema name column, if we are partitioning by schema name.
 		// If the table has a PK by this stage, add the schema name column
 		// to it, otherwise don't bother as it'll introduce unnecessary
@@ -1237,16 +1227,17 @@ public class DataSet extends GenericSchema {
 
 		// Create the primary key on this table. First check that
 		// all columns end in '_key'. If they don't, make it so.
-		try {
-			for (final Iterator i = dsTablePKCols.iterator(); i.hasNext();) {
-				final DataSetColumn col = (DataSetColumn) i.next();
-				if (!col.getName().endsWith(Resources.get("pkSuffix")))
-					col.setName(col.getName() + Resources.get("pkSuffix"));
+		if (!dsTablePKCols.isEmpty())
+			try {
+				for (final Iterator i = dsTablePKCols.iterator(); i.hasNext();) {
+					final DataSetColumn col = (DataSetColumn) i.next();
+					if (!col.getName().endsWith(Resources.get("pkSuffix")))
+						col.setName(col.getName() + Resources.get("pkSuffix"));
+				}
+				dsTable.setPrimaryKey(new GenericPrimaryKey(dsTablePKCols));
+			} catch (final Throwable t) {
+				throw new MartBuilderInternalError(t);
 			}
-			dsTable.setPrimaryKey(new GenericPrimaryKey(dsTablePKCols));
-		} catch (final Throwable t) {
-			throw new MartBuilderInternalError(t);
-		}
 
 		// Process the subclass relations of this table.
 		for (int i = 0; i < subclassQ.size(); i++) {
@@ -1889,16 +1880,16 @@ public class DataSet extends GenericSchema {
 				final Key k = (Key) i.next();
 
 				// Is the column in this key?
-				if (k.getColumns().contains(this)) 
+				if (k.getColumns().contains(this))
 					// Iterate over the relations.
-					for (Iterator j = k.getRelations().iterator(); j.hasNext(); ) {
-						Key targetKey = ((Relation)j.next()).getOtherKey(k);
-					// What is the target column?
-					DataSetColumn targetCol = (DataSetColumn)targetKey.
-					getColumns().get(k.getColumns().indexOf(this));
-					// Rename it.
-					targetCol.setName(this.getName());
-				}
+					for (Iterator j = k.getRelations().iterator(); j.hasNext();) {
+						Key targetKey = ((Relation) j.next()).getOtherKey(k);
+						// What is the target column?
+						DataSetColumn targetCol = (DataSetColumn) targetKey
+								.getColumns().get(k.getColumns().indexOf(this));
+						// Rename it.
+						targetCol.setName(this.getName());
+					}
 			}
 		}
 

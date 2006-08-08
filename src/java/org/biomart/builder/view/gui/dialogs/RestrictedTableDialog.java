@@ -55,7 +55,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * table for this dataset only.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 31st July 2006
+ * @version 0.1.3, 8th August 2006
  * @since 0.1
  */
 public class RestrictedTableDialog extends JDialog {
@@ -99,6 +99,7 @@ public class RestrictedTableDialog extends JDialog {
 
 		// Remembers the dataset tabset this dialog is referring to.
 		this.martTab = martTab;
+		this.cancelled = true;
 
 		// Create the content pane to store the create dialog panel.
 		final GridBagLayout gridBag = new GridBagLayout();
@@ -127,7 +128,6 @@ public class RestrictedTableDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Create the fields that will contain the user's table choices.
-		this.cancelled = false;
 		this.expression = new JTextArea(10, 40); // Arbitrary size.
 
 		// First table aliases.
@@ -226,7 +226,6 @@ public class RestrictedTableDialog extends JDialog {
 		// dialog without making any changes.
 		this.cancel.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				RestrictedTableDialog.this.cancelled = true;
 				RestrictedTableDialog.this.hide();
 			}
 		});
@@ -235,8 +234,10 @@ public class RestrictedTableDialog extends JDialog {
 		// the appropriate partition type, then close the dialog.
 		this.execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				if (RestrictedTableDialog.this.validateFields())
+				if (RestrictedTableDialog.this.validateFields()) {
+					RestrictedTableDialog.this.cancelled = false;
 					RestrictedTableDialog.this.hide();
+				}
 			}
 		});
 

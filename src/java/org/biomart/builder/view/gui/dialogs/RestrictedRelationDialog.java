@@ -56,7 +56,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * relation for this dataset only.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 31st July 2006
+ * @version 0.1.4, 8th August 2006
  * @since 0.1
  */
 public class RestrictedRelationDialog extends JDialog {
@@ -108,6 +108,7 @@ public class RestrictedRelationDialog extends JDialog {
 
 		// Remembers the dataset tabset this dialog is referring to.
 		this.martTab = martTab;
+		this.cancelled = true;
 
 		// Create the content pane to store the create dialog panel.
 		final GridBagLayout gridBag = new GridBagLayout();
@@ -136,7 +137,6 @@ public class RestrictedRelationDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Create the fields that will contain the user's table choices.
-		this.cancelled = false;
 		this.expression = new JTextArea(10, 40); // Arbitrary size.
 
 		// First table aliases.
@@ -325,7 +325,6 @@ public class RestrictedRelationDialog extends JDialog {
 		// dialog without making any changes.
 		this.cancel.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				RestrictedRelationDialog.this.cancelled = true;
 				RestrictedRelationDialog.this.hide();
 			}
 		});
@@ -334,8 +333,10 @@ public class RestrictedRelationDialog extends JDialog {
 		// the appropriate partition type, then close the dialog.
 		this.execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				if (RestrictedRelationDialog.this.validateFields())
+				if (RestrictedRelationDialog.this.validateFields()) {
+					RestrictedRelationDialog.this.cancelled = false;
 					RestrictedRelationDialog.this.hide();
+				}
 			}
 		});
 

@@ -840,21 +840,16 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Unmasks a column within a dataset, then regenerates the dataset.
+	 * Unmasks a column within a dataset.
 	 * 
 	 * @param dataset
 	 *            the dataset to unmask the column in.
 	 * @param column
 	 *            the column to unmask.
-	 * @throws SQLException
-	 *             if the dataset could not be synchronised.
-	 * @throws BuilderException
-	 *             if the dataset could not be synchronised.
 	 */
 	public static void unmaskColumn(final DataSet dataset,
-			final DataSetColumn column) throws SQLException, BuilderException {
+			final DataSetColumn column) {
 		dataset.unmaskDataSetColumn(column);
-		dataset.synchronise();
 	}
 
 	/**
@@ -869,16 +864,11 @@ public class MartBuilderUtils {
 	 * @throws AssociationException
 	 *             if the column could not be used for partitioning, for
 	 *             whatever reason.
-	 * @throws BuilderException
-	 *             if anything goes wrong during subsequent synchronisation.
-	 * @throws SQLException
-	 *             if anything goes wrong during subsequent synchronisation.
 	 */
 	public static void partitionByColumn(final DataSet dataset,
 			final DataSetColumn column, final PartitionedColumnType type)
-			throws AssociationException, BuilderException, SQLException {
+			throws AssociationException {
 		dataset.flagPartitionedDataSetColumn(column, type);
-		dataset.synchronise();
 	}
 
 	/**
@@ -888,15 +878,10 @@ public class MartBuilderUtils {
 	 *            the dataset to turn off partitioning for on this column.
 	 * @param column
 	 *            the column to turn off partitioning for.
-	 * @throws BuilderException
-	 *             if anything goes wrong during subsequent synchronisation.
-	 * @throws SQLException
-	 *             if anything goes wrong during subsequent synchronisation.
 	 */
 	public static void unpartitionByColumn(final DataSet dataset,
-			final DataSetColumn column) throws BuilderException, SQLException {
+			final DataSetColumn column) {
 		dataset.unflagPartitionedDataSetColumn(column);
-		dataset.synchronise();
 	}
 
 	/**

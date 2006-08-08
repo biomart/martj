@@ -58,7 +58,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * This dialog asks users to create or modify an expression column.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 31st July 2006
+ * @version 0.1.7, 8th August 2006
  * @since 0.1
  */
 public class ExpressionColumnDialog extends JDialog {
@@ -109,6 +109,7 @@ public class ExpressionColumnDialog extends JDialog {
 		// Remembers the dataset tabset this dialog is referring to.
 		this.martTab = martTab;
 		this.table = table;
+		this.cancelled = true;
 
 		// Create the content pane to store the create dialog panel.
 		final GridBagLayout gridBag = new GridBagLayout();
@@ -137,7 +138,6 @@ public class ExpressionColumnDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Create the fields that will contain the user's table choices.
-		this.cancelled = false;
 		this.columnName = new JTextField(30); // Arbitrary size.
 		this.expression = new JTextArea(10, 40); // Arbitrary size.
 		this.columnAliasModel = new ColumnAliasTableModel(table, template);
@@ -256,7 +256,6 @@ public class ExpressionColumnDialog extends JDialog {
 		// dialog without making any changes.
 		this.cancel.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				ExpressionColumnDialog.this.cancelled = true;
 				ExpressionColumnDialog.this.hide();
 			}
 		});
@@ -265,8 +264,10 @@ public class ExpressionColumnDialog extends JDialog {
 		// the appropriate partition type, then close the dialog.
 		this.execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				if (ExpressionColumnDialog.this.validateFields())
+				if (ExpressionColumnDialog.this.validateFields()) {
+					ExpressionColumnDialog.this.cancelled = false;
 					ExpressionColumnDialog.this.hide();
+				}
 			}
 		});
 
