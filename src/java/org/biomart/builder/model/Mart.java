@@ -489,10 +489,15 @@ public class Mart {
 	 *            the new name for it.
 	 */
 	public void renameDataSet(final DataSet dataset, String name) {
+		// Skip if name is the same already.
+		if (name.equals(dataset.getName()))
+			return;
+
 		final String baseName = name;
 		// Check we don't have one by this name already. Alias if we do.
-		for (int i = 1; this.datasets.containsKey(name); name = baseName + "_"
-				+ i++)
+		for (int i = 1; this.datasets.containsKey(name)
+				&& !this.datasets.get(name).equals(dataset); name = baseName
+				+ "_" + i++)
 			;
 		// Rename it.
 		this.datasets.remove(dataset.getName());
