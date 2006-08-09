@@ -33,7 +33,7 @@ import org.biomart.builder.resources.Resources;
  * name.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 2nd August 2006
+ * @version 0.1.9, 9th August 2006
  * @since 0.1
  */
 public interface Column extends Comparable {
@@ -79,21 +79,6 @@ public interface Column extends Comparable {
 	public Table getTable();
 
 	/**
-	 * Sets whether this column is nullable or not.
-	 * 
-	 * @param nullable
-	 *            <tt>true</tt> if it is nullable, <tt>false</tt> if not.
-	 */
-	public void setNullable(boolean nullable);
-
-	/**
-	 * Tests to see if this column is nullable or not.
-	 * 
-	 * @return <tt>true</tt> if it is nullable, <tt>false</tt> if not.
-	 */
-	public boolean getNullable();
-
-	/**
 	 * A generic implementation which provides the basic functionality required
 	 * for a column to function.
 	 */
@@ -103,8 +88,6 @@ public interface Column extends Comparable {
 		private String originalName;
 
 		private String name;
-
-		private boolean nullable;
 
 		/**
 		 * This constructor creates a column and remembers the name and parent
@@ -118,7 +101,6 @@ public interface Column extends Comparable {
 		public GenericColumn(String name, final Table table) {
 			// Remember the values.
 			this.table = table;
-			this.nullable = false;
 			// Make the name unique.
 			String baseName = name;
 			String suffix = Resources.get("pkSuffix");
@@ -173,14 +155,6 @@ public interface Column extends Comparable {
 
 		public void setOriginalName(final String newName) {
 			this.originalName = newName;
-		}
-
-		public boolean getNullable() {
-			return this.nullable;
-		}
-
-		public void setNullable(final boolean nullable) {
-			this.nullable = nullable;
 		}
 
 		public String toString() {

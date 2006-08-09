@@ -632,9 +632,9 @@ public class DataSet extends GenericSchema {
 				final DataSetColumn col = (DataSetColumn) j.next();
 				if (col instanceof ExpressionColumn)
 					expressionColumns.add(col);
-				if (col.getMasked())
+				else if (col.getMasked())
 					maskedColumns.add(col);
-				if (col.getPartitionType() != null)
+				else if (col.getPartitionType() != null)
 					partitionColumns.put(col, col.getPartitionType());
 			}
 
@@ -1853,8 +1853,9 @@ public class DataSet extends GenericSchema {
 
 			public void setMasked(boolean masked) throws AssociationException {
 				super.setMasked(masked);
-				((DataSet) this.getTable().getSchema()).maskRelation(this
-						.getUnderlyingRelation());
+				if (masked)
+					((DataSet) this.getTable().getSchema()).maskRelation(this
+							.getUnderlyingRelation());
 			}
 
 			public void setPartitionType(PartitionedColumnType partitionType)
@@ -2103,7 +2104,8 @@ public class DataSet extends GenericSchema {
 
 			public void setMasked(boolean masked) throws AssociationException {
 				super.setMasked(masked);
-				((DataSetTable) this.getTable()).removeColumn(this);
+				if (masked)
+					((DataSetTable) this.getTable()).removeColumn(this);
 			}
 
 			public void setPartitionType(PartitionedColumnType partitionType)

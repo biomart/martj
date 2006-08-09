@@ -450,12 +450,8 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Generic column?
 				else if (tbl instanceof GenericTable) {
-					final String nullable = (String) attributes.get("nullable");
 					final Column column = new GenericColumn(name, tbl);
 					column.setOriginalName(originalName);
-					column
-							.setNullable(Boolean.valueOf(nullable)
-									.booleanValue());
 					element = column;
 				}
 
@@ -521,7 +517,7 @@ public class MartBuilderXML extends DefaultHandler {
 				throw new SAXException(Resources.get("fkOutsideTable"));
 			final Table tbl = (Table) this.objectStack.peek();
 
-			// Get the ID and nullability.
+			// Get the ID.
 			final String id = (String) attributes.get("id");
 
 			try {
@@ -1118,8 +1114,6 @@ public class MartBuilderXML extends DefaultHandler {
 				this.writeAttribute("name", col.getName(), xmlWriter);
 				this.writeAttribute("originalName", col.getOriginalName(),
 						xmlWriter);
-				this.writeAttribute("nullable", Boolean.toString(col
-						.getNullable()), xmlWriter);
 
 				// Dataset column?
 				if (col instanceof DataSetColumn) {
@@ -1251,8 +1245,6 @@ public class MartBuilderXML extends DefaultHandler {
 				this.writeAttribute("name", col.getName(), xmlWriter);
 				this.writeAttribute("originalName", col.getOriginalName(),
 						xmlWriter);
-				this.writeAttribute("nullable", Boolean.toString(col
-						.getNullable()), xmlWriter);
 
 				final Relation underlyingRelation = col.getUnderlyingRelation();
 				String underlyingRelationId = "null";
@@ -1261,9 +1253,9 @@ public class MartBuilderXML extends DefaultHandler {
 							.get(underlyingRelation);
 				this.writeAttribute("underlyingRelationId",
 						underlyingRelationId, xmlWriter);
-				this.writeAttribute("dependency", Boolean
-						.toString(((DataSetColumn) col).getDependency()),
-						xmlWriter);
+				this.writeAttribute("dependency", "false", xmlWriter);
+				this.writeAttribute("masked", "false", xmlWriter);
+				this.writeAttribute("partitionType", "null", xmlWriter);
 				this.writeAttribute("alt", underlyingRelation == null ? "null"
 						: underlyingRelation.toString(), xmlWriter);
 

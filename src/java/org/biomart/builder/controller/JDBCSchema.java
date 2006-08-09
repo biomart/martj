@@ -382,7 +382,6 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			while (dbTblCols.next()) {
 				// What is the column called, and is it nullable?
 				final String dbTblColName = dbTblCols.getString("COLUMN_NAME");
-				final int nullable = dbTblCols.getInt("NULLABLE");
 
 				// Look to see if the column already exists on this table. If it
 				// does, reuse it. Else, create it.
@@ -393,10 +392,6 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 					} catch (final Throwable t) {
 						throw new MartBuilderInternalError(t);
 					}
-
-				// If the column is nullable, remember the fact.
-				dbTblCol
-						.setNullable(nullable == DatabaseMetaData.attributeNullable);
 
 				// Column exists, so remove it from our list of columns to be
 				// dropped at the end of the loop.
