@@ -41,7 +41,7 @@ import org.biomart.builder.resources.Resources;
  * {@link ComponentStatus#INFERRED}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 12th July 2006
+ * @version 0.1.12, 9th August 2006
  * @since 0.1
  */
 public interface Key extends Comparable {
@@ -151,21 +151,6 @@ public interface Key extends Comparable {
 	 * This interface is designed to mark key instances as foreign keys.
 	 */
 	public interface ForeignKey extends Key {
-		/**
-		 * Sets the nullability of this key.
-		 * 
-		 * @param nullable
-		 *            <tt>true</tt> if nulls are allowed, <tt>false</tt>if
-		 *            not.
-		 */
-		public void setNullable(boolean nullable);
-
-		/**
-		 * Check to see if this key is nullable.
-		 * 
-		 * @return <tt>true</tt> if it is nullable, <tt>false</tt> if not.
-		 */
-		public boolean getNullable();
 	}
 
 	/**
@@ -421,13 +406,10 @@ public interface Key extends Comparable {
 	 * This implementation is a simple foreign key.
 	 */
 	public class GenericForeignKey extends GenericKey implements ForeignKey {
-		private boolean nullable = false;
-
 		/**
 		 * The constructor passes on all its work to the {@link GenericKey}
 		 * constructor. It then adds itself to the set of foreign keys on the
-		 * parent table. By default, the nullability of this key is set to
-		 * <tt>false</tt>, which means nulls are not allowed.
+		 * parent table. 
 		 * 
 		 * @param columns
 		 *            the list of columns to form the key over.
@@ -443,14 +425,6 @@ public interface Key extends Comparable {
 		public String getName() {
 			final String supername = super.getName();
 			return Resources.get("fkPrefix") + supername;
-		}
-
-		public void setNullable(final boolean nullable) {
-			this.nullable = nullable;
-		}
-
-		public boolean getNullable() {
-			return this.nullable;
 		}
 	}
 }

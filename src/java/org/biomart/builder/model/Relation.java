@@ -42,7 +42,7 @@ import org.biomart.builder.resources.Resources;
  * outlined above.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 21st June 2006
+ * @version 0.1.13, 9th August 2006
  * @since 0.1
  */
 public interface Relation extends Comparable {
@@ -87,16 +87,6 @@ public interface Relation extends Comparable {
 	 * @return the second key.
 	 */
 	public Key getSecondKey();
-
-	/**
-	 * Returns whether or not this relation is optional or compulsory. A
-	 * relation is optional of one or both of the keys are nullable. Optionality
-	 * is set through the keys, not through the relation.
-	 * 
-	 * @return <tt>true</tt> if this relation is optional, <tt>false</tt> if
-	 *         not.
-	 */
-	public boolean isOptional();
 
 	/**
 	 * Given a key that is in this relationship, return the other key.
@@ -398,15 +388,6 @@ public interface Relation extends Comparable {
 
 		public Key getSecondKey() {
 			return this.secondKey;
-		}
-
-		public boolean isOptional() {
-			if (this.firstKey instanceof ForeignKey)
-				return ((ForeignKey) this.firstKey).getNullable();
-			else if (this.secondKey instanceof ForeignKey)
-				return ((ForeignKey) this.secondKey).getNullable();
-			else
-				return false;
 		}
 
 		public Key getOtherKey(final Key key) throws IllegalArgumentException {

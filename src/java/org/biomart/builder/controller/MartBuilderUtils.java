@@ -62,7 +62,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.33, 8th August 2006
+ * @version 0.1.34, 9th August 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -835,21 +835,30 @@ public class MartBuilderUtils {
 	public static void maskColumn(final DataSet dataset,
 			final DataSetColumn column) throws AssociationException,
 			SQLException, BuilderException {
-		dataset.maskDataSetColumn(column);
+		column.setMasked(true);
 		dataset.synchronise();
 	}
 
 	/**
-	 * Unmasks a column within a dataset.
+	 * Unmasks a column within a dataset, then regenerates the dataset.
 	 * 
 	 * @param dataset
 	 *            the dataset to unmask the column in.
 	 * @param column
 	 *            the column to unmask.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws BuilderException
+	 *             if the dataset could not be synchronised.
+	 * @throws AssociationException
+	 *             if the column could not be used for masking, for whatever
+	 *             reason.
 	 */
 	public static void unmaskColumn(final DataSet dataset,
-			final DataSetColumn column) {
-		dataset.unmaskDataSetColumn(column);
+			final DataSetColumn column) throws AssociationException,
+			BuilderException, SQLException {
+		column.setMasked(false);
+		dataset.synchronise();
 	}
 
 	/**
@@ -868,7 +877,7 @@ public class MartBuilderUtils {
 	public static void partitionByColumn(final DataSet dataset,
 			final DataSetColumn column, final PartitionedColumnType type)
 			throws AssociationException {
-		dataset.flagPartitionedDataSetColumn(column, type);
+		column.setPartitionType(type);
 	}
 
 	/**
@@ -878,10 +887,13 @@ public class MartBuilderUtils {
 	 *            the dataset to turn off partitioning for on this column.
 	 * @param column
 	 *            the column to turn off partitioning for.
+	 * @throws AssociationException
+	 *             if the column could not be used for partitioning, for
+	 *             whatever reason.
 	 */
 	public static void unpartitionByColumn(final DataSet dataset,
-			final DataSetColumn column) {
-		dataset.unflagPartitionedDataSetColumn(column);
+			final DataSetColumn column) throws AssociationException {
+		column.setPartitionType(null);
 	}
 
 	/**
@@ -1024,20 +1036,6 @@ public class MartBuilderUtils {
 			final ComponentStatus status) {
 		key.setStatus(status);
 		mart.synchroniseDataSets();
-	}
-
-	/**
-	 * Changes the nullability of a foreign key.
-	 * 
-	 * @param key
-	 *            the foreign key to change.
-	 * @param nullable
-	 *            the new nullable status to give the key. <tt>true</tt> means
-	 *            it is nullable, <tt>false</tt> means it is not.
-	 */
-	public static void changeForeignKeyNullability(final ForeignKey key,
-			final boolean nullable) {
-		key.setNullable(nullable);
 	}
 
 	/**

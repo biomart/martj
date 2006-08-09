@@ -48,7 +48,6 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
-import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.resources.SettingsCache;
@@ -72,7 +71,7 @@ import org.biomart.builder.view.gui.dialogs.SchemaManagerDialog;
  * represented in each of the tabs has the same context applied.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.22, 2nd August 2006
+ * @version 0.1.23, 9th August 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -1399,58 +1398,7 @@ public class SchemaTabSet extends JTabbedPane {
 		if (!cols.isEmpty() && !cols.equals(key.getColumns()))
 			this.requestEditKey(key, cols);
 	}
-
-	/**
-	 * Change the nullability of a foreign key.
-	 * 
-	 * @param key
-	 *            the key to change.
-	 * @param nullable
-	 *            <tt>true</tt> if it should be nullable, <tt>false</tt> if
-	 *            not.
-	 */
-	public void requestChangeForeignKeyNullability(final ForeignKey key,
-			final boolean nullable) {
-		// In the background, make the change.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Do the changes.
-					MartBuilderUtils.changeForeignKeyNullability(key, nullable);
-
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							// Repaint the schema diagram this key appears in,
-							// as the relation components will have changed
-							// appearance.
-							SchemaTabSet.this.repaintSchemaDiagram(key
-									.getTable().getSchema());
-
-							// The same may have happened in the all-schemas
-							// diagram if
-							// this key had any external relations, or belonged
-							// to a
-							// table which had external relations on some other
-							// key.
-							SchemaTabSet.this.repaintOverviewDiagram();
-
-							// Set the dataset tabset status to modified.
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.setModifiedStatus(true);
-						}
-					});
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
-						}
-					});
-				}
-			}
-		});
-	}
-
+	
 	/**
 	 * Change the columns that a key uses.
 	 * 
@@ -1752,11 +1700,9 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void setDiagramContext(final DiagramContext diagramContext) {
 		this.diagramContext = diagramContext;
-		for (int i = 0; i < this.getTabCount(); i++) {
-			final Diagram diagram = (Diagram) ((JScrollPane) this
-					.getComponentAt(i)).getViewport().getView();
-			diagram.setDiagramContext(diagramContext);
-		}
+		this.allSchemasDiagram.setDiagramContext(diagramContext);
+		for (Iterator i = this.schemaToDiagram[1].iterator(); i.hasNext(); ) 
+			((Diagram)i.next()).setDiagramContext(diagramContext);
 	}
 
 	/**

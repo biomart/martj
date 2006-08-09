@@ -42,7 +42,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * rather than exact component.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 25th July 2006
+ * @version 0.1.14, 9th August 2006
  * @since 0.1
  */
 public abstract class BoxShapedComponent extends JPanel implements
@@ -151,6 +151,10 @@ public abstract class BoxShapedComponent extends JPanel implements
 	}
 
 	public abstract void recalculateDiagramComponent();
+
+	public void repaintDiagramComponent() {
+		this.repaint(this.getVisibleRect());
+	}
 
 	public Map getSubComponents() {
 		return this.subComponents;

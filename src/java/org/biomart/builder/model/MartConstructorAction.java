@@ -41,7 +41,7 @@ import org.biomart.builder.resources.Resources;
  * schema instead, as specified by the datasetSchemaName parameter.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 3rd August 2006
+ * @version 0.1.8, 9th August 2006
  * @since 0.1
  */
 public abstract class MartConstructorAction {
@@ -516,59 +516,6 @@ public abstract class MartConstructorAction {
 	}
 
 	/**
-	 * Primary key actions create a primary key over the given set of columns on
-	 * the given table.
-	 */
-	public static class PK extends MartConstructorAction {
-
-		private Schema pkTableSchema;
-
-		private String pkTableName;
-
-		private List pkColumns;
-
-		/**
-		 * Creates a primary key.
-		 * 
-		 * @param dsSchemaName
-		 *            the dataset schema name to use by default.
-		 * @param dsTableName
-		 *            the dataset table this action is associated with.
-		 * @param pkTableSchema
-		 *            the schema holding the table to create the key for.
-		 * @param pkTableName
-		 *            the table to create the key for.
-		 * @param pkColumns
-		 *            the column names to include in the key. Items in this list
-		 *            are {@link Column} instances.
-		 */
-		public PK(final String dsSchemaName, final String dsTableName,
-				final Schema pkTableSchema, final String pkTableName,
-				final List pkColumns) {
-			super(dsSchemaName, dsTableName);
-			this.pkTableSchema = pkTableSchema;
-			this.pkTableName = pkTableName;
-			this.pkColumns = pkColumns;
-		}
-
-		public List getPkColumns() {
-			return this.pkColumns;
-		}
-
-		public String getPkTableName() {
-			return this.pkTableName;
-		}
-
-		public Schema getPkTableSchema() {
-			return this.pkTableSchema;
-		}
-
-		public String getStatusMessage() {
-			return Resources.get("mcPK");
-		}
-	}
-
-	/**
 	 * Index actions create indexes over the given set of columns on the given
 	 * table.
 	 */
@@ -619,91 +566,6 @@ public abstract class MartConstructorAction {
 
 		public String getStatusMessage() {
 			return Resources.get("mcIndex");
-		}
-	}
-
-	/**
-	 * Foreign key actions create a foreign key over the given set of columns on
-	 * the given table, then establishes a relation to the given primary key
-	 * columns an the given table.
-	 */
-	public static class FK extends MartConstructorAction {
-
-		private Schema fkTableSchema;
-
-		private String fkTableName;
-
-		private List fkColumns;
-
-		private Schema pkTableSchema;
-
-		private String pkTableName;
-
-		private List pkColumns;
-
-		/**
-		 * Establishes a foreign key.
-		 * 
-		 * @param dsSchemaName
-		 *            the dataset schema name to use by default.
-		 * @param dsTableName
-		 *            the dataset table this action is associated with.
-		 * @param fkTableSchema
-		 *            the schema holding the table that will have the key.
-		 * @param fkTableName
-		 *            the table that will have the key.
-		 * @param fkColumns
-		 *            the columns to include in that key. Items in this list are
-		 *            {@link Column} instances.
-		 * @param pkTableSchema
-		 *            the schema in which the table whose primary key this
-		 *            foreign key refers to lives.
-		 * @param pkTableName
-		 *            the table whose primary key this foreign key refers to.
-		 * @param pkColumns
-		 *            the columns in the primary key that this foreign key
-		 *            refers to. Items in this list are {@link Column}
-		 *            instances.
-		 */
-		public FK(final String dsSchemaName, final String dsTableName,
-				final Schema fkTableSchema, final String fkTableName,
-				final List fkColumns, final Schema pkTableSchema,
-				final String pkTableName, final List pkColumns) {
-			super(dsSchemaName, dsTableName);
-			this.fkTableSchema = fkTableSchema;
-			this.fkTableName = fkTableName;
-			this.fkColumns = fkColumns;
-			this.pkTableSchema = pkTableSchema;
-			this.pkTableName = pkTableName;
-			this.pkColumns = pkColumns;
-		}
-
-		public List getPkColumns() {
-			return this.pkColumns;
-		}
-
-		public String getPkTableName() {
-			return this.pkTableName;
-		}
-
-		public Schema getPkTableSchema() {
-			return this.pkTableSchema;
-		}
-
-		public List getFkColumns() {
-			return this.fkColumns;
-		}
-
-		public String getFkTableName() {
-			return this.fkTableName;
-		}
-
-		public Schema getFkTableSchema() {
-			return this.fkTableSchema;
-		}
-
-		public String getStatusMessage() {
-			return Resources.get("mcFK");
 		}
 	}
 
@@ -929,6 +791,8 @@ public abstract class MartConstructorAction {
 
 		private List fkColumns;
 
+		private List countNotNullColumns;
+
 		private Schema pkTableSchema;
 
 		private String pkTableName;
@@ -953,6 +817,10 @@ public abstract class MartConstructorAction {
 		 * @param fkColumns
 		 *            the columns of the foreign key. Items are {@link Column}
 		 *            instances.
+		 * @param countNotNullColumns
+		 *            the columns to check for null values. The optimiser counts
+		 *            a row as existing in the FK for the PK if all the columns
+		 *            in this collection are not null.
 		 * @param pkTableSchema
 		 *            the schema the pkTable lives in.
 		 * @param pkTableName
@@ -969,12 +837,14 @@ public abstract class MartConstructorAction {
 		public OptimiseUpdateColumn(final String dsSchemaName,
 				final String dsTableName, final Schema fkTableSchema,
 				final String fkTableName, final List fkColumns,
-				final Schema pkTableSchema, final String pkTableName,
-				final List pkColumns, final String optimiseColumnName) {
+				List countNotNullColumns, final Schema pkTableSchema,
+				final String pkTableName, final List pkColumns,
+				final String optimiseColumnName) {
 			super(dsSchemaName, dsTableName);
 			this.fkTableSchema = fkTableSchema;
 			this.fkTableName = fkTableName;
 			this.fkColumns = fkColumns;
+			this.countNotNullColumns = countNotNullColumns;
 			this.pkTableSchema = pkTableSchema;
 			this.pkTableName = pkTableName;
 			this.pkColumns = pkColumns;
@@ -983,6 +853,10 @@ public abstract class MartConstructorAction {
 
 		public List getFkColumns() {
 			return this.fkColumns;
+		}
+
+		public List getCountNotNullColumns() {
+			return this.countNotNullColumns;
 		}
 
 		public String getFkTableName() {
@@ -1129,8 +1003,6 @@ public abstract class MartConstructorAction {
 
 		private List sourceTableKeyColumns;
 
-		private boolean useLeftJoin;
-
 		private Schema targetTableSchema;
 
 		private String targetTableName;
@@ -1150,7 +1022,8 @@ public abstract class MartConstructorAction {
 		private boolean useAliases;
 
 		/**
-		 * Creates a new table by merging two existing ones together.
+		 * Creates a new table by merging two existing ones together. The merge
+		 * should be done using left joins.
 		 * 
 		 * @param dsSchemaName
 		 *            the dataset schema name to use by default.
@@ -1166,9 +1039,6 @@ public abstract class MartConstructorAction {
 		 *            the table on the LHS of the join.
 		 * @param sourceTableKeyColumns
 		 *            the columns on the LHS to use to make the join.
-		 * @param useLeftJoin
-		 *            <tt>true</tt> if the join should be a left join,
-		 *            <tt>false</tt> for an inner join.
 		 * @param targetTableSchema
 		 *            the schema the RHS of the join lives in.
 		 * @param targetTableName
@@ -1199,7 +1069,7 @@ public abstract class MartConstructorAction {
 		public Merge(final String dsSchemaName, final String dsTableName,
 				final Schema mergedTableSchema, final String mergedTableName,
 				final Schema sourceTableSchema, final String sourceTableName,
-				final List sourceTableKeyColumns, final boolean useLeftJoin,
+				final List sourceTableKeyColumns,
 				final Schema targetTableSchema, final String targetTableName,
 				final List targetTableKeyColumns,
 				final List targetTableColumns,
@@ -1213,7 +1083,6 @@ public abstract class MartConstructorAction {
 			this.sourceTableSchema = sourceTableSchema;
 			this.sourceTableName = sourceTableName;
 			this.sourceTableKeyColumns = sourceTableKeyColumns;
-			this.useLeftJoin = relationRestriction != null ? true : useLeftJoin;
 			this.targetTableSchema = targetTableSchema;
 			this.targetTableName = targetTableName;
 			this.targetTableKeyColumns = targetTableKeyColumns;
@@ -1236,7 +1105,7 @@ public abstract class MartConstructorAction {
 		public List getSourceTableKeyColumns() {
 			return this.sourceTableKeyColumns;
 		}
-		
+
 		public String getSourceTableName() {
 			return this.sourceTableName;
 		}
@@ -1267,10 +1136,6 @@ public abstract class MartConstructorAction {
 
 		public boolean isUseAliases() {
 			return this.useAliases;
-		}
-
-		public boolean isUseLeftJoin() {
-			return this.useLeftJoin;
 		}
 
 		public boolean isFirstTableSourceTable() {

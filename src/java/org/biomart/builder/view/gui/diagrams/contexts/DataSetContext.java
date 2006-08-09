@@ -29,7 +29,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
-import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
@@ -53,7 +52,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * org.biomart.builder.view.gui.diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.29, 4th August 2006
+ * @version 0.1.30, 9th August 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -408,12 +407,10 @@ public class DataSetContext extends WindowContext {
 				}
 			});
 			contextMenu.add(mask);
-			if (this.getDataSet().getMaskedDataSetColumns().contains(column))
-				mask.setSelected(true);
+			mask.setSelected(column.getMasked());
 
 			// Which column is it? And is it already partitioned?
-			final boolean isPartitioned = this.getDataSet()
-					.getPartitionedDataSetColumns().contains(column);
+			final boolean isPartitioned = column.getPartitionType() != null;
 
 			// If it is partitioned, make a submenu to change the partition
 			// type.
@@ -477,11 +474,6 @@ public class DataSetContext extends WindowContext {
 					}
 				});
 				contextMenu.add(partition);
-				/**
-				 * Disabled until we've decided on a partitioned table naming
-				 * convention.
-				 */
-				partition.setEnabled(false);
 			}
 
 			// Else, if it's an expression column...
@@ -566,23 +558,21 @@ public class DataSetContext extends WindowContext {
 		}
 
 		// Columns.
-		else if (object instanceof Column) {
+		else if (object instanceof DataSetColumn) {
 
 			// Which column is it?
-			final Column column = (Column) object;
+			final DataSetColumn column = (DataSetColumn) object;
 
 			// Magenta EXPRESSION columns.
 			if (column instanceof InheritedColumn)
 				component.setForeground(ColumnComponent.INHERITED_COLOUR);
 
 			// Fade out all MASKED columns.
-			else if (this.getDataSet().getMaskedDataSetColumns().contains(
-					column))
+			else if (column.getMasked())
 				component.setForeground(ColumnComponent.FADED_COLOUR);
 
 			// Blue PARTITIONED columns.
-			else if (this.getDataSet().getPartitionedDataSetColumns().contains(
-					column))
+			else if (column.getPartitionType() != null)
 				component.setForeground(ColumnComponent.PARTITIONED_COLOUR);
 
 			// Magenta EXPRESSION columns.

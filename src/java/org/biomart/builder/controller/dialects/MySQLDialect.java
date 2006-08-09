@@ -50,12 +50,10 @@ import org.biomart.builder.model.MartConstructorAction.Concat;
 import org.biomart.builder.model.MartConstructorAction.Create;
 import org.biomart.builder.model.MartConstructorAction.Drop;
 import org.biomart.builder.model.MartConstructorAction.ExpressionAddColumns;
-import org.biomart.builder.model.MartConstructorAction.FK;
 import org.biomart.builder.model.MartConstructorAction.Index;
 import org.biomart.builder.model.MartConstructorAction.Merge;
 import org.biomart.builder.model.MartConstructorAction.OptimiseAddColumn;
 import org.biomart.builder.model.MartConstructorAction.OptimiseUpdateColumn;
-import org.biomart.builder.model.MartConstructorAction.PK;
 import org.biomart.builder.model.MartConstructorAction.Partition;
 import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
 import org.biomart.builder.model.MartConstructorAction.Reduce;
@@ -66,7 +64,7 @@ import org.biomart.builder.model.MartConstructorAction.Union;
  * Understands how to create SQL and DDL for a MySQL database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.19, 4th August 2006
+ * @version 0.1.20, 9th August 2006
  * @since 0.1
  */
 public class MySQLDialect extends DatabaseDialect {
@@ -186,54 +184,6 @@ public class MySQLDialect extends DatabaseDialect {
 		}
 
 		return (String[]) statements.toArray(new String[0]);
-	}
-
-	public void doPK(final PK action, final List statements) throws Exception {
-		final String schemaName = action.getPkTableSchema() == null ? action
-				.getDataSetSchemaName() : ((JDBCSchema) action
-				.getPkTableSchema()).getDatabaseSchema();
-		final String tableName = action.getPkTableName();
-		final StringBuffer sb = new StringBuffer();
-		for (final Iterator i = action.getPkColumns().iterator(); i.hasNext();) {
-			final String colName = ((Column) i.next()).getName();
-			sb.append(colName);
-			if (i.hasNext())
-				sb.append(",");
-		}
-		statements.add("alter table " + schemaName + "." + tableName
-				+ " add primary key (" + sb.toString() + ")");
-	}
-
-	public void doFK(final FK action, final List statements) throws Exception {
-		final String pkSchemaName = action.getPkTableSchema() == null ? action
-				.getDataSetSchemaName() : ((JDBCSchema) action
-				.getPkTableSchema()).getDatabaseSchema();
-		final String pkTableName = action.getPkTableName();
-		final String fkSchemaName = action.getFkTableSchema() == null ? action
-				.getDataSetSchemaName() : ((JDBCSchema) action
-				.getFkTableSchema()).getDatabaseSchema();
-		final String fkTableName = action.getFkTableName();
-
-		final StringBuffer sbFK = new StringBuffer();
-		for (final Iterator i = action.getFkColumns().iterator(); i.hasNext();) {
-			final String colName = ((Column) i.next()).getName();
-			sbFK.append(colName);
-			if (i.hasNext())
-				sbFK.append(",");
-		}
-
-		final StringBuffer sbPK = new StringBuffer();
-		for (final Iterator i = action.getPkColumns().iterator(); i.hasNext();) {
-			final String colName = ((Column) i.next()).getName();
-			sbPK.append(colName);
-			if (i.hasNext())
-				sbPK.append(",");
-		}
-
-		statements.add("alter table " + fkSchemaName + "." + fkTableName
-				+ " add foreign key (" + sbFK.toString() + ") references "
-				+ pkSchemaName + "." + pkTableName + " (" + sbPK.toString()
-				+ ")");
 	}
 
 	public void doReduce(final Reduce action, final List statements)
@@ -386,6 +336,17 @@ public class MySQLDialect extends DatabaseDialect {
 			sb.append("=b.");
 			sb.append(fkCol.getName());
 		}
+		for (int i = 0; i < action.getCountNotNullColumns().size(); i++) {
+			final Column col = (Column) action.getCountNotNullColumns().get(i);
+			// Skip those in FK as already checked.
+			if (action.getFkColumns().contains(col))
+				continue;
+			// Check column not null.
+			sb.append(" and b.");
+			sb.append(col.getName());
+			sb.append(" is not null");
+		}
+		sb.append(')');
 		sb.append(')');
 
 		statements.add(sb.toString());
@@ -521,9 +482,9 @@ public class MySQLDialect extends DatabaseDialect {
 			}
 			sb.append(col.getName());
 		}
-		sb.append(" from " + srcSchemaName + "." + srcTableName + " as a "
-				+ (action.isUseLeftJoin() ? "left" : "inner") + " join "
-				+ trgtSchemaName + "." + trgtTableName + " as b on ");
+		sb.append(" from " + srcSchemaName + "." + srcTableName
+				+ " as a left join " + trgtSchemaName + "." + trgtTableName
+				+ " as b on ");
 		for (int i = 0; i < action.getTargetTableKeyColumns().size(); i++) {
 			if (i > 0)
 				sb.append(',');

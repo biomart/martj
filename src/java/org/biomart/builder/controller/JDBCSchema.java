@@ -80,7 +80,7 @@ import org.biomart.builder.resources.Resources;
  * or keys, or to reinstate any that have previously been marked as incorrect.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.19, 4th August 2006
+ * @version 0.1.20, 9th August 2006
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -543,30 +543,6 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			if (k.getStatus().equals(ComponentStatus.HANDMADE))
 				continue;
 			k.destroy();
-		}
-
-		// Iterate over the foreign keys that remain, and check all their
-		// columns. If every column in a key is nullable, then the key
-		// itself is nullable too.
-		for (final Iterator i = this.tables.values().iterator(); i.hasNext();) {
-			final Table t = (Table) i.next();
-			for (final Iterator j = t.getForeignKeys().iterator(); j.hasNext();) {
-				final ForeignKey fk = (ForeignKey) j.next();
-				// Skip any hand-made keys as we assume the user knows best.
-				if (fk.getStatus().equals(ComponentStatus.HANDMADE))
-					continue;
-				// Check each column one-by-one.
-				boolean allColsNullable = true;
-				for (final Iterator k = fk.getColumns().iterator(); k.hasNext()
-						&& allColsNullable;) {
-					final Column c = (Column) k.next();
-					if (!c.getNullable())
-						allColsNullable = false;
-				}
-				// If all columns are nullable, the key is too.
-				if (allColsNullable)
-					fk.setNullable(true);
-			}
 		}
 	}
 

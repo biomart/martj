@@ -109,7 +109,7 @@ public class Mart {
 	public void renameSchema(final Schema schema, String name) {
 		final String baseName = name;
 		// Check we don't have one by this name already. Alias if we do.
-		for (int i = 1; this.datasets.containsKey(name); name = baseName + "_"
+		for (int i = 1; this.schemas.containsKey(name); name = baseName + "_"
 				+ i++)
 			;
 		// Rename it.
@@ -277,7 +277,9 @@ public class Mart {
 				}
 			}
 			// Rename it to lose any extension it may have gained.
-			perfectDS.setName(perfectDS.getCentralTable().getName());
+			this
+					.renameDataSet(perfectDS, perfectDS.getCentralTable()
+							.getName());
 		}
 
 		// Return the final set of suggested datasets.

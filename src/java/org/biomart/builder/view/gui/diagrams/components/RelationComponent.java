@@ -43,7 +43,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * The line is defined by the layout manager.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.18, 24th July 2006
+ * @version 0.1.19, 9th August 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
@@ -119,33 +119,6 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	public static final Stroke MANY_MANY = new BasicStroke(
 			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
 			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM);
-
-	/**
-	 * Constant defining our optional 1:M stroke.
-	 */
-	public static final Stroke ONE_MANY_OPTIONAL = new BasicStroke(
-			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
-			new float[] { RelationComponent.RELATION_DASHSIZE,
-					RelationComponent.RELATION_DASHSIZE }, 0);
-
-	/**
-	 * Constant defining our optional 1:1 stroke.
-	 */
-	public static final Stroke ONE_ONE_OPTIONAL = new BasicStroke(
-			RelationComponent.RELATION_LINEWIDTH * 2.0f, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
-			new float[] { RelationComponent.RELATION_DASHSIZE,
-					RelationComponent.RELATION_DASHSIZE }, 0);
-
-	/**
-	 * Constant defining our optional M:M stroke.
-	 */
-	public static final Stroke MANY_MANY_OPTIONAL = new BasicStroke(
-			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
-			new float[] { RelationComponent.RELATION_DASHSIZE,
-					RelationComponent.RELATION_DASHSIZE }, 0);
 
 	/**
 	 * Constant defining our restricted 1:M stroke.
@@ -228,11 +201,12 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		final DiagramContext mod = this.getDiagram().getDiagramContext();
 		if (mod != null)
 			mod.customiseAppearance(this, this.getObject());
-		this.setBackground(this.getForeground());
-		if (this.stroke != null && this.shape != null) {
+		if (this.shape != null) 
 			this.outline = new BasicStroke().createStrokedShape(this.shape);
-			this.repaint();
-		}
+	}
+
+	public void repaintDiagramComponent() {
+		this.repaint(this.getVisibleRect());
 	}
 
 	public void recalculateDiagramComponent() {

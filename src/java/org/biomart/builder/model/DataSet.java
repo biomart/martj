@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -60,7 +61,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.46, 8th August 2006
+ * @version 0.1.47, 9th August 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -70,13 +71,6 @@ public class DataSet extends GenericSchema {
 
 	// Use List to avoid problems with hashcodes changing.
 	private final List maskedRelations = new ArrayList();
-
-	// Use List to avoid problems with hashcodes changing.
-	private final List maskedDataSetColumns = new ArrayList();
-
-	// Use double-List to avoid problems with hashcodes changing.
-	private final List[] partitionedDataSetColumns = new List[] {
-			new ArrayList(), new ArrayList() };
 
 	// Use List to avoid problems with hashcodes changing.
 	private final List subclassedRelations = new ArrayList();
@@ -139,50 +133,14 @@ public class DataSet extends GenericSchema {
 			final DataSet newDataSet = new DataSet(this.mart,
 					this.centralTable, newName);
 
-			// Copy everything. It doesn't matter that we're using the
-			// objects for columns from the original dataset, as during
-			// synchronisation these will be replaced with objects
-			// representing columns in the new one automatically.
-			newDataSet.setDataSetOptimiserType(this.optimiser);
-			for (final Iterator i = this.maskedRelations.iterator(); i
-					.hasNext();)
-				newDataSet.maskRelation((Relation) i.next());
-			for (final Iterator i = this.subclassedRelations.iterator(); i
-					.hasNext();)
-				newDataSet.flagSubclassRelation((Relation) i.next());
-			for (final Iterator i = this.maskedDataSetColumns.iterator(); i
-					.hasNext();)
-				newDataSet.maskDataSetColumn((DataSetColumn) i.next());
-			for (int i = 0; i < this.concatOnlyRelations[0].size(); i++) {
-				final Relation rel = (Relation) this.concatOnlyRelations[0]
-						.get(i);
-				final ConcatRelationType type = (ConcatRelationType) this.concatOnlyRelations[1]
-						.get(i);
-				newDataSet.flagConcatOnlyRelation(rel, type);
-			}
-			for (int i = 0; i < this.partitionedDataSetColumns[0].size(); i++) {
-				final WrappedColumn col = (WrappedColumn) this.partitionedDataSetColumns[0]
-						.get(i);
-				final PartitionedColumnType type = (PartitionedColumnType) this.partitionedDataSetColumns[1]
-						.get(i);
-				newDataSet.flagPartitionedDataSetColumn(col, type);
-			}
-			for (int i = 0; i < this.restrictedRelations[0].size(); i++) {
-				final Relation rel = (Relation) this.restrictedRelations[0]
-						.get(i);
-				final DataSetRelationRestriction restriction = (DataSetRelationRestriction) this.restrictedRelations[1]
-						.get(i);
-				newDataSet.flagRestrictedRelation(rel, restriction);
-			}
-			for (int i = 0; i < this.restrictedTables[0].size(); i++) {
-				final Table tbl = (Table) this.restrictedTables[0].get(i);
-				final DataSetTableRestriction restriction = (DataSetTableRestriction) this.restrictedTables[1]
-						.get(i);
-				newDataSet.flagRestrictedTable(tbl, restriction);
-			}
-
 			// Synchronise it.
 			newDataSet.synchronise();
+
+			// FIXME This isn't really replication, it is merely
+			// creating a new dataset with the same central table
+			// as us. We should also be Copying over custom stuff
+			// like masks, subclasses, expressions, restrictions,
+			// partitioning, concat relations, etc.
 
 			// Return the copy.
 			return newDataSet;
@@ -242,13 +200,32 @@ public class DataSet extends GenericSchema {
 	}
 
 	/**
-	 * Unmask a relation.
+	 * Unmask a relation. Also unmasks all columns in keys at both ends of the
+	 * relation.
 	 * 
 	 * @param relation
 	 *            the relation to unmask.
 	 */
 	public void unmaskRelation(final Relation relation) {
 		this.maskedRelations.remove(relation);
+		// Also unmask all columns which wrap those in keys at both ends.
+		for (Iterator i = this.getTables().iterator(); i.hasNext();)
+			for (Iterator j = ((Table) i.next()).getColumns().iterator(); j
+					.hasNext();) {
+				DataSetColumn dcol = (DataSetColumn) j.next();
+				if (dcol instanceof WrappedColumn) {
+					Column col = ((WrappedColumn) dcol).getWrappedColumn();
+					if (relation.getFirstKey().getColumns().contains(col)
+							|| relation.getSecondKey().getColumns().contains(
+									col))
+						try {
+							dcol.setMasked(false);
+						} catch (AssociationException e) {
+							// Should never happen.
+							throw new MartBuilderInternalError(e);
+						}
+				}
+			}
 	}
 
 	/**
@@ -258,119 +235,6 @@ public class DataSet extends GenericSchema {
 	 */
 	public Collection getMaskedRelations() {
 		return this.maskedRelations;
-	}
-
-	/**
-	 * <p>
-	 * Mask a column. If the column is an essential part of an underlying key,
-	 * then all relations using that key are also masked.
-	 * <p>
-	 * Columns that are part of the primary key on the table they are from, or
-	 * are part of any foreign key on that table, cannot be masked.
-	 * 
-	 * @param dsColumn
-	 *            the {@link DataSetColumn} to mask.
-	 * @throws AssociationException
-	 *             if it is not possible to mask this column.
-	 */
-	public void maskDataSetColumn(final DataSetColumn dsColumn)
-			throws AssociationException {
-		// Work out where this column is coming from.
-		final DataSetTable dsTable = (DataSetTable) dsColumn.getTable();
-		final Table centralTable = ((DataSet) dsTable.getSchema())
-				.getCentralTable();
-
-		// Make a list of columns that are OK to mask.
-		final List okToMask = new ArrayList(dsTable.getColumns());
-
-		// Can mask PK cols only if not from original central table
-		final Key dsTablePK = dsTable.getPrimaryKey();
-		if (dsTablePK != null)
-			for (final Iterator i = dsTablePK.getColumns().iterator(); i
-					.hasNext();) {
-				final DataSetColumn col = (DataSetColumn) i.next();
-				final Table underlyingTable = ((DataSetTable) col.getTable())
-						.getUnderlyingTable();
-				if (underlyingTable != null
-						&& underlyingTable.equals(centralTable))
-					okToMask.remove(col);
-			}
-
-		// Can't mask any FK cols.
-		for (final Iterator i = dsTable.getForeignKeys().iterator(); i
-				.hasNext();)
-			okToMask.removeAll(((Key) i.next()).getColumns());
-
-		// Refuse to mask the column if it does not appear in the list of OK
-		// columns to mask.
-		if (!okToMask.contains(dsColumn))
-			throw new AssociationException(Resources
-					.get("cannotMaskNecessaryColumn"));
-
-		// Refuse to mask schema name columns.
-		else if (dsColumn instanceof SchemaNameColumn)
-			throw new AssociationException(Resources
-					.get("cannotMaskSchemaNameColumn"));
-
-		// Refuse to mask inherited columns.
-		else if (dsColumn instanceof InheritedColumn)
-			throw new AssociationException(Resources
-					.get("cannotMaskInheritedColumn"));
-
-		// Refuse to mask inherited columns.
-		else if (dsColumn instanceof ExpressionColumn)
-			((DataSetTable) dsColumn.getTable()).removeColumn(dsColumn);
-
-		// If concat-only, mask concat-only relation instead
-		else if (dsColumn instanceof ConcatRelationColumn)
-			this.maskRelation(dsColumn.getUnderlyingRelation());
-
-		// If wrapped, mask wrapped column
-		else if (dsColumn instanceof WrappedColumn) {
-			final WrappedColumn wcol = (WrappedColumn) dsColumn;
-
-			// Skip if already masked.
-			if (this.maskedDataSetColumns.contains(wcol))
-				return;
-
-			// Mask it.
-			this.maskedDataSetColumns.add(wcol);
-
-			// Mask the associated relations from the real underlying column.
-			for (final Iterator i = wcol.getWrappedColumn().getTable()
-					.getKeys().iterator(); i.hasNext();) {
-				final Key k = (Key) i.next();
-				if (k.getColumns().contains(wcol.getWrappedColumn()))
-					for (final Iterator j = k.getRelations().iterator(); j
-							.hasNext();) {
-						final Relation r = (Relation) j.next();
-						this.maskRelation(r);
-					}
-			}
-		}
-
-		// Eh?
-		else
-			throw new MartBuilderInternalError();
-	}
-
-	/**
-	 * Unmask a column.
-	 * 
-	 * @param column
-	 *            the column to unmask.
-	 */
-	public void unmaskDataSetColumn(final DataSetColumn column) {
-		this.maskedDataSetColumns.remove(column);
-	}
-
-	/**
-	 * Return the set of masked columns. It may be empty, but never null.
-	 * 
-	 * @return the set of masked columns.
-	 */
-	public Collection getMaskedDataSetColumns() {
-		return this.maskedDataSetColumns;
 	}
 
 	/**
@@ -495,97 +359,6 @@ public class DataSet extends GenericSchema {
 	 */
 	public Collection getSubclassedRelations() {
 		return this.subclassedRelations;
-	}
-
-	/**
-	 * Mark a column as partitioned. If previously marked as partitioned, this
-	 * call will override the previous request.
-	 * 
-	 * @param column
-	 *            the columnto mark as partitioned.
-	 * @param type
-	 *            the partition type to use for the partition.
-	 * @throws AssociationException
-	 *             if there is already a partitioned column on this table.
-	 */
-	public void flagPartitionedDataSetColumn(final DataSetColumn column,
-			final PartitionedColumnType type) throws AssociationException {
-		// If we do already have a partitioned column on this table, throw a
-		// wobbly.
-		if (!(column instanceof WrappedColumn || column instanceof SchemaNameColumn))
-			throw new AssociationException(Resources
-					.get("cannotPartitionNonWrapSchColumns"));
-
-		// Check to see if we already have a partitioned column in this table,
-		// that is not the same column as this one.
-		boolean alreadyHave = false;
-		for (final Iterator i = this.partitionedDataSetColumns[0].iterator(); i
-				.hasNext()
-				&& !alreadyHave;) {
-			final DataSetColumn testCol = (DataSetColumn) i.next();
-			if (testCol.getTable().equals(column.getTable())
-					&& !testCol.equals(column))
-				alreadyHave = true;
-		}
-
-		// If we do already have a partitioned column on this table, throw a
-		// wobbly.
-		if (alreadyHave)
-			throw new AssociationException(Resources
-					.get("cannotPartitionMultiColumns"));
-
-		// Partition the colum. If the column has already been partitioned, this
-		// will override the type.
-		final int index = this.partitionedDataSetColumns[0].indexOf(column);
-		if (index >= 0) {
-			this.partitionedDataSetColumns[0].set(index, column);
-			this.partitionedDataSetColumns[1].set(index, type);
-		} else {
-			this.partitionedDataSetColumns[0].add(column);
-			this.partitionedDataSetColumns[1].add(type);
-		}
-	}
-
-	/**
-	 * Unmark a column as partitioned.
-	 * 
-	 * @param column
-	 *            the column to unmark.
-	 */
-	public void unflagPartitionedDataSetColumn(final DataSetColumn column) {
-		final int index = this.partitionedDataSetColumns[0].indexOf(column);
-		if (index >= 0) {
-			this.partitionedDataSetColumns[0].remove(index);
-			this.partitionedDataSetColumns[1].remove(index);
-		}
-	}
-
-	/**
-	 * Return the set of partitioned columns. It may be empty, but never null.
-	 * 
-	 * @return the set of partitioned columns.
-	 */
-	public Collection getPartitionedDataSetColumns() {
-		return this.partitionedDataSetColumns[0];
-	}
-
-	/**
-	 * Return the partition type of a partitioned column. It will return null if
-	 * there is no such partitioned column.
-	 * 
-	 * @param column
-	 *            the column to check the partitioning type for.
-	 * @return the partition type of the column, or null if it is not
-	 *         partitioned.
-	 */
-	public PartitionedColumnType getPartitionedDataSetColumnType(
-			final DataSetColumn column) {
-		final int index = this.partitionedDataSetColumns[0].indexOf(column);
-		if (index >= 0)
-			return (PartitionedColumnType) this.partitionedDataSetColumns[1]
-					.get(index);
-		else
-			return null;
 	}
 
 	/**
@@ -849,14 +622,20 @@ public class DataSet extends GenericSchema {
 			}
 		}
 
-		// Remember all the ExpressionColumns
+		// Remember the masked, partition, and expression columns.
+		final List maskedColumns = new ArrayList();
 		final List expressionColumns = new ArrayList();
+		final Map partitionColumns = new HashMap();
 		for (final Iterator i = this.getTables().iterator(); i.hasNext();)
 			for (final Iterator j = ((Table) i.next()).getColumns().iterator(); j
 					.hasNext();) {
-				final Column col = (Column) j.next();
+				final DataSetColumn col = (DataSetColumn) j.next();
 				if (col instanceof ExpressionColumn)
 					expressionColumns.add(col);
+				if (col.getMasked())
+					maskedColumns.add(col);
+				if (col.getPartitionType() != null)
+					partitionColumns.put(col, col.getPartitionType());
 			}
 
 		// Regenerate the dataset
@@ -886,54 +665,33 @@ public class DataSet extends GenericSchema {
 			}
 		}
 
-		// Attempt to reuse existing masked columns.
-		// Do this by first creating a set of columns from the new tables
-		// with identical table and column names to the old set of masked
-		// columns. Once the set is constructed, use it to replace the old
-		// set of masked columns.
-		final Collection newMaskedCols = new ArrayList();
-		for (final Iterator i = this.maskedDataSetColumns.iterator(); i
-				.hasNext();) {
-			final DataSetColumn col = (DataSetColumn) i.next();
-			if (this.getTables().contains(col.getTable())) {
-				// Find the new column with the same name.
-				final Table newTable = this.getTableByName(col.getTable()
-						.getName());
-				final Column newCol = newTable.getColumnByName(col.getName());
-
-				// If found, mask the column.
-				if (newCol != null)
-					newMaskedCols.add(newCol);
+		// Mask previously masked columns.
+		for (Iterator i = maskedColumns.iterator(); i.hasNext();) {
+			DataSetColumn oldCol = (DataSetColumn) i.next();
+			Table targetTable = this
+					.getTableByName(oldCol.getTable().getName());
+			try {
+				((DataSetColumn) targetTable.getColumnByName(oldCol.getName()))
+						.setMasked(true);
+			} catch (AssociationException e) {
+				// Should never happen.
+				throw new MartBuilderInternalError(e);
 			}
 		}
-		this.maskedDataSetColumns.clear();
-		this.maskedDataSetColumns.addAll(newMaskedCols);
 
-		// Attempt to reuse existing partitioned columns.
-		// Do this by first creating a set of columns from the new tables
-		// with identical table and column names to the old set of 
-		// columns. Once the set is constructed, use it to replace the old
-		// set of partitioned columns.
-		final Collection newPartDSCols = new ArrayList();
-		for (final Iterator i = this.partitionedDataSetColumns[0].iterator(); i
-				.hasNext();) {
-			final WrappedColumn col = (WrappedColumn) i.next();
-			if (this.getTables().contains(col.getTable())) {
-				// Find the new column with the same name.
-				final Table newTable = this.getTableByName(col.getTable()
-						.getName());
-				final Column newCol = newTable.getColumnByName(col.getName());
-
-				// If found, partition the column.
-				if (newCol != null)
-					newPartDSCols.add(newCol);
-			}
-		}
-		for (int i = 0; i < this.partitionedDataSetColumns[0].size(); i++) {
-			if (!newPartDSCols.contains(this.partitionedDataSetColumns[0].get(i))) {
-				this.partitionedDataSetColumns[0].remove(i);
-				this.partitionedDataSetColumns[1].remove(i);
-				i--;
+		// Partition previously partitioned columns.
+		for (Iterator i = partitionColumns.entrySet().iterator(); i.hasNext();) {
+			Map.Entry entry = (Map.Entry) i.next();
+			DataSetColumn oldCol = (DataSetColumn) entry.getKey();
+			Table targetTable = this
+					.getTableByName(oldCol.getTable().getName());
+			try {
+				((DataSetColumn) targetTable.getColumnByName(oldCol.getName()))
+						.setPartitionType((PartitionedColumnType) entry
+								.getValue());
+			} catch (AssociationException e) {
+				// Should never happen.
+				throw new MartBuilderInternalError(e);
 			}
 		}
 
@@ -1139,6 +897,9 @@ public class DataSet extends GenericSchema {
 			for (final Iterator i = parentDSTable.getColumns().iterator(); i
 					.hasNext();) {
 				final DataSetColumn parentDSCol = (DataSetColumn) i.next();
+				// Skip masked ones.
+				if (parentDSCol.getMasked())
+					continue;
 				// If this is not a subclass table, we need to filter columns.
 				if (!type.equals(DataSetTableType.MAIN_SUBCLASS)) {
 					// Skip columns that are not in the primary key and not in
@@ -1164,6 +925,7 @@ public class DataSet extends GenericSchema {
 					dsCol = new InheritedColumn(dsTable, parentDSCol);
 				// Copy the name, too.
 				dsCol.setName(parentDSCol.getName());
+				dsCol.setOriginalName(parentDSCol.getOriginalName());
 				// Add the column to the child's PK and FK, if it was in
 				// the parent PK only.
 				if (parentDSTablePK.getColumns().contains(parentDSCol)) {
@@ -1830,6 +1592,10 @@ public class DataSet extends GenericSchema {
 
 		private boolean dependency;
 
+		private boolean masked;
+
+		private PartitionedColumnType partitionType;
+
 		/**
 		 * This constructor gives the column a name.
 		 * 
@@ -1854,43 +1620,105 @@ public class DataSet extends GenericSchema {
 
 			// Set up default dependency.
 			this.dependency = false;
+
+			// Set up default mask/partition values.
+			this.masked = false;
+			this.partitionType = null;
 		}
 
 		/**
-		 * Renames the column, then renames all referring columns to match so
-		 * that we don't get different names for the same column in different
-		 * places.
+		 * Is this column masked?
 		 * 
-		 * @param name
-		 *            the new name to give the column. See
-		 *            {@link GenericColumn#setName(String)} for how this will be
-		 *            used.
+		 * @return <tt>true</tt> if it is, <tt>false</tt> if it is not.
 		 */
-		public void setName(final String name) {
-			// Skip if this would result in duplicated effort.
-			if (name.equals(this.getName()))
-				return;
+		public boolean getMasked() {
+			return this.masked;
+		}
 
-			// Rename the column.
-			super.setName(name);
+		/**
+		 * Mask/unmask this column.
+		 * 
+		 * @param masked
+		 *            <tt>true</tt> if the column should be masked.
+		 * @throws AssociationException
+		 *             if masking is not allowed on this column.
+		 */
+		public void setMasked(boolean masked) throws AssociationException {
+			if (masked) {
+				// Work out where this column is coming from.
+				final DataSetTable dsTable = (DataSetTable) this.getTable();
+				final Table centralTable = ((DataSet) dsTable.getSchema())
+						.getCentralTable();
 
-			// Is it in any of the keys on this table?
-			for (final Iterator i = this.getTable().getKeys().iterator(); i
-					.hasNext();) {
-				final Key k = (Key) i.next();
+				// Make a list of columns that are OK to mask.
+				final List okToMask = new ArrayList(dsTable.getColumns());
 
-				// Is the column in this key?
-				if (k.getColumns().contains(this))
-					// Iterate over the relations.
-					for (Iterator j = k.getRelations().iterator(); j.hasNext();) {
-						Key targetKey = ((Relation) j.next()).getOtherKey(k);
-						// What is the target column?
-						DataSetColumn targetCol = (DataSetColumn) targetKey
-								.getColumns().get(k.getColumns().indexOf(this));
-						// Rename it.
-						targetCol.setName(this.getName());
+				// Can mask PK cols only if not from original central table
+				final Key dsTablePK = dsTable.getPrimaryKey();
+				if (dsTablePK != null)
+					for (final Iterator i = dsTablePK.getColumns().iterator(); i
+							.hasNext();) {
+						final DataSetColumn col = (DataSetColumn) i.next();
+						final Table underlyingTable = ((DataSetTable) col
+								.getTable()).getUnderlyingTable();
+						if (underlyingTable != null
+								&& underlyingTable.equals(centralTable))
+							okToMask.remove(col);
 					}
+
+				// Can't mask any FK cols.
+				for (final Iterator i = dsTable.getForeignKeys().iterator(); i
+						.hasNext();)
+					okToMask.removeAll(((Key) i.next()).getColumns());
+
+				// Refuse to mask the column if it does not appear in the list
+				// of OK
+				// columns to mask.
+				if (!okToMask.contains(this))
+					throw new AssociationException(Resources
+							.get("cannotMaskNecessaryColumn"));
 			}
+
+			// Do it.
+			this.masked = masked;
+		}
+
+		/**
+		 * Is this column partitioned?
+		 * 
+		 * @return <tt>null</tt> if it is not, or the partition type
+		 *         otherwise.
+		 */
+		public PartitionedColumnType getPartitionType() {
+			return this.partitionType;
+		}
+
+		/**
+		 * Partition/unpartition this column.
+		 * 
+		 * @param partitionType
+		 *            <tt>null</tt> if the column should not be partitioned,
+		 *            or a type if it should be.
+		 * @throws AssociationException
+		 *             if partitioning is not allowed on this column.
+		 */
+		public void setPartitionType(PartitionedColumnType partitionType)
+				throws AssociationException {
+			// Check to see if we already have a partitioned column in this
+			// table, that is not the same column as this one.
+			if (partitionType != null) {
+				for (final Iterator i = this.getTable().getColumns().iterator(); i
+						.hasNext();) {
+					final DataSetColumn testCol = (DataSetColumn) i.next();
+					if (!testCol.equals(this)
+							&& testCol.getPartitionType() != null)
+						throw new AssociationException(Resources
+								.get("cannotPartitionMultiColumns"));
+				}
+			}
+
+			// Do it.
+			this.partitionType = partitionType;
 		}
 
 		/**
@@ -1969,6 +1797,25 @@ public class DataSet extends GenericSchema {
 			public Column getWrappedColumn() {
 				return this.column;
 			}
+
+			public void setMasked(boolean masked) throws AssociationException {
+				super.setMasked(masked);
+
+				// Mask the associated relations from the real underlying
+				// column.
+				if (masked)
+					for (final Iterator i = this.getWrappedColumn().getTable()
+							.getKeys().iterator(); i.hasNext();) {
+						final Key k = (Key) i.next();
+						if (k.getColumns().contains(this.getWrappedColumn()))
+							for (final Iterator j = k.getRelations().iterator(); j
+									.hasNext();) {
+								final Relation r = (Relation) j.next();
+								((DataSet) this.getTable().getSchema())
+										.maskRelation(r);
+							}
+					}
+			}
 		}
 
 		/**
@@ -2003,6 +1850,20 @@ public class DataSet extends GenericSchema {
 					throw new AssociationException(Resources
 							.get("relationNotConcatRelation"));
 			}
+
+			public void setMasked(boolean masked) throws AssociationException {
+				super.setMasked(masked);
+				((DataSet) this.getTable().getSchema()).maskRelation(this
+						.getUnderlyingRelation());
+			}
+
+			public void setPartitionType(PartitionedColumnType partitionType)
+					throws AssociationException {
+				if (partitionType != null)
+					throw new AssociationException(Resources
+							.get("cannotPartitionNonWrapSchColumns"));
+			}
+
 		}
 
 		/**
@@ -2023,6 +1884,12 @@ public class DataSet extends GenericSchema {
 					final DataSetTable dsTable) {
 				// The super constructor will make the alias for us.
 				super(name, dsTable, null);
+			}
+
+			public void setMasked(boolean masked) throws AssociationException {
+				if (masked)
+					throw new AssociationException(Resources
+							.get("cannotMaskSchemaNameColumn"));
 			}
 		}
 
@@ -2057,6 +1924,43 @@ public class DataSet extends GenericSchema {
 			 */
 			public DataSetColumn getInheritedColumn() {
 				return this.dsColumn;
+			}
+
+			public void setMasked(boolean masked) throws AssociationException {
+				if (masked)
+					throw new AssociationException(Resources
+							.get("cannotMaskInheritedColumn"));
+			}
+
+			public void setPartitionType(PartitionedColumnType partitionType)
+					throws AssociationException {
+				if (partitionType != null)
+					throw new AssociationException(Resources
+							.get("cannotPartitionNonWrapSchColumns"));
+			}
+
+			public void setName(String name) {
+				if (this.dsColumn == null)
+					super.setName(name);
+				else
+					this.dsColumn.setName(name);
+			}
+
+			public String getName() {
+				return this.dsColumn == null ? super.getName() : this.dsColumn
+						.getName();
+			}
+
+			public void setOriginalName(String name) {
+				if (this.dsColumn == null)
+					super.setOriginalName(name);
+				else
+					this.dsColumn.setOriginalName(name);
+			}
+
+			public String getOriginalName() {
+				return this.dsColumn == null ? super.getOriginalName()
+						: this.dsColumn.getOriginalName();
 			}
 		}
 
@@ -2196,6 +2100,19 @@ public class DataSet extends GenericSchema {
 			public boolean getGroupBy() {
 				return this.groupBy;
 			}
+
+			public void setMasked(boolean masked) throws AssociationException {
+				super.setMasked(masked);
+				((DataSetTable) this.getTable()).removeColumn(this);
+			}
+
+			public void setPartitionType(PartitionedColumnType partitionType)
+					throws AssociationException {
+				if (partitionType != null)
+					throw new AssociationException(Resources
+							.get("cannotPartitionNonWrapSchColumns"));
+			}
+
 		}
 	}
 

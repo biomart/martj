@@ -32,7 +32,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * interest to the diagram.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 2nd June 2006
+ * @version 0.1.8, 9th August 2006
  * @since 0.1
  */
 public interface DiagramComponent {
@@ -60,6 +60,7 @@ public interface DiagramComponent {
 	/**
 	 * Updates the appearance of this component, usually by setting colours.
 	 * This may often be handled by delegating calls to a {@link DiagramContext}.
+	 * It does _not_ repaint the object.
 	 */
 	public void updateAppearance();
 
@@ -85,6 +86,11 @@ public interface DiagramComponent {
 	 * and layout.
 	 */
 	public void recalculateDiagramComponent();
+
+	/**
+	 * This method is called when the component needs to repaint its contents.
+	 */
+	public void repaintDiagramComponent();
 
 	/**
 	 * Returns a map of inner components inside the diagram. The keys are model

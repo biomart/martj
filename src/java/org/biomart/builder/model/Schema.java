@@ -51,7 +51,7 @@ import org.biomart.builder.resources.Resources;
  * with keeping track of the tables a schema provides.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 2nd August 2006
+ * @version 0.1.18, 9th August 2006
  * @since 0.1
  */
 public interface Schema extends Comparable, DataLink {
@@ -368,7 +368,6 @@ public interface Schema extends Comparable, DataLink {
 						} else
 							fksToDrop.remove(newFK);
 						newFK.setStatus(fk.getStatus());
-						newFK.setNullable(fk.getNullable());
 					} catch (final Throwable t) {
 						throw new MartBuilderInternalError(t);
 					}

@@ -81,7 +81,7 @@ import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.37, 2nd August 2006
+ * @version 0.1.38, 9th August 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -1465,6 +1465,10 @@ public class DataSetTabSet extends JTabbedPane {
 			// Mask the column.
 			MartBuilderUtils.maskColumn(ds, column);
 
+			// In case it masked a relation, repaint the schema diagrams.
+			this.martTab.getSchemaTabSet().repaintAllSchemaDiagrams();
+			this.martTab.getSchemaTabSet().repaintOverviewDiagram();
+
 			// Recalculate the dataset diagram to reflect the changes.
 			this.recalculateDataSetDiagram(ds);
 
@@ -1492,10 +1496,10 @@ public class DataSetTabSet extends JTabbedPane {
 			MartBuilderUtils.unmaskColumn(ds, column);
 
 			// Recalculate the dataset diagram to reflect the changes.
-			this.repaintDataSetDiagram(ds);
+			this.recalculateDataSetDiagram(ds);
 
 			// Update the explanation too.
-			this.repaintExplanationDialog();
+			this.recalculateExplanationDialog();
 
 			// Update the modification status for this tabset.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -1600,9 +1604,8 @@ public class DataSetTabSet extends JTabbedPane {
 
 		// If the column is already partitioned, open a dialog
 		// explaining this and asking the user to edit the settings.
-		if (dataset.getPartitionedDataSetColumns().contains(column)) {
-			final PartitionedColumnType oldType = dataset
-					.getPartitionedDataSetColumnType(column);
+		if (column.getPartitionType()!=null) {
+			final PartitionedColumnType oldType = column.getPartitionType();
 			type = PartitionColumnDialog.updatePartitionedColumnType(
 					this.martTab, oldType);
 

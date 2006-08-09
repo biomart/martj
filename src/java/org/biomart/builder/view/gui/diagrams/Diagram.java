@@ -65,7 +65,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * what those items should be.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.26, 1st August 2006
+ * @version 0.1.27, 9th August 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
@@ -432,12 +432,6 @@ public abstract class Diagram extends JPanel {
 
 		// Update appearances of components.
 		this.repaintDiagram();
-
-		// Finally, repaint it as by default a component only repaints
-		// the area uncovered by the last action, but we have changed
-		// the entire visible area, so need the entire visible area to
-		// be repainted.
-		this.repaint(this.getVisibleRect());
 	}
 
 	/**
@@ -466,6 +460,7 @@ public abstract class Diagram extends JPanel {
 		for (final Iterator i = this.componentMap.values().iterator(); i
 				.hasNext();)
 			((DiagramComponent) i.next()).updateAppearance();
+		this.repaint(this.getVisibleRect());
 	}
 
 	/**

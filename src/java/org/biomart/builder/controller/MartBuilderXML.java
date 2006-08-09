@@ -100,7 +100,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.32, 8th August 2006
+ * @version 0.1.33, 9th August 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -358,6 +358,8 @@ public class MartBuilderXML extends DefaultHandler {
 					final boolean dependency = Boolean.valueOf(
 							(String) attributes.get("dependency"))
 							.booleanValue();
+					final boolean masked = Boolean.valueOf(
+							(String) attributes.get("masked")).booleanValue();
 
 					// Work out type and construct appropriate column.
 					final String type = (String) attributes.get("type");
@@ -372,17 +374,12 @@ public class MartBuilderXML extends DefaultHandler {
 								.get(attributes.get("wrappedColumnId"));
 						column = new WrappedColumn(wrappedCol,
 								(DataSetTable) tbl, underlyingRelation);
-						// Update name to ensure we have the same name
-						// the file specified.
 						column.setName(name);
 					} else if ("inherited".equals(type)) {
 						final DataSetColumn inheritedCol = (DataSetColumn) this.mappedObjects
 								.get(attributes.get("inheritedColumnId"));
 						column = new InheritedColumn((DataSetTable) tbl,
 								inheritedCol);
-						// Update name to ensure we have the same name
-						// the file specified.
-						column.setName(name);
 					} else if ("expression".equals(type)) {
 						column = new ExpressionColumn(name, (DataSetTable) tbl);
 						// AliasCols, AliasNames - wrapped obj to string map
@@ -407,9 +404,47 @@ public class MartBuilderXML extends DefaultHandler {
 						throw new SAXException(Resources.get(
 								"unknownColumnType", type));
 
-					// Update remaining settings. 
+					// Partitioning.
+					final String partitionType = (String) attributes
+							.get("partitionType");
+					PartitionedColumnType resolvedPartitionType;
+					if (partitionType==null || "null".equals(partitionType)) {
+						resolvedPartitionType = null;
+					} else if ("singleValue".equals(partitionType)) {
+						String value = null;
+						boolean useNull = Boolean.valueOf(
+								(String) attributes.get("partitionUseNull"))
+								.booleanValue();
+						if (!useNull)
+							value = (String) attributes.get("partitionValue");
+						resolvedPartitionType = new SingleValue(value, useNull);
+					} else if ("valueCollection".equals(partitionType)) {
+						// Values are comma-separated.
+						final List valueList = new ArrayList();
+						if (attributes.containsKey("partitionValues"))
+							valueList.addAll(Arrays
+									.asList(((String) attributes
+											.get("partitionValues"))
+											.split("\\s*,\\s*")));
+						final boolean includeNull = Boolean.valueOf(
+								(String) attributes.get("partitionUseNull"))
+								.booleanValue();
+						// Make the collection.
+						resolvedPartitionType = new ValueCollection(valueList,
+								includeNull);
+					} else if ("uniqueValues".equals(partitionType))
+						resolvedPartitionType = new UniqueValues();
+					else
+						throw new SAXException(Resources.get(
+								"unknownPartitionColumnType", partitionType));
+
+					// Flag the column as partitioned.
+					column.setPartitionType(resolvedPartitionType);
+
+					// Update remaining settings.
 					column.setOriginalName(originalName);
 					column.setDependency(dependency);
+					column.setMasked(masked);
 					element = column;
 				}
 
@@ -488,8 +523,6 @@ public class MartBuilderXML extends DefaultHandler {
 
 			// Get the ID and nullability.
 			final String id = (String) attributes.get("id");
-			final boolean nullable = Boolean.valueOf(
-					(String) attributes.get("nullable")).booleanValue();
 
 			try {
 				// Work out what status it is.
@@ -506,7 +539,6 @@ public class MartBuilderXML extends DefaultHandler {
 				// Make the key.
 				final ForeignKey fk = new GenericForeignKey(fkCols);
 				fk.setStatus(status);
-				fk.setNullable(nullable);
 
 				// Add it to the table.
 				tbl.addForeignKey(fk);
@@ -733,80 +765,6 @@ public class MartBuilderXML extends DefaultHandler {
 						expr, aliases);
 				w.flagRestrictedTable(tbl, restrict);
 				element = tbl;
-			} catch (final Exception e) {
-				if (e instanceof SAXException)
-					throw (SAXException) e;
-				else
-					throw new SAXException(e);
-			}
-		}
-
-		// Masked Column (inside dataset).
-		else if ("maskedColumn".equals(eName)) {
-			// What dataset does it belong to? Throw a wobbly if none.
-			if (this.objectStack.empty()
-					|| !(this.objectStack.peek() instanceof DataSet))
-				throw new SAXException(Resources
-						.get("maskedColumnOutsideDataSet"));
-			final DataSet w = (DataSet) this.objectStack.peek();
-
-			try {
-				// Look up the column.
-				final DataSetColumn col = (DataSetColumn) this.mappedObjects
-						.get(attributes.get("columnId"));
-
-				// Mask it.
-				w.maskDataSetColumn(col);
-				element = col;
-			} catch (final Exception e) {
-				throw new SAXException(e);
-			}
-		}
-
-		// Partition Column (inside dataset).
-		else if ("partitionColumn".equals(eName)) {
-			// What dataset does it belong to? Throw a wobbly if none.
-			if (this.objectStack.empty()
-					|| !(this.objectStack.peek() instanceof DataSet))
-				throw new SAXException(Resources
-						.get("partitionColumnOutsideDataSet"));
-			final DataSet w = (DataSet) this.objectStack.peek();
-
-			try {
-				// Look up the column.
-				final DataSetColumn col = (DataSetColumn) this.mappedObjects
-						.get(attributes.get("columnId"));
-
-				// Work out the partition type.
-				final String type = (String) attributes
-						.get("partitionedColumnType");
-				PartitionedColumnType resolvedType = null;
-				if ("singleValue".equals(type)) {
-					String value = null;
-					boolean useNull = Boolean.valueOf(
-							(String) attributes.get("useNull")).booleanValue();
-					if (!useNull)
-						value = (String) attributes.get("value");
-					resolvedType = new SingleValue(value, useNull);
-				} else if ("valueCollection".equals(type)) {
-					// Values are comma-separated.
-					final List valueList = new ArrayList();
-					if (attributes.containsKey("values"))
-						valueList.addAll(Arrays.asList(((String) attributes
-								.get("values")).split("\\s*,\\s*")));
-					final boolean includeNull = Boolean.valueOf(
-							(String) attributes.get("useNull")).booleanValue();
-					// Make the collection.
-					resolvedType = new ValueCollection(valueList, includeNull);
-				} else if ("uniqueValues".equals(type))
-					resolvedType = new UniqueValues();
-				else
-					throw new SAXException(Resources.get(
-							"unknownPartitionColumnType", type));
-
-				// Flag the column as partitioned.
-				w.flagPartitionedDataSetColumn(col, resolvedType);
-				element = col;
 			} catch (final Exception e) {
 				if (e instanceof SAXException)
 					throw (SAXException) e;
@@ -1174,12 +1132,14 @@ public class MartBuilderXML extends DefaultHandler {
 								.get(underlyingRelation);
 					this.writeAttribute("underlyingRelationId",
 							underlyingRelationId, xmlWriter);
-					this.writeAttribute("dependency", Boolean
-							.toString(((DataSetColumn) dcol).getDependency()),
-							xmlWriter);
+					this.writeAttribute("dependency", Boolean.toString(dcol
+							.getDependency()), xmlWriter);
+					this.writeAttribute("masked", Boolean.toString(dcol
+							.getMasked()), xmlWriter);
 					this.writeAttribute("alt",
 							underlyingRelation == null ? "null"
 									: underlyingRelation.toString(), xmlWriter);
+
 					// Concat relation column?
 					if (dcol instanceof ConcatRelationColumn)
 						this
@@ -1220,6 +1180,50 @@ public class MartBuilderXML extends DefaultHandler {
 					else
 						throw new BuilderException(Resources.get(
 								"unknownDatasetColumnType", dcol.getClass()
+										.getName()));
+
+					// What kind of partition is it?
+					PartitionedColumnType ptc = dcol.getPartitionType();
+					if (ptc == null) {
+						this.writeAttribute("partitionType", "null", xmlWriter);
+					}
+					// Single value partition?
+					else if (ptc instanceof SingleValue) {
+						final SingleValue sv = (SingleValue) ptc;
+						this.writeAttribute("partitionType", "singleValue",
+								xmlWriter);
+						final String value = sv.getValue();
+						this.writeAttribute("partitionUseNull", Boolean
+								.toString(sv.getIncludeNull()), xmlWriter);
+						if (value != null)
+							this.writeAttribute("partitionValue", value,
+									xmlWriter);
+					}
+					// Unique values partition?
+					else if (ptc instanceof UniqueValues)
+						this.writeAttribute("partitionType",
+								"uniqueValues", xmlWriter);
+					// Values collection partition?
+					else if (ptc instanceof ValueCollection) {
+						final ValueCollection vc = (ValueCollection) ptc;
+						this.writeAttribute("partitionType",
+								"valueCollection", xmlWriter);
+						// Values are comma-separated.
+						final List valueList = new ArrayList();
+						valueList.addAll(vc.getValues());
+						this.writeAttribute("partitionUseNull", Boolean
+								.toString(vc.getIncludeNull()), xmlWriter);
+						if (!valueList.isEmpty())
+							this
+									.writeAttribute("partitionValues",
+											(String[]) valueList
+													.toArray(new String[0]),
+											xmlWriter);
+					}
+					// Others.
+					else
+						throw new BuilderException(Resources.get(
+								"unknownPartitionColumnType", ptc.getClass()
 										.getName()));
 				}
 				// Generic column?
@@ -1315,9 +1319,6 @@ public class MartBuilderXML extends DefaultHandler {
 
 				this.openElement(elem, xmlWriter);
 				this.writeAttribute("id", keyMappedID, xmlWriter);
-				if (elem.equals("foreignKey"))
-					this.writeAttribute("nullable", ""
-							+ ((ForeignKey) key).getNullable(), xmlWriter);
 				final List columnIds = new ArrayList();
 				for (final Iterator kci = key.getColumns().iterator(); kci
 						.hasNext();)
@@ -1421,8 +1422,6 @@ public class MartBuilderXML extends DefaultHandler {
 		// Write out relations.
 		this.writeRelations(externalRelations, xmlWriter);
 
-		// Write out mart constructors. Remember windows as we go along.
-
 		// Write out windows.
 		for (final Iterator dsi = mart.getDataSets().iterator(); dsi.hasNext();) {
 			final DataSet ds = (DataSet) dsi.next();
@@ -1437,6 +1436,9 @@ public class MartBuilderXML extends DefaultHandler {
 					.getName(), xmlWriter);
 			this.writeAttribute("invisible", Boolean
 					.toString(ds.getInvisible()), xmlWriter);
+
+			// Write out the contents of the dataset, and note the relations.
+			this.writeSchemaContents(ds, xmlWriter);
 
 			// Write out concat relations inside window. MUST come first else
 			// the dataset concat-only cols will complain about not having a
@@ -1571,74 +1573,6 @@ public class MartBuilderXML extends DefaultHandler {
 						(String) this.reverseMappedObjects.get(r), xmlWriter);
 				this.writeAttribute("alt", r.toString(), xmlWriter);
 				this.closeElement("subclassRelation", xmlWriter);
-			}
-
-			// Write out the contents of the dataset, and note the relations.
-			this.writeSchemaContents(ds, xmlWriter);
-
-			// Write out masked columns inside window. MUST go after else will
-			// not have
-			// dataset cols to refer to.
-			for (final Iterator x = ds.getMaskedDataSetColumns().iterator(); x
-					.hasNext();) {
-				final Column c = (Column) x.next();
-				this.openElement("maskedColumn", xmlWriter);
-				this.writeAttribute("columnId",
-						(String) this.reverseMappedObjects.get(c), xmlWriter);
-				this.writeAttribute("alt", c.toString(), xmlWriter);
-				this.closeElement("maskedColumn", xmlWriter);
-			}
-
-			// Write out partitioned columns inside window. MUST go after else
-			// will not have dataset cols to refer to.
-			for (final Iterator x = ds.getPartitionedDataSetColumns()
-					.iterator(); x.hasNext();) {
-				final WrappedColumn c = (WrappedColumn) x.next();
-				this.openElement("partitionColumn", xmlWriter);
-				this.writeAttribute("columnId",
-						(String) this.reverseMappedObjects.get(c), xmlWriter);
-				final PartitionedColumnType ptc = ds
-						.getPartitionedDataSetColumnType(c);
-
-				// What kind of partition is it?
-				// Single value partition?
-				if (ptc instanceof SingleValue) {
-					final SingleValue sv = (SingleValue) ptc;
-					this.writeAttribute("partitionedColumnType", "singleValue",
-							xmlWriter);
-					final String value = sv.getValue();
-					this.writeAttribute("useNull", Boolean.toString(sv
-							.getIncludeNull()), xmlWriter);
-					if (value != null)
-						this.writeAttribute("value", value, xmlWriter);
-				}
-				// Unique values partition?
-				else if (ptc instanceof UniqueValues)
-					this.writeAttribute("partitionedColumnType",
-							"uniqueValues", xmlWriter);
-				// Values collection partition?
-				else if (ptc instanceof ValueCollection) {
-					final ValueCollection vc = (ValueCollection) ptc;
-					this.writeAttribute("partitionedColumnType",
-							"valueCollection", xmlWriter);
-					// Values are comma-separated.
-					final List valueList = new ArrayList();
-					valueList.addAll(vc.getValues());
-					this.writeAttribute("useNull", Boolean.toString(vc
-							.getIncludeNull()), xmlWriter);
-					if (!valueList.isEmpty())
-						this.writeAttribute("values", (String[]) valueList
-								.toArray(new String[0]), xmlWriter);
-				}
-				// Others.
-				else
-					throw new BuilderException(Resources.get(
-							"unknownPartitionColumnType", ptc.getClass()
-									.getName()));
-
-				// Finish off.
-				this.writeAttribute("alt", c.toString(), xmlWriter);
-				this.closeElement("partitionColumn", xmlWriter);
 			}
 
 			// Write out relations inside dataset.

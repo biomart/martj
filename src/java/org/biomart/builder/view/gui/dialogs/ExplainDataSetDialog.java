@@ -27,7 +27,6 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -38,10 +37,10 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 
-import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
@@ -63,7 +62,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.WindowContext;
  * and relations not involved directly in this dataset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 2nd August 2006
+ * @version 0.1.13, 9th August 2006
  * @since 0.1
  */
 public class ExplainDataSetDialog extends JDialog {
@@ -237,7 +236,7 @@ public class ExplainDataSetDialog extends JDialog {
 			final List includeCols = new ArrayList();
 			for (final Iterator i = this.dsTable.getColumns().iterator(); i
 					.hasNext();) {
-				final Column col = (Column) i.next();
+				final DataSetColumn col = (DataSetColumn) i.next();
 				if (col instanceof SchemaNameColumn)
 					includeCols.add(col);
 				else if (col instanceof WrappedColumn) {
@@ -264,7 +263,7 @@ public class ExplainDataSetDialog extends JDialog {
 			final List includeCols = new ArrayList();
 			for (final Iterator j = this.dsTable.getColumns().iterator(); j
 					.hasNext();) {
-				final Column col = (Column) j.next();
+				final DataSetColumn col = (DataSetColumn) j.next();
 				if (col instanceof InheritedColumn)
 					includeCols.add(col);
 			}
@@ -292,7 +291,7 @@ public class ExplainDataSetDialog extends JDialog {
 			final List includeCols = new ArrayList();
 			for (final Iterator j = this.dsTable.getColumns().iterator(); j
 					.hasNext();) {
-				final Column col = (Column) j.next();
+				final DataSetColumn col = (DataSetColumn) j.next();
 				if (col instanceof WrappedColumn) {
 					final WrappedColumn wcol = (WrappedColumn) col;
 					if (r.equals(wcol.getUnderlyingRelation()))
@@ -309,14 +308,15 @@ public class ExplainDataSetDialog extends JDialog {
 
 		// Work out expression and partitioned columns.
 		final List expressionCols = new ArrayList();
+		final List partCols = new ArrayList();
 		for (final Iterator i = this.dsTable.getColumns().iterator(); i
 				.hasNext();) {
-			final Column c = (Column) i.next();
+			final DataSetColumn c = (DataSetColumn) i.next();
 			if (c instanceof ExpressionColumn)
 				expressionCols.add(c);
+			if (c.getPartitionType()!=null)
+				partCols.add(c);
 		}
-		final Collection partCols = ((DataSet) this.dsTable.getSchema())
-				.getPartitionedDataSetColumns();
 
 		// Show expression columns.
 		if (!expressionCols.isEmpty()) {

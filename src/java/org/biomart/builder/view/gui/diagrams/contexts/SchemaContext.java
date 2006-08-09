@@ -38,7 +38,6 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
-import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
@@ -51,7 +50,7 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
  * dataset onto a set of masked relations.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.27, 3rd August 2006
+ * @version 0.1.28, 9th August 2006
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
@@ -504,27 +503,6 @@ public class SchemaContext implements DiagramContext {
 			});
 			contextMenu.add(editkey);
 
-			// Add a checkbox menu item to turn nullability on/off.
-			final JCheckBoxMenuItem nullable = new JCheckBoxMenuItem(Resources
-					.get("nullableForeignKeyTitle"));
-			nullable.setMnemonic(Resources.get("nullableForeignKeyMnemonic")
-					.charAt(0));
-			nullable.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestChangeForeignKeyNullability(
-									(ForeignKey) key, nullable.isSelected());
-				}
-			});
-			contextMenu.add(nullable);
-			if (!(key instanceof ForeignKey)) {
-				nullable.setEnabled(false);
-				nullable.setSelected(false);
-			} else {
-				nullable.setEnabled(true);
-				nullable.setSelected(((ForeignKey) key).getNullable());
-			}
-
 			// Option to establish a relation between this key and another.
 			final JMenuItem createrel = new JMenuItem(Resources
 					.get("createRelationTitle"));
@@ -631,14 +609,7 @@ public class SchemaContext implements DiagramContext {
 
 			// Do the stroke.
 			final RelationComponent relcomp = (RelationComponent) component;
-			if (relation.isOptional()) {
-				if (relation.isOneToOne())
-					relcomp.setStroke(RelationComponent.ONE_ONE_OPTIONAL);
-				else if (relation.isManyToMany())
-					relcomp.setStroke(RelationComponent.MANY_MANY_OPTIONAL);
-				else
-					relcomp.setStroke(RelationComponent.ONE_MANY_OPTIONAL);
-			} else if (relation.isOneToOne())
+			if (relation.isOneToOne())
 				relcomp.setStroke(RelationComponent.ONE_ONE);
 			else if (relation.isManyToMany())
 				relcomp.setStroke(RelationComponent.MANY_MANY);
