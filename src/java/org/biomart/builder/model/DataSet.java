@@ -61,7 +61,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.47, 9th August 2006
+ * @version 0.1.48, 10th August 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -670,13 +670,32 @@ public class DataSet extends GenericSchema {
 			DataSetColumn oldCol = (DataSetColumn) i.next();
 			Table targetTable = this
 					.getTableByName(oldCol.getTable().getName());
-			try {
-				((DataSetColumn) targetTable.getColumnByName(oldCol.getName()))
-						.setMasked(true);
-			} catch (AssociationException e) {
-				// Should never happen.
-				throw new MartBuilderInternalError(e);
+			if (targetTable != null)
+				try {
+					DataSetColumn targetCol = (DataSetColumn) targetTable
+							.getColumnByName(oldCol.getName());
+					if (targetCol != null)
+						targetCol.setMasked(true);
+				} catch (AssociationException e) {
+					// Should never happen.
+					throw new MartBuilderInternalError(e);
+				}
+		}
+
+		// Drop inherited masked columns.
+		List deadInheritedCols = new ArrayList();
+		for (Iterator i = this.getTables().iterator(); i.hasNext();)
+			for (Iterator j = ((Table) i.next()).getColumns().iterator(); j
+					.hasNext();) {
+				DataSetColumn col = (DataSetColumn) j.next();
+				if (col instanceof InheritedColumn)
+					if (((InheritedColumn) col).getInheritedColumn()
+							.getMasked())
+						deadInheritedCols.add(col);
 			}
+		for (Iterator i = deadInheritedCols.iterator(); i.hasNext();) {
+			Column col = (Column) i.next();
+			col.getTable().removeColumn(col);
 		}
 
 		// Partition previously partitioned columns.
@@ -685,14 +704,18 @@ public class DataSet extends GenericSchema {
 			DataSetColumn oldCol = (DataSetColumn) entry.getKey();
 			Table targetTable = this
 					.getTableByName(oldCol.getTable().getName());
-			try {
-				((DataSetColumn) targetTable.getColumnByName(oldCol.getName()))
-						.setPartitionType((PartitionedColumnType) entry
-								.getValue());
-			} catch (AssociationException e) {
-				// Should never happen.
-				throw new MartBuilderInternalError(e);
-			}
+			if (targetTable != null)
+				try {
+					DataSetColumn targetCol = (DataSetColumn) targetTable
+							.getColumnByName(oldCol.getName());
+					if (targetCol != null)
+						targetCol
+								.setPartitionType((PartitionedColumnType) entry
+										.getValue());
+				} catch (AssociationException e) {
+					// Should never happen.
+					throw new MartBuilderInternalError(e);
+				}
 		}
 
 		// Regenerate all the ExpressionColumns and mark all
@@ -897,9 +920,6 @@ public class DataSet extends GenericSchema {
 			for (final Iterator i = parentDSTable.getColumns().iterator(); i
 					.hasNext();) {
 				final DataSetColumn parentDSCol = (DataSetColumn) i.next();
-				// Skip masked ones.
-				if (parentDSCol.getMasked())
-					continue;
 				// If this is not a subclass table, we need to filter columns.
 				if (!type.equals(DataSetTableType.MAIN_SUBCLASS)) {
 					// Skip columns that are not in the primary key and not in
@@ -1653,7 +1673,8 @@ public class DataSet extends GenericSchema {
 				// Make a list of columns that are OK to mask.
 				final List okToMask = new ArrayList(dsTable.getColumns());
 
-				// Can mask PK cols only if not from original central table
+				// Cannot mask PK cols if they are on central table
+				// or underlying table.
 				final Key dsTablePK = dsTable.getPrimaryKey();
 				if (dsTablePK != null)
 					for (final Iterator i = dsTablePK.getColumns().iterator(); i
@@ -1662,7 +1683,8 @@ public class DataSet extends GenericSchema {
 						final Table underlyingTable = ((DataSetTable) col
 								.getTable()).getUnderlyingTable();
 						if (underlyingTable != null
-								&& underlyingTable.equals(centralTable))
+								&& (underlyingTable.equals(centralTable) || underlyingTable
+										.equals(dsTable.getUnderlyingTable())))
 							okToMask.remove(col);
 					}
 

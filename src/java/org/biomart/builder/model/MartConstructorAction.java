@@ -41,7 +41,7 @@ import org.biomart.builder.resources.Resources;
  * schema instead, as specified by the datasetSchemaName parameter.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 9th August 2006
+ * @version 0.1.9, 10th August 2006
  * @since 0.1
  */
 public abstract class MartConstructorAction {
@@ -458,14 +458,14 @@ public abstract class MartConstructorAction {
 		 * @param dsTableName
 		 *            the dataset table this action is associated with.
 		 * @param targetTableSchema
-		 *            the schema from which to select data.
-		 * @param targetTableName
-		 *            the table from which to select data.
-		 * @param partitionTableSchema
 		 *            the schema in which the newly partitioned table will be
 		 *            created.
-		 * @param partitionTableName
+		 * @param targetTableName
 		 *            the name of the newly partitioned table to create.
+		 * @param partitionTableSchema
+		 *            the schema from which to select data.
+		 * @param partitionTableName
+		 *            the table from which to select data.
 		 * @param partitionColumnName
 		 *            the name of the column to use for the partitioning.
 		 * @param partitionColumnValue

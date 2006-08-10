@@ -45,6 +45,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.UniqueValues;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.ValueCollection;
+import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.MartConstructorAction.Concat;
 import org.biomart.builder.model.MartConstructorAction.Create;
 import org.biomart.builder.model.MartConstructorAction.Drop;
@@ -68,7 +69,7 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.26, 9th August 2006
+ * @version 0.1.27, 10th August 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -408,8 +409,9 @@ public interface MartConstructor {
 
 				// Set up a queue to hold all the subclass and dimension
 				// relations we encounter.
-				final List dsParentRelations = new ArrayList(dsMainTable
-						.getPrimaryKey().getRelations());
+				final PrimaryKey dsMainTablePK = dsMainTable.getPrimaryKey();
+				final List dsParentRelations = dsMainTablePK == null ? Collections.EMPTY_LIST
+						: new ArrayList(dsMainTablePK.getRelations());
 				final List vParents = new ArrayList();
 				for (int x = 0; x < dsParentRelations.size(); x++)
 					vParents.add(vMainTable);
@@ -593,7 +595,7 @@ public interface MartConstructor {
 							// Convert to String.
 							String strValue = value.toString();
 							// Check for other improper symbols.
-							Pattern badSyms = Pattern.compile("[\\s'\"\\.,]|"
+							Pattern badSyms = Pattern.compile("^[_\\w]|"
 									+ Resources.get("tablenameSep"));
 							if (badSyms.matcher(strValue).matches())
 								throw new ConstructorException(Resources
@@ -672,8 +674,8 @@ public interface MartConstructor {
 						lastPartitionAction = index;
 
 						// Partition the parent table.
-						// Do the partitioning, one table per value.
 						final List reduceActions = new ArrayList();
+						// Do the partitioning, one table per value.
 						for (final Iterator k = partitionValues.iterator(); k
 								.hasNext();) {
 							final Object partitionValue = k.next();
@@ -691,14 +693,15 @@ public interface MartConstructor {
 							final MartConstructorAction partition = new Partition(
 									this.datasetSchemaName, vPartitionTable
 											.getDataSetTable().getName(), null,
-									vPartitionTable.getTempTableName(), null,
-									vParentTable.getTempTableName(), dsPartCol
+									vParentTable.getTempTableName(), null,
+									vPartitionTable.getTempTableName(),  dsPartCol
 											.getName(), partitionValue);
 							actionGraph.addActionWithParent(partition,
 									lastPartitionAction);
 							// Make the last action of each partitioned
 							// table the partition action.
 							vPartitionTable.setLastActionPerformed(partition);
+							reduceActions.add(partition);
 
 							// Create an index over the primary key columns of
 							// the newly partitioned table.
@@ -783,8 +786,10 @@ public interface MartConstructor {
 			final List pkFkActions = new ArrayList();
 			for (final Iterator i = vTables.iterator(); i.hasNext();) {
 				final VirtualTable vParentTable = (VirtualTable) i.next();
-				final List dsPKCols = vParentTable.getDataSetTable()
-						.getPrimaryKey().getColumns();
+				final PrimaryKey dsParentTablePK = vParentTable
+						.getDataSetTable().getPrimaryKey();
+				final List dsPKCols = dsParentTablePK == null ? Collections.EMPTY_LIST
+						: dsParentTablePK.getColumns();
 				// Create a PK over pkKeyCols.
 				final MartConstructorAction pk = new Index(
 						this.datasetSchemaName, vParentTable.getDataSetTable()
@@ -795,42 +800,45 @@ public interface MartConstructor {
 
 				// Iterate over foreign keys from this PK.
 				final Key dsPK = vParentTable.getDataSetTable().getPrimaryKey();
-				for (final Iterator j = dsPK.getRelations().iterator(); j
-						.hasNext();) {
-					final Relation dsPKRelation = (Relation) j.next();
-					final DataSetTable dsFKTable = (DataSetTable) dsPKRelation
-							.getOtherKey(dsPK).getTable();
-					// For each one, find all VirtualTables involved in
-					// that relation, and index and establish FK.
-					for (final Iterator k = vTables.iterator(); k.hasNext();) {
-						final VirtualTable vChildTable = (VirtualTable) k
-								.next();
-						if (!vChildTable.getDataSetTable().equals(dsFKTable))
-							continue;
-						final List vParentPartitionValues = vParentTable
-								.getPartitionValues();
-						if (vChildTable.getPartitionValues().size() < vParentPartitionValues
-								.size())
-							continue;
-						else if (!vChildTable.getPartitionValues().subList(0,
-								vParentPartitionValues.size()).equals(
-								vParentPartitionValues))
-							continue;
-						final Key dsFK = (Key) vChildTable.getDataSetTable()
-								.getForeignKeys().iterator().next();
-						final List dsFKCols = dsFK.getColumns();
+				if (dsPK != null)
+					for (final Iterator j = dsPK.getRelations().iterator(); j
+							.hasNext();) {
+						final Relation dsPKRelation = (Relation) j.next();
+						final DataSetTable dsFKTable = (DataSetTable) dsPKRelation
+								.getOtherKey(dsPK).getTable();
+						// For each one, find all VirtualTables involved in
+						// that relation, and index and establish FK.
+						for (final Iterator k = vTables.iterator(); k.hasNext();) {
+							final VirtualTable vChildTable = (VirtualTable) k
+									.next();
+							if (!vChildTable.getDataSetTable()
+									.equals(dsFKTable))
+								continue;
+							final List vParentPartitionValues = vParentTable
+									.getPartitionValues();
+							if (vChildTable.getPartitionValues().size() < vParentPartitionValues
+									.size())
+								continue;
+							else if (!vChildTable.getPartitionValues().subList(
+									0, vParentPartitionValues.size()).equals(
+									vParentPartitionValues))
+								continue;
+							final Key dsFK = (Key) vChildTable
+									.getDataSetTable().getForeignKeys()
+									.iterator().next();
+							final List dsFKCols = dsFK.getColumns();
 
-						// Index fkKeyCols.
-						final MartConstructorAction fk = new Index(
-								this.datasetSchemaName, vChildTable
-										.getDataSetTable().getName(), null,
-								vChildTable.getTempTableName(), dsFKCols);
-						actionGraph.addActionWithParent(fk, pk);
-						// Add action to list of pkFkActions.
-						pkFkActions.add(fk);
+							// Index fkKeyCols.
+							final MartConstructorAction fk = new Index(
+									this.datasetSchemaName, vChildTable
+											.getDataSetTable().getName(), null,
+									vChildTable.getTempTableName(), dsFKCols);
+							actionGraph.addActionWithParent(fk, pk);
+							// Add action to list of pkFkActions.
+							pkFkActions.add(fk);
+						}
+
 					}
-
-				}
 			}
 
 			// Set up a break-point last action that waits for all
