@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
@@ -69,7 +68,7 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.27, 10th August 2006
+ * @version 0.1.28, 11th August 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -586,23 +585,6 @@ public interface MartConstructor {
 							// Other column types not supported.
 							throw new MartBuilderInternalError();
 
-					// Validate the partition values.
-					for (Iterator z = partitionValues.iterator(); z.hasNext();) {
-						Object value = z.next();
-						if (value == null)
-							continue; // nulls are OK
-						else {
-							// Convert to String.
-							String strValue = value.toString();
-							// Check for other improper symbols.
-							Pattern badSyms = Pattern.compile("^[_\\w]|"
-									+ Resources.get("tablenameSep"));
-							if (badSyms.matcher(strValue).matches())
-								throw new ConstructorException(Resources
-										.get("badPartitionValues"));
-						}
-					}
-
 					// Do the partitioning. First, partition the table the
 					// column
 					// belongs to. Then, partition every child, and every child
@@ -694,8 +676,8 @@ public interface MartConstructor {
 									this.datasetSchemaName, vPartitionTable
 											.getDataSetTable().getName(), null,
 									vParentTable.getTempTableName(), null,
-									vPartitionTable.getTempTableName(),  dsPartCol
-											.getName(), partitionValue);
+									vPartitionTable.getTempTableName(),
+									dsPartCol.getName(), partitionValue);
 							actionGraph.addActionWithParent(partition,
 									lastPartitionAction);
 							// Make the last action of each partitioned
@@ -775,70 +757,77 @@ public interface MartConstructor {
 
 			// Set up a break-point last action that waits again for all
 			// tables to complete.
-			final MartConstructorAction prePKAction = new PlaceHolder(
+			final MartConstructorAction preIndexAction = new PlaceHolder(
 					this.datasetSchemaName);
 			for (final Iterator i = vTables.iterator(); i.hasNext();)
-				prePKAction.addParent(((VirtualTable) i.next())
+				preIndexAction.addParent(((VirtualTable) i.next())
 						.getLastActionPerformed());
-			actionGraph.addAction(prePKAction);
+			actionGraph.addAction(preIndexAction);
 
 			// Establish PKs and FKs, but only as indexes.
 			final List pkFkActions = new ArrayList();
+			pkFkActions.add(preIndexAction);
 			for (final Iterator i = vTables.iterator(); i.hasNext();) {
 				final VirtualTable vParentTable = (VirtualTable) i.next();
 				final PrimaryKey dsParentTablePK = vParentTable
 						.getDataSetTable().getPrimaryKey();
-				final List dsPKCols = dsParentTablePK == null ? Collections.EMPTY_LIST
-						: dsParentTablePK.getColumns();
-				// Create a PK over pkKeyCols.
-				final MartConstructorAction pk = new Index(
+				if (dsParentTablePK == null)
+					continue;
+				final List dsPKCols = dsParentTablePK.getColumns();
+				// Create a PK index over pkKeyCols.
+				final MartConstructorAction pkIndex = new Index(
 						this.datasetSchemaName, vParentTable.getDataSetTable()
 								.getName(), null, vParentTable
 								.getTempTableName(), dsPKCols);
-				actionGraph.addActionWithParent(pk, prePKAction);
-				pkFkActions.add(pk);
+				actionGraph.addActionWithParent(pkIndex, preIndexAction);
+				pkFkActions.add(pkIndex);
 
 				// Iterate over foreign keys from this PK.
-				final Key dsPK = vParentTable.getDataSetTable().getPrimaryKey();
-				if (dsPK != null)
-					for (final Iterator j = dsPK.getRelations().iterator(); j
-							.hasNext();) {
-						final Relation dsPKRelation = (Relation) j.next();
-						final DataSetTable dsFKTable = (DataSetTable) dsPKRelation
-								.getOtherKey(dsPK).getTable();
-						// For each one, find all VirtualTables involved in
-						// that relation, and index and establish FK.
-						for (final Iterator k = vTables.iterator(); k.hasNext();) {
-							final VirtualTable vChildTable = (VirtualTable) k
-									.next();
-							if (!vChildTable.getDataSetTable()
-									.equals(dsFKTable))
-								continue;
-							final List vParentPartitionValues = vParentTable
-									.getPartitionValues();
-							if (vChildTable.getPartitionValues().size() < vParentPartitionValues
-									.size())
-								continue;
-							else if (!vChildTable.getPartitionValues().subList(
-									0, vParentPartitionValues.size()).equals(
-									vParentPartitionValues))
-								continue;
-							final Key dsFK = (Key) vChildTable
-									.getDataSetTable().getForeignKeys()
-									.iterator().next();
-							final List dsFKCols = dsFK.getColumns();
-
-							// Index fkKeyCols.
-							final MartConstructorAction fk = new Index(
-									this.datasetSchemaName, vChildTable
-											.getDataSetTable().getName(), null,
-									vChildTable.getTempTableName(), dsFKCols);
-							actionGraph.addActionWithParent(fk, pk);
-							// Add action to list of pkFkActions.
-							pkFkActions.add(fk);
-						}
-
+				for (final Iterator j = dsParentTablePK.getRelations()
+						.iterator(); j.hasNext();) {
+					final Relation dsPKRelation = (Relation) j.next();
+					final DataSetTable dsFKTable = (DataSetTable) dsPKRelation
+							.getOtherKey(dsParentTablePK).getTable();
+					// For each one, find all VirtualTables involved in
+					// that relation, and index and establish FK.
+					for (final Iterator k = vTables.iterator(); k.hasNext();) {
+						final VirtualTable vChildTable = (VirtualTable) k
+								.next();
+						// Virtual table not one we're looking for?
+						if (!vChildTable.getDataSetTable().equals(dsFKTable))
+							continue;
+						// Virtual table not same partition values as
+						// parent?
+						final List vParentPartitionValues = vParentTable
+								.getPartitionValues();
+						if (vChildTable.getPartitionValues().size() < vParentPartitionValues
+								.size())
+							continue;
+						else if (!vChildTable.getPartitionValues().subList(0,
+								vParentPartitionValues.size()).equals(
+								vParentPartitionValues))
+							continue;
+						// Work out the FK.
+						final Key dsChildPK = vChildTable.getDataSetTable()
+								.getPrimaryKey();
+						final Key dsChildFK = (Key) vChildTable
+								.getDataSetTable().getForeignKeys().iterator()
+								.next();
+						final List dsChildFKCols = dsChildFK.getColumns();
+						// FK identical to PK on child table?
+						if (dsChildPK != null
+								&& dsChildFKCols.equals(dsChildPK.getColumns()))
+							continue;
+						// Index fkKeyCols.
+						final MartConstructorAction fkIndex = new Index(
+								this.datasetSchemaName, vChildTable
+										.getDataSetTable().getName(), null,
+								vChildTable.getTempTableName(), dsChildFKCols);
+						actionGraph.addActionWithParent(fkIndex, pkIndex);
+						// Add action to list of pkFkActions.
+						pkFkActions.add(fkIndex);
 					}
+				}
 			}
 
 			// Set up a break-point last action that waits for all
@@ -890,12 +879,12 @@ public interface MartConstructor {
 						actionGraph.addActionWithParent(create, preDOAction);
 						// Create the PK on the 'has' table using the same
 						// columns, as an index.
-						final MartConstructorAction pk = new Index(
+						final MartConstructorAction pkIndex = new Index(
 								this.datasetSchemaName, vHasTable
 										.getDataSetTable().getName(), null,
 								vHasTable.getTempTableName(), dsPKCols);
-						actionGraph.addActionWithParent(pk, create);
-						preDOAction = pk;
+						actionGraph.addActionWithParent(pkIndex, create);
+						preDOAction = pkIndex;
 					}
 
 					// For each main or subclass table, identify all dimensions.

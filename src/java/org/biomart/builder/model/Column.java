@@ -33,7 +33,7 @@ import org.biomart.builder.resources.Resources;
  * name.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 9th August 2006
+ * @version 0.1.10, 11th August 2006
  * @since 0.1
  */
 public interface Column extends Comparable {
@@ -135,9 +135,6 @@ public interface Column extends Comparable {
 		}
 
 		public void setName(String newName) {
-			// Don't duplicate effort.
-			if (newName.equals(this.name))
-				return;
 			// Make the name unique.
 			String baseName = newName;
 			String suffix = Resources.get("pkSuffix");
@@ -146,8 +143,9 @@ public interface Column extends Comparable {
 			else
 				suffix = "";
 			// Check there is no other column on this table with the same name.
-			for (int i = 1; this.table.getColumnByName(newName) != null; newName = baseName
-					+ "_" + i++ + suffix)
+			for (int i = 1; this.table.getColumnByName(newName) != null
+					&& !newName.equals(this.name); newName = baseName + "_"
+					+ i++ + suffix)
 				;
 			this.getTable().changeColumnMapKey(this.name, newName);
 			this.name = newName;

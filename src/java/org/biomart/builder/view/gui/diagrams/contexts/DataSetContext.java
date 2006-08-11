@@ -52,7 +52,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * org.biomart.builder.view.gui.diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.30, 9th August 2006
+ * @version 0.1.31, 11th August 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -565,7 +565,7 @@ public class DataSetContext extends WindowContext {
 
 			// Magenta EXPRESSION columns.
 			if (column instanceof InheritedColumn)
-				component.setForeground(ColumnComponent.INHERITED_COLOUR);
+					component.setForeground(ColumnComponent.INHERITED_COLOUR);
 
 			// Fade out all MASKED columns.
 			else if (column.getMasked())

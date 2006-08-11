@@ -61,7 +61,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.48, 10th August 2006
+ * @version 0.1.49, 11th August 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -625,7 +625,7 @@ public class DataSet extends GenericSchema {
 		// Remember the masked, partition, and expression columns.
 		final List maskedColumns = new ArrayList();
 		final List expressionColumns = new ArrayList();
-		final Map partitionColumns = new HashMap();
+		final List partitionColumns = new ArrayList();
 		for (final Iterator i = this.getTables().iterator(); i.hasNext();)
 			for (final Iterator j = ((Table) i.next()).getColumns().iterator(); j
 					.hasNext();) {
@@ -635,131 +635,176 @@ public class DataSet extends GenericSchema {
 				else if (col.getMasked())
 					maskedColumns.add(col);
 				else if (col.getPartitionType() != null)
-					partitionColumns.put(col, col.getPartitionType());
+					partitionColumns.add(col);
 			}
 
 		// Regenerate the dataset
 		this.regenerate();
-
-		// Reapply the names for renamed tables and columns. Look up using
-		// original names else they won't be found. Do columns first before
-		// table names have changed completely.
-		for (final Iterator i = renamedColumns.iterator(); i.hasNext();) {
-			final Column col = (Column) i.next();
-			try {
-				final Column newCol = this.getTableByName(
-						col.getTable().getOriginalName()).getColumnByName(
-						col.getOriginalName());
-				newCol.setName(col.getName());
-			} catch (final Throwable t) {
-				// Ignore, and leave the name as it is.
-			}
-		}
-		for (final Iterator i = renamedTables.iterator(); i.hasNext();) {
-			final Table tbl = (Table) i.next();
-			try {
-				final Table newTbl = this.getTableByName(tbl.getOriginalName());
-				newTbl.setName(tbl.getName());
-			} catch (final Throwable t) {
-				// Ignore, and leave the name as it is.
-			}
-		}
-
-		// Mask previously masked columns.
-		for (Iterator i = maskedColumns.iterator(); i.hasNext();) {
-			DataSetColumn oldCol = (DataSetColumn) i.next();
-			Table targetTable = this
-					.getTableByName(oldCol.getTable().getName());
-			if (targetTable != null)
-				try {
-					DataSetColumn targetCol = (DataSetColumn) targetTable
-							.getColumnByName(oldCol.getName());
-					if (targetCol != null)
-						targetCol.setMasked(true);
-				} catch (AssociationException e) {
-					// Should never happen.
-					throw new MartBuilderInternalError(e);
+		
+		// Mask things that were already masked.
+		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
+			DataSetTable table = (DataSetTable) i.next();
+			// Check the columns from this table.
+			for (final Iterator j = table.getColumns().iterator(); j.hasNext();) {
+				DataSetColumn column = (DataSetColumn) j.next();
+				// Mask previously masked columns.
+				for (Iterator k = maskedColumns.iterator(); k.hasNext();) {
+					DataSetColumn maskedColumn = (DataSetColumn) k.next();
+					// Is the new column the same one? Check underlying
+					// relation and original name.
+					if (maskedColumn.getTable().getOriginalName().equals(
+							table.getOriginalName())
+							&& ((DataSetTable) maskedColumn.getTable())
+									.getSourceRelation() == table
+									.getSourceRelation()
+							&& maskedColumn.getOriginalName().equals(
+									column.getOriginalName())
+							&& maskedColumn.getUnderlyingRelation() == column
+									.getUnderlyingRelation())
+						try {
+							column.setMasked(true);
+						} catch (AssociationException e) {
+							// Should never happen.
+							throw new MartBuilderInternalError(e);
+						}
 				}
-		}
-
-		// Drop inherited masked columns.
-		List deadInheritedCols = new ArrayList();
-		for (Iterator i = this.getTables().iterator(); i.hasNext();)
-			for (Iterator j = ((Table) i.next()).getColumns().iterator(); j
-					.hasNext();) {
-				DataSetColumn col = (DataSetColumn) j.next();
-				if (col instanceof InheritedColumn)
-					if (((InheritedColumn) col).getInheritedColumn()
-							.getMasked())
-						deadInheritedCols.add(col);
 			}
-		for (Iterator i = deadInheritedCols.iterator(); i.hasNext();) {
-			Column col = (Column) i.next();
+		}
+		
+		// Remove masked inherited columns.
+		List deadInherited = new ArrayList();
+		for (final Iterator i = this.getTables().iterator(); i.hasNext(); ) 
+			for (final Iterator j = ((Table)i.next()).getColumns().iterator(); j.hasNext(); ) {
+				DataSetColumn col = (DataSetColumn)j.next();
+				if (col instanceof InheritedColumn)
+					if (((InheritedColumn)col).getInheritedColumn().getMasked())
+						deadInherited.add(col);
+			}
+		for (final Iterator i = deadInherited.iterator(); i.hasNext(); ) {
+			DataSetColumn col = (DataSetColumn)i.next();
 			col.getTable().removeColumn(col);
 		}
-
-		// Partition previously partitioned columns.
-		for (Iterator i = partitionColumns.entrySet().iterator(); i.hasNext();) {
-			Map.Entry entry = (Map.Entry) i.next();
-			DataSetColumn oldCol = (DataSetColumn) entry.getKey();
-			Table targetTable = this
-					.getTableByName(oldCol.getTable().getName());
-			if (targetTable != null)
-				try {
-					DataSetColumn targetCol = (DataSetColumn) targetTable
-							.getColumnByName(oldCol.getName());
-					if (targetCol != null)
-						targetCol
-								.setPartitionType((PartitionedColumnType) entry
-										.getValue());
-				} catch (AssociationException e) {
-					// Should never happen.
-					throw new MartBuilderInternalError(e);
+		
+		// Reapply the names for renamed tables and columns. Look up using
+		// original names and underlying relations else they won't be found.
+		// We have to store things in maps else we get concurrent modification
+		// exceptions from the iterators.
+		Map newTableNames = new HashMap();
+		Map newColumnNames = new HashMap();
+		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
+			DataSetTable table = (DataSetTable) i.next();
+			// Has it been renamed? Check underlying relation and original
+			// name against ones we know have changed.
+			for (final Iterator k = renamedTables.iterator(); k.hasNext();) {
+				DataSetTable renamedTable = (DataSetTable) k.next();
+				if (renamedTable.getOriginalName().equals(
+						table.getOriginalName())
+						&& renamedTable.getSourceRelation() == table
+								.getSourceRelation())
+					newTableNames.put(table, renamedTable.getName());
+			}
+			// Check the columns from this table.
+			for (final Iterator j = table.getColumns().iterator(); j.hasNext();) {
+				DataSetColumn column = (DataSetColumn) j.next();
+				// Has it been renamed? Check underlying relation and original
+				// name against ones we know have changed.
+				for (final Iterator k = renamedColumns.iterator(); k.hasNext();) {
+					DataSetColumn renamedColumn = (DataSetColumn) k.next();
+					if (renamedColumn.getOriginalName().equals(
+							column.getOriginalName())
+							&& renamedColumn.getUnderlyingRelation() == column
+									.getUnderlyingRelation())
+						newColumnNames.put(column, renamedColumn.getName());
 				}
-		}
+				// Partition previously partitioned columns.
+				for (Iterator k = partitionColumns.iterator(); k.hasNext();) {
+					DataSetColumn partitionedColumn = (DataSetColumn) k.next();
+					// Is the new column the same one? Check underlying relation
+					// and original name.
+					if (partitionedColumn.getTable().getOriginalName().equals(
+							table.getOriginalName())
+							&& ((DataSetTable) partitionedColumn.getTable())
+									.getSourceRelation() == table
+									.getSourceRelation()
+							&& partitionedColumn.getOriginalName().equals(
+									column.getOriginalName())
+							&& partitionedColumn.getUnderlyingRelation() == column
+									.getUnderlyingRelation())
+						try {
+							column.setPartitionType(partitionedColumn
+									.getPartitionType());
+						} catch (AssociationException e) {
+							// Should never happen.
+							throw new MartBuilderInternalError(e);
+						}
+				}
+			}
 
-		// Regenerate all the ExpressionColumns and mark all
-		// their dependencies again. Drop any that refer to columns
-		// that no longer exist.
-		for (final Iterator i = expressionColumns.iterator(); i.hasNext();) {
-			final ExpressionColumn oldExpCol = (ExpressionColumn) i.next();
-			// Work out what table it came from. Gone? Drop.
-			final DataSetTable newExpColTable = (DataSetTable) this
-					.getTableByName(oldExpCol.getTable().getName());
-			if (newExpColTable == null)
-				continue;
-			// Get all the dependent columns. Any gone? Drop.
-			boolean allFound = true;
-			final Map newDependencies = new TreeMap();
-			for (final Iterator j = oldExpCol.getAliases().entrySet()
-					.iterator(); j.hasNext();) {
-				final Map.Entry entry = (Map.Entry) j.next();
-				final DataSetColumn origDependency = (DataSetColumn) entry
-						.getKey();
-				final DataSetColumn dependency = (DataSetColumn) newExpColTable
-						.getColumnByName(origDependency.getName());
-				final String alias = (String) entry.getValue();
-				if (dependency == null)
-					allFound = false;
-				else
-					newDependencies.put(dependency, alias);
+			// Regenerate all the ExpressionColumns and mark all
+			// their dependencies again. Drop any that refer to columns
+			// that no longer exist.
+			for (final Iterator j = expressionColumns.iterator(); j.hasNext();) {
+				final ExpressionColumn oldExpCol = (ExpressionColumn) j.next();
+				// Only regenerate expression columns from this table.
+				final DataSetTable oldExpColTable = (DataSetTable) oldExpCol
+						.getTable();
+				if (!(oldExpColTable.getOriginalName().equals(
+						table.getOriginalName()) && oldExpColTable
+						.getSourceRelation() == table.getSourceRelation()))
+					continue;
+				// Get all the dependent columns. Any gone? Drop.
+				boolean allFound = true;
+				final Map newDependencies = new TreeMap();
+				for (final Iterator k = oldExpCol.getAliases().entrySet()
+						.iterator(); k.hasNext();) {
+					final Map.Entry entry = (Map.Entry) k.next();
+					final DataSetColumn origDependency = (DataSetColumn) entry
+							.getKey();
+					final String alias = (String) entry.getValue();
+					// Find column.
+					DataSetColumn dependency = null;
+					for (final Iterator l = table.getColumns().iterator(); l
+							.hasNext()
+							&& dependency == null;) {
+						DataSetColumn column = (DataSetColumn) l.next();
+						if (column.getOriginalName().equals(
+								origDependency.getOriginalName())
+								&& column.getUnderlyingRelation() == origDependency
+										.getUnderlyingRelation())
+							dependency = column;
+					}
+					if (dependency == null)
+						allFound = false;
+					else
+						newDependencies.put(dependency, alias);
+				}
+				if (!allFound)
+					continue;
+				// Create a new ExpressionColumn based on the new columns.
+				try {
+					final ExpressionColumn newExpCol = new ExpressionColumn(
+							oldExpCol.getName(), table);
+					newExpCol.getAliases().putAll(newDependencies);
+					newExpCol.setExpression(oldExpCol.getExpression());
+					newExpCol.setGroupBy(oldExpCol.getGroupBy());
+					for (final Iterator k = newDependencies.keySet().iterator(); k
+							.hasNext();)
+						((DataSetColumn) k.next()).setDependency(true);
+				} catch (final Throwable t) {
+					// Should never happen!
+					throw new MartBuilderInternalError(t);
+				}
 			}
-			if (!allFound)
-				continue;
-			// Create a new ExpressionColumn based on the new columns.
-			try {
-				final ExpressionColumn newExpCol = new ExpressionColumn(
-						oldExpCol.getName(), newExpColTable);
-				newExpCol.getAliases().putAll(newDependencies);
-				newExpCol.setExpression(oldExpCol.getExpression());
-				newExpCol.setGroupBy(oldExpCol.getGroupBy());
-				for (final Iterator j = newDependencies.keySet().iterator(); j
-						.hasNext();)
-					((DataSetColumn) j.next()).setDependency(true);
-			} catch (final Throwable t) {
-				// Should never happen!
-				throw new MartBuilderInternalError(t);
-			}
+		}
+		for (final Iterator i = newTableNames.entrySet().iterator(); i
+				.hasNext();) {
+			Map.Entry entry = (Map.Entry) i.next();
+			((DataSetTable) entry.getKey()).setName((String) entry.getValue());
+		}
+		for (final Iterator i = newColumnNames.entrySet().iterator(); i
+				.hasNext();) {
+			Map.Entry entry = (Map.Entry) i.next();
+			((DataSetColumn) entry.getKey()).setName((String) entry.getValue());
 		}
 
 		// Regenerate all the columns in the restricted relations,
@@ -827,6 +872,43 @@ public class DataSet extends GenericSchema {
 		for (final Iterator i = deadRelationRestrictions.iterator(); i
 				.hasNext();)
 			this.unflagRestrictedRelation((Relation) i.next());
+
+		// Remove any table restrictions that reference tables or columns that
+		// no longer exist.
+		final List deadTableRestrictions = new ArrayList();
+		for (int i = 0; i < this.restrictedTables[0].size(); i++) {
+			final Table table = (Table) this.restrictedTables[0].get(i);
+			final DataSetTableRestriction restriction = (DataSetTableRestriction) this.restrictedTables[1]
+					.get(i);
+			// Cannot use map iterator as will get concurrent modifications.
+			List oldAliases = new ArrayList(restriction.getAliases().keySet());
+			boolean destroy = false;
+			for (final Iterator j = oldAliases.iterator(); j.hasNext()
+					&& !destroy;) {
+				final Column oldCol = (Column) j.next();
+				final Table newTbl = oldCol.getTable().getSchema()
+						.getTableByName(oldCol.getTable().getName());
+				if (newTbl == null)
+					destroy = true;
+				else {
+					final String alias = (String) restriction.getAliases().get(
+							oldCol);
+					final Column newCol = newTbl.getColumnByName(oldCol
+							.getName());
+					if (newCol == null)
+						destroy = true;
+					else {
+						restriction.getAliases().remove(oldCol);
+						restriction.getAliases().put(newCol, alias);
+					}
+				}
+			}
+			if (destroy)
+				deadTableRestrictions.add(table);
+		}
+		// Remove the dead ones that reference columns that no longer exist.
+		for (final Iterator i = deadTableRestrictions.iterator(); i.hasNext();)
+			this.unflagRestrictedTable((Table) i.next());
 	}
 
 	/**
@@ -1107,13 +1189,11 @@ public class DataSet extends GenericSchema {
 		for (final Iterator i = mergeTable.getRelations().iterator(); i
 				.hasNext();) {
 			final Relation r = (Relation) i.next();
-
+			
 			// Don't repeat relations.
 			if (relationsFollowed.contains(r))
 				continue;
-			else
-				relationsFollowed.add(r);
-
+			
 			// Don't follow masked or incorrect relations, or relations
 			// between incorrect keys.
 			if (this.maskedRelations.contains(r)
@@ -1121,8 +1201,10 @@ public class DataSet extends GenericSchema {
 					|| r.getFirstKey().getStatus().equals(
 							ComponentStatus.INFERRED_INCORRECT)
 					|| r.getSecondKey().getStatus().equals(
-							ComponentStatus.INFERRED_INCORRECT))
+							ComponentStatus.INFERRED_INCORRECT)) {
+				relationsFollowed.add(r);
 				continue;
+			}
 
 			// Are we at the 1 end of a 1:M, or at either end of a M:M?
 			else if (r.isManyToMany() || r.isOneToMany()
@@ -1131,6 +1213,7 @@ public class DataSet extends GenericSchema {
 				// Concatenate concat-only relations.
 				if (this.concatOnlyRelations[0].contains(r))
 					try {
+						relationsFollowed.add(r);
 						new ConcatRelationColumn(Resources
 								.get("concatColumnPrefix")
 								+ mergeTable.getName(), dsTable, r);
@@ -1142,28 +1225,34 @@ public class DataSet extends GenericSchema {
 				// not building a dimension table.
 				else if (this.subclassedRelations.contains(r)
 						&& !dsTable.getType()
-								.equals(DataSetTableType.DIMENSION))
+								.equals(DataSetTableType.DIMENSION)) {
+					relationsFollowed.add(r);
 					subclassQ.add(r);
+				}
 
 				// Dimensionize dimension relations, which are all other 1:M
 				// or M:M relations, if we are not constructing a dimension
 				// table, and are currently intending to construct dimensions.
 				else if (makeDimensions
 						&& !dsTable.getType()
-								.equals(DataSetTableType.DIMENSION))
+								.equals(DataSetTableType.DIMENSION)) {
+					relationsFollowed.add(r);
 					dimensionQ.add(r);
+				}					
 			}
 
 			// Follow all others. If we follow a 1:1, and we are currently
 			// including dimensions, include them from the 1:1 as well.
 			// Otherwise, stop including dimensions on subsequent tables.
-			else
+			else {				
+				relationsFollowed.add(r);
 				normalQ.add(new Object[] {
 						r,
 						(r.getFirstKey().getTable().equals(mergeTable) ? r
 								.getSecondKey().getTable() : r.getFirstKey()
 								.getTable()),
 						Boolean.valueOf(makeDimensions && r.isOneToOne()) });
+			}
 		}
 	}
 
@@ -1874,7 +1963,6 @@ public class DataSet extends GenericSchema {
 			}
 
 			public void setMasked(boolean masked) throws AssociationException {
-				super.setMasked(masked);
 				if (masked)
 					((DataSet) this.getTable().getSchema()).maskRelation(this
 							.getUnderlyingRelation());
@@ -2125,7 +2213,6 @@ public class DataSet extends GenericSchema {
 			}
 
 			public void setMasked(boolean masked) throws AssociationException {
-				super.setMasked(masked);
 				if (masked)
 					((DataSetTable) this.getTable()).removeColumn(this);
 			}

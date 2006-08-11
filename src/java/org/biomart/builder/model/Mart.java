@@ -42,7 +42,7 @@ import org.biomart.builder.resources.Resources;
  * mart. It also has zero or more datasets based around these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.23, 8th August 2006
+ * @version 0.1.24, 11th August 2006
  * @since 0.1
  */
 public class Mart {
@@ -109,8 +109,8 @@ public class Mart {
 	public void renameSchema(final Schema schema, String name) {
 		final String baseName = name;
 		// Check we don't have one by this name already. Alias if we do.
-		for (int i = 1; this.schemas.containsKey(name); name = baseName + "_"
-				+ i++)
+		for (int i = 1; this.schemas.containsKey(name)
+				&& !name.equals(schema.getName()); name = baseName + "_" + i++)
 			;
 		// Rename it.
 		this.schemas.remove(schema.getName());
@@ -489,15 +489,10 @@ public class Mart {
 	 *            the new name for it.
 	 */
 	public void renameDataSet(final DataSet dataset, String name) {
-		// Skip if name is the same already.
-		if (name.equals(dataset.getName()))
-			return;
-
 		final String baseName = name;
 		// Check we don't have one by this name already. Alias if we do.
 		for (int i = 1; this.datasets.containsKey(name)
-				&& !this.datasets.get(name).equals(dataset); name = baseName
-				+ "_" + i++)
+				&& !name.equals(dataset.getName()); name = baseName + "_" + i++)
 			;
 		// Rename it.
 		this.datasets.remove(dataset.getName());
