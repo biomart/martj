@@ -2085,7 +2085,10 @@ public int templateCount(String template) throws ConfigurationException{
 					+template+"')");
 	  ps.executeUpdate();	
       
-      
+	  
+	  
+	  
+	  
       //sql = "SELECT count(*) FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE template='"+template+"'";
 	  //ps = conn.prepareStatement(sql);
 	  //ResultSet rs = ps.executeQuery();
@@ -2103,8 +2106,14 @@ public int templateCount(String template) throws ConfigurationException{
       	// System.out.println("OVERWRITE TEMPLATE WITH THIS LAYOUT");
 	  	generateTemplateXML(dsConfig);
       }
+               
+      Timestamp tstamp = new Timestamp(System.currentTimeMillis());
+      String [] mytimeStamp = new String[2];
+      mytimeStamp = tstamp.toString().split("\\."); // avoid the milli seconds in the end of the string
+      doc.getRootElement().setAttribute("modified",mytimeStamp[0]);
+	  //System.out.println(doc.getRootElement().getAttributeValue("modified").toString());
+
       
-       
       String insertSQL1 = "INSERT INTO " + getSchema()[0]+"." + metatable + " (display_name, dataset, description, " +	  	"type, visible, version,dataset_id_key,modified) values (?, ?, ?, ?, ?, ?,?,?)";
       String insertSQL2 = "INSERT INTO " + getSchema()[0]+"."+MARTXMLTABLE+" (dataset_id_key, xml, compressed_xml, " +      	"message_digest) values (?, ?, ?, ?)";
 	  
@@ -2162,10 +2171,8 @@ public int templateCount(String template) throws ConfigurationException{
 	  ps1.setString(6,version);
 	  ps1.setString(7,datasetID);
   
-  	  Timestamp tstamp = new Timestamp(System.currentTimeMillis());
+  	  //Timestamp tstamp = new Timestamp(System.currentTimeMillis());
 	  ps1.setTimestamp(8,tstamp);
-	  
-
 	  
       int ret = ps1.executeUpdate();
 	  ret = ps2.executeUpdate();
@@ -2287,7 +2294,13 @@ public int templateCount(String template) throws ConfigurationException{
 		generateTemplateXML(dsConfig);
 	  }
       
-      //String insertSQL = INSERTCOMPRESSEDXMLA + metatable + INSERTCOMPRESSEDXMLB;
+      
+	  Timestamp tstamp = new Timestamp(System.currentTimeMillis());
+      String [] mytimeStamp = new String[2];
+      mytimeStamp = tstamp.toString().split("\\."); // avoid the milli seconds in the end of the string
+      doc.getRootElement().setAttribute("modified",mytimeStamp[0]);
+	  
+	  //String insertSQL = INSERTCOMPRESSEDXMLA + metatable + INSERTCOMPRESSEDXMLB;
 	  String insertSQL1 = "INSERT INTO " + getSchema()[0]+"." + metatable + " (display_name, dataset, description, " +
 		"type, visible, version,dataset_id_key,modified) values (?, ?, ?, ?, ?, ?,?,?)";
 	  String insertSQL2 = "INSERT INTO " + getSchema()[0]+"."+MARTXMLTABLE+" (dataset_id_key, compressed_xml, " +
@@ -2342,7 +2355,7 @@ public int templateCount(String template) throws ConfigurationException{
 	  ps1.setString(6,version);
 	  ps1.setString(7,datasetID);
 	  
-	  Timestamp tstamp = new Timestamp(System.currentTimeMillis());
+	  //Timestamp tstamp = new Timestamp(System.currentTimeMillis());
 	  ps1.setTimestamp(8,tstamp);	
 	  	  
       int ret = ps1.executeUpdate();
