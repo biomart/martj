@@ -939,17 +939,6 @@ public interface MartConstructor {
 										.getColumns(), vHasColumnName);
 						actionGraph.addActionWithParent(optimiseUpd,
 								optimiseAdd);
-						// Index the has-column.
-						final MartConstructorAction optimiseInd = new Index(
-								this.datasetSchemaName, vHasTable
-										.getDataSetTable().getName(), null,
-								vHasTable.getTempTableName(), Collections
-										.singletonList(vHasColumnName));
-						actionGraph.addActionWithParent(optimiseInd,
-								optimiseUpd);
-						// Add final index to list of actions to wait for
-						// before doing renames later.
-						optActions.add(optimiseInd);
 					}
 				}
 				vTables.addAll(vHasTables);
@@ -1135,6 +1124,8 @@ public interface MartConstructor {
 				// What are the columns we should merge from this new table?
 				final List dsTargetIncludeCols = vConstructionTable
 						.getDataSetColumns(rSourceRelation);
+				// Skip the merge if we won't gain anything from it.
+				if (dsTargetIncludeCols.isEmpty()) continue;
 				// If targetTable is in a group schema that is not the
 				// same group schema we started with, create a union table
 				// containing all the targetTable copies, then merge with
