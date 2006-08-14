@@ -1342,13 +1342,14 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
   String configCollectionName = configCollection.getInternalName();
   if (templateConfig.supportsFilterDescription(configAttField,configAttTC,configAtt.getQualifier())){// will find option filters as well
     //System.out.println("1 - make sure dsConfig has same structure as templateConfig for this filter:"
-	//	  +configAtt.getInternalName()+":"+configAtt.getDisplayName()+":"+dsConfig.getDataset());		
+	//	  +configAtt.getInternalName()+":"+configAtt.getDisplayName()+":"+dsConfig.getDataset()+":"+upstreamFilterName);		
 	  // remove att from old hierarchy in dsConfig
 	  
 	  FilterDescription upstreamFilter = null;
 	  if (upstreamFilterName != null){
 	  	
 	  	upstreamFilter = configCollection.getFilterDescriptionByInternalName(upstreamFilterName);
+	  	//System.out.println("GOT "+upstreamFilter.getInternalName()+ "FOR "+upstreamFilterName);
 	  	Option opToRemove = new Option(configAtt);
 	  	upstreamFilter.removeOption(opToRemove);
 	  	if (!(upstreamFilter.getOptions().length > 0)){
@@ -1395,7 +1396,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					  // get bug below when filter has been removed by the 
 					  // configCollection.removeFilterDescription(upstreamFilter) call above
 					  // therefore added extra clause to test it had options still
-					  if (configFilterList != null && upstreamFilter.getOptions().length > 0){
+					  if (configFilterList != null && upstreamFilter != null && upstreamFilter.getOptions().length > 0){
 					  	  // check not already there
 					  	  if (!configFilterList.containsOption(opToAdd.getInternalName())){
 						  	configFilterList.addOption(opToAdd);
@@ -5810,7 +5811,7 @@ public int templateCount(String template) throws ConfigurationException{
         + " IS NOT NULL ORDER BY "
         + columnName;
     }
-    
+	if (dsource.getDatabaseType().equals("mysql")) {sql += " LIMIT 2000";}// hack to keep chr drop downs in check
     //System.out.println(sql);    
     PreparedStatement ps = conn.prepareStatement(sql);
     ResultSet rs = ps.executeQuery();
@@ -5989,7 +5990,8 @@ public int templateCount(String template) throws ConfigurationException{
         + " IS NOT NULL "
         + orderSQL;
     }  
-           
+	if (dsource.getDatabaseType().equals("mysql")) {sql += " LIMIT 2000";}// hack to keep chr drop downs in check
+	//System.out.println(sql);    
     PreparedStatement ps = conn.prepareStatement(sql);
     ResultSet rs = null;
     try{
