@@ -225,47 +225,14 @@ public class MartCompleter implements Completor {
 
 
 	
-
-	/**
-	 *  The {@link ArgumentCompletor.ArgumentDelimiter} allows custom
-	 *  breaking up of a {@link String} into individual arguments in
-	 *  order to dispatch the arguments to the nested {@link Completor}.
-	 *
-	 *  @author  <a href="mailto:mwp1@cornell.edu">Marc Prud'hommeaux</a>
-	 */
 	public static interface ArgumentDelimiter
 	{
-		/**
-		 *  Break the specified buffer into individual tokens
-		 *  that can be completed on their own.
-		 *
-		 *  @param  buffer			the buffer to split
-		 *  @param  argumentPosition	the current position of the
-		 *  						cursor in the buffer
-		 *  @return			the tokens
-		 */
 		ArgumentList delimit (String buffer, int argumentPosition);
 
-
-		/**
-		 *  Returns true if the specified character is a whitespace
-		 *  parameter.
-		 *
-		 *  @param  buffer	the complete command buffer
-		 *  @param  pos		the index of the character in the buffer
-		 *  @return			true if the character should be a delimiter
-		 */
 		boolean isDelimiter (String buffer, int pos);
 	}
 
 
-	/**
-	 *  Abstract implementation of a delimiter that uses the
-	 *  {@link #isDelimiter} method to determine if a particular
-	 *  character should be used as a delimiter.
-	 *
-	 *  @author  <a href="mailto:mwp1@cornell.edu">Marc Prud'hommeaux</a>
-	 */
 	public static abstract class AbstractArgumentDelimiter
 		implements ArgumentDelimiter
 	{
@@ -337,18 +304,6 @@ public class MartCompleter implements Completor {
 		}
 
 
-		/**
-		 *  Returns true if the specified character is a whitespace
-		 *  parameter. Check to ensure that the character is not
-		 *  escaped by any of
-		 *  {@link #getQuoteChars}, and is not escaped by ant of the
-		 *  {@link #getEscapeChars}, and returns true from
-		 *  {@link #isDelimiterChar}.
-		 *
-		 *  @param  buffer	the complete command buffer
-		 *  @param  pos		the index of the character in the buffer
-		 *  @return			true if the character should be a delimiter
-		 */
 		public boolean isDelimiter (final String buffer, final int pos)
 		{
 			if (isQuoted (buffer, pos))
@@ -381,33 +336,13 @@ public class MartCompleter implements Completor {
 		}
 
 
-		/**
-		 *  Returns true if the character at the specified position
-		 *  if a delimiter. This method will only be called if the
-		 *  character is not enclosed in any of the
-		 *  {@link #getQuoteChars}, and is not escaped by ant of the
-		 *  {@link #getEscapeChars}. To perform escaping manually,
-		 *  override {@link #isDelimiter} instead.
-		 */
 		public abstract boolean isDelimiterChar (String buffer, int pos);
 	}
 
-
-	/**
-	 *  {@link ArgumentCompletor.ArgumentDelimiter}
-	 *  implementation that counts all
-	 *  whitespace (as reported by {@link Character#isWhitespace})
-	 *  as being a delimiter.
-	 *
-	 *  @author  <a href="mailto:mwp1@cornell.edu">Marc Prud'hommeaux</a>
-	 */
 	public static class WhitespaceArgumentDelimiter
 		extends AbstractArgumentDelimiter
 	{
-		/**
-		 *  The character is a delimiter if it is whitespace, and the
-		 *  preceeding character is not an escape character.
-		 */
+	
 		public boolean isDelimiterChar (String buffer, int pos)
 		{
 			return Character.isWhitespace (buffer.charAt (pos));
@@ -415,11 +350,7 @@ public class MartCompleter implements Completor {
 	}
 
 
-	/**
-	 *  The result of a delimited buffer.
-	 *
-	 *  @author  <a href="mailto:mwp1@cornell.edu">Marc Prud'hommeaux</a>
-	 */
+	
 	public static class ArgumentList
 	{
 		private String [] arguments;
@@ -575,16 +506,6 @@ public class MartCompleter implements Completor {
 
 		int pos = ret + (list.getBufferPosition () - argpos) + 1;
 
-		/**
-		 *	Special case: when completing in the middle of a line, and the
-		 *	area under the cursor is a delimiter, then trim any delimiters
-		 *	from the candidates, since we do not need to have an extra
-		 *	delimiter.
-		 *
-		 *	E.g., if we have a completion for "foo", and we
-		 *	enter "f bar" into the buffer, and move to after the "f"
-		 *	and hit TAB, we want "foo bar" instead of "foo  bar".
-		 */
 		if (cursor != buffer.length () && delim.isDelimiter (buffer, cursor))
 		{
 			for (int i = 0; i < candidates.size (); i++)
