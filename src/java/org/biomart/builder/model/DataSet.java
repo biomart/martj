@@ -61,7 +61,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.49, 11th August 2006
+ * @version 0.1.50, 14th August 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -503,7 +503,7 @@ public class DataSet extends GenericSchema {
 	 *             if it is not possible to concat this relation.
 	 */
 	public void flagConcatOnlyRelation(final Relation relation,
-			final ConcatRelationType type) throws AssociationException {
+			final DataSetConcatRelationType type) throws AssociationException {
 
 		// Sanity check.
 		if (!relation.isOneToMany())
@@ -556,10 +556,12 @@ public class DataSet extends GenericSchema {
 	 * @return the concat type of the relation, or null if it is not flagged as
 	 *         concat-only.
 	 */
-	public ConcatRelationType getConcatRelationType(final Relation relation) {
+	public DataSetConcatRelationType getConcatRelationType(
+			final Relation relation) {
 		final int index = this.concatOnlyRelations[0].indexOf(relation);
 		if (index >= 0)
-			return (ConcatRelationType) this.concatOnlyRelations[1].get(index);
+			return (DataSetConcatRelationType) this.concatOnlyRelations[1]
+					.get(index);
 		else
 			return null;
 	}
@@ -640,7 +642,7 @@ public class DataSet extends GenericSchema {
 
 		// Regenerate the dataset
 		this.regenerate();
-		
+
 		// Mask things that were already masked.
 		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
 			DataSetTable table = (DataSetTable) i.next();
@@ -670,21 +672,23 @@ public class DataSet extends GenericSchema {
 				}
 			}
 		}
-		
+
 		// Remove masked inherited columns.
 		List deadInherited = new ArrayList();
-		for (final Iterator i = this.getTables().iterator(); i.hasNext(); ) 
-			for (final Iterator j = ((Table)i.next()).getColumns().iterator(); j.hasNext(); ) {
-				DataSetColumn col = (DataSetColumn)j.next();
+		for (final Iterator i = this.getTables().iterator(); i.hasNext();)
+			for (final Iterator j = ((Table) i.next()).getColumns().iterator(); j
+					.hasNext();) {
+				DataSetColumn col = (DataSetColumn) j.next();
 				if (col instanceof InheritedColumn)
-					if (((InheritedColumn)col).getInheritedColumn().getMasked())
+					if (((InheritedColumn) col).getInheritedColumn()
+							.getMasked())
 						deadInherited.add(col);
 			}
-		for (final Iterator i = deadInherited.iterator(); i.hasNext(); ) {
-			DataSetColumn col = (DataSetColumn)i.next();
+		for (final Iterator i = deadInherited.iterator(); i.hasNext();) {
+			DataSetColumn col = (DataSetColumn) i.next();
 			col.getTable().removeColumn(col);
 		}
-		
+
 		// Reapply the names for renamed tables and columns. Look up using
 		// original names and underlying relations else they won't be found.
 		// We have to store things in maps else we get concurrent modification
@@ -909,6 +913,44 @@ public class DataSet extends GenericSchema {
 		// Remove the dead ones that reference columns that no longer exist.
 		for (final Iterator i = deadTableRestrictions.iterator(); i.hasNext();)
 			this.unflagRestrictedTable((Table) i.next());
+
+		// Remove any concat relations that reference tables or columns that
+		// no longer exist. For those that do still exist but columns
+		// have gone missing, remove those columns but leave the concat
+		// in place.
+		final List deadConcatRelations = new ArrayList();
+		for (int i = 0; i < this.concatOnlyRelations[0].size(); i++) {
+			final Relation rel = (Relation) this.concatOnlyRelations[0].get(i);
+			final DataSetConcatRelationType concatType = (DataSetConcatRelationType) this.concatOnlyRelations[1]
+					.get(i);
+			// Iterate over columns.
+			// Update the column references.
+			List replacementColumns = new ArrayList();
+			for (Iterator j = concatType.getConcatColumns().iterator(); j
+					.hasNext();) {
+				Column oldCol = (Column) j.next();
+				// Look up the equivalent and remember it.
+				final Table newTbl = oldCol.getTable().getSchema()
+						.getTableByName(oldCol.getTable().getName());
+				if (newTbl != null) {
+					final Column newCol = newTbl.getColumnByName(oldCol
+							.getName());
+					if (newCol != null)
+						replacementColumns.add(newCol);
+				}
+			}
+			// Drop concat relations where no columns were found.
+			if (replacementColumns.isEmpty())
+				deadConcatRelations.add(rel);
+			else if (!replacementColumns.equals(concatType.getConcatColumns())) {
+				// Update the relationship.
+				concatType.getConcatColumns().clear();
+				concatType.getConcatColumns().addAll(replacementColumns);
+			}
+		}
+		// Remove the dead ones that reference columns that no longer exist.
+		for (final Iterator i = deadConcatRelations.iterator(); i.hasNext();)
+			this.unflagConcatOnlyRelation((Relation) i.next());
 	}
 
 	/**
@@ -1189,11 +1231,11 @@ public class DataSet extends GenericSchema {
 		for (final Iterator i = mergeTable.getRelations().iterator(); i
 				.hasNext();) {
 			final Relation r = (Relation) i.next();
-			
+
 			// Don't repeat relations.
 			if (relationsFollowed.contains(r))
 				continue;
-			
+
 			// Don't follow masked or incorrect relations, or relations
 			// between incorrect keys.
 			if (this.maskedRelations.contains(r)
@@ -1238,13 +1280,13 @@ public class DataSet extends GenericSchema {
 								.equals(DataSetTableType.DIMENSION)) {
 					relationsFollowed.add(r);
 					dimensionQ.add(r);
-				}					
+				}
 			}
 
 			// Follow all others. If we follow a 1:1, and we are currently
 			// including dimensions, include them from the 1:1 as well.
 			// Otherwise, stop including dimensions on subsequent tables.
-			else {				
+			else {
 				relationsFollowed.add(r);
 				normalQ.add(new Object[] {
 						r,
@@ -1419,104 +1461,33 @@ public class DataSet extends GenericSchema {
 
 	/**
 	 * Represents a method of concatenating values in a key referenced by a
-	 * concat-only {@link Relation}. It simply represents the separator to use.
+	 * concat-only {@link Relation}. It simply represents the separator to use
+	 * and the columns to include.
 	 */
-	public static class ConcatRelationType implements Comparable {
-		private final String name;
-
-		private final String valueSeparator;
+	public static class DataSetConcatRelationType {
+		private final String columnSeparator;
 
 		private final String recordSeparator;
 
-		/**
-		 * Use this constant to refer to value-separation by commas, and
-		 * record-separation by commas.
-		 */
-		public static final ConcatRelationType COMMA_COMMA = new ConcatRelationType(
-				"COMMA_COMMA", ",", ",");
+		private final List concatColumns;
 
 		/**
-		 * Use this constant to refer to value-separation by commas, and
-		 * record-separation by spaces.
-		 */
-		public static final ConcatRelationType COMMA_SPACE = new ConcatRelationType(
-				"COMMA_SPACE", ",", " ");
-
-		/**
-		 * Use this constant to refer to value-separation by commas, and
-		 * record-separation by tabs.
-		 */
-		public static final ConcatRelationType COMMA_TAB = new ConcatRelationType(
-				"COMMA_TAB", ",", "\t");
-
-		/**
-		 * Use this constant to refer to value-separation by spaces, and
-		 * record-separation by commas.
-		 */
-		public static final ConcatRelationType SPACE_COMMA = new ConcatRelationType(
-				"SPACE_COMMA", " ", ",");
-
-		/**
-		 * Use this constant to refer to value-separation by spaces, and
-		 * record-separation by spaces.
-		 */
-		public static final ConcatRelationType SPACE_SPACE = new ConcatRelationType(
-				"SPACE_SPACE", " ", " ");
-
-		/**
-		 * Use this constant to refer to value-separation by spaces, and
-		 * record-separation by tabs.
-		 */
-		public static final ConcatRelationType SPACE_TAB = new ConcatRelationType(
-				"SPACE_TAB", " ", "\t");
-
-		/**
-		 * Use this constant to refer to value-separation by tabs, and
-		 * record-separation by commas.
-		 */
-		public static final ConcatRelationType TAB_COMMA = new ConcatRelationType(
-				"TAB_COMMA", "\t", ",");
-
-		/**
-		 * Use this constant to refer to value-separation by tabs, and
-		 * record-separation by spaces.
-		 */
-		public static final ConcatRelationType TAB_SPACE = new ConcatRelationType(
-				"TAB_SPACE", "\t", " ");
-
-		/**
-		 * Use this constant to refer to value-separation by tabs, and
-		 * record-separation by tabs.
-		 */
-		public static final ConcatRelationType TAB_TAB = new ConcatRelationType(
-				"TAB_TAB", "\t", "\t");
-
-		/**
-		 * The private constructor takes parameters which define the name this
-		 * concat type object will display when printed, and the separator to
-		 * use between values and records that have been concatenated.
+		 * The constructor takes parameters which define the columns this object
+		 * will concatenate, and the separator to use between values and records
+		 * that have been concatenated.
 		 * 
-		 * @param name
-		 *            the name of the concat type.
-		 * @param valueSeparator
+		 * @param columnSeparator
 		 *            the separator for values in this concat type.
 		 * @param recordSeparator
 		 *            the separator for records in this concat type.
+		 * @param concatColumns
+		 *            the columns to concatenate.
 		 */
-		private ConcatRelationType(final String name,
-				final String valueSeparator, final String recordSeparator) {
-			this.name = name;
-			this.valueSeparator = valueSeparator;
+		public DataSetConcatRelationType(final String columnSeparator,
+				final String recordSeparator, final List concatColumns) {
+			this.concatColumns = concatColumns;
+			this.columnSeparator = columnSeparator;
 			this.recordSeparator = recordSeparator;
-		}
-
-		/**
-		 * Displays the name of this concat type object.
-		 * 
-		 * @return the name of this concat type object.
-		 */
-		public String getName() {
-			return this.name;
 		}
 
 		/**
@@ -1524,8 +1495,8 @@ public class DataSet extends GenericSchema {
 		 * 
 		 * @return the value separator for this concat type object.
 		 */
-		public String getValueSeparator() {
-			return this.valueSeparator;
+		public String getColumnSeparator() {
+			return this.columnSeparator;
 		}
 
 		/**
@@ -1537,22 +1508,13 @@ public class DataSet extends GenericSchema {
 			return this.recordSeparator;
 		}
 
-		public String toString() {
-			return this.getName();
-		}
-
-		public int hashCode() {
-			return this.toString().hashCode();
-		}
-
-		public int compareTo(final Object o) throws ClassCastException {
-			final ConcatRelationType pct = (ConcatRelationType) o;
-			return this.toString().compareTo(pct.toString());
-		}
-
-		public boolean equals(final Object o) {
-			// We are dealing with singletons so can use == happily.
-			return o == this;
+		/**
+		 * Displays the columns concatenated by this concat type object.
+		 * 
+		 * @return the columns concatenated by this concat type object.
+		 */
+		public List getConcatColumns() {
+			return this.concatColumns;
 		}
 	}
 

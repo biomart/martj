@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.biomart.builder.model.DataSet.ConcatRelationType;
+import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
@@ -41,7 +41,7 @@ import org.biomart.builder.resources.Resources;
  * schema instead, as specified by the datasetSchemaName parameter.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 10th August 2006
+ * @version 0.1.10, 14th August 2006
  * @since 0.1
  */
 public abstract class MartConstructorAction {
@@ -1184,7 +1184,9 @@ public abstract class MartConstructorAction {
 
 		private String concatColumnName;
 
-		private ConcatRelationType concatRelationType;
+		private String columnSeparator;
+
+		private String recordSeparator;
 
 		private DataSetRelationRestriction relationRestriction;
 
@@ -1222,8 +1224,10 @@ public abstract class MartConstructorAction {
 		 * @param concatColumnName
 		 *            the name of the column which will hold the concatenated
 		 *            values.
-		 * @param concatRelationType
-		 *            the type of concatenation to perform.
+		 * @param columnSeparator
+		 *            the separator to use between columns.
+		 * @param recordSeparator
+		 *            the separator to use between records.
 		 * @param relationRestriction
 		 *            a restriction to place on the join.
 		 * @param firstTableSourceTable
@@ -1240,8 +1244,8 @@ public abstract class MartConstructorAction {
 				final Schema targetTableSchema, final String targetTableName,
 				final List targetTableKeyColumns,
 				final List targetTableConcatColumns,
-				final String concatColumnName,
-				final ConcatRelationType concatRelationType,
+				final String concatColumnName, final String columnSeparator,
+				final String recordSeparator,
 				final DataSetRelationRestriction relationRestriction,
 				final boolean firstTableSourceTable,
 				final DataSetTableRestriction targetTableRestriction) {
@@ -1256,7 +1260,8 @@ public abstract class MartConstructorAction {
 			this.targetTableKeyColumns = targetTableKeyColumns;
 			this.targetTableConcatColumns = targetTableConcatColumns;
 			this.concatColumnName = concatColumnName;
-			this.concatRelationType = concatRelationType;
+			this.columnSeparator = columnSeparator;
+			this.recordSeparator = recordSeparator;
 			this.relationRestriction = relationRestriction;
 			this.firstTableSourceTable = firstTableSourceTable;
 			this.targetTableRestriction = targetTableRestriction;
@@ -1302,8 +1307,12 @@ public abstract class MartConstructorAction {
 			return this.concatColumnName;
 		}
 
-		public ConcatRelationType getConcatRelationType() {
-			return this.concatRelationType;
+		public String getColumnSeparator() {
+			return this.columnSeparator;
+		}
+
+		public String getRecordSeparator() {
+			return this.recordSeparator;
 		}
 
 		public DataSetRelationRestriction getRelationRestriction() {

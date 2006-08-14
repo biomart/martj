@@ -42,7 +42,6 @@ import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
-import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
@@ -68,7 +67,7 @@ import org.biomart.builder.resources.Resources;
  * Understands how to create SQL and DDL for an Oracle database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.16, 11th August 2006
+ * @version 0.1.17, 14th August 2006
  * @since 0.1
  */
 public class OracleDialect extends DatabaseDialect {
@@ -576,7 +575,8 @@ public class OracleDialect extends DatabaseDialect {
 				: ((JDBCSchema) action.getConcatTableSchema())
 						.getDatabaseSchema();
 		final String concatTableName = action.getConcatTableName();
-		final ConcatRelationType crType = action.getConcatRelationType();
+		final String columnSep = action.getColumnSeparator();
+		final String recordSep = action.getRecordSeparator();
 		final DataSetRelationRestriction relRestriction = action
 				.getRelationRestriction();
 		final DataSetTableRestriction tblRestriction = action
@@ -612,12 +612,12 @@ public class OracleDialect extends DatabaseDialect {
 			sb.append(col.getName());
 			if (i.hasNext()) {
 				sb.append("||'");
-				sb.append(crType.getValueSeparator());
+				sb.append(columnSep);
 				sb.append("'||");
 			}
 		}
 		sb.append(",'");
-		sb.append(crType.getRecordSeparator());
+		sb.append(recordSep);
 		sb.append("')) as ");
 		sb.append(trgtColName);
 

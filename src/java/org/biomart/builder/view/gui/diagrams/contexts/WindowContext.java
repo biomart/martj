@@ -21,13 +21,10 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.ButtonGroup;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
-import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import javax.swing.JRadioButtonMenuItem;
 
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.ComponentStatus;
@@ -36,7 +33,6 @@ import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
-import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.BoxShapedComponent;
@@ -51,7 +47,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * rather than the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.21, 9th August 2006
+ * @version 0.1.22, 14th August 2006
  * @since 0.1
  */
 public class WindowContext extends SchemaContext {
@@ -251,224 +247,58 @@ public class WindowContext extends SchemaContext {
 					|| relationConcated)
 				subclass.setEnabled(false);
 
-			// The concat-only submenu allows concat-only relations.
-			final JMenu concatSubmenu = new JMenu(Resources
-					.get("concatOnlyRelationTitle"));
-			concatSubmenu.setMnemonic(Resources.get(
-					"concatOnlyRelationMnemonic").charAt(0));
-			final ButtonGroup concatGroup = new ButtonGroup();
+			// If it's a concat column...
+			if (this.dataset.getConcatOnlyRelations().contains(relation)) {
 
-			// This item in the concat-only relation submenu turns concat-only
-			// relations off.
-			final JRadioButtonMenuItem none = new JRadioButtonMenuItem(
-					Resources.get("noneConcatTitle"));
-			none.setMnemonic(Resources.get("noneConcatMnemonic").charAt(0));
-			none.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this.getMartTab().getDataSetTabSet()
-							.requestUnconcatOnlyRelation(
-									WindowContext.this.dataset, relation);
-				}
-			});
-			concatGroup.add(none);
-			concatSubmenu.add(none);
-			if (this.dataset.getConcatRelationType(relation) == null)
-				none.setSelected(true);
+				// Option to modify concat.
+				final JMenuItem modify = new JMenuItem(Resources
+						.get("modifyConcatRelationTitle"));
+				modify.setMnemonic(Resources
+						.get("modifyConcatRelationMnemonic").charAt(0));
+				modify.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						WindowContext.this
+								.getMartTab()
+								.getDataSetTabSet()
+								.requestModifyConcatOnlyRelation(
+										WindowContext.this.dataset,
+										relation,
+										WindowContext.this.dataset
+												.getConcatRelationType(relation));
+					}
+				});
+				contextMenu.add(modify);
 
-			// This item in the concat-only relation submenu turns concat-only
-			// relations into ones separated by commas then commas.
-			JRadioButtonMenuItem comma = new JRadioButtonMenuItem(Resources
-					.get("commaCommaConcatTitle"));
-			comma.setMnemonic(Resources.get("commaCommaConcatMnemonic").charAt(
-					0));
-			comma.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this.getMartTab().getDataSetTabSet()
-							.requestConcatOnlyRelation(
-									WindowContext.this.dataset, relation,
-									ConcatRelationType.COMMA_COMMA);
-				}
-			});
-			concatGroup.add(comma);
-			concatSubmenu.add(comma);
-			if (this.dataset.getConcatRelationType(relation) != null
-					&& this.dataset.getConcatRelationType(relation).equals(
-							ConcatRelationType.COMMA_COMMA))
-				comma.setSelected(true);
+				// Option to remove concat.
+				final JMenuItem remove = new JMenuItem(Resources
+						.get("removeConcatRelationTitle"));
+				remove.setMnemonic(Resources
+						.get("removeConcatRelationMnemonic").charAt(0));
+				remove.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						WindowContext.this.getMartTab().getDataSetTabSet()
+								.requestUnconcatOnlyRelation(
+										WindowContext.this.dataset, relation);
+					}
+				});
+				contextMenu.add(remove);
 
-			// This item in the concat-only relation submenu turns concat-only
-			// relations into ones separated by commas then tabs.
-			JRadioButtonMenuItem tab = new JRadioButtonMenuItem(Resources
-					.get("commaTabConcatTitle"));
-			tab.setMnemonic(Resources.get("commaTabConcatMnemonic").charAt(0));
-			tab.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this.getMartTab().getDataSetTabSet()
-							.requestConcatOnlyRelation(
-									WindowContext.this.dataset, relation,
-									ConcatRelationType.COMMA_TAB);
-				}
-			});
-			concatGroup.add(tab);
-			concatSubmenu.add(tab);
-			if (this.dataset.getConcatRelationType(relation) != null
-					&& this.dataset.getConcatRelationType(relation).equals(
-							ConcatRelationType.COMMA_TAB))
-				tab.setSelected(true);
+			} else {
 
-			// This item in the concat-only relation submenu turns concat-only
-			// relations into ones separated by commas then spaces.
-			JRadioButtonMenuItem space = new JRadioButtonMenuItem(Resources
-					.get("commaSpaceConcatTitle"));
-			space.setMnemonic(Resources.get("commaSpaceConcatMnemonic").charAt(
-					0));
-			space.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this.getMartTab().getDataSetTabSet()
-							.requestConcatOnlyRelation(
-									WindowContext.this.dataset, relation,
-									ConcatRelationType.COMMA_SPACE);
-				}
-			});
-			concatGroup.add(space);
-			concatSubmenu.add(space);
-			if (this.dataset.getConcatRelationType(relation) != null
-					&& this.dataset.getConcatRelationType(relation).equals(
-							ConcatRelationType.COMMA_SPACE))
-				space.setSelected(true);
-
-			// This item in the concat-only relation submenu turns concat-only
-			// relations into ones separated by spaces then commas.
-			comma = new JRadioButtonMenuItem(Resources
-					.get("spaceCommaConcatTitle"));
-			comma.setMnemonic(Resources.get("spaceCommaConcatMnemonic").charAt(
-					0));
-			comma.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this.getMartTab().getDataSetTabSet()
-							.requestConcatOnlyRelation(
-									WindowContext.this.dataset, relation,
-									ConcatRelationType.SPACE_COMMA);
-				}
-			});
-			concatGroup.add(comma);
-			concatSubmenu.add(comma);
-			if (this.dataset.getConcatRelationType(relation) != null
-					&& this.dataset.getConcatRelationType(relation).equals(
-							ConcatRelationType.SPACE_COMMA))
-				comma.setSelected(true);
-
-			// This item in the concat-only relation submenu turns concat-only
-			// relations into ones separated by spaces then tabs.
-			tab = new JRadioButtonMenuItem(Resources.get("spaceTabConcatTitle"));
-			tab.setMnemonic(Resources.get("spaceTabConcatMnemonic").charAt(0));
-			tab.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this.getMartTab().getDataSetTabSet()
-							.requestConcatOnlyRelation(
-									WindowContext.this.dataset, relation,
-									ConcatRelationType.SPACE_TAB);
-				}
-			});
-			concatGroup.add(tab);
-			concatSubmenu.add(tab);
-			if (this.dataset.getConcatRelationType(relation) != null
-					&& this.dataset.getConcatRelationType(relation).equals(
-							ConcatRelationType.SPACE_TAB))
-				tab.setSelected(true);
-
-			// This item in the concat-only relation submenu turns concat-only
-			// relations into ones separated by spaces then spaces.
-			space = new JRadioButtonMenuItem(Resources
-					.get("spaceSpaceConcatTitle"));
-			space.setMnemonic(Resources.get("spaceSpaceConcatMnemonic").charAt(
-					0));
-			space.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this.getMartTab().getDataSetTabSet()
-							.requestConcatOnlyRelation(
-									WindowContext.this.dataset, relation,
-									ConcatRelationType.SPACE_SPACE);
-				}
-			});
-			concatGroup.add(space);
-			concatSubmenu.add(space);
-			if (this.dataset.getConcatRelationType(relation) != null
-					&& this.dataset.getConcatRelationType(relation).equals(
-							ConcatRelationType.SPACE_SPACE))
-				space.setSelected(true);
-
-			// This item in the concat-only relation submenu turns concat-only
-			// relations into ones separated by tabs then commas.
-			comma = new JRadioButtonMenuItem(Resources
-					.get("tabCommaConcatTitle"));
-			comma
-					.setMnemonic(Resources.get("tabCommaConcatMnemonic")
-							.charAt(0));
-			comma.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this.getMartTab().getDataSetTabSet()
-							.requestConcatOnlyRelation(
-									WindowContext.this.dataset, relation,
-									ConcatRelationType.TAB_COMMA);
-				}
-			});
-			concatGroup.add(comma);
-			concatSubmenu.add(comma);
-			if (this.dataset.getConcatRelationType(relation) != null
-					&& this.dataset.getConcatRelationType(relation).equals(
-							ConcatRelationType.TAB_COMMA))
-				comma.setSelected(true);
-
-			// This item in the concat-only relation submenu turns concat-only
-			// relations into ones separated by tabs then tabs.
-			tab = new JRadioButtonMenuItem(Resources.get("tabTabConcatTitle"));
-			tab.setMnemonic(Resources.get("tabTabConcatMnemonic").charAt(0));
-			tab.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this.getMartTab().getDataSetTabSet()
-							.requestConcatOnlyRelation(
-									WindowContext.this.dataset, relation,
-									ConcatRelationType.TAB_TAB);
-				}
-			});
-			concatGroup.add(tab);
-			concatSubmenu.add(tab);
-			if (this.dataset.getConcatRelationType(relation) != null
-					&& this.dataset.getConcatRelationType(relation).equals(
-							ConcatRelationType.TAB_TAB))
-				tab.setSelected(true);
-
-			// This item in the concat-only relation submenu turns concat-only
-			// relations into ones separated by tabs then spaces.
-			space = new JRadioButtonMenuItem(Resources
-					.get("tabSpaceConcatTitle"));
-			space
-					.setMnemonic(Resources.get("tabSpaceConcatMnemonic")
-							.charAt(0));
-			space.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this.getMartTab().getDataSetTabSet()
-							.requestConcatOnlyRelation(
-									WindowContext.this.dataset, relation,
-									ConcatRelationType.TAB_SPACE);
-				}
-			});
-			concatGroup.add(space);
-			concatSubmenu.add(space);
-			if (this.dataset.getConcatRelationType(relation) != null
-					&& this.dataset.getConcatRelationType(relation).equals(
-							ConcatRelationType.TAB_SPACE))
-				space.setSelected(true);
-
-			// Attach the concat-only submenu to the main context menu.
-			// It is only usable when the relation is unmasked and not
-			// incorrect or already flagged as being in any conflicting state.
-			// contextMenu.add(concatSubmenu);
-			contextMenu.add(concatSubmenu);
-			if (incorrect || relation.isOneToOne() || relationMasked
-					|| relationSubclassed)
-				concatSubmenu.setEnabled(false);
+				// Add a relation concat.
+				final JMenuItem concat = new JMenuItem(Resources
+						.get("addConcatRelationTitle"));
+				concat.setMnemonic(Resources.get("addConcatRelationMnemonic")
+						.charAt(0));
+				concat.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						WindowContext.this.getMartTab().getDataSetTabSet()
+								.requestCreateConcatOnlyRelation(
+										WindowContext.this.dataset, relation);
+					}
+				});
+				contextMenu.add(concat);
+			}
 
 			// If it's a restricted column...
 			if (this.dataset.getRestrictedRelations().contains(relation)) {

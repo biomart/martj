@@ -38,7 +38,7 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
-import org.biomart.builder.model.DataSet.ConcatRelationType;
+import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
@@ -671,7 +671,7 @@ public class MartBuilderUtils {
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void concatOnlyRelation(final DataSet dataset,
-			final Relation relation, final ConcatRelationType type)
+			final Relation relation, final DataSetConcatRelationType type)
 			throws AssociationException, SQLException, BuilderException {
 		dataset.flagConcatOnlyRelation(relation, type);
 		dataset.unflagSubclassRelation(relation);

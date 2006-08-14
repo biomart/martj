@@ -68,7 +68,7 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.28, 11th August 2006
+ * @version 0.1.29, 14th August 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -1236,7 +1236,9 @@ public interface MartConstructor {
 				final boolean useUnionMerge = !rConcatTargetTable.getSchema()
 						.equals(rMainTableSchema);
 				// What columns on the table should be concatted?
-				final Key rConcatTargetPK = rConcatTargetTable.getPrimaryKey();
+				final List rConcatTargetCols = vConstructionTable.getDataSet()
+								.getConcatRelationType(rConcatRelation)
+								.getConcatColumns();
 				// What are the equivalent columns on the existing temp table
 				// that correspond to the source key?
 				final List vSourceKeyCols = vConstructionTable
@@ -1309,13 +1311,15 @@ public interface MartConstructor {
 						vPopulatedConcatTableTempName, null, vTableTempName,
 						vSourceKeyCols, rConcatTargetSchema,
 						rConcatTargetTableName, rConcatTargetKey.getColumns(),
-						rConcatTargetPK.getColumns(), dsConcatCol.getName(),
+						rConcatTargetCols, dsConcatCol.getName(),
 						vConstructionTable.getDataSet().getConcatRelationType(
-								rConcatRelation), vConstructionTable
-								.getDataSet().getRestrictedRelationType(
-										rConcatRelation), rConcatTargetTable
-								.equals(rConcatRelation.getSecondKey()
-										.getTable()), vConstructionTable
+								rConcatRelation).getColumnSeparator(),
+						vConstructionTable.getDataSet().getConcatRelationType(
+								rConcatRelation).getRecordSeparator(),
+						vConstructionTable.getDataSet()
+								.getRestrictedRelationType(rConcatRelation),
+						rConcatTargetTable.equals(rConcatRelation
+								.getSecondKey().getTable()), vConstructionTable
 								.getDataSet().getRestrictedTableType(
 										rConcatTargetTable));
 				actionGraph.addActionWithParent(concat, createCon);

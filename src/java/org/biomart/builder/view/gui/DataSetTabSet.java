@@ -46,8 +46,8 @@ import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
-import org.biomart.builder.model.DataSet.ConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTable;
@@ -64,6 +64,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.AllDataSetsContext;
 import org.biomart.builder.view.gui.diagrams.contexts.DataSetContext;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 import org.biomart.builder.view.gui.diagrams.contexts.WindowContext;
+import org.biomart.builder.view.gui.dialogs.ConcatRelationEditorDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.ExpressionColumnDialog;
 import org.biomart.builder.view.gui.dialogs.PartitionColumnDialog;
@@ -81,7 +82,7 @@ import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.38, 9th August 2006
+ * @version 0.1.39, 14th August 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -1375,6 +1376,48 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Request that a relation be marked as concat-only. A dialog will be shown
+	 * to allow the user to choose the concat-only type to use.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param relation
+	 *            the relation to mark.
+	 */
+	public void requestCreateConcatOnlyRelation(final DataSet ds,
+			final Relation relation) {
+		// Pop up a dialog to ask which columns to use.
+		final DataSetConcatRelationType newType = ConcatRelationEditorDialog
+				.createConcatRelation(this.martTab, relation);
+
+		// If they chose some columns, create the key.
+		if (newType != null)
+			this.requestConcatOnlyRelation(ds, relation, newType);
+	}
+
+	/**
+	 * Request that a relation be modified as concat-only. A dialog will be
+	 * shown to allow the user to modify the concat-only type to use.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param relation
+	 *            the relation to mark.
+	 * @param type
+	 *            the existing concat-relation type.
+	 */
+	public void requestModifyConcatOnlyRelation(final DataSet ds,
+			final Relation relation, final DataSetConcatRelationType type) {
+		// Pop up a dialog to ask which columns to use.
+		final DataSetConcatRelationType newType = ConcatRelationEditorDialog
+				.modifyConcatRelation(this.martTab, relation, type);
+
+		// If they chose some columns, create the key.
+		if (newType != null)
+			this.requestConcatOnlyRelation(ds, relation, newType);
+	}
+
+	/**
 	 * Request that a relation be marked as concat-only.
 	 * 
 	 * @param ds
@@ -1384,8 +1427,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param type
 	 *            the type of concatenation to use on this relation.
 	 */
-	public void requestConcatOnlyRelation(final DataSet ds,
-			final Relation relation, final ConcatRelationType type) {
+	private void requestConcatOnlyRelation(final DataSet ds,
+			final Relation relation, final DataSetConcatRelationType type) {
 		try {
 			// Mark the relation concat-only.
 			MartBuilderUtils.concatOnlyRelation(ds, relation, type);
@@ -1604,7 +1647,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 		// If the column is already partitioned, open a dialog
 		// explaining this and asking the user to edit the settings.
-		if (column.getPartitionType()!=null) {
+		if (column.getPartitionType() != null) {
 			final PartitionedColumnType oldType = column.getPartitionType();
 			type = PartitionColumnDialog.updatePartitionedColumnType(
 					this.martTab, oldType);

@@ -62,7 +62,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * {@link JDBCSchema} implementation which represents the connection.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 2nd August 2006
+ * @version 0.1.10, 14th August 2006
  * @since 0.1
  */
 public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
@@ -246,20 +246,19 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		this.add(label);
 		field = new JPanel();
 		field.add(this.predefinedDriverClass);
-		// FIXME: Uncomment after Arek's demo.
-		// field.add(this.driverClass);
+		field.add(this.driverClass);
 		gridBag.setConstraints(field, fieldConstraints);
 		this.add(field);
 
-		/*
-		 * FIXME: Uncomment after Arek's demo. // Add the driver location label,
-		 * field and file chooser button. label = new
-		 * JLabel(Resources.getString("driverClassLocationLabel"));
-		 * gridBag.setConstraints(label, labelConstraints); this.add(label);
-		 * field = new JPanel(); field.add(this.driverClassLocation);
-		 * field.add(this.driverClassLocationButton);
-		 * gridBag.setConstraints(field, fieldConstraints); this.add(field);
-		 */
+		// Add the driver location label, field and file chooser button.
+		label = new JLabel(Resources.get("driverClassLocationLabel"));
+		gridBag.setConstraints(label, labelConstraints);
+		this.add(label);
+		field = new JPanel();
+		field.add(this.driverClassLocation);
+		field.add(this.driverClassLocationButton);
+		gridBag.setConstraints(field, fieldConstraints);
+		this.add(field);
 
 		// Add the host label, and the host field, port label, port field.
 		label = new JLabel(Resources.get("hostLabel"));

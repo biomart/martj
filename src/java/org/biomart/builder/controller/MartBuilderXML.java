@@ -49,7 +49,7 @@ import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Column.GenericColumn;
-import org.biomart.builder.model.DataSet.ConcatRelationType;
+import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
@@ -100,7 +100,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.33, 9th August 2006
+ * @version 0.1.34, 14th August 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -408,7 +408,7 @@ public class MartBuilderXML extends DefaultHandler {
 					final String partitionType = (String) attributes
 							.get("partitionType");
 					PartitionedColumnType resolvedPartitionType;
-					if (partitionType==null || "null".equals(partitionType)) {
+					if (partitionType == null || "null".equals(partitionType)) {
 						resolvedPartitionType = null;
 					} else if ("singleValue".equals(partitionType)) {
 						String value = null;
@@ -637,32 +637,22 @@ public class MartBuilderXML extends DefaultHandler {
 						.get(attributes.get("relationId"));
 
 				// Work out what concat-only type to use.
-				final String type = (String) attributes
-						.get("concatRelationType");
-				ConcatRelationType crType = null;
-				if (type.equals("COMMA_COMMA"))
-					crType = ConcatRelationType.COMMA_COMMA;
-				else if (type.equals("COMMA_SPACE"))
-					crType = ConcatRelationType.COMMA_SPACE;
-				else if (type.equals("COMMA_TAB"))
-					crType = ConcatRelationType.COMMA_TAB;
-				else if (type.equals("SPACE_COMMA"))
-					crType = ConcatRelationType.SPACE_COMMA;
-				else if (type.equals("SPACE_SPACE"))
-					crType = ConcatRelationType.SPACE_SPACE;
-				else if (type.equals("SPACE_TAB"))
-					crType = ConcatRelationType.SPACE_TAB;
-				else if (type.equals("TAB_COMMA"))
-					crType = ConcatRelationType.TAB_COMMA;
-				else if (type.equals("TAB_SPACE"))
-					crType = ConcatRelationType.TAB_SPACE;
-				else if (type.equals("TAB_TAB"))
-					crType = ConcatRelationType.TAB_TAB;
-				else
-					throw new SAXException(Resources.get(
-							"unknownConcatRelationType", type));
+				final String recordSep = (String) attributes
+						.get("recordSeparator");
+				final String columnSep = (String) attributes
+						.get("columnSeparator");
+
+				// Get the concatted columns.
+				final List concatColumns = new ArrayList();
+				final String[] concatColumnIds = ((String) attributes
+						.get("concatColumnIds")).split(",");
+				for (int i = 0; i < concatColumnIds.length; i++)
+					concatColumns.add(this.mappedObjects
+							.get(concatColumnIds[i]));
 
 				// Flag it as concat-only.
+				DataSetConcatRelationType crType = new DataSetConcatRelationType(
+						columnSep, recordSep, concatColumns);
 				w.flagConcatOnlyRelation(rel, crType);
 				element = rel;
 			} catch (final Exception e) {
@@ -1195,13 +1185,13 @@ public class MartBuilderXML extends DefaultHandler {
 					}
 					// Unique values partition?
 					else if (ptc instanceof UniqueValues)
-						this.writeAttribute("partitionType",
-								"uniqueValues", xmlWriter);
+						this.writeAttribute("partitionType", "uniqueValues",
+								xmlWriter);
 					// Values collection partition?
 					else if (ptc instanceof ValueCollection) {
 						final ValueCollection vc = (ValueCollection) ptc;
-						this.writeAttribute("partitionType",
-								"valueCollection", xmlWriter);
+						this.writeAttribute("partitionType", "valueCollection",
+								xmlWriter);
 						// Values are comma-separated.
 						final List valueList = new ArrayList();
 						valueList.addAll(vc.getValues());
@@ -1438,11 +1428,29 @@ public class MartBuilderXML extends DefaultHandler {
 			for (final Iterator x = ds.getConcatOnlyRelations().iterator(); x
 					.hasNext();) {
 				final Relation r = (Relation) x.next();
+				final DataSetConcatRelationType type = ds
+						.getConcatRelationType(r);
 				this.openElement("concatRelation", xmlWriter);
 				this.writeAttribute("relationId",
 						(String) this.reverseMappedObjects.get(r), xmlWriter);
-				this.writeAttribute("concatRelationType", ds
-						.getConcatRelationType(r).getName(), xmlWriter);
+				this.writeAttribute("columnSeparator", type
+						.getColumnSeparator(), xmlWriter);
+				this.writeAttribute("recordSeparator", type
+						.getRecordSeparator(), xmlWriter);
+
+				// Concat columns - wrapped obj to string map
+				final StringBuffer concatColumnIds = new StringBuffer();
+				for (final Iterator i = type.getConcatColumns().iterator(); i
+						.hasNext();) {
+					final Column col = (Column) i.next();
+					concatColumnIds.append((String) this.reverseMappedObjects
+							.get(col));
+					if (i.hasNext())
+						concatColumnIds.append(',');
+				}
+				this.writeAttribute("concatColumnIds", concatColumnIds
+						.toString(), xmlWriter);
+
 				this.writeAttribute("alt", r.toString(), xmlWriter);
 				this.closeElement("concatRelation", xmlWriter);
 			}
