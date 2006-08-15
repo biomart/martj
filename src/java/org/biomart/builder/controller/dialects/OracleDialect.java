@@ -211,7 +211,7 @@ public class OracleDialect extends DatabaseDialect {
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + reduceSchemaName + "." + reduceTableName
 				+ " as select b.* from " + srcSchemaName + "." + srcTableName
-				+ " a inner join " + trgtSchemaName + "." + trgtTableName
+				+ " a left join " + trgtSchemaName + "." + trgtTableName
 				+ " b on ");
 		for (int i = 0; i < action.getTargetTableKeyColumns().size(); i++) {
 			if (i > 0)

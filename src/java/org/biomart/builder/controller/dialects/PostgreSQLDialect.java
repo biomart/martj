@@ -216,7 +216,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + reduceSchemaName + "." + reduceTableName
 				+ " as select b.* from " + srcSchemaName + "." + srcTableName
-				+ " as a inner join " + trgtSchemaName + "." + trgtTableName
+				+ " as a left join " + trgtSchemaName + "." + trgtTableName
 				+ " as b on ");
 		for (int i = 0; i < action.getTargetTableKeyColumns().size(); i++) {
 			if (i > 0)
