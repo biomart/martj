@@ -1062,13 +1062,8 @@ public class DataSet extends GenericSchema {
 						continue;
 				}
 				// Otherwise, create a copy of the column.
-				InheritedColumn dsCol;
-				if (parentDSCol instanceof InheritedColumn)
-					dsCol = new InheritedColumn(dsTable,
-							((InheritedColumn) parentDSCol)
-									.getInheritedColumn());
-				else
-					dsCol = new InheritedColumn(dsTable, parentDSCol);
+				InheritedColumn dsCol = new InheritedColumn(dsTable,
+						parentDSCol);
 				// Copy the name, too.
 				dsCol.setOriginalName(parentDSCol.getOriginalName());
 				// Add the column to the child's PK and FK, if it was in
