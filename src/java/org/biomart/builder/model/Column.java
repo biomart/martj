@@ -20,7 +20,6 @@ package org.biomart.builder.model;
 
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
-import org.biomart.builder.resources.Resources;
 
 /**
  * <p>
@@ -33,7 +32,7 @@ import org.biomart.builder.resources.Resources;
  * name.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 11th August 2006
+ * @version 0.1.11, 15th August 2006
  * @since 0.1
  */
 public interface Column extends Comparable {
@@ -103,14 +102,9 @@ public interface Column extends Comparable {
 			this.table = table;
 			// Make the name unique.
 			String baseName = name;
-			String suffix = Resources.get("pkSuffix");
-			if (baseName.endsWith(suffix))
-				baseName = baseName.substring(0, baseName.indexOf(suffix));
-			else
-				suffix = "";
 			// Check there is no other column on this table with the same name.
 			for (int i = 1; table.getColumnByName(name) != null; name = baseName
-					+ "_" + i++ + suffix)
+					+ "_" + i++)
 				;
 			this.name = name;
 			this.originalName = name;
@@ -137,15 +131,10 @@ public interface Column extends Comparable {
 		public void setName(String newName) {
 			// Make the name unique.
 			String baseName = newName;
-			String suffix = Resources.get("pkSuffix");
-			if (baseName.endsWith(suffix))
-				baseName = baseName.substring(0, baseName.indexOf(suffix));
-			else
-				suffix = "";
 			// Check there is no other column on this table with the same name.
 			for (int i = 1; this.table.getColumnByName(newName) != null
 					&& !newName.equals(this.name); newName = baseName + "_"
-					+ i++ + suffix)
+					+ i++)
 				;
 			this.getTable().changeColumnMapKey(this.name, newName);
 			this.name = newName;

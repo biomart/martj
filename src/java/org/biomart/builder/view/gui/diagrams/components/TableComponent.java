@@ -45,7 +45,7 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * a secondary label indicating which schema they belong to.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 25th July 2006
+ * @version 0.1.14, 15th August 2006
  * @since 0.1
  */
 public class TableComponent extends BoxShapedComponent {
@@ -132,8 +132,24 @@ public class TableComponent extends BoxShapedComponent {
 		this.add(label);
 
 		// Add a key component as a sub-component of this table
-		// for each of the keys in the table.
-		for (final Iterator i = this.getTable().getKeys().iterator(); i
+		// for the primary key in the table.
+		if (this.getTable().getPrimaryKey()!=null) {
+			final Key key = this.getTable().getPrimaryKey();
+			final KeyComponent keyComponent = new KeyComponent(key, this
+					.getDiagram());
+
+			// Add it as a sub-component (internal representation only).
+			this.addSubComponent(key, keyComponent);
+			this.getSubComponents().putAll(keyComponent.getSubComponents());
+
+			// Physically add it to the table component layout.
+			this.layout.setConstraints(keyComponent, this.constraints);
+			this.add(keyComponent);
+		}
+		
+		// Add a key component as a sub-component of this table
+		// for each of the foreign keys in the table.
+		for (final Iterator i = this.getTable().getForeignKeys().iterator(); i
 				.hasNext();) {
 			final Key key = (Key) i.next();
 			final KeyComponent keyComponent = new KeyComponent(key, this

@@ -61,7 +61,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.50, 14th August 2006
+ * @version 0.1.51, 15th August 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -800,6 +800,8 @@ public class DataSet extends GenericSchema {
 				}
 			}
 		}
+
+		// Do the renames we queued up earlier.
 		for (final Iterator i = newTableNames.entrySet().iterator(); i
 				.hasNext();) {
 			Map.Entry entry = (Map.Entry) i.next();
@@ -1060,7 +1062,7 @@ public class DataSet extends GenericSchema {
 						continue;
 				}
 				// Otherwise, create a copy of the column.
-				DataSetColumn dsCol;
+				InheritedColumn dsCol;
 				if (parentDSCol instanceof InheritedColumn)
 					dsCol = new InheritedColumn(dsTable,
 							((InheritedColumn) parentDSCol)
@@ -1068,13 +1070,14 @@ public class DataSet extends GenericSchema {
 				else
 					dsCol = new InheritedColumn(dsTable, parentDSCol);
 				// Copy the name, too.
-				dsCol.setName(parentDSCol.getName());
 				dsCol.setOriginalName(parentDSCol.getOriginalName());
 				// Add the column to the child's PK and FK, if it was in
 				// the parent PK only.
 				if (parentDSTablePK.getColumns().contains(parentDSCol)) {
 					dsTablePKCols.add(dsCol);
 					dsTableFKCols.add(dsCol);
+					// Flag the inherited column to include the '_key' suffix.
+					dsCol.setForeignKey(true);
 				}
 			}
 
@@ -1131,15 +1134,9 @@ public class DataSet extends GenericSchema {
 				throw new MartBuilderInternalError(t);
 			}
 
-		// Create the primary key on this table. First check that
-		// all columns end in '_key'. If they don't, make it so.
+		// Create the primary key on this table.
 		if (!dsTablePKCols.isEmpty())
 			try {
-				for (final Iterator i = dsTablePKCols.iterator(); i.hasNext();) {
-					final DataSetColumn col = (DataSetColumn) i.next();
-					if (!col.getName().endsWith(Resources.get("pkSuffix")))
-						col.setName(col.getName() + Resources.get("pkSuffix"));
-				}
 				dsTable.setPrimaryKey(new GenericPrimaryKey(dsTablePKCols));
 			} catch (final Throwable t) {
 				throw new MartBuilderInternalError(t);
@@ -1973,6 +1970,8 @@ public class DataSet extends GenericSchema {
 		public static class InheritedColumn extends DataSetColumn {
 			private DataSetColumn dsColumn;
 
+			private boolean isForeignKey;
+
 			/**
 			 * This constructor gives the column a name. The underlying relation
 			 * is not required here. The name is inherited from the column too.
@@ -1988,6 +1987,7 @@ public class DataSet extends GenericSchema {
 				super(dsColumn.getName(), dsTable, null);
 				// Remember the inherited column.
 				this.dsColumn = dsColumn;
+				this.isForeignKey = false;
 			}
 
 			/**
@@ -1997,6 +1997,17 @@ public class DataSet extends GenericSchema {
 			 */
 			public DataSetColumn getInheritedColumn() {
 				return this.dsColumn;
+			}
+
+			/**
+			 * Sets this column to include the '_key' suffix.
+			 * 
+			 * @param isForeignKey
+			 *            <tt>true</tt> if this column should adopt the
+			 *            foreign key naming conventions.
+			 */
+			public void setForeignKey(boolean isForeignKey) {
+				this.isForeignKey = isForeignKey;
 			}
 
 			public void setMasked(boolean masked) throws AssociationException {
@@ -2013,6 +2024,9 @@ public class DataSet extends GenericSchema {
 			}
 
 			public void setName(String name) {
+				String suffix = Resources.get("fkSuffix");
+				if (this.isForeignKey && name.endsWith(suffix))
+					name = name.substring(0, name.indexOf(suffix));
 				if (this.dsColumn == null)
 					super.setName(name);
 				else
@@ -2020,8 +2034,10 @@ public class DataSet extends GenericSchema {
 			}
 
 			public String getName() {
-				return this.dsColumn == null ? super.getName() : this.dsColumn
-						.getName();
+				String baseName = this.dsColumn == null ? super.getName()
+						: this.dsColumn.getName();
+				if (this.isForeignKey) baseName += Resources.get("fkSuffix");
+				return baseName;
 			}
 
 			public void setOriginalName(String name) {
