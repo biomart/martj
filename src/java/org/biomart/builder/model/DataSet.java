@@ -1076,7 +1076,6 @@ public class DataSet extends GenericSchema {
 				if (parentDSTablePK.getColumns().contains(parentDSCol)) {
 					dsTablePKCols.add(dsCol);
 					dsTableFKCols.add(dsCol);
-					// Flag the inherited column to include the '_key' suffix.
 					dsCol.setForeignKey(true);
 				}
 			}
@@ -1970,7 +1969,7 @@ public class DataSet extends GenericSchema {
 		public static class InheritedColumn extends DataSetColumn {
 			private DataSetColumn dsColumn;
 
-			private boolean isForeignKey;
+			private boolean foreignKey;
 
 			/**
 			 * This constructor gives the column a name. The underlying relation
@@ -1987,7 +1986,7 @@ public class DataSet extends GenericSchema {
 				super(dsColumn.getName(), dsTable, null);
 				// Remember the inherited column.
 				this.dsColumn = dsColumn;
-				this.isForeignKey = false;
+				this.foreignKey = false;
 			}
 
 			/**
@@ -2000,14 +1999,15 @@ public class DataSet extends GenericSchema {
 			}
 
 			/**
-			 * Sets this column to include the '_key' suffix.
+			 * Sets whether or not this column should report its name with the
+			 * '_key' suffix or not.
 			 * 
-			 * @param isForeignKey
-			 *            <tt>true</tt> if this column should adopt the
-			 *            foreign key naming conventions.
+			 * @param foreignKey
+			 *            <tt>true</tt> if the '_key' suffix should be used
+			 *            for this column.
 			 */
-			public void setForeignKey(boolean isForeignKey) {
-				this.isForeignKey = isForeignKey;
+			public void setForeignKey(boolean foreignKey) {
+				this.foreignKey = foreignKey;
 			}
 
 			public void setMasked(boolean masked) throws AssociationException {
@@ -2025,7 +2025,7 @@ public class DataSet extends GenericSchema {
 
 			public void setName(String name) {
 				String suffix = Resources.get("fkSuffix");
-				if (this.isForeignKey && name.endsWith(suffix))
+				if (this.foreignKey && name.endsWith(suffix))
 					name = name.substring(0, name.indexOf(suffix));
 				if (this.dsColumn == null)
 					super.setName(name);
@@ -2034,10 +2034,13 @@ public class DataSet extends GenericSchema {
 			}
 
 			public String getName() {
-				String baseName = this.dsColumn == null ? super.getName()
+				String suffix = Resources.get("fkSuffix");
+				String result = this.dsColumn == null ? super.getName()
 						: this.dsColumn.getName();
-				if (this.isForeignKey) baseName += Resources.get("fkSuffix");
-				return baseName;
+				if (this.foreignKey && !result.endsWith(suffix))
+					return result + suffix;
+				else
+					return result;
 			}
 
 			public void setOriginalName(String name) {

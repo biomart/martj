@@ -39,11 +39,11 @@ import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
-import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.MartConstructorAction.Concat;
@@ -57,14 +57,14 @@ import org.biomart.builder.model.MartConstructorAction.OptimiseUpdateColumn;
 import org.biomart.builder.model.MartConstructorAction.Partition;
 import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
 import org.biomart.builder.model.MartConstructorAction.Reduce;
-import org.biomart.builder.model.MartConstructorAction.Rename;
+import org.biomart.builder.model.MartConstructorAction.RenameTable;
 import org.biomart.builder.model.MartConstructorAction.Union;
 
 /**
  * Understands how to create SQL and DDL for a PostgreSQL database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 14th August 2006
+ * @version 0.1.14, 15th August 2006
  * @since 0.1
  */
 public class PostgreSQLDialect extends DatabaseDialect {
@@ -244,7 +244,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		statements.add("drop table " + schemaName + "." + tableName);
 	}
 
-	public void doRename(final Rename action, final List statements)
+	public void doRenameTable(final RenameTable action, final List statements)
 			throws Exception {
 		final String schemaName = action.getRenameTableSchema() == null ? action
 				.getDataSetSchemaName()
@@ -421,6 +421,13 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				} else
 					// Ouch!
 					throw new MartBuilderInternalError();
+			} else {
+				if (col instanceof InheritedColumn) {
+					sb.append("a.");
+					sb.append(((InheritedColumn) col).getInheritedColumn()
+							.getName());
+					sb.append(" as ");
+				} 
 			}
 			sb.append(col.getName());
 			if (i.hasNext())

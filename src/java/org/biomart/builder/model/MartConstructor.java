@@ -57,7 +57,7 @@ import org.biomart.builder.model.MartConstructorAction.OptimiseUpdateColumn;
 import org.biomart.builder.model.MartConstructorAction.Partition;
 import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
 import org.biomart.builder.model.MartConstructorAction.Reduce;
-import org.biomart.builder.model.MartConstructorAction.Rename;
+import org.biomart.builder.model.MartConstructorAction.RenameTable;
 import org.biomart.builder.model.MartConstructorAction.Union;
 import org.biomart.builder.resources.Resources;
 
@@ -68,7 +68,7 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.29, 14th August 2006
+ * @version 0.1.30, 15th August 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -914,8 +914,7 @@ public interface MartConstructor {
 						// Work out 'has' column name.
 						final String vHasColumnName = vChildTable
 								.createFinalName()
-								+ Resources.get("tablenameSep")
-								+ Resources.get("hasSuffix");
+								+ Resources.get("hasColSuffix");
 						// Add columns to the main or subclass table or
 						// 'has' table.
 						final MartConstructorAction optimiseAdd = new OptimiseAddColumn(
@@ -961,11 +960,11 @@ public interface MartConstructor {
 				final String vTableFinalName = vTable.createFinalName();
 				final String vTableTempName = vTable.getTempTableName();
 				// Rename the table.
-				final MartConstructorAction rename = new Rename(
+				final MartConstructorAction renameTable = new RenameTable(
 						this.datasetSchemaName, vTable.getDataSetTable()
 								.getName(), null, vTableTempName,
 						vTableFinalName);
-				actionGraph.addActionWithParent(rename, preRenameAction);
+				actionGraph.addActionWithParent(renameTable, preRenameAction);
 			}
 
 			// Now we have constructed our action graph, issue events to
@@ -1125,7 +1124,8 @@ public interface MartConstructor {
 				final List dsTargetIncludeCols = vConstructionTable
 						.getDataSetColumns(rSourceRelation);
 				// Skip the merge if we won't gain anything from it.
-				if (dsTargetIncludeCols.isEmpty()) continue;
+				if (dsTargetIncludeCols.isEmpty())
+					continue;
 				// If targetTable is in a group schema that is not the
 				// same group schema we started with, create a union table
 				// containing all the targetTable copies, then merge with
@@ -1228,8 +1228,8 @@ public interface MartConstructor {
 						.equals(rMainTableSchema);
 				// What columns on the table should be concatted?
 				final List rConcatTargetCols = vConstructionTable.getDataSet()
-								.getConcatRelationType(rConcatRelation)
-								.getConcatColumns();
+						.getConcatRelationType(rConcatRelation)
+						.getConcatColumns();
 				// What are the equivalent columns on the existing temp table
 				// that correspond to the source key?
 				final List vSourceKeyCols = vConstructionTable
@@ -1743,28 +1743,21 @@ public interface MartConstructor {
 			}
 
 			/**
-			 * Constructs a string containing the recommended table name for
+			 * Constructs a string containing the recommended content name for
 			 * this dataset table in the final schema.
 			 * 
 			 * @return the constructed name for this dataset table.
 			 */
-			public String createFinalName() {
+			public String createContentName() {
 				// TODO - come up with a better naming scheme
 				// Currently the name is:
-				// datasetname__\
 				// tablename\
 				// {_partitionvalue}*}\
-				// __type
 
 				// Work out what dataset we are in.
-				final DataSet dataset = this.getDataSet();
 				final DataSetTable datasetTable = this.getDataSetTable();
 
 				final StringBuffer name = new StringBuffer();
-
-				// Dataset name and __ separator.
-				name.append(dataset.getName());
-				name.append(Resources.get("tablenameSep"));
 
 				// Table name.
 				name.append(datasetTable.getName());
@@ -1777,10 +1770,41 @@ public interface MartConstructor {
 						name.append(Resources.get("tablenameSubSep"));
 						// Partition values may be null, so cannot use
 						// toString().
-						final String partitionValue = "" + j.next();
+						String partitionValue = "" + j.next();
+						// Replace all unusable bits with single underscores.
+						partitionValue = partitionValue.replaceAll("\\W", "_");
+						// Replace multiple underscores with single ones.
+						partitionValue = partitionValue.replaceAll("_+", "_");
+						// Append the value.
 						name.append(partitionValue);
 					}
 				}
+
+				return name.toString().toLowerCase();
+			}
+
+			/**
+			 * Constructs a string containing the recommended table name for
+			 * this dataset table in the final schema.
+			 * 
+			 * @return the constructed name for this dataset table.
+			 */
+			public String createFinalName() {
+				// TODO - come up with a better naming scheme
+				// Currently the name is:
+				// datasetname__{content}__type
+
+				// Work out what dataset we are in.
+				final DataSet dataset = this.getDataSet();
+
+				final StringBuffer name = new StringBuffer();
+
+				// Dataset name and __ separator.
+				name.append(dataset.getName());
+				name.append(Resources.get("tablenameSep"));
+
+				// Content name.
+				name.append(this.createContentName());
 
 				// __ separator.
 				name.append(Resources.get("tablenameSep"));
@@ -1794,7 +1818,7 @@ public interface MartConstructor {
 				else if (type.equals(DataSetTableType.DIMENSION))
 					name.append(Resources.get("dimensionSuffix"));
 
-				return name.toString();
+				return name.toString().toLowerCase();
 			}
 		}
 
@@ -1815,14 +1839,10 @@ public interface MartConstructor {
 			public String createFinalName() {
 				// TODO - come up with a better naming scheme
 				// Currently the name is:
-				// datasetname__\
-				// tablename\
-				// {_partitionvalue}*}\
-				// _has__type
+				// datasetname__{content}_has__type
 
 				// Work out what dataset we are in.
 				final DataSet dataset = this.getDataSet();
-				final DataSetTable datasetTable = this.getDataSetTable();
 
 				final StringBuffer name = new StringBuffer();
 
@@ -1830,31 +1850,18 @@ public interface MartConstructor {
 				name.append(dataset.getName());
 				name.append(Resources.get("tablenameSep"));
 
-				// Table name.
-				name.append(datasetTable.getName());
-
-				// Partition values with _ separator between.
-				final List partitionValues = this.getPartitionValues();
-				if (!partitionValues.isEmpty()) {
-					for (final Iterator j = partitionValues.iterator(); j
-							.hasNext();) {
-						name.append(Resources.get("tablenameSubSep"));
-						// Partition values may be null, so cannot use
-						// toString().
-						final String partitionValue = "" + j.next();
-						name.append(partitionValue);
-					}
-				}
+				// Content name.
+				name.append(this.createContentName());
 
 				// _ separator, 'has', and __ separator.
 				name.append(Resources.get("tablenameSubSep"));
-				name.append(Resources.get("hasSuffix"));
+				name.append(Resources.get("hasTblSuffix"));
 				name.append(Resources.get("tablenameSep"));
 
 				// Type.
 				name.append(Resources.get("dimensionSuffix"));
 
-				return name.toString();
+				return name.toString().toLowerCase();
 			}
 		}
 	}

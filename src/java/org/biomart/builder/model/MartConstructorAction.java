@@ -24,10 +24,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
+import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.resources.Resources;
@@ -41,7 +41,7 @@ import org.biomart.builder.resources.Resources;
  * schema instead, as specified by the datasetSchemaName parameter.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 14th August 2006
+ * @version 0.1.11, 15th August 2006
  * @since 0.1
  */
 public abstract class MartConstructorAction {
@@ -572,7 +572,7 @@ public abstract class MartConstructorAction {
 	/**
 	 * Rename table actions rename tables.
 	 */
-	public static class Rename extends MartConstructorAction {
+	public static class RenameTable extends MartConstructorAction {
 		private Schema renameTableSchema;
 
 		private String renameTableOldName;
@@ -593,7 +593,7 @@ public abstract class MartConstructorAction {
 		 * @param renameTableNewName
 		 *            the new name of the table.
 		 */
-		public Rename(final String dsSchemaName, final String dsTableName,
+		public RenameTable(final String dsSchemaName, final String dsTableName,
 				final Schema renameTableSchema,
 				final String renameTableOldName, final String renameTableNewName) {
 			super(dsSchemaName, dsTableName);
