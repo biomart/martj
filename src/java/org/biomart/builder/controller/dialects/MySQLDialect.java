@@ -449,8 +449,7 @@ public class MySQLDialect extends DatabaseDialect {
 				.hasNext();) {
 			final String joinColName = ((Column) i.next()).getName();
 			sb.append("a." + joinColName + "=b." + joinColName);
-			if (i.hasNext())
-				sb.append(" and ");
+			sb.append(" and ");
 		}
 		String escapedValue = " is null";
 		if (partColumnValue != null) {
@@ -459,7 +458,7 @@ public class MySQLDialect extends DatabaseDialect {
 			escapedValue = escapedValue.replaceAll("'", "\\'");
 			escapedValue = "='" + escapedValue + "'";
 		}
-		sb.append(" where b." + partColumnName + escapedValue);
+		sb.append("b." + partColumnName + escapedValue);
 		statements.add(sb.toString());
 	}
 
