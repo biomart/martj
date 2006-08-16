@@ -623,7 +623,7 @@ public class OracleDialect extends DatabaseDialect {
 			final BufferedReader br = new BufferedReader(
 					new InputStreamReader(
 							Resources
-									.getResource("org/biomart/builder/resources/ora_group_concat.sql")));
+									.getResourceAsStream("org/biomart/builder/resources/ora_group_concat.sql")));
 			try {
 				String line;
 				while ((line = br.readLine()) != null) {
