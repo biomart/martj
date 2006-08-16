@@ -64,7 +64,7 @@ import org.biomart.builder.model.MartConstructorAction.Union;
  * Understands how to create SQL and DDL for a PostgreSQL database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 15th August 2006
+ * @version 0.1.15, 16th August 2006
  * @since 0.1
  */
 public class PostgreSQLDialect extends DatabaseDialect {
@@ -220,7 +220,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				+ " as b on ");
 		for (int i = 0; i < action.getTargetTableKeyColumns().size(); i++) {
 			if (i > 0)
-				sb.append(',');
+				sb.append(" and ");
 			final String pkColName = ((Column) action
 					.getSourceTableKeyColumns().get(i)).getName();
 			final String fkColName = ((Column) action
@@ -421,13 +421,13 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				} else
 					// Ouch!
 					throw new MartBuilderInternalError();
-			} else {
+			} else if (action.isUseInheritedAliases()) {
 				if (col instanceof InheritedColumn) {
 					sb.append("a.");
 					sb.append(((InheritedColumn) col).getInheritedColumn()
 							.getName());
 					sb.append(" as ");
-				} 
+				}
 			}
 			sb.append(col.getName());
 			if (i.hasNext())
@@ -457,23 +457,44 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final String fromTableName = action.getPartitionTableName();
 		final String partColumnName = action.getPartitionColumnName();
 		final Object partColumnValue = action.getPartitionColumnValue();
-
-		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
-				+ partTableSchema + "," + fromTableSchema + ",pg_catalog");
-
+		StringBuffer sb = new StringBuffer();
+		sb.append("create table " + partTableSchema + "." + partTableName
+				+ " as select distinct ");
+		final List remainingCols = new ArrayList(action
+				.getPartitionTableAllColumns());
+		remainingCols.removeAll(action.getPartitionTableFKColumns());
+		for (Iterator i = action.getPartitionTableFKColumns().iterator(); i
+				.hasNext();) {
+			final String colName = ((Column) i.next()).getName();
+			sb.append("a." + colName);
+			sb.append(',');
+		}
+		for (Iterator i = remainingCols.iterator(); i.hasNext();) {
+			final String colName = ((Column) i.next()).getName();
+			sb.append("b." + colName);
+			if (i.hasNext())
+				sb.append(',');
+		}
+		// select a.FK cols and b.Remaining cols
+		sb.append(" from " + fromTableSchema + "." + fromTableName
+				+ " as a left join " + fromTableSchema + "." + fromTableName
+				+ " as b on ");
+		for (Iterator i = action.getPartitionTablePKColumns().iterator(); i
+				.hasNext();) {
+			final String joinColName = ((Column) i.next()).getName();
+			sb.append("a." + joinColName + "=b." + joinColName);
+			if (i.hasNext())
+				sb.append(" and ");
+		}
+		String escapedValue = " is null";
 		if (partColumnValue != null) {
-			String escapedValue = partColumnValue.toString();
+			escapedValue = partColumnValue.toString();
 			escapedValue = escapedValue.replaceAll("\\\\", "\\\\");
 			escapedValue = escapedValue.replaceAll("'", "\\'");
-			statements.add("create table " + partTableSchema + "."
-					+ partTableName + " as select * from " + fromTableSchema
-					+ "." + fromTableName + " where " + partColumnName + "='"
-					+ escapedValue + "'");
-		} else
-			statements.add("create table " + partTableSchema + "."
-					+ partTableName + " as select * from " + fromTableSchema
-					+ "." + fromTableName + " where " + partColumnName
-					+ " is null");
+			escapedValue = "='" + escapedValue + "'";
+		}
+		sb.append(" where b." + partColumnName + escapedValue);
+		statements.add(sb.toString());
 	}
 
 	public void doMerge(final Merge action, final List statements)
@@ -535,7 +556,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				+ " as b on ");
 		for (int i = 0; i < action.getTargetTableKeyColumns().size(); i++) {
 			if (i > 0)
-				sb.append(',');
+				sb.append(" and ");
 			final String pkColName = ((Column) action
 					.getSourceTableKeyColumns().get(i)).getName();
 			final String fkColName = ((Column) action

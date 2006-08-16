@@ -68,7 +68,7 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.30, 15th August 2006
+ * @version 0.1.31, 16th August 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -671,13 +671,27 @@ public interface MartConstructor {
 							vPartitionTable.getPartitionValues().add(
 									partitionValue);
 							vTables.add(vPartitionTable);
+							final Key dsPartTablePK = vParentTable
+									.getDataSetTable().getPrimaryKey();
+							final List dsPartTablePKCols = dsPartTablePK == null ? Collections.EMPTY_LIST
+									: dsPartTablePK.getColumns();
+							final Iterator dsPartTableFK = vParentTable
+									.getDataSetTable().getForeignKeys()
+									.iterator();
+							final List dsPartTableFKCols = dsPartTableFK
+									.hasNext() ? ((Key) dsPartTableFK.next())
+									.getColumns() : Collections.EMPTY_LIST;
+							final List dsPartTableCols = vParentTable
+									.getDataSetColumns();
 							// Partition the parent table for this value.
 							final MartConstructorAction partition = new Partition(
 									this.datasetSchemaName, vPartitionTable
 											.getDataSetTable().getName(), null,
 									vParentTable.getTempTableName(), null,
 									vPartitionTable.getTempTableName(),
-									dsPartCol.getName(), partitionValue);
+									dsPartCol.getName(), partitionValue,
+									dsPartTablePKCols, dsPartTableFKCols,
+									dsPartTableCols);
 							actionGraph.addActionWithParent(partition,
 									lastPartitionAction);
 							// Make the last action of each partitioned
@@ -875,7 +889,7 @@ public interface MartConstructor {
 										.getDataSetTable().getName(), null,
 								vHasTable.getTempTableName(), null,
 								vParentTable.getTempTableName(), dsPKCols,
-								false, null, false);
+								false, null, false, false);
 						actionGraph.addActionWithParent(create, preDOAction);
 						// Create the PK on the 'has' table using the same
 						// columns, as an index.
@@ -913,7 +927,7 @@ public interface MartConstructor {
 							continue;
 						// Work out 'has' column name.
 						final String vHasColumnName = vChildTable
-								.createFinalName()
+								.createContentName()
 								+ Resources.get("hasColSuffix");
 						// Add columns to the main or subclass table or
 						// 'has' table.
@@ -1067,7 +1081,7 @@ public interface MartConstructor {
 						vTableTempName, rSchema, rFirstTable.getName(),
 						dsFirstTableCols, rFirstTable.getPrimaryKey() == null,
 						vConstructionTable.getDataSet().getRestrictedTableType(
-								rFirstTable), true);
+								rFirstTable), true, false);
 				actionGraph.addActionWithParent(create, lastActionPerformed);
 				// Update last action performed, in case there are no merges.
 				lastActionPerformed = create;
@@ -1083,8 +1097,7 @@ public interface MartConstructor {
 					final DataSetColumn dsCol = (DataSetColumn) i.next();
 					if (dsCol instanceof InheritedColumn) {
 						final InheritedColumn dsInheritedCol = (InheritedColumn) dsCol;
-						if (!dsInheritedCol.getMasked())
-							dsTableFirstCols.add(dsInheritedCol);
+						dsTableFirstCols.add(dsInheritedCol);
 					}
 				}
 
@@ -1092,7 +1105,7 @@ public interface MartConstructor {
 						this.datasetSchemaName, vConstructionTable
 								.getDataSetTable().getName(), null,
 						vTableTempName, null, vParentTable.getTempTableName(),
-						dsTableFirstCols, false, null, false);
+						dsTableFirstCols, false, null, false, true);
 				actionGraph.addActionWithParent(create, lastActionPerformed);
 				// Update last action performed, in case there are no merges.
 				lastActionPerformed = create;
@@ -1287,7 +1300,7 @@ public interface MartConstructor {
 						this.datasetSchemaName, vConstructionTable
 								.getDataSetTable().getName(), null,
 						vConcatTableTempName, null, vTableTempName,
-						vSourceKeyCols, false, null, false);
+						vSourceKeyCols, false, null, false, false);
 				actionGraph.addActionWithParent(createCon, lastActionPerformed);
 				// Generate new temp table name for populated concat table.
 				final String vPopulatedConcatTableTempName = this.helper
@@ -1384,11 +1397,8 @@ public interface MartConstructor {
 				// group by). List contains all unmasked columns on table,
 				// minus expression columns, minus dependency columns from
 				// group-by expression columns.
-				final List vSelectedColumns = new ArrayList(vConstructionTable
-						.getDataSetTable().getColumns());
-				for (Iterator i = vSelectedColumns.iterator(); i.hasNext();)
-					if (((DataSetColumn) i.next()).getMasked())
-						i.remove();
+				final List vSelectedColumns = vConstructionTable
+						.getDataSetColumns();
 				vSelectedColumns.removeAll(dsExpressionColumns);
 				vSelectedColumns.removeAll(dsGroupByDependentColumns);
 				// Generate new temp table name for merged table.
@@ -1411,6 +1421,40 @@ public interface MartConstructor {
 						vTableTempName);
 				actionGraph.addActionWithParent(drop, expr);
 				vTableTempName = vExpressionTableTempName;
+			}
+
+			// Get all the columns for this table. Remove all
+			// the masked dependency columns, if there are any left
+			// that weren't already removed by the expression group-by.
+			final List dsFinalColumns = vConstructionTable.getDataSetColumns();
+			final int beforeDependentRemoved = dsFinalColumns.size();
+			for (final Iterator i = dsFinalColumns.iterator(); i.hasNext();) {
+				DataSetColumn dsCol = (DataSetColumn) i.next();
+				if (dsCol.getDependency() && dsCol.getMasked())
+					i.remove();
+			}
+			final int afterDependentRemoved = dsFinalColumns.size();
+			dsFinalColumns.removeAll(dsGroupByDependentColumns);
+			final int afterGroupByRemoved = dsFinalColumns.size();
+			if (beforeDependentRemoved != afterDependentRemoved
+					&& (dsGroupByDependentColumns.size() == 0 || afterDependentRemoved != afterGroupByRemoved)) {
+				// We need to do the trim as there were extra columns
+				// that need to be removed that were not already removed
+				// by the group-by.
+				final String vTrimmedTableTempName = this.helper
+						.getNewTempTableName();
+				final Create trim = new Create(this.datasetSchemaName,
+						vConstructionTable.getDataSetTable().getName(), null,
+						vTrimmedTableTempName, null, vTableTempName,
+						dsFinalColumns, false, null, false, false);
+				actionGraph.addActionWithParent(trim, lastActionPerformed);
+				lastActionPerformed = trim;
+				// Drop previous table.
+				final Drop drop = new Drop(this.datasetSchemaName,
+						vConstructionTable.getDataSetTable().getName(), null,
+						vTableTempName);
+				actionGraph.addActionWithParent(drop, trim);
+				vTableTempName = vTrimmedTableTempName;
 			}
 
 			// Update the temp table name.
@@ -1644,6 +1688,25 @@ public interface MartConstructor {
 			}
 
 			/**
+			 * Find all columns in this dataset table that are not masked, or
+			 * are dependencies.
+			 * 
+			 * @return the columns that meet this criteria. May be empty but
+			 *         never null.
+			 */
+			public List getDataSetColumns() {
+				final List list = new ArrayList();
+				for (final Iterator i = this.datasetTable.getColumns()
+						.iterator(); i.hasNext();) {
+					final DataSetColumn candidate = (DataSetColumn) i.next();
+					if (candidate.getMasked() && !candidate.getDependency())
+						continue;
+					list.add(candidate);
+				}
+				return list;
+			}
+
+			/**
 			 * Given a relation, find all columns in this dataset table that
 			 * were added as a result of following this relation.
 			 * 
@@ -1775,6 +1838,11 @@ public interface MartConstructor {
 						partitionValue = partitionValue.replaceAll("\\W", "_");
 						// Replace multiple underscores with single ones.
 						partitionValue = partitionValue.replaceAll("_+", "_");
+						// Wrap with 'p's if start/end with _.
+						if (partitionValue.startsWith("_"))
+							partitionValue = 'p' + partitionValue;
+						if (partitionValue.endsWith("_"))
+							partitionValue += 'p';
 						// Append the value.
 						name.append(partitionValue);
 					}

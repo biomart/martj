@@ -61,7 +61,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.51, 15th August 2006
+ * @version 0.1.52, 16th August 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -1202,7 +1202,13 @@ public class DataSet extends GenericSchema {
 			try {
 				final WrappedColumn wc = new WrappedColumn(c, dsTable,
 						sourceRelation);
-
+				
+				// If the column is in any key then it is a dependency
+				// for possible future linking, which must be flagged.
+				for (final Iterator j = mergeTable.getKeys().iterator(); j.hasNext(); ) 
+					if (((Key)j.next()).getColumns().contains(c))
+						wc.setDependency(true);
+				
 				// If the column was in the merge table's PK, add it to the ds
 				// tables's PK too, but only if not at the 1 end of 1:M.
 				if (mergeTablePK != null
@@ -1860,25 +1866,6 @@ public class DataSet extends GenericSchema {
 			 */
 			public Column getWrappedColumn() {
 				return this.column;
-			}
-
-			public void setMasked(boolean masked) throws AssociationException {
-				super.setMasked(masked);
-
-				// Mask the associated relations from the real underlying
-				// column.
-				if (masked)
-					for (final Iterator i = this.getWrappedColumn().getTable()
-							.getKeys().iterator(); i.hasNext();) {
-						final Key k = (Key) i.next();
-						if (k.getColumns().contains(this.getWrappedColumn()))
-							for (final Iterator j = k.getRelations().iterator(); j
-									.hasNext();) {
-								final Relation r = (Relation) j.next();
-								((DataSet) this.getTable().getSchema())
-										.maskRelation(r);
-							}
-					}
 			}
 		}
 

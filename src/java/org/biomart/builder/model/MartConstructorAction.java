@@ -41,7 +41,7 @@ import org.biomart.builder.resources.Resources;
  * schema instead, as specified by the datasetSchemaName parameter.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 15th August 2006
+ * @version 0.1.12, 16th August 2006
  * @since 0.1
  */
 public abstract class MartConstructorAction {
@@ -441,6 +441,12 @@ public abstract class MartConstructorAction {
 
 		private String targetTableName;
 
+		private List partitionTablePKColumns;
+
+		private List partitionTableFKColumns;
+
+		private Collection partitionTableAllColumns;
+
 		private String partitionColumnName;
 
 		private Object partitionColumnValue;
@@ -470,13 +476,22 @@ public abstract class MartConstructorAction {
 		 *            the name of the column to use for the partitioning.
 		 * @param partitionColumnValue
 		 *            the value to restrict the partitioned column by.
+		 * @param partitionTablePKColumns
+		 *            the PK columns of the table we are selecting from.
+		 * @param partitionTableFKColumns
+		 *            the FK columns of the table we are selecting from.
+		 * @param partitionTableAllColumns
+		 *            all columns on the table we are selecting from.
 		 */
 		public Partition(final String dsSchemaName, final String dsTableName,
 				final Schema partitionTableSchema,
 				final String partitionTableName,
 				final Schema targetTableSchema, final String targetTableName,
 				final String partitionColumnName,
-				final Object partitionColumnValue) {
+				final Object partitionColumnValue,
+				final List partitionTablePKColumns,
+				final List partitionTableFKColumns,
+				final Collection partitionTableAllColumns) {
 			super(dsSchemaName, dsTableName);
 			this.partitionTableSchema = partitionTableSchema;
 			this.partitionTableName = partitionTableName;
@@ -484,6 +499,9 @@ public abstract class MartConstructorAction {
 			this.targetTableName = targetTableName;
 			this.partitionColumnName = partitionColumnName;
 			this.partitionColumnValue = partitionColumnValue;
+			this.partitionTablePKColumns = partitionTablePKColumns;
+			this.partitionTableFKColumns = partitionTableFKColumns;
+			this.partitionTableAllColumns = partitionTableAllColumns;
 		}
 
 		public String getPartitionColumnName() {
@@ -492,6 +510,18 @@ public abstract class MartConstructorAction {
 
 		public Object getPartitionColumnValue() {
 			return this.partitionColumnValue;
+		}
+
+		public List getPartitionTablePKColumns() {
+			return this.partitionTablePKColumns;
+		}
+
+		public List getPartitionTableFKColumns() {
+			return this.partitionTableFKColumns;
+		}
+
+		public Collection getPartitionTableAllColumns() {
+			return this.partitionTableAllColumns;
 		}
 
 		public String getTargetTableName() {
@@ -642,6 +672,8 @@ public abstract class MartConstructorAction {
 
 		private boolean useAliases;
 
+		private boolean useInheritedAliases;
+
 		/**
 		 * Creates a new table by selecting from an existing table.
 		 * 
@@ -673,6 +705,12 @@ public abstract class MartConstructorAction {
 		 *            columns wrap. Otherwise, the names used are those returned
 		 *            by the {@link Column#getName()} function on each column in
 		 *            the list.
+		 * @param useInheritedAliases
+		 *            if <tt>true</tt>, then any {@link InheritedColumn}
+		 *            items selectFromColumns will be aliased to select the
+		 *            referenced column aliased to the inherited column name.
+		 *            Otherwise, the name of the referenced column is used
+		 *            verbatim.
 		 */
 		public Create(final String dsSchemaName, final String dsTableName,
 				final Schema newTableSchema, final String newTableName,
@@ -680,7 +718,7 @@ public abstract class MartConstructorAction {
 				final String selectFromTableName, final List selectFromColumns,
 				final boolean useDistinct,
 				final DataSetTableRestriction tableRestriction,
-				final boolean useAliases) {
+				final boolean useAliases, final boolean useInheritedAliases) {
 			super(dsSchemaName, dsTableName);
 			this.newTableSchema = newTableSchema;
 			this.newTableName = newTableName;
@@ -690,6 +728,7 @@ public abstract class MartConstructorAction {
 			this.useDistinct = useDistinct;
 			this.tableRestriction = tableRestriction;
 			this.useAliases = useAliases;
+			this.useInheritedAliases = useInheritedAliases;
 		}
 
 		public String getNewTableName() {
@@ -722,6 +761,10 @@ public abstract class MartConstructorAction {
 
 		public boolean isUseAliases() {
 			return this.useAliases;
+		}
+
+		public boolean isUseInheritedAliases() {
+			return this.useInheritedAliases;
 		}
 
 		public String getStatusMessage() {
