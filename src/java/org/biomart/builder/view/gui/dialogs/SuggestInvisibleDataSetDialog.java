@@ -54,7 +54,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * do.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 25th July 2006
+ * @version 0.1.2, 17th August 2006
  * @since 0.1
  */
 public class SuggestInvisibleDataSetDialog extends JDialog {
@@ -153,7 +153,8 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 										.equals(
 												SuggestInvisibleDataSetDialog.this.tables
 														.getSelectedItem()))
-							availableColumns.add(col);
+							availableColumns.add(((WrappedColumn) col)
+									.getWrappedColumn());
 					}
 					SuggestInvisibleDataSetDialog.this.columns
 							.setListData(availableColumns

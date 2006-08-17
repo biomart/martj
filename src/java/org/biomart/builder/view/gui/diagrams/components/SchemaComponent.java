@@ -194,6 +194,10 @@ public class SchemaComponent extends BoxShapedComponent {
 	private JPopupMenu getGroupContextMenu() {
 		// First of all, work out what would have been shown by default.
 		final JPopupMenu contextMenu = super.getContextMenu();
+		
+		// Add a divider if necessary.
+		if (contextMenu.getComponentCount()>0)
+			contextMenu.addSeparator();
 
 		// Add the 'show tables' option, which opens the tab representing
 		// this schema.
@@ -272,6 +276,9 @@ public class SchemaComponent extends BoxShapedComponent {
 			});
 			schemaMenu.add(testM);
 
+			// Divide the ungroup option from the others.
+			schemaMenu.addSeparator();
+			
 			// Remove the schema from the group and reinstate as an individual
 			// schema.
 			final JMenuItem unGroup = new JMenuItem(Resources

@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -41,6 +42,9 @@ import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.MartConstructorAction.Drop;
+import org.biomart.builder.model.MartConstructorAction.MartConstructorTableAction;
+import org.biomart.builder.model.MartConstructorAction.OptimiseUpdateColumn;
 import org.biomart.builder.resources.Resources;
 
 /**
@@ -486,8 +490,6 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		private ZipOutputStream outputZipStream;
 
-		private ZipEntry entry;
-
 		private int martSequence;
 
 		private int datasetSequence;
@@ -529,18 +531,112 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				// Clear out action map ready for next dataset.
 				this.actions.clear();
 			else if (event == MartConstructorListener.DATASET_ENDED) {
+				ZipEntry entry;
+				// Make a list for optimise-update actions.
+				final List optimiseUpdate = new ArrayList();
 				// Write out one file per table in action map.
 				for (final Iterator i = this.actions.entrySet().iterator(); i
 						.hasNext();) {
 					final Map.Entry actionEntry = (Map.Entry) i.next();
 					final String tableName = (String) actionEntry.getKey();
-					this.entry = new ZipEntry(this.martSequence + "/"
+					entry = new ZipEntry(this.martSequence + "/"
 							+ this.datasetSequence + "/" + tableName + ".sql");
-					this.entry.setTime(System.currentTimeMillis());
-					this.outputZipStream.putNextEntry(this.entry);
-					// Write the actions.
-					for (final Iterator j = ((List) actionEntry.getValue())
-							.iterator(); j.hasNext();) {
+					entry.setTime(System.currentTimeMillis());
+					this.outputZipStream.putNextEntry(entry);
+					// What actions are for this table?
+					final List tableActions = (List) actionEntry.getValue();
+					// What is the first table action?
+					MartConstructorTableAction firstAction = null;
+					for (final Iterator j = tableActions.iterator(); j
+							.hasNext()
+							&& firstAction == null;) {
+						final MartConstructorAction candidate = (MartConstructorAction) j
+								.next();
+						if (candidate instanceof MartConstructorTableAction)
+							firstAction = (MartConstructorTableAction) candidate;
+					}
+
+					// Work out the parent actions necessary to provide
+					// the temp table that the create action selects from.
+					final List dependentActions = new ArrayList();
+					if (firstAction != null
+							&& firstAction.getParents().size() > 0) {
+						dependentActions.addAll(firstAction.getParents());
+						for (int j = 0; j < dependentActions.size(); j++)
+							dependentActions
+									.addAll(((MartConstructorAction) dependentActions
+											.get(j)).getParents());
+						Collections.reverse(dependentActions);
+						// Insert the dependent actions before the table
+						// actions.
+						tableActions.addAll(0, dependentActions);
+					}
+					// Write the actions for the table itself.
+					for (final Iterator j = tableActions.iterator(); j
+							.hasNext();) {
+						final MartConstructorAction nextAction = (MartConstructorAction) j
+								.next();
+						// Is it a optimise-update action? Save it for later and
+						// don't do DDL.
+						if (nextAction instanceof OptimiseUpdateColumn) {
+							optimiseUpdate.add(nextAction);
+							continue;
+						}
+						// Convert the action to some DDL.
+						final String[] cmd = this
+								.getStatementsForAction(nextAction);
+						// Write the data.
+						for (int k = 0; k < cmd.length; k++) {
+							this.outputZipStream.write(cmd[k].getBytes());
+							this.outputZipStream.write(';');
+							this.outputZipStream.write(System.getProperty(
+									"line.separator").getBytes());
+						}
+					}
+					// Drop any inherited actions by making a list
+					// of the temp table names they created and dropping
+					// all those.
+					if (dependentActions.size() > 0) {
+						final Set tempTableNames = new HashSet();
+						for (final Iterator j = dependentActions.iterator(); j
+								.hasNext();) {
+							MartConstructorAction candidate = (MartConstructorAction) j
+									.next();
+							if (candidate instanceof MartConstructorTableAction)
+								tempTableNames
+										.add(((MartConstructorTableAction) candidate)
+												.getTargetTableName());
+						}
+						for (final Iterator j = tempTableNames.iterator(); j
+								.hasNext();) {
+							// Create and write a drop action.
+							final Drop drop = new Drop(firstAction
+									.getDataSetSchemaName(), firstAction
+									.getDataSetTableName(), firstAction
+									.getTargetTableSchema(), (String) j.next());
+							// Convert the action to some DDL.
+							final String[] cmd = this
+									.getStatementsForAction(drop);
+							// Write the data.
+							for (int k = 0; k < cmd.length; k++) {
+								this.outputZipStream.write(cmd[k].getBytes());
+								this.outputZipStream.write(';');
+								this.outputZipStream.write(System.getProperty(
+										"line.separator").getBytes());
+							}
+						}
+					}
+					// Done with this entry.
+					this.outputZipStream.closeEntry();
+				}
+				// Write out the optimise-update actions in their own file.
+				if (optimiseUpdate.size() > 0) {
+					entry = new ZipEntry(this.martSequence + "/"
+							+ this.datasetSequence + "/_update_has_columns.sql");
+					entry.setTime(System.currentTimeMillis());
+					this.outputZipStream.putNextEntry(entry);
+					for (final Iterator j = optimiseUpdate.iterator(); j
+							.hasNext();) {
 						// Convert the action to some DDL.
 						final String[] cmd = this
 								.getStatementsForAction((MartConstructorAction) j
@@ -553,7 +649,6 @@ public class SaveDDLMartConstructor implements MartConstructor {
 									"line.separator").getBytes());
 						}
 					}
-					// Done with this entry.
 					this.outputZipStream.closeEntry();
 				}
 				// Bump up the dataset count for the next one.

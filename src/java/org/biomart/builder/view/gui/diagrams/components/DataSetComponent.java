@@ -108,6 +108,10 @@ public class DataSetComponent extends BoxShapedComponent {
 	public JPopupMenu getContextMenu() {
 		// First of all, work out what would have been shown by default.
 		final JPopupMenu contextMenu = super.getContextMenu();
+		
+		// Add a divider if necessary.
+		if (contextMenu.getComponentCount()>0)
+			contextMenu.addSeparator();
 
 		// Add the 'show tables' option, which opens the tab representing
 		// this schema.

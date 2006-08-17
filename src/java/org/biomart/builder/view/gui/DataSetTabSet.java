@@ -82,7 +82,7 @@ import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.39, 14th August 2006
+ * @version 0.1.41, 17th August 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -709,28 +709,21 @@ public class DataSetTabSet extends JTabbedPane {
 						}
 					});
 				} finally {
-					// Must use a finally in case the dataset gets created
-					// but won't sync.
-					final Collection dssRef = dss;
-					if (dssRef != null)
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								// For each one suggested, add a dataset tab for
-								// it.
-								for (final Iterator i = dssRef.iterator(); i
-										.hasNext();) {
-									final DataSet dataset = (DataSet) i.next();
-									DataSetTabSet.this.addDataSetTab(dataset);
-								}
+					if (dss != null) {
+						// For each one suggested, add a dataset tab for
+						// it.
+						for (final Iterator i = dss.iterator(); i.hasNext();) {
+							final DataSet dataset = (DataSet) i.next();
+							DataSetTabSet.this.addDataSetTab(dataset);
+						}
 
-								// Update the overview diagram.
-								DataSetTabSet.this.recalculateOverviewDiagram();
+						// Update the overview diagram.
+						DataSetTabSet.this.recalculateOverviewDiagram();
 
-								// Update the modified status for this tabset.
-								DataSetTabSet.this.martTab.getMartTabSet()
-										.setModifiedStatus(true);
-							}
-						});
+						// Update the modified status for this tabset.
+						DataSetTabSet.this.martTab.getMartTabSet()
+								.setModifiedStatus(true);
+					}
 				}
 			}
 		});
@@ -1508,15 +1501,11 @@ public class DataSetTabSet extends JTabbedPane {
 			// Mask the column.
 			MartBuilderUtils.maskColumn(ds, column);
 
-			// In case it masked a relation, repaint the schema diagrams.
-			this.martTab.getSchemaTabSet().repaintAllSchemaDiagrams();
-			this.martTab.getSchemaTabSet().repaintOverviewDiagram();
+			// Repaint the dataset diagram to reflect the changes.
+			this.repaintDataSetDiagram(ds);
 
-			// Recalculate the dataset diagram to reflect the changes.
-			this.recalculateDataSetDiagram(ds);
-
-			// Recalculate the overview too.
-			this.recalculateExplanationDialog();
+			// Repaint the overview too.
+			this.repaintExplanationDialog();
 
 			// Update the modification status for this tabset.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -1538,11 +1527,11 @@ public class DataSetTabSet extends JTabbedPane {
 			// Unmask the column.
 			MartBuilderUtils.unmaskColumn(ds, column);
 
-			// Recalculate the dataset diagram to reflect the changes.
-			this.recalculateDataSetDiagram(ds);
+			// Repaint the dataset diagram to reflect the changes.
+			this.repaintDataSetDiagram(ds);
 
-			// Update the explanation too.
-			this.recalculateExplanationDialog();
+			// Repaint the overview too.
+			this.repaintExplanationDialog();
 
 			// Update the modification status for this tabset.
 			this.martTab.getMartTabSet().setModifiedStatus(true);

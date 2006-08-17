@@ -687,9 +687,9 @@ public interface MartConstructor {
 							final MartConstructorAction partition = new Partition(
 									this.datasetSchemaName, vPartitionTable
 											.getDataSetTable().getName(), null,
-									vParentTable.getTempTableName(), null,
-									vPartitionTable.getTempTableName(),
-									dsPartCol.getName(), partitionValue,
+									vPartitionTable.getTempTableName(), null,
+									vParentTable.getTempTableName(), dsPartCol
+											.getName(), partitionValue,
 									dsPartTablePKCols, dsPartTableFKCols,
 									dsPartTableCols);
 							actionGraph.addActionWithParent(partition,
@@ -738,7 +738,8 @@ public interface MartConstructor {
 												.getOneKey().getColumns(),
 										null, vChildTable.getTempTableName(),
 										vChildTable.getParentDataSetRelation()
-												.getManyKey().getColumns());
+												.getManyKey().getColumns(),
+										vChildTable.getDataSetColumns());
 								actionGraph.addActionWithParent(reduce, index);
 								reduceActions.add(reduce);
 								vReducedTable.setLastActionPerformed(reduce);
@@ -846,14 +847,34 @@ public interface MartConstructor {
 
 			// Set up a break-point last action that waits for all
 			// foreign keys to complete.
-			final MartConstructorAction prePCOAction = new PlaceHolder(
+			final MartConstructorAction preRenameAction = new PlaceHolder(
 					this.datasetSchemaName);
 			for (final Iterator i = pkFkActions.iterator(); i.hasNext();)
-				prePCOAction.addParent((MartConstructorAction) i.next());
-			actionGraph.addAction(prePCOAction);
+				preRenameAction.addParent((MartConstructorAction) i.next());
+			actionGraph.addAction(preRenameAction);
+			final List renameActions = new ArrayList();
+
+			// Rename all tables.
+			for (final Iterator i = vTables.iterator(); i.hasNext();) {
+				final VirtualTable vTable = (VirtualTable) i.next();
+				final String vTableFinalName = vTable.createFinalName();
+				final String vTableTempName = vTable.getTempTableName();
+				// Rename the table.
+				final MartConstructorAction renameTable = new RenameTable(
+						this.datasetSchemaName, vTable.getDataSetTable()
+								.getName(), null, vTableFinalName,
+						vTableTempName);
+				actionGraph.addActionWithParent(renameTable, preRenameAction);
+				renameActions.add(renameTable);
+				vTable.setTempTableName(vTableFinalName);
+			}
 
 			// Post-construction optimisation.
-			final List optActions = new ArrayList();
+			final MartConstructorAction prePCOAction = new PlaceHolder(
+					this.datasetSchemaName);
+			for (final Iterator i = renameActions.iterator(); i.hasNext();)
+				prePCOAction.addParent((MartConstructorAction) i.next());
+			actionGraph.addAction(prePCOAction);
 			final DataSetOptimiserType dsOptimiserType = dataset
 					.getDataSetOptimiserType();
 			if (!dsOptimiserType.equals(DataSetOptimiserType.NONE)) {
@@ -878,6 +899,8 @@ public interface MartConstructor {
 						vHasTables.add(vHasTable);
 						vHasTable.getPartitionValues().addAll(
 								vParentTable.getPartitionValues());
+						// Use the final name from the start.
+						vHasTable.setTempTableName(vHasTable.createFinalName());
 						// Work out what columns to include from the
 						// main/subclass table.
 						final List dsPKCols = vParentTable.getDataSetTable()
@@ -942,12 +965,12 @@ public interface MartConstructor {
 						final MartConstructorAction optimiseUpd = new OptimiseUpdateColumn(
 								this.datasetSchemaName, vHasTable
 										.getDataSetTable().getName(), null,
-								vChildTable.getTempTableName(), vChildTable
+								vHasTable.getTempTableName(), null, vChildTable
+										.getTempTableName(), vChildTable
 										.getParentDataSetRelation()
 										.getManyKey().getColumns(), vChildTable
 										.getDataSetTable().getPrimaryKey()
-										.getColumns(), null, vHasTable
-										.getTempTableName(), vHasTable
+										.getColumns(), vHasTable
 										.getDataSetTable().getPrimaryKey()
 										.getColumns(), vHasColumnName);
 						actionGraph.addActionWithParent(optimiseUpd,
@@ -955,30 +978,6 @@ public interface MartConstructor {
 					}
 				}
 				vTables.addAll(vHasTables);
-			}
-
-			// Set up a break-point last action that waits for all
-			// optimisations to complete.
-			final MartConstructorAction preRenameAction = new PlaceHolder(
-					this.datasetSchemaName);
-			if (!optActions.isEmpty())
-				for (final Iterator i = optActions.iterator(); i.hasNext();)
-					preRenameAction.addParent((MartConstructorAction) i.next());
-			else
-				preRenameAction.addParent(prePCOAction);
-			actionGraph.addAction(preRenameAction);
-
-			// Rename all tables.
-			for (final Iterator i = vTables.iterator(); i.hasNext();) {
-				final VirtualTable vTable = (VirtualTable) i.next();
-				final String vTableFinalName = vTable.createFinalName();
-				final String vTableTempName = vTable.getTempTableName();
-				// Rename the table.
-				final MartConstructorAction renameTable = new RenameTable(
-						this.datasetSchemaName, vTable.getDataSetTable()
-								.getName(), null, vTableTempName,
-						vTableFinalName);
-				actionGraph.addActionWithParent(renameTable, preRenameAction);
 			}
 
 			// Now we have constructed our action graph, issue events to
@@ -1410,7 +1409,7 @@ public interface MartConstructor {
 				final ExpressionAddColumns expr = new ExpressionAddColumns(
 						this.datasetSchemaName, vConstructionTable
 								.getDataSetTable().getName(), null,
-						vTableTempName, null, vExpressionTableTempName,
+						vExpressionTableTempName, null, vTableTempName,
 						vSelectedColumns, dsExpressionColumns,
 						!dsGroupByDependentColumns.isEmpty());
 				actionGraph.addActionWithParent(expr, lastActionPerformed);

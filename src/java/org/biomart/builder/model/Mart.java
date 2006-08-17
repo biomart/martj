@@ -42,7 +42,7 @@ import org.biomart.builder.resources.Resources;
  * mart. It also has zero or more datasets based around these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.24, 11th August 2006
+ * @version 0.1.25, 17th August 2006
  * @since 0.1
  */
 public class Mart {
