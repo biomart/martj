@@ -61,7 +61,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.52, 16th August 2006
+ * @version 0.1.53, 17th August 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -1041,8 +1041,9 @@ public class DataSet extends GenericSchema {
 
 			// Loop over each column in the parent table. If this is
 			// a subclass table, add it. If it is a dimension table,
-			// only add it if it is in the PK. In either case, if it
-			// is in the PK, add it both to the child PK and the child FK.
+			// only add it if it is in the PK or is in the first underlying
+			// key. In either case, if it is in the PK, add it both to the
+			// child PK and the child FK.
 			for (final Iterator i = parentDSTable.getColumns().iterator(); i
 					.hasNext();) {
 				final DataSetColumn parentDSCol = (DataSetColumn) i.next();
@@ -1058,7 +1059,15 @@ public class DataSet extends GenericSchema {
 													.getWrappedColumn());
 					boolean inPK = parentDSTablePK.getColumns().contains(
 							parentDSCol);
-					if (!inRestriction && !inPK)
+					boolean inFirstKey = parentDSCol instanceof WrappedColumn
+							&& (sourceRelation.getFirstKey().getColumns()
+									.contains(
+											((WrappedColumn) parentDSCol)
+													.getWrappedColumn()) || sourceRelation
+									.getSecondKey().getColumns().contains(
+											((WrappedColumn) parentDSCol)
+													.getWrappedColumn()));
+					if (!inRestriction && !inPK && !inFirstKey)
 						continue;
 				}
 				// Otherwise, create a copy of the column.
@@ -1071,7 +1080,6 @@ public class DataSet extends GenericSchema {
 				if (parentDSTablePK.getColumns().contains(parentDSCol)) {
 					dsTablePKCols.add(dsCol);
 					dsTableFKCols.add(dsCol);
-					dsCol.setForeignKey(true);
 				}
 			}
 
@@ -1131,6 +1139,12 @@ public class DataSet extends GenericSchema {
 		// Create the primary key on this table.
 		if (!dsTablePKCols.isEmpty())
 			try {
+				// Rename all PK columns to have the '_key' suffix.
+				for (final Iterator i = dsTablePKCols.iterator(); i.hasNext();) {
+					DataSetColumn col = (DataSetColumn) i.next();
+					if (!col.getName().endsWith(Resources.get("keySuffix")))
+						col.setName(col.getName() + Resources.get("keySuffix"));
+				}
 				dsTable.setPrimaryKey(new GenericPrimaryKey(dsTablePKCols));
 			} catch (final Throwable t) {
 				throw new MartBuilderInternalError(t);
@@ -1189,6 +1203,18 @@ public class DataSet extends GenericSchema {
 		// Work out the merge table's PK.
 		final PrimaryKey mergeTablePK = mergeTable.getPrimaryKey();
 
+		// We must merge only the first PK we come across, if this is
+		// a MAIN table, or the first PK we come across after the
+		// inherited PK, if this is any other kind of table.
+		boolean includeMergeTablePK = mergeTablePK != null;
+		if (includeMergeTablePK && sourceRelation != null) {
+			// Only add further PK columns if the relation did NOT
+			// involve our PK and was NOT 1:1.
+			includeMergeTablePK = !sourceRelation.isOneToOne()
+					&& !sourceRelation.getFirstKey().equals(mergeTablePK)
+					&& !sourceRelation.getSecondKey().equals(mergeTablePK);
+		}
+
 		// Add all columns from merge table to dataset table, except those in
 		// the ignore key.
 		for (final Iterator i = mergeTable.getColumns().iterator(); i.hasNext();) {
@@ -1202,21 +1228,18 @@ public class DataSet extends GenericSchema {
 			try {
 				final WrappedColumn wc = new WrappedColumn(c, dsTable,
 						sourceRelation);
-				
+
 				// If the column is in any key then it is a dependency
 				// for possible future linking, which must be flagged.
-				for (final Iterator j = mergeTable.getKeys().iterator(); j.hasNext(); ) 
-					if (((Key)j.next()).getColumns().contains(c))
+				for (final Iterator j = mergeTable.getKeys().iterator(); j
+						.hasNext();)
+					if (((Key) j.next()).getColumns().contains(c))
 						wc.setDependency(true);
-				
+
 				// If the column was in the merge table's PK, add it to the ds
-				// tables's PK too, but only if not at the 1 end of 1:M.
-				if (mergeTablePK != null
-						&& (sourceRelation == null
-								|| !sourceRelation.isOneToMany() || sourceRelation
-								.isOneToMany()
-								&& !sourceRelation.getOneKey().equals(
-										mergeTablePK))
+				// tables's PK too, but only if at the top table, or at the
+				// M end of a 1:M or M:M.
+				if (includeMergeTablePK
 						&& mergeTablePK.getColumns().contains(c))
 					dsTablePKCols.add(wc);
 			} catch (final Throwable t) {
@@ -1951,8 +1974,6 @@ public class DataSet extends GenericSchema {
 		public static class InheritedColumn extends DataSetColumn {
 			private DataSetColumn dsColumn;
 
-			private boolean foreignKey;
-
 			/**
 			 * This constructor gives the column a name. The underlying relation
 			 * is not required here. The name is inherited from the column too.
@@ -1968,7 +1989,6 @@ public class DataSet extends GenericSchema {
 				super(dsColumn.getName(), dsTable, null);
 				// Remember the inherited column.
 				this.dsColumn = dsColumn;
-				this.foreignKey = false;
 			}
 
 			/**
@@ -1978,18 +1998,6 @@ public class DataSet extends GenericSchema {
 			 */
 			public DataSetColumn getInheritedColumn() {
 				return this.dsColumn;
-			}
-
-			/**
-			 * Sets whether or not this column should report its name with the
-			 * '_key' suffix or not.
-			 * 
-			 * @param foreignKey
-			 *            <tt>true</tt> if the '_key' suffix should be used
-			 *            for this column.
-			 */
-			public void setForeignKey(boolean foreignKey) {
-				this.foreignKey = foreignKey;
 			}
 
 			public void setMasked(boolean masked) throws AssociationException {
@@ -2006,9 +2014,6 @@ public class DataSet extends GenericSchema {
 			}
 
 			public void setName(String name) {
-				String suffix = Resources.get("fkSuffix");
-				if (this.foreignKey && name.endsWith(suffix))
-					name = name.substring(0, name.indexOf(suffix));
 				if (this.dsColumn == null)
 					super.setName(name);
 				else
@@ -2016,13 +2021,8 @@ public class DataSet extends GenericSchema {
 			}
 
 			public String getName() {
-				String suffix = Resources.get("fkSuffix");
-				String result = this.dsColumn == null ? super.getName()
-						: this.dsColumn.getName();
-				if (this.foreignKey && !result.endsWith(suffix))
-					return result + suffix;
-				else
-					return result;
+				return this.dsColumn == null ? super.getName() : this.dsColumn
+						.getName();
 			}
 
 			public void setOriginalName(String name) {

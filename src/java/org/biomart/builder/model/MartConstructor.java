@@ -1625,8 +1625,8 @@ public interface MartConstructor {
 						final DataSetColumn candidate = (DataSetColumn) i
 								.next();
 						DataSetColumn test = candidate;
-						if (test instanceof InheritedColumn)
-							test = ((InheritedColumn) candidate)
+						while (test instanceof InheritedColumn) 
+							test = ((InheritedColumn) test)
 									.getInheritedColumn();
 						if (!(test instanceof WrappedColumn))
 							continue;
