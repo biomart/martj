@@ -54,6 +54,7 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.AllDataSetsDiagram;
@@ -82,7 +83,7 @@ import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.41, 17th August 2006
+ * @version 0.1.42, 18th August 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -1501,11 +1502,21 @@ public class DataSetTabSet extends JTabbedPane {
 			// Mask the column.
 			MartBuilderUtils.maskColumn(ds, column);
 
-			// Repaint the dataset diagram to reflect the changes.
-			this.repaintDataSetDiagram(ds);
+			// If it is a wrapped column, repaint the schema diagrams in
+			// case the relations have changed.
+			if (column instanceof WrappedColumn) {
+				this.martTab.getSchemaTabSet().repaintSchemaDiagram(
+						((WrappedColumn) column).getWrappedColumn().getTable()
+								.getSchema());
+				this.martTab.getSchemaTabSet().repaintOverviewDiagram();
+			}
 
-			// Repaint the overview too.
-			this.repaintExplanationDialog();
+			// Recalculate the dataset diagram based on the modified dataset.
+			this.recalculateDataSetDiagram(ds);
+
+			// Update the explanation diagram so that it
+			// correctly reflects any changed relation.
+			this.recalculateExplanationDialog();
 
 			// Update the modification status for this tabset.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -1527,11 +1538,21 @@ public class DataSetTabSet extends JTabbedPane {
 			// Unmask the column.
 			MartBuilderUtils.unmaskColumn(ds, column);
 
-			// Repaint the dataset diagram to reflect the changes.
-			this.repaintDataSetDiagram(ds);
+			// If it is a wrapped column, repaint the schema diagrams in
+			// case the relations have changed.
+			if (column instanceof WrappedColumn) {
+				this.martTab.getSchemaTabSet().repaintSchemaDiagram(
+						((WrappedColumn) column).getWrappedColumn().getTable()
+								.getSchema());
+				this.martTab.getSchemaTabSet().repaintOverviewDiagram();
+			}
 
-			// Repaint the overview too.
-			this.repaintExplanationDialog();
+			// Recalculate the dataset diagram based on the modified dataset.
+			this.recalculateDataSetDiagram(ds);
+
+			// Update the explanation diagram so that it
+			// correctly reflects any changed relation.
+			this.recalculateExplanationDialog();
 
 			// Update the modification status for this tabset.
 			this.martTab.getMartTabSet().setModifiedStatus(true);

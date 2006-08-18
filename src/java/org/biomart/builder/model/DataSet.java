@@ -61,7 +61,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.53, 17th August 2006
+ * @version 0.1.54, 18th August 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -207,6 +207,8 @@ public class DataSet extends GenericSchema {
 	 *            the relation to unmask.
 	 */
 	public void unmaskRelation(final Relation relation) {
+		if (!this.maskedRelations.contains(relation))
+			return;
 		this.maskedRelations.remove(relation);
 		// Also unmask all columns which wrap those in keys at both ends.
 		for (Iterator i = this.getTables().iterator(); i.hasNext();)
@@ -219,7 +221,8 @@ public class DataSet extends GenericSchema {
 							|| relation.getSecondKey().getColumns().contains(
 									col))
 						try {
-							dcol.setMasked(false);
+							if (dcol.getMasked())
+								dcol.setMasked(false);
 						} catch (AssociationException e) {
 							// Should never happen.
 							throw new MartBuilderInternalError(e);
@@ -335,6 +338,8 @@ public class DataSet extends GenericSchema {
 	 *            the relation to unmark.
 	 */
 	public void unflagSubclassRelation(final Relation relation) {
+		if (!this.subclassedRelations.contains(relation))
+			return;
 		// Break the chain first.
 		final Key key = relation.getManyKey();
 		if (key != null) {
@@ -1889,6 +1894,43 @@ public class DataSet extends GenericSchema {
 			 */
 			public Column getWrappedColumn() {
 				return this.column;
+			}
+
+			public void setMasked(boolean masked) throws AssociationException {
+				super.setMasked(masked);
+				// If this column is part of the PK on the table it came
+				// from that has a 1:M relation, or is part of an FK with a
+				// M:M relation, then that relation must also be (un)masked.
+				if (masked)
+					for (final Iterator i = this.getWrappedColumn().getTable()
+							.getKeys().iterator(); i.hasNext();) {
+						Key k = (Key) i.next();
+						if (k.getColumns().contains(this.getWrappedColumn()))
+							for (final Iterator j = k.getRelations().iterator(); j
+									.hasNext();) {
+								Relation r = (Relation) j.next();
+								if ((k instanceof PrimaryKey && r.isOneToMany())
+										|| (k instanceof ForeignKey && r
+												.isManyToMany()))
+									((DataSet) this.getTable().getSchema())
+											.maskRelation(r);
+							}
+					}
+				else
+					for (final Iterator i = this.getWrappedColumn().getTable()
+							.getKeys().iterator(); i.hasNext();) {
+						Key k = (Key) i.next();
+						if (k.getColumns().contains(this.getWrappedColumn()))
+							for (final Iterator j = k.getRelations().iterator(); j
+									.hasNext();) {
+								Relation r = (Relation) j.next();
+								if ((k instanceof PrimaryKey && r.isOneToMany())
+										|| (k instanceof ForeignKey && r
+												.isManyToMany()))
+									((DataSet) this.getTable().getSchema())
+											.unmaskRelation(r);
+							}
+					}
 			}
 		}
 
