@@ -31,6 +31,7 @@ import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -55,7 +56,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * concatenation operation.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 14th August 2006
+ * @version 0.1.2, 18th August 2006
  * @since 0.1
  */
 public class ConcatRelationEditorDialog extends JDialog {
@@ -78,7 +79,7 @@ public class ConcatRelationEditorDialog extends JDialog {
 		// Create the base dialog.
 		super(martTab.getMartTabSet().getMartBuilder(), title, true);
 		this.type = null;
-		
+
 		// Create the layout manager for this panel.
 		final GridBagLayout gridBag = new GridBagLayout();
 		final JPanel content = new JPanel();
@@ -95,7 +96,7 @@ public class ConcatRelationEditorDialog extends JDialog {
 		final GridBagConstraints fieldLastRowConstraints = (GridBagConstraints) fieldConstraints
 				.clone();
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
-		
+
 		// Set up the column and row separator fields.
 		this.columnSep = new JTextField(5);
 		this.columnSep.setText(defaultColumnSep);
@@ -125,14 +126,20 @@ public class ConcatRelationEditorDialog extends JDialog {
 		// Create the table column list, and the buttons
 		// to move columns to/from the selected column list.
 		final JList tabColList = new JList(this.tableColumns);
-		final JButton insertButton = new JButton(Resources.get("insertButton"));
-		final JButton removeButton = new JButton(Resources.get("removeButton"));
+		final JButton insertButton = new JButton(new ImageIcon(Resources
+				.getResourceAsURL("org/biomart/builder/resources/add.gif")));
+		final JButton removeButton = new JButton(new ImageIcon(Resources
+				.getResourceAsURL("org/biomart/builder/resources/remove.gif")));
 
 		// Create the key column list, and the buttons to
 		// move columns to/from the table columns list.
 		final JList keyColList = new JList(this.selectedColumns);
-		final JButton upButton = new JButton(Resources.get("upButton"));
-		final JButton downButton = new JButton(Resources.get("downButton"));
+		final JButton upButton = new JButton(new ImageIcon(Resources
+				.getResourceAsURL("org/biomart/builder/resources/arrowUp.gif")));
+		final JButton downButton = new JButton(
+				new ImageIcon(
+						Resources
+								.getResourceAsURL("org/biomart/builder/resources/arrowDown.gif")));
 
 		// Put the two halves of the dialog side-by-side in a horizontal box.
 		final Box columnContent = Box.createHorizontalBox();
@@ -170,11 +177,11 @@ public class ConcatRelationEditorDialog extends JDialog {
 		rightPanel.add(rightButtonPanel, BorderLayout.LINE_END);
 		// Add the right panel.
 		columnContent.add(rightPanel);
-		
+
 		// Add the column panel content.
 		gridBag.setConstraints(columnContent, fieldConstraints);
 		content.add(columnContent);
-		
+
 		// Row separator.
 		JPanel field = new JPanel();
 		field.add(new JLabel(Resources.get("rowSepLabel")));
@@ -184,7 +191,7 @@ public class ConcatRelationEditorDialog extends JDialog {
 		field.add(this.columnSep);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
-		
+
 		// Close/Execute buttons at the bottom.
 		field = new JPanel();
 		field.add(close);

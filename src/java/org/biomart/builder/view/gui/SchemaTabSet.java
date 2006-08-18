@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
 
+import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -71,7 +72,7 @@ import org.biomart.builder.view.gui.dialogs.SchemaManagerDialog;
  * represented in each of the tabs has the same context applied.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.23, 9th August 2006
+ * @version 0.1.24, 18th August 2006
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -1398,7 +1399,7 @@ public class SchemaTabSet extends JTabbedPane {
 		if (!cols.isEmpty() && !cols.equals(key.getColumns()))
 			this.requestEditKey(key, cols);
 	}
-	
+
 	/**
 	 * Change the columns that a key uses.
 	 * 
@@ -1618,7 +1619,8 @@ public class SchemaTabSet extends JTabbedPane {
 		// Add an option to remove this schema tab, and the
 		// associated schema from the mart.
 		final JMenuItem close = new JMenuItem(Resources
-				.get("removeSchemaTitle"));
+				.get("removeSchemaTitle"), new ImageIcon(Resources
+				.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
 		close.setMnemonic(Resources.get("removeSchemaMnemonic").charAt(0));
 		close.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
@@ -1701,8 +1703,8 @@ public class SchemaTabSet extends JTabbedPane {
 	public void setDiagramContext(final DiagramContext diagramContext) {
 		this.diagramContext = diagramContext;
 		this.allSchemasDiagram.setDiagramContext(diagramContext);
-		for (Iterator i = this.schemaToDiagram[1].iterator(); i.hasNext(); ) 
-			((Diagram)i.next()).setDiagramContext(diagramContext);
+		for (Iterator i = this.schemaToDiagram[1].iterator(); i.hasNext();)
+			((Diagram) i.next()).setDiagramContext(diagramContext);
 	}
 
 	/**

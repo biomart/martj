@@ -21,6 +21,7 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -31,7 +32,6 @@ import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
@@ -47,7 +47,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * rather than the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.22, 14th August 2006
+ * @version 0.1.23, 18th August 2006
  * @since 0.1
  */
 public class WindowContext extends SchemaContext {
@@ -81,23 +81,29 @@ public class WindowContext extends SchemaContext {
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
 
-		// This menu applies to the background area (null) of the window,
-		// plus all Schema objects displayed in it. In other words, the
-		// background behaves in the same way as the Schema objects in it.
-		if (object == null || object instanceof Schema) {
-
-			// None, yet.
-
-		}
-
 		// This menu is attached to all table objects.
-		else if (object instanceof Table) {
+		if (object instanceof Table) {
 			// Add a separator if there's other stuff before us.
 			if (contextMenu.getComponentCount() > 0)
 				contextMenu.addSeparator();
 
 			// Obtain the table object we should refer to.
 			final Table table = (Table) object;
+
+			// Show the first 10 rows on a table.
+			final JMenuItem showTen = new JMenuItem(Resources
+					.get("showFirstTenRowsTitle"));
+			showTen.setMnemonic(Resources.get("showFirstTenRowsMnemonic")
+					.charAt(0));
+			showTen.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this.getMartTab().getSchemaTabSet()
+							.requestShowRows(table, 0, 10);
+				}
+			});
+			contextMenu.add(showTen);
+
+			contextMenu.addSeparator();
 
 			// The mask option allows the user to mask all
 			// relations on a table.
@@ -114,25 +120,15 @@ public class WindowContext extends SchemaContext {
 			});
 			contextMenu.add(mask);
 
-			// Show the first 10 rows on a table.
-			final JMenuItem showTen = new JMenuItem(Resources
-					.get("showFirstTenRowsTitle"));
-			showTen.setMnemonic(Resources.get("showFirstTenRowsMnemonic")
-					.charAt(0));
-			showTen.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this.getMartTab().getSchemaTabSet()
-							.requestShowRows(table, 0, 10);
-				}
-			});
-			contextMenu.add(showTen);
+			contextMenu.addSeparator();
 
 			// If it's a restricted table...
 			if (this.dataset.getRestrictedTables().contains(table)) {
 
 				// Option to modify restriction.
 				final JMenuItem modify = new JMenuItem(Resources
-						.get("modifyTableRestrictionTitle"));
+						.get("modifyTableRestrictionTitle"),
+						new ImageIcon(Resources.getResourceAsURL("org/biomart/builder/resources/filter.gif")));
 				modify.setMnemonic(Resources.get(
 						"modifyTableRestrictionMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
@@ -147,25 +143,12 @@ public class WindowContext extends SchemaContext {
 				});
 				contextMenu.add(modify);
 
-				// Option to remove restriction.
-				final JMenuItem remove = new JMenuItem(Resources
-						.get("removeTableRestrictionTitle"));
-				remove.setMnemonic(Resources.get(
-						"removeTableRestrictionMnemonic").charAt(0));
-				remove.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						WindowContext.this.getMartTab().getDataSetTabSet()
-								.requestRemoveTableRestriction(
-										WindowContext.this.dataset, table);
-					}
-				});
-				contextMenu.add(remove);
-
 			} else {
 
 				// Add a table restriction.
 				final JMenuItem restriction = new JMenuItem(Resources
-						.get("addTableRestrictionTitle"));
+						.get("addTableRestrictionTitle"),
+						new ImageIcon(Resources.getResourceAsURL("org/biomart/builder/resources/filter.gif")));
 				restriction.setMnemonic(Resources.get(
 						"addTableRestrictionMnemonic").charAt(0));
 				restriction.addActionListener(new ActionListener() {
@@ -177,6 +160,22 @@ public class WindowContext extends SchemaContext {
 				});
 				contextMenu.add(restriction);
 			}
+
+			// Option to remove restriction.
+			final JMenuItem remove = new JMenuItem(Resources
+					.get("removeTableRestrictionTitle"));
+			remove.setMnemonic(Resources.get("removeTableRestrictionMnemonic")
+					.charAt(0));
+			remove.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this.getMartTab().getDataSetTabSet()
+							.requestRemoveTableRestriction(
+									WindowContext.this.dataset, table);
+				}
+			});
+			contextMenu.add(remove);
+			if (!this.dataset.getRestrictedTables().contains(table))
+				remove.setEnabled(false);
 		}
 
 		// This menu is attached to all the relation lines in the schema.
@@ -247,12 +246,17 @@ public class WindowContext extends SchemaContext {
 					|| relationConcated)
 				subclass.setEnabled(false);
 
+			contextMenu.addSeparator();
+
 			// If it's a concat column...
 			if (this.dataset.getConcatOnlyRelations().contains(relation)) {
 
 				// Option to modify concat.
-				final JMenuItem modify = new JMenuItem(Resources
-						.get("modifyConcatRelationTitle"));
+				final JMenuItem modify = new JMenuItem(
+						Resources.get("modifyConcatRelationTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("org/biomart/builder/resources/collapseAll.gif")));
 				modify.setMnemonic(Resources
 						.get("modifyConcatRelationMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
@@ -269,25 +273,14 @@ public class WindowContext extends SchemaContext {
 				});
 				contextMenu.add(modify);
 
-				// Option to remove concat.
-				final JMenuItem remove = new JMenuItem(Resources
-						.get("removeConcatRelationTitle"));
-				remove.setMnemonic(Resources
-						.get("removeConcatRelationMnemonic").charAt(0));
-				remove.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						WindowContext.this.getMartTab().getDataSetTabSet()
-								.requestUnconcatOnlyRelation(
-										WindowContext.this.dataset, relation);
-					}
-				});
-				contextMenu.add(remove);
-
 			} else {
 
 				// Add a relation concat.
-				final JMenuItem concat = new JMenuItem(Resources
-						.get("addConcatRelationTitle"));
+				final JMenuItem concat = new JMenuItem(
+						Resources.get("addConcatRelationTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("org/biomart/builder/resources/collapseAll.gif")));
 				concat.setMnemonic(Resources.get("addConcatRelationMnemonic")
 						.charAt(0));
 				concat.addActionListener(new ActionListener() {
@@ -300,12 +293,33 @@ public class WindowContext extends SchemaContext {
 				contextMenu.add(concat);
 			}
 
+			// Option to remove concat.
+			final JMenuItem remove = new JMenuItem(Resources
+					.get("removeConcatRelationTitle"));
+			remove.setMnemonic(Resources.get("removeConcatRelationMnemonic")
+					.charAt(0));
+			remove.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this.getMartTab().getDataSetTabSet()
+							.requestUnconcatOnlyRelation(
+									WindowContext.this.dataset, relation);
+				}
+			});
+			contextMenu.add(remove);
+			if (!this.dataset.getConcatOnlyRelations().contains(relation))
+				remove.setEnabled(false);
+
+			contextMenu.addSeparator();
+
 			// If it's a restricted column...
 			if (this.dataset.getRestrictedRelations().contains(relation)) {
 
 				// Option to modify restriction.
-				final JMenuItem modify = new JMenuItem(Resources
-						.get("modifyRelationRestrictionTitle"));
+				final JMenuItem modify = new JMenuItem(
+						Resources.get("modifyRelationRestrictionTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("org/biomart/builder/resources/filter.gif")));
 				modify.setMnemonic(Resources.get(
 						"modifyRelationRestrictionMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
@@ -322,25 +336,14 @@ public class WindowContext extends SchemaContext {
 				});
 				contextMenu.add(modify);
 
-				// Option to remove restriction.
-				final JMenuItem remove = new JMenuItem(Resources
-						.get("removeRelationRestrictionTitle"));
-				remove.setMnemonic(Resources.get(
-						"removeRelationRestrictionMnemonic").charAt(0));
-				remove.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						WindowContext.this.getMartTab().getDataSetTabSet()
-								.requestRemoveRelationRestriction(
-										WindowContext.this.dataset, relation);
-					}
-				});
-				contextMenu.add(remove);
-
 			} else {
 
 				// Add a relation restriction.
-				final JMenuItem restriction = new JMenuItem(Resources
-						.get("addRelationRestrictionTitle"));
+				final JMenuItem restriction = new JMenuItem(
+						Resources.get("addRelationRestrictionTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("org/biomart/builder/resources/filter.gif")));
 				restriction.setMnemonic(Resources.get(
 						"addRelationRestrictionMnemonic").charAt(0));
 				restriction.addActionListener(new ActionListener() {
@@ -352,6 +355,22 @@ public class WindowContext extends SchemaContext {
 				});
 				contextMenu.add(restriction);
 			}
+
+			// Option to remove restriction.
+			final JMenuItem removeRest = new JMenuItem(Resources
+					.get("removeRelationRestrictionTitle"));
+			removeRest.setMnemonic(Resources.get(
+					"removeRelationRestrictionMnemonic").charAt(0));
+			removeRest.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this.getMartTab().getDataSetTabSet()
+							.requestRemoveRelationRestriction(
+									WindowContext.this.dataset, relation);
+				}
+			});
+			contextMenu.add(removeRest);
+			if (!this.dataset.getRestrictedRelations().contains(relation))
+				removeRest.setEnabled(false);
 		}
 
 		// This submenu applies when keys are clicked on.

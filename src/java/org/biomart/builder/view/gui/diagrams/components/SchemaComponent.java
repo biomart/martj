@@ -218,6 +218,8 @@ public class SchemaComponent extends BoxShapedComponent {
 		});
 		contextMenu.add(showTables);
 
+		contextMenu.addSeparator();
+		
 		// Create a submenu containing all the members of the group. Each one
 		// of these will have their own submenu providing the usual functions
 		// available as if they had schema objects which had been clicked on

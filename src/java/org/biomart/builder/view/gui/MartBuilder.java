@@ -28,6 +28,7 @@ import java.awt.event.WindowEvent;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -46,7 +47,7 @@ import org.biomart.builder.resources.SettingsCache;
  * The main window housing the MartBuilder GUI.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.16, 16th August 2006
+ * @version 0.1.17, 18th August 2006
  * @since 0.1
  */
 public class MartBuilder extends JFrame {
@@ -227,31 +228,51 @@ public class MartBuilder extends JFrame {
 			fileMenu.setMnemonic(Resources.get("fileMenuMnemonic").charAt(0));
 
 			// New mart.
-			this.newMart = new JMenuItem(Resources.get("newMartTitle"));
+			this.newMart = new JMenuItem(
+					Resources.get("newMartTitle"),
+					new ImageIcon(
+							Resources
+									.getResourceAsURL("org/biomart/builder/resources/new.gif")));
 			this.newMart
 					.setMnemonic(Resources.get("newMartMnemonic").charAt(0));
 			this.newMart.addActionListener(this);
 
 			// Open existing mart.
-			this.openMart = new JMenuItem(Resources.get("openMartTitle"));
+			this.openMart = new JMenuItem(
+					Resources.get("openMartTitle"),
+					new ImageIcon(
+							Resources
+									.getResourceAsURL("org/biomart/builder/resources/open.gif")));
 			this.openMart.setMnemonic(Resources.get("openMartMnemonic").charAt(
 					0));
 			this.openMart.addActionListener(this);
 
 			// Save current mart.
-			this.saveMart = new JMenuItem(Resources.get("saveMartTitle"));
+			this.saveMart = new JMenuItem(
+					Resources.get("saveMartTitle"),
+					new ImageIcon(
+							Resources
+									.getResourceAsURL("org/biomart/builder/resources/save.gif")));
 			this.saveMart.setMnemonic(Resources.get("saveMartMnemonic").charAt(
 					0));
 			this.saveMart.addActionListener(this);
 
 			// Save current mart as.
-			this.saveMartAs = new JMenuItem(Resources.get("saveMartAsTitle"));
+			this.saveMartAs = new JMenuItem(
+					Resources.get("saveMartAsTitle"),
+					new ImageIcon(
+							Resources
+									.getResourceAsURL("org/biomart/builder/resources/save.gif")));
 			this.saveMartAs.setMnemonic(Resources.get("saveMartAsMnemonic")
 					.charAt(0));
 			this.saveMartAs.addActionListener(this);
 
 			// Create DDL for current mart.
-			this.saveDDL = new JMenuItem(Resources.get("saveDDLTitle"));
+			this.saveDDL = new JMenuItem(
+					Resources.get("saveDDLTitle"),
+					new ImageIcon(
+							Resources
+									.getResourceAsURL("org/biomart/builder/resources/saveText.gif")));
 			this.saveDDL
 					.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
 			this.saveDDL.addActionListener(this);
@@ -269,11 +290,12 @@ public class MartBuilder extends JFrame {
 
 			// Construct the file menu.
 			fileMenu.add(this.newMart);
-			fileMenu.addSeparator();
 			fileMenu.add(this.openMart);
+			fileMenu.addSeparator();
 			fileMenu.add(this.saveMart);
 			fileMenu.add(this.saveMartAs);
 			fileMenu.add(this.saveDDL);
+			fileMenu.addSeparator();
 			fileMenu.add(this.closeMart);
 			fileMenu.addSeparator();
 			fileMenu.add(this.exit);

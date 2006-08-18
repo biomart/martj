@@ -28,6 +28,7 @@ import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -48,7 +49,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * move those columns around, thus editing the key.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 20th June 2006
+ * @version 0.1.5, 18th August 2006
  * @since 0.1
  */
 public class KeyEditorDialog extends JDialog {
@@ -86,14 +87,20 @@ public class KeyEditorDialog extends JDialog {
 		// Create the table column list, and the buttons
 		// to move columns to/from the selected column list.
 		final JList tabColList = new JList(this.tableColumns);
-		final JButton insertButton = new JButton(Resources.get("insertButton"));
-		final JButton removeButton = new JButton(Resources.get("removeButton"));
+		final JButton insertButton = new JButton(new ImageIcon(Resources
+				.getResourceAsURL("org/biomart/builder/resources/add.gif")));
+		final JButton removeButton = new JButton(new ImageIcon(Resources
+				.getResourceAsURL("org/biomart/builder/resources/remove.gif")));
 
 		// Create the key column list, and the buttons to
 		// move columns to/from the table columns list.
 		final JList keyColList = new JList(this.selectedColumns);
-		final JButton upButton = new JButton(Resources.get("upButton"));
-		final JButton downButton = new JButton(Resources.get("downButton"));
+		final JButton upButton = new JButton(new ImageIcon(Resources
+				.getResourceAsURL("org/biomart/builder/resources/arrowUp.gif")));
+		final JButton downButton = new JButton(
+				new ImageIcon(
+						Resources
+								.getResourceAsURL("org/biomart/builder/resources/arrowDown.gif")));
 
 		// Put the two halves of the dialog side-by-side in a horizontal box.
 		final Box content = Box.createHorizontalBox();

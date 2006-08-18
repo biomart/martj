@@ -22,9 +22,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
-import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
@@ -52,7 +52,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * org.biomart.builder.view.gui.diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.31, 11th August 2006
+ * @version 0.1.32, 18th August 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -80,50 +80,6 @@ public class DataSetContext extends WindowContext {
 			if (contextMenu.getComponentCount() > 0)
 				contextMenu.addSeparator();
 
-			// Option to remove the dataset from the mart.
-			final JMenuItem remove = new JMenuItem(Resources
-					.get("removeDataSetTitle"));
-			remove
-					.setMnemonic(Resources.get("removeDataSetMnemonic").charAt(
-							0));
-			remove.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestRemoveDataSet(
-									DataSetContext.this.getDataSet());
-				}
-			});
-			contextMenu.add(remove);
-
-			// Option to rename the dataset.
-			final JMenuItem rename = new JMenuItem(Resources
-					.get("renameDataSetTitle"));
-			rename
-					.setMnemonic(Resources.get("renameDataSetMnemonic").charAt(
-							0));
-			rename.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestRenameDataSet(
-									DataSetContext.this.getDataSet());
-				}
-			});
-			contextMenu.add(rename);
-
-			// Option to replicate the dataset from the mart.
-			final JMenuItem replicate = new JMenuItem(Resources
-					.get("replicateDataSetTitle"));
-			replicate.setMnemonic(Resources.get("replicateDataSetMnemonic")
-					.charAt(0));
-			replicate.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestReplicateDataSet(
-									DataSetContext.this.getDataSet());
-				}
-			});
-			contextMenu.add(replicate);
-
 			// Add an option to make this dataset invisible.
 			final JCheckBoxMenuItem invisible = new JCheckBoxMenuItem(Resources
 					.get("invisibleDataSetTitle"));
@@ -145,12 +101,40 @@ public class DataSetContext extends WindowContext {
 				invisible.setSelected(true);
 			contextMenu.add(invisible);
 
-			// The optimiser submenu allows the user to choose different
-			// post-construction optimiser types for the dataset.
-			final JMenu optimiserMenu = new JMenu(Resources
-					.get("optimiserTypeTitle"));
-			optimiserMenu.setMnemonic(Resources.get("optimiserTypeMnemonic")
-					.charAt(0));
+			contextMenu.addSeparator();
+
+			// Option to rename the dataset.
+			final JMenuItem rename = new JMenuItem(Resources
+					.get("renameDataSetTitle"));
+			rename
+					.setMnemonic(Resources.get("renameDataSetMnemonic").charAt(
+							0));
+			rename.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestRenameDataSet(
+									DataSetContext.this.getDataSet());
+				}
+			});
+			contextMenu.add(rename);
+
+			// Option to remove the dataset from the mart.
+			final JMenuItem remove = new JMenuItem(Resources
+					.get("removeDataSetTitle"), new ImageIcon(Resources
+					.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
+			remove
+					.setMnemonic(Resources.get("removeDataSetMnemonic").charAt(
+							0));
+			remove.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestRemoveDataSet(
+									DataSetContext.this.getDataSet());
+				}
+			});
+			contextMenu.add(remove);
+
+			contextMenu.addSeparator();
 
 			// Make a group for the different optimiser types.
 			final ButtonGroup optGroup = new ButtonGroup();
@@ -169,7 +153,7 @@ public class DataSetContext extends WindowContext {
 				}
 			});
 			optGroup.add(optNone);
-			optimiserMenu.add(optNone);
+			contextMenu.add(optNone);
 			if (this.getDataSet().getDataSetOptimiserType().equals(
 					DataSetOptimiserType.NONE))
 				optNone.setSelected(true);
@@ -188,7 +172,7 @@ public class DataSetContext extends WindowContext {
 				}
 			});
 			optGroup.add(optCol);
-			optimiserMenu.add(optCol);
+			contextMenu.add(optCol);
 			if (this.getDataSet().getDataSetOptimiserType().equals(
 					DataSetOptimiserType.COLUMN))
 				optCol.setSelected(true);
@@ -207,17 +191,19 @@ public class DataSetContext extends WindowContext {
 				}
 			});
 			optGroup.add(optTbl);
-			optimiserMenu.add(optTbl);
+			contextMenu.add(optTbl);
 			if (this.getDataSet().getDataSetOptimiserType().equals(
 					DataSetOptimiserType.TABLE))
 				optTbl.setSelected(true);
 
-			// Add the optimiser type submenu to the context menu.
-			contextMenu.add(optimiserMenu);
+			contextMenu.addSeparator();
 
 			// Option to create the DDL for the dataset.
-			final JMenuItem saveDDL = new JMenuItem(Resources
-					.get("saveDDLTitle"));
+			final JMenuItem saveDDL = new JMenuItem(
+					Resources.get("saveDDLTitle"),
+					new ImageIcon(
+							Resources
+									.getResourceAsURL("org/biomart/builder/resources/saveText.gif")));
 			saveDDL.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
 			saveDDL.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
@@ -240,8 +226,11 @@ public class DataSetContext extends WindowContext {
 			final DataSetTableType tableType = table.getType();
 
 			// Option to explain how the table was constructed.
-			final JMenuItem explain = new JMenuItem(Resources
-					.get("explainTableTitle"));
+			final JMenuItem explain = new JMenuItem(
+					Resources.get("explainTableTitle"),
+					new ImageIcon(
+							Resources
+									.getResourceAsURL("org/biomart/builder/resources/help.gif")));
 			explain
 					.setMnemonic(Resources.get("explainTableMnemonic")
 							.charAt(0));
@@ -252,6 +241,8 @@ public class DataSetContext extends WindowContext {
 				}
 			});
 			contextMenu.add(explain);
+
+			contextMenu.addSeparator();
 
 			// Rename the table.
 			final JMenuItem rename = new JMenuItem(Resources
@@ -278,30 +269,19 @@ public class DataSetContext extends WindowContext {
 			});
 			contextMenu.add(expression);
 
+			contextMenu.addSeparator();
+
 			// Dimension tables have their own options.
 			if (tableType.equals(DataSetTableType.DIMENSION)) {
-
-				// The dimension can be removed by using this option. This
-				// simply masks the relation that caused the dimension to exist.
-				final JMenuItem removeDM = new JMenuItem(Resources
-						.get("removeDimensionTitle"));
-				removeDM.setMnemonic(Resources.get("removeDimensionMnemonic")
-						.charAt(0));
-				removeDM.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestMaskRelation(
-										DataSetContext.this.getDataSet(),
-										table.getSourceRelation());
-					}
-				});
-				contextMenu.add(removeDM);
 
 				// The dimension can be merged by using this option. This
 				// simply changes the relation cardinality to 1:1. This
 				// affects ALL datasets, not just this one!
-				final JMenuItem mergeDM = new JMenuItem(Resources
-						.get("mergeDimensionTitle"));
+				final JMenuItem mergeDM = new JMenuItem(
+						Resources.get("mergeDimensionTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("org/biomart/builder/resources/collapseAll.gif")));
 				mergeDM.setMnemonic(Resources.get("mergeDimensionMnemonic")
 						.charAt(0));
 				mergeDM.addActionListener(new ActionListener() {
@@ -313,6 +293,25 @@ public class DataSetContext extends WindowContext {
 					}
 				});
 				contextMenu.add(mergeDM);
+
+				// The dimension can be removed by using this option. This
+				// simply masks the relation that caused the dimension to exist.
+				final JMenuItem removeDM = new JMenuItem(
+						Resources.get("removeDimensionTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
+				removeDM.setMnemonic(Resources.get("removeDimensionMnemonic")
+						.charAt(0));
+				removeDM.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestMaskRelation(
+										DataSetContext.this.getDataSet(),
+										table.getSourceRelation());
+					}
+				});
+				contextMenu.add(removeDM);
 			}
 
 			// Subclass tables have their own options too.
@@ -320,8 +319,11 @@ public class DataSetContext extends WindowContext {
 
 				// The subclass table can be removed by using this option. This
 				// simply masks the relation that caused the subclass to exist.
-				final JMenuItem unsubclass = new JMenuItem(Resources
-						.get("removeSubclassTitle"));
+				final JMenuItem unsubclass = new JMenuItem(
+						Resources.get("removeSubclassTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("org/biomart/builder/resources/collapseAll.gif")));
 				unsubclass.setMnemonic(Resources.get("removeSubclassMnemonic")
 						.charAt(0));
 				unsubclass.addActionListener(new ActionListener() {
@@ -388,6 +390,8 @@ public class DataSetContext extends WindowContext {
 			});
 			contextMenu.add(rename);
 
+			contextMenu.addSeparator();
+
 			// Mask the column.
 			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
 					.get("maskColumnTitle"));
@@ -409,22 +413,18 @@ public class DataSetContext extends WindowContext {
 			contextMenu.add(mask);
 			mask.setSelected(column.getMasked());
 
-			// Which column is it? And is it already partitioned?
-			final boolean isPartitioned = column.getPartitionType() != null;
+			contextMenu.addSeparator();
 
 			// If it is partitioned, make a submenu to change the partition
 			// type.
-			if (isPartitioned) {
-
-				// Set up the partitioning submenu.
-				final JMenu partitionSubmenu = new JMenu(Resources
-						.get("partitionColumnSMTitle"));
-				partitionSubmenu.setMnemonic(Resources.get(
-						"partitionColumnSMMnemonic").charAt(0));
+			if (column.getPartitionType() != null) {
 
 				// The option to change the partition type.
-				final JMenuItem changepartition = new JMenuItem(Resources
-						.get("changePartitionColumnTitle"));
+				final JMenuItem changepartition = new JMenuItem(
+						Resources.get("changePartitionColumnTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("org/biomart/builder/resources/expandAll.gif")));
 				changepartition.setMnemonic(Resources.get(
 						"changePartitionColumnMnemonic").charAt(0));
 				changepartition.addActionListener(new ActionListener() {
@@ -435,25 +435,8 @@ public class DataSetContext extends WindowContext {
 										column);
 					}
 				});
-				partitionSubmenu.add(changepartition);
+				contextMenu.add(changepartition);
 
-				// The option to turn off partitioning.
-				final JMenuItem unpartition = new JMenuItem(Resources
-						.get("unpartitionColumnTitle"));
-				unpartition.setMnemonic(Resources.get(
-						"unpartitionColumnMnemonic").charAt(0));
-				unpartition.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestUnpartitionByColumn(
-										DataSetContext.this.getDataSet(),
-										column);
-					}
-				});
-				partitionSubmenu.add(unpartition);
-
-				// Add the submenu to the context menu.
-				contextMenu.add(partitionSubmenu);
 			}
 
 			// If it is not partitioned, allow the user to turn partitioning
@@ -461,8 +444,11 @@ public class DataSetContext extends WindowContext {
 			else {
 
 				// Option to enable partitioning.
-				final JMenuItem partition = new JMenuItem(Resources
-						.get("partitionColumnTitle"));
+				final JMenuItem partition = new JMenuItem(
+						Resources.get("partitionColumnTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("org/biomart/builder/resources/expandAll.gif")));
 				partition.setMnemonic(Resources.get("partitionColumnMnemonic")
 						.charAt(0));
 				partition.addActionListener(new ActionListener() {
@@ -476,8 +462,26 @@ public class DataSetContext extends WindowContext {
 				contextMenu.add(partition);
 			}
 
+			// The option to turn off partitioning.
+			final JMenuItem unpartition = new JMenuItem(Resources
+					.get("unpartitionColumnTitle"));
+			unpartition.setMnemonic(Resources.get("unpartitionColumnMnemonic")
+					.charAt(0));
+			unpartition.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestUnpartitionByColumn(
+									DataSetContext.this.getDataSet(), column);
+				}
+			});
+			contextMenu.add(unpartition);
+			if (column.getPartitionType() == null)
+				unpartition.setEnabled(false);
+
 			// Else, if it's an expression column...
 			if (column instanceof ExpressionColumn) {
+
+				contextMenu.addSeparator();
 
 				// Option to modify column.
 				final JMenuItem modify = new JMenuItem(Resources
@@ -565,7 +569,7 @@ public class DataSetContext extends WindowContext {
 
 			// Magenta EXPRESSION columns.
 			if (column instanceof InheritedColumn)
-					component.setForeground(ColumnComponent.INHERITED_COLOUR);
+				component.setForeground(ColumnComponent.INHERITED_COLOUR);
 
 			// Fade out all MASKED columns.
 			else if (column.getMasked())

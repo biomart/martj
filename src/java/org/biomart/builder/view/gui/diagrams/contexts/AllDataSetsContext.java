@@ -21,6 +21,7 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -76,7 +77,8 @@ public class AllDataSetsContext implements DiagramContext {
 
 			// Option to remove all datasets from the mart.
 			final JMenuItem remove = new JMenuItem(Resources
-					.get("removeAllDataSetsTitle"));
+					.get("removeAllDataSetsTitle"), new ImageIcon(Resources
+					.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
 			remove.setMnemonic(Resources.get("removeAllDataSetsMnemonic")
 					.charAt(0));
 			remove.addActionListener(new ActionListener() {
@@ -99,47 +101,6 @@ public class AllDataSetsContext implements DiagramContext {
 			// What schema is this?
 			final DataSet dataset = (DataSet) object;
 
-			// Option to remove the dataset from the mart.
-			final JMenuItem remove = new JMenuItem(Resources
-					.get("removeDataSetTitle"));
-			remove
-					.setMnemonic(Resources.get("removeDataSetMnemonic").charAt(
-							0));
-			remove.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					AllDataSetsContext.this.martTab.getDataSetTabSet()
-							.requestRemoveDataSet(dataset);
-				}
-			});
-			contextMenu.add(remove);
-
-			// Add an option to rename this dataset.
-			final JMenuItem rename = new JMenuItem(Resources
-					.get("renameDataSetTitle"));
-			rename
-					.setMnemonic(Resources.get("renameDataSetMnemonic").charAt(
-							0));
-			rename.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					AllDataSetsContext.this.martTab.getDataSetTabSet()
-							.requestRenameDataSet(dataset);
-				}
-			});
-			contextMenu.add(rename);
-
-			// Add an option to replicate this dataset.
-			final JMenuItem replicate = new JMenuItem(Resources
-					.get("replicateDataSetTitle"));
-			replicate.setMnemonic(Resources.get("replicateDataSetMnemonic")
-					.charAt(0));
-			replicate.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					AllDataSetsContext.this.martTab.getDataSetTabSet()
-							.requestReplicateDataSet(dataset);
-				}
-			});
-			contextMenu.add(replicate);
-
 			// Add an option to make this dataset invisible.
 			final JCheckBoxMenuItem invisible = new JCheckBoxMenuItem(Resources
 					.get("invisibleDataSetTitle"));
@@ -159,9 +120,45 @@ public class AllDataSetsContext implements DiagramContext {
 				invisible.setSelected(true);
 			contextMenu.add(invisible);
 
+			contextMenu.addSeparator();
+
+			// Add an option to rename this dataset.
+			final JMenuItem rename = new JMenuItem(Resources
+					.get("renameDataSetTitle"));
+			rename
+					.setMnemonic(Resources.get("renameDataSetMnemonic").charAt(
+							0));
+			rename.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					AllDataSetsContext.this.martTab.getDataSetTabSet()
+							.requestRenameDataSet(dataset);
+				}
+			});
+			contextMenu.add(rename);
+
+			// Option to remove the dataset from the mart.
+			final JMenuItem remove = new JMenuItem(Resources
+					.get("removeDataSetTitle"), new ImageIcon(Resources
+					.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
+			remove
+					.setMnemonic(Resources.get("removeDataSetMnemonic").charAt(
+							0));
+			remove.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					AllDataSetsContext.this.martTab.getDataSetTabSet()
+							.requestRemoveDataSet(dataset);
+				}
+			});
+			contextMenu.add(remove);
+
+			contextMenu.addSeparator();
+
 			// Option to create the DDL for the dataset.
-			final JMenuItem saveDDL = new JMenuItem(Resources
-					.get("saveDDLTitle"));
+			final JMenuItem saveDDL = new JMenuItem(
+					Resources.get("saveDDLTitle"),
+					new ImageIcon(
+							Resources
+									.getResourceAsURL("org/biomart/builder/resources/saveText.gif")));
 			saveDDL.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
 			saveDDL.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {

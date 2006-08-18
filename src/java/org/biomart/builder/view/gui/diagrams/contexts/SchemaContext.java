@@ -24,6 +24,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -50,7 +51,7 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
  * dataset onto a set of masked relations.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.28, 9th August 2006
+ * @version 0.1.29, 18th August 2006
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
@@ -102,8 +103,11 @@ public class SchemaContext implements DiagramContext {
 				contextMenu.addSeparator();
 
 			// Synchronise all schemas in the mart.
-			final JMenuItem syncAll = new JMenuItem(Resources
-					.get("synchroniseAllSchemasTitle"));
+			final JMenuItem syncAll = new JMenuItem(
+					Resources.get("synchroniseAllSchemasTitle"),
+					new ImageIcon(
+							Resources
+									.getResourceAsURL("org/biomart/builder/resources/refresh.gif")));
 			syncAll.setMnemonic(Resources.get("synchroniseAllSchemasMnemonic")
 					.charAt(0));
 			syncAll.addActionListener(new ActionListener() {
@@ -114,8 +118,14 @@ public class SchemaContext implements DiagramContext {
 			});
 			contextMenu.add(syncAll);
 
+			contextMenu.addSeparator();
+
 			// Add a new schema to the mart.
-			final JMenuItem add = new JMenuItem(Resources.get("addSchemaTitle"));
+			final JMenuItem add = new JMenuItem(
+					Resources.get("addSchemaTitle"),
+					new ImageIcon(
+							Resources
+									.getResourceAsURL("org/biomart/builder/resources/add.gif")));
 			add.setMnemonic(Resources.get("addSchemaMnemonic").charAt(0));
 			add.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
@@ -124,6 +134,8 @@ public class SchemaContext implements DiagramContext {
 				}
 			});
 			contextMenu.add(add);
+
+			contextMenu.addSeparator();
 
 			// Menu option to suggest a bunch of datasets.
 			final JMenuItem suggest = new JMenuItem(Resources
@@ -148,6 +160,21 @@ public class SchemaContext implements DiagramContext {
 
 			// Work out what table we are using.
 			final Table table = (Table) object;
+
+			// Show the first 10 rows on a table.
+			final JMenuItem showTen = new JMenuItem(Resources
+					.get("showFirstTenRowsTitle"));
+			showTen.setMnemonic(Resources.get("showFirstTenRowsMnemonic")
+					.charAt(0));
+			showTen.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaContext.this.getMartTab().getSchemaTabSet()
+							.requestShowRows(table, 0, 10);
+				}
+			});
+			contextMenu.add(showTen);
+
+			contextMenu.addSeparator();
 
 			// Menu option to suggest a bunch of datasets based around that
 			// table.
@@ -192,19 +219,6 @@ public class SchemaContext implements DiagramContext {
 				}
 			});
 			contextMenu.add(fk);
-
-			// Show the first 10 rows on a table.
-			final JMenuItem showTen = new JMenuItem(Resources
-					.get("showFirstTenRowsTitle"));
-			showTen.setMnemonic(Resources.get("showFirstTenRowsMnemonic")
-					.charAt(0));
-			showTen.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.getMartTab().getSchemaTabSet()
-							.requestShowRows(table, 0, 10);
-				}
-			});
-			contextMenu.add(showTen);
 		}
 
 		// Schema objects have different menus to the background.
@@ -216,6 +230,23 @@ public class SchemaContext implements DiagramContext {
 
 			// What schema is this?
 			final Schema schema = (Schema) object;
+
+			// Add an option to synchronise this schema against it's datasource
+			// or database.
+			final JMenuItem sync = new JMenuItem(
+					Resources.get("synchroniseSchemaTitle"),
+					new ImageIcon(
+							Resources
+									.getResourceAsURL("org/biomart/builder/resources/refresh.gif")));
+			sync.setMnemonic(Resources.get("synchroniseSchemaMnemonic").charAt(
+					0));
+			sync.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaContext.this.martTab.getSchemaTabSet()
+							.requestSynchroniseSchema(schema);
+				}
+			});
+			contextMenu.add(sync);
 
 			// Add a checkbox menu item to turn keyguessing on/off.
 			final JCheckBoxMenuItem keyguess = new JCheckBoxMenuItem(Resources
@@ -236,6 +267,8 @@ public class SchemaContext implements DiagramContext {
 			if (schema.getKeyGuessing())
 				keyguess.setSelected(true);
 
+			contextMenu.addSeparator();
+
 			// Add an option to rename this schema.
 			final JMenuItem rename = new JMenuItem(Resources
 					.get("renameSchemaTitle"));
@@ -247,20 +280,6 @@ public class SchemaContext implements DiagramContext {
 				}
 			});
 			contextMenu.add(rename);
-
-			// Add an option to synchronise this schema against it's datasource
-			// or database.
-			final JMenuItem sync = new JMenuItem(Resources
-					.get("synchroniseSchemaTitle"));
-			sync.setMnemonic(Resources.get("synchroniseSchemaMnemonic").charAt(
-					0));
-			sync.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestSynchroniseSchema(schema);
-				}
-			});
-			contextMenu.add(sync);
 
 			// If this schema is NOT a schema group, there are more options!
 			if (!(schema instanceof SchemaGroup)) {
@@ -291,8 +310,11 @@ public class SchemaContext implements DiagramContext {
 				contextMenu.add(test);
 
 				// Option to remove the schema from the mart.
-				final JMenuItem remove = new JMenuItem(Resources
-						.get("removeSchemaTitle"));
+				final JMenuItem remove = new JMenuItem(
+						Resources.get("removeSchemaTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
 				remove.setMnemonic(Resources.get("removeSchemaMnemonic")
 						.charAt(0));
 				remove.addActionListener(new ActionListener() {
@@ -302,6 +324,8 @@ public class SchemaContext implements DiagramContext {
 					}
 				});
 				contextMenu.add(remove);
+
+				contextMenu.addSeparator();
 
 				// Option to replicate the schema.
 				final JMenuItem replicate = new JMenuItem(Resources
@@ -316,6 +340,8 @@ public class SchemaContext implements DiagramContext {
 				});
 				contextMenu.add(replicate);
 
+				contextMenu.addSeparator();
+
 				// Option to add the schema to a schema group.
 				final JMenuItem addToGroup = new JMenuItem(Resources
 						.get("addToGroupTitle"));
@@ -328,6 +354,8 @@ public class SchemaContext implements DiagramContext {
 					}
 				});
 				contextMenu.add(addToGroup);
+
+				contextMenu.addSeparator();
 
 				// Menu option to suggest a bunch of datasets.
 				final JMenuItem suggest = new JMenuItem(Resources
@@ -463,7 +491,8 @@ public class SchemaContext implements DiagramContext {
 
 			// Remove the relation from the schema, but only if handmade.
 			final JMenuItem remove = new JMenuItem(Resources
-					.get("removeRelationTitle"));
+					.get("removeRelationTitle"), new ImageIcon(Resources
+					.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
 			remove.setMnemonic(Resources.get("removeRelationMnemonic")
 					.charAt(0));
 			remove.addActionListener(new ActionListener() {
@@ -503,20 +532,20 @@ public class SchemaContext implements DiagramContext {
 			});
 			contextMenu.add(editkey);
 
-			// Option to establish a relation between this key and another.
-			final JMenuItem createrel = new JMenuItem(Resources
-					.get("createRelationTitle"));
-			createrel.setMnemonic(Resources.get("createRelationMnemonic")
-					.charAt(0));
-			createrel.addActionListener(new ActionListener() {
+			// Remove the key from the table, but only if handmade.
+			final JMenuItem remove = new JMenuItem(Resources
+					.get("removeKeyTitle"), new ImageIcon(Resources
+					.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
+			remove.setMnemonic(Resources.get("removeKeyMnemonic").charAt(0));
+			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestCreateRelation(key);
+							.requestRemoveKey(key);
 				}
 			});
-			contextMenu.add(createrel);
-			if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
-				createrel.setEnabled(false);
+			contextMenu.add(remove);
+			if (!key.getStatus().equals(ComponentStatus.HANDMADE))
+				remove.setEnabled(false);
 
 			// Separator.
 			contextMenu.addSeparator();
@@ -564,19 +593,20 @@ public class SchemaContext implements DiagramContext {
 			// Separator
 			contextMenu.addSeparator();
 
-			// Remove the key from the table, but only if handmade.
-			final JMenuItem remove = new JMenuItem(Resources
-					.get("removeKeyTitle"));
-			remove.setMnemonic(Resources.get("removeKeyMnemonic").charAt(0));
-			remove.addActionListener(new ActionListener() {
+			// Option to establish a relation between this key and another.
+			final JMenuItem createrel = new JMenuItem(Resources
+					.get("createRelationTitle"));
+			createrel.setMnemonic(Resources.get("createRelationMnemonic")
+					.charAt(0));
+			createrel.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestRemoveKey(key);
+							.requestCreateRelation(key);
 				}
 			});
-			contextMenu.add(remove);
-			if (!key.getStatus().equals(ComponentStatus.HANDMADE))
-				remove.setEnabled(false);
+			contextMenu.add(createrel);
+			if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
+				createrel.setEnabled(false);
 		}
 
 		// Columns too, finally.

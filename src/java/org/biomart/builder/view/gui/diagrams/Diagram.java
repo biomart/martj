@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -65,7 +66,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * what those items should be.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.27, 9th August 2006
+ * @version 0.1.28, 18th August 2006
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {
@@ -296,19 +297,14 @@ public abstract class Diagram extends JPanel {
 		});
 		contextMenu.add(find);
 
-		// Add an item that allows the user to print this diagram.
-		final JMenuItem print = new JMenuItem(Resources
-				.get("printDiagramTitle"));
-		print.setMnemonic(Resources.get("printDiagramMnemonic").charAt(0));
-		print.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				Diagram.this.printDiagram();
-			}
-		});
-		contextMenu.add(print);
+		contextMenu.addSeparator();
 
 		// Add an item that allows the user to save this diagram as an image.
-		final JMenuItem save = new JMenuItem(Resources.get("saveDiagramTitle"));
+		final JMenuItem save = new JMenuItem(
+				Resources.get("saveDiagramTitle"),
+				new ImageIcon(
+						Resources
+								.getResourceAsURL("org/biomart/builder/resources/save.gif")));
 		save.setMnemonic(Resources.get("saveDiagramMnemonic").charAt(0));
 		save.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
@@ -316,6 +312,18 @@ public abstract class Diagram extends JPanel {
 			}
 		});
 		contextMenu.add(save);
+
+		// Add an item that allows the user to print this diagram.
+		final JMenuItem print = new JMenuItem(Resources
+				.get("printDiagramTitle"), new ImageIcon(Resources
+				.getResourceAsURL("org/biomart/builder/resources/print.gif")));
+		print.setMnemonic(Resources.get("printDiagramMnemonic").charAt(0));
+		print.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				Diagram.this.printDiagram();
+			}
+		});
+		contextMenu.add(print);
 
 		// Return the completed context menu.
 		return contextMenu;

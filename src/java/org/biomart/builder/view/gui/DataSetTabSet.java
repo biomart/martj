@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -1779,7 +1780,8 @@ public class DataSetTabSet extends JTabbedPane {
 
 		// This item allows the user to remove the dataset from the mart.
 		final JMenuItem close = new JMenuItem(Resources
-				.get("removeDataSetTitle"));
+				.get("removeDataSetTitle"), new ImageIcon(Resources
+				.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
 		close.setMnemonic(Resources.get("removeDataSetMnemonic").charAt(0));
 		close.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
