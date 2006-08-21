@@ -111,9 +111,22 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             	  			}
             	  			config.setTemplate(template);
             	  	
-							int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateCount(template);
-							if (templateCount > 0)			            	  	
-								config = MartEditor.getDatabaseDatasetConfigUtils().updateConfigToTemplate(config,0);
+							DatasetConfigAttributesTable attrTable = new DatasetConfigAttributesTable(
+										config, this);
+							tree = new DatasetConfigTree(config,
+										this, attrTable);
+							export();
+							
+							// THEN JUST OPEN UP TEMPLATE DOC
+							config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","");
+							MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(config,
+								MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template));
+							config.setTemplateFlag("1");
+            	  	
+            	  	
+							//int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateCount(template);
+							//if (templateCount > 0)			            	  	
+							//	config = MartEditor.getDatabaseDatasetConfigUtils().updateConfigToTemplate(config,0);
             	  		}
             		}
             		else{//Importing config
@@ -126,7 +139,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             				config.setTemplateFlag("1");	
             			}	
             			else{
-      					//              ignore cache, do not loadFully, include hidden members
+      					    // have an individual config without a template - generate template
 					  		DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, "", true, false, true);
 					  		DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 					  		while (configs.hasNext()){
@@ -136,6 +149,57 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 					    			break;
 								}
 					  		}
+					  		
+					  		System.out.println("GOT IMPORTED CONFIG WITH TEMPLATE "+config.getTemplate());
+					  		
+							// convert config to latest version using xslt - ? whether to do
+							config = MartEditor.getDatabaseDatasetConfigUtils().getXSLTransformedConfig(config);
+							
+							// CHOOSE A TEMPLATE AS FOR NAIVE GENERATION
+							
+							template = dataset;
+      
+							String[] templates = new String[MartEditor.getDatabaseDatasetConfigUtils().getAllTemplateNames().length + 1];
+							templates[0] = dataset;	
+							String[] tNames = MartEditor.getDatabaseDatasetConfigUtils().getAllTemplateNames();
+							for (int i = 0; i < tNames.length; i++){
+							  templates[i+1] = tNames[i];
+							}
+							if(templates.length!=0){
+      
+							   template =
+							  (String) JOptionPane.showInputDialog(
+								null,
+								"Choose one",
+								"Template",
+								JOptionPane.INFORMATION_MESSAGE,
+								null,
+								templates,
+								templates[0]);
+							if (template == null)
+							  return;
+							}
+							
+							//System.out.println("HAVE AN UNTEMPLATED CONFIG AND NOW HAVE CHOSEN TO USE TEMPLATE "+template+" FOR IT");
+							
+							//int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateCount(template);
+							//System.out.println("TEMPLATE COUNT IS "+templateCount);
+							
+							// ? JUST CALLING STORE DATASET CONFIGURATION - SHOULD GENERATE AND STORE
+							
+							config.setTemplate(template);
+							DatasetConfigAttributesTable attrTable = new DatasetConfigAttributesTable(
+										config, this);
+							tree = new DatasetConfigTree(config,
+										this, attrTable);
+							export();
+							
+//							THEN JUST OPEN UP TEMPLATE DOC
+							config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","");
+							MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(config,
+								MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template));
+							config.setTemplateFlag("1");	
+														
             			}
             		}
             	} 
@@ -156,7 +220,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
           	}
         
         	// convert config to latest version using xslt
-        	config = MartEditor.getDatabaseDatasetConfigUtils().getUpdatedConfig(config);
+        	config = MartEditor.getDatabaseDatasetConfigUtils().getXSLTransformedConfig(config);
         
 			this.setTitle(schema + "." + config.getDataset());
             JFrame.setDefaultLookAndFeelDecorated(true);
@@ -186,6 +250,9 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 
             //...Then set the window size or call pack...
             setSize(800, 400);
+            
+            
+            // SHOULD BE ABLE TO GET RID OF BELOW
 			int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateCount(config.getTemplate());
 			if (template == null && templateCount > 1){// flag non-template XMLs with a template origin
 			

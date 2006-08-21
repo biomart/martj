@@ -34,12 +34,16 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.prefs.Preferences;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Hashtable;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Enumeration;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDesktopPane;
@@ -53,6 +57,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JToolBar;
 import javax.swing.UIManager;
 
+import org.apache.xalan.processor.StopParseException;
 import org.ensembl.mart.explorer.Feedback;
 import org.ensembl.mart.guiutils.DatabaseSettingsDialog;
 import org.ensembl.mart.lib.DetailedDataSource;
@@ -321,60 +326,59 @@ System.out.println ("getting driver "+ driver);
 
     menuItem = new JMenuItem("Import ");
     menuItem.addActionListener(menuActionListener);
-    //menuItem.setMnemonic(KeyEvent.VK_I);
     menu.add(menuItem);
 
     menuItem = new JMenuItem("Export ");
     menuItem.addActionListener(menuActionListener);
-    //menuItem.setMnemonic(KeyEvent.VK_I);
     menu.add(menuItem);
 
     menuItem = new JMenuItem("Delete ");
     menuItem.addActionListener(menuActionListener);
-    //menuItem.setMnemonic(KeyEvent.VK_I);
     menu.add(menuItem);
 
     menuItem = new JMenuItem("Naive ");
     menuItem.addActionListener(menuActionListener);
-    //menuItem.setMnemonic(KeyEvent.VK_M);
     menu.add(menuItem);
 
-    menuItem = new JMenuItem("Update ");
+	menuItem = new JMenuItem("Update ");
     menuItem.addActionListener(menuActionListener);
-    //menuItem.setMnemonic(KeyEvent.VK_I);
     menu.add(menuItem);
     
-	menuItem = new JMenuItem("Validate ");
-	menuItem.addActionListener(menuActionListener);
-	//menuItem.setMnemonic(KeyEvent.VK_I);
-	menu.add(menuItem);
+//	menuItem = new JMenuItem("Validate ");
+//	menuItem.addActionListener(menuActionListener);
+//	//menuItem.setMnemonic(KeyEvent.VK_I);
+//	menu.add(menuItem);
 
 	menu.addSeparator();
 
-	menuItem = new JMenuItem("Import Template");
-	menuItem.addActionListener(menuActionListener);
-	//menuItem.setMnemonic(KeyEvent.VK_I);
-	menu.add(menuItem);
+//	menuItem = new JMenuItem("Import Config");
+//	menuItem.addActionListener(menuActionListener);
+//	menu.add(menuItem);
 
-	menuItem = new JMenuItem("Export Template");
-	menuItem.addActionListener(menuActionListener);
+	//menuItem = new JMenuItem("Import Template");
+	//menuItem.addActionListener(menuActionListener);
 	//menuItem.setMnemonic(KeyEvent.VK_I);
-	menu.add(menuItem);
+	//menu.add(menuItem);
 
-    menu.addSeparator();
-	menuItem = new JMenuItem("Update All");
-	menuItem.addActionListener(menuActionListener);
-	menu.add(menuItem);
-	menuItem = new JMenuItem("Validate All");
+//	menuItem = new JMenuItem("Export Template");
+//	menuItem.addActionListener(menuActionListener);
+	//menuItem.setMnemonic(KeyEvent.VK_I);
+//	menu.add(menuItem);
+
+//    menu.addSeparator();
+//	menuItem = new JMenuItem("Update All");
+//	menuItem.addActionListener(menuActionListener);
+//	menu.add(menuItem);
+//	menuItem = new JMenuItem("Validate All");
+//	menuItem.addActionListener(menuActionListener);
+//	menu.add(menuItem);	
+	menuItem = new JMenuItem("Save Configuration");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);	
-	menuItem = new JMenuItem("Save All");
+	menuItem = new JMenuItem("Upload Configuration");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);	
-	menuItem = new JMenuItem("Upload All");
-	menuItem.addActionListener(menuActionListener);
-	menu.add(menuItem);	
-	menuItem = new JMenuItem("Move All");
+	menuItem = new JMenuItem("Move Configuration");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);		
 	menu.addSeparator();
@@ -388,22 +392,22 @@ System.out.println ("getting driver "+ driver);
     //menuItem.getAccessibleContext().setAccessibleDescription("Creates a new file");
     //menu.add(menuItem);
 
-    icon = createImageIcon(IMAGE_DIR + "open.gif");
-    menuItem = new JMenuItem("Open", icon);
-    menuItem.addActionListener(menuActionListener);
+    //icon = createImageIcon(IMAGE_DIR + "open.gif");
+    //menuItem = new JMenuItem("Open", icon);
+    //menuItem.addActionListener(menuActionListener);
     //menuItem.setMnemonic(KeyEvent.VK_O);
-    menu.add(menuItem);
+    //menu.add(menuItem);
 
-    icon = createImageIcon(IMAGE_DIR + "save.gif");
-    menuItem = new JMenuItem("Save", icon);
-    menuItem.addActionListener(menuActionListener);
+    //icon = createImageIcon(IMAGE_DIR + "save.gif");
+    //menuItem = new JMenuItem("Save", icon);
+    //menuItem.addActionListener(menuActionListener);
     //menuItem.setMnemonic(KeyEvent.VK_S);
-    menu.add(menuItem);
+    //menu.add(menuItem);
 
-    menuItem = new JMenuItem("Save as");
-    menuItem.addActionListener(menuActionListener);
+    //menuItem = new JMenuItem("Save as");
+    //menuItem.addActionListener(menuActionListener);
     //menuItem.setMnemonic(KeyEvent.VK_A);
-    menu.add(menuItem);
+    //menu.add(menuItem);
 
     //a group of radio button menu items
     //menu.addSeparator();
@@ -582,44 +586,46 @@ System.out.println ("getting driver "+ driver);
         delete();
       else if (e.getActionCommand().startsWith("New"))
         newDatasetConfig();
-      else if (e.getActionCommand().startsWith("Open"))
-        openDatasetConfig();
+      //else if (e.getActionCommand().startsWith("Open"))
+      //  openDatasetConfig();
       else if (e.getActionCommand().equals("Exit"))
         exit();
-      else if (e.getActionCommand().equals("Save"))
-        save();
-      else if (e.getActionCommand().equals("Save as"))
-        save_as();
+      //else if (e.getActionCommand().equals("Save"))
+      //  save();
+      //else if (e.getActionCommand().equals("Save as"))
+      //  save_as();
       else if (e.getActionCommand().startsWith("Undo"))
         undo();
       else if (e.getActionCommand().startsWith("Redo"))
         redo();
       else if (e.getActionCommand().startsWith("Database"))
         databaseConnection("");
-	  else if (e.getActionCommand().startsWith("Import Template"))
-		importTemplate(); 
-      else if (e.getActionCommand().startsWith("Import"))
-        importDatasetConfig();
-	  else if (e.getActionCommand().startsWith("Export Template"))
+	  //else if (e.getActionCommand().startsWith("Import Template")){
+		//importTemplate(); DISABLED
+	  else if (e.getActionCommand().startsWith("Import"))
+	  	importConfig();	 
+//      else if (e.getActionCommand().startsWith("Import"))
+//        importDatasetConfig(); 
+	  else if (e.getActionCommand().startsWith("Export"))
 		exportTemplate();  
-      else if (e.getActionCommand().startsWith("Export"))
-        exportDatasetConfig();
+      //else if (e.getActionCommand().startsWith("Export"))
+      //  exportDatasetConfig();
       else if (e.getActionCommand().startsWith("Naive"))
         naiveDatasetConfig();
-	  else if (e.getActionCommand().startsWith("Update All"))
+	  else if (e.getActionCommand().startsWith("Update"))
 		updateAll();
-	  else if (e.getActionCommand().startsWith("Validate All"))
-		  validateAll();		
-	  else if (e.getActionCommand().startsWith("Move All"))
+//	  else if (e.getActionCommand().startsWith("Validate All"))
+//		  validateAll();		
+	  else if (e.getActionCommand().startsWith("Move Configuration"))
 		  moveAll();		
-	  else if (e.getActionCommand().startsWith("Save All"))
+	  else if (e.getActionCommand().startsWith("Save Configuration"))
 		  saveAll();	
-	  else if (e.getActionCommand().startsWith("Upload All"))
+	  else if (e.getActionCommand().startsWith("Upload Configuration"))
 			uploadAll();			  	
-      else if (e.getActionCommand().startsWith("Update"))
-        updateDatasetConfig();
-	  else if (e.getActionCommand().startsWith("Validate"))
-		  validateDatasetConfig();  
+//      else if (e.getActionCommand().startsWith("Update"))
+//        updateDatasetConfig();
+//	  else if (e.getActionCommand().startsWith("Validate"))
+//		  validateDatasetConfig();  
       else if (e.getActionCommand().startsWith("Delete"))
         deleteDatasetConfig();
       else if (e.getActionCommand().startsWith("hide"))
@@ -778,7 +784,7 @@ System.out.println ("getting driver "+ driver);
   }
 
 
-
+/*
   public void openDatasetConfig() {
 
     XMLFileFilter filter = new XMLFileFilter();
@@ -795,8 +801,9 @@ System.out.println ("getting driver "+ driver);
     }
 
   }
+*/
 
-
+/*
   public void importTemplate() {
 	try {
 	  if (ds == null) {
@@ -847,9 +854,86 @@ System.out.println ("getting driver "+ driver);
 	  enableCursor();
 	}
   }
+*/
 
+  public void importConfig() {
+	try {
+	  if (ds == null) {
+		JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+		return;
+	  }
 
+	  disableCursor();
 
+	  HashMap importOptions = dbutils.getImportOptions();
+	  SortedSet names = new TreeSet(importOptions.keySet());
+	  String[] options = new String[names.size()];
+	  names.toArray(options);
+	  
+	  if (options.length == 0){
+		JOptionPane.showMessageDialog(this, "No dataset configurations in this database", "ERROR", 0);
+				return;
+	  }
+	  String option =
+		(String) JOptionPane.showInputDialog(
+		  null,
+		  "Choose one",
+		  "Dataset config",
+		  JOptionPane.INFORMATION_MESSAGE,
+		  null,
+		  options,
+		  options[0]);
+
+	  if (option == null)
+		return;
+
+	  DatasetConfigTreeWidget frame = null;
+	  if (importOptions.get(option).equals("0")){
+	  		//don't have a template yet so generate one from the datasetconfig
+	  		System.out.println("DEALING WITH NON-TEMPLATED CONFIG "+option);
+
+			String[] datasetIDs = dbutils.getAllDatasetIDsForDataset(user,option);
+			String datasetID;
+			if (datasetIDs.length == 1)
+		  		datasetID = datasetIDs[0];
+			else {
+		  		datasetID =
+				(String) JOptionPane.showInputDialog(
+			  		null,
+			  		"Choose one",
+			  		"Dataset ID",
+			  		JOptionPane.INFORMATION_MESSAGE,
+			  		null,
+			  		datasetIDs,
+			  		datasetIDs[0]);
+			}
+
+			if (datasetID == null)
+		  		return;
+	
+			frame = new DatasetConfigTreeWidget(null, this, null, user, option, datasetID, 
+		  		databaseDialog.getSchema(),null);
+	  }
+	  else{	
+	      frame = new DatasetConfigTreeWidget(null, this, null, user, null, null, databaseDialog.getSchema(), option);
+	  }
+	      
+	  frame.setVisible(true);
+	  desktop.add(frame);
+	  try {
+		frame.setSelected(true);
+	  }
+	  catch (java.beans.PropertyVetoException e) {
+	  }
+	} catch (ConfigurationException e) {
+	  JOptionPane.showMessageDialog(this, "No datasets available for import - is this a BioMart compatible schema? Missing  meta_configuration tables?" +
+			" Empty meta_configuration tables?", "ERROR", 0);
+	} finally {
+	  enableCursor();
+	}
+  }
+
+/*
   public void importDatasetConfig() {
     try {
       if (ds == null) {
@@ -877,7 +961,7 @@ System.out.println ("getting driver "+ driver);
       if (dataset == null)
         return;
 
-	String[] datasetIDs = dbutils.getAllDatasetIDsForDataset(user,dataset);
+	  String[] datasetIDs = dbutils.getAllDatasetIDsForDataset(user,dataset);
 	  String datasetID;
 	  if (datasetIDs.length == 1)
 		datasetID = datasetIDs[0];
@@ -912,6 +996,7 @@ System.out.println ("getting driver "+ driver);
       enableCursor();
     }
   }
+*/
 
   public void exportTemplate() {
 	if (ds == null) {
@@ -933,7 +1018,7 @@ System.out.println ("getting driver "+ driver);
 	}
   }
 
-
+/*
   public void exportDatasetConfig() {
     if (ds == null) {
       JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
@@ -975,6 +1060,7 @@ System.out.println ("getting driver "+ driver);
       enableCursor();
     }
   }
+*/
 
   public void naiveDatasetConfig(){
     if (ds == null) {
@@ -1099,7 +1185,22 @@ System.out.println ("getting driver "+ driver);
 					}
 				  				
 				}	
-			  } 
+			  }
+			  
+			  // cycle through all templates for the database
+			  String[] templates = dbutils.getAllTemplateNames();
+			  for (int i = 0; i < templates.length; i++){
+				String template = templates[i];
+				DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","");
+				dscutils.loadDatasetConfigWithDocument(odsv,dbutils.getTemplateDocument(template));
+				try {
+						File newFile = new File(fc.getSelectedFile().getPath() + "/" + odsv.getDataset() + ".template.xml");
+						URLDSConfigAdaptor.StoreDatasetConfig(odsv, newFile);
+							setFileChooserPath(fc.getSelectedFile());
+				} catch (Exception e) {
+							e.printStackTrace();
+				}	
+			  }
 			} catch (Exception e) {
 			  e.printStackTrace();
 			}
@@ -1141,28 +1242,55 @@ System.out.println ("getting driver "+ driver);
 			     // cycle through all dataset files	
 			     File[] files = fc.getSelectedFiles();
 				 dbutils.dropMetaTables(); 
+				
+				 // have to upload templates first
+				 for (int i = 0; i < files.length; i++){
+					file = files[i];
+				  			  
+	   			    URL url = file.toURL();
+					//System.out.println(file.getName());
+				  
+	  			    if (file.getName().endsWith(".template.xml")){
+						System.out.println("!!!UPLOAD TEMPLATE XML "+file.getName());
+						DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
+						DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
+						//DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","");
+						//dscutils.loadDatasetConfigWithDocument(odsv,dbutils.getTemplateDocument(template));
+						dbutils.storeTemplateXML(odsv,odsv.getTemplate());
+						
+						//DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
+				  	
+					}
+				 }
+				 
 			     for (int i = 0; i < files.length; i++){
 				  file = files[i];
 				  			  
 				  URL url = file.toURL();
-				  //ignoreCache, includeHiddenMembers
-				  DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
-				  DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
-				  odsv.setDatasetID("");
-				  // export osdv
+				  //System.out.println(file.getName());
 				  
-				  String martUsers = odsv.getMartUsers();
-				  String interfaces = odsv.getInterfaces();
-				  if (martUsers == null)
+				  if (file.getName().endsWith(".template.xml")){
+				  	  continue;
+				  }
+				  else{
+				  	//ignoreCache, includeHiddenMembers
+				  	DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
+				  	DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
+				  	odsv.setDatasetID("");
+				  	// export osdv
+				  
+				  	String martUsers = odsv.getMartUsers();
+				  	String interfaces = odsv.getInterfaces();
+				  	if (martUsers == null)
 					martUsers = "default";
 	  
-				  if (interfaces == null)
-					interfaces = "default";
+				  	if (interfaces == null)
+						interfaces = "default";
 				  
-				  // convert config to latest version using xslt
-				  odsv = MartEditor.getDatabaseDatasetConfigUtils().getUpdatedConfig(odsv);
+				  	// convert config to latest version using xslt
+				  	odsv = MartEditor.getDatabaseDatasetConfigUtils().getXSLTransformedConfig(odsv);
 				  
-				  try {
+				  	try {
 				  	    dbutils.storeDatasetConfiguration(
 									MartEditor.getUser(),
 									odsv.getInternalName(),
@@ -1178,8 +1306,9 @@ System.out.println ("getting driver "+ driver);
 									martUsers,
 									interfaces,
 									odsv);
-				   } catch (Exception e) {
+				   	} catch (Exception e) {
 							e.printStackTrace();
+				   	}
 				   }
 			     } 				
 			  } 
@@ -1219,16 +1348,32 @@ System.out.println ("getting driver "+ driver);
 			  retSet.toArray(dsConfigs);
 		      
 
+			  Set templateSet = new HashSet();
+			  String[] templates = dbutils.getAllTemplateNames();
+			  for (int i = 0; i < templates.length; i++){
+				String template = templates[i];
+				DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","");
+				dscutils.loadDatasetConfigWithDocument(odsv,dbutils.getTemplateDocument(template));
+				templateSet.add(odsv);
+			  }
+			  DatasetConfig[] templateConfigs = new DatasetConfig[templateSet.size()];
+			  templateSet.toArray(templateConfigs);
+
 		      JOptionPane.showMessageDialog(null,"WARNING - THIS WILL REMOVE ALL EXISTING CONFIGURATION IN THE DATABASE YOU ARE MOVING YOUR CONFIGURATION TO");
 			  // connect to database to export to
 	    	  databaseConnection("Move to this database:");
 							
 			  DatasetConfig dsv = null;
 			  dbutils.dropMetaTables();
+			  
+			  for (int k = 0; k < templateConfigs.length;k++){
+				 dbutils.storeTemplateXML(templateConfigs[k],templateConfigs[k].getTemplate());
+			  }
+			  
 			  for (int k = 0; k < dsConfigs.length;k++){
 					dsv = dsConfigs[k];
 					// convert config to latest version using xslt
-				    dsv = MartEditor.getDatabaseDatasetConfigUtils().getUpdatedConfig(dsv);
+				    dsv = MartEditor.getDatabaseDatasetConfigUtils().getXSLTransformedConfig(dsv);
 					// export it to new database	
 					dbutils.storeDatasetConfiguration(
 										MartEditor.getUser(),
@@ -1245,7 +1390,8 @@ System.out.println ("getting driver "+ driver);
 										dsv.getMartUsers(),
 										dsv.getInterfaces(),
 										dsv);						   		
-			  }	
+			  }
+			  	
 			} 
 			catch (Exception e) {
 			  e.printStackTrace();
@@ -1283,9 +1429,12 @@ System.out.println ("getting driver "+ driver);
 							break;
 					}
 				}
-				
+				System.out.println("!!! UPDATING "+dataset);
 				//DatasetConfig odsv = dbutils.getDatasetConfigByDatasetInternalName(user, dataset, internalName);
 				// update it
+				odsv = MartEditor.getDatabaseDatasetConfigUtils().getXSLTransformedConfig(odsv);//needed to maintain template for some reason
+				//String existingTemplate = odsv.getTemplate();
+				//System.out.println("!!! TEMPLATE IS "+existingTemplate);
 				DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
 				
 				// test if version need updating and newVersion++ if so
@@ -1309,7 +1458,12 @@ System.out.println ("getting driver "+ driver);
 				dsv = dbutils.getNewFiltsAtts(schema, dsv);
 				// export it
 				// convert config to latest version using xslt
-				dsv = MartEditor.getDatabaseDatasetConfigUtils().getUpdatedConfig(dsv);	
+				dsv = MartEditor.getDatabaseDatasetConfigUtils().getXSLTransformedConfig(dsv);
+				
+				//String currentTemplate = dsv.getTemplate();
+				//System.out.println("UPDATED CONFIG "+dsv.getDataset()+ " HAS TEMPLATE "+currentTemplate+", SETTING TO "+existingTemplate);
+				//dsv.setTemplate(existingTemplate);
+				
 				dbutils.storeDatasetConfiguration(
 							MartEditor.getUser(),
 							dsv.getInternalName(),
@@ -1327,6 +1481,7 @@ System.out.println ("getting driver "+ driver);
 							dsv);
 					
 				// display it if new atts or filts for further editing	
+				/*
 				if ((dsv.getAttributePageByInternalName("new_attributes") != null) ||
 				    (dsv.getFilterPageByName("new_filters") != null)){
 					DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, 
@@ -1337,7 +1492,8 @@ System.out.println ("getting driver "+ driver);
 						frame.setSelected(true);
 					} catch (java.beans.PropertyVetoException e) {
 					}
-				}			
+				}	
+				*/		
 			}	
 		  } 
 		} catch (Exception e) {
@@ -1347,7 +1503,7 @@ System.out.println ("getting driver "+ driver);
 		enableCursor();
 	  }
   }
-  
+  /*
   public void validateAll() {
 	  try {
 		if (ds == null) {
@@ -1677,8 +1833,8 @@ System.out.println ("getting driver "+ driver);
 		enableCursor();
 	  }
   }  
-  
-  
+  */
+  /*
   public void updateDatasetConfig() {
     try {
       if (ds == null) {
@@ -2069,7 +2225,7 @@ System.out.println ("getting driver "+ driver);
 
 
 
-
+*/
 
 
   public void deleteDatasetConfig() {
@@ -2119,7 +2275,7 @@ System.out.println ("getting driver "+ driver);
       enableCursor();
     }
   }
-
+/*
   public void save() {
     ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).save();
   }
@@ -2127,7 +2283,7 @@ System.out.println ("getting driver "+ driver);
   public void save_as() {
     ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).save_as();
   }
-
+*/
   public void exit() {
     System.exit(0);
   }
