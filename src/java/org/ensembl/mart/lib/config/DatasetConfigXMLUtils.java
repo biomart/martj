@@ -72,6 +72,9 @@ public class DatasetConfigXMLUtils {
   private final String ATTRIBUTEGROUP = "AttributeGroup";
   private final String ATTRIBUTECOLLECTION = "AttributeCollection";
   private final String ATTRIBUTEDESCRIPTION = "AttributeDescription";
+  private final String DYNAMICATTRIBUTECONTENT = "DynamicAttributeContent";
+  private final String DYNAMICFILTERCONTENT = "DynamicFilterContent";
+  private final String DYNAMICDATASETCONTENT = "DynamicDatasetContent";
   private final String DSATTRIBUTEGROUP = "DSAttributeGroup";
   private final String OPTION = "Option";
   private final String PUSHACTION = "PushAction";
@@ -231,6 +234,14 @@ public class DatasetConfigXMLUtils {
 	String defParam = thisElement.getAttributeValue(DEFAULTDATASET, "");
 	String visibleFilterPageParam = thisElement.getAttributeValue(VISIBLEFILTERPAGEPARAM, "");
     
+    String displayName = thisElement.getAttributeValue("displayName","");
+	String version = thisElement.getAttributeValue("version","");
+    if (displayName.length() > 0)
+    	dsv.setDisplayName(displayName);
+	if (version.length() > 0)
+		dsv.setVersion(version);    	
+    	
+    
     if (visibleFilterPageParam.length() > 0)
     	dsv.setVisibleFilterPage(visibleFilterPageParam);
     
@@ -288,6 +299,12 @@ public class DatasetConfigXMLUtils {
 	  dsv.addBatchSize(element.getTextNormalize());
 	}
 
+	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, DYNAMICDATASETCONTENT));
+	  iter.hasNext();
+	  ) {
+	  Element element = (Element) iter.next();
+	  dsv.addDynamicDatasetContent(getDynamicDatasetContent(element));
+	}
 	
 	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, IMPORTABLE));
 	  iter.hasNext();
@@ -429,6 +446,13 @@ public class DatasetConfigXMLUtils {
     FilterDescription f = new FilterDescription();
     loadAttributesFromElement(thisElement, f);
 	
+	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, DYNAMICFILTERCONTENT));
+	  iter.hasNext();
+	  ) {
+	  Element element = (Element) iter.next();
+	  f.addDynamicFilterContent(getDynamicFilterContent(element));
+	}
+	
     for (Iterator iter = thisElement.getChildren(OPTION).iterator(); iter.hasNext();) {
       Element option = (Element) iter.next();
       if (includeHiddenMembers){
@@ -493,7 +517,32 @@ public class DatasetConfigXMLUtils {
     AttributeDescription a = new AttributeDescription();
     loadAttributesFromElement(thisElement, a);
     
+	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, DYNAMICATTRIBUTECONTENT));
+	  iter.hasNext();
+	  ) {
+	  Element element = (Element) iter.next();
+	  a.addDynamicAttributeContent(getDynamicAttributeContent(element));
+	}
+    
     return a;
+  }
+  
+  private DynamicAttributeContent getDynamicAttributeContent(Element thisElement) throws ConfigurationException {
+	 DynamicAttributeContent a = new DynamicAttributeContent();
+	 loadAttributesFromElement(thisElement, a);
+	 return a;	 
+  }
+  
+  private DynamicFilterContent getDynamicFilterContent(Element thisElement) throws ConfigurationException {
+	 DynamicFilterContent a = new DynamicFilterContent();
+	 loadAttributesFromElement(thisElement, a);
+	 return a;	 
+  }
+  
+  private DynamicDatasetContent getDynamicDatasetContent(Element thisElement) throws ConfigurationException {
+	 DynamicDatasetContent a = new DynamicDatasetContent();
+	 loadAttributesFromElement(thisElement, a);
+	 return a;	 
   }
 
   /**
@@ -581,6 +630,10 @@ public class DatasetConfigXMLUtils {
     Element root = new Element(DATASETCONFIG);
     loadElementAttributesFromObject(dsconfig, root);
 
+	List ads = dsconfig.getDynamicDatasetContents();
+	for (Iterator iter = ads.iterator(); iter.hasNext();)
+	   root.addContent(getDynamicDatasetContentElement((DynamicDatasetContent) iter.next()));
+
     Option[] os = dsconfig.getOptions();
     for (int i = 0, n = os.length; i < n; i++)
       root.addContent(getOptionElement(os[i]));
@@ -664,7 +717,28 @@ public class DatasetConfigXMLUtils {
   private Element getAttributeDescriptionElement(AttributeDescription attribute) {
     Element att = new Element(ATTRIBUTEDESCRIPTION);
     loadElementAttributesFromObject(attribute, att);
+	List ads = attribute.getDynamicAttributeContents();
+	for (Iterator iter = ads.iterator(); iter.hasNext();)
+	   att.addContent(getDynamicAttributeContentElement((DynamicAttributeContent) iter.next()));
     return att;
+  }
+  
+  private Element getDynamicAttributeContentElement(DynamicAttributeContent dynAttribute) {
+	 Element datt = new Element(DYNAMICATTRIBUTECONTENT);
+	 loadElementAttributesFromObject(dynAttribute, datt);
+	 return datt;
+  }
+  
+  private Element getDynamicFilterContentElement(DynamicFilterContent dynAttribute) {
+	 Element datt = new Element(DYNAMICFILTERCONTENT);
+	 loadElementAttributesFromObject(dynAttribute, datt);
+	 return datt;
+  }
+  
+  private Element getDynamicDatasetContentElement(DynamicDatasetContent dynAttribute) {
+	 Element datt = new Element(DYNAMICDATASETCONTENT);
+	 loadElementAttributesFromObject(dynAttribute, datt);
+	 return datt;
   }
 
   private Element getFilterPageElement(FilterPage fpage) {
@@ -772,7 +846,9 @@ public class DatasetConfigXMLUtils {
   private Element getFilterDescriptionElement(FilterDescription filter) {
     Element fdesc = new Element(FILTERDESCRIPTION);
     loadElementAttributesFromObject(filter, fdesc);
-
+	List ads = filter.getDynamicFilterContents();
+	for (Iterator iter = ads.iterator(); iter.hasNext();)
+	   fdesc.addContent(getDynamicFilterContentElement((DynamicFilterContent) iter.next()));
     Option[] subops = filter.getOptions();
     for (int i = 0, n = subops.length; i < n; i++)
        fdesc.addContent(getOptionElement(subops[i]));

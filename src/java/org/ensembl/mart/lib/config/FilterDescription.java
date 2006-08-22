@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
+
 /**
  * Contains all of the information necessary for the UI to display the information for a specific filter,
  * and add this filter as a Filter to a Query.
@@ -40,6 +41,9 @@ public class FilterDescription extends QueryFilterSettings {
 	private List Enables = new ArrayList();
 	private List Disables = new ArrayList();
 	private List PushActions = new ArrayList();
+
+	private List dynamicFilterContents = new ArrayList();
+	private Hashtable dynamicFilterContentNameMap = new Hashtable();
 	
 	private boolean hasBrokenOptions = false;
 	
@@ -166,6 +170,72 @@ public class FilterDescription extends QueryFilterSettings {
 			throw new ConfigurationException("FilterDescription requires a type.");
 	}
 
+
+	/**
+	 * Add a dynamicFilterContent to the FilterDescription.
+	 * 
+	 * @param a dynamicFilterContent object.
+	 */
+	public void addDynamicFilterContent(DynamicFilterContent a) {
+		dynamicFilterContents.add(a);
+		dynamicFilterContentNameMap.put(a.getInternalName(), a);
+	}
+
+	/**
+	 * Remove an dynamicFilterContent from this FilterDescription.
+	 * @param a -- dynamicFilterContent to be removed.
+	 */
+	public void removeDynamicFilterContent(DynamicFilterContent a) {
+	  dynamicFilterContentNameMap.remove(a.getInternalName());
+	  dynamicFilterContents.remove(a);
+	}
+
+	/**
+	 * Insert an dynamicFilterContent at a particular position within the Filter.
+	 * dynamicFilterContent set at or after the given position are shift right.
+	 * @param position -- position at which to insert the given dynamicFilterContent
+	 * @param a -- dynamicFilterContent to insert
+	 */
+	public void insertDynamicFilterContent(int position, DynamicFilterContent a) {
+	  dynamicFilterContents.add(position, a);
+	  dynamicFilterContentNameMap.put(a.getInternalName(), a);
+	}
+
+	/**
+	  * Get a specific dynamicFilterContent, named by internalName.
+	  *  
+	  * @param internalName name of the requested dynamicFilterContent
+	  * @return dynamicFilterContent requested, or null
+	  */
+	public DynamicFilterContent getDynamicFilterContentByInternalName(String internalName) {
+	  if ( containsDynamicFilterContent(internalName) )
+		  return (DynamicFilterContent) dynamicFilterContentNameMap.get(internalName);
+	  else
+		  return null;
+	}
+  
+	/**
+		* Check if this FilterDescription contains a specific dynamicFilterContent named
+		* by internalName.
+		*  
+		* @param internalName name of the requested dynamicFilterContent object
+		* @return boolean, true if found, false if not.
+		*/
+	public boolean containsDynamicFilterContent(String internalName) {
+	  return dynamicFilterContentNameMap.containsKey(internalName);
+	}
+  
+	
+	/**
+	 * Returns a List of dynamicFilterContent objects, in the order they were added.
+	 * 
+	 * @return List of dynamicFilterContent objects.
+	 */
+	public List getDynamicFilterContents() {
+		return new ArrayList(dynamicFilterContents);
+	}
+
+
 	/**
 	 * Returns the description, given an internalName which may, in some cases, map to an Option instead of this FilterDescription.
 	 * @param internalName -- internalName of either this FilterDescription, or an Option contained within this FilterDescription
@@ -193,6 +263,9 @@ public class FilterDescription extends QueryFilterSettings {
 				return null; // nothing found
 		}
 	}
+
+
+
 
 	/**
 	 * Returns the displayName, given an internalName which may, in some cases, map to an Option instead of this FilterDescription.

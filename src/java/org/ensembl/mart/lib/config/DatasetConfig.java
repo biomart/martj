@@ -126,6 +126,9 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 
   private Logger logger = Logger.getLogger(DatasetConfig.class.getName());
 
+  private List dynamicDatasetContents = new ArrayList();
+  private Hashtable dynamicDatasetContentNameMap = new Hashtable();
+
   /**
    * Copy Constructor allowing client to specify whether to lazyLoad the copy at initiation, rather
    * than defering to a call to getXXX.
@@ -318,6 +321,74 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(noCountKey,noCount);
 	setRequiredFields(reqFields);
   }
+  
+  
+  /**
+   * Add a dynamicDatasetContent to the DatasetConfig.
+   * 
+   * @param a dynamicDatasetContent object.
+   */
+  public void addDynamicDatasetContent(DynamicDatasetContent a) {
+	  dynamicDatasetContents.add(a);
+	  dynamicDatasetContentNameMap.put(a.getInternalName(), a);
+  }
+
+  /**
+   * Remove an dynamicDatasetContent from this DatasetConfig.
+   * @param a -- dynamicDatasetContent to be removed.
+   */
+  public void removeDynamicDatasetContent(DynamicDatasetContent a) {
+	dynamicDatasetContentNameMap.remove(a.getInternalName());
+	dynamicDatasetContents.remove(a);
+  }
+
+  /**
+   * Insert an DynamicDatasetContent at a particular position within the Attribute.
+   * DynamicDatasetContent set at or after the given position are shift right.
+   * @param position -- position at which to insert the given DynamicDatasetContent
+   * @param a -- DynamicDatasetContent to insert
+   */
+  public void insertDynamicDatasetContent(int position, DynamicDatasetContent a) {
+	dynamicDatasetContents.add(position, a);
+	dynamicDatasetContentNameMap.put(a.getInternalName(), a);
+  }
+
+  /**
+	* Get a specific DynamicDatasetContent, named by internalName.
+	*  
+	* @param internalName name of the requested dynamicDatasetContent
+	* @return DynamicDatasetContent requested, or null
+	*/
+  public DynamicDatasetContent getDynamicDatasetContentByInternalName(String internalName) {
+	if ( containsDynamicDatasetContent(internalName) )
+		return (DynamicDatasetContent) dynamicDatasetContentNameMap.get(internalName);
+	else
+		return null;
+  }
+  
+  /**
+	  * Check if this DatasetConfig contains a specific DynamicDatasetContent named
+	  * by internalName.
+	  *  
+	  * @param internalName name of the requested DynamicDatasetContent object
+	  * @return boolean, true if found, false if not.
+	  */
+  public boolean containsDynamicDatasetContent(String internalName) {
+	return dynamicDatasetContentNameMap.containsKey(internalName);
+  }
+  
+	
+  /**
+   * Returns a List of DynamicDatasetContent objects, in the order they were added.
+   * 
+   * @return List of DynamicDatasetContent objects.
+   */
+  public List getDynamicDatasetContents() {
+	  return new ArrayList(dynamicDatasetContents);
+  }
+  
+  
+  
   
 
 	public void setTemplateFlag(String flag) {

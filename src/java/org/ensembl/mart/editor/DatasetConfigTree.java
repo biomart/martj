@@ -265,6 +265,18 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					AttributeDescription ad = new AttributeDescription();
 					ad.setAttribute("internalName", "new");
 					insert(ad, "AttributeDescription");
+				} else if (e.getActionCommand().equals("insert dynamic attribute content")) {
+					DynamicAttributeContent dynAtt = new DynamicAttributeContent();
+					dynAtt.setAttribute("internalName", "new");
+					insert(dynAtt, "DynamicAttributeContent");
+				} else if (e.getActionCommand().equals("insert dynamic filter content")) {
+					DynamicFilterContent dynAtt = new DynamicFilterContent();
+					dynAtt.setAttribute("internalName", "new");
+					insert(dynAtt, "DynamicFilterContent");
+				} else if (e.getActionCommand().equals("insert dynamic dataset content")) {
+					DynamicDatasetContent dynAtt = new DynamicDatasetContent();
+					dynAtt.setAttribute("internalName", "new");
+					insert(dynAtt, "DynamicDatasetContent");
 				} else if (e.getActionCommand().equals("insert option")) {
 					Option option = new Option();
 					option.setAttribute("internalName", "new");
@@ -584,8 +596,13 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			menuItems =
 				new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert option", "insert push action" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
-			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "hideDisplay toggle", };
-
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "hideDisplay toggle", "insert dynamic content"};
+		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DynamicAttributeContent"))
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "hideDisplay toggle",};  
+		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DynamicFilterContent"))
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "hideDisplay toggle",};  
+		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DynamicDatasetContent"))
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "hideDisplay toggle",};  		      
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Importable"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Exportable"))
@@ -670,6 +687,21 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				new DatasetConfigTreeNode(
 					editingNode.toString(),
 					new AttributeDescription((AttributeDescription) editingNode.getUserObject()));
+		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.DynamicAttributeContent"))
+			copiedNode =
+				new DatasetConfigTreeNode(
+					editingNode.toString(),
+					new DynamicAttributeContent((DynamicAttributeContent) editingNode.getUserObject()));	
+		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.DynamicFilterContent"))
+			copiedNode =
+				new DatasetConfigTreeNode(
+					editingNode.toString(),
+					new DynamicFilterContent((DynamicFilterContent) editingNode.getUserObject()));	
+		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.DynamicDatasetContent"))
+			copiedNode =
+				new DatasetConfigTreeNode(
+					editingNode.toString(),
+					new DynamicDatasetContent((DynamicDatasetContent) editingNode.getUserObject()));															
 		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.Option"))
 			copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new Option((Option) editingNode.getUserObject()));
 		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.PushAction"))
@@ -813,8 +845,12 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 						newSel = new AttributeCollection((AttributeCollection)sel);
 					else if (selnodeName.equals("org.ensembl.mart.lib.config.AttributeDescription"))
 						newSel = new AttributeDescription((AttributeDescription)sel);						
-																	
-					
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.DynamicAttributeContent"))
+						newSel = new DynamicAttributeContent((DynamicAttributeContent)sel);			
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.DynamicFilterContent"))
+						newSel = new DynamicFilterContent((DynamicFilterContent)sel);
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.DynamicDatasetContent"))
+						newSel = new DynamicDatasetContent((DynamicDatasetContent)sel);											
 					newSel.setInternalName(sel.getInternalName() + "_copy");
 					// need to make sure refers to a different object for multiple pastes
 					selnode = new DatasetConfigTreeNode(selnode.name + "_copy",newSel);

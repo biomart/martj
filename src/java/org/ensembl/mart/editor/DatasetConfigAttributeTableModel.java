@@ -37,6 +37,9 @@ import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.BaseConfigurationObject;
 import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
 import org.ensembl.mart.lib.config.DatasetConfig;
+import org.ensembl.mart.lib.config.DynamicAttributeContent;
+import org.ensembl.mart.lib.config.DynamicFilterContent;
+import org.ensembl.mart.lib.config.DynamicDatasetContent;
 import org.ensembl.mart.lib.config.Exportable;
 import org.ensembl.mart.lib.config.FilterCollection;
 import org.ensembl.mart.lib.config.FilterDescription;
@@ -188,6 +191,9 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 						}
 						config.removeAttributePage((AttributePage) node.getUserObject());
 					}
+					else if (child instanceof DynamicDatasetContent){
+						config.removeDynamicDatasetContent((DynamicDatasetContent) node.getUserObject());
+					}
 				} else if (parent instanceof org.ensembl.mart.lib.config.FilterPage) {
 					FilterPage fp = (FilterPage) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.FilterGroup){
@@ -241,7 +247,9 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 						//	setValueAt(newName,rowIndex,columnIndex);
 						//	return;
 						//}	
-					}
+					} else if (child instanceof org.ensembl.mart.lib.config.DynamicFilterContent){
+						fdesc.removeDynamicFilterContent((DynamicFilterContent) node.getUserObject());
+				    }
 				} else if (parent instanceof Option) {
 					Option op = (Option) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof Option)
@@ -289,6 +297,11 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 							return;
 						}
 					}
+				}  else if (parent instanceof org.ensembl.mart.lib.config.AttributeDescription) {
+					AttributeDescription ad = (AttributeDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+					if (child instanceof org.ensembl.mart.lib.config.DynamicAttributeContent){
+						ad.removeDynamicAttributeContent((DynamicAttributeContent) node.getUserObject());
+					}
 				}
 
 				obj.setAttribute(firstColumnData[rowIndex], (String) aValue);
@@ -302,7 +315,9 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 					else if (child instanceof Importable)
 						config.insertImportable(index, (Importable) obj);
 					else if (child instanceof Exportable)
-						config.insertExportable(index, (Exportable) obj);            
+						config.insertExportable(index, (Exportable) obj);          
+					else if (child instanceof DynamicDatasetContent)
+						config.insertDynamicDatasetContent(index, (DynamicDatasetContent) obj);          						  
 				} else if (parent instanceof org.ensembl.mart.lib.config.FilterPage) {
 					FilterPage fp = (FilterPage) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.FilterGroup)
@@ -319,6 +334,8 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 					FilterDescription fdesc = (FilterDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof Option)
 						fdesc.insertOption(index, (Option) obj);
+				    else if (child instanceof org.ensembl.mart.lib.config.DynamicFilterContent)	
+						fdesc.insertDynamicFilterContent(index, (DynamicFilterContent) obj);		
 				} else if (parent instanceof Option) {
 					Option op = (Option) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof Option)
@@ -341,6 +358,11 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 					AttributeCollection ac = (AttributeCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.AttributeDescription){		
 						ac.insertAttributeDescription(index, (AttributeDescription) obj);
+					}
+				} else if (parent instanceof org.ensembl.mart.lib.config.AttributeDescription) {
+					AttributeDescription ad = (AttributeDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+					if (child instanceof org.ensembl.mart.lib.config.DynamicAttributeContent){		
+						ad.insertDynamicAttributeContent(index, (DynamicAttributeContent) obj);
 					}
 				}
 			}

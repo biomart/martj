@@ -785,7 +785,7 @@ public class DatabaseDatasetConfigUtils {
 			if (fd.getTableConstraint() != null && !fd.getTableConstraint().equals("") 
 					&& !fd.getTableConstraint().equals("main"))			
 				fd.setTableConstraint(fd.getTableConstraint().split("__")[1]+"__"+fd.getTableConstraint().split("__")[2]);
-			fd.setOtherFilters("");
+			//fd.setOtherFilters("");
 			
 			Option[] ops = fd.getOptions();
 			for (int j = 0; j < ops.length; j++){
@@ -798,7 +798,7 @@ public class DatabaseDatasetConfigUtils {
 				// if a filter option remove dataset part from tableConstraint
 				if (!op.getTableConstraint().equals("main"))
 					op.setTableConstraint(op.getTableConstraint().split("__")[1]+"__"+op.getTableConstraint().split("__")[2]);
-				op.setOtherFilters("");
+				//op.setOtherFilters("");
 			}
 		}
 		
@@ -820,7 +820,7 @@ public class DatabaseDatasetConfigUtils {
 			if (ad.getTableConstraint() != null && !ad.getTableConstraint().equals("") && !ad.getTableConstraint().equals("main"))
 				ad.setTableConstraint(ad.getTableConstraint().split("__")[1]+"__"+ad.getTableConstraint().split("__")[2]);		
 			
-			ad.setLinkoutURL("");		
+			//ad.setLinkoutURL("");		
 		}
 		
 		Exportable[] exps = templateConfig.getExportables();
@@ -849,7 +849,7 @@ public class DatabaseDatasetConfigUtils {
 			ps.executeUpdate();
 			
 			Document doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(templateConfig);
-		
+			
 			MessageDigest md5digest = MessageDigest.getInstance(DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM);    
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 			GZIPOutputStream gout = new GZIPOutputStream(bout);
@@ -1256,6 +1256,7 @@ public class DatabaseDatasetConfigUtils {
 		
   	return true;	  	
   }
+  
 
   public void updateConfigsToTemplate(String template, DatasetConfig templateConfig) throws ConfigurationException{
   	
@@ -1440,9 +1441,32 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 			configAttToAdd.setTableConstraint(configAtt.getTableConstraint());
 			configAttToAdd.setField(configAtt.getField());
 			
-			if (configAtt.getLinkoutURL() != null && !configAtt.getLinkoutURL().equals(""))
-				configAttToAdd.setLinkoutURL(configAtt.getLinkoutURL());			
-						
+			//if (configAtt.getLinkoutURL() != null && !configAtt.getLinkoutURL().equals(""))
+			//	configAttToAdd.setLinkoutURL(configAtt.getLinkoutURL());			
+			
+			// dynamic content handling eg linkoutURL
+			if (templateAttribute.getDynamicAttributeContents().size() > 0){
+				// already got multiple settings for this attribute
+				if (!templateAttribute.containsDynamicAttributeContent(dsConfig.getDataset()))
+					templateAttribute.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),configAtt.getLinkoutURL()));
+				
+				configAttToAdd.setLinkoutURL(templateAttribute.getDynamicAttributeContentByInternalName(dsConfig.getDataset()).getLinkoutURL());
+			}
+			else if (configAtt.getLinkoutURL() != null && !configAtt.getLinkoutURL().equals("") 
+					&& !configAtt.getLinkoutURL().equals(templateAttribute.getLinkoutURL())){
+						// if this config has a different setting then start using dynamic objects
+						// create dynamic objects - add one per existing dataset set to current template linkoutURL
+						String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
+						for (int j = 0; j < datasetNames.length; j++){
+							String datasetName = datasetNames[j];
+							if (datasetName.equals(dsConfig.getDataset())) continue;
+							templateAttribute.addDynamicAttributeContent(new DynamicAttributeContent(datasetName,templateAttribute.getLinkoutURL()));
+						}
+						templateAttribute.setLinkoutURL("MULTI");
+		
+						templateAttribute.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),configAtt.getLinkoutURL()));
+						configAttToAdd.setLinkoutURL(templateAttribute.getDynamicAttributeContentByInternalName(dsConfig.getDataset()).getLinkoutURL());			
+			}
 			
 			AttributePage dsConfigPage = dsConfig.getAttributePageByInternalName(templatePage.getInternalName());
 			if (dsConfigPage == null){
@@ -1569,7 +1593,7 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 			if (templateAttToAdd.getTableConstraint() != null && !templateAttToAdd.getTableConstraint().equals("") 
 				&& !templateAttToAdd.getTableConstraint().equals("main"))
 					templateAttToAdd.setTableConstraint(templateAttToAdd.getTableConstraint().split("__")[1]+"__"+templateAttToAdd.getTableConstraint().split("__")[2]);		
-			templateAttToAdd.setLinkoutURL("");
+			//templateAttToAdd.setLinkoutURL("");
 			
 			if (configAtt.getHidden() != null) templateAttToAdd.setHidden(configAtt.getHidden());			
 			templateCollection.addAttributeDescription(templateAttToAdd);					
@@ -1673,7 +1697,34 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		  configAttToAdd = new FilterDescription(templateFilter);
 		  configAttToAdd.setTableConstraint(configAtt.getTableConstraint());
 		  configAttToAdd.setField(configAtt.getField());
-		  configAttToAdd.setOtherFilters(configAtt.getOtherFilters());
+		  //configAttToAdd.setOtherFilters(configAtt.getOtherFilters());
+		  
+		  // dynamic content handling eg linkoutURL
+		  if (templateFilter.getDynamicFilterContents().size() > 0){
+			// already got multiple settings for this attribute
+			if (!templateFilter.containsDynamicFilterContent(dsConfig.getDataset()))
+				templateFilter.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),configAtt.getOtherFilters
+				()));
+				
+			configAttToAdd.setOtherFilters(templateFilter.getDynamicFilterContentByInternalName(dsConfig.getDataset()).getOtherFilters());
+		  }
+		  else if (configAtt.getOtherFilters() != null && !configAtt.getOtherFilters().equals("") 
+				&& !configAtt.getOtherFilters().equals(templateFilter.getOtherFilters())){
+					// if this config has a different setting then start using dynamic objects
+					// create dynamic objects - add one per existing dataset set to current template linkoutURL
+					String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
+					for (int j = 0; j < datasetNames.length; j++){
+						String datasetName = datasetNames[j];
+						if (datasetName.equals(dsConfig.getDataset())) continue;
+						templateFilter.addDynamicFilterContent(new DynamicFilterContent(datasetName,templateFilter.getOtherFilters()));
+					}
+					templateFilter.setOtherFilters("MULTI");
+		
+					templateFilter.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),configAtt.getOtherFilters()));
+					configAttToAdd.setOtherFilters(templateFilter.getDynamicFilterContentByInternalName(dsConfig.getDataset()).getOtherFilters());			
+		  }		  
+		  
+		  
 		  // chromosome_name hack to stop mmullata memory problems with chr options
 		  //if (templateFilter.getType().equals("list") && !templateFilter.getInternalName().equals("chromosome_name")){
 		  if (templateFilter.getType().equals("list")){
@@ -1816,7 +1867,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	  if (templateAttToAdd.getTableConstraint() != null && !templateAttToAdd.getTableConstraint().equals("") 
 				&& !templateAttToAdd.getTableConstraint().equals("main"))			
 			templateAttToAdd.setTableConstraint(templateAttToAdd.getTableConstraint().split("__")[1]+"__"+templateAttToAdd.getTableConstraint().split("__")[2]);
-	  templateAttToAdd.setOtherFilters("");
+	  //templateAttToAdd.setOtherFilters("");
 			
 	  Option[] ops = templateAttToAdd.getOptions();
 	  for (int j = 0; j < ops.length; j++){
@@ -1831,7 +1882,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			//System.out.println(op.getDisplayName()+":"+op.getTableConstraint());
 			op.setTableConstraint(op.getTableConstraint().split("__")[1]+"__"+op.getTableConstraint().split("__")[2]);
 		}
-		op.setOtherFilters("");
+		//op.setOtherFilters("");
 	  }	  
 	  
 	  if (configAtt.getHidden() != null) templateAttToAdd.setHidden(configAtt.getHidden());			
@@ -1860,6 +1911,35 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 
 	System.out.println("!!! - UPDATING CONFIG TO TEMPLATE:"+dsConfig.getDataset());	
 	
+	
+	// dynamic content handling eg linkoutURL
+	if (templateConfig.getDynamicDatasetContents().size() > 0){
+		// already got multiple settings for this template
+		if (!templateConfig.containsDynamicDatasetContent(dsConfig.getDataset()))
+			templateConfig.addDynamicDatasetContent(new DynamicDatasetContent(dsConfig.getDataset(),dsConfig.getDisplayName(),dsConfig.getVersion()));
+				
+		dsConfig.setDisplayName(templateConfig.getDynamicDatasetContentByInternalName(dsConfig.getDataset()).getDisplayName());
+		dsConfig.setVersion(templateConfig.getDynamicDatasetContentByInternalName(dsConfig.getDataset()).getVersion());
+	}
+	else if ( (dsConfig.getDisplayName() != null && !dsConfig.getDisplayName().equals("") 
+			&& !dsConfig.getDisplayName().equals(templateConfig.getDisplayName())) || 
+	        (dsConfig.getVersion() != null && !dsConfig.getVersion().equals("") 
+				&& !dsConfig.getVersion().equals(templateConfig.getVersion()))){
+				// if this config has a different setting then start using dynamic objects
+				// create dynamic objects - add one per existing dataset set to current template linkoutURL
+				String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
+				for (int j = 0; j < datasetNames.length; j++){
+					String datasetName = datasetNames[j];
+					if (datasetName.equals(dsConfig.getDataset())) continue;
+					templateConfig.addDynamicDatasetContent(new DynamicDatasetContent(datasetName,templateConfig.getDisplayName(),templateConfig.getVersion()));
+				}
+				templateConfig.setDisplayName("MULTI");
+				templateConfig.setVersion("MULTI");
+		
+				templateConfig.addDynamicDatasetContent(new DynamicDatasetContent(dsConfig.getDataset(),dsConfig.getDisplayName(),dsConfig.getVersion()));
+				dsConfig.setDisplayName(templateConfig.getDynamicDatasetContentByInternalName(dsConfig.getDataset()).getDisplayName());			
+				dsConfig.setVersion(templateConfig.getDynamicDatasetContentByInternalName(dsConfig.getDataset()).getVersion());			
+	}
 	// filter merge
 	List filters = dsConfig.getAllFilterDescriptions();
 
@@ -2792,6 +2872,8 @@ public int templateCount(String template) throws ConfigurationException{
 		  while (rs.next()) {
 		  	results.add(rs.getString(1));
 		  }
+		  rs.close();
+		  ps.close();
 		  String[] templateNames = new String[results.size()];
 		  results.toArray(templateNames);
 		  return templateNames;
@@ -2799,6 +2881,44 @@ public int templateCount(String template) throws ConfigurationException{
 	catch(SQLException e){
 		System.out.println("PROBLEM QUERYING "+MARTTEMPLATEDMTABLE+" TABLE "+e.toString());
 		return null;
+	}
+	
+  }
+  
+  /**
+   * Returns all datasets names for the given template
+   * @param template.
+   * @return String[] dataset names
+   * @throws ConfigurationException when valid meta_configuration table does not exist, and for all underlying SQL Exceptions
+   */
+  public String[] getDatasetNamesForTemplate(String template) throws ConfigurationException {
+	      
+	Connection conn = null;
+	
+	try {
+		  String sql = "SELECT c.dataset FROM "+getSchema()[0]+"."+BASEMETATABLE+" c, "+getSchema()[0]+"."+
+		  MARTTEMPLATEMAINTABLE+" t where c.dataset_id_key=t.dataset_id_key and t.template = ?";
+		  conn = dsource.getConnection();
+		  PreparedStatement ps = conn.prepareStatement(sql);
+		  ps.setString(1,template);
+		  ResultSet rs = ps.executeQuery();
+		  List results = new ArrayList();
+		  while (rs.next()) {
+			results.add(rs.getString(1));
+		  }
+		  rs.close();
+		  ps.close();
+		  
+		  String[] templateNames = new String[results.size()];
+		  results.toArray(templateNames);
+		  return templateNames;
+	}
+	catch(SQLException e){
+		System.out.println("PROBLEM QUERYING "+MARTTEMPLATEMAINTABLE+" TABLE "+e.toString());
+		return null;
+	}
+	finally {
+		DetailedDataSource.close(conn);
 	}
 	
   }
