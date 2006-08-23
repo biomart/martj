@@ -32,10 +32,10 @@ public class DynamicFilterContent extends BaseNamedConfigurationObject {
 
 
   private final String otherFiltersKey = "otherFilters"; 
-  //private final String pointerDatasetKey = "pointerDataset";
-  //private final String pointerInterfaceKey = "pointerInterface";
+  private final String pointerDatasetKey = "pointerDataset";
+  private final String pointerInterfaceKey = "pointerInterface";
   //private final String pointerAttributeKey = "pointerAttribute";
-  //private final String pointerFilterKey = "pointerFilter";
+  private final String pointerFilterKey = "pointerFilter";
   
   private int[] reqFields = {0,1};// rendered red in AttributeTable
 
@@ -56,10 +56,10 @@ public class DynamicFilterContent extends BaseNamedConfigurationObject {
     super();
     
     setAttribute(otherFiltersKey, null);
-	//setAttribute(pointerDatasetKey, null);
-	//setAttribute(pointerInterfaceKey, null);
+	setAttribute(pointerDatasetKey, null);
+	setAttribute(pointerInterfaceKey, null);
 	//setAttribute(pointerAttributeKey, null);
-	//setAttribute(pointerFilterKey, null);
+	setAttribute(pointerFilterKey, null);
 	setRequiredFields(reqFields);
   }
 
@@ -74,10 +74,28 @@ public class DynamicFilterContent extends BaseNamedConfigurationObject {
     super(internalName, "","");
 
     setAttribute(otherFiltersKey, otherFilters);
-//	setAttribute(pointerDatasetKey, pointerDataset);
-//	setAttribute(pointerInterfaceKey, pointerInterface);
+	setAttribute(pointerDatasetKey, "");
+	setAttribute(pointerInterfaceKey, "");
 //	setAttribute(pointerAttributeKey, pointerAttribute);
-//	setAttribute(pointerFilterKey, pointerFilter);
+	setAttribute(pointerFilterKey, "");
+	setRequiredFields(reqFields);
+  }
+  
+  /**
+   * Constructor for a DynamicFilterContent.
+   * 
+   * @param internalName String name to internally represent the DynamicFilterContent. Must not be null or empty.
+   * @param otherFilters .
+   * @throws ConfigurationException when required parameters are null or empty
+   */
+  public DynamicFilterContent(String internalName,String otherFilters,String pointerDataset,String pointerInterface,String pointerFilter) throws ConfigurationException {
+	super(internalName, "","");
+
+	setAttribute(otherFiltersKey, otherFilters);
+	setAttribute(pointerDatasetKey, pointerDataset);
+	setAttribute(pointerInterfaceKey, pointerInterface);
+//	setAttribute(pointerAttributeKey, pointerAttribute);
+	setAttribute(pointerFilterKey, pointerFilter);
 	setRequiredFields(reqFields);
   }
 
@@ -95,6 +113,57 @@ public class DynamicFilterContent extends BaseNamedConfigurationObject {
   public String getOtherFilters() {
     return getAttribute(otherFiltersKey);
   }
+
+  /**
+   * @param pointerDataset - pointer dataset, used for placeholder attributes
+   */
+  public void setPointerDataset(String pointerDataset) {
+	setAttribute(pointerDatasetKey, pointerDataset);
+  }
+
+  /**
+   * Returns the pointerDataset.
+   * 
+   * @return String pointerDataset
+   */
+  public String getPointerDataset() {
+	return getAttribute(pointerDatasetKey);
+  }
+
+  /**
+   * @param pointerInterface - pointer interface, used for placeholder attributes
+   */
+  public void setPointerInterface(String pointerInterface) {
+	setAttribute(pointerInterfaceKey, pointerInterface);
+  }
+
+  /**
+   * Returns the pointerInterface.
+   * 
+   * @return String pointerInterface
+   */
+  public String getPointerInterface() {
+	return getAttribute(pointerInterfaceKey);
+  }
+  
+  /**
+   * @param pointerfilter - pointer filter, used for placeholder filters
+   */
+  public void setPointerFilter(String pointerFilter) {
+	setAttribute(pointerFilterKey, pointerFilter);
+  }
+
+  /**
+   * Returns the pointerDataset.
+   * 
+   * @return String pointerFilter
+   */
+  public String getPointerFilter() {
+	return getAttribute(pointerFilterKey);
+  }
+
+
+
 
   public String toString() {
     StringBuffer buf = new StringBuffer();

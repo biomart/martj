@@ -32,10 +32,10 @@ public class DynamicAttributeContent extends BaseNamedConfigurationObject {
 
 
   private final String linkoutURLKey = "linkoutURL"; 
-  //private final String pointerDatasetKey = "pointerDataset";
-  //private final String pointerInterfaceKey = "pointerInterface";
-  //private final String pointerAttributeKey = "pointerAttribute";
-  //private final String pointerFilterKey = "pointerFilter";
+  private final String pointerDatasetKey = "pointerDataset";
+  private final String pointerInterfaceKey = "pointerInterface";
+  private final String pointerAttributeKey = "pointerAttribute";
+  private final String pointerFilterKey = "pointerFilter";
   
   private int[] reqFields = {0,1};// rendered red in AttributeTable
 
@@ -56,10 +56,10 @@ public class DynamicAttributeContent extends BaseNamedConfigurationObject {
     super();
     
     setAttribute(linkoutURLKey, null);
-	//setAttribute(pointerDatasetKey, null);
-	//setAttribute(pointerInterfaceKey, null);
-	//setAttribute(pointerAttributeKey, null);
-	//setAttribute(pointerFilterKey, null);
+	setAttribute(pointerDatasetKey, null);
+	setAttribute(pointerInterfaceKey, null);
+	setAttribute(pointerAttributeKey, null);
+	setAttribute(pointerFilterKey, null);
 	setRequiredFields(reqFields);
   }
 
@@ -74,10 +74,28 @@ public class DynamicAttributeContent extends BaseNamedConfigurationObject {
     super(internalName, "","");
 
     setAttribute(linkoutURLKey, linkoutURL);
-//	setAttribute(pointerDatasetKey, pointerDataset);
-//	setAttribute(pointerInterfaceKey, pointerInterface);
-//	setAttribute(pointerAttributeKey, pointerAttribute);
-//	setAttribute(pointerFilterKey, pointerFilter);
+	setAttribute(pointerDatasetKey, "");
+	setAttribute(pointerInterfaceKey, "");
+	setAttribute(pointerAttributeKey, "");
+	setAttribute(pointerFilterKey, "");
+	setRequiredFields(reqFields);
+  }
+  
+  /**
+   * Constructor for a DynamiacAttributeContent.
+   * 
+   * @param internalName String name to internally represent the DynamiacAttributeContent. Must not be null or empty.
+   * @param linkoutURL String Base for a link to a specific entry in a source website.
+   * @throws ConfigurationException when required parameters are null or empty
+   */
+  public DynamicAttributeContent(String internalName,String linkoutURL, String pointerDataset, String pointerInterface, String pointerAttribute, String pointerFilter) throws ConfigurationException {
+	super(internalName, "","");
+
+	setAttribute(linkoutURLKey, linkoutURL);
+	setAttribute(pointerDatasetKey, pointerDataset);
+	setAttribute(pointerInterfaceKey, pointerInterface);
+	setAttribute(pointerAttributeKey, pointerAttribute);
+	setAttribute(pointerFilterKey, pointerFilter);
 	setRequiredFields(reqFields);
   }
 
@@ -94,6 +112,70 @@ public class DynamicAttributeContent extends BaseNamedConfigurationObject {
    */
   public String getLinkoutURL() {
     return getAttribute(linkoutURLKey);
+  }
+
+  /**
+   * @param pointerDataset - pointer dataset, used for placeholder attributes
+   */
+  public void setPointerDataset(String pointerDataset) {
+	setAttribute(pointerDatasetKey, pointerDataset);
+  }
+
+  /**
+   * Returns the pointerDataset.
+   * 
+   * @return String pointerDataset
+   */
+  public String getPointerDataset() {
+	return getAttribute(pointerDatasetKey);
+  }
+
+  /**
+   * @param pointerInterface - pointer interface, used for placeholder attributes
+   */
+  public void setPointerInterface(String pointerInterface) {
+	setAttribute(pointerInterfaceKey, pointerInterface);
+  }
+
+  /**
+   * Returns the pointerInterface.
+   * 
+   * @return String pointerInterface
+   */
+  public String getPointerInterface() {
+	return getAttribute(pointerInterfaceKey);
+  }
+  
+  /**
+   * @param pointerAttribute - pointer attribute, used for placeholder attributes
+   */
+  public void setPointerAttribute(String pointerAttribute) {
+	setAttribute(pointerAttributeKey, pointerAttribute);
+  }
+
+  /**
+   * Returns the pointerDataset.
+   * 
+   * @return String pointerDataset
+   */
+  public String getPointerAttribute() {
+	return getAttribute(pointerAttributeKey);
+  }
+
+  /**
+   * @param pointerfilter - pointer filter, used for placeholder filters
+   */
+  public void setPointerFilter(String pointerFilter) {
+	setAttribute(pointerFilterKey, pointerFilter);
+  }
+
+  /**
+   * Returns the pointerDataset.
+   * 
+   * @return String pointerFilter
+   */
+  public String getPointerFilter() {
+	return getAttribute(pointerFilterKey);
   }
 
   public String toString() {

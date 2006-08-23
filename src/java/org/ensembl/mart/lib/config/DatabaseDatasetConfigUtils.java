@@ -2064,11 +2064,11 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					if (templateAttName.matches(dsConfig.getTemplate()+"\\..+")){
 						configAttName = templateAttName.replaceFirst(dsConfig.getTemplate(),dsConfig.getDataset());			
 					}
-					else{
+					//else{
 						// for now just ignore external placeholders
 						// later implement some sort of mapping in template to handle auto replacement of these						
-						continue;
-					}
+						//continue;
+					//}
 					// add the missing placeholder to the dsConfig			
 					FilterPage configPage = dsConfig.getFilterPageByName(templatePage.getInternalName());
 					if (configPage == null){
@@ -2094,10 +2094,72 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						configGroup.addFilterCollection(configCollection);				
 					}
 			
-					FilterDescription configAttToAdd = new FilterDescription(templateAtt);
-					configAttToAdd.setInternalName(configAttName);		
-					if (!configCollection.containsFilterDescription(configAttName)) 
-						configCollection.addFilterDescription(configAttToAdd);					
+					// resolve what to do depending on type of placeholder
+					if (configAttName.equals(templateAttName)){
+						// external placeholder
+						if (!templateAtt.containsDynamicFilterContent(dsConfig.getDataset())){
+							// add an entry if dsConfig already has an equivalent placeholder but make sure previous datasets also have one
+							List existingFilters = configCollection.getFilterDescriptions();
+							for (int m = 0; m < existingFilters.size(); m++){
+								FilterDescription existingFilter = (FilterDescription) existingFilters.get(m);
+								if (!existingFilter.getInternalName().matches(".+\\..+")) continue;
+								if (existingFilter.getInternalName().split(".")[1].equals(templateAttName.split(".")[1])){
+									if (templateAtt.getDynamicFilterContents().size() > 0){}
+									else{
+										String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
+										for (int n = 0; n < datasetNames.length; n++){
+											String datasetName = datasetNames[n];
+											if (datasetName.equals(dsConfig.getDataset())) continue;
+											templateAtt.addDynamicFilterContent(new DynamicFilterContent(datasetName,"",templateAtt.getPointerDataset(),templateAtt.getPointerInterface(),templateAtt.getPointerFilter()));
+										}
+									}
+									templateAtt.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),
+												"",existingFilter.getPointerDataset(),existingFilter.getPointerInterface(),existingFilter.getPointerFilter()));
+									templateAtt.setPointerDataset("MULTI");
+									templateAtt.setPointerInterface("MULTI");
+									templateAtt.setPointerFilter("MULTI");						
+									break;
+								}
+								
+							}
+							
+						}
+					}
+					else{
+						// internal placeholder
+						if (!templateAtt.containsDynamicFilterContent(dsConfig.getDataset())){
+							// always add an entry but make sure previous datasets also have one
+							if (templateAtt.getDynamicFilterContents().size() > 0){}
+							else{
+								String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
+								for (int m = 0; m < datasetNames.length; m++){
+									String datasetName = datasetNames[m];
+									if (datasetName.equals(dsConfig.getDataset())) continue;
+									templateAtt.addDynamicFilterContent(new DynamicFilterContent(datasetName,"",templateAtt.getPointerDataset(),templateAtt.getPointerInterface(),templateAtt.getPointerFilter()));
+								}
+							}
+							templateAtt.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),
+								"",dsConfig.getDataset(),templateAtt.getPointerInterface(),templateAtt.getPointerFilter()));
+							templateAtt.setPointerDataset("MULTI");
+							templateAtt.setPointerInterface("MULTI");
+							templateAtt.setPointerFilter("MULTI");						
+							 	
+						}
+					}
+					
+					if (templateAtt.containsDynamicFilterContent(dsConfig.getDataset())){
+						FilterDescription configAttToAdd = new FilterDescription(templateAtt);
+						DynamicFilterContent templateSettings = templateAtt.getDynamicFilterContentByInternalName(dsConfig.getDataset());
+						configAttToAdd.setInternalName(templateSettings.getPointerDataset()+"."+templateSettings.getPointerFilter());
+						configAttToAdd.setPointerDataset(templateSettings.getPointerDataset());
+						configAttToAdd.setPointerInterface(templateSettings.getPointerInterface());
+						configAttToAdd.setPointerFilter(templateSettings.getPointerFilter());
+								
+						if (!configCollection.containsFilterDescription(configAttToAdd.getInternalName())) 
+							configCollection.addFilterDescription(configAttToAdd);
+					}
+					
+									
 				}
 			}
 		}
@@ -2122,14 +2184,14 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						continue;
 					
 					String configAttName = templateAttName;	
-					if (templateAttName.matches(dsConfig.getTemplate()+".+")){
+					if (templateAttName.matches(dsConfig.getTemplate()+"\\..+")){
 						configAttName = templateAttName.replaceFirst(dsConfig.getTemplate(),dsConfig.getDataset());			
 					}
-					else{
+					//else{
 						// for now just ignore external placeholders
 						// later implement some sort of mapping in template to handle auto replacement of these
-						continue;
-					}
+					//	continue;
+					//}
 					// add the missing placeholder to the dsConfig			
 					AttributePage configPage = dsConfig.getAttributePageByInternalName(templatePage.getInternalName());
 					if (configPage == null){
@@ -2162,12 +2224,84 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					}
 			
 					
+					
+					// resolve what to do depending on type of placeholder
+					if (configAttName.equals(templateAttName)){
+						// external placeholder
+						if (!templateAtt.containsDynamicAttributeContent(dsConfig.getDataset())){
+							// add an entry if dsConfig already has an equivalent placeholder but make sure previous datasets also have one
+							List existingAtts = configCollection.getAttributeDescriptions();
+							for (int m = 0; m < existingAtts.size(); m++){
+								AttributeDescription existingAtt = (AttributeDescription) existingAtts.get(m);
+								
+								if (!existingAtt.getInternalName().matches(".+\\..+")) continue;
+								
+								if (existingAtt.getInternalName().split("\\.")[1].equals(templateAttName.split("\\.")[1])){
+									if (templateAtt.getDynamicAttributeContents().size() > 0){}
+									else{
+										String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
+										for (int n = 0; n < datasetNames.length; n++){
+											String datasetName = datasetNames[n];
+											if (datasetName.equals(dsConfig.getDataset())) continue;
+											templateAtt.addDynamicAttributeContent(new DynamicAttributeContent(datasetName,"",templateAtt.getPointerDataset(),templateAtt.getPointerInterface(),templateAtt.getPointerAttribute(),templateAtt.getPointerFilter()));
+										}	
+									}
+									templateAtt.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),
+												"",existingAtt.getPointerDataset(),existingAtt.getPointerInterface(),existingAtt.getPointerAttribute(),existingAtt.getPointerFilter()));
+									templateAtt.setPointerDataset("MULTI");
+									templateAtt.setPointerInterface("MULTI");
+									templateAtt.setPointerFilter("MULTI");
+									templateAtt.setPointerAttribute("MULTI");
+									break;
+								}	
+							}						
+						}
+					}
+					else{
+						// internal placeholder
+						if (!templateAtt.containsDynamicAttributeContent(dsConfig.getDataset())){
+							// always add an entry but make sure previous datasets also have one
+							if (templateAtt.getDynamicAttributeContents().size() > 0){}
+							else{
+								String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
+								for (int m = 0; m < datasetNames.length; m++){
+									String datasetName = datasetNames[m];
+									if (datasetName.equals(dsConfig.getDataset())) continue;
+									templateAtt.addDynamicAttributeContent(new DynamicAttributeContent(datasetName,"",templateAtt.getPointerDataset(),templateAtt.getPointerInterface(),templateAtt.getPointerAttribute(),templateAtt.getPointerFilter()));
+								}
+								
+							}
+							templateAtt.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),
+								"",dsConfig.getDataset(),templateAtt.getPointerInterface(),templateAtt.getPointerAttribute(),templateAtt.getPointerFilter()));
+							templateAtt.setPointerDataset("MULTI");
+							templateAtt.setPointerInterface("MULTI");
+							templateAtt.setPointerFilter("MULTI");
+							templateAtt.setPointerAttribute("MULTI");
+							 	
+						}
+					}
+					
+					if (templateAtt.containsDynamicAttributeContent(dsConfig.getDataset())){
+						AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
+						DynamicAttributeContent templateSettings = templateAtt.getDynamicAttributeContentByInternalName(dsConfig.getDataset());
+						configAttToAdd.setInternalName(templateSettings.getPointerDataset()+"."+templateSettings.getPointerFilter());
+						configAttToAdd.setPointerDataset(templateSettings.getPointerDataset());
+						configAttToAdd.setPointerInterface(templateSettings.getPointerInterface());
+						configAttToAdd.setPointerAttribute(templateSettings.getPointerAttribute());
+						configAttToAdd.setPointerFilter(templateSettings.getPointerFilter());
+								
+						if (!configCollection.containsAttributeDescription(configAttToAdd.getInternalName())) 
+							configCollection.addAttributeDescription(configAttToAdd);
+					}
+					
+					
+					
 			
 			
-					AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
-					configAttToAdd.setInternalName(configAttName);
-					if (!configCollection.containsAttributeDescription(configAttName)) 
-						configCollection.addAttributeDescription(configAttToAdd);					
+					//AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
+					//configAttToAdd.setInternalName(configAttName);
+					//if (!configCollection.containsAttributeDescription(configAttName)) 
+					//	configCollection.addAttributeDescription(configAttToAdd);					
 				}
 			}
 		}	  		
