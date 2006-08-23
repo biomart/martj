@@ -75,6 +75,8 @@ public class DatasetConfigXMLUtils {
   private final String DYNAMICATTRIBUTECONTENT = "DynamicAttributeContent";
   private final String DYNAMICFILTERCONTENT = "DynamicFilterContent";
   private final String DYNAMICDATASETCONTENT = "DynamicDatasetContent";
+  private final String DYNAMICIMPORTABLECONTENT = "DynamicImportableContent";
+  private final String DYNAMICEXPORTABLECONTENT = "DynamicExportableContent";
   private final String DSATTRIBUTEGROUP = "DSAttributeGroup";
   private final String OPTION = "Option";
   private final String PUSHACTION = "PushAction";
@@ -347,12 +349,28 @@ public class DatasetConfigXMLUtils {
   private Importable getImportable(Element thisElement) throws ConfigurationException {
 	Importable im = new Importable();
 	loadAttributesFromElement(thisElement, im);
+	
+	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, DYNAMICIMPORTABLECONTENT));
+	  iter.hasNext();
+	  ) {
+	  Element element = (Element) iter.next();
+	  im.addDynamicImportableContent(getDynamicImportableContent(element));
+	}	
+	
 	return im;
   }
   
   private Exportable getExportable(Element thisElement) throws ConfigurationException {
 	Exportable ex = new Exportable();
 	loadAttributesFromElement(thisElement, ex);
+	
+	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, DYNAMICEXPORTABLECONTENT));
+	  iter.hasNext();
+	  ) {
+	  Element element = (Element) iter.next();
+	  ex.addDynamicExportableContent(getDynamicExportableContent(element));
+	}
+	
 	return ex;
   }
 
@@ -545,6 +563,18 @@ public class DatasetConfigXMLUtils {
 	 return a;	 
   }
 
+  private DynamicImportableContent getDynamicImportableContent(Element thisElement) throws ConfigurationException {
+	 DynamicImportableContent a = new DynamicImportableContent();
+	 loadAttributesFromElement(thisElement, a);
+	 return a;	 
+  }
+  
+  private DynamicExportableContent getDynamicExportableContent(Element thisElement) throws ConfigurationException {
+	 DynamicExportableContent a = new DynamicExportableContent();
+	 loadAttributesFromElement(thisElement, a);
+	 return a;	 
+  }
+  
   /**
    * Writes a DatasetConfig object as XML to the given File.  Handles opening and closing of the OutputStream.
    * @param dsv -- DatasetConfig object
@@ -741,6 +771,18 @@ public class DatasetConfigXMLUtils {
 	 return datt;
   }
 
+  private Element getDynamicImportableContentElement(DynamicImportableContent dynAttribute) {
+	 Element datt = new Element(DYNAMICIMPORTABLECONTENT);
+	 loadElementAttributesFromObject(dynAttribute, datt);
+	 return datt;
+  }
+  
+  private Element getDynamicExportableContentElement(DynamicExportableContent dynAttribute) {
+	 Element datt = new Element(DYNAMICEXPORTABLECONTENT);
+	 loadElementAttributesFromObject(dynAttribute, datt);
+	 return datt;
+  }
+
   private Element getFilterPageElement(FilterPage fpage) {
     Element page = new Element(FILTERPAGE);
     loadElementAttributesFromObject(fpage, page);
@@ -800,12 +842,18 @@ public class DatasetConfigXMLUtils {
   private Element getImportableElement(Importable smodule) {
 	Element module = new Element(IMPORTABLE);
 	loadElementAttributesFromObject(smodule, module);
+	List ads = smodule.getDynamicImportableContents();
+	for (Iterator iter = ads.iterator(); iter.hasNext();)
+	   module.addContent(getDynamicImportableContentElement((DynamicImportableContent) iter.next()));	
 	return module;
   }
   
   private Element getExportableElement(Exportable smodule) {
 	Element module = new Element(EXPORTABLE);
 	loadElementAttributesFromObject(smodule, module);
+	List ads = smodule.getDynamicExportableContents();
+	for (Iterator iter = ads.iterator(); iter.hasNext();)
+	   module.addContent(getDynamicExportableContentElement((DynamicExportableContent) iter.next()));		
 	return module;
   }
 

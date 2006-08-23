@@ -823,15 +823,15 @@ public class DatabaseDatasetConfigUtils {
 			//ad.setLinkoutURL("");		
 		}
 		
-		Exportable[] exps = templateConfig.getExportables();
-		for (int i = 0; i < exps.length; i++){
-			exps[i].setLinkVersion("");
-		}
+		//Exportable[] exps = templateConfig.getExportables();
+		//for (int i = 0; i < exps.length; i++){
+		//	exps[i].setLinkVersion("");
+		//}
 		
-		Importable[] imps = templateConfig.getImportables();
-		for (int i = 0; i < imps.length; i++){
-			imps[i].setLinkVersion("");
-		}	
+		//Importable[] imps = templateConfig.getImportables();
+		//for (int i = 0; i < imps.length; i++){
+		//	imps[i].setLinkVersion("");
+		//}	
 		
 		storeTemplateXML(templateConfig,template);
 
@@ -1978,67 +1978,188 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	Importable[] configImps = dsConfig.getImportables();
 	OUTER:for (int i = 0; i < configImps.length; i++){
 		Importable[] tempImps = templateConfig.getImportables();
-		for (int j = 0; j < tempImps.length; j++){
+		for (int j = 0; j < tempImps.length; j++){	
 			if (tempImps[j].getInternalName().equals(configImps[i].getInternalName())) {
-				// make sure list of filters matches template
-				configImps[i].setFilters(tempImps[j].getFilters());
+				
+				
+				if (tempImps[j].getDynamicImportableContents().size() > 0){
+					// already got multiple settings for this importable
+					if (!tempImps[j].containsDynamicImportableContent(dsConfig.getDataset()))
+						tempImps[j].addDynamicImportableContent(new 
+							DynamicImportableContent(dsConfig.getDataset(),"","",configImps[i].getLinkName(),
+								configImps[i].getLinkVersion(),configImps[i].getName(),configImps[i].getFilters(),""));
+				
+					configImps[i].setLinkName(tempImps[j].getDynamicImportableContentByInternalName(dsConfig.getDataset()).getLinkName());
+					configImps[i].setLinkVersion(tempImps[j].getDynamicImportableContentByInternalName(dsConfig.getDataset()).getLinkVersion());
+					configImps[i].setName(tempImps[j].getDynamicImportableContentByInternalName(dsConfig.getDataset()).getName());
+					configImps[i].setFilters(tempImps[j].getDynamicImportableContentByInternalName(dsConfig.getDataset()).getFilters());
+				}
+				else if ((configImps[i].getLinkName() != null && !configImps[i].getLinkName().equals(tempImps[j].getLinkName())) ||
+				         (configImps[i].getName() != null && !configImps[i].getName().equals(tempImps[j].getName())) ||
+					     (configImps[i].getLinkVersion() != null && !configImps[i].getLinkVersion().equals(tempImps[j].getLinkVersion())) ||
+				         (configImps[i].getFilters() != null && !configImps[i].getFilters().equals(tempImps[j].getFilters()))) {
+							// if this config has a different setting then start using dynamic objects
+							// create dynamic objects - add one per existing dataset set to current template linkoutURL
+							String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
+							for (int l = 0; l < datasetNames.length; l++){
+								String datasetName = datasetNames[l];
+								if (datasetName.equals(dsConfig.getDataset())) continue;
+								tempImps[j].addDynamicImportableContent(new 
+									DynamicImportableContent(datasetName,"","",tempImps[j].getLinkName(),
+									   tempImps[j].getLinkVersion(),tempImps[j].getName(),tempImps[j].getFilters(),""));
+							}
+							tempImps[j].setLinkName("MULTI");
+							tempImps[j].setName("MULTI");
+							tempImps[j].setLinkVersion("MULTI");
+							tempImps[j].setFilters("MULTI");
+		
+							tempImps[j].addDynamicImportableContent(new 
+								DynamicImportableContent(dsConfig.getDataset(),"","",configImps[i].getLinkName(),
+									configImps[i].getLinkVersion(),configImps[i].getName(),configImps[i].getFilters(),""));
+							configImps[i].setLinkName(tempImps[j].getDynamicImportableContentByInternalName(dsConfig.getDataset()).getLinkName());
+							configImps[i].setLinkVersion(tempImps[j].getDynamicImportableContentByInternalName(dsConfig.getDataset()).getLinkVersion());
+							configImps[i].setName(tempImps[j].getDynamicImportableContentByInternalName(dsConfig.getDataset()).getName());
+							configImps[i].setFilters(tempImps[j].getDynamicImportableContentByInternalName(dsConfig.getDataset()).getFilters());
+										
+				}
+				
+				
+				
 				continue OUTER;
 			} 
 		}
+		// dsConfig has a novel Importable - hence add to template
 		Importable newImp = new Importable(configImps[i]);
-		newImp.setLinkVersion("");
 		templateConfig.addImportable(newImp);
 	}
-	// then add extra template config importables to config if filters exist
+	
+	// then add extra template config importables to config if correct conditions
 	Importable[] tempImps = templateConfig.getImportables();
 	OUTER:for (int i = 0; i < tempImps.length; i++){
+		// skip if the importable has dynamic content or a linkVersion as won't know what to use
+		if (tempImps[i].getDynamicImportableContents().size() > 0 || 
+			(tempImps[i].getLinkVersion() != null && !tempImps[i].getLinkVersion().equals("")))
+				continue;
+				
 		configImps = dsConfig.getImportables();
 		for (int j = 0; j < configImps.length; j++){
+			// skip if importable with same internalName already exists in dsConfig
 			if (tempImps[i].getInternalName().equals(configImps[j].getInternalName())
 				|| (tempImps[i].getFilters().equals(configImps[j].getFilters()))) continue OUTER;
 		}
-		Importable newImp = new Importable(tempImps[i]);
-		String[] filterNames = newImp.getFilters().split(",");
+		
+		// skip if templateConfig contains other Importables with the same filters setting as wouldn't know which one to use
+		for (int j = 0; j < tempImps.length; j++){
+			if (i == j) continue;
+			if (tempImps[i].getFilters().equals(tempImps[j].getFilters())) continue OUTER;	
+		}
+		
+		String[] filterNames = tempImps[i].getFilters().split(",");
 		for (int j = 0; j < filterNames.length; j++){
+			// skip if filters are not defined in the dsConfig
 			if (!dsConfig.containsFilterDescription(filterNames[j]) || 
 				(dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden() != null
 					&& dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden().equals("true"))) 
 						continue OUTER;
 		}
+		
+		// if passsed all above tests then add template Importable to datasetConfig 
+		Importable newImp = new Importable(tempImps[i]);
 		dsConfig.addImportable(newImp);
 	}
+	
+	
+	
 	
 	Exportable[] configExps = dsConfig.getExportables();
 	OUTER:for (int i = 0; i < configExps.length; i++){
 		Exportable[] tempExps = templateConfig.getExportables();
-		for (int j = 0; j < tempExps.length; j++){
+		for (int j = 0; j < tempExps.length; j++){	
 			if (tempExps[j].getInternalName().equals(configExps[i].getInternalName())) {
-				if (!configExps[i].getAttributes().matches(".+__.+")){// lets gtf stay same
-					configExps[i].setAttributes(tempExps[j].getAttributes());
-			    }
+				
+				if (tempExps[j].getDynamicExportableContents().size() > 0){
+					// already got multiple settings for this importable
+					if (!tempExps[j].containsDynamicExportableContent(dsConfig.getDataset()))
+						tempExps[j].addDynamicExportableContent(new 
+							DynamicExportableContent(dsConfig.getDataset(),"","",configExps[i].getLinkName(),
+								configExps[i].getLinkVersion(),configExps[i].getName(),configExps[i].getAttributes(),"",""));
+				
+					configExps[i].setLinkName(tempExps[j].getDynamicExportableContentByInternalName(dsConfig.getDataset()).getLinkName());
+					configExps[i].setLinkVersion(tempExps[j].getDynamicExportableContentByInternalName(dsConfig.getDataset()).getLinkVersion());
+					configExps[i].setName(tempExps[j].getDynamicExportableContentByInternalName(dsConfig.getDataset()).getName());
+					configExps[i].setAttributes(tempExps[j].getDynamicExportableContentByInternalName(dsConfig.getDataset()).getAttributes());
+				}
+				else if ((configExps[i].getLinkName() != null && !configExps[i].getLinkName().equals(tempExps[j].getLinkName())) ||
+									 (configExps[i].getName() != null && !configExps[i].getName().equals(tempExps[j].getName())) ||
+									 (configExps[i].getLinkVersion() != null && !configExps[i].getLinkVersion().equals(tempExps[j].getLinkVersion())) ||
+									 (configExps[i].getAttributes() != null && !configExps[i].getAttributes().equals(tempExps[j].getAttributes()))) {
+							// if this config has a different setting then start using dynamic objects
+							// create dynamic objects - add one per existing dataset set to current template linkoutURL
+							String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
+							for (int l = 0; l < datasetNames.length; l++){
+								String datasetName = datasetNames[l];
+								if (datasetName.equals(dsConfig.getDataset())) continue;
+								tempExps[j].addDynamicExportableContent(new 
+									DynamicExportableContent(datasetName,"","",tempExps[j].getLinkName(),
+									   tempExps[j].getLinkVersion(),tempExps[j].getName(),tempExps[j].getAttributes(),"",""));
+							}
+							tempExps[j].setLinkName("MULTI");
+							tempExps[j].setName("MULTI");
+							tempExps[j].setLinkVersion("MULTI");
+							tempExps[j].setAttributes("MULTI");
+		
+							tempExps[j].addDynamicExportableContent(new 
+								DynamicExportableContent(dsConfig.getDataset(),"","",configExps[i].getLinkName(),
+									configExps[i].getLinkVersion(),configExps[i].getName(),configExps[i].getAttributes(),"",""));
+							configExps[i].setLinkName(tempExps[j].getDynamicExportableContentByInternalName(dsConfig.getDataset()).getLinkName());
+							configExps[i].setLinkVersion(tempExps[j].getDynamicExportableContentByInternalName(dsConfig.getDataset()).getLinkVersion());
+							configExps[i].setName(tempExps[j].getDynamicExportableContentByInternalName(dsConfig.getDataset()).getName());
+							configExps[i].setAttributes(tempExps[j].getDynamicExportableContentByInternalName(dsConfig.getDataset()).getAttributes());
+										
+				}
+				
+				
+				
 				continue OUTER;
 			} 
 		}
+		// dsConfig has a novel Importable - hence add to template
 		Exportable newExp = new Exportable(configExps[i]);
-		newExp.setLinkVersion("");
 		templateConfig.addExportable(newExp);
 	}
+
+
 	Exportable[] tempExps = templateConfig.getExportables();
 	OUTER:for (int i = 0; i < tempExps.length; i++){
+		// skip if the importable has dynamic content or a linkVersion as won't know what to use
+		if (tempExps[i].getDynamicExportableContents().size() > 0 || 
+			(tempExps[i].getLinkVersion() != null && !tempExps[i].getLinkVersion().equals("")))
+				continue;
+				
 		configExps = dsConfig.getExportables();
 		for (int j = 0; j < configExps.length; j++){
+			// skip if importable with same internalName already exists in dsConfig
 			if (tempExps[i].getInternalName().equals(configExps[j].getInternalName())
 				|| (tempExps[i].getAttributes().equals(configExps[j].getAttributes()))) continue OUTER;
 		}
-		Exportable newExp = new Exportable(tempExps[i]);
-		String[] attributeNames = newExp.getAttributes().split(",");
-		for (int j = 0; j < attributeNames.length; j++){
-			//if (!dsConfig.containsAttributeDescription(attributeNames[j])) continue OUTER; 
-			if (!dsConfig.containsAttributeDescription(attributeNames[j]) || 
-				(dsConfig.getAttributeDescriptionByInternalName(attributeNames[j]).getHidden() != null
-					&& dsConfig.getAttributeDescriptionByInternalName(attributeNames[j]).getHidden().equals("true"))) 
+		
+		// skip if templateConfig contains other Importables with the same filters setting as wouldn't know which one to use
+		for (int j = 0; j < tempExps.length; j++){
+			if (i == j) continue;
+			if (tempExps[i].getAttributes().equals(tempExps[j].getAttributes())) continue OUTER;	
+		}
+		
+		String[] filterNames = tempExps[i].getAttributes().split(",");
+		for (int j = 0; j < filterNames.length; j++){
+			// skip if filters are not defined in the dsConfig
+			if (!dsConfig.containsFilterDescription(filterNames[j]) || 
+				(dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden() != null
+					&& dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden().equals("true"))) 
 						continue OUTER;
 		}
+		
+		// if passsed all above tests then add template Importable to datasetConfig 
+		Exportable newExp = new Exportable(tempExps[i]);
 		dsConfig.addExportable(newExp);
 	}
 	

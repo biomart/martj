@@ -18,17 +18,11 @@
  
 package org.ensembl.mart.lib.config;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-
  /** 
   * Allows a FilterDescription Object to code whether to enable another FilterDescription Object
-  * in the UI, possibly based on a particular value of the enabling FilterDescription.
- * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
- * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+ * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
  */
-public class Exportable extends BaseNamedConfigurationObject {
+public class DynamicExportableContent extends BaseNamedConfigurationObject {
   private final String linkNameKey = "linkName";
   private final String linkVersionKey = "linkVersion";
   private final String nameKey = "name";
@@ -36,21 +30,18 @@ public class Exportable extends BaseNamedConfigurationObject {
   private final String orderByKey = "orderBy";
   private final String defaultKey = "default";
   private int[] reqFields = {0,5,7,8};// rendered red in AttributeTable
-
-  private List dynamicExportableContents = new ArrayList();
-  private Hashtable dynamicExportableContentNameMap = new Hashtable();
-   
+ 
 	/**
 	 * Copy Constructor. Constructs a new Importable that is a
 	 * exact copy of an existing Importable.
 	 * @param e Importable Object to copy.
 	 */ 
-  public Exportable(Exportable e) {
+  public DynamicExportableContent(DynamicExportableContent e) {
   	super(e);
   	setRequiredFields(reqFields); 
   }
   
-  public Exportable() {
+  public DynamicExportableContent() {
   	super();
     
     setAttribute(linkNameKey, null);
@@ -62,7 +53,7 @@ public class Exportable extends BaseNamedConfigurationObject {
 	setRequiredFields(reqFields);
   }
   
-  public Exportable(String linkName)  throws ConfigurationException {
+  public DynamicExportableContent(String linkName)  throws ConfigurationException {
     this(linkName, null, null, linkName, null, null, null, null, null);
   }
   
@@ -71,7 +62,7 @@ public class Exportable extends BaseNamedConfigurationObject {
    * @param ref - String internalName of the FilterDescription to Importable.
    * @throws ConfigurationException when ref is null or empty.
    */
-  public Exportable(String internalName, String displayName, String description, String linkName) throws ConfigurationException {
+  public DynamicExportableContent(String internalName, String displayName, String description, String linkName) throws ConfigurationException {
   	this(internalName, displayName, description, linkName, null, null, null, null, null);
   }
   
@@ -81,7 +72,7 @@ public class Exportable extends BaseNamedConfigurationObject {
    * @param valueCondition - String Condition for Value of the Enabling FilterDescription required for it to Importable the referent FilterDescription.
    * @throws ConfigurationException when ref is null or empty.
    */
-  public Exportable(String internalName, String displayName, String description, String linkName, String linkVersion, String moduleName, String attributes, String orderBy, String d) throws ConfigurationException {
+  public DynamicExportableContent(String internalName, String displayName, String description, String linkName, String linkVersion, String moduleName, String attributes, String orderBy, String d) throws ConfigurationException {
   	super(internalName, displayName, description);
   	
   	if (linkName == null || "".equals(linkName))
@@ -95,71 +86,6 @@ public class Exportable extends BaseNamedConfigurationObject {
 	setAttribute(defaultKey, d);
 	setRequiredFields(reqFields);
   }
-
-  /**
-   * Add a dynamicExportableContent to the AttributeDescription.
-   * 
-   * @param a dynamicExportableContent object.
-   */
-  public void addDynamicExportableContent(DynamicExportableContent a) {
-	  dynamicExportableContents.add(a);
-	  dynamicExportableContentNameMap.put(a.getInternalName(), a);
-  }
-
-  /**
-   * Remove an dynamicExportableContent from this AttributeDescription.
-   * @param a -- dynamicExportableContent to be removed.
-   */
-  public void removeDynamicExportableContent(DynamicExportableContent a) {
-	dynamicExportableContentNameMap.remove(a.getInternalName());
-	dynamicExportableContents.remove(a);
-  }
-
-  /**
-   * Insert an DynamicExportableContent at a particular position within the Attribute.
-   * DynamicExportableContent set at or after the given position are shift right.
-   * @param position -- position at which to insert the given DynamicExportableContent
-   * @param a -- DynamicExportableContent to insert
-   */
-  public void insertDynamicExportableContent(int position, DynamicExportableContent a) {
-	dynamicExportableContents.add(position, a);
-	dynamicExportableContentNameMap.put(a.getInternalName(), a);
-  }
-
-  /**
-	* Get a specific DynamicExportableContent, named by internalName.
-	*  
-	* @param internalName name of the requested dynamicExportableContent
-	* @return DynamicExportableContent requested, or null
-	*/
-  public DynamicExportableContent getDynamicExportableContentByInternalName(String internalName) {
-	if ( containsDynamicExportableContent(internalName) )
-		return (DynamicExportableContent) dynamicExportableContentNameMap.get(internalName);
-	else
-		return null;
-  }
-  
-  /**
-	  * Check if this AttributeDescription contains a specific DynamicExportableContent named
-	  * by internalName.
-	  *  
-	  * @param internalName name of the requested DynamicExportableContent object
-	  * @return boolean, true if found, false if not.
-	  */
-  public boolean containsDynamicExportableContent(String internalName) {
-	return dynamicExportableContentNameMap.containsKey(internalName);
-  }
-  
-	
-  /**
-   * Returns a List of DynamicExportableContent objects, in the order they were added.
-   * 
-   * @return List of DynamicExportableContent objects.
-   */
-  public List getDynamicExportableContents() {
-	  return new ArrayList(dynamicExportableContents);
-  }
-
 
 	/**
 	 * Get the Reference for this Importable.  Refers to the internalName of a FilterDescription to Importable.
@@ -263,7 +189,7 @@ public class Exportable extends BaseNamedConfigurationObject {
 	 * Allows Equality Comparisons manipulation of Importable objects
 	 */
 	public boolean equals(Object o) {
-		return o instanceof Exportable && hashCode() == o.hashCode();
+		return o instanceof DynamicExportableContent && hashCode() == o.hashCode();
 	}
 
 	/**

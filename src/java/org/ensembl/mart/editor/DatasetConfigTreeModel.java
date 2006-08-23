@@ -87,6 +87,16 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 				config = (DatasetConfig) parentNode.getUserObject();
 				config.addDynamicDatasetContent((DynamicDatasetContent) editingNode.getUserObject());
 			}	
+		} else if (parentClassName.equals("org.ensembl.mart.lib.config.Importable")) {
+			if (childClassName.equals("org.ensembl.mart.lib.config.DynamicImportableContent")) {
+				Importable imp = (Importable) parentNode.getUserObject();
+				imp.addDynamicImportableContent((DynamicImportableContent) editingNode.getUserObject());
+			}
+		} else if (parentClassName.equals("org.ensembl.mart.lib.config.Exportable")) {
+			if (childClassName.equals("org.ensembl.mart.lib.config.DynamicExportableContent")) {
+				Exportable exp = (Exportable) parentNode.getUserObject();
+				exp.addDynamicExportableContent((DynamicExportableContent) editingNode.getUserObject());
+			}
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.FilterPage")) {
 			if (childClassName.equals("org.ensembl.mart.lib.config.FilterGroup")) {
 				FilterPage fp = (FilterPage) parentNode.getUserObject();
@@ -147,6 +157,8 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.DynamicAttributeContent")) {
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.DynamicFilterContent")) {
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.DynamicDatasetContent")) {
+		} else if (parentClassName.equals("org.ensembl.mart.lib.config.DynamicImportableContent")) {
+		} else if (parentClassName.equals("org.ensembl.mart.lib.config.DynamicExportableContent")) {
 		}
 		
 		super.reload(parentNode);
@@ -334,6 +346,12 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 		} else if (parent instanceof org.ensembl.mart.lib.config.DynamicDatasetContent) {
 			String error_string = "Error: DynamicDatasetContent is a leaf node, no insertions are allowed.";
 			return error_string;
+		} else if (parent instanceof org.ensembl.mart.lib.config.DynamicImportableContent) {
+			String error_string = "Error: DynamicImportableContent is a leaf node, no insertions are allowed.";
+			return error_string;
+		} else if (parent instanceof org.ensembl.mart.lib.config.DynamicExportableContent) {
+			String error_string = "Error: DynamicExportableContent is a leaf node, no insertions are allowed.";
+			return error_string;
 		}
 		super.insertNodeInto(editingNode, parentNode, index);
 		return "success";
@@ -358,6 +376,16 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 			} else if (child instanceof org.ensembl.mart.lib.config.DynamicDatasetContent) {
 				config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 				config.removeDynamicDatasetContent((DynamicDatasetContent) node.getUserObject());
+			}
+		}  else if (parent instanceof org.ensembl.mart.lib.config.Importable) {
+			if (child instanceof DynamicImportableContent) {
+				Importable imp = (Importable) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+				imp.removeDynamicImportableContent((DynamicImportableContent) node.getUserObject());
+			}
+		}  else if (parent instanceof Exportable) {
+			if (child instanceof DynamicExportableContent) {
+				Exportable exp = (Exportable) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+				exp.removeDynamicExportableContent((DynamicExportableContent) node.getUserObject());
 			}
 		} else if (parent instanceof org.ensembl.mart.lib.config.FilterPage) {
 			if (child instanceof org.ensembl.mart.lib.config.FilterGroup) {

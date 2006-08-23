@@ -34,6 +34,8 @@ import org.ensembl.mart.lib.config.DatasetConfig;
 //import org.ensembl.mart.lib.config.Disable;
 //import org.ensembl.mart.lib.config.Enable;
 import org.ensembl.mart.lib.config.DynamicAttributeContent;
+import org.ensembl.mart.lib.config.DynamicImportableContent;
+import org.ensembl.mart.lib.config.DynamicExportableContent;
 import org.ensembl.mart.lib.config.DynamicFilterContent;
 import org.ensembl.mart.lib.config.DynamicDatasetContent;
 import org.ensembl.mart.lib.config.Exportable;
@@ -159,6 +161,14 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				DatasetConfigTreeNode impNode = new DatasetConfigTreeNode("Importable:" + impName);
 				impNode.setUserObject(importable);
 				this.add(impNode);
+				List dynamicContentImps = importable.getDynamicImportableContents();
+				for (int a = 0; a < dynamicContentImps.size(); a++){
+					DynamicImportableContent dynAtt = (DynamicImportableContent) dynamicContentImps.get(a);
+					String dynName = dynAtt.getInternalName();
+					DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicImportableContent:" + dynName);
+					dynNode.setUserObject(dynAtt);	
+				}				
+				
 			}
 			Exportable[] exps = dsv.getExportables();
 			for (int i = 0; i < exps.length; i++) {
@@ -167,6 +177,13 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				DatasetConfigTreeNode expNode = new DatasetConfigTreeNode("Exportable:" + expName);
 				expNode.setUserObject(exportable);
 				this.add(expNode);
+				List dynamicContentExps = exportable.getDynamicExportableContents();
+				for (int a = 0; a < dynamicContentExps.size(); a++){
+					DynamicExportableContent dynAtt = (DynamicExportableContent) dynamicContentExps.get(a);
+					String dynName = dynAtt.getInternalName();
+					DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicExportableContent:" + dynName);
+					dynNode.setUserObject(dynAtt);	
+				}				
 			}
 			
 			FilterPage[] fpages = dsv.getFilterPages();
@@ -622,12 +639,36 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 			setName("DynamicFilterContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DynamicDatasetContent")) {
 			setName("DynamicDatasetContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
+		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DynamicImportableContent")) {
+			setName("DynamicImportableContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
+		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DynamicExportableContent")) {
+			setName("DynamicExportableContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Exportable")) {
 			//System.out.println("EXP\t" + ((BaseNamedConfigurationObject) obj).getInternalName());
 			setName("Exportable: " + ((BaseNamedConfigurationObject) obj).getInternalName());
+			Exportable ad = (Exportable) obj;
+			//System.out.println("ATT\t" + ((BaseNamedConfigurationObject) obj).getInternalName()+":"+ad.getDynamicAttributeContents().size());
+			List dynamicContentAtts = ad.getDynamicExportableContents();
+			for (int y = 0; y < dynamicContentAtts.size(); y++){
+				DynamicExportableContent dynAtt = (DynamicExportableContent) dynamicContentAtts.get(y);
+				String dynName = dynAtt.getInternalName();
+				DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicExportableContent:" + dynName);
+				dynNode.setUserObject(dynAtt);	
+				this.add(dynNode);
+			}			
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Importable")) {
 			//System.out.println("IMP\t" + ((BaseNamedConfigurationObject) obj).getInternalName());
 			setName("Importable: " + ((BaseNamedConfigurationObject) obj).getInternalName());
+			Importable ad = (Importable) obj;
+			//System.out.println("ATT\t" + ((BaseNamedConfigurationObject) obj).getInternalName()+":"+ad.getDynamicAttributeContents().size());
+			List dynamicContentAtts = ad.getDynamicImportableContents();
+			for (int y = 0; y < dynamicContentAtts.size(); y++){
+				DynamicImportableContent dynAtt = (DynamicImportableContent) dynamicContentAtts.get(y);
+				String dynName = dynAtt.getInternalName();
+				DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicImportableContent:" + dynName);
+				dynNode.setUserObject(dynAtt);	
+				this.add(dynNode);
+			}	
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Enable")) {
 			//setName("Enable");
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Disable")) {
