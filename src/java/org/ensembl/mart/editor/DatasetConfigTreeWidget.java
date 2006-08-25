@@ -82,7 +82,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 
 	
     public DatasetConfigTreeWidget(File file, MartEditor editor, DatasetConfig dsv, String user, 
-    	String dataset, String datasetID, String schema, String template, String viewFlag){
+    	String dataset, String datasetID, String schema, String template, String settingsFlag){
 
         super("Dataset Tree " + (++openFrameCount),
                 true, //resizable
@@ -140,7 +140,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             					
             				config.setTemplateFlag("1");	
             			}
-            			else if (viewFlag != null){
+            			else if (settingsFlag == null){
             				// have an indiviudal config just for read-only viewing
 							DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, "", true, false, true);
 							DatasetConfigIterator configs = adaptor.getDatasetConfigs();
@@ -164,20 +164,27 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 								}
 					  		}
 					  		
-					  		System.out.println("GOT IMPORTED CONFIG WITH TEMPLATE "+config.getTemplate());
+					  		//System.out.println("GOT IMPORTED CONFIG WITH TEMPLATE "+config.getTemplate());
 					  		
 							// convert config to latest version using xslt - ? whether to do
 							config = MartEditor.getDatabaseDatasetConfigUtils().getXSLTransformedConfig(config);
 							
-							// CHOOSE A TEMPLATE AS FOR NAIVE GENERATION
+							// now just create a template with same name as dataset and open up
+							// if want to change to a more generic n1 template use the Set template option
 							
-							int choice = JOptionPane.showConfirmDialog(null,"Create new template rather than use existing one?");
-							if (choice == 0){// YES
-								template = (String) JOptionPane.showInputDialog(null,"New template name",dataset);		
+							if (settingsFlag.equals("1")){
+								template = dataset;
 							}
-							else if (choice == 1){// NO
-								String[] templates = MartEditor.getDatabaseDatasetConfigUtils().getAllTemplateNames();							
-								if(templates.length!=0){
+							else if (settingsFlag.equals("0")){// the set template option
+							
+								// CHOOSE A TEMPLATE AS FOR NAIVE GENERATION
+								int choice = JOptionPane.showConfirmDialog(null,"Create new template rather than use existing one?");
+								if (choice == 0){// YES
+								template = (String) JOptionPane.showInputDialog(null,"New template name",dataset);		
+								}
+								else if (choice == 1){// NO
+									String[] templates = MartEditor.getDatabaseDatasetConfigUtils().getAllTemplateNames();							
+									if(templates.length!=0){
      									template =
 										  (String) JOptionPane.showInputDialog(
 												null,
@@ -188,22 +195,17 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 												templates,null);
 										if (template == null)
 											  return;
+									}
+									else{
+										JOptionPane.showMessageDialog(null,"No existing templates available. Create a new one");
+										return;								
+									}
 								}
-								else{
-									JOptionPane.showMessageDialog(null,"No existing templates available. Create a new one");
-									return;								
+								else{// CANCEL
+									return;
 								}
+							
 							}
-							else{// CANCEL
-								return;
-							}
-							
-							//System.out.println("HAVE AN UNTEMPLATED CONFIG AND NOW HAVE CHOSEN TO USE TEMPLATE "+template+" FOR IT");
-							
-							//int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateCount(template);
-							//System.out.println("TEMPLATE COUNT IS "+templateCount);
-							
-							// ? JUST CALLING STORE DATASET CONFIGURATION - SHOULD GENERATE AND STORE
 							
 							config.setTemplate(template);
 							DatasetConfigAttributesTable attrTable = new DatasetConfigAttributesTable(

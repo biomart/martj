@@ -350,7 +350,7 @@ System.out.println ("getting driver "+ driver);
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);
 	
-	menuItem = new JMenuItem("Change Template ");
+	menuItem = new JMenuItem("Set Template ");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);
     
@@ -616,7 +616,7 @@ System.out.println ("getting driver "+ driver);
 	  	importConfig();	 
       else if (e.getActionCommand().startsWith("View Dataset Configuration"))
         importDatasetConfig(); 
-	  else if (e.getActionCommand().startsWith("Change Template"))
+	  else if (e.getActionCommand().startsWith("Set Template"))
 		  changeTemplate();   
 	  else if (e.getActionCommand().startsWith("Export"))
 		exportTemplate();  
@@ -902,7 +902,7 @@ System.out.println ("getting driver "+ driver);
 	  DatasetConfigTreeWidget frame = null;
 	  if (importOptions.get(option).equals("0")){
 	  		//don't have a template yet so generate one from the datasetconfig
-	  		System.out.println("DEALING WITH NON-TEMPLATED CONFIG "+option);
+	  		//System.out.println("DEALING WITH NON-TEMPLATED CONFIG "+option);
 
 			String[] datasetIDs = dbutils.getAllDatasetIDsForDataset(user,option);
 			String datasetID;
@@ -924,7 +924,7 @@ System.out.println ("getting driver "+ driver);
 		  		return;
 	
 			frame = new DatasetConfigTreeWidget(null, this, null, user, option, datasetID, 
-		  		databaseDialog.getSchema(),null,null);
+		  		databaseDialog.getSchema(),null,"1");
 	  }
 	  else{	
 	      frame = new DatasetConfigTreeWidget(null, this, null, user, null, null, databaseDialog.getSchema(), option,null);
@@ -994,7 +994,7 @@ System.out.println ("getting driver "+ driver);
 	
 
       DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, dataset, datasetID, 
-      	databaseDialog.getSchema(),null,"true");
+      	databaseDialog.getSchema(),null,null);
       frame.setVisible(true);
       desktop.add(frame);
       try {
@@ -1054,13 +1054,12 @@ System.out.println ("getting driver "+ driver);
 
 	  if (datasetID == null)
 		return;
-	
 
 	  //DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, dataset, datasetID, 
 	  //	databaseDialog.getSchema(),null,"true");
 		
 	  DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, dataset, datasetID, 
-						databaseDialog.getSchema(),null,null);	
+						databaseDialog.getSchema(),null,"0");	
 		
 	  frame.setVisible(true);
 	  desktop.add(frame);
@@ -1202,7 +1201,7 @@ System.out.println ("getting driver "+ driver);
 		return;
 	  }
 */
-	   String template;	
+	  String template;	
 	  int choice = JOptionPane.showConfirmDialog(null,"Create new template rather than use existing one?");
 		  if (choice == 0){// YES
 			  template = (String) JOptionPane.showInputDialog(null,"New template name",dataset);		
