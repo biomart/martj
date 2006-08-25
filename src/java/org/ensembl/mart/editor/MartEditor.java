@@ -344,7 +344,13 @@ System.out.println ("getting driver "+ driver);
     menuItem.addActionListener(menuActionListener);
     menu.add(menuItem);
     
+	menu.addSeparator();
+    
 	menuItem = new JMenuItem("View Dataset Configuration ");
+	menuItem.addActionListener(menuActionListener);
+	menu.add(menuItem);
+	
+	menuItem = new JMenuItem("Change Template ");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);
     
@@ -610,6 +616,8 @@ System.out.println ("getting driver "+ driver);
 	  	importConfig();	 
       else if (e.getActionCommand().startsWith("View Dataset Configuration"))
         importDatasetConfig(); 
+	  else if (e.getActionCommand().startsWith("Change Template"))
+		  changeTemplate();   
 	  else if (e.getActionCommand().startsWith("Export"))
 		exportTemplate();  
       //else if (e.getActionCommand().startsWith("Export"))
@@ -999,6 +1007,73 @@ System.out.println ("getting driver "+ driver);
     } finally {
       enableCursor();
     }
+  }
+
+  public void changeTemplate() {
+	try {
+	  if (ds == null) {
+		JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+		return;
+	  }
+
+	  disableCursor();
+
+	  String[] datasets = dbutils.getAllDatasetNames(user,martUser);
+	  if (datasets.length == 0){
+		JOptionPane.showMessageDialog(this, "No datasets in this database", "ERROR", 0);
+				return;
+	  }
+		 String dataset =
+		(String) JOptionPane.showInputDialog(
+		  null,
+		  "Choose one",
+		  "Dataset config",
+		  JOptionPane.INFORMATION_MESSAGE,
+		  null,
+		  datasets,
+		  datasets[0]);
+
+	  if (dataset == null)
+		return;
+
+	  String[] datasetIDs = dbutils.getAllDatasetIDsForDataset(user,dataset);
+	  String datasetID;
+	  if (datasetIDs.length == 1)
+		datasetID = datasetIDs[0];
+	  else {
+		datasetID =
+		  (String) JOptionPane.showInputDialog(
+			null,
+			"Choose one",
+			"Dataset ID",
+			JOptionPane.INFORMATION_MESSAGE,
+			null,
+			datasetIDs,
+			datasetIDs[0]);
+	  }
+
+	  if (datasetID == null)
+		return;
+	
+
+	  //DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, dataset, datasetID, 
+	  //	databaseDialog.getSchema(),null,"true");
+		
+	  DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, dataset, datasetID, 
+						databaseDialog.getSchema(),null,null);	
+		
+	  frame.setVisible(true);
+	  desktop.add(frame);
+	  try {
+		frame.setSelected(true);
+	  } catch (java.beans.PropertyVetoException e) {
+	  }
+	} catch (ConfigurationException e) {
+	  JOptionPane.showMessageDialog(this, "No datasets available for import - is this a BioMart compatible schema? Missing  meta_configuration tables?" +
+			" Empty meta_configuration tables?", "ERROR", 0);
+	} finally {
+	  enableCursor();
+	}
   }
 
 

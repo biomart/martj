@@ -769,7 +769,8 @@ public class DatabaseDatasetConfigUtils {
 				fd.setField("");
 				fd.setDisplayName("");
 				fd.setDescription("");
-				fd.setKey("");		
+				fd.setKey("");
+				fd.setLegalQualifiers("");		
 		    }
 			
 			// change internal placeholders to template.filter
@@ -811,7 +812,8 @@ public class DatabaseDatasetConfigUtils {
 				ad.setField("");
 				ad.setDisplayName("");
 				ad.setDescription("");
-				ad.setKey("");	
+				ad.setKey("");
+				ad.setLinkoutURL("");	
 			}
 			// change internal placeholders to template.placeholder
 			if (ad.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
@@ -1366,7 +1368,7 @@ public class DatabaseDatasetConfigUtils {
 					}
 				}			
 			}	
-						
+			System.out.println("STORING WITH "+dsConfig.getDisplayName()+":"+dsConfig.getVersion());			
 			storeDatasetConfiguration(
 										MartEditor.getUser(),
 										dsConfig.getInternalName(),
@@ -1446,6 +1448,7 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 			
 			// dynamic content handling eg linkoutURL
 			if (configAtt.getLinkoutURL() == null) configAtt.setLinkoutURL("");// avoids template problems
+			if (templateAttribute.getLinkoutURL() == null) templateAttribute.setLinkoutURL("");// avoids template problems
 			if (templateAttribute.getDynamicAttributeContents().size() > 0){
 				// already got multiple settings for this attribute
 				if (!templateAttribute.containsDynamicAttributeContent(dsConfig.getDataset()))
@@ -1703,6 +1706,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		  
 		  // dynamic content handling eg linkoutURL
           if (configAtt.getOtherFilters() == null) configAtt.setOtherFilters("");// avoids template problems
+		  if (templateFilter.getOtherFilters() == null) templateFilter.setOtherFilters("");// avoids template problems
           if (templateFilter.getDynamicFilterContents().size() > 0){
 			// already got multiple settings for this attribute
 			if (!templateFilter.containsDynamicFilterContent(dsConfig.getDataset()))
@@ -1712,7 +1716,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			configAttToAdd.setOtherFilters(templateFilter.getDynamicFilterContentByInternalName(dsConfig.getDataset()).getOtherFilters());
 		  }
 		  else if (!configAtt.getOtherFilters().equals(templateFilter.getOtherFilters())){
-					// if this config has a different setting then start using dynamic objects
+		  			// if this config has a different setting then start using dynamic objects
 					// create dynamic objects - add one per existing dataset set to current template linkoutURL
 					String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
 					for (int j = 0; j < datasetNames.length; j++){
@@ -1917,6 +1921,9 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	// dynamic content handling eg linkoutURL
 	if (dsConfig.getDisplayName() == null) dsConfig.setDisplayName("");// avoids template problems
 	if (dsConfig.getVersion() == null) dsConfig.setVersion("");// avoids template problems
+	if (templateConfig.getDisplayName() == null) templateConfig.setDisplayName("");// avoids template problems
+	if (templateConfig.getVersion() == null) templateConfig.setVersion("");// avoids template problems
+		
 	if (templateConfig.getDynamicDatasetContents().size() > 0){
 		// already got multiple settings for this template
 		if (!templateConfig.containsDynamicDatasetContent(dsConfig.getDataset()))
@@ -1942,6 +1949,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 				dsConfig.setDisplayName(templateConfig.getDynamicDatasetContentByInternalName(dsConfig.getDataset()).getDisplayName());			
 				dsConfig.setVersion(templateConfig.getDynamicDatasetContentByInternalName(dsConfig.getDataset()).getVersion());			
 	}
+	
 	// filter merge
 	List filters = dsConfig.getAllFilterDescriptions();
 
@@ -2166,6 +2174,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	}
 	
 	// add any missing placeholders from template to the dataset - useful for naive
+	// don't bother with MULTI settings as XSLT transformation will remove anyhow
 	
 	FilterPage[] templatePages = templateConfig.getFilterPages();	
 	for (int i = 0; i < templatePages.length; i++){
@@ -2238,9 +2247,9 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 									}
 									templateAtt.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),
 												"",existingFilter.getPointerDataset(),existingFilter.getPointerInterface(),existingFilter.getPointerFilter()));
-									templateAtt.setPointerDataset("MULTI");
-									templateAtt.setPointerInterface("MULTI");
-									templateAtt.setPointerFilter("MULTI");						
+									//templateAtt.setPointerDataset("MULTI");
+									//templateAtt.setPointerInterface("MULTI");
+									//templateAtt.setPointerFilter("MULTI");						
 									break;
 								}
 								
@@ -2263,9 +2272,9 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 							}
 							templateAtt.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),
 								"",dsConfig.getDataset(),templateAtt.getPointerInterface(),templateAtt.getPointerFilter()));
-							templateAtt.setPointerDataset("MULTI");
-							templateAtt.setPointerInterface("MULTI");
-							templateAtt.setPointerFilter("MULTI");						
+							//templateAtt.setPointerDataset("MULTI");
+							//templateAtt.setPointerInterface("MULTI");
+							//templateAtt.setPointerFilter("MULTI");						
 							 	
 						}
 					}
@@ -2350,16 +2359,19 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					
 					// resolve what to do depending on type of placeholder
 					if (configAttName.equals(templateAttName)){
-						// external placeholder
+						// external placeholders - if dsConfig contains a placeholder att with the same internalName
+						// AND in exactly the same page,group,collection defined by internalName then add
+						// new dynamic content entry for it to the template
 						if (!templateAtt.containsDynamicAttributeContent(dsConfig.getDataset())){
 							// add an entry if dsConfig already has an equivalent placeholder but make sure previous datasets also have one
 							List existingAtts = configCollection.getAttributeDescriptions();
 							for (int m = 0; m < existingAtts.size(); m++){
 								AttributeDescription existingAtt = (AttributeDescription) existingAtts.get(m);
-								
+								//System.out.println("EXISTING ATT IN CONFIG COLLECTION IS "+existingAtt.getInternalName());
 								if (!existingAtt.getInternalName().matches(".+\\..+")) continue;
 								
 								if (existingAtt.getInternalName().split("\\.")[1].equals(templateAttName.split("\\.")[1])){
+									
 									if (templateAtt.getDynamicAttributeContents().size() > 0){}
 									else{
 										String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
@@ -2371,10 +2383,10 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 									}
 									templateAtt.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),
 												"",existingAtt.getPointerDataset(),existingAtt.getPointerInterface(),existingAtt.getPointerAttribute(),existingAtt.getPointerFilter()));
-									templateAtt.setPointerDataset("MULTI");
-									templateAtt.setPointerInterface("MULTI");
-									templateAtt.setPointerFilter("MULTI");
-									templateAtt.setPointerAttribute("MULTI");
+									//templateAtt.setPointerDataset("MULTI");
+									//templateAtt.setPointerInterface("MULTI");
+									//templateAtt.setPointerFilter("MULTI");
+									//templateAtt.setPointerAttribute("MULTI");
 									break;
 								}	
 							}						
@@ -2396,10 +2408,10 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 							}
 							templateAtt.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),
 								"",dsConfig.getDataset(),templateAtt.getPointerInterface(),templateAtt.getPointerAttribute(),templateAtt.getPointerFilter()));
-							templateAtt.setPointerDataset("MULTI");
-							templateAtt.setPointerInterface("MULTI");
-							templateAtt.setPointerFilter("MULTI");
-							templateAtt.setPointerAttribute("MULTI");
+							//templateAtt.setPointerDataset("MULTI");
+							//templateAtt.setPointerInterface("MULTI");
+							//templateAtt.setPointerFilter("MULTI");
+							//templateAtt.setPointerAttribute("MULTI");
 							 	
 						}
 					}
@@ -2762,6 +2774,11 @@ public int templateCount(String template) throws ConfigurationException{
 
       PreparedStatement ps1 = conn.prepareStatement(insertSQL1);
 	  PreparedStatement ps2 = conn.prepareStatement(insertSQL2);
+	  
+	  // redo displayName and version as updateConfigToTemplate may have changed 
+	  // ? why don't get all settings direct from dsConfig and get rid of method params
+	  displayName = dsConfig.getDisplayName();
+	  version = dsConfig.getVersion();
 	  
 	  
       //ps.setString(1, internalName);
