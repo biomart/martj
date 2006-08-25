@@ -81,7 +81,8 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
     private MartEditor editor;
 
 	
-    public DatasetConfigTreeWidget(File file, MartEditor editor, DatasetConfig dsv, String user, String dataset, String datasetID, String schema, String template){
+    public DatasetConfigTreeWidget(File file, MartEditor editor, DatasetConfig dsv, String user, 
+    	String dataset, String datasetID, String schema, String template, String viewFlag){
 
         super("Dataset Tree " + (++openFrameCount),
                 true, //resizable
@@ -138,7 +139,19 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             					MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template));
             					
             				config.setTemplateFlag("1");	
-            			}	
+            			}
+            			else if (viewFlag != null){
+            				// have an indiviudal config just for read-only viewing
+							DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, "", true, false, true);
+							DatasetConfigIterator configs = adaptor.getDatasetConfigs();
+							while (configs.hasNext()){
+								DatasetConfig lconfig = (DatasetConfig) configs.next();
+								if (lconfig.getDataset().equals(dataset) && lconfig.getDatasetID().equals(datasetID)){
+									config = lconfig;
+									break;
+								}
+							}	
+            			}
             			else{
       					    // have an individual config without a template - generate template
 					  		DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, "", true, false, true);
@@ -158,27 +171,31 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 							
 							// CHOOSE A TEMPLATE AS FOR NAIVE GENERATION
 							
-							template = dataset;
-      
-							String[] templates = new String[MartEditor.getDatabaseDatasetConfigUtils().getAllTemplateNames().length + 1];
-							templates[0] = dataset;	
-							String[] tNames = MartEditor.getDatabaseDatasetConfigUtils().getAllTemplateNames();
-							for (int i = 0; i < tNames.length; i++){
-							  templates[i+1] = tNames[i];
+							int choice = JOptionPane.showConfirmDialog(null,"Create new template rather than use existing one?");
+							if (choice == 0){// YES
+								template = (String) JOptionPane.showInputDialog(null,"New template name",dataset);		
 							}
-							if(templates.length!=0){
-      
-							   template =
-							  (String) JOptionPane.showInputDialog(
-								null,
-								"Choose one",
-								"Template",
-								JOptionPane.INFORMATION_MESSAGE,
-								null,
-								templates,
-								templates[0]);
-							if (template == null)
-							  return;
+							else if (choice == 1){// NO
+								String[] templates = MartEditor.getDatabaseDatasetConfigUtils().getAllTemplateNames();							
+								if(templates.length!=0){
+     									template =
+										  (String) JOptionPane.showInputDialog(
+												null,
+										  		"Choose one",
+												"Template",
+												JOptionPane.INFORMATION_MESSAGE,
+												null,
+												templates,null);
+										if (template == null)
+											  return;
+								}
+								else{
+									JOptionPane.showMessageDialog(null,"No existing templates available. Create a new one");
+									return;								
+								}
+							}
+							else{// CANCEL
+								return;
 							}
 							
 							//System.out.println("HAVE AN UNTEMPLATED CONFIG AND NOW HAVE CHOSEN TO USE TEMPLATE "+template+" FOR IT");
@@ -254,8 +271,8 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             
             
             // SHOULD BE ABLE TO GET RID OF BELOW
-			int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateCount(config.getTemplate());
-			if (template == null && templateCount > 1){// flag non-template XMLs with a template origin
+			//int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateCount(config.getTemplate());
+			if (template == null){// && templateCount > 1){// flag non-template XMLs with a template origin
 			
 				JOptionPane.showMessageDialog(null,"This config is under template control. You need to edit the template in the majority of cases");
 			

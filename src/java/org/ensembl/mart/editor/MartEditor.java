@@ -344,6 +344,10 @@ System.out.println ("getting driver "+ driver);
     menuItem.addActionListener(menuActionListener);
     menu.add(menuItem);
     
+	menuItem = new JMenuItem("View Dataset Configuration ");
+	menuItem.addActionListener(menuActionListener);
+	menu.add(menuItem);
+    
 //	menuItem = new JMenuItem("Validate ");
 //	menuItem.addActionListener(menuActionListener);
 //	//menuItem.setMnemonic(KeyEvent.VK_I);
@@ -511,7 +515,7 @@ System.out.println ("getting driver "+ driver);
   //Create a new internal frame.
   protected void createFrame(File file) {
 
-    DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(file, this, null, null, null, null, null,null);
+    DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(file, this, null, null, null, null, null,null,null);
     frame.setVisible(true);
     desktop.add(frame);
     try {
@@ -604,8 +608,8 @@ System.out.println ("getting driver "+ driver);
 		//importTemplate(); DISABLED
 	  else if (e.getActionCommand().startsWith("Import"))
 	  	importConfig();	 
-//      else if (e.getActionCommand().startsWith("Import"))
-//        importDatasetConfig(); 
+      else if (e.getActionCommand().startsWith("View Dataset Configuration"))
+        importDatasetConfig(); 
 	  else if (e.getActionCommand().startsWith("Export"))
 		exportTemplate();  
       //else if (e.getActionCommand().startsWith("Export"))
@@ -912,10 +916,10 @@ System.out.println ("getting driver "+ driver);
 		  		return;
 	
 			frame = new DatasetConfigTreeWidget(null, this, null, user, option, datasetID, 
-		  		databaseDialog.getSchema(),null);
+		  		databaseDialog.getSchema(),null,null);
 	  }
 	  else{	
-	      frame = new DatasetConfigTreeWidget(null, this, null, user, null, null, databaseDialog.getSchema(), option);
+	      frame = new DatasetConfigTreeWidget(null, this, null, user, null, null, databaseDialog.getSchema(), option,null);
 	  }
 	      
 	  frame.setVisible(true);
@@ -933,7 +937,7 @@ System.out.println ("getting driver "+ driver);
 	}
   }
 
-/*
+
   public void importDatasetConfig() {
     try {
       if (ds == null) {
@@ -982,7 +986,7 @@ System.out.println ("getting driver "+ driver);
 	
 
       DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, dataset, datasetID, 
-      	databaseDialog.getSchema(),null);
+      	databaseDialog.getSchema(),null,"true");
       frame.setVisible(true);
       desktop.add(frame);
       try {
@@ -996,7 +1000,7 @@ System.out.println ("getting driver "+ driver);
       enableCursor();
     }
   }
-*/
+
 
   public void exportTemplate() {
 	if (ds == null) {
@@ -1097,7 +1101,7 @@ System.out.println ("getting driver "+ driver);
         return;
 
       disableCursor();
-     
+/*     
       String template = dataset;
       
       String[] templates = new String[dbutils.getAllTemplateNames().length + 1];
@@ -1122,8 +1126,38 @@ System.out.println ("getting driver "+ driver);
 	  if (template == null)
 		return;
 	  }
+*/
+	   String template;	
+	  int choice = JOptionPane.showConfirmDialog(null,"Create new template rather than use existing one?");
+		  if (choice == 0){// YES
+			  template = (String) JOptionPane.showInputDialog(null,"New template name",dataset);		
+		  }
+		  else if (choice == 1){// NO
+			  String[] templates = MartEditor.getDatabaseDatasetConfigUtils().getAllTemplateNames();							
+			  if(templates.length!=0){
+					  template =
+						(String) JOptionPane.showInputDialog(
+							  null,
+							  "Choose one",
+							  "Template",
+							  JOptionPane.INFORMATION_MESSAGE,
+							  null,
+							  templates,null);
+					  if (template == null)
+							return;
+			  }
+			  else{
+				  JOptionPane.showMessageDialog(null,"No existing templates available. Create a new one");
+				  return;								
+			  }
+		  }
+		  else{// CANCEL
+			  return;
+		  }
+
+
       	
-      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, null, schema,template);
+      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, null, schema,template,null);
       frame.setVisible(true);
       desktop.add(frame);
       try {
@@ -1436,7 +1470,6 @@ System.out.println ("getting driver "+ driver);
 				//String existingTemplate = odsv.getTemplate();
 				//System.out.println("!!! TEMPLATE IS "+existingTemplate);
 				DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
-				
 				// test if version need updating and newVersion++ if so
 				String datasetVersion = dsv.getVersion();
 				String newDatasetVersion = dbutils.getNewVersion(dsv.getDataset());

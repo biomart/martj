@@ -579,10 +579,15 @@ public class FilterDescription extends QueryFilterSettings {
    * Remove Options from the FilterDescription.
    */
   public void removeOptions() {
-  	Option[] ops = getOptions();
-  	for (int i = 0; i < ops.length; i++){
-  		removeOption(ops[i]);
-  	}
+  	//uiOptionNameMap.clear();
+  	//uiOptions.clear();
+	uiOptionNameMap = new Hashtable();
+	uiOptions = new ArrayList();
+	hasOptions = false;
+  	//Option[] ops = getOptions();
+  	//for (int i = 0; i < ops.length; i++){
+  	//	removeOption(ops[i]);
+  	//}
   }
   
   /**

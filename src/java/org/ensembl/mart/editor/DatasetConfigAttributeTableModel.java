@@ -141,6 +141,18 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {		
 		//Sets the value in the cell at columnIndex and rowIndex to aValue.
 		Object child = node.getUserObject();
+		
+		if (((BaseNamedConfigurationObject)child).getTemplateDrivenFlag() == 1){
+			JOptionPane.showMessageDialog(null,"Read only - import a configuration to edit");
+			return;
+		}
+				
+		//if (((String) aValue).equals("MULTI") ){
+		if (((String) obj.getAttribute(firstColumnData[rowIndex])).equals("MULTI")){
+			JOptionPane.showMessageDialog(null,"Edit the dynamic nodes for each dataset to set this value");
+			return;	
+		}
+		
 		DatasetConfigTreeNode rootNode = (DatasetConfigTreeNode) node.getRoot();
 		DatasetConfig dsConfig = (DatasetConfig) rootNode.getUserObject();		
 		
@@ -166,31 +178,15 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 					DatasetConfig config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 
 					if (child instanceof org.ensembl.mart.lib.config.Importable){
-						if (((BaseNamedConfigurationObject)child).getTemplateDrivenFlag() == 1 && rowIndex != 6){
-							JOptionPane.showMessageDialog(null,"NEED TO EDIT THE TEMPLATE TO CHANGE THIS");
-							return;
-						}
 						config.removeImportable((Importable) node.getUserObject());
 					}
 					else if (child instanceof Exportable){
-						if (((BaseNamedConfigurationObject)child).getTemplateDrivenFlag() == 1 && rowIndex != 6){
-							JOptionPane.showMessageDialog(null,"NEED TO EDIT THE TEMPLATE TO CHANGE THIS");
-							return;
-						}
 						config.removeExportable((Exportable) node.getUserObject());
 					}
 					else if (child instanceof org.ensembl.mart.lib.config.FilterPage){
-						if (((BaseNamedConfigurationObject)child).getTemplateDrivenFlag() == 1){
-							JOptionPane.showMessageDialog(null,"NEED TO EDIT THE TEMPLATE TO CHANGE THIS");
-							return;
-						}
 						config.removeFilterPage((FilterPage) node.getUserObject());
 					}
 					else if (child instanceof org.ensembl.mart.lib.config.AttributePage){
-						if (((BaseNamedConfigurationObject)child).getTemplateDrivenFlag() == 1){
-							JOptionPane.showMessageDialog(null,"NEED TO EDIT THE TEMPLATE TO CHANGE THIS");
-							return;
-						}
 						config.removeAttributePage((AttributePage) node.getUserObject());
 					}
 					else if (child instanceof DynamicDatasetContent){
@@ -209,29 +205,16 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 				} else if (parent instanceof org.ensembl.mart.lib.config.FilterPage) {
 					FilterPage fp = (FilterPage) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.FilterGroup){
-						if (((BaseNamedConfigurationObject)child).getTemplateDrivenFlag() == 1){
-							JOptionPane.showMessageDialog(null,"NEED TO EDIT THE TEMPLATE TO CHANGE THIS");
-							return;
-						}
 						fp.removeFilterGroup((FilterGroup) node.getUserObject());
 					}
 				} else if (parent instanceof org.ensembl.mart.lib.config.FilterGroup) {
 					FilterGroup fg = (FilterGroup) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.FilterCollection){
-						if (((BaseNamedConfigurationObject)child).getTemplateDrivenFlag() == 1){
-							JOptionPane.showMessageDialog(null,"NEED TO EDIT THE TEMPLATE TO CHANGE THIS");
-							return;
-						}
 						fg.removeFilterCollection((FilterCollection) node.getUserObject());
 					}
 				} else if (parent instanceof org.ensembl.mart.lib.config.FilterCollection) {
 					FilterCollection fc = (FilterCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.FilterDescription){
-						if (((BaseNamedConfigurationObject)child).getTemplateDrivenFlag() == 1 && 
-							(rowIndex != 5 && rowIndex != 7 && rowIndex != 12)){
-							JOptionPane.showMessageDialog(null,"NEED TO EDIT THE TEMPLATE TO CHANGE THIS");
-							return;
-						}
 						if (checkFilterUniqueness((String) aValue, rowIndex, dsConfig)){				
 								fc.removeFilterDescription((FilterDescription) node.getUserObject());
 						}
@@ -245,11 +228,7 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 				} else if (parent instanceof FilterDescription) {
 					FilterDescription fdesc = (FilterDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof Option){
-						if (((BaseNamedConfigurationObject)child).getTemplateDrivenFlag() == 1 && 
-							(rowIndex != 5 && rowIndex != 7 && rowIndex != 12)){
-							JOptionPane.showMessageDialog(null,"NEED TO EDIT THE TEMPLATE TO CHANGE THIS");
-							return;
-						}
+						
 						//if (checkOptionUniqueness((String) aValue, dsConfig)){	
 							fdesc.removeOption((Option) node.getUserObject());			
 						//}
@@ -275,29 +254,16 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 				} else if (parent instanceof org.ensembl.mart.lib.config.AttributePage) {
 					AttributePage ap = (AttributePage) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.AttributeGroup){
-						if (((BaseNamedConfigurationObject)child).getTemplateDrivenFlag() == 1){
-							JOptionPane.showMessageDialog(null,"NEED TO EDIT THE TEMPLATE TO CHANGE THIS");
-							return;
-						}
 						ap.removeAttributeGroup((AttributeGroup) node.getUserObject());
 					}
 				} else if (parent instanceof org.ensembl.mart.lib.config.AttributeGroup) {
 					AttributeGroup ag = (AttributeGroup) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.AttributeCollection){
-						if (((BaseNamedConfigurationObject)child).getTemplateDrivenFlag() == 1){
-							JOptionPane.showMessageDialog(null,"NEED TO EDIT THE TEMPLATE TO CHANGE THIS");
-							return;
-						}
 						ag.removeAttributeCollection((AttributeCollection) node.getUserObject());
 					}
 				} else if (parent instanceof org.ensembl.mart.lib.config.AttributeCollection) {
 					AttributeCollection ac = (AttributeCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.AttributeDescription){
-						if (((BaseNamedConfigurationObject)child).getTemplateDrivenFlag() == 1 && 
-							(rowIndex != 5 && rowIndex != 8 && rowIndex != 12)){
-							JOptionPane.showMessageDialog(null,"NEED TO EDIT THE TEMPLATE TO CHANGE THIS");
-							return;
-						}
 						if (checkUniqueness((String) aValue, rowIndex, dsConfig)){				
 							ac.removeAttributeDescription((AttributeDescription) node.getUserObject());
 						}
@@ -317,6 +283,7 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 				}
 
 				obj.setAttribute(firstColumnData[rowIndex], (String) aValue);
+
 
 				if (parent instanceof org.ensembl.mart.lib.config.DatasetConfig) {
 					DatasetConfig config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();

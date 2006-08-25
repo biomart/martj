@@ -159,6 +159,7 @@ public abstract class BaseNamedConfigurationObject extends BaseConfigurationObje
 	 * @param string
 	 */
 	public void setDisplayName(String displayName) {
+		if (displayName == null) displayName = "";
 		attributes.setProperty(displayNameKey, displayName);
 	}
 

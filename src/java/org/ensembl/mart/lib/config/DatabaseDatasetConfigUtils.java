@@ -1445,6 +1445,7 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 			//	configAttToAdd.setLinkoutURL(configAtt.getLinkoutURL());			
 			
 			// dynamic content handling eg linkoutURL
+			if (configAtt.getLinkoutURL() == null) configAtt.setLinkoutURL("");// avoids template problems
 			if (templateAttribute.getDynamicAttributeContents().size() > 0){
 				// already got multiple settings for this attribute
 				if (!templateAttribute.containsDynamicAttributeContent(dsConfig.getDataset()))
@@ -1452,8 +1453,7 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 				
 				configAttToAdd.setLinkoutURL(templateAttribute.getDynamicAttributeContentByInternalName(dsConfig.getDataset()).getLinkoutURL());
 			}
-			else if (configAtt.getLinkoutURL() != null && !configAtt.getLinkoutURL().equals("") 
-					&& !configAtt.getLinkoutURL().equals(templateAttribute.getLinkoutURL())){
+			else if (!configAtt.getLinkoutURL().equals(templateAttribute.getLinkoutURL())){
 						// if this config has a different setting then start using dynamic objects
 						// create dynamic objects - add one per existing dataset set to current template linkoutURL
 						String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
@@ -1699,8 +1699,11 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		  configAttToAdd.setField(configAtt.getField());
 		  //configAttToAdd.setOtherFilters(configAtt.getOtherFilters());
 		  
+		  
+		  
 		  // dynamic content handling eg linkoutURL
-		  if (templateFilter.getDynamicFilterContents().size() > 0){
+          if (configAtt.getOtherFilters() == null) configAtt.setOtherFilters("");// avoids template problems
+          if (templateFilter.getDynamicFilterContents().size() > 0){
 			// already got multiple settings for this attribute
 			if (!templateFilter.containsDynamicFilterContent(dsConfig.getDataset()))
 				templateFilter.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),configAtt.getOtherFilters
@@ -1708,8 +1711,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 				
 			configAttToAdd.setOtherFilters(templateFilter.getDynamicFilterContentByInternalName(dsConfig.getDataset()).getOtherFilters());
 		  }
-		  else if (configAtt.getOtherFilters() != null && !configAtt.getOtherFilters().equals("") 
-				&& !configAtt.getOtherFilters().equals(templateFilter.getOtherFilters())){
+		  else if (!configAtt.getOtherFilters().equals(templateFilter.getOtherFilters())){
 					// if this config has a different setting then start using dynamic objects
 					// create dynamic objects - add one per existing dataset set to current template linkoutURL
 					String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
@@ -1913,6 +1915,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	
 	
 	// dynamic content handling eg linkoutURL
+	if (dsConfig.getDisplayName() == null) dsConfig.setDisplayName("");// avoids template problems
+	if (dsConfig.getVersion() == null) dsConfig.setVersion("");// avoids template problems
 	if (templateConfig.getDynamicDatasetContents().size() > 0){
 		// already got multiple settings for this template
 		if (!templateConfig.containsDynamicDatasetContent(dsConfig.getDataset()))
@@ -1921,10 +1925,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		dsConfig.setDisplayName(templateConfig.getDynamicDatasetContentByInternalName(dsConfig.getDataset()).getDisplayName());
 		dsConfig.setVersion(templateConfig.getDynamicDatasetContentByInternalName(dsConfig.getDataset()).getVersion());
 	}
-	else if ( (dsConfig.getDisplayName() != null && !dsConfig.getDisplayName().equals("") 
-			&& !dsConfig.getDisplayName().equals(templateConfig.getDisplayName())) || 
-	        (dsConfig.getVersion() != null && !dsConfig.getVersion().equals("") 
-				&& !dsConfig.getVersion().equals(templateConfig.getVersion()))){
+	else if (!dsConfig.getDisplayName().equals(templateConfig.getDisplayName()) || 
+	         !dsConfig.getVersion().equals(templateConfig.getVersion())){
 				// if this config has a different setting then start using dynamic objects
 				// create dynamic objects - add one per existing dataset set to current template linkoutURL
 				String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
@@ -2224,7 +2226,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 							for (int m = 0; m < existingFilters.size(); m++){
 								FilterDescription existingFilter = (FilterDescription) existingFilters.get(m);
 								if (!existingFilter.getInternalName().matches(".+\\..+")) continue;
-								if (existingFilter.getInternalName().split(".")[1].equals(templateAttName.split(".")[1])){
+								if (existingFilter.getInternalName().split("\\.")[1].equals(templateAttName.split("\\.")[1])){
 									if (templateAtt.getDynamicFilterContents().size() > 0){}
 									else{
 										String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
@@ -2670,13 +2672,15 @@ public int templateCount(String template) throws ConfigurationException{
       	template = dataset;
       	dsConfig.setTemplate(template);	
       }
-	  sql = "DELETE FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE dataset_id_key="+datasetID;
-	  ps = conn.prepareStatement(sql);
-	  ps.executeUpdate();
+      
+      // moved below sql after templateCount check as breaking new creation
+//	  sql = "DELETE FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE dataset_id_key="+datasetID;
+//	  ps = conn.prepareStatement(sql);
+//	  ps.executeUpdate();
 	  
-	  ps = conn.prepareStatement("INSERT INTO "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" VALUES ("+datasetID+",'"
-					+template+"')");
-	  ps.executeUpdate();	
+//	  ps = conn.prepareStatement("INSERT INTO "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" VALUES ("+datasetID+",'"
+//					+template+"')");
+//	  ps.executeUpdate();	
       
 	  
 	  
@@ -2688,7 +2692,7 @@ public int templateCount(String template) throws ConfigurationException{
 	  //rs.next();
 	  //int result = rs.getInt(1);
       int result = templateCount(template);
-      if (result > 1){//usual 1:1 dataset:template do not get template merging 
+      if (result > 0){//usual 1:1 dataset:template do not get template merging 
       	   // System.out.println("SHOULD MERGE CONFIG AND TEMPLATE TOGETHER NOW");
 		   dsConfig = updateConfigToTemplate(dsConfig,1);
 		   // convert config to latest version using xslt
@@ -2696,9 +2700,18 @@ public int templateCount(String template) throws ConfigurationException{
            doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
       }
       else{
-      	// System.out.println("OVERWRITE TEMPLATE WITH THIS LAYOUT");
 	  	generateTemplateXML(dsConfig);
       }
+  		
+  	  // trial move from above	    
+	  sql = "DELETE FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE dataset_id_key="+datasetID;
+	  ps = conn.prepareStatement(sql);
+	  ps.executeUpdate();
+	  
+	  ps = conn.prepareStatement("INSERT INTO "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" VALUES ("+datasetID+",'"
+					+template+"')");
+	  ps.executeUpdate();	
+      
                
       Timestamp tstamp = new Timestamp(System.currentTimeMillis());
       String [] mytimeStamp = new String[2];
@@ -3116,7 +3129,7 @@ public int templateCount(String template) throws ConfigurationException{
    */
   public String[] getAllTemplateNames() throws ConfigurationException {
 	      
-	Connection conn;
+	Connection conn = null;
 	
 	try {
 		  String sql = "SELECT template FROM "+getSchema()[0]+"."+MARTTEMPLATEDMTABLE;
@@ -3136,7 +3149,9 @@ public int templateCount(String template) throws ConfigurationException{
 	catch(SQLException e){
 		System.out.println("PROBLEM QUERYING "+MARTTEMPLATEDMTABLE+" TABLE "+e.toString());
 		return null;
-	}
+	} finally {
+		DetailedDataSource.close(conn);
+  	}
 	
   }
   
@@ -3186,9 +3201,10 @@ public int templateCount(String template) throws ConfigurationException{
    */
   public HashMap getImportOptions() throws ConfigurationException {
 	      
-	Connection conn;
+	Connection conn = null;
 	
 	try {
+		  createMetaTables("");
 		  HashMap importOptions = new HashMap();
 		  String sql = "SELECT DISTINCT IF (t.template IS NOT NULL, t.template, m.dataset) AS display_label," +		  	                           "IF (t.template IS NOT NULL, 1, 0) AS flag " +		  	                           "FROM "+getSchema()[0]+"."+BASEMETATABLE+" m LEFT JOIN " +										getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" t ON m.dataset_id_key=t.dataset_id_key";
 		  //System.out.println(sql);
@@ -3205,7 +3221,9 @@ public int templateCount(String template) throws ConfigurationException{
 		System.out.println("PROBLEM QUERYING "+MARTTEMPLATEDMTABLE+" TABLE "+e.toString());
 		return null;
 	}
-	
+	finally {
+		DetailedDataSource.close(conn);
+	}
   }	
   
   /**
@@ -4102,6 +4120,9 @@ public int templateCount(String template) throws ConfigurationException{
 			} catch (SQLException e) {
 			  throw new ConfigurationException("Caught SQLException during drop meta tables\n" +e);
 			}
+			finally {
+				DetailedDataSource.close(conn);
+			}
 	    }
 
   }
@@ -4481,7 +4502,6 @@ public int templateCount(String template) throws ConfigurationException{
     
     
     FilterCollection validatedFilterCollection = new FilterCollection(collection);
-
     List allFilts = validatedFilterCollection.getFilterDescriptions();
 
     boolean filtersValid = true;
@@ -4530,7 +4550,6 @@ public int templateCount(String template) throws ConfigurationException{
 	Connection conn)
     throws SQLException, ConfigurationException {
     FilterDescription validatedFilter = new FilterDescription(filter);
-    
     
     DatasetConfig otherDataset = null;
     // if a placeholder get the real filter
@@ -4597,7 +4616,7 @@ public int templateCount(String template) throws ConfigurationException{
       boolean optionsValid = true;
       HashMap brokenOptions = new HashMap();
       Option[] options = validatedFilter.getOptions();      
-     if (options.length > 0 && options[0].getValue() != null && !options[0].getValue().equals("only")){// UPDATE VALUE OPTIONS
+      if (options.length > 0 && options[0].getValue() != null && !options[0].getValue().equals("only")){// UPDATE VALUE OPTIONS
       	    // regenerate options and push actions
      		//System.out.println("UPDATING OPTIONS");
       		// store the option/push action structure so can recreate      		
@@ -4630,7 +4649,6 @@ public int templateCount(String template) throws ConfigurationException{
 			
 			if (field == null || tableName == null)
 				return validatedFilter;
-   
       		// remove all options
       		String[] oldOptionOrder = new String[options.length];
 		    for (int j = 0; j < options.length; j++) {
@@ -4647,7 +4665,6 @@ public int templateCount(String template) throws ConfigurationException{
 			validatedFilter.setQualifier("=");
 			validatedFilter.setLegalQualifiers("=");
 			String colForDisplay = validatedFilter.getColForDisplay();
-			
 			Option[] ops;
 			if (otherDataset != null){
 				ops = getOptions(field, tableName, joinKey, otherDataset, colForDisplay);
@@ -4655,7 +4672,6 @@ public int templateCount(String template) throws ConfigurationException{
 			else{
 				ops = getOptions(field, tableName, joinKey, dsv, colForDisplay);
 			}
-			
 			// add back any options
 			HashMap valMap = new HashMap();// use to keep options in existing order if possible	
 			for (int k = 0; k < ops.length; k++) {
@@ -4677,7 +4693,6 @@ public int templateCount(String template) throws ConfigurationException{
 				  validatedFilter.insertOption(k, (Option) valMap.get(position));
 				  k++;
 			}	
-			
 			// add back any PushActions
 			for (int n = 0; n < pushActions.length; n++){
 				
@@ -4894,7 +4909,7 @@ public int templateCount(String template) throws ConfigurationException{
           validatedFilter.insertOption(position.intValue(), brokenOption);
         }
       }
-      return validatedFilter;
+	  return validatedFilter;
   }	
 
   private Option getValidatedOption(String schema, String catalog, Option option, String dset, Connection conn) throws SQLException {
@@ -6194,9 +6209,11 @@ public int templateCount(String template) throws ConfigurationException{
   private void updateDropDown(DatasetConfig dsConfig, FilterDescription fd1)
     throws ConfigurationException, SQLException {
 
-    Option[] ops = fd1.getOptions();
+    System.out.println("UPDATING OPTION " + fd1.getInternalName());
     
-    //System.out.println("options size " + ops.length);
+    Option[] ops = fd1.getOptions();
+    System.out.println("LENGTH "+ops.length);
+    
     
     if (ops[0].getTableConstraint() != null)
       return;
@@ -6211,10 +6228,12 @@ public int templateCount(String template) throws ConfigurationException{
         pas2 = paOps[0].getPushActions();
     }
 
-    
-    for (int i = 0; i < ops.length; i++) {
-      fd1.removeOption(ops[i]);
-    }
+    System.out.println("REMOVING OPS STARTED"); 
+    fd1.removeOptions();
+    //for (int i = 0; i < ops.length; i++) {
+    //  fd1.removeOption(ops[i]);
+    //}
+    System.out.println("REMOVING FINISHED");
     String field = fd1.getField();
     String tableName = fd1.getTableConstraint();
     String joinKey = fd1.getKey();
