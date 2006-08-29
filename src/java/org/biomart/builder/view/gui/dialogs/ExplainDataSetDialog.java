@@ -62,7 +62,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.WindowContext;
  * and relations not involved directly in this dataset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 9th August 2006
+ * @version 0.1.14, 29th August 2006
  * @since 0.1
  */
 public class ExplainDataSetDialog extends JDialog {
@@ -84,8 +84,6 @@ public class ExplainDataSetDialog extends JDialog {
 
 	private GridBagConstraints fieldLastRowConstraints;
 
-	private DataSet dataset;
-
 	private DataSetTable dsTable;
 
 	private ExplainDataSetDialog(final MartTab martTab,
@@ -95,7 +93,6 @@ public class ExplainDataSetDialog extends JDialog {
 				"explainTableDialogTitle", dsTable.getName()), true);
 		this.dsTable = dsTable;
 		this.martTab = martTab;
-		this.dataset = (DataSet) this.dsTable.getSchema();
 
 		// Make the content pane.
 		final JPanel displayArea = new JPanel(new CardLayout());
@@ -215,7 +212,7 @@ public class ExplainDataSetDialog extends JDialog {
 		this.transformation.add(label);
 		JPanel field = new JPanel();
 		Diagram diagram = new ExplainTransformationDiagram(this.martTab,
-				this.dataset, this.dsTable);
+				this.dsTable);
 		field.add(new JScrollPane(diagram));
 		this.gridBag.setConstraints(field, this.fieldConstraints);
 		this.transformation.add(field);
@@ -231,7 +228,7 @@ public class ExplainDataSetDialog extends JDialog {
 			this.transformation.add(label);
 			field = new JPanel();
 			diagram = new ExplainTransformationDiagram(this.martTab,
-					this.dataset, this.dsTable.getUnderlyingTable());
+					this.dsTable.getUnderlyingTable());
 			field.add(new JScrollPane(diagram));
 			final List includeCols = new ArrayList();
 			for (final Iterator i = this.dsTable.getColumns().iterator(); i
@@ -247,7 +244,7 @@ public class ExplainDataSetDialog extends JDialog {
 				}
 			}
 			diagram = new ExplainTransformationDiagram(this.martTab,
-					this.dataset, includeCols);
+					includeCols);
 			field.add(new JScrollPane(diagram));
 			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
@@ -268,7 +265,7 @@ public class ExplainDataSetDialog extends JDialog {
 					includeCols.add(col);
 			}
 			diagram = new ExplainTransformationDiagram(this.martTab,
-					this.dataset, includeCols);
+					includeCols);
 			field.add(new JScrollPane(diagram));
 			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
@@ -285,8 +282,7 @@ public class ExplainDataSetDialog extends JDialog {
 			this.gridBag.setConstraints(label, this.labelConstraints);
 			this.transformation.add(label);
 			field = new JPanel();
-			diagram = new ExplainTransformationDiagram(this.martTab,
-					this.dataset, k, r);
+			diagram = new ExplainTransformationDiagram(this.martTab, k, r);
 			field.add(new JScrollPane(diagram));
 			final List includeCols = new ArrayList();
 			for (final Iterator j = this.dsTable.getColumns().iterator(); j
@@ -299,7 +295,7 @@ public class ExplainDataSetDialog extends JDialog {
 				}
 			}
 			diagram = new ExplainTransformationDiagram(this.martTab,
-					this.dataset, includeCols);
+					includeCols);
 			field.add(new JScrollPane(diagram));
 			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
@@ -314,7 +310,7 @@ public class ExplainDataSetDialog extends JDialog {
 			final DataSetColumn c = (DataSetColumn) i.next();
 			if (c instanceof ExpressionColumn)
 				expressionCols.add(c);
-			if (c.getPartitionType()!=null)
+			if (c.getPartitionType() != null)
 				partCols.add(c);
 		}
 
@@ -329,7 +325,7 @@ public class ExplainDataSetDialog extends JDialog {
 			this.transformation.add(label);
 			field = new JPanel();
 			diagram = new ExplainTransformationDiagram(this.martTab,
-					this.dataset, expressionCols);
+					expressionCols);
 			field.add(new JScrollPane(diagram));
 			this.gridBag.setConstraints(field,
 					partCols.isEmpty() ? this.fieldLastRowConstraints
@@ -345,8 +341,7 @@ public class ExplainDataSetDialog extends JDialog {
 			this.gridBag.setConstraints(label, this.labelLastRowConstraints);
 			this.transformation.add(label);
 			field = new JPanel();
-			diagram = new ExplainTransformationDiagram(this.martTab,
-					this.dataset, partCols);
+			diagram = new ExplainTransformationDiagram(this.martTab, partCols);
 			field.add(new JScrollPane(diagram));
 			this.gridBag.setConstraints(field, this.fieldLastRowConstraints);
 			this.transformation.add(field);

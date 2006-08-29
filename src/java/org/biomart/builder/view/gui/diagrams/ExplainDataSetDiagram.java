@@ -35,18 +35,18 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * not involved in the construction of the dataset or dataset table concerned.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 27th June 2006
+ * @version 0.1.8, 29th August 2006
  * @since 0.1
  */
 public class ExplainDataSetDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
 
+	private DataSetTable datasetTable;
+
 	/**
 	 * Static reference to the background colour to use for components.
 	 */
 	public static final Color BACKGROUND_COLOUR = Color.WHITE;
-
-	private DataSetTable datasetTable;
 
 	/**
 	 * Creates a diagram explaining the underlying relations beneath a given
@@ -60,9 +60,6 @@ public class ExplainDataSetDiagram extends Diagram {
 	public ExplainDataSetDiagram(final MartTab martTab,
 			final DataSetTable datasetTable) {
 		super(martTab);
-
-		// Set the background.
-		this.setBackground(ExplainDataSetDiagram.BACKGROUND_COLOUR);
 
 		// Remember the table, and calculate the diagram.
 		this.datasetTable = datasetTable;
@@ -109,5 +106,10 @@ public class ExplainDataSetDiagram extends Diagram {
 
 		// Resize the diagram to fit.
 		this.resizeDiagram();
+	}
+	
+	protected void updateAppearance() {
+		// Set the background.
+		this.setBackground(ExplainDataSetDiagram.BACKGROUND_COLOUR);
 	}
 }

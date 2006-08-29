@@ -36,7 +36,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * the basic background object of the diagram.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 20th May 2006
+ * @version 0.1.14, 29th August 2006
  * @since 0.1
  */
 public class SchemaDiagram extends Diagram {
@@ -61,9 +61,6 @@ public class SchemaDiagram extends Diagram {
 	public SchemaDiagram(final MartTab martTab, final Schema schema) {
 		// Call the general diagram constructor first.
 		super(martTab);
-
-		// Set up our background colour.
-		this.setBackground(SchemaDiagram.BACKGROUND_COLOUR);
 
 		// Remember the schema, then lay it out.
 		this.schema = schema;
@@ -135,5 +132,10 @@ public class SchemaDiagram extends Diagram {
 
 		// Resize the diagram to fit our new components.
 		this.resizeDiagram();
+	}
+	
+	protected void updateAppearance() {
+		// Set the background.
+		this.setBackground(SchemaDiagram.BACKGROUND_COLOUR);
 	}
 }

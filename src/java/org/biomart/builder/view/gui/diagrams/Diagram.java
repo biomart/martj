@@ -465,6 +465,7 @@ public abstract class Diagram extends JPanel {
 	 * on a table).
 	 */
 	public void repaintDiagram() {
+		this.updateAppearance();
 		for (final Iterator i = this.componentMap.values().iterator(); i
 				.hasNext();)
 			((DiagramComponent) i.next()).updateAppearance();
@@ -481,4 +482,12 @@ public abstract class Diagram extends JPanel {
 		// Update ourselves.
 		this.validate();
 	}
+	
+	/**
+	 * Update the appearance of this diagram prior to a repaint.
+	 * This is called by {@link #repaintDiagram()} before the repaint is
+	 * done.
+	 *
+	 */
+	protected abstract void updateAppearance();
 }

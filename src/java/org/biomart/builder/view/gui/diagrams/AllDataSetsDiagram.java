@@ -31,7 +31,7 @@ import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
  * {@link SchemaComponent}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 21st June 2006
+ * @version 0.1.3, 29th August 2006
  * @since 0.1
  */
 public class AllDataSetsDiagram extends Diagram {
@@ -53,9 +53,6 @@ public class AllDataSetsDiagram extends Diagram {
 	public AllDataSetsDiagram(final MartTab martTab) {
 		super(martTab);
 
-		// Set the background.
-		this.setBackground(AllDataSetsDiagram.BACKGROUND_COLOUR);
-
 		// Calculate the diagram.
 		this.recalculateDiagram();
 	}
@@ -74,5 +71,10 @@ public class AllDataSetsDiagram extends Diagram {
 
 		// Resize the diagram to fit the components.
 		this.resizeDiagram();
+	}
+	
+	protected void updateAppearance() {
+		// Set the background.
+		this.setBackground(AllDataSetsDiagram.BACKGROUND_COLOUR);
 	}
 }

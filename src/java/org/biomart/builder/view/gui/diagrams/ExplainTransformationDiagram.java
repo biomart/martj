@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.biomart.builder.model.Column;
-import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
@@ -33,27 +32,21 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
-import org.biomart.builder.view.gui.diagrams.contexts.DataSetContext;
-import org.biomart.builder.view.gui.diagrams.contexts.WindowContext;
 
 /**
  * Displays a transformation step, depending on what is passed to the
  * constructor. The results is always a diagram containing only those components
  * which are involved in the current transformation.
+ * <p>
+ * Note how sub-diagrams do not have contexts, in order to prevent
+ * user interaction with them.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 27th July 2006
+ * @version 0.1.2, 29th August 2006
  * @since 0.1
  */
 public class ExplainTransformationDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
-
-	/**
-	 * Static reference to the background colour to use for components.
-	 */
-	public static final Color BACKGROUND_COLOUR = Color.WHITE;
-
-	private DataSet dataset;
 
 	private DataSetTable datasetTable;
 
@@ -66,24 +59,26 @@ public class ExplainTransformationDiagram extends Diagram {
 	private Collection columns;
 
 	/**
+	 * Static reference to the background colour to use for components.
+	 */
+	public static final Color BACKGROUND_COLOUR = Color.WHITE;
+
+	/**
 	 * Creates a diagram showing the given table and possibly it's parent too.
 	 * 
 	 * @param martTab
 	 *            the mart tab to pass menu events onto.
-	 * @param dataset
-	 *            the dataset we are explaining.
 	 * @param datasetTable
 	 *            the dataset table to explain.
 	 */
 	public ExplainTransformationDiagram(final MartTab martTab,
-			final DataSet dataset, final DataSetTable datasetTable) {
+			final DataSetTable datasetTable) {
 		super(martTab);
 
 		// Set the background.
 		this.setBackground(ExplainTransformationDiagram.BACKGROUND_COLOUR);
 
 		// Remember the table, and calculate the diagram.
-		this.dataset = dataset;
 		this.datasetTable = datasetTable;
 		this.recalculateDiagram();
 	}
@@ -93,20 +88,17 @@ public class ExplainTransformationDiagram extends Diagram {
 	 * 
 	 * @param martTab
 	 *            the mart tab to pass menu events onto.
-	 * @param dataset
-	 *            the dataset we are explaining.
 	 * @param table
 	 *            the table to explain.
 	 */
 	public ExplainTransformationDiagram(final MartTab martTab,
-			final DataSet dataset, final Table table) {
+			final Table table) {
 		super(martTab);
 
 		// Set the background.
 		this.setBackground(ExplainTransformationDiagram.BACKGROUND_COLOUR);
 
 		// Remember the table, and calculate the diagram.
-		this.dataset = dataset;
 		this.table = table;
 		this.recalculateDiagram();
 	}
@@ -116,22 +108,19 @@ public class ExplainTransformationDiagram extends Diagram {
 	 * 
 	 * @param martTab
 	 *            the mart tab to pass menu events onto.
-	 * @param dataset
-	 *            the dataset we are explaining.
 	 * @param key
 	 *            the key to explain the relation from.
 	 * @param relation
 	 *            the relation to explain.
 	 */
 	public ExplainTransformationDiagram(final MartTab martTab,
-			final DataSet dataset, final Key key, final Relation relation) {
+			final Key key, final Relation relation) {
 		super(martTab);
 
 		// Set the background.
 		this.setBackground(ExplainTransformationDiagram.BACKGROUND_COLOUR);
 
 		// Remember the key and relation, and calculate the diagram.
-		this.dataset = dataset;
 		this.key = key;
 		this.relation = relation;
 		this.recalculateDiagram();
@@ -142,20 +131,14 @@ public class ExplainTransformationDiagram extends Diagram {
 	 * 
 	 * @param martTab
 	 *            the mart tab to pass menu events onto.
-	 * @param dataset
-	 *            the dataset we are explaining.
 	 * @param columns
 	 *            the columns to explain.
 	 */
 	public ExplainTransformationDiagram(final MartTab martTab,
-			final DataSet dataset, final Collection columns) {
+			final Collection columns) {
 		super(martTab);
 
-		// Set the background.
-		this.setBackground(ExplainTransformationDiagram.BACKGROUND_COLOUR);
-
 		// Remember the columns, and calculate the diagram.
-		this.dataset = dataset;
 		this.columns = columns;
 		this.recalculateDiagram();
 	}
@@ -185,17 +168,11 @@ public class ExplainTransformationDiagram extends Diagram {
 						parentRelation, this);
 				this.addDiagramComponent(relationComponent);
 			}
-			// Set the context.
-			this.setDiagramContext(new DataSetContext(this.getMartTab(),
-					this.dataset));
 		}
 
 		// Explain a normal table?
 		else if (this.table != null) {
 			this.addDiagramComponent(new TableComponent(this.table, this));
-			// Set the context.
-			this.setDiagramContext(new WindowContext(this.getMartTab(),
-					this.dataset));
 		}
 
 		// Explain a key/relation pair?
@@ -209,9 +186,6 @@ public class ExplainTransformationDiagram extends Diagram {
 			final RelationComponent relationComponent = new RelationComponent(
 					this.relation, this);
 			this.addDiagramComponent(relationComponent);
-			// Set the context.
-			this.setDiagramContext(new WindowContext(this.getMartTab(),
-					this.dataset));
 		}
 
 		// Explain a set of columns?
@@ -221,12 +195,14 @@ public class ExplainTransformationDiagram extends Diagram {
 						(Column) i.next(), this);
 				this.addDiagramComponent(columnComponent);
 			}
-			// Set the context.
-			this.setDiagramContext(new DataSetContext(this.getMartTab(),
-					this.dataset));
 		}
 
 		// Resize the diagram to fit.
 		this.resizeDiagram();
+	}
+	
+	protected void updateAppearance() {
+		// Set the background.
+		this.setBackground(ExplainTransformationDiagram.BACKGROUND_COLOUR);
 	}
 }
