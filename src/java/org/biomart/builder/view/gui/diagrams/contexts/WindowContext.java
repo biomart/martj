@@ -35,7 +35,6 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
-import org.biomart.builder.view.gui.diagrams.components.BoxShapedComponent;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
@@ -47,7 +46,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * rather than the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.23, 18th August 2006
+ * @version 0.1.24, 29th August 2006
  * @since 0.1
  */
 public class WindowContext extends SchemaContext {
@@ -126,9 +125,11 @@ public class WindowContext extends SchemaContext {
 			if (this.dataset.getRestrictedTables().contains(table)) {
 
 				// Option to modify restriction.
-				final JMenuItem modify = new JMenuItem(Resources
-						.get("modifyTableRestrictionTitle"),
-						new ImageIcon(Resources.getResourceAsURL("org/biomart/builder/resources/filter.gif")));
+				final JMenuItem modify = new JMenuItem(
+						Resources.get("modifyTableRestrictionTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("org/biomart/builder/resources/filter.gif")));
 				modify.setMnemonic(Resources.get(
 						"modifyTableRestrictionMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
@@ -146,9 +147,11 @@ public class WindowContext extends SchemaContext {
 			} else {
 
 				// Add a table restriction.
-				final JMenuItem restriction = new JMenuItem(Resources
-						.get("addTableRestrictionTitle"),
-						new ImageIcon(Resources.getResourceAsURL("org/biomart/builder/resources/filter.gif")));
+				final JMenuItem restriction = new JMenuItem(
+						Resources.get("addTableRestrictionTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("org/biomart/builder/resources/filter.gif")));
 				restriction.setMnemonic(Resources.get(
 						"addTableRestrictionMnemonic").charAt(0));
 				restriction.addActionListener(new ActionListener() {
@@ -394,13 +397,9 @@ public class WindowContext extends SchemaContext {
 		// This bit adds a restricted outline to restricted tables.
 		if (object instanceof Table) {
 			final Table table = (Table) object;
-			if (this.dataset.getRestrictedTables().contains(table))
-				((TableComponent) component)
-						.setStroke(BoxShapedComponent.RESTRICTED_OUTLINE);
-			else
-				((TableComponent) component)
-						.setStroke(BoxShapedComponent.NORMAL_OUTLINE);
-
+			final TableComponent tblcomp = (TableComponent) component;
+			tblcomp.setDotted(this.dataset.getRestrictedTables()
+					.contains(table));
 		}
 
 		// This section customises the appearance of relation lines within
@@ -429,21 +428,8 @@ public class WindowContext extends SchemaContext {
 
 			// Do the stroke.
 			final RelationComponent relcomp = (RelationComponent) component;
-			if (this.dataset.getRestrictedRelations().contains(relation)) {
-				if (relation.isOneToOne())
-					relcomp.setStroke(RelationComponent.ONE_ONE_RESTRICTED);
-				else if (relation.isManyToMany())
-					relcomp.setStroke(RelationComponent.MANY_MANY_RESTRICTED);
-				else
-					relcomp.setStroke(RelationComponent.ONE_MANY_RESTRICTED);
-			} else {
-				if (relation.isOneToOne())
-					relcomp.setStroke(RelationComponent.ONE_ONE);
-				else if (relation.isManyToMany())
-					relcomp.setStroke(RelationComponent.MANY_MANY);
-				else
-					relcomp.setStroke(RelationComponent.ONE_MANY);
-			}
+			relcomp.setDotted(this.dataset.getRestrictedRelations().contains(
+					relation));
 		}
 
 		// This section customises the appearance of key objects within

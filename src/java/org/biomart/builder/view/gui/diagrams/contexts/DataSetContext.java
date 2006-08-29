@@ -52,7 +52,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * org.biomart.builder.view.gui.diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.32, 18th August 2006
+ * @version 0.1.33, 29th August 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -538,7 +538,7 @@ public class DataSetContext extends WindowContext {
 
 			// Do the stroke.
 			final RelationComponent relcomp = (RelationComponent) component;
-			relcomp.setStroke(RelationComponent.ONE_MANY);
+			relcomp.setDotted(false);
 		}
 
 		// Is it a table?

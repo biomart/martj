@@ -30,14 +30,13 @@ import javax.swing.JPopupMenu;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
-import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
 
 /**
  * Provides the context menus and colour schemes to use when viewing the all
  * datasets tab.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 27th July 2006
+ * @version 0.1.6, 29th August 2006
  * @since 0.1
  */
 public class AllDataSetsContext implements DiagramContext {
@@ -172,13 +171,6 @@ public class AllDataSetsContext implements DiagramContext {
 
 	public void customiseAppearance(final JComponent component,
 			final Object object) {
-		// Only worried about visible/invisible datasets.
-		if (object instanceof DataSet) {
-			final DataSet ds = (DataSet) object;
-			if (ds.getInvisible())
-				component.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
-			else
-				component.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
-		}
+		// Nothing to do here.
 	}
 }

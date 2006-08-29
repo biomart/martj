@@ -45,7 +45,7 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * a secondary label indicating which schema they belong to.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 15th August 2006
+ * @version 0.1.15, 29th August 2006
  * @since 0.1
  */
 public class TableComponent extends BoxShapedComponent {
@@ -62,17 +62,32 @@ public class TableComponent extends BoxShapedComponent {
 	/**
 	 * Colour for subclassed tables (in the dataset context).
 	 */
-	public static final Color SUBCLASS_COLOUR = Color.RED;
+	public static Color SUBCLASS_COLOUR = Color.RED;
 
 	/**
 	 * Colour for subclassed tables (in the dataset context).
 	 */
-	public static final Color DIMENSION_COLOUR = Color.BLUE;
+	public static Color DIMENSION_COLOUR = Color.BLUE;
 
 	/**
 	 * Colour for all non-subclassed, non-dimension tables.
 	 */
-	public static final Color NORMAL_COLOUR = Color.BLACK;
+	public static Color NORMAL_COLOUR = Color.BLACK;
+
+	/**
+	 * Colour for background.
+	 */
+	public static Color BACKGROUND_COLOUR = Color.PINK;
+
+	/**
+	 * Plain font.
+	 */
+	public static Font PLAIN_FONT = Font.decode("Serif-PLAIN-10");
+
+	/**
+	 * Bold font.
+	 */
+	public static Font BOLD_FONT = Font.decode("Serif-BOLD-10");
 
 	/**
 	 * This constructor makes a new table component, associated with a
@@ -117,17 +132,17 @@ public class TableComponent extends BoxShapedComponent {
 		this.removeAll();
 
 		// Set the background to pink.
-		this.setBackground(Color.PINK);
+		this.setBackground(TableComponent.BACKGROUND_COLOUR);
 
 		// Add the table name label.
 		JLabel label = new JLabel(this.getTable().getName());
-		label.setFont(Font.decode("Serif-BOLD-10"));
+		label.setFont(TableComponent.BOLD_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 
 		// Add the schema name label below.
 		label = new JLabel(this.getTable().getSchema().getName());
-		label.setFont(Font.decode("Serif-PLAIN-10"));
+		label.setFont(TableComponent.PLAIN_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 
@@ -188,7 +203,7 @@ public class TableComponent extends BoxShapedComponent {
 
 		// Show/hide the columns panel with a button.
 		this.showHide = new JButton(Resources.get("showColumnsButton"));
-		this.showHide.setFont(Font.decode("Serif-BOLD-10"));
+		this.showHide.setFont(TableComponent.BOLD_FONT);
 		this.layout.setConstraints(this.showHide, this.constraints);
 		this.add(this.showHide);
 		this.showHide.addActionListener(new ActionListener() {

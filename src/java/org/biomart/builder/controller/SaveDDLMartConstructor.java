@@ -54,7 +54,7 @@ import org.biomart.builder.resources.Resources;
  * use JDBC to fetch/retrieve data between two databases.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 18th August 2006
+ * @version 0.1.18, 29th August 2006
  * @since 0.1
  */
 public class SaveDDLMartConstructor implements MartConstructor {
@@ -69,13 +69,10 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 	/**
 	 * Creates a constructor that, when requested, will begin constructing a
-	 * mart and outputting DDL.
+	 * mart and outputting DDL to a string buffer.
 	 * 
 	 * @param granularity
 	 *            the granularity to which the DDL will be broken down.
-	 * @param outputFile
-	 *            the file to write the DDL to. If null, then the
-	 *            <tt>outputStringBuffer</tt> parameter must not be null.
 	 * @param outputStringBuffer
 	 *            the string buffer to write the DDL to. If null, then the
 	 *            <tt>outputFile</tt> parameter must not be null. This
@@ -90,24 +87,49 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 *             not make sense.
 	 */
 	public SaveDDLMartConstructor(final SaveDDLGranularity granularity,
-			final File outputFile, final StringBuffer outputStringBuffer,
-			final boolean includeComments) throws IllegalArgumentException {
+			final StringBuffer outputStringBuffer, final boolean includeComments)
+			throws IllegalArgumentException {
 		// Check it's sensible.
-		if (outputStringBuffer != null
-				&& !granularity.equals(SaveDDLGranularity.SINGLE))
+		if (!granularity.equals(SaveDDLGranularity.SINGLE))
 			throw new IllegalArgumentException(Resources
 					.get("mcDDLStringBufferSingleFileOnly"));
-		else if (outputStringBuffer == null && outputFile == null)
+
+		// Remember the settings.
+		this.granularity = granularity;
+		this.outputFile = null;
+		this.outputStringBuffer = outputStringBuffer;
+		this.includeComments = includeComments;
+	}
+
+	/**
+	 * Creates a constructor that, when requested, will begin constructing a
+	 * mart and outputting DDL to a file.
+	 * 
+	 * @param granularity
+	 *            the granularity to which the DDL will be broken down.
+	 * @param outputFile
+	 *            the file to write the DDL to. If null, then the
+	 *            <tt>outputStringBuffer</tt> parameter must not be null.
+	 * @param includeComments
+	 *            <tt>true</tt> if comments are to be included, <tt>false</tt>
+	 *            if not.
+	 * @throws IllegalArgumentException
+	 *             if the combination of <tt>granularity</tt>,
+	 *             <tt>outputFile</tt> and <tt>outputStringBuffer</tt> do
+	 *             not make sense.
+	 */
+	public SaveDDLMartConstructor(final SaveDDLGranularity granularity,
+			final File outputFile, final boolean includeComments)
+			throws IllegalArgumentException {
+		// Check it's sensible.
+		if (outputFile == null)
 			throw new IllegalArgumentException(Resources
 					.get("mcDDLNoOutputSpecified"));
-		else if (outputStringBuffer != null && outputFile != null)
-			throw new IllegalArgumentException(Resources
-					.get("mcDDLBothOutputsSpecified"));
 
 		// Remember the settings.
 		this.granularity = granularity;
 		this.outputFile = outputFile;
-		this.outputStringBuffer = outputStringBuffer;
+		this.outputStringBuffer = null;
 		this.includeComments = includeComments;
 	}
 

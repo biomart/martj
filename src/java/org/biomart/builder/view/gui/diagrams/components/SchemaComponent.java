@@ -45,7 +45,7 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * relations will appear in full using {@link TableComponent}s.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 7th July 2006
+ * @version 0.1.14, 29th August 2006
  * @since 0.1
  */
 public class SchemaComponent extends BoxShapedComponent {
@@ -54,6 +54,21 @@ public class SchemaComponent extends BoxShapedComponent {
 	private GridBagLayout layout;
 
 	private GridBagConstraints constraints;
+	
+	/**
+	 * Constant defining background colour.
+	 */
+	public static Color BACKGROUND_COLOUR = Color.LIGHT_GRAY;
+	
+	/**
+	 * Bold font.
+	 */
+	public static Font BOLD_FONT = Font.decode("Serif-BOLD-10");
+	
+	/**
+	 * Bold italic font.
+	 */
+	public static Font BOLDITALIC_FONT = Font.decode("Serif-BOLDITALIC-10");
 
 	/**
 	 * Constructs a schema diagram component in the given diagram that displays
@@ -87,11 +102,11 @@ public class SchemaComponent extends BoxShapedComponent {
 		this.removeAll();
 
 		// Set the background colour.
-		this.setBackground(Color.LIGHT_GRAY);
+		this.setBackground(SchemaComponent.BACKGROUND_COLOUR);
 
 		// Add the label for the schema name,
 		JLabel label = new JLabel(this.getSchema().getName());
-		label.setFont(Font.decode("Serif-BOLD-10"));
+		label.setFont(SchemaComponent.BOLD_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 
@@ -99,7 +114,7 @@ public class SchemaComponent extends BoxShapedComponent {
 		if (this.getSchema() instanceof SchemaGroup) {
 			// Add a 'contains' label.
 			label = new JLabel(Resources.get("schemaGroupContains"));
-			label.setFont(Font.decode("Serif-BOLDITALIC-10"));
+			label.setFont(SchemaComponent.BOLDITALIC_FONT);
 			this.layout.setConstraints(label, this.constraints);
 			this.add(label);
 
@@ -108,7 +123,7 @@ public class SchemaComponent extends BoxShapedComponent {
 					.getSchemas().iterator(); i.hasNext();) {
 				final Schema s = (Schema) i.next();
 				label = new JLabel(s.getName());
-				label.setFont(Font.decode("Serif-BOLDITALIC-10"));
+				label.setFont(SchemaComponent.BOLDITALIC_FONT);
 				this.layout.setConstraints(label, this.constraints);
 				this.add(label);
 			}

@@ -37,7 +37,7 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * Represents a key by listing out in a set of labels each column in the key.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 20th June 2006
+ * @version 0.1.9, 29th August 2006
  * @since 0.1
  */
 public class KeyComponent extends BoxShapedComponent {
@@ -50,22 +50,37 @@ public class KeyComponent extends BoxShapedComponent {
 	/**
 	 * Constant referring to normal key colour.
 	 */
-	public static final Color NORMAL_COLOUR = Color.DARK_GRAY;
+	public static Color NORMAL_COLOUR = Color.DARK_GRAY;
 
 	/**
 	 * Constant referring to masked key colour.
 	 */
-	public static final Color MASKED_COLOUR = Color.LIGHT_GRAY;
+	public static Color MASKED_COLOUR = Color.LIGHT_GRAY;
 
 	/**
 	 * Constant referring to incorrect key colour.
 	 */
-	public static final Color INCORRECT_COLOUR = Color.RED;
+	public static Color INCORRECT_COLOUR = Color.RED;
 
 	/**
 	 * Constant referring to handmade key colour.
 	 */
-	public static final Color HANDMADE_COLOUR = Color.GREEN;
+	public static Color HANDMADE_COLOUR = Color.GREEN;
+
+	/**
+	 * Constant referring to primary key colour.
+	 */
+	public static Color PK_BACKGROUND_COLOUR = Color.CYAN;
+
+	/**
+	 * Constant referring to foreign key colour.
+	 */
+	public static Color FK_BACKGROUND_COLOUR = Color.YELLOW;
+
+	/**
+	 * Italic font.
+	 */
+	public static Font ITALIC_FONT = Font.decode("Serif-ITALIC-10");
 
 	/**
 	 * The constructor constructs a key component around a given key object, and
@@ -104,15 +119,15 @@ public class KeyComponent extends BoxShapedComponent {
 
 		// Create the background colour.
 		if (this.getKey() instanceof PrimaryKey)
-			this.setBackground(Color.CYAN);
+			this.setBackground(KeyComponent.PK_BACKGROUND_COLOUR);
 		else
-			this.setBackground(Color.GREEN);
+			this.setBackground(KeyComponent.FK_BACKGROUND_COLOUR);
 
 		// Add the labels for each column.
 		for (final Iterator i = this.getKey().getColumns().iterator(); i
 				.hasNext();) {
 			final JLabel label = new JLabel(((Column) i.next()).getName());
-			label.setFont(Font.decode("Serif-ITALIC-10"));
+			label.setFont(KeyComponent.ITALIC_FONT);
 			this.layout.setConstraints(label, this.constraints);
 			this.add(label);
 		}

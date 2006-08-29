@@ -41,13 +41,15 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * relations between them along fixed-space tracks between components.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 27th July 2006
+ * @version 0.1.4, 29th August 2006
  * @since 0.1
  */
 public class LinearLayout implements LayoutManager {
 	private static final double RELATION_SPACING = 5.0; // 72.0 = 1 inch
 
 	private static final double TABLE_PADDING = 10.0; // 72.0 = 1 inch
+	
+	private static final int MAX_SINGLE_ROW = 4; // 4 components on one row
 
 	private int minWidth;
 
@@ -138,7 +140,7 @@ public class LinearLayout implements LayoutManager {
 
 			// Split the row into top and bottom halves if
 			// there are more than 4 objects.
-			if (bothRows.size() > 4) {
+			if (bothRows.size() > LinearLayout.MAX_SINGLE_ROW) {
 				final int splitIndex = bothRows.size() / 2;
 				this.topRow.addAll(bothRows.subList(0, splitIndex));
 				this.bottomRow.addAll(bothRows.subList(splitIndex, bothRows
@@ -436,7 +438,7 @@ public class LinearLayout implements LayoutManager {
 				path.lineTo(secondKeyX, secondKeyY);
 
 				// Done! Tell the relation what shape we made.
-				comp.setShape(path);
+				comp.setLineShape(path);
 
 				// Move the horizontal track down for the next relation.
 				nextHorizontalY += LinearLayout.RELATION_SPACING;

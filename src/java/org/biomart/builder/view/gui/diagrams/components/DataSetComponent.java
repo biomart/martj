@@ -39,26 +39,31 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 27th July 2006
+ * @version 0.1.4, 29th August 2006
  * @since 0.1
  */
 public class DataSetComponent extends BoxShapedComponent {
-
-	/**
-	 * This color is the one used for the background of invisible datasets.
-	 */
-	public static final Color INVISIBLE_BACKGROUND = Color.WHITE;
-
-	/**
-	 * This color is the one used for the background of visible datasets.
-	 */
-	public static final Color VISIBLE_BACKGROUND = Color.LIGHT_GRAY;
 
 	private static final long serialVersionUID = 1;
 
 	private GridBagLayout layout;
 
 	private GridBagConstraints constraints;
+
+	/**
+	 * This color is the one used for the background of invisible datasets.
+	 */
+	public static Color INVISIBLE_BACKGROUND = Color.WHITE;
+
+	/**
+	 * This color is the one used for the background of visible datasets.
+	 */
+	public static Color VISIBLE_BACKGROUND = Color.LIGHT_GRAY;
+	
+	/**
+	 * Bold font.
+	 */
+	public static Font BOLD_FONT = Font.decode("Serif-BOLD-10");
 
 	/**
 	 * Constructs a dataset diagram component in the given diagram that displays
@@ -92,11 +97,14 @@ public class DataSetComponent extends BoxShapedComponent {
 		this.removeAll();
 
 		// Set the background colour.
-		this.setBackground(Color.LIGHT_GRAY);
+		if (this.getDataSet().getInvisible())
+			this.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
+		else
+			this.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
 
 		// Add the label for the schema name,
 		final JLabel label = new JLabel(this.getDataSet().getName());
-		label.setFont(Font.decode("Serif-BOLD-10"));
+		label.setFont(DataSetComponent.BOLD_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 	}

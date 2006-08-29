@@ -42,49 +42,11 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * rather than exact component.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 9th August 2006
+ * @version 0.1.15, 29th August 2006
  * @since 0.1
  */
 public abstract class BoxShapedComponent extends JPanel implements
 		DiagramComponent {
-
-	/**
-	 * Constant referring to the normal width of a box outline.
-	 */
-	public static final float BOX_LINEWIDTH = 1.0f; // 72 = 1 inch
-
-	/**
-	 * Constant referring to the dash size of an optional box outline.
-	 */
-	public static final float BOX_DASHSIZE = 7.0f; // 72 = 1 inch
-
-	/**
-	 * Constant referring to the dot size of a restricted box outline.
-	 */
-	public static final float BOX_DOTSIZE = 3.0f; // 72 = 1 inch
-
-	/**
-	 * Constant referring to the mitre trim of a box outline.
-	 */
-	public static final float BOX_MITRE_TRIM = 10.0f; // 72 = 1 inch
-
-	/**
-	 * Constant defining our restricted stroke.
-	 */
-	public static final Stroke RESTRICTED_OUTLINE = new BasicStroke(
-			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND, BoxShapedComponent.BOX_MITRE_TRIM,
-			new float[] { BoxShapedComponent.BOX_DASHSIZE,
-					BoxShapedComponent.BOX_DOTSIZE,
-					BoxShapedComponent.BOX_DOTSIZE,
-					BoxShapedComponent.BOX_DOTSIZE }, 0);
-
-	/**
-	 * Constant defining our normal stroke.
-	 */
-	public static final Stroke NORMAL_OUTLINE = new BasicStroke(
-			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND, BoxShapedComponent.BOX_MITRE_TRIM);
 
 	private Diagram diagram;
 
@@ -98,6 +60,28 @@ public abstract class BoxShapedComponent extends JPanel implements
 	private RenderingHints renderHints;
 
 	private Stroke stroke;
+	
+	private boolean dotted = false;
+
+	private static final float BOX_LINEWIDTH = 1.0f; // 72 = 1 inch
+
+	private static final float BOX_DASHSIZE = 7.0f; // 72 = 1 inch
+
+	private static final float BOX_DOTSIZE = 3.0f; // 72 = 1 inch
+
+	private static final float BOX_MITRE_TRIM = 10.0f; // 72 = 1 inch
+
+	private static final Stroke OUTLINE = new BasicStroke(
+			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, BoxShapedComponent.BOX_MITRE_TRIM);
+
+	private static final Stroke DOTTED_OUTLINE = new BasicStroke(
+			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, BoxShapedComponent.BOX_MITRE_TRIM,
+			new float[] { BoxShapedComponent.BOX_DASHSIZE,
+					BoxShapedComponent.BOX_DOTSIZE,
+					BoxShapedComponent.BOX_DOTSIZE,
+					BoxShapedComponent.BOX_DOTSIZE }, 0);
 
 	/**
 	 * Constructs a box-shaped component around the given model object to be
@@ -127,21 +111,18 @@ public abstract class BoxShapedComponent extends JPanel implements
 		this.renderHints.put(RenderingHints.KEY_RENDERING,
 				RenderingHints.VALUE_RENDER_QUALITY);
 
-		// Default stroke.
-		this.stroke = BoxShapedComponent.NORMAL_OUTLINE;
-
 		// Repaint ourselves.
 		this.updateAppearance();
 	}
-
+	
 	/**
-	 * Set the stroke to use to outline this component.
-	 * 
-	 * @param stroke
-	 *            the stroke to use.
+	 * If this is set to <tt>true</tt> then the component will appear
+	 * with a dotted/dashed outline.
+	 * @param dotted <tt>true</tt> if the component is to appear
+	 * with a dotted outline. The default is <tt>false</tt>.
 	 */
-	public void setStroke(final Stroke stroke) {
-		this.stroke = stroke;
+	public void setDotted(final boolean dotted) {
+		this.dotted = dotted;
 	}
 
 	public void paintComponent(final Graphics g) {
@@ -185,15 +166,17 @@ public abstract class BoxShapedComponent extends JPanel implements
 		final DiagramContext mod = this.getDiagram().getDiagramContext();
 		if (mod != null)
 			mod.customiseAppearance(this, this.getObject());
+		if (this.dotted)
+			this.stroke = BoxShapedComponent.DOTTED_OUTLINE;
+		else 
+			this.stroke = BoxShapedComponent.OUTLINE;
 		this.setBorder(BorderFactory.createLineBorder(this.getForeground()));
 	}
 
 	protected void paintBorder(final Graphics g) {
-		final Graphics2D g2 = (Graphics2D) g;
-		final Stroke oldStroke = g2.getStroke();
-		g2.setStroke(this.stroke);
-		super.paintBorder(g2);
-		g2.setStroke(oldStroke);
+		final Graphics2D g2d = (Graphics2D) g;
+		g2d.setStroke(this.stroke);
+		super.paintBorder(g2d);
 	}
 
 	public Diagram getDiagram() {

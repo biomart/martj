@@ -42,6 +42,7 @@ import javax.swing.Timer;
 import javax.swing.filechooser.FileFilter;
 
 import org.biomart.builder.controller.MartBuilderXML;
+import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.resources.Resources;
@@ -53,7 +54,7 @@ import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
  * of the mart inside it, including all datasets and schemas.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 4th August 2006
+ * @version 0.1.15, 29th August 2006
  * @since 0.1
  */
 public class MartTabSet extends JTabbedPane {
@@ -86,11 +87,13 @@ public class MartTabSet extends JTabbedPane {
 
 			public File getSelectedFile() {
 				File file = super.getSelectedFile();
-				if (file!=null && !file.exists()) {
+				if (file != null && !file.exists()) {
 					String filename = file.getName();
 					String extension = ".xml";
-					if (!filename.endsWith(extension) && filename.indexOf('.')<0)
-						file = new File(file.getParentFile(), filename+extension);
+					if (!filename.endsWith(extension)
+							&& filename.indexOf('.') < 0)
+						file = new File(file.getParentFile(), filename
+								+ extension);
 				}
 				return file;
 			}
@@ -144,7 +147,7 @@ public class MartTabSet extends JTabbedPane {
 		final ProgressMonitor progressMonitor = new ProgressMonitor(this
 				.getMartBuilder(), Resources.get("creatingMart"), "", 0, 100);
 		progressMonitor.setProgress(0); // Start with 0% complete.
-		progressMonitor.setMillisToPopup(1000); // Open after 1 second.
+		progressMonitor.setMillisToPopup(0); // Open immediately.
 
 		// Start the construction in a thread. It does not need to be
 		// Swing-thread-safe because it will never access the GUI. All
@@ -155,7 +158,7 @@ public class MartTabSet extends JTabbedPane {
 		// Create a timer thread that will update the progress dialog.
 		// We use the Swing Timer to make it Swing-thread-safe. (1000 millis
 		// equals 1 second.)
-		final Timer timer = new Timer(500, null);
+		final Timer timer = new Timer(300, null);
 		timer.setInitialDelay(0); // Start immediately upon request.
 		timer.setCoalesce(true); // Coalesce delayed events.
 		timer.addActionListener(new ActionListener() {
@@ -192,16 +195,14 @@ public class MartTabSet extends JTabbedPane {
 			// If it failed, show the exception.
 			final Exception failure = constructor.getFailureException();
 			if (failure != null)
-				this.getMartBuilder().showStackTrace(failure);
-			// Inform user of success or otherwise.
-			if (failure == null)
+				this.getMartBuilder().showStackTrace(
+						new ConstructorException(Resources
+								.get("martConstructionFailed"), failure));
+			// Inform user of success, if it succeeded.
+			else
 				JOptionPane.showMessageDialog(this.getMartBuilder(), Resources
 						.get("martConstructionComplete"), Resources
 						.get("messageTitle"), JOptionPane.INFORMATION_MESSAGE);
-			else
-				JOptionPane.showMessageDialog(this.getMartBuilder(), Resources
-						.get("martConstructionFailed"), Resources
-						.get("messageTitle"), JOptionPane.WARNING_MESSAGE);
 		}
 	}
 

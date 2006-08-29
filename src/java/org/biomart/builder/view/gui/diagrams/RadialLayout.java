@@ -432,7 +432,7 @@ public class RadialLayout implements LayoutManager {
 				path.lineTo(secondX, secondY);
 
 				// Done! Tell the relation what shape we made.
-				relationComponent.setShape(path);
+				relationComponent.setLineShape(path);
 			}
 		}
 	}

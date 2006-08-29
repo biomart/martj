@@ -33,7 +33,7 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * This simple component represents a single column within a table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 28th July 2006
+ * @version 0.1.78, 29th August 2006
  * @since 0.1
  */
 public class ColumnComponent extends BoxShapedComponent {
@@ -46,27 +46,37 @@ public class ColumnComponent extends BoxShapedComponent {
 	/**
 	 * Constant referring to normal column colour.
 	 */
-	public static final Color NORMAL_COLOUR = Color.DARK_GRAY;
+	public static Color NORMAL_COLOUR = Color.DARK_GRAY;
 
 	/**
 	 * Constant referring to faded column colour.
 	 */
-	public static final Color FADED_COLOUR = Color.LIGHT_GRAY;
+	public static Color FADED_COLOUR = Color.LIGHT_GRAY;
 
 	/**
 	 * Constant referring to partitioned column colour.
 	 */
-	public static final Color PARTITIONED_COLOUR = Color.BLUE;
+	public static Color PARTITIONED_COLOUR = Color.BLUE;
 
 	/**
 	 * Constant referring to expression column colour.
 	 */
-	public static final Color EXPRESSION_COLOUR = Color.MAGENTA;
+	public static Color EXPRESSION_COLOUR = Color.MAGENTA;
 
 	/**
 	 * Constant referring to inherited column colour.
 	 */
-	public static final Color INHERITED_COLOUR = Color.RED;
+	public static Color INHERITED_COLOUR = Color.RED;
+
+	/**
+	 * Constant referring to background colour.
+	 */
+	public static Color BACKGROUND_COLOUR = Color.ORANGE;
+	
+	/**
+	 * Italic font.
+	 */
+	public static Font ITALIC_FONT = Font.decode("Serif-ITALIC-10");
 
 	/**
 	 * The constructor creates a new column component representing the given
@@ -100,11 +110,11 @@ public class ColumnComponent extends BoxShapedComponent {
 		this.removeAll();
 
 		// Set the background.
-		this.setBackground(Color.ORANGE);
+		this.setBackground(ColumnComponent.BACKGROUND_COLOUR);
 
 		// Add the label for the column name.
 		final JLabel label = new JLabel(this.getColumn().getName());
-		label.setFont(Font.decode("Serif-ITALIC-10"));
+		label.setFont(ColumnComponent.ITALIC_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 	}

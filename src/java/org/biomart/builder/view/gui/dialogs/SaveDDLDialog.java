@@ -61,7 +61,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * a given set of datasets, then lets them actually do it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 4th August 2006
+ * @version 0.1.8, 29th August 2006
  * @since 0.1
  */
 public class SaveDDLDialog extends JDialog {
@@ -167,7 +167,7 @@ public class SaveDDLDialog extends JDialog {
 
 			public File getSelectedFile() {
 				File file = super.getSelectedFile();
-				if (file!=null && !file.exists()) {
+				if (file != null && !file.exists()) {
 					final String filename = file.getName();
 					final SaveDDLGranularity gran = (SaveDDLGranularity) SaveDDLDialog.this.granularity
 							.getSelectedItem();
@@ -384,11 +384,11 @@ public class SaveDDLDialog extends JDialog {
 		if (this.viewDDL.isSelected())
 			constructor = new SaveDDLMartConstructor(
 					(SaveDDLGranularity) this.granularity.getSelectedItem(),
-					null, sb, this.includeComments.isSelected());
+					sb, this.includeComments.isSelected());
 		else
 			constructor = new SaveDDLMartConstructor(
 					(SaveDDLGranularity) this.granularity.getSelectedItem(),
-					new File(this.zipFileLocation.getText()), null,
+					new File(this.zipFileLocation.getText()),
 					this.includeComments.isSelected());
 		try {
 			final ConstructorRunnable cr = constructor.getConstructorRunnable(

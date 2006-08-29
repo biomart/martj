@@ -68,7 +68,7 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.31, 16th August 2006
+ * @version 0.1.32, 29th August 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -153,6 +153,7 @@ public interface MartConstructor {
 	 * construction. The events are defined as constants in this interface.
 	 */
 	public interface MartConstructorListener {
+		
 		/**
 		 * This event will occur when mart construction begins.
 		 */
@@ -208,8 +209,8 @@ public interface MartConstructor {
 	}
 
 	/**
-	 * Helper provides methods to define large steps. Helper implementations
-	 * perform those steps.
+	 * Helpers provide methods to give useful information to the
+	 * constructor as it builds the action graph.
 	 */
 	public interface Helper {
 
@@ -238,7 +239,7 @@ public interface MartConstructor {
 	 */
 	public static class GenericConstructorRunnable implements
 			ConstructorRunnable {
-		private String statusMessage = "";
+		private String statusMessage = Resources.get("mcCreatingGraph");;
 
 		private double percentComplete = 0.0;
 
@@ -373,7 +374,6 @@ public interface MartConstructor {
 
 			// We have to make space to store the graph of actions we
 			// must carry out.
-			this.statusMessage = Resources.get("mcCreatingGraph");
 			final MartConstructorActionGraph actionGraph = new MartConstructorActionGraph();
 
 			// Establish a root action for the graph.

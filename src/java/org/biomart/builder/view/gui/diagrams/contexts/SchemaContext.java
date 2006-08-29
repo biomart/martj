@@ -44,6 +44,7 @@ import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
+import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 
 /**
  * Provides the context menus and colour schemes to use when viewing a schema in
@@ -51,7 +52,7 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
  * dataset onto a set of masked relations.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.29, 18th August 2006
+ * @version 0.1.30, 29th August 2006
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
@@ -619,6 +620,12 @@ public class SchemaContext implements DiagramContext {
 
 	public void customiseAppearance(final JComponent component,
 			final Object object) {
+		// This bit removes a restricted outline from restricted tables.
+		if (object instanceof Table) {
+			final TableComponent tblcomp = (TableComponent) component;
+			tblcomp.setDotted(false);
+		}
+
 		// Relations get pretty colours if they are incorrect or handmade.
 		if (object instanceof Relation) {
 
@@ -639,12 +646,7 @@ public class SchemaContext implements DiagramContext {
 
 			// Do the stroke.
 			final RelationComponent relcomp = (RelationComponent) component;
-			if (relation.isOneToOne())
-				relcomp.setStroke(RelationComponent.ONE_ONE);
-			else if (relation.isManyToMany())
-				relcomp.setStroke(RelationComponent.MANY_MANY);
-			else
-				relcomp.setStroke(RelationComponent.ONE_MANY);
+			relcomp.setDotted(false);
 		}
 
 		// Keys also get pretty colours for being incorrect or handmade.

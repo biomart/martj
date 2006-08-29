@@ -43,121 +43,17 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * The line is defined by the layout manager.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.19, 9th August 2006
+ * @version 0.1.20, 29th August 2006
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
 	private static final long serialVersionUID = 1;
 
-	/**
-	 * Constant referring to the normal width of a relation line.
-	 */
-	public static final float RELATION_LINEWIDTH = 1.0f; // 72 = 1 inch
-
-	/**
-	 * Constant referring to the dash size of an optional relation line.
-	 */
-	public static final float RELATION_DASHSIZE = 7.0f; // 72 = 1 inch
-
-	/**
-	 * Constant referring to the dot size of a restricted relation line.
-	 */
-	public static final float RELATION_DOTSIZE = 3.0f; // 72 = 1 inch
-
-	/**
-	 * Constant referring to the mitre trim of a relation line.
-	 */
-	public static final float RELATION_MITRE_TRIM = 10.0f; // 72 = 1 inch
-
-	/**
-	 * Constant referring to normal relation colour.
-	 */
-	public static final Color NORMAL_COLOUR = Color.DARK_GRAY;
-
-	/**
-	 * Constant referring to masked relation colour.
-	 */
-	public static final Color MASKED_COLOUR = Color.LIGHT_GRAY;
-
-	/**
-	 * Constant referring to incorrect relation colour.
-	 */
-	public static final Color INCORRECT_COLOUR = Color.RED;
-
-	/**
-	 * Constant referring to handmade relation colour.
-	 */
-	public static final Color HANDMADE_COLOUR = Color.GREEN;
-
-	/**
-	 * Constant referring to concat-only relation colour.
-	 */
-	public static final Color CONCAT_COLOUR = Color.BLUE;
-
-	/**
-	 * Constant referring to subclassed relation colour.
-	 */
-	public static final Color SUBCLASS_COLOUR = Color.RED;
-
-	/**
-	 * Constant defining our 1:M stroke.
-	 */
-	public static final Stroke ONE_MANY = new BasicStroke(
-			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM);
-
-	/**
-	 * Constant defining our 1:1 stroke.
-	 */
-	public static final Stroke ONE_ONE = new BasicStroke(
-			RelationComponent.RELATION_LINEWIDTH * 2.0f, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM);
-
-	/**
-	 * Constant defining our M:M stroke.
-	 */
-	public static final Stroke MANY_MANY = new BasicStroke(
-			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM);
-
-	/**
-	 * Constant defining our restricted 1:M stroke.
-	 */
-	public static final Stroke ONE_MANY_RESTRICTED = new BasicStroke(
-			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
-			new float[] { RelationComponent.RELATION_DASHSIZE,
-					RelationComponent.RELATION_DOTSIZE,
-					RelationComponent.RELATION_DOTSIZE,
-					RelationComponent.RELATION_DOTSIZE }, 0);
-
-	/**
-	 * Constant defining our restricted 1:1 stroke.
-	 */
-	public static final Stroke ONE_ONE_RESTRICTED = new BasicStroke(
-			RelationComponent.RELATION_LINEWIDTH * 2.0f, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
-			new float[] { RelationComponent.RELATION_DASHSIZE,
-					RelationComponent.RELATION_DOTSIZE,
-					RelationComponent.RELATION_DOTSIZE,
-					RelationComponent.RELATION_DOTSIZE }, 0);
-
-	/**
-	 * Constant defining our restricted M:M stroke.
-	 */
-	public static final Stroke MANY_MANY_RESTRICTED = new BasicStroke(
-			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
-			new float[] { RelationComponent.RELATION_DASHSIZE,
-					RelationComponent.RELATION_DOTSIZE,
-					RelationComponent.RELATION_DOTSIZE,
-					RelationComponent.RELATION_DOTSIZE }, 0);
-
-	private Shape shape;
-
-	private Stroke stroke;
+	private Shape lineShape;
 
 	private Shape outline;
+	
+	private Stroke stroke;
 
 	private Diagram diagram;
 
@@ -166,6 +62,82 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	private Object state;
 
 	private RenderingHints renderHints;
+	
+	private boolean dotted = false;
+
+	private static final float RELATION_LINEWIDTH = 1.0f; // 72 = 1 inch
+
+	private static final float RELATION_DASHSIZE = 7.0f; // 72 = 1 inch
+
+	private static final float RELATION_DOTSIZE = 3.0f; // 72 = 1 inch
+
+	private static final float RELATION_MITRE_TRIM = 10.0f; // 72 = 1 inch
+
+	private static final Stroke ONE_MANY = new BasicStroke(
+			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM);
+
+	private static final Stroke ONE_ONE = new BasicStroke(
+			RelationComponent.RELATION_LINEWIDTH * 2.0f, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM);
+
+	private static final Stroke MANY_MANY = new BasicStroke(
+			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM);
+
+	private static final Stroke ONE_MANY_DOTTED = new BasicStroke(
+			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
+			new float[] { RelationComponent.RELATION_DASHSIZE,
+					RelationComponent.RELATION_DOTSIZE,
+					RelationComponent.RELATION_DOTSIZE,
+					RelationComponent.RELATION_DOTSIZE }, 0);
+
+	private static final Stroke ONE_ONE_DOTTED = new BasicStroke(
+			RelationComponent.RELATION_LINEWIDTH * 2.0f, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
+			new float[] { RelationComponent.RELATION_DASHSIZE,
+					RelationComponent.RELATION_DOTSIZE,
+					RelationComponent.RELATION_DOTSIZE,
+					RelationComponent.RELATION_DOTSIZE }, 0);
+
+	private static final Stroke MANY_MANY_DOTTED = new BasicStroke(
+			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
+			new float[] { RelationComponent.RELATION_DASHSIZE,
+					RelationComponent.RELATION_DOTSIZE,
+					RelationComponent.RELATION_DOTSIZE,
+					RelationComponent.RELATION_DOTSIZE }, 0);
+
+	/**
+	 * Constant referring to normal relation colour.
+	 */
+	public static Color NORMAL_COLOUR = Color.DARK_GRAY;
+
+	/**
+	 * Constant referring to masked relation colour.
+	 */
+	public static Color MASKED_COLOUR = Color.LIGHT_GRAY;
+
+	/**
+	 * Constant referring to incorrect relation colour.
+	 */
+	public static Color INCORRECT_COLOUR = Color.RED;
+
+	/**
+	 * Constant referring to handmade relation colour.
+	 */
+	public static Color HANDMADE_COLOUR = Color.GREEN;
+
+	/**
+	 * Constant referring to concat-only relation colour.
+	 */
+	public static Color CONCAT_COLOUR = Color.BLUE;
+
+	/**
+	 * Constant referring to subclassed relation colour.
+	 */
+	public static Color SUBCLASS_COLOUR = Color.RED;
 
 	/**
 	 * The constructor constructs an object around a given object, and
@@ -178,10 +150,16 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	 */
 	public RelationComponent(final Relation relation, final Diagram diagram) {
 		super();
+
+		// Remember settings.
 		this.relation = relation;
 		this.diagram = diagram;
+
+		// Turn on the mouse.
 		this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
-		this.recalculateDiagramComponent();
+
+		// Make sure we're transparent.
+		this.setOpaque(false);
 
 		// Set-up rendering hints.
 		this.renderHints = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
@@ -189,6 +167,11 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		this.renderHints.put(RenderingHints.KEY_RENDERING,
 				RenderingHints.VALUE_RENDER_QUALITY);
 
+		// Draw our contents, as we don't have any child classes that
+		// do this for us unfortunately.
+		this.recalculateDiagramComponent();
+		
+		// Repaint ourselves.
 		this.updateAppearance();
 	}
 
@@ -201,8 +184,23 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		final DiagramContext mod = this.getDiagram().getDiagramContext();
 		if (mod != null)
 			mod.customiseAppearance(this, this.getObject());
-		if (this.shape != null) 
-			this.outline = new BasicStroke().createStrokedShape(this.shape);
+		if (this.dotted) {
+			if (this.relation.isOneToOne())
+				this.stroke = RelationComponent.ONE_ONE_DOTTED;
+			else if (this.relation.isOneToMany())
+				this.stroke = RelationComponent.ONE_MANY_DOTTED;
+			else if (this.relation.isManyToMany())
+				this.stroke = RelationComponent.MANY_MANY_DOTTED;
+		} else {
+			if (this.relation.isOneToOne())
+				this.stroke = RelationComponent.ONE_ONE;
+			else if (this.relation.isOneToMany())
+				this.stroke = RelationComponent.ONE_MANY;
+			else if (this.relation.isManyToMany())
+				this.stroke = RelationComponent.MANY_MANY;
+		}
+		if (this.lineShape != null)
+			this.outline = new BasicStroke().createStrokedShape(this.lineShape);
 	}
 
 	public void repaintDiagramComponent() {
@@ -220,6 +218,16 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 
 	public void setState(final Object state) {
 		this.state = state;
+	}
+	
+	/**
+	 * If this is set to <tt>true</tt> then the component will appear
+	 * with a dotted/dashed outline.
+	 * @param dotted <tt>true</tt> if the component is to appear
+	 * with a dotted outline. The default is <tt>false</tt>.
+	 */
+	public void setDotted(final boolean dotted) {
+		this.dotted = dotted;
 	}
 
 	/**
@@ -259,8 +267,8 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	 * @param shape
 	 *            the shape this relation should take on screen.
 	 */
-	public void setShape(final Shape shape) {
-		this.shape = shape;
+	public void setLineShape(final Shape shape) {
+		this.lineShape = shape;
 		this.updateAppearance();
 	}
 
@@ -309,27 +317,22 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 			super.processMouseEvent(evt);
 	}
 
-	/**
-	 * Updates the stroke of this relation.
-	 * 
-	 * @param stroke
-	 *            the stroke to use for this relation.
-	 */
-	public void setStroke(final Stroke stroke) {
-		this.stroke = stroke;
-	}
-
 	protected void paintComponent(final Graphics g) {
 		final Graphics2D g2d = (Graphics2D) g.create();
 		g2d.setRenderingHints(this.renderHints);
 		final Shape clippingArea = g2d.getClip();
 		if (clippingArea != null
-				&& !this.shape.intersects(clippingArea.getBounds2D()))
+				&& !this.lineShape.intersects(clippingArea.getBounds2D()))
 			return;
+		// Fill in opaque background.
+		if (this.isOpaque()) {
+			g2d.setColor(this.getBackground());
+			g2d.fillRect(0, 0, this.getWidth(), this.getHeight());
+		}
 		// Do painting of this component.
 		g2d.setColor(this.getForeground());
 		g2d.setStroke(this.stroke);
-		g2d.draw(this.shape);
+		g2d.draw(this.lineShape);
 		// Clean up.
 		g2d.dispose();
 	}
