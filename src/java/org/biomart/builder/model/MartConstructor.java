@@ -1906,7 +1906,7 @@ public interface MartConstructor {
 			public String createFinalName() {
 				// TODO - come up with a better naming scheme
 				// Currently the name is:
-				// datasetname__{content}_has__type
+				// datasetname__{content}_has__dm
 
 				// Work out what dataset we are in.
 				final DataSet dataset = this.getDataSet();

@@ -49,8 +49,8 @@ import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Column.GenericColumn;
-import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTable;
@@ -76,6 +76,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
 import org.biomart.builder.model.Table.GenericTable;
 import org.biomart.builder.resources.Resources;
 import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -96,18 +97,12 @@ import org.xml.sax.helpers.DefaultHandler;
  * official release of MartBuilder, and subsequent releases will include new
  * DTDs (if any aspects have changed) and converter tools to translate your old
  * files.
- * <p>
- * TODO: Generate an initial DTD.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.34, 14th August 2006
+ * @version 0.1.35, 30th August 2006
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
-	/**
-	 * Version number of MartBuilder XML DTD this class will read/write.
-	 */
-	public static final String DTD_VERSION = "0.1";
 
 	private Mart constructedMart;
 
@@ -124,6 +119,23 @@ public class MartBuilderXML extends DefaultHandler {
 	private int currentElementID;
 
 	/**
+	 * Version number of MartBuilder XML DTD this class will read/write.
+	 */
+	public static final String DTD_VERSION = "0.1";
+
+	/**
+	 * DTD Public ID for MartBuilder XML documents.
+	 */
+	public static final String DTD_PUBLIC_ID = "-//EBI//DTD MartBuilder "
+			+ MartBuilderXML.DTD_VERSION + "//EN";
+
+	/**
+	 * DTD URL for MartBuilder XML documents.
+	 */
+	public static final String DTD_URL = "http://www.biomart.org/DTD/MartBuilder-"
+			+ MartBuilderXML.DTD_VERSION + ".dtd";
+
+	/**
 	 * This class is intended to be used only in a static context.
 	 */
 	private MartBuilderXML() {
@@ -131,6 +143,21 @@ public class MartBuilderXML extends DefaultHandler {
 		this.currentOutputElement = null;
 		this.currentOutputIndent = 0;
 		this.currentElementID = 1;
+	}
+
+	public InputSource resolveEntity(String publicId, String systemId)
+			throws SAXException {
+		// If the public ID is our own DTD version, then we can use our
+		// own copy of the DTD in our resources bundle.
+		if (MartBuilderXML.DTD_PUBLIC_ID.equals(publicId)
+				|| MartBuilderXML.DTD_URL.equals(systemId))
+			return new InputSource(
+					Resources.getResourceAsURL("org/biomart/builder/resources/MartBuilder-"
+									+ MartBuilderXML.DTD_VERSION + ".dtd").toExternalForm());
+		// By returning null we allow the default behaviour for all other
+		// DTDs.
+		else
+			return null;
 	}
 
 	public void startDocument() throws SAXException {
@@ -1372,9 +1399,9 @@ public class MartBuilderXML extends DefaultHandler {
 			throws IOException, BuilderException {
 		// Write the headers.
 		xmlWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-		// xmlWriter.write("<\!DOCTYPE mart PUBLIC \"-//EBI//DTD
-		// MartBuilder "+MartBuilderXML.DTD_VERSION+"//EN\"
-		// \"http\://www.biomart.org/TR/MartBuilder-"+MartBuilderXML.DTD_VERSION+"/DTD/mart.dtd\">\n");
+		xmlWriter.write("<!DOCTYPE mart PUBLIC \""
+				+ MartBuilderXML.DTD_PUBLIC_ID + "\" \""
+				+ MartBuilderXML.DTD_URL + "\">\n");
 
 		// Initialise the ID counter.
 		this.reverseMappedObjects = new HashMap();
@@ -1608,6 +1635,8 @@ public class MartBuilderXML extends DefaultHandler {
 		final MartBuilderXML loader = new MartBuilderXML();
 		try {
 			final SAXParser saxParser = factory.newSAXParser();
+			// Resources.getResourceAsURL("org/biomart/builder/resources/MartBuilder-"+
+			// MartBuilderXML.DTD_VERSION+ ".dtd")
 			saxParser.parse(file, loader);
 		} catch (final ParserConfigurationException e) {
 			throw new BuilderException(Resources.get("XMLConfigFailed"), e);
