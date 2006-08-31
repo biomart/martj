@@ -61,7 +61,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.54, 18th August 2006
+ * @version 0.1.55, 30th August 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -138,7 +138,7 @@ public class DataSet extends GenericSchema {
 
 			// FIXME This isn't really replication, it is merely
 			// creating a new dataset with the same central table
-			// as us. We should also be Copying over custom stuff
+			// as us. We should also be copying over custom stuff
 			// like masks, subclasses, expressions, restrictions,
 			// partitioning, concat relations, etc.
 
@@ -1897,40 +1897,37 @@ public class DataSet extends GenericSchema {
 			}
 
 			public void setMasked(boolean masked) throws AssociationException {
-				super.setMasked(masked);
 				// If this column is part of the PK on the table it came
 				// from that has a 1:M relation, or is part of an FK with a
-				// M:M relation, then that relation must also be (un)masked.
-				if (masked)
+				// M:M relation, then we can only mask this column if the
+				// relation is already masked (ie. there are no dependent
+				// dimensions).
+				if (masked) {
+					boolean hasUnmaskedRel = false;
 					for (final Iterator i = this.getWrappedColumn().getTable()
-							.getKeys().iterator(); i.hasNext();) {
+							.getKeys().iterator(); i.hasNext()
+							&& !hasUnmaskedRel;) {
 						Key k = (Key) i.next();
 						if (k.getColumns().contains(this.getWrappedColumn()))
 							for (final Iterator j = k.getRelations().iterator(); j
-									.hasNext();) {
+									.hasNext()
+									&& !hasUnmaskedRel;) {
 								Relation r = (Relation) j.next();
 								if ((k instanceof PrimaryKey && r.isOneToMany())
 										|| (k instanceof ForeignKey && r
-												.isManyToMany()))
-									((DataSet) this.getTable().getSchema())
-											.maskRelation(r);
+												.isManyToMany())) {
+									if (!((DataSet) this.getTable().getSchema())
+											.getMaskedRelations().contains(r))
+										hasUnmaskedRel = true;
+								}
 							}
 					}
-				else
-					for (final Iterator i = this.getWrappedColumn().getTable()
-							.getKeys().iterator(); i.hasNext();) {
-						Key k = (Key) i.next();
-						if (k.getColumns().contains(this.getWrappedColumn()))
-							for (final Iterator j = k.getRelations().iterator(); j
-									.hasNext();) {
-								Relation r = (Relation) j.next();
-								if ((k instanceof PrimaryKey && r.isOneToMany())
-										|| (k instanceof ForeignKey && r
-												.isManyToMany()))
-									((DataSet) this.getTable().getSchema())
-											.unmaskRelation(r);
-							}
-					}
+					if (hasUnmaskedRel)
+						throw new AssociationException(Resources
+								.get("dimDependsOnCol"));
+				}
+				// Do the (un)masking.
+				super.setMasked(masked);
 			}
 		}
 
