@@ -158,6 +158,7 @@ public class SchemaConnectionDialog extends JDialog {
 		final JPanel connectionPanelHolder = new JPanel();
 		this.type.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
+				// JDBC specific stuff.
 				if (SchemaConnectionDialog.this.type.getSelectedItem().equals(
 						Resources.get("jdbcSchema")))
 					if (!(SchemaConnectionDialog.this.connectionPanel instanceof JDBCSchemaConnectionPanel)) {
@@ -168,6 +169,36 @@ public class SchemaConnectionDialog extends JDialog {
 								.add(SchemaConnectionDialog.this.connectionPanel);
 						SchemaConnectionDialog.this.pack();
 					}
+				// General stuff for all schema types.
+				SchemaConnectionDialog.this.name.removeAllItems();
+				for (final Iterator i = SettingsCache.getHistoryNamesForClass(
+						SchemaConnectionDialog.this.connectionPanel
+								.getSchemaClass()).iterator(); i.hasNext();)
+					SchemaConnectionDialog.this.name.addItem(i.next());
+				SchemaConnectionDialog.this.name.setSelectedItem(null);
+			}
+		});
+
+		// Build a combo box that lists all other JDBCSchema instances in
+		// the mart, and allows the user to copy settings from them.
+		this.name = new JComboBox();
+		this.name.setEditable(true);
+		this.name.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// Identify which schema to copy settings from.
+				final Object obj = SchemaConnectionDialog.this.name
+						.getSelectedItem();
+
+				// Load the schema settings from our history.
+				final Properties historyProps = SettingsCache
+						.getHistoryProperties(
+								SchemaConnectionDialog.this.connectionPanel
+										.getSchemaClass(), (String) obj);
+				
+				// Copy the settings, if we found any that matched.
+				if (historyProps != null)
+					SchemaConnectionDialog.this.connectionPanel
+							.copySettingsFrom(historyProps);
 			}
 		});
 
@@ -176,33 +207,6 @@ public class SchemaConnectionDialog extends JDialog {
 		// the
 		// box won't size properly without one.
 		this.type.setSelectedItem(Resources.get("jdbcSchema"));
-
-		// Build a combo box that lists all other JDBCSchema instances in
-		// the mart, and allows the user to copy settings from them.
-		this.name = new JComboBox();
-		for (final Iterator i = SettingsCache.getHistoryNamesForClass(
-				JDBCSchema.class).iterator(); i.hasNext();)
-			this.name.addItem(i.next());
-		this.name.setEditable(true);
-		this.name.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-					// Identify which schema to copy settings from.
-					final Object obj = SchemaConnectionDialog.this.name
-							.getSelectedItem();
-
-					// If one was actually seleted, copy the settings from it.
-					if (obj != null) {
-						// Load the schema settings from our history.
-						final Properties historyProps = SettingsCache
-								.getHistoryProperties(
-										SchemaConnectionDialog.this.connectionPanel
-												.getSchemaClass(), (String) obj);
-						// Copy the settings.
-						if (historyProps!=null) SchemaConnectionDialog.this.connectionPanel
-								.copySettingsFrom(historyProps);
-					}
-			}
-		});
 
 		// Create buttons in dialog.
 		this.test = new JButton(Resources.get("testButton"));
@@ -293,7 +297,7 @@ public class SchemaConnectionDialog extends JDialog {
 			final String type = (String) this.type.getSelectedItem();
 			if (type.equals(Resources.get("jdbcSchema")))
 				return ((JDBCSchemaConnectionPanel) this.connectionPanel)
-						.createSchema((String)this.name.getSelectedItem());
+						.createSchema((String) this.name.getSelectedItem());
 
 			// What kind of type is it then??
 			else

@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -138,7 +139,8 @@ public class SettingsCache {
 	 */
 	public static Collection getHistoryNamesForClass(final Class clazz) {
 		final Map map = (Map) SettingsCache.classCache.get(clazz);
-		return map == null ? Collections.EMPTY_SET : map.keySet();
+		// Use copy of map keys in order to prevent concurrent modifications.
+		return map == null ? Collections.EMPTY_SET : new HashSet(map.keySet());
 	}
 
 	/**
