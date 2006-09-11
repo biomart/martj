@@ -46,9 +46,10 @@ public class DataSetComponent extends BoxShapedComponent {
 
 	private static final long serialVersionUID = 1;
 
-	private GridBagLayout layout;
-
-	private GridBagConstraints constraints;
+	/**
+	 * Bold font.
+	 */
+	public static Font BOLD_FONT = Font.decode("Serif-BOLD-10");
 
 	/**
 	 * This color is the one used for the background of invisible datasets.
@@ -59,11 +60,10 @@ public class DataSetComponent extends BoxShapedComponent {
 	 * This color is the one used for the background of visible datasets.
 	 */
 	public static Color VISIBLE_BACKGROUND = Color.LIGHT_GRAY;
-	
-	/**
-	 * Bold font.
-	 */
-	public static Font BOLD_FONT = Font.decode("Serif-BOLD-10");
+
+	private GridBagConstraints constraints;
+
+	private GridBagLayout layout;
 
 	/**
 	 * Constructs a dataset diagram component in the given diagram that displays
@@ -92,23 +92,6 @@ public class DataSetComponent extends BoxShapedComponent {
 		this.recalculateDiagramComponent();
 	}
 
-	public void recalculateDiagramComponent() {
-		// Remove all our components.
-		this.removeAll();
-
-		// Set the background colour.
-		if (this.getDataSet().getInvisible())
-			this.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
-		else
-			this.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
-
-		// Add the label for the schema name,
-		final JLabel label = new JLabel(this.getDataSet().getName());
-		label.setFont(DataSetComponent.BOLD_FONT);
-		this.layout.setConstraints(label, this.constraints);
-		this.add(label);
-	}
-
 	private DataSet getDataSet() {
 		return (DataSet) this.getObject();
 	}
@@ -116,9 +99,9 @@ public class DataSetComponent extends BoxShapedComponent {
 	public JPopupMenu getContextMenu() {
 		// First of all, work out what would have been shown by default.
 		final JPopupMenu contextMenu = super.getContextMenu();
-		
+
 		// Add a divider if necessary.
-		if (contextMenu.getComponentCount()>0)
+		if (contextMenu.getComponentCount() > 0)
 			contextMenu.addSeparator();
 
 		// Add the 'show tables' option, which opens the tab representing
@@ -139,5 +122,22 @@ public class DataSetComponent extends BoxShapedComponent {
 
 		// Return it. Will be further adapted by a listener elsewhere.
 		return contextMenu;
+	}
+
+	public void recalculateDiagramComponent() {
+		// Remove all our components.
+		this.removeAll();
+
+		// Set the background colour.
+		if (this.getDataSet().getInvisible())
+			this.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
+		else
+			this.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
+
+		// Add the label for the schema name,
+		final JLabel label = new JLabel(this.getDataSet().getName());
+		label.setFont(DataSetComponent.BOLD_FONT);
+		this.layout.setConstraints(label, this.constraints);
+		this.add(label);
 	}
 }

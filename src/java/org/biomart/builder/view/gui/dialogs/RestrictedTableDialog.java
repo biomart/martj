@@ -61,7 +61,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 public class RestrictedTableDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	private MartTab martTab;
+	private JButton cancel;
 
 	private boolean cancelled;
 
@@ -69,15 +69,15 @@ public class RestrictedTableDialog extends JDialog {
 
 	private JTable columnAliasTable;
 
-	private JButton insert;
-
-	private JButton remove;
+	private JButton execute;
 
 	private JTextArea expression;
 
-	private JButton cancel;
+	private JButton insert;
 
-	private JButton execute;
+	private MartTab martTab;
+
+	private JButton remove;
 
 	/**
 	 * Creates (but does not open) a dialog requesting details of a restricted
@@ -257,6 +257,11 @@ public class RestrictedTableDialog extends JDialog {
 		// Aliases were already copied in the JTable constructor above.
 	}
 
+	private boolean isEmpty(final String string) {
+		// Strings are empty if they are null or all whitespace.
+		return string == null || string.trim().length() == 0;
+	}
+
 	private boolean validateFields() {
 		// A placeholder to hold the validation messages, if any.
 		final List messages = new ArrayList();
@@ -281,18 +286,13 @@ public class RestrictedTableDialog extends JDialog {
 		return messages.isEmpty();
 	}
 
-	private boolean isEmpty(final String string) {
-		// Strings are empty if they are null or all whitespace.
-		return string == null || string.trim().length() == 0;
-	}
-
 	/**
-	 * Return the expression the user selected.
+	 * Return <tt>true</tt> if the user cancelled the box.
 	 * 
-	 * @return the expression.
+	 * @return <tt>true</tt> if the box was cancelled.
 	 */
-	public String getExpression() {
-		return this.expression.getText().trim();
+	public boolean getCancelled() {
+		return this.cancelled;
 	}
 
 	/**
@@ -305,22 +305,22 @@ public class RestrictedTableDialog extends JDialog {
 	}
 
 	/**
-	 * Return <tt>true</tt> if the user cancelled the box.
+	 * Return the expression the user selected.
 	 * 
-	 * @return <tt>true</tt> if the box was cancelled.
+	 * @return the expression.
 	 */
-	public boolean getCancelled() {
-		return this.cancelled;
+	public String getExpression() {
+		return this.expression.getText().trim();
 	}
 
 	/**
 	 * This internal class represents a map of dataset columns to aliases.
 	 */
 	private static class ColumnAliasTableModel extends DefaultTableModel {
-		private static final long serialVersionUID = 1;
-
 		private static final Class[] colClasses = new Class[] {
 				GenericColumn.class, String.class };
+
+		private static final long serialVersionUID = 1;
 
 		/**
 		 * This constructor sets up a new model, and populates it with the
@@ -346,10 +346,6 @@ public class RestrictedTableDialog extends JDialog {
 				}
 		}
 
-		public Class getColumnClass(final int column) {
-			return ColumnAliasTableModel.colClasses[column];
-		}
-
 		/**
 		 * Find out what aliases the user has given.
 		 * 
@@ -367,6 +363,10 @@ public class RestrictedTableDialog extends JDialog {
 					aliases.put(col, alias);
 			}
 			return aliases;
+		}
+
+		public Class getColumnClass(final int column) {
+			return ColumnAliasTableModel.colClasses[column];
 		}
 	}
 }

@@ -62,15 +62,59 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 public class ConcatRelationEditorDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	private DefaultListModel tableColumns;
+	/**
+	 * Creates a new concat-relation type.
+	 * 
+	 * @param martTab
+	 *            the mart tab this all belongs to.
+	 * @param relation
+	 *            the relation the concat is to be created on.
+	 * @return the concat type the user defined.
+	 */
+	public static DataSetConcatRelationType createConcatRelation(
+			final MartTab martTab, final Relation relation) {
+		final ConcatRelationEditorDialog dialog = new ConcatRelationEditorDialog(
+				martTab, relation.getManyKey().getTable(), Resources
+						.get("newConcatDialogTitle"), Resources
+						.get("addButton"), null, null, null);
+		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.show();
+		return dialog.getConcatRelationType();
+	}
 
-	private DefaultListModel selectedColumns;
-
-	private DataSetConcatRelationType type;
+	/**
+	 * Edits an existing relation.
+	 * 
+	 * @param martTab
+	 *            the mart tab this all belongs to.
+	 * @param relation
+	 *            the relation to be edited.
+	 * @param type
+	 *            the existing concat type for this relation.
+	 * @return the new concat type the user defined.
+	 */
+	public static DataSetConcatRelationType modifyConcatRelation(
+			final MartTab martTab, final Relation relation,
+			final DataSetConcatRelationType type) {
+		final ConcatRelationEditorDialog dialog = new ConcatRelationEditorDialog(
+				martTab, relation.getManyKey().getTable(), Resources
+						.get("editConcatDialogTitle"), Resources
+						.get("modifyButton"), type.getColumnSeparator(), type
+						.getRecordSeparator(), type.getConcatColumns());
+		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.show();
+		return dialog.getConcatRelationType();
+	}
 
 	private JTextField columnSep;
 
 	private JTextField rowSep;
+
+	private DefaultListModel selectedColumns;
+
+	private DefaultListModel tableColumns;
+
+	private DataSetConcatRelationType type;
 
 	private ConcatRelationEditorDialog(final MartTab martTab,
 			final Table table, final String title, final String action,
@@ -296,6 +340,16 @@ public class ConcatRelationEditorDialog extends JDialog {
 		this.pack();
 	}
 
+	private void createType() {
+		this.type = new DataSetConcatRelationType(this.columnSep.getText(),
+				this.rowSep.getText(), new ArrayList(Arrays
+						.asList(this.selectedColumns.toArray())));
+	}
+
+	private DataSetConcatRelationType getConcatRelationType() {
+		return this.type;
+	}
+
 	private boolean validateFields() {
 		// List of messages to display, if any are necessary.
 		final List messages = new ArrayList();
@@ -321,59 +375,5 @@ public class ConcatRelationEditorDialog extends JDialog {
 
 		// Validation succeeds if there are no messages.
 		return messages.isEmpty();
-	}
-
-	private void createType() {
-		this.type = new DataSetConcatRelationType(this.columnSep.getText(),
-				this.rowSep.getText(), new ArrayList(Arrays
-						.asList(this.selectedColumns.toArray())));
-	}
-
-	private DataSetConcatRelationType getConcatRelationType() {
-		return this.type;
-	}
-
-	/**
-	 * Creates a new concat-relation type.
-	 * 
-	 * @param martTab
-	 *            the mart tab this all belongs to.
-	 * @param relation
-	 *            the relation the concat is to be created on.
-	 * @return the concat type the user defined.
-	 */
-	public static DataSetConcatRelationType createConcatRelation(
-			final MartTab martTab, final Relation relation) {
-		final ConcatRelationEditorDialog dialog = new ConcatRelationEditorDialog(
-				martTab, relation.getManyKey().getTable(), Resources
-						.get("newConcatDialogTitle"), Resources
-						.get("addButton"), null, null, null);
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
-		dialog.show();
-		return dialog.getConcatRelationType();
-	}
-
-	/**
-	 * Edits an existing relation.
-	 * 
-	 * @param martTab
-	 *            the mart tab this all belongs to.
-	 * @param relation
-	 *            the relation to be edited.
-	 * @param type
-	 *            the existing concat type for this relation.
-	 * @return the new concat type the user defined.
-	 */
-	public static DataSetConcatRelationType modifyConcatRelation(
-			final MartTab martTab, final Relation relation,
-			final DataSetConcatRelationType type) {
-		final ConcatRelationEditorDialog dialog = new ConcatRelationEditorDialog(
-				martTab, relation.getManyKey().getTable(), Resources
-						.get("editConcatDialogTitle"), Resources
-						.get("modifyButton"), type.getColumnSeparator(), type
-						.getRecordSeparator(), type.getConcatColumns());
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
-		dialog.show();
-		return dialog.getConcatRelationType();
 	}
 }

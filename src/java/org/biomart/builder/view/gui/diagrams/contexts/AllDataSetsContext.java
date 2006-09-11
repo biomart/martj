@@ -36,7 +36,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * datasets tab.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.6, 29th August 2006
+ * @version 0.1.7, 11th September 2006
  * @since 0.1
  */
 public class AllDataSetsContext implements DiagramContext {
@@ -63,6 +63,11 @@ public class AllDataSetsContext implements DiagramContext {
 		return this.martTab;
 	}
 
+	public void customiseAppearance(final JComponent component,
+			final Object object) {
+		// Nothing to do here.
+	}
+
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
 
@@ -74,6 +79,9 @@ public class AllDataSetsContext implements DiagramContext {
 			if (contextMenu.getComponentCount() > 0)
 				contextMenu.addSeparator();
 
+			// Gray out if there are no datasets.
+			boolean grayOut = this.martTab.getDataSetTabSet().getTabCount()<=1;
+			
 			// Option to remove all datasets from the mart.
 			final JMenuItem remove = new JMenuItem(Resources
 					.get("removeAllDataSetsTitle"), new ImageIcon(Resources
@@ -86,6 +94,7 @@ public class AllDataSetsContext implements DiagramContext {
 							.requestRemoveAllDataSets();
 				}
 			});
+			if (grayOut) remove.setEnabled(false);
 			contextMenu.add(remove);
 
 		}
@@ -99,27 +108,6 @@ public class AllDataSetsContext implements DiagramContext {
 
 			// What schema is this?
 			final DataSet dataset = (DataSet) object;
-
-			// Add an option to make this dataset invisible.
-			final JCheckBoxMenuItem invisible = new JCheckBoxMenuItem(Resources
-					.get("invisibleDataSetTitle"));
-			invisible.setMnemonic(Resources.get("invisibleDataSetMnemonic")
-					.charAt(0));
-			invisible.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					if (invisible.isSelected())
-						AllDataSetsContext.this.martTab.getDataSetTabSet()
-								.requestInvisibleDataSet(dataset);
-					else
-						AllDataSetsContext.this.martTab.getDataSetTabSet()
-								.requestVisibleDataSet(dataset);
-				}
-			});
-			if (dataset.getInvisible())
-				invisible.setSelected(true);
-			contextMenu.add(invisible);
-
-			contextMenu.addSeparator();
 
 			// Add an option to rename this dataset.
 			final JMenuItem rename = new JMenuItem(Resources
@@ -152,6 +140,45 @@ public class AllDataSetsContext implements DiagramContext {
 
 			contextMenu.addSeparator();
 
+			// Add an option to make this dataset invisible.
+			final JCheckBoxMenuItem invisible = new JCheckBoxMenuItem(Resources
+					.get("invisibleDataSetTitle"));
+			invisible.setMnemonic(Resources.get("invisibleDataSetMnemonic")
+					.charAt(0));
+			invisible.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					if (invisible.isSelected())
+						AllDataSetsContext.this.martTab.getDataSetTabSet()
+								.requestInvisibleDataSet(dataset);
+					else
+						AllDataSetsContext.this.martTab.getDataSetTabSet()
+								.requestVisibleDataSet(dataset);
+				}
+			});
+			if (dataset.getInvisible())
+				invisible.setSelected(true);
+			contextMenu.add(invisible);
+
+			contextMenu.addSeparator();
+
+			// Option to explain how the dataset was constructed.
+			final JMenuItem explain = new JMenuItem(
+					Resources.get("explainDataSetTitle"),
+					new ImageIcon(
+							Resources
+									.getResourceAsURL("org/biomart/builder/resources/help.gif")));
+			explain.setMnemonic(Resources.get("explainDataSetMnemonic").charAt(
+					0));
+			explain.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					AllDataSetsContext.this.getMartTab().getDataSetTabSet()
+							.requestExplainDataSet(dataset);
+				}
+			});
+			contextMenu.add(explain);
+
+			contextMenu.addSeparator();
+
 			// Option to create the DDL for the dataset.
 			final JMenuItem saveDDL = new JMenuItem(
 					Resources.get("saveDDLTitle"),
@@ -167,10 +194,5 @@ public class AllDataSetsContext implements DiagramContext {
 			});
 			contextMenu.add(saveDDL);
 		}
-	}
-
-	public void customiseAppearance(final JComponent component,
-			final Object object) {
-		// Nothing to do here.
 	}
 }

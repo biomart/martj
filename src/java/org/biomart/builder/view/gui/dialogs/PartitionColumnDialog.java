@@ -58,21 +58,62 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 public class PartitionColumnDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	private MartTab martTab;
+	/**
+	 * This opens a dialog in order for the user to create a new partition type.
+	 * It returns that type, or null if they cancelled it.
+	 * 
+	 * @param martTab
+	 *            the mart tab this dialog is creating a partition type for.
+	 * @return the newly created partition type, or null if the dialog was
+	 *         cancelled.
+	 */
+	public static PartitionedColumnType createPartitionedColumnType(
+			final MartTab martTab) {
+		final PartitionColumnDialog dialog = new PartitionColumnDialog(martTab,
+				Resources.get("createPartitionButton"), null);
+		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.show();
+		return dialog.partitionType;
+	}
 
-	private PartitionedColumnType partitionType;
-
-	private JComboBox type;
-
-	private JTextField singleValue;
-
-	private JTextArea multiValue;
+	/**
+	 * This opens a dialog in order for the user to edit an existing partition
+	 * type. Actually what it does is use an existing type to provide a template
+	 * to create a new type, so it is an entirely new type that is returned -
+	 * the existing one is untouched. If it returns null, the user cancelled the
+	 * dialog.
+	 * 
+	 * @param martTab
+	 *            the mart tab this dialog is creating a partition type for.
+	 * @param template
+	 *            the template to copy settings from. Can be null.
+	 * @return the replacement, updated, partition type, or null if the dialog
+	 *         was cancelled.
+	 */
+	public static PartitionedColumnType updatePartitionedColumnType(
+			final MartTab martTab, final PartitionedColumnType template) {
+		final PartitionColumnDialog dialog = new PartitionColumnDialog(martTab,
+				Resources.get("updatePartitionButton"), template);
+		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.show();
+		return dialog.partitionType;
+	}
 
 	private JButton cancel;
 
 	private JButton execute;
 
+	private MartTab martTab;
+
+	private JTextArea multiValue;
+
 	private JCheckBox nullable;
+
+	private PartitionedColumnType partitionType;
+
+	private JTextField singleValue;
+
+	private JComboBox type;
 
 	private PartitionColumnDialog(final MartTab martTab,
 			final String executeButtonText, final PartitionedColumnType template) {
@@ -251,6 +292,48 @@ public class PartitionColumnDialog extends JDialog {
 		this.pack();
 	}
 
+	private PartitionedColumnType createPartitionType() {
+		// If we can't validate it, we can't create it.
+		if (!this.validateFields())
+			return null;
+
+		try {
+			// Attempt to create the appropriate type.
+			final String type = (String) this.type.getSelectedItem();
+
+			// Single-value uses the single value and/or nullable.
+			if (type.equals(Resources.get("singlePartitionOption")))
+				return new SingleValue(this.singleValue.getText().trim(),
+						this.nullable.isSelected());
+
+			// Multi-value uses the multi values, and/or nullable.
+			else if (type.equals(Resources.get("collectionPartitionOption"))) {
+				final String[] values = this.multiValue.getText().trim().split(
+						System.getProperty("line.separator"));
+				return new ValueCollection(Arrays.asList(values), this.nullable
+						.isSelected());
+			}
+
+			// Unique values doesn't require anything.
+			else if (type.equals(Resources.get("uniquePartitionOption")))
+				return new UniqueValues();
+
+			// Eh? Don't know what this is!
+			else
+				throw new MartBuilderInternalError();
+		} catch (final Throwable t) {
+			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+		}
+
+		// If we get here, we failed, so act as if validation failed.
+		return null;
+	}
+
+	private boolean isEmpty(final String string) {
+		// Strings are empty if they are null or all whitespace.
+		return string == null || string.trim().length() == 0;
+	}
+
 	private void resetFields(final PartitionedColumnType template) {
 		// If an existing single partition has been specified, populate
 		// its details into the box.
@@ -322,88 +405,5 @@ public class PartitionColumnDialog extends JDialog {
 
 		// Validation succeeds if there are no messages.
 		return messages.isEmpty();
-	}
-
-	private PartitionedColumnType createPartitionType() {
-		// If we can't validate it, we can't create it.
-		if (!this.validateFields())
-			return null;
-
-		try {
-			// Attempt to create the appropriate type.
-			final String type = (String) this.type.getSelectedItem();
-
-			// Single-value uses the single value and/or nullable.
-			if (type.equals(Resources.get("singlePartitionOption")))
-				return new SingleValue(this.singleValue.getText().trim(),
-						this.nullable.isSelected());
-
-			// Multi-value uses the multi values, and/or nullable.
-			else if (type.equals(Resources.get("collectionPartitionOption"))) {
-				final String[] values = this.multiValue.getText().trim().split(
-						System.getProperty("line.separator"));
-				return new ValueCollection(Arrays.asList(values), this.nullable
-						.isSelected());
-			}
-
-			// Unique values doesn't require anything.
-			else if (type.equals(Resources.get("uniquePartitionOption")))
-				return new UniqueValues();
-
-			// Eh? Don't know what this is!
-			else
-				throw new MartBuilderInternalError();
-		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
-		}
-
-		// If we get here, we failed, so act as if validation failed.
-		return null;
-	}
-
-	private boolean isEmpty(final String string) {
-		// Strings are empty if they are null or all whitespace.
-		return string == null || string.trim().length() == 0;
-	}
-
-	/**
-	 * This opens a dialog in order for the user to create a new partition type.
-	 * It returns that type, or null if they cancelled it.
-	 * 
-	 * @param martTab
-	 *            the mart tab this dialog is creating a partition type for.
-	 * @return the newly created partition type, or null if the dialog was
-	 *         cancelled.
-	 */
-	public static PartitionedColumnType createPartitionedColumnType(
-			final MartTab martTab) {
-		final PartitionColumnDialog dialog = new PartitionColumnDialog(martTab,
-				Resources.get("createPartitionButton"), null);
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
-		dialog.show();
-		return dialog.partitionType;
-	}
-
-	/**
-	 * This opens a dialog in order for the user to edit an existing partition
-	 * type. Actually what it does is use an existing type to provide a template
-	 * to create a new type, so it is an entirely new type that is returned -
-	 * the existing one is untouched. If it returns null, the user cancelled the
-	 * dialog.
-	 * 
-	 * @param martTab
-	 *            the mart tab this dialog is creating a partition type for.
-	 * @param template
-	 *            the template to copy settings from. Can be null.
-	 * @return the replacement, updated, partition type, or null if the dialog
-	 *         was cancelled.
-	 */
-	public static PartitionedColumnType updatePartitionedColumnType(
-			final MartTab martTab, final PartitionedColumnType template) {
-		final PartitionColumnDialog dialog = new PartitionColumnDialog(martTab,
-				Resources.get("updatePartitionButton"), template);
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
-		dialog.show();
-		return dialog.partitionType;
 	}
 }

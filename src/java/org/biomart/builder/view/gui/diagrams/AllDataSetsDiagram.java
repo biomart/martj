@@ -57,6 +57,11 @@ public class AllDataSetsDiagram extends Diagram {
 		this.recalculateDiagram();
 	}
 
+	protected void updateAppearance() {
+		// Set the background.
+		this.setBackground(AllDataSetsDiagram.BACKGROUND_COLOUR);
+	}
+
 	public void doRecalculateDiagram() {
 		// Remove all existing components.
 		this.removeAll();
@@ -71,10 +76,5 @@ public class AllDataSetsDiagram extends Diagram {
 
 		// Resize the diagram to fit the components.
 		this.resizeDiagram();
-	}
-	
-	protected void updateAppearance() {
-		// Set the background.
-		this.setBackground(AllDataSetsDiagram.BACKGROUND_COLOUR);
 	}
 }

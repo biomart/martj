@@ -43,24 +43,10 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
 public class KeyComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
 
-	private GridBagLayout layout;
-
-	private GridBagConstraints constraints;
-
 	/**
-	 * Constant referring to normal key colour.
+	 * Constant referring to foreign key colour.
 	 */
-	public static Color NORMAL_COLOUR = Color.DARK_GRAY;
-
-	/**
-	 * Constant referring to masked key colour.
-	 */
-	public static Color MASKED_COLOUR = Color.LIGHT_GRAY;
-
-	/**
-	 * Constant referring to incorrect key colour.
-	 */
-	public static Color INCORRECT_COLOUR = Color.RED;
+	public static Color FK_BACKGROUND_COLOUR = Color.YELLOW;
 
 	/**
 	 * Constant referring to handmade key colour.
@@ -68,19 +54,33 @@ public class KeyComponent extends BoxShapedComponent {
 	public static Color HANDMADE_COLOUR = Color.GREEN;
 
 	/**
-	 * Constant referring to primary key colour.
+	 * Constant referring to incorrect key colour.
 	 */
-	public static Color PK_BACKGROUND_COLOUR = Color.CYAN;
-
-	/**
-	 * Constant referring to foreign key colour.
-	 */
-	public static Color FK_BACKGROUND_COLOUR = Color.YELLOW;
+	public static Color INCORRECT_COLOUR = Color.RED;
 
 	/**
 	 * Italic font.
 	 */
 	public static Font ITALIC_FONT = Font.decode("Serif-ITALIC-10");
+
+	/**
+	 * Constant referring to masked key colour.
+	 */
+	public static Color MASKED_COLOUR = Color.LIGHT_GRAY;
+
+	/**
+	 * Constant referring to normal key colour.
+	 */
+	public static Color NORMAL_COLOUR = Color.DARK_GRAY;
+
+	/**
+	 * Constant referring to primary key colour.
+	 */
+	public static Color PK_BACKGROUND_COLOUR = Color.CYAN;
+
+	private GridBagConstraints constraints;
+
+	private GridBagLayout layout;
 
 	/**
 	 * The constructor constructs a key component around a given key object, and
@@ -113,6 +113,20 @@ public class KeyComponent extends BoxShapedComponent {
 		this.setTransferHandler(new TransferHandler("draggedKey"));
 	}
 
+	private Key getKey() {
+		return (Key) this.getObject();
+	}
+
+	/**
+	 * For drag-and-drop, this returns the object that will be dropped onto the
+	 * target when drag-and-drop starts from this key.
+	 * 
+	 * @return the key the user 'picked up' with the mouse.
+	 */
+	public Key getDraggedKey() {
+		return this.getKey();
+	}
+
 	public void recalculateDiagramComponent() {
 		// Removes all columns.
 		this.removeAll();
@@ -131,20 +145,6 @@ public class KeyComponent extends BoxShapedComponent {
 			this.layout.setConstraints(label, this.constraints);
 			this.add(label);
 		}
-	}
-
-	private Key getKey() {
-		return (Key) this.getObject();
-	}
-
-	/**
-	 * For drag-and-drop, this returns the object that will be dropped onto the
-	 * target when drag-and-drop starts from this key.
-	 * 
-	 * @return the key the user 'picked up' with the mouse.
-	 */
-	public Key getDraggedKey() {
-		return this.getKey();
 	}
 
 	/**

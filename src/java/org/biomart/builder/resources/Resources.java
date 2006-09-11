@@ -27,7 +27,7 @@ import java.util.ResourceBundle;
  * Simple wrapper for resources.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 16th August 2006
+ * @version 0.1.4, 11th September 2006
  * @since 0.1
  */
 public class Resources {
@@ -90,22 +90,6 @@ public class Resources {
 
 	/**
 	 * Given a resource name (a file inside some package somewhere), return a
-	 * URL pointing to it.
-	 * 
-	 * @param resource
-	 *            the classpath of the resource to lookup, e.g.
-	 *            "org/biomart/builder/resources/myfile.txt".
-	 * @return a URL pointing to that file.
-	 */
-	public static URL getResourceAsURL(final String resource) {
-		ClassLoader cl = Resources.class.getClassLoader();
-		if (cl == null)
-			cl = ClassLoader.getSystemClassLoader();
-		return cl.getResource(resource);
-	}
-
-	/**
-	 * Given a resource name (a file inside some package somewhere), return a
 	 * stream that will read the contents of that file.
 	 * 
 	 * @param resource
@@ -114,9 +98,41 @@ public class Resources {
 	 * @return a stream that will read that file.
 	 */
 	public static InputStream getResourceAsStream(final String resource) {
-		ClassLoader cl = Resources.class.getClassLoader();
-		if (cl == null)
-			cl = ClassLoader.getSystemClassLoader();
-		return cl.getResourceAsStream(resource);
+		final ClassLoader cl = Resources.class.getClassLoader();
+        return (InputStream)java.security.AccessController.doPrivileged(
+            new java.security.PrivilegedAction() {
+                public Object run() {
+                    if (cl != null) {
+                        return cl.getResourceAsStream(resource);
+                    } else {
+                        return ClassLoader.getSystemResourceAsStream(resource);
+                    }
+                }
+            }
+        );
+	}
+
+	/**
+	 * Given a resource name (a file inside some package somewhere), return a
+	 * URL pointing to it.
+	 * 
+	 * @param resource
+	 *            the classpath of the resource to lookup, e.g.
+	 *            "org/biomart/builder/resources/myfile.txt".
+	 * @return a URL pointing to that file.
+	 */
+	public static URL getResourceAsURL(final String resource) {
+		final ClassLoader cl = Resources.class.getClassLoader();
+        return (URL)java.security.AccessController.doPrivileged(
+            new java.security.PrivilegedAction() {
+                public Object run() {
+                    if (cl != null) {
+                        return cl.getResource(resource);
+                    } else {
+                        return ClassLoader.getSystemResource(resource);
+                    }
+                }
+            }
+        );
 	}
 }

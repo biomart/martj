@@ -42,8 +42,6 @@ import org.biomart.builder.model.DataSet.DataSetTable;
  * @since 0.1
  */
 public abstract class DatabaseDialect {
-	private static final Set dialects = new HashSet();
-
 	/**
 	 * Registers all known dialects for use with this system. Need only be
 	 * called once, but doesn't hurt to call multiple times.
@@ -53,6 +51,8 @@ public abstract class DatabaseDialect {
 		DatabaseDialect.dialects.add(new OracleDialect());
 		DatabaseDialect.dialects.add(new PostgreSQLDialect());
 	}
+
+	private static final Set dialects = new HashSet();
 
 	/**
 	 * Work out what kind of dialect to use for the given data link.
@@ -71,17 +71,6 @@ public abstract class DatabaseDialect {
 		}
 		return null;
 	}
-
-	/**
-	 * Test to see whether this particular dialect implementation can understand
-	 * the data link given, ie. it knows how to interact with it and speak the
-	 * appropriate version of SQL or DDL.
-	 * 
-	 * @param dataLink
-	 *            the data link to test compatibility with.
-	 * @return <tt>true</tt> if it understands it, <tt>false</tt> if not.
-	 */
-	public abstract boolean understandsDataLink(DataLink dataLink);
 
 	/**
 	 * Gets the distinct values in the given column. This must be a real column,
@@ -149,4 +138,15 @@ public abstract class DatabaseDialect {
 	 * in order to clear out any state it may be keeping track of.
 	 */
 	public abstract void reset();
+
+	/**
+	 * Test to see whether this particular dialect implementation can understand
+	 * the data link given, ie. it knows how to interact with it and speak the
+	 * appropriate version of SQL or DDL.
+	 * 
+	 * @param dataLink
+	 *            the data link to test compatibility with.
+	 * @return <tt>true</tt> if it understands it, <tt>false</tt> if not.
+	 */
+	public abstract boolean understandsDataLink(DataLink dataLink);
 }

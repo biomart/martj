@@ -102,22 +102,22 @@ public interface MartConstructor {
 	public interface ConstructorRunnable extends Runnable {
 
 		/**
-		 * This method should return a message describing what the thread is
-		 * currently doing.
+		 * This method adds a listener which will listen out for events emitted
+		 * by the constructor.
 		 * 
-		 * @return a message describing current activity.
+		 * @param listener
+		 *            the listener to add.
 		 */
-		public String getStatusMessage();
+		public void addMartConstructorListener(MartConstructorListener listener);
 
 		/**
-		 * This method should return a value between 0 and 100 indicating how
-		 * the thread is getting along in the general scheme of things. 0
-		 * indicates just starting, 100 indicates complete or very nearly
-		 * complete.
-		 * 
-		 * @return a percentage indicating how far the thread has got.
+		 * This method will be called if the user wants the thread to stop work
+		 * straight away. It should set an exception for
+		 * {@link #getFailureException()} to return saying that it was
+		 * cancelled, so that the user knows it was so, and doesn't think it
+		 * just finished successfully without any warnings.
 		 */
-		public int getPercentComplete();
+		public void cancel();
 
 		/**
 		 * If the thread failed, this method should return an exception
@@ -130,108 +130,22 @@ public interface MartConstructor {
 		public Exception getFailureException();
 
 		/**
-		 * This method will be called if the user wants the thread to stop work
-		 * straight away. It should set an exception for
-		 * {@link #getFailureException()} to return saying that it was
-		 * cancelled, so that the user knows it was so, and doesn't think it
-		 * just finished successfully without any warnings.
-		 */
-		public void cancel();
-
-		/**
-		 * This method adds a listener which will listen out for events emitted
-		 * by the constructor.
+		 * This method should return a value between 0 and 100 indicating how
+		 * the thread is getting along in the general scheme of things. 0
+		 * indicates just starting, 100 indicates complete or very nearly
+		 * complete.
 		 * 
-		 * @param listener
-		 *            the listener to add.
+		 * @return a percentage indicating how far the thread has got.
 		 */
-		public void addMartConstructorListener(MartConstructorListener listener);
-	}
-
-	/**
-	 * This interface defines a listener which hears events about mart
-	 * construction. The events are defined as constants in this interface.
-	 */
-	public interface MartConstructorListener {
-		
-		/**
-		 * This event will occur when mart construction begins.
-		 */
-		public static final int CONSTRUCTION_STARTED = 0;
+		public int getPercentComplete();
 
 		/**
-		 * This event will occur when mart construction ends.
-		 */
-		public static final int CONSTRUCTION_ENDED = 1;
-
-		/**
-		 * This event will occur when an individual mart begins.
-		 */
-		public static final int MART_STARTED = 2;
-
-		/**
-		 * This event will occur when an individual mart ends.
-		 */
-		public static final int MART_ENDED = 3;
-
-		/**
-		 * This event will occur when an individual dataset begins.
-		 */
-		public static final int DATASET_STARTED = 4;
-
-		/**
-		 * This event will occur when an individual dataset ends.
-		 */
-		public static final int DATASET_ENDED = 5;
-
-		/**
-		 * This event will occur when an action needs performing, and will be
-		 * accompanied by a {@link MartConstructorAction} object describing what
-		 * needs doing.
-		 */
-		public static final int ACTION_EVENT = 6;
-
-		/**
-		 * This method will be called when an event occurs.
+		 * This method should return a message describing what the thread is
+		 * currently doing.
 		 * 
-		 * @param event
-		 *            the event that occurred. See the constants defined
-		 *            elsewhere in this interface for possible events.
-		 * @param action
-		 *            an action object that belongs to this event. Will be null
-		 *            in all cases except where the event is
-		 *            {@link #ACTION_EVENT}.
-		 * @throws Exception
-		 *             if anything goes wrong whilst handling the event.
+		 * @return a message describing current activity.
 		 */
-		public void martConstructorEventOccurred(int event,
-				MartConstructorAction action) throws Exception;
-	}
-
-	/**
-	 * Helpers provide methods to give useful information to the
-	 * constructor as it builds the action graph.
-	 */
-	public interface Helper {
-
-		/**
-		 * Generate a new temporary table name.
-		 * 
-		 * @return a new temporary table name.
-		 */
-		public String getNewTempTableName();
-
-		/**
-		 * Lists the distinct values in the given column. This must be a real
-		 * column, not an instance of {@link DataSetColumn}.
-		 * 
-		 * @param col
-		 *            the column to get the distinct values from.
-		 * @return the distinct values in the column.
-		 * @throws SQLException
-		 *             in case of problems.
-		 */
-		public List listDistinctValues(Column col) throws SQLException;
+		public String getStatusMessage();
 	}
 
 	/**
@@ -239,21 +153,21 @@ public interface MartConstructor {
 	 */
 	public static class GenericConstructorRunnable implements
 			ConstructorRunnable {
-		private String statusMessage = Resources.get("mcCreatingGraph");;
-
-		private double percentComplete = 0.0;
-
-		private boolean cancelled = false;
-
-		private Exception failure = null;
+		private boolean cancelled = false;;
 
 		private Collection datasets;
+
+		private String datasetSchemaName;
+
+		private Exception failure = null;
 
 		private Helper helper;
 
 		private List martConstructorListeners;
 
-		private String datasetSchemaName;
+		private double percentComplete = 0.0;
+
+		private String statusMessage = Resources.get("mcCreatingGraph");
 
 		/**
 		 * Constructs a mart builder that will build the mart in the given
@@ -276,73 +190,9 @@ public interface MartConstructor {
 			this.datasetSchemaName = datasetSchemaName;
 		}
 
-		public void addMartConstructorListener(
-				final MartConstructorListener listener) {
-			this.martConstructorListeners.add(listener);
-		}
-
-		private void issueListenerEvent(final int event) throws Exception {
-			this.issueListenerEvent(event, null);
-		}
-
-		private void issueListenerEvent(final int event,
-				final MartConstructorAction action) throws Exception {
-			for (final Iterator i = this.martConstructorListeners.iterator(); i
-					.hasNext();)
-				((MartConstructorListener) i.next())
-						.martConstructorEventOccurred(event, action);
-		}
-
-		public void run() {
-			try {
-				// Split the datasets into groups by mart.
-				final Map martDataSets = new HashMap();
-				for (final Iterator i = this.datasets.iterator(); i.hasNext();) {
-					final DataSet ds = (DataSet) i.next();
-					final Mart mart = ds.getMart();
-					if (!martDataSets.containsKey(mart))
-						martDataSets.put(mart, new ArrayList());
-					((List) martDataSets.get(mart)).add(ds);
-				}
-
-				// Begin.
-				this
-						.issueListenerEvent(MartConstructorListener.CONSTRUCTION_STARTED);
-
-				// Work out how many datasets we have.
-				final int totalDataSetCount = this.datasets.size();
-
-				// Loop over each mart.
-				for (final Iterator j = martDataSets.values().iterator(); j
-						.hasNext();) {
-					this
-							.issueListenerEvent(MartConstructorListener.MART_STARTED);
-
-					try {
-						// Loop over all the datasets we want included from this
-						// mart.
-						for (final Iterator i = ((List) j.next()).iterator(); i
-								.hasNext();)
-							this.doIt((DataSet) i.next(), totalDataSetCount);
-					} finally {
-						this
-								.issueListenerEvent(MartConstructorListener.MART_ENDED);
-					}
-				}
-			} catch (final ConstructorException e) {
-				this.failure = e;
-			} catch (final Throwable t) {
-				this.failure = new ConstructorException(t);
-			} finally {
-				try {
-					this
-							.issueListenerEvent(MartConstructorListener.CONSTRUCTION_ENDED);
-				} catch (final ConstructorException e) {
-					this.failure = e;
-				} catch (final Throwable t) {
-					this.failure = new ConstructorException(t);
-				}
-			}
+		private void checkCancelled() throws ConstructorException {
+			if (this.cancelled)
+				throw new ConstructorException(Resources.get("mcCancelled"));
 		}
 
 		private void doIt(final DataSet dataset, final int totalDataSetCount)
@@ -1034,6 +884,18 @@ public interface MartConstructor {
 			}
 		}
 
+		private void issueListenerEvent(final int event) throws Exception {
+			this.issueListenerEvent(event, null);
+		}
+
+		private void issueListenerEvent(final int event,
+				final MartConstructorAction action) throws Exception {
+			for (final Iterator i = this.martConstructorListeners.iterator(); i
+					.hasNext();)
+				((MartConstructorListener) i.next())
+						.martConstructorEventOccurred(event, action);
+		}
+
 		private void processTable(final VirtualTable vParentTable,
 				final MartConstructorAction firstActionDependsOn,
 				final MartConstructorActionGraph actionGraph,
@@ -1463,429 +1325,76 @@ public interface MartConstructor {
 			vConstructionTable.setLastActionPerformed(lastActionPerformed);
 		}
 
-		public String getStatusMessage() {
-			return this.statusMessage;
-		}
-
-		public int getPercentComplete() {
-			return (int) this.percentComplete;
-		}
-
-		public Exception getFailureException() {
-			return this.failure;
+		public void addMartConstructorListener(
+				final MartConstructorListener listener) {
+			this.martConstructorListeners.add(listener);
 		}
 
 		public void cancel() {
 			this.cancelled = true;
 		}
 
-		private void checkCancelled() throws ConstructorException {
-			if (this.cancelled)
-				throw new ConstructorException(Resources.get("mcCancelled"));
+		public Exception getFailureException() {
+			return this.failure;
 		}
 
-		// Internal use only, serves as a convenient wrapper for tracking
-		// info about a particular dataset table.
-		private class VirtualTable {
-			private DataSetTable datasetTable;
+		public int getPercentComplete() {
+			return (int) this.percentComplete;
+		}
 
-			private Relation parentDataSetRelation;
+		public String getStatusMessage() {
+			return this.statusMessage;
+		}
 
-			private String tempTableName;
-
-			private List partitionValues;
-
-			private MartConstructorAction lastActionPerformed;
-
-			private Map counter;
-
-			/**
-			 * Constructor starts tracking a dataset table.
-			 * 
-			 * @param datasetTable
-			 *            the table to track.
-			 * @param parentDataSetRelation
-			 *            the relation between this dataset table and any parent
-			 *            table it belongs to, e.g. a main or a subclass.
-			 */
-			public VirtualTable(final DataSetTable datasetTable,
-					final Relation parentDataSetRelation) {
-				this.tempTableName = GenericConstructorRunnable.this.helper
-						.getNewTempTableName();
-				this.datasetTable = datasetTable;
-				this.parentDataSetRelation = parentDataSetRelation;
-				this.partitionValues = new ArrayList();
-				this.counter = new HashMap();
-			}
-
-			/**
-			 * The name of the physical temporary table that contains the data
-			 * for this representation.
-			 * 
-			 * @return the temp table name.
-			 */
-			public String getTempTableName() {
-				return this.tempTableName;
-			}
-
-			/**
-			 * Sets the name to use for the physical temporary table that
-			 * contains the data for this representation.
-			 * 
-			 * @param tempTableName
-			 *            the temp table name.
-			 */
-			public void setTempTableName(final String tempTableName) {
-				this.tempTableName = tempTableName;
-			}
-
-			/**
-			 * Obtain the list of values used to partition this table, in the
-			 * order in which those partitions were made.
-			 * 
-			 * @return the list of values used to partition this table.
-			 */
-			public List getPartitionValues() {
-				return this.partitionValues;
-			}
-
-			/**
-			 * Work out what dataset this virtual table represents.
-			 * 
-			 * @return the dataset for this virtual table.
-			 */
-			public DataSet getDataSet() {
-				return (DataSet) this.datasetTable.getSchema();
-			}
-
-			/**
-			 * Work out what dataset table this virtual table represents.
-			 * 
-			 * @return the dataset table for this virtual table.
-			 */
-			public DataSetTable getDataSetTable() {
-				return this.datasetTable;
-			}
-
-			/**
-			 * Work out what real table, ie. the underlying table of the dataset
-			 * table, for this virtual table.
-			 * 
-			 * @return the underlying table of the dataset table for this
-			 *         virtual table.
-			 */
-			public Table getRealTable() {
-				return this.datasetTable.getUnderlyingTable();
-			}
-
-			/**
-			 * Work out what schema the real table of this virtual table is in.
-			 * 
-			 * @return the schema that the real table of this virtual table is
-			 *         in.
-			 */
-			public Schema getRealSchema() {
-				return this.datasetTable.getUnderlyingTable().getSchema();
-			}
-
-			/**
-			 * Find out the relation that links the dataset table of this
-			 * virtual table to its parent dataset table, if any.
-			 * 
-			 * @return the relation between this virtual table's dataset table
-			 *         and its parent, if any.
-			 */
-			public Relation getParentDataSetRelation() {
-				return this.parentDataSetRelation;
-			}
-
-			/**
-			 * Find out the parent dataset table of the dataset table inside
-			 * this virtual table.
-			 * 
-			 * @return the parent dataset table of this virtual table's dataset
-			 *         table.
-			 */
-			public DataSetTable getParentDataSetTable() {
-				return (DataSetTable) this.parentDataSetRelation.getOneKey()
-						.getTable();
-			}
-
-			private DataSetColumn getDataSetColumn(int n,
-					final Column interestingColumn) {
-				// We must look not only for this column, but all columns
-				// involved in relations with it, because it could have been
-				// introduced via another route.
-				final List candidates = new ArrayList();
-				candidates.add(interestingColumn);
-				for (int j = 0; j < candidates.size(); j++) {
-					final Column searchColumn = (Column) candidates.get(j);
-					for (final Iterator i = this.datasetTable.getColumns()
-							.iterator(); i.hasNext();) {
-						final DataSetColumn candidate = (DataSetColumn) i
-								.next();
-						DataSetColumn test = candidate;
-						while (test instanceof InheritedColumn) 
-							test = ((InheritedColumn) test)
-									.getInheritedColumn();
-						if (!(test instanceof WrappedColumn))
-							continue;
-						final WrappedColumn wc = (WrappedColumn) test;
-						if (wc.getMasked() && !wc.getDependency())
-							continue;
-						if (searchColumn.equals(wc.getWrappedColumn())
-								&& n-- == 0)
-							return candidate;
-					}
-					// If got here, didn't find this search candidate, so add
-					// all the related columns in other keys.
-					for (final Iterator i = searchColumn.getTable().getKeys()
-							.iterator(); i.hasNext();) {
-						final Key key = (Key) i.next();
-						final int colIndex = key.getColumns().indexOf(
-								searchColumn);
-						if (colIndex < 0)
-							continue;
-						for (final Iterator k = key.getRelations().iterator(); k
-								.hasNext();) {
-							final Relation rel = (Relation) k.next();
-							final Key otherKey = rel.getOtherKey(key);
-							final Column nextCandidate = (Column) otherKey
-									.getColumns().get(colIndex);
-							if (!candidates.contains(nextCandidate))
-								candidates.add(nextCandidate);
-						}
-					}
+		public void run() {
+			try {
+				// Split the datasets into groups by mart.
+				final Map martDataSets = new HashMap();
+				for (final Iterator i = this.datasets.iterator(); i.hasNext();) {
+					final DataSet ds = (DataSet) i.next();
+					final Mart mart = ds.getMart();
+					if (!martDataSets.containsKey(mart))
+						martDataSets.put(mart, new ArrayList());
+					((List) martDataSets.get(mart)).add(ds);
 				}
-				// If we get here, it means the specified column is not part
-				// of the unmasked columns on this dataset table.
-				return null;
-			}
 
-			/**
-			 * Given a set of interesting columns from normal tables (not
-			 * dataset tables), return the 0th set of matching dataset columns.
-			 * This means that if the interesting column appears twice in the
-			 * table as a dataset column, and n=1, then the 2nd instance is the
-			 * one that gets returned. (n is 0-indexed).
-			 * 
-			 * @param interestingColumns
-			 *            the set of normal columns to find matching dataset
-			 *            columns for.
-			 * @return the set of 0th matching dataset columns.
-			 */
-			public List getDataSetColumns(final Collection interestingColumns) {
-				final List list = new ArrayList();
-				for (final Iterator i = interestingColumns.iterator(); i
+				// Begin.
+				this
+						.issueListenerEvent(MartConstructorListener.CONSTRUCTION_STARTED);
+
+				// Work out how many datasets we have.
+				final int totalDataSetCount = this.datasets.size();
+
+				// Loop over each mart.
+				for (final Iterator j = martDataSets.values().iterator(); j
 						.hasNext();) {
-					final DataSetColumn col = this.getDataSetColumn(0,
-							(Column) i.next());
-					if (col != null)
-						list.add(col);
-				}
-				return list;
-			}
+					this
+							.issueListenerEvent(MartConstructorListener.MART_STARTED);
 
-			/**
-			 * Find all columns in this dataset table that are not masked, or
-			 * are dependencies.
-			 * 
-			 * @return the columns that meet this criteria. May be empty but
-			 *         never null.
-			 */
-			public List getDataSetColumns() {
-				final List list = new ArrayList();
-				for (final Iterator i = this.datasetTable.getColumns()
-						.iterator(); i.hasNext();) {
-					final DataSetColumn candidate = (DataSetColumn) i.next();
-					if (candidate.getMasked() && !candidate.getDependency())
-						continue;
-					list.add(candidate);
-				}
-				return list;
-			}
-
-			/**
-			 * Given a relation, find all columns in this dataset table that
-			 * were added as a result of following this relation.
-			 * 
-			 * @param underlyingRelation
-			 *            the relation to look for associated columns for.
-			 * @return the columns added to this table by that relation. May be
-			 *         empty but never null.
-			 */
-			public List getDataSetColumns(final Relation underlyingRelation) {
-				final List list = new ArrayList();
-				for (final Iterator i = this.datasetTable.getColumns()
-						.iterator(); i.hasNext();) {
-					final DataSetColumn candidate = (DataSetColumn) i.next();
-					if (!(candidate instanceof WrappedColumn))
-						continue;
-					final WrappedColumn wc = (WrappedColumn) candidate;
-					if (wc.getMasked() && !wc.getDependency())
-						continue;
-					final Relation wcRel = wc.getUnderlyingRelation();
-					if (wcRel == underlyingRelation)
-						list.add(candidate);
-					else if (wcRel != null
-							&& underlyingRelation != null
-							&& wc.getUnderlyingRelation().equals(
-									underlyingRelation))
-						list.add(candidate);
-				}
-				return list;
-			}
-
-			/**
-			 * Given a set of interesting columns from normal tables (not
-			 * dataset tables), return the nth set of matching dataset columns.
-			 * This means that if the interesting column appears twice in the
-			 * table as a dataset column, and n=1, then the 2nd instance is the
-			 * one that gets returned. (n is 0-indexed).
-			 * 
-			 * @param interestingColumns
-			 *            the set of normal columns to find matching dataset
-			 *            columns for.
-			 * @param counter
-			 *            the counter object to retrieve the value n from. The
-			 *            first time any object is used, n=0. The next time that
-			 *            same object is seen, n=1, and so on.
-			 * @return the set of nth matching dataset columns.
-			 */
-			public List getNthDataSetColumns(
-					final Collection interestingColumns, final Object counter) {
-				final int n = this.incrementCount(counter);
-				final List list = new ArrayList();
-				for (final Iterator i = interestingColumns.iterator(); i
-						.hasNext();) {
-					final DataSetColumn col = this.getDataSetColumn(n,
-							(Column) i.next());
-					if (col != null)
-						list.add(col);
-				}
-				return list;
-			}
-
-			private int incrementCount(final Object counter) {
-				int count;
-				if (!this.counter.containsKey(counter)) {
-					count = 0;
-					this.counter.put(counter, new Integer(count));
-				} else {
-					count = ((Integer) this.counter.get(counter)).intValue();
-					count++;
-					this.counter.put(counter, new Integer(count));
-				}
-				return count;
-			}
-
-			/**
-			 * Sets the last action performed for this table, so that other
-			 * methods can work out which action to wait for in order for this
-			 * table to be complete.
-			 * 
-			 * @param lastActionPerformed
-			 *            the last action performed in the creation of this
-			 *            table.
-			 */
-			public void setLastActionPerformed(
-					final MartConstructorAction lastActionPerformed) {
-				this.lastActionPerformed = lastActionPerformed;
-			}
-
-			/**
-			 * Gets the last action performed for this table, so that other
-			 * methods can work out which action to wait for in order for this
-			 * table to be complete.
-			 * 
-			 * @return the last action performed in the creation of this table.
-			 */
-			public MartConstructorAction getLastActionPerformed() {
-				return this.lastActionPerformed;
-			}
-
-			/**
-			 * Constructs a string containing the recommended content name for
-			 * this dataset table in the final schema.
-			 * 
-			 * @return the constructed name for this dataset table.
-			 */
-			public String createContentName() {
-				// TODO - come up with a better naming scheme
-				// Currently the name is:
-				// tablename\
-				// {_partitionvalue}*}\
-
-				// Work out what dataset we are in.
-				final DataSetTable datasetTable = this.getDataSetTable();
-
-				final StringBuffer name = new StringBuffer();
-
-				// Table name.
-				name.append(datasetTable.getName());
-
-				// Partition values with _ separator between.
-				final List partitionValues = this.getPartitionValues();
-				if (!partitionValues.isEmpty()) {
-					for (final Iterator j = partitionValues.iterator(); j
-							.hasNext();) {
-						name.append(Resources.get("tablenameSubSep"));
-						// Partition values may be null, so cannot use
-						// toString().
-						String partitionValue = "" + j.next();
-						// Replace all unusable bits with single underscores.
-						partitionValue = partitionValue.replaceAll("\\W", "_");
-						// Replace multiple underscores with single ones.
-						partitionValue = partitionValue.replaceAll("_+", "_");
-						// Wrap with 'p's if start/end with _.
-						if (partitionValue.startsWith("_"))
-							partitionValue = 'p' + partitionValue;
-						if (partitionValue.endsWith("_"))
-							partitionValue += 'p';
-						// Append the value.
-						name.append(partitionValue);
+					try {
+						// Loop over all the datasets we want included from this
+						// mart.
+						for (final Iterator i = ((List) j.next()).iterator(); i
+								.hasNext();)
+							this.doIt((DataSet) i.next(), totalDataSetCount);
+					} finally {
+						this
+								.issueListenerEvent(MartConstructorListener.MART_ENDED);
 					}
 				}
-
-				return name.toString().toLowerCase();
-			}
-
-			/**
-			 * Constructs a string containing the recommended table name for
-			 * this dataset table in the final schema.
-			 * 
-			 * @return the constructed name for this dataset table.
-			 */
-			public String createFinalName() {
-				// TODO - come up with a better naming scheme
-				// Currently the name is:
-				// datasetname__{content}__type
-
-				// Work out what dataset we are in.
-				final DataSet dataset = this.getDataSet();
-
-				final StringBuffer name = new StringBuffer();
-
-				// Dataset name and __ separator.
-				name.append(dataset.getName());
-				name.append(Resources.get("tablenameSep"));
-
-				// Content name.
-				name.append(this.createContentName());
-
-				// __ separator.
-				name.append(Resources.get("tablenameSep"));
-
-				// Type.
-				final DataSetTableType type = datasetTable.getType();
-				if (type.equals(DataSetTableType.MAIN))
-					name.append(Resources.get("mainSuffix"));
-				else if (type.equals(DataSetTableType.MAIN_SUBCLASS))
-					name.append(Resources.get("subclassSuffix"));
-				else if (type.equals(DataSetTableType.DIMENSION))
-					name.append(Resources.get("dimensionSuffix"));
-
-				return name.toString().toLowerCase();
+			} catch (final ConstructorException e) {
+				this.failure = e;
+			} catch (final Throwable t) {
+				this.failure = new ConstructorException(t);
+			} finally {
+				try {
+					this
+							.issueListenerEvent(MartConstructorListener.CONSTRUCTION_ENDED);
+				} catch (final ConstructorException e) {
+					this.failure = e;
+				} catch (final Throwable t) {
+					this.failure = new ConstructorException(t);
+				}
 			}
 		}
 
@@ -1931,5 +1440,495 @@ public interface MartConstructor {
 				return name.toString().toLowerCase();
 			}
 		}
+
+		// Internal use only, serves as a convenient wrapper for tracking
+		// info about a particular dataset table.
+		private class VirtualTable {
+			private Map counter;
+
+			private DataSetTable datasetTable;
+
+			private MartConstructorAction lastActionPerformed;
+
+			private Relation parentDataSetRelation;
+
+			private List partitionValues;
+
+			private String tempTableName;
+
+			/**
+			 * Constructor starts tracking a dataset table.
+			 * 
+			 * @param datasetTable
+			 *            the table to track.
+			 * @param parentDataSetRelation
+			 *            the relation between this dataset table and any parent
+			 *            table it belongs to, e.g. a main or a subclass.
+			 */
+			public VirtualTable(final DataSetTable datasetTable,
+					final Relation parentDataSetRelation) {
+				this.tempTableName = GenericConstructorRunnable.this.helper
+						.getNewTempTableName();
+				this.datasetTable = datasetTable;
+				this.parentDataSetRelation = parentDataSetRelation;
+				this.partitionValues = new ArrayList();
+				this.counter = new HashMap();
+			}
+
+			private DataSetColumn getDataSetColumn(int n,
+					final Column interestingColumn) {
+				// We must look not only for this column, but all columns
+				// involved in relations with it, because it could have been
+				// introduced via another route.
+				final List candidates = new ArrayList();
+				candidates.add(interestingColumn);
+				for (int j = 0; j < candidates.size(); j++) {
+					final Column searchColumn = (Column) candidates.get(j);
+					for (final Iterator i = this.datasetTable.getColumns()
+							.iterator(); i.hasNext();) {
+						final DataSetColumn candidate = (DataSetColumn) i
+								.next();
+						DataSetColumn test = candidate;
+						while (test instanceof InheritedColumn)
+							test = ((InheritedColumn) test)
+									.getInheritedColumn();
+						if (!(test instanceof WrappedColumn))
+							continue;
+						final WrappedColumn wc = (WrappedColumn) test;
+						if (wc.getMasked() && !wc.getDependency())
+							continue;
+						if (searchColumn.equals(wc.getWrappedColumn())
+								&& n-- == 0)
+							return candidate;
+					}
+					// If got here, didn't find this search candidate, so add
+					// all the related columns in other keys.
+					for (final Iterator i = searchColumn.getTable().getKeys()
+							.iterator(); i.hasNext();) {
+						final Key key = (Key) i.next();
+						final int colIndex = key.getColumns().indexOf(
+								searchColumn);
+						if (colIndex < 0)
+							continue;
+						for (final Iterator k = key.getRelations().iterator(); k
+								.hasNext();) {
+							final Relation rel = (Relation) k.next();
+							final Key otherKey = rel.getOtherKey(key);
+							final Column nextCandidate = (Column) otherKey
+									.getColumns().get(colIndex);
+							if (!candidates.contains(nextCandidate))
+								candidates.add(nextCandidate);
+						}
+					}
+				}
+				// If we get here, it means the specified column is not part
+				// of the unmasked columns on this dataset table.
+				return null;
+			}
+
+			private int incrementCount(final Object counter) {
+				int count;
+				if (!this.counter.containsKey(counter)) {
+					count = 0;
+					this.counter.put(counter, new Integer(count));
+				} else {
+					count = ((Integer) this.counter.get(counter)).intValue();
+					count++;
+					this.counter.put(counter, new Integer(count));
+				}
+				return count;
+			}
+
+			/**
+			 * Constructs a string containing the recommended content name for
+			 * this dataset table in the final schema.
+			 * 
+			 * @return the constructed name for this dataset table.
+			 */
+			public String createContentName() {
+				// TODO - come up with a better naming scheme
+				// Currently the name is:
+				// tablename\
+				// {_partitionvalue}*}\
+
+				// Work out what dataset we are in.
+				final DataSetTable datasetTable = this.getDataSetTable();
+
+				final StringBuffer name = new StringBuffer();
+
+				// Table name.
+				name.append(datasetTable.getName());
+
+				// Partition values with _ separator between.
+				final List partitionValues = this.getPartitionValues();
+				if (!partitionValues.isEmpty())
+					for (final Iterator j = partitionValues.iterator(); j
+							.hasNext();) {
+						name.append(Resources.get("tablenameSubSep"));
+						// Partition values may be null, so cannot use
+						// toString().
+						String partitionValue = "" + j.next();
+						// Replace all unusable bits with single underscores.
+						partitionValue = partitionValue.replaceAll("\\W", "_");
+						// Replace multiple underscores with single ones.
+						partitionValue = partitionValue.replaceAll("_+", "_");
+						// Wrap with 'p's if start/end with _.
+						if (partitionValue.startsWith("_"))
+							partitionValue = 'p' + partitionValue;
+						if (partitionValue.endsWith("_"))
+							partitionValue += 'p';
+						// Append the value.
+						name.append(partitionValue);
+					}
+
+				return name.toString().toLowerCase();
+			}
+
+			/**
+			 * Constructs a string containing the recommended table name for
+			 * this dataset table in the final schema.
+			 * 
+			 * @return the constructed name for this dataset table.
+			 */
+			public String createFinalName() {
+				// TODO - come up with a better naming scheme
+				// Currently the name is:
+				// datasetname__{content}__type
+
+				// Work out what dataset we are in.
+				final DataSet dataset = this.getDataSet();
+
+				final StringBuffer name = new StringBuffer();
+
+				// Dataset name and __ separator.
+				name.append(dataset.getName());
+				name.append(Resources.get("tablenameSep"));
+
+				// Content name.
+				name.append(this.createContentName());
+
+				// __ separator.
+				name.append(Resources.get("tablenameSep"));
+
+				// Type.
+				final DataSetTableType type = this.datasetTable.getType();
+				if (type.equals(DataSetTableType.MAIN))
+					name.append(Resources.get("mainSuffix"));
+				else if (type.equals(DataSetTableType.MAIN_SUBCLASS))
+					name.append(Resources.get("subclassSuffix"));
+				else if (type.equals(DataSetTableType.DIMENSION))
+					name.append(Resources.get("dimensionSuffix"));
+
+				return name.toString().toLowerCase();
+			}
+
+			/**
+			 * Work out what dataset this virtual table represents.
+			 * 
+			 * @return the dataset for this virtual table.
+			 */
+			public DataSet getDataSet() {
+				return (DataSet) this.datasetTable.getSchema();
+			}
+
+			/**
+			 * Find all columns in this dataset table that are not masked, or
+			 * are dependencies.
+			 * 
+			 * @return the columns that meet this criteria. May be empty but
+			 *         never null.
+			 */
+			public List getDataSetColumns() {
+				final List list = new ArrayList();
+				for (final Iterator i = this.datasetTable.getColumns()
+						.iterator(); i.hasNext();) {
+					final DataSetColumn candidate = (DataSetColumn) i.next();
+					if (candidate.getMasked() && !candidate.getDependency())
+						continue;
+					list.add(candidate);
+				}
+				return list;
+			}
+
+			/**
+			 * Given a set of interesting columns from normal tables (not
+			 * dataset tables), return the 0th set of matching dataset columns.
+			 * This means that if the interesting column appears twice in the
+			 * table as a dataset column, and n=1, then the 2nd instance is the
+			 * one that gets returned. (n is 0-indexed).
+			 * 
+			 * @param interestingColumns
+			 *            the set of normal columns to find matching dataset
+			 *            columns for.
+			 * @return the set of 0th matching dataset columns.
+			 */
+			public List getDataSetColumns(final Collection interestingColumns) {
+				final List list = new ArrayList();
+				for (final Iterator i = interestingColumns.iterator(); i
+						.hasNext();) {
+					final DataSetColumn col = this.getDataSetColumn(0,
+							(Column) i.next());
+					if (col != null)
+						list.add(col);
+				}
+				return list;
+			}
+
+			/**
+			 * Given a relation, find all columns in this dataset table that
+			 * were added as a result of following this relation.
+			 * 
+			 * @param underlyingRelation
+			 *            the relation to look for associated columns for.
+			 * @return the columns added to this table by that relation. May be
+			 *         empty but never null.
+			 */
+			public List getDataSetColumns(final Relation underlyingRelation) {
+				final List list = new ArrayList();
+				for (final Iterator i = this.datasetTable.getColumns()
+						.iterator(); i.hasNext();) {
+					final DataSetColumn candidate = (DataSetColumn) i.next();
+					if (!(candidate instanceof WrappedColumn))
+						continue;
+					final WrappedColumn wc = (WrappedColumn) candidate;
+					if (wc.getMasked() && !wc.getDependency())
+						continue;
+					final Relation wcRel = wc.getUnderlyingRelation();
+					if (wcRel == underlyingRelation)
+						list.add(candidate);
+					else if (wcRel != null
+							&& underlyingRelation != null
+							&& wc.getUnderlyingRelation().equals(
+									underlyingRelation))
+						list.add(candidate);
+				}
+				return list;
+			}
+
+			/**
+			 * Work out what dataset table this virtual table represents.
+			 * 
+			 * @return the dataset table for this virtual table.
+			 */
+			public DataSetTable getDataSetTable() {
+				return this.datasetTable;
+			}
+
+			/**
+			 * Gets the last action performed for this table, so that other
+			 * methods can work out which action to wait for in order for this
+			 * table to be complete.
+			 * 
+			 * @return the last action performed in the creation of this table.
+			 */
+			public MartConstructorAction getLastActionPerformed() {
+				return this.lastActionPerformed;
+			}
+
+			/**
+			 * Given a set of interesting columns from normal tables (not
+			 * dataset tables), return the nth set of matching dataset columns.
+			 * This means that if the interesting column appears twice in the
+			 * table as a dataset column, and n=1, then the 2nd instance is the
+			 * one that gets returned. (n is 0-indexed).
+			 * 
+			 * @param interestingColumns
+			 *            the set of normal columns to find matching dataset
+			 *            columns for.
+			 * @param counter
+			 *            the counter object to retrieve the value n from. The
+			 *            first time any object is used, n=0. The next time that
+			 *            same object is seen, n=1, and so on.
+			 * @return the set of nth matching dataset columns.
+			 */
+			public List getNthDataSetColumns(
+					final Collection interestingColumns, final Object counter) {
+				final int n = this.incrementCount(counter);
+				final List list = new ArrayList();
+				for (final Iterator i = interestingColumns.iterator(); i
+						.hasNext();) {
+					final DataSetColumn col = this.getDataSetColumn(n,
+							(Column) i.next());
+					if (col != null)
+						list.add(col);
+				}
+				return list;
+			}
+
+			/**
+			 * Find out the relation that links the dataset table of this
+			 * virtual table to its parent dataset table, if any.
+			 * 
+			 * @return the relation between this virtual table's dataset table
+			 *         and its parent, if any.
+			 */
+			public Relation getParentDataSetRelation() {
+				return this.parentDataSetRelation;
+			}
+
+			/**
+			 * Find out the parent dataset table of the dataset table inside
+			 * this virtual table.
+			 * 
+			 * @return the parent dataset table of this virtual table's dataset
+			 *         table.
+			 */
+			public DataSetTable getParentDataSetTable() {
+				return (DataSetTable) this.parentDataSetRelation.getOneKey()
+						.getTable();
+			}
+
+			/**
+			 * Obtain the list of values used to partition this table, in the
+			 * order in which those partitions were made.
+			 * 
+			 * @return the list of values used to partition this table.
+			 */
+			public List getPartitionValues() {
+				return this.partitionValues;
+			}
+
+			/**
+			 * Work out what schema the real table of this virtual table is in.
+			 * 
+			 * @return the schema that the real table of this virtual table is
+			 *         in.
+			 */
+			public Schema getRealSchema() {
+				return this.datasetTable.getUnderlyingTable().getSchema();
+			}
+
+			/**
+			 * Work out what real table, ie. the underlying table of the dataset
+			 * table, for this virtual table.
+			 * 
+			 * @return the underlying table of the dataset table for this
+			 *         virtual table.
+			 */
+			public Table getRealTable() {
+				return this.datasetTable.getUnderlyingTable();
+			}
+
+			/**
+			 * The name of the physical temporary table that contains the data
+			 * for this representation.
+			 * 
+			 * @return the temp table name.
+			 */
+			public String getTempTableName() {
+				return this.tempTableName;
+			}
+
+			/**
+			 * Sets the last action performed for this table, so that other
+			 * methods can work out which action to wait for in order for this
+			 * table to be complete.
+			 * 
+			 * @param lastActionPerformed
+			 *            the last action performed in the creation of this
+			 *            table.
+			 */
+			public void setLastActionPerformed(
+					final MartConstructorAction lastActionPerformed) {
+				this.lastActionPerformed = lastActionPerformed;
+			}
+
+			/**
+			 * Sets the name to use for the physical temporary table that
+			 * contains the data for this representation.
+			 * 
+			 * @param tempTableName
+			 *            the temp table name.
+			 */
+			public void setTempTableName(final String tempTableName) {
+				this.tempTableName = tempTableName;
+			}
+		}
+	}
+
+	/**
+	 * Helpers provide methods to give useful information to the constructor as
+	 * it builds the action graph.
+	 */
+	public interface Helper {
+
+		/**
+		 * Generate a new temporary table name.
+		 * 
+		 * @return a new temporary table name.
+		 */
+		public String getNewTempTableName();
+
+		/**
+		 * Lists the distinct values in the given column. This must be a real
+		 * column, not an instance of {@link DataSetColumn}.
+		 * 
+		 * @param col
+		 *            the column to get the distinct values from.
+		 * @return the distinct values in the column.
+		 * @throws SQLException
+		 *             in case of problems.
+		 */
+		public List listDistinctValues(Column col) throws SQLException;
+	}
+
+	/**
+	 * This interface defines a listener which hears events about mart
+	 * construction. The events are defined as constants in this interface.
+	 */
+	public interface MartConstructorListener {
+
+		/**
+		 * This event will occur when an action needs performing, and will be
+		 * accompanied by a {@link MartConstructorAction} object describing what
+		 * needs doing.
+		 */
+		public static final int ACTION_EVENT = 6;
+
+		/**
+		 * This event will occur when mart construction ends.
+		 */
+		public static final int CONSTRUCTION_ENDED = 1;
+
+		/**
+		 * This event will occur when mart construction begins.
+		 */
+		public static final int CONSTRUCTION_STARTED = 0;
+
+		/**
+		 * This event will occur when an individual dataset ends.
+		 */
+		public static final int DATASET_ENDED = 5;
+
+		/**
+		 * This event will occur when an individual dataset begins.
+		 */
+		public static final int DATASET_STARTED = 4;
+
+		/**
+		 * This event will occur when an individual mart ends.
+		 */
+		public static final int MART_ENDED = 3;
+
+		/**
+		 * This event will occur when an individual mart begins.
+		 */
+		public static final int MART_STARTED = 2;
+
+		/**
+		 * This method will be called when an event occurs.
+		 * 
+		 * @param event
+		 *            the event that occurred. See the constants defined
+		 *            elsewhere in this interface for possible events.
+		 * @param action
+		 *            an action object that belongs to this event. Will be null
+		 *            in all cases except where the event is
+		 *            {@link #ACTION_EVENT}.
+		 * @throws Exception
+		 *             if anything goes wrong whilst handling the event.
+		 */
+		public void martConstructorEventOccurred(int event,
+				MartConstructorAction action) throws Exception;
 	}
 }

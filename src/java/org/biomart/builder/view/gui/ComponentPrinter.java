@@ -44,9 +44,9 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  */
 public class ComponentPrinter implements Printable {
 
-	private MartTab martTab;
-
 	private Component component;
+
+	private MartTab martTab;
 
 	/**
 	 * Constructs a component printer that is associated with the given mart

@@ -60,15 +60,15 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 public class SuggestInvisibleDataSetDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	private MartTab martTab;
-
-	private JComboBox tables;
+	private JButton cancel;
 
 	private JList columns;
 
-	private JButton cancel;
-
 	private JButton execute;
+
+	private MartTab martTab;
+
+	private JComboBox tables;
 
 	/**
 	 * Creates (but does not open) a dialog requesting details of invisible

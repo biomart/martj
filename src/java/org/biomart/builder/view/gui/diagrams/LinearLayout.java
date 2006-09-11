@@ -45,59 +45,33 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * @since 0.1
  */
 public class LinearLayout implements LayoutManager {
+	private static final int MAX_SINGLE_ROW = 4; // 4 components on one row
+
 	private static final double RELATION_SPACING = 5.0; // 72.0 = 1 inch
 
 	private static final double TABLE_PADDING = 10.0; // 72.0 = 1 inch
-	
-	private static final int MAX_SINGLE_ROW = 4; // 4 components on one row
+
+	private final List bottomRow = new ArrayList();
+
+	private double bottomRowHeight;
+
+	private int minHeight;
 
 	private int minWidth;
 
-	private int minHeight;
+	private final List relations = new ArrayList();
 
 	private boolean sizeUnknown;
 
 	private final List topRow = new ArrayList();
 
-	private final List bottomRow = new ArrayList();
-
-	private final List relations = new ArrayList();
-
 	private double topRowHeight;
-
-	private double bottomRowHeight;
 
 	/**
 	 * Sets up some defaults for the layout, ready for use.
 	 */
 	public LinearLayout() {
 		this.sizeUnknown = true;
-	}
-
-	public Dimension preferredLayoutSize(final Container parent) {
-		synchronized (parent.getTreeLock()) {
-			// Our preferred size is our minimum size.
-			return this.minimumLayoutSize(parent);
-		}
-	}
-
-	public Dimension minimumLayoutSize(final Container parent) {
-		synchronized (parent.getTreeLock()) {
-			// Work out how big we are.
-			this.setSizes(parent);
-
-			// Work out our parent's insets.
-			final Insets insets = parent.getInsets();
-
-			// The minimum size is our size plus our
-			// parent's insets size.
-			final Dimension dim = new Dimension(0, 0);
-			dim.width = this.minWidth + insets.left + insets.right;
-			dim.height = this.minHeight + insets.top + insets.bottom;
-
-			// That's it!
-			return dim;
-		}
 	}
 
 	private void setSizes(final Container parent) {
@@ -227,6 +201,10 @@ public class LinearLayout implements LayoutManager {
 			// All done.
 			this.sizeUnknown = false;
 		}
+	}
+
+	public void addLayoutComponent(final String name, final Component comp) {
+		// Ignore.
 	}
 
 	public void layoutContainer(final Container parent) {
@@ -446,8 +424,30 @@ public class LinearLayout implements LayoutManager {
 		}
 	}
 
-	public void addLayoutComponent(final String name, final Component comp) {
-		// Ignore.
+	public Dimension minimumLayoutSize(final Container parent) {
+		synchronized (parent.getTreeLock()) {
+			// Work out how big we are.
+			this.setSizes(parent);
+
+			// Work out our parent's insets.
+			final Insets insets = parent.getInsets();
+
+			// The minimum size is our size plus our
+			// parent's insets size.
+			final Dimension dim = new Dimension(0, 0);
+			dim.width = this.minWidth + insets.left + insets.right;
+			dim.height = this.minHeight + insets.top + insets.bottom;
+
+			// That's it!
+			return dim;
+		}
+	}
+
+	public Dimension preferredLayoutSize(final Container parent) {
+		synchronized (parent.getTreeLock()) {
+			// Our preferred size is our minimum size.
+			return this.minimumLayoutSize(parent);
+		}
 	}
 
 	public void removeLayoutComponent(final Component comp) {

@@ -19,7 +19,6 @@
 package org.biomart.builder.model;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.biomart.builder.exceptions.AssociationException;
@@ -42,10 +41,42 @@ import org.biomart.builder.resources.Resources;
  * outlined above.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 9th August 2006
+ * @version 0.1.14, 11th September 2006
  * @since 0.1
  */
 public interface Relation extends Comparable {
+	/**
+	 * Deconstructs the relation by removing references to itself from the keys
+	 * at both ends.
+	 */
+	public void destroy();
+
+	/**
+	 * Returns the cardinality of the foreign key end of this relation, in a 1:M
+	 * relation. In 1:1 relations this will always return 1, and in M:M
+	 * relations it will always return M.
+	 * 
+	 * @return the cardinality of the foreign key end of this relation, in 1:M
+	 *         relations only. Otherwise determined by the relation type.
+	 */
+	public Cardinality getCardinality();
+
+	/**
+	 * Returns the first key of this relation.
+	 * 
+	 * @return the first key.
+	 */
+	public Key getFirstKey();
+
+	/**
+	 * In a 1:M relation, this will return the M end of the relation. In all
+	 * other relation types, this will return <tt>null</tt>.
+	 * 
+	 * @return the key at the many end of the relation, or <tt>null</tt> if
+	 *         this is not a 1:M relation.
+	 */
+	public Key getManyKey();
+
 	/**
 	 * Returns the name of this relation.
 	 * 
@@ -54,12 +85,96 @@ public interface Relation extends Comparable {
 	public String getName();
 
 	/**
+	 * In a 1:M relation, this will return the 1 end of the relation. In all
+	 * other relation types, this will return <tt>null</tt>.
+	 * 
+	 * @return the key at the one end of the relation, or <tt>null</tt> if
+	 *         this is not a 1:M relation.
+	 */
+	public Key getOneKey();
+
+	/**
+	 * Given a key that is in this relationship, return the other key.
+	 * 
+	 * @param key
+	 *            the key we know is in this relationship.
+	 * @return the other key in this relationship.
+	 * @throws IllegalArgumentException
+	 *             if the key specified is not in this relationship.
+	 */
+	public Key getOtherKey(Key key) throws IllegalArgumentException;
+
+	/**
+	 * Returns the second key of this relation.
+	 * 
+	 * @return the second key.
+	 */
+	public Key getSecondKey();
+
+	/**
 	 * Returns the status of this relation. The default value, unless otherwise
 	 * specified, is {@link ComponentStatus#INFERRED}.
 	 * 
 	 * @return the status of this relation.
 	 */
 	public ComponentStatus getStatus();
+
+	/**
+	 * Returns <tt>true</tt> if this relation involves keys in two separate
+	 * schemas. Those that do are external, those that don't are not.
+	 * 
+	 * @return <tt>true</tt> if this is external, <tt>false</tt> otherwise.
+	 */
+	public boolean isExternal();
+
+	/**
+	 * Returns <tt>true</tt> if this is a M:M relation.
+	 * 
+	 * @return <tt>true</tt> if this is a M:M relation, <tt>false</tt>
+	 *         otherwise.
+	 */
+	public boolean isManyToMany();
+
+	/**
+	 * Can this relation be M:M? Returns true where both keys are foreign keys.
+	 * 
+	 * @return <tt>true</tt> if this can be M:M, <tt>false</tt> if not.
+	 */
+	public boolean isManyToManyAllowed();
+
+	/**
+	 * Returns <tt>true</tt> if this is a 1:M relation.
+	 * 
+	 * @return <tt>true</tt> if this is a 1:M relation, <tt>false</tt>
+	 *         otherwise.
+	 */
+	public boolean isOneToMany();
+
+	/**
+	 * Can this relation be 1:M? Returns true in all cases where both keys are
+	 * of different types.
+	 * 
+	 * @return <tt>true</tt> if this can be 1:M, <tt>false</tt> if not.
+	 */
+	public boolean isOneToManyAllowed();
+
+	/**
+	 * Returns <tt>true</tt> if this is a 1:1 relation.
+	 * 
+	 * @return <tt>true</tt> if this is a 1:1 relation, <tt>false</tt>
+	 *         otherwise.
+	 */
+	public boolean isOneToOne();
+
+	/**
+	 * Sets the cardinality of the foreign key end of this relation, in a 1:M
+	 * relation. If used on a 1:1 or M:M relation, then specifying M makes it
+	 * M:M and specifying 1 makes it 1:1.
+	 * 
+	 * @param cardinality
+	 *            the cardinality.
+	 */
+	public void setCardinality(Cardinality cardinality);
 
 	/**
 	 * Sets the status of this relation.
@@ -75,122 +190,6 @@ public interface Relation extends Comparable {
 	public void setStatus(ComponentStatus status) throws AssociationException;
 
 	/**
-	 * Returns the first key of this relation.
-	 * 
-	 * @return the first key.
-	 */
-	public Key getFirstKey();
-
-	/**
-	 * Returns the second key of this relation.
-	 * 
-	 * @return the second key.
-	 */
-	public Key getSecondKey();
-
-	/**
-	 * Given a key that is in this relationship, return the other key.
-	 * 
-	 * @param key
-	 *            the key we know is in this relationship.
-	 * @return the other key in this relationship.
-	 * @throws IllegalArgumentException
-	 *             if the key specified is not in this relationship.
-	 */
-	public Key getOtherKey(Key key) throws IllegalArgumentException;
-
-	/**
-	 * In a 1:M relation, this will return the M end of the relation. In all
-	 * other relation types, this will return <tt>null</tt>.
-	 * 
-	 * @return the key at the many end of the relation, or <tt>null</tt> if
-	 *         this is not a 1:M relation.
-	 */
-	public Key getManyKey();
-
-	/**
-	 * In a 1:M relation, this will return the 1 end of the relation. In all
-	 * other relation types, this will return <tt>null</tt>.
-	 * 
-	 * @return the key at the one end of the relation, or <tt>null</tt> if
-	 *         this is not a 1:M relation.
-	 */
-	public Key getOneKey();
-
-	/**
-	 * Returns the cardinality of the foreign key end of this relation, in a 1:M
-	 * relation. In 1:1 relations this will always return 1, and in M:M
-	 * relations it will always return M.
-	 * 
-	 * @return the cardinality of the foreign key end of this relation, in 1:M
-	 *         relations only. Otherwise determined by the relation type.
-	 */
-	public Cardinality getCardinality();
-
-	/**
-	 * Sets the cardinality of the foreign key end of this relation, in a 1:M
-	 * relation. If used on a 1:1 or M:M relation, then specifying M makes it
-	 * M:M and specifying 1 makes it 1:1.
-	 * 
-	 * @param cardinality
-	 *            the cardinality.
-	 */
-	public void setCardinality(Cardinality cardinality);
-
-	/**
-	 * Can this relation be 1:M? Returns true in all cases where both keys are
-	 * of different types.
-	 * 
-	 * @return <tt>true</tt> if this can be 1:M, <tt>false</tt> if not.
-	 */
-	public boolean isOneToManyAllowed();
-
-	/**
-	 * Can this relation be M:M? Returns true where both keys are foreign keys.
-	 * 
-	 * @return <tt>true</tt> if this can be M:M, <tt>false</tt> if not.
-	 */
-	public boolean isManyToManyAllowed();
-
-	/**
-	 * Deconstructs the relation by removing references to itself from the keys
-	 * at both ends.
-	 */
-	public void destroy();
-
-	/**
-	 * Returns <tt>true</tt> if this is a 1:1 relation.
-	 * 
-	 * @return <tt>true</tt> if this is a 1:1 relation, <tt>false</tt>
-	 *         otherwise.
-	 */
-	public boolean isOneToOne();
-
-	/**
-	 * Returns <tt>true</tt> if this is a 1:M relation.
-	 * 
-	 * @return <tt>true</tt> if this is a 1:M relation, <tt>false</tt>
-	 *         otherwise.
-	 */
-	public boolean isOneToMany();
-
-	/**
-	 * Returns <tt>true</tt> if this is a M:M relation.
-	 * 
-	 * @return <tt>true</tt> if this is a M:M relation, <tt>false</tt>
-	 *         otherwise.
-	 */
-	public boolean isManyToMany();
-
-	/**
-	 * Returns <tt>true</tt> if this relation involves keys in two separate
-	 * schemas. Those that do are external, those that don't are not.
-	 * 
-	 * @return <tt>true</tt> if this is external, <tt>false</tt> otherwise.
-	 */
-	public boolean isExternal();
-
-	/**
 	 * This internal singleton class represents the cardinality of a foreign key
 	 * involved in a relation. Note that the names of cardinality objects are
 	 * case-sensitive.
@@ -198,17 +197,15 @@ public interface Relation extends Comparable {
 	public class Cardinality implements Comparable {
 		private static final Map singletons = new HashMap();
 
-		private final String name;
+		/**
+		 * Use this constant to refer to a 1:M relation.
+		 */
+		public static final Cardinality MANY = Cardinality.get("M");
 
 		/**
 		 * Use this constant to refer to 1:1 relation.
 		 */
 		public static final Cardinality ONE = Cardinality.get("1");
-
-		/**
-		 * Use this constant to refer to a 1:M relation.
-		 */
-		public static final Cardinality MANY = Cardinality.get("M");
 
 		/**
 		 * The static factory method creates and returns a cardinality with the
@@ -233,6 +230,8 @@ public interface Relation extends Comparable {
 			return c;
 		}
 
+		private final String name;
+
 		/**
 		 * The private constructor takes a single parameter, which defines the
 		 * name this cardinality object will display when printed.
@@ -244,23 +243,6 @@ public interface Relation extends Comparable {
 			this.name = name;
 		}
 
-		/**
-		 * Displays the name of this cardinality object.
-		 * 
-		 * @return the name of this cardinality object.
-		 */
-		public String getName() {
-			return this.name;
-		}
-
-		public String toString() {
-			return this.getName();
-		}
-
-		public int hashCode() {
-			return this.toString().hashCode();
-		}
-
 		public int compareTo(final Object o) throws ClassCastException {
 			final Cardinality c = (Cardinality) o;
 			return this.toString().compareTo(c.toString());
@@ -270,6 +252,23 @@ public interface Relation extends Comparable {
 			// We are dealing with singletons so can use == happily.
 			return o == this;
 		}
+
+		/**
+		 * Displays the name of this cardinality object.
+		 * 
+		 * @return the name of this cardinality object.
+		 */
+		public String getName() {
+			return this.name;
+		}
+
+		public int hashCode() {
+			return this.toString().hashCode();
+		}
+
+		public String toString() {
+			return this.getName();
+		}
 	}
 
 	/**
@@ -277,11 +276,11 @@ public interface Relation extends Comparable {
 	 * keys at both ends have the same number of columns.
 	 */
 	public class GenericRelation implements Relation {
+		private Cardinality cardinality;
+
 		private final Key firstKey;
 
 		private final Key secondKey;
-
-		private Cardinality cardinality;
 
 		private ComponentStatus status;
 
@@ -324,34 +323,42 @@ public interface Relation extends Comparable {
 				throw new AssociationException(Resources
 						.get("relationAlreadyExists"));
 
-			// Check that any foreign key doesn't have an active relation
-			// elsewhere.
-			boolean fkHasOtherRel = false;
-			if (firstKey instanceof ForeignKey)
-				for (final Iterator i = firstKey.getRelations().iterator(); i
-						.hasNext()
-						&& !fkHasOtherRel;) {
-					final Relation r = (Relation) i.next();
-					if (!r.getStatus().equals(
-							ComponentStatus.INFERRED_INCORRECT))
-						fkHasOtherRel = true;
-				}
-			if (secondKey instanceof ForeignKey)
-				for (final Iterator i = secondKey.getRelations().iterator(); i
-						.hasNext()
-						&& !fkHasOtherRel;) {
-					final Relation r = (Relation) i.next();
-					if (!r.getStatus().equals(
-							ComponentStatus.INFERRED_INCORRECT))
-						fkHasOtherRel = true;
-				}
-			if (fkHasOtherRel)
-				throw new AssociationException(Resources
-						.get("fkHasMultiplePKs"));
-
 			// Add ourselves to the keys at both ends.
 			firstKey.addRelation(this);
 			secondKey.addRelation(this);
+		}
+
+		public int compareTo(final Object o) throws ClassCastException {
+			final Relation r = (Relation) o;
+			return this.toString().compareTo(r.toString());
+		}
+
+		public void destroy() {
+			this.firstKey.removeRelation(this);
+			this.secondKey.removeRelation(this);
+		}
+
+		public boolean equals(final Object o) {
+			if (o == null || !(o instanceof Relation))
+				return false;
+			final Relation r = (Relation) o;
+			return r.toString().equals(this.toString());
+		}
+
+		public Cardinality getCardinality() {
+			return this.cardinality;
+		}
+
+		public Key getFirstKey() {
+			return this.firstKey;
+		}
+
+		public Key getManyKey() {
+			if (!this.isOneToMany())
+				return null;
+			// The many end is the foreign key end.
+			return this.firstKey instanceof ForeignKey ? this.firstKey
+					: this.secondKey;
 		}
 
 		public String getName() {
@@ -362,8 +369,68 @@ public interface Relation extends Comparable {
 			return sb.toString();
 		}
 
+		public Key getOneKey() {
+			if (!this.isOneToMany())
+				return null;
+			// The one end is the primary key end.
+			return this.firstKey instanceof PrimaryKey ? this.firstKey
+					: this.secondKey;
+		}
+
+		public Key getOtherKey(final Key key) throws IllegalArgumentException {
+			if (key.equals(this.firstKey))
+				return this.secondKey;
+			else if (key.equals(this.secondKey))
+				return this.firstKey;
+			else
+				throw new IllegalArgumentException(Resources.get("keyNotInRel"));
+		}
+
+		public Key getSecondKey() {
+			return this.secondKey;
+		}
+
 		public ComponentStatus getStatus() {
 			return this.status;
+		}
+
+		public int hashCode() {
+			return this.toString().hashCode();
+		}
+
+		public boolean isExternal() {
+			return !this.firstKey.getTable().getSchema().equals(
+					this.secondKey.getTable().getSchema());
+		}
+
+		public boolean isManyToMany() {
+			return this.cardinality.equals(Cardinality.MANY)
+					&& !(this.firstKey instanceof PrimaryKey || this.secondKey instanceof PrimaryKey);
+		}
+
+		public boolean isManyToManyAllowed() {
+			return this.firstKey instanceof ForeignKey
+					&& this.secondKey instanceof ForeignKey;
+		}
+
+		public boolean isOneToMany() {
+			return this.cardinality.equals(Cardinality.MANY)
+					&& (this.firstKey instanceof PrimaryKey || this.secondKey instanceof PrimaryKey);
+		}
+
+		public boolean isOneToManyAllowed() {
+			return !this.firstKey.getClass().equals(this.secondKey.getClass());
+		}
+
+		public boolean isOneToOne() {
+			return this.cardinality.equals(Cardinality.ONE);
+		}
+
+		public void setCardinality(Cardinality cardinality) {
+			if (this.firstKey instanceof PrimaryKey
+					&& this.secondKey instanceof PrimaryKey)
+				cardinality = Cardinality.ONE;
+			this.cardinality = cardinality;
 		}
 
 		public void setStatus(final ComponentStatus status)
@@ -382,101 +449,8 @@ public interface Relation extends Comparable {
 			this.status = status;
 		}
 
-		public Key getFirstKey() {
-			return this.firstKey;
-		}
-
-		public Key getSecondKey() {
-			return this.secondKey;
-		}
-
-		public Key getOtherKey(final Key key) throws IllegalArgumentException {
-			if (key.equals(this.firstKey))
-				return this.secondKey;
-			else if (key.equals(this.secondKey))
-				return this.firstKey;
-			else
-				throw new IllegalArgumentException(Resources.get("keyNotInRel"));
-		}
-
-		public Key getManyKey() {
-			if (!this.isOneToMany())
-				return null;
-			// The many end is the foreign key end.
-			return this.firstKey instanceof ForeignKey ? this.firstKey
-					: this.secondKey;
-		}
-
-		public Key getOneKey() {
-			if (!this.isOneToMany())
-				return null;
-			// The one end is the primary key end.
-			return this.firstKey instanceof PrimaryKey ? this.firstKey
-					: this.secondKey;
-		}
-
-		public Cardinality getCardinality() {
-			return this.cardinality;
-		}
-
-		public void setCardinality(Cardinality cardinality) {
-			if (this.firstKey instanceof PrimaryKey
-					&& this.secondKey instanceof PrimaryKey)
-				cardinality = Cardinality.ONE;
-			this.cardinality = cardinality;
-		}
-
-		public boolean isOneToManyAllowed() {
-			return !this.firstKey.getClass().equals(this.secondKey.getClass());
-		}
-
-		public boolean isManyToManyAllowed() {
-			return this.firstKey instanceof ForeignKey
-					&& this.secondKey instanceof ForeignKey;
-		}
-
-		public void destroy() {
-			this.firstKey.removeRelation(this);
-			this.secondKey.removeRelation(this);
-		}
-
-		public boolean isOneToOne() {
-			return this.cardinality.equals(Cardinality.ONE);
-		}
-
-		public boolean isOneToMany() {
-			return this.cardinality.equals(Cardinality.MANY)
-					&& (this.firstKey instanceof PrimaryKey || this.secondKey instanceof PrimaryKey);
-		}
-
-		public boolean isManyToMany() {
-			return this.cardinality.equals(Cardinality.MANY)
-					&& !(this.firstKey instanceof PrimaryKey || this.secondKey instanceof PrimaryKey);
-		}
-
-		public boolean isExternal() {
-			return !this.firstKey.getTable().getSchema().equals(
-					this.secondKey.getTable().getSchema());
-		}
-
 		public String toString() {
 			return this.getName();
-		}
-
-		public int hashCode() {
-			return this.toString().hashCode();
-		}
-
-		public int compareTo(final Object o) throws ClassCastException {
-			final Relation r = (Relation) o;
-			return this.toString().compareTo(r.toString());
-		}
-
-		public boolean equals(final Object o) {
-			if (o == null || !(o instanceof Relation))
-				return false;
-			final Relation r = (Relation) o;
-			return r.toString().equals(this.toString());
 		}
 	}
 }

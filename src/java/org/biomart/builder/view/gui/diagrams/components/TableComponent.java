@@ -51,18 +51,15 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
 public class TableComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
 
-	private GridBagLayout layout;
-
-	private GridBagConstraints constraints;
-
-	private JButton showHide;
-
-	private JComponent columnsListPanel;
+	/**
+	 * Colour for background.
+	 */
+	public static Color BACKGROUND_COLOUR = Color.PINK;
 
 	/**
-	 * Colour for subclassed tables (in the dataset context).
+	 * Bold font.
 	 */
-	public static Color SUBCLASS_COLOUR = Color.RED;
+	public static Font BOLD_FONT = Font.decode("Serif-BOLD-10");
 
 	/**
 	 * Colour for subclassed tables (in the dataset context).
@@ -75,19 +72,22 @@ public class TableComponent extends BoxShapedComponent {
 	public static Color NORMAL_COLOUR = Color.BLACK;
 
 	/**
-	 * Colour for background.
-	 */
-	public static Color BACKGROUND_COLOUR = Color.PINK;
-
-	/**
 	 * Plain font.
 	 */
 	public static Font PLAIN_FONT = Font.decode("Serif-PLAIN-10");
 
 	/**
-	 * Bold font.
+	 * Colour for subclassed tables (in the dataset context).
 	 */
-	public static Font BOLD_FONT = Font.decode("Serif-BOLD-10");
+	public static Color SUBCLASS_COLOUR = Color.RED;
+
+	private JComponent columnsListPanel;
+
+	private GridBagConstraints constraints;
+
+	private GridBagLayout layout;
+
+	private JButton showHide;
 
 	/**
 	 * This constructor makes a new table component, associated with a
@@ -127,6 +127,17 @@ public class TableComponent extends BoxShapedComponent {
 		return (Table) this.getObject();
 	}
 
+	/**
+	 * Count the internal relations attached to our table. Internal relations
+	 * are those that refer at both ends to tables in the same schema as each
+	 * other.
+	 * 
+	 * @return the number of internal relations linked to this table.
+	 */
+	public int countInternalRelations() {
+		return this.getTable().getInternalRelations().size();
+	}
+
 	public void recalculateDiagramComponent() {
 		// Remove all our existing components.
 		this.removeAll();
@@ -148,7 +159,7 @@ public class TableComponent extends BoxShapedComponent {
 
 		// Add a key component as a sub-component of this table
 		// for the primary key in the table.
-		if (this.getTable().getPrimaryKey()!=null) {
+		if (this.getTable().getPrimaryKey() != null) {
 			final Key key = this.getTable().getPrimaryKey();
 			final KeyComponent keyComponent = new KeyComponent(key, this
 					.getDiagram());
@@ -161,7 +172,7 @@ public class TableComponent extends BoxShapedComponent {
 			this.layout.setConstraints(keyComponent, this.constraints);
 			this.add(keyComponent);
 		}
-		
+
 		// Add a key component as a sub-component of this table
 		// for each of the foreign keys in the table.
 		for (final Iterator i = this.getTable().getForeignKeys().iterator(); i
@@ -248,16 +259,5 @@ public class TableComponent extends BoxShapedComponent {
 
 		// Delegate upwards, so that the state is remembered for later.
 		super.setState(state);
-	}
-
-	/**
-	 * Count the internal relations attached to our table. Internal relations
-	 * are those that refer at both ends to tables in the same schema as each
-	 * other.
-	 * 
-	 * @return the number of internal relations linked to this table.
-	 */
-	public int countInternalRelations() {
-		return this.getTable().getInternalRelations().size();
 	}
 }

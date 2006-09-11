@@ -37,6 +37,13 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  */
 public interface DiagramComponent {
 	/**
+	 * Construct a context menu for the model object.
+	 * 
+	 * @return the popup menu.
+	 */
+	public JPopupMenu getContextMenu();
+
+	/**
 	 * Retrieves the diagram this component belongs to.
 	 * 
 	 * @return the diagram.
@@ -51,20 +58,6 @@ public interface DiagramComponent {
 	public Object getObject();
 
 	/**
-	 * Construct a context menu for the model object.
-	 * 
-	 * @return the popup menu.
-	 */
-	public JPopupMenu getContextMenu();
-
-	/**
-	 * Updates the appearance of this component, usually by setting colours.
-	 * This may often be handled by delegating calls to a {@link DiagramContext}.
-	 * It does _not_ repaint the object.
-	 */
-	public void updateAppearance();
-
-	/**
 	 * The current state of the component is returned by this. States are
 	 * arbitrary and can be null. States can be set by using
 	 * {@link #setState(Object)}
@@ -74,12 +67,14 @@ public interface DiagramComponent {
 	public Object getState();
 
 	/**
-	 * Sets the current state of the component. See {@link #getState()}.
+	 * Returns a map of inner components inside the diagram. The keys are model
+	 * object references, and the values are the diagram components representing
+	 * them inside the current diagram component. This is useful for instance
+	 * when wanting to obtain key components for a table.
 	 * 
-	 * @param state
-	 *            the new state for the component.
+	 * @return the map of inner components.
 	 */
-	public void setState(Object state);
+	public Map getSubComponents();
 
 	/**
 	 * This method is called when the component needs to rethink its contents
@@ -93,12 +88,17 @@ public interface DiagramComponent {
 	public void repaintDiagramComponent();
 
 	/**
-	 * Returns a map of inner components inside the diagram. The keys are model
-	 * object references, and the values are the diagram components representing
-	 * them inside the current diagram component. This is useful for instance
-	 * when wanting to obtain key components for a table.
+	 * Sets the current state of the component. See {@link #getState()}.
 	 * 
-	 * @return the map of inner components.
+	 * @param state
+	 *            the new state for the component.
 	 */
-	public Map getSubComponents();
+	public void setState(Object state);
+
+	/**
+	 * Updates the appearance of this component, usually by setting colours.
+	 * This may often be handled by delegating calls to a {@link DiagramContext}.
+	 * It does _not_ repaint the object.
+	 */
+	public void updateAppearance();
 }

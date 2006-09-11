@@ -51,14 +51,6 @@ import org.biomart.builder.resources.Resources;
  */
 public interface SchemaGroup extends Schema {
 	/**
-	 * Returns the set of schema members of this schema group. It will never
-	 * return null but may return an empty set.
-	 * 
-	 * @return the set of schemas in this schema group.
-	 */
-	public Collection getSchemas();
-
-	/**
 	 * Adds a schema to this partition. No check is made to see if the new
 	 * schema is actually identical to the base one in terms of structure. An
 	 * exception will be thrown if you try to nest schema groups inside other
@@ -70,6 +62,14 @@ public interface SchemaGroup extends Schema {
 	 *             if the schema to be added is a schema group.
 	 */
 	public void addSchema(Schema schema) throws AssociationException;
+
+	/**
+	 * Returns the set of schema members of this schema group. It will never
+	 * return null but may return an empty set.
+	 * 
+	 * @return the set of schemas in this schema group.
+	 */
+	public Collection getSchemas();
 
 	/**
 	 * Removes the schema from this group.
@@ -97,6 +97,23 @@ public interface SchemaGroup extends Schema {
 			super(name);
 		}
 
+		public void addSchema(final Schema schema) throws AssociationException {
+			// Check the schema isn't a group itself.
+			if (schema instanceof SchemaGroup)
+				throw new AssociationException(Resources.get("nestedSchema"));
+
+			// Add it.
+			this.schemas.add(schema);
+		}
+
+		public Collection getSchemas() {
+			return this.schemas;
+		}
+
+		public void removeSchema(final Schema schema) {
+			this.schemas.remove(schema);
+		}
+
 		public Schema replicate(final String newName) {
 			throw new MartBuilderInternalError(Resources
 					.get("noSchemaGroupReplication"));
@@ -117,23 +134,6 @@ public interface SchemaGroup extends Schema {
 			if (!this.schemas.isEmpty())
 				((Schema) this.schemas.iterator().next())
 						.replicateContents(this);
-		}
-
-		public Collection getSchemas() {
-			return this.schemas;
-		}
-
-		public void addSchema(final Schema schema) throws AssociationException {
-			// Check the schema isn't a group itself.
-			if (schema instanceof SchemaGroup)
-				throw new AssociationException(Resources.get("nestedSchema"));
-
-			// Add it.
-			this.schemas.add(schema);
-		}
-
-		public void removeSchema(final Schema schema) {
-			this.schemas.remove(schema);
 		}
 	}
 }

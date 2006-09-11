@@ -48,243 +48,11 @@ import org.biomart.builder.resources.Resources;
 public class Mart {
 	// OK to use map, as keys are strings and never change.
 	// Use tree map to keep them in alphabetical order.
-	private final Map schemas = new TreeMap();
+	private final Map datasets = new TreeMap();
 
 	// OK to use map, as keys are strings and never change.
 	// Use tree map to keep them in alphabetical order.
-	private final Map datasets = new TreeMap();
-
-	/**
-	 * Returns the set of schema objects which this mart includes when building
-	 * a mart. The set may be empty but it is never null.
-	 * 
-	 * @return a set of schema objects.
-	 */
-	public Collection getSchemas() {
-		return this.schemas.values();
-	}
-
-	/**
-	 * Returns the schema object with the given name. If it doesn't exist, null
-	 * is returned. If the name was null, you'll get an exception.
-	 * 
-	 * @param name
-	 *            the name to look for.
-	 * @return a schema object matching the specified name.
-	 */
-	public Schema getSchemaByName(final String name) {
-		return (Schema) this.schemas.get(name);
-	}
-
-	/**
-	 * Adds a schema to the set which this mart includes. An exception is thrown
-	 * if it already is in this set, or if it is null.
-	 * 
-	 * 
-	 * @param schema
-	 *            the schema to add.
-	 */
-	public void addSchema(final Schema schema) {
-		String name = schema.getName();
-		final String baseName = schema.getName();
-		// Check we don't have one by this name already. Alias if we do.
-		for (int i = 1; this.schemas.containsKey(name); name = baseName + "_"
-				+ i++)
-			;
-		schema.setName(name);
-		// Add it.
-		this.schemas.put(name, schema);
-	}
-
-	/**
-	 * Renames a schema. An exception is thrown if that names has already been
-	 * used, or if it is null. This call cascades to the schema and renames that
-	 * as well.
-	 * 
-	 * @param schema
-	 *            the schema to rename.
-	 * @param name
-	 *            the new name for it.
-	 */
-	public void renameSchema(final Schema schema, String name) {
-		final String baseName = name;
-		// Check we don't have one by this name already. Alias if we do.
-		for (int i = 1; this.schemas.containsKey(name)
-				&& !name.equals(schema.getName()); name = baseName + "_" + i++)
-			;
-		// Rename it.
-		this.schemas.remove(schema.getName());
-		schema.setName(name);
-		this.schemas.put(name, schema);
-	}
-
-	/**
-	 * Removes a schema from the set which this mart includes. Any datasets
-	 * centred on this schema are also removed, and any external relations
-	 * referring to it also.
-	 * 
-	 * @param schema
-	 *            the schema to remove.
-	 */
-	public void removeSchema(final Schema schema) {
-		final List datasets = new ArrayList(this.getDataSets());
-		for (final Iterator i = datasets.iterator(); i.hasNext();) {
-			final DataSet ds = (DataSet) i.next();
-			if (ds.getCentralTable().getSchema().equals(schema))
-				this.removeDataSet(ds);
-		}
-		for (final Iterator i = schema.getExternalRelations().iterator(); i
-				.hasNext();)
-			((Relation) i.next()).destroy();
-		this.schemas.remove(schema.getName());
-	}
-
-	/**
-	 * Returns the set of dataset objects which this mart includes. The set may
-	 * be empty but it is never null.
-	 * 
-	 * @return a set of dataset objects.
-	 */
-	public Collection getDataSets() {
-		return this.datasets.values();
-	}
-
-	/**
-	 * Returns the dataset object with the given name.
-	 * 
-	 * @param name
-	 *            the name to look for.
-	 * @return a dataset object matching the specified name.
-	 */
-	public DataSet getDataSetByName(final String name) {
-		return (DataSet) this.datasets.get(name);
-	}
-
-	/**
-	 * Adds a dataset to the mart.
-	 * 
-	 * @param dataset
-	 *            the dataset to add.
-	 */
-	public void addDataSet(final DataSet dataset) {
-		String name = dataset.getName();
-		final String baseName = dataset.getName();
-		// Check we don't have one by this name already. Alias if we do.
-		for (int i = 1; this.datasets.containsKey(name); name = baseName + "_"
-				+ i++)
-			;
-		dataset.setName(name);
-		// Add it.
-		this.datasets.put(dataset.getName(), dataset);
-	}
-
-	/**
-	 * Given a set of tables, produce the minimal set of datasets which include
-	 * all the specified tables. Tables can be included in the same dataset if
-	 * they are linked by 1:M relations (1:M, 1:M in a chain), or if the table
-	 * is the last in the chain and is linked to the previous table by a pair of
-	 * 1:M and M:1 relations via a third table, simulating a M:M relation.
-	 * <p>
-	 * If the chains of tables fork, then one dataset is generated for each
-	 * branch of the fork.
-	 * <p>
-	 * Every suggested dataset is synchronised before being returned.
-	 * <p>
-	 * Datasets will be named after their central tables. If a dataset with that
-	 * name already exists, a '_' and sequence number will be appended to make
-	 * the new dataset name unique.
-	 * 
-	 * @param includeTables
-	 *            the tables that must appear in the final set of datasets.
-	 * @return the collection of datasets generated.
-	 * @throws SQLException
-	 *             if there is any problem talking to the source database whilst
-	 *             generating the dataset.
-	 * @throws AssociationException
-	 *             if any of the tables do not belong to this mart.
-	 * @throws BuilderException
-	 *             if synchronisation fails.
-	 */
-	public Collection suggestDataSets(final Collection includeTables)
-			throws SQLException, AssociationException, BuilderException {
-		// The root tables are all those which do not have a M:1 relation
-		// to another one of the initial set of tables. This means that
-		// extra datasets will be created for each table at the end of
-		// 1:M:1 relation, so that any further tables past it will still
-		// be included.
-		final List rootTables = new ArrayList(includeTables);
-		for (final Iterator i = includeTables.iterator(); i.hasNext();) {
-			final Table candidate = (Table) i.next();
-			for (final Iterator j = candidate.getRelations().iterator(); j
-					.hasNext();) {
-				final Relation rel = (Relation) j.next();
-				if (rel.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
-					continue;
-				if (!rel.isOneToMany())
-					continue;
-				if (!rel.getManyKey().getTable().equals(candidate))
-					continue;
-				if (includeTables.contains(rel.getOneKey().getTable()))
-					rootTables.remove(candidate);
-			}
-		}
-		// We construct one dataset per root table.
-		final Set suggestedDataSets = new TreeSet();
-		for (final Iterator i = rootTables.iterator(); i.hasNext();) {
-			final Table rootTable = (Table) i.next();
-			final DataSet dataset = new DataSet(this, rootTable, rootTable
-					.getName());
-			// Process it.
-			final List tablesIncluded = new ArrayList();
-			tablesIncluded.add(rootTable);
-			suggestedDataSets.addAll(this.continueSubclassing(includeTables,
-					tablesIncluded, dataset, rootTable));
-		}
-
-		// Synchronise them all.
-		for (final Iterator i = suggestedDataSets.iterator(); i.hasNext();)
-			((DataSet) i.next()).synchronise();
-
-		// Do any of the resulting datasets contain all the tables
-		// exactly with subclass relations between each?
-		// If so, just use that one dataset and forget the rest.
-		DataSet perfectDS = null;
-		for (final Iterator i = suggestedDataSets.iterator(); i.hasNext()
-				&& perfectDS == null;) {
-			final DataSet candidate = (DataSet) i.next();
-
-			// A candidate is a perfect match if the set of tables
-			// covered by the subclass relations is the same as the
-			// original set of tables requested.
-			final Set scTables = new HashSet();
-			for (final Iterator j = candidate.getSubclassedRelations()
-					.iterator(); j.hasNext();) {
-				final Relation r = (Relation) j.next();
-				scTables.add(r.getFirstKey().getTable());
-				scTables.add(r.getSecondKey().getTable());
-			}
-			if (scTables.size() == includeTables.size()
-					&& scTables.containsAll(includeTables))
-				perfectDS = candidate;
-		}
-		if (perfectDS != null) {
-			// Drop the others.
-			for (final Iterator i = suggestedDataSets.iterator(); i.hasNext();) {
-				final DataSet candidate = (DataSet) i.next();
-				if (!candidate.equals(perfectDS)) {
-					this.removeDataSet(candidate);
-					i.remove();
-				}
-			}
-			// Rename it to lose any extension it may have gained.
-			this
-					.renameDataSet(perfectDS, perfectDS.getCentralTable()
-							.getName());
-		}
-
-		// Return the final set of suggested datasets.
-		return suggestedDataSets;
-	}
+	private final Map schemas = new TreeMap();
 
 	private Collection continueSubclassing(final Collection includeTables,
 			final Collection tablesIncluded, final DataSet dataset,
@@ -396,6 +164,269 @@ public class Mart {
 	}
 
 	/**
+	 * Adds a dataset to the mart.
+	 * 
+	 * @param dataset
+	 *            the dataset to add.
+	 */
+	public void addDataSet(final DataSet dataset) {
+		String name = dataset.getName();
+		final String baseName = dataset.getName();
+		// Check we don't have one by this name already. Alias if we do.
+		for (int i = 1; this.datasets.containsKey(name); name = baseName + "_"
+				+ i++)
+			;
+		dataset.setName(name);
+		// Add it.
+		this.datasets.put(dataset.getName(), dataset);
+	}
+
+	/**
+	 * Adds a schema to the set which this mart includes. An exception is thrown
+	 * if it already is in this set, or if it is null.
+	 * 
+	 * 
+	 * @param schema
+	 *            the schema to add.
+	 */
+	public void addSchema(final Schema schema) {
+		String name = schema.getName();
+		final String baseName = schema.getName();
+		// Check we don't have one by this name already. Alias if we do.
+		for (int i = 1; this.schemas.containsKey(name); name = baseName + "_"
+				+ i++)
+			;
+		schema.setName(name);
+		// Add it.
+		this.schemas.put(name, schema);
+	}
+
+	/**
+	 * Returns the dataset object with the given name.
+	 * 
+	 * @param name
+	 *            the name to look for.
+	 * @return a dataset object matching the specified name.
+	 */
+	public DataSet getDataSetByName(final String name) {
+		return (DataSet) this.datasets.get(name);
+	}
+
+	/**
+	 * Returns the set of dataset objects which this mart includes. The set may
+	 * be empty but it is never null.
+	 * 
+	 * @return a set of dataset objects.
+	 */
+	public Collection getDataSets() {
+		return this.datasets.values();
+	}
+
+	/**
+	 * Returns the schema object with the given name. If it doesn't exist, null
+	 * is returned. If the name was null, you'll get an exception.
+	 * 
+	 * @param name
+	 *            the name to look for.
+	 * @return a schema object matching the specified name.
+	 */
+	public Schema getSchemaByName(final String name) {
+		return (Schema) this.schemas.get(name);
+	}
+
+	/**
+	 * Returns the set of schema objects which this mart includes when building
+	 * a mart. The set may be empty but it is never null.
+	 * 
+	 * @return a set of schema objects.
+	 */
+	public Collection getSchemas() {
+		return this.schemas.values();
+	}
+
+	/**
+	 * Removes a dataset from the set which this mart includes.
+	 * 
+	 * @param dataset
+	 *            the dataset to remove.
+	 */
+	public void removeDataSet(final DataSet dataset) {
+		this.datasets.remove(dataset.getName());
+	}
+
+	/**
+	 * Removes a schema from the set which this mart includes. Any datasets
+	 * centred on this schema are also removed, and any external relations
+	 * referring to it also.
+	 * 
+	 * @param schema
+	 *            the schema to remove.
+	 */
+	public void removeSchema(final Schema schema) {
+		final List datasets = new ArrayList(this.getDataSets());
+		for (final Iterator i = datasets.iterator(); i.hasNext();) {
+			final DataSet ds = (DataSet) i.next();
+			if (ds.getCentralTable().getSchema().equals(schema))
+				this.removeDataSet(ds);
+		}
+		for (final Iterator i = schema.getExternalRelations().iterator(); i
+				.hasNext();)
+			((Relation) i.next()).destroy();
+		this.schemas.remove(schema.getName());
+	}
+
+	/**
+	 * Renames a dataset. This call cascades to the dataset itself and renames
+	 * that too.
+	 * 
+	 * @param dataset
+	 *            the dataset to rename.
+	 * @param name
+	 *            the new name for it.
+	 */
+	public void renameDataSet(final DataSet dataset, String name) {
+		final String baseName = name;
+		// Check we don't have one by this name already. Alias if we do.
+		for (int i = 1; this.datasets.containsKey(name)
+				&& !name.equals(dataset.getName()); name = baseName + "_" + i++)
+			;
+		// Rename it.
+		this.datasets.remove(dataset.getName());
+		dataset.setName(name);
+		this.datasets.put(name, dataset);
+	}
+
+	/**
+	 * Renames a schema. An exception is thrown if that names has already been
+	 * used, or if it is null. This call cascades to the schema and renames that
+	 * as well.
+	 * 
+	 * @param schema
+	 *            the schema to rename.
+	 * @param name
+	 *            the new name for it.
+	 */
+	public void renameSchema(final Schema schema, String name) {
+		final String baseName = name;
+		// Check we don't have one by this name already. Alias if we do.
+		for (int i = 1; this.schemas.containsKey(name)
+				&& !name.equals(schema.getName()); name = baseName + "_" + i++)
+			;
+		// Rename it.
+		this.schemas.remove(schema.getName());
+		schema.setName(name);
+		this.schemas.put(name, schema);
+	}
+
+	/**
+	 * Given a set of tables, produce the minimal set of datasets which include
+	 * all the specified tables. Tables can be included in the same dataset if
+	 * they are linked by 1:M relations (1:M, 1:M in a chain), or if the table
+	 * is the last in the chain and is linked to the previous table by a pair of
+	 * 1:M and M:1 relations via a third table, simulating a M:M relation.
+	 * <p>
+	 * If the chains of tables fork, then one dataset is generated for each
+	 * branch of the fork.
+	 * <p>
+	 * Every suggested dataset is synchronised before being returned.
+	 * <p>
+	 * Datasets will be named after their central tables. If a dataset with that
+	 * name already exists, a '_' and sequence number will be appended to make
+	 * the new dataset name unique.
+	 * 
+	 * @param includeTables
+	 *            the tables that must appear in the final set of datasets.
+	 * @return the collection of datasets generated.
+	 * @throws SQLException
+	 *             if there is any problem talking to the source database whilst
+	 *             generating the dataset.
+	 * @throws AssociationException
+	 *             if any of the tables do not belong to this mart.
+	 * @throws BuilderException
+	 *             if synchronisation fails.
+	 */
+	public Collection suggestDataSets(final Collection includeTables)
+			throws SQLException, AssociationException, BuilderException {
+		// The root tables are all those which do not have a M:1 relation
+		// to another one of the initial set of tables. This means that
+		// extra datasets will be created for each table at the end of
+		// 1:M:1 relation, so that any further tables past it will still
+		// be included.
+		final List rootTables = new ArrayList(includeTables);
+		for (final Iterator i = includeTables.iterator(); i.hasNext();) {
+			final Table candidate = (Table) i.next();
+			for (final Iterator j = candidate.getRelations().iterator(); j
+					.hasNext();) {
+				final Relation rel = (Relation) j.next();
+				if (rel.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
+					continue;
+				if (!rel.isOneToMany())
+					continue;
+				if (!rel.getManyKey().getTable().equals(candidate))
+					continue;
+				if (includeTables.contains(rel.getOneKey().getTable()))
+					rootTables.remove(candidate);
+			}
+		}
+		// We construct one dataset per root table.
+		final Set suggestedDataSets = new TreeSet();
+		for (final Iterator i = rootTables.iterator(); i.hasNext();) {
+			final Table rootTable = (Table) i.next();
+			final DataSet dataset = new DataSet(this, rootTable, rootTable
+					.getName());
+			// Process it.
+			final List tablesIncluded = new ArrayList();
+			tablesIncluded.add(rootTable);
+			suggestedDataSets.addAll(this.continueSubclassing(includeTables,
+					tablesIncluded, dataset, rootTable));
+		}
+
+		// Synchronise them all.
+		for (final Iterator i = suggestedDataSets.iterator(); i.hasNext();)
+			((DataSet) i.next()).synchronise();
+
+		// Do any of the resulting datasets contain all the tables
+		// exactly with subclass relations between each?
+		// If so, just use that one dataset and forget the rest.
+		DataSet perfectDS = null;
+		for (final Iterator i = suggestedDataSets.iterator(); i.hasNext()
+				&& perfectDS == null;) {
+			final DataSet candidate = (DataSet) i.next();
+
+			// A candidate is a perfect match if the set of tables
+			// covered by the subclass relations is the same as the
+			// original set of tables requested.
+			final Set scTables = new HashSet();
+			for (final Iterator j = candidate.getSubclassedRelations()
+					.iterator(); j.hasNext();) {
+				final Relation r = (Relation) j.next();
+				scTables.add(r.getFirstKey().getTable());
+				scTables.add(r.getSecondKey().getTable());
+			}
+			if (scTables.size() == includeTables.size()
+					&& scTables.containsAll(includeTables))
+				perfectDS = candidate;
+		}
+		if (perfectDS != null) {
+			// Drop the others.
+			for (final Iterator i = suggestedDataSets.iterator(); i.hasNext();) {
+				final DataSet candidate = (DataSet) i.next();
+				if (!candidate.equals(perfectDS)) {
+					this.removeDataSet(candidate);
+					i.remove();
+				}
+			}
+			// Rename it to lose any extension it may have gained.
+			this
+					.renameDataSet(perfectDS, perfectDS.getCentralTable()
+							.getName());
+		}
+
+		// Return the final set of suggested datasets.
+		return suggestedDataSets;
+	}
+
+	/**
 	 * Given a dataset and a set of columns from one table upon which a table of
 	 * that dataset is based, find all other tables which have similar columns,
 	 * and create a new dataset for each one.
@@ -477,37 +508,6 @@ public class Mart {
 		}
 		// Return the results.
 		return invisibleDataSets;
-	}
-
-	/**
-	 * Renames a dataset. This call cascades to the dataset itself and renames
-	 * that too.
-	 * 
-	 * @param dataset
-	 *            the dataset to rename.
-	 * @param name
-	 *            the new name for it.
-	 */
-	public void renameDataSet(final DataSet dataset, String name) {
-		final String baseName = name;
-		// Check we don't have one by this name already. Alias if we do.
-		for (int i = 1; this.datasets.containsKey(name)
-				&& !name.equals(dataset.getName()); name = baseName + "_" + i++)
-			;
-		// Rename it.
-		this.datasets.remove(dataset.getName());
-		dataset.setName(name);
-		this.datasets.put(name, dataset);
-	}
-
-	/**
-	 * Removes a dataset from the set which this mart includes.
-	 * 
-	 * @param dataset
-	 *            the dataset to remove.
-	 */
-	public void removeDataSet(final DataSet dataset) {
-		this.datasets.remove(dataset.getName());
 	}
 
 	/**

@@ -42,9 +42,9 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  */
 public class ComponentImageSaver {
 
-	private MartTab martTab;
-
 	private Component component;
+
+	private MartTab martTab;
 
 	/**
 	 * Constructs a component saver that is associated with the given mart tab.
@@ -59,6 +59,24 @@ public class ComponentImageSaver {
 		this.martTab = martTab;
 	}
 
+	private void save(final File file, final ImageSaverFilter format)
+			throws IOException {
+		// Create an image the same size as the component.
+		final BufferedImage image = GraphicsEnvironment
+				.getLocalGraphicsEnvironment().getDefaultScreenDevice()
+				.getDefaultConfiguration().createCompatibleImage(
+						this.component.getWidth(), this.component.getHeight());
+		// Render the component onto the image.
+		final Graphics2D g2d = image.createGraphics();
+		final RepaintManager currentManager = RepaintManager
+				.currentManager(this.component);
+		currentManager.setDoubleBufferingEnabled(false);
+		this.component.paintAll(g2d);
+		currentManager.setDoubleBufferingEnabled(true);
+		// Save the image in the given format to the given filename.
+		ImageIO.write(image, format.getFormat(), file);
+	}
+
 	/**
 	 * Pops up a save-as dialog, and if the user completes it correctly, saves
 	 * the component.
@@ -70,12 +88,15 @@ public class ComponentImageSaver {
 
 			public File getSelectedFile() {
 				File file = super.getSelectedFile();
-				if (file!=null && !file.exists()) {
+				if (file != null && !file.exists()) {
 					String filename = file.getName();
-					ImageSaverFilter filter = (ImageSaverFilter)this.getFileFilter();
+					ImageSaverFilter filter = (ImageSaverFilter) this
+							.getFileFilter();
 					String extension = filter.getExtensions()[0];
-					if (!filename.endsWith(extension) && filename.indexOf('.')<0)
-						file = new File(file.getParentFile(), filename+extension);
+					if (!filename.endsWith(extension)
+							&& filename.indexOf('.') < 0)
+						file = new File(file.getParentFile(), filename
+								+ extension);
 				}
 				return file;
 			}
@@ -103,34 +124,16 @@ public class ComponentImageSaver {
 			});
 	}
 
-	private void save(final File file, final ImageSaverFilter format)
-			throws IOException {
-		// Create an image the same size as the component.
-		final BufferedImage image = GraphicsEnvironment
-				.getLocalGraphicsEnvironment().getDefaultScreenDevice()
-				.getDefaultConfiguration().createCompatibleImage(
-						this.component.getWidth(), this.component.getHeight());
-		// Render the component onto the image.
-		final Graphics2D g2d = image.createGraphics();
-		final RepaintManager currentManager = RepaintManager
-				.currentManager(this.component);
-		currentManager.setDoubleBufferingEnabled(false);
-		this.component.paintAll(g2d);
-		currentManager.setDoubleBufferingEnabled(true);
-		// Save the image in the given format to the given filename.
-		ImageIO.write(image, format.getFormat(), file);
-	}
-
 	/**
 	 * This class represents a filter for a particular image format.
 	 */
 	private class ImageSaverFilter extends FileFilter {
 
-		private String format;
-
 		private String description;
 
 		private String[] extensions;
+
+		private String format;
 
 		/**
 		 * The constructor accepts a format name, a description, and a list of
@@ -150,15 +153,6 @@ public class ComponentImageSaver {
 			this.extensions = extensions;
 		}
 
-		/**
-		 * Find out what image format this filter represents.
-		 * 
-		 * @return the format this filter represents.
-		 */
-		public String getFormat() {
-			return this.format;
-		}
-
 		public boolean accept(final File f) {
 			if (f.isDirectory())
 				return true;
@@ -174,15 +168,25 @@ public class ComponentImageSaver {
 		public String getDescription() {
 			return this.description;
 		}
-		
+
 		/**
-		 * Find out what extensions this filter accepts. The first
-		 * extension in the list is the default one if you want to
-		 * modify a file to be accepted by this filter.
+		 * Find out what extensions this filter accepts. The first extension in
+		 * the list is the default one if you want to modify a file to be
+		 * accepted by this filter.
+		 * 
 		 * @return the extensions this filter accepts.
 		 */
 		public String[] getExtensions() {
 			return this.extensions;
+		}
+
+		/**
+		 * Find out what image format this filter represents.
+		 * 
+		 * @return the format this filter represents.
+		 */
+		public String getFormat() {
+			return this.format;
 		}
 	}
 }

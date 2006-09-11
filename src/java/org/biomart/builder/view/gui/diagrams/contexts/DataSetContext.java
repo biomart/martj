@@ -52,7 +52,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * org.biomart.builder.view.gui.diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.33, 29th August 2006
+ * @version 0.1.34, 11th September 2006
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {
@@ -70,6 +70,80 @@ public class DataSetContext extends WindowContext {
 		super(martTab, dataset);
 	}
 
+	public void customiseAppearance(final JComponent component,
+			final Object object) {
+
+		// Is it a relation?
+		if (object instanceof Relation) {
+
+			// Which relation is it?
+			final Relation relation = (Relation) object;
+
+			// What tables does it link?
+			final DataSetTable target = (DataSetTable) relation.getManyKey()
+					.getTable();
+
+			// Highlight SUBCLASS relations.
+			if (target.getType().equals(DataSetTableType.MAIN_SUBCLASS))
+				component.setForeground(RelationComponent.SUBCLASS_COLOUR);
+
+			// All the rest are normal.
+			else
+				component.setForeground(RelationComponent.NORMAL_COLOUR);
+
+			// Do the stroke.
+			final RelationComponent relcomp = (RelationComponent) component;
+			relcomp.setDotted(false);
+		}
+
+		// Is it a table?
+		else if (object instanceof DataSetTable) {
+
+			// Which table is it?
+			final DataSetTableType tableType = ((DataSetTable) object)
+					.getType();
+
+			// Highlight SUBCLASS tables.
+			if (tableType.equals(DataSetTableType.MAIN_SUBCLASS))
+				component.setForeground(TableComponent.SUBCLASS_COLOUR);
+
+			// Highlight DIMENSION tables.
+			else if (tableType.equals(DataSetTableType.DIMENSION))
+				component.setForeground(TableComponent.DIMENSION_COLOUR);
+
+			// All others are normal.
+			else
+				component.setForeground(TableComponent.NORMAL_COLOUR);
+		}
+
+		// Columns.
+		else if (object instanceof DataSetColumn) {
+
+			// Which column is it?
+			final DataSetColumn column = (DataSetColumn) object;
+
+			// Magenta EXPRESSION columns.
+			if (column instanceof InheritedColumn)
+				component.setForeground(ColumnComponent.INHERITED_COLOUR);
+
+			// Fade out all MASKED columns.
+			else if (column.getMasked())
+				component.setForeground(ColumnComponent.FADED_COLOUR);
+
+			// Blue PARTITIONED columns.
+			else if (column.getPartitionType() != null)
+				component.setForeground(ColumnComponent.PARTITIONED_COLOUR);
+
+			// Magenta EXPRESSION columns.
+			else if (column instanceof ExpressionColumn)
+				component.setForeground(ColumnComponent.EXPRESSION_COLOUR);
+
+			// All others are normal.
+			else
+				component.setForeground(ColumnComponent.NORMAL_COLOUR);
+		}
+	}
+
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
 
@@ -79,29 +153,6 @@ public class DataSetContext extends WindowContext {
 			// Add a separator if the menu is not empty.
 			if (contextMenu.getComponentCount() > 0)
 				contextMenu.addSeparator();
-
-			// Add an option to make this dataset invisible.
-			final JCheckBoxMenuItem invisible = new JCheckBoxMenuItem(Resources
-					.get("invisibleDataSetTitle"));
-			invisible.setMnemonic(Resources.get("invisibleDataSetMnemonic")
-					.charAt(0));
-			invisible.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					if (invisible.isSelected())
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestInvisibleDataSet(
-										DataSetContext.this.getDataSet());
-					else
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestVisibleDataSet(
-										DataSetContext.this.getDataSet());
-				}
-			});
-			if (this.getDataSet().getInvisible())
-				invisible.setSelected(true);
-			contextMenu.add(invisible);
-
-			contextMenu.addSeparator();
 
 			// Option to rename the dataset.
 			final JMenuItem rename = new JMenuItem(Resources
@@ -195,6 +246,48 @@ public class DataSetContext extends WindowContext {
 			if (this.getDataSet().getDataSetOptimiserType().equals(
 					DataSetOptimiserType.TABLE))
 				optTbl.setSelected(true);
+
+			contextMenu.addSeparator();
+
+			// Add an option to make this dataset invisible.
+			final JCheckBoxMenuItem invisible = new JCheckBoxMenuItem(Resources
+					.get("invisibleDataSetTitle"));
+			invisible.setMnemonic(Resources.get("invisibleDataSetMnemonic")
+					.charAt(0));
+			invisible.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					if (invisible.isSelected())
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestInvisibleDataSet(
+										DataSetContext.this.getDataSet());
+					else
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestVisibleDataSet(
+										DataSetContext.this.getDataSet());
+				}
+			});
+			if (this.getDataSet().getInvisible())
+				invisible.setSelected(true);
+			contextMenu.add(invisible);
+
+			contextMenu.addSeparator();
+
+			// Option to explain how the dataset was constructed.
+			final JMenuItem explain = new JMenuItem(
+					Resources.get("explainDataSetTitle"),
+					new ImageIcon(
+							Resources
+									.getResourceAsURL("org/biomart/builder/resources/help.gif")));
+			explain
+					.setMnemonic(Resources.get("explainDataSetMnemonic")
+							.charAt(0));
+			explain.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestExplainDataSet(DataSetContext.this.getDataSet());
+				}
+			});
+			contextMenu.add(explain);
 
 			contextMenu.addSeparator();
 
@@ -512,80 +605,6 @@ public class DataSetContext extends WindowContext {
 				contextMenu.add(remove);
 
 			}
-		}
-	}
-
-	public void customiseAppearance(final JComponent component,
-			final Object object) {
-
-		// Is it a relation?
-		if (object instanceof Relation) {
-
-			// Which relation is it?
-			final Relation relation = (Relation) object;
-
-			// What tables does it link?
-			final DataSetTable target = (DataSetTable) relation.getManyKey()
-					.getTable();
-
-			// Highlight SUBCLASS relations.
-			if (target.getType().equals(DataSetTableType.MAIN_SUBCLASS))
-				component.setForeground(RelationComponent.SUBCLASS_COLOUR);
-
-			// All the rest are normal.
-			else
-				component.setForeground(RelationComponent.NORMAL_COLOUR);
-
-			// Do the stroke.
-			final RelationComponent relcomp = (RelationComponent) component;
-			relcomp.setDotted(false);
-		}
-
-		// Is it a table?
-		else if (object instanceof DataSetTable) {
-
-			// Which table is it?
-			final DataSetTableType tableType = ((DataSetTable) object)
-					.getType();
-
-			// Highlight SUBCLASS tables.
-			if (tableType.equals(DataSetTableType.MAIN_SUBCLASS))
-				component.setForeground(TableComponent.SUBCLASS_COLOUR);
-
-			// Highlight DIMENSION tables.
-			else if (tableType.equals(DataSetTableType.DIMENSION))
-				component.setForeground(TableComponent.DIMENSION_COLOUR);
-
-			// All others are normal.
-			else
-				component.setForeground(TableComponent.NORMAL_COLOUR);
-		}
-
-		// Columns.
-		else if (object instanceof DataSetColumn) {
-
-			// Which column is it?
-			final DataSetColumn column = (DataSetColumn) object;
-
-			// Magenta EXPRESSION columns.
-			if (column instanceof InheritedColumn)
-				component.setForeground(ColumnComponent.INHERITED_COLOUR);
-
-			// Fade out all MASKED columns.
-			else if (column.getMasked())
-				component.setForeground(ColumnComponent.FADED_COLOUR);
-
-			// Blue PARTITIONED columns.
-			else if (column.getPartitionType() != null)
-				component.setForeground(ColumnComponent.PARTITIONED_COLOUR);
-
-			// Magenta EXPRESSION columns.
-			else if (column instanceof ExpressionColumn)
-				component.setForeground(ColumnComponent.EXPRESSION_COLOUR);
-
-			// All others are normal.
-			else
-				component.setForeground(ColumnComponent.NORMAL_COLOUR);
 		}
 	}
 }

@@ -72,6 +72,20 @@ public interface DataLink {
 		public Connection getConnection() throws SQLException;
 
 		/**
+		 * Gets the database schema name.
+		 * 
+		 * @return the database schema name.
+		 */
+		public String getDatabaseSchema();
+
+		/**
+		 * Gets the location of the driver class, if specified. May return null.
+		 * 
+		 * @return the location of the driver class.
+		 */
+		public File getDriverClassLocation();
+
+		/**
 		 * Getter for the name of the driver class, eg.
 		 * <tt>com.mysql.jdbc.Driver</tt>
 		 * 
@@ -80,19 +94,33 @@ public interface DataLink {
 		public String getDriverClassName();
 
 		/**
-		 * Sets the name of the driver class, eg. <tt>com.mysql.jdbc.Driver</tt>
+		 * Gets the JDBC URL.
 		 * 
-		 * @param driverClassName
-		 *            the name of the driver class.
+		 * @return the JDBC url.
 		 */
-		public void setDriverClassName(String driverClassName);
+		public String getJDBCURL();
 
 		/**
-		 * Gets the location of the driver class, if specified. May return null.
+		 * Gets the password.
 		 * 
-		 * @return the location of the driver class.
+		 * @return the password.
 		 */
-		public File getDriverClassLocation();
+		public String getPassword();
+
+		/**
+		 * Gets the username.
+		 * 
+		 * @return the username.
+		 */
+		public String getUsername();
+
+		/**
+		 * Sets the database schema name.
+		 * 
+		 * @param schemaName
+		 *            the database schema name.
+		 */
+		public void setDatabaseSchema(String schemaName);
 
 		/**
 		 * Sets the location of the driver class. If the class is not found at
@@ -105,11 +133,12 @@ public interface DataLink {
 		public void setDriverClassLocation(File driverClassLocation);
 
 		/**
-		 * Gets the JDBC URL.
+		 * Sets the name of the driver class, eg. <tt>com.mysql.jdbc.Driver</tt>
 		 * 
-		 * @return the JDBC url.
+		 * @param driverClassName
+		 *            the name of the driver class.
 		 */
-		public String getJDBCURL();
+		public void setDriverClassName(String driverClassName);
 
 		/**
 		 * Sets the JDBC URL.
@@ -120,26 +149,12 @@ public interface DataLink {
 		public void setJDBCURL(String url);
 
 		/**
-		 * Gets the database schema name.
+		 * Sets the password. If null, then no password will be used.
 		 * 
-		 * @return the database schema name.
+		 * @param password
+		 *            the password.
 		 */
-		public String getDatabaseSchema();
-
-		/**
-		 * Sets the database schema name.
-		 * 
-		 * @param schemaName
-		 *            the database schema name.
-		 */
-		public void setDatabaseSchema(String schemaName);
-
-		/**
-		 * Gets the username.
-		 * 
-		 * @return the username.
-		 */
-		public String getUsername();
+		public void setPassword(String password);
 
 		/**
 		 * Sets the username.
@@ -148,21 +163,6 @@ public interface DataLink {
 		 *            the username.
 		 */
 		public void setUsername(String username);
-
-		/**
-		 * Gets the password.
-		 * 
-		 * @return the password.
-		 */
-		public String getPassword();
-
-		/**
-		 * Sets the password. If null, then no password will be used.
-		 * 
-		 * @param password
-		 *            the password.
-		 */
-		public void setPassword(String password);
 	}
 
 	/**

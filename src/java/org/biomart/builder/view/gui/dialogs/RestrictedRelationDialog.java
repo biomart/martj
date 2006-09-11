@@ -62,9 +62,13 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 public class RestrictedRelationDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	private MartTab martTab;
+	private JButton cancel;
 
 	private boolean cancelled;
+
+	private JButton execute;
+
+	private JTextArea expression;
 
 	private ColumnAliasTableModel firstColumnAliasModel;
 
@@ -74,6 +78,8 @@ public class RestrictedRelationDialog extends JDialog {
 
 	private JButton firstRemove;
 
+	private MartTab martTab;
+
 	private ColumnAliasTableModel secondColumnAliasModel;
 
 	private JTable secondColumnAliasTable;
@@ -81,12 +87,6 @@ public class RestrictedRelationDialog extends JDialog {
 	private JButton secondInsert;
 
 	private JButton secondRemove;
-
-	private JTextArea expression;
-
-	private JButton cancel;
-
-	private JButton execute;
 
 	/**
 	 * Creates (but does not open) a dialog requesting details of a restricted
@@ -356,6 +356,11 @@ public class RestrictedRelationDialog extends JDialog {
 		// Aliases were already copied in the JTable constructor above.
 	}
 
+	private boolean isEmpty(final String string) {
+		// Strings are empty if they are null or all whitespace.
+		return string == null || string.trim().length() == 0;
+	}
+
 	private boolean validateFields() {
 		// A placeholder to hold the validation messages, if any.
 		final List messages = new ArrayList();
@@ -382,9 +387,13 @@ public class RestrictedRelationDialog extends JDialog {
 		return messages.isEmpty();
 	}
 
-	private boolean isEmpty(final String string) {
-		// Strings are empty if they are null or all whitespace.
-		return string == null || string.trim().length() == 0;
+	/**
+	 * Return <tt>true</tt> if the user cancelled the box.
+	 * 
+	 * @return <tt>true</tt> if the box was cancelled.
+	 */
+	public boolean getCancelled() {
+		return this.cancelled;
 	}
 
 	/**
@@ -415,22 +424,13 @@ public class RestrictedRelationDialog extends JDialog {
 	}
 
 	/**
-	 * Return <tt>true</tt> if the user cancelled the box.
-	 * 
-	 * @return <tt>true</tt> if the box was cancelled.
-	 */
-	public boolean getCancelled() {
-		return this.cancelled;
-	}
-
-	/**
 	 * This internal class represents a map of dataset columns to aliases.
 	 */
 	private static class ColumnAliasTableModel extends DefaultTableModel {
-		private static final long serialVersionUID = 1;
-
 		private static final Class[] colClasses = new Class[] {
 				GenericColumn.class, String.class };
+
+		private static final long serialVersionUID = 1;
 
 		/**
 		 * Construct a model and use the given settings to populate it if
@@ -462,10 +462,6 @@ public class RestrictedRelationDialog extends JDialog {
 			}
 		}
 
-		public Class getColumnClass(final int column) {
-			return ColumnAliasTableModel.colClasses[column];
-		}
-
 		/**
 		 * Find out what aliases the user defined.
 		 * 
@@ -482,6 +478,10 @@ public class RestrictedRelationDialog extends JDialog {
 					aliases.put(col, alias);
 			}
 			return aliases;
+		}
+
+		public Class getColumnClass(final int column) {
+			return ColumnAliasTableModel.colClasses[column];
 		}
 	}
 }

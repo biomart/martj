@@ -36,31 +36,29 @@ import java.util.Properties;
  * Manages the on-disk cache of user settings.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 2nd August 2006
+ * @version 0.1.3, 11th September 2006
  * @since 0.1
  */
 public class SettingsCache {
 
-	private static boolean initialising = true;
-
-	private static final File homeDir = new File(System
-			.getProperty("user.home"), ".martbuilder");
-
-	private static int classCacheSize = 10;
-
-	private static final File propertiesFile = new File(SettingsCache.homeDir,
-			"properties");
-
-	private static final Properties properties = new Properties();
+	private static final Map classCache = new HashMap();
 
 	private static final File classCacheDir = new File(SettingsCache.homeDir,
 			"cache");
 
-	private static final Map classCache = new HashMap();
+	private static int classCacheSize = 10;
 
-	// Private means that this class is a static singleton.
-	private SettingsCache() {
-	}
+	private static final File homeDir = new File(System
+			.getProperty("user.home"), ".martbuilder");
+
+	private static boolean initialising = true;
+
+	private static final Properties properties = new Properties();
+
+	private static final File propertiesFile = new File(SettingsCache.homeDir,
+			"properties");
+
+	private static final Object SAVE_LOCK = new String("__SAVE__LOCK");
 
 	// Create the bits we need on start-up.
 	static {
@@ -76,59 +74,6 @@ public class SettingsCache {
 			t.printStackTrace(System.err);
 		}
 	}
-
-	/**
-	 * Loads the current cache of settings from disk, from the files in
-	 * <tt>~/.martbuilder</tt>.
-	 */
-	public static synchronized void load() {
-		SettingsCache.initialising = true;
-
-		try {
-			SettingsCache.properties.load(new FileInputStream(
-					SettingsCache.propertiesFile));
-		} catch (final Throwable t) {
-			System.err.println(Resources.get("settingsCacheLoadFailed"));
-			t.printStackTrace(System.err);
-		}
-
-		final String newClassCacheSize = SettingsCache.properties
-				.getProperty("classCacheSize");
-		try {
-			SettingsCache.classCacheSize = Integer.parseInt(newClassCacheSize);
-		} catch (final NumberFormatException e) {
-			// Ignore and use the default.
-			SettingsCache.classCacheSize = 10;
-			SettingsCache.setProperty("classCacheSize", ""
-					+ SettingsCache.classCacheSize);
-		}
-
-		// Loop over classCacheDir to find classes.
-		final String[] classes = SettingsCache.classCacheDir.list();
-		if (classes != null)
-			for (int i = 0; i < classes.length; i++)
-				try {
-					final Class clazz = Class.forName(classes[i]);
-					final File classDir = new File(SettingsCache.classCacheDir,
-							classes[i]);
-					final String[] entries = classDir.list();
-					for (int j = 0; j < entries.length; j++) {
-						final Properties props = new Properties();
-						props.load(new FileInputStream(new File(classDir,
-								entries[j])));
-						SettingsCache.saveHistoryProperties(clazz, entries[j],
-								props);
-					}
-				} catch (final Throwable t) {
-					System.err
-							.println(Resources.get("settingsCacheLoadFailed"));
-					t.printStackTrace(System.err);
-				}
-
-		SettingsCache.initialising = false;
-	}
-
-	private static final Object SAVE_LOCK = new String("__SAVE__LOCK");
 
 	/**
 	 * Saves the current cache of settings to disk as a set of files at
@@ -183,31 +128,6 @@ public class SettingsCache {
 	}
 
 	/**
-	 * Given a property name, return that property based on the contents of the
-	 * cache file <tt>properties</tt>.
-	 * 
-	 * @param property
-	 *            the property name to look up.
-	 * @return the value, or <tt>null</tt> if not found.
-	 */
-	public static String getProperty(final String property) {
-		return SettingsCache.properties.getProperty(property);
-	}
-
-	/**
-	 * Given a property name, sets that property.
-	 * 
-	 * @param property
-	 *            the property name to set.
-	 * @param value
-	 *            the value to give it.
-	 */
-	public static void setProperty(final String property, final String value) {
-		SettingsCache.properties.setProperty(property, value);
-		SettingsCache.save();
-	}
-
-	/**
 	 * Given a class, return the set of names of properties from the history map
 	 * that correspond to that class.
 	 * 
@@ -238,6 +158,69 @@ public class SettingsCache {
 	}
 
 	/**
+	 * Given a property name, return that property based on the contents of the
+	 * cache file <tt>properties</tt>.
+	 * 
+	 * @param property
+	 *            the property name to look up.
+	 * @return the value, or <tt>null</tt> if not found.
+	 */
+	public static String getProperty(final String property) {
+		return SettingsCache.properties.getProperty(property);
+	}
+
+	/**
+	 * Loads the current cache of settings from disk, from the files in
+	 * <tt>~/.martbuilder</tt>.
+	 */
+	public static synchronized void load() {
+		SettingsCache.initialising = true;
+
+		try {
+			SettingsCache.properties.load(new FileInputStream(
+					SettingsCache.propertiesFile));
+		} catch (final Throwable t) {
+			System.err.println(Resources.get("settingsCacheLoadFailed"));
+			t.printStackTrace(System.err);
+		}
+
+		final String newClassCacheSize = SettingsCache.properties
+				.getProperty("classCacheSize");
+		try {
+			SettingsCache.classCacheSize = Integer.parseInt(newClassCacheSize);
+		} catch (final NumberFormatException e) {
+			// Ignore and use the default.
+			SettingsCache.classCacheSize = 10;
+			SettingsCache.setProperty("classCacheSize", ""
+					+ SettingsCache.classCacheSize);
+		}
+
+		// Loop over classCacheDir to find classes.
+		final String[] classes = SettingsCache.classCacheDir.list();
+		if (classes != null)
+			for (int i = 0; i < classes.length; i++)
+				try {
+					final Class clazz = Class.forName(classes[i]);
+					final File classDir = new File(SettingsCache.classCacheDir,
+							classes[i]);
+					final String[] entries = classDir.list();
+					for (int j = 0; j < entries.length; j++) {
+						final Properties props = new Properties();
+						props.load(new FileInputStream(new File(classDir,
+								entries[j])));
+						SettingsCache.saveHistoryProperties(clazz, entries[j],
+								props);
+					}
+				} catch (final Throwable t) {
+					System.err
+							.println(Resources.get("settingsCacheLoadFailed"));
+					t.printStackTrace(System.err);
+				}
+
+		SettingsCache.initialising = false;
+	}
+
+	/**
 	 * Given a bunch of properties, save them in the history of the given class
 	 * with the given name. If the history contains very old stuff, age it out.
 	 * 
@@ -263,5 +246,22 @@ public class SettingsCache {
 		}
 		((Map) SettingsCache.classCache.get(clazz)).put(name, properties);
 		SettingsCache.save();
+	}
+
+	/**
+	 * Given a property name, sets that property.
+	 * 
+	 * @param property
+	 *            the property name to set.
+	 * @param value
+	 *            the value to give it.
+	 */
+	public static void setProperty(final String property, final String value) {
+		SettingsCache.properties.setProperty(property, value);
+		SettingsCache.save();
+	}
+
+	// Private means that this class is a static singleton.
+	private SettingsCache() {
 	}
 }

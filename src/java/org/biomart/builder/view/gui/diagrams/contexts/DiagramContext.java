@@ -33,17 +33,6 @@ import javax.swing.JPopupMenu;
  */
 public interface DiagramContext {
 	/**
-	 * Add items to a context menu for a given component. Must add separator
-	 * first if the menu is not empty.
-	 * 
-	 * @param contextMenu
-	 *            the context menu to add parameters to.
-	 * @param object
-	 *            the model object we wish to customise this menu to.
-	 */
-	public void populateContextMenu(JPopupMenu contextMenu, Object object);
-
-	/**
 	 * Customise the appearance of a component that represents the given model
 	 * object.
 	 * 
@@ -53,4 +42,15 @@ public interface DiagramContext {
 	 *            the model object we wish to customise this component to.
 	 */
 	public void customiseAppearance(JComponent component, Object object);
+
+	/**
+	 * Add items to a context menu for a given component. Must add separator
+	 * first if the menu is not empty.
+	 * 
+	 * @param contextMenu
+	 *            the context menu to add parameters to.
+	 * @param object
+	 *            the model object we wish to customise this menu to.
+	 */
+	public void populateContextMenu(JPopupMenu contextMenu, Object object);
 }

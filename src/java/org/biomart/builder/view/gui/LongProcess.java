@@ -46,20 +46,9 @@ public abstract class LongProcess {
 
 	private static Container container;
 
-	private static int longProcessCount = 0;
-
 	private static final Object lockObject = "My MartBuilder Hourglass Lock";
 
-	/**
-	 * Sets the container which the hourglass will appear over.
-	 * 
-	 * @param newContainer
-	 *            the container over which the mouse will transform into an
-	 *            hourglass.
-	 */
-	public static void setContainer(final Container newContainer) {
-		LongProcess.container = newContainer;
-	}
+	private static int longProcessCount = 0;
 
 	/**
 	 * Runs the given task in the background, in a Swing-thread-safe
@@ -115,5 +104,16 @@ public abstract class LongProcess {
 				}
 			}
 		}).start();
+	}
+
+	/**
+	 * Sets the container which the hourglass will appear over.
+	 * 
+	 * @param newContainer
+	 *            the container over which the mouse will transform into an
+	 *            hourglass.
+	 */
+	public static void setContainer(final Container newContainer) {
+		LongProcess.container = newContainer;
 	}
 }

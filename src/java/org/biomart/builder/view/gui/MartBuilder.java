@@ -53,6 +53,28 @@ import org.biomart.builder.resources.SettingsCache;
 public class MartBuilder extends JFrame {
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * Run this application and open the main window. The window stays open and
+	 * the application keeps running until the window is closed.
+	 * 
+	 * @param args
+	 *            any command line arguments that the user specified will be in
+	 *            this array.
+	 */
+	public static void main(final String[] args) {
+		// Start the application.
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				// Create it.
+				final MartBuilder mb = new MartBuilder();
+				// Centre it.
+				mb.setLocationRelativeTo(null);
+				// Open it.
+				mb.setVisible(true);
+			}
+		});
+	}
+
 	private MartTabSet martTabSet;
 
 	/**
@@ -125,6 +147,21 @@ public class MartBuilder extends JFrame {
 		this.pack();
 	}
 
+	public Dimension getMinimumSize() {
+		// An arbitrary minimum size.
+		return new Dimension(400, 400);
+	}
+
+	/**
+	 * Exits the application, but only with permission from the mart tabset.
+	 */
+	public void requestExitApp() {
+		// Only do it if the mart tabs say it's OK. They'll probably
+		// prompt the user on our behalf.
+		if (this.martTabSet.confirmCloseAllMarts())
+			System.exit(0);
+	}
+
 	/**
 	 * Display a nice friendly stack trace window.
 	 * 
@@ -154,46 +191,13 @@ public class MartBuilder extends JFrame {
 					.get("stackTraceTitle"), messageClass);
 	}
 
-	/**
-	 * Exits the application, but only with permission from the mart tabset.
-	 */
-	public void requestExitApp() {
-		// Only do it if the mart tabs say it's OK. They'll probably
-		// prompt the user on our behalf.
-		if (this.martTabSet.confirmCloseAllMarts())
-			System.exit(0);
-	}
-
-	public Dimension getMinimumSize() {
-		// An arbitrary minimum size.
-		return new Dimension(400, 400);
-	}
-
-	/**
-	 * Run this application and open the main window. The window stays open and
-	 * the application keeps running until the window is closed.
-	 * 
-	 * @param args
-	 *            any command line arguments that the user specified will be in
-	 *            this array.
-	 */
-	public static void main(final String[] args) {
-		// Start the application.
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				// Create it.
-				final MartBuilder mb = new MartBuilder();
-				// Centre it.
-				mb.setLocationRelativeTo(null);
-				// Open it.
-				mb.setVisible(true);
-			}
-		});
-	}
-
 	// This is the main menu bar.
 	private class MartBuilderMenuBar extends JMenuBar implements ActionListener {
 		private static final long serialVersionUID = 1;
+
+		private JMenuItem closeMart;
+
+		private JMenuItem exit;
 
 		private MartBuilder martBuilder;
 
@@ -201,15 +205,11 @@ public class MartBuilder extends JFrame {
 
 		private JMenuItem openMart;
 
+		private JMenuItem saveDDL;
+
 		private JMenuItem saveMart;
 
 		private JMenuItem saveMartAs;
-
-		private JMenuItem saveDDL;
-
-		private JMenuItem closeMart;
-
-		private JMenuItem exit;
 
 		/**
 		 * Constructor calls super then sets up our menu items.
@@ -305,6 +305,12 @@ public class MartBuilder extends JFrame {
 			// save and close will be disabled, and if the current mart is not
 			// modified, save will be disabled.
 			fileMenu.addMenuListener(new MenuListener() {
+				public void menuCanceled(final MenuEvent e) {
+				} // Interface requirement.
+
+				public void menuDeselected(final MenuEvent e) {
+				} // Interface requirement.
+
 				public void menuSelected(final MenuEvent e) {
 					boolean hasMart = true;
 					if (martBuilder.martTabSet.getSelectedMartTab() == null)
@@ -315,12 +321,6 @@ public class MartBuilder extends JFrame {
 					MartBuilderMenuBar.this.saveDDL.setEnabled(hasMart);
 					MartBuilderMenuBar.this.closeMart.setEnabled(hasMart);
 				}
-
-				public void menuDeselected(final MenuEvent e) {
-				} // Interface requirement.
-
-				public void menuCanceled(final MenuEvent e) {
-				} // Interface requirement.
 			});
 
 			// Adds the file menu to the menu bar.

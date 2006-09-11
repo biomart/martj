@@ -52,12 +52,10 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * dataset onto a set of masked relations.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.30, 29th August 2006
+ * @version 0.1.31, 11th September 2006
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
-	private MartTab martTab;
-
 	/**
 	 * This mouse adapter intercepts clicks on objects and enables them to
 	 * initiate drag-and-drop events, if nothing else on the mouse event queue
@@ -70,6 +68,8 @@ public class SchemaContext implements DiagramContext {
 			handler.exportAsDrag(c, e, TransferHandler.COPY);
 		}
 	};
+
+	private MartTab martTab;
 
 	/**
 	 * Creates a new context which will pass any menu actions onto the given
@@ -92,6 +92,60 @@ public class SchemaContext implements DiagramContext {
 		return this.martTab;
 	}
 
+	public void customiseAppearance(final JComponent component,
+			final Object object) {
+		// This bit removes a restricted outline from restricted tables.
+		if (object instanceof Table) {
+			final TableComponent tblcomp = (TableComponent) component;
+			tblcomp.setDotted(false);
+		}
+
+		// Relations get pretty colours if they are incorrect or handmade.
+		if (object instanceof Relation) {
+
+			// What relation is this?
+			final Relation relation = (Relation) object;
+
+			// Fade out all INFERRED_INCORRECT relations.
+			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
+				component.setForeground(RelationComponent.INCORRECT_COLOUR);
+
+			// Highlight all HANDMADE relations.
+			else if (relation.getStatus().equals(ComponentStatus.HANDMADE))
+				component.setForeground(RelationComponent.HANDMADE_COLOUR);
+
+			// All others are normal.
+			else
+				component.setForeground(RelationComponent.NORMAL_COLOUR);
+
+			// Do the stroke.
+			final RelationComponent relcomp = (RelationComponent) component;
+			relcomp.setDotted(false);
+		}
+
+		// Keys also get pretty colours for being incorrect or handmade.
+		else if (object instanceof Key) {
+
+			// What key is this?
+			final Key key = (Key) object;
+
+			// Fade out all INFERRED_INCORRECT relations.
+			if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
+				component.setForeground(KeyComponent.INCORRECT_COLOUR);
+
+			// Highlight all HANDMADE relations.
+			else if (key.getStatus().equals(ComponentStatus.HANDMADE))
+				component.setForeground(KeyComponent.HANDMADE_COLOUR);
+
+			// All others are normal.
+			else
+				component.setForeground(KeyComponent.NORMAL_COLOUR);
+
+			// Add drag-and-drop to all keys here.
+			component.addMouseListener(SchemaContext.dragAdapter);
+		}
+	}
+
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
 
@@ -102,6 +156,25 @@ public class SchemaContext implements DiagramContext {
 			// Add a separator if the menu is not empty.
 			if (contextMenu.getComponentCount() > 0)
 				contextMenu.addSeparator();
+			
+			// Gray out options if there are no schemas.
+			boolean grayOut = this.martTab.getSchemaTabSet().getTabCount()<=1;
+
+			// Menu option to suggest a bunch of datasets.
+			final JMenuItem suggest = new JMenuItem(Resources
+					.get("suggestDataSetsTitle"));
+			suggest.setMnemonic(Resources.get("suggestDataSetsMnemonic")
+					.charAt(0));
+			suggest.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaContext.this.martTab.getDataSetTabSet()
+							.requestSuggestDataSets(null);
+				}
+			});
+			if (grayOut) suggest.setEnabled(false);
+			contextMenu.add(suggest);
+			
+			contextMenu.addSeparator();
 
 			// Synchronise all schemas in the mart.
 			final JMenuItem syncAll = new JMenuItem(
@@ -117,9 +190,8 @@ public class SchemaContext implements DiagramContext {
 							.requestSynchroniseAllSchemas();
 				}
 			});
+			if (grayOut) syncAll.setEnabled(false);
 			contextMenu.add(syncAll);
-
-			contextMenu.addSeparator();
 
 			// Add a new schema to the mart.
 			final JMenuItem add = new JMenuItem(
@@ -135,21 +207,6 @@ public class SchemaContext implements DiagramContext {
 				}
 			});
 			contextMenu.add(add);
-
-			contextMenu.addSeparator();
-
-			// Menu option to suggest a bunch of datasets.
-			final JMenuItem suggest = new JMenuItem(Resources
-					.get("suggestDataSetsTitle"));
-			suggest.setMnemonic(Resources.get("suggestDataSetsMnemonic")
-					.charAt(0));
-			suggest.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getDataSetTabSet()
-							.requestSuggestDataSets(null);
-				}
-			});
-			contextMenu.add(suggest);
 		}
 
 		// Table objects have their own menus too.
@@ -161,21 +218,6 @@ public class SchemaContext implements DiagramContext {
 
 			// Work out what table we are using.
 			final Table table = (Table) object;
-
-			// Show the first 10 rows on a table.
-			final JMenuItem showTen = new JMenuItem(Resources
-					.get("showFirstTenRowsTitle"));
-			showTen.setMnemonic(Resources.get("showFirstTenRowsMnemonic")
-					.charAt(0));
-			showTen.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.getMartTab().getSchemaTabSet()
-							.requestShowRows(table, 0, 10);
-				}
-			});
-			contextMenu.add(showTen);
-
-			contextMenu.addSeparator();
 
 			// Menu option to suggest a bunch of datasets based around that
 			// table.
@@ -192,6 +234,21 @@ public class SchemaContext implements DiagramContext {
 			contextMenu.add(suggest);
 
 			// Separator.
+			contextMenu.addSeparator();
+
+			// Show the first 10 rows on a table.
+			final JMenuItem showTen = new JMenuItem(Resources
+					.get("showFirstTenRowsTitle"));
+			showTen.setMnemonic(Resources.get("showFirstTenRowsMnemonic")
+					.charAt(0));
+			showTen.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaContext.this.getMartTab().getSchemaTabSet()
+							.requestShowRows(table, 0, 10);
+				}
+			});
+			contextMenu.add(showTen);
+
 			contextMenu.addSeparator();
 
 			// Menu item to create a primary key. If it already has one, disable
@@ -231,6 +288,21 @@ public class SchemaContext implements DiagramContext {
 
 			// What schema is this?
 			final Schema schema = (Schema) object;
+
+			// Menu option to suggest a bunch of datasets.
+			final JMenuItem suggest = new JMenuItem(Resources
+					.get("suggestDataSetsTitle"));
+			suggest.setMnemonic(Resources.get("suggestDataSetsMnemonic")
+					.charAt(0));
+			suggest.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaContext.this.martTab.getDataSetTabSet()
+							.requestSuggestDataSets(null);
+				}
+			});
+			contextMenu.add(suggest);
+
+			contextMenu.addSeparator();
 
 			// Add an option to synchronise this schema against it's datasource
 			// or database.
@@ -355,21 +427,6 @@ public class SchemaContext implements DiagramContext {
 					}
 				});
 				contextMenu.add(addToGroup);
-
-				contextMenu.addSeparator();
-
-				// Menu option to suggest a bunch of datasets.
-				final JMenuItem suggest = new JMenuItem(Resources
-						.get("suggestDataSetsTitle"));
-				suggest.setMnemonic(Resources.get("suggestDataSetsMnemonic")
-						.charAt(0));
-				suggest.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						SchemaContext.this.martTab.getDataSetTabSet()
-								.requestSuggestDataSets(null);
-					}
-				});
-				contextMenu.add(suggest);
 			}
 		}
 
@@ -615,60 +672,6 @@ public class SchemaContext implements DiagramContext {
 			// Columns just show their table menus.
 			final Table table = ((Column) object).getTable();
 			this.populateContextMenu(contextMenu, table);
-		}
-	}
-
-	public void customiseAppearance(final JComponent component,
-			final Object object) {
-		// This bit removes a restricted outline from restricted tables.
-		if (object instanceof Table) {
-			final TableComponent tblcomp = (TableComponent) component;
-			tblcomp.setDotted(false);
-		}
-
-		// Relations get pretty colours if they are incorrect or handmade.
-		if (object instanceof Relation) {
-
-			// What relation is this?
-			final Relation relation = (Relation) object;
-
-			// Fade out all INFERRED_INCORRECT relations.
-			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
-				component.setForeground(RelationComponent.INCORRECT_COLOUR);
-
-			// Highlight all HANDMADE relations.
-			else if (relation.getStatus().equals(ComponentStatus.HANDMADE))
-				component.setForeground(RelationComponent.HANDMADE_COLOUR);
-
-			// All others are normal.
-			else
-				component.setForeground(RelationComponent.NORMAL_COLOUR);
-
-			// Do the stroke.
-			final RelationComponent relcomp = (RelationComponent) component;
-			relcomp.setDotted(false);
-		}
-
-		// Keys also get pretty colours for being incorrect or handmade.
-		else if (object instanceof Key) {
-
-			// What key is this?
-			final Key key = (Key) object;
-
-			// Fade out all INFERRED_INCORRECT relations.
-			if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
-				component.setForeground(KeyComponent.INCORRECT_COLOUR);
-
-			// Highlight all HANDMADE relations.
-			else if (key.getStatus().equals(ComponentStatus.HANDMADE))
-				component.setForeground(KeyComponent.HANDMADE_COLOUR);
-
-			// All others are normal.
-			else
-				component.setForeground(KeyComponent.NORMAL_COLOUR);
-
-			// Add drag-and-drop to all keys here.
-			component.addMouseListener(SchemaContext.dragAdapter);
 		}
 	}
 }

@@ -67,9 +67,19 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 public class SaveDDLDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
+	private Collection datasets;
+
+	private JList datasetsList;
+
+	private JComboBox granularity;
+
+	private JCheckBox includeComments;
+
 	private MartTab martTab;
 
-	private Collection datasets;
+	private JTextField targetSchemaName;
+
+	private JCheckBox viewDDL;
 
 	private JFileChooser zipFileChooser;
 
@@ -77,17 +87,7 @@ public class SaveDDLDialog extends JDialog {
 
 	private JTextField zipFileLocation;
 
-	private JTextField targetSchemaName;
-
-	private JList datasetsList;
-
-	private JComboBox granularity;
-
 	private JButton zipFileLocationButton;
-
-	private JCheckBox includeComments;
-
-	private JCheckBox viewDDL;
 
 	/**
 	 * Creates (but does not display) a dialog centred on the given tab, which
@@ -340,42 +340,6 @@ public class SaveDDLDialog extends JDialog {
 		this.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
 	}
 
-	private boolean isEmpty(final String string) {
-		// Strings are empty if they are null or all whitespace.
-		return string == null || string.trim().length() == 0;
-	}
-
-	private boolean validateFields() {
-		// List of messages to display, if any are necessary.
-		final List messages = new ArrayList();
-
-		// Must have a target schema.
-		if (this.isEmpty(this.targetSchemaName.getText()))
-			messages.add(Resources.get("fieldIsEmpty", Resources
-					.get("targetSchema")));
-
-		// Must have an output file.
-		if (!this.viewDDL.isSelected()
-				&& this.isEmpty(this.zipFileLocation.getText()))
-			messages.add(Resources.get("fieldIsEmpty", Resources
-					.get("saveDDLFileLocation")));
-
-		// Must have at least one dataset selected.
-		if (this.datasetsList.getSelectedValues().length == 0)
-			messages.add(Resources.get("fieldIsEmpty", Resources
-					.get("selectedDataSets")));
-
-		// Any messages to display? Show them.
-		if (!messages.isEmpty())
-			JOptionPane.showMessageDialog(this,
-					messages.toArray(new String[0]), Resources
-							.get("validationTitle"),
-					JOptionPane.INFORMATION_MESSAGE);
-
-		// Validation succeeds if there are no messages.
-		return messages.isEmpty();
-	}
-
 	private void createDDL() {
 		final List selectedDataSets = Arrays.asList(this.datasetsList
 				.getSelectedValues());
@@ -428,5 +392,41 @@ public class SaveDDLDialog extends JDialog {
 		// Show the output.
 		JOptionPane.showMessageDialog(this.martTab, editorScrollPane, Resources
 				.get("mcViewDDLWindowTitle"), JOptionPane.INFORMATION_MESSAGE);
+	}
+
+	private boolean isEmpty(final String string) {
+		// Strings are empty if they are null or all whitespace.
+		return string == null || string.trim().length() == 0;
+	}
+
+	private boolean validateFields() {
+		// List of messages to display, if any are necessary.
+		final List messages = new ArrayList();
+
+		// Must have a target schema.
+		if (this.isEmpty(this.targetSchemaName.getText()))
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("targetSchema")));
+
+		// Must have an output file.
+		if (!this.viewDDL.isSelected()
+				&& this.isEmpty(this.zipFileLocation.getText()))
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("saveDDLFileLocation")));
+
+		// Must have at least one dataset selected.
+		if (this.datasetsList.getSelectedValues().length == 0)
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("selectedDataSets")));
+
+		// Any messages to display? Show them.
+		if (!messages.isEmpty())
+			JOptionPane.showMessageDialog(this,
+					messages.toArray(new String[0]), Resources
+							.get("validationTitle"),
+					JOptionPane.INFORMATION_MESSAGE);
+
+		// Validation succeeds if there are no messages.
+		return messages.isEmpty();
 	}
 }

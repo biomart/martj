@@ -42,30 +42,12 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 public class SchemaDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
 
-	private Schema schema;
-
 	/**
 	 * The background colour to use for this diagram.
 	 */
 	public static final Color BACKGROUND_COLOUR = Color.WHITE;
 
-	/**
-	 * Creates a new diagram that displays the tables and relations inside a
-	 * specific schema. Uses a default layout specified by {@link Diagram}.
-	 * 
-	 * @param martTab
-	 *            the tab within which this diagram appears.
-	 * @param schema
-	 *            the schema to draw in this diagram.
-	 */
-	public SchemaDiagram(final MartTab martTab, final Schema schema) {
-		// Call the general diagram constructor first.
-		super(martTab);
-
-		// Remember the schema, then lay it out.
-		this.schema = schema;
-		this.recalculateDiagram();
-	}
+	private Schema schema;
 
 	/**
 	 * Creates a new diagram that displays the tables and relations inside a
@@ -92,12 +74,21 @@ public class SchemaDiagram extends Diagram {
 	}
 
 	/**
-	 * Returns the schema that this diagram represents.
+	 * Creates a new diagram that displays the tables and relations inside a
+	 * specific schema. Uses a default layout specified by {@link Diagram}.
 	 * 
-	 * @return the schema this diagram represents.
+	 * @param martTab
+	 *            the tab within which this diagram appears.
+	 * @param schema
+	 *            the schema to draw in this diagram.
 	 */
-	public Schema getSchema() {
-		return this.schema;
+	public SchemaDiagram(final MartTab martTab, final Schema schema) {
+		// Call the general diagram constructor first.
+		super(martTab);
+
+		// Remember the schema, then lay it out.
+		this.schema = schema;
+		this.recalculateDiagram();
 	}
 
 	protected Object getContextMenuBaseObject() {
@@ -106,6 +97,11 @@ public class SchemaDiagram extends Diagram {
 		// background will be treated as though the schema object was clicked
 		// on.
 		return this.getSchema();
+	}
+
+	protected void updateAppearance() {
+		// Set the background.
+		this.setBackground(SchemaDiagram.BACKGROUND_COLOUR);
 	}
 
 	public void doRecalculateDiagram() {
@@ -133,9 +129,13 @@ public class SchemaDiagram extends Diagram {
 		// Resize the diagram to fit our new components.
 		this.resizeDiagram();
 	}
-	
-	protected void updateAppearance() {
-		// Set the background.
-		this.setBackground(SchemaDiagram.BACKGROUND_COLOUR);
+
+	/**
+	 * Returns the schema that this diagram represents.
+	 * 
+	 * @return the schema this diagram represents.
+	 */
+	public Schema getSchema() {
+		return this.schema;
 	}
 }

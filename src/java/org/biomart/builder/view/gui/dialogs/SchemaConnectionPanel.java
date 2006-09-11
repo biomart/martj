@@ -18,6 +18,8 @@
 
 package org.biomart.builder.view.gui.dialogs;
 
+import java.util.Properties;
+
 import javax.swing.JPanel;
 
 import org.biomart.builder.model.Schema;
@@ -29,20 +31,10 @@ import org.biomart.builder.model.Schema;
  * input, and can modify or create schemas based on the input.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 17th July 2006
+ * @version 0.1.3, 11th September 2006
  * @since 0.1
  */
 public abstract class SchemaConnectionPanel extends JPanel {
-	/**
-	 * Modifies a schema based on the values in the panel's fields.
-	 * 
-	 * @param schema
-	 *            the schema to modify.
-	 * @return the modified schema. It will return null if modification failed,
-	 *         eg. the currently field values are not valid.
-	 */
-	public abstract Schema modifySchema(Schema schema);
-
 	/**
 	 * Creates a new schema based on the values in the panel's fields.
 	 * 
@@ -54,12 +46,14 @@ public abstract class SchemaConnectionPanel extends JPanel {
 	public abstract Schema createSchema(String schemaName);
 
 	/**
-	 * Validates the current values of the fields in the panel.
+	 * Modifies a schema based on the values in the panel's fields.
 	 * 
-	 * @return <tt>true</tt> if all is well, <tt>false</tt> if not, and may
-	 *         possible pop up some messages for the user to read en route.
+	 * @param schema
+	 *            the schema to modify.
+	 * @return the modified schema. It will return null if modification failed,
+	 *         eg. the currently field values are not valid.
 	 */
-	public abstract boolean validateFields();
+	public abstract Schema modifySchema(Schema schema);
 
 	/**
 	 * Resets the fields based on a given template. Specify <tt>null</tt> for
@@ -69,4 +63,27 @@ public abstract class SchemaConnectionPanel extends JPanel {
 	 *            the template to reset the fields for.
 	 */
 	public abstract void resetFields(Schema template);
+
+	/**
+	 * Validates the current values of the fields in the panel.
+	 * 
+	 * @return <tt>true</tt> if all is well, <tt>false</tt> if not, and may
+	 *         possible pop up some messages for the user to read en route.
+	 */
+	public abstract boolean validateFields();
+	
+	/**
+	 * Using a properties object from history that matches this class, copy
+	 * settings and populate the dialog from it.
+	 * 
+	 * @param template the properties to copy into the dialog.
+	 */
+	public abstract void copySettingsFrom(final Properties template);
+	
+	/**
+	 * Work out what class of {@link Schema} objects this panel edits.
+	 * 
+	 * @return the type of {@link Schema} objects this panel edits.
+	 */
+	public abstract Class getSchemaClass();
 }

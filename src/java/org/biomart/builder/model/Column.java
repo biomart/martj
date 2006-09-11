@@ -54,6 +54,13 @@ public interface Column extends Comparable {
 	public String getOriginalName();
 
 	/**
+	 * Retrieve the parent table of this column.
+	 * 
+	 * @return the parent table of this column.
+	 */
+	public Table getTable();
+
+	/**
 	 * Use this to rename a column. The table will be informed of the change as
 	 * well.
 	 * 
@@ -72,22 +79,15 @@ public interface Column extends Comparable {
 	public void setOriginalName(String newName);
 
 	/**
-	 * Retrieve the parent table of this column.
-	 * 
-	 * @return the parent table of this column.
-	 */
-	public Table getTable();
-
-	/**
 	 * A generic implementation which provides the basic functionality required
 	 * for a column to function.
 	 */
 	public class GenericColumn implements Column {
-		private final Table table;
+		private String name;
 
 		private String originalName;
 
-		private String name;
+		private final Table table;
 
 		/**
 		 * This constructor creates a column and remembers the name and parent
@@ -123,6 +123,18 @@ public interface Column extends Comparable {
 			}
 		}
 
+		public int compareTo(final Object o) throws ClassCastException {
+			final Column c = (Column) o;
+			return this.toString().compareTo(c.toString());
+		}
+
+		public boolean equals(final Object o) {
+			if (o == null || !(o instanceof Column))
+				return false;
+			final Column c = (Column) o;
+			return c.toString().equals(this.toString());
+		}
+
 		public String getName() {
 			return this.name;
 		}
@@ -133,6 +145,10 @@ public interface Column extends Comparable {
 
 		public Table getTable() {
 			return this.table;
+		}
+
+		public int hashCode() {
+			return this.toString().hashCode();
 		}
 
 		public void setName(String newName) {
@@ -159,22 +175,6 @@ public interface Column extends Comparable {
 
 		public String toString() {
 			return this.getTable().toString() + ":" + this.getName();
-		}
-
-		public int hashCode() {
-			return this.toString().hashCode();
-		}
-
-		public int compareTo(final Object o) throws ClassCastException {
-			final Column c = (Column) o;
-			return this.toString().compareTo(c.toString());
-		}
-
-		public boolean equals(final Object o) {
-			if (o == null || !(o instanceof Column))
-				return false;
-			final Column c = (Column) o;
-			return c.toString().equals(this.toString());
 		}
 	}
 }

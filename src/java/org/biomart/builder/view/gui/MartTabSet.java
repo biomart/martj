@@ -54,7 +54,7 @@ import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
  * of the mart inside it, including all datasets and schemas.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.15, 29th August 2006
+ * @version 0.1.16, 11th September 2006
  * @since 0.1
  */
 public class MartTabSet extends JTabbedPane {
@@ -62,13 +62,13 @@ public class MartTabSet extends JTabbedPane {
 
 	private MartBuilder martBuilder;
 
-	private JFileChooser xmlFileChooser;
-
 	// Mart hashcodes don't change, so it is safe to use a Map.
 	private Map martModifiedStatus;
 
 	// Mart hashcodes don't change, so it is safe to use a Map.
 	private Map martXMLFile;
+
+	private JFileChooser xmlFileChooser;
 
 	/**
 	 * Creates a new set of tabs and associates them with a given MartBuilder
@@ -118,62 +118,52 @@ public class MartTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Retrieves the parent MartBuilder GUI.
+	 * Adds a new tab to the tabset representing a new mart.
 	 * 
-	 * @return the parent mart builder GUI.
+	 * @param mart
+	 *            the mart to put in the tab.
+	 * @param martXMLFile
+	 *            the file the mart came from. May be null if the mart is new.
+	 * @param initialState
+	 *            <tt>true</tt> if the mart should start out modified,
+	 *            <tt>false</tt> if not.
 	 */
-	public MartBuilder getMartBuilder() {
-		return this.martBuilder;
+	private void addMartTab(final Mart mart, final File martXMLFile,
+			final boolean initialState) {
+		this.martXMLFile.put(mart, martXMLFile);
+		this.martModifiedStatus.put(mart, Boolean.valueOf(initialState));
+		final MartTab martTab = new MartTab(this, mart);
+		this.addTab(this.suggestTabName(mart), martTab);
+
+		// Select the tab we just created.
+		this.setSelectedIndex(this.getTabCount() - 1);
+
+		// Within that tab, select the all-schemas and all-datasets tabs.
+		martTab.getDataSetTabSet().setSelectedIndex(0);
+		martTab.getSchemaTabSet().setSelectedIndex(0);
 	}
 
 	/**
-	 * Works out which mart tab is selected, and return it.
+	 * Construct a context menu for a given mart tab.
 	 * 
-	 * @return the currently selected mart tab, or null if none is selected.
+	 * @return the popup menu.
 	 */
-	public MartTab getSelectedMartTab() {
-		return (MartTab) this.getSelectedComponent();
-	}
+	private JPopupMenu getMartTabContextMenu() {
+		final JPopupMenu contextMenu = new JPopupMenu();
 
-	/**
-	 * Runs the given {@link ConstructorRunnable} and monitors it's progress.
-	 * 
-	 * @param constructor
-	 *            the constructor that will build a mart.
-	 */
-	public void requestMonitorConstructorRunnable(
-			final ConstructorRunnable constructor) {
-		// Create a progress monitor.
-		final ProgressMonitor progressMonitor = new ProgressMonitor(this
-				.getMartBuilder(), Resources.get("creatingMart"), "", 0, 100);
-		progressMonitor.setProgress(0); // Start with 0% complete.
-		progressMonitor.setMillisToPopup(0); // Open immediately.
-
-		// Start the construction in a thread. It does not need to be
-		// Swing-thread-safe because it will never access the GUI. All
-		// GUI interaction is done through the Timer below.
-		final Thread thread = new Thread(constructor);
-		thread.start();
-
-		// Create a timer thread that will update the progress dialog.
-		// We use the Swing Timer to make it Swing-thread-safe. (1000 millis
-		// equals 1 second.)
-		final Timer timer = new Timer(300, null);
-		timer.setInitialDelay(0); // Start immediately upon request.
-		timer.setCoalesce(true); // Coalesce delayed events.
-		timer.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						MartTabSet.this.monitorConstructionProgress(thread,
-								timer, progressMonitor, constructor);
-					}
-				});
+		// The close option closes the selected mart, confirming first
+		// that it's OK to do so.
+		final JMenuItem close = new JMenuItem(Resources.get("closeMartTitle"));
+		close.setMnemonic(Resources.get("closeMartMnemonic").charAt(0));
+		close.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				MartTabSet.this.confirmCloseMart();
 			}
 		});
+		contextMenu.add(close);
 
-		// Start the timer.
-		timer.start();
+		// Return the menu.
+		return contextMenu;
 	}
 
 	private void monitorConstructionProgress(final Thread thread,
@@ -204,6 +194,47 @@ public class MartTabSet extends JTabbedPane {
 						.get("martConstructionComplete"), Resources
 						.get("messageTitle"), JOptionPane.INFORMATION_MESSAGE);
 		}
+	}
+
+	/**
+	 * Suggests a tab name based on a filename.
+	 */
+	private String suggestTabName(final Mart mart) {
+
+		// Start with "unsaved".
+		String basename = Resources.get("unsavedMart");
+
+		// See if this mart came from a file. If so, use the filename.
+		final File filename = (File) this.martXMLFile.get(mart);
+		if (filename != null)
+			basename = filename.getName();
+
+		// If it's modified, append a "*" to make it obvious.
+		return basename
+				+ (this.martModifiedStatus.get(mart).equals(Boolean.TRUE) ? " *"
+						: "");
+	}
+
+	protected void processMouseEvent(final MouseEvent evt) {
+		boolean eventProcessed = false;
+		// Is it a right-click?
+		if (evt.isPopupTrigger()) {
+			// Where was the click?
+			final int selectedIndex = this.indexAtLocation(evt.getX(), evt
+					.getY());
+			// Did we actually click on any tab?
+			if (selectedIndex >= 0) {
+				// Select that tab.
+				this.setSelectedIndex(selectedIndex);
+				// Pop up the context menu for it.
+				this.getMartTabContextMenu().show(this, evt.getX(), evt.getY());
+				// We've processed the mouse event.
+				eventProcessed = true;
+			}
+		}
+		// Pass it on up if we're not interested.
+		if (!eventProcessed)
+			super.processMouseEvent(evt);
 	}
 
 	/**
@@ -267,6 +298,72 @@ public class MartTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Retrieves the parent MartBuilder GUI.
+	 * 
+	 * @return the parent mart builder GUI.
+	 */
+	public MartBuilder getMartBuilder() {
+		return this.martBuilder;
+	}
+
+	/**
+	 * Gets whether any currently open mart is modified.
+	 * 
+	 * @return <tt>true</tt> if any of them are, <tt>false</tt> if not.
+	 */
+	public boolean getModifiedStatus() {
+		return this.martModifiedStatus.values().contains(Boolean.TRUE);
+	}
+
+	/**
+	 * Works out which mart tab is selected, and return it.
+	 * 
+	 * @return the currently selected mart tab, or null if none is selected.
+	 */
+	public MartTab getSelectedMartTab() {
+		return (MartTab) this.getSelectedComponent();
+	}
+
+	/**
+	 * Loads a schema from a user-specified file(s), by popping up a dialog
+	 * allowing them to choose the file(s).
+	 */
+	public void loadMart() {
+		// Open the file chooser.
+		if (this.xmlFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+			// Find out which files they selected.
+			final File[] loadFiles = this.xmlFileChooser.getSelectedFiles();
+
+			// If they selected any at all, load them in turn.
+			if (loadFiles != null)
+				// In the background, load them in turn.
+				LongProcess.run(new Runnable() {
+					public void run() {
+						try {
+							for (int i = 0; i < loadFiles.length; i++) {
+								final File file = loadFiles[i];
+								final Mart mart = MartBuilderXML.load(file);
+								SwingUtilities.invokeLater(new Runnable() {
+									public void run() {
+										MartTabSet.this.addMartTab(mart, file,
+												false);
+									}
+								});
+							}
+						} catch (final Throwable t) {
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									MartTabSet.this.martBuilder
+											.showStackTrace(t);
+								}
+							});
+						}
+					}
+				});
+		}
+	}
+
+	/**
 	 * On a request to create DDL for the current mart, open the DDL creation
 	 * window with all the datasets for this mart selected.
 	 */
@@ -285,80 +382,44 @@ public class MartTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Sets the current modified status. This applies to the currently selected
-	 * mart.
+	 * Runs the given {@link ConstructorRunnable} and monitors it's progress.
 	 * 
-	 * @param status
-	 *            <tt>true</tt> for modified, <tt>false</tt> for unmodified.
+	 * @param constructor
+	 *            the constructor that will build a mart.
 	 */
-	public void setModifiedStatus(final boolean status) {
-		// If nothing selected, ignore it.
-		if (this.getSelectedMartTab() == null)
-			return;
+	public void requestMonitorConstructorRunnable(
+			final ConstructorRunnable constructor) {
+		// Create a progress monitor.
+		final ProgressMonitor progressMonitor = new ProgressMonitor(this
+				.getMartBuilder(), Resources.get("creatingMart"), "", 0, 100);
+		progressMonitor.setProgress(0); // Start with 0% complete.
+		progressMonitor.setMillisToPopup(0); // Open immediately.
 
-		// Work out the current mart.
-		final Mart currentMart = this.getSelectedMartTab().getMart();
+		// Start the construction in a thread. It does not need to be
+		// Swing-thread-safe because it will never access the GUI. All
+		// GUI interaction is done through the Timer below.
+		final Thread thread = new Thread(constructor);
+		thread.start();
 
-		// Update the status for it.
-		this.martModifiedStatus.put(currentMart, Boolean.valueOf(status));
+		// Create a timer thread that will update the progress dialog.
+		// We use the Swing Timer to make it Swing-thread-safe. (1000 millis
+		// equals 1 second.)
+		final Timer timer = new Timer(300, null);
+		timer.setInitialDelay(0); // Start immediately upon request.
+		timer.setCoalesce(true); // Coalesce delayed events.
+		timer.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						MartTabSet.this.monitorConstructionProgress(thread,
+								timer, progressMonitor, constructor);
+					}
+				});
+			}
+		});
 
-		// Update the tab title to indicate modification status.
-		this.setTitleAt(this.getSelectedIndex(), this
-				.suggestTabName(currentMart));
-	}
-
-	/**
-	 * Gets whether any currently open mart is modified.
-	 * 
-	 * @return <tt>true</tt> if any of them are, <tt>false</tt> if not.
-	 */
-	public boolean getModifiedStatus() {
-		return this.martModifiedStatus.values().contains(Boolean.TRUE);
-	}
-
-	/**
-	 * Suggests a tab name based on a filename.
-	 */
-	private String suggestTabName(final Mart mart) {
-
-		// Start with "unsaved".
-		String basename = Resources.get("unsavedMart");
-
-		// See if this mart came from a file. If so, use the filename.
-		final File filename = (File) this.martXMLFile.get(mart);
-		if (filename != null)
-			basename = filename.getName();
-
-		// If it's modified, append a "*" to make it obvious.
-		return basename
-				+ (this.martModifiedStatus.get(mart).equals(Boolean.TRUE) ? " *"
-						: "");
-	}
-
-	/**
-	 * Adds a new tab to the tabset representing a new mart.
-	 * 
-	 * @param mart
-	 *            the mart to put in the tab.
-	 * @param martXMLFile
-	 *            the file the mart came from. May be null if the mart is new.
-	 * @param initialState
-	 *            <tt>true</tt> if the mart should start out modified,
-	 *            <tt>false</tt> if not.
-	 */
-	private void addMartTab(final Mart mart, final File martXMLFile,
-			final boolean initialState) {
-		this.martXMLFile.put(mart, martXMLFile);
-		this.martModifiedStatus.put(mart, Boolean.valueOf(initialState));
-		final MartTab martTab = new MartTab(this, mart);
-		this.addTab(this.suggestTabName(mart), martTab);
-
-		// Select the tab we just created.
-		this.setSelectedIndex(this.getTabCount() - 1);
-
-		// Within that tab, select the all-schemas and all-datasets tabs.
-		martTab.getDataSetTabSet().setSelectedIndex(0);
-		martTab.getSchemaTabSet().setSelectedIndex(0);
+		// Start the timer.
+		timer.start();
 	}
 
 	/**
@@ -437,87 +498,26 @@ public class MartTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Loads a schema from a user-specified file(s), by popping up a dialog
-	 * allowing them to choose the file(s).
-	 */
-	public void loadMart() {
-		// Open the file chooser.
-		if (this.xmlFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-			// Find out which files they selected.
-			final File[] loadFiles = this.xmlFileChooser.getSelectedFiles();
-
-			// If they selected any at all, load them in turn.
-			if (loadFiles != null)
-				// In the background, load them in turn.
-				LongProcess.run(new Runnable() {
-					public void run() {
-						try {
-							for (int i = 0; i < loadFiles.length; i++) {
-								final File file = loadFiles[i];
-								final Mart mart = MartBuilderXML.load(file);
-								SwingUtilities.invokeLater(new Runnable() {
-									public void run() {
-										MartTabSet.this.addMartTab(mart, file,
-												false);
-									}
-								});
-							}
-						} catch (final Throwable t) {
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									MartTabSet.this.martBuilder
-											.showStackTrace(t);
-								}
-							});
-						}
-					}
-				});
-		}
-	}
-
-	/**
-	 * Construct a context menu for a given mart tab.
+	 * Sets the current modified status. This applies to the currently selected
+	 * mart.
 	 * 
-	 * @return the popup menu.
+	 * @param status
+	 *            <tt>true</tt> for modified, <tt>false</tt> for unmodified.
 	 */
-	private JPopupMenu getMartTabContextMenu() {
-		final JPopupMenu contextMenu = new JPopupMenu();
+	public void setModifiedStatus(final boolean status) {
+		// If nothing selected, ignore it.
+		if (this.getSelectedMartTab() == null)
+			return;
 
-		// The close option closes the selected mart, confirming first
-		// that it's OK to do so.
-		final JMenuItem close = new JMenuItem(Resources.get("closeMartTitle"));
-		close.setMnemonic(Resources.get("closeMartMnemonic").charAt(0));
-		close.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent evt) {
-				MartTabSet.this.confirmCloseMart();
-			}
-		});
-		contextMenu.add(close);
+		// Work out the current mart.
+		final Mart currentMart = this.getSelectedMartTab().getMart();
 
-		// Return the menu.
-		return contextMenu;
-	}
+		// Update the status for it.
+		this.martModifiedStatus.put(currentMart, Boolean.valueOf(status));
 
-	protected void processMouseEvent(final MouseEvent evt) {
-		boolean eventProcessed = false;
-		// Is it a right-click?
-		if (evt.isPopupTrigger()) {
-			// Where was the click?
-			final int selectedIndex = this.indexAtLocation(evt.getX(), evt
-					.getY());
-			// Did we actually click on any tab?
-			if (selectedIndex >= 0) {
-				// Select that tab.
-				this.setSelectedIndex(selectedIndex);
-				// Pop up the context menu for it.
-				this.getMartTabContextMenu().show(this, evt.getX(), evt.getY());
-				// We've processed the mouse event.
-				eventProcessed = true;
-			}
-		}
-		// Pass it on up if we're not interested.
-		if (!eventProcessed)
-			super.processMouseEvent(evt);
+		// Update the tab title to indicate modification status.
+		this.setTitleAt(this.getSelectedIndex(), this
+				.suggestTabName(currentMart));
 	}
 
 	/**
@@ -527,19 +527,19 @@ public class MartTabSet extends JTabbedPane {
 	public class MartTab extends JPanel {
 		private static final long serialVersionUID = 1;
 
-		private MartTabSet martTabSet;
+		private JRadioButton datasetButton;
 
 		private DataSetTabSet datasetTabSet;
 
-		private SchemaTabSet schemaTabSet;
+		private JPanel displayArea;
 
 		private Mart mart;
 
+		private MartTabSet martTabSet;
+
 		private JRadioButton schemaButton;
 
-		private JRadioButton datasetButton;
-
-		private JPanel displayArea;
+		private SchemaTabSet schemaTabSet;
 
 		/**
 		 * Constructs a new tab in the tabbed pane that represents the given
@@ -574,12 +574,11 @@ public class MartTabSet extends JTabbedPane {
 			// whilst we weren't looking.
 			this.schemaButton = new JRadioButton(Resources
 					.get("schemaEditorButtonName"));
-			final MartTab ourselves = this;
 			this.schemaButton.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent e) {
 					if (e.getSource() == MartTab.this.schemaButton) {
 						final SchemaContext context = new SchemaContext(
-								ourselves);
+								MartTab.this);
 						MartTab.this.schemaTabSet.setDiagramContext(context);
 						MartTab.this.displayArea.add(MartTab.this.schemaTabSet,
 								"SCHEMA_EDITOR_CARD");
@@ -608,9 +607,6 @@ public class MartTabSet extends JTabbedPane {
 								.getLayout();
 						cards.show(MartTab.this.displayArea,
 								"DATASET_EDITOR_CARD");
-						if (MartTab.this.datasetTabSet.getSelectedDataSetTab() != null)
-							MartTab.this.datasetTabSet.getSelectedDataSetTab()
-									.attachSchemaTabSet();
 					}
 				}
 			});
@@ -632,30 +628,13 @@ public class MartTabSet extends JTabbedPane {
 		}
 
 		/**
-		 * Fakes a click on the schema editor radio button.
-		 */
-		public void selectSchemaEditor() {
-			// May get called before button has been created.
-			if (this.schemaButton != null && !this.schemaButton.isSelected())
-				this.schemaButton.doClick();
-		}
-
-		/**
-		 * Fakes a click on the dataset editor radio button.
-		 */
-		public void selectDataSetEditor() {
-			// May get called before button has been created.
-			if (this.datasetButton != null && !this.datasetButton.isSelected())
-				this.datasetButton.doClick();
-		}
-
-		/**
-		 * Find out what tabbed pane set we belong to.
+		 * Obtain the tabbed pane set inside this one that represents the
+		 * datasets in this mart.
 		 * 
-		 * @return the tabbed pane set we belong to.
+		 * @return the tabbed pane set showing the datasets in this mart.
 		 */
-		public MartTabSet getMartTabSet() {
-			return this.martTabSet;
+		public DataSetTabSet getDataSetTabSet() {
+			return this.datasetTabSet;
 		}
 
 		/**
@@ -668,13 +647,12 @@ public class MartTabSet extends JTabbedPane {
 		}
 
 		/**
-		 * Obtain the tabbed pane set inside this one that represents the
-		 * datasets in this mart.
+		 * Find out what tabbed pane set we belong to.
 		 * 
-		 * @return the tabbed pane set showing the datasets in this mart.
+		 * @return the tabbed pane set we belong to.
 		 */
-		public DataSetTabSet getDataSetTabSet() {
-			return this.datasetTabSet;
+		public MartTabSet getMartTabSet() {
+			return this.martTabSet;
 		}
 
 		/**
@@ -685,6 +663,24 @@ public class MartTabSet extends JTabbedPane {
 		 */
 		public SchemaTabSet getSchemaTabSet() {
 			return this.schemaTabSet;
+		}
+
+		/**
+		 * Fakes a click on the dataset editor radio button.
+		 */
+		public void selectDataSetEditor() {
+			// May get called before button has been created.
+			if (this.datasetButton != null && !this.datasetButton.isSelected())
+				this.datasetButton.doClick();
+		}
+
+		/**
+		 * Fakes a click on the schema editor radio button.
+		 */
+		public void selectSchemaEditor() {
+			// May get called before button has been created.
+			if (this.schemaButton != null && !this.schemaButton.isSelected())
+				this.schemaButton.doClick();
 		}
 	}
 }

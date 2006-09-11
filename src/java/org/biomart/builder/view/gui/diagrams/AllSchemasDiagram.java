@@ -61,6 +61,11 @@ public class AllSchemasDiagram extends Diagram {
 		this.recalculateDiagram();
 	}
 
+	protected void updateAppearance() {
+		// Set the background.
+		this.setBackground(AllSchemasDiagram.BACKGROUND_COLOUR);
+	}
+
 	public void doRecalculateDiagram() {
 		// Remove all existing components.
 		this.removeAll();
@@ -89,10 +94,5 @@ public class AllSchemasDiagram extends Diagram {
 
 		// Resize the diagram to fit the components.
 		this.resizeDiagram();
-	}
-	
-	protected void updateAppearance() {
-		// Set the background.
-		this.setBackground(AllSchemasDiagram.BACKGROUND_COLOUR);
 	}
 }

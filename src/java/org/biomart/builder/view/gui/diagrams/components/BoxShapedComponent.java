@@ -48,32 +48,13 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 public abstract class BoxShapedComponent extends JPanel implements
 		DiagramComponent {
 
-	private Diagram diagram;
-
-	private Object object;
-
-	// OK to use map, as the components are recreated, not changed.
-	private final Map subComponents = new HashMap();
-
-	private Object state;
-
-	private RenderingHints renderHints;
-
-	private Stroke stroke;
-	
-	private boolean dotted = false;
-
-	private static final float BOX_LINEWIDTH = 1.0f; // 72 = 1 inch
-
 	private static final float BOX_DASHSIZE = 7.0f; // 72 = 1 inch
 
 	private static final float BOX_DOTSIZE = 3.0f; // 72 = 1 inch
 
-	private static final float BOX_MITRE_TRIM = 10.0f; // 72 = 1 inch
+	private static final float BOX_LINEWIDTH = 1.0f; // 72 = 1 inch
 
-	private static final Stroke OUTLINE = new BasicStroke(
-			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND, BoxShapedComponent.BOX_MITRE_TRIM);
+	private static final float BOX_MITRE_TRIM = 10.0f; // 72 = 1 inch
 
 	private static final Stroke DOTTED_OUTLINE = new BasicStroke(
 			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
@@ -82,6 +63,25 @@ public abstract class BoxShapedComponent extends JPanel implements
 					BoxShapedComponent.BOX_DOTSIZE,
 					BoxShapedComponent.BOX_DOTSIZE,
 					BoxShapedComponent.BOX_DOTSIZE }, 0);
+
+	private static final Stroke OUTLINE = new BasicStroke(
+			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, BoxShapedComponent.BOX_MITRE_TRIM);
+
+	private Diagram diagram;
+
+	private boolean dotted = false;
+
+	private Object object;
+
+	private RenderingHints renderHints;
+
+	private Object state;
+
+	private Stroke stroke;
+
+	// OK to use map, as the components are recreated, not changed.
+	private final Map subComponents = new HashMap();
 
 	/**
 	 * Constructs a box-shaped component around the given model object to be
@@ -114,32 +114,6 @@ public abstract class BoxShapedComponent extends JPanel implements
 		// Repaint ourselves.
 		this.updateAppearance();
 	}
-	
-	/**
-	 * If this is set to <tt>true</tt> then the component will appear
-	 * with a dotted/dashed outline.
-	 * @param dotted <tt>true</tt> if the component is to appear
-	 * with a dotted outline. The default is <tt>false</tt>.
-	 */
-	public void setDotted(final boolean dotted) {
-		this.dotted = dotted;
-	}
-
-	public void paintComponent(final Graphics g) {
-		final Graphics2D g2d = (Graphics2D) g;
-		g2d.setRenderingHints(this.renderHints);
-		super.paintComponent(g2d);
-	}
-
-	public abstract void recalculateDiagramComponent();
-
-	public void repaintDiagramComponent() {
-		this.repaint(this.getVisibleRect());
-	}
-
-	public Map getSubComponents() {
-		return this.subComponents;
-	}
 
 	/**
 	 * Adds a sub-component to the map, but not to the diagram.
@@ -154,44 +128,10 @@ public abstract class BoxShapedComponent extends JPanel implements
 		this.subComponents.put(object, component);
 	}
 
-	public Object getState() {
-		return this.state;
-	}
-
-	public void setState(final Object state) {
-		this.state = state;
-	}
-
-	public void updateAppearance() {
-		final DiagramContext mod = this.getDiagram().getDiagramContext();
-		if (mod != null)
-			mod.customiseAppearance(this, this.getObject());
-		if (this.dotted)
-			this.stroke = BoxShapedComponent.DOTTED_OUTLINE;
-		else 
-			this.stroke = BoxShapedComponent.OUTLINE;
-		this.setBorder(BorderFactory.createLineBorder(this.getForeground()));
-	}
-
 	protected void paintBorder(final Graphics g) {
 		final Graphics2D g2d = (Graphics2D) g;
 		g2d.setStroke(this.stroke);
 		super.paintBorder(g2d);
-	}
-
-	public Diagram getDiagram() {
-		return this.diagram;
-	}
-
-	public Object getObject() {
-		return this.object;
-	}
-
-	public JPopupMenu getContextMenu() {
-		final JPopupMenu contextMenu = new JPopupMenu();
-		// No additional entries for us yet.
-		// Return it.
-		return contextMenu;
 	}
 
 	protected void processMouseEvent(final MouseEvent evt) {
@@ -215,13 +155,75 @@ public abstract class BoxShapedComponent extends JPanel implements
 			super.processMouseEvent(evt);
 	}
 
-	public int hashCode() {
-		return this.getObject().hashCode();
-	}
-
 	public boolean equals(final Object obj) {
 		return obj instanceof DiagramComponent
 				&& ((DiagramComponent) obj).getObject()
 						.equals(this.getObject());
+	}
+
+	public JPopupMenu getContextMenu() {
+		final JPopupMenu contextMenu = new JPopupMenu();
+		// No additional entries for us yet.
+		// Return it.
+		return contextMenu;
+	}
+
+	public Diagram getDiagram() {
+		return this.diagram;
+	}
+
+	public Object getObject() {
+		return this.object;
+	}
+
+	public Object getState() {
+		return this.state;
+	}
+
+	public Map getSubComponents() {
+		return this.subComponents;
+	}
+
+	public int hashCode() {
+		return this.getObject().hashCode();
+	}
+
+	public void paintComponent(final Graphics g) {
+		final Graphics2D g2d = (Graphics2D) g;
+		g2d.setRenderingHints(this.renderHints);
+		super.paintComponent(g2d);
+	}
+
+	public abstract void recalculateDiagramComponent();
+
+	public void repaintDiagramComponent() {
+		this.repaint(this.getVisibleRect());
+	}
+
+	/**
+	 * If this is set to <tt>true</tt> then the component will appear with a
+	 * dotted/dashed outline.
+	 * 
+	 * @param dotted
+	 *            <tt>true</tt> if the component is to appear with a dotted
+	 *            outline. The default is <tt>false</tt>.
+	 */
+	public void setDotted(final boolean dotted) {
+		this.dotted = dotted;
+	}
+
+	public void setState(final Object state) {
+		this.state = state;
+	}
+
+	public void updateAppearance() {
+		final DiagramContext mod = this.getDiagram().getDiagramContext();
+		if (mod != null)
+			mod.customiseAppearance(this, this.getObject());
+		if (this.dotted)
+			this.stroke = BoxShapedComponent.DOTTED_OUTLINE;
+		else
+			this.stroke = BoxShapedComponent.OUTLINE;
+		this.setBorder(BorderFactory.createLineBorder(this.getForeground()));
 	}
 }

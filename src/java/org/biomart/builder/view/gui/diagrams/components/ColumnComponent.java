@@ -39,24 +39,10 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
 public class ColumnComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
 
-	private GridBagLayout layout;
-
-	private GridBagConstraints constraints;
-
 	/**
-	 * Constant referring to normal column colour.
+	 * Constant referring to background colour.
 	 */
-	public static Color NORMAL_COLOUR = Color.DARK_GRAY;
-
-	/**
-	 * Constant referring to faded column colour.
-	 */
-	public static Color FADED_COLOUR = Color.LIGHT_GRAY;
-
-	/**
-	 * Constant referring to partitioned column colour.
-	 */
-	public static Color PARTITIONED_COLOUR = Color.BLUE;
+	public static Color BACKGROUND_COLOUR = Color.ORANGE;
 
 	/**
 	 * Constant referring to expression column colour.
@@ -64,19 +50,33 @@ public class ColumnComponent extends BoxShapedComponent {
 	public static Color EXPRESSION_COLOUR = Color.MAGENTA;
 
 	/**
+	 * Constant referring to faded column colour.
+	 */
+	public static Color FADED_COLOUR = Color.LIGHT_GRAY;
+
+	/**
 	 * Constant referring to inherited column colour.
 	 */
 	public static Color INHERITED_COLOUR = Color.RED;
 
 	/**
-	 * Constant referring to background colour.
-	 */
-	public static Color BACKGROUND_COLOUR = Color.ORANGE;
-	
-	/**
 	 * Italic font.
 	 */
 	public static Font ITALIC_FONT = Font.decode("Serif-ITALIC-10");
+
+	/**
+	 * Constant referring to normal column colour.
+	 */
+	public static Color NORMAL_COLOUR = Color.DARK_GRAY;
+
+	/**
+	 * Constant referring to partitioned column colour.
+	 */
+	public static Color PARTITIONED_COLOUR = Color.BLUE;
+
+	private GridBagConstraints constraints;
+
+	private GridBagLayout layout;
 
 	/**
 	 * The constructor creates a new column component representing the given
@@ -105,6 +105,10 @@ public class ColumnComponent extends BoxShapedComponent {
 		this.recalculateDiagramComponent();
 	}
 
+	private Column getColumn() {
+		return (Column) this.getObject();
+	}
+
 	public void recalculateDiagramComponent() {
 		// Remove everything.
 		this.removeAll();
@@ -117,9 +121,5 @@ public class ColumnComponent extends BoxShapedComponent {
 		label.setFont(ColumnComponent.ITALIC_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
-	}
-
-	private Column getColumn() {
-		return (Column) this.getObject();
 	}
 }

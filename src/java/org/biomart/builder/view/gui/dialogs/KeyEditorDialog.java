@@ -55,9 +55,66 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 public class KeyEditorDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	private DefaultListModel tableColumns;
+	/**
+	 * Creates a new foreign key, or rather creates a list of columns for the
+	 * calling code to create a key with.
+	 * 
+	 * @param martTab
+	 *            the mart tab this all belongs to.
+	 * @param table
+	 *            the table the key is to be created on.
+	 * @return the list of columns the user selected.
+	 */
+	public static List createForeignKey(final MartTab martTab, final Table table) {
+		final KeyEditorDialog dialog = new KeyEditorDialog(martTab, table,
+				Resources.get("newFKDialogTitle"), Resources.get("addButton"),
+				null);
+		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.show();
+		return Arrays.asList(dialog.selectedColumns.toArray());
+	}
+
+	/**
+	 * Creates a new primary key, or rather creates a list of columns for the
+	 * calling code to create a key with.
+	 * 
+	 * @param martTab
+	 *            the mart tab this all belongs to.
+	 * @param table
+	 *            the table the key is to be created on.
+	 * @return the list of columns the user selected.
+	 */
+	public static List createPrimaryKey(final MartTab martTab, final Table table) {
+		final KeyEditorDialog dialog = new KeyEditorDialog(martTab, table,
+				Resources.get("newPKDialogTitle"), Resources.get("addButton"),
+				null);
+		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.show();
+		return Arrays.asList(dialog.selectedColumns.toArray());
+	}
+
+	/**
+	 * Edits an existing key, or rather creates a list of columns for the
+	 * calling code to edit the key with.
+	 * 
+	 * @param martTab
+	 *            the mart tab this all belongs to.
+	 * @param key
+	 *            the key to be edited.
+	 * @return the list of columns the user selected.
+	 */
+	public static List editKey(final MartTab martTab, final Key key) {
+		final KeyEditorDialog dialog = new KeyEditorDialog(martTab, key
+				.getTable(), Resources.get("editKeyDialogTitle"), Resources
+				.get("modifyButton"), key.getColumns());
+		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.show();
+		return Arrays.asList(dialog.selectedColumns.toArray());
+	}
 
 	private DefaultListModel selectedColumns;
+
+	private DefaultListModel tableColumns;
 
 	private KeyEditorDialog(final MartTab martTab, final Table table,
 			final String title, final String action, final List columns) {
@@ -252,62 +309,5 @@ public class KeyEditorDialog extends JDialog {
 
 		// Validation succeeds if there are no messages.
 		return messages.isEmpty();
-	}
-
-	/**
-	 * Creates a new primary key, or rather creates a list of columns for the
-	 * calling code to create a key with.
-	 * 
-	 * @param martTab
-	 *            the mart tab this all belongs to.
-	 * @param table
-	 *            the table the key is to be created on.
-	 * @return the list of columns the user selected.
-	 */
-	public static List createPrimaryKey(final MartTab martTab, final Table table) {
-		final KeyEditorDialog dialog = new KeyEditorDialog(martTab, table,
-				Resources.get("newPKDialogTitle"), Resources.get("addButton"),
-				null);
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
-		dialog.show();
-		return Arrays.asList(dialog.selectedColumns.toArray());
-	}
-
-	/**
-	 * Creates a new foreign key, or rather creates a list of columns for the
-	 * calling code to create a key with.
-	 * 
-	 * @param martTab
-	 *            the mart tab this all belongs to.
-	 * @param table
-	 *            the table the key is to be created on.
-	 * @return the list of columns the user selected.
-	 */
-	public static List createForeignKey(final MartTab martTab, final Table table) {
-		final KeyEditorDialog dialog = new KeyEditorDialog(martTab, table,
-				Resources.get("newFKDialogTitle"), Resources.get("addButton"),
-				null);
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
-		dialog.show();
-		return Arrays.asList(dialog.selectedColumns.toArray());
-	}
-
-	/**
-	 * Edits an existing key, or rather creates a list of columns for the
-	 * calling code to edit the key with.
-	 * 
-	 * @param martTab
-	 *            the mart tab this all belongs to.
-	 * @param key
-	 *            the key to be edited.
-	 * @return the list of columns the user selected.
-	 */
-	public static List editKey(final MartTab martTab, final Key key) {
-		final KeyEditorDialog dialog = new KeyEditorDialog(martTab, key
-				.getTable(), Resources.get("editKeyDialogTitle"), Resources
-				.get("modifyButton"), key.getColumns());
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
-		dialog.show();
-		return Arrays.asList(dialog.selectedColumns.toArray());
 	}
 }

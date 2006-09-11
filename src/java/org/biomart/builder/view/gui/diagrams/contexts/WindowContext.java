@@ -68,6 +68,72 @@ public class WindowContext extends SchemaContext {
 		this.dataset = dataset;
 	}
 
+	public void customiseAppearance(final JComponent component,
+			final Object object) {
+
+		// This bit adds a restricted outline to restricted tables.
+		if (object instanceof Table) {
+			final Table table = (Table) object;
+			final TableComponent tblcomp = (TableComponent) component;
+			tblcomp.setDotted(this.dataset.getRestrictedTables()
+					.contains(table));
+		}
+
+		// This section customises the appearance of relation lines within
+		// the window schema diagram.
+		if (object instanceof Relation) {
+
+			// Work out what relation we are dealing with.
+			final Relation relation = (Relation) object;
+
+			// Fade out all INFERRED_INCORRECT and MASKED relations.
+			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
+					|| this.dataset.getMaskedRelations().contains(relation))
+				component.setForeground(RelationComponent.MASKED_COLOUR);
+
+			// Highlight CONCAT-ONLY relations.
+			else if (this.dataset.getConcatOnlyRelations().contains(relation))
+				component.setForeground(RelationComponent.CONCAT_COLOUR);
+
+			// Highlight SUBCLASS relations.
+			else if (this.dataset.getSubclassedRelations().contains(relation))
+				component.setForeground(RelationComponent.SUBCLASS_COLOUR);
+
+			// All others are normal.
+			else
+				component.setForeground(RelationComponent.NORMAL_COLOUR);
+
+			// Do the stroke.
+			final RelationComponent relcomp = (RelationComponent) component;
+			relcomp.setDotted(this.dataset.getRestrictedRelations().contains(
+					relation));
+		}
+
+		// This section customises the appearance of key objects within
+		// table objects in the diagram.
+		else if (object instanceof Key) {
+
+			// Work out what key we are dealing with.
+			final Key key = (Key) object;
+
+			// Fade out all INFERRED_INCORRECT keys.
+			if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
+				component.setForeground(KeyComponent.MASKED_COLOUR);
+
+			// Highlight all HANDMADE keys.
+			else if (key.getStatus().equals(ComponentStatus.HANDMADE))
+				component.setForeground(KeyComponent.HANDMADE_COLOUR);
+
+			// All others are normal.
+			else
+				component.setForeground(KeyComponent.NORMAL_COLOUR);
+
+			// Remove drag-and-drop from the key as it does not apply in
+			// the window context.
+			component.removeMouseListener(SchemaContext.dragAdapter);
+		}
+	}
+
 	/**
 	 * Obtain the dataset that this context is linked with.
 	 * 
@@ -388,72 +454,6 @@ public class WindowContext extends SchemaContext {
 			// Columns simply show the menu for the table they are in.
 			final Table table = ((Column) object).getTable();
 			this.populateContextMenu(contextMenu, table);
-		}
-	}
-
-	public void customiseAppearance(final JComponent component,
-			final Object object) {
-
-		// This bit adds a restricted outline to restricted tables.
-		if (object instanceof Table) {
-			final Table table = (Table) object;
-			final TableComponent tblcomp = (TableComponent) component;
-			tblcomp.setDotted(this.dataset.getRestrictedTables()
-					.contains(table));
-		}
-
-		// This section customises the appearance of relation lines within
-		// the window schema diagram.
-		if (object instanceof Relation) {
-
-			// Work out what relation we are dealing with.
-			final Relation relation = (Relation) object;
-
-			// Fade out all INFERRED_INCORRECT and MASKED relations.
-			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
-					|| this.dataset.getMaskedRelations().contains(relation))
-				component.setForeground(RelationComponent.MASKED_COLOUR);
-
-			// Highlight CONCAT-ONLY relations.
-			else if (this.dataset.getConcatOnlyRelations().contains(relation))
-				component.setForeground(RelationComponent.CONCAT_COLOUR);
-
-			// Highlight SUBCLASS relations.
-			else if (this.dataset.getSubclassedRelations().contains(relation))
-				component.setForeground(RelationComponent.SUBCLASS_COLOUR);
-
-			// All others are normal.
-			else
-				component.setForeground(RelationComponent.NORMAL_COLOUR);
-
-			// Do the stroke.
-			final RelationComponent relcomp = (RelationComponent) component;
-			relcomp.setDotted(this.dataset.getRestrictedRelations().contains(
-					relation));
-		}
-
-		// This section customises the appearance of key objects within
-		// table objects in the diagram.
-		else if (object instanceof Key) {
-
-			// Work out what key we are dealing with.
-			final Key key = (Key) object;
-
-			// Fade out all INFERRED_INCORRECT keys.
-			if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
-				component.setForeground(KeyComponent.MASKED_COLOUR);
-
-			// Highlight all HANDMADE keys.
-			else if (key.getStatus().equals(ComponentStatus.HANDMADE))
-				component.setForeground(KeyComponent.HANDMADE_COLOUR);
-
-			// All others are normal.
-			else
-				component.setForeground(KeyComponent.NORMAL_COLOUR);
-
-			// Remove drag-and-drop from the key as it does not apply in
-			// the window context.
-			component.removeMouseListener(SchemaContext.dragAdapter);
 		}
 	}
 }

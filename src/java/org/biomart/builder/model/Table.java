@@ -54,142 +54,6 @@ import org.biomart.builder.resources.Resources;
  */
 public interface Table extends Comparable {
 	/**
-	 * Returns the name of this table.
-	 * 
-	 * @return the name of this table.
-	 */
-	public String getName();
-
-	/**
-	 * Returns the original name of this table. This is useful if the user
-	 * renames the table but you need to refer to it by the name it started life
-	 * out as.
-	 * 
-	 * @return the original name of this table.
-	 */
-	public String getOriginalName();
-
-	/**
-	 * Sets a new name for this table. This will also rename the table in the
-	 * schema map.
-	 * 
-	 * @param newName
-	 *            the new name.
-	 */
-	public void setName(String newName);
-
-	/**
-	 * Use this to rename a table's original name. Use with extreme caution. The
-	 * owning schema doesn't need to know so won't be notified.
-	 * 
-	 * @param newName
-	 *            the new original name to give the table.
-	 */
-	public void setOriginalName(String newName);
-
-	/**
-	 * Returns the schema for this table.
-	 * 
-	 * @return the schema for this table.
-	 */
-	public Schema getSchema();
-
-	/**
-	 * Returns a reference to the primary key of this table. It may be null,
-	 * indicating that the table has no primary key.
-	 * 
-	 * @return the primary key of this table.
-	 */
-	public PrimaryKey getPrimaryKey();
-
-	/**
-	 * Sets the primary key of this table. It may be null, indicating that the
-	 * table has no primary key.
-	 * 
-	 * @param primaryKey
-	 *            the new primary key of this table.
-	 * @throws AssociationException
-	 *             if the table parameter of the foreign key does not match this
-	 *             table.
-	 */
-	public void setPrimaryKey(PrimaryKey primaryKey)
-			throws AssociationException;
-
-	/**
-	 * Returns a set of the foreign keys of this table. It may be empty,
-	 * indicating that the table has no foreign keys. It will never return null.
-	 * 
-	 * @return the set of foreign keys for this table.
-	 */
-	public Collection getForeignKeys();
-
-	/**
-	 * Adds a foreign key to this table. It may not be null. The foreign key
-	 * must refer to this table else an exception will be thrown.
-	 * 
-	 * @param foreignKey
-	 *            the new foreign key to add to this table.
-	 * @throws AssociationException
-	 *             if the table parameter of the foreign key does not match this
-	 *             table.
-	 */
-	public void addForeignKey(ForeignKey foreignKey)
-			throws AssociationException;
-
-	/**
-	 * Removes a foreign key from this table.
-	 * 
-	 * @param foreignKey
-	 *            the new foreign key to remove from this table.
-	 */
-	public void removeForeignKey(ForeignKey foreignKey);
-
-	/**
-	 * Returns a set of the keys on all columns in this table. It may be empty,
-	 * indicating that the table has no keys. It will never return null.
-	 * 
-	 * @return the set of keys for this table.
-	 */
-	public Collection getKeys();
-
-	/**
-	 * Returns a set of the relations on all keys in this table. It may be
-	 * empty, indicating that the table has no relations. It will never return
-	 * null.
-	 * 
-	 * @return the set of relations for this table.
-	 */
-	public Collection getRelations();
-
-	/**
-	 * Returns a set of the relations on all keys in this table that refer to
-	 * other keys in the same schema as this table. It may be empty, indicating
-	 * that the table has no internal relations. It will never return null.
-	 * 
-	 * @return the set of internal relations for this table.
-	 */
-	public Collection getInternalRelations();
-
-	/**
-	 * Returns a set of the columns of this table. It may be empty, indicating
-	 * that the table has no columns, however this is highly unlikely! It will
-	 * never return null.
-	 * 
-	 * @return the set of columns for this table.
-	 */
-	public Collection getColumns();
-
-	/**
-	 * Attempts to locate a column in this table by name. If it finds it, it
-	 * returns it. If it doesn't, it returns null.
-	 * 
-	 * @param name
-	 *            the name of the column to look up.
-	 * @return the corresponding column, or null if it couldn't be found.
-	 */
-	public Column getColumnByName(String name);
-
-	/**
 	 * Attempts to add a column to this table. The column will already have had
 	 * it's table parameter set to match, otherwise an exception will be thrown.
 	 * An exception will also get thrown if the column has the same name as an
@@ -204,14 +68,17 @@ public interface Table extends Comparable {
 	public void addColumn(Column column) throws AssociationException;
 
 	/**
-	 * Attempts to remove a column from this table. If the column does not exist
-	 * on this table the operation will be quietly ignored. Any key involving
-	 * that column will also be dropped along with all associated relations.
+	 * Adds a foreign key to this table. It may not be null. The foreign key
+	 * must refer to this table else an exception will be thrown.
 	 * 
-	 * @param column
-	 *            the column to remove.
+	 * @param foreignKey
+	 *            the new foreign key to add to this table.
+	 * @throws AssociationException
+	 *             if the table parameter of the foreign key does not match this
+	 *             table.
 	 */
-	public void removeColumn(Column column);
+	public void addForeignKey(ForeignKey foreignKey)
+			throws AssociationException;
 
 	/**
 	 * Attempts to rename a column. If the new name has already been taken by
@@ -232,22 +99,155 @@ public interface Table extends Comparable {
 	public void destroy();
 
 	/**
+	 * Attempts to locate a column in this table by name. If it finds it, it
+	 * returns it. If it doesn't, it returns null.
+	 * 
+	 * @param name
+	 *            the name of the column to look up.
+	 * @return the corresponding column, or null if it couldn't be found.
+	 */
+	public Column getColumnByName(String name);
+
+	/**
+	 * Returns a set of the columns of this table. It may be empty, indicating
+	 * that the table has no columns, however this is highly unlikely! It will
+	 * never return null.
+	 * 
+	 * @return the set of columns for this table.
+	 */
+	public Collection getColumns();
+
+	/**
+	 * Returns a set of the foreign keys of this table. It may be empty,
+	 * indicating that the table has no foreign keys. It will never return null.
+	 * 
+	 * @return the set of foreign keys for this table.
+	 */
+	public Collection getForeignKeys();
+
+	/**
+	 * Returns a set of the relations on all keys in this table that refer to
+	 * other keys in the same schema as this table. It may be empty, indicating
+	 * that the table has no internal relations. It will never return null.
+	 * 
+	 * @return the set of internal relations for this table.
+	 */
+	public Collection getInternalRelations();
+
+	/**
+	 * Returns a set of the keys on all columns in this table. It may be empty,
+	 * indicating that the table has no keys. It will never return null.
+	 * 
+	 * @return the set of keys for this table.
+	 */
+	public Collection getKeys();
+
+	/**
+	 * Returns the name of this table.
+	 * 
+	 * @return the name of this table.
+	 */
+	public String getName();
+
+	/**
+	 * Returns the original name of this table. This is useful if the user
+	 * renames the table but you need to refer to it by the name it started life
+	 * out as.
+	 * 
+	 * @return the original name of this table.
+	 */
+	public String getOriginalName();
+
+	/**
+	 * Returns a reference to the primary key of this table. It may be null,
+	 * indicating that the table has no primary key.
+	 * 
+	 * @return the primary key of this table.
+	 */
+	public PrimaryKey getPrimaryKey();
+
+	/**
+	 * Returns a set of the relations on all keys in this table. It may be
+	 * empty, indicating that the table has no relations. It will never return
+	 * null.
+	 * 
+	 * @return the set of relations for this table.
+	 */
+	public Collection getRelations();
+
+	/**
+	 * Returns the schema for this table.
+	 * 
+	 * @return the schema for this table.
+	 */
+	public Schema getSchema();
+
+	/**
+	 * Attempts to remove a column from this table. If the column does not exist
+	 * on this table the operation will be quietly ignored. Any key involving
+	 * that column will also be dropped along with all associated relations.
+	 * 
+	 * @param column
+	 *            the column to remove.
+	 */
+	public void removeColumn(Column column);
+
+	/**
+	 * Removes a foreign key from this table.
+	 * 
+	 * @param foreignKey
+	 *            the new foreign key to remove from this table.
+	 */
+	public void removeForeignKey(ForeignKey foreignKey);
+
+	/**
+	 * Sets a new name for this table. This will also rename the table in the
+	 * schema map.
+	 * 
+	 * @param newName
+	 *            the new name.
+	 */
+	public void setName(String newName);
+
+	/**
+	 * Use this to rename a table's original name. Use with extreme caution. The
+	 * owning schema doesn't need to know so won't be notified.
+	 * 
+	 * @param newName
+	 *            the new original name to give the table.
+	 */
+	public void setOriginalName(String newName);
+
+	/**
+	 * Sets the primary key of this table. It may be null, indicating that the
+	 * table has no primary key.
+	 * 
+	 * @param primaryKey
+	 *            the new primary key of this table.
+	 * @throws AssociationException
+	 *             if the table parameter of the foreign key does not match this
+	 *             table.
+	 */
+	public void setPrimaryKey(PrimaryKey primaryKey)
+			throws AssociationException;
+
+	/**
 	 * The generic implementation of table provides basic methods for working
 	 * with database or XML document tables, including the ability to add a new
 	 * column and check for conflicts with existing columns.
 	 */
 	public class GenericTable implements Table {
-		private final Schema schema;
-
-		private PrimaryKey primaryKey;
+		private final Map columns = new TreeMap();
 
 		private final List foreignKeys = new ArrayList();
 
-		private final Map columns = new TreeMap();
+		private String name;
 
 		private String originalName;
 
-		private String name;
+		private PrimaryKey primaryKey;
+
+		private final Schema schema;
 
 		/**
 		 * The constructor sets up an empty table representation with the given
@@ -277,67 +277,13 @@ public interface Table extends Comparable {
 			}
 		}
 
-		public String getName() {
-			return this.name;
-		}
-
-		public String getOriginalName() {
-			return this.originalName;
-		}
-
-		public void setOriginalName(final String newName) {
-			this.originalName = newName;
-		}
-
-		public void setName(String newName) {
-			// Make the name unique.
-			final String baseName = newName;
-			for (int i = 1; this.schema.getTableByName(newName) != null
-					&& !newName.equals(this.name); newName = baseName + "_"
-					+ i++)
-				;
-			// Do it.
-			this.getSchema().changeTableMapKey(this.name, newName);
-			this.name = newName;
-		}
-
-		public Schema getSchema() {
-			return this.schema;
-		}
-
-		public PrimaryKey getPrimaryKey() {
-			return this.primaryKey;
-		}
-
-		public void setPrimaryKey(final PrimaryKey primaryKey)
-				throws AssociationException {
-			// Check the key lives in this table first.
-			if (primaryKey != null && !primaryKey.getTable().equals(this))
-				throw new AssociationException(Resources.get("pkTableMismatch"));
-
-			// If the key is the same, do nothing.
-			if (primaryKey != null && this.primaryKey != null
-					&& primaryKey.equals(this.primaryKey))
-				return;
-
-			// Ensure nobody points to the old primary key
-			if (this.primaryKey != null) {
-				// Destroy relations on the old primary key.
-				// Must use a copy else get concurrent-modification problems.
-				final List relations = new ArrayList(this.primaryKey
-						.getRelations());
-				for (final Iterator i = relations.iterator(); i.hasNext();) {
-					final Relation r = (Relation) i.next();
-					r.destroy();
-				}
-			}
-
-			// Update our primary key to the new one.
-			this.primaryKey = primaryKey;
-		}
-
-		public Collection getForeignKeys() {
-			return this.foreignKeys;
+		public void addColumn(final Column column) throws AssociationException {
+			// Refuse to do it if the column belongs to some other table.
+			if (column.getTable() != this)
+				throw new AssociationException(Resources
+						.get("columnTableMismatch"));
+			// Add it.
+			this.columns.put(column.getName(), column);
 		}
 
 		public void addForeignKey(final ForeignKey foreignKey)
@@ -350,24 +296,50 @@ public interface Table extends Comparable {
 			this.foreignKeys.add(foreignKey);
 		}
 
-		public void removeForeignKey(final ForeignKey foreignKey) {
-			this.foreignKeys.remove(foreignKey);
+		public void changeColumnMapKey(final String oldName,
+				final String newName) {
+			// If the names are the same, do nothing.
+			if (oldName.equals(newName))
+				return;
+			// Update our mapping but don't rename the columns themselves.
+			final Column col = (Column) this.columns.get(oldName);
+			this.columns.put(newName, col);
+			this.columns.remove(oldName);
 		}
 
-		public Collection getKeys() {
-			final List allKeys = new ArrayList(this.foreignKeys);
-			if (this.primaryKey != null)
-				allKeys.add(this.primaryKey);
-			return allKeys;
+		public int compareTo(final Object o) throws ClassCastException {
+			final Table t = (Table) o;
+			return this.toString().compareTo(t.toString());
 		}
 
-		public Collection getRelations() {
-			final Set allRels = new HashSet(); // enforce uniqueness
-			for (final Iterator i = this.getKeys().iterator(); i.hasNext();) {
-				final Key k = (Key) i.next();
-				allRels.addAll(k.getRelations());
+		public void destroy() {
+			// Remove each column we have. This will recursively cause
+			// keys etc. to be removed.
+			// Must use a copy else we'll get concurrent modification problems.
+			final Set allCols = new HashSet(this.columns.values());
+			for (final Iterator i = allCols.iterator(); i.hasNext();) {
+				final Column c = (Column) i.next();
+				this.removeColumn(c);
 			}
-			return allRels;
+		}
+
+		public boolean equals(final Object o) {
+			if (o == null || !(o instanceof Table))
+				return false;
+			final Table t = (Table) o;
+			return t.toString().equals(this.toString());
+		}
+
+		public Column getColumnByName(final String name) {
+			return (Column) this.columns.get(name);
+		}
+
+		public Collection getColumns() {
+			return this.columns.values();
+		}
+
+		public Collection getForeignKeys() {
+			return this.foreignKeys;
 		}
 
 		public Collection getInternalRelations() {
@@ -402,21 +374,40 @@ public interface Table extends Comparable {
 			return relations;
 		}
 
-		public Collection getColumns() {
-			return this.columns.values();
+		public Collection getKeys() {
+			final List allKeys = new ArrayList(this.foreignKeys);
+			if (this.primaryKey != null)
+				allKeys.add(this.primaryKey);
+			return allKeys;
 		}
 
-		public Column getColumnByName(final String name) {
-			return (Column) this.columns.get(name);
+		public String getName() {
+			return this.name;
 		}
 
-		public void addColumn(final Column column) throws AssociationException {
-			// Refuse to do it if the column belongs to some other table.
-			if (column.getTable() != this)
-				throw new AssociationException(Resources
-						.get("columnTableMismatch"));
-			// Add it.
-			this.columns.put(column.getName(), column);
+		public String getOriginalName() {
+			return this.originalName;
+		}
+
+		public PrimaryKey getPrimaryKey() {
+			return this.primaryKey;
+		}
+
+		public Collection getRelations() {
+			final Set allRels = new HashSet(); // enforce uniqueness
+			for (final Iterator i = this.getKeys().iterator(); i.hasNext();) {
+				final Key k = (Key) i.next();
+				allRels.addAll(k.getRelations());
+			}
+			return allRels;
+		}
+
+		public Schema getSchema() {
+			return this.schema;
+		}
+
+		public int hashCode() {
+			return this.toString().hashCode();
 		}
 
 		public void removeColumn(final Column column) {
@@ -433,46 +424,55 @@ public interface Table extends Comparable {
 			this.columns.remove(column.getName());
 		}
 
-		public void changeColumnMapKey(final String oldName,
-				final String newName) {
-			// If the names are the same, do nothing.
-			if (oldName.equals(newName))
-				return;
-			// Update our mapping but don't rename the columns themselves.
-			final Column col = (Column) this.columns.get(oldName);
-			this.columns.put(newName, col);
-			this.columns.remove(oldName);
+		public void removeForeignKey(final ForeignKey foreignKey) {
+			this.foreignKeys.remove(foreignKey);
 		}
 
-		public void destroy() {
-			// Remove each column we have. This will recursively cause
-			// keys etc. to be removed.
-			// Must use a copy else we'll get concurrent modification problems.
-			final Set allCols = new HashSet(this.columns.values());
-			for (final Iterator i = allCols.iterator(); i.hasNext();) {
-				final Column c = (Column) i.next();
-				this.removeColumn(c);
+		public void setName(String newName) {
+			// Make the name unique.
+			final String baseName = newName;
+			for (int i = 1; this.schema.getTableByName(newName) != null
+					&& !newName.equals(this.name); newName = baseName + "_"
+					+ i++)
+				;
+			// Do it.
+			this.getSchema().changeTableMapKey(this.name, newName);
+			this.name = newName;
+		}
+
+		public void setOriginalName(final String newName) {
+			this.originalName = newName;
+		}
+
+		public void setPrimaryKey(final PrimaryKey primaryKey)
+				throws AssociationException {
+			// Check the key lives in this table first.
+			if (primaryKey != null && !primaryKey.getTable().equals(this))
+				throw new AssociationException(Resources.get("pkTableMismatch"));
+
+			// If the key is the same, do nothing.
+			if (primaryKey != null && this.primaryKey != null
+					&& primaryKey.equals(this.primaryKey))
+				return;
+
+			// Ensure nobody points to the old primary key
+			if (this.primaryKey != null) {
+				// Destroy relations on the old primary key.
+				// Must use a copy else get concurrent-modification problems.
+				final List relations = new ArrayList(this.primaryKey
+						.getRelations());
+				for (final Iterator i = relations.iterator(); i.hasNext();) {
+					final Relation r = (Relation) i.next();
+					r.destroy();
+				}
 			}
+
+			// Update our primary key to the new one.
+			this.primaryKey = primaryKey;
 		}
 
 		public String toString() {
 			return this.schema.toString() + ":" + this.getName();
-		}
-
-		public int hashCode() {
-			return this.toString().hashCode();
-		}
-
-		public int compareTo(final Object o) throws ClassCastException {
-			final Table t = (Table) o;
-			return this.toString().compareTo(t.toString());
-		}
-
-		public boolean equals(final Object o) {
-			if (o == null || !(o instanceof Table))
-				return false;
-			final Table t = (Table) o;
-			return t.toString().equals(this.toString());
 		}
 	}
 }

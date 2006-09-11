@@ -86,17 +86,17 @@ import org.biomart.builder.resources.Resources;
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	private Connection connection;
 
-	private String driverClassName;
-
 	private File driverClassLocation;
 
-	private String url;
-
-	private String username;
+	private String driverClassName;
 
 	private String password;
 
 	private String schemaName;
+
+	private String url;
+
+	private String username;
 
 	/**
 	 * <p>
@@ -151,393 +151,252 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		this.schemaName = schemaName;
 	}
 
-	public Schema replicate(final String newName) {
-		// Make an empty copy.
-		final Schema newSchema = new JDBCSchema(this.driverClassLocation,
-				this.driverClassName, this.url, this.schemaName, this.username,
-				this.password, newName, this.getKeyGuessing());
-
-		// Copy the contents over.
-		this.replicateContents(newSchema);
-
-		// Return the copy.
-		return newSchema;
-	}
-
-	public boolean test() throws Exception {
-		// Establish the JDBC connection. May throw an exception of its own,
-		// which is fine, just let it go.
-		final Connection connection = this.getConnection();
-		// If we have no connection, we can't test it!
-		if (connection == null)
-			return false;
-
-		// Get the metadata.
-		final DatabaseMetaData dmd = connection.getMetaData();
-
-		// By opening, executing, then closing a DMD query we will test
-		// the connection fully without actually having to read anything from
-		// it.
-		final String catalog = connection.getCatalog();
-		final ResultSet rs = dmd.getTables(catalog, this.schemaName, "%", null);
-		final boolean worked = rs.isBeforeFirst();
-		rs.close();
-
-		// If we get here, it worked.
-		return worked;
-	}
-
-	public Connection getConnection() throws SQLException {
-		// If we have not connected before, we should attempt to connect now.
-		if (this.connection == null) {
-			// Start out with no driver at all.
-			Class loadedDriverClass = null;
-
-			// If a path was specified for the driver, and that path exists,
-			// load the driver from that path.
-			if (this.driverClassLocation != null
-					&& this.driverClassLocation.exists())
-				try {
-					final ClassLoader classLoader = URLClassLoader
-							.newInstance(new URL[] { this.driverClassLocation
-									.toURL() });
-					loadedDriverClass = classLoader
-							.loadClass(this.driverClassName);
-				} catch (final ClassNotFoundException e) {
-					final SQLException e2 = new SQLException();
-					e2.initCause(e);
-					throw e2;
-				} catch (final MalformedURLException e) {
-					throw new MartBuilderInternalError(e);
-				}
-
-			// If we failed to load the driver from the custom path, try the
-			// system class loader instead.
-			if (loadedDriverClass == null)
-				try {
-					loadedDriverClass = Class.forName(this.driverClassName);
-				} catch (final ClassNotFoundException e) {
-					final SQLException e2 = new SQLException();
-					e2.initCause(e);
-					throw e2;
-				}
-
-			// Check it really is an instance of Driver.
-			if (!Driver.class.isAssignableFrom(loadedDriverClass))
-				throw new ClassCastException(Resources
-						.get("driverClassNotJDBCDriver"));
-
-			// Connect!
-			final Properties properties = new Properties();
-			properties.setProperty("user", this.username);
-			if (this.password != null)
-				properties.setProperty("password", this.password);
-			this.connection = DriverManager.getConnection(this.url, properties);
-
-			// Check the schema name.
-			final DatabaseMetaData dmd = this.connection.getMetaData();
-			final String catalog = this.connection.getCatalog();
-			ResultSet rs = dmd.getTables(catalog, this.schemaName, "%", null);
-			if (!rs.isBeforeFirst()) {
-				rs = dmd.getTables(catalog, this.schemaName.toUpperCase(), "%",
-						null);
-				if (rs.isBeforeFirst())
-					this.schemaName = this.schemaName.toUpperCase();
-			}
-			if (!rs.isBeforeFirst()) {
-				rs = dmd.getTables(catalog, this.schemaName.toUpperCase(), "%",
-						null);
-				if (rs.isBeforeFirst())
-					this.schemaName = this.schemaName.toLowerCase();
-			}
-			rs.close();
-		}
-
-		// Return the connection.
-		return this.connection;
-	}
-
-	public String getDriverClassName() {
-		return this.driverClassName;
-	}
-
-	public void setDriverClassName(final String driverClassName) {
-		this.driverClassName = driverClassName;
-	}
-
-	public File getDriverClassLocation() {
-		return this.driverClassLocation;
-	}
-
-	public void setDriverClassLocation(final File driverClassLocation) {
-		this.driverClassLocation = driverClassLocation;
-	}
-
-	public String getJDBCURL() {
-		return this.url;
-	}
-
-	public void setJDBCURL(final String url) {
-		this.url = url;
-	}
-
-	public String getDatabaseSchema() {
-		return this.schemaName;
-	}
-
-	public void setDatabaseSchema(final String schemaName) {
-		this.schemaName = schemaName;
-	}
-
-	public String getUsername() {
-		return this.username;
-	}
-
-	public void setUsername(final String username) {
-		this.username = username;
-	}
-
-	public String getPassword() {
-		return this.password;
-	}
-
-	public void setPassword(final String password) {
-		this.password = password;
-	}
-
 	/**
-	 * {@inheritDoc}
-	 * <p>
-	 * In our case, cohabitation means that the partner link is also a
-	 * {@link JDBCDataLink} and that its connection is connected to the same
-	 * database server listening on the same port and connected with the same
-	 * username.
+	 * Establish foreign keys based purely on database metadata.
+	 * 
+	 * @param fksToBeDropped
+	 *            the list of foreign keys to update as we go along. By the end
+	 *            of the method, the only keys left in this list should be ones
+	 *            that no longer exist in the database and may be dropped.
+	 * @param dmd
+	 *            the database metadata to obtain the foreign keys from.
+	 * @param schema
+	 *            the database schema to read metadata from.
+	 * @param catalog
+	 *            the database catalog to read metadata from.
+	 * @throws SQLException
+	 *             if there was a problem talking to the database.
+	 * @throws BuilderException
+	 *             if there was a logical problem during construction of the set
+	 *             of foreign keys.
 	 */
-	public boolean canCohabit(final DataLink partner) {
-		// We can't cohabit with non-JDBCDataLink partners.
-		if (!(partner instanceof JDBCDataLink))
-			return false;
-		final JDBCDataLink partnerLink = (JDBCDataLink) partner;
-
-		// Work out the partner's catalogs and schemas.
-		final List partnerSchemas = new ArrayList();
-		try {
-			final DatabaseMetaData dmd = partnerLink.getConnection()
-					.getMetaData();
-			// We need to compare by catalog only.
-			final ResultSet catalogs = dmd.getCatalogs();
-			while (catalogs.next())
-				partnerSchemas.add(catalogs.getString("TABLE_CAT"));
-			return partnerSchemas.contains(this.getConnection().getCatalog());
-		} catch (final Throwable t) {
-			// If get an error, assume can't find anything, thus assume
-			// incompatible.
-			return false;
-		}
-	}
-
-	public void synchronise() throws SQLException, BuilderException {
-		// Get database metadata, catalog, and schema details.
-		final DatabaseMetaData dmd = this.getConnection().getMetaData();
-		final String catalog = this.getConnection().getCatalog();
-
-		// Create a list of existing tables. During this method, we remove from
-		// this list all tables that still exist in the database. At the end of
-		// the method, the list contains only those tables which no longer
-		// exist, so they will be dropped.
-		final List tablesToBeDropped = new ArrayList(this.tables.values());
-
-		// Load tables and views from database, then loop over them.
-		final ResultSet dbTables = dmd.getTables(catalog, this.schemaName, "%",
-				new String[] { "TABLE", "VIEW", "ALIAS", "SYNONYM" });
-
-		// Do the loop.
-		while (dbTables.next()) {
-			// What is the table called?
-			final String dbTableName = dbTables.getString("TABLE_NAME");
-
-			// Look to see if we already have a table by this name defined. If
-			// we do, reuse it. If not, create a new table.
-			Table dbTable = this.getTableByName(dbTableName);
-			if (dbTable == null)
-				try {
-					dbTable = new GenericTable(dbTableName, this);
-				} catch (final Throwable t) {
-					throw new MartBuilderInternalError(t);
-				}
-
-			// Table exists, so remove it from our list of tables to be dropped
-			// at the end of the method.
-			tablesToBeDropped.remove(dbTable);
-
-			// Make a list of all the columns in the table. Any columns
-			// remaining in this list by the end of the loop will be dropped.
-			final List colsToBeDropped = new ArrayList(dbTable.getColumns());
-
-			// Load the table columns from the database, then loop over them.
-			final ResultSet dbTblCols = dmd.getColumns(catalog,
-					this.schemaName, dbTableName, "%");
-			// FIXME: When using Oracle, if the table is a synonym then the
-			// above call returns no results.
-			while (dbTblCols.next()) {
-				// What is the column called, and is it nullable?
-				final String dbTblColName = dbTblCols.getString("COLUMN_NAME");
-
-				// Look to see if the column already exists on this table. If it
-				// does, reuse it. Else, create it.
-				Column dbTblCol = dbTable.getColumnByName(dbTblColName);
-				if (dbTblCol == null)
-					try {
-						dbTblCol = new GenericColumn(dbTblColName, dbTable);
-					} catch (final Throwable t) {
-						throw new MartBuilderInternalError(t);
-					}
-
-				// Column exists, so remove it from our list of columns to be
-				// dropped at the end of the loop.
-				colsToBeDropped.remove(dbTblCol);
-			}
-			dbTblCols.close();
-
-			// Drop all columns that are left in the list, as they no longer
-			// exist in the database.
-			for (final Iterator i = colsToBeDropped.iterator(); i.hasNext();) {
-				final Column column = (Column) i.next();
-				dbTable.removeColumn(column);
-			}
-
-			// Obtain the primary key from the database. Even in databases
-			// without referential integrity, the primary key is still defined
-			// and can be obtained from the metadata.
-			final ResultSet dbTblPKCols = dmd.getPrimaryKeys(catalog,
-					this.schemaName, dbTableName);
-
-			// Load the primary key columns into a map keyed by column position.
-			// In other words, the first column in the key has a map key of 1,
-			// and so on. We do this because we can't guarantee we'll read the
-			// key columns from the database in the correct order. We keep the
-			// map
-			// sorted, so that when we iterate over it later we get back the
-			// columns in the correct order.
-			final Map pkCols = new TreeMap();
-			while (dbTblPKCols.next()) {
-				final String pkColName = dbTblPKCols.getString("COLUMN_NAME");
-				final Short pkColPosition = new Short(dbTblPKCols
-						.getShort("KEY_SEQ"));
-				pkCols.put(pkColPosition, dbTable.getColumnByName(pkColName));
-			}
-			dbTblPKCols.close();
-
-			// Did DMD find a PK? If not, which is really unusual but
-			// potentially may happen, attempt to find one by looking for a
-			// single
-			// column with the same name as the table or with '_id' appended.
-			// Only do this if we are using key-guessing.
-			if (pkCols.isEmpty() && this.getKeyGuessing()) {
-				// Plain version first.
-				Column candidateCol = dbTable.getColumnByName(dbTableName);
-				// Try with '_id' appended if plain version turned up nothing.
-				if (candidateCol == null)
-					candidateCol = dbTable.getColumnByName(dbTableName
-							+ Resources.get("primaryKeySuffix"));
-				// Found something? Add it to the primary key columns map, with
-				// a dummy key of 1. (Use Short for the key because that is what
-				// DMD would have used had it found anything itself).
-				if (candidateCol != null)
-					pkCols.put(Short.valueOf("1"), candidateCol);
-			}
-
-			// Obtain the existing primary key on the table, if the table
-			// previously existed and even had one in the first place.
-			final PrimaryKey existingPK = dbTable.getPrimaryKey();
-
-			// Did we find a PK on the database copy of the table?
-			if (!pkCols.isEmpty()) {
-				// Yes, we found a PK on the database copy of the table. So,
-				// create a new key based around the columns we identified.
-				PrimaryKey candidatePK;
-				try {
-					candidatePK = new GenericPrimaryKey(new ArrayList(pkCols
-							.values()));
-				} catch (final Throwable t) {
-					throw new MartBuilderInternalError(t);
-				}
-
-				// If the existing table has no PK, or has a PK which matches
-				// and is handmade, or has a PK which does not match and is not
-				// handmade, replace that PK with the one we found. This way we
-				// preserve any existing handmade PKs, and don't override any
-				// marked as incorrect.
-				if (existingPK == null
-						|| existingPK.equals(candidatePK)
-						&& existingPK.getStatus().equals(
-								ComponentStatus.HANDMADE)
-						|| !existingPK.equals(candidatePK)
-						&& !existingPK.getStatus().equals(
-								ComponentStatus.HANDMADE))
-					try {
-						dbTable.setPrimaryKey(candidatePK);
-					} catch (final Throwable t) {
-						throw new MartBuilderInternalError(t);
-					}
-			} else // No, we did not find a PK on the database copy of the
-			// table,
-			// so that table should not have a PK at all. So if the existing
-			// table has a PK which is not handmade, remove it.
-			if (existingPK != null
-					&& !existingPK.getStatus().equals(ComponentStatus.HANDMADE))
-				try {
-					dbTable.setPrimaryKey(null);
-				} catch (final Throwable t) {
-					throw new MartBuilderInternalError(t);
-				}
-		}
-		dbTables.close();
-
-		// Remove from schema all tables not found in the database, using the
-		// list we constructed above.
-		for (final Iterator i = tablesToBeDropped.iterator(); i.hasNext();) {
-			final Table existingTable = (Table) i.next();
-			final String tableName = existingTable.getName();
-			existingTable.destroy();
-			this.tables.remove(tableName);
-		}
-
-		// Sync the keys.
-		this.synchroniseKeys();
-	}
-
-	public void synchroniseKeys() throws SQLException, BuilderException {
-		final DatabaseMetaData dmd = this.getConnection().getMetaData();
-		final String catalog = this.getConnection().getCatalog();
-		final String schema = this.schemaName;
-
-		// Work out a list of all foreign keys currently existing.
-		// Any remaining in this list later will be dropped.
-		final List fksToBeDropped = new ArrayList();
+	private void synchroniseKeysUsingDMD(final Collection fksToBeDropped,
+			final DatabaseMetaData dmd, final String schema,
+			final String catalog) throws SQLException, BuilderException {
+		// Loop through all the tables in the database, which is the same
+		// as looping through all the primary keys.
 		for (final Iterator i = this.tables.values().iterator(); i.hasNext();) {
-			final Table t = (Table) i.next();
-			fksToBeDropped.addAll(t.getForeignKeys());
-		}
-
-		// Are we key-guessing? Key guess the foreign keys, passing in a
-		// reference to the list of existing foreign keys. After this call has
-		// completed, the list will contain all those foreign keys which no
-		// longer exist, and can safely be dropped.
-		if (this.getKeyGuessing())
-			this.synchroniseKeysUsingKeyGuessing(fksToBeDropped);
-		// Otherwise, use DMD to do the same, also passing in the list of
-		// existing foreign keys to be updated as the call progresses. Also pass
-		// in the DMD details so it doesn't have to work them out for itself.
-		else
-			this.synchroniseKeysUsingDMD(fksToBeDropped, dmd, schema, catalog);
-
-		// Drop any foreign keys that are left over (but not handmade ones).
-		for (final Iterator i = fksToBeDropped.iterator(); i.hasNext();) {
-			final Key k = (Key) i.next();
-			if (k.getStatus().equals(ComponentStatus.HANDMADE))
+			// Obtain the table and its primary key.
+			final Table pkTable = (Table) i.next();
+			final PrimaryKey pk = pkTable.getPrimaryKey();
+			// Skip all tables which have no primary key.
+			if (pk == null)
 				continue;
-			k.destroy();
+
+			// Make a list of relations that already exist in this schema, from
+			// some previous run. Any relations that are left in this list by
+			// the end of the loop for this table no longer exist in the
+			// database, and will be dropped.
+			final List relationsToBeDropped = new ArrayList(pk.getRelations());
+
+			// Identify all foreign keys in the database metadata that refer
+			// to the current primary key.
+			final ResultSet dbTblFKCols = dmd.getExportedKeys(catalog, schema,
+					pkTable.getName());
+
+			// Loop through the results. There will be one result row per column
+			// per key, so we need to build up a set of key columns in a map.
+			// The map keys represent the column position within a key. Each map
+			// value is a list of columns. In essence the map is a 2-D
+			// representation of the foreign keys which refer to this PK, with
+			// the keys of the map (Y-axis) representing the column position in
+			// the FK, and the values of the map (X-axis) representing each
+			// individual FK. In all cases, FK columns are assumed to be in the
+			// same order as the PK columns. The map is sorted by key column
+			// position.
+			final TreeMap dbFKs = new TreeMap();
+			while (dbTblFKCols.next()) {
+				final String fkTblName = dbTblFKCols.getString("FKTABLE_NAME");
+				final String fkColName = dbTblFKCols.getString("FKCOLUMN_NAME");
+				final Short fkColSeq = new Short(dbTblFKCols
+						.getShort("KEY_SEQ"));
+				// Note the column.
+				if (!dbFKs.containsKey(fkColSeq))
+					dbFKs.put(fkColSeq, new ArrayList());
+				((List) dbFKs.get(fkColSeq)).add(this.getTableByName(fkTblName)
+						.getColumnByName(fkColName));
+			}
+			dbTblFKCols.close();
+
+			// Only construct FKs if we actually found any.
+			if (!dbFKs.isEmpty()) {
+				// Identify the sequence of the first column, which may be 0 or
+				// 1, depending on database implementation.
+				final int firstColSeq = ((Short) dbFKs.firstKey()).intValue();
+
+				// How many columns are in the PK?
+				final int pkColCount = pkTable.getPrimaryKey().countColumns();
+
+				// How many FKs do we have?
+				final int fkCount = ((List) dbFKs.get(dbFKs.firstKey())).size();
+
+				// Loop through the FKs, and construct each one at a time.
+				for (int j = 0; j < fkCount; j++) {
+					// Set up an array to hold the FK columns.
+					final Column[] candidateFKColumns = new Column[pkColCount];
+
+					// For each FK column name, look up the actual column in the
+					// table.
+					for (final Iterator k = dbFKs.entrySet().iterator(); k
+							.hasNext();) {
+						final Map.Entry entry = (Map.Entry) k.next();
+						final Short keySeq = (Short) entry.getKey();
+						// Convert the db-specific column index to a 0-indexed
+						// figure for the array of fk columns.
+						final int fkColSeq = keySeq.intValue() - firstColSeq;
+						candidateFKColumns[fkColSeq] = (Column) ((List) entry
+								.getValue()).get(j);
+					}
+
+					// Create a template foreign key based around the set
+					// of candidate columns we found.
+					ForeignKey fk;
+					try {
+						fk = new GenericForeignKey(Arrays
+								.asList(candidateFKColumns));
+					} catch (final Throwable t) {
+						throw new MartBuilderInternalError(t);
+					}
+					final Table fkTable = fk.getTable();
+
+					// If any FK already exists on the target table with the
+					// same columns in the same order, then reuse it.
+					boolean fkAlreadyExists = false;
+					for (final Iterator f = fkTable.getForeignKeys().iterator(); f
+							.hasNext()
+							&& !fkAlreadyExists;) {
+						final ForeignKey candidateFK = (ForeignKey) f.next();
+						if (candidateFK.equals(fk)) {
+							// Found one. Reuse it!
+							fk = candidateFK;
+							// Update the status to indicate that the FK is
+							// backed by the database, if previously it was
+							// handmade.
+							if (fk.getStatus().equals(ComponentStatus.HANDMADE))
+								fk.setStatus(ComponentStatus.INFERRED);
+							// Remove the FK from the list to be dropped later,
+							// as it definitely exists now.
+							fksToBeDropped.remove(candidateFK);
+							// Flag the key as existing.
+							fkAlreadyExists = true;
+						}
+					}
+
+					// Has the key been reused, or is it a new one?
+					if (!fkAlreadyExists) {
+						// Its brand new, so go ahead and make the relation.
+						try {
+							fkTable.addForeignKey(fk);
+						} catch (final Throwable t) {
+							throw new MartBuilderInternalError(t);
+						}
+
+						// Work out whether the relation from the FK to the PK
+						// should be 1:M or 1:1. The rule is that it will be 1:M
+						// in all cases except where the FK table has a PK with
+						// identical columns to the FK, in which case it is 1:1,
+						// as the FK is unique.
+						Cardinality card = Cardinality.MANY;
+						final PrimaryKey fkPK = fkTable.getPrimaryKey();
+						if (fkPK != null
+								&& fk.getColumns().equals(fkPK.getColumns()))
+							card = Cardinality.ONE;
+
+						// Establish the relation.
+						try {
+							new GenericRelation(pk, fk, card);
+						} catch (final Throwable t) {
+							throw new MartBuilderInternalError(t);
+						}
+					} else {
+						// If the FK has been reused, check to see if it already
+						// has a relation. There are three possible situations
+						// here:
+						// a) the relation exists between the FK and the PK
+						// already, in which case we can reuse it,
+						// b) the FK has no existing relation, in which case we
+						// can create one, and
+						// c) the FK has an existing relation to some other PK,
+						// which would be logically impossible.
+
+						// Iterate through the existing relations on the key.
+						boolean relationExists = false;
+						for (final Iterator f = fk.getRelations().iterator(); f
+								.hasNext()
+								&& !relationExists;) {
+							// Obtain the next relation.
+							final Relation candidateRel = (Relation) f.next();
+
+							// a) a relation already exists between the FK and
+							// the PK.
+							if (candidateRel.getOtherKey(fk).equals(pk)) {
+								// Update the relation's status if handmade, as
+								// it is now backed by the database.
+								if (candidateRel.getStatus().equals(
+										ComponentStatus.HANDMADE))
+									try {
+										candidateRel
+												.setStatus(ComponentStatus.INFERRED);
+									} catch (final Throwable t) {
+										throw new MartBuilderInternalError(t);
+									}
+								// Don't drop it at the end of the loop.
+								relationsToBeDropped.remove(candidateRel);
+								// Say we've found it.
+								relationExists = true;
+							}
+
+							// b.i) an incorrect relation exists somewhere else,
+							// which we should drop now because the database no
+							// longer infers it, so in fact we need do nothing
+							// here.
+
+							else if (candidateRel.getStatus().equals(
+									ComponentStatus.INFERRED_INCORRECT)) {
+
+							}
+
+							// b.ii) an inferred or handmade relation exists
+							// somewhere else, which produces a logical
+							// impossibility.
+							else
+								throw new MartBuilderInternalError();
+						}
+
+						// If relation did not already exist, create it.
+						if (!relationExists) {
+							// Work out whether the relation from the FK to the
+							// PK should be 1:M or 1:1. The rule is that it will
+							// be 1:M in all cases except where the FK table has
+							// a PK with identical columns to the FK, in which
+							// case it is 1:1, as the FK is unique.
+							Cardinality card = Cardinality.MANY;
+							final PrimaryKey fkPK = fkTable.getPrimaryKey();
+							if (fkPK != null
+									&& fk.getColumns()
+											.equals(fkPK.getColumns()))
+								card = Cardinality.ONE;
+
+							// Establish the relation.
+							try {
+								new GenericRelation(pk, fk, card);
+							} catch (final Throwable t) {
+								throw new MartBuilderInternalError(t);
+							}
+						}
+					}
+				}
+			}
+
+			// Remove any relations that we didn't find in the database (but
+			// leave the handmade ones behind).
+			for (final Iterator j = relationsToBeDropped.iterator(); j
+					.hasNext();) {
+				final Relation r = (Relation) j.next();
+				if (r.getStatus().equals(ComponentStatus.HANDMADE))
+					continue;
+				r.destroy();
+			}
 		}
 	}
 
@@ -823,251 +682,392 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	}
 
 	/**
-	 * Establish foreign keys based purely on database metadata.
-	 * 
-	 * @param fksToBeDropped
-	 *            the list of foreign keys to update as we go along. By the end
-	 *            of the method, the only keys left in this list should be ones
-	 *            that no longer exist in the database and may be dropped.
-	 * @param dmd
-	 *            the database metadata to obtain the foreign keys from.
-	 * @param schema
-	 *            the database schema to read metadata from.
-	 * @param catalog
-	 *            the database catalog to read metadata from.
-	 * @throws SQLException
-	 *             if there was a problem talking to the database.
-	 * @throws BuilderException
-	 *             if there was a logical problem during construction of the set
-	 *             of foreign keys.
+	 * {@inheritDoc}
+	 * <p>
+	 * In our case, cohabitation means that the partner link is also a
+	 * {@link JDBCDataLink} and that its connection is connected to the same
+	 * database server listening on the same port and connected with the same
+	 * username.
 	 */
-	private void synchroniseKeysUsingDMD(final Collection fksToBeDropped,
-			final DatabaseMetaData dmd, final String schema,
-			final String catalog) throws SQLException, BuilderException {
-		// Loop through all the tables in the database, which is the same
-		// as looping through all the primary keys.
-		for (final Iterator i = this.tables.values().iterator(); i.hasNext();) {
-			// Obtain the table and its primary key.
-			final Table pkTable = (Table) i.next();
-			final PrimaryKey pk = pkTable.getPrimaryKey();
-			// Skip all tables which have no primary key.
-			if (pk == null)
-				continue;
+	public boolean canCohabit(final DataLink partner) {
+		// We can't cohabit with non-JDBCDataLink partners.
+		if (!(partner instanceof JDBCDataLink))
+			return false;
+		final JDBCDataLink partnerLink = (JDBCDataLink) partner;
 
-			// Make a list of relations that already exist in this schema, from
-			// some previous run. Any relations that are left in this list by
-			// the end of the loop for this table no longer exist in the
-			// database, and will be dropped.
-			final List relationsToBeDropped = new ArrayList(pk.getRelations());
+		// Work out the partner's catalogs and schemas.
+		final List partnerSchemas = new ArrayList();
+		try {
+			final DatabaseMetaData dmd = partnerLink.getConnection()
+					.getMetaData();
+			// We need to compare by catalog only.
+			final ResultSet catalogs = dmd.getCatalogs();
+			while (catalogs.next())
+				partnerSchemas.add(catalogs.getString("TABLE_CAT"));
+			return partnerSchemas.contains(this.getConnection().getCatalog());
+		} catch (final Throwable t) {
+			// If get an error, assume can't find anything, thus assume
+			// incompatible.
+			return false;
+		}
+	}
 
-			// Identify all foreign keys in the database metadata that refer
-			// to the current primary key.
-			final ResultSet dbTblFKCols = dmd.getExportedKeys(catalog, schema,
-					pkTable.getName());
+	public Connection getConnection() throws SQLException {
+		// If we have not connected before, we should attempt to connect now.
+		if (this.connection == null) {
+			// Start out with no driver at all.
+			Class loadedDriverClass = null;
 
-			// Loop through the results. There will be one result row per column
-			// per key, so we need to build up a set of key columns in a map.
-			// The map keys represent the column position within a key. Each map
-			// value is a list of columns. In essence the map is a 2-D
-			// representation of the foreign keys which refer to this PK, with
-			// the keys of the map (Y-axis) representing the column position in
-			// the FK, and the values of the map (X-axis) representing each
-			// individual FK. In all cases, FK columns are assumed to be in the
-			// same order as the PK columns. The map is sorted by key column
-			// position.
-			final TreeMap dbFKs = new TreeMap();
-			while (dbTblFKCols.next()) {
-				final String fkTblName = dbTblFKCols.getString("FKTABLE_NAME");
-				final String fkColName = dbTblFKCols.getString("FKCOLUMN_NAME");
-				final Short fkColSeq = new Short(dbTblFKCols
-						.getShort("KEY_SEQ"));
-				// Note the column.
-				if (!dbFKs.containsKey(fkColSeq))
-					dbFKs.put(fkColSeq, new ArrayList());
-				((List) dbFKs.get(fkColSeq)).add(this.getTableByName(fkTblName)
-						.getColumnByName(fkColName));
+			// If a path was specified for the driver, and that path exists,
+			// load the driver from that path.
+			if (this.driverClassLocation != null
+					&& this.driverClassLocation.exists())
+				try {
+					final ClassLoader classLoader = URLClassLoader
+							.newInstance(new URL[] { this.driverClassLocation
+									.toURL() });
+					loadedDriverClass = classLoader
+							.loadClass(this.driverClassName);
+				} catch (final ClassNotFoundException e) {
+					final SQLException e2 = new SQLException();
+					e2.initCause(e);
+					throw e2;
+				} catch (final MalformedURLException e) {
+					throw new MartBuilderInternalError(e);
+				}
+
+			// If we failed to load the driver from the custom path, try the
+			// system class loader instead.
+			if (loadedDriverClass == null)
+				try {
+					loadedDriverClass = Class.forName(this.driverClassName);
+				} catch (final ClassNotFoundException e) {
+					final SQLException e2 = new SQLException();
+					e2.initCause(e);
+					throw e2;
+				}
+
+			// Check it really is an instance of Driver.
+			if (!Driver.class.isAssignableFrom(loadedDriverClass))
+				throw new ClassCastException(Resources
+						.get("driverClassNotJDBCDriver"));
+
+			// Connect!
+			final Properties properties = new Properties();
+			properties.setProperty("user", this.username);
+			if (this.password != null)
+				properties.setProperty("password", this.password);
+			this.connection = DriverManager.getConnection(this.url, properties);
+
+			// Check the schema name.
+			final DatabaseMetaData dmd = this.connection.getMetaData();
+			final String catalog = this.connection.getCatalog();
+			ResultSet rs = dmd.getTables(catalog, this.schemaName, "%", null);
+			if (!rs.isBeforeFirst()) {
+				rs = dmd.getTables(catalog, this.schemaName.toUpperCase(), "%",
+						null);
+				if (rs.isBeforeFirst())
+					this.schemaName = this.schemaName.toUpperCase();
 			}
-			dbTblFKCols.close();
+			if (!rs.isBeforeFirst()) {
+				rs = dmd.getTables(catalog, this.schemaName.toUpperCase(), "%",
+						null);
+				if (rs.isBeforeFirst())
+					this.schemaName = this.schemaName.toLowerCase();
+			}
+			rs.close();
+		}
 
-			// Only construct FKs if we actually found any.
-			if (!dbFKs.isEmpty()) {
-				// Identify the sequence of the first column, which may be 0 or
-				// 1, depending on database implementation.
-				final int firstColSeq = ((Short) dbFKs.firstKey()).intValue();
+		// Return the connection.
+		return this.connection;
+	}
 
-				// How many columns are in the PK?
-				final int pkColCount = pkTable.getPrimaryKey().countColumns();
+	public String getDatabaseSchema() {
+		return this.schemaName;
+	}
 
-				// How many FKs do we have?
-				final int fkCount = ((List) dbFKs.get(dbFKs.firstKey())).size();
+	public File getDriverClassLocation() {
+		return this.driverClassLocation;
+	}
 
-				// Loop through the FKs, and construct each one at a time.
-				for (int j = 0; j < fkCount; j++) {
-					// Set up an array to hold the FK columns.
-					final Column[] candidateFKColumns = new Column[pkColCount];
+	public String getDriverClassName() {
+		return this.driverClassName;
+	}
 
-					// For each FK column name, look up the actual column in the
-					// table.
-					for (final Iterator k = dbFKs.entrySet().iterator(); k
-							.hasNext();) {
-						final Map.Entry entry = (Map.Entry) k.next();
-						final Short keySeq = (Short) entry.getKey();
-						// Convert the db-specific column index to a 0-indexed
-						// figure for the array of fk columns.
-						final int fkColSeq = keySeq.intValue() - firstColSeq;
-						candidateFKColumns[fkColSeq] = (Column) ((List) entry
-								.getValue()).get(j);
-					}
+	public String getJDBCURL() {
+		return this.url;
+	}
 
-					// Create a template foreign key based around the set
-					// of candidate columns we found.
-					ForeignKey fk;
+	public String getPassword() {
+		return this.password;
+	}
+
+	public String getUsername() {
+		return this.username;
+	}
+
+	public Schema replicate(final String newName) {
+		// Make an empty copy.
+		final Schema newSchema = new JDBCSchema(this.driverClassLocation,
+				this.driverClassName, this.url, this.schemaName, this.username,
+				this.password, newName, this.getKeyGuessing());
+
+		// Copy the contents over.
+		this.replicateContents(newSchema);
+
+		// Return the copy.
+		return newSchema;
+	}
+
+	public void setDatabaseSchema(final String schemaName) {
+		this.schemaName = schemaName;
+	}
+
+	public void setDriverClassLocation(final File driverClassLocation) {
+		this.driverClassLocation = driverClassLocation;
+	}
+
+	public void setDriverClassName(final String driverClassName) {
+		this.driverClassName = driverClassName;
+	}
+
+	public void setJDBCURL(final String url) {
+		this.url = url;
+	}
+
+	public void setPassword(final String password) {
+		this.password = password;
+	}
+
+	public void setUsername(final String username) {
+		this.username = username;
+	}
+
+	public void synchronise() throws SQLException, BuilderException {
+		// Get database metadata, catalog, and schema details.
+		final DatabaseMetaData dmd = this.getConnection().getMetaData();
+		final String catalog = this.getConnection().getCatalog();
+
+		// Create a list of existing tables. During this method, we remove from
+		// this list all tables that still exist in the database. At the end of
+		// the method, the list contains only those tables which no longer
+		// exist, so they will be dropped.
+		final List tablesToBeDropped = new ArrayList(this.tables.values());
+
+		// Load tables and views from database, then loop over them.
+		final ResultSet dbTables = dmd.getTables(catalog, this.schemaName, "%",
+				new String[] { "TABLE", "VIEW", "ALIAS", "SYNONYM" });
+
+		// Do the loop.
+		while (dbTables.next()) {
+			// What is the table called?
+			final String dbTableName = dbTables.getString("TABLE_NAME");
+
+			// Look to see if we already have a table by this name defined. If
+			// we do, reuse it. If not, create a new table.
+			Table dbTable = this.getTableByName(dbTableName);
+			if (dbTable == null)
+				try {
+					dbTable = new GenericTable(dbTableName, this);
+				} catch (final Throwable t) {
+					throw new MartBuilderInternalError(t);
+				}
+
+			// Table exists, so remove it from our list of tables to be dropped
+			// at the end of the method.
+			tablesToBeDropped.remove(dbTable);
+
+			// Make a list of all the columns in the table. Any columns
+			// remaining in this list by the end of the loop will be dropped.
+			final List colsToBeDropped = new ArrayList(dbTable.getColumns());
+
+			// Load the table columns from the database, then loop over them.
+			final ResultSet dbTblCols = dmd.getColumns(catalog,
+					this.schemaName, dbTableName, "%");
+			// FIXME: When using Oracle, if the table is a synonym then the
+			// above call returns no results.
+			while (dbTblCols.next()) {
+				// What is the column called, and is it nullable?
+				final String dbTblColName = dbTblCols.getString("COLUMN_NAME");
+
+				// Look to see if the column already exists on this table. If it
+				// does, reuse it. Else, create it.
+				Column dbTblCol = dbTable.getColumnByName(dbTblColName);
+				if (dbTblCol == null)
 					try {
-						fk = new GenericForeignKey(Arrays
-								.asList(candidateFKColumns));
+						dbTblCol = new GenericColumn(dbTblColName, dbTable);
 					} catch (final Throwable t) {
 						throw new MartBuilderInternalError(t);
 					}
-					final Table fkTable = fk.getTable();
 
-					// If any FK already exists on the target table with the
-					// same columns in the same order, then reuse it.
-					boolean fkAlreadyExists = false;
-					for (final Iterator f = fkTable.getForeignKeys().iterator(); f
-							.hasNext()
-							&& !fkAlreadyExists;) {
-						final ForeignKey candidateFK = (ForeignKey) f.next();
-						if (candidateFK.equals(fk)) {
-							// Found one. Reuse it!
-							fk = candidateFK;
-							// Update the status to indicate that the FK is
-							// backed by the database, if previously it was
-							// handmade.
-							if (fk.getStatus().equals(ComponentStatus.HANDMADE))
-								fk.setStatus(ComponentStatus.INFERRED);
-							// Remove the FK from the list to be dropped later,
-							// as it definitely exists now.
-							fksToBeDropped.remove(candidateFK);
-							// Flag the key as existing.
-							fkAlreadyExists = true;
-						}
-					}
+				// Column exists, so remove it from our list of columns to be
+				// dropped at the end of the loop.
+				colsToBeDropped.remove(dbTblCol);
+			}
+			dbTblCols.close();
 
-					// Has the key been reused, or is it a new one?
-					if (!fkAlreadyExists) {
-						// Its brand new, so go ahead and make the relation.
-						try {
-							fkTable.addForeignKey(fk);
-						} catch (final Throwable t) {
-							throw new MartBuilderInternalError(t);
-						}
+			// Drop all columns that are left in the list, as they no longer
+			// exist in the database.
+			for (final Iterator i = colsToBeDropped.iterator(); i.hasNext();) {
+				final Column column = (Column) i.next();
+				dbTable.removeColumn(column);
+			}
 
-						// Work out whether the relation from the FK to the PK
-						// should be 1:M or 1:1. The rule is that it will be 1:M
-						// in all cases except where the FK table has a PK with
-						// identical columns to the FK, in which case it is 1:1,
-						// as the FK is unique.
-						Cardinality card = Cardinality.MANY;
-						final PrimaryKey fkPK = fkTable.getPrimaryKey();
-						if (fkPK != null
-								&& fk.getColumns().equals(fkPK.getColumns()))
-							card = Cardinality.ONE;
+			// Obtain the primary key from the database. Even in databases
+			// without referential integrity, the primary key is still defined
+			// and can be obtained from the metadata.
+			final ResultSet dbTblPKCols = dmd.getPrimaryKeys(catalog,
+					this.schemaName, dbTableName);
 
-						// Establish the relation.
-						try {
-							new GenericRelation(pk, fk, card);
-						} catch (final Throwable t) {
-							throw new MartBuilderInternalError(t);
-						}
-					} else {
-						// If the FK has been reused, check to see if it already
-						// has a relation. There are three possible situations
-						// here:
-						// a) the relation exists between the FK and the PK
-						// already, in which case we can reuse it,
-						// b) the FK has no existing relation, in which case we
-						// can create one, and
-						// c) the FK has an existing relation to some other PK,
-						// which would be logically impossible.
+			// Load the primary key columns into a map keyed by column position.
+			// In other words, the first column in the key has a map key of 1,
+			// and so on. We do this because we can't guarantee we'll read the
+			// key columns from the database in the correct order. We keep the
+			// map
+			// sorted, so that when we iterate over it later we get back the
+			// columns in the correct order.
+			final Map pkCols = new TreeMap();
+			while (dbTblPKCols.next()) {
+				final String pkColName = dbTblPKCols.getString("COLUMN_NAME");
+				final Short pkColPosition = new Short(dbTblPKCols
+						.getShort("KEY_SEQ"));
+				pkCols.put(pkColPosition, dbTable.getColumnByName(pkColName));
+			}
+			dbTblPKCols.close();
 
-						// Iterate through the existing relations on the key.
-						boolean relationExists = false;
-						for (final Iterator f = fk.getRelations().iterator(); f
-								.hasNext()
-								&& !relationExists;) {
-							// Obtain the next relation.
-							final Relation candidateRel = (Relation) f.next();
+			// Did DMD find a PK? If not, which is really unusual but
+			// potentially may happen, attempt to find one by looking for a
+			// single
+			// column with the same name as the table or with '_id' appended.
+			// Only do this if we are using key-guessing.
+			if (pkCols.isEmpty() && this.getKeyGuessing()) {
+				// Plain version first.
+				Column candidateCol = dbTable.getColumnByName(dbTableName);
+				// Try with '_id' appended if plain version turned up nothing.
+				if (candidateCol == null)
+					candidateCol = dbTable.getColumnByName(dbTableName
+							+ Resources.get("primaryKeySuffix"));
+				// Found something? Add it to the primary key columns map, with
+				// a dummy key of 1. (Use Short for the key because that is what
+				// DMD would have used had it found anything itself).
+				if (candidateCol != null)
+					pkCols.put(Short.valueOf("1"), candidateCol);
+			}
 
-							// a) a relation already exists between the FK and
-							// the PK.
-							if (candidateRel.getOtherKey(fk).equals(pk)) {
-								// Update the relation's status if handmade, as
-								// it is now backed by the database.
-								if (candidateRel.getStatus().equals(
-										ComponentStatus.HANDMADE))
-									try {
-										candidateRel
-												.setStatus(ComponentStatus.INFERRED);
-									} catch (final Throwable t) {
-										throw new MartBuilderInternalError(t);
-									}
-								// Don't drop it at the end of the loop.
-								relationsToBeDropped.remove(candidateRel);
-								// Say we've found it.
-								relationExists = true;
-							}
+			// Obtain the existing primary key on the table, if the table
+			// previously existed and even had one in the first place.
+			final PrimaryKey existingPK = dbTable.getPrimaryKey();
 
-							// b.i) an incorrect relation exists somewhere else,
-							// which we should drop now because the database no
-							// longer infers it, so in fact we need do nothing
-							// here.
-
-							else if (candidateRel.getStatus().equals(
-									ComponentStatus.INFERRED_INCORRECT)) {
-
-							}
-
-							// b.ii) an inferred or handmade relation exists
-							// somewhere else, which produces a logical
-							// impossibility.
-							else
-								throw new MartBuilderInternalError();
-						}
-
-						// If relation did not already exist, create it.
-						if (!relationExists) {
-							// Work out whether the relation from the FK to the
-							// PK should be 1:M or 1:1. The rule is that it will
-							// be 1:M in all cases except where the FK table has
-							// a PK with identical columns to the FK, in which
-							// case it is 1:1, as the FK is unique.
-							Cardinality card = Cardinality.MANY;
-							final PrimaryKey fkPK = fkTable.getPrimaryKey();
-							if (fkPK != null
-									&& fk.getColumns()
-											.equals(fkPK.getColumns()))
-								card = Cardinality.ONE;
-
-							// Establish the relation.
-							try {
-								new GenericRelation(pk, fk, card);
-							} catch (final Throwable t) {
-								throw new MartBuilderInternalError(t);
-							}
-						}
-					}
+			// Did we find a PK on the database copy of the table?
+			if (!pkCols.isEmpty()) {
+				// Yes, we found a PK on the database copy of the table. So,
+				// create a new key based around the columns we identified.
+				PrimaryKey candidatePK;
+				try {
+					candidatePK = new GenericPrimaryKey(new ArrayList(pkCols
+							.values()));
+				} catch (final Throwable t) {
+					throw new MartBuilderInternalError(t);
 				}
-			}
 
-			// Remove any relations that we didn't find in the database (but
-			// leave the handmade ones behind).
-			for (final Iterator j = relationsToBeDropped.iterator(); j
-					.hasNext();) {
-				final Relation r = (Relation) j.next();
-				if (r.getStatus().equals(ComponentStatus.HANDMADE))
-					continue;
-				r.destroy();
-			}
+				// If the existing table has no PK, or has a PK which matches
+				// and is handmade, or has a PK which does not match and is not
+				// handmade, replace that PK with the one we found. This way we
+				// preserve any existing handmade PKs, and don't override any
+				// marked as incorrect.
+				if (existingPK == null
+						|| existingPK.equals(candidatePK)
+						&& existingPK.getStatus().equals(
+								ComponentStatus.HANDMADE)
+						|| !existingPK.equals(candidatePK)
+						&& !existingPK.getStatus().equals(
+								ComponentStatus.HANDMADE))
+					try {
+						dbTable.setPrimaryKey(candidatePK);
+					} catch (final Throwable t) {
+						throw new MartBuilderInternalError(t);
+					}
+			} else // No, we did not find a PK on the database copy of the
+			// table,
+			// so that table should not have a PK at all. So if the existing
+			// table has a PK which is not handmade, remove it.
+			if (existingPK != null
+					&& !existingPK.getStatus().equals(ComponentStatus.HANDMADE))
+				try {
+					dbTable.setPrimaryKey(null);
+				} catch (final Throwable t) {
+					throw new MartBuilderInternalError(t);
+				}
 		}
+		dbTables.close();
+
+		// Remove from schema all tables not found in the database, using the
+		// list we constructed above.
+		for (final Iterator i = tablesToBeDropped.iterator(); i.hasNext();) {
+			final Table existingTable = (Table) i.next();
+			final String tableName = existingTable.getName();
+			existingTable.destroy();
+			this.tables.remove(tableName);
+		}
+
+		// Sync the keys.
+		this.synchroniseKeys();
+	}
+
+	public void synchroniseKeys() throws SQLException, BuilderException {
+		final DatabaseMetaData dmd = this.getConnection().getMetaData();
+		final String catalog = this.getConnection().getCatalog();
+		final String schema = this.schemaName;
+
+		// Work out a list of all foreign keys currently existing.
+		// Any remaining in this list later will be dropped.
+		final List fksToBeDropped = new ArrayList();
+		for (final Iterator i = this.tables.values().iterator(); i.hasNext();) {
+			final Table t = (Table) i.next();
+			fksToBeDropped.addAll(t.getForeignKeys());
+		}
+
+		// Are we key-guessing? Key guess the foreign keys, passing in a
+		// reference to the list of existing foreign keys. After this call has
+		// completed, the list will contain all those foreign keys which no
+		// longer exist, and can safely be dropped.
+		if (this.getKeyGuessing())
+			this.synchroniseKeysUsingKeyGuessing(fksToBeDropped);
+		// Otherwise, use DMD to do the same, also passing in the list of
+		// existing foreign keys to be updated as the call progresses. Also pass
+		// in the DMD details so it doesn't have to work them out for itself.
+		else
+			this.synchroniseKeysUsingDMD(fksToBeDropped, dmd, schema, catalog);
+
+		// Drop any foreign keys that are left over (but not handmade ones).
+		for (final Iterator i = fksToBeDropped.iterator(); i.hasNext();) {
+			final Key k = (Key) i.next();
+			if (k.getStatus().equals(ComponentStatus.HANDMADE))
+				continue;
+			k.destroy();
+		}
+	}
+
+	public boolean test() throws Exception {
+		// Establish the JDBC connection. May throw an exception of its own,
+		// which is fine, just let it go.
+		final Connection connection = this.getConnection();
+		// If we have no connection, we can't test it!
+		if (connection == null)
+			return false;
+
+		// Get the metadata.
+		final DatabaseMetaData dmd = connection.getMetaData();
+
+		// By opening, executing, then closing a DMD query we will test
+		// the connection fully without actually having to read anything from
+		// it.
+		final String catalog = connection.getCatalog();
+		final ResultSet rs = dmd.getTables(catalog, this.schemaName, "%", null);
+		final boolean worked = rs.isBeforeFirst();
+		rs.close();
+
+		// If we get here, it worked.
+		return worked;
 	}
 }

@@ -62,13 +62,11 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * {@link JDBCSchema} implementation which represents the connection.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.10, 14th August 2006
+ * @version 0.1.11, 11th September 2006
  * @since 0.1
  */
 public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
-		ActionListener, DocumentListener {
-	private static final long serialVersionUID = 1;
-
+		DocumentListener {
 	// Please add any more default drivers that we support to this list. The
 	// keys are the driver classnames, and the values are arrays of strings.
 	// The first entry in the array should be the default port number for this
@@ -79,6 +77,9 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	private static final Map DRIVER_MAP = new HashMap();
 
 	private static final Map DRIVER_NAME_MAP = new HashMap();
+
+	private static final long serialVersionUID = 1;
+
 	static {
 		// JDBC URL formats.
 		JDBCSchemaConnectionPanel.DRIVER_MAP
@@ -101,11 +102,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 
 	private String currentJDBCURLTemplate;
 
-	private MartTab martTab;
-
-	private JComboBox copysettings;
-
-	private JComboBox predefinedDriverClass;
+	private JTextField database;
 
 	private JTextField driverClass;
 
@@ -113,21 +110,23 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 
 	private JButton driverClassLocationButton;
 
+	private JTextField host;
+
 	private JFileChooser jarFileChooser;
 
 	private JTextField jdbcURL;
 
-	private JTextField host;
+	private MartTab martTab;
+
+	private JPasswordField password;
 
 	private JFormattedTextField port;
 
+	private JComboBox predefinedDriverClass;
+
 	private JTextField schemaName;
 
-	private JTextField database;
-
 	private JTextField username;
-
-	private JPasswordField password;
 
 	/**
 	 * This constructor creates a panel with all the fields necessary to
@@ -199,15 +198,28 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		this.predefinedDriverClass = new JComboBox(
 				JDBCSchemaConnectionPanel.DRIVER_NAME_MAP.keySet().toArray(
 						new String[0]));
-		this.predefinedDriverClass.addActionListener(this);
+		this.predefinedDriverClass.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				// This method is called when the driver class field is
+				// changed, either by the user typing in it, or using
+				// the drop-down to select a predefine value.
 
-		// Build a combo box that lists all other JDBCSchema instances in
-		// the mart, and allows the user to copy settings from them.
-		this.copysettings = new JComboBox();
-		for (final Iterator i = SettingsCache.getHistoryNamesForClass(
-				JDBCSchema.class).iterator(); i.hasNext();)
-			this.copysettings.addItem(i.next());
-		this.copysettings.addActionListener(this);
+					// Work out which database was selected.
+					final String classType = (String) JDBCSchemaConnectionPanel.this.predefinedDriverClass
+							.getSelectedItem();
+
+					// Use it to look up the default class for that database,
+					// then reset the drop-down to nothing-selected.
+					if (!JDBCSchemaConnectionPanel.this.isEmpty(classType)) {
+						final String driverClassName = (String) JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
+								.get(classType);
+						if (!JDBCSchemaConnectionPanel.this.driverClass
+								.getText().equals(driverClassName))
+							JDBCSchemaConnectionPanel.this.driverClass
+									.setText(driverClassName);
+					}
+			}
+		});
 
 		// Create a listener that listens for changes on the host, port
 		// and database fields, and uses this to automatically update
@@ -231,20 +243,11 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			}
 		});
 
-		// Add the copy settings label and drop-down menu.
-		JLabel label = new JLabel(Resources.get("copySettingsLabel"));
+		// Add the driver class label and field.
+		JLabel label = new JLabel(Resources.get("driverClassLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		this.add(label);
 		JPanel field = new JPanel();
-		field.add(this.copysettings);
-		gridBag.setConstraints(field, fieldConstraints);
-		this.add(field);
-
-		// Add the driver class label and field.
-		label = new JLabel(Resources.get("driverClassLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		this.add(label);
-		field = new JPanel();
 		field.add(this.predefinedDriverClass);
 		field.add(this.driverClass);
 		gridBag.setConstraints(field, fieldConstraints);
@@ -325,32 +328,43 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		});
 	}
 
-	public void resetFields(final Schema template) {
-		// Set the copy-settings box to nothing-selected.
-		this.copysettings.setSelectedIndex(-1);
-		this.predefinedDriverClass.setSelectedIndex(-1);
+	public void copySettingsFrom(final Properties template) {
+		// If it is, copy everything over from it.
+		this.driverClass.setText(template.getProperty("driverClass"));
+		this.driverClassLocation.setText(template
+				.getProperty("driverClassLocation"));
 
-		// If the template is a JDBC schema, copy the settings
-		// from it.
-		if (template instanceof JDBCSchema)
-			this.copySettingsFrom(template);
+		// Make sure the right fields get enabled.
+		this.driverClassChanged();
 
-		// Otherwise, set some sensible defaults.
-		else {
-			this.driverClass.setText(null);
-			this.driverClassLocation.setText(null);
+		// Carry on copying.
+		final String jdbcURL = template.getProperty("jdbcURL");
+		this.jdbcURL.setText(jdbcURL);
+		this.username.setText(template.getProperty("username"));
+		this.password.setText(template.getProperty("password"));
+		this.schemaName.setText(template.getProperty("schema"));
 
-			// Make sure the right fields get enabled.
-			this.driverClassChanged();
+		// Parse the JDBC URL into host, port and database, if the
+		// driver is known to us (defined in the map at the start
+		// of this class).
+		String regexURL = this.currentJDBCURLTemplate;
 
-			// Carry on resetting.
-			this.jdbcURL.setText(null);
-			this.host.setText(null);
-			this.port.setText(null);
-			this.database.setText(null);
-			this.schemaName.setText(null);
-			this.username.setText(null);
-			this.password.setText(null);
+		// Replace the three placeholders in the JDBC URL template
+		// with regex patterns. Obviously, this depends on the
+		// three placeholders appearing in the correct order.
+		// If they don't, then you're stuffed.
+		regexURL = regexURL.replaceAll("<HOST>", "(.*)");
+		regexURL = regexURL.replaceAll("<PORT>", "(.*)");
+		regexURL = regexURL.replaceAll("<DATABASE>", "(.*)");
+
+		// Use the regex to parse out the host, port and database
+		// from the JDBC URL.
+		final Pattern regex = Pattern.compile(regexURL);
+		final Matcher matcher = regex.matcher(jdbcURL);
+		if (matcher.matches()) {
+			this.host.setText(matcher.group(1));
+			this.port.setText(matcher.group(2));
+			this.database.setText(matcher.group(3));
 		}
 	}
 
@@ -398,128 +412,6 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				this.database.setText(matcher.group(3));
 			}
 		}
-	}
-
-	private void copySettingsFrom(final Properties template) {
-		// If it is, copy everything over from it.
-		this.driverClass.setText(template.getProperty("driverClass"));
-		this.driverClassLocation.setText(template
-				.getProperty("driverClassLocation"));
-
-		// Make sure the right fields get enabled.
-		this.driverClassChanged();
-
-		// Carry on copying.
-		final String jdbcURL = template.getProperty("jdbcURL");
-		this.jdbcURL.setText(jdbcURL);
-		this.username.setText(template.getProperty("username"));
-		this.password.setText(template.getProperty("password"));
-		this.schemaName.setText(template.getProperty("schema"));
-
-		// Parse the JDBC URL into host, port and database, if the
-		// driver is known to us (defined in the map at the start
-		// of this class).
-		String regexURL = this.currentJDBCURLTemplate;
-
-		// Replace the three placeholders in the JDBC URL template
-		// with regex patterns. Obviously, this depends on the
-		// three placeholders appearing in the correct order.
-		// If they don't, then you're stuffed.
-		regexURL = regexURL.replaceAll("<HOST>", "(.*)");
-		regexURL = regexURL.replaceAll("<PORT>", "(.*)");
-		regexURL = regexURL.replaceAll("<DATABASE>", "(.*)");
-
-		// Use the regex to parse out the host, port and database
-		// from the JDBC URL.
-		final Pattern regex = Pattern.compile(regexURL);
-		final Matcher matcher = regex.matcher(jdbcURL);
-		if (matcher.matches()) {
-			this.host.setText(matcher.group(1));
-			this.port.setText(matcher.group(2));
-			this.database.setText(matcher.group(3));
-		}
-	}
-
-	/**
-	 * Validates the fields. If any are invalid, it pops up a message saying so.
-	 * 
-	 * @return <tt>true</tt> if all is well, <tt>false</tt> if not.
-	 */
-	public boolean validateFields() {
-		// Make a list to hold any validation messages that may occur.
-		final List messages = new ArrayList();
-
-		// If we don't have a class, complain.
-		if (this.isEmpty(this.driverClass.getText()))
-			messages.add(Resources.get("fieldIsEmpty", Resources
-					.get("driverClass")));
-
-		// If we do have a class, and we don't know where it lives, make
-		// sure the user has told us where it lives.
-		else if (this.driverClassLocation.isEnabled()
-				&& this.isEmpty(this.driverClassLocation.getText()))
-			messages.add(Resources.get("fieldIsEmpty", Resources
-					.get("driverClassLocation")));
-
-		// If the user had to specify their own JDBC URL, make sure
-		// they have done so.
-		if (this.jdbcURL.isEnabled()) {
-			if (this.isEmpty(this.jdbcURL.getText()))
-				messages.add(Resources.get("fieldIsEmpty", Resources
-						.get("jdbcURL")));
-		}
-
-		// Otherwise, make sure they have specified all three of host, port
-		// and database.
-		else {
-			if (this.isEmpty(this.host.getText()))
-				messages.add(Resources.get("fieldIsEmpty", Resources
-						.get("host")));
-			if (this.isEmpty(this.port.getText()))
-				messages.add(Resources.get("fieldIsEmpty", Resources
-						.get("port")));
-			if (this.isEmpty(this.database.getText()))
-				messages.add(Resources.get("fieldIsEmpty", Resources
-						.get("database")));
-		}
-
-		// Make sure they have given a schema name.
-		if (this.isEmpty(this.schemaName.getText()))
-			messages.add(Resources.get("fieldIsEmpty", Resources
-					.get("schemaName")));
-
-		// Make sure they have given a username. (Password is optional as
-		// not all databases require one).
-		if (this.isEmpty(this.username.getText()))
-			messages.add(Resources.get("fieldIsEmpty", Resources
-					.get("username")));
-
-		// If there any messages to show the user, show them.
-		if (!messages.isEmpty())
-			JOptionPane.showMessageDialog(this,
-					messages.toArray(new String[0]), Resources
-							.get("validationTitle"),
-					JOptionPane.INFORMATION_MESSAGE);
-
-		// Validation succeeds if there were no messages.
-		return messages.isEmpty();
-	}
-
-	private boolean isEmpty(final String string) {
-		// Strings are empty if they are null or all whitespace.
-		return string == null || string.trim().length() == 0;
-	}
-
-	public void insertUpdate(final DocumentEvent e) {
-		this.documentEvent(e);
-	}
-
-	public void removeUpdate(final DocumentEvent e) {
-		this.documentEvent(e);
-	}
-
-	public void changedUpdate(final DocumentEvent e) {
-		this.documentEvent(e);
 	}
 
 	private void documentEvent(final DocumentEvent e) {
@@ -612,6 +504,15 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		}
 	}
 
+	public Class getSchemaClass() {
+		return JDBCSchema.class;
+	}
+	
+	private boolean isEmpty(final String string) {
+		// Strings are empty if they are null or all whitespace.
+		return string == null || string.trim().length() == 0;
+	}
+
 	private void updateJDBCURL() {
 		// If we don't have a current template, we can't parse it,
 		// so don't even attempt to do so.
@@ -635,44 +536,8 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		this.jdbcURL.setText(newURL);
 	}
 
-	public void actionPerformed(final ActionEvent e) {
-		// This method is called when the driver class field is
-		// changed, either by the user typing in it, or using
-		// the drop-down to select a predefine value.
-
-		// It is also called when the user selects an existing
-		// schema from the copy-settings box.
-
-		// Copy settings box selected?
-		if (e.getSource() == this.copysettings) {
-			// Identify which schema to copy settings from.
-			final Object obj = this.copysettings.getSelectedItem();
-
-			// If one was actually seleted, copy the settings from it.
-			if (obj != null) {
-				// Load the schema settings from our history.
-				final Properties historyProps = SettingsCache
-						.getHistoryProperties(JDBCSchema.class, (String) obj);
-				// Copy the settings.
-				this.copySettingsFrom(historyProps);
-			}
-		}
-
-		// Driver class field changed?
-		else if (e.getSource() == this.predefinedDriverClass) {
-			// Work out which database was selected.
-			final String classType = (String) this.predefinedDriverClass
-					.getSelectedItem();
-
-			// Use it to look up the default class for that database,
-			// then reset the drop-down to nothing-selected.
-			if (!this.isEmpty(classType)) {
-				final String driverClassName = (String) JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
-						.get(classType);
-				if (!this.driverClass.getText().equals(driverClassName))
-					this.driverClass.setText(driverClassName);
-			}
-		}
+	public void changedUpdate(final DocumentEvent e) {
+		this.documentEvent(e);
 	}
 
 	/**
@@ -713,6 +578,10 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		// If we got here, something went wrong, so behave
 		// as though validation failed.
 		return null;
+	}
+
+	public void insertUpdate(final DocumentEvent e) {
+		this.documentEvent(e);
 	}
 
 	/**
@@ -763,5 +632,102 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		// Return the modified schema, or the original schema if
 		// it was not a JDBC schema.
 		return schema;
+	}
+
+	public void removeUpdate(final DocumentEvent e) {
+		this.documentEvent(e);
+	}
+
+	public void resetFields(final Schema template) {
+		// Set the copy-settings box to nothing-selected.
+		this.predefinedDriverClass.setSelectedIndex(-1);
+
+		// If the template is a JDBC schema, copy the settings
+		// from it.
+		if (template instanceof JDBCSchema)
+			this.copySettingsFrom(template);
+
+		// Otherwise, set some sensible defaults.
+		else {
+			this.driverClass.setText(null);
+			this.driverClassLocation.setText(null);
+
+			// Make sure the right fields get enabled.
+			this.driverClassChanged();
+
+			// Carry on resetting.
+			this.jdbcURL.setText(null);
+			this.host.setText(null);
+			this.port.setText(null);
+			this.database.setText(null);
+			this.schemaName.setText(null);
+			this.username.setText(null);
+			this.password.setText(null);
+		}
+	}
+
+	/**
+	 * Validates the fields. If any are invalid, it pops up a message saying so.
+	 * 
+	 * @return <tt>true</tt> if all is well, <tt>false</tt> if not.
+	 */
+	public boolean validateFields() {
+		// Make a list to hold any validation messages that may occur.
+		final List messages = new ArrayList();
+
+		// If we don't have a class, complain.
+		if (this.isEmpty(this.driverClass.getText()))
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("driverClass")));
+
+		// If we do have a class, and we don't know where it lives, make
+		// sure the user has told us where it lives.
+		else if (this.driverClassLocation.isEnabled()
+				&& this.isEmpty(this.driverClassLocation.getText()))
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("driverClassLocation")));
+
+		// If the user had to specify their own JDBC URL, make sure
+		// they have done so.
+		if (this.jdbcURL.isEnabled()) {
+			if (this.isEmpty(this.jdbcURL.getText()))
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("jdbcURL")));
+		}
+
+		// Otherwise, make sure they have specified all three of host, port
+		// and database.
+		else {
+			if (this.isEmpty(this.host.getText()))
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("host")));
+			if (this.isEmpty(this.port.getText()))
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("port")));
+			if (this.isEmpty(this.database.getText()))
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("database")));
+		}
+
+		// Make sure they have given a schema name.
+		if (this.isEmpty(this.schemaName.getText()))
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("schemaName")));
+
+		// Make sure they have given a username. (Password is optional as
+		// not all databases require one).
+		if (this.isEmpty(this.username.getText()))
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("username")));
+
+		// If there any messages to show the user, show them.
+		if (!messages.isEmpty())
+			JOptionPane.showMessageDialog(this,
+					messages.toArray(new String[0]), Resources
+							.get("validationTitle"),
+					JOptionPane.INFORMATION_MESSAGE);
+
+		// Validation succeeds if there were no messages.
+		return messages.isEmpty();
 	}
 }

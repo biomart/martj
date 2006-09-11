@@ -53,13 +53,13 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 public class SuggestDataSetDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	private MartTab martTab;
-
-	private JList tables;
-
 	private JButton cancel;
 
 	private JButton execute;
+
+	private MartTab martTab;
+
+	private JList tables;
 
 	/**
 	 * Creates (but does not open) a dialog requesting details of dataset

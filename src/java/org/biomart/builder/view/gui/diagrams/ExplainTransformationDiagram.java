@@ -38,8 +38,8 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * constructor. The results is always a diagram containing only those components
  * which are involved in the current transformation.
  * <p>
- * Note how sub-diagrams do not have contexts, in order to prevent
- * user interaction with them.
+ * Note how sub-diagrams do not have contexts, in order to prevent user
+ * interaction with them.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version 0.1.2, 29th August 2006
@@ -48,20 +48,37 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 public class ExplainTransformationDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
 
-	private DataSetTable datasetTable;
+	/**
+	 * Static reference to the background colour to use for components.
+	 */
+	public static final Color BACKGROUND_COLOUR = Color.WHITE;
 
-	private Table table;
+	private Collection columns;
+
+	private DataSetTable datasetTable;
 
 	private Key key;
 
 	private Relation relation;
 
-	private Collection columns;
+	private Table table;
 
 	/**
-	 * Static reference to the background colour to use for components.
+	 * Creates a diagram showing the given set of columns.
+	 * 
+	 * @param martTab
+	 *            the mart tab to pass menu events onto.
+	 * @param columns
+	 *            the columns to explain.
 	 */
-	public static final Color BACKGROUND_COLOUR = Color.WHITE;
+	public ExplainTransformationDiagram(final MartTab martTab,
+			final Collection columns) {
+		super(martTab);
+
+		// Remember the columns, and calculate the diagram.
+		this.columns = columns;
+		this.recalculateDiagram();
+	}
 
 	/**
 	 * Creates a diagram showing the given table and possibly it's parent too.
@@ -84,26 +101,6 @@ public class ExplainTransformationDiagram extends Diagram {
 	}
 
 	/**
-	 * Creates a diagram showing the given table.
-	 * 
-	 * @param martTab
-	 *            the mart tab to pass menu events onto.
-	 * @param table
-	 *            the table to explain.
-	 */
-	public ExplainTransformationDiagram(final MartTab martTab,
-			final Table table) {
-		super(martTab);
-
-		// Set the background.
-		this.setBackground(ExplainTransformationDiagram.BACKGROUND_COLOUR);
-
-		// Remember the table, and calculate the diagram.
-		this.table = table;
-		this.recalculateDiagram();
-	}
-
-	/**
 	 * Creates a diagram showing the given key/relation pair explanation.
 	 * 
 	 * @param martTab
@@ -113,8 +110,8 @@ public class ExplainTransformationDiagram extends Diagram {
 	 * @param relation
 	 *            the relation to explain.
 	 */
-	public ExplainTransformationDiagram(final MartTab martTab,
-			final Key key, final Relation relation) {
+	public ExplainTransformationDiagram(final MartTab martTab, final Key key,
+			final Relation relation) {
 		super(martTab);
 
 		// Set the background.
@@ -127,20 +124,27 @@ public class ExplainTransformationDiagram extends Diagram {
 	}
 
 	/**
-	 * Creates a diagram showing the given set of columns.
+	 * Creates a diagram showing the given table.
 	 * 
 	 * @param martTab
 	 *            the mart tab to pass menu events onto.
-	 * @param columns
-	 *            the columns to explain.
+	 * @param table
+	 *            the table to explain.
 	 */
-	public ExplainTransformationDiagram(final MartTab martTab,
-			final Collection columns) {
+	public ExplainTransformationDiagram(final MartTab martTab, final Table table) {
 		super(martTab);
 
-		// Remember the columns, and calculate the diagram.
-		this.columns = columns;
+		// Set the background.
+		this.setBackground(ExplainTransformationDiagram.BACKGROUND_COLOUR);
+
+		// Remember the table, and calculate the diagram.
+		this.table = table;
 		this.recalculateDiagram();
+	}
+
+	protected void updateAppearance() {
+		// Set the background.
+		this.setBackground(ExplainTransformationDiagram.BACKGROUND_COLOUR);
 	}
 
 	public void doRecalculateDiagram() {
@@ -171,11 +175,8 @@ public class ExplainTransformationDiagram extends Diagram {
 		}
 
 		// Explain a normal table?
-		else if (this.table != null) {
+		else if (this.table != null)
 			this.addDiagramComponent(new TableComponent(this.table, this));
-		}
-
-		// Explain a key/relation pair?
 		else if (this.key != null && this.relation != null) {
 			final Table source = this.key.getTable();
 			final Table target = this.relation.getOtherKey(this.key).getTable();
@@ -189,20 +190,14 @@ public class ExplainTransformationDiagram extends Diagram {
 		}
 
 		// Explain a set of columns?
-		else if (this.columns != null) {
+		else if (this.columns != null)
 			for (final Iterator i = this.columns.iterator(); i.hasNext();) {
 				final ColumnComponent columnComponent = new ColumnComponent(
 						(Column) i.next(), this);
 				this.addDiagramComponent(columnComponent);
 			}
-		}
 
 		// Resize the diagram to fit.
 		this.resizeDiagram();
-	}
-	
-	protected void updateAppearance() {
-		// Set the background.
-		this.setBackground(ExplainTransformationDiagram.BACKGROUND_COLOUR);
 	}
 }

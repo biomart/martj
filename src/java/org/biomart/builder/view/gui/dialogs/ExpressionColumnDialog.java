@@ -64,29 +64,29 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 public class ExpressionColumnDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	private MartTab martTab;
-
-	private DataSetTable table;
+	private JButton cancel;
 
 	private boolean cancelled;
-
-	private JTextField columnName;
 
 	private ColumnAliasTableModel columnAliasModel;
 
 	private JTable columnAliasTable;
 
-	private JButton insert;
+	private JTextField columnName;
 
-	private JButton remove;
+	private JButton execute;
 
 	private JTextArea expression;
 
 	private JCheckBox groupBy;
 
-	private JButton cancel;
+	private JButton insert;
 
-	private JButton execute;
+	private MartTab martTab;
+
+	private JButton remove;
+
+	private DataSetTable table;
 
 	/**
 	 * Creates (but does not open) a dialog requesting details of expression
@@ -290,6 +290,11 @@ public class ExpressionColumnDialog extends JDialog {
 		}
 	}
 
+	private boolean isEmpty(final String string) {
+		// Strings are empty if they are null or all whitespace.
+		return string == null || string.trim().length() == 0;
+	}
+
 	private boolean validateFields() {
 		// A placeholder to hold the validation messages, if any.
 		final List messages = new ArrayList();
@@ -336,9 +341,22 @@ public class ExpressionColumnDialog extends JDialog {
 		return messages.isEmpty();
 	}
 
-	private boolean isEmpty(final String string) {
-		// Strings are empty if they are null or all whitespace.
-		return string == null || string.trim().length() == 0;
+	/**
+	 * Return <tt>true</tt> if the user cancelled the box.
+	 * 
+	 * @return <tt>true</tt> if the box was cancelled.
+	 */
+	public boolean getCancelled() {
+		return this.cancelled;
+	}
+
+	/**
+	 * Return the column aliases the user selected.
+	 * 
+	 * @return the aliases.
+	 */
+	public Map getColumnAliases() {
+		return this.columnAliasModel.getColumnAliases();
 	}
 
 	/**
@@ -360,15 +378,6 @@ public class ExpressionColumnDialog extends JDialog {
 	}
 
 	/**
-	 * Return the column aliases the user selected.
-	 * 
-	 * @return the aliases.
-	 */
-	public Map getColumnAliases() {
-		return this.columnAliasModel.getColumnAliases();
-	}
-
-	/**
 	 * Return <tt>true</tt> if the user selected the group-by box.
 	 * 
 	 * @return the group-by flag.
@@ -378,22 +387,13 @@ public class ExpressionColumnDialog extends JDialog {
 	}
 
 	/**
-	 * Return <tt>true</tt> if the user cancelled the box.
-	 * 
-	 * @return <tt>true</tt> if the box was cancelled.
-	 */
-	public boolean getCancelled() {
-		return this.cancelled;
-	}
-
-	/**
 	 * This internal class represents a map of dataset columns to aliases.
 	 */
 	private static class ColumnAliasTableModel extends DefaultTableModel {
-		private static final long serialVersionUID = 1;
-
 		private static final Class[] colClasses = new Class[] {
 				DataSetColumn.class, String.class };
+
+		private static final long serialVersionUID = 1;
 
 		/**
 		 * Construct a model of aliases for the given table, and copy any
@@ -419,10 +419,6 @@ public class ExpressionColumnDialog extends JDialog {
 				}
 		}
 
-		public Class getColumnClass(final int column) {
-			return ColumnAliasTableModel.colClasses[column];
-		}
-
 		/**
 		 * Find out what aliases the user has defined.
 		 * 
@@ -439,6 +435,10 @@ public class ExpressionColumnDialog extends JDialog {
 					aliases.put(col, alias);
 			}
 			return aliases;
+		}
+
+		public Class getColumnClass(final int column) {
+			return ColumnAliasTableModel.colClasses[column];
 		}
 	}
 }

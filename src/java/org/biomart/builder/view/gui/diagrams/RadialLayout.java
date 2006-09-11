@@ -51,19 +51,19 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * @since 0.1
  */
 public class RadialLayout implements LayoutManager {
-	private static final double INTRA_PADDING = 0.0; // 72.0 = 1 inch
-
 	private static final double INTER_PADDING = 10.0; // 72.0 = 1 inch
 
+	private static final double INTRA_PADDING = 0.0; // 72.0 = 1 inch
+
 	private static final int RELATION_TAGSIZE = 10; // 72 = 1 inch at 72 dpi
+
+	private int minSize;
+
+	private Map ringNumbers;
 
 	private Map ringRadii;
 
 	private Map ringSizes;
-
-	private Map ringNumbers;
-
-	private int minSize;
 
 	private boolean sizeUnknown;
 
@@ -75,32 +75,6 @@ public class RadialLayout implements LayoutManager {
 		this.ringSizes = new HashMap();
 		this.ringNumbers = new HashMap();
 		this.sizeUnknown = true;
-	}
-
-	public Dimension preferredLayoutSize(final Container parent) {
-		synchronized (parent.getTreeLock()) {
-			// Our preferred size is our minimum size.
-			return this.minimumLayoutSize(parent);
-		}
-	}
-
-	public Dimension minimumLayoutSize(final Container parent) {
-		synchronized (parent.getTreeLock()) {
-			// Work out how big we are.
-			this.setSizes(parent);
-
-			// Work out our parent's insets.
-			final Insets insets = parent.getInsets();
-
-			// The minimum size is our size plus our
-			// parent's insets size.
-			final Dimension dim = new Dimension(0, 0);
-			dim.width = this.minSize + insets.left + insets.right;
-			dim.height = this.minSize + insets.top + insets.bottom;
-
-			// That's it!
-			return dim;
-		}
 	}
 
 	private void setSizes(final Container parent) {
@@ -220,6 +194,10 @@ public class RadialLayout implements LayoutManager {
 			// All done.
 			this.sizeUnknown = false;
 		}
+	}
+
+	public void addLayoutComponent(final String name, final Component comp) {
+		// Ignore.
 	}
 
 	public void layoutContainer(final Container parent) {
@@ -437,8 +415,30 @@ public class RadialLayout implements LayoutManager {
 		}
 	}
 
-	public void addLayoutComponent(final String name, final Component comp) {
-		// Ignore.
+	public Dimension minimumLayoutSize(final Container parent) {
+		synchronized (parent.getTreeLock()) {
+			// Work out how big we are.
+			this.setSizes(parent);
+
+			// Work out our parent's insets.
+			final Insets insets = parent.getInsets();
+
+			// The minimum size is our size plus our
+			// parent's insets size.
+			final Dimension dim = new Dimension(0, 0);
+			dim.width = this.minSize + insets.left + insets.right;
+			dim.height = this.minSize + insets.top + insets.bottom;
+
+			// That's it!
+			return dim;
+		}
+	}
+
+	public Dimension preferredLayoutSize(final Container parent) {
+		synchronized (parent.getTreeLock()) {
+			// Our preferred size is our minimum size.
+			return this.minimumLayoutSize(parent);
+		}
 	}
 
 	public void removeLayoutComponent(final Component comp) {

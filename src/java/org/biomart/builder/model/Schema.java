@@ -56,11 +56,119 @@ import org.biomart.builder.resources.Resources;
  */
 public interface Schema extends Comparable, DataLink {
 	/**
+	 * Adds a table to this schema. The table must not already exist (ie. with
+	 * the same name).
+	 * 
+	 * @param table
+	 *            the table to add.
+	 * @throws AssociationException
+	 *             if the table doesn't claim that it belongs to this schema.
+	 */
+	public void addTable(Table table) throws AssociationException;
+
+	/**
+	 * Attempts to rename a table. If the new name has already been taken by
+	 * another table, an exception is thrown. The rename does not affect the
+	 * table itself, only the representation of the table within this schema. If
+	 * the names are the same, nothing happens.
+	 * 
+	 * @param oldName
+	 *            the old name of the table.
+	 * @param newName
+	 *            the new name of the table.
+	 */
+	public void changeTableMapKey(String oldName, String newName);
+
+	/**
+	 * Returns a collection of all the keys in this schema which have relations
+	 * referring to keys in other schemas.
+	 * 
+	 * @return a set of keys with relations linking to keys in other schemas.
+	 */
+	public Collection getExternalKeys();
+
+	/**
+	 * Returns a collection of all the relations in this schema which refer to
+	 * keys in other schemas.
+	 * 
+	 * @return a set of relations linking to keys in other schemas.
+	 */
+	public Collection getExternalRelations();
+
+	/**
+	 * Returns a collection of all the relations in this schema which refer to
+	 * keys in the same schema.
+	 * 
+	 * @return a set of relations linking to keys in the same schema.
+	 */
+	public Collection getInternalRelations();
+
+	/**
+	 * Checks whether this schema uses key-guessing or not.
+	 * 
+	 * @return <tt>true</tt> if it does, <tt>false</tt> if it doesn't.
+	 */
+	public boolean getKeyGuessing();
+
+	/**
 	 * Returns the name of this schema.
 	 * 
 	 * @return the name of this schema.
 	 */
 	public String getName();
+
+	/**
+	 * Returns the tables from this schema with the given name. If there is no
+	 * such table, the method will return null.
+	 * 
+	 * @param name
+	 *            the name of the table to retrieve.
+	 * @return the matching tables from this provider.
+	 */
+	public Table getTableByName(String name);
+
+	/**
+	 * Returns all the tables this schema provides. The set returned may be
+	 * empty but it will never be null.
+	 * 
+	 * @return the set of all tables in this schema.
+	 */
+	public Collection getTables();
+
+	/**
+	 * Creates an exact replica of this schema, with the given name. It then
+	 * calls {@link #replicateContents(Schema)} to copy the contents over.
+	 * 
+	 * @param newName
+	 *            the name to give the new copy of the schema.
+	 * @return the copy of the schema.
+	 */
+	public Schema replicate(String newName);
+
+	/**
+	 * Copies all the tables, keys and relations from this schema into the
+	 * target schema. Reuses any which already exist. Any relations which are
+	 * {@link ComponentStatus#INFERRED_INCORRECT} and have keys with different
+	 * numbers of columns at either end will probably not be copied.
+	 * 
+	 * @param targetSchema
+	 *            the schema to copy into.
+	 */
+	public void replicateContents(Schema targetSchema);
+
+	/**
+	 * Enables or disables key-guessing on this schema. Changing this value will
+	 * cause {@link #synchroniseKeys()} to be called.
+	 * 
+	 * @param keyguessing
+	 *            <tt>true</tt> to enable it, <tt>false</tt> to disable it.
+	 * @throws SQLException
+	 *             See {@link #synchroniseKeys()}.
+	 * @throws BuilderException
+	 *             See {@link #synchroniseKeys()}.
+	 */
+	public void setKeyGuessing(boolean keyguessing) throws SQLException,
+			BuilderException;
 
 	/**
 	 * Sets the name of this schema.
@@ -104,129 +212,21 @@ public interface Schema extends Comparable, DataLink {
 	public void synchroniseKeys() throws SQLException, BuilderException;
 
 	/**
-	 * Adds a table to this schema. The table must not already exist (ie. with
-	 * the same name).
-	 * 
-	 * @param table
-	 *            the table to add.
-	 * @throws AssociationException
-	 *             if the table doesn't claim that it belongs to this schema.
-	 */
-	public void addTable(Table table) throws AssociationException;
-
-	/**
-	 * Returns all the tables this schema provides. The set returned may be
-	 * empty but it will never be null.
-	 * 
-	 * @return the set of all tables in this schema.
-	 */
-	public Collection getTables();
-
-	/**
-	 * Returns the tables from this schema with the given name. If there is no
-	 * such table, the method will return null.
-	 * 
-	 * @param name
-	 *            the name of the table to retrieve.
-	 * @return the matching tables from this provider.
-	 */
-	public Table getTableByName(String name);
-
-	/**
-	 * Attempts to rename a table. If the new name has already been taken by
-	 * another table, an exception is thrown. The rename does not affect the
-	 * table itself, only the representation of the table within this schema. If
-	 * the names are the same, nothing happens.
-	 * 
-	 * @param oldName
-	 *            the old name of the table.
-	 * @param newName
-	 *            the new name of the table.
-	 */
-	public void changeTableMapKey(String oldName, String newName);
-
-	/**
-	 * Returns a collection of all the keys in this schema which have relations
-	 * referring to keys in other schemas.
-	 * 
-	 * @return a set of keys with relations linking to keys in other schemas.
-	 */
-	public Collection getExternalKeys();
-
-	/**
-	 * Returns a collection of all the relations in this schema which refer to
-	 * keys in other schemas.
-	 * 
-	 * @return a set of relations linking to keys in other schemas.
-	 */
-	public Collection getExternalRelations();
-
-	/**
-	 * Returns a collection of all the relations in this schema which refer to
-	 * keys in the same schema.
-	 * 
-	 * @return a set of relations linking to keys in the same schema.
-	 */
-	public Collection getInternalRelations();
-
-	/**
-	 * Enables or disables key-guessing on this schema. Changing this value will
-	 * cause {@link #synchroniseKeys()} to be called.
-	 * 
-	 * @param keyguessing
-	 *            <tt>true</tt> to enable it, <tt>false</tt> to disable it.
-	 * @throws SQLException
-	 *             See {@link #synchroniseKeys()}.
-	 * @throws BuilderException
-	 *             See {@link #synchroniseKeys()}.
-	 */
-	public void setKeyGuessing(boolean keyguessing) throws SQLException,
-			BuilderException;
-
-	/**
-	 * Checks whether this schema uses key-guessing or not.
-	 * 
-	 * @return <tt>true</tt> if it does, <tt>false</tt> if it doesn't.
-	 */
-	public boolean getKeyGuessing();
-
-	/**
-	 * Creates an exact replica of this schema, with the given name. It then
-	 * calls {@link #replicateContents(Schema)} to copy the contents over.
-	 * 
-	 * @param newName
-	 *            the name to give the new copy of the schema.
-	 * @return the copy of the schema.
-	 */
-	public Schema replicate(String newName);
-
-	/**
-	 * Copies all the tables, keys and relations from this schema into the
-	 * target schema. Reuses any which already exist. Any relations which are
-	 * {@link ComponentStatus#INFERRED_INCORRECT} and have keys with different
-	 * numbers of columns at either end will probably not be copied.
-	 * 
-	 * @param targetSchema
-	 *            the schema to copy into.
-	 */
-	public void replicateContents(Schema targetSchema);
-
-	/**
 	 * The generic implementation should suffice as the ground for most complex
 	 * implementations. It keeps track of tables it has seen, and performs
 	 * simple lookups for them.
 	 */
 	public class GenericSchema implements Schema {
-		/** 
-		 * Try not to use this unless absolutely necessary. The keys of
-		 * this map are table names, and the values are actual table objects.
-		 * It is protected to allow subclasses direct access for efficiency.
-		 */
-		protected final Map tables = new TreeMap();
+		private boolean keyguessing;
 
 		private String name;
 
-		private boolean keyguessing;
+		/**
+		 * Try not to use this unless absolutely necessary. The keys of this map
+		 * are table names, and the values are actual table objects. It is
+		 * protected to allow subclasses direct access for efficiency.
+		 */
+		protected final Map tables = new TreeMap();
 
 		/**
 		 * The constructor creates a schema with the given name. Keyguessing is
@@ -252,6 +252,123 @@ public interface Schema extends Comparable, DataLink {
 		public GenericSchema(final String name, final boolean keyguessing) {
 			this.name = name;
 			this.keyguessing = keyguessing;
+		}
+
+		public void addTable(final Table table) throws AssociationException {
+			// Check the table belongs to us, and has a unique name.
+			if (!table.getSchema().equals(this))
+				throw new AssociationException(Resources
+						.get("tableSchemaMismatch"));
+			// Add the table.
+			this.tables.put(table.getName(), table);
+		}
+
+		public boolean canCohabit(final DataLink partner) {
+			return false;
+		}
+
+		public void changeTableMapKey(final String oldName, final String newName) {
+			// If the names are the same, do nothing.
+			if (oldName.equals(newName))
+				return;
+			// Update our mapping but don't rename the columns themselves.
+			final Table tbl = (Table) this.tables.get(oldName);
+			this.tables.put(newName, tbl);
+			this.tables.remove(oldName);
+		}
+
+		public int compareTo(final Object o) throws ClassCastException {
+			final Schema t = (Schema) o;
+			return this.toString().compareTo(t.toString());
+		}
+
+		public boolean equals(final Object o) {
+			if (o == null || !(o instanceof Schema))
+				return false;
+			final Schema t = (Schema) o;
+			return t.toString().equals(this.toString());
+		}
+
+		public Collection getExternalKeys() {
+			// Keys are external if they have a relation which
+			// points, at the other end, to a key in some schema
+			// other than ourselves.
+			final List keys = new ArrayList();
+			final Collection relations = this.getExternalRelations();
+			for (final Iterator i = relations.iterator(); i.hasNext();) {
+				final Relation relation = (Relation) i.next();
+				if (relation.getFirstKey().getTable().getSchema().equals(this))
+					keys.add(relation.getFirstKey());
+				else
+					keys.add(relation.getSecondKey());
+			}
+			return keys;
+		}
+
+		public Collection getExternalRelations() {
+			// Relations are external if one end points to a key
+			// in a schema other than ourselves.
+			final Set relations = new HashSet();
+			for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
+				final Table table = (Table) i.next();
+				for (final Iterator j = table.getKeys().iterator(); j.hasNext();) {
+					final Key key = (Key) j.next();
+					for (final Iterator l = key.getRelations().iterator(); l
+							.hasNext();) {
+						final Relation relation = (Relation) l.next();
+						if (relation.isExternal())
+							relations.add(relation);
+					}
+				}
+			}
+			return relations;
+		}
+
+		public Collection getInternalRelations() {
+			// Relations are internal if both ends point to keys
+			// in this schema.
+			final Set relations = new HashSet();
+			for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
+				final Table table = (Table) i.next();
+				for (final Iterator j = table.getRelations().iterator(); j
+						.hasNext();) {
+					final Relation relation = (Relation) j.next();
+					if (!relation.isExternal())
+						relations.add(relation);
+				}
+			}
+			return relations;
+		}
+
+		public boolean getKeyGuessing() {
+			return this.keyguessing;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public Table getTableByName(final String name) {
+			return (Table) this.tables.get(name);
+		}
+
+		public Collection getTables() {
+			return this.tables.values();
+		}
+
+		public int hashCode() {
+			return this.toString().hashCode();
+		}
+
+		public Schema replicate(final String newName) {
+			// Create a new schema.
+			final Schema newSchema = new GenericSchema(newName);
+
+			// Copy the contents over.
+			this.replicateContents(newSchema);
+
+			// Return.
+			return newSchema;
 		}
 
 		public void replicateContents(final Schema targetSchema) {
@@ -511,29 +628,10 @@ public interface Schema extends Comparable, DataLink {
 				((Relation) j.next()).destroy();
 		}
 
-		public Schema replicate(final String newName) {
-			// Create a new schema.
-			final Schema newSchema = new GenericSchema(newName);
-
-			// Copy the contents over.
-			this.replicateContents(newSchema);
-
-			// Return.
-			return newSchema;
-		}
-
 		public void setKeyGuessing(final boolean keyguessing)
 				throws SQLException, BuilderException {
 			this.keyguessing = keyguessing;
 			this.synchroniseKeys();
-		}
-
-		public boolean getKeyGuessing() {
-			return this.keyguessing;
-		}
-
-		public String getName() {
-			return this.name;
 		}
 
 		public void setName(final String name) {
@@ -543,14 +641,6 @@ public interface Schema extends Comparable, DataLink {
 			this.name = name;
 		}
 
-		public boolean canCohabit(final DataLink partner) {
-			return false;
-		}
-
-		public boolean test() throws Exception {
-			return true;
-		}
-
 		public void synchronise() throws SQLException, BuilderException {
 			this.synchroniseKeys();
 		}
@@ -558,102 +648,12 @@ public interface Schema extends Comparable, DataLink {
 		public void synchroniseKeys() throws SQLException, BuilderException {
 		}
 
-		public void addTable(final Table table) throws AssociationException {
-			// Check the table belongs to us, and has a unique name.
-			if (!table.getSchema().equals(this))
-				throw new AssociationException(Resources
-						.get("tableSchemaMismatch"));
-			// Add the table.
-			this.tables.put(table.getName(), table);
-		}
-
-		public Collection getTables() {
-			return this.tables.values();
-		}
-
-		public Table getTableByName(final String name) {
-			return (Table) this.tables.get(name);
-		}
-
-		public void changeTableMapKey(final String oldName, final String newName) {
-			// If the names are the same, do nothing.
-			if (oldName.equals(newName))
-				return;
-			// Update our mapping but don't rename the columns themselves.
-			final Table tbl = (Table) this.tables.get(oldName);
-			this.tables.put(newName, tbl);
-			this.tables.remove(oldName);
-		}
-
-		public Collection getExternalKeys() {
-			// Keys are external if they have a relation which
-			// points, at the other end, to a key in some schema
-			// other than ourselves.
-			final List keys = new ArrayList();
-			final Collection relations = this.getExternalRelations();
-			for (final Iterator i = relations.iterator(); i.hasNext();) {
-				final Relation relation = (Relation) i.next();
-				if (relation.getFirstKey().getTable().getSchema().equals(this))
-					keys.add(relation.getFirstKey());
-				else
-					keys.add(relation.getSecondKey());
-			}
-			return keys;
-		}
-
-		public Collection getInternalRelations() {
-			// Relations are internal if both ends point to keys
-			// in this schema.
-			final Set relations = new HashSet();
-			for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
-				final Table table = (Table) i.next();
-				for (final Iterator j = table.getRelations().iterator(); j
-						.hasNext();) {
-					final Relation relation = (Relation) j.next();
-					if (!relation.isExternal())
-						relations.add(relation);
-				}
-			}
-			return relations;
-		}
-
-		public Collection getExternalRelations() {
-			// Relations are external if one end points to a key
-			// in a schema other than ourselves.
-			final Set relations = new HashSet();
-			for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
-				final Table table = (Table) i.next();
-				for (final Iterator j = table.getKeys().iterator(); j.hasNext();) {
-					final Key key = (Key) j.next();
-					for (final Iterator l = key.getRelations().iterator(); l
-							.hasNext();) {
-						final Relation relation = (Relation) l.next();
-						if (relation.isExternal())
-							relations.add(relation);
-					}
-				}
-			}
-			return relations;
+		public boolean test() throws Exception {
+			return true;
 		}
 
 		public String toString() {
 			return this.getName();
-		}
-
-		public int hashCode() {
-			return this.toString().hashCode();
-		}
-
-		public int compareTo(final Object o) throws ClassCastException {
-			final Schema t = (Schema) o;
-			return this.toString().compareTo(t.toString());
-		}
-
-		public boolean equals(final Object o) {
-			if (o == null || !(o instanceof Schema))
-				return false;
-			final Schema t = (Schema) o;
-			return t.toString().equals(this.toString());
 		}
 	}
 }

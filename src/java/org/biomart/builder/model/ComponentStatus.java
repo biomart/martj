@@ -32,7 +32,11 @@ import java.util.Map;
 public class ComponentStatus implements Comparable {
 	private static final Map singletons = new HashMap();
 
-	private final String name;
+	/**
+	 * Use this constant to refer to a component that was specified by the user.
+	 */
+	public static final ComponentStatus HANDMADE = ComponentStatus
+			.get("HANDMADE");
 
 	/**
 	 * Use this constant to refer to a component that was inferred from the
@@ -47,12 +51,6 @@ public class ComponentStatus implements Comparable {
 	 */
 	public static final ComponentStatus INFERRED_INCORRECT = ComponentStatus
 			.get("INFERRED_INCORRECT");
-
-	/**
-	 * Use this constant to refer to a component that was specified by the user.
-	 */
-	public static final ComponentStatus HANDMADE = ComponentStatus
-			.get("HANDMADE");
 
 	/**
 	 * The static factory method creates and returns a status object with the
@@ -77,6 +75,8 @@ public class ComponentStatus implements Comparable {
 		return s;
 	}
 
+	private final String name;
+
 	/**
 	 * The private constructor takes a single parameter, which defines the name
 	 * this status object will display when printed.
@@ -88,6 +88,16 @@ public class ComponentStatus implements Comparable {
 		this.name = name;
 	}
 
+	public int compareTo(final Object o) throws ClassCastException {
+		final ComponentStatus c = (ComponentStatus) o;
+		return this.toString().compareTo(c.toString());
+	}
+
+	public boolean equals(final Object o) {
+		// We are dealing with singletons so can use == happily.
+		return o == this;
+	}
+
 	/**
 	 * Displays the name of this status object.
 	 * 
@@ -97,21 +107,11 @@ public class ComponentStatus implements Comparable {
 		return this.name;
 	}
 
-	public String toString() {
-		return this.getName();
-	}
-
 	public int hashCode() {
 		return this.toString().hashCode();
 	}
 
-	public int compareTo(final Object o) throws ClassCastException {
-		final ComponentStatus c = (ComponentStatus) o;
-		return this.toString().compareTo(c.toString());
-	}
-
-	public boolean equals(final Object o) {
-		// We are dealing with singletons so can use == happily.
-		return o == this;
+	public String toString() {
+		return this.getName();
 	}
 }
