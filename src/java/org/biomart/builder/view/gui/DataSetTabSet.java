@@ -303,13 +303,13 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * This method is called by the {@link ExplainTableDialog} when it is
+	 * This method is called by the {@link ExplainDialog} when it is
 	 * opened. This dialog is then updated whenever the dataset window is
 	 * updated.
 	 * 
 	 * @param dialog
 	 *            the dialog being displayed by a current
-	 *            {@link ExplainTableDialog}.
+	 *            {@link ExplainDialog}.
 	 */
 	public void addCurrentExplanationDialog(final ExplainDialog dialog) {
 		this.currentExplanationDialogs.add(dialog);
@@ -389,13 +389,13 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Causes {@link ExplainTableDialog#recalculateDialog()} to be called on the
+	 * Causes {@link ExplainDialog#recalculateDialog()} to be called on the
 	 * currently visible explanation dialog, if any.
 	 */
 	public void recalculateExplanationDialog() {
 		for (final Iterator i = this.currentExplanationDialogs.iterator(); i
 				.hasNext();)
-			((ExplainTableDialog) i.next()).recalculateDialog();
+			((ExplainDialog) i.next()).recalculateDialog();
 	}
 
 	/**
@@ -407,12 +407,12 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * This method is called by the {@link ExplainTableDialog} when it is
+	 * This method is called by the {@link ExplainDialog} when it is
 	 * closed.
 	 * 
 	 * @param dialog
 	 *            the dialog being closed by a current
-	 *            {@link ExplainTableDialog}.
+	 *            {@link ExplainDialog}.
 	 */
 	public void removeCurrentExplanationDialog(final ExplainDialog dialog) {
 		this.currentExplanationDialogs.remove(dialog);
@@ -445,13 +445,13 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Causes {@link ExplainTableDialog#repaintDialog()} to be called on the
+	 * Causes {@link ExplainDialog#repaintDialog()} to be called on the
 	 * currently visible explanation dialog, if any.
 	 */
 	public void repaintExplanationDialog() {
 		for (final Iterator i = this.currentExplanationDialogs.iterator(); i
 				.hasNext();)
-			((ExplainTableDialog) i.next()).repaintDialog();
+			((ExplainDialog) i.next()).repaintDialog();
 	}
 
 	/**
