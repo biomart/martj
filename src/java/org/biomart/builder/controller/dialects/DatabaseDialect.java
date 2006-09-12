@@ -42,6 +42,9 @@ import org.biomart.builder.model.DataSet.DataSetTable;
  * @since 0.1
  */
 public abstract class DatabaseDialect {
+
+	private static final Set dialects = new HashSet();
+	
 	/**
 	 * Registers all known dialects for use with this system. Need only be
 	 * called once, but doesn't hurt to call multiple times.
@@ -51,8 +54,6 @@ public abstract class DatabaseDialect {
 		DatabaseDialect.dialects.add(new OracleDialect());
 		DatabaseDialect.dialects.add(new PostgreSQLDialect());
 	}
-
-	private static final Set dialects = new HashSet();
 
 	/**
 	 * Work out what kind of dialect to use for the given data link.
