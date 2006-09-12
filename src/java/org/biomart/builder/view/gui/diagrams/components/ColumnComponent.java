@@ -62,7 +62,7 @@ public class ColumnComponent extends BoxShapedComponent {
 	/**
 	 * Italic font.
 	 */
-	public static Font ITALIC_FONT = Font.decode("Serif-ITALIC-10");
+	public static Font ITALIC_FONT = Font.decode("SansSerif-PLAIN-10");
 
 	/**
 	 * Constant referring to normal column colour.
@@ -119,6 +119,7 @@ public class ColumnComponent extends BoxShapedComponent {
 		// Add the label for the column name.
 		final JLabel label = new JLabel(this.getColumn().getName());
 		label.setFont(ColumnComponent.ITALIC_FONT);
+		label.setForeground(this.getForeground());
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 	}

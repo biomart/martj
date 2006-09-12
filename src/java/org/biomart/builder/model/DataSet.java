@@ -61,7 +61,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.55, 30th August 2006
+ * @version 0.1.56, 12th September 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -168,8 +168,11 @@ public class DataSet extends GenericSchema {
 			// Get the primary key of the parent DS table.
 			final PrimaryKey parentDSTablePK = parentDSTable.getPrimaryKey();
 
-			// Don't follow the parent's relations again.
-			relationsFollowed.addAll(parentDSTable.getUnderlyingRelations());
+			// Don't follow the parent's relations again, if this is
+			// a subclass table. Otherwise, follow everything as normal.
+			if (type.equals(DataSetTableType.MAIN_SUBCLASS))
+				relationsFollowed
+						.addAll(parentDSTable.getUnderlyingRelations());
 
 			// Work out restrictions on the source relation.
 			final DataSetRelationRestriction restriction = this
@@ -1402,7 +1405,8 @@ public class DataSet extends GenericSchema {
 				final Relation underlyingRelation) {
 			// Call the super constructor using the alias generator to
 			// ensure we have a unique name.
-			super(name, dsTable);
+			super(dsTable.getColumnByName(name) != null ? name + "_"
+					+ dsTable.getName() : name, dsTable);
 
 			// Remember the rest.
 			this.underlyingRelation = underlyingRelation;

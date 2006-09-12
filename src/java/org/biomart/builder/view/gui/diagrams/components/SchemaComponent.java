@@ -59,12 +59,12 @@ public class SchemaComponent extends BoxShapedComponent {
 	/**
 	 * Bold font.
 	 */
-	public static Font BOLD_FONT = Font.decode("Serif-BOLD-10");
+	public static Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
 
 	/**
 	 * Bold italic font.
 	 */
-	public static Font BOLDITALIC_FONT = Font.decode("Serif-BOLDITALIC-10");
+	public static Font BOLDITALIC_FONT = Font.decode("SansSerif-PLAIN-10");
 
 	private GridBagConstraints constraints;
 
@@ -271,6 +271,7 @@ public class SchemaComponent extends BoxShapedComponent {
 		// Add the label for the schema name,
 		JLabel label = new JLabel(this.getSchema().getName());
 		label.setFont(SchemaComponent.BOLD_FONT);
+		label.setForeground(this.getForeground());
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 
@@ -279,6 +280,7 @@ public class SchemaComponent extends BoxShapedComponent {
 			// Add a 'contains' label.
 			label = new JLabel(Resources.get("schemaGroupContains"));
 			label.setFont(SchemaComponent.BOLDITALIC_FONT);
+			label.setForeground(this.getForeground());
 			this.layout.setConstraints(label, this.constraints);
 			this.add(label);
 
@@ -288,6 +290,7 @@ public class SchemaComponent extends BoxShapedComponent {
 				final Schema s = (Schema) i.next();
 				label = new JLabel(s.getName());
 				label.setFont(SchemaComponent.BOLDITALIC_FONT);
+				label.setForeground(this.getForeground());
 				this.layout.setConstraints(label, this.constraints);
 				this.add(label);
 			}

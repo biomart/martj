@@ -47,7 +47,7 @@ import org.biomart.builder.resources.SettingsCache;
  * The main window housing the MartBuilder GUI.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 18th August 2006
+ * @version 0.1.18, 12th August 2006
  * @since 0.1
  */
 public class MartBuilder extends JFrame {
@@ -318,7 +318,9 @@ public class MartBuilder extends JFrame {
 					MartBuilderMenuBar.this.saveMart.setEnabled(hasMart
 							&& martBuilder.martTabSet.getModifiedStatus());
 					MartBuilderMenuBar.this.saveMartAs.setEnabled(hasMart);
-					MartBuilderMenuBar.this.saveDDL.setEnabled(hasMart);
+					MartBuilderMenuBar.this.saveDDL.setEnabled(hasMart
+							&& martBuilder.martTabSet.getSelectedMartTab()
+									.getMart().getDataSets().size() > 0);
 					MartBuilderMenuBar.this.closeMart.setEnabled(hasMart);
 				}
 			});

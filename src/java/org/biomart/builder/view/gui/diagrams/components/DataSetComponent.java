@@ -49,7 +49,7 @@ public class DataSetComponent extends BoxShapedComponent {
 	/**
 	 * Bold font.
 	 */
-	public static Font BOLD_FONT = Font.decode("Serif-BOLD-10");
+	public static Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
 
 	/**
 	 * This color is the one used for the background of invisible datasets.
@@ -137,6 +137,7 @@ public class DataSetComponent extends BoxShapedComponent {
 		// Add the label for the schema name,
 		final JLabel label = new JLabel(this.getDataSet().getName());
 		label.setFont(DataSetComponent.BOLD_FONT);
+		label.setForeground(this.getForeground());
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 	}

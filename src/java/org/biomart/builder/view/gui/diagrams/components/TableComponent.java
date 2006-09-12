@@ -59,7 +59,7 @@ public class TableComponent extends BoxShapedComponent {
 	/**
 	 * Bold font.
 	 */
-	public static Font BOLD_FONT = Font.decode("Serif-BOLD-10");
+	public static Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
 
 	/**
 	 * Colour for subclassed tables (in the dataset context).
@@ -74,7 +74,7 @@ public class TableComponent extends BoxShapedComponent {
 	/**
 	 * Plain font.
 	 */
-	public static Font PLAIN_FONT = Font.decode("Serif-PLAIN-10");
+	public static Font PLAIN_FONT = Font.decode("SansSerif-PLAIN-10");
 
 	/**
 	 * Colour for subclassed tables (in the dataset context).
@@ -148,12 +148,14 @@ public class TableComponent extends BoxShapedComponent {
 		// Add the table name label.
 		JLabel label = new JLabel(this.getTable().getName());
 		label.setFont(TableComponent.BOLD_FONT);
+		label.setForeground(this.getForeground());
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 
 		// Add the schema name label below.
 		label = new JLabel(this.getTable().getSchema().getName());
 		label.setFont(TableComponent.PLAIN_FONT);
+		label.setForeground(this.getForeground());
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 

@@ -61,7 +61,7 @@ public class KeyComponent extends BoxShapedComponent {
 	/**
 	 * Italic font.
 	 */
-	public static Font ITALIC_FONT = Font.decode("Serif-ITALIC-10");
+	public static Font ITALIC_FONT = Font.decode("SansSerif-PLAIN-10");
 
 	/**
 	 * Constant referring to masked key colour.
@@ -142,6 +142,7 @@ public class KeyComponent extends BoxShapedComponent {
 				.hasNext();) {
 			final JLabel label = new JLabel(((Column) i.next()).getName());
 			label.setFont(KeyComponent.ITALIC_FONT);
+			label.setForeground(this.getForeground());
 			this.layout.setConstraints(label, this.constraints);
 			this.add(label);
 		}

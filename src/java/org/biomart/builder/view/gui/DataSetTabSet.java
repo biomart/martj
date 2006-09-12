@@ -77,7 +77,7 @@ import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.43, 11th September 2006
+ * @version 0.1.44, 12th September 2006
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -1619,6 +1619,33 @@ public class DataSetTabSet extends JTabbedPane {
 
 			// Update the explanation diagram so that it
 			// correctly reflects the changed relation.
+			this.recalculateExplanationDialog();
+
+			// Update the modified status.
+			this.martTab.getMartTabSet().setModifiedStatus(true);
+		} catch (final Throwable t) {
+			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+		}
+	}
+
+	/**
+	 * Asks that all relations on a table be unmasked.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param table
+	 *            the schema table to unmask all relations for.
+	 */
+	public void requestUnmaskTable(final DataSet ds, final Table table) {
+		try {
+			// Mask all the relations on the table.
+			MartBuilderUtils.unmaskTable(ds, table);
+
+			// Recalculate the dataset diagram based on the modified dataset.
+			this.recalculateDataSetDiagram(ds);
+
+			// Update the explanation diagram so that it
+			// correctly reflects the changed table.
 			this.recalculateExplanationDialog();
 
 			// Update the modified status.

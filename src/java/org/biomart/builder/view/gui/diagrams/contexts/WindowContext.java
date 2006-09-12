@@ -46,7 +46,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * rather than the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.24, 29th August 2006
+ * @version 0.1.25, 12th September 2006
  * @since 0.1
  */
 public class WindowContext extends SchemaContext {
@@ -184,6 +184,21 @@ public class WindowContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(mask);
+
+			// The unmask option allows the user to unmask all
+			// relations on a table.
+			final JMenuItem unmask = new JMenuItem(Resources
+					.get("unmaskTableTitle"));
+			unmask.setMnemonic(Resources.get("unmaskTableMnemonic").charAt(0));
+			unmask.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					WindowContext.this
+							.getMartTab()
+							.getDataSetTabSet()
+							.requestUnmaskTable(WindowContext.this.dataset, table);
+				}
+			});
+			contextMenu.add(unmask);
 
 			contextMenu.addSeparator();
 

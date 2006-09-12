@@ -62,7 +62,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.34, 9th August 2006
+ * @version 0.1.35, 12th September 2006
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -1020,6 +1020,26 @@ public class MartBuilderUtils {
 			final DataSetColumn column) throws AssociationException,
 			BuilderException, SQLException {
 		column.setMasked(false);
+		dataset.synchronise();
+	}
+
+	/**
+	 * Unmasks all relations on a table within a dataset. The dataset is
+	 * regenerated afterwards.
+	 * 
+	 * @param dataset
+	 *            the dataset to unmask the table in.
+	 * @param table
+	 *            the table to unmask all relations for.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws BuilderException
+	 *             if the dataset could not be synchronised.
+	 */
+	public static void unmaskTable(final DataSet dataset, final Table table)
+			throws SQLException, BuilderException {
+		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
+			dataset.unmaskRelation((Relation) i.next());
 		dataset.synchronise();
 	}
 

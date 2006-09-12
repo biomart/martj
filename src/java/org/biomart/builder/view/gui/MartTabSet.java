@@ -29,7 +29,9 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -54,7 +56,7 @@ import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
  * of the mart inside it, including all datasets and schemas.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.16, 11th September 2006
+ * @version 0.1.17, 12th September 2006
  * @since 0.1
  */
 public class MartTabSet extends JTabbedPane {
@@ -568,7 +570,7 @@ public class MartTabSet extends JTabbedPane {
 
 			// Create panel which contains the buttons.
 			final JPanel buttonsPanel = new JPanel();
-
+			
 			// Create the button that selects the window card. It reattaches
 			// it every time in case it has been attached somewhere else
 			// whilst we weren't looking.
@@ -590,6 +592,13 @@ public class MartTabSet extends JTabbedPane {
 				}
 			});
 			buttonsPanel.add(this.schemaButton);
+
+			// Add the Biomart logo to the buttons panel.
+			buttonsPanel
+					.add(new JLabel(
+							new ImageIcon(
+									Resources
+											.getResourceAsURL("org/biomart/builder/resources/biomart-logo.gif"))));
 
 			// Create the dataset tabset.
 			this.datasetTabSet = new DataSetTabSet(this);
