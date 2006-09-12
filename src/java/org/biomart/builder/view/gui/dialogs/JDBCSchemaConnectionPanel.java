@@ -62,7 +62,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * {@link JDBCSchema} implementation which represents the connection.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.11, 11th September 2006
+ * @version 0.1.12, 12th September 2006
  * @since 0.1
  */
 public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
@@ -204,20 +204,20 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				// changed, either by the user typing in it, or using
 				// the drop-down to select a predefine value.
 
-					// Work out which database was selected.
-					final String classType = (String) JDBCSchemaConnectionPanel.this.predefinedDriverClass
-							.getSelectedItem();
+				// Work out which database was selected.
+				final String classType = (String) JDBCSchemaConnectionPanel.this.predefinedDriverClass
+						.getSelectedItem();
 
-					// Use it to look up the default class for that database,
-					// then reset the drop-down to nothing-selected.
-					if (!JDBCSchemaConnectionPanel.this.isEmpty(classType)) {
-						final String driverClassName = (String) JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
-								.get(classType);
-						if (!JDBCSchemaConnectionPanel.this.driverClass
-								.getText().equals(driverClassName))
-							JDBCSchemaConnectionPanel.this.driverClass
-									.setText(driverClassName);
-					}
+				// Use it to look up the default class for that database,
+				// then reset the drop-down to nothing-selected.
+				if (!JDBCSchemaConnectionPanel.this.isEmpty(classType)) {
+					final String driverClassName = (String) JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
+							.get(classType);
+					if (!JDBCSchemaConnectionPanel.this.driverClass.getText()
+							.equals(driverClassName))
+						JDBCSchemaConnectionPanel.this.driverClass
+								.setText(driverClassName);
+				}
 			}
 		});
 
@@ -348,23 +348,24 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		// driver is known to us (defined in the map at the start
 		// of this class).
 		String regexURL = this.currentJDBCURLTemplate;
+		if (regexURL != null) {
+			// Replace the three placeholders in the JDBC URL template
+			// with regex patterns. Obviously, this depends on the
+			// three placeholders appearing in the correct order.
+			// If they don't, then you're stuffed.
+			regexURL = regexURL.replaceAll("<HOST>", "(.*)");
+			regexURL = regexURL.replaceAll("<PORT>", "(.*)");
+			regexURL = regexURL.replaceAll("<DATABASE>", "(.*)");
 
-		// Replace the three placeholders in the JDBC URL template
-		// with regex patterns. Obviously, this depends on the
-		// three placeholders appearing in the correct order.
-		// If they don't, then you're stuffed.
-		regexURL = regexURL.replaceAll("<HOST>", "(.*)");
-		regexURL = regexURL.replaceAll("<PORT>", "(.*)");
-		regexURL = regexURL.replaceAll("<DATABASE>", "(.*)");
-
-		// Use the regex to parse out the host, port and database
-		// from the JDBC URL.
-		final Pattern regex = Pattern.compile(regexURL);
-		final Matcher matcher = regex.matcher(jdbcURL);
-		if (matcher.matches()) {
-			this.host.setText(matcher.group(1));
-			this.port.setText(matcher.group(2));
-			this.database.setText(matcher.group(3));
+			// Use the regex to parse out the host, port and database
+			// from the JDBC URL.
+			final Pattern regex = Pattern.compile(regexURL);
+			final Matcher matcher = regex.matcher(jdbcURL);
+			if (matcher.matches()) {
+				this.host.setText(matcher.group(1));
+				this.port.setText(matcher.group(2));
+				this.database.setText(matcher.group(3));
+			}
 		}
 	}
 
@@ -507,7 +508,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	public Class getSchemaClass() {
 		return JDBCSchema.class;
 	}
-	
+
 	private boolean isEmpty(final String string) {
 		// Strings are empty if they are null or all whitespace.
 		return string == null || string.trim().length() == 0;
