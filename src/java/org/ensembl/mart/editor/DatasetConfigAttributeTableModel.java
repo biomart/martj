@@ -241,6 +241,12 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 					} else if (child instanceof org.ensembl.mart.lib.config.DynamicFilterContent){
 						fdesc.removeDynamicFilterContent((DynamicFilterContent) node.getUserObject());
 				    }
+				} else if (parent instanceof DynamicFilterContent){
+					DynamicFilterContent fdesc = (DynamicFilterContent) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+					if (child instanceof Option){						
+						fdesc.removeOption((Option) node.getUserObject());			
+					}
+						
 				} else if (parent instanceof Option) {
 					Option op = (Option) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof Option)
@@ -280,7 +286,7 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 					if (child instanceof org.ensembl.mart.lib.config.DynamicAttributeContent){
 						ad.removeDynamicAttributeContent((DynamicAttributeContent) node.getUserObject());
 					}
-				}
+				}  
 
 				obj.setAttribute(firstColumnData[rowIndex], (String) aValue);
 
@@ -323,7 +329,11 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 						fdesc.insertOption(index, (Option) obj);
 				    else if (child instanceof org.ensembl.mart.lib.config.DynamicFilterContent)	
 						fdesc.insertDynamicFilterContent(index, (DynamicFilterContent) obj);		
-				} else if (parent instanceof Option) {
+				} else if (parent instanceof DynamicFilterContent) {
+					DynamicFilterContent dynFilter = (DynamicFilterContent) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+					if (child instanceof Option)
+						dynFilter.insertOption(index, (Option) obj);	
+				}  else if (parent instanceof Option) {
 					Option op = (Option) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof Option)
 						op.insertOption(index, (Option) obj);

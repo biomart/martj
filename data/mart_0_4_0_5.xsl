@@ -20,6 +20,10 @@
 	    </xsl:otherwise>
         </xsl:choose>
     </xsl:if>
+    
+    <!-- call other templates eg identity copy on all the child elements -->
+    <xsl:apply-templates select="node()"/>
+    
   </xsl:copy>
 </xsl:template>
 	

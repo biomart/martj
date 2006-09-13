@@ -552,9 +552,26 @@ public class DatasetConfigXMLUtils {
   }
   
   private DynamicFilterContent getDynamicFilterContent(Element thisElement) throws ConfigurationException {
-	 DynamicFilterContent a = new DynamicFilterContent();
-	 loadAttributesFromElement(thisElement, a);
-	 return a;	 
+	 DynamicFilterContent f = new DynamicFilterContent();
+	 loadAttributesFromElement(thisElement, f);
+	 
+	for (Iterator iter = thisElement.getChildren(OPTION).iterator(); iter.hasNext();) {
+	  Element option = (Element) iter.next();
+	  if (includeHiddenMembers){
+		Option o = getOption(option);
+		//o.setParent(f);
+		o.setParent(null);
+		f.addOption(o);
+	  }
+	  else if (!(Boolean.valueOf(option.getAttributeValue(HIDDEN)).booleanValue())) {      
+		Option o = getOption(option);
+		//o.setParent(f);
+		o.setParent(null);
+		f.addOption(o);
+	  }
+	}
+	 
+	 return f;	 
   }
   
   private DynamicDatasetContent getDynamicDatasetContent(Element thisElement) throws ConfigurationException {
@@ -762,6 +779,10 @@ public class DatasetConfigXMLUtils {
   private Element getDynamicFilterContentElement(DynamicFilterContent dynAttribute) {
 	 Element datt = new Element(DYNAMICFILTERCONTENT);
 	 loadElementAttributesFromObject(dynAttribute, datt);
+	 Option[] subops = dynAttribute.getOptions();
+	 for (int i = 0, n = subops.length; i < n; i++){
+	    datt.addContent(getOptionElement(subops[i]));
+	 }
 	 return datt;
   }
   

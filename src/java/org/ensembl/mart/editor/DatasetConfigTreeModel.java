@@ -156,6 +156,12 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 			}			
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.DynamicAttributeContent")) {
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.DynamicFilterContent")) {
+			if (childClassName.equals("org.ensembl.mart.lib.config.Option")) {
+				DynamicFilterContent fd = (DynamicFilterContent) parentNode.getUserObject();
+				System.out.println("TREE MODEL -- ADDING DYN OPTION "+ ((Option) editingNode.getUserObject()).getInternalName());
+				fd.addOption((Option) editingNode.getUserObject());
+
+			}
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.DynamicDatasetContent")) {
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.DynamicImportableContent")) {
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.DynamicExportableContent")) {
@@ -341,8 +347,16 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 			String error_string = "Error: DynamicAttributeContent is a leaf node, no insertions are allowed.";
 			return error_string;
 		} else if (parent instanceof org.ensembl.mart.lib.config.DynamicFilterContent) {
-			String error_string = "Error: DynamicFilterContent is a leaf node, no insertions are allowed.";
-			return error_string;
+			if (child instanceof org.ensembl.mart.lib.config.Option) {
+				DynamicFilterContent fd = (DynamicFilterContent) parentNode.getUserObject();
+				System.out.println("TREE MODEL 2 -- ADDING DYN OPTION "+ ((Option) editingNode.getUserObject()).getInternalName());
+				
+				fd.insertOption(objIndex, (Option) editingNode.getUserObject());
+			}
+			else{ 
+				String error_string = "Error: " + childName + " cannot be inserted in an DynamicFilterContent.";
+				return error_string;				
+			}
 		} else if (parent instanceof org.ensembl.mart.lib.config.DynamicDatasetContent) {
 			String error_string = "Error: DynamicDatasetContent is a leaf node, no insertions are allowed.";
 			return error_string;
@@ -443,7 +457,12 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 				AttributeDescription ad = (AttributeDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 				ad.removeDynamicAttributeContent((DynamicAttributeContent) node.getUserObject());
 			}
+		} else if (parent instanceof DynamicFilterContent) {
+			if (child instanceof org.ensembl.mart.lib.config.Option) {
+				DynamicFilterContent ad = (DynamicFilterContent) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+				ad.removeOption((Option) node.getUserObject());
 		}
+	}
 		super.removeNodeFromParent(node);
 
 	}

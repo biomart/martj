@@ -793,7 +793,7 @@ public class DatabaseDatasetConfigUtils {
 				Option op = ops[j];
 				// if a value option remove it
 				if (op.getTableConstraint() == null){
-					fd.removeOption(op);
+				//	fd.removeOption(op);
 					continue;		
 				}
 				// if a filter option remove dataset part from tableConstraint
@@ -1709,30 +1709,46 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		  if (templateFilter.getOtherFilters() == null) templateFilter.setOtherFilters("");// avoids template problems
           if (templateFilter.getDynamicFilterContents().size() > 0){
 			// already got multiple settings for this attribute
-			if (!templateFilter.containsDynamicFilterContent(dsConfig.getDataset()))
-				templateFilter.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),configAtt.getOtherFilters
-				()));
+			if (!templateFilter.containsDynamicFilterContent(dsConfig.getDataset())){
+				DynamicFilterContent dynFilter = new DynamicFilterContent(dsConfig.getDataset(),configAtt.getOtherFilters());
+				//templateFilter.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),configAtt.getOtherFilters()));
+				dynFilter.addOptions(configAtt.getOptions());
+				templateFilter.addDynamicFilterContent(dynFilter);
+			}
 				
 			configAttToAdd.setOtherFilters(templateFilter.getDynamicFilterContentByInternalName(dsConfig.getDataset()).getOtherFilters());
+		  	configAttToAdd.removeOptions();
+		  	configAttToAdd.addOptions(templateFilter.getDynamicFilterContentByInternalName(dsConfig.getDataset()).getOptions());
 		  }
-		  else if (!configAtt.getOtherFilters().equals(templateFilter.getOtherFilters())){
+		  else if (!configAtt.getOtherFilters().equals(templateFilter.getOtherFilters()) || configAtt.getOptions().length > 0 || templateFilter.getOptions().length > 0){
 		  			// if this config has a different setting then start using dynamic objects
 					// create dynamic objects - add one per existing dataset set to current template linkoutURL
 					String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
 					for (int j = 0; j < datasetNames.length; j++){
 						String datasetName = datasetNames[j];
 						if (datasetName.equals(dsConfig.getDataset())) continue;
-						templateFilter.addDynamicFilterContent(new DynamicFilterContent(datasetName,templateFilter.getOtherFilters()));
+						
+						DynamicFilterContent dynFilter = new DynamicFilterContent(datasetName,templateFilter.getOtherFilters());
+						System.out.println("ADDING OPTIONS TO NEW DYNAMIC CONTENT FOR " +datasetName);
+						dynFilter.addOptions(templateFilter.getOptions());
+						templateFilter.addDynamicFilterContent(dynFilter);
+						//templateFilter.addDynamicFilterContent(new DynamicFilterContent(datasetName,templateFilter.getOtherFilters()));
 					}
+					templateFilter.removeOptions();
 					templateFilter.setOtherFilters("MULTI");
 		
-					templateFilter.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),configAtt.getOtherFilters()));
+			        DynamicFilterContent dynFilter = new DynamicFilterContent(dsConfig.getDataset(),configAtt.getOtherFilters());
+			System.out.println("ADDING OPTIONS TO NEW DYNAMIC CONTENT FOR "+dsConfig.getDataset());
+					dynFilter.addOptions(configAtt.getOptions());
+					templateFilter.addDynamicFilterContent(dynFilter);
+					//templateFilter.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),configAtt.getOtherFilters()));
+					
 					configAttToAdd.setOtherFilters(templateFilter.getDynamicFilterContentByInternalName(dsConfig.getDataset()).getOtherFilters());			
-		  }		  
+					configAttToAdd.removeOptions();
+					configAttToAdd.addOptions(templateFilter.getDynamicFilterContentByInternalName(dsConfig.getDataset()).getOptions());
+		  }
 		  
-		  
-		  // chromosome_name hack to stop mmullata memory problems with chr options
-		  //if (templateFilter.getType().equals("list") && !templateFilter.getInternalName().equals("chromosome_name")){
+		  /* options now handled in dynamic content above	
 		  if (templateFilter.getType().equals("list")){
 		  	String colForDisplay = "";
 			if (configAttToAdd.getColForDisplay() != null){
@@ -1751,7 +1767,12 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 				configAttToAdd.insertOption(k,options[k]);
 			}		  			  	
 		  }
+		  */
+		  
 	  }
+	  
+	  
+	  
 	  
 	  if (configAtt.getHidden() != null && configAtt.getHidden().equals("true"))
 			configAttToAdd.setHidden("true");
@@ -1880,7 +1901,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		Option op = ops[j];
 		// if a value option remove it
 		if (op.getTableConstraint() == null || op.getTableConstraint().equals("")){
-			templateAttToAdd.removeOption(op);
+			//templateAttToAdd.removeOption(op);
 			continue;		
 		}
 		// if a filter option remove dataset part from tableConstraint

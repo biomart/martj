@@ -609,7 +609,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DynamicAttributeContent"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "hideDisplay toggle",};  
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DynamicFilterContent"))
-			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "hideDisplay toggle",};  
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "hideDisplay toggle","delete options","insert option"};  
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DynamicDatasetContent"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "hideDisplay toggle",};
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DynamicExportableContent"))

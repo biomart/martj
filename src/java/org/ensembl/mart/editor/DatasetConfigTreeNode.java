@@ -221,7 +221,43 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 										DynamicFilterContent dynAtt = (DynamicFilterContent) dynamicContentFilts.get(a);
 										String dynName = dynAtt.getInternalName();
 										DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicFilterContent:" + dynName);
-										dynNode.setUserObject(dynAtt);	
+										dynNode.setUserObject(dynAtt);
+										
+										Option[] options = dynAtt.getOptions();
+									
+										for (int k = 0; k < options.length; k++) {
+											Option option = options[k];
+											String optionName = option.getInternalName();
+											DatasetConfigTreeNode optionNode = new DatasetConfigTreeNode("Option: " + optionName);
+											optionNode.setUserObject(option);
+
+										   // code for options within options ie for expression menus
+																				Option[] subOptions = option.getOptions();
+																				for (int m = 0; m < subOptions.length; m++) {
+																					Option op = subOptions[m];
+																					String paoptionName = op.getInternalName();
+																					DatasetConfigTreeNode subOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
+																					subOptionNode.setUserObject(op);
+																				}
+																				// new code to cycle through push actions
+																				PushAction[] pushActions = option.getPushActions();
+																				for (int l = 0; l < pushActions.length; l++) {
+																					PushAction pa = pushActions[l];
+																					DatasetConfigTreeNode pushActionNode = new DatasetConfigTreeNode("PushAction");
+																					pushActionNode.setUserObject(pa);
+
+																					Option[] paOptions = pa.getOptions();
+																					for (int m = 0; m < paOptions.length; m++) {
+																						Option op = paOptions[m];
+																						String paoptionName = op.getInternalName();
+																						DatasetConfigTreeNode paOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
+																						paOptionNode.setUserObject(op);
+																					}
+
+																				}
+																				//end of new code
+										}
+											
 									}
 									
 									Option[] options = fiDescription.getOptions();
@@ -334,7 +370,43 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 								DynamicFilterContent dynAtt = (DynamicFilterContent) dynamicContentAtts.get(a);
 								String dynName = dynAtt.getInternalName();
 								DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicFilterContent:" + dynName);
-								dynNode.setUserObject(dynAtt);	
+								dynNode.setUserObject(dynAtt);
+								
+								Option[] options = dynAtt.getOptions();
+									
+																	for (int k = 0; k < options.length; k++) {
+																		Option option = options[k];
+																		String optionName = option.getInternalName();
+																		DatasetConfigTreeNode optionNode = new DatasetConfigTreeNode("Option: " + optionName);
+																		optionNode.setUserObject(option);
+
+																		// code for options within options ie for expression menus
+																		Option[] subOptions = option.getOptions();
+																		for (int m = 0; m < subOptions.length; m++) {
+																			Option op = subOptions[m];
+																			String paoptionName = op.getInternalName();
+																			DatasetConfigTreeNode subOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
+																			subOptionNode.setUserObject(op);
+																		}
+																		// new code to cycle through push actions
+																		PushAction[] pushActions = option.getPushActions();
+																		for (int l = 0; l < pushActions.length; l++) {
+																			PushAction pa = pushActions[l];
+																			DatasetConfigTreeNode pushActionNode = new DatasetConfigTreeNode("PushAction");
+																			pushActionNode.setUserObject(pa);
+
+																			Option[] paOptions = pa.getOptions();
+																			for (int m = 0; m < paOptions.length; m++) {
+																				Option op = paOptions[m];
+																				String paoptionName = op.getInternalName();
+																				DatasetConfigTreeNode paOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
+																				paOptionNode.setUserObject(op);
+																			}
+
+																		}
+																		//end of new code
+																	}
+									
 							}
 							
 							Option[] options = fiDescription.getOptions();
@@ -433,7 +505,43 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 						DynamicFilterContent dynAtt = (DynamicFilterContent) dynamicContentAtts.get(a);
 						String dynName = dynAtt.getInternalName();
 						DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicFilterContent:" + dynName);
-						dynNode.setUserObject(dynAtt);	
+						dynNode.setUserObject(dynAtt);
+						
+						Option[] options = dynAtt.getOptions();
+									
+															for (int k = 0; k < options.length; k++) {
+																Option option = options[k];
+																String optionName = option.getInternalName();
+																DatasetConfigTreeNode optionNode = new DatasetConfigTreeNode("Option: " + optionName);
+																optionNode.setUserObject(option);
+
+																// code for options within options ie for expression menus
+																Option[] subOptions = option.getOptions();
+																for (int m = 0; m < subOptions.length; m++) {
+																	Option op = subOptions[m];
+																	String paoptionName = op.getInternalName();
+																	DatasetConfigTreeNode subOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
+																	subOptionNode.setUserObject(op);
+																}
+																// new code to cycle through push actions
+																PushAction[] pushActions = option.getPushActions();
+																for (int l = 0; l < pushActions.length; l++) {
+																	PushAction pa = pushActions[l];
+																	DatasetConfigTreeNode pushActionNode = new DatasetConfigTreeNode("PushAction");
+																	pushActionNode.setUserObject(pa);
+
+																	Option[] paOptions = pa.getOptions();
+																	for (int m = 0; m < paOptions.length; m++) {
+																		Option op = paOptions[m];
+																		String paoptionName = op.getInternalName();
+																		DatasetConfigTreeNode paOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
+																		paOptionNode.setUserObject(op);
+																	}
+
+																}
+																//end of new code
+															}
+							
 					}
 					
 					Option[] options = fiDescription.getOptions();
@@ -515,7 +623,43 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 					DynamicFilterContent dynAtt = (DynamicFilterContent) dynamicContentAtts.get(a);
 					String dynName = dynAtt.getInternalName();
 					DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicFilterContent:" + dynName);
-					dynNode.setUserObject(dynAtt);	
+					dynNode.setUserObject(dynAtt);
+					
+					Option[] options = dynAtt.getOptions();
+									
+														for (int k = 0; k < options.length; k++) {
+															Option option = options[k];
+															String optionName = option.getInternalName();
+															DatasetConfigTreeNode optionNode = new DatasetConfigTreeNode("Option: " + optionName);
+															optionNode.setUserObject(option);
+
+															// code for options within options ie for expression menus
+															Option[] subOptions = option.getOptions();
+															for (int m = 0; m < subOptions.length; m++) {
+																Option op = subOptions[m];
+																String paoptionName = op.getInternalName();
+																DatasetConfigTreeNode subOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
+																subOptionNode.setUserObject(op);
+															}
+															// new code to cycle through push actions
+															PushAction[] pushActions = option.getPushActions();
+															for (int l = 0; l < pushActions.length; l++) {
+																PushAction pa = pushActions[l];
+																DatasetConfigTreeNode pushActionNode = new DatasetConfigTreeNode("PushAction");
+																pushActionNode.setUserObject(pa);
+
+																Option[] paOptions = pa.getOptions();
+																for (int m = 0; m < paOptions.length; m++) {
+																	Option op = paOptions[m];
+																	String paoptionName = op.getInternalName();
+																	DatasetConfigTreeNode paOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
+																	paOptionNode.setUserObject(op);
+																}
+
+															}
+															//end of new code
+														}
+						
 				}
 				Option[] options = fiDescription.getOptions();
 
@@ -583,7 +727,43 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				String dynName = dynAtt.getInternalName();
 				DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicFilterContent:" + dynName);
 				dynNode.setUserObject(dynAtt);
-				this.add(dynNode);	
+				this.add(dynNode);
+				
+				Option[] options = dynAtt.getOptions();
+									
+													for (int k = 0; k < options.length; k++) {
+														Option option = options[k];
+														String optionName = option.getInternalName();
+														DatasetConfigTreeNode optionNode = new DatasetConfigTreeNode("Option: " + optionName);
+														optionNode.setUserObject(option);
+
+														// code for options within options ie for expression menus
+														Option[] subOptions = option.getOptions();
+														for (int m = 0; m < subOptions.length; m++) {
+															Option op = subOptions[m];
+															String paoptionName = op.getInternalName();
+															DatasetConfigTreeNode subOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
+															subOptionNode.setUserObject(op);
+														}
+														// new code to cycle through push actions
+														PushAction[] pushActions = option.getPushActions();
+														for (int l = 0; l < pushActions.length; l++) {
+															PushAction pa = pushActions[l];
+															DatasetConfigTreeNode pushActionNode = new DatasetConfigTreeNode("PushAction");
+															pushActionNode.setUserObject(pa);
+
+															Option[] paOptions = pa.getOptions();
+															for (int m = 0; m < paOptions.length; m++) {
+																Option op = paOptions[m];
+																String paoptionName = op.getInternalName();
+																DatasetConfigTreeNode paOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
+																paOptionNode.setUserObject(op);
+															}
+
+														}
+														//end of new code
+													}
+					
 			}
 			Option[] ops = fiDescription.getOptions();
 			
@@ -635,8 +815,48 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 			
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DynamicAttributeContent")) {
 			setName("DynamicAttributeContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
+			
+			
+			
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DynamicFilterContent")) {
 			setName("DynamicFilterContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
+			DynamicFilterContent dynAtt = (DynamicFilterContent) obj;
+			Option[] options = dynAtt.getOptions();
+									
+												for (int k = 0; k < options.length; k++) {
+													Option option = options[k];
+													String optionName = option.getInternalName();
+													DatasetConfigTreeNode optionNode = new DatasetConfigTreeNode("Option: " + optionName);
+													optionNode.setUserObject(option);
+													this.add(optionNode);// TRY THIS
+
+													// code for options within options ie for expression menus
+													Option[] subOptions = option.getOptions();
+													for (int m = 0; m < subOptions.length; m++) {
+														Option op = subOptions[m];
+														String paoptionName = op.getInternalName();
+														DatasetConfigTreeNode subOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
+														subOptionNode.setUserObject(op);
+													}
+													// new code to cycle through push actions
+													PushAction[] pushActions = option.getPushActions();
+													for (int l = 0; l < pushActions.length; l++) {
+														PushAction pa = pushActions[l];
+														DatasetConfigTreeNode pushActionNode = new DatasetConfigTreeNode("PushAction");
+														pushActionNode.setUserObject(pa);
+
+														Option[] paOptions = pa.getOptions();
+														for (int m = 0; m < paOptions.length; m++) {
+															Option op = paOptions[m];
+															String paoptionName = op.getInternalName();
+															DatasetConfigTreeNode paOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
+															paOptionNode.setUserObject(op);
+														}
+
+													}
+													//end of new code
+												}
+			
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DynamicDatasetContent")) {
 			setName("DynamicDatasetContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DynamicImportableContent")) {
