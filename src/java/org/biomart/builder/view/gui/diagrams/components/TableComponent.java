@@ -148,14 +148,12 @@ public class TableComponent extends BoxShapedComponent {
 		// Add the table name label.
 		JLabel label = new JLabel(this.getTable().getName());
 		label.setFont(TableComponent.BOLD_FONT);
-		label.setForeground(this.getForeground());
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 
 		// Add the schema name label below.
 		label = new JLabel(this.getTable().getSchema().getName());
 		label.setFont(TableComponent.PLAIN_FONT);
-		label.setForeground(this.getForeground());
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 

@@ -137,7 +137,6 @@ public class DataSetComponent extends BoxShapedComponent {
 		// Add the label for the schema name,
 		final JLabel label = new JLabel(this.getDataSet().getName());
 		label.setFont(DataSetComponent.BOLD_FONT);
-		label.setForeground(this.getForeground());
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 	}

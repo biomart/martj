@@ -271,7 +271,6 @@ public class SchemaComponent extends BoxShapedComponent {
 		// Add the label for the schema name,
 		JLabel label = new JLabel(this.getSchema().getName());
 		label.setFont(SchemaComponent.BOLD_FONT);
-		label.setForeground(this.getForeground());
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 
@@ -280,7 +279,6 @@ public class SchemaComponent extends BoxShapedComponent {
 			// Add a 'contains' label.
 			label = new JLabel(Resources.get("schemaGroupContains"));
 			label.setFont(SchemaComponent.BOLDITALIC_FONT);
-			label.setForeground(this.getForeground());
 			this.layout.setConstraints(label, this.constraints);
 			this.add(label);
 
@@ -290,7 +288,6 @@ public class SchemaComponent extends BoxShapedComponent {
 				final Schema s = (Schema) i.next();
 				label = new JLabel(s.getName());
 				label.setFont(SchemaComponent.BOLDITALIC_FONT);
-				label.setForeground(this.getForeground());
 				this.layout.setConstraints(label, this.constraints);
 				this.add(label);
 			}

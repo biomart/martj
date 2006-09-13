@@ -1405,8 +1405,7 @@ public class DataSet extends GenericSchema {
 				final Relation underlyingRelation) {
 			// Call the super constructor using the alias generator to
 			// ensure we have a unique name.
-			super(dsTable.getColumnByName(name) != null ? name + "_"
-					+ dsTable.getName() : name, dsTable);
+			super(name, dsTable);
 
 			// Remember the rest.
 			this.underlyingRelation = underlyingRelation;
@@ -1874,7 +1873,11 @@ public class DataSet extends GenericSchema {
 					final DataSetTable dsTable,
 					final Relation underlyingRelation) {
 				// Call the parent which will use the alias generator for us.
-				super(column.getName(), dsTable, underlyingRelation);
+				super(
+						dsTable.getColumnByName(column.getName()) != null ? column
+								.getName()
+								+ "_" + column.getTable().getName()
+								: column.getName(), dsTable, underlyingRelation);
 
 				// Remember the wrapped column.
 				this.column = column;

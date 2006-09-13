@@ -142,7 +142,6 @@ public class KeyComponent extends BoxShapedComponent {
 				.hasNext();) {
 			final JLabel label = new JLabel(((Column) i.next()).getName());
 			label.setFont(KeyComponent.ITALIC_FONT);
-			label.setForeground(this.getForeground());
 			this.layout.setConstraints(label, this.constraints);
 			this.add(label);
 		}

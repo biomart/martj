@@ -33,7 +33,7 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * This simple component represents a single column within a table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.78, 29th August 2006
+ * @version 0.1.79, 13th September 2006
  * @since 0.1
  */
 public class ColumnComponent extends BoxShapedComponent {
@@ -67,7 +67,7 @@ public class ColumnComponent extends BoxShapedComponent {
 	/**
 	 * Constant referring to normal column colour.
 	 */
-	public static Color NORMAL_COLOUR = Color.DARK_GRAY;
+	public static Color NORMAL_COLOUR = Color.ORANGE;
 
 	/**
 	 * Constant referring to partitioned column colour.
@@ -114,12 +114,11 @@ public class ColumnComponent extends BoxShapedComponent {
 		this.removeAll();
 
 		// Set the background.
-		this.setBackground(ColumnComponent.BACKGROUND_COLOUR);
+		this.setBackground(ColumnComponent.NORMAL_COLOUR);
 
 		// Add the label for the column name.
 		final JLabel label = new JLabel(this.getColumn().getName());
 		label.setFont(ColumnComponent.ITALIC_FONT);
-		label.setForeground(this.getForeground());
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 	}

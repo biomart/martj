@@ -68,7 +68,7 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.32, 29th August 2006
+ * @version 0.1.33, 13th September 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -922,7 +922,7 @@ public interface MartConstructor {
 
 				// Work out what columns to include from the first table.
 				final List dsFirstTableCols = vConstructionTable
-						.getDataSetColumns(rFirstTable.getColumns());
+						.getDataSetColumns(rFirstTable.getColumns(), null);
 
 				// Include the schema name column if there is one (don't need
 				// to do this for dimension/subclass tables as it will be part
@@ -993,7 +993,8 @@ public interface MartConstructor {
 				// What are the equivalent columns on the existing temp table
 				// that correspond to the key on the previous table?
 				final List dsSourceKeyCols = vConstructionTable
-						.getDataSetColumns(rSourceKey.getColumns());
+						.getDataSetColumns(rSourceKey.getColumns(),
+								rSourceRelation);
 				// What are the columns we should merge from this new table?
 				final List dsTargetIncludeCols = vConstructionTable
 						.getDataSetColumns(rSourceRelation);
@@ -1108,7 +1109,7 @@ public interface MartConstructor {
 				// that correspond to the source key?
 				final List vSourceKeyCols = vConstructionTable
 						.getNthDataSetColumns(rConcatSourceKey.getColumns(),
-								rConcatRelation);
+								rConcatRelation, rConcatRelation);
 				// If concatColumn is in a table in a group schema
 				// that is not the same group schema we started with, create
 				// a union table containing all the concatTable copies, then
@@ -1476,7 +1477,8 @@ public interface MartConstructor {
 			}
 
 			private DataSetColumn getDataSetColumn(int n,
-					final Column interestingColumn) {
+					final Column interestingColumn,
+					final Relation ignoreRelation) {
 				// We must look not only for this column, but all columns
 				// involved in relations with it, because it could have been
 				// introduced via another route.
@@ -1501,8 +1503,46 @@ public interface MartConstructor {
 								&& n-- == 0)
 							return candidate;
 					}
-					// If got here, didn't find this search candidate, so add
-					// all the related columns in other keys.
+					// If got here, didn't find this search candidate, so
+					// work out all other columns in any 1:1 chains linked
+					// to the candidate and try those.
+					List oneOneCandidates = new ArrayList();
+					oneOneCandidates.add(searchColumn);
+					for (int l = 0; l < oneOneCandidates.size(); l++) {
+						Column oneOneCandidate = (Column) oneOneCandidates
+								.get(l);
+						for (final Iterator i = oneOneCandidate.getTable()
+								.getKeys().iterator(); i.hasNext();) {
+							final Key key = (Key) i.next();
+							final int colIndex = key.getColumns().indexOf(
+									oneOneCandidate);
+							if (colIndex < 0)
+								continue;
+							for (final Iterator k = key.getRelations()
+									.iterator(); k.hasNext();) {
+								final Relation rel = (Relation) k.next();
+								if (rel.equals(ignoreRelation)
+										|| !rel.isOneToOne())
+									continue;
+								final Key otherKey = rel.getOtherKey(key);
+								final Column nextOneOneCandidate = (Column) otherKey
+										.getColumns().get(colIndex);
+								if (!oneOneCandidates
+										.contains(nextOneOneCandidate))
+									oneOneCandidates.add(nextOneOneCandidate);
+							}
+						}
+					}
+					for (final Iterator i = oneOneCandidates.iterator(); i
+							.hasNext();) {
+						Column nextCandidate = (Column) i.next();
+						if (!candidates.contains(nextCandidate))
+							candidates.add(nextCandidate);
+					}
+
+					// If got here, didn't find this search candidate, or any
+					// equivalent in a 1:1 chain from the candidate, so
+					// add all the related columns in other keys.
 					for (final Iterator i = searchColumn.getTable().getKeys()
 							.iterator(); i.hasNext();) {
 						final Key key = (Key) i.next();
@@ -1513,6 +1553,8 @@ public interface MartConstructor {
 						for (final Iterator k = key.getRelations().iterator(); k
 								.hasNext();) {
 							final Relation rel = (Relation) k.next();
+							if (rel.equals(ignoreRelation))
+								continue;
 							final Key otherKey = rel.getOtherKey(key);
 							final Column nextCandidate = (Column) otherKey
 									.getColumns().get(colIndex);
@@ -1660,14 +1702,18 @@ public interface MartConstructor {
 			 * @param interestingColumns
 			 *            the set of normal columns to find matching dataset
 			 *            columns for.
+			 * @param ignoreRelation
+			 *            don't follow this relation when trying to resolve
+			 *            indirect references.
 			 * @return the set of 0th matching dataset columns.
 			 */
-			public List getDataSetColumns(final Collection interestingColumns) {
+			public List getDataSetColumns(final Collection interestingColumns,
+					final Relation ignoreRelation) {
 				final List list = new ArrayList();
 				for (final Iterator i = interestingColumns.iterator(); i
 						.hasNext();) {
 					final DataSetColumn col = this.getDataSetColumn(0,
-							(Column) i.next());
+							(Column) i.next(), ignoreRelation);
 					if (col != null)
 						list.add(col);
 				}
@@ -1739,16 +1785,20 @@ public interface MartConstructor {
 			 *            the counter object to retrieve the value n from. The
 			 *            first time any object is used, n=0. The next time that
 			 *            same object is seen, n=1, and so on.
+			 * @param ignoreRelation
+			 *            the relation to ignore when resolving indirect
+			 *            columns.
 			 * @return the set of nth matching dataset columns.
 			 */
 			public List getNthDataSetColumns(
-					final Collection interestingColumns, final Object counter) {
+					final Collection interestingColumns, final Object counter,
+					final Relation ignoreRelation) {
 				final int n = this.incrementCount(counter);
 				final List list = new ArrayList();
 				for (final Iterator i = interestingColumns.iterator(); i
 						.hasNext();) {
 					final DataSetColumn col = this.getDataSetColumn(n,
-							(Column) i.next());
+							(Column) i.next(), ignoreRelation);
 					if (col != null)
 						list.add(col);
 				}
