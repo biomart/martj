@@ -1109,7 +1109,7 @@ public interface MartConstructor {
 				// that correspond to the source key?
 				final List vSourceKeyCols = vConstructionTable
 						.getNthDataSetColumns(rConcatSourceKey.getColumns(),
-								rConcatRelation, rConcatRelation);
+								rConcatRelation);
 				// If concatColumn is in a table in a group schema
 				// that is not the same group schema we started with, create
 				// a union table containing all the concatTable copies, then
@@ -1781,17 +1781,16 @@ public interface MartConstructor {
 			 * @param interestingColumns
 			 *            the set of normal columns to find matching dataset
 			 *            columns for.
-			 * @param counter
-			 *            the counter object to retrieve the value n from. The
-			 *            first time any object is used, n=0. The next time that
-			 *            same object is seen, n=1, and so on.
 			 * @param ignoreRelation
 			 *            the relation to ignore when resolving indirect
-			 *            columns.
+			 *            columns. This will also be used as a counter object to
+			 *            retrieve the value n from. The first time any object
+			 *            is used, n=0. The next time that same object is seen,
+			 *            n=1, and so on.
 			 * @return the set of nth matching dataset columns.
 			 */
 			public List getNthDataSetColumns(
-					final Collection interestingColumns, final Object counter,
+					final Collection interestingColumns,
 					final Relation ignoreRelation) {
 				final int n = this.incrementCount(counter);
 				final List list = new ArrayList();

@@ -64,7 +64,7 @@ import org.biomart.builder.model.MartConstructorAction.Union;
  * Understands how to create SQL and DDL for a MySQL database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.25, 17th August 2006
+ * @version 0.1.26, 13th September 2006
  * @since 0.1
  */
 public class MySQLDialect extends DatabaseDialect {
@@ -111,24 +111,28 @@ public class MySQLDialect extends DatabaseDialect {
 			MySQLDialect.GROUP_CONCAT_SIZED = true;
 		}
 
-		sb.append("create table " + concatSchemaName + "." + concatTableName
-				+ " as select a.*, group_concat(distinct concat_ws('");
+		sb.append("create table " + concatSchemaName + ".`" + concatTableName
+				+ "` as select a.*, group_concat(distinct concat_ws('");
 		sb.append(columnSep);
-		sb.append("'");
+		sb.append("',");
 		for (final Iterator i = action.getConcatTableConcatColumns().iterator(); i
 				.hasNext();) {
-			sb.append(',');
+			sb.append("b.`");
 			final Column col = (Column) i.next();
 			sb.append(col.getName());
+			sb.append('`');
+			if (i.hasNext())
+				sb.append(',');
 		}
 		sb.append(") separator '");
 		sb.append(recordSep);
-		sb.append("')) as ");
+		sb.append("')) as `");
 		sb.append(trgtColName);
+		sb.append('`');
 
-		sb.append(" from " + srcSchemaName + "." + srcTableName
-				+ " as a inner join " + trgtSchemaName + "." + trgtTableName
-				+ " as b on ");
+		sb.append(" from " + srcSchemaName + ".`" + srcTableName
+				+ "` as a inner join " + trgtSchemaName + ".`" + trgtTableName
+				+ "` as b on ");
 		for (int i = 0; i < action.getConcatTableFKColumns().size(); i++) {
 			if (i > 0)
 				sb.append(" and ");
@@ -136,26 +140,27 @@ public class MySQLDialect extends DatabaseDialect {
 					.get(i)).getName();
 			final String fkColName = ((Column) action.getConcatTableFKColumns()
 					.get(i)).getName();
-			sb.append("a." + pkColName + "=b." + fkColName);
+			sb.append("a.`" + pkColName + "`=b.`" + fkColName + '`');
 		}
 
 		// Do restriction.
 		if (relRestriction != null || tblRestriction != null)
 			sb.append(" where ");
 		if (relRestriction != null)
-			sb.append(relRestriction.getSubstitutedExpression(
+			sb.append(relRestriction.getSubstitutedExpression('`',
 					firstIsSource ? "a" : "b", firstIsSource ? "b" : "a"));
 		if (relRestriction != null && tblRestriction != null)
 			sb.append(" and ");
 		if (tblRestriction != null)
-			sb.append(tblRestriction.getSubstitutedExpression("b"));
+			sb.append(tblRestriction.getSubstitutedExpression('`', "b"));
 
 		// Do group-by.
 		sb.append(" group by ");
 		for (final Iterator i = srcTableKeyCols.iterator(); i.hasNext();) {
 			final Column srcKeyCol = (Column) i.next();
-			sb.append("a.");
+			sb.append("a.`");
 			sb.append(srcKeyCol.getName());
+			sb.append('`');
 			if (i.hasNext())
 				sb.append(',');
 		}
@@ -179,8 +184,8 @@ public class MySQLDialect extends DatabaseDialect {
 		final boolean useDistinct = action.isUseDistinct();
 
 		final StringBuffer sb = new StringBuffer();
-		sb.append("create table " + createTableSchema + "." + createTableName
-				+ " as select ");
+		sb.append("create table " + createTableSchema + ".`" + createTableName
+				+ "` as select ");
 		if (useDistinct)
 			sb.append("distinct ");
 		for (final Iterator i = action.getSelectFromColumns().iterator(); i
@@ -189,12 +194,12 @@ public class MySQLDialect extends DatabaseDialect {
 			if (action.isUseAliases()) {
 				final DataSetColumn dsCol = (DataSetColumn) col;
 				if (dsCol instanceof WrappedColumn) {
-					sb.append("a.");
+					sb.append("a.`");
 					sb.append(((WrappedColumn) dsCol).getWrappedColumn()
 							.getName());
-					sb.append(" as ");
+					sb.append("` as ");
 				} else if (dsCol instanceof SchemaNameColumn) {
-					sb.append('\'');
+					sb.append("'");
 					sb.append(fromTableSchema);
 					sb.append("' as ");
 				} else
@@ -202,21 +207,23 @@ public class MySQLDialect extends DatabaseDialect {
 					throw new MartBuilderInternalError();
 			} else if (action.isUseInheritedAliases())
 				if (col instanceof InheritedColumn) {
-					sb.append("a.");
+					sb.append("a.`");
 					sb.append(((InheritedColumn) col).getInheritedColumn()
 							.getName());
-					sb.append(" as ");
+					sb.append("` as ");
 				}
+			sb.append('`');
 			sb.append(col.getName());
+			sb.append('`');
 			if (i.hasNext())
 				sb.append(',');
 		}
-		sb.append(" from " + fromTableSchema + "." + fromTableName + " as a");
+		sb.append(" from " + fromTableSchema + ".`" + fromTableName + "` as a");
 
 		// Do restriction.
 		if (tblRestriction != null) {
 			sb.append(" where ");
-			sb.append(tblRestriction.getSubstitutedExpression("a"));
+			sb.append(tblRestriction.getSubstitutedExpression('`', "a"));
 		}
 
 		statements.add(sb.toString());
@@ -229,7 +236,7 @@ public class MySQLDialect extends DatabaseDialect {
 				: ((JDBCSchema) action.getTargetTableSchema())
 						.getDatabaseSchema();
 		final String tableName = action.getTargetTableName();
-		statements.add("drop table " + schemaName + "." + tableName);
+		statements.add("drop table " + schemaName + ".`" + tableName + "`");
 	}
 
 	public void doExpressionAddColumns(final ExpressionAddColumns action,
@@ -249,27 +256,31 @@ public class MySQLDialect extends DatabaseDialect {
 		final Collection expressCols = action.getTargetExpressionColumns();
 
 		final StringBuffer sb = new StringBuffer();
-		sb.append("create table " + trgtSchemaName + "." + trgtTableName
-				+ " as select ");
+		sb.append("create table " + trgtSchemaName + ".`" + trgtTableName
+				+ "` as select ");
 		for (final Iterator i = selectCols.iterator(); i.hasNext();) {
 			final Column col = (Column) i.next();
+			sb.append('`');
 			sb.append(col.getName());
-			sb.append(',');
+			sb.append("`,");
 		}
 		for (final Iterator i = expressCols.iterator(); i.hasNext();) {
 			final ExpressionColumn col = (ExpressionColumn) i.next();
-			sb.append(col.getSubstitutedExpression());
-			sb.append(" as ");
+			sb.append(col.getSubstitutedExpression('`'));
+			sb.append(" as `");
 			sb.append(col.getName());
+			sb.append('`');
 			if (i.hasNext())
 				sb.append(',');
 		}
-		sb.append(" from " + srcSchemaName + "." + srcTableName);
+		sb.append(" from " + srcSchemaName + ".`" + srcTableName + "`");
 		if (useGroupBy) {
 			sb.append(" group by ");
 			for (final Iterator i = selectCols.iterator(); i.hasNext();) {
 				final Column col = (Column) i.next();
+				sb.append('`');
 				sb.append(col.getName());
+				sb.append('`');
 				if (i.hasNext())
 					sb.append(',');
 			}
@@ -285,11 +296,12 @@ public class MySQLDialect extends DatabaseDialect {
 		final String tableName = action.getTargetTableName();
 		final StringBuffer sb = new StringBuffer();
 
-		sb.append("create index " + tableName + "_I_" + this.indexCount++
-				+ " on " + schemaName + "." + tableName + "(");
+		sb.append("create index `" + tableName + "_I_" + this.indexCount++
+				+ "` on " + schemaName + ".`" + tableName + "`(");
 		for (final Iterator i = action.getIndexColumns().iterator(); i
 				.hasNext();) {
 			final Object obj = i.next();
+			sb.append('`');
 			if (obj instanceof Column) {
 				final Column col = (Column) obj;
 				sb.append(col.getName());
@@ -297,6 +309,7 @@ public class MySQLDialect extends DatabaseDialect {
 				sb.append(obj);
 			else
 				throw new MartBuilderInternalError();
+			sb.append('`');
 			if (i.hasNext())
 				sb.append(',');
 		}
@@ -330,21 +343,22 @@ public class MySQLDialect extends DatabaseDialect {
 		final boolean useDistinct = action.isUseDistinct();
 
 		final StringBuffer sb = new StringBuffer();
-		sb.append("create table " + mergeSchemaName + "." + mergeTableName
-				+ " as select ");
+		sb.append("create table " + mergeSchemaName + ".`" + mergeTableName
+				+ "` as select ");
 		if (useDistinct)
 			sb.append("distinct ");
 		sb.append("a.*");
 		for (final Iterator i = action.getMergeTableSelectColumns().iterator(); i
 				.hasNext();) {
-			sb.append(",b.");
+			sb.append(',');
 			final Column col = (Column) i.next();
 			if (action.isUseAliases()) {
 				final DataSetColumn dsCol = (DataSetColumn) col;
 				if (dsCol instanceof WrappedColumn) {
+					sb.append("b.`");
 					sb.append(((WrappedColumn) dsCol).getWrappedColumn()
 							.getName());
-					sb.append(" as ");
+					sb.append("` as ");
 				} else if (dsCol instanceof SchemaNameColumn) {
 					sb.append('\'');
 					sb.append(trgtSchemaName);
@@ -353,11 +367,13 @@ public class MySQLDialect extends DatabaseDialect {
 					// Ouch!
 					throw new MartBuilderInternalError();
 			}
+			sb.append('`');
 			sb.append(col.getName());
+			sb.append('`');
 		}
-		sb.append(" from " + srcSchemaName + "." + srcTableName
-				+ " as a left join " + trgtSchemaName + "." + trgtTableName
-				+ " as b on ");
+		sb.append(" from " + srcSchemaName + ".`" + srcTableName
+				+ "` as a left join " + trgtSchemaName + ".`" + trgtTableName
+				+ "` as b on ");
 		for (int i = 0; i < action.getMergeTableJoinColumns().size(); i++) {
 			if (i > 0)
 				sb.append(" and ");
@@ -365,19 +381,19 @@ public class MySQLDialect extends DatabaseDialect {
 					.getSourceTableJoinColumns().get(i)).getName();
 			final String fkColName = ((Column) action
 					.getMergeTableJoinColumns().get(i)).getName();
-			sb.append("a." + pkColName + "=b." + fkColName);
+			sb.append("a.`" + pkColName + "`=b.`" + fkColName + "`");
 		}
 
 		// Do restriction.
 		if (relRestriction != null || tblRestriction != null)
 			sb.append(" where ");
 		if (relRestriction != null)
-			sb.append(relRestriction.getSubstitutedExpression(
+			sb.append(relRestriction.getSubstitutedExpression('`',
 					firstIsSource ? "a" : "b", firstIsSource ? "b" : "a"));
 		if (relRestriction != null && tblRestriction != null)
 			sb.append(" and ");
 		if (tblRestriction != null)
-			sb.append(tblRestriction.getSubstitutedExpression("b"));
+			sb.append(tblRestriction.getSubstitutedExpression('`', "b"));
 
 		statements.add(sb.toString());
 	}
@@ -390,8 +406,8 @@ public class MySQLDialect extends DatabaseDialect {
 						.getDatabaseSchema();
 		final String tableName = action.getTargetTableName();
 		final String colName = action.getColumnName();
-		statements.add("alter table " + schemaName + "." + tableName
-				+ " add column (" + colName + " integer default 0)");
+		statements.add("alter table " + schemaName + ".`" + tableName
+				+ "` add column (`" + colName + "` integer default 0)");
 	}
 
 	public void doOptimiseUpdateColumn(final OptimiseUpdateColumn action,
@@ -409,9 +425,9 @@ public class MySQLDialect extends DatabaseDialect {
 		final String colName = action.getOptimiseColumnName();
 
 		final StringBuffer sb = new StringBuffer();
-		sb.append("update " + pkSchemaName + "." + pkTableName + " a set "
-				+ colName + "=(select count(1) from " + fkSchemaName + "."
-				+ fkTableName + " b where ");
+		sb.append("update " + pkSchemaName + ".`" + pkTableName + "` a set "
+				+ colName + "=(select count(1) from " + fkSchemaName + ".`"
+				+ fkTableName + "` b where ");
 		for (int i = 0; i < action.getTargetTablePKColumns().size(); i++) {
 			if (i > 0)
 				sb.append(" and ");
@@ -419,10 +435,11 @@ public class MySQLDialect extends DatabaseDialect {
 					i);
 			final Column fkCol = (Column) action.getCountTableFKColumns()
 					.get(i);
-			sb.append("a.");
+			sb.append("a.`");
 			sb.append(pkCol.getName());
-			sb.append("=b.");
+			sb.append("`=b.`");
 			sb.append(fkCol.getName());
+			sb.append("`");
 		}
 		for (int i = 0; i < action.getCountTableNotNullColumns().size(); i++) {
 			final Column col = (Column) action.getCountTableNotNullColumns()
@@ -431,9 +448,9 @@ public class MySQLDialect extends DatabaseDialect {
 			if (action.getCountTableFKColumns().contains(col))
 				continue;
 			// Check column not null.
-			sb.append(" and b.");
+			sb.append(" and b.`");
 			sb.append(col.getName());
-			sb.append(" is not null");
+			sb.append("` is not null");
 		}
 		sb.append(')');
 
@@ -462,20 +479,22 @@ public class MySQLDialect extends DatabaseDialect {
 			escapedValue = escapedValue.replaceAll("'", "\\'");
 			escapedValue = "='" + escapedValue + "'";
 		}
-		sb.append("create table " + partTableSchema + "." + partTableName
-				+ " as select ");
+		sb.append("create table " + partTableSchema + ".`" + partTableName
+				+ "` as select ");
 
 		if (action.getSourceTablePKColumns().isEmpty()) {
 			// Do the partition as a simple select where.
 			for (Iterator i = action.getSourceTableAllColumns().iterator(); i
 					.hasNext();) {
 				final String colName = ((Column) i.next()).getName();
+				sb.append('`');
 				sb.append(colName);
+				sb.append('`');
 				if (i.hasNext())
 					sb.append(',');
 			}
-			sb.append(" from " + fromTableSchema + "." + fromTableName
-					+ " where ");
+			sb.append(" from " + fromTableSchema + ".`" + fromTableName
+					+ "` where ");
 		} else {
 			// Do the partition as a self-leftjoin-self so that
 			// we don't lose any foreign keys.
@@ -486,29 +505,30 @@ public class MySQLDialect extends DatabaseDialect {
 			for (Iterator i = action.getSourceTableFKColumns().iterator(); i
 					.hasNext();) {
 				final String colName = ((Column) i.next()).getName();
-				sb.append("a." + colName);
-				sb.append(',');
+				sb.append("a.`" + colName);
+				sb.append("`,");
 			}
 			for (Iterator i = remainingCols.iterator(); i.hasNext();) {
 				final String colName = ((Column) i.next()).getName();
-				sb.append("b." + colName);
+				sb.append("b.`" + colName + "`");
 				if (i.hasNext())
 					sb.append(',');
 			}
 			// select a.FK cols and b.Remaining cols
-			sb.append(" from " + fromTableSchema + "." + fromTableName
-					+ " as a left join " + fromTableSchema + "."
-					+ fromTableName + " as b on ");
+			sb.append(" from " + fromTableSchema + ".`" + fromTableName
+					+ "` as a left join " + fromTableSchema + ".`"
+					+ fromTableName + "` as b on ");
 			for (Iterator i = action.getSourceTablePKColumns().iterator(); i
 					.hasNext();) {
 				final String joinColName = ((Column) i.next()).getName();
-				sb.append("a." + joinColName + "=b." + joinColName);
+				sb.append("a.`" + joinColName + "`=b.`" + joinColName + "`");
 				sb.append(" and ");
 			}
 			sb.append("b.");
 		}
 
-		sb.append(partColumnName + escapedValue);
+		sb.append('`' + partColumnName + '`');
+		sb.append(escapedValue);
 		statements.add(sb.toString());
 	}
 
@@ -535,8 +555,8 @@ public class MySQLDialect extends DatabaseDialect {
 		final String reduceTableName = action.getTargetTableName();
 
 		final StringBuffer sb = new StringBuffer();
-		sb.append("create table " + reduceSchemaName + "." + reduceTableName
-				+ " as select distinct ");
+		sb.append("create table " + reduceSchemaName + ".`" + reduceTableName
+				+ "` as select distinct ");
 		final List remainingCols = new ArrayList(action
 				.getReduceTableAllColumns());
 		remainingCols.removeAll(action.getReduceTableFKColumns());
@@ -544,18 +564,18 @@ public class MySQLDialect extends DatabaseDialect {
 		for (Iterator i = action.getSourceTablePKColumns().iterator(); i
 				.hasNext();) {
 			final String colName = ((Column) i.next()).getName();
-			sb.append("a." + colName);
+			sb.append("a.`" + colName + "`");
 			sb.append(',');
 		}
 		for (Iterator i = remainingCols.iterator(); i.hasNext();) {
 			final String colName = ((Column) i.next()).getName();
-			sb.append("b." + colName);
+			sb.append("b.`" + colName + "`");
 			if (i.hasNext())
 				sb.append(',');
 		}
-		sb.append(" from " + srcSchemaName + "." + srcTableName
-				+ " as a left join " + trgtSchemaName + "." + trgtTableName
-				+ " as b on ");
+		sb.append(" from " + srcSchemaName + ".`" + srcTableName
+				+ "` as a left join " + trgtSchemaName + ".`" + trgtTableName
+				+ "` as b on ");
 		for (int i = 0; i < action.getReduceTableFKColumns().size(); i++) {
 			if (i > 0)
 				sb.append(" and ");
@@ -563,7 +583,7 @@ public class MySQLDialect extends DatabaseDialect {
 					.get(i)).getName();
 			final String fkColName = ((Column) action.getReduceTableFKColumns()
 					.get(i)).getName();
-			sb.append("a." + pkColName + "=b." + fkColName);
+			sb.append("a.`" + pkColName + "`=b.`" + fkColName + "`");
 		}
 
 		statements.add(sb.toString());
@@ -577,8 +597,8 @@ public class MySQLDialect extends DatabaseDialect {
 						.getDatabaseSchema();
 		final String oldTableName = action.getTargetTableOldName();
 		final String newTableName = action.getTargetTableName();
-		statements.add("rename table " + schemaName + "." + oldTableName
-				+ " to " + schemaName + "." + newTableName);
+		statements.add("rename table " + schemaName + ".`" + oldTableName
+				+ "` to " + schemaName + ".`" + newTableName + "`");
 	}
 
 	public void doUnion(final Union action, final List statements)
@@ -589,8 +609,8 @@ public class MySQLDialect extends DatabaseDialect {
 						.getDatabaseSchema();
 		final String tableName = action.getTargetTableName();
 		final StringBuffer sb = new StringBuffer();
-		sb.append("create table " + schemaName + "." + tableName
-				+ " as select * from ");
+		sb.append("create table " + schemaName + ".`" + tableName
+				+ "` as select * from ");
 		for (int i = 0; i < action.getSourceTableSchemas().size(); i++) {
 			if (i > 0)
 				sb.append(" union select * from ");
@@ -601,8 +621,9 @@ public class MySQLDialect extends DatabaseDialect {
 			final String targetTableName = (String) action
 					.getSourceTableNames().get(i);
 			sb.append(targetSchemaName);
-			sb.append('.');
+			sb.append(".`");
 			sb.append(targetTableName);
+			sb.append('`');
 		}
 		statements.add(sb.toString());
 	}
@@ -630,8 +651,8 @@ public class MySQLDialect extends DatabaseDialect {
 		final String schemaName = ((JDBCSchema) schema).getDatabaseSchema();
 		final Connection conn = ((JDBCSchema) schema).getConnection();
 		final ResultSet rs = conn.prepareStatement(
-				"select distinct " + colName + " from " + schemaName + "."
-						+ tableName).executeQuery();
+				"select distinct `" + colName + "` from " + schemaName + ".`"
+						+ tableName + "`").executeQuery();
 		while (rs.next())
 			results.add(rs.getString(1));
 		rs.close();
@@ -646,7 +667,9 @@ public class MySQLDialect extends DatabaseDialect {
 		// Build up a list of column names.
 		final StringBuffer colNames = new StringBuffer();
 		for (final Iterator i = table.getColumns().iterator(); i.hasNext();) {
+			colNames.append('`');
 			colNames.append(((Column) i.next()).getName());
+			colNames.append('`');
 			if (i.hasNext())
 				colNames.append(',');
 		}
@@ -656,8 +679,8 @@ public class MySQLDialect extends DatabaseDialect {
 		final String schemaName = ((JDBCSchema) schema).getDatabaseSchema();
 		final Connection conn = ((JDBCSchema) schema).getConnection();
 		final ResultSet rs = conn.prepareStatement(
-				"select " + colNames.toString() + " from " + schemaName + "."
-						+ tableName + " limit " + count + " offset " + count)
+				"select " + colNames.toString() + " from " + schemaName + ".`"
+						+ tableName + "` limit " + count + " offset " + offset)
 				.executeQuery();
 		while (rs.next()) {
 			final List values = new ArrayList();
