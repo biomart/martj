@@ -108,7 +108,7 @@
     </xsl:if>
  
     <!-- add value options for boolean filters for display purposes  -->
-    <xsl:if test="count(.//Option) = 0 and @type = 'boolean' or @type = 'boolean_num' " >
+    <xsl:if test="count(.//Option) = 0 and (@type = 'boolean' or @type = 'boolean_num') " >
         <xsl:element name="Option">
 		<xsl:attribute name="internalName">only</xsl:attribute>
                 <xsl:attribute name="displayName">Only</xsl:attribute>
@@ -180,7 +180,7 @@
     <xsl:attribute name="autoCompletion"></xsl:attribute>
 
     <!-- add value options for boolean filters for display purposes  -->
-    <xsl:if test="count(.//Option) = 0 and @type = 'boolean' or @type = 'boolean_num'" >
+    <xsl:if test="count(.//Option) = 0 and (@type = 'boolean' or @type = 'boolean_num')" >
             <xsl:element name="Option">
 		<xsl:attribute name="internalName">only</xsl:attribute>
                 <xsl:attribute name="displayName">Only</xsl:attribute>
