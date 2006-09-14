@@ -249,7 +249,6 @@ public void insertOptionAfterOption(String internalName, Option o) throws Config
  * @param o - an array of Option objects
  */
 public void addOptions(Option[] o) {
-  System.out.println("ADDING OPS "+o.length);	
   for (int i = 0, n = o.length; i < n; i++) {
 	uiOptions.add(o[i]);
 	uiOptionNameMap.put(o[i].getInternalName(), o[i]);

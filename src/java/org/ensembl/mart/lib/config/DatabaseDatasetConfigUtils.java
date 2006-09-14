@@ -1729,7 +1729,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						if (datasetName.equals(dsConfig.getDataset())) continue;
 						
 						DynamicFilterContent dynFilter = new DynamicFilterContent(datasetName,templateFilter.getOtherFilters());
-						System.out.println("ADDING OPTIONS TO NEW DYNAMIC CONTENT FOR " +datasetName);
 						dynFilter.addOptions(templateFilter.getOptions());
 						templateFilter.addDynamicFilterContent(dynFilter);
 						//templateFilter.addDynamicFilterContent(new DynamicFilterContent(datasetName,templateFilter.getOtherFilters()));
@@ -1738,7 +1737,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					templateFilter.setOtherFilters("MULTI");
 		
 			        DynamicFilterContent dynFilter = new DynamicFilterContent(dsConfig.getDataset(),configAtt.getOtherFilters());
-			System.out.println("ADDING OPTIONS TO NEW DYNAMIC CONTENT FOR "+dsConfig.getDataset());
 					dynFilter.addOptions(configAtt.getOptions());
 					templateFilter.addDynamicFilterContent(dynFilter);
 					//templateFilter.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),configAtt.getOtherFilters()));
@@ -2312,6 +2310,16 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 							configCollection.addFilterDescription(configAttToAdd);
 					}
 					
+					if (!(configCollection.getFilterDescriptions().size() > 0)){
+						configGroup.removeFilterCollection(configCollection);
+						if (!(configGroup.getFilterCollections().length > 0)){
+							configPage.removeFilterGroup(configGroup);
+							if (!(configPage.getFilterGroups().size() > 0)){
+								dsConfig.removeFilterPage(configPage);
+							}					
+						}
+					}
+					
 									
 				}
 			}
@@ -2351,12 +2359,12 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						// for now continue rather than adding a completely new page consisting purely of
 						// internal placeholders - this stops empty SNP pages being created for the datasets
 						// without other SNP attributes 
-						continue;
-						//configPage = new AttributePage(templatePage.getInternalName(),
-						//					  templatePage.getDisplayName(),
-						//					  templatePage.getDescription(),
-						//					  templatePage.getOutFormats());
-						//dsConfig.addAttributePage(configPage);				
+						//continue;
+						configPage = new AttributePage(templatePage.getInternalName(),
+											  templatePage.getDisplayName(),
+											  templatePage.getDescription(),
+											  templatePage.getOutFormats());
+						dsConfig.addAttributePage(configPage);				
 					}
 			
 					AttributeGroup configGroup = (AttributeGroup) configPage.getAttributeGroupByName(templateGroup.getInternalName());
@@ -2440,16 +2448,28 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					if (templateAtt.containsDynamicAttributeContent(dsConfig.getDataset())){
 						AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
 						DynamicAttributeContent templateSettings = templateAtt.getDynamicAttributeContentByInternalName(dsConfig.getDataset());
-						configAttToAdd.setInternalName(templateSettings.getPointerDataset()+"."+templateSettings.getPointerFilter());
+						configAttToAdd.setInternalName(templateSettings.getPointerDataset()+"."+templateSettings.getPointerAttribute());
 						configAttToAdd.setPointerDataset(templateSettings.getPointerDataset());
 						configAttToAdd.setPointerInterface(templateSettings.getPointerInterface());
 						configAttToAdd.setPointerAttribute(templateSettings.getPointerAttribute());
 						configAttToAdd.setPointerFilter(templateSettings.getPointerFilter());
 								
-						if (!configCollection.containsAttributeDescription(configAttToAdd.getInternalName())) 
+						if (!configCollection.containsAttributeDescription(configAttToAdd.getInternalName()) &&
+							templateSettings.getPointerAttribute() != null) {
+							//System.out.println("ADDING PLACEHOLDE ATT "+configAttToAdd.getInternalName());	
 							configCollection.addAttributeDescription(configAttToAdd);
+						}
 					}
 					
+					if (!(configCollection.getAttributeDescriptions().size() > 0)){
+						configGroup.removeAttributeCollection(configCollection);
+						if (!(configGroup.getAttributeCollections().length > 0)){
+							configPage.removeAttributeGroup(configGroup);
+							if (!(configPage.getAttributeGroups().size() > 0)){
+								dsConfig.removeAttributePage(configPage);
+							}					
+						}
+					}
 					
 					
 			
