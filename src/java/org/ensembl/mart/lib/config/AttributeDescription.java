@@ -47,6 +47,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
   private final String sourceKey = "source";
   private final String homepageURLKey = "homepageURL";
   private final String linkoutURLKey = "linkoutURL";
+  private final String imageURLKey = "imageURL";
   private final String maxLengthKey = "maxLength";
   private final String defaultKey = "default";
   private final String pointerDatasetKey = "pointerDataset";
@@ -89,6 +90,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     setAttribute(sourceKey, null);
     setAttribute(homepageURLKey, null);
     setAttribute(linkoutURLKey, null);
+	setAttribute(imageURLKey, null);
 	setAttribute(defaultKey, null);
 	setAttribute(pointerDatasetKey, null);
 	setAttribute(pointerInterfaceKey, null);
@@ -107,7 +109,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
    */
   public AttributeDescription(String internalName, String field)
     throws ConfigurationException {
-    this(internalName, field, "", "0", "", "", "", "", "", "", "", "", "", "", "", "");
+    this(internalName, field, "", "0", "", "", "", "", "", "", "", "", "", "", "", "", "");
   }
   /**
    * Constructor for an AttributeDescription.
@@ -136,6 +138,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     String source,
     String homePageURL,
     String linkoutURL,
+    String imageURL,
     String datasetLink,
     String defaultString,
     String pointerDataset,
@@ -156,6 +159,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     setAttribute(sourceKey, source);
     setAttribute(homepageURLKey, homePageURL);
     setAttribute(linkoutURLKey, linkoutURL);
+	setAttribute(imageURLKey, imageURL);
     setAttribute(datasetLinkKey, datasetLink);
 	setAttribute(defaultKey, defaultString);
 	setAttribute(pointerDatasetKey, pointerDataset);
@@ -448,6 +452,21 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
    */
   public String getLinkoutURL() {
     return getAttribute(linkoutURLKey);
+  }
+  
+  /**
+   * @param ImageURL - String base for HTML link references
+   */
+  public void setImageURL(String imageURL) {
+	setAttribute(imageURLKey, imageURL);
+  }
+
+  /**
+   * Returns the imageURL.
+   * @return String imageURL.
+   */
+  public String getImageURL() {
+	return getAttribute(imageURLKey);
   }
 
   /**

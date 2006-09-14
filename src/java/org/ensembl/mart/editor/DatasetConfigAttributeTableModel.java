@@ -148,7 +148,7 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 		}
 				
 		//if (((String) aValue).equals("MULTI") ){
-		if (((String) obj.getAttribute(firstColumnData[rowIndex])).equals("MULTI")){
+		if (obj.getAttribute(firstColumnData[rowIndex]) != null && ((String) obj.getAttribute(firstColumnData[rowIndex])).equals("MULTI")){
 			JOptionPane.showMessageDialog(null,"Edit the dynamic nodes for each dataset to set this value");
 			return;	
 		}
