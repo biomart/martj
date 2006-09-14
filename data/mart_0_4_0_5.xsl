@@ -65,7 +65,7 @@
 
     <!-- create the multipleValues attribute  -->
     <xsl:choose>
-	<xsl:when test="count(@filterList) &gt; 0 and @filterList != ''" >
+	<xsl:when test="@multipleValues = 1 or (count(@filterList) &gt; 0 and @filterList != '')" >
 	    <xsl:attribute name="multipleValues">1</xsl:attribute>
         </xsl:when>
 	<xsl:otherwise>
