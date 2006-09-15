@@ -239,8 +239,9 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
           		config = new DatasetConfig(dsv, true, false);
           	}
         
-        	// convert config to latest version using xslt
-        	config = MartEditor.getDatabaseDatasetConfigUtils().getXSLTransformedConfig(config);
+        	// convert config to latest version using xslt - COMMENTED OUT AS WAS TRANSFORMING TEMPLATE AND 
+        	// CAUSING MEMORY ERRORS - ? IF NEEED THOUGH
+        	//config = MartEditor.getDatabaseDatasetConfigUtils().getXSLTransformedConfig(config);
         	
 			this.setTitle(schema + "." + config.getDataset());
             JFrame.setDefaultLookAndFeelDecorated(true);

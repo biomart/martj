@@ -1931,10 +1931,9 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 
   public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig, int storeFlag) throws ConfigurationException, SQLException{
 	String template = dsConfig.getTemplate();
+	
 	DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","");
 	dscutils.loadDatasetConfigWithDocument(templateConfig,getTemplateDocument(template));
-
-	System.out.println("!!! - UPDATING CONFIG TO TEMPLATE:"+dsConfig.getDataset());	
 	
 	
 	// dynamic content handling eg linkoutURL
@@ -2679,7 +2678,6 @@ public int templateCount(String template) throws ConfigurationException{
     Connection conn = null;
     try {
 		conn = dsource.getConnection();	
-	  
 	  String metatable = createMetaTables(user);	
 	  if (datasetID == null || datasetID.equals("")){
 		String sql = "SELECT MAX(dataset_id_key) FROM "+getSchema()[0]+"."+BASEMETATABLE;
@@ -2744,9 +2742,11 @@ public int templateCount(String template) throws ConfigurationException{
 	  //ResultSet rs = ps.executeQuery();
 	  //rs.next();
 	  //int result = rs.getInt(1);
+	  
       int result = templateCount(template);
       if (result > 0){//usual 1:1 dataset:template do not get template merging 
       	   // System.out.println("SHOULD MERGE CONFIG AND TEMPLATE TOGETHER NOW");
+		   
 		   dsConfig = updateConfigToTemplate(dsConfig,1);
 		   // convert config to latest version using xslt
 		   dsConfig = getXSLTransformedConfig(dsConfig);
@@ -3479,18 +3479,15 @@ public int templateCount(String template) throws ConfigurationException{
   public DatasetConfig getXSLTransformedConfig(DatasetConfig config)
 	throws ConfigurationException {
 	  try{	
-		System.out.println("CONVERTING CONFIG TO "+SOFTWAREVERSION);
 		Document sourceDoc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(config);
 		//Element thisElement = sourceDoc.getRootElement();
 		//String template = thisElement.getAttributeValue("template", "");
 		//System.out.println("ORIGINAL DOC HAS "+template);
-		
 		InputStream xsl = this.getClass().getClassLoader().getResourceAsStream(XSL_FILE);
 		Transformer transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(xsl));      
 		JDOMResult out = new JDOMResult();
 		transformer.transform(new JDOMSource(sourceDoc),out);
         Document resultDoc = out.getDocument();
-        	
 		DatasetConfig newConfig = new DatasetConfig(config.getInternalName(),config.getDisplayName(),config.getDataset(),config.getDescription(), 
 			config.getType(),config.getVisible(),config.getVisibleFilterPage(),config.getVersion(),config.getOptionalParameter(), 
 			config.getDefaultDataset(),config.getDatasetID(),config.getModified(),config.getMartUsers(),config.getInterfaces(),
