@@ -61,7 +61,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.57, 13th September 2006
+ * @version 0.1.58, 21st September 2006
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -2245,6 +2245,156 @@ public class DataSet extends GenericSchema {
 
 			// Call the super to add it.
 			super.addColumn(column);
+		}
+
+		/**
+		 * Given a real column, and a relation to ignore whilst doing the work,
+		 * find out which column in this dataset table is derived from that real
+		 * column. If that real column appears more than once, only the first
+		 * appearance is returned. Note that masked columns are ignored, unless
+		 * they are also dependencies.
+		 * 
+		 * @param realColumn
+		 *            the real column to look for in this dataset table.
+		 * @param ignoreRelation
+		 *            a relation to ignore when walking through 1:1 relations to
+		 *            find if the real column came from elsewhere.
+		 * @return the dataset column that is based on the real column, or
+		 *         <tt>null</tt> if it could not be found.
+		 */
+		public DataSetColumn getUnmaskedDataSetColumn(final Column realColumn,
+				final Relation ignoreRelation) {
+			// We must look not only for this column, but all columns
+			// involved in relations with it, because it could have been
+			// introduced via another route.
+			final List candidates = new ArrayList();
+			candidates.add(realColumn);
+			for (int j = 0; j < candidates.size(); j++) {
+				final Column searchColumn = (Column) candidates.get(j);
+				for (final Iterator i = this.getColumns().iterator(); i
+						.hasNext();) {
+					final DataSetColumn candidate = (DataSetColumn) i.next();
+					DataSetColumn test = candidate;
+					while (test instanceof InheritedColumn)
+						test = ((InheritedColumn) test).getInheritedColumn();
+					if (!(test instanceof WrappedColumn))
+						continue;
+					final WrappedColumn wc = (WrappedColumn) test;
+					if (wc.getMasked() && !wc.getDependency())
+						continue;
+					if (searchColumn.equals(wc.getWrappedColumn()))
+						return candidate;
+				}
+				// If got here, didn't find this search candidate, so
+				// work out all other columns in any 1:1 chains linked
+				// to the candidate and try those.
+				List oneOneCandidates = new ArrayList();
+				oneOneCandidates.add(searchColumn);
+				for (int l = 0; l < oneOneCandidates.size(); l++) {
+					Column oneOneCandidate = (Column) oneOneCandidates.get(l);
+					for (final Iterator i = oneOneCandidate.getTable()
+							.getKeys().iterator(); i.hasNext();) {
+						final Key key = (Key) i.next();
+						final int colIndex = key.getColumns().indexOf(
+								oneOneCandidate);
+						if (colIndex < 0)
+							continue;
+						for (final Iterator k = key.getRelations().iterator(); k
+								.hasNext();) {
+							final Relation rel = (Relation) k.next();
+							if (rel.equals(ignoreRelation) || !rel.isOneToOne())
+								continue;
+							final Key otherKey = rel.getOtherKey(key);
+							final Column nextOneOneCandidate = (Column) otherKey
+									.getColumns().get(colIndex);
+							if (!oneOneCandidates.contains(nextOneOneCandidate))
+								oneOneCandidates.add(nextOneOneCandidate);
+						}
+					}
+				}
+				for (final Iterator i = oneOneCandidates.iterator(); i
+						.hasNext();) {
+					Column nextCandidate = (Column) i.next();
+					if (!candidates.contains(nextCandidate))
+						candidates.add(nextCandidate);
+				}
+			}
+			// If we get here, it means the specified column is not part
+			// of this dataset table, at least not unmasked.
+			return null;
+		}
+
+		/**
+		 * Find all columns in this dataset table that are not masked, or are
+		 * dependencies.
+		 * 
+		 * @return the columns that meet this criteria. May be empty but never
+		 *         null.
+		 */
+		public List getUnmaskedDataSetColumns() {
+			final List list = new ArrayList();
+			for (final Iterator i = this.getColumns().iterator(); i.hasNext();) {
+				final DataSetColumn candidate = (DataSetColumn) i.next();
+				if (candidate.getMasked() && !candidate.getDependency())
+					continue;
+				list.add(candidate);
+			}
+			return list;
+		}
+
+		/**
+		 * Given a set of interesting columns from normal tables (not dataset
+		 * tables), return the set of matching dataset columns.
+		 * 
+		 * @param interestingColumns
+		 *            the set of normal columns to find matching dataset columns
+		 *            for.
+		 * @param ignoreRelation
+		 *            don't follow this relation when trying to resolve indirect
+		 *            references.
+		 * @return the set of 0th matching dataset columns.
+		 */
+		public List getUnmaskedDataSetColumns(
+				final Collection interestingColumns,
+				final Relation ignoreRelation) {
+			final List list = new ArrayList();
+			for (final Iterator i = interestingColumns.iterator(); i.hasNext();) {
+				final DataSetColumn col = this.getUnmaskedDataSetColumn(
+						(Column) i.next(), ignoreRelation);
+				if (col != null)
+					list.add(col);
+			}
+			return list;
+		}
+
+		/**
+		 * Given a relation, find all columns in this dataset table that were
+		 * added as a result of following this relation.
+		 * 
+		 * @param underlyingRelation
+		 *            the relation to look for associated columns for.
+		 * @return the columns added to this table by that relation. May be
+		 *         empty but never null.
+		 */
+		public List getUnmaskedDataSetColumns(final Relation underlyingRelation) {
+			final List list = new ArrayList();
+			for (final Iterator i = this.getColumns().iterator(); i.hasNext();) {
+				final DataSetColumn candidate = (DataSetColumn) i.next();
+				if (!(candidate instanceof WrappedColumn))
+					continue;
+				final WrappedColumn wc = (WrappedColumn) candidate;
+				if (wc.getMasked() && !wc.getDependency())
+					continue;
+				final Relation wcRel = wc.getUnderlyingRelation();
+				if (wcRel == underlyingRelation)
+					list.add(candidate);
+				else if (wcRel != null
+						&& underlyingRelation != null
+						&& wc.getUnderlyingRelation()
+								.equals(underlyingRelation))
+					list.add(candidate);
+			}
+			return list;
 		}
 
 		/**

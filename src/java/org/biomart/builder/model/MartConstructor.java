@@ -532,7 +532,8 @@ public interface MartConstructor {
 									.hasNext() ? ((Key) dsPartTableFK.next())
 									.getColumns() : Collections.EMPTY_LIST;
 							final List dsPartTableCols = vParentTable
-									.getDataSetColumns();
+									.getDataSetTable()
+									.getUnmaskedDataSetColumns();
 							// Partition the parent table for this value.
 							final MartConstructorAction partition = new Partition(
 									this.datasetSchemaName, vPartitionTable
@@ -589,7 +590,8 @@ public interface MartConstructor {
 										null, vChildTable.getTempTableName(),
 										vChildTable.getParentDataSetRelation()
 												.getManyKey().getColumns(),
-										vChildTable.getDataSetColumns());
+										vChildTable.getDataSetTable()
+												.getUnmaskedDataSetColumns());
 								actionGraph.addActionWithParent(reduce, index);
 								reduceActions.add(reduce);
 								vReducedTable.setLastActionPerformed(reduce);
@@ -906,7 +908,7 @@ public interface MartConstructor {
 
 			// Mark temp table from dependent action as an interim table.
 			lastActionPerformed.setInterim(true);
-			
+
 			// Placeholder for name of the target temp table that will
 			// contain the constructed table.
 			String vTableTempName = vConstructionTable.getTempTableName();
@@ -925,7 +927,8 @@ public interface MartConstructor {
 
 				// Work out what columns to include from the first table.
 				final List dsFirstTableCols = vConstructionTable
-						.getDataSetColumns(rFirstTable.getColumns(), null);
+						.getDataSetTable().getUnmaskedDataSetColumns(
+								rFirstTable.getColumns(), null);
 
 				// Include the schema name column if there is one (don't need
 				// to do this for dimension/subclass tables as it will be part
@@ -996,11 +999,12 @@ public interface MartConstructor {
 				// What are the equivalent columns on the existing temp table
 				// that correspond to the key on the previous table?
 				final List dsSourceKeyCols = vConstructionTable
-						.getDataSetColumns(rSourceKey.getColumns(),
-								rSourceRelation);
+						.getDataSetTable().getUnmaskedDataSetColumns(
+								rSourceKey.getColumns(), rSourceRelation);
 				// What are the columns we should merge from this new table?
 				final List dsTargetIncludeCols = vConstructionTable
-						.getDataSetColumns(rSourceRelation);
+						.getDataSetTable().getUnmaskedDataSetColumns(
+								rSourceRelation);
 				// Skip the merge if we won't gain anything from it.
 				if (dsTargetIncludeCols.isEmpty())
 					continue;
@@ -1111,8 +1115,8 @@ public interface MartConstructor {
 				// What are the equivalent columns on the existing temp table
 				// that correspond to the source key?
 				final List vSourceKeyCols = vConstructionTable
-						.getNthDataSetColumns(rConcatSourceKey.getColumns(),
-								rConcatRelation);
+						.getDataSetTable().getUnmaskedDataSetColumns(
+								rConcatSourceKey.getColumns(), rConcatRelation);
 				// If concatColumn is in a table in a group schema
 				// that is not the same group schema we started with, create
 				// a union table containing all the concatTable copies, then
@@ -1263,7 +1267,7 @@ public interface MartConstructor {
 				// minus expression columns, minus dependency columns from
 				// group-by expression columns.
 				final List vSelectedColumns = vConstructionTable
-						.getDataSetColumns();
+						.getDataSetTable().getUnmaskedDataSetColumns();
 				vSelectedColumns.removeAll(dsExpressionColumns);
 				vSelectedColumns.removeAll(dsGroupByDependentColumns);
 				// Generate new temp table name for merged table.
@@ -1291,7 +1295,8 @@ public interface MartConstructor {
 			// Get all the columns for this table. Remove all
 			// the masked dependency columns, if there are any left
 			// that weren't already removed by the expression group-by.
-			final List dsFinalColumns = vConstructionTable.getDataSetColumns();
+			final List dsFinalColumns = vConstructionTable.getDataSetTable()
+					.getUnmaskedDataSetColumns();
 			final int beforeDependentRemoved = dsFinalColumns.size();
 			for (final Iterator i = dsFinalColumns.iterator(); i.hasNext();) {
 				DataSetColumn dsCol = (DataSetColumn) i.next();
@@ -1448,7 +1453,6 @@ public interface MartConstructor {
 		// Internal use only, serves as a convenient wrapper for tracking
 		// info about a particular dataset table.
 		private class VirtualTable {
-			private Map counter;
 
 			private DataSetTable datasetTable;
 
@@ -1476,112 +1480,6 @@ public interface MartConstructor {
 				this.datasetTable = datasetTable;
 				this.parentDataSetRelation = parentDataSetRelation;
 				this.partitionValues = new ArrayList();
-				this.counter = new HashMap();
-			}
-
-			private DataSetColumn getDataSetColumn(int n,
-					final Column interestingColumn,
-					final Relation ignoreRelation) {
-				// We must look not only for this column, but all columns
-				// involved in relations with it, because it could have been
-				// introduced via another route.
-				final List candidates = new ArrayList();
-				candidates.add(interestingColumn);
-				for (int j = 0; j < candidates.size(); j++) {
-					final Column searchColumn = (Column) candidates.get(j);
-					for (final Iterator i = this.datasetTable.getColumns()
-							.iterator(); i.hasNext();) {
-						final DataSetColumn candidate = (DataSetColumn) i
-								.next();
-						DataSetColumn test = candidate;
-						while (test instanceof InheritedColumn)
-							test = ((InheritedColumn) test)
-									.getInheritedColumn();
-						if (!(test instanceof WrappedColumn))
-							continue;
-						final WrappedColumn wc = (WrappedColumn) test;
-						if (wc.getMasked() && !wc.getDependency())
-							continue;
-						if (searchColumn.equals(wc.getWrappedColumn())
-								&& n-- == 0)
-							return candidate;
-					}
-					// If got here, didn't find this search candidate, so
-					// work out all other columns in any 1:1 chains linked
-					// to the candidate and try those.
-					List oneOneCandidates = new ArrayList();
-					oneOneCandidates.add(searchColumn);
-					for (int l = 0; l < oneOneCandidates.size(); l++) {
-						Column oneOneCandidate = (Column) oneOneCandidates
-								.get(l);
-						for (final Iterator i = oneOneCandidate.getTable()
-								.getKeys().iterator(); i.hasNext();) {
-							final Key key = (Key) i.next();
-							final int colIndex = key.getColumns().indexOf(
-									oneOneCandidate);
-							if (colIndex < 0)
-								continue;
-							for (final Iterator k = key.getRelations()
-									.iterator(); k.hasNext();) {
-								final Relation rel = (Relation) k.next();
-								if (rel.equals(ignoreRelation)
-										|| !rel.isOneToOne())
-									continue;
-								final Key otherKey = rel.getOtherKey(key);
-								final Column nextOneOneCandidate = (Column) otherKey
-										.getColumns().get(colIndex);
-								if (!oneOneCandidates
-										.contains(nextOneOneCandidate))
-									oneOneCandidates.add(nextOneOneCandidate);
-							}
-						}
-					}
-					for (final Iterator i = oneOneCandidates.iterator(); i
-							.hasNext();) {
-						Column nextCandidate = (Column) i.next();
-						if (!candidates.contains(nextCandidate))
-							candidates.add(nextCandidate);
-					}
-
-					// If got here, didn't find this search candidate, or any
-					// equivalent in a 1:1 chain from the candidate, so
-					// add all the related columns in other keys.
-					for (final Iterator i = searchColumn.getTable().getKeys()
-							.iterator(); i.hasNext();) {
-						final Key key = (Key) i.next();
-						final int colIndex = key.getColumns().indexOf(
-								searchColumn);
-						if (colIndex < 0)
-							continue;
-						for (final Iterator k = key.getRelations().iterator(); k
-								.hasNext();) {
-							final Relation rel = (Relation) k.next();
-							if (rel.equals(ignoreRelation))
-								continue;
-							final Key otherKey = rel.getOtherKey(key);
-							final Column nextCandidate = (Column) otherKey
-									.getColumns().get(colIndex);
-							if (!candidates.contains(nextCandidate))
-								candidates.add(nextCandidate);
-						}
-					}
-				}
-				// If we get here, it means the specified column is not part
-				// of the unmasked columns on this dataset table.
-				return null;
-			}
-
-			private int incrementCount(final Object counter) {
-				int count;
-				if (!this.counter.containsKey(counter)) {
-					count = 0;
-					this.counter.put(counter, new Integer(count));
-				} else {
-					count = ((Integer) this.counter.get(counter)).intValue();
-					count++;
-					this.counter.put(counter, new Integer(count));
-				}
-				return count;
 			}
 
 			/**
@@ -1677,84 +1575,6 @@ public interface MartConstructor {
 			}
 
 			/**
-			 * Find all columns in this dataset table that are not masked, or
-			 * are dependencies.
-			 * 
-			 * @return the columns that meet this criteria. May be empty but
-			 *         never null.
-			 */
-			public List getDataSetColumns() {
-				final List list = new ArrayList();
-				for (final Iterator i = this.datasetTable.getColumns()
-						.iterator(); i.hasNext();) {
-					final DataSetColumn candidate = (DataSetColumn) i.next();
-					if (candidate.getMasked() && !candidate.getDependency())
-						continue;
-					list.add(candidate);
-				}
-				return list;
-			}
-
-			/**
-			 * Given a set of interesting columns from normal tables (not
-			 * dataset tables), return the 0th set of matching dataset columns.
-			 * This means that if the interesting column appears twice in the
-			 * table as a dataset column, and n=1, then the 2nd instance is the
-			 * one that gets returned. (n is 0-indexed).
-			 * 
-			 * @param interestingColumns
-			 *            the set of normal columns to find matching dataset
-			 *            columns for.
-			 * @param ignoreRelation
-			 *            don't follow this relation when trying to resolve
-			 *            indirect references.
-			 * @return the set of 0th matching dataset columns.
-			 */
-			public List getDataSetColumns(final Collection interestingColumns,
-					final Relation ignoreRelation) {
-				final List list = new ArrayList();
-				for (final Iterator i = interestingColumns.iterator(); i
-						.hasNext();) {
-					final DataSetColumn col = this.getDataSetColumn(0,
-							(Column) i.next(), ignoreRelation);
-					if (col != null)
-						list.add(col);
-				}
-				return list;
-			}
-
-			/**
-			 * Given a relation, find all columns in this dataset table that
-			 * were added as a result of following this relation.
-			 * 
-			 * @param underlyingRelation
-			 *            the relation to look for associated columns for.
-			 * @return the columns added to this table by that relation. May be
-			 *         empty but never null.
-			 */
-			public List getDataSetColumns(final Relation underlyingRelation) {
-				final List list = new ArrayList();
-				for (final Iterator i = this.datasetTable.getColumns()
-						.iterator(); i.hasNext();) {
-					final DataSetColumn candidate = (DataSetColumn) i.next();
-					if (!(candidate instanceof WrappedColumn))
-						continue;
-					final WrappedColumn wc = (WrappedColumn) candidate;
-					if (wc.getMasked() && !wc.getDependency())
-						continue;
-					final Relation wcRel = wc.getUnderlyingRelation();
-					if (wcRel == underlyingRelation)
-						list.add(candidate);
-					else if (wcRel != null
-							&& underlyingRelation != null
-							&& wc.getUnderlyingRelation().equals(
-									underlyingRelation))
-						list.add(candidate);
-				}
-				return list;
-			}
-
-			/**
 			 * Work out what dataset table this virtual table represents.
 			 * 
 			 * @return the dataset table for this virtual table.
@@ -1772,39 +1592,6 @@ public interface MartConstructor {
 			 */
 			public MartConstructorAction getLastActionPerformed() {
 				return this.lastActionPerformed;
-			}
-
-			/**
-			 * Given a set of interesting columns from normal tables (not
-			 * dataset tables), return the nth set of matching dataset columns.
-			 * This means that if the interesting column appears twice in the
-			 * table as a dataset column, and n=1, then the 2nd instance is the
-			 * one that gets returned. (n is 0-indexed).
-			 * 
-			 * @param interestingColumns
-			 *            the set of normal columns to find matching dataset
-			 *            columns for.
-			 * @param ignoreRelation
-			 *            the relation to ignore when resolving indirect
-			 *            columns. This will also be used as a counter object to
-			 *            retrieve the value n from. The first time any object
-			 *            is used, n=0. The next time that same object is seen,
-			 *            n=1, and so on.
-			 * @return the set of nth matching dataset columns.
-			 */
-			public List getNthDataSetColumns(
-					final Collection interestingColumns,
-					final Relation ignoreRelation) {
-				final int n = this.incrementCount(counter);
-				final List list = new ArrayList();
-				for (final Iterator i = interestingColumns.iterator(); i
-						.hasNext();) {
-					final DataSetColumn col = this.getDataSetColumn(n,
-							(Column) i.next(), ignoreRelation);
-					if (col != null)
-						list.add(col);
-				}
-				return list;
 			}
 
 			/**

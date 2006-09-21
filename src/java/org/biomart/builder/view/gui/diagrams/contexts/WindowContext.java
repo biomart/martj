@@ -18,7 +18,6 @@
 
 package org.biomart.builder.view.gui.diagrams.contexts;
 
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
