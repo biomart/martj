@@ -42,15 +42,15 @@ import java.util.Properties;
  */
 public class SettingsCache {
 
+	private static final File homeDir = new File(System
+			.getProperty("user.home"), ".martbuilder");
+
 	private static final Map classCache = new HashMap();
 
 	private static final File classCacheDir = new File(SettingsCache.homeDir,
 			"cache");
 
 	private static int classCacheSize = 10;
-
-	private static final File homeDir = new File(System
-			.getProperty("user.home"), ".martbuilder");
 
 	private static boolean initialising = true;
 
@@ -151,12 +151,12 @@ public class SettingsCache {
 	 *            the class to look up.
 	 * @param name
 	 *            the name of the property set in the history.
-	 * @return the properties that match. May be empty but never <tt>null</tt>.
+	 * @return the properties that match. <tt>null</tt> if there is no match.
 	 */
 	public static Properties getHistoryProperties(final Class clazz,
 			final String name) {
 		final Map map = (Map) SettingsCache.classCache.get(clazz);
-		return map == null ? new Properties() : (Properties) map.get(name);
+		return map == null ? null : (Properties) map.get(name);
 	}
 
 	/**
