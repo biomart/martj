@@ -62,7 +62,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.WindowContext;
  * and relations not involved directly in this table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.15, 11th September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class ExplainTableDialog extends JDialog implements ExplainDialog {

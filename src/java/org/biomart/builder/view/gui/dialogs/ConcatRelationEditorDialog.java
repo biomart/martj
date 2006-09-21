@@ -56,7 +56,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * concatenation operation.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 18th August 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class ConcatRelationEditorDialog extends JDialog {

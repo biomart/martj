@@ -55,7 +55,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * table for this dataset only.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 8th August 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class RestrictedTableDialog extends JDialog {

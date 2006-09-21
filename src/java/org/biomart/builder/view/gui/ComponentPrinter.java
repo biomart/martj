@@ -39,7 +39,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * Swing Tutorial</a>.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 25th July 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class ComponentPrinter implements Printable {

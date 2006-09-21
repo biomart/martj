@@ -46,7 +46,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * rather than the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.25, 12th September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class WindowContext extends SchemaContext {

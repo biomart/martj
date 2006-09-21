@@ -52,7 +52,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * what values to use.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 20th June 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class PartitionColumnDialog extends JDialog {

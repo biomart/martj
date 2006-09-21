@@ -33,7 +33,7 @@ import org.biomart.builder.resources.Resources;
  * name.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.12, 17th August 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public interface Column extends Comparable {

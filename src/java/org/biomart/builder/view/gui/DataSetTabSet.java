@@ -77,7 +77,7 @@ import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.44, 12th September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {

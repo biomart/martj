@@ -33,7 +33,7 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * This simple component represents a single column within a table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.79, 13th September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class ColumnComponent extends BoxShapedComponent {

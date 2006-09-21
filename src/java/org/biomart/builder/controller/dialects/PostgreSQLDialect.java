@@ -64,7 +64,7 @@ import org.biomart.builder.model.MartConstructorAction.Union;
  * Understands how to create SQL and DDL for a PostgreSQL database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 12th September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class PostgreSQLDialect extends DatabaseDialect {

@@ -49,7 +49,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * move those columns around, thus editing the key.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 18th August 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class KeyEditorDialog extends JDialog {

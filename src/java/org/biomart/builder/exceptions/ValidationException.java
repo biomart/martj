@@ -23,7 +23,7 @@ package org.biomart.builder.exceptions;
  * incorrect input.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 28th April 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class ValidationException extends Exception {

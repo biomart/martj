@@ -64,7 +64,7 @@ import org.biomart.builder.model.MartConstructorAction.Union;
  * Understands how to create SQL and DDL for a MySQL database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.26, 13th September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class MySQLDialect extends DatabaseDialect {

@@ -28,7 +28,7 @@ import javax.swing.JPopupMenu;
  * methods at some point, so anything displayed can be customised.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 16th May 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public interface DiagramContext {

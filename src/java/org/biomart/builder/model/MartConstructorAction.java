@@ -42,7 +42,7 @@ import org.biomart.builder.resources.Resources;
  * schema instead, as specified by the datasetSchemaName parameter.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 21st September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public abstract class MartConstructorAction {

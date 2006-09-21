@@ -52,7 +52,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * org.biomart.builder.view.gui.diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.35, 13th September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class DataSetContext extends WindowContext {

@@ -49,7 +49,7 @@ import org.biomart.builder.resources.Resources;
  * but it does not provide any methods that process or analyse these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.16, 11th August 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public interface Table extends Comparable {

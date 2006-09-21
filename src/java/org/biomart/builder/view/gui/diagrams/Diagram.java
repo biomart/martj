@@ -66,7 +66,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * what those items should be.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.30, 11th September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public abstract class Diagram extends JPanel {

@@ -45,7 +45,7 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * a secondary label indicating which schema they belong to.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.15, 29th August 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class TableComponent extends BoxShapedComponent {

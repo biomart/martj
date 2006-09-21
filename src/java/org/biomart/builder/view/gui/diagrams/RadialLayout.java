@@ -47,7 +47,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * circle around a centre point.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 21st July 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class RadialLayout implements LayoutManager {

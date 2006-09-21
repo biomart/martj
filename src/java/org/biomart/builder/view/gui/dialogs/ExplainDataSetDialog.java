@@ -35,7 +35,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.WindowContext;
  * window context.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.1, 11th September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class ExplainDataSetDialog extends JDialog implements ExplainDialog {

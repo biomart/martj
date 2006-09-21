@@ -50,7 +50,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * before the result is returned to the caller.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.9, 11th September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class SchemaConnectionDialog extends JDialog {

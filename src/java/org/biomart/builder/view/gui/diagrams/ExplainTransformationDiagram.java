@@ -42,7 +42,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * interaction with them.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 29th August 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class ExplainTransformationDiagram extends Diagram {

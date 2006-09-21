@@ -62,7 +62,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.35, 12th September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class MartBuilderUtils {

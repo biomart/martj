@@ -47,7 +47,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * This dialog asks users what kind of dataset suggestion they want to do.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 25th July 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class SuggestDataSetDialog extends JDialog {

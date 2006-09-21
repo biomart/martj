@@ -26,7 +26,7 @@ import java.util.Map;
  * know about it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.2, 21st June 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class ComponentStatus implements Comparable {

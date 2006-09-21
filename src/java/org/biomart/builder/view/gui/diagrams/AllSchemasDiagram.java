@@ -35,7 +35,7 @@ import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
  * schemas, then a {@link RelationComponent} is drawn between them.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 29th August 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class AllSchemasDiagram extends Diagram {

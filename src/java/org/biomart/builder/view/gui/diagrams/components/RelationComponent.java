@@ -43,7 +43,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * The line is defined by the layout manager.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.20, 29th August 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {

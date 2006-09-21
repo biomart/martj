@@ -61,7 +61,7 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.58, 21st September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class DataSet extends GenericSchema {

@@ -39,7 +39,7 @@ import org.biomart.builder.exceptions.MartBuilderInternalError;
  * avoid concurrent modification problems.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.5, 20th June 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public abstract class LongProcess {

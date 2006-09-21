@@ -68,7 +68,7 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.34, 21st September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public interface MartConstructor {

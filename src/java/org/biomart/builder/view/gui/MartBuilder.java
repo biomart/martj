@@ -50,7 +50,7 @@ import org.biomart.builder.resources.SettingsCache;
  * The main window housing the MartBuilder GUI.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.19, 21st September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class MartBuilder extends JFrame {

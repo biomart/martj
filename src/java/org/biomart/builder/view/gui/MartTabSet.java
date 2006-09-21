@@ -56,7 +56,7 @@ import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
  * of the mart inside it, including all datasets and schemas.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.17, 12th September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class MartTabSet extends JTabbedPane {

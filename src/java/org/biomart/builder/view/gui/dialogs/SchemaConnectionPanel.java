@@ -31,7 +31,7 @@ import org.biomart.builder.model.Schema;
  * input, and can modify or create schemas based on the input.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 11th September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public abstract class SchemaConnectionPanel extends JPanel {

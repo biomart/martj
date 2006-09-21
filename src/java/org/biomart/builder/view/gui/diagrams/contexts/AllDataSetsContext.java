@@ -36,7 +36,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * datasets tab.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.7, 11th September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class AllDataSetsContext implements DiagramContext {

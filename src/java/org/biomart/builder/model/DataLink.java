@@ -29,7 +29,7 @@ import java.sql.SQLException;
  * the data is coming from.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 21st June 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public interface DataLink {

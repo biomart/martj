@@ -72,7 +72,7 @@ import org.biomart.builder.view.gui.dialogs.SchemaConnectionDialog;
  * represented in each of the tabs has the same context applied.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.25, 11th September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {

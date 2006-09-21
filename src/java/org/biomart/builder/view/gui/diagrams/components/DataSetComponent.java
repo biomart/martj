@@ -39,7 +39,7 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 29th August 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class DataSetComponent extends BoxShapedComponent {

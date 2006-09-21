@@ -37,7 +37,7 @@ import java.util.Properties;
  * Manages the on-disk cache of user settings.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.3, 11th September 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class SettingsCache {

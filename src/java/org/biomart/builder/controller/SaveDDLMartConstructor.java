@@ -52,7 +52,7 @@ import org.biomart.builder.resources.Resources;
  * use JDBC to fetch/retrieve data between two databases.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.18, 29th August 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class SaveDDLMartConstructor implements MartConstructor {

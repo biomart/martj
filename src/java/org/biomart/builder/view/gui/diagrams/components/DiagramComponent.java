@@ -32,7 +32,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * interest to the diagram.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.8, 9th August 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public interface DiagramComponent {

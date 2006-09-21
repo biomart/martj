@@ -41,7 +41,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * relations between them along fixed-space tracks between components.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.4, 29th August 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class LinearLayout implements LayoutManager {

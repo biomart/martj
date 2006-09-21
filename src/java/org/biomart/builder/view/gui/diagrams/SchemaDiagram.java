@@ -36,7 +36,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * the basic background object of the diagram.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.14, 29th August 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class SchemaDiagram extends Diagram {
