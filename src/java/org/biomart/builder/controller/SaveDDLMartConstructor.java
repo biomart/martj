@@ -699,8 +699,12 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 */
 	public static class TableAsFileHelper extends DDLHelper {
 
-		private Map actions;
+		private Map preInterimActions;
 
+		private Map postInterimActions;
+
+		private List postInterimTables;
+		
 		private int datasetSequence;
 
 		private int martSequence;
@@ -711,7 +715,11 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		/**
 		 * Constructs a helper which will output all DDL into a single file per
-		 * table inside the given zip file.
+		 * table inside the given zip file. Actually what you get is a pair
+		 * of files - part1 and part2. All part1 files must run and complete
+		 * successfully before you run any part2 files, as part2 files will
+		 * remove dependency temp tables that various part1 files may need.
+		 * There may also be a part3 file containing boolean column updates.
 		 * 
 		 * @param outputFile
 		 *            the zip file to write the DDL into.
@@ -724,7 +732,9 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			super(outputFile, includeComments);
 			this.martSequence = 0;
 			this.datasetSequence = 0;
-			this.actions = new HashMap();
+			this.preInterimActions = new HashMap();
+			this.postInterimActions = new HashMap();
+			this.postInterimTables = new ArrayList();
 		}
 
 		public void martConstructorEventOccurred(final int event,
@@ -740,20 +750,21 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.outputZipStream.finish();
 				this.outputFileStream.flush();
 				this.outputFileStream.close();
-			} else if (event == MartConstructorListener.DATASET_STARTED)
+			} else if (event == MartConstructorListener.DATASET_STARTED) {
 				// Clear out action map ready for next dataset.
-				this.actions.clear();
+				this.preInterimActions.clear();
+				this.postInterimActions.clear();
+				this.postInterimTables.clear();
+			}	
 			else if (event == MartConstructorListener.DATASET_ENDED) {
-				ZipEntry entry;
-				// Make a list for optimise-update actions.
-				final List optimiseUpdate = new ArrayList();
-				// Write out one file per table in action map.
-				for (final Iterator i = this.actions.entrySet().iterator(); i
+				// Write out one file per table in pre-interim action map.
+				for (final Iterator i = this.preInterimActions.entrySet().iterator(); i
 						.hasNext();) {
 					final Map.Entry actionEntry = (Map.Entry) i.next();
 					final String tableName = (String) actionEntry.getKey();
-					entry = new ZipEntry(this.martSequence + "/"
-							+ this.datasetSequence + "/" + tableName + ".sql");
+					ZipEntry entry = new ZipEntry(this.martSequence + "/"
+							+ this.datasetSequence + "/" + tableName
+							+ Resources.get("perTablePart1FileName") + ".sql");
 					entry.setTime(System.currentTimeMillis());
 					this.outputZipStream.putNextEntry(entry);
 					// What actions are for this table?
@@ -768,21 +779,48 @@ public class SaveDDLMartConstructor implements MartConstructor {
 						if (candidate instanceof MartConstructorTableAction)
 							firstAction = (MartConstructorTableAction) candidate;
 					}
-
-					// Work out the parent actions necessary to provide
-					// the temp table that the create action selects from.
-					final List dependentActions = new ArrayList();
-					if (firstAction != null
-							&& firstAction.getParents().size() > 0) {
-						dependentActions.addAll(firstAction.getParents());
-						for (int j = 0; j < dependentActions.size(); j++)
-							dependentActions
-									.addAll(((MartConstructorAction) dependentActions
-											.get(j)).getParents());
-						Collections.reverse(dependentActions);
-						// Insert the dependent actions before the table
-						// actions.
-						tableActions.addAll(0, dependentActions);
+					// Write the actions for the table itself.
+					for (final Iterator j = tableActions.iterator(); j
+							.hasNext();) {
+						final MartConstructorAction nextAction = (MartConstructorAction) j
+								.next();
+						// Convert the action to some DDL.
+						final String[] cmd = this
+								.getStatementsForAction(nextAction);
+						// Write the data.
+						for (int k = 0; k < cmd.length; k++) {
+							this.outputZipStream.write(cmd[k].getBytes());
+							this.outputZipStream.write(';');
+							this.outputZipStream.write(System.getProperty(
+									"line.separator").getBytes());
+						}
+					}
+					// Done with this entry.
+					this.outputZipStream.closeEntry();
+				}
+				// Make a list for optimise-update actions.
+				final Map optimiseUpdate = new HashMap();
+				// Write out one file per table in post-interim action map.
+				for (final Iterator i = this.postInterimActions.entrySet().iterator(); i
+						.hasNext();) {
+					final Map.Entry actionEntry = (Map.Entry) i.next();
+					final String tableName = (String) actionEntry.getKey();
+					ZipEntry entry = new ZipEntry(this.martSequence + "/"
+							+ this.datasetSequence + "/" + tableName
+							+ Resources.get("perTablePart2FileName") + ".sql");
+					entry.setTime(System.currentTimeMillis());
+					this.outputZipStream.putNextEntry(entry);
+					// What actions are for this table?
+					final List tableActions = (List) actionEntry.getValue();
+					// What is the first table action?
+					MartConstructorTableAction firstAction = null;
+					for (final Iterator j = tableActions.iterator(); j
+							.hasNext()
+							&& firstAction == null;) {
+						final MartConstructorAction candidate = (MartConstructorAction) j
+								.next();
+						if (candidate instanceof MartConstructorTableAction)
+							firstAction = (MartConstructorTableAction) candidate;
 					}
 					// Write the actions for the table itself.
 					for (final Iterator j = tableActions.iterator(); j
@@ -792,7 +830,9 @@ public class SaveDDLMartConstructor implements MartConstructor {
 						// Is it a optimise-update action? Save it for later and
 						// don't do DDL.
 						if (nextAction instanceof OptimiseUpdateColumn) {
-							optimiseUpdate.add(nextAction);
+							if (!optimiseUpdate.containsKey(nextAction.getDataSetTableName()))
+								optimiseUpdate.put(nextAction.getDataSetTableName(), new ArrayList());
+							((List)optimiseUpdate.get(nextAction.getDataSetTableName())).add(nextAction);
 							continue;
 						}
 						// Convert the action to some DDL.
@@ -806,50 +846,19 @@ public class SaveDDLMartConstructor implements MartConstructor {
 									"line.separator").getBytes());
 						}
 					}
-					// Drop any inherited actions by making a list
-					// of the temp table names they created and dropping
-					// all those.
-					if (dependentActions.size() > 0) {
-						final Set tempTableNames = new HashSet();
-						for (final Iterator j = dependentActions.iterator(); j
-								.hasNext();) {
-							MartConstructorAction candidate = (MartConstructorAction) j
-									.next();
-							if (candidate instanceof MartConstructorTableAction)
-								tempTableNames
-										.add(((MartConstructorTableAction) candidate)
-												.getTargetTableName());
-						}
-						for (final Iterator j = tempTableNames.iterator(); j
-								.hasNext();) {
-							// Create and write a drop action.
-							final Drop drop = new Drop(firstAction
-									.getDataSetSchemaName(), firstAction
-									.getDataSetTableName(), firstAction
-									.getTargetTableSchema(), (String) j.next());
-							// Convert the action to some DDL.
-							final String[] cmd = this
-									.getStatementsForAction(drop);
-							// Write the data.
-							for (int k = 0; k < cmd.length; k++) {
-								this.outputZipStream.write(cmd[k].getBytes());
-								this.outputZipStream.write(';');
-								this.outputZipStream.write(System.getProperty(
-										"line.separator").getBytes());
-							}
-						}
-					}
 					// Done with this entry.
 					this.outputZipStream.closeEntry();
 				}
 				// Write out the optimise-update actions in their own file.
-				if (optimiseUpdate.size() > 0) {
-					entry = new ZipEntry(this.martSequence + "/"
-							+ this.datasetSequence + "/"
-							+ Resources.get("hasColumnsFileName") + ".sql");
+				for (final Iterator i = optimiseUpdate.entrySet().iterator(); i.hasNext(); ) {
+					Map.Entry mapEntry = (Map.Entry)i.next();
+					String tableName = (String)mapEntry.getKey();
+					ZipEntry entry = new ZipEntry(this.martSequence + "/"
+							+ this.datasetSequence + "/" + tableName
+							+ Resources.get("perTablePart3FileName") + ".sql");
 					entry.setTime(System.currentTimeMillis());
 					this.outputZipStream.putNextEntry(entry);
-					for (final Iterator j = optimiseUpdate.iterator(); j
+					for (final Iterator j = ((List)mapEntry.getValue()).iterator(); j
 							.hasNext();) {
 						// Convert the action to some DDL.
 						final String[] cmd = this
@@ -872,11 +881,21 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.martSequence++;
 			else if (event == MartConstructorListener.ACTION_EVENT) {
 				// Add the action to the current map.
-				if (!this.actions.containsKey(action.getDataSetTableName()))
-					this.actions.put(action.getDataSetTableName(),
+				String dsTableName = action.getDataSetTableName();
+				if (postInterimTables.contains(dsTableName)) {
+					if (!this.postInterimActions.containsKey(action.getDataSetTableName()))
+						this.postInterimActions.put(action.getDataSetTableName(),
+								new ArrayList());
+					((ArrayList) this.postInterimActions.get(action.getDataSetTableName()))
+							.add(action);
+				} else {
+				if (!this.preInterimActions.containsKey(action.getDataSetTableName()))
+					this.preInterimActions.put(action.getDataSetTableName(),
 							new ArrayList());
-				((ArrayList) this.actions.get(action.getDataSetTableName()))
+				((ArrayList) this.preInterimActions.get(action.getDataSetTableName()))
 						.add(action);
+				}
+				if (action.getInterim()) postInterimTables.add(dsTableName);
 			}
 		}
 	}

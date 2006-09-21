@@ -42,7 +42,7 @@ import org.biomart.builder.resources.Resources;
  * schema instead, as specified by the datasetSchemaName parameter.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.13, 17th August 2006
+ * @version 0.1.14, 21st September 2006
  * @since 0.1
  */
 public abstract class MartConstructorAction {
@@ -57,6 +57,8 @@ public abstract class MartConstructorAction {
 	private String datasetTableName;
 
 	private int depth;
+
+	private boolean interim;
 
 	private Set parents;
 
@@ -83,6 +85,7 @@ public abstract class MartConstructorAction {
 		}
 		this.children = new HashSet();
 		this.parents = new HashSet();
+		this.interim = false;
 	}
 
 	private void ensureDepth(final int newDepth) {
@@ -198,6 +201,17 @@ public abstract class MartConstructorAction {
 	}
 
 	/**
+	 * Returns <tt>true</tt> if the temp table created by this step is
+	 * depended on by the first steps of other dataset tables.
+	 * 
+	 * @return <tt>true</tt> if the temp table is a dependency for other
+	 *         tables, <tt>false</tt> if not.
+	 */
+	public boolean getInterim() {
+		return this.interim;
+	}
+
+	/**
 	 * Returns the parents of this node.
 	 * 
 	 * @return the parents of this node.
@@ -225,6 +239,18 @@ public abstract class MartConstructorAction {
 
 	public int hashCode() {
 		return this.sequence;
+	}
+
+	/**
+	 * Set to <tt>true</tt> if the temp table created by this step is depended
+	 * on by the first steps of other dataset tables.
+	 * 
+	 * @param interim
+	 *            <tt>true</tt> if the temp table is a dependency for other
+	 *            tables, <tt>false</tt> if not.
+	 */
+	public void setInterim(boolean interim) {
+		this.interim = interim;
 	}
 
 	/**

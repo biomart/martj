@@ -68,7 +68,7 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.33, 13th September 2006
+ * @version 0.1.34, 21st September 2006
  * @since 0.1
  */
 public interface MartConstructor {
@@ -904,6 +904,9 @@ public interface MartConstructor {
 			// A placeholder for the last action performed on this table.
 			MartConstructorAction lastActionPerformed = firstActionDependsOn;
 
+			// Mark temp table from dependent action as an interim table.
+			lastActionPerformed.setInterim(true);
+			
 			// Placeholder for name of the target temp table that will
 			// contain the constructed table.
 			String vTableTempName = vConstructionTable.getTempTableName();
