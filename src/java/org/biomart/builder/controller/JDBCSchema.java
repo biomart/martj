@@ -80,7 +80,7 @@ import org.biomart.builder.resources.Resources;
  * or keys, or to reinstate any that have previously been marked as incorrect.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.20, 9th August 2006
+ * @version $Revision$, $Date$, modified by $Author$
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
