@@ -29,11 +29,14 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import javax.swing.ImageIcon;
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.event.MenuEvent;
@@ -47,7 +50,7 @@ import org.biomart.builder.resources.SettingsCache;
  * The main window housing the MartBuilder GUI.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version 0.1.18, 12th August 2006
+ * @version 0.1.19, 21st September 2006
  * @since 0.1
  */
 public class MartBuilder extends JFrame {
@@ -172,7 +175,12 @@ public class MartBuilder extends JFrame {
 		// Create the main message.
 		final int messageClass = t instanceof Error ? JOptionPane.ERROR_MESSAGE
 				: JOptionPane.WARNING_MESSAGE;
-		final String mainMessage = t.getLocalizedMessage();
+		String mainMessage = t.getLocalizedMessage();
+		if (mainMessage.length() > 100)
+			mainMessage = mainMessage.substring(0, 100)
+					+ Resources.get("truncatedException");
+		else if (mainMessage.length() == 0)
+			mainMessage = Resources.get("missingException");
 
 		// Extract the full stack trace.
 		final StringWriter sw = new StringWriter();
@@ -186,9 +194,23 @@ public class MartBuilder extends JFrame {
 				.get("stackTraceTitle"), JOptionPane.YES_NO_OPTION);
 
 		// Create and show the full stack trace dialog if they said yes.
-		if (choice == JOptionPane.YES_OPTION)
-			JOptionPane.showMessageDialog(this, stackTraceText, Resources
+		if (choice == JOptionPane.YES_OPTION) {
+			// Build the text pane.
+			final JEditorPane editorPane = new JEditorPane("text/plain",
+					stackTraceText);
+
+			// Put the editor pane in a scroll pane.
+			final JScrollPane editorScrollPane = new JScrollPane(editorPane);
+			editorScrollPane
+					.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+
+			// Arbitrarily resize the scrollpane.
+			editorScrollPane.setPreferredSize(new Dimension(600, 400));
+
+			// Show the output.
+			JOptionPane.showMessageDialog(this, editorScrollPane, Resources
 					.get("stackTraceTitle"), messageClass);
+		}
 	}
 
 	// This is the main menu bar.
