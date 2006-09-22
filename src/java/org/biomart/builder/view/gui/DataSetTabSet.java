@@ -120,9 +120,6 @@ public class DataSetTabSet extends JTabbedPane {
 
 		// Calculate the dataset tabs.
 		this.recalculateDataSetTabs();
-
-		// Update the overview diagram.
-		this.recalculateOverviewDiagram();
 	}
 
 	private void addDataSetTab(final DataSet dataset) {

@@ -62,7 +62,8 @@ import org.biomart.builder.view.gui.diagrams.contexts.WindowContext;
  * and relations not involved directly in this table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class ExplainTableDialog extends JDialog implements ExplainDialog {
@@ -223,28 +224,21 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		this.transformation.removeAll();
 		// Redisplay it.
 
-		// Add the table definition at the top.
-		JLabel label = new JLabel(Resources.get("targetTableLabel"));
-		this.gridBag.setConstraints(label, this.labelConstraints);
-		this.transformation.add(label);
-		JPanel field = new JPanel();
-		Diagram diagram = new ExplainTransformationDiagram(this.martTab,
-				this.dsTable);
-		field.add(new JScrollPane(diagram));
-		this.gridBag.setConstraints(field, this.fieldConstraints);
-		this.transformation.add(field);
+		// Keep track of columns counted so far.
+		List columnsSoFar = new ArrayList();
 
 		// Count our steps.
 		int stepNumber = 1;
 
 		// If main table, show underlying table first.
 		if (this.dsTable.getType().equals(DataSetTableType.MAIN)) {
-			label = new JLabel(Resources.get("stepTableLabel", new String[] {
-					"" + stepNumber, Resources.get("explainSelectLabel") }));
+			JLabel label = new JLabel(Resources.get("stepTableLabel",
+					new String[] { "" + stepNumber,
+							Resources.get("explainSelectLabel") }));
 			this.gridBag.setConstraints(label, this.labelConstraints);
 			this.transformation.add(label);
-			field = new JPanel();
-			diagram = new ExplainTransformationDiagram(this.martTab,
+			JPanel field = new JPanel();
+			Diagram diagram = new ExplainTransformationDiagram(this.martTab,
 					this.dsTable.getUnderlyingTable());
 			field.add(new JScrollPane(diagram));
 			final List includeCols = new ArrayList();
@@ -265,15 +259,22 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			field.add(new JScrollPane(diagram));
 			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
+			columnsSoFar.addAll(includeCols);
 			stepNumber++;
 		}
 		// Otherwise, show inherited columns.
 		else {
-			label = new JLabel(Resources.get("stepTableLabel", new String[] {
-					"" + stepNumber, Resources.get("explainInheritLabel") }));
+			JLabel label = new JLabel(Resources.get("stepTableLabel",
+					new String[] { "" + stepNumber,
+							Resources.get("explainInheritLabel") }));
 			this.gridBag.setConstraints(label, this.labelConstraints);
 			this.transformation.add(label);
-			field = new JPanel();
+			JPanel field = new JPanel();
+			Diagram diagram = new ExplainTransformationDiagram(
+					this.martTab,
+					((Relation) (this.dsTable.getRelations().iterator().next()))
+							.getOneKey().getTable());
+			field.add(new JScrollPane(diagram));
 			final List includeCols = new ArrayList();
 			for (final Iterator j = this.dsTable.getColumns().iterator(); j
 					.hasNext();) {
@@ -286,6 +287,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			field.add(new JScrollPane(diagram));
 			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
+			columnsSoFar.addAll(includeCols);
 			stepNumber++;
 		}
 
@@ -294,12 +296,16 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			final Key k = (Key) this.dsTable.getUnderlyingKeys().get(i);
 			final Relation r = (Relation) this.dsTable.getUnderlyingRelations()
 					.get(i);
-			label = new JLabel(Resources.get("stepTableLabel", new String[] {
-					"" + stepNumber, Resources.get("explainMergeLabel") }));
+			JLabel label = new JLabel(Resources.get("stepTableLabel",
+					new String[] { "" + stepNumber,
+							Resources.get("explainMergeLabel") }));
 			this.gridBag.setConstraints(label, this.labelConstraints);
 			this.transformation.add(label);
-			field = new JPanel();
-			diagram = new ExplainTransformationDiagram(this.martTab, k, r);
+			JPanel field = new JPanel();
+			Diagram diagram = new ExplainTransformationDiagram(this.martTab,
+					this.dsTable.getSchema().getName(), this.dsTable
+							.getUnmaskedDataSetColumns(k.getColumns(), r),
+					columnsSoFar, k, r);
 			field.add(new JScrollPane(diagram));
 			final List includeCols = new ArrayList();
 			for (final Iterator j = this.dsTable.getColumns().iterator(); j
@@ -316,6 +322,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			field.add(new JScrollPane(diagram));
 			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
+			columnsSoFar.addAll(includeCols);
 			stepNumber++;
 		}
 
@@ -331,39 +338,50 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 				partCols.add(c);
 		}
 
-		// Show expression columns.
-		if (!expressionCols.isEmpty()) {
-			label = new JLabel(Resources
-					.get("stepTableLabel", new String[] { "" + stepNumber,
-							Resources.get("explainExpressionsLabel") }));
-			this.gridBag.setConstraints(label,
-					partCols.isEmpty() ? this.labelLastRowConstraints
-							: this.labelConstraints);
+		// Show partitioned columns.
+		if (!partCols.isEmpty()) {
+			JLabel label = new JLabel(Resources.get("stepTableLabel",
+					new String[] { "" + stepNumber,
+							Resources.get("explainPartitionsLabel") }));
+			this.gridBag.setConstraints(label, this.labelConstraints);
 			this.transformation.add(label);
-			field = new JPanel();
-			diagram = new ExplainTransformationDiagram(this.martTab,
-					expressionCols);
+			JPanel field = new JPanel();
+			Diagram diagram = new ExplainTransformationDiagram(this.martTab,
+					partCols);
 			field.add(new JScrollPane(diagram));
-			this.gridBag.setConstraints(field,
-					partCols.isEmpty() ? this.fieldLastRowConstraints
-							: this.fieldConstraints);
+			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
 			stepNumber++;
 		}
 
-		// Show partitioned columns.
-		if (!partCols.isEmpty()) {
-			label = new JLabel(Resources.get("stepTableLabel", new String[] {
-					"" + stepNumber, Resources.get("explainPartitionsLabel") }));
-			this.gridBag.setConstraints(label, this.labelLastRowConstraints);
+		// Show expression columns.
+		if (!expressionCols.isEmpty()) {
+			JLabel label = new JLabel(Resources.get("stepTableLabel",
+					new String[] { "" + stepNumber,
+							Resources.get("explainExpressionsLabel") }));
+			this.gridBag.setConstraints(label, this.labelConstraints);
 			this.transformation.add(label);
-			field = new JPanel();
-			diagram = new ExplainTransformationDiagram(this.martTab, partCols);
+			JPanel field = new JPanel();
+			Diagram diagram = new ExplainTransformationDiagram(this.martTab,
+					expressionCols);
 			field.add(new JScrollPane(diagram));
-			this.gridBag.setConstraints(field, this.fieldLastRowConstraints);
+			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
 			stepNumber++;
 		}
+
+		// Add the table definition at the bottom.
+		JLabel label = new JLabel(Resources.get("stepTableLabel", new String[] {
+				"" + stepNumber, Resources.get("explainRenameLabel") }));
+		this.gridBag.setConstraints(label, this.labelLastRowConstraints);
+		this.transformation.add(label);
+		JPanel field = new JPanel();
+		Diagram diagram = new ExplainTransformationDiagram(this.martTab,
+				this.dsTable);
+		field.add(new JScrollPane(diagram));
+		this.gridBag.setConstraints(field, this.fieldLastRowConstraints);
+		this.transformation.add(field);
+		stepNumber++;
 	}
 
 	/**
