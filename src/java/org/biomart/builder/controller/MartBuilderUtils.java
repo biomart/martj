@@ -62,7 +62,8 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
  * obviously the Model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class MartBuilderUtils {
@@ -420,7 +421,7 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Masks a column within a dataset, then regenerates the dataset.
+	 * Masks a column within a dataset.
 	 * 
 	 * @param dataset
 	 *            the dataset to mask the column in.
@@ -428,16 +429,10 @@ public class MartBuilderUtils {
 	 *            the column to mask.
 	 * @throws AssociationException
 	 *             if the column is not maskable.
-	 * @throws SQLException
-	 *             if the dataset could not be synchronised.
-	 * @throws BuilderException
-	 *             if the dataset could not be synchronised.
 	 */
 	public static void maskColumn(final DataSet dataset,
-			final DataSetColumn column) throws AssociationException,
-			SQLException, BuilderException {
+			final DataSetColumn column) throws AssociationException {
 		column.setMasked(true);
-		dataset.synchronise();
 	}
 
 	/**
@@ -1002,25 +997,19 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Unmasks a column within a dataset, then regenerates the dataset.
+	 * Unmasks a column within a dataset.
 	 * 
 	 * @param dataset
 	 *            the dataset to unmask the column in.
 	 * @param column
 	 *            the column to unmask.
-	 * @throws SQLException
-	 *             if the dataset could not be synchronised.
-	 * @throws BuilderException
-	 *             if the dataset could not be synchronised.
 	 * @throws AssociationException
 	 *             if the column could not be used for masking, for whatever
 	 *             reason.
 	 */
 	public static void unmaskColumn(final DataSet dataset,
-			final DataSetColumn column) throws AssociationException,
-			BuilderException, SQLException {
+			final DataSetColumn column) throws AssociationException {
 		column.setMasked(false);
-		dataset.synchronise();
 	}
 
 	/**

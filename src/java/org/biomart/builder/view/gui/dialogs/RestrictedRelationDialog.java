@@ -56,7 +56,8 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * relation for this dataset only.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class RestrictedRelationDialog extends JDialog {
@@ -166,15 +167,15 @@ public class RestrictedRelationDialog extends JDialog {
 		// Set the column-editor for the first column column.
 		TableColumn columnColumn = this.firstColumnAliasTable.getColumnModel()
 				.getColumn(0);
-		JComboBox columnEditor = new JComboBox();
+		final JComboBox firstColumnEditor = new JComboBox();
 		for (final Iterator i = relation.getFirstKey().getTable().getColumns()
 				.iterator(); i.hasNext();)
-			columnEditor.addItem(i.next());
-		columnColumn.setCellEditor(new DefaultCellEditor(columnEditor));
+			firstColumnEditor.addItem(i.next());
+		columnColumn.setCellEditor(new DefaultCellEditor(firstColumnEditor));
 
 		// Size the first table columns.
 		this.firstColumnAliasTable.getColumnModel().getColumn(0)
-				.setPreferredWidth(columnEditor.getPreferredSize().width);
+				.setPreferredWidth(firstColumnEditor.getPreferredSize().width);
 		this.firstColumnAliasTable.getColumnModel().getColumn(1)
 				.setPreferredWidth(
 						this.firstColumnAliasTable.getTableHeader()
@@ -189,15 +190,15 @@ public class RestrictedRelationDialog extends JDialog {
 		// Set the column-editor for the second column column.
 		columnColumn = this.secondColumnAliasTable.getColumnModel()
 				.getColumn(0);
-		columnEditor = new JComboBox();
+		final JComboBox secondColumnEditor = new JComboBox();
 		for (final Iterator i = relation.getSecondKey().getTable().getColumns()
 				.iterator(); i.hasNext();)
-			columnEditor.addItem(i.next());
-		columnColumn.setCellEditor(new DefaultCellEditor(columnEditor));
+			secondColumnEditor.addItem(i.next());
+		columnColumn.setCellEditor(new DefaultCellEditor(secondColumnEditor));
 
 		// Size the second table columns.
 		this.secondColumnAliasTable.getColumnModel().getColumn(0)
-				.setPreferredWidth(columnEditor.getPreferredSize().width);
+				.setPreferredWidth(secondColumnEditor.getPreferredSize().width);
 		this.secondColumnAliasTable.getColumnModel().getColumn(1)
 				.setPreferredWidth(
 						this.secondColumnAliasTable.getTableHeader()
@@ -216,17 +217,27 @@ public class RestrictedRelationDialog extends JDialog {
 
 		// Listener for the insert buttons.
 		this.firstInsert.addActionListener(new ActionListener() {
+			private int aliasCount = 1;
+
 			public void actionPerformed(final ActionEvent e) {
 				RestrictedRelationDialog.this.firstColumnAliasModel.insertRow(
 						RestrictedRelationDialog.this.firstColumnAliasModel
-								.getRowCount(), new Object[] { null, null });
+								.getRowCount(), new Object[] {
+								firstColumnEditor.getItemAt(0),
+								Resources.get("defaultFirstAlias")
+										+ (this.aliasCount++) });
 			}
 		});
 		this.secondInsert.addActionListener(new ActionListener() {
+			private int aliasCount = 1;
+
 			public void actionPerformed(final ActionEvent e) {
 				RestrictedRelationDialog.this.secondColumnAliasModel.insertRow(
 						RestrictedRelationDialog.this.secondColumnAliasModel
-								.getRowCount(), new Object[] { null, null });
+								.getRowCount(), new Object[] {
+								secondColumnEditor.getItemAt(0),
+								Resources.get("defaultSecondAlias")
+										+ (this.aliasCount++) });
 			}
 		});
 

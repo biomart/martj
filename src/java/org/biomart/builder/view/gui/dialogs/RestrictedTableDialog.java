@@ -55,7 +55,8 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * table for this dataset only.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class RestrictedTableDialog extends JDialog {
@@ -166,10 +167,15 @@ public class RestrictedTableDialog extends JDialog {
 
 		// Listener for the insert button.
 		this.insert.addActionListener(new ActionListener() {
+			private int aliasCount = 1;
+
 			public void actionPerformed(final ActionEvent e) {
 				RestrictedTableDialog.this.columnAliasModel.insertRow(
 						RestrictedTableDialog.this.columnAliasModel
-								.getRowCount(), new Object[] { null, null });
+								.getRowCount(), new Object[] {
+								columnEditor.getItemAt(0),
+								Resources.get("defaultAlias")
+										+ (this.aliasCount++) });
 			}
 		});
 

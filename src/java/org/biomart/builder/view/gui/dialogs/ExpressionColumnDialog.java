@@ -58,7 +58,8 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * This dialog asks users to create or modify an expression column.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class ExpressionColumnDialog extends JDialog {
@@ -178,10 +179,15 @@ public class ExpressionColumnDialog extends JDialog {
 
 		// Listener for the insert button.
 		this.insert.addActionListener(new ActionListener() {
+			private int aliasCount = 1;
+
 			public void actionPerformed(final ActionEvent e) {
 				ExpressionColumnDialog.this.columnAliasModel.insertRow(
 						ExpressionColumnDialog.this.columnAliasModel
-								.getRowCount(), new Object[] { null, null });
+								.getRowCount(), new Object[] {
+								columnEditor.getItemAt(0),
+								Resources.get("defaultAlias")
+										+ (this.aliasCount++) });
 			}
 		});
 

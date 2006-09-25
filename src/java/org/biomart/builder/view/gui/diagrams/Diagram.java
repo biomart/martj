@@ -303,8 +303,8 @@ public abstract class Diagram extends JPanel {
 	 *            the model object to locate and scroll to.
 	 */
 	public void findObject(final Object object) {
-		// Don't do it if the object is null.
-		if (object == null)
+		// Don't do it if the object is null or if we are not in a viewport.
+		if (object == null || !(this.getParent() instanceof JViewport))
 			return;
 
 		// Ensure the diagram is valid and the correct size.

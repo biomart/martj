@@ -52,6 +52,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTableDiagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram;
+import org.biomart.builder.view.gui.diagrams.contexts.DataSetContext;
 import org.biomart.builder.view.gui.diagrams.contexts.WindowContext;
 
 /**
@@ -62,8 +63,8 @@ import org.biomart.builder.view.gui.diagrams.contexts.WindowContext;
  * and relations not involved directly in this table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class ExplainTableDialog extends JDialog implements ExplainDialog {
@@ -105,12 +106,18 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 
 	private JPanel transformation;
 
+	private DataSetContext dataSetContext;
+
 	private ExplainTableDialog(final MartTab martTab, final DataSetTable dsTable) {
 		// Create the blank dialog, and give it an appropriate title.
 		super(martTab.getMartTabSet().getMartBuilder(), Resources.get(
 				"explainTableDialogTitle", dsTable.getName()), true);
 		this.dsTable = dsTable;
 		this.martTab = martTab;
+
+		// Make a context for our column diagrams.
+		this.dataSetContext = new DataSetContext(this.martTab,
+				(DataSet) dsTable.getSchema());
 
 		// Make the content pane.
 		final JPanel displayArea = new JPanel(new CardLayout());
@@ -240,7 +247,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			JPanel field = new JPanel();
 			Diagram diagram = new ExplainTransformationDiagram(this.martTab,
 					this.dsTable.getUnderlyingTable());
-			field.add(new JScrollPane(diagram));
+			field.add(diagram);
 			final List includeCols = new ArrayList();
 			for (final Iterator i = this.dsTable.getColumns().iterator(); i
 					.hasNext();) {
@@ -256,7 +263,8 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			}
 			diagram = new ExplainTransformationDiagram(this.martTab,
 					includeCols);
-			field.add(new JScrollPane(diagram));
+			diagram.setDiagramContext(this.dataSetContext);
+			field.add(diagram);
 			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
 			columnsSoFar.addAll(includeCols);
@@ -274,7 +282,8 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 					this.martTab,
 					((Relation) (this.dsTable.getRelations().iterator().next()))
 							.getOneKey().getTable());
-			field.add(new JScrollPane(diagram));
+			diagram.setDiagramContext(this.dataSetContext);
+			field.add(diagram);
 			final List includeCols = new ArrayList();
 			for (final Iterator j = this.dsTable.getColumns().iterator(); j
 					.hasNext();) {
@@ -284,7 +293,8 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			}
 			diagram = new ExplainTransformationDiagram(this.martTab,
 					includeCols);
-			field.add(new JScrollPane(diagram));
+			diagram.setDiagramContext(this.dataSetContext);
+			field.add(diagram);
 			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
 			columnsSoFar.addAll(includeCols);
@@ -306,7 +316,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 					this.dsTable.getSchema().getName(), this.dsTable
 							.getUnmaskedDataSetColumns(k.getColumns(), r),
 					columnsSoFar, k, r);
-			field.add(new JScrollPane(diagram));
+			field.add(diagram);
 			final List includeCols = new ArrayList();
 			for (final Iterator j = this.dsTable.getColumns().iterator(); j
 					.hasNext();) {
@@ -319,7 +329,8 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			}
 			diagram = new ExplainTransformationDiagram(this.martTab,
 					includeCols);
-			field.add(new JScrollPane(diagram));
+			diagram.setDiagramContext(this.dataSetContext);
+			field.add(diagram);
 			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
 			columnsSoFar.addAll(includeCols);
@@ -348,7 +359,8 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			JPanel field = new JPanel();
 			Diagram diagram = new ExplainTransformationDiagram(this.martTab,
 					partCols);
-			field.add(new JScrollPane(diagram));
+			diagram.setDiagramContext(this.dataSetContext);
+			field.add(diagram);
 			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
 			stepNumber++;
@@ -364,7 +376,8 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			JPanel field = new JPanel();
 			Diagram diagram = new ExplainTransformationDiagram(this.martTab,
 					expressionCols);
-			field.add(new JScrollPane(diagram));
+			diagram.setDiagramContext(this.dataSetContext);
+			field.add(diagram);
 			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
 			stepNumber++;
@@ -378,7 +391,8 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		JPanel field = new JPanel();
 		Diagram diagram = new ExplainTransformationDiagram(this.martTab,
 				this.dsTable);
-		field.add(new JScrollPane(diagram));
+		diagram.setDiagramContext(this.dataSetContext);
+		field.add(diagram);
 		this.gridBag.setConstraints(field, this.fieldLastRowConstraints);
 		this.transformation.add(field);
 		stepNumber++;

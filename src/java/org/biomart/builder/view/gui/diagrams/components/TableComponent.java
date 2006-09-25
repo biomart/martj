@@ -45,7 +45,8 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * a secondary label indicating which schema they belong to.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class TableComponent extends BoxShapedComponent {
@@ -72,9 +73,9 @@ public class TableComponent extends BoxShapedComponent {
 	public static Color NORMAL_COLOUR = Color.BLACK;
 
 	/**
-	 * Plain font.
+	 * Italic font.
 	 */
-	public static Font PLAIN_FONT = Font.decode("SansSerif-PLAIN-10");
+	public static Font ITALIC_FONT = Font.decode("SansSerif-ITALIC-10");
 
 	/**
 	 * Colour for subclassed tables (in the dataset context).
@@ -153,7 +154,7 @@ public class TableComponent extends BoxShapedComponent {
 
 		// Add the schema name label below.
 		label = new JLabel(this.getTable().getSchema().getName());
-		label.setFont(TableComponent.PLAIN_FONT);
+		label.setFont(TableComponent.ITALIC_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 

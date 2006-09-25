@@ -77,7 +77,8 @@ import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
  * to the various {@link Diagram}s inside it, including the schema tabset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class DataSetTabSet extends JTabbedPane {
@@ -300,13 +301,11 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * This method is called by the {@link ExplainDialog} when it is
-	 * opened. This dialog is then updated whenever the dataset window is
-	 * updated.
+	 * This method is called by the {@link ExplainDialog} when it is opened.
+	 * This dialog is then updated whenever the dataset window is updated.
 	 * 
 	 * @param dialog
-	 *            the dialog being displayed by a current
-	 *            {@link ExplainDialog}.
+	 *            the dialog being displayed by a current {@link ExplainDialog}.
 	 */
 	public void addCurrentExplanationDialog(final ExplainDialog dialog) {
 		this.currentExplanationDialogs.add(dialog);
@@ -404,12 +403,10 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * This method is called by the {@link ExplainDialog} when it is
-	 * closed.
+	 * This method is called by the {@link ExplainDialog} when it is closed.
 	 * 
 	 * @param dialog
-	 *            the dialog being closed by a current
-	 *            {@link ExplainDialog}.
+	 *            the dialog being closed by a current {@link ExplainDialog}.
 	 */
 	public void removeCurrentExplanationDialog(final ExplainDialog dialog) {
 		this.currentExplanationDialogs.remove(dialog);
@@ -545,7 +542,7 @@ public class DataSetTabSet extends JTabbedPane {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							// Update the explanation diagram so that it
-							// correctly reflects the changed relation.
+							// correctly reflects the changed objects.
 							DataSetTabSet.this.repaintExplanationDialog();
 
 							// Update the modified status for the tabset.
@@ -595,7 +592,7 @@ public class DataSetTabSet extends JTabbedPane {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							// Update the explanation diagram so that it
-							// correctly reflects the changed table.
+							// correctly reflects the changed objects.
 							DataSetTabSet.this.repaintExplanationDialog();
 
 							// Update the modified status for the tabset.
@@ -732,12 +729,12 @@ public class DataSetTabSet extends JTabbedPane {
 			// Mask the column.
 			MartBuilderUtils.maskColumn(ds, column);
 
-			// Recalculate the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
+			// Repaint the dataset diagram based on the modified dataset.
+			this.repaintDataSetDiagram(ds);
 
 			// Update the explanation diagram so that it
 			// correctly reflects any changed relation.
-			this.recalculateExplanationDialog();
+			this.repaintExplanationDialog();
 
 			// Update the modification status for this tabset.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -1019,8 +1016,9 @@ public class DataSetTabSet extends JTabbedPane {
 			// will have changed colour.
 			this.repaintDataSetDiagram(dataset);
 
-			// Repaint the explanation, too.
-			this.repaintExplanationDialog();
+			// Update the explanation diagram so that it
+			// correctly reflects the changed objects.
+			this.recalculateExplanationDialog();
 
 			// Update the modified status on this tabset.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -1195,7 +1193,7 @@ public class DataSetTabSet extends JTabbedPane {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							// Update the explanation diagram so that it
-							// correctly reflects the changed relation.
+							// correctly reflects the changed objects.
 							DataSetTabSet.this.repaintExplanationDialog();
 
 							// Update the modified status for the tabset.
@@ -1235,7 +1233,7 @@ public class DataSetTabSet extends JTabbedPane {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							// Update the explanation diagram so that it
-							// correctly reflects the changed table.
+							// correctly reflects the changed objects.
 							DataSetTabSet.this.repaintExplanationDialog();
 
 							// Update the modified status for the tabset.
@@ -1589,7 +1587,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 			// Update the explanation diagram so that it
 			// correctly reflects any changed relation.
-			this.recalculateExplanationDialog();
+			this.repaintExplanationDialog();
 
 			// Update the modification status for this tabset.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -1611,12 +1609,12 @@ public class DataSetTabSet extends JTabbedPane {
 			// Unmasks the relation.
 			MartBuilderUtils.unmaskRelation(ds, relation);
 
-			// Recalculate the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
+			// Repaint the dataset diagram based on the modified dataset.
+			this.repaintDataSetDiagram(ds);
 
 			// Update the explanation diagram so that it
 			// correctly reflects the changed relation.
-			this.recalculateExplanationDialog();
+			this.repaintExplanationDialog();
 
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
@@ -1670,7 +1668,8 @@ public class DataSetTabSet extends JTabbedPane {
 			// will have changed colour.
 			this.repaintDataSetDiagram(dataset);
 
-			// Repaint the explanation too.
+			// Update the explanation diagram so that it
+			// correctly reflects the changed objects.
 			this.repaintExplanationDialog();
 
 			// Update the modified status on this tabset.

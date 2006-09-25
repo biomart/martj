@@ -27,13 +27,15 @@ import java.awt.Insets;
 import javax.swing.JLabel;
 
 import org.biomart.builder.model.Column;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 
 /**
  * This simple component represents a single column within a table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class ColumnComponent extends BoxShapedComponent {
@@ -60,9 +62,14 @@ public class ColumnComponent extends BoxShapedComponent {
 	public static Color INHERITED_COLOUR = Color.RED;
 
 	/**
+	 * Normal font.
+	 */
+	public static Font NORMAL_FONT = Font.decode("SansSerif-PLAIN-10");
+
+	/**
 	 * Italic font.
 	 */
-	public static Font ITALIC_FONT = Font.decode("SansSerif-PLAIN-10");
+	public static Font ITALIC_FONT = Font.decode("SansSerif-ITALIC-10");
 
 	/**
 	 * Constant referring to normal column colour.
@@ -117,9 +124,21 @@ public class ColumnComponent extends BoxShapedComponent {
 		this.setBackground(ColumnComponent.NORMAL_COLOUR);
 
 		// Add the label for the column name.
-		final JLabel label = new JLabel(this.getColumn().getName());
-		label.setFont(ColumnComponent.ITALIC_FONT);
+		JLabel label = new JLabel(this.getColumn().getName());
+		label.setFont(ColumnComponent.NORMAL_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
+
+		// Is it a wrapped column? Add the original name too if different.
+		if (this.getColumn() instanceof WrappedColumn) {
+			final String wrappedName = ((WrappedColumn) this.getColumn())
+					.getWrappedColumn().getName();
+			if (!this.getColumn().getName().equals(wrappedName)) {
+				label = new JLabel("(" + wrappedName + ")");
+				label.setFont(ColumnComponent.ITALIC_FONT);
+				this.layout.setConstraints(label, this.constraints);
+				this.add(label);
+			}
+		}
 	}
 }

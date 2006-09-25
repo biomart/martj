@@ -1512,8 +1512,7 @@ public class DataSet extends GenericSchema {
 					okToMask.removeAll(((Key) i.next()).getColumns());
 
 				// Refuse to mask the column if it does not appear in the list
-				// of OK
-				// columns to mask.
+				// of OK columns to mask.
 				if (!okToMask.contains(this))
 					throw new AssociationException(Resources
 							.get("cannotMaskNecessaryColumn"));
