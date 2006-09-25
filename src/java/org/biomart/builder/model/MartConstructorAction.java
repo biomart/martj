@@ -817,13 +817,17 @@ public abstract class MartConstructorAction {
 
 		private List sourceTableJoinColumns;
 
+		private List sourceTableSelectColumns;
+
 		private String sourceTableName;
 
 		private Schema sourceTableSchema;
 
 		private DataSetTableRestriction targetTableRestriction;
 
-		private boolean useAliases;
+		private boolean useLHSAliases;
+		
+		private boolean useRHSAliases;
 
 		private boolean useDistinct;
 
@@ -845,6 +849,9 @@ public abstract class MartConstructorAction {
 		 *            the table on the LHS of the join.
 		 * @param sourceTableJoinColumns
 		 *            the columns on the LHS to use to make the join.
+		 * @param sourceTableSelectColumns
+		 *            the columns to select from the LHS of the join.
+		 *            If null is specified, all columns are selected.
 		 * @param mergeTableSchema
 		 *            the schema the RHS of the join lives in.
 		 * @param mergeTableName
@@ -863,8 +870,16 @@ public abstract class MartConstructorAction {
 		 *            <tt>true</tt> if a select distinct should be used.
 		 * @param targetTableRestriction
 		 *            a restriction to place on the RHS table.
-		 * @param useAliases
-		 *            if <tt>true</tt>, then the items in selectFromColumns
+		 * @param useLHSAliases
+		 *            if <tt>true</tt>, then the items in sourceTableSelectColumns
+		 *            are expected to be {@link WrappedColumn} or
+		 *            {@link SchemaNameColumn} instances, and the names used are
+		 *            the names of the real {@link Column} instances which these
+		 *            columns wrap. Otherwise, the names used are those returned
+		 *            by the {@link Column#getName()} function on each column in
+		 *            the list.
+		 * @param useRHSAliases
+		 *            if <tt>true</tt>, then the items in mergeTableSelectColumns
 		 *            are expected to be {@link WrappedColumn} or
 		 *            {@link SchemaNameColumn} instances, and the names used are
 		 *            the names of the real {@link Column} instances which these
@@ -875,18 +890,19 @@ public abstract class MartConstructorAction {
 		public Merge(final String dsSchemaName, final String dsTableName,
 				final Schema targetTableSchema, final String targetTableName,
 				final Schema sourceTableSchema, final String sourceTableName,
-				final List sourceTableJoinColumns,
+				final List sourceTableJoinColumns, final List sourceTableSelectColumns,
 				final Schema mergeTableSchema, final String mergeTableName,
 				final List mergeTableJoinColumns,
 				final List mergeTableSelectColumns,
 				final DataSetRelationRestriction mergeRelationRestriction,
 				final boolean firstTableSourceTable, final boolean useDistinct,
 				final DataSetTableRestriction targetTableRestriction,
-				final boolean useAliases) {
+				final boolean useLHSAliases, final boolean useRHSAliases) {
 			super(dsSchemaName, dsTableName, targetTableSchema, targetTableName);
 			this.sourceTableSchema = sourceTableSchema;
 			this.sourceTableName = sourceTableName;
 			this.sourceTableJoinColumns = sourceTableJoinColumns;
+			this.sourceTableSelectColumns = sourceTableSelectColumns;
 			this.mergeTableSchema = mergeTableSchema;
 			this.mergeTableName = mergeTableName;
 			this.mergeTableJoinColumns = mergeTableJoinColumns;
@@ -895,7 +911,8 @@ public abstract class MartConstructorAction {
 			this.firstTableSourceTable = firstTableSourceTable;
 			this.useDistinct = useDistinct;
 			this.targetTableRestriction = targetTableRestriction;
-			this.useAliases = useAliases;
+			this.useLHSAliases = useLHSAliases;
+			this.useRHSAliases = useRHSAliases;
 		}
 
 		public DataSetRelationRestriction getMergeRelationRestriction() {
@@ -922,6 +939,10 @@ public abstract class MartConstructorAction {
 			return this.sourceTableJoinColumns;
 		}
 
+		public List getSourceTableSelectColumns() {
+			return this.sourceTableSelectColumns;
+		}
+
 		public String getSourceTableName() {
 			return this.sourceTableName;
 		}
@@ -942,8 +963,12 @@ public abstract class MartConstructorAction {
 			return this.firstTableSourceTable;
 		}
 
-		public boolean isUseAliases() {
-			return this.useAliases;
+		public boolean isUseLHSAliases() {
+			return this.useLHSAliases;
+		}
+
+		public boolean isUseRHSAliases() {
+			return this.useRHSAliases;
 		}
 
 		public boolean isUseDistinct() {

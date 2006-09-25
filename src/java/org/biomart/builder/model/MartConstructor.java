@@ -913,22 +913,21 @@ public interface MartConstructor {
 			// contain the constructed table.
 			String vTableTempName = vConstructionTable.getTempTableName();
 
-			// If the table is a MAIN table, then we can select columns
-			// directly from the underlying table.
-			if (vConstructionTable.getDataSetTable().getType().equals(
-					DataSetTableType.MAIN)) {
-				// We now need to work out at which point to start the process
-				// of transforming the table. That point is either the
-				// underlying
-				// table, or the first table in the list of underlying
-				// relations,
-				// if a list has been specified.
-				final Table rFirstTable = vConstructionTable.getRealTable();
+			// First table to select from is the underlying table if MAIN,
+			// or the parent DS table if not MAIN.
+			Schema replacementFirstSchema;
+			Table replacementFirstTable;
+			String replacementFirstTableName;
+			final List replacementFirstTableCols = new ArrayList();
+			if (vConstructionTable.getDataSetTable().getType().equals(DataSetTableType.MAIN)) {
+				replacementFirstSchema = rSchema;
+				replacementFirstTable = vConstructionTable.getRealTable();
+				replacementFirstTableName = replacementFirstTable.getName();
 
 				// Work out what columns to include from the first table.
-				final List dsFirstTableCols = vConstructionTable
+				replacementFirstTableCols.addAll(vConstructionTable
 						.getDataSetTable().getUnmaskedDataSetColumns(
-								rFirstTable.getColumns(), null);
+								replacementFirstTable.getColumns(), null));
 
 				// Include the schema name column if there is one (don't need
 				// to do this for dimension/subclass tables as it will be part
@@ -937,49 +936,136 @@ public interface MartConstructor {
 						.getColumns().iterator(); i.hasNext();) {
 					final DataSetColumn dsCol = (DataSetColumn) i.next();
 					if (dsCol instanceof SchemaNameColumn)
-						dsFirstTableCols.add(dsCol);
+						replacementFirstTableCols.add(dsCol);
 				}
-
-				// Create the table based on firstTable, and selecting
-				// based on firstDSCols.
-				final MartConstructorAction create = new Create(
-						this.datasetSchemaName, vConstructionTable
-								.getDataSetTable().getName(), null,
-						vTableTempName, rSchema, rFirstTable.getName(),
-						dsFirstTableCols, rFirstTable.getPrimaryKey() == null,
-						vConstructionTable.getDataSet().getRestrictedTableType(
-								rFirstTable), true, false);
-				actionGraph.addActionWithParent(create, lastActionPerformed);
-				// Update last action performed, in case there are no merges.
-				lastActionPerformed = create;
-			}
-
-			// Else, if the table is NOT a MAIN table, then we should select
-			// the inherited columns from the parent dataset table.
-			else {
+			} else {
+				replacementFirstSchema = null;
+				replacementFirstTable = null;
+				replacementFirstTableName = vParentTable.getTempTableName();
+				
 				// Work out what columns to include from the first table.
-				final List dsTableFirstCols = new ArrayList();
 				for (final Iterator i = vConstructionTable.getDataSetTable()
 						.getColumns().iterator(); i.hasNext();) {
 					final DataSetColumn dsCol = (DataSetColumn) i.next();
 					if (dsCol instanceof InheritedColumn) {
 						final InheritedColumn dsInheritedCol = (InheritedColumn) dsCol;
-						dsTableFirstCols.add(dsInheritedCol);
+						replacementFirstTableCols.add(dsInheritedCol);
 					}
 				}
-
+			}
+			
+			// If no underlying relations, CREATE from replacement first.
+			if (vConstructionTable.getDataSetTable()
+					.getUnderlyingKeys().isEmpty()) {
 				final MartConstructorAction create = new Create(
 						this.datasetSchemaName, vConstructionTable
 								.getDataSetTable().getName(), null,
-						vTableTempName, null, vParentTable.getTempTableName(),
-						dsTableFirstCols, false, null, false, true);
+						vTableTempName, replacementFirstSchema, replacementFirstTableName,
+						replacementFirstTableCols, replacementFirstTable.getPrimaryKey() == null,
+						vConstructionTable.getDataSet().getRestrictedTableType(
+								replacementFirstTable), true, false);
 				actionGraph.addActionWithParent(create, lastActionPerformed);
 				// Update last action performed, in case there are no merges.
 				lastActionPerformed = create;
+			} 
+			// Otherwise, MERGE from replacement first plus second in line.
+			else {
+				// What key was followed from the previous table?
+				final Key rSourceKey = (Key) vConstructionTable
+						.getDataSetTable().getUnderlyingKeys().get(0);
+				// What relation was followed?
+				final Relation rSourceRelation = (Relation) vConstructionTable
+						.getDataSetTable().getUnderlyingRelations().get(0);
+				// What key did we reach by following the relation?
+				final Key rTargetKey = rSourceRelation.getOtherKey(rSourceKey);
+				// What table did we reach, and therefore need to merge now?
+				final Table rTargetTable = rTargetKey.getTable();
+				String rTargetTableName = rTargetTable.getName();
+				Schema rTargetSchema = rTargetTable.getSchema();
+				// Is the target table going to need a union merge?
+				final boolean useUnionMerge = rTargetSchema instanceof SchemaGroup
+						&& !rTargetSchema.equals(rMainTableSchema);
+				// What are the equivalent columns on the existing temp table
+				// that correspond to the key on the previous table?
+				final List dsSourceKeyCols = vConstructionTable
+						.getDataSetTable().getUnmaskedDataSetColumns(
+								rSourceKey.getColumns(), rSourceRelation);
+				// What are the columns we should merge from this new table?
+				final List dsTargetIncludeCols = vConstructionTable
+						.getDataSetTable().getUnmaskedDataSetColumns(
+								rSourceRelation);
+				// If targetTable is in a group schema that is not the
+				// same group schema we started with, create a union table
+				// containing all the targetTable copies, then merge with
+				// that instead.
+				if (useUnionMerge) {
+					// Build a list of schemas to union tables from.
+					final List rUnionSchemas = new ArrayList();
+					final List rUnionTableNames = new ArrayList();
+					for (final Iterator j = ((SchemaGroup) rTargetTable
+							.getSchema()).getSchemas().iterator(); j.hasNext();) {
+						final Schema rUnionSchema = (Schema) j.next();
+						rUnionSchemas.add(rUnionSchema);
+						rUnionTableNames.add(rTargetTableName);
+					}
+					// Make name for union table, which is now the target table.
+					rTargetTableName = this.helper.getNewTempTableName();
+					// Create union table.
+					final MartConstructorAction union = new Union(
+							this.datasetSchemaName, vConstructionTable
+									.getDataSetTable().getName(), null,
+							rTargetTableName, rUnionSchemas, rUnionTableNames);
+					actionGraph.addActionWithParent(union, lastActionPerformed);
+					// Create index on targetKey on union table.
+					final MartConstructorAction index = new Index(
+							this.datasetSchemaName, vConstructionTable
+									.getDataSetTable().getName(), null,
+							rTargetTableName, rTargetKey.getColumns());
+					actionGraph.addActionWithParent(index, union);
+					// Update the last action performed to reflect the index
+					// of the union table.
+					lastActionPerformed = index;
+					// Target schema is now the dataset schema. Null
+					// represents this.
+					rTargetSchema = null;
+				}
+				// Generate new temp table name for merged table.
+				final String vMergedTableTempName = this.helper
+						.getNewTempTableName();
+				// Merge tables based on sourceDSKey -> targetKey,
+				// and selecting based on targetDSCols.
+				final MartConstructorAction merge = new Merge(
+						this.datasetSchemaName, vConstructionTable
+								.getDataSetTable().getName(), null,
+						vMergedTableTempName, replacementFirstSchema, replacementFirstTableName,
+						dsSourceKeyCols, replacementFirstTableCols, rTargetSchema, rTargetTableName,
+						rTargetKey.getColumns(), dsTargetIncludeCols,
+						vConstructionTable.getDataSet()
+								.getRestrictedRelationType(rSourceRelation),
+						rTargetTable.equals(rSourceRelation.getSecondKey()
+								.getTable()), rSourceRelation.isManyToMany(),
+						vConstructionTable.getDataSet().getRestrictedTableType(
+								rTargetTable), replacementFirstSchema!=null,true);
+				actionGraph.addActionWithParent(merge, lastActionPerformed);
+				// Last action performed for this table is the merge, as
+				// the drop can be carried out later at any time.
+				lastActionPerformed = merge;
+				// Update temp table name to point to newly merged table.
+				vTableTempName = vMergedTableTempName;
+				// If targetTable was a union table, drop it.
+				if (useUnionMerge) {
+					// Drop union target table. Dependent on
+					// lastActionPerformed, but does not update it.
+					final Drop drop = new Drop(this.datasetSchemaName, vConstructionTable
+							.getDataSetTable().getName(), null,
+							rTargetTableName);
+					actionGraph.addActionWithParent(drop, merge);
+				}
 			}
 
-			// Merge subsequent tables based on underlying relations.
-			for (int i = 0; i < vConstructionTable.getDataSetTable()
+			// Merge subsequent tables based on underlying relations,
+			// starting from second in line.
+			for (int i = 1; i < vConstructionTable.getDataSetTable()
 					.getUnderlyingKeys().size(); i++) {
 				// What key was followed from the previous table?
 				final Key rSourceKey = (Key) vConstructionTable
@@ -1058,14 +1144,14 @@ public interface MartConstructor {
 						this.datasetSchemaName, vConstructionTable
 								.getDataSetTable().getName(), null,
 						vMergedTableTempName, null, vTableTempName,
-						dsSourceKeyCols, rTargetSchema, rTargetTableName,
+						dsSourceKeyCols, null, rTargetSchema, rTargetTableName,
 						rTargetKey.getColumns(), dsTargetIncludeCols,
 						vConstructionTable.getDataSet()
 								.getRestrictedRelationType(rSourceRelation),
 						rTargetTable.equals(rSourceRelation.getSecondKey()
 								.getTable()), rSourceRelation.isManyToMany(),
 						vConstructionTable.getDataSet().getRestrictedTableType(
-								rTargetTable), true);
+								rTargetTable), false, true);
 				actionGraph.addActionWithParent(merge, index);
 				// Last action performed for this table is the merge, as
 				// the drop can be carried out later at any time.
@@ -1218,9 +1304,9 @@ public interface MartConstructor {
 						this.datasetSchemaName, vConstructionTable
 								.getDataSetTable().getName(), null,
 						vConcatTableFinalTempName, null, vTableTempName,
-						vSourceKeyCols, null, vConcatTableTempName,
+						vSourceKeyCols, null, null, vConcatTableTempName,
 						vSourceKeyCols, Collections.singletonList(dsConcatCol),
-						null, false, false, null, false);
+						null, false, false, null, false, false);
 				actionGraph.addActionWithParent(merge, indexCon);
 				lastActionPerformed = merge;
 				// Drop old temp table and replace with new one.

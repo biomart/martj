@@ -198,7 +198,7 @@ public class DataSet extends GenericSchema {
 													.getWrappedColumn());
 					boolean inPK = parentDSTablePK.getColumns().contains(
 							parentDSCol);
-					boolean inFirstKey = parentDSCol instanceof WrappedColumn
+					boolean inSourceKey = parentDSCol instanceof WrappedColumn
 							&& (sourceRelation.getFirstKey().getColumns()
 									.contains(
 											((WrappedColumn) parentDSCol)
@@ -206,7 +206,7 @@ public class DataSet extends GenericSchema {
 									.getSecondKey().getColumns().contains(
 											((WrappedColumn) parentDSCol)
 													.getWrappedColumn()));
-					if (!inRestriction && !inPK && !inFirstKey)
+					if (!inRestriction && !inPK && !inSourceKey)
 						continue;
 				}
 				// Otherwise, create a copy of the column.
@@ -214,12 +214,10 @@ public class DataSet extends GenericSchema {
 						parentDSCol);
 				// Copy the name, too.
 				dsCol.setOriginalName(parentDSCol.getOriginalName());
-				// Add the column to the child's PK and FK, if it was in
-				// the parent PK only.
-				if (parentDSTablePK.getColumns().contains(parentDSCol)) {
-					dsTablePKCols.add(dsCol);
+				// Add the column to the child's FK, if it was in
+				// the parent PK only. 
+				if (parentDSTablePK.getColumns().contains(parentDSCol)) 
 					dsTableFKCols.add(dsCol);
-				}
 			}
 
 			try {

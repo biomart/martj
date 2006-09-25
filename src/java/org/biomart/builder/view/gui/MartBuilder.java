@@ -50,7 +50,8 @@ import org.biomart.builder.resources.SettingsCache;
  * The main window housing the MartBuilder GUI.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class MartBuilder extends JFrame {
@@ -176,6 +177,8 @@ public class MartBuilder extends JFrame {
 		final int messageClass = t instanceof Error ? JOptionPane.ERROR_MESSAGE
 				: JOptionPane.WARNING_MESSAGE;
 		String mainMessage = t.getLocalizedMessage();
+		if (mainMessage == null)
+			mainMessage = "";
 		if (mainMessage.length() > 100)
 			mainMessage = mainMessage.substring(0, 100)
 					+ Resources.get("truncatedException");

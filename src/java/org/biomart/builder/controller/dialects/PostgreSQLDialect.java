@@ -192,10 +192,11 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		for (final Iterator i = action.getSelectFromColumns().iterator(); i
 				.hasNext();) {
 			final Column col = (Column) i.next();
+			sb.append("a.");
 			if (action.isUseAliases()) {
 				final DataSetColumn dsCol = (DataSetColumn) col;
 				if (dsCol instanceof WrappedColumn) {
-					sb.append("a.\"");
+					sb.append('"');
 					sb.append(((WrappedColumn) dsCol).getWrappedColumn()
 							.getName());
 					sb.append('"');
@@ -207,14 +208,15 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				} else
 					// Ouch!
 					throw new MartBuilderInternalError();
-			} else if (action.isUseInheritedAliases())
+			} else if (action.isUseInheritedAliases()) 
 				if (col instanceof InheritedColumn) {
-					sb.append("a.\"");
+					sb.append('"');
 					sb.append(((InheritedColumn) col).getInheritedColumn()
 							.getName());
 					sb.append('"');
 					sb.append(" as ");
 				}
+			
 			sb.append('"');
 			sb.append(col.getName());
 			sb.append('"');
@@ -367,12 +369,39 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				+ "\" as select ");
 		if (useDistinct)
 			sb.append("distinct ");
-		sb.append("a.*");
+		final List sourceCols = action.getSourceTableSelectColumns();
+		if (sourceCols==null)
+			sb.append("a.*");
+		else
+			for (final Iterator i = sourceCols.iterator(); i.hasNext();) {
+				final Column col = (Column) i.next();
+				sb.append("a.");
+				if (action.isUseLHSAliases()) {
+					final DataSetColumn dsCol = (DataSetColumn) col;
+					if (dsCol instanceof WrappedColumn) {
+						sb.append('"');
+						sb.append(((WrappedColumn) dsCol).getWrappedColumn()
+								.getName());
+						sb.append("\" as ");
+					} else if (dsCol instanceof SchemaNameColumn) {
+						sb.append('\'');
+						sb.append(trgtSchemaName);
+						sb.append("' as ");
+					} else
+						// Ouch!
+						throw new MartBuilderInternalError();
+				} 
+				sb.append('"');
+				sb.append(col.getName());
+				sb.append('"');
+				if (i.hasNext())
+					sb.append(',');
+			}
 		for (final Iterator i = action.getMergeTableSelectColumns().iterator(); i
 				.hasNext();) {
 			sb.append(",b.");
 			final Column col = (Column) i.next();
-			if (action.isUseAliases()) {
+			if (action.isUseRHSAliases()) {
 				final DataSetColumn dsCol = (DataSetColumn) col;
 				if (dsCol instanceof WrappedColumn) {
 					sb.append('"');
