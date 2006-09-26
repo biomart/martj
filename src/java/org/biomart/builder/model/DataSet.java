@@ -61,7 +61,8 @@ import org.biomart.builder.resources.Resources;
  * the main table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class DataSet extends GenericSchema {
@@ -104,18 +105,10 @@ public class DataSet extends GenericSchema {
 	 *            the table to use as the central table for this dataset.
 	 * @param name
 	 *            the name to give this dataset.
-	 * @throws AssociationException
-	 *             if the central table does not belong to any of the schema
-	 *             objects in the mart.
 	 */
-	public DataSet(final Mart mart, final Table centralTable, final String name)
-			throws AssociationException {
+	public DataSet(final Mart mart, final Table centralTable, final String name) {
 		// Super first, to set the name.
 		super(name);
-
-		// Sanity check to see if the table is in this mart or not.
-		if (!mart.getSchemas().contains(centralTable.getSchema()))
-			throw new AssociationException(Resources.get("tableMartMismatch"));
 
 		// Remember the settings and make some defaults.
 		this.invisible = false;
@@ -131,13 +124,8 @@ public class DataSet extends GenericSchema {
 			final DataSetTable parentDSTable, final Table realTable,
 			final Relation sourceRelation) {
 		// Create the dataset table.
-		DataSetTable dsTable = null;
-		try {
-			dsTable = new DataSetTable(realTable.getName(), this, type,
-					realTable, sourceRelation);
-		} catch (final Throwable t) {
-			throw new MartBuilderInternalError(t);
-		}
+		final DataSetTable dsTable = new DataSetTable(realTable.getName(),
+				this, type, realTable, sourceRelation);
 
 		// Create the three relation-table pair queues we will work with. The
 		// normal queue holds pairs of relations and tables. The other two hold
@@ -215,8 +203,8 @@ public class DataSet extends GenericSchema {
 				// Copy the name, too.
 				dsCol.setOriginalName(parentDSCol.getOriginalName());
 				// Add the column to the child's FK, if it was in
-				// the parent PK only. 
-				if (parentDSTablePK.getColumns().contains(parentDSCol)) 
+				// the parent PK only.
+				if (parentDSTablePK.getColumns().contains(parentDSCol))
 					dsTableFKCols.add(dsCol);
 			}
 
@@ -263,29 +251,23 @@ public class DataSet extends GenericSchema {
 		// restrictions if we do. We only need do this to main tables, as
 		// others will inherit it through their foreign key.
 		if (type.equals(DataSetTableType.MAIN)
-				&& realTable.getSchema() instanceof SchemaGroup)
-			try {
-				final DataSetColumn schemaNameCol = new SchemaNameColumn(
-						Resources.get("schemaColumnName"), dsTable);
-				if (!dsTablePKCols.isEmpty())
-					dsTablePKCols.add(schemaNameCol);
-			} catch (final Throwable t) {
-				throw new MartBuilderInternalError(t);
-			}
+				&& realTable.getSchema() instanceof SchemaGroup) {
+			final DataSetColumn schemaNameCol = new SchemaNameColumn(Resources
+					.get("schemaColumnName"), dsTable);
+			if (!dsTablePKCols.isEmpty())
+				dsTablePKCols.add(schemaNameCol);
+		}
 
 		// Create the primary key on this table.
-		if (!dsTablePKCols.isEmpty())
-			try {
-				// Rename all PK columns to have the '_key' suffix.
-				for (final Iterator i = dsTablePKCols.iterator(); i.hasNext();) {
-					DataSetColumn col = (DataSetColumn) i.next();
-					if (!col.getName().endsWith(Resources.get("keySuffix")))
-						col.setName(col.getName() + Resources.get("keySuffix"));
-				}
-				dsTable.setPrimaryKey(new GenericPrimaryKey(dsTablePKCols));
-			} catch (final Throwable t) {
-				throw new MartBuilderInternalError(t);
+		if (!dsTablePKCols.isEmpty()) {
+			// Rename all PK columns to have the '_key' suffix.
+			for (final Iterator i = dsTablePKCols.iterator(); i.hasNext();) {
+				DataSetColumn col = (DataSetColumn) i.next();
+				if (!col.getName().endsWith(Resources.get("keySuffix")))
+					col.setName(col.getName() + Resources.get("keySuffix"));
 			}
+			dsTable.setPrimaryKey(new GenericPrimaryKey(dsTablePKCols));
+		}
 
 		// Process the subclass relations of this table.
 		for (int i = 0; i < subclassQ.size(); i++) {
@@ -361,26 +343,21 @@ public class DataSet extends GenericSchema {
 				continue;
 
 			// Create a wrapped column for this column.
-			try {
-				final WrappedColumn wc = new WrappedColumn(c, dsTable,
-						sourceRelation);
+			final WrappedColumn wc = new WrappedColumn(c, dsTable,
+					sourceRelation);
 
-				// If the column is in any key then it is a dependency
-				// for possible future linking, which must be flagged.
-				for (final Iterator j = mergeTable.getKeys().iterator(); j
-						.hasNext();)
-					if (((Key) j.next()).getColumns().contains(c))
-						wc.setDependency(true);
+			// If the column is in any key then it is a dependency
+			// for possible future linking, which must be flagged.
+			for (final Iterator j = mergeTable.getKeys().iterator(); j
+					.hasNext();)
+				if (((Key) j.next()).getColumns().contains(c))
+					wc.setDependency(true);
 
-				// If the column was in the merge table's PK, add it to the ds
-				// tables's PK too, but only if at the top table, or at the
-				// M end of a 1:M or M:M.
-				if (includeMergeTablePK
-						&& mergeTablePK.getColumns().contains(c))
-					dsTablePKCols.add(wc);
-			} catch (final Throwable t) {
-				throw new MartBuilderInternalError(t);
-			}
+			// If the column was in the merge table's PK, add it to the ds
+			// tables's PK too, but only if at the top table, or at the
+			// M end of a 1:M or M:M.
+			if (includeMergeTablePK && mergeTablePK.getColumns().contains(c))
+				dsTablePKCols.add(wc);
 		}
 
 		// Update the three queues with relations.
@@ -490,11 +467,7 @@ public class DataSet extends GenericSchema {
 				null);
 	}
 
-	public void addTable(final Table table) throws AssociationException {
-		// We only accept dataset tables.
-		if (!(table instanceof DataSetTable))
-			throw new AssociationException(Resources.get("tableNotDSTable"));
-
+	public void addTable(final Table table) {
 		// Call the super version to do the work.
 		super.addTable(table);
 	}
@@ -1096,19 +1069,14 @@ public class DataSet extends GenericSchema {
 				if (!allFound)
 					continue;
 				// Create a new ExpressionColumn based on the new columns.
-				try {
-					final ExpressionColumn newExpCol = new ExpressionColumn(
-							oldExpCol.getName(), table);
-					newExpCol.getAliases().putAll(newDependencies);
-					newExpCol.setExpression(oldExpCol.getExpression());
-					newExpCol.setGroupBy(oldExpCol.getGroupBy());
-					for (final Iterator k = newDependencies.keySet().iterator(); k
-							.hasNext();)
-						((DataSetColumn) k.next()).setDependency(true);
-				} catch (final Throwable t) {
-					// Should never happen!
-					throw new MartBuilderInternalError(t);
-				}
+				final ExpressionColumn newExpCol = new ExpressionColumn(
+						oldExpCol.getName(), table);
+				newExpCol.getAliases().putAll(newDependencies);
+				newExpCol.setExpression(oldExpCol.getExpression());
+				newExpCol.setGroupBy(oldExpCol.getGroupBy());
+				for (final Iterator k = newDependencies.keySet().iterator(); k
+						.hasNext();)
+					((DataSetColumn) k.next()).setDependency(true);
 			}
 		}
 
@@ -2232,16 +2200,6 @@ public class DataSet extends GenericSchema {
 			this.sourceRelation = sourceRelation;
 			this.underlyingRelations = new ArrayList();
 			this.underlyingKeys = new ArrayList();
-		}
-
-		public void addColumn(final Column column) throws AssociationException {
-			// We only accept dataset columns.
-			if (!(column instanceof DataSetColumn))
-				throw new AssociationException(Resources
-						.get("columnNotDatasetColumn"));
-
-			// Call the super to add it.
-			super.addColumn(column);
 		}
 
 		/**

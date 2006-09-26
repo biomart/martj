@@ -33,7 +33,6 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.biomart.builder.exceptions.AssociationException;
-import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.resources.Resources;
@@ -49,7 +48,8 @@ import org.biomart.builder.resources.Resources;
  * but it does not provide any methods that process or analyse these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public interface Table extends Comparable {
@@ -61,11 +61,8 @@ public interface Table extends Comparable {
 	 * 
 	 * @param column
 	 *            the column to add.
-	 * @throws AssociationException
-	 *             if the table parameter of the column does not match this
-	 *             table.
 	 */
-	public void addColumn(Column column) throws AssociationException;
+	public void addColumn(Column column);
 
 	/**
 	 * Adds a foreign key to this table. It may not be null. The foreign key
@@ -74,8 +71,7 @@ public interface Table extends Comparable {
 	 * @param foreignKey
 	 *            the new foreign key to add to this table.
 	 * @throws AssociationException
-	 *             if the table parameter of the foreign key does not match this
-	 *             table.
+	 *             if the key already exists.
 	 */
 	public void addForeignKey(ForeignKey foreignKey)
 			throws AssociationException;
@@ -224,12 +220,8 @@ public interface Table extends Comparable {
 	 * 
 	 * @param primaryKey
 	 *            the new primary key of this table.
-	 * @throws AssociationException
-	 *             if the table parameter of the foreign key does not match this
-	 *             table.
 	 */
-	public void setPrimaryKey(PrimaryKey primaryKey)
-			throws AssociationException;
+	public void setPrimaryKey(PrimaryKey primaryKey);
 
 	/**
 	 * The generic implementation of table provides basic methods for working
@@ -269,19 +261,10 @@ public interface Table extends Comparable {
 				;
 			this.name = name;
 			// Add it to the schema.
-			try {
-				schema.addTable(this);
-			} catch (final AssociationException e) {
-				// Should never happen, as it is only thrown if schema!=schema.
-				throw new MartBuilderInternalError(e);
-			}
+			schema.addTable(this);
 		}
 
-		public void addColumn(final Column column) throws AssociationException {
-			// Refuse to do it if the column belongs to some other table.
-			if (column.getTable() != this)
-				throw new AssociationException(Resources
-						.get("columnTableMismatch"));
+		public void addColumn(final Column column) {
 			// Add it.
 			this.columns.put(column.getName(), column);
 		}
@@ -444,12 +427,7 @@ public interface Table extends Comparable {
 			this.originalName = newName;
 		}
 
-		public void setPrimaryKey(final PrimaryKey primaryKey)
-				throws AssociationException {
-			// Check the key lives in this table first.
-			if (primaryKey != null && !primaryKey.getTable().equals(this))
-				throw new AssociationException(Resources.get("pkTableMismatch"));
-
+		public void setPrimaryKey(final PrimaryKey primaryKey) {
 			// If the key is the same, do nothing.
 			if (primaryKey != null && this.primaryKey != null
 					&& primaryKey.equals(this.primaryKey))

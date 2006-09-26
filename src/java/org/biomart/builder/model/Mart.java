@@ -56,7 +56,7 @@ public class Mart {
 
 	private Collection continueSubclassing(final Collection includeTables,
 			final Collection tablesIncluded, final DataSet dataset,
-			final Table table) throws AssociationException {
+			final Table table)  {
 		// Check table has a primary key.
 		final Key pk = table.getPrimaryKey();
 
@@ -153,7 +153,12 @@ public class Mart {
 			if (i.hasNext())
 				suggestedDataSet = (DataSet) dataset.replicate(dataset
 						.getName());
+			try {
 			suggestedDataSet.flagSubclassRelation(r);
+			} catch (AssociationException e) {
+				// Eh? We asked for it, dammit!
+				throw new MartBuilderInternalError(e);
+			}
 			suggestedDataSets.addAll(this.continueSubclassing(includeTables,
 					(List) relationTablesIncluded.get(r), suggestedDataSet, r
 							.getManyKey().getTable()));
@@ -340,13 +345,11 @@ public class Mart {
 	 * @throws SQLException
 	 *             if there is any problem talking to the source database whilst
 	 *             generating the dataset.
-	 * @throws AssociationException
-	 *             if any of the tables do not belong to this mart.
 	 * @throws BuilderException
 	 *             if synchronisation fails.
 	 */
 	public Collection suggestDataSets(final Collection includeTables)
-			throws SQLException, AssociationException, BuilderException {
+			throws SQLException, BuilderException {
 		// The root tables are all those which do not have a M:1 relation
 		// to another one of the initial set of tables. This means that
 		// extra datasets will be created for each table at the end of
@@ -453,26 +456,15 @@ public class Mart {
 	 * @throws SQLException
 	 *             if there is any problem talking to the source database whilst
 	 *             generating the dataset.
-	 * @throws AssociationException
-	 *             if any of the tables do not belong to this mart.
 	 * @throws BuilderException
 	 *             if synchronisation fails.
 	 */
 	public Collection suggestInvisibleDataSets(final DataSet dataset,
-			final Collection columns) throws AssociationException,
+			final Collection columns) throws 
 			SQLException, BuilderException {
 		final List invisibleDataSets = new ArrayList();
-		// Check the dataset belongs to us.
-		if (!this.datasets.values().contains(dataset))
-			throw new AssociationException(Resources
-					.get("datasetSchemaMismatch"));
-		// Check all the columns are from the same table.
 		final Table sourceTable = ((Column) columns.iterator().next())
 				.getTable();
-		for (final Iterator i = columns.iterator(); i.hasNext();)
-			if (!((Column) i.next()).getTable().equals(sourceTable))
-				throw new AssociationException(Resources
-						.get("invisibleNotAllSameTable"));
 		// Find all tables which mention them.
 		final List candidates = new ArrayList();
 		for (final Iterator i = this.schemas.values().iterator(); i.hasNext();)

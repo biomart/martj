@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.model.Column.GenericColumn;
@@ -39,7 +38,6 @@ import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Table.GenericTable;
-import org.biomart.builder.resources.Resources;
 
 /**
  * <p>
@@ -61,10 +59,8 @@ public interface Schema extends Comparable, DataLink {
 	 * 
 	 * @param table
 	 *            the table to add.
-	 * @throws AssociationException
-	 *             if the table doesn't claim that it belongs to this schema.
 	 */
-	public void addTable(Table table) throws AssociationException;
+	public void addTable(Table table);
 
 	/**
 	 * Attempts to rename a table. If the new name has already been taken by
@@ -254,11 +250,7 @@ public interface Schema extends Comparable, DataLink {
 			this.keyguessing = keyguessing;
 		}
 
-		public void addTable(final Table table) throws AssociationException {
-			// Check the table belongs to us, and has a unique name.
-			if (!table.getSchema().equals(this))
-				throw new AssociationException(Resources
-						.get("tableSchemaMismatch"));
+		public void addTable(final Table table) {
 			// Add the table.
 			this.tables.put(table.getName(), table);
 		}

@@ -1609,12 +1609,12 @@ public class DataSetTabSet extends JTabbedPane {
 			// Unmasks the relation.
 			MartBuilderUtils.unmaskRelation(ds, relation);
 
-			// Repaint the dataset diagram based on the modified dataset.
-			this.repaintDataSetDiagram(ds);
+			// Recalculate the dataset diagram based on the modified dataset.
+			this.recalculateDataSetDiagram(ds);
 
 			// Update the explanation diagram so that it
 			// correctly reflects the changed relation.
-			this.repaintExplanationDialog();
+			this.recalculateExplanationDialog();
 
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);

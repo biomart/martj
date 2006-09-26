@@ -41,7 +41,8 @@ import org.biomart.builder.resources.Resources;
  * {@link ComponentStatus#INFERRED}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public interface Key extends Comparable {
@@ -127,11 +128,8 @@ public interface Key extends Comparable {
 	 * 
 	 * @param columns
 	 *            the replacement columns, in order.
-	 * @throws AssociationException
-	 *             if any of the columns are not from the same table as this key
-	 *             is from.
 	 */
-	public void setColumns(List columns) throws AssociationException;
+	public void setColumns(List columns);
 
 	/**
 	 * Sets the status of this key.
@@ -158,12 +156,8 @@ public interface Key extends Comparable {
 		 * 
 		 * @param columns
 		 *            the list of columns to form the key over.
-		 * @throws AssociationException
-		 *             if any of the columns do not belong to the table
-		 *             specified.
 		 */
-		public GenericForeignKey(final List columns)
-				throws AssociationException {
+		public GenericForeignKey(final List columns) {
 			super(columns);
 		}
 
@@ -193,11 +187,8 @@ public interface Key extends Comparable {
 		 * 
 		 * @param column
 		 *            the column to form the key over.
-		 * @throws AssociationException
-		 *             if the column cannot be combined into a single key. See
-		 *             {@link Key#setColumns(List)}.
 		 */
-		public GenericKey(final Column column) throws AssociationException {
+		public GenericKey(final Column column) {
 			this(Collections.singletonList(column));
 		}
 
@@ -211,12 +202,8 @@ public interface Key extends Comparable {
 		 * 
 		 * @param columns
 		 *            the set of columns to form the key over.
-		 * @throws AssociationException
-		 *             if the set is empty or contains columns which cannot be
-		 *             combined into a single key. See
-		 *             {@link Key#setColumns(List)}.
 		 */
-		public GenericKey(final List columns) throws AssociationException {
+		public GenericKey(final List columns) {
 			this.status = ComponentStatus.INFERRED;
 			this.setColumns(columns);
 		}
@@ -315,12 +302,7 @@ public interface Key extends Comparable {
 			this.relations.remove(relation);
 		}
 
-		public void setColumns(final List columns) throws AssociationException {
-			// Make sure we have at least one column.
-			if (columns.size() < 1)
-				throw new IllegalArgumentException(Resources
-						.get("columnsIsEmpty"));
-
+		public void setColumns(final List columns) {
 			// Remove all existing columns.
 			this.columns.clear();
 
@@ -331,15 +313,6 @@ public interface Key extends Comparable {
 				// Make our table the table of the first column we find.
 				if (this.table == null)
 					this.table = column.getTable();
-
-				// If the column doesn't match our table, or we already have
-				// the same column, throw a wobbly.
-				if (!column.getTable().equals(this.table))
-					throw new AssociationException(Resources
-							.get("multiTableColumns"));
-				if (this.columns.contains(column))
-					throw new AssociationException(Resources
-							.get("duplicateColumnsInKey"));
 
 				// Add the column.
 				this.columns.add(column);
@@ -354,7 +327,12 @@ public interface Key extends Comparable {
 				if (r.getStatus().equals(ComponentStatus.HANDMADE))
 					deadRels.add(r);
 				else
-					r.setStatus(ComponentStatus.INFERRED_INCORRECT);
+					try {
+						r.setStatus(ComponentStatus.INFERRED_INCORRECT);
+					} catch (AssociationException e) {
+						// Never happens.
+						throw new MartBuilderInternalError(e);
+					}
 			}
 
 			// Drop the relations we identified as useless. We have to do this
@@ -407,12 +385,8 @@ public interface Key extends Comparable {
 		 * 
 		 * @param columns
 		 *            the list of columns to form the key over.
-		 * @throws AssociationException
-		 *             if any of the columns do not belong to the table
-		 *             specified.
 		 */
-		public GenericPrimaryKey(final List columns)
-				throws AssociationException {
+		public GenericPrimaryKey(final List columns) {
 			super(columns);
 		}
 

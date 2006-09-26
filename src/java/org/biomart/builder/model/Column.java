@@ -18,8 +18,6 @@
 
 package org.biomart.builder.model;
 
-import org.biomart.builder.exceptions.AssociationException;
-import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.resources.Resources;
 
 /**
@@ -33,7 +31,8 @@ import org.biomart.builder.resources.Resources;
  * name.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public interface Column extends Comparable {
@@ -115,12 +114,8 @@ public interface Column extends Comparable {
 				;
 			this.name = name;
 			this.originalName = name;
-			// Add it to the table - throws AssociationException.
-			try {
-				table.addColumn(this);
-			} catch (final AssociationException e) {
-				throw new MartBuilderInternalError(e);
-			}
+			// Add it to the table.
+			table.addColumn(this);
 		}
 
 		public int compareTo(final Object o) throws ClassCastException {
