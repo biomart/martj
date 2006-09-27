@@ -275,7 +275,9 @@ public class OracleDialect extends DatabaseDialect {
 				+ "\" as select ");
 		for (final Iterator i = selectCols.iterator(); i.hasNext();) {
 			final Column col = (Column) i.next();
+			sb.append('"');
 			sb.append(col.getName());
+			sb.append('"');
 			sb.append(',');
 		}
 		for (final Iterator i = expressCols.iterator(); i.hasNext();) {

@@ -105,6 +105,11 @@ import org.xml.sax.helpers.DefaultHandler;
 public class MartBuilderXML extends DefaultHandler {
 
 	/**
+	 * Version number of MartBuilder XML DTD this class will read/write.
+	 */
+	public static final String DTD_VERSION = "0.5";
+
+	/**
 	 * DTD Public ID for MartBuilder XML documents.
 	 */
 	public static final String DTD_PUBLIC_ID = "-//EBI//DTD MartBuilder "
@@ -115,11 +120,6 @@ public class MartBuilderXML extends DefaultHandler {
 	 */
 	public static final String DTD_URL = "http://www.biomart.org/DTD/MartBuilder-"
 			+ MartBuilderXML.DTD_VERSION + ".dtd";
-
-	/**
-	 * Version number of MartBuilder XML DTD this class will read/write.
-	 */
-	public static final String DTD_VERSION = "0.1";
 
 	/**
 	 * The load method takes a {@link File} and loads up a {@link Mart} object
@@ -143,8 +143,6 @@ public class MartBuilderXML extends DefaultHandler {
 		final MartBuilderXML loader = new MartBuilderXML();
 		try {
 			final SAXParser saxParser = factory.newSAXParser();
-			// Resources.getResourceAsURL("org/biomart/builder/resources/MartBuilder-"+
-			// MartBuilderXML.DTD_VERSION+ ".dtd")
 			saxParser.parse(file, loader);
 		} catch (final ParserConfigurationException e) {
 			throw new BuilderException(Resources.get("XMLConfigFailed"), e);
