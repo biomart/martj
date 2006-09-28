@@ -2468,7 +2468,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 							List existingAtts = configCollection.getAttributeDescriptions();
 							for (int m = 0; m < existingAtts.size(); m++){
 								AttributeDescription existingAtt = (AttributeDescription) existingAtts.get(m);
-								System.out.println(existingAtt.getInternalName()+"=>"+templateAttName);
+								//System.out.println(existingAtt.getInternalName()+"=>"+templateAttName);
 								if (existingAtt.getInternalName().matches(".+\\..+") && existingAtt.getInternalName().split("\\.")[1].equals(templateAttName.split("\\.")[1])){
 									
 									templateAtt.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),

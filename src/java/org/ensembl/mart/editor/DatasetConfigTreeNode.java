@@ -80,17 +80,23 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
    */
   protected static int getHeterogenousOffset(Object parent, Object child) {
     int hetOffset = -1;
-    if (child instanceof org.ensembl.mart.lib.config.Exportable) {
+    
+	if (child instanceof org.ensembl.mart.lib.config.Importable) {
+		DatasetConfig dsc = (DatasetConfig) parent;
+		hetOffset = dsc.getDynamicDatasetContents().size();
+	}
+    else if (child instanceof org.ensembl.mart.lib.config.Exportable) {
       //Exportables go after Importables within a DatasetConfig
-      hetOffset = ((DatasetConfig) parent).getImportables().length;
+	  DatasetConfig dsc = (DatasetConfig) parent;
+      hetOffset = dsc.getDynamicDatasetContents().size() + dsc.getImportables().length;
     } else if (child instanceof org.ensembl.mart.lib.config.FilterPage) {
       //FilterPages go after Importables and Exportables within a DatasetConfig
       DatasetConfig dsc = (DatasetConfig) parent;
-      hetOffset = dsc.getImportables().length + dsc.getExportables().length;
+      hetOffset = dsc.getDynamicDatasetContents().size() + dsc.getImportables().length + dsc.getExportables().length;
     } else if (child instanceof org.ensembl.mart.lib.config.AttributePage) {
       //AttributePages go after Importables, Exportables, and FilterPages within a DatasetConfig
       DatasetConfig dsc = (DatasetConfig) parent;
-      hetOffset = dsc.getImportables().length + dsc.getExportables().length + dsc.getFilterPages().length;
+      hetOffset = dsc.getDynamicDatasetContents().size() + dsc.getImportables().length + dsc.getExportables().length + dsc.getFilterPages().length;
     //} //else if (child instanceof org.ensembl.mart.lib.config.Disable) {
       //Disables go after Enables within a FilterDescription
       //FilterDescription fdesc = (FilterDescription) parent;
