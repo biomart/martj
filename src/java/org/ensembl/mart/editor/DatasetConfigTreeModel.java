@@ -271,7 +271,7 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 																	"",
 																	"",
 																	"",
-																	"","","","","","");
+																	"","","","","","","","");
 				}
 				catch (ConfigurationException e){
 					// guaranteed internal name for atts

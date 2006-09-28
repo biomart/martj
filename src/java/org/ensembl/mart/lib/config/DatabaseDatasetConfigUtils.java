@@ -581,7 +581,7 @@ public class DatabaseDatasetConfigUtils {
 		  return;//no export performed
 		}
 
-		if (brokenString != ""){
+		if (brokenString != "" && dsConfig.getType().equals("TableSet")){
 			int choice = JOptionPane.showConfirmDialog(null,"The following may not contain the required fields:\n"
 		  							+ brokenString, "Export Anyway?", JOptionPane.YES_NO_OPTION);
 		  	if (choice != 0)									
@@ -772,11 +772,17 @@ public class DatabaseDatasetConfigUtils {
 				fd.setKey("");
 				fd.setLegalQualifiers("");		
 		    }
-			
+
+			if (fd.getInternalName().matches(".+\\..+")){			
+				fd.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),
+															"",fd.getPointerDataset(),fd.getPointerInterface(),fd.getPointerFilter()));
+			}
 			// change internal placeholders to template.filter
 			if (fd.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
 					fd.setInternalName(fd.getInternalName().replaceFirst(dsConfig.getDataset(),template));
-			} 
+			}
+												
+			 
 			// hack to fix broken types in existing XML as updateConfigToTemplate uses list type to specify options	
 			if (fd.getType() != null && fd.getType().equals("list") && !(fd.getOptions().length > 0)){
 				fd.setType("text");
@@ -808,6 +814,10 @@ public class DatabaseDatasetConfigUtils {
 			AttributeDescription ad = (AttributeDescription) attributeDescriptions.get(i);		
 			String internalName = ad.getInternalName();
 			if (internalName.matches(".+\\..+")){
+				
+				ad.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),"",ad.getPointerDataset(),
+					ad.getPointerInterface(),ad.getPointerAttribute(),ad.getPointerFilter()));
+				
 				ad.setTableConstraint("");
 				ad.setField("");
 				ad.setDisplayName("");
@@ -1180,7 +1190,7 @@ public class DatabaseDatasetConfigUtils {
 	  JOptionPane.showMessageDialog(null, "The following internal names contain spaces:\n"
 							+ spaceErrors, "ERROR", 0);
 			
-  if (brokenFields != "")
+  if (brokenFields != "" && config.getType().equals("TableSet"))
 		JOptionPane.showMessageDialog(null, "The following may not contain the required fields:\n"
 								  + brokenFields, "ERROR", 0);
 
@@ -1188,7 +1198,7 @@ public class DatabaseDatasetConfigUtils {
 		  JOptionPane.showMessageDialog(null, "The following are no longer defined in the database\n"
 									+ brokenString, "ERROR", 0);
 
-  if (spaceErrors != "" || brokenFields != "" || brokenString != "")
+  if (spaceErrors != "" || (brokenFields != "" && config.getType().equals("TableSet")) || brokenString != "")
 	  return false;//no export performed
 
 
@@ -1287,6 +1297,8 @@ public class DatabaseDatasetConfigUtils {
 			getXSLTransformedConfig(dsConfig);// transform XML to latest version
 			
 			// delete any non-placeholder filts/atts that are no longer in the template
+			if (dsConfig.getType().equals("TableSet")){
+			
 			List attributeDescriptions = dsConfig.getAllAttributeDescriptions();
 			for (int i = 0; i < attributeDescriptions.size(); i++){
 				AttributeDescription configAtt = (AttributeDescription) attributeDescriptions.get(i);
@@ -1367,6 +1379,7 @@ public class DatabaseDatasetConfigUtils {
 						}
 					}
 				}			
+			}
 			}	
 			System.out.println("STORING WITH "+dsConfig.getDisplayName()+":"+dsConfig.getVersion());			
 			storeDatasetConfiguration(
@@ -2247,6 +2260,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					// resolve what to do depending on type of placeholder
 					if (configAttName.equals(templateAttName)){
 						// external placeholder
+						
+						
 						if (!templateAtt.containsDynamicFilterContent(dsConfig.getDataset())){
 							// add an entry if dsConfig already has an equivalent placeholder but make sure previous datasets also have one
 							List existingFilters = configCollection.getFilterDescriptions();
@@ -2254,26 +2269,30 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 								FilterDescription existingFilter = (FilterDescription) existingFilters.get(m);
 								if (!existingFilter.getInternalName().matches(".+\\..+")) continue;
 								if (existingFilter.getInternalName().split("\\.")[1].equals(templateAttName.split("\\.")[1])){
+									
+									// BELOW ENDS UP ADDING ENCODE ENTRIES FOR EVERY DATASET - WRONG
+									/*
 									if (templateAtt.getDynamicFilterContents().size() > 0){}
 									else{
 										String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
 										for (int n = 0; n < datasetNames.length; n++){
 											String datasetName = datasetNames[n];
 											if (datasetName.equals(dsConfig.getDataset())) continue;
+											
+											// THIS LINE ADDS AN ENCODE ENTRY FOR EVERY SPECIES ON FIRST HUMAN UPDATE
 											templateAtt.addDynamicFilterContent(new DynamicFilterContent(datasetName,"",templateAtt.getPointerDataset(),templateAtt.getPointerInterface(),templateAtt.getPointerFilter()));
 										}
 									}
+									*/
+									
 									templateAtt.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),
-												"",existingFilter.getPointerDataset(),existingFilter.getPointerInterface(),existingFilter.getPointerFilter()));
-									//templateAtt.setPointerDataset("MULTI");
-									//templateAtt.setPointerInterface("MULTI");
-									//templateAtt.setPointerFilter("MULTI");						
+												"",existingFilter.getPointerDataset(),existingFilter.getPointerInterface(),existingFilter.getPointerFilter()));					
 									break;
 								}
 								
 							}
 							
-						}
+						}						
 					}
 					else{
 						// internal placeholder
@@ -2305,8 +2324,25 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						configAttToAdd.setPointerInterface(templateSettings.getPointerInterface());
 						configAttToAdd.setPointerFilter(templateSettings.getPointerFilter());
 								
-						if (!configCollection.containsFilterDescription(configAttToAdd.getInternalName())) 
+						//if (!configCollection.containsFilterDescription(configAttToAdd.getInternalName())){ 
+							// make sure no other placeholders filters already exist with the same name in this page
+							if (configPage.containsFilterDescription(configAttToAdd.getInternalName())){
+								//System.out.println(configPage.getInternalName()+" already has placeholder att "+configAttToAdd.getInternalName());
+								List configGroups = configPage.getFilterGroups();
+								for (int a = 0; a < configGroups.size(); a++){
+									FilterGroup tempConfigGroup = (FilterGroup) configGroups.get(a);
+									FilterCollection[] configCollections = tempConfigGroup.getFilterCollections();
+									for (int b = 0; b < configCollections.length; b++){
+										FilterCollection tempConfigCollection = configCollections[b];
+										if (tempConfigCollection.containsFilterDescription(configAttToAdd.getInternalName())){
+											//System.out.println("Removing it:"+configAttToAdd.getInternalName());
+											tempConfigCollection.removeFilterDescription(tempConfigCollection.getFilterDescriptionByInternalName(configAttToAdd.getInternalName()));
+										}
+									}
+								}								
+							}
 							configCollection.addFilterDescription(configAttToAdd);
+						//}
 					}
 					
 					if (!(configCollection.getFilterDescriptions().size() > 0)){
@@ -2358,12 +2394,14 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						// for now continue rather than adding a completely new page consisting purely of
 						// internal placeholders - this stops empty SNP pages being created for the datasets
 						// without other SNP attributes 
-						//continue;
+						//continue;// BUT THIS STOPS SEQ AND STRUCTURE PAGE BEING ADDED FOR NEW NAIVE DATASETS
+						
 						configPage = new AttributePage(templatePage.getInternalName(),
 											  templatePage.getDisplayName(),
 											  templatePage.getDescription(),
 											  templatePage.getOutFormats());
 						dsConfig.addAttributePage(configPage);				
+						
 					}
 			
 					AttributeGroup configGroup = (AttributeGroup) configPage.getAttributeGroupByName(templateGroup.getInternalName());
@@ -2400,6 +2438,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 								
 								if (existingAtt.getInternalName().split("\\.")[1].equals(templateAttName.split("\\.")[1])){
 									
+									/* REMOVED AS FOR FILTERS - SEE ABOVE
 									if (templateAtt.getDynamicAttributeContents().size() > 0){}
 									else{
 										String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
@@ -2409,12 +2448,11 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 											templateAtt.addDynamicAttributeContent(new DynamicAttributeContent(datasetName,"",templateAtt.getPointerDataset(),templateAtt.getPointerInterface(),templateAtt.getPointerAttribute(),templateAtt.getPointerFilter()));
 										}	
 									}
+									*/
+									
 									templateAtt.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),
 												"",existingAtt.getPointerDataset(),existingAtt.getPointerInterface(),existingAtt.getPointerAttribute(),existingAtt.getPointerFilter()));
-									//templateAtt.setPointerDataset("MULTI");
-									//templateAtt.setPointerInterface("MULTI");
-									//templateAtt.setPointerFilter("MULTI");
-									//templateAtt.setPointerAttribute("MULTI");
+									
 									break;
 								}	
 							}						
@@ -2423,7 +2461,25 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					else{
 						// internal placeholder
 						if (!templateAtt.containsDynamicAttributeContent(dsConfig.getDataset())){
+							
+							// do same as for external ones now - should merge with above code
+							List existingAtts = configCollection.getAttributeDescriptions();
+							for (int m = 0; m < existingAtts.size(); m++){
+								AttributeDescription existingAtt = (AttributeDescription) existingAtts.get(m);
+								System.out.println(existingAtt.getInternalName()+"=>"+templateAttName);
+								if (existingAtt.getInternalName().matches(".+\\..+") && existingAtt.getInternalName().split("\\.")[1].equals(templateAttName.split("\\.")[1])){
+									
+									templateAtt.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),
+											"",existingAtt.getPointerDataset(),existingAtt.getPointerInterface(),existingAtt.getPointerAttribute(),existingAtt.getPointerFilter()));
+									
+									break;
+								}
+							}	
+							
+							
+							
 							// always add an entry but make sure previous datasets also have one
+							/*
 							if (templateAtt.getDynamicAttributeContents().size() > 0){}
 							else{
 								String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
@@ -2436,10 +2492,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 							}
 							templateAtt.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),
 								"",dsConfig.getDataset(),templateAtt.getPointerInterface(),templateAtt.getPointerAttribute(),templateAtt.getPointerFilter()));
-							//templateAtt.setPointerDataset("MULTI");
-							//templateAtt.setPointerInterface("MULTI");
-							//templateAtt.setPointerFilter("MULTI");
-							//templateAtt.setPointerAttribute("MULTI");
+							*/
+							
 							 	
 						}
 					}
@@ -4097,7 +4151,7 @@ public int templateCount(String template) throws ConfigurationException{
 			  String CREATE_USER =new String();
 			  String CREATE_INTERFACE = new String();
 			  String CREATE_VERSION = new String();
-			  String INSERT_VERSION = "INSERT INTO "+getSchema()[0]+"."+MARTVERSIONTABLE+" VALUES ('"+SOFTWAREVERSION+"')";
+			  String INSERT_VERSION = "INSERT INTO "+getSchema()[0]+"."+MARTVERSIONTABLE+" VALUES ('0.4')";
 			  if(dsource.getDatabaseType().equals("oracle")) {CREATE_SQL1=ORACLE_META1; CREATE_SQL2=ORACLE_META2; CREATE_USER=ORACLE_USER; CREATE_INTERFACE=ORACLE_INTERFACE; CREATE_VERSION=ORACLE_VERSION;}
 			  if(dsource.getDatabaseType().equals("postgres")) {CREATE_SQL1=POSTGRES_META1;CREATE_SQL2=POSTGRES_META2;CREATE_USER=POSTGRES_USER; CREATE_INTERFACE=POSTGRES_INTERFACE; CREATE_VERSION=POSTGRES_VERSION;}
 			  if(dsource.getDatabaseType().equals("mysql")) {CREATE_SQL1 = MYSQL_META1;CREATE_SQL2 = MYSQL_META2;CREATE_USER=MYSQL_USER; CREATE_INTERFACE=MYSQL_INTERFACE; CREATE_VERSION=MYSQL_VERSION;}
@@ -6470,8 +6524,8 @@ public int templateCount(String template) throws ConfigurationException{
         filt.setLegalQualifiers("only,excluded");
         filt.setDisplayType("list");
         filt.setStyle("radio");
-        Option op1 = new Option("only","true","Only","","","","","only","","","","","","","","","","","","","","","","","","","","","");
-		Option op2 = new Option("excluded","true","Excluded","","","","","excluded","","","","","","","","","","","","","","","","","","","","","");
+        Option op1 = new Option("only","true","Only","","","","","only","","","","","","","","","","","","","","","","","","","","","","","");
+		Option op2 = new Option("excluded","true","Excluded","","","","","excluded","","","","","","","","","","","","","","","","","","","","","","","");
  		filt.addOption(op1);
  		filt.addOption(op2);
     } 

@@ -51,6 +51,8 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	protected final String graphKey = "graph";
 	protected final String styleKey = "style";
 	protected final String autoCompletionKey = "autoCompletion";
+	protected final String dependsOnTypeKey = "dependsOnType";
+	protected final String dependsOnKey = "dependsOn";
 	
     //protected final String hiddenKey = "hidden";
 	private int[] reqFields = {0,5,7,8,10};// rendered red in AttributeTable
@@ -78,7 +80,9 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 												 multipleValuesKey,
 												 graphKey,
 											 	 styleKey,
-												 autoCompletionKey	 
+												 autoCompletionKey,
+												 dependsOnTypeKey,
+												 dependsOnKey,	 
   };
 
 	/**
@@ -118,14 +122,15 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	 */
 	public QueryFilterSettings(String internalName, String displayName, String description)
 		throws ConfigurationException {
-			this(internalName, displayName, description, "", "", null, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "","", "", "", "", "");
+			this(internalName, displayName, description, "", "", null, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "","", "", "", "", "");
 	}
 
   public QueryFilterSettings(String internalName, String displayName, String description, String field, 
   	String value, String tableConstraint, String key, String type, String qualifier, String legalQualifiers, 
   	String otherFilters, String buttonURL, String regexp, String defaultValue, String defaultOn, String filterList, 
   	String attributePage, String attribute, String colForDisplay, String pointerDataset, String pointerInterface,
-	String pointerFilter, String displayType, String multipleValues, String graph, String style, String autoCompletion) throws ConfigurationException {
+	String pointerFilter, String displayType, String multipleValues, String graph, String style, String autoCompletion,
+	String dependsOnType, String dependsOn) throws ConfigurationException {
 		super(internalName, displayName, description);
 		
     	setAttribute(fieldKey, field);
@@ -152,6 +157,8 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 		setAttribute(graphKey, graph);
 		setAttribute(styleKey, style);
 		setAttribute(autoCompletionKey, autoCompletion);
+		setAttribute(dependsOnTypeKey, dependsOnType);
+		setAttribute(dependsOnKey, dependsOn);
 	    setRequiredFields(reqFields);
   }
   
@@ -347,6 +354,22 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 
 	public String getAutoCompletion() {
 		return getAttribute(autoCompletionKey);
+	}
+	
+	public void setDependsOnType(String value) {
+		setAttribute(dependsOnTypeKey, value);
+	}
+
+	public String getDependsOnType() {
+		return getAttribute(dependsOnTypeKey);
+	}
+	
+	public void setDependsOn(String value) {
+		setAttribute(dependsOnKey, value);
+	}
+
+	public String getDependsOn() {
+		return getAttribute(dependsOnKey);
 	}
 	
 	public void setType(String type) {
