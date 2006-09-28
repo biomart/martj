@@ -47,7 +47,8 @@ public class AttributePage extends BaseNamedConfigurationObject {
   //cache one AttributeCollection for call to getCollectionForAttribute
   private AttributeCollection lastColl = null;
   private final String outFormatsKey = "outFormats";
-  
+  private final String maxSelectKey = "maxSelect";
+  public final int DEFAULTMAXSELECT = 0;
   
   /**
    * Copy constructor. Constructs an exact copy of an existing AttributePage.
@@ -70,6 +71,7 @@ public class AttributePage extends BaseNamedConfigurationObject {
 	public AttributePage() {
 		super();
 		setAttribute(outFormatsKey, null);
+		setAttribute(maxSelectKey, null);
 	}
 
 	/**
@@ -79,7 +81,7 @@ public class AttributePage extends BaseNamedConfigurationObject {
 	 * @throws ConfigurationException when the internalName is null or empty
 	 */
 	public AttributePage(String internalName) throws ConfigurationException {
-		this(internalName, "", "", "");
+		this(internalName, "", "", "","");
 	}
 
 	/**
@@ -91,9 +93,10 @@ public class AttributePage extends BaseNamedConfigurationObject {
 	 * @param description String description of the AttributePage
 	 * @throws ConfigurationException when the internalName is null or empty
 	 */
-	public AttributePage(String internalName, String displayName, String description, String outFormats) throws ConfigurationException {
+	public AttributePage(String internalName, String displayName, String description, String outFormats, String maxSelect) throws ConfigurationException {
 		super(internalName, displayName, description);
 		setAttribute(outFormatsKey, outFormats);
+		setAttribute(maxSelectKey,maxSelect);
 	}
 
 	/**
@@ -449,6 +452,34 @@ public class AttributePage extends BaseNamedConfigurationObject {
   public void setOutFormats(String outFormats) {
 	 setAttribute(outFormatsKey, outFormats);
   }
+
+
+  /**
+   * Set the maxSelect value for this AttributeCollection
+   * @param maxSelect -- String value to limit selections of Attributes in groups. 0 means no limit.
+   */
+  public void setMaxSelect(String maxSelect){
+	setAttribute(maxSelectKey, maxSelect);
+  }
+  
+  public String getMaxSelectString()  {
+	return getAttribute(maxSelectKey);
+  }
+	/**
+	 * Returns the maxSelect value for attributes in this AttributeCollection.
+	 * If the value for maxSelect provided is not a valid int (eg.
+	 * Integer.parseInt( maxSelect) throws a NumberFormatException)
+	 * this method returns DEFAULTMAXSELECT.
+	 * 
+	 * @return int maxSelect value
+	 */
+	public int getMaxSelect()  {
+		try {
+			 return Integer.parseInt( getAttribute(maxSelectKey) );
+		} catch (NumberFormatException e) {
+			return DEFAULTMAXSELECT;
+		}
+	}
 
 public boolean containsOnlyPointerAttributes() {
     boolean ret = true;

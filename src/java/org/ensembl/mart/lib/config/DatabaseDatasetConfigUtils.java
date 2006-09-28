@@ -1487,7 +1487,7 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 			AttributePage dsConfigPage = dsConfig.getAttributePageByInternalName(templatePage.getInternalName());
 			if (dsConfigPage == null){
 				dsConfigPage = new AttributePage(templatePage.getInternalName(),templatePage.getDisplayName(),
-					templatePage.getDescription(), templatePage.getOutFormats());
+					templatePage.getDescription(), templatePage.getOutFormats(),templatePage.getMaxSelectString());
 				AttributeGroup dsConfigGroup = new AttributeGroup(templateGroup.getInternalName(),
 					templateGroup.getDisplayName(), templateGroup.getDescription(),"");
 				AttributeCollection dsConfigCollection = new AttributeCollection(templateCollection.getInternalName(),
@@ -1579,7 +1579,8 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 				 templatePage = new AttributePage(configPage.getInternalName(),
 												  configPage.getDisplayName(),
 												  configPage.getDescription(),
-												  configPage.getOutFormats());
+												  configPage.getOutFormats(),
+												  configPage.getMaxSelectString());
 				 if (configPage.getHidden() != null) templatePage.setHidden(configPage.getHidden());
 				 templateConfig.addAttributePage(templatePage);				
 			}
@@ -2399,7 +2400,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						configPage = new AttributePage(templatePage.getInternalName(),
 											  templatePage.getDisplayName(),
 											  templatePage.getDescription(),
-											  templatePage.getOutFormats());
+											  templatePage.getOutFormats(),
+											  templatePage.getMaxSelectString());
 						dsConfig.addAttributePage(configPage);				
 						
 					}
