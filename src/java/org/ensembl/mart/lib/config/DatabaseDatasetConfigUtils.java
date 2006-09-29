@@ -1514,6 +1514,7 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 				if (templatePage.getDisplayName() != null) dsConfigPage.setDisplayName(templatePage.getDisplayName());
 				if (templatePage.getDescription() != null) dsConfigPage.setDescription(templatePage.getDescription());
 				if (templatePage.getOutFormats() != null) dsConfigPage.setOutFormats(templatePage.getOutFormats());
+				if (templatePage.getMaxSelectString() != null) dsConfigPage.setMaxSelect(templatePage.getMaxSelectString());
 				
 				AttributeGroup dsConfigGroup = (AttributeGroup) dsConfigPage.getAttributeGroupByName(templateGroup.getInternalName());
 				if (dsConfigGroup == null){
