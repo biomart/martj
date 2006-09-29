@@ -119,7 +119,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 							export();
 							
 							// THEN JUST OPEN UP TEMPLATE DOC
-							config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","");
+							config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
 							MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(config,
 								MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template));
 							config.setTemplateFlag("1");
@@ -134,7 +134,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             			if (template != null){
             				// import template
             				//config = MartEditor.getDatabaseDatasetConfigUtils().getTemplateConfig(template);
-            				config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","");
+            				config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
             				MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(config,
             					MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template));
             					
@@ -215,7 +215,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 							export();
 							
 //							THEN JUST OPEN UP TEMPLATE DOC
-							config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","");
+							config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
 							MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(config,
 								MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template));
 							config.setTemplateFlag("1");	

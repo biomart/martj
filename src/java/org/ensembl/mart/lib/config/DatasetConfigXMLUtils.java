@@ -238,6 +238,9 @@ public class DatasetConfigXMLUtils {
     
     String displayName = thisElement.getAttributeValue("displayName","");
 	String version = thisElement.getAttributeValue("version","");
+    
+    String entryLabel = thisElement.getAttributeValue("entryLabel","");
+    
     if (displayName.length() > 0)
     	dsv.setDisplayName(displayName);
 	if (version.length() > 0)
@@ -249,6 +252,10 @@ public class DatasetConfigXMLUtils {
     
     if (optParam.length() > 0)
       dsv.setOptionalParameter(optParam);
+    
+    if (entryLabel.length() > 0)
+    	dsv.setEntryLabel(entryLabel);
+    
       
 	if (softwareVersion.length() > 0)
 	  dsv.setSoftwareVersion(softwareVersion);  
@@ -263,7 +270,9 @@ public class DatasetConfigXMLUtils {
 	   dsv.setTemplate(template);  
       
 	if (defParam.length() > 0)
-	  dsv.setDefaultDataset(defParam);      
+	  dsv.setDefaultDataset(defParam); 
+	  
+	       
 
     // a DatasetConfig object must have been constructed with an internalName
     // test that the internalNames match , throw an exception if they are not

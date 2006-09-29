@@ -1947,7 +1947,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
   public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig, int storeFlag) throws ConfigurationException, SQLException{
 	String template = dsConfig.getTemplate();
 	
-	DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","");
+	DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
 	dscutils.loadDatasetConfigWithDocument(templateConfig,getTemplateDocument(template));
 	
 	
@@ -1956,6 +1956,9 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	if (dsConfig.getVersion() == null) dsConfig.setVersion("");// avoids template problems
 	if (templateConfig.getDisplayName() == null) templateConfig.setDisplayName("");// avoids template problems
 	if (templateConfig.getVersion() == null) templateConfig.setVersion("");// avoids template problems
+	
+	
+	if (templateConfig.getEntryLabel() != null) dsConfig.setEntryLabel(templateConfig.getEntryLabel());
 		
 	if (templateConfig.getDynamicDatasetContents().size() > 0){
 		// already got multiple settings for this template
@@ -3213,7 +3216,7 @@ public int templateCount(String template) throws ConfigurationException{
 		// always set internalName of dataset to default - not really used anywhere now
 		// internalName can probably be safely removed from DatasetConfig or at least from constructor
         DatasetConfig dsv = new DatasetConfig("default", dname, dset, description, type, visible,"",version,"",
-        	datasetID,modified,martUsers,interfaces,"","","","");
+        	datasetID,modified,martUsers,interfaces,"","","","","");
         dsv.setMessageDigest(digest);
         
         HashMap userMap = (HashMap) configInfo.get(user);
@@ -3548,7 +3551,7 @@ public int templateCount(String template) throws ConfigurationException{
 		DatasetConfig newConfig = new DatasetConfig(config.getInternalName(),config.getDisplayName(),config.getDataset(),config.getDescription(), 
 			config.getType(),config.getVisible(),config.getVisibleFilterPage(),config.getVersion(),config.getOptionalParameter(), 
 			config.getDefaultDataset(),config.getDatasetID(),config.getModified(),config.getMartUsers(),config.getInterfaces(),
-			config.getprimaryKeyRestriction(),config.getTemplate(),SOFTWAREVERSION,config.getNoCount());
+			config.getprimaryKeyRestriction(),config.getTemplate(),SOFTWAREVERSION,config.getNoCount(),config.getEntryLabel());
 		dscutils.loadDatasetConfigWithDocument(newConfig,resultDoc);
 		newConfig.setTemplate(config.getTemplate());//hack as for some reason sourceDoc has template set to dataset and hence lose true template
 		newConfig.setTemplateFlag(config.getTemplateFlag());
@@ -5754,7 +5757,7 @@ public int templateCount(String template) throws ConfigurationException{
 	Timestamp tstamp = new Timestamp(System.currentTimeMillis());
 	Connection conn = dsource.getConnection();
 
-    DatasetConfig dsv = new DatasetConfig("default",datasetName,datasetName,"","TableSet","1","","","","",tstamp.toString(),"default","default","",datasetName,SOFTWAREVERSION,"");
+    DatasetConfig dsv = new DatasetConfig("default",datasetName,datasetName,"","TableSet","1","","","","",tstamp.toString(),"default","default","",datasetName,SOFTWAREVERSION,"","");
 
     AttributePage ap = new AttributePage();
     ap.setInternalName("naive_attributes");

@@ -64,6 +64,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   private final String templateKey="template";
   private final String softwareVersionKey="softwareVersion";
   private final String noCountKey="noCount";
+  private final String entryLabelKey="entryLabel";
   
   private int[] reqFields = {0,3,4,5};// rendered red in AttributeTable
   
@@ -147,6 +148,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
       
     setDataset(ds.getDataset());
     setOptionalParameter(ds.getOptionalParameter());
+    setEntryLabel(ds.getEntryLabel());
 	setDefaultDataset(ds.getDefaultDataset());
 	setPrimaryKeyRestriction(ds.getprimaryKeyRestriction());
 	setTemplate(ds.getTemplate());
@@ -217,6 +219,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(templateKey, null);
 	setAttribute(softwareVersionKey, null);
 	setAttribute(noCountKey, null);
+	setAttribute(entryLabelKey, null);
 	setRequiredFields(reqFields);
   }
 
@@ -249,7 +252,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     //super(internalName, displayName, description);
     
     
-	this(internalName, displayName, dataset, description, "", "0", "", "", "", "","","","","","","","");
+	this(internalName, displayName, dataset, description, "", "0", "", "", "", "","","","","","","","","");
 
     //if (dataset == null)
     //  throw new ConfigurationException("DatasetConfig objects must contain a dataset\n");
@@ -271,10 +274,10 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   public DatasetConfig(String internalName, String displayName, String dataset, String description, 
   		String type, String pub, String visibleFilterPage, String version, String optParam, String datasetID, 
   		String modified, String martUsers, String interfaces,String primaryKeyRestriction,String template,
-  		String softwareVersion,String noCount)
+  		String softwareVersion,String noCount,String entryLabel)
   throws ConfigurationException {
     this(internalName, displayName, dataset, description, type, pub, visibleFilterPage, version, null, null, 
-    	datasetID,modified,martUsers,interfaces,primaryKeyRestriction,template,softwareVersion,noCount);
+    	datasetID,modified,martUsers,interfaces,primaryKeyRestriction,template,softwareVersion,noCount,entryLabel);
   }
   
   
@@ -295,7 +298,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   public DatasetConfig(String internalName, String displayName, String dataset, String description, 
   		String type, String pub, String visibleFilterPage, String version, String optParameters, 
   		String defaultDataset,String datasetID,String modified, String martUsers,String interfaces,
-  		String primaryKeyRestriction,String template, String softwareVersion, String noCount)
+  		String primaryKeyRestriction,String template, String softwareVersion, String noCount, String entryLabel)
 		throws ConfigurationException {
 		
 	super(internalName, displayName, description);
@@ -319,6 +322,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(templateKey,template);
 	setAttribute(softwareVersionKey,softwareVersion);
 	setAttribute(noCountKey,noCount);
+	setAttribute(entryLabelKey,entryLabel);
 	setRequiredFields(reqFields);
   }
   
@@ -496,6 +500,14 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   public String getNoCount (){
 	return attributes.getProperty(noCountKey);
   }  
+  
+  public void setEntryLabel(String entryLabel) {
+	setAttribute(entryLabelKey, entryLabel);
+  }
+  
+  public String getEntryLabel(){
+	return attributes.getProperty(entryLabelKey);
+  }    
   
   /**
    * @return the prefix for the mart database tables in this Dataset

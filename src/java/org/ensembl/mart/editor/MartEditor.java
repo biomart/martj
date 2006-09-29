@@ -1299,7 +1299,7 @@ System.out.println ("getting driver "+ driver);
 			  String[] templates = dbutils.getAllTemplateNames();
 			  for (int i = 0; i < templates.length; i++){
 				String template = templates[i];
-				DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","");
+				DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
 				dscutils.loadDatasetConfigWithDocument(odsv,dbutils.getTemplateDocument(template));
 				try {
 						File newFile = new File(fc.getSelectedFile().getPath() + "/" + odsv.getDataset() + ".template.xml");
@@ -1460,7 +1460,7 @@ System.out.println ("getting driver "+ driver);
 			  String[] templates = dbutils.getAllTemplateNames();
 			  for (int i = 0; i < templates.length; i++){
 				String template = templates[i];
-				DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","");
+				DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
 				dscutils.loadDatasetConfigWithDocument(odsv,dbutils.getTemplateDocument(template));
 				templateSet.add(odsv);
 			  }
@@ -1555,6 +1555,7 @@ System.out.println ("getting driver "+ driver);
 					}
 				}
 				dsv.setOptionalParameter(odsv.getOptionalParameter());// so don't lose
+				dsv.setEntryLabel(odsv.getEntryLabel());
 				// repeat logic for linkVersions updating any not null or '' or equal to newLinkVersion
 				dbutils.updateLinkVersions(dsv);					
 				
