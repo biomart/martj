@@ -258,8 +258,9 @@ public class DataSet extends GenericSchema {
 				dsTablePKCols.add(schemaNameCol);
 		}
 
-		// Create the primary key on this table.
-		if (!dsTablePKCols.isEmpty()) {
+		// Create the primary key on this table, but not for dimensions.
+		if (!dsTablePKCols.isEmpty() 
+				&& !dsTable.getType().equals(DataSetTableType.DIMENSION)) {
 			// Rename all PK columns to have the '_key' suffix.
 			for (final Iterator i = dsTablePKCols.iterator(); i.hasNext();) {
 				DataSetColumn col = (DataSetColumn) i.next();

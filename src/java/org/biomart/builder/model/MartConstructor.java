@@ -68,7 +68,8 @@ import org.biomart.builder.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public interface MartConstructor {
@@ -290,11 +291,13 @@ public interface MartConstructor {
 							.getLastActionPerformed());
 
 					// Add further subclasses and dimensions to queue.
-					final Collection dsChildTableRelations = dsChildTable
-							.getPrimaryKey().getRelations();
-					dsParentRelations.addAll(dsChildTableRelations);
-					for (int x = 0; x < dsChildTableRelations.size(); x++)
-						vParents.add(vChildTable);
+					if (dsChildTable.getPrimaryKey() != null) {
+						final Collection dsChildTableRelations = dsChildTable
+								.getPrimaryKey().getRelations();
+						dsParentRelations.addAll(dsChildTableRelations);
+						for (int x = 0; x < dsChildTableRelations.size(); x++)
+							vParents.add(vChildTable);
+					}
 
 					// Check not cancelled.
 					this.checkCancelled();
@@ -445,12 +448,15 @@ public interface MartConstructor {
 					// require partitioning.
 					final List dsTablesToPartition = new ArrayList();
 					dsTablesToPartition.add(dsParentTable);
-					for (int j = 0; j < dsTablesToPartition.size(); j++)
-						for (final Iterator l = ((DataSetTable) dsTablesToPartition
-								.get(j)).getPrimaryKey().getRelations()
-								.iterator(); l.hasNext();)
-							dsTablesToPartition.add(((Relation) l.next())
-									.getManyKey().getTable());
+					for (int j = 0; j < dsTablesToPartition.size(); j++) {
+						final DataSetTable partTable = (DataSetTable) dsTablesToPartition
+								.get(j);
+						if (partTable.getPrimaryKey() != null)
+							for (final Iterator l = partTable.getPrimaryKey()
+									.getRelations().iterator(); l.hasNext();)
+								dsTablesToPartition.add(((Relation) l.next())
+										.getManyKey().getTable());
+					}
 
 					// Keep track of the last partition we do on this column.
 					MartConstructorAction lastPartitionAction = prePartitionAction;
@@ -498,9 +504,8 @@ public interface MartConstructor {
 						MartConstructorAction index = new Index(
 								this.datasetSchemaName, vParentTable
 										.getDataSetTable().getName(), null,
-								vParentTable.getTempTableName(), vParentTable
-										.getDataSetTable().getPrimaryKey()
-										.getColumns());
+								vParentTable.getTempTableName(), Collections
+										.singletonList(dsPartCol));
 						actionGraph.addActionWithParent(index,
 								lastPartitionAction);
 						lastPartitionAction = index;
@@ -551,53 +556,69 @@ public interface MartConstructor {
 							reduceActions.add(partition);
 
 							// Create an index over the primary key columns of
-							// the newly partitioned table.
-							index = new Index(
-									this.datasetSchemaName,
-									vPartitionTable.getDataSetTable().getName(),
-									null, vPartitionTable.getTempTableName(),
-									vParentTable.getDataSetTable()
-											.getPrimaryKey().getColumns());
-							actionGraph.addActionWithParent(index, partition);
-
-							// For each child table, create a new VirtualTable
-							// and generate it by doing a Reduce action. Add
-							// the new VirtualTable to the list of all tables.
-							for (final Iterator l = vTablesToReduce.iterator(); l
-									.hasNext();) {
-								final VirtualTable vChildTable = (VirtualTable) l
-										.next();
-								// Create an VirtualTable for the partitioned
-								// child table. Add it to the list of all
+							// the newly partitioned table, if it has a primary
+							// key. Also, if it doesn't have a primary key, then
+							// we can't recurse to children, so don't bother.
+							if (vParentTable.getDataSetTable().getPrimaryKey() != null) {
+								index = new Index(this.datasetSchemaName,
+										vPartitionTable.getDataSetTable()
+												.getName(), null,
+										vPartitionTable.getTempTableName(),
+										vParentTable.getDataSetTable()
+												.getPrimaryKey().getColumns());
+								actionGraph.addActionWithParent(index,
+										partition);
+								// For each child table, create a new
+								// VirtualTable
+								// and generate it by doing a Reduce action. Add
+								// the new VirtualTable to the list of all
 								// tables.
-								final VirtualTable vReducedTable = new VirtualTable(
-										vChildTable.getDataSetTable(),
-										vChildTable.getParentDataSetRelation());
-								vReducedTable.getPartitionValues().addAll(
-										vChildTable.getPartitionValues());
-								vReducedTable.getPartitionValues().add(
-										partitionValue);
-								vTables.add(vReducedTable);
-								// Generate the table.
-								final MartConstructorAction reduce = new Reduce(
-										this.datasetSchemaName, vReducedTable
-												.getDataSetTable().getName(),
-										null, vReducedTable.getTempTableName(),
-										null, vPartitionTable
-												.getTempTableName(),
-										vChildTable.getParentDataSetRelation()
-												.getOneKey().getColumns(),
-										null, vChildTable.getTempTableName(),
-										vChildTable.getParentDataSetRelation()
-												.getManyKey().getColumns(),
-										vChildTable.getDataSetTable()
-												.getUnmaskedDataSetColumns());
-								actionGraph.addActionWithParent(reduce, index);
-								reduceActions.add(reduce);
-								vReducedTable.setLastActionPerformed(reduce);
+								for (final Iterator l = vTablesToReduce
+										.iterator(); l.hasNext();) {
+									final VirtualTable vChildTable = (VirtualTable) l
+											.next();
+									// Create an VirtualTable for the
+									// partitioned
+									// child table. Add it to the list of all
+									// tables.
+									final VirtualTable vReducedTable = new VirtualTable(
+											vChildTable.getDataSetTable(),
+											vChildTable
+													.getParentDataSetRelation());
+									vReducedTable.getPartitionValues().addAll(
+											vChildTable.getPartitionValues());
+									vReducedTable.getPartitionValues().add(
+											partitionValue);
+									vTables.add(vReducedTable);
+									// Generate the table.
+									final MartConstructorAction reduce = new Reduce(
+											this.datasetSchemaName,
+											vReducedTable.getDataSetTable()
+													.getName(),
+											null,
+											vReducedTable.getTempTableName(),
+											null,
+											vPartitionTable.getTempTableName(),
+											vChildTable
+													.getParentDataSetRelation()
+													.getOneKey().getColumns(),
+											null,
+											vChildTable.getTempTableName(),
+											vChildTable
+													.getParentDataSetRelation()
+													.getManyKey().getColumns(),
+											vChildTable
+													.getDataSetTable()
+													.getUnmaskedDataSetColumns());
+									actionGraph.addActionWithParent(reduce,
+											index);
+									reduceActions.add(reduce);
+									vReducedTable
+											.setLastActionPerformed(reduce);
+								}
 							}
 						}
-						// Drop previous table.
+						// Drop original parent table.
 						final MartConstructorAction drop = new Drop(
 								this.datasetSchemaName, vParentTable
 										.getDataSetTable().getName(), null,
@@ -812,6 +833,26 @@ public interface MartConstructor {
 								vHasTable.getTempTableName(), vHasColumnName);
 						actionGraph.addActionWithParent(optimiseAdd,
 								preDOAction);
+						// Work out what the non-null columns to check are.
+						// By default it's the primary key, but if not, then
+						// it is all columns except the foreign key.
+						// If that leaves it with no columns, then it is
+						// simply all columns.
+						List vChildTableNonNullCols;
+						if (vChildTable.getDataSetTable().getPrimaryKey() != null)
+							vChildTableNonNullCols = vChildTable
+									.getDataSetTable().getPrimaryKey()
+									.getColumns();
+						else {
+							vChildTableNonNullCols = new ArrayList(vChildTable
+									.getDataSetTable().getColumns());
+							if (vChildTable.getParentDataSetRelation()
+									.getManyKey().getColumns().size() < vChildTableNonNullCols
+									.size()) 
+								vChildTableNonNullCols.removeAll(vChildTable
+										.getParentDataSetRelation()
+										.getManyKey().getColumns());
+						}
 						// Update those columns using inner join
 						// on has table PK to dimension table FK.
 						final MartConstructorAction optimiseUpd = new OptimiseUpdateColumn(
@@ -820,9 +861,8 @@ public interface MartConstructor {
 								vHasTable.getTempTableName(), null, vChildTable
 										.getTempTableName(), vChildTable
 										.getParentDataSetRelation()
-										.getManyKey().getColumns(), vChildTable
-										.getDataSetTable().getPrimaryKey()
-										.getColumns(), vHasTable
+										.getManyKey().getColumns(),
+								vChildTableNonNullCols, vHasTable
 										.getDataSetTable().getPrimaryKey()
 										.getColumns(), vHasColumnName);
 						actionGraph.addActionWithParent(optimiseUpd,
@@ -919,7 +959,8 @@ public interface MartConstructor {
 			Table replacementFirstTable;
 			String replacementFirstTableName;
 			final List replacementFirstTableCols = new ArrayList();
-			if (vConstructionTable.getDataSetTable().getType().equals(DataSetTableType.MAIN)) {
+			if (vConstructionTable.getDataSetTable().getType().equals(
+					DataSetTableType.MAIN)) {
 				replacementFirstSchema = rSchema;
 				replacementFirstTable = vConstructionTable.getRealTable();
 				replacementFirstTableName = replacementFirstTable.getName();
@@ -942,7 +983,7 @@ public interface MartConstructor {
 				replacementFirstSchema = null;
 				replacementFirstTable = null;
 				replacementFirstTableName = vParentTable.getTempTableName();
-				
+
 				// Work out what columns to include from the first table.
 				for (final Iterator i = vConstructionTable.getDataSetTable()
 						.getColumns().iterator(); i.hasNext();) {
@@ -953,21 +994,22 @@ public interface MartConstructor {
 					}
 				}
 			}
-			
+
 			// If no underlying relations, CREATE from replacement first.
-			if (vConstructionTable.getDataSetTable()
-					.getUnderlyingKeys().isEmpty()) {
+			if (vConstructionTable.getDataSetTable().getUnderlyingKeys()
+					.isEmpty()) {
 				final MartConstructorAction create = new Create(
 						this.datasetSchemaName, vConstructionTable
 								.getDataSetTable().getName(), null,
-						vTableTempName, replacementFirstSchema, replacementFirstTableName,
-						replacementFirstTableCols, replacementFirstTable.getPrimaryKey() == null,
+						vTableTempName, replacementFirstSchema,
+						replacementFirstTableName, replacementFirstTableCols,
+						replacementFirstTable.getPrimaryKey() == null,
 						vConstructionTable.getDataSet().getRestrictedTableType(
 								replacementFirstTable), true, false);
 				actionGraph.addActionWithParent(create, lastActionPerformed);
 				// Update last action performed, in case there are no merges.
 				lastActionPerformed = create;
-			} 
+			}
 			// Otherwise, MERGE from replacement first plus second in line.
 			else {
 				// What key was followed from the previous table?
@@ -1037,15 +1079,17 @@ public interface MartConstructor {
 				final MartConstructorAction merge = new Merge(
 						this.datasetSchemaName, vConstructionTable
 								.getDataSetTable().getName(), null,
-						vMergedTableTempName, replacementFirstSchema, replacementFirstTableName,
-						dsSourceKeyCols, replacementFirstTableCols, rTargetSchema, rTargetTableName,
-						rTargetKey.getColumns(), dsTargetIncludeCols,
-						vConstructionTable.getDataSet()
+						vMergedTableTempName, replacementFirstSchema,
+						replacementFirstTableName, dsSourceKeyCols,
+						replacementFirstTableCols, rTargetSchema,
+						rTargetTableName, rTargetKey.getColumns(),
+						dsTargetIncludeCols, vConstructionTable.getDataSet()
 								.getRestrictedRelationType(rSourceRelation),
 						rTargetTable.equals(rSourceRelation.getSecondKey()
 								.getTable()), rSourceRelation.isManyToMany(),
 						vConstructionTable.getDataSet().getRestrictedTableType(
-								rTargetTable), replacementFirstSchema!=null,true);
+								rTargetTable), replacementFirstSchema != null,
+						true);
 				actionGraph.addActionWithParent(merge, lastActionPerformed);
 				// Last action performed for this table is the merge, as
 				// the drop can be carried out later at any time.
@@ -1056,9 +1100,9 @@ public interface MartConstructor {
 				if (useUnionMerge) {
 					// Drop union target table. Dependent on
 					// lastActionPerformed, but does not update it.
-					final Drop drop = new Drop(this.datasetSchemaName, vConstructionTable
-							.getDataSetTable().getName(), null,
-							rTargetTableName);
+					final Drop drop = new Drop(this.datasetSchemaName,
+							vConstructionTable.getDataSetTable().getName(),
+							null, rTargetTableName);
 					actionGraph.addActionWithParent(drop, merge);
 				}
 			}
