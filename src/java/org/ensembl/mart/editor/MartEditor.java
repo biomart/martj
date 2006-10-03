@@ -626,10 +626,10 @@ System.out.println ("getting driver "+ driver);
 		exportTemplate();  
       //else if (e.getActionCommand().startsWith("Export"))
       //  exportDatasetConfig();
-      else if (e.getActionCommand().startsWith("Naive"))
-        naiveDatasetConfig();
       else if (e.getActionCommand().startsWith("Naive Template"))
-        naiveTemplateDatasetConfig();
+          naiveTemplateDatasetConfig();
+      else if (e.getActionCommand().startsWith("Naive"))
+    	  naiveDatasetConfig();
 	  else if (e.getActionCommand().startsWith("Update"))
 		updateAll();
 //	  else if (e.getActionCommand().startsWith("Validate All"))
@@ -1146,7 +1146,7 @@ System.out.println ("getting driver "+ driver);
   }
 */
 
-  public void naiveDatasetConfig(){
+  public void naiveTemplateDatasetConfig(){
     if (ds == null) {
       JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
       return;
@@ -1251,7 +1251,7 @@ System.out.println ("getting driver "+ driver);
     }
   }
   
-  public void naiveTemplateDatasetConfig(){
+  public void naiveDatasetConfig(){
     if (ds == null) {
       JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
       return;
