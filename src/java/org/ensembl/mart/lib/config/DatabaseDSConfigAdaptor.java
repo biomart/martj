@@ -62,6 +62,8 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
   private boolean ignoreCache = false;
   
   private boolean loadFully = false;
+  
+  private boolean readonly = false;
 
   //To propogate update exceptions from thread
   private Thread updateThread = null;
@@ -76,6 +78,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
    *                      no lazy loading occurs (this should only be used by big servers with reasonable memory).
    *                      Note, setting this true also be default sets ignoreCache to true.
    * @param includeHiddenMembers -- if true, hidden members are included in DatasetConfig objects, otherwise they are not included
+   * @param readonly - if true, meta tables are not altered.
    * @throws ConfigurationException if DataSource or user is null
    */
   public DatabaseDSConfigAdaptor(
@@ -84,7 +87,8 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
     String martUser,
     boolean ignoreCache,
     boolean loadFully,
-    boolean includeHiddenMembers)
+    boolean includeHiddenMembers,
+    boolean readonly)
     throws ConfigurationException {
     if (ds == null || user == null)
       throw new ConfigurationException("DatabaseDSConfigAdaptor Objects must be instantiated with a DataSource and User\n");
@@ -94,6 +98,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
     dataSource = ds;
     this.ignoreCache = ignoreCache;
     this.loadFully = loadFully;
+    this.readonly = readonly;
     
     dscutils = new DatasetConfigXMLUtils(includeHiddenMembers);
     
@@ -102,7 +107,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
         this.ignoreCache = true;
     }
     
-    dbutils = new DatabaseDatasetConfigUtils(dscutils, dataSource);
+    dbutils = new DatabaseDatasetConfigUtils(dscutils, dataSource, readonly);
 
     String host = ds.getHost();
     String port = ds.getPort();

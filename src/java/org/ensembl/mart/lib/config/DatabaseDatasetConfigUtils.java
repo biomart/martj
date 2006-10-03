@@ -114,18 +114,21 @@ public class DatabaseDatasetConfigUtils {
   
   private DatasetConfigXMLUtils dscutils = null;
   private DetailedDataSource dsource = null;
+  
+  private boolean readonly;
 
   /**
    * Constructor for a DatabaseDatasetConfigUtils object to obtain DatasetConfig related information
    * from a Mart Database host.
    * @param dscutils - DatasetConfigXMLUtils object for parsing XML
    * @param dsource - DetailedDataSource object with connection to a Mart Database host.
+   * @param readonly - true if this is a read-only connection (meta tables will not be altered).
    */
-  public DatabaseDatasetConfigUtils(DatasetConfigXMLUtils dscutils, DetailedDataSource dsource){
+  public DatabaseDatasetConfigUtils(DatasetConfigXMLUtils dscutils, DetailedDataSource dsource, boolean readonly){
     this.dscutils = dscutils;
     this.dsource = dsource;
     //this.connection = dsource.getConnection();
-    
+    this.readonly = readonly;
   }
 
   /**
@@ -191,7 +194,7 @@ public class DatabaseDatasetConfigUtils {
         ret = false;
       }
     } finally {
-      //this throws any SQLException, but always closes the connection
+      //this throws any non-SQLException, but always closes the connection
       DetailedDataSource.close(conn);
     }
 
@@ -850,6 +853,7 @@ public class DatabaseDatasetConfigUtils {
   }
 
   public void storeTemplateXML(DatasetConfig templateConfig, String template) throws ConfigurationException{
+	  if (readonly) throw new ConfigurationException("Cannot store config into read-only database");
   		Connection conn = null;
   		try{
 			conn = dsource.getConnection();	
@@ -1282,7 +1286,7 @@ public class DatabaseDatasetConfigUtils {
 		while(rs.next()){		
 			String datasetID = rs.getString(1);	
 			DatasetConfig dsConfig = null;
-			DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),MartEditor.getUser(), MartEditor.getMartUser(), true, false, true);
+			DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),MartEditor.getUser(), MartEditor.getMartUser(), true, false, true, true);
 			DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 			while (configs.hasNext()){
 				DatasetConfig lconfig = (DatasetConfig) configs.next();
@@ -2734,6 +2738,7 @@ public int templateCount(String template) throws ConfigurationException{
     throws ConfigurationException {
     if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
       return storeCompressedXMLOracle(user, internalName, displayName, dataset, description, doc, type, visible, version, datasetID, martUsers, interfaces,dsConfig);
+	  if (readonly) throw new ConfigurationException("Cannot store config into read-only database");
 
     Connection conn = null;
     try {
@@ -2937,6 +2942,7 @@ public int templateCount(String template) throws ConfigurationException{
 	String interfaces,
 	DatasetConfig dsConfig)
     throws ConfigurationException {
+	  if (readonly) throw new ConfigurationException("Cannot store config into read-only database");
 
     Connection conn = null;
     try {
@@ -3932,6 +3938,7 @@ public int templateCount(String template) throws ConfigurationException{
    */
   public void deleteOldDSConfigEntriesFor(String metatable, String datasetID, String internalName)
     throws ConfigurationException {
+	  if (readonly) throw new ConfigurationException("Cannot delete config from a read-only database");
 
     String deleteSQL1 = "delete from " + getSchema()[0]+"."+metatable + " where dataset_id_key = ?";
 	String deleteSQL2 = "delete from " + getSchema()[0]+"."+MARTXMLTABLE + " where dataset_id_key = ?";
@@ -4039,7 +4046,8 @@ public int templateCount(String template) throws ConfigurationException{
 	String deleteUserSQL      = "delete from "+getSchema()[0]+"."+MARTUSERTABLE+" where dataset_id_key = ?";
 	String deleteInterfaceSQL = "delete from "+getSchema()[0]+"."+MARTINTERFACETABLE+" where dataset_id_key = ?";
 	String deleteTemplateSQL = "delete from "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" where dataset_id_key = ?";
-	
+	  if (readonly) throw new ConfigurationException("Cannot delete config from a read-only database");
+
 	Connection conn = null;
 	try {
 	  conn = dsource.getConnection();
@@ -4087,6 +4095,8 @@ public int templateCount(String template) throws ConfigurationException{
     
     	String metatable = BASEMETATABLE;
     
+    	if (readonly) return metatable;
+    	
     	String CREATETABLE= "create table " +getSchema()[0];
   
     	String MYSQL_META1    = CREATETABLE+"."+BASEMETATABLE+
@@ -4195,7 +4205,8 @@ public int templateCount(String template) throws ConfigurationException{
   
   
   public void dropMetaTables() throws ConfigurationException {
-    
+	  if (readonly) throw new ConfigurationException("Cannot drop tables in a read-only database");
+
 		String DROPTABLE= "drop table " +getSchema()[0];
   
 		String MYSQL_META1     = DROPTABLE+"."+BASEMETATABLE;

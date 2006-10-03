@@ -142,7 +142,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             			}
             			else if (settingsFlag == null){
             				// have an indiviudal config just for read-only viewing
-							DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, "", true, false, true);
+							DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, "", true, false, true, true);
 							DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 							while (configs.hasNext()){
 								DatasetConfig lconfig = (DatasetConfig) configs.next();
@@ -154,7 +154,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             			}
             			else{
       					    // have an individual config without a template - generate template
-					  		DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, "", true, false, true);
+					  		DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, "", true, false, true, false);
 					  		DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 					  		while (configs.hasNext()){
             					DatasetConfig lconfig = (DatasetConfig) configs.next();

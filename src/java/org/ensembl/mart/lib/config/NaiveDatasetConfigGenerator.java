@@ -287,7 +287,7 @@ public class NaiveDatasetConfigGenerator {
           DetailedDataSource.DEFAULTPOOLSIZE,
           dbDriver, "Naive");
 
-      dbutils = new DatabaseDatasetConfigUtils(dscutils, dsource);
+      dbutils = new DatabaseDatasetConfigUtils(dscutils, dsource, true);
       
       if (dsName != null) {
         OutputStream dsvOutput = null;

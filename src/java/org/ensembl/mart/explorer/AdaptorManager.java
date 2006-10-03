@@ -274,7 +274,7 @@ public class AdaptorManager extends Box {
 
     if (valid) {
       try {
-        DSConfigAdaptor a = new DatabaseDSConfigAdaptor(ds, databaseDialog.getUser(), databaseDialog.getMartUser(), false, false, true);
+        DSConfigAdaptor a = new DatabaseDSConfigAdaptor(ds, databaseDialog.getUser(), databaseDialog.getMartUser(), false, false, true, true);
         //see notes for rootAdaptor for boolean settings
         // TODO bind a and ds so that can recreate the link after persistence
         add(a);

@@ -385,7 +385,7 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 								name);
 
 						DatabaseDSConfigAdaptor adaptor =
-							new DatabaseDSConfigAdaptor(dsource, user, martUser, ignoreCache, loadFully, includeHiddenMembers);
+							new DatabaseDSConfigAdaptor(dsource, user, martUser, ignoreCache, loadFully, includeHiddenMembers, true);
 						adaptor.setName(location.getName());
 						add(adaptor);
 

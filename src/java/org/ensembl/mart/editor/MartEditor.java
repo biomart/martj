@@ -179,7 +179,7 @@ System.out.println ("getting driver "+ driver);
 				 Connection conn = null;
 				 try {
 				   conn = ds.getConnection();
-				   dbutils = new DatabaseDatasetConfigUtils(dscutils, ds);
+				   dbutils = new DatabaseDatasetConfigUtils(dscutils, ds, false);
 					connection = "MartEditor (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";
 				   //valid = true;
 				   String[] schemas = databaseDialog.getSchema().split(";");
@@ -196,7 +196,7 @@ System.out.println ("getting driver "+ driver);
 										 10,
 										 driver,
 										 defaultSourceName);
-					    DatabaseDatasetConfigUtils dbutils1 = new DatabaseDatasetConfigUtils(new DatasetConfigXMLUtils(true), ds1);
+					    DatabaseDatasetConfigUtils dbutils1 = new DatabaseDatasetConfigUtils(new DatasetConfigXMLUtils(true), ds1, false);
 				   		dbutilsHash.put(schemas[i],dbutils1);
 				   }
 				   
@@ -337,6 +337,10 @@ System.out.println ("getting driver "+ driver);
     menu.add(menuItem);
 
     menuItem = new JMenuItem("Naive ");
+    menuItem.addActionListener(menuActionListener);
+    menu.add(menuItem);
+
+    menuItem = new JMenuItem("Naive Template ");
     menuItem.addActionListener(menuActionListener);
     menu.add(menuItem);
 
@@ -624,6 +628,8 @@ System.out.println ("getting driver "+ driver);
       //  exportDatasetConfig();
       else if (e.getActionCommand().startsWith("Naive"))
         naiveDatasetConfig();
+      else if (e.getActionCommand().startsWith("Naive Template"))
+        naiveTemplateDatasetConfig();
 	  else if (e.getActionCommand().startsWith("Update"))
 		updateAll();
 //	  else if (e.getActionCommand().startsWith("Validate All"))
@@ -751,7 +757,7 @@ System.out.println ("getting driver "+ driver);
         Connection conn = null;
         try {
           conn = ds.getConnection();
-          dbutils = new DatabaseDatasetConfigUtils(dscutils, ds);
+          dbutils = new DatabaseDatasetConfigUtils(dscutils, ds, false);
           valid = true;
           connection = "MartEditor (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";		  
         
@@ -768,7 +774,7 @@ System.out.println ("getting driver "+ driver);
 												   10,
 												   databaseDialog.getDriver(),
 												   defaultSourceName);
-				DatabaseDatasetConfigUtils dbutils1 = new DatabaseDatasetConfigUtils(new DatasetConfigXMLUtils(true), ds1);
+				DatabaseDatasetConfigUtils dbutils1 = new DatabaseDatasetConfigUtils(new DatasetConfigXMLUtils(true), ds1, false);
 				dbutilsHash.put(schemas[i],dbutils1);
 		  }
         
@@ -1244,6 +1250,82 @@ System.out.println ("getting driver "+ driver);
       enableCursor();
     }
   }
+  
+  public void naiveTemplateDatasetConfig(){
+    if (ds == null) {
+      JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+      return;
+    }
+
+    
+    String dbtype = databaseDialog.getDatabaseType();
+    String schema = null;
+    
+    if(dbtype.equals("oracle")) schema = databaseDialog.getSchema().toUpperCase();
+    else schema = databaseDialog.getSchema();
+     
+    
+    try {
+      disableCursor();
+      String[] datasets = dbutils.getNaiveDatasetNamesFor(schema);
+      if(datasets.length==0){
+        JOptionPane.showMessageDialog(this, "No datasets available - Is this a BioMart comptatible schema?", "ERROR", 0);
+        return;
+      }
+      
+      String dataset =
+        (String) JOptionPane.showInputDialog(
+          null,
+          "Choose one",
+          "Dataset",
+          JOptionPane.INFORMATION_MESSAGE,
+          null,
+          datasets,
+          datasets[0]);
+      if (dataset == null)
+        return;
+
+      disableCursor();
+/*     
+      String template = dataset;
+      
+      String[] templates = new String[dbutils.getAllTemplateNames().length + 1];
+      templates[0] = dataset;	
+	  String[] tNames = dbutils.getAllTemplateNames();
+	  for (int i = 0; i < tNames.length; i++){
+	  	templates[i+1] = tNames[i];
+	  }
+	  if(templates.length!=0){
+		//JOptionPane.showMessageDialog(this, "No datasets available - Is this a BioMart comptatible schema?", "ERROR", 0);
+		//return;
+      
+	   template =
+		(String) JOptionPane.showInputDialog(
+		  null,
+		  "Choose one",
+		  "Template",
+		  JOptionPane.INFORMATION_MESSAGE,
+		  null,
+		  templates,
+		  templates[0]);
+	  if (template == null)
+		return;
+	  }
+*/
+	  String template = dataset;
+      	
+      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, null, schema,template,null);
+      frame.setVisible(true);
+      desktop.add(frame);
+      try {
+        frame.setSelected(true);
+      } catch (java.beans.PropertyVetoException e) {
+      }
+    } catch (SQLException e) {
+    } finally {
+      enableCursor();
+    }
+  }
 
   public void saveAll() {
   	
@@ -1273,7 +1355,7 @@ System.out.println ("getting driver "+ driver);
 					String internalName = internalNames[j];
 				
 					DatasetConfig odsv = null;
-					DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true);
+					DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true, false);
 					DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 					while (configs.hasNext()){
 						DatasetConfig lconfig = (DatasetConfig) configs.next();
@@ -1438,7 +1520,7 @@ System.out.println ("getting driver "+ driver);
 			try {
 			  disableCursor();
 			  
-			  DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true);
+			  DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true, false);
 			  DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 						   
 			  
@@ -1528,7 +1610,7 @@ System.out.println ("getting driver "+ driver);
 				String internalName = internalNames[j];
 				
 				DatasetConfig odsv = null;
-				DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true);
+				DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true, false);
 				DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 				while (configs.hasNext()){
 					DatasetConfig lconfig = (DatasetConfig) configs.next();
