@@ -845,10 +845,17 @@ public interface MartConstructor {
 									.getColumns();
 						else {
 							vChildTableNonNullCols = new ArrayList(vChildTable
-									.getDataSetTable().getColumns());
+									.getDataSetTable()
+									.getUnmaskedDataSetColumns());
+							// Remove all dependencies as they will not be
+							// there in the actual table.
+							for (final Iterator l = vChildTableNonNullCols
+									.iterator(); l.hasNext();)
+								if (((DataSetColumn) l.next()).getDependency())
+									l.remove();
 							if (vChildTable.getParentDataSetRelation()
 									.getManyKey().getColumns().size() < vChildTableNonNullCols
-									.size()) 
+									.size())
 								vChildTableNonNullCols.removeAll(vChildTable
 										.getParentDataSetRelation()
 										.getManyKey().getColumns());
