@@ -130,6 +130,10 @@ public class DatabaseDatasetConfigUtils {
     //this.connection = dsource.getConnection();
     this.readonly = readonly;
   }
+  
+  public void setReadonly(boolean readonly) {
+	  this.readonly = readonly;
+  }
 
   /**
    * Verify if a meta_configuration_[user] table exists.  Returns false if user is null, or

@@ -1442,7 +1442,7 @@ System.out.println ("getting driver "+ driver);
 				  
 	  			    if (file.getName().endsWith(".template.xml")){
 						System.out.println("!!!UPLOAD TEMPLATE XML "+file.getName());
-						DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
+						DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, false);
 						DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
 						//DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","");
 						//dscutils.loadDatasetConfigWithDocument(odsv,dbutils.getTemplateDocument(template));
@@ -1464,7 +1464,7 @@ System.out.println ("getting driver "+ driver);
 				  }
 				  else{
 				  	//ignoreCache, includeHiddenMembers
-				  	DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
+				  	DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, false);
 				  	DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
 				  	odsv.setDatasetID("");
 				  	// export osdv

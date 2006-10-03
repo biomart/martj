@@ -584,7 +584,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				}
 			}
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeGroup")) {
-			setName("AttributGroup: " + ((BaseNamedConfigurationObject) obj).getInternalName());
+			setName("AttributeGroup: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 			AttributeGroup atGroup = (AttributeGroup) obj;
 			AttributeCollection[] collections = atGroup.getAttributeCollections();
 			for (int z = 0; z < collections.length; z++) {
@@ -610,7 +610,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				}
 			}
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DSAttributeGroup")) {
-			setName("DSAttributGroup: " + ((BaseNamedConfigurationObject) obj).getInternalName());
+			setName("DSAttributeGroup: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 //			DSAttributeGroup atGroup = (DSAttributeGroup) obj;
 
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterCollection")) {

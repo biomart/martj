@@ -27,17 +27,17 @@ import java.io.File;
 import java.net.URL;
 import java.util.List;
 
-import javax.swing.JOptionPane;
 import javax.swing.ImageIcon;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
-import javax.swing.event.InternalFrameListener;
-import javax.swing.event.InternalFrameEvent;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTree;
+import javax.swing.event.InternalFrameEvent;
+import javax.swing.event.InternalFrameListener;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
 import org.ensembl.mart.lib.config.AttributeCollection;
@@ -59,6 +59,7 @@ import org.ensembl.mart.lib.config.Importable;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.SimpleDSConfigAdaptor;
 import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
+import org.jdom.Document;
 
 
 
@@ -119,11 +120,18 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 							export();
 							
 							// THEN JUST OPEN UP TEMPLATE DOC
-							config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
-							MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(config,
-								MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template));
-							config.setTemplateFlag("1");
-            	  	
+							DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
+							Document templateDocument = MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template);
+							if (templateDocument==null) {
+								templateConfig = new DatasetConfig(config,true,false);
+								// Generate template document based on existing config.
+								templateConfig.setInternalName("template");
+								templateConfig.setDataset(template+"_template");
+								templateConfig.setTemplate("template");
+							}
+							MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, templateDocument);
+							templateConfig.setTemplateFlag("1");
+							config = templateConfig;
             	  	
 							//int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateCount(template);
 							//if (templateCount > 0)			            	  	
@@ -134,11 +142,18 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             			if (template != null){
             				// import template
             				//config = MartEditor.getDatabaseDatasetConfigUtils().getTemplateConfig(template);
-            				config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
-            				MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(config,
-            					MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template));
-            					
-            				config.setTemplateFlag("1");	
+							DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
+							Document templateDocument = MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template);
+							if (templateDocument==null) {
+								templateConfig = new DatasetConfig(config,true,false);
+								// Generate template document based on existing config.
+								templateConfig.setInternalName("template");
+								templateConfig.setDataset(template+"_template");
+								templateConfig.setTemplate("template");
+							}
+							MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, templateDocument);
+							templateConfig.setTemplateFlag("1");
+							config = templateConfig;
             			}
             			else if (settingsFlag == null){
             				// have an indiviudal config just for read-only viewing
@@ -215,10 +230,18 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 							export();
 							
 //							THEN JUST OPEN UP TEMPLATE DOC
-							config = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
-							MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(config,
-								MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template));
-							config.setTemplateFlag("1");	
+							DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
+							Document templateDocument = MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template);
+							if (templateDocument==null) {
+								templateConfig = new DatasetConfig(config,true,false);
+								// Generate template document based on existing config.
+								templateConfig.setInternalName("template");
+								templateConfig.setDataset(template+"_template");
+								templateConfig.setTemplate("template");
+							}
+							MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, templateDocument);
+							templateConfig.setTemplateFlag("1");							
+							config = templateConfig;
 														
             			}
             		}
