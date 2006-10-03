@@ -3618,14 +3618,16 @@ public int templateCount(String template) throws ConfigurationException{
 	  }
 	  return dscutils.getDocumentForXMLStream(rstream);
 	  
-	} catch (SQLException e) {
-	  throw new ConfigurationException(
-		"Caught SQL Exception during fetch of requested DatasetConfig: " + e.getMessage(),
-		e);
-	} catch (IOException e) {
-	  throw new ConfigurationException(
-		"Caught IOException during fetch of requested DatasetConfig: " + e.getMessage(),
-		e);
+	//} catch (SQLException e) {
+	  //throw new ConfigurationException(
+	//	"Caught SQL Exception during fetch of requested DatasetConfig: " + e.getMessage(),
+	//	e);
+	//} catch (IOException e) {
+	//  throw new ConfigurationException(
+	//	"Caught IOException during fetch of requested DatasetConfig: " + e.getMessage(),
+	//	e);
+    } catch (Exception e) {
+		return null;
 	} finally {
 	  DetailedDataSource.close(conn);
 	}

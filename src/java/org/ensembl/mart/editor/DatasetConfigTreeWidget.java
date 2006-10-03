@@ -73,6 +73,7 @@ import org.jdom.Document;
 public class DatasetConfigTreeWidget extends JInternalFrame{
 
     private DatasetConfig datasetConfig = null;
+    private DatasetConfigTree naiveTree = null;
     private static int openFrameCount = 0;
     private static final int xOffset = 10, yOffset = 10;
     private JDesktopPane desktop;
@@ -117,7 +118,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 										config, this);
 							tree = new DatasetConfigTree(config,
 										this, attrTable);
-							export();
+				            setNaiveTree(tree);
 							
 							// THEN JUST OPEN UP TEMPLATE DOC
 							DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
@@ -128,8 +129,9 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 								templateConfig.setInternalName("template");
 								templateConfig.setDataset(template+"_template");
 								templateConfig.setTemplate("template");
+							} else {
+								MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, templateDocument);
 							}
-							MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, templateDocument);
 							templateConfig.setTemplateFlag("1");
 							config = templateConfig;
             	  	
@@ -144,13 +146,6 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             				//config = MartEditor.getDatabaseDatasetConfigUtils().getTemplateConfig(template);
 							DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
 							Document templateDocument = MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template);
-							if (templateDocument==null) {
-								templateConfig = new DatasetConfig(config,true,false);
-								// Generate template document based on existing config.
-								templateConfig.setInternalName("template");
-								templateConfig.setDataset(template+"_template");
-								templateConfig.setTemplate("template");
-							}
 							MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, templateDocument);
 							templateConfig.setTemplateFlag("1");
 							config = templateConfig;
@@ -227,7 +222,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 										config, this);
 							tree = new DatasetConfigTree(config,
 										this, attrTable);
-							export();
+				            setNaiveTree(tree);
 							
 //							THEN JUST OPEN UP TEMPLATE DOC
 							DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
@@ -239,7 +234,9 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 								templateConfig.setDataset(template+"_template");
 								templateConfig.setTemplate("template");
 							}
-							MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, templateDocument);
+							else {
+								MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, templateDocument);
+							}							
 							templateConfig.setTemplateFlag("1");							
 							config = templateConfig;
 														
@@ -406,6 +403,13 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
     }
 
     /**
+     * @param tree
+     */
+    public void setNaiveTree(DatasetConfigTree tree) {
+        naiveTree = tree;
+    }
+
+    /**
      * @param config
      */
     public void setDatasetConfig(DatasetConfig config) {
@@ -443,6 +447,10 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 	}
 	
 	public void exportTemplate() throws ConfigurationException{
+		if (naiveTree!=null) {
+			naiveTree.export();
+			naiveTree = null;
+		}
 		tree.exportTemplate();
 	}
 

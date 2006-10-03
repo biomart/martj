@@ -179,7 +179,7 @@ System.out.println ("getting driver "+ driver);
 				 Connection conn = null;
 				 try {
 				   conn = ds.getConnection();
-				   dbutils = new DatabaseDatasetConfigUtils(dscutils, ds, false);
+				   dbutils = new DatabaseDatasetConfigUtils(dscutils, ds, true);
 					connection = "MartEditor (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";
 				   //valid = true;
 				   String[] schemas = databaseDialog.getSchema().split(";");
@@ -196,7 +196,7 @@ System.out.println ("getting driver "+ driver);
 										 10,
 										 driver,
 										 defaultSourceName);
-					    DatabaseDatasetConfigUtils dbutils1 = new DatabaseDatasetConfigUtils(new DatasetConfigXMLUtils(true), ds1, false);
+					    DatabaseDatasetConfigUtils dbutils1 = new DatabaseDatasetConfigUtils(new DatasetConfigXMLUtils(true), ds1, true);
 				   		dbutilsHash.put(schemas[i],dbutils1);
 				   }
 				   
@@ -757,7 +757,7 @@ System.out.println ("getting driver "+ driver);
         Connection conn = null;
         try {
           conn = ds.getConnection();
-          dbutils = new DatabaseDatasetConfigUtils(dscutils, ds, false);
+          dbutils = new DatabaseDatasetConfigUtils(dscutils, ds, true);
           valid = true;
           connection = "MartEditor (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";		  
         
@@ -774,7 +774,7 @@ System.out.println ("getting driver "+ driver);
 												   10,
 												   databaseDialog.getDriver(),
 												   defaultSourceName);
-				DatabaseDatasetConfigUtils dbutils1 = new DatabaseDatasetConfigUtils(new DatasetConfigXMLUtils(true), ds1, false);
+				DatabaseDatasetConfigUtils dbutils1 = new DatabaseDatasetConfigUtils(new DatasetConfigXMLUtils(true), ds1, true);
 				dbutilsHash.put(schemas[i],dbutils1);
 		  }
         
@@ -1090,6 +1090,7 @@ System.out.println ("getting driver "+ driver);
 
 	try {
 	  disableCursor();
+      dbutils.setReadonly(false);
 	  //DatasetConfig dsConfig = ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig();	
 	  ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).exportTemplate();
 	} catch (ConfigurationException e) {
@@ -1355,7 +1356,7 @@ System.out.println ("getting driver "+ driver);
 					String internalName = internalNames[j];
 				
 					DatasetConfig odsv = null;
-					DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true, false);
+					DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true, true);
 					DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 					while (configs.hasNext()){
 						DatasetConfig lconfig = (DatasetConfig) configs.next();
@@ -1416,7 +1417,8 @@ System.out.println ("getting driver "+ driver);
 			  JFileChooser fc = new JFileChooser(getFileChooserPath());
 			  fc.setSelectedFile(getFileChooserPath());
 
-			  
+
+		        dbutils.setReadonly(false);
 			  // changed to JOptionPane as not readable on the file chooser
 			  JOptionPane.showMessageDialog(null,"WARNING - THIS WILL REMOVE ALL EXISTING CONFIGURATION IN THE DATABASE YOU ARE UPLOADING YOUR CONFIGURATION TO");
 			  //fc.setDialogTitle("Choose file(s) to upload: WARNING: THIS WILL REMOVE ALL EXISTING XMLS IN THE DATABASE");
@@ -1442,7 +1444,7 @@ System.out.println ("getting driver "+ driver);
 				  
 	  			    if (file.getName().endsWith(".template.xml")){
 						System.out.println("!!!UPLOAD TEMPLATE XML "+file.getName());
-						DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, false);
+						DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
 						DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
 						//DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","");
 						//dscutils.loadDatasetConfigWithDocument(odsv,dbutils.getTemplateDocument(template));
@@ -1464,7 +1466,7 @@ System.out.println ("getting driver "+ driver);
 				  }
 				  else{
 				  	//ignoreCache, includeHiddenMembers
-				  	DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, false);
+				  	DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
 				  	DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
 				  	odsv.setDatasetID("");
 				  	// export osdv
@@ -1519,8 +1521,9 @@ System.out.println ("getting driver "+ driver);
 			}
 			try {
 			  disableCursor();
+		        dbutils.setReadonly(false);
 			  
-			  DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true, false);
+			  DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true, true);
 			  DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 						   
 			  
@@ -1600,7 +1603,8 @@ System.out.println ("getting driver "+ driver);
 
 		try {
 		  disableCursor();
-		  
+
+	        dbutils.setReadonly(false);
 		  // cycle through all datasets for the database
 		  String[] datasets = dbutils.getAllDatasetNames(user,martUser);
 		  for (int i = 0; i < datasets.length; i++){
@@ -1610,7 +1614,7 @@ System.out.println ("getting driver "+ driver);
 				String internalName = internalNames[j];
 				
 				DatasetConfig odsv = null;
-				DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true, false);
+				DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true, true);
 				DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 				while (configs.hasNext()){
 					DatasetConfig lconfig = (DatasetConfig) configs.next();
@@ -2428,6 +2432,7 @@ System.out.println ("getting driver "+ driver);
 
       try {
         disableCursor();
+        dbutils.setReadonly(false);
         String[] datasets = dbutils.getAllDatasetNames(user,martUser);
         String dataset =
           (String) JOptionPane.showInputDialog(
