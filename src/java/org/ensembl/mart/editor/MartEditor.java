@@ -502,6 +502,7 @@ System.out.println ("getting driver "+ driver);
     menu.add(clear);
     menuBar.add(menu);
 */
+    /*
     //Build help menu in the menu bar.
     icon = createImageIcon(IMAGE_DIR + "help.gif");
     menu = new JMenu("Help");
@@ -518,6 +519,7 @@ System.out.println ("getting driver "+ driver);
     //menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
     menuItem.getAccessibleContext().setAccessibleDescription("inserts");
     menu.add(menuItem);
+    */
 
     return menuBar;
   }
@@ -648,24 +650,27 @@ System.out.println ("getting driver "+ driver);
         deleteDatasetConfig();
       else if (e.getActionCommand().startsWith("hide"))
         makeHidden();
-
     }
   }
 
   public void cut() {
-    ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).cut();
+	    DatasetConfigTreeWidget widget = (DatasetConfigTreeWidget) desktop.getSelectedFrame();
+	    if (widget!=null) widget.cut();
   }
 
   public void copy() {
-    ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).copy();
+	    DatasetConfigTreeWidget widget = (DatasetConfigTreeWidget) desktop.getSelectedFrame();
+	    if (widget!=null) widget.copy();
   }
 
   public void paste() {
-    ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).paste();
+	    DatasetConfigTreeWidget widget = (DatasetConfigTreeWidget) desktop.getSelectedFrame();
+	    if (widget!=null) widget.paste();
   }
 
   public void makeHidden() {
-    ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).makeHidden();
+	    DatasetConfigTreeWidget widget = (DatasetConfigTreeWidget) desktop.getSelectedFrame();
+	    if (widget!=null) widget.makeHidden();
   }
 
   public void insert() {
@@ -673,7 +678,8 @@ System.out.println ("getting driver "+ driver);
   }
 
   public void delete() {
-    ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).delete();
+    DatasetConfigTreeWidget widget = (DatasetConfigTreeWidget) desktop.getSelectedFrame();
+    if (widget!=null) widget.delete();
   }
 
   public void newDatasetConfig() {
@@ -882,6 +888,10 @@ System.out.println ("getting driver "+ driver);
 	  }
 
 	  disableCursor();
+		if (!dbutils.baseDSConfigTableExists()) {
+			  JOptionPane.showMessageDialog(this, "Database contains no datasets", "ERROR", 0);
+			  return;
+			}
 
 	  HashMap importOptions = dbutils.getImportOptions();
 	  SortedSet names = new TreeSet(importOptions.keySet());
@@ -1023,6 +1033,11 @@ System.out.println ("getting driver "+ driver);
 	  }
 
 	  disableCursor();
+	  
+		if (!dbutils.baseDSConfigTableExists()) {
+			  JOptionPane.showMessageDialog(this, "Database contains no datasets", "ERROR", 0);
+			  return;
+			}
 
 	  String[] datasets = dbutils.getAllDatasetNames(user,martUser);
 	  if (datasets.length == 0){
@@ -1090,9 +1105,11 @@ System.out.println ("getting driver "+ driver);
 
 	try {
 	  disableCursor();
+	  DatasetConfigTreeWidget widget = (DatasetConfigTreeWidget) desktop.getSelectedFrame();
+      if (widget==null) return;
       dbutils.setReadonly(false);
 	  //DatasetConfig dsConfig = ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig();	
-	  ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).exportTemplate();
+	  widget.exportTemplate();
 	} catch (ConfigurationException e) {
 	  JOptionPane.showMessageDialog(this, "Problems with exporting requested dataset. " +
 			"Check that dataset id is unique, you have write permissions " +
@@ -1100,6 +1117,7 @@ System.out.println ("getting driver "+ driver);
 	  e.printStackTrace();
 	} finally {
 	  enableCursor();
+      dbutils.setReadonly(true);
 	}
   }
 
@@ -1338,6 +1356,11 @@ System.out.println ("getting driver "+ driver);
 			}
 
 			try {
+				if (!dbutils.baseDSConfigTableExists()) {
+					  JOptionPane.showMessageDialog(this, "Database contains no datasets", "ERROR", 0);
+					  return;
+					}
+				
 			  disableCursor();
 		  	  // choose folder
 			  JFileChooser fc = new JFileChooser(getFileChooserPath());
@@ -1345,7 +1368,7 @@ System.out.println ("getting driver "+ driver);
 			  fc.setSelectedFile(getFileChooserPath());
 			  fc.setDialogTitle("Choose folder to save all XMLs");
 			  fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			  fc.showSaveDialog(getContentPane());
+			  if (fc.showSaveDialog(getContentPane())!=fc.APPROVE_OPTION) return;
 		  
 			  // cycle through all datasets for the database
 			  String[] datasets = dbutils.getAllDatasetNames(user,martUser);
@@ -1415,7 +1438,7 @@ System.out.println ("getting driver "+ driver);
 			  disableCursor();
 			  // choose folder
 			  JFileChooser fc = new JFileChooser(getFileChooserPath());
-			  fc.setSelectedFile(getFileChooserPath());
+			  fc.setSelectedFile(getFileChooserPath());	
 
 
 		        dbutils.setReadonly(false);
@@ -1504,11 +1527,14 @@ System.out.println ("getting driver "+ driver);
 				   }
 			     } 				
 			  } 
+			} catch (ConfigurationException e) {
+			  JOptionPane.showMessageDialog(this, "File does not contain valid configuration", "ERROR", 0);
 			} catch (Exception e) {
 			  e.printStackTrace();
 			}
 		  } finally {
 			enableCursor();
+	        dbutils.setReadonly(true);
 		  }
   }
 
@@ -1518,8 +1544,13 @@ System.out.println ("getting driver "+ driver);
 			if (ds == null) {
 			  JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
 			  return;
-			}
-			try {
+			}	
+			try {	
+				if (!dbutils.baseDSConfigTableExists()) {
+					  JOptionPane.showMessageDialog(this, "Database contains no datasets", "ERROR", 0);
+					  return;
+					}
+				
 			  disableCursor();
 		        dbutils.setReadonly(false);
 			  
@@ -1591,6 +1622,7 @@ System.out.println ("getting driver "+ driver);
 			}
      } finally {
 			enableCursor();
+	        dbutils.setReadonly(true);
      }
 }
 
@@ -1603,6 +1635,10 @@ System.out.println ("getting driver "+ driver);
 
 		try {
 		  disableCursor();
+			if (!dbutils.baseDSConfigTableExists()) {
+				  JOptionPane.showMessageDialog(this, "Database contains no datasets", "ERROR", 0);
+				  return;
+				}
 
 	        dbutils.setReadonly(false);
 		  // cycle through all datasets for the database
@@ -1695,6 +1731,7 @@ System.out.println ("getting driver "+ driver);
 		}
 	  } finally {
 		enableCursor();
+        dbutils.setReadonly(true);
 	  }
   }
   /*
@@ -2432,6 +2469,10 @@ System.out.println ("getting driver "+ driver);
 
       try {
         disableCursor();
+		if (!dbutils.baseDSConfigTableExists()) {
+			  JOptionPane.showMessageDialog(this, "Database contains no datasets", "ERROR", 0);
+			  return;
+			}
         dbutils.setReadonly(false);
         String[] datasets = dbutils.getAllDatasetNames(user,martUser);
         String dataset =
@@ -2468,6 +2509,7 @@ System.out.println ("getting driver "+ driver);
       }
     } finally {
       enableCursor();
+      dbutils.setReadonly(true);
     }
   }
 /*

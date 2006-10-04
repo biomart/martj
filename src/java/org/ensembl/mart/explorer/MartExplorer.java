@@ -278,13 +278,6 @@ public class MartExplorer
   }
 
   /**
-   * TODO Displays "about" dialog.
-   *
-   */
-  public void doAbout() {
-  }
-
-  /**
    * Adds component to application as a tabbed pane. The tab's
    * name id component.getName().
    */
@@ -480,15 +473,6 @@ public class MartExplorer
     settings.add(reset);
 
     JMenu help = new JMenu("Help");
-    JMenuItem about = new JMenuItem("About");
-    about.setEnabled(false);
-    about.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        doAbout();
-      }
-
-    });
-    help.add(about);
 
     JMenuItem docs = new JMenuItem(documentationAction);
     help.add(docs);
