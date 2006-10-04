@@ -2803,10 +2803,6 @@ public int templateCount(String template) throws ConfigurationException{
 	  if (datasetID == null || datasetID.equals("")){
 		String sql = "SELECT MAX(dataset_id_key) FROM "+getSchema()[0]+"."+BASEMETATABLE;
 		PreparedStatement ps = conn.prepareStatement(sql);
-		ps.setString(1, displayName);
-		ps.setString(2, dataset);
-		ps.setString(3, type);
-		ps.setString(4, version);
 		ResultSet rs = ps.executeQuery();
 		rs.next();
 		int result = rs.getInt(1);
@@ -3032,10 +3028,6 @@ public int templateCount(String template) throws ConfigurationException{
 	  if (datasetID == null || datasetID.equals("")){
 		String sql = "SELECT MAX(dataset_id_key) FROM "+getSchema()[0]+"."+BASEMETATABLE;
 		PreparedStatement ps = conn.prepareStatement(sql);
-		ps.setString(1, displayName);
-		ps.setString(2, dataset);
-		ps.setString(3, type);
-		ps.setString(4, version);
 		ResultSet rs = ps.executeQuery();
 		rs.next();
 		int result = rs.getInt(1);
