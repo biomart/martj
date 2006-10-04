@@ -297,7 +297,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 			//int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateCount(config.getTemplate());
 			if (template == null){// && templateCount > 1){// flag non-template XMLs with a template origin
 			
-				JOptionPane.showMessageDialog(null,"This config is under template control. You need to edit the template in the majority of cases");
+				//JOptionPane.showMessageDialog(null,"This config is under template control. You need to edit the template in the majority of cases");
 			
 				Importable[] imps = config.getImportables();
 				for (int i = 0; i < imps.length; i++){
