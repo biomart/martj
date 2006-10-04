@@ -2784,17 +2784,39 @@ public int templateCount(String template) throws ConfigurationException{
     Connection conn = null;
     try {
 		conn = dsource.getConnection();	
-	  String metatable = createMetaTables(user);	
+	  String metatable = createMetaTables(user);
+	  // Name/version/type already exists? Reuse it.
+	  if (datasetID == null || datasetID.equals("")){
+		String sql = "SELECT dataset_id_key FROM " + getSchema()[0]+"." + metatable + " where display_name=? and dataset=? and type=? and version=?";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setString(1, displayName);
+		ps.setString(2, dataset);
+		ps.setString(3, type);
+		ps.setString(4, version);
+		ResultSet rs = ps.executeQuery();
+		if (rs.next()) datasetID = ""+rs.getInt(1);
+		rs.close();
+		ps.close();
+	  }
+	  
+	  // Doesn't already exist? Create a new one.
 	  if (datasetID == null || datasetID.equals("")){
 		String sql = "SELECT MAX(dataset_id_key) FROM "+getSchema()[0]+"."+BASEMETATABLE;
 		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setString(1, displayName);
+		ps.setString(2, dataset);
+		ps.setString(3, type);
+		ps.setString(4, version);
 		ResultSet rs = ps.executeQuery();
 		rs.next();
 		int result = rs.getInt(1);
 		result++;
 		Integer datasetNo = new Integer(result);
 		datasetID = datasetNo.toString();
+		rs.close();
+		ps.close();
 	  }
+	  
 	  // sort out meta_users and meta_interfaces tables first
 	  String sql = "DELETE FROM "+getSchema()[0]+"."+MARTUSERTABLE+" WHERE dataset_id_key="+datasetID;
 	  //System.out.println(sql);
@@ -2992,15 +3014,36 @@ public int templateCount(String template) throws ConfigurationException{
       
 	  conn = dsource.getConnection();
 	  conn.setAutoCommit(false);	
+	  // Name/version/type already exists? Reuse it.
+	  if (datasetID == null || datasetID.equals("")){
+		String sql = "SELECT dataset_id_key FROM " + getSchema()[0]+"." + metatable + " where display_name=? and dataset=? and type=? and version=?";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setString(1, displayName);
+		ps.setString(2, dataset);
+		ps.setString(3, type);
+		ps.setString(4, version);
+		ResultSet rs = ps.executeQuery();
+		if (rs.next()) datasetID = ""+rs.getInt(1);
+		rs.close();
+		ps.close();
+	  }
+	  
+	  // Doesn't already exist? Create a new one.
 	  if (datasetID == null || datasetID.equals("")){
 		String sql = "SELECT MAX(dataset_id_key) FROM "+getSchema()[0]+"."+BASEMETATABLE;
 		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setString(1, displayName);
+		ps.setString(2, dataset);
+		ps.setString(3, type);
+		ps.setString(4, version);
 		ResultSet rs = ps.executeQuery();
 		rs.next();
 		int result = rs.getInt(1);
 		result++;
 		Integer datasetNo = new Integer(result);
 		datasetID = datasetNo.toString();
+		rs.close();
+		ps.close();
 	  }
       
 	  // sort out meta_users and meta_interfaces tables first
