@@ -4149,17 +4149,18 @@ public boolean naiveExportWouldOverrideExistingConfig(
 	* @throws ConfigurationException if number of rows to delete doesnt match number returned by getDSConfigEntryCountFor()
 	*/
 
-  public void deleteDatasetConfigsForDatasetID(String dataset, String datasetID, String user) throws ConfigurationException {
+  public void deleteDatasetConfigsForDatasetID(String dataset, String datasetID, String user, String template) throws ConfigurationException {
 	String deleteSQL1 = "delete from " + getSchema()[0] + "." + BASEMETATABLE + " where dataset = ?" + 
 		" and dataset_id_key = ?";
 	String deleteSQL2         = "delete from "+getSchema()[0]+"."+MARTXMLTABLE+" where dataset_id_key = ?";	
 	String deleteUserSQL      = "delete from "+getSchema()[0]+"."+MARTUSERTABLE+" where dataset_id_key = ?";
 	String deleteInterfaceSQL = "delete from "+getSchema()[0]+"."+MARTINTERFACETABLE+" where dataset_id_key = ?";
 	String deleteTemplateSQL = "delete from "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" where dataset_id_key = ?";
+	String deleteRealTemplateSQL = "delete from "+getSchema()[0]+"."+MARTTEMPLATEDMTABLE+" where template = ?";
 	  if (readonly) throw new ConfigurationException("Cannot delete config from a read-only database");
 
 	Connection conn = null;
-	try {
+	try {		
 	  conn = dsource.getConnection();
 	  PreparedStatement ds = conn.prepareStatement(deleteSQL1);
 	  ds.setString(1, dataset);
@@ -4181,6 +4182,12 @@ public boolean naiveExportWouldOverrideExistingConfig(
 	  ds = conn.prepareStatement(deleteTemplateSQL);
 	  ds.setString(1,datasetID);
 	  ds.executeUpdate();
+	  
+	  if (template!=null) {
+	  ds = conn.prepareStatement(deleteRealTemplateSQL);
+	  ds.setString(1,template);
+	  ds.executeUpdate();
+	  }
 	  
 	  ds.close();
 

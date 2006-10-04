@@ -2503,7 +2503,17 @@ System.out.println ("getting driver "+ driver);
         }
         if (intName == null)
           return;
-        dbutils.deleteDatasetConfigsForDatasetID(dataset, intName, user);
+        
+        // Find the template name.
+        DatasetConfig dsconf = dbutils.getDatasetConfigByDatasetID(user, dataset, intName, schema);
+        String template = dsconf.getTemplate();
+        
+        // Will the template be an orphan after this? No? Make it null.
+        String[] refs = dbutils.getDatasetNamesForTemplate(template);
+        if (refs!=null && refs.length>1)
+        	template = null;
+        
+        dbutils.deleteDatasetConfigsForDatasetID(dataset, intName, user, template);
 
       } catch (ConfigurationException e) {
       }
