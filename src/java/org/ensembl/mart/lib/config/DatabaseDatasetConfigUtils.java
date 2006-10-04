@@ -1481,15 +1481,21 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 						// if this config has a different setting then start using dynamic objects
 						// create dynamic objects - add one per existing dataset set to current template linkoutURL
 						String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
-						for (int j = 0; j < datasetNames.length; j++){
+
+						// if only one ds, do a straight copy.
+						if (datasetNames.length<2) {
+							configAttToAdd.setLinkoutURL(templateAttribute.getLinkoutURL());			
+						} else {
+							for (int j = 0; j < datasetNames.length; j++){
 							String datasetName = datasetNames[j];
 							if (datasetName.equals(dsConfig.getDataset())) continue;
 							templateAttribute.addDynamicAttributeContent(new DynamicAttributeContent(datasetName,templateAttribute.getLinkoutURL()));
-						}
+							}
 						templateAttribute.setLinkoutURL("MULTI");
 		
 						templateAttribute.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),configAtt.getLinkoutURL()));
 						configAttToAdd.setLinkoutURL(templateAttribute.getDynamicAttributeContentByInternalName(dsConfig.getDataset()).getLinkoutURL());			
+						}			
 			}
 			
 			AttributePage dsConfigPage = dsConfig.getAttributePageByInternalName(templatePage.getInternalName());
@@ -1747,6 +1753,13 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		  			// if this config has a different setting then start using dynamic objects
 					// create dynamic objects - add one per existing dataset set to current template linkoutURL
 					String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
+					
+					// if only one ds, do a straight copy.
+					if (datasetNames.length<2) {
+						configAttToAdd.setOtherFilters(templateFilter.getOtherFilters());			
+						configAttToAdd.removeOptions();
+						configAttToAdd.addOptions(templateFilter.getOptions());
+					} else {
 					for (int j = 0; j < datasetNames.length; j++){
 						String datasetName = datasetNames[j];
 						if (datasetName.equals(dsConfig.getDataset())) continue;
@@ -1767,7 +1780,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					configAttToAdd.setOtherFilters(templateFilter.getDynamicFilterContentByInternalName(dsConfig.getDataset()).getOtherFilters());			
 					configAttToAdd.removeOptions();
 					configAttToAdd.addOptions(templateFilter.getDynamicFilterContentByInternalName(dsConfig.getDataset()).getOptions());
-		  }
+					}
+			}
 		  
 		  /* options now handled in dynamic content above	
 		  if (templateFilter.getType().equals("list")){
@@ -1981,17 +1995,24 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 				// if this config has a different setting then start using dynamic objects
 				// create dynamic objects - add one per existing dataset set to current template linkoutURL
 				String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
-				for (int j = 0; j < datasetNames.length; j++){
-					String datasetName = datasetNames[j];
-					if (datasetName.equals(dsConfig.getDataset())) continue;
-					templateConfig.addDynamicDatasetContent(new DynamicDatasetContent(datasetName,templateConfig.getDisplayName(),templateConfig.getVersion()));
-				}
-				templateConfig.setDisplayName("MULTI");
-				templateConfig.setVersion("MULTI");
+
+				// only use dynamic content if there are multiple datasets
+				if (datasetNames.length<2) {
+					dsConfig.setDisplayName(templateConfig.getDisplayName());			
+					dsConfig.setVersion(templateConfig.getVersion());			
+				} else {				
+					for (int j = 0; j < datasetNames.length; j++){
+						String datasetName = datasetNames[j];
+						if (datasetName.equals(dsConfig.getDataset())) continue;
+						templateConfig.addDynamicDatasetContent(new DynamicDatasetContent(datasetName,templateConfig.getDisplayName(),templateConfig.getVersion()));
+					}
+					templateConfig.setDisplayName("MULTI");
+					templateConfig.setVersion("MULTI");
 		
-				templateConfig.addDynamicDatasetContent(new DynamicDatasetContent(dsConfig.getDataset(),dsConfig.getDisplayName(),dsConfig.getVersion()));
-				dsConfig.setDisplayName(templateConfig.getDynamicDatasetContentByInternalName(dsConfig.getDataset()).getDisplayName());			
-				dsConfig.setVersion(templateConfig.getDynamicDatasetContentByInternalName(dsConfig.getDataset()).getVersion());			
+					templateConfig.addDynamicDatasetContent(new DynamicDatasetContent(dsConfig.getDataset(),dsConfig.getDisplayName(),dsConfig.getVersion()));
+					dsConfig.setDisplayName(templateConfig.getDynamicDatasetContentByInternalName(dsConfig.getDataset()).getDisplayName());			
+					dsConfig.setVersion(templateConfig.getDynamicDatasetContentByInternalName(dsConfig.getDataset()).getVersion());			
+				}
 	}
 	
 	// filter merge
@@ -2055,6 +2076,14 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 							// if this config has a different setting then start using dynamic objects
 							// create dynamic objects - add one per existing dataset set to current template linkoutURL
 							String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
+							
+							// only dynamic if more than one
+							if (datasetNames.length<2) {
+								configImps[i].setLinkName(tempImps[j].getLinkName());
+								configImps[i].setLinkVersion(tempImps[j].getLinkVersion());
+								configImps[i].setName(tempImps[j].getName());
+								configImps[i].setFilters(tempImps[j].getFilters());
+							} else {
 							for (int l = 0; l < datasetNames.length; l++){
 								String datasetName = datasetNames[l];
 								if (datasetName.equals(dsConfig.getDataset())) continue;
@@ -2074,7 +2103,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 							configImps[i].setLinkVersion(tempImps[j].getDynamicImportableContentByInternalName(dsConfig.getDataset()).getLinkVersion());
 							configImps[i].setName(tempImps[j].getDynamicImportableContentByInternalName(dsConfig.getDataset()).getName());
 							configImps[i].setFilters(tempImps[j].getDynamicImportableContentByInternalName(dsConfig.getDataset()).getFilters());
-										
+							}
 				}
 				
 				
@@ -2150,6 +2179,14 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 							// if this config has a different setting then start using dynamic objects
 							// create dynamic objects - add one per existing dataset set to current template linkoutURL
 							String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
+							
+							// copy if only one
+							if (datasetNames.length<2) {
+								configExps[i].setLinkName(tempExps[j].getLinkName());
+								configExps[i].setLinkVersion(tempExps[j].getLinkVersion());
+								configExps[i].setName(tempExps[j].getName());
+								configExps[i].setAttributes(tempExps[j].getAttributes());
+							} else {
 							for (int l = 0; l < datasetNames.length; l++){
 								String datasetName = datasetNames[l];
 								if (datasetName.equals(dsConfig.getDataset())) continue;
@@ -2169,7 +2206,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 							configExps[i].setLinkVersion(tempExps[j].getDynamicExportableContentByInternalName(dsConfig.getDataset()).getLinkVersion());
 							configExps[i].setName(tempExps[j].getDynamicExportableContentByInternalName(dsConfig.getDataset()).getName());
 							configExps[i].setAttributes(tempExps[j].getDynamicExportableContentByInternalName(dsConfig.getDataset()).getAttributes());
-										
+							}										
 				}
 				
 				
