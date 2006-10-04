@@ -448,7 +448,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 	
 	public void exportTemplate() throws ConfigurationException{
 		if (naiveTree!=null) {
-			naiveTree.export();
+			if (!naiveTree.export()) return;
 			naiveTree = null;
 		}
 		tree.exportTemplate();

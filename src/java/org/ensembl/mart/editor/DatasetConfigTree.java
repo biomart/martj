@@ -1271,11 +1271,21 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		}
 	}
 
-	public void export() throws ConfigurationException {
+	public boolean export() throws ConfigurationException {
 		dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
 		if (dsConfig.getTemplateFlag() != null){
 			JOptionPane.showMessageDialog(null,"This is a template config rather than standard dataset config","",JOptionPane.ERROR_MESSAGE);
-			return;
+			return false;
+		}
+		if (MartEditor.getDatabaseDatasetConfigUtils().naiveExportWouldOverrideExistingConfig(
+				MartEditor.getUser(), 
+				dsConfig.getDatasetID(),
+			    dsConfig.getDisplayName(),
+			    dsConfig.getDataset(),
+			    dsConfig.getType(),
+			    dsConfig.getVersion())) {
+			if (JOptionPane.showConfirmDialog(null,"This action will override the existing config for this dataset. Are you sure?")!=JOptionPane.YES_OPTION)
+				return false;
 		}
 		MartEditor.getDatabaseDatasetConfigUtils().storeDatasetConfiguration(
 			MartEditor.getUser(),
@@ -1292,6 +1302,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			dsConfig.getMartUsers(),
 			dsConfig.getInterfaces(),
 			dsConfig);
+		return true;
 	}
 	
 	public void exportTemplate() throws ConfigurationException {

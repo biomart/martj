@@ -2762,6 +2762,38 @@ public int templateCount(String template) throws ConfigurationException{
   }
 }
 
+public boolean naiveExportWouldOverrideExistingConfig(
+	    String user, 
+		String datasetID,
+	    String displayName,
+	    String dataset,
+	    String type,
+	    String version) throws ConfigurationException {
+	boolean exists = false;
+	try {
+	Connection conn = dsource.getConnection();	
+	  String metatable = createMetaTables(user);
+	  // Name/version/type already exists? Reuse it.
+	  if (datasetID == null || datasetID.equals("")){
+		String sql = "SELECT dataset_id_key FROM " + getSchema()[0]+"." + metatable + " where display_name=? and dataset=? and type=? and version=?";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setString(1, displayName);
+		ps.setString(2, dataset);
+		ps.setString(3, type);
+		ps.setString(4, version);
+		ResultSet rs = ps.executeQuery();
+		if (rs.next()) exists = true;
+		rs.close();
+		ps.close();
+	  }
+	  return exists;
+	} catch (ConfigurationException e) {
+		throw e;
+	} catch (Exception e) {
+		throw new ConfigurationException(e);
+	}
+}
+
   private int storeCompressedXML(
     String user,
     String internalName,
