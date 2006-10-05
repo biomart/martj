@@ -453,6 +453,10 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 		}
 		tree.exportTemplate();
 	}
+	
+	public void validateTemplate() throws ConfigurationException{
+		tree.validateTemplate();
+	}
 
     public void cut(){
         tree.cut();

@@ -316,7 +316,7 @@ System.out.println ("getting driver "+ driver);
     //a group of JMenuItems
     ImageIcon icon = createImageIcon(IMAGE_DIR + "new.gif");
 
-    menuItem = new JMenuItem("Database Connection ");
+    menuItem = new JMenuItem("Database Connection");
     MartEditor.MenuActionListener menuActionListener = new MartEditor.MenuActionListener();
     menuItem.addActionListener(menuActionListener);
     //menuItem.setMnemonic(KeyEvent.VK_D);
@@ -324,46 +324,49 @@ System.out.println ("getting driver "+ driver);
 
     menu.addSeparator();
 
-    menuItem = new JMenuItem("Import ");
+    menuItem = new JMenuItem("Naive Dataset");
     menuItem.addActionListener(menuActionListener);
     menu.add(menuItem);
 
-    menuItem = new JMenuItem("Export ");
+    menuItem = new JMenuItem("Apply Template to Dataset");
     menuItem.addActionListener(menuActionListener);
     menu.add(menuItem);
 
-    menuItem = new JMenuItem("Delete ");
+    menuItem = new JMenuItem("Import Template");
     menuItem.addActionListener(menuActionListener);
     menu.add(menuItem);
 
-    menuItem = new JMenuItem("Naive ");
-    menuItem.addActionListener(menuActionListener);
-    menu.add(menuItem);
-
-    menuItem = new JMenuItem("Naive Template ");
-    menuItem.addActionListener(menuActionListener);
-    menu.add(menuItem);
-
-	menuItem = new JMenuItem("Update ");
-    menuItem.addActionListener(menuActionListener);
-    menu.add(menuItem);
-    
-	menu.addSeparator();
-    
-	menuItem = new JMenuItem("View Dataset Configuration ");
+	menuItem = new JMenuItem("Import Dataset (read-only)");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);
-	
-	menuItem = new JMenuItem("Set Template ");
+
+    menu.addSeparator();
+    
+	menuItem = new JMenuItem("Update All Templates");
+    menuItem.addActionListener(menuActionListener);
+    menu.add(menuItem);
+
+    menu.addSeparator();
+    
+	menuItem = new JMenuItem("Validate Template");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);
-    
-//	menuItem = new JMenuItem("Validate ");
-//	menuItem.addActionListener(menuActionListener);
-//	//menuItem.setMnemonic(KeyEvent.VK_I);
-//	menu.add(menuItem);
 
-	menu.addSeparator();
+	menuItem = new JMenuItem("Export Template");
+    menuItem.addActionListener(menuActionListener);
+    menu.add(menuItem);
+
+    menuItem = new JMenuItem("Delete Template");
+    menuItem.addActionListener(menuActionListener);
+    menu.add(menuItem);
+
+    menu.addSeparator();
+
+    menuItem = new JMenuItem("Delete Dataset");
+    menuItem.addActionListener(menuActionListener);
+    menu.add(menuItem);
+
+    menu.addSeparator();
 
 //	menuItem = new JMenuItem("Import Config");
 //	menuItem.addActionListener(menuActionListener);
@@ -386,15 +389,19 @@ System.out.println ("getting driver "+ driver);
 //	menuItem = new JMenuItem("Validate All");
 //	menuItem.addActionListener(menuActionListener);
 //	menu.add(menuItem);	
+	
 	menuItem = new JMenuItem("Save Configuration");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);	
+	
 	menuItem = new JMenuItem("Upload Configuration");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);	
+
 	menuItem = new JMenuItem("Move Configuration");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);		
+
 	menu.addSeparator();
     
     //menuItem = new JMenuItem("New", icon);
@@ -431,10 +438,9 @@ System.out.println ("getting driver "+ driver);
     //menu.add(menuItem);
 
     //a group of check box menu items
-    menu.addSeparator();
-    menuItem = new JMenuItem("Exit");
+    
+	menuItem = new JMenuItem("Exit");
     menuItem.addActionListener(menuActionListener);
-    //menuItem.setMnemonic(KeyEvent.VK_X);
     menu.add(menuItem);
 
     //Build edit menu in the menu bar.
@@ -600,8 +606,12 @@ System.out.println ("getting driver "+ driver);
         insert();
       else if (e.getActionCommand().equals("Delete"))
         delete();
-      else if (e.getActionCommand().startsWith("New"))
-        newDatasetConfig();
+      else if (e.getActionCommand().equals("Undo"))
+          undo();
+        else if (e.getActionCommand().equals("Redo"))
+          redo();
+      //else if (e.getActionCommand().startsWith("New"))
+      //  newDatasetConfig();
       //else if (e.getActionCommand().startsWith("Open"))
       //  openDatasetConfig();
       else if (e.getActionCommand().equals("Exit"))
@@ -610,46 +620,44 @@ System.out.println ("getting driver "+ driver);
       //  save();
       //else if (e.getActionCommand().equals("Save as"))
       //  save_as();
-      else if (e.getActionCommand().startsWith("Undo"))
-        undo();
-      else if (e.getActionCommand().startsWith("Redo"))
-        redo();
-      else if (e.getActionCommand().startsWith("Database"))
+      
+      
+      else if (e.getActionCommand().equals("Database Connection"))
         databaseConnection("");
 	  //else if (e.getActionCommand().startsWith("Import Template")){
 		//importTemplate(); DISABLED
-	  else if (e.getActionCommand().startsWith("Import"))
-	  	importConfig();	 
-      else if (e.getActionCommand().startsWith("View Dataset Configuration"))
+	  else if (e.getActionCommand().equals("Import Template"))
+	  	importTemplateConfig();	 
+      else if (e.getActionCommand().equals("Import Dataset (read-only)"))
         importDatasetConfig(); 
-	  else if (e.getActionCommand().startsWith("Set Template"))
-		  changeTemplate();   
-	  else if (e.getActionCommand().startsWith("Export"))
+	  else if (e.getActionCommand().equals("Export Template"))
 		exportTemplate();  
       //else if (e.getActionCommand().startsWith("Export"))
       //  exportDatasetConfig();
-      else if (e.getActionCommand().startsWith("Naive Template"))
+      else if (e.getActionCommand().equals("Apply Template to Dataset"))
           naiveTemplateDatasetConfig();
-      else if (e.getActionCommand().startsWith("Naive"))
+      else if (e.getActionCommand().equals("Naive Dataset"))
     	  naiveDatasetConfig();
-	  else if (e.getActionCommand().startsWith("Update"))
-		updateAll();
-//	  else if (e.getActionCommand().startsWith("Validate All"))
-//		  validateAll();		
-	  else if (e.getActionCommand().startsWith("Move Configuration"))
+	  else if (e.getActionCommand().equals("Update All Templates"))
+		updateAllTemplates();
+	  else if (e.getActionCommand().equals("Validate Template"))
+		  validateTemplate();		
+	  else if (e.getActionCommand().equals("Move Configuration"))
 		  moveAll();		
-	  else if (e.getActionCommand().startsWith("Save Configuration"))
+	  else if (e.getActionCommand().equals("Save Configuration"))
 		  saveAll();	
-	  else if (e.getActionCommand().startsWith("Upload Configuration"))
+	  else if (e.getActionCommand().equals("Upload Configuration"))
 			uploadAll();			  	
 //      else if (e.getActionCommand().startsWith("Update"))
 //        updateDatasetConfig();
 //	  else if (e.getActionCommand().startsWith("Validate"))
 //		  validateDatasetConfig();  
-      else if (e.getActionCommand().startsWith("Delete"))
-        deleteDatasetConfig();
-      else if (e.getActionCommand().startsWith("hide"))
-        makeHidden();
+      else if (e.getActionCommand().equals("Delete Template"))
+        deleteTemplateConfig();
+      else if (e.getActionCommand().equals("Delete Dataset"))
+          deleteDatasetConfig();
+      //else if (e.getActionCommand().startsWith("hide"))
+      //  makeHidden();
     }
   }
 
@@ -667,12 +675,13 @@ System.out.println ("getting driver "+ driver);
 	    DatasetConfigTreeWidget widget = (DatasetConfigTreeWidget) desktop.getSelectedFrame();
 	    if (widget!=null) widget.paste();
   }
-
+/*
   public void makeHidden() {
 	    DatasetConfigTreeWidget widget = (DatasetConfigTreeWidget) desktop.getSelectedFrame();
 	    if (widget!=null) widget.makeHidden();
   }
-
+*/
+  
   public void insert() {
     //((DatasetConfigTreeWidget)desktop.getSelectedFrame()).insert();
   }
@@ -880,7 +889,7 @@ System.out.println ("getting driver "+ driver);
   }
 */
 
-  public void importConfig() {
+  public void importTemplateConfig() {
 	try {
 	  if (ds == null) {
 		JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
@@ -1025,7 +1034,9 @@ System.out.println ("getting driver "+ driver);
     }
   }
 
-  public void changeTemplate() {
+  /*
+  public void assignTemplate() {
+	    
 	try {
 	  if (ds == null) {
 		JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
@@ -1078,7 +1089,7 @@ System.out.println ("getting driver "+ driver);
 
 	  //DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, dataset, datasetID, 
 	  //	databaseDialog.getSchema(),null,"true");
-		
+	  
 	  DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, dataset, datasetID, 
 						databaseDialog.getSchema(),null,"0");	
 		
@@ -1095,8 +1106,8 @@ System.out.println ("getting driver "+ driver);
 	  enableCursor();
 	}
   }
-
-
+*/
+  
   public void exportTemplate() {
 	if (ds == null) {
 	  JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
@@ -1120,6 +1131,27 @@ System.out.println ("getting driver "+ driver);
       dbutils.setReadonly(true);
 	}
   }
+  
+  public void validateTemplate() {
+	if (ds == null) {
+	  JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+	  return;
+	}
+
+	try {
+	  disableCursor();
+	  DatasetConfigTreeWidget widget = (DatasetConfigTreeWidget) desktop.getSelectedFrame();
+      if (widget==null) return;
+	  //DatasetConfig dsConfig = ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig();	
+	  widget.validateTemplate();
+	} catch (ConfigurationException e) {
+	  JOptionPane.showMessageDialog(this, "Problems with validating requested dataset.", "ERROR", 0);
+	  e.printStackTrace();
+	} finally {
+	  enableCursor();
+	}
+  }
+
 
 /*
   public void exportDatasetConfig() {
@@ -1540,93 +1572,198 @@ System.out.println ("getting driver "+ driver);
 
 
   public void moveAll() {  	
-	try {
-			if (ds == null) {
-			  JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
-			  return;
-			}	
-			try {	
-				if (!dbutils.baseDSConfigTableExists()) {
-					  JOptionPane.showMessageDialog(this, "Database contains no datasets", "ERROR", 0);
-					  return;
-					}
-				
-			  disableCursor();
-		        dbutils.setReadonly(false);
-			  
-			  DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true, true);
-			  DatasetConfigIterator configs = adaptor.getDatasetConfigs();
-						   
-			  
-			 		  
-			  
-			  Set retSet = new HashSet();
-			  //int k = 0;
-			  while (configs.hasNext()){
-					DatasetConfig lconfig = (DatasetConfig) configs.next();
-					adaptor.lazyLoad(lconfig);
-					lconfig.setDatasetID("");
-					retSet.add(lconfig);
-		      }
-			  DatasetConfig[] dsConfigs = new DatasetConfig[retSet.size()];
-			  retSet.toArray(dsConfigs);
-		      
+	  
+		if (JOptionPane.showConfirmDialog(null,"WARNING - THIS WILL REMOVE ALL EXISTING CONFIGURATION IN THE DATABASE YOU ARE MOVING YOUR CONFIGURATION TO.\nAre you sure?")!=JOptionPane.YES_OPTION) {
+			return;
+		}
 
-			  Set templateSet = new HashSet();
-			  String[] templates = dbutils.getAllTemplateNames();
-			  for (int i = 0; i < templates.length; i++){
-				String template = templates[i];
-				DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
-				dscutils.loadDatasetConfigWithDocument(odsv,dbutils.getTemplateDocument(template));
-				templateSet.add(odsv);
-			  }
-			  DatasetConfig[] templateConfigs = new DatasetConfig[templateSet.size()];
-			  templateSet.toArray(templateConfigs);
+	  
+  	  // choose folder
+	  File tempFolder;
+	  try {
+	  tempFolder = File.createTempFile("marteditor", "tmpdir");
+	  tempFolder.deleteOnExit();
+	  tempFolder.mkdir();
+	  } catch (Exception e) {
+		  JOptionPane.showMessageDialog(this, "Could not create temp directory", "ERROR", 0);
+		  return;
+	  }
 
-		      JOptionPane.showMessageDialog(null,"WARNING - THIS WILL REMOVE ALL EXISTING CONFIGURATION IN THE DATABASE YOU ARE MOVING YOUR CONFIGURATION TO");
-			  // connect to database to export to
-	    	  databaseConnection("Move to this database:");
-							
-			  DatasetConfig dsv = null;
-			  dbutils.dropMetaTables();
-			  
-			  for (int k = 0; k < templateConfigs.length;k++){
-				 dbutils.storeTemplateXML(templateConfigs[k],templateConfigs[k].getTemplate());
-			  }
-			  
-			  for (int k = 0; k < dsConfigs.length;k++){
-					dsv = dsConfigs[k];
-					// convert config to latest version using xslt
-				    dsv = MartEditor.getDatabaseDatasetConfigUtils().getXSLTransformedConfig(dsv);
-					// export it to new database	
-					dbutils.storeDatasetConfiguration(
-										MartEditor.getUser(),
-										dsv.getInternalName(),
-										dsv.getDisplayName(),
-										dsv.getDataset(),
-										dsv.getDescription(),
-										MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsv),
-										true,
-										dsv.getType(),
-										dsv.getVisible(),
-										dsv.getVersion(),
-										dsv.getDatasetID(),
-										dsv.getMartUsers(),
-										dsv.getInterfaces(),
-										dsv);						   		
-			  }
-			  	
-			} 
-			catch (Exception e) {
-			  e.printStackTrace();
-			}
-     } finally {
-			enableCursor();
-	        dbutils.setReadonly(true);
-     }
-}
+	  // Write all configs to file.
+	  	
+		try {
+				if (ds == null) {
+				  JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+				  return;
+				}
 
-  public void updateAll() {
+				try {
+					if (!dbutils.baseDSConfigTableExists()) {
+						  JOptionPane.showMessageDialog(this, "Database contains no datasets", "ERROR", 0);
+						  return;
+						}
+					
+				  disableCursor();
+			  
+				  // cycle through all datasets for the database
+				  String[] datasets = dbutils.getAllDatasetNames(user,martUser);
+				  for (int i = 0; i < datasets.length; i++){
+					String dataset = datasets[i];
+					String[] internalNames = dbutils.getAllDatasetIDsForDataset(user, dataset);
+					for (int j = 0; j < internalNames.length; j++){
+						String internalName = internalNames[j];
+					
+						DatasetConfig odsv = null;
+						DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, martUser, true, false, true, true);
+						DatasetConfigIterator configs = adaptor.getDatasetConfigs();
+						while (configs.hasNext()){
+							DatasetConfig lconfig = (DatasetConfig) configs.next();
+							if (lconfig.getDataset().equals(dataset) && lconfig.getDatasetID().equals(internalName)){
+									odsv = lconfig;
+									break;
+							}
+						}
+						adaptor.lazyLoad(odsv);// makes sure nothing is lost such as optional_parameterrs
+						// save osdv each one to a separate file <internalname>.xml
+						try {
+							File newFile = new File(tempFolder.getPath() + "/" + odsv.getDataset() + ".xml");
+							newFile.deleteOnExit();
+							URLDSConfigAdaptor.StoreDatasetConfig(odsv, newFile);
+						} catch (Exception e) {
+								e.printStackTrace();
+						}
+					  				
+					}	
+				  }
+				  
+				  // cycle through all templates for the database
+				  String[] templates = dbutils.getAllTemplateNames();
+				  for (int i = 0; i < templates.length; i++){
+					String template = templates[i];
+					DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
+					dscutils.loadDatasetConfigWithDocument(odsv,dbutils.getTemplateDocument(template));
+					try {
+							File newFile = new File(tempFolder.getPath() + "/" + odsv.getDataset() + ".template.xml");
+							newFile.deleteOnExit();
+							URLDSConfigAdaptor.StoreDatasetConfig(odsv, newFile);
+					} catch (Exception e) {
+								e.printStackTrace();
+					}	
+				  }
+				} catch (Exception e) {
+				  e.printStackTrace();
+				}
+			  } finally {
+				enableCursor();
+			  }
+			  
+			  
+	  // Find out where we're going.
+
+			// connect to database to export to
+	    	databaseConnection("Move to this database:");
+	    	
+
+	   // Load configs back from file.
+	      	
+	    	try {
+	    			if (ds == null) {
+	    			  JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+	    			  return;
+	    			}
+
+	    			try {
+	    			  disableCursor();
+
+	    		        dbutils.setReadonly(false);
+    		  	  
+	    			     
+	    				 //file = fc.getSelectedFile();// works
+	    				 	
+	    			     // cycle through all dataset files	
+	    			     File[] files = tempFolder.listFiles();
+	    				 dbutils.dropMetaTables(); 
+	    				
+	    				 // have to upload templates first
+	    				 for (int i = 0; i < files.length; i++){
+	    					file = files[i];
+	    				  			  
+	    	   			    URL url = file.toURL();
+	    					//System.out.println(file.getName());
+	    				  
+	    	  			    if (file.getName().endsWith(".template.xml")){
+	    						System.out.println("!!!UPLOAD TEMPLATE XML "+file.getName());
+	    						DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
+	    						DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
+	    						//DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","");
+	    						//dscutils.loadDatasetConfigWithDocument(odsv,dbutils.getTemplateDocument(template));
+	    						dbutils.storeTemplateXML(odsv,odsv.getTemplate());
+	    						
+	    						//DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
+	    				  	
+	    					}
+	    				 }
+	    				 
+	    			     for (int i = 0; i < files.length; i++){
+	    				  file = files[i];
+	    				  			  
+	    				  URL url = file.toURL();
+	    				  //System.out.println(file.getName());
+	    				  
+	    				  if (file.getName().endsWith(".template.xml")){
+	    				  	  continue;
+	    				  }
+	    				  else{
+	    				  	//ignoreCache, includeHiddenMembers
+	    				  	DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
+	    				  	DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
+	    				  	odsv.setDatasetID("");
+	    				  	// export osdv
+	    				  
+	    				  	String martUsers = odsv.getMartUsers();
+	    				  	String interfaces = odsv.getInterfaces();
+	    				  	if (martUsers == null)
+	    					martUsers = "default";
+	    	  
+	    				  	if (interfaces == null)
+	    						interfaces = "default";
+	    				  
+	    				  	// convert config to latest version using xslt
+	    				  	odsv = MartEditor.getDatabaseDatasetConfigUtils().getXSLTransformedConfig(odsv);
+	    				  
+	    				  	try {
+	    				  	    dbutils.storeDatasetConfiguration(
+	    									MartEditor.getUser(),
+	    									odsv.getInternalName(),
+	    									odsv.getDisplayName(),
+	    									odsv.getDataset(),
+	    									odsv.getDescription(),
+	    									MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(odsv),
+	    									true,
+	    									odsv.getType(),
+	    									odsv.getVisible(),
+	    									odsv.getVersion(),
+	    									odsv.getDatasetID(),
+	    									martUsers,
+	    									interfaces,
+	    									odsv);
+	    				   	} catch (Exception e) {
+	    							e.printStackTrace();
+	    				   	}
+	    				   }		
+	    			  } 
+	    			} catch (ConfigurationException e) {
+	    			  JOptionPane.showMessageDialog(this, "File does not contain valid configuration", "ERROR", 0);
+	    			} catch (Exception e) {
+	    			  e.printStackTrace();
+	    			}
+	    		  } finally {
+	    			enableCursor();
+	    	        dbutils.setReadonly(true);
+	    		  }
+  }
+
+  public void updateAllTemplates() {
 	  try {
 		if (ds == null) {
 		  JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
@@ -2475,6 +2612,10 @@ System.out.println ("getting driver "+ driver);
 			}
         dbutils.setReadonly(false);
         String[] datasets = dbutils.getAllDatasetNames(user,martUser);
+		if (datasets==null || datasets.length==0) {
+			  JOptionPane.showMessageDialog(this, "Database contains no datasets", "ERROR", 0);
+			  return;
+			}
         String dataset =
           (String) JOptionPane.showInputDialog(
             null,
@@ -2512,6 +2653,14 @@ System.out.println ("getting driver "+ driver);
         String[] refs = dbutils.getDatasetNamesForTemplate(template);
         if (refs!=null && refs.length>1)
         	template = null;
+        else if (refs!=null && refs.length==1) {
+        	// Check with user if they want to remove the template too.
+        	if (JOptionPane.showConfirmDialog(null, 
+        			"The template for this dataset will be orphaned if this dataset is deleted.\n" +
+        			"Do you want to delete the template too?")
+        			==JOptionPane.YES_OPTION) 
+        		template = null;
+        }
         
         dbutils.deleteDatasetConfigsForDatasetID(dataset, intName, user, template);
 
@@ -2522,6 +2671,48 @@ System.out.println ("getting driver "+ driver);
       dbutils.setReadonly(true);
     }
   }
+  
+  public void deleteTemplateConfig() {
+
+	    try {
+	      if (ds == null) {
+	        JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+	        return;
+	      }
+
+	      try {
+	        disableCursor();
+			if (!dbutils.baseDSConfigTableExists()) {
+				  JOptionPane.showMessageDialog(this, "Database contains no datasets", "ERROR", 0);
+				  return;
+				}
+	        dbutils.setReadonly(false);
+	        String[] templates = dbutils.getAllTemplateNames();
+			if (templates==null || templates.length==0) {
+				  JOptionPane.showMessageDialog(this, "Database contains no templates", "ERROR", 0);
+				  return;
+				}
+	        String template =
+	          (String) JOptionPane.showInputDialog(
+	            null,
+	            "Choose one",
+	            "Template Config",
+	            JOptionPane.INFORMATION_MESSAGE,
+	            null,
+	            templates,
+	            templates[0]);
+	        if (template == null)
+	          return;
+	        	        	        
+	        dbutils.deleteTemplateConfigs(template);
+
+	      } catch (ConfigurationException e) {
+	      }
+	    } finally {
+	      enableCursor();
+	      dbutils.setReadonly(true);
+	    }
+	  }
 /*
   public void save() {
     ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).save();

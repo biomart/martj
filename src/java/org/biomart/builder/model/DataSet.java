@@ -176,16 +176,10 @@ public class DataSet extends GenericSchema {
 				final DataSetColumn parentDSCol = (DataSetColumn) i.next();
 				// If this is not a subclass table, we need to filter columns.
 				if (!type.equals(DataSetTableType.MAIN_SUBCLASS)) {
-					// Skip columns that are not in the primary key and not in
-					// the relation restriction.
-					boolean inRestriction = restriction != null
-							&& parentDSCol instanceof WrappedColumn
-							&& restriction.getFirstTableAliases().keySet()
-									.contains(
-											((WrappedColumn) parentDSCol)
-													.getWrappedColumn());
+					// Skip columns that are not in the primary key.
 					boolean inPK = parentDSTablePK.getColumns().contains(
 							parentDSCol);
+					// Skip columns that are not in the source key.
 					boolean inSourceKey = parentDSCol instanceof WrappedColumn
 							&& (sourceRelation.getFirstKey().getColumns()
 									.contains(
@@ -194,7 +188,7 @@ public class DataSet extends GenericSchema {
 									.getSecondKey().getColumns().contains(
 											((WrappedColumn) parentDSCol)
 													.getWrappedColumn()));
-					if (!inRestriction && !inPK && !inSourceKey)
+					if (!inPK && !inSourceKey)
 						continue;
 				}
 				// Otherwise, create a copy of the column.

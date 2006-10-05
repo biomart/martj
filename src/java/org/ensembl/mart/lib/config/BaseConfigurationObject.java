@@ -20,6 +20,7 @@ package org.ensembl.mart.lib.config;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Collection;
 import java.util.Properties;
 
 /**
@@ -79,6 +80,16 @@ public abstract class BaseConfigurationObject implements Comparable {
    */
   public String getAttribute(String key) {
     return attributes.getProperty(key);
+  }
+
+  /**
+   * Get the value of an attribute for a given key. This method is primarily for DatasetConfigEditor.  Client code should
+   * use the getXXX methods.
+   * @param key- 
+   * @return String attribute for key
+   */
+  public String getKey(int index) {
+    return (String)attributes.keySet().toArray(new String[0])[index];
   }
 
   /**

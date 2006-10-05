@@ -52,6 +52,9 @@ import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.awt.Color;
 
 import javax.swing.Box;
@@ -1315,6 +1318,116 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		MartEditor.getDatabaseDatasetConfigUtils().storeTemplateXML(dsConfig,dsConfig.getTemplate());
 		// update config to template
 		MartEditor.getDatabaseDatasetConfigUtils().updateConfigsToTemplate(dsConfig.getTemplate(),dsConfig);
+	}
+	
+	public void validateTemplate() throws ConfigurationException {
+		dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
+		if (dsConfig.getTemplateFlag() == null){
+			JOptionPane.showMessageDialog(null,"This is not a template config","",JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		
+		List problems = new ArrayList();
+
+		List toCheck = new ArrayList();
+		toCheck.add(dsConfig);
+		
+		for (int i = 0; i < toCheck.size(); i++) {
+			BaseNamedConfigurationObject obj = (BaseNamedConfigurationObject)toCheck.get(i);
+			// Spaces in internal names.
+			if (obj.getInternalName().indexOf(' ')>=0) 
+				problems.add("Space found in internal name: '"+obj.getInternalName()+"'");
+			
+			//
+			// TO TURN REQUIRED FILEDS OFF, COMMENT FROM HERE...
+			//
+			
+			// Missing values in required (red) fields.
+			int[] required = obj.getRequiredFields();
+			String[] keys = obj.getXmlAttributeTitles();
+			for (int j = 0; j < required.length; j++) {
+				String key = keys[required[j]];
+				String value = obj.getAttribute(key);
+				if (value==null || value.equals(""))
+					problems.add("Missing value for "+key+" in "+obj.getInternalName());
+			}			
+			
+			//
+			// ... TO HERE, TO TURN REQUIRED FIELDS OFF
+			//
+			
+			// Append objects to list for checking.
+			if (obj instanceof DatasetConfig) {
+				toCheck.addAll(((DatasetConfig)obj).getDynamicDatasetContents());
+				toCheck.addAll(Arrays.asList(((DatasetConfig)obj).getAttributePages()));
+				toCheck.addAll(Arrays.asList(((DatasetConfig)obj).getFilterPages()));
+				toCheck.addAll(Arrays.asList(((DatasetConfig)obj).getExportables()));
+				toCheck.addAll(Arrays.asList(((DatasetConfig)obj).getImportables()));
+			}
+			else if (obj instanceof AttributePage) {
+				toCheck.addAll(((AttributePage)obj).getAttributeGroups());
+			}
+			else if (obj instanceof AttributeGroup) {
+				toCheck.addAll(Arrays.asList(((AttributeGroup)obj).getAttributeCollections()));
+			}
+			else if (obj instanceof AttributeCollection) {
+				toCheck.addAll(((AttributeCollection)obj).getAttributeDescriptions());
+			}
+			else if (obj instanceof AttributeDescription) {
+				toCheck.addAll(((AttributeDescription)obj).getDynamicAttributeContents());
+			}
+			else if (obj instanceof FilterPage) {
+				toCheck.addAll(((FilterPage)obj).getFilterGroups());
+			}
+			else if (obj instanceof FilterGroup) {
+				toCheck.addAll(Arrays.asList(((FilterGroup)obj).getFilterCollections()));
+			}
+			else if (obj instanceof FilterCollection) {
+				toCheck.addAll(((FilterCollection)obj).getFilterDescriptions());
+			}
+			else if (obj instanceof FilterDescription) {
+				toCheck.addAll(((FilterDescription)obj).getDynamicFilterContents());
+			}
+			else if (obj instanceof Exportable) {
+				Exportable exp = (Exportable)obj;
+
+				// Non-existent attributes.
+				if (exp.getAttributes()!=null) {
+					String[] attrs = exp.getAttributes().split(",");
+					for (int j = 0; j < attrs.length; j++) {
+						if (!dsConfig.containsAttributeDescription(attrs[j]))
+							problems.add("Exportable "+exp.getInternalName()+" refers to non-existent attribute "+attrs[j]);
+					}
+				}
+				
+				// Recurse.
+				toCheck.addAll(exp.getDynamicExportableContents());
+				}
+			else if (obj instanceof Importable) {
+				Importable imp = (Importable)obj;
+
+				// Non-existent filters.
+				if (imp.getFilters()!=null) {
+					String[] attrs = imp.getFilters().split(",");
+					for (int j = 0; j < attrs.length; j++) {
+						if (!dsConfig.containsFilterDescription(attrs[j]))
+							problems.add("Importable "+imp.getInternalName()+" refers to non-existent filter "+attrs[j]);
+					}
+				}
+				
+				// Recurse.
+				toCheck.addAll(imp.getDynamicImportableContents());		
+			}
+		}
+		
+		if (!problems.isEmpty()) {
+			StringBuffer message = new StringBuffer();
+			for (int i = 0; i < problems.size(); i++)
+				message.append(problems.get(i).toString()+'\n');
+			JOptionPane.showMessageDialog(null, message.toString());
+		} else {
+			JOptionPane.showMessageDialog(null, "Validated OK");
+		}
 	}
 
 	//public void lostOwnership(Clipboard c, Transferable t) {

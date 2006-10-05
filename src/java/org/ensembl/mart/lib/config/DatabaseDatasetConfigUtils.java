@@ -4199,6 +4199,38 @@ public boolean naiveExportWouldOverrideExistingConfig(
 	  DetailedDataSource.close(conn);
 	}
   }
+  
+  /**
+	* Removes all records in a given metatable for the given template
+	* @param template - template for TemplateConfig entries to delete from metatable
+	* @throws ConfigurationException if something goes wrong
+	*/
+
+public void deleteTemplateConfigs(String template) throws ConfigurationException {
+	String deleteTemplateSQL = "delete from "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" where template = ?";
+	String deleteRealTemplateSQL = "delete from "+getSchema()[0]+"."+MARTTEMPLATEDMTABLE+" where template = ?";
+	  if (readonly) throw new ConfigurationException("Cannot delete config from a read-only database");
+
+	Connection conn = null;
+	try {		
+	  conn = dsource.getConnection();
+	  	  
+	  PreparedStatement ds = conn.prepareStatement(deleteRealTemplateSQL);
+	  ds.setString(1, template);
+	  ds.executeUpdate();
+	  
+	  ds = conn.prepareStatement(deleteTemplateSQL);
+	  ds.setString(1,template);
+	  ds.executeUpdate();
+
+	  ds.close();
+	  
+	} catch (SQLException e) {
+	  throw new ConfigurationException("Caught SQLException during delete\n");
+	} finally {
+	  DetailedDataSource.close(conn);
+	}
+}
 
   /**
    * Get the correct DatasetConfig table for a given user in the Mart Database
