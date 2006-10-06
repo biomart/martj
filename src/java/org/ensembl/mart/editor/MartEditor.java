@@ -1475,7 +1475,7 @@ System.out.println ("getting driver "+ driver);
 
 		        dbutils.setReadonly(false);
 			  // changed to JOptionPane as not readable on the file chooser
-			  JOptionPane.showMessageDialog(null,"WARNING - THIS WILL REMOVE ALL EXISTING CONFIGURATION IN THE DATABASE YOU ARE UPLOADING YOUR CONFIGURATION TO");
+			  if (JOptionPane.showConfirmDialog(null,"WARNING - THIS WILL REMOVE ALL EXISTING CONFIGURATION IN THE DATABASE YOU ARE UPLOADING YOUR CONFIGURATION TO.\nAre you sure you want to do this?")!=JOptionPane.YES_OPTION) return;
 			  //fc.setDialogTitle("Choose file(s) to upload: WARNING: THIS WILL REMOVE ALL EXISTING XMLS IN THE DATABASE");
 		  	  
 			  fc.setMultiSelectionEnabled(true);			  
@@ -1573,10 +1573,7 @@ System.out.println ("getting driver "+ driver);
 
   public void moveAll() {  	
 	  
-		if (JOptionPane.showConfirmDialog(null,"WARNING - THIS WILL REMOVE ALL EXISTING CONFIGURATION IN THE DATABASE YOU ARE MOVING YOUR CONFIGURATION TO.\nAre you sure?")!=JOptionPane.YES_OPTION) {
-			return;
-		}
-
+	  if (JOptionPane.showConfirmDialog(null,"WARNING - THIS WILL REMOVE ALL EXISTING CONFIGURATION IN THE DATABASE YOU ARE MOVING YOUR CONFIGURATION TO.\nAre you sure you want to do this?")!=JOptionPane.YES_OPTION) return;
 	  
   	  // choose folder
 	  File tempFolder;
