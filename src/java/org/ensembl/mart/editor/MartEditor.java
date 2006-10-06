@@ -99,7 +99,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
   private JDesktopPane desktop;
   static private final String newline = "\n";
   private JFileChooser fc;
-  final static String IMAGE_DIR = "data/image/";
+  final static File IMAGE_DIR = new File(new File("data"),"image");
   static final private String NEW = "New";
   static final private String OPEN = "Open";
   static final private String SAVE = "Save";
@@ -279,7 +279,7 @@ System.out.println ("getting driver "+ driver);
 
   protected JButton makeNavigationButton(String imageName, String actionCommand, String toolTipText, String altText) {
     //Look for the image.
-    String imgLocation = IMAGE_DIR + imageName + ".gif";
+    String imgLocation = (new File(IMAGE_DIR,imageName+".gif")).getPath();
     URL imageURL = DatasetConfigTree.class.getClassLoader().getResource(imgLocation);
 
     //Create and initialize the button.
@@ -314,7 +314,7 @@ System.out.println ("getting driver "+ driver);
     menuBar.add(menu);
 
     //a group of JMenuItems
-    ImageIcon icon = createImageIcon(IMAGE_DIR + "new.gif");
+    ImageIcon icon = createImageIcon((new File(IMAGE_DIR,"new.gif")).getPath());
 
     menuItem = new JMenuItem("Database Connection");
     MartEditor.MenuActionListener menuActionListener = new MartEditor.MenuActionListener();
@@ -448,32 +448,32 @@ System.out.println ("getting driver "+ driver);
     //menu.setMnemonic(KeyEvent.VK_E);
     menu.getAccessibleContext().setAccessibleDescription("this is the edit menu");
     menuBar.add(menu);
-    icon = createImageIcon(IMAGE_DIR + "undo.gif");
+    icon = createImageIcon((new File(IMAGE_DIR,"undo.gif")).getPath());
     menuItem = new JMenuItem("Undo", icon);
     menuItem.addActionListener(menuActionListener);
     //menuItem.setMnemonic(KeyEvent.VK_U); //used constructor instead
     menuItem.getAccessibleContext().setAccessibleDescription("undo");
     //menu.add(menuItem);
-    icon = createImageIcon(IMAGE_DIR + "redo.gif");
+    icon = createImageIcon((new File(IMAGE_DIR,"redo.gif")).getPath());
     menuItem = new JMenuItem("Redo", icon);
     menuItem.addActionListener(menuActionListener);
     //menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
     menuItem.getAccessibleContext().setAccessibleDescription("redo");
     //menu.add(menuItem);
     menu.addSeparator();
-    icon = createImageIcon(IMAGE_DIR + "cut.gif");
+    icon = createImageIcon((new File(IMAGE_DIR,"cut.gif")).getPath());
     menuItem = new JMenuItem("Cut", icon);
     menuItem.addActionListener(menuActionListener);
     menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
     menuItem.getAccessibleContext().setAccessibleDescription("cuts to clipboard");
     menu.add(menuItem);
-    icon = createImageIcon(IMAGE_DIR + "copy.gif");
+    icon = createImageIcon((new File(IMAGE_DIR,"copy.gif")).getPath());
     menuItem = new JMenuItem("Copy", icon);
     menuItem.addActionListener(menuActionListener);
     menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
     menuItem.getAccessibleContext().setAccessibleDescription("copies to clipboard");
     menu.add(menuItem);
-    icon = createImageIcon(IMAGE_DIR + "paste.gif");
+    icon = createImageIcon((new File(IMAGE_DIR,"paste.gif")).getPath());
     menuItem = new JMenuItem("Paste", icon);
     menuItem.addActionListener(menuActionListener);
     menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
@@ -481,7 +481,7 @@ System.out.println ("getting driver "+ driver);
     menu.add(menuItem);
 
     menu.addSeparator();
-    icon = createImageIcon(IMAGE_DIR + "remove.gif");
+    icon = createImageIcon((new File(IMAGE_DIR,"remove.gif")).getPath());
     menuItem = new JMenuItem("Delete", icon);
     menuItem.addActionListener(menuActionListener);
     menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
@@ -1423,7 +1423,7 @@ System.out.println ("getting driver "+ driver);
 					adaptor.lazyLoad(odsv);// makes sure nothing is lost such as optional_parameterrs
 					// save osdv each one to a separate file <internalname>.xml
 					try {
-						File newFile = new File(fc.getSelectedFile().getPath() + "/" + odsv.getDataset() + ".xml");
+						File newFile = new File(fc.getSelectedFile(), odsv.getDataset() + ".xml");
 						URLDSConfigAdaptor.StoreDatasetConfig(odsv, newFile);
 							setFileChooserPath(fc.getSelectedFile());
 					} catch (Exception e) {
@@ -1440,7 +1440,7 @@ System.out.println ("getting driver "+ driver);
 				DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
 				dscutils.loadDatasetConfigWithDocument(odsv,dbutils.getTemplateDocument(template));
 				try {
-						File newFile = new File(fc.getSelectedFile().getPath() + "/" + odsv.getDataset() + ".template.xml");
+						File newFile = new File(fc.getSelectedFile(), odsv.getDataset() + ".template.xml");
 						URLDSConfigAdaptor.StoreDatasetConfig(odsv, newFile);
 							setFileChooserPath(fc.getSelectedFile());
 				} catch (Exception e) {
@@ -1578,7 +1578,9 @@ System.out.println ("getting driver "+ driver);
   	  // choose folder
 	  File tempFolder;
 	  try {
-	  tempFolder = File.createTempFile("marteditor", "tmpdir");
+	  File tempFile = File.createTempFile("marteditor", "tmp");
+	  tempFile.deleteOnExit();
+	  tempFolder = new File(tempFile.getCanonicalPath()+"dir");
 	  tempFolder.deleteOnExit();
 	  tempFolder.mkdir();
 	  } catch (Exception e) {
@@ -1623,7 +1625,7 @@ System.out.println ("getting driver "+ driver);
 						adaptor.lazyLoad(odsv);// makes sure nothing is lost such as optional_parameterrs
 						// save osdv each one to a separate file <internalname>.xml
 						try {
-							File newFile = new File(tempFolder.getPath() + "/" + odsv.getDataset() + ".xml");
+							File newFile = new File(tempFolder, odsv.getDataset() + ".xml");
 							newFile.deleteOnExit();
 							URLDSConfigAdaptor.StoreDatasetConfig(odsv, newFile);
 						} catch (Exception e) {
@@ -1640,7 +1642,7 @@ System.out.println ("getting driver "+ driver);
 					DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
 					dscutils.loadDatasetConfigWithDocument(odsv,dbutils.getTemplateDocument(template));
 					try {
-							File newFile = new File(tempFolder.getPath() + "/" + odsv.getDataset() + ".template.xml");
+							File newFile = new File(tempFolder, odsv.getDataset() + ".template.xml");
 							newFile.deleteOnExit();
 							URLDSConfigAdaptor.StoreDatasetConfig(odsv, newFile);
 					} catch (Exception e) {
