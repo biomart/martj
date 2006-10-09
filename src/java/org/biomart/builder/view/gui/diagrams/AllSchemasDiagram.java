@@ -30,19 +30,22 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
 
 /**
- * This diagram draws a box for each schema in the mart, as a
- * {@link SchemaComponent}. If any of them have external relations to other
- * schemas, then a {@link RelationComponent} is drawn between them.
+ * This diagram draws a {@link SchemaComponent} for each schema in the mart. If
+ * any of them have external relations to other schemas, then a
+ * {@link RelationComponent} is drawn between them, and implicitly this causes
+ * the table that the relation links from to be added inside the appropriate 
+ * schema component.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class AllSchemasDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * Static reference to the background colour to use for components.
+	 * The background colour to use for the diagram.
 	 */
 	public static final Color BACKGROUND_COLOUR = Color.WHITE;
 

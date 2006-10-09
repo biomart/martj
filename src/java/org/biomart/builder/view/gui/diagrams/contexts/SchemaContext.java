@@ -52,7 +52,8 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * dataset onto a set of masked relations.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
@@ -61,7 +62,7 @@ public class SchemaContext implements DiagramContext {
 	 * initiate drag-and-drop events, if nothing else on the mouse event queue
 	 * claims them first.
 	 */
-	public static MouseAdapter dragAdapter = new MouseAdapter() {
+	public static final MouseAdapter dragAdapter = new MouseAdapter() {
 		public void mousePressed(MouseEvent e) {
 			JComponent c = (JComponent) e.getSource();
 			TransferHandler handler = c.getTransferHandler();
@@ -73,7 +74,7 @@ public class SchemaContext implements DiagramContext {
 
 	/**
 	 * Creates a new context which will pass any menu actions onto the given
-	 * dataset tabset.
+	 * mart tab.
 	 * 
 	 * @param martTab
 	 *            the mart tab which will receive any menu actions the user
@@ -94,7 +95,7 @@ public class SchemaContext implements DiagramContext {
 
 	public void customiseAppearance(final JComponent component,
 			final Object object) {
-		// This bit removes a restricted outline from restricted tables.
+		// This bit removes a restricted outline from any restricted tables.
 		if (object instanceof Table) {
 			final TableComponent tblcomp = (TableComponent) component;
 			tblcomp.setDotted(false);
@@ -156,9 +157,9 @@ public class SchemaContext implements DiagramContext {
 			// Add a separator if the menu is not empty.
 			if (contextMenu.getComponentCount() > 0)
 				contextMenu.addSeparator();
-			
+
 			// Gray out options if there are no schemas.
-			boolean grayOut = this.martTab.getSchemaTabSet().getTabCount()<=1;
+			boolean grayOut = this.martTab.getSchemaTabSet().getTabCount() <= 1;
 
 			// Menu option to suggest a bunch of datasets.
 			final JMenuItem suggest = new JMenuItem(Resources
@@ -171,9 +172,10 @@ public class SchemaContext implements DiagramContext {
 							.requestSuggestDataSets(null);
 				}
 			});
-			if (grayOut) suggest.setEnabled(false);
+			if (grayOut)
+				suggest.setEnabled(false);
 			contextMenu.add(suggest);
-			
+
 			contextMenu.addSeparator();
 
 			// Synchronise all schemas in the mart.
@@ -190,7 +192,8 @@ public class SchemaContext implements DiagramContext {
 							.requestSynchroniseAllSchemas();
 				}
 			});
-			if (grayOut) syncAll.setEnabled(false);
+			if (grayOut)
+				syncAll.setEnabled(false);
 			contextMenu.add(syncAll);
 
 			// Add a new schema to the mart.

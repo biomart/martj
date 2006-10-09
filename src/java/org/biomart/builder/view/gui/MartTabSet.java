@@ -92,7 +92,7 @@ public class MartTabSet extends JTabbedPane {
 				File file = super.getSelectedFile();
 				if (file != null && !file.exists()) {
 					String filename = file.getName();
-					String extension = ".xml";
+					String extension = Resources.get("xmlExtension");
 					if (!filename.endsWith(extension)
 							&& filename.indexOf('.') < 0)
 						file = new File(file.getParentFile(), filename
@@ -105,7 +105,8 @@ public class MartTabSet extends JTabbedPane {
 			// Accepts only files ending in ".xml".
 			public boolean accept(final File f) {
 				return f.isDirectory()
-						|| f.getName().toLowerCase().endsWith(".xml");
+						|| f.getName().toLowerCase().endsWith(
+								Resources.get("xmlExtension"));
 			}
 
 			public String getDescription() {
@@ -211,7 +212,7 @@ public class MartTabSet extends JTabbedPane {
 								.get("martConstructionFailed"), failure));
 			// Inform user of success, if it succeeded.
 			else
-				JOptionPane.showMessageDialog(this.getMartBuilder(), Resources
+				JOptionPane.showMessageDialog(null, Resources
 						.get("martConstructionComplete"), Resources
 						.get("messageTitle"), JOptionPane.INFORMATION_MESSAGE);
 		}
@@ -271,7 +272,7 @@ public class MartTabSet extends JTabbedPane {
 		for (final Iterator i = this.martModifiedStatus.values().iterator(); i
 				.hasNext();)
 			if (i.next().equals(Boolean.TRUE)) {
-				final int choice = JOptionPane.showConfirmDialog(this,
+				final int choice = JOptionPane.showConfirmDialog(null,
 						Resources.get("okToCloseAll"), Resources
 								.get("questionTitle"),
 						JOptionPane.YES_NO_OPTION);
@@ -298,7 +299,7 @@ public class MartTabSet extends JTabbedPane {
 		boolean canClose = true;
 		if (this.martModifiedStatus.get(currentMart).equals(Boolean.TRUE)) {
 			// Modified, so must confirm action first.
-			final int choice = JOptionPane.showConfirmDialog(this, Resources
+			final int choice = JOptionPane.showConfirmDialog(null, Resources
 					.get("okToClose"), Resources.get("questionTitle"),
 					JOptionPane.YES_NO_OPTION);
 			canClose = choice == JOptionPane.YES_OPTION;

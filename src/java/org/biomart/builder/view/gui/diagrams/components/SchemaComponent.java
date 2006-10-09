@@ -45,7 +45,8 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * relations will appear in full using {@link TableComponent}s.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *			$Author$
  * @since 0.1
  */
 public class SchemaComponent extends BoxShapedComponent {
@@ -62,9 +63,9 @@ public class SchemaComponent extends BoxShapedComponent {
 	public static Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
 
 	/**
-	 * Bold italic font.
+	 * Plain font.
 	 */
-	public static Font BOLDITALIC_FONT = Font.decode("SansSerif-PLAIN-10");
+	public static Font PLAIN_FONT = Font.decode("SansSerif-PLAIN-10");
 
 	private GridBagConstraints constraints;
 
@@ -86,7 +87,7 @@ public class SchemaComponent extends BoxShapedComponent {
 		this.layout = new GridBagLayout();
 		this.setLayout(this.layout);
 
-		// Constraints for each field.
+		// Constraints for each part of the schema component.
 		this.constraints = new GridBagConstraints();
 		this.constraints.gridwidth = GridBagConstraints.REMAINDER;
 		this.constraints.fill = GridBagConstraints.HORIZONTAL;
@@ -219,7 +220,7 @@ public class SchemaComponent extends BoxShapedComponent {
 		return (SchemaGroup) this.getObject();
 	}
 
-	private JPopupMenu getSingleContextMenu(final Schema schema) {
+	private JPopupMenu getSingleContextMenu() {
 		// First of all, work out what would have been shown by default.
 		final JPopupMenu contextMenu = super.getContextMenu();
 
@@ -232,7 +233,7 @@ public class SchemaComponent extends BoxShapedComponent {
 			public void actionPerformed(final ActionEvent evt) {
 				final int index = SchemaComponent.this.getDiagram()
 						.getMartTab().getSchemaTabSet().indexOfTab(
-								schema.getName());
+								SchemaComponent.this.getSchema().getName());
 				SchemaComponent.this.getDiagram().getMartTab()
 						.getSchemaTabSet().setSelectedIndex(index);
 			}
@@ -244,7 +245,8 @@ public class SchemaComponent extends BoxShapedComponent {
 	}
 
 	/**
-	 * Count the external relations in this schema.
+	 * Count the external relations in this schema. This delegates to
+	 * {@link Schema#getExternalRelations()}.
 	 * 
 	 * @return the number of external relations in this schema.
 	 */
@@ -258,7 +260,7 @@ public class SchemaComponent extends BoxShapedComponent {
 		if (this.getObject() instanceof SchemaGroup)
 			return this.getGroupContextMenu();
 		else
-			return this.getSingleContextMenu(this.getSchema());
+			return this.getSingleContextMenu();
 	}
 
 	public void recalculateDiagramComponent() {
@@ -278,7 +280,7 @@ public class SchemaComponent extends BoxShapedComponent {
 		if (this.getSchema() instanceof SchemaGroup) {
 			// Add a 'contains' label.
 			label = new JLabel(Resources.get("schemaGroupContains"));
-			label.setFont(SchemaComponent.BOLDITALIC_FONT);
+			label.setFont(SchemaComponent.PLAIN_FONT);
 			this.layout.setConstraints(label, this.constraints);
 			this.add(label);
 
@@ -287,7 +289,7 @@ public class SchemaComponent extends BoxShapedComponent {
 					.getSchemas().iterator(); i.hasNext();) {
 				final Schema s = (Schema) i.next();
 				label = new JLabel(s.getName());
-				label.setFont(SchemaComponent.BOLDITALIC_FONT);
+				label.setFont(SchemaComponent.PLAIN_FONT);
 				this.layout.setConstraints(label, this.constraints);
 				this.add(label);
 			}

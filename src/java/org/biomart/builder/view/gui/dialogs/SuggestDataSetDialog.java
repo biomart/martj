@@ -26,6 +26,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -45,9 +46,12 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * This dialog asks users what kind of dataset suggestion they want to do.
+ * It does this by presenting a list of tables in all available schemas
+ * and asking the user to select one or more of them for inclusion.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class SuggestDataSetDialog extends JDialog {
@@ -57,8 +61,6 @@ public class SuggestDataSetDialog extends JDialog {
 
 	private JButton execute;
 
-	private MartTab martTab;
-
 	private JList tables;
 
 	/**
@@ -66,17 +68,15 @@ public class SuggestDataSetDialog extends JDialog {
 	 * suggestion.
 	 * 
 	 * @param martTab
-	 *            the mart tab set to centre ourselves over.
+	 *            the mart tab set to centre ourselves over and obtain
+	 *            details of schemas and tables from.
 	 * @param initialTable
 	 *            the initial table to select in the list of tables.
 	 */
 	public SuggestDataSetDialog(final MartTab martTab, final Table initialTable) {
 		// Creates the basic dialog.
-		super(martTab.getMartTabSet().getMartBuilder(), Resources
+		super((JDialog)null, Resources
 				.get("suggestDataSetDialogTitle"), true);
-
-		// Remembers the dataset tabset this dialog is referring to.
-		this.martTab = martTab;
 
 		// Create the content pane to store the create dialog panel.
 		final GridBagLayout gridBag = new GridBagLayout();
@@ -105,11 +105,13 @@ public class SuggestDataSetDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		final List availableTables = new ArrayList();
-		for (final Iterator i = this.martTab.getMart().getSchemas().iterator(); i
+		for (final Iterator i = martTab.getMart().getSchemas().iterator(); i
 				.hasNext();)
 			for (final Iterator j = ((Schema) i.next()).getTables().iterator(); j
 					.hasNext();)
 				availableTables.add(j.next());
+		// Sort the list and make a component to display it.
+		Collections.sort(availableTables);
 		this.tables = new JList(availableTables.toArray(new Table[0]));
 		this.tables.setVisibleRowCount(10); // Arbitrary.
 		// Set the list to 50-characters wide. Longer than this and it will
@@ -167,10 +169,9 @@ public class SuggestDataSetDialog extends JDialog {
 		this.pack();
 
 		// Centre ourselves.
-		this.setLocationRelativeTo(this.martTab.getMartTabSet()
-				.getMartBuilder());
+		this.setLocationRelativeTo(null);
 
-		// Set some nice defaults.
+		// Set the default selected table.
 		if (initialTable != null)
 			this.tables.setSelectedValue(initialTable, true);
 	}
@@ -185,7 +186,7 @@ public class SuggestDataSetDialog extends JDialog {
 
 		// If there any messages, display them.
 		if (!messages.isEmpty())
-			JOptionPane.showMessageDialog(this,
+			JOptionPane.showMessageDialog(null,
 					messages.toArray(new String[0]), Resources
 							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);

@@ -36,16 +36,16 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
 
 /**
- * This context adapts dataset org.biomart.builder.view.gui.diagrams to display
- * different colours, and provides the context menu for interacting with dataset
- * org.biomart.builder.view.gui.diagrams.
+ * This context is basically the same as {@link DataSetContext}, except
+ * it only provides context menus and adaptations for {@link DataSetColumn}
+ * instances.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
  * @since 0.1
  */
-public class ExplainTransformationContext extends WindowContext {
+public class ExplainTransformationContext extends DataSetContext {
 	/**
 	 * Creates a new context that will adapt objects according to the settings
 	 * in the specified dataset.

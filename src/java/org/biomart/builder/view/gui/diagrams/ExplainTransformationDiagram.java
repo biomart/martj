@@ -51,22 +51,24 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * constructor. The results is always a diagram containing only those components
  * which are involved in the current transformation.
  * <p>
- * Note how sub-diagrams do not have contexts, in order to prevent user
- * interaction with them.
+ * Note how diagrams do not have contexts, in order to prevent user interaction
+ * with them.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *			$Author$
  * @since 0.1
  */
 public abstract class ExplainTransformationDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * Creates an empty diagram.
+	 * Creates an empty diagram, using the single-parameter constructor from
+	 * {@link Diagram}.
 	 * 
 	 * @param martTab
-	 *            the tabset to communicate with via menus.
+	 *            the tabset to communicate with when (if) context menus are
+	 *            selected.
 	 */
 	protected ExplainTransformationDiagram(MartTab martTab) {
 		super(martTab);
@@ -78,7 +80,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	}
 
 	/**
-	 * Static reference to the background colour to use for components.
+	 * The background colour to use for the diagram.
 	 */
 	public static final Color BACKGROUND_COLOUR = Color.WHITE;
 
@@ -96,7 +98,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 * @param martTab
 		 *            the mart tab to pass menu events onto.
 		 * @param columns
-		 *            the columns to explain.
+		 *            the columns to show.
 		 */
 		public Columns(final MartTab martTab, final Collection columns) {
 			super(martTab);
@@ -109,6 +111,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		public void doRecalculateDiagram() {
 			// Removes all existing components.
 			this.removeAll();
+			// Add new components for our columns.
 			for (final Iterator i = this.columns.iterator(); i.hasNext();) {
 				final ColumnComponent columnComponent = new ColumnComponent(
 						(Column) i.next(), this);
@@ -143,7 +146,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				final Collection includeCols) {
 			super(martTab);
 
-			// Remember the table, and calculate the diagram.
+			// Remember the params, and calculate the diagram.
 			this.table = table;
 			this.includeCols = includeCols;
 			this.recalculateDiagram();
@@ -197,13 +200,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 *            the name to use for the fake schema the temp table lives
 		 *            in.
 		 * @param key
-		 *            the key to explain the relation from.
+		 *            the real key to explain the relation from.
 		 * @param relation
 		 *            the relation to explain.
 		 * @param lIncludeCols
-		 *            the columns to show in the LHS.
+		 *            the columns to show in the temp table.
 		 * @param rIncludeCols
-		 *            the columns to show in the RHS.
+		 *            the columns to show in the real table.
 		 */
 		public TempReal(final MartTab martTab,
 				final String tempTableSchemaName,
@@ -211,8 +214,6 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				final Relation relation, final Collection lIncludeCols,
 				final Collection rIncludeCols) {
 			super(martTab);
-			
-			System.err.println("TR: Linking temp from "+tempTableKeyColumns+" to "+key+" using "+relation);
 
 			// Remember the columns, and calculate the diagram.
 			this.tempTableSchemaName = tempTableSchemaName;
@@ -236,19 +237,19 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			for (Iterator i = this.lIncludeCols.iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
 			Key tempSourceKey;
-			try {
-				if (this.key instanceof ForeignKey) {
-					tempSourceKey = new GenericForeignKey(new ArrayList(
-							this.tempTableKeyColumns));
+			if (this.key instanceof ForeignKey) {
+				tempSourceKey = new GenericForeignKey(new ArrayList(
+						this.tempTableKeyColumns));
+				try {
 					tempSource.addForeignKey((ForeignKey) tempSourceKey);
-				} else {
-					tempSourceKey = new GenericPrimaryKey(new ArrayList(
-							this.tempTableKeyColumns));
-					tempSource.setPrimaryKey((PrimaryKey) tempSourceKey);
+				} catch (AssociationException e) {
+					// Really should never happen.
+					throw new MartBuilderInternalError(e);
 				}
-			} catch (AssociationException e) {
-				// Really should never happen.
-				throw new MartBuilderInternalError(e);
+			} else {
+				tempSourceKey = new GenericPrimaryKey(new ArrayList(
+						this.tempTableKeyColumns));
+				tempSource.setPrimaryKey((PrimaryKey) tempSourceKey);
 			}
 
 			// Create a copy of the target table complete with target key.
@@ -261,23 +262,23 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			for (Iterator i = this.rIncludeCols.iterator(); i.hasNext();)
 				tempTarget.addColumn((Column) i.next());
 			Key tempTargetKey;
-			try {
-				if (realTargetKey instanceof ForeignKey) {
-					tempTargetKey = new GenericForeignKey(realTargetKey
-							.getColumns());
+			if (realTargetKey instanceof ForeignKey) {
+				tempTargetKey = new GenericForeignKey(realTargetKey
+						.getColumns());
+				try {
 					tempTarget.addForeignKey((ForeignKey) tempTargetKey);
-				} else {
-					tempTargetKey = new GenericPrimaryKey(realTargetKey
-							.getColumns());
-					tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
+				} catch (AssociationException e) {
+					// Really should never happen.
+					throw new MartBuilderInternalError(e);
 				}
-			} catch (AssociationException e) {
-				// Really should never happen.
-				throw new MartBuilderInternalError(e);
+			} else {
+				tempTargetKey = new GenericPrimaryKey(realTargetKey
+						.getColumns());
+				tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
 			}
 
 			// Create a copy of the relation but change to be between the
-			// two temp keys.
+			// two fake keys.
 			Relation tempRelation;
 			try {
 				tempRelation = new GenericRelation(tempSourceKey,
@@ -330,13 +331,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 *            the columns to use as a key in the displayed dataset
 		 *            table.
 		 * @param key
-		 *            the key to explain the relation from.
+		 *            the real key to explain the relation from.
 		 * @param relation
 		 *            the relation to explain.
 		 * @param lIncludeCols
-		 *            the columns to show in the LHS.
+		 *            the columns to show in the dataset table.
 		 * @param rIncludeCols
-		 *            the columns to show in the RHS.
+		 *            the columns to show in the real table.
 		 */
 		public DatasetReal(final MartTab martTab, final DataSetTable dsTable,
 				final Collection dsTableKeyColumns, final Key key,
@@ -344,8 +345,6 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				final Collection rIncludeCols) {
 			super(martTab);
 
-			System.err.println("DR: Linking "+dsTable+" from "+dsTableKeyColumns+" to "+key);
-			
 			// Remember the columns, and calculate the diagram.
 			this.dsTable = dsTable;
 			this.dsTableKeyColumns = dsTableKeyColumns;
@@ -368,19 +367,19 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			for (Iterator i = this.lIncludeCols.iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
 			Key tempSourceKey;
-			try {
-				if (this.key instanceof ForeignKey) {
-					tempSourceKey = new GenericForeignKey(new ArrayList(
-							this.dsTableKeyColumns));
+			if (this.key instanceof ForeignKey) {
+				tempSourceKey = new GenericForeignKey(new ArrayList(
+						this.dsTableKeyColumns));
+				try {
 					tempSource.addForeignKey((ForeignKey) tempSourceKey);
-				} else {
-					tempSourceKey = new GenericPrimaryKey(new ArrayList(
-							this.dsTableKeyColumns));
-					tempSource.setPrimaryKey((PrimaryKey) tempSourceKey);
+				} catch (AssociationException e) {
+					// Really should never happen.
+					throw new MartBuilderInternalError(e);
 				}
-			} catch (AssociationException e) {
-				// Really should never happen.
-				throw new MartBuilderInternalError(e);
+			} else {
+				tempSourceKey = new GenericPrimaryKey(new ArrayList(
+						this.dsTableKeyColumns));
+				tempSource.setPrimaryKey((PrimaryKey) tempSourceKey);
 			}
 
 			// Create a copy of the target table complete with target key.
@@ -393,19 +392,19 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			for (Iterator i = this.rIncludeCols.iterator(); i.hasNext();)
 				tempTarget.addColumn((Column) i.next());
 			Key tempTargetKey;
-			try {
-				if (realTargetKey instanceof ForeignKey) {
-					tempTargetKey = new GenericForeignKey(realTargetKey
-							.getColumns());
+			if (realTargetKey instanceof ForeignKey) {
+				tempTargetKey = new GenericForeignKey(realTargetKey
+						.getColumns());
+				try {
 					tempTarget.addForeignKey((ForeignKey) tempTargetKey);
-				} else {
-					tempTargetKey = new GenericPrimaryKey(realTargetKey
-							.getColumns());
-					tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
+				} catch (AssociationException e) {
+					// Really should never happen.
+					throw new MartBuilderInternalError(e);
 				}
-			} catch (AssociationException e) {
-				// Really should never happen.
-				throw new MartBuilderInternalError(e);
+			} else {
+				tempTargetKey = new GenericPrimaryKey(realTargetKey
+						.getColumns());
+				tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
 			}
 
 			// Create a copy of the relation but change to be between the
@@ -446,26 +445,24 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		private Collection rIncludeCols;
 
 		/**
-		 * Creates a diagram showing the given pair of tables and a relation
-		 * between them.
+		 * Creates a diagram showing the given pair of real tables and a
+		 * relation between them.
 		 * 
 		 * @param martTab
 		 *            the mart tab to pass menu events onto.
 		 * @param key
-		 *            the key to explain the relation from.
+		 *            the real key to explain the relation from.
 		 * @param relation
 		 *            the relation to explain.
 		 * @param lIncludeCols
-		 *            the columns to show in the LHS.
+		 *            the columns to show in the LHS real table.
 		 * @param rIncludeCols
-		 *            the columns to show in the RHS.
+		 *            the columns to show in the RHS real table.
 		 */
 		public RealReal(final MartTab martTab, final Key key,
 				final Relation relation, final Collection lIncludeCols,
 				final Collection rIncludeCols) {
 			super(martTab);
-
-			System.err.println("RR: Linking "+relation+" from "+key+" to "+relation.getOtherKey(key));
 
 			// Remember the columns, and calculate the diagram.
 			this.key = key;
@@ -497,17 +494,17 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					tempKeyColumns.add(realColumn);
 			}
 			Key tempSourceKey;
-			try {
-				if (this.key instanceof ForeignKey) {
-					tempSourceKey = new GenericForeignKey(tempKeyColumns);
+			if (this.key instanceof ForeignKey) {
+				tempSourceKey = new GenericForeignKey(tempKeyColumns);
+				try {
 					tempSource.addForeignKey((ForeignKey) tempSourceKey);
-				} else {
-					tempSourceKey = new GenericPrimaryKey(tempKeyColumns);
-					tempSource.setPrimaryKey((PrimaryKey) tempSourceKey);
+				} catch (AssociationException e) {
+					// Really should never happen.
+					throw new MartBuilderInternalError(e);
 				}
-			} catch (AssociationException e) {
-				// Really should never happen.
-				throw new MartBuilderInternalError(e);
+			} else {
+				tempSourceKey = new GenericPrimaryKey(tempKeyColumns);
+				tempSource.setPrimaryKey((PrimaryKey) tempSourceKey);
 			}
 
 			// Create a copy of the target table complete with target key.
@@ -520,19 +517,19 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			for (Iterator i = this.rIncludeCols.iterator(); i.hasNext();)
 				tempTarget.addColumn((Column) i.next());
 			Key tempTargetKey;
-			try {
-				if (realTargetKey instanceof ForeignKey) {
-					tempTargetKey = new GenericForeignKey(realTargetKey
-							.getColumns());
+			if (realTargetKey instanceof ForeignKey) {
+				tempTargetKey = new GenericForeignKey(realTargetKey
+						.getColumns());
+				try {
 					tempTarget.addForeignKey((ForeignKey) tempTargetKey);
-				} else {
-					tempTargetKey = new GenericPrimaryKey(realTargetKey
-							.getColumns());
-					tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
+				} catch (AssociationException e) {
+					// Really should never happen.
+					throw new MartBuilderInternalError(e);
 				}
-			} catch (AssociationException e) {
-				// Really should never happen.
-				throw new MartBuilderInternalError(e);
+			} else {
+				tempTargetKey = new GenericPrimaryKey(realTargetKey
+						.getColumns());
+				tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
 			}
 
 			// Create a copy of the relation but change to be between the

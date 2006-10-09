@@ -34,8 +34,8 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * This simple component represents a single column within a table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class ColumnComponent extends BoxShapedComponent {
@@ -101,7 +101,7 @@ public class ColumnComponent extends BoxShapedComponent {
 		this.layout = new GridBagLayout();
 		this.setLayout(this.layout);
 
-		// Constraints for each field.
+		// Constraints for each label within the column.
 		this.constraints = new GridBagConstraints();
 		this.constraints.gridwidth = GridBagConstraints.REMAINDER;
 		this.constraints.fill = GridBagConstraints.HORIZONTAL;

@@ -41,7 +41,6 @@ import javax.swing.border.EmptyBorder;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.resources.Resources;
-import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * A dialog which lists all the columns in a key, and all the columns in the
@@ -49,7 +48,8 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * move those columns around, thus editing the key.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class KeyEditorDialog extends JDialog {
@@ -59,17 +59,15 @@ public class KeyEditorDialog extends JDialog {
 	 * Creates a new foreign key, or rather creates a list of columns for the
 	 * calling code to create a key with.
 	 * 
-	 * @param martTab
-	 *            the mart tab this all belongs to.
 	 * @param table
 	 *            the table the key is to be created on.
 	 * @return the list of columns the user selected.
 	 */
-	public static List createForeignKey(final MartTab martTab, final Table table) {
-		final KeyEditorDialog dialog = new KeyEditorDialog(martTab, table,
+	public static List createForeignKey(final Table table) {
+		final KeyEditorDialog dialog = new KeyEditorDialog(table,
 				Resources.get("newFKDialogTitle"), Resources.get("addButton"),
 				null);
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		return Arrays.asList(dialog.selectedColumns.toArray());
 	}
@@ -78,17 +76,15 @@ public class KeyEditorDialog extends JDialog {
 	 * Creates a new primary key, or rather creates a list of columns for the
 	 * calling code to create a key with.
 	 * 
-	 * @param martTab
-	 *            the mart tab this all belongs to.
 	 * @param table
 	 *            the table the key is to be created on.
 	 * @return the list of columns the user selected.
 	 */
-	public static List createPrimaryKey(final MartTab martTab, final Table table) {
-		final KeyEditorDialog dialog = new KeyEditorDialog(martTab, table,
+	public static List createPrimaryKey(final Table table) {
+		final KeyEditorDialog dialog = new KeyEditorDialog(table,
 				Resources.get("newPKDialogTitle"), Resources.get("addButton"),
 				null);
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		return Arrays.asList(dialog.selectedColumns.toArray());
 	}
@@ -97,17 +93,15 @@ public class KeyEditorDialog extends JDialog {
 	 * Edits an existing key, or rather creates a list of columns for the
 	 * calling code to edit the key with.
 	 * 
-	 * @param martTab
-	 *            the mart tab this all belongs to.
 	 * @param key
 	 *            the key to be edited.
 	 * @return the list of columns the user selected.
 	 */
-	public static List editKey(final MartTab martTab, final Key key) {
-		final KeyEditorDialog dialog = new KeyEditorDialog(martTab, key
+	public static List editKey(final Key key) {
+		final KeyEditorDialog dialog = new KeyEditorDialog(key
 				.getTable(), Resources.get("editKeyDialogTitle"), Resources
 				.get("modifyButton"), key.getColumns());
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		return Arrays.asList(dialog.selectedColumns.toArray());
 	}
@@ -116,17 +110,17 @@ public class KeyEditorDialog extends JDialog {
 
 	private DefaultListModel tableColumns;
 
-	private KeyEditorDialog(final MartTab martTab, final Table table,
+	private KeyEditorDialog(final Table table,
 			final String title, final String action, final List columns) {
 		// Create the base dialog.
-		super(martTab.getMartTabSet().getMartBuilder(), title, true);
+		super((JDialog)null, title, true);
 
 		// The list of table columns is populated with the names of columns.
 		this.tableColumns = new DefaultListModel();
 		for (final Iterator i = table.getColumns().iterator(); i.hasNext();)
 			this.tableColumns.addElement(i.next());
 
-		// The list of selected columns is populate with the columns from
+		// The list of selected columns is populated with the columns from
 		// the existing key. These are also removed from the list of table
 		// columns, to prevent duplication.
 		this.selectedColumns = new DefaultListModel();
@@ -302,7 +296,7 @@ public class KeyEditorDialog extends JDialog {
 
 		// Any messages to display? Show them.
 		if (!messages.isEmpty())
-			JOptionPane.showMessageDialog(this,
+			JOptionPane.showMessageDialog(null,
 					messages.toArray(new String[0]), Resources
 							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);

@@ -46,7 +46,6 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.resources.Resources;
-import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * A dialog which lists all the columns in a concat relation, and all the
@@ -56,7 +55,8 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * concatenation operation.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class ConcatRelationEditorDialog extends JDialog {
@@ -65,19 +65,17 @@ public class ConcatRelationEditorDialog extends JDialog {
 	/**
 	 * Creates a new concat-relation type.
 	 * 
-	 * @param martTab
-	 *            the mart tab this all belongs to.
 	 * @param relation
 	 *            the relation the concat is to be created on.
 	 * @return the concat type the user defined.
 	 */
 	public static DataSetConcatRelationType createConcatRelation(
-			final MartTab martTab, final Relation relation) {
+			final Relation relation) {
 		final ConcatRelationEditorDialog dialog = new ConcatRelationEditorDialog(
-				martTab, relation.getManyKey().getTable(), Resources
+				relation.getManyKey().getTable(), Resources
 						.get("newConcatDialogTitle"), Resources
 						.get("addButton"), null, null, null);
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		return dialog.getConcatRelationType();
 	}
@@ -85,8 +83,6 @@ public class ConcatRelationEditorDialog extends JDialog {
 	/**
 	 * Edits an existing relation.
 	 * 
-	 * @param martTab
-	 *            the mart tab this all belongs to.
 	 * @param relation
 	 *            the relation to be edited.
 	 * @param type
@@ -94,14 +90,13 @@ public class ConcatRelationEditorDialog extends JDialog {
 	 * @return the new concat type the user defined.
 	 */
 	public static DataSetConcatRelationType modifyConcatRelation(
-			final MartTab martTab, final Relation relation,
-			final DataSetConcatRelationType type) {
+			final Relation relation, final DataSetConcatRelationType type) {
 		final ConcatRelationEditorDialog dialog = new ConcatRelationEditorDialog(
-				martTab, relation.getManyKey().getTable(), Resources
+				relation.getManyKey().getTable(), Resources
 						.get("editConcatDialogTitle"), Resources
 						.get("modifyButton"), type.getColumnSeparator(), type
 						.getRecordSeparator(), type.getConcatColumns());
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		return dialog.getConcatRelationType();
 	}
@@ -116,12 +111,11 @@ public class ConcatRelationEditorDialog extends JDialog {
 
 	private DataSetConcatRelationType type;
 
-	private ConcatRelationEditorDialog(final MartTab martTab,
-			final Table table, final String title, final String action,
-			final String defaultColumnSep, final String defaultRowSep,
-			final List columns) {
+	private ConcatRelationEditorDialog(final Table table, final String title,
+			final String action, final String defaultColumnSep,
+			final String defaultRowSep, final List columns) {
 		// Create the base dialog.
-		super(martTab.getMartTabSet().getMartBuilder(), title, true);
+		super((JDialog) null, title, true);
 		this.type = null;
 
 		// Create the layout manager for this panel.
@@ -368,7 +362,7 @@ public class ConcatRelationEditorDialog extends JDialog {
 
 		// Any messages to display? Show them.
 		if (!messages.isEmpty())
-			JOptionPane.showMessageDialog(this,
+			JOptionPane.showMessageDialog(null,
 					messages.toArray(new String[0]), Resources
 							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);

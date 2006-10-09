@@ -731,7 +731,12 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	}
 
 	public Connection getConnection() throws SQLException {
-		// If we have not connected before, we should attempt to connect now.
+		// If we are already connected, test to see if we are
+		// still connected. If not, reset our connection.
+		if (this.connection != null && this.connection.isClosed())
+			this.connection = null;
+
+		// If we are not connected, we should attempt to (re)connect now.
 		if (this.connection == null) {
 			// Start out with no driver at all.
 			Class loadedDriverClass = null;

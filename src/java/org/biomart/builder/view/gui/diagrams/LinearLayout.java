@@ -38,10 +38,14 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 
 /**
  * This is a layout manager that lays out components in two rows and runs
- * relations between them along fixed-space tracks between components.
+ * relations between them along fixed-space tracks. The space to the right of
+ * each component is proportional to the number of relations on that component.
+ * The space between the two rows is proportional to the total number of
+ * relations in the diagram.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class LinearLayout implements LayoutManager {
@@ -78,11 +82,11 @@ public class LinearLayout implements LayoutManager {
 		// This method works out how big each component should be, and
 		// then works out in total how much space to allocate to the diagram.
 		synchronized (parent.getTreeLock()) {
-			// Reset the lists that define the top and bottom rows.
+			// Clear the lists that define the top and bottom rows.
 			this.topRow.clear();
 			this.bottomRow.clear();
 
-			// Reset the list that holds all the relations to display.
+			// Clear the list that holds all the relations to display.
 			this.relations.clear();
 
 			// Make one big list to hold them all for now.
@@ -99,17 +103,18 @@ public class LinearLayout implements LayoutManager {
 			for (int i = 0; i < nComps; i++) {
 				final Component comp = parent.getComponent(i);
 
-				// We're only interested in visible non-RelationComponents at
-				// this stage.
+				// Only visible components are interesting.
 				if (!comp.isVisible())
 					continue;
-				if (comp instanceof RelationComponent) {
-					this.relations.add(comp);
-					continue;
-				}
 
-				// Add the component to the list to be split into rows.
-				bothRows.add(comp);
+				// If it's a relation, note it for later, but
+				// don't add it to either of the component rows.
+				if (comp instanceof RelationComponent)
+					this.relations.add(comp);
+				// Otherwise, add the component to the list to be split later
+				// into rows.
+				else
+					bothRows.add(comp);
 			}
 
 			// Split the row into top and bottom halves if
@@ -132,7 +137,7 @@ public class LinearLayout implements LayoutManager {
 				// Get the component.
 				final Component comp = (Component) i.next();
 
-				// Work out how many relations lead off this component.
+				// Work out how many visible relations lead off this component.
 				// If not a TableComponent or SchemaComponent, it's zero.
 				int relationCount = 0;
 				if (comp instanceof TableComponent)
@@ -145,13 +150,14 @@ public class LinearLayout implements LayoutManager {
 				// How big is this component?
 				final Dimension compSize = comp.getPreferredSize();
 
-				// Work out the maximum height for the top row.
+				// Update the maximum height for the top row.
 				this.topRowHeight = Math.max(this.topRowHeight, compSize
 						.getHeight());
 
-				// Add up the width for this row, including padding
-				// and space for relations. Double padding = padding before
-				// and after relations segment.
+				// Increase the width for this row, including padding
+				// and space for relations. The use of double the table
+				// padding value allows for padding both before
+				// and after the relations beside the table.
 				topRowWidth += compSize.getWidth() + 2.0
 						* LinearLayout.TABLE_PADDING;
 				topRowWidth += relationCount * LinearLayout.RELATION_SPACING;
@@ -175,13 +181,14 @@ public class LinearLayout implements LayoutManager {
 				// How big is this component?
 				final Dimension compSize = comp.getPreferredSize();
 
-				// Work out the maximum height for the top row.
+				// Update the maximum height for the top row.
 				this.bottomRowHeight = Math.max(this.bottomRowHeight, compSize
 						.getHeight());
 
-				// Add up the width for this row, including padding
-				// and space for relations. Double padding = padding before
-				// and after relations segment.
+				// Increase the width for this row, including padding
+				// and space for relations. The use of double the table
+				// padding value allows for padding both before
+				// and after the relations beside the table.
 				bottomRowWidth += compSize.getWidth() + 2.0
 						* LinearLayout.TABLE_PADDING;
 				bottomRowWidth += relationCount * LinearLayout.RELATION_SPACING;
@@ -217,7 +224,8 @@ public class LinearLayout implements LayoutManager {
 			// that table the next relation linking to it must go on.
 			final Map nextVerticalTrackX = new HashMap();
 
-			// Lay out the top row of tables.
+			// Lay out the top row of tables. All the components are
+			// aligned to the bottom of the row.
 			double nextX = LinearLayout.TABLE_PADDING;
 			double nextY = this.topRowHeight + LinearLayout.TABLE_PADDING;
 			for (final Iterator i = this.topRow.iterator(); i.hasNext();) {
@@ -231,10 +239,11 @@ public class LinearLayout implements LayoutManager {
 						(int) (nextY - compSize.getHeight()), (int) compSize
 								.getWidth(), (int) compSize.getHeight());
 
-				// Move across table then pad to the right.
+				// Work out where the first relation will go by moving
+				// to the right of the component then padding.
 				nextX += compSize.getWidth() + LinearLayout.TABLE_PADDING;
 
-				// Specify where the first relation will go.
+				// Remember where the first relation will go.
 				nextVerticalTrackX.put(comp, new Double(nextX));
 
 				// Work out how many relations lead off this component.
@@ -258,7 +267,9 @@ public class LinearLayout implements LayoutManager {
 				nextX += LinearLayout.TABLE_PADDING;
 			}
 
-			// Lay out the bottom row.
+			// Lay out the bottom row. All the components are aligned
+			// to the top of the row, leaving space for the top row
+			// and all the relations between the two rows.
 			nextX = LinearLayout.TABLE_PADDING;
 			nextY = this.topRowHeight + 3.0 * LinearLayout.TABLE_PADDING
 					+ this.relations.size() * LinearLayout.RELATION_SPACING;
@@ -272,10 +283,11 @@ public class LinearLayout implements LayoutManager {
 				comp.setBounds((int) nextX, (int) nextY, (int) compSize
 						.getWidth(), (int) compSize.getHeight());
 
-				// Move across table then pad to the right.
+				// Work out where the first relation will go by moving
+				// to the right of the component then padding.
 				nextX += compSize.getWidth() + LinearLayout.TABLE_PADDING;
 
-				// Specify where the first relation will go.
+				// Remember where the first relation will go.
 				nextVerticalTrackX.put(comp, new Double(nextX));
 
 				// Work out how many relations lead off this component.
@@ -311,30 +323,30 @@ public class LinearLayout implements LayoutManager {
 				final KeyComponent firstKey = comp.getFirstKeyComponent();
 				final Rectangle firstKeyRectangle = firstKey.getBounds();
 				Container firstKeyContainer = firstKey;
-				Container checkContainer = firstKey.getParent();
-				while (checkContainer != parent) {
+				Container keyParent = firstKey.getParent();
+				while (keyParent != parent) {
 					firstKeyRectangle.setLocation(firstKeyRectangle.x
-							+ checkContainer.getX(), firstKeyRectangle.y
-							+ checkContainer.getY());
-					if (checkContainer instanceof TableComponent
-							|| checkContainer instanceof SchemaComponent)
-						firstKeyContainer = checkContainer;
-					checkContainer = checkContainer.getParent();
+							+ keyParent.getX(), firstKeyRectangle.y
+							+ keyParent.getY());
+					if (keyParent instanceof TableComponent
+							|| keyParent instanceof SchemaComponent)
+						firstKeyContainer = keyParent;
+					keyParent = keyParent.getParent();
 				}
 
 				// Do the same for the second key.
 				final KeyComponent secondKey = comp.getSecondKeyComponent();
 				final Rectangle secondKeyRectangle = secondKey.getBounds();
 				Container secondKeyContainer = secondKey;
-				checkContainer = secondKey.getParent();
-				while (checkContainer != parent) {
+				keyParent = secondKey.getParent();
+				while (keyParent != parent) {
 					secondKeyRectangle.setLocation(secondKeyRectangle.x
-							+ checkContainer.getX(), secondKeyRectangle.y
-							+ checkContainer.getY());
-					if (checkContainer instanceof TableComponent
-							|| checkContainer instanceof SchemaComponent)
-						secondKeyContainer = checkContainer;
-					checkContainer = checkContainer.getParent();
+							+ keyParent.getX(), secondKeyRectangle.y
+							+ keyParent.getY());
+					if (keyParent instanceof TableComponent
+							|| keyParent instanceof SchemaComponent)
+						secondKeyContainer = keyParent;
+					keyParent = keyParent.getParent();
 				}
 
 				// Find RHS of both foreign and primary keys. This
@@ -355,14 +367,16 @@ public class LinearLayout implements LayoutManager {
 						firstVerticalX + LinearLayout.RELATION_SPACING));
 
 				// Work out which vertical track at the second key end the
-				// relation fits into.
+				// relation fits into, and update the map for the next one.
 				int secondVerticalX = (int) ((Double) nextVerticalTrackX
 						.get(secondKeyContainer)).doubleValue();
 				nextVerticalTrackX.put(secondKeyContainer, new Double(
 						secondVerticalX + LinearLayout.RELATION_SPACING));
 
-				// Work out which horizontal track we are following.
+				// Work out which horizontal track we are following,
+				// and update the value for the next relation.
 				int horizontalY = (int) nextHorizontalY;
+				nextHorizontalY += LinearLayout.RELATION_SPACING;
 
 				// Create a bounding box around which covers the
 				// whole relation area.
@@ -390,7 +404,9 @@ public class LinearLayout implements LayoutManager {
 				secondVerticalX -= bounds.x;
 				horizontalY -= bounds.y;
 
-				// Create a path to describe the relation shape.
+				// Create a path to describe the relation shape. It
+				// will have 6 components to it - move, across, down/up,
+				// across, up/down, across.
 				final GeneralPath path = new GeneralPath(
 						GeneralPath.WIND_EVEN_ODD, 6);
 
@@ -417,9 +433,6 @@ public class LinearLayout implements LayoutManager {
 
 				// Done! Tell the relation what shape we made.
 				comp.setLineShape(path);
-
-				// Move the horizontal track down for the next relation.
-				nextHorizontalY += LinearLayout.RELATION_SPACING;
 			}
 		}
 	}

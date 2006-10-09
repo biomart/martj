@@ -157,10 +157,9 @@ public class DataSetTabSet extends JTabbedPane {
 			final String defaultResponse) {
 		// Ask the user for a name. Use the default response
 		// as the default value in the input field.
-		String name = (String) JOptionPane.showInputDialog(this.martTab
-				.getMartTabSet().getMartBuilder(), message, Resources
-				.get("questionTitle"), JOptionPane.QUESTION_MESSAGE, null,
-				null, defaultResponse);
+		String name = (String) JOptionPane.showInputDialog(null, message,
+				Resources.get("questionTitle"), JOptionPane.QUESTION_MESSAGE,
+				null, null, defaultResponse);
 
 		// If they cancelled the request, return null.
 		if (name == null)
@@ -461,8 +460,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the table to add the expression column to.
 	 */
 	public void requestAddExpressionColumn(final DataSetTable table) {
-		final ExpressionColumnDialog dialog = new ExpressionColumnDialog(
-				this.martTab, table, null);
+		final ExpressionColumnDialog dialog = new ExpressionColumnDialog(table,
+				null);
 		dialog.show();
 		// Cancelled?
 		if (dialog.getCancelled())
@@ -519,7 +518,7 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestAddRelationRestriction(final DataSet dataset,
 			final Relation relation) {
 		final RestrictedRelationDialog dialog = new RestrictedRelationDialog(
-				this.martTab, relation, null);
+				relation, null);
 		dialog.show();
 		// Cancelled?
 		if (dialog.getCancelled())
@@ -570,8 +569,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestAddTableRestriction(final DataSet dataset,
 			final Table table) {
-		final RestrictedTableDialog dialog = new RestrictedTableDialog(
-				this.martTab, table, null);
+		final RestrictedTableDialog dialog = new RestrictedTableDialog(table,
+				null);
 		dialog.show();
 		// Cancelled?
 		if (dialog.getCancelled())
@@ -641,7 +640,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final Relation relation) {
 		// Pop up a dialog to ask which columns to use.
 		final DataSetConcatRelationType newType = ConcatRelationEditorDialog
-				.createConcatRelation(this.martTab, relation);
+				.createConcatRelation(relation);
 
 		// If they chose some columns, create the key.
 		if (newType != null)
@@ -810,7 +809,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final Relation relation, final DataSetConcatRelationType type) {
 		// Pop up a dialog to ask which columns to use.
 		final DataSetConcatRelationType newType = ConcatRelationEditorDialog
-				.modifyConcatRelation(this.martTab, relation, type);
+				.modifyConcatRelation(relation, type);
 
 		// If they chose some columns, create the key.
 		if (newType != null)
@@ -825,7 +824,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestModifyExpressionColumn(final ExpressionColumn column) {
 		final ExpressionColumnDialog dialog = new ExpressionColumnDialog(
-				this.martTab, (DataSetTable) column.getTable(), column);
+				(DataSetTable) column.getTable(), column);
 		dialog.show();
 		// Cancelled?
 		if (dialog.getCancelled())
@@ -871,7 +870,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final Relation relation,
 			final DataSetRelationRestriction restriction) {
 		final RestrictedRelationDialog dialog = new RestrictedRelationDialog(
-				this.martTab, relation, restriction);
+				relation, restriction);
 		dialog.show();
 		// Cancelled?
 		if (dialog.getCancelled())
@@ -916,8 +915,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestModifyTableRestriction(final DataSet dataset,
 			final Table table, final DataSetTableRestriction restriction) {
-		final RestrictedTableDialog dialog = new RestrictedTableDialog(
-				this.martTab, table, restriction);
+		final RestrictedTableDialog dialog = new RestrictedTableDialog(table,
+				restriction);
 		dialog.show();
 		// Cancelled?
 		if (dialog.getCancelled())
@@ -1031,7 +1030,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestRemoveAllDataSets() {
 		// Confirm the decision first.
-		final int choice = JOptionPane.showConfirmDialog(this, Resources
+		final int choice = JOptionPane.showConfirmDialog(null, Resources
 				.get("confirmDelAllDatasets"), Resources.get("questionTitle"),
 				JOptionPane.YES_NO_OPTION);
 
@@ -1088,7 +1087,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestRemoveDataSet(final DataSet dataset) {
 		// Confirm the decision first.
-		final int choice = JOptionPane.showConfirmDialog(this, Resources
+		final int choice = JOptionPane.showConfirmDialog(null, Resources
 				.get("confirmDelDataset"), Resources.get("questionTitle"),
 				JOptionPane.YES_NO_OPTION);
 
@@ -1496,7 +1495,7 @@ public class DataSetTabSet extends JTabbedPane {
 		// Ask the user what tables they want to work with and what
 		// mode they want.
 		final SuggestInvisibleDataSetDialog dialog = new SuggestInvisibleDataSetDialog(
-				this.martTab, table);
+				table);
 		dialog.show();
 
 		// If they cancelled it, return without doing anything.

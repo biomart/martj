@@ -54,14 +54,17 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTableDiagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainTransformationContext;
-import org.biomart.builder.view.gui.diagrams.contexts.WindowContext;
+import org.biomart.builder.view.gui.diagrams.contexts.ExplainDataSetContext;
 
 /**
- * This simple dialog explains a table by drawing a big diagram of the
- * underlying tables and relations involved in it. If a particular column is
- * selected, then the diagram focuses on that column. Otherwise, the diagram
- * behaves exactly as the window-context diagram does, but without the tables
- * and relations not involved directly in this table.
+ * This simple dialog explains a table by drawing a series of diagrams of the
+ * underlying tables and relations involved in it.
+ * <p>
+ * It has two tabs. In the first tab goes an overview diagram, an instance of
+ * {@link ExplainTableDiagram}. In the second tab goes a series of smaller
+ * diagrams, each one an instance of {@link ExplainTransformationDiagram} which
+ * represents a single step in the transformation process required to produce
+ * the table being explained.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by 
@@ -83,9 +86,10 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 	public static void showTableExplanation(final MartTab martTab,
 			final DataSetTable table) {
 		final ExplainTableDialog dialog = new ExplainTableDialog(martTab, table);
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.setLocationRelativeTo(null);
 		martTab.getDataSetTabSet().addCurrentExplanationDialog(dialog);
 		dialog.show();
+		// We don't get here until the dialog is closed.
 		martTab.getDataSetTabSet().removeCurrentExplanationDialog(dialog);
 	}
 
@@ -116,17 +120,13 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		this.dsTable = dsTable;
 		this.martTab = martTab;
 
-		// Make a context for our column diagrams.
-		this.explainTransformationContext = new ExplainTransformationContext(
-				this.martTab, (DataSet) dsTable.getSchema());
-
 		// Make the content pane.
 		final JPanel displayArea = new JPanel(new CardLayout());
 
-		// Compute the diagram, and assign it the appropriate context.
+		// Compute the overview diagram, and assign it the appropriate context.
 		this.diagram = new ExplainTableDiagram(this.martTab, this.dsTable);
-		final WindowContext context = new WindowContext(this.martTab,
-				(DataSet) this.dsTable.getSchema());
+		final ExplainDataSetContext context = new ExplainDataSetContext(
+				this.martTab, (DataSet) this.dsTable.getSchema());
 		this.diagram.setDiagramContext(context);
 		displayArea.add(new JScrollPane(this.diagram), "WINDOW_CARD");
 
@@ -216,6 +216,10 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 				maxSize.height - 20));
 		content.setPreferredSize(size);
 
+		// Make a context for our sub-diagrams.
+		this.explainTransformationContext = new ExplainTransformationContext(
+				this.martTab, (DataSet) dsTable.getSchema());
+
 		// Calculate the transform.
 		this.recalculateTransformation();
 
@@ -230,6 +234,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 	private void recalculateTransformation() {
 		// Clear the transformation box.
 		this.transformation.removeAll();
+
 		// Redisplay it.
 
 		// Keep track of columns counted so far.
@@ -428,7 +433,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			stepNumber++;
 		}
 
-		// Add the table definition at the bottom.
+		// Add the final table definition at the bottom.
 		JLabel label = new JLabel(Resources.get("stepTableLabel", new String[] {
 				"" + stepNumber, Resources.get("explainRenameLabel") }));
 		this.gridBag.setConstraints(label, this.labelLastRowConstraints);
@@ -443,9 +448,6 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		stepNumber++;
 	}
 
-	/**
-	 * Recalculate the currently visible diagram.
-	 */
 	public void recalculateDialog() {
 		if (this.diagram != null)
 			this.diagram.recalculateDiagram();
@@ -454,9 +456,6 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		this.validate();
 	}
 
-	/**
-	 * Repaint the currently visible diagram.
-	 */
 	public void repaintDialog() {
 		if (this.diagram != null)
 			this.diagram.repaintDiagram();

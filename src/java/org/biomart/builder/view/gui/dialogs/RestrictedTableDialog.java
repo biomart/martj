@@ -48,7 +48,6 @@ import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Column.GenericColumn;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.resources.Resources;
-import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * This dialog asks users to create or modify a restriction over a particular
@@ -76,30 +75,25 @@ public class RestrictedTableDialog extends JDialog {
 
 	private JButton insert;
 
-	private MartTab martTab;
-
 	private JButton remove;
 
 	/**
 	 * Creates (but does not open) a dialog requesting details of a restricted
 	 * table.
 	 * 
-	 * @param martTab
-	 *            the mart tab set to centre ourselves over.
 	 * @param table
 	 *            the table to restrict.
 	 * @param template
 	 *            the restriction to use as a template, if any.
 	 */
-	public RestrictedTableDialog(final MartTab martTab, final Table table,
+	public RestrictedTableDialog(final Table table,
 			final DataSetTableRestriction template) {
 		// Creates the basic dialog.
-		super(martTab.getMartTabSet().getMartBuilder(),
+		super((JDialog)null,
 				template == null ? Resources.get("addTblRestrictDialogTitle")
 						: Resources.get("modifyTblRestrictDialogTitle"), true);
 
 		// Remembers the dataset tabset this dialog is referring to.
-		this.martTab = martTab;
 		this.cancelled = true;
 
 		// Create the content pane to store the create dialog panel.
@@ -254,8 +248,7 @@ public class RestrictedTableDialog extends JDialog {
 		this.pack();
 
 		// Centre ourselves.
-		this.setLocationRelativeTo(this.martTab.getMartTabSet()
-				.getMartBuilder());
+		this.setLocationRelativeTo(null);
 
 		// Set some nice defaults.
 		if (template != null)
@@ -283,7 +276,7 @@ public class RestrictedTableDialog extends JDialog {
 
 		// If there any messages, display them.
 		if (!messages.isEmpty())
-			JOptionPane.showMessageDialog(this,
+			JOptionPane.showMessageDialog(null,
 					messages.toArray(new String[0]), Resources
 							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);

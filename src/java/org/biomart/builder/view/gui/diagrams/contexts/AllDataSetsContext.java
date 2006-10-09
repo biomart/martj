@@ -36,7 +36,8 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * datasets tab.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class AllDataSetsContext implements DiagramContext {
@@ -44,7 +45,7 @@ public class AllDataSetsContext implements DiagramContext {
 
 	/**
 	 * Creates a new context which will pass any menu actions onto the given
-	 * dataset tabset.
+	 * mart tab.
 	 * 
 	 * @param martTab
 	 *            the mart tab which will receive any menu actions the user
@@ -72,7 +73,7 @@ public class AllDataSetsContext implements DiagramContext {
 			final Object object) {
 
 		// The background area of the diagram has some simple menu items
-		// that refer to all schemas.
+		// that refer to all datasets.
 		if (object == null) {
 
 			// Add a separator if the menu is not already empty.

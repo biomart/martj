@@ -49,7 +49,6 @@ import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Column.GenericColumn;
 import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.resources.Resources;
-import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * This dialog asks users to create or modify a restriction over a particular
@@ -79,8 +78,6 @@ public class RestrictedRelationDialog extends JDialog {
 
 	private JButton firstRemove;
 
-	private MartTab martTab;
-
 	private ColumnAliasTableModel secondColumnAliasModel;
 
 	private JTable secondColumnAliasTable;
@@ -93,22 +90,19 @@ public class RestrictedRelationDialog extends JDialog {
 	 * Creates (but does not open) a dialog requesting details of a restricted
 	 * relation.
 	 * 
-	 * @param martTab
-	 *            the mart tab set to centre ourselves over.
 	 * @param relation
 	 *            the relation to restrict.
 	 * @param template
 	 *            the restriction to use as a template, if any.
 	 */
-	public RestrictedRelationDialog(final MartTab martTab,
-			final Relation relation, final DataSetRelationRestriction template) {
+	public RestrictedRelationDialog(final Relation relation, 
+			final DataSetRelationRestriction template) {
 		// Creates the basic dialog.
-		super(martTab.getMartTabSet().getMartBuilder(),
+		super((JDialog)null,
 				template == null ? Resources.get("addRelRestrictDialogTitle")
 						: Resources.get("modifyRelRestrictDialogTitle"), true);
 
 		// Remembers the dataset tabset this dialog is referring to.
-		this.martTab = martTab;
 		this.cancelled = true;
 
 		// Create the content pane to store the create dialog panel.
@@ -145,10 +139,10 @@ public class RestrictedRelationDialog extends JDialog {
 				.getFirstKey().getTable(), template, true);
 		this.firstColumnAliasTable = new JTable(this.firstColumnAliasModel);
 		this.firstColumnAliasTable.setGridColor(Color.LIGHT_GRAY); // Mac OSX
-		// fix.
+		// Arbitrary size.
 		this.firstColumnAliasTable
 				.setPreferredScrollableViewportSize(new Dimension(400, 100));
-		// Arbitrary size.
+		// First set of buttons.
 		this.firstInsert = new JButton(Resources.get("insertAliasButton"));
 		this.firstRemove = new JButton(Resources.get("removeAliasButton"));
 
@@ -157,10 +151,10 @@ public class RestrictedRelationDialog extends JDialog {
 				.getSecondKey().getTable(), template, false);
 		this.secondColumnAliasTable = new JTable(this.secondColumnAliasModel);
 		this.secondColumnAliasTable.setGridColor(Color.LIGHT_GRAY); // Mac OSX
-		// fix.
+		// Arbitrary size.
 		this.secondColumnAliasTable
 				.setPreferredScrollableViewportSize(new Dimension(400, 100));
-		// Arbitrary size.
+		// Second set of buttons.
 		this.secondInsert = new JButton(Resources.get("insertAliasButton"));
 		this.secondRemove = new JButton(Resources.get("removeAliasButton"));
 
@@ -358,8 +352,7 @@ public class RestrictedRelationDialog extends JDialog {
 		this.pack();
 
 		// Centre ourselves.
-		this.setLocationRelativeTo(this.martTab.getMartTabSet()
-				.getMartBuilder());
+		this.setLocationRelativeTo(null);
 
 		// Set some nice defaults.
 		if (template != null)
@@ -389,7 +382,7 @@ public class RestrictedRelationDialog extends JDialog {
 
 		// If there any messages, display them.
 		if (!messages.isEmpty())
-			JOptionPane.showMessageDialog(this,
+			JOptionPane.showMessageDialog(null,
 					messages.toArray(new String[0]), Resources
 							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);

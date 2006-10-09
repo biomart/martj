@@ -19,18 +19,19 @@
 package org.biomart.builder.view.gui.diagrams;
 
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.Schema;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
-import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
-import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 
 /**
- * Displays the contents of a dataset within a standard diagram object. It adds
- * a series of {@link TableComponent} and {@link RelationComponent} objects when
- * the diagram is recalculated, and treats the schema object it represents as
- * the basic background object of the diagram.
+ * Displays the contents of a dataset within a standard diagram object. This is
+ * identical to {@link SchemaDiagram} except that it shows {@link DataSet}
+ * objects, instead of plain {@link Schema} objects. As {@link DataSet} extends
+ * {@link Schema}, this means that almost all of the code in
+ * {@link SchemaDiagram} can be reused for displaying datasets.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class DataSetDiagram extends SchemaDiagram {

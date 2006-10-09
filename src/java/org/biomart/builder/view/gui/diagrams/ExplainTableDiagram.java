@@ -29,13 +29,14 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 
 /**
- * Displays the contents of a dataset, explaining the relations followed to
- * reach each table used in the dataset tables. It is pretty much the same as a
- * {@link SchemaDiagram}, except that it doesn't show any tables or relations
- * not involved in the construction of the dataset or dataset table concerned.
+ * Given a {@link DataSetTable}, this diagram displays all the underlying
+ * relations from that table, and all the tables that those underlying relations
+ * link, allowing the user to see exactly which tables and relations are
+ * involved in the construction of the {@link DataSetTable}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class ExplainTableDiagram extends Diagram {
@@ -75,7 +76,7 @@ public class ExplainTableDiagram extends Diagram {
 		// Removes all existing components.
 		this.removeAll();
 
-		// Add a TableComponent for the main underlying table, if it exists.
+		// Add a TableComponent for the main underlying table.
 		this.addDiagramComponent(new TableComponent(this.datasetTable
 				.getUnderlyingTable(), this));
 
@@ -85,7 +86,8 @@ public class ExplainTableDiagram extends Diagram {
 				.iterator(); i.hasNext();) {
 			final Relation relation = (Relation) i.next();
 
-			// Add the two ends of the relation, only if not done so before.
+			// Add the tables at the two ends of the relation, but only if
+			// not done so before.
 			final Table firstTable = relation.getFirstKey().getTable();
 			if (this.getDiagramComponent(firstTable) == null) {
 				final TableComponent tableComponent = new TableComponent(

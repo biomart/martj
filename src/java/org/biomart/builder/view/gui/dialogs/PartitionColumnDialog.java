@@ -52,7 +52,8 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * what values to use.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class PartitionColumnDialog extends JDialog {
@@ -71,7 +72,7 @@ public class PartitionColumnDialog extends JDialog {
 			final MartTab martTab) {
 		final PartitionColumnDialog dialog = new PartitionColumnDialog(martTab,
 				Resources.get("createPartitionButton"), null);
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		return dialog.partitionType;
 	}
@@ -94,7 +95,7 @@ public class PartitionColumnDialog extends JDialog {
 			final MartTab martTab, final PartitionedColumnType template) {
 		final PartitionColumnDialog dialog = new PartitionColumnDialog(martTab,
 				Resources.get("updatePartitionButton"), template);
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		return dialog.partitionType;
 	}
@@ -162,9 +163,7 @@ public class PartitionColumnDialog extends JDialog {
 		this.nullable = new JCheckBox();
 
 		// Make the drop-down type choice change which value and nullable
-		// options appear. Use a final reference to ourselves to enable us
-		// to reference ourselves inside the anonymous classes.
-		final JDialog us = this;
+		// options appear. 
 		this.type.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				final String selectedItem = (String) PartitionColumnDialog.this.type
@@ -201,7 +200,9 @@ public class PartitionColumnDialog extends JDialog {
 					PartitionColumnDialog.this.multiValue.setVisible(false);
 					PartitionColumnDialog.this.nullable.setVisible(false);
 				}
-				us.pack();
+				
+				// Update the dialog size to fit the new fields.
+				PartitionColumnDialog.this.pack();
 			}
 		});
 
@@ -276,7 +277,7 @@ public class PartitionColumnDialog extends JDialog {
 		this.execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				PartitionColumnDialog.this.partitionType = PartitionColumnDialog.this
-						.createPartitionType();
+						.createPartitionTypeFromSettings();
 				if (PartitionColumnDialog.this.partitionType != null)
 					PartitionColumnDialog.this.hide();
 			}
@@ -286,13 +287,13 @@ public class PartitionColumnDialog extends JDialog {
 		this.getRootPane().setDefaultButton(this.execute);
 
 		// Reset the fields to their default values.
-		this.resetFields(template);
+		this.copySettingsFromPartitionType(template);
 
 		// Set the size of the dialog.
 		this.pack();
 	}
 
-	private PartitionedColumnType createPartitionType() {
+	private PartitionedColumnType createPartitionTypeFromSettings() {
 		// If we can't validate it, we can't create it.
 		if (!this.validateFields())
 			return null;
@@ -334,7 +335,7 @@ public class PartitionColumnDialog extends JDialog {
 		return string == null || string.trim().length() == 0;
 	}
 
-	private void resetFields(final PartitionedColumnType template) {
+	private void copySettingsFromPartitionType(final PartitionedColumnType template) {
 		// If an existing single partition has been specified, populate
 		// its details into the box.
 		if (template instanceof SingleValue) {
@@ -398,7 +399,7 @@ public class PartitionColumnDialog extends JDialog {
 
 		// If there any messages, display them.
 		if (!messages.isEmpty())
-			JOptionPane.showMessageDialog(this,
+			JOptionPane.showMessageDialog(null,
 					messages.toArray(new String[0]), Resources
 							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);

@@ -261,7 +261,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			} else if (event == MartConstructorListener.DATASET_STARTED) {
 				// Start a new file within the zip file.
 				this.entry = new ZipEntry(this.martSequence + "/"
-						+ this.datasetSequence + ".sql");
+						+ this.datasetSequence + Resources.get("ddlExtension"));
 				this.entry.setTime(System.currentTimeMillis());
 				this.outputZipStream.putNextEntry(this.entry);
 			} else if (event == MartConstructorListener.DATASET_ENDED) {
@@ -429,7 +429,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.outputFileStream.close();
 			} else if (event == MartConstructorListener.MART_STARTED) {
 				// Start a new entry in the zip file.
-				this.entry = new ZipEntry(this.martSequence + ".sql");
+				this.entry = new ZipEntry(this.martSequence + Resources.get("ddlExtension"));
 				this.entry.setTime(System.currentTimeMillis());
 				this.outputZipStream.putNextEntry(this.entry);
 			} else if (event == MartConstructorListener.MART_ENDED) {
@@ -708,7 +708,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 					// create the folder structure for us if it does
 					// not already exist.
 					final ZipEntry entry = new ZipEntry(level + "/" + level
-							+ "-" + action.getSequence() + ".sql");
+							+ "-" + action.getSequence() + Resources.get("ddlExtension"));
 					entry.setTime(System.currentTimeMillis());
 					this.outputZipStream.putNextEntry(entry);
 					// Convert the action to some DDL.
@@ -802,7 +802,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 					final String tableName = (String) actionEntry.getKey();
 					ZipEntry entry = new ZipEntry(this.martSequence + "/"
 							+ this.datasetSequence + "/" + tableName
-							+ Resources.get("perTablePart1FileName") + ".sql");
+							+ Resources.get("perTablePart1FileName") + Resources.get("ddlExtension"));
 					entry.setTime(System.currentTimeMillis());
 					this.outputZipStream.putNextEntry(entry);
 					// What actions are for this table?
@@ -845,7 +845,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 					final String tableName = (String) actionEntry.getKey();
 					ZipEntry entry = new ZipEntry(this.martSequence + "/"
 							+ this.datasetSequence + "/" + tableName
-							+ Resources.get("perTablePart2FileName") + ".sql");
+							+ Resources.get("perTablePart2FileName") + Resources.get("ddlExtension"));
 					entry.setTime(System.currentTimeMillis());
 					this.outputZipStream.putNextEntry(entry);
 					// What actions are for this table?
@@ -898,7 +898,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 					String tableName = (String) mapEntry.getKey();
 					ZipEntry entry = new ZipEntry(this.martSequence + "/"
 							+ this.datasetSequence + "/" + tableName
-							+ Resources.get("perTablePart3FileName") + ".sql");
+							+ Resources.get("perTablePart3FileName") + Resources.get("ddlExtension"));
 					entry.setTime(System.currentTimeMillis());
 					this.outputZipStream.putNextEntry(entry);
 					for (final Iterator j = ((List) mapEntry.getValue())

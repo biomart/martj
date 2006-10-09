@@ -40,13 +40,23 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 
 /**
  * This component represents a relation between two keys, in the form of a line.
- * The line is defined by the layout manager.
+ * The path of the line is defined by one of the layout managers provided with
+ * MartBuilder.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
+	private static final float RELATION_DASHSIZE = 7.0f; // 72 = 1 inch
+
+	private static final float RELATION_DOTSIZE = 3.0f; // 72 = 1 inch
+
+	private static final float RELATION_LINEWIDTH = 1.0f; // 72 = 1 inch
+
+	private static final float RELATION_MITRE_TRIM = 10.0f; // 72 = 1 inch
+
 	private static final Stroke MANY_MANY = new BasicStroke(
 			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
 			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM);
@@ -82,14 +92,6 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 					RelationComponent.RELATION_DOTSIZE,
 					RelationComponent.RELATION_DOTSIZE,
 					RelationComponent.RELATION_DOTSIZE }, 0);
-
-	private static final float RELATION_DASHSIZE = 7.0f; // 72 = 1 inch
-
-	private static final float RELATION_DOTSIZE = 3.0f; // 72 = 1 inch
-
-	private static final float RELATION_LINEWIDTH = 1.0f; // 72 = 1 inch
-
-	private static final float RELATION_MITRE_TRIM = 10.0f; // 72 = 1 inch
 
 	private static final long serialVersionUID = 1;
 
@@ -140,8 +142,8 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	private Stroke stroke;
 
 	/**
-	 * The constructor constructs an object around a given object, and
-	 * associates with a given display.
+	 * The constructor constructs a component around a given relation, and
+	 * associates the component with the given diagram.
 	 * 
 	 * @param relation
 	 *            the relation to show in the component.
@@ -178,6 +180,8 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	protected void paintComponent(final Graphics g) {
 		final Graphics2D g2d = (Graphics2D) g.create();
 		g2d.setRenderingHints(this.renderHints);
+		// Only bother redrawing if we actually intersect the area being
+		// redrawn.
 		final Shape clippingArea = g2d.getClip();
 		if (clippingArea != null
 				&& !this.lineShape.intersects(clippingArea.getBounds2D()))
@@ -224,7 +228,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 
 	public boolean contains(final int x, final int y) {
 		// Clicks are on us if they are within a certain distance
-		// of the stroked shape.
+		// of the outline shape.
 		return this.outline != null
 				&& this.outline.intersects(new Rectangle2D.Double(x
 						- RelationComponent.RELATION_LINEWIDTH * 2, y
@@ -251,10 +255,10 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	}
 
 	/**
-	 * Returns the diagram component representing the first end of this
+	 * Returns the diagram component representing the first key of this
 	 * relation.
 	 * 
-	 * @return the diagram component for the first end.
+	 * @return the diagram component for the first key.
 	 */
 	public KeyComponent getFirstKeyComponent() {
 		return (KeyComponent) this.diagram.getDiagramComponent(this.relation
@@ -266,10 +270,10 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	}
 
 	/**
-	 * Returns the diagram component representing the second end of this
+	 * Returns the diagram component representing the second key of this
 	 * relation.
 	 * 
-	 * @return the diagram component for the second end.
+	 * @return the diagram component for the second key.
 	 */
 	public KeyComponent getSecondKeyComponent() {
 		return (KeyComponent) this.diagram.getDiagramComponent(this.relation
@@ -318,7 +322,16 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	 *            the shape this relation should take on screen.
 	 */
 	public void setLineShape(final Shape shape) {
-		this.lineShape = shape;
+		// Only change if the shape has changed.
+		if (this.lineShape != shape
+				|| (this.lineShape != null && !this.lineShape.equals(shape))) {
+			this.lineShape = shape;
+			// Update the outline of the relation shape accordingly.
+			if (this.lineShape != null)
+				this.outline = new BasicStroke()
+						.createStrokedShape(this.lineShape);
+		}
+		// Update our appearance.
 		this.updateAppearance();
 	}
 
@@ -327,9 +340,11 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	}
 
 	public void updateAppearance() {
+		// Use the context to alter us first.
 		final DiagramContext mod = this.getDiagram().getDiagramContext();
 		if (mod != null)
 			mod.customiseAppearance(this, this.getObject());
+		// Work out what style to draw the relation line.
 		if (this.dotted) {
 			if (this.relation.isOneToOne())
 				this.stroke = RelationComponent.ONE_ONE_DOTTED;
@@ -343,7 +358,5 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 			this.stroke = RelationComponent.ONE_MANY;
 		else if (this.relation.isManyToMany())
 			this.stroke = RelationComponent.MANY_MANY;
-		if (this.lineShape != null)
-			this.outline = new BasicStroke().createStrokedShape(this.lineShape);
 	}
 }

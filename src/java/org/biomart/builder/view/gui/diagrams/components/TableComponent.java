@@ -45,8 +45,8 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * a secondary label indicating which schema they belong to.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class TableComponent extends BoxShapedComponent {
@@ -63,12 +63,13 @@ public class TableComponent extends BoxShapedComponent {
 	public static Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
 
 	/**
-	 * Colour for subclassed tables (in the dataset context).
+	 * Colour for dimension tables (in the dataset context).
 	 */
 	public static Color DIMENSION_COLOUR = Color.BLUE;
 
 	/**
-	 * Colour for all non-subclassed, non-dimension tables.
+	 * Colour for main tables (in the dataset context) and all tables in other
+	 * contexts.
 	 */
 	public static Color NORMAL_COLOUR = Color.BLACK;
 
@@ -108,7 +109,7 @@ public class TableComponent extends BoxShapedComponent {
 		this.layout = new GridBagLayout();
 		this.setLayout(this.layout);
 
-		// Constraints for each field.
+		// Constraints for each component within the table component.
 		this.constraints = new GridBagConstraints();
 		this.constraints.gridwidth = GridBagConstraints.REMAINDER;
 		this.constraints.fill = GridBagConstraints.HORIZONTAL;
@@ -131,7 +132,7 @@ public class TableComponent extends BoxShapedComponent {
 	/**
 	 * Count the internal relations attached to our table. Internal relations
 	 * are those that refer at both ends to tables in the same schema as each
-	 * other.
+	 * other. Delegates to {@link Table#getInternalRelations()}.
 	 * 
 	 * @return the number of internal relations linked to this table.
 	 */
@@ -143,7 +144,7 @@ public class TableComponent extends BoxShapedComponent {
 		// Remove all our existing components.
 		this.removeAll();
 
-		// Set the background to pink.
+		// Set the background colour.
 		this.setBackground(TableComponent.BACKGROUND_COLOUR);
 
 		// Add the table name label.
@@ -152,13 +153,13 @@ public class TableComponent extends BoxShapedComponent {
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 
-		// Add the schema name label below.
+		// Add the schema name label.
 		label = new JLabel(this.getTable().getSchema().getName());
 		label.setFont(TableComponent.ITALIC_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
 
-		// Add a key component as a sub-component of this table
+		// Add a key component as a sub-component of this table,
 		// for the primary key in the table.
 		if (this.getTable().getPrimaryKey() != null) {
 			final Key key = this.getTable().getPrimaryKey();
@@ -174,7 +175,7 @@ public class TableComponent extends BoxShapedComponent {
 			this.add(keyComponent);
 		}
 
-		// Add a key component as a sub-component of this table
+		// Add a key component as a sub-component of this table,
 		// for each of the foreign keys in the table.
 		for (final Iterator i = this.getTable().getForeignKeys().iterator(); i
 				.hasNext();) {
@@ -191,7 +192,7 @@ public class TableComponent extends BoxShapedComponent {
 			this.add(keyComponent);
 		}
 
-		// Now the columns, as a vertical list.
+		// Now the columns, as a vertical list in their own panel.
 		this.columnsListPanel = new JPanel();
 		final GridBagLayout columnsListPanelLayout = new GridBagLayout();
 		this.columnsListPanel.setLayout(columnsListPanelLayout);
@@ -238,8 +239,7 @@ public class TableComponent extends BoxShapedComponent {
 	}
 
 	public void setState(final Object state) {
-		// For us, state is TRUE if we want the columns panel hidden, FALSE if
-		// not.
+		// For us, state is TRUE if we want the columns panel visible.
 		if (state != null && state.equals(Boolean.TRUE)) {
 			// If the state has changed from FALSE to TRUE, show the columns
 			// and change the button to 'hide columns'.

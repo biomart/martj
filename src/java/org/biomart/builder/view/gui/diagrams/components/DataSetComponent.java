@@ -39,7 +39,8 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class DataSetComponent extends BoxShapedComponent {
@@ -81,7 +82,7 @@ public class DataSetComponent extends BoxShapedComponent {
 		this.layout = new GridBagLayout();
 		this.setLayout(this.layout);
 
-		// Constraints for each field.
+		// Constraints for each sub-component.
 		this.constraints = new GridBagConstraints();
 		this.constraints.gridwidth = GridBagConstraints.REMAINDER;
 		this.constraints.fill = GridBagConstraints.HORIZONTAL;
@@ -105,7 +106,7 @@ public class DataSetComponent extends BoxShapedComponent {
 			contextMenu.addSeparator();
 
 		// Add the 'show tables' option, which opens the tab representing
-		// this schema.
+		// this dataset.
 		final JMenuItem showTables = new JMenuItem(Resources
 				.get("showTablesTitle"));
 		showTables.setMnemonic(Resources.get("showTablesMnemonic").charAt(0));
@@ -134,7 +135,7 @@ public class DataSetComponent extends BoxShapedComponent {
 		else
 			this.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
 
-		// Add the label for the schema name,
+		// Add the label for the dataset name,
 		final JLabel label = new JLabel(this.getDataSet().getName());
 		label.setFont(DataSetComponent.BOLD_FONT);
 		this.layout.setConstraints(label, this.constraints);

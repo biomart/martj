@@ -26,12 +26,13 @@ import org.biomart.builder.model.Schema;
 
 /**
  * Connection panels represent all the different options available when
- * establishing a schema. They don't do the common stuff - name, type - but do
- * the stuff specific to a particular type of schema. They handle validation of
- * input, and can modify or create schemas based on the input.
+ * establishing a schema. They don't do the common stuff - name, type, etc. -
+ * but do the stuff specific to a particular type of schema. They handle
+ * validation of input, and can modify or create schemas based on the input.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public abstract class SchemaConnectionPanel extends JPanel {
@@ -43,7 +44,7 @@ public abstract class SchemaConnectionPanel extends JPanel {
 	 * @return the created schema. It will return null if creation failed, eg.
 	 *         the currently field values are not valid.
 	 */
-	public abstract Schema createSchema(String schemaName);
+	public abstract Schema createSchemaFromSettings(String schemaName);
 
 	/**
 	 * Modifies a schema based on the values in the panel's fields.
@@ -53,7 +54,7 @@ public abstract class SchemaConnectionPanel extends JPanel {
 	 * @return the modified schema. It will return null if modification failed,
 	 *         eg. the currently field values are not valid.
 	 */
-	public abstract Schema modifySchema(Schema schema);
+	public abstract Schema copySettingsToExistingSchema(Schema schema);
 
 	/**
 	 * Resets the fields based on a given template. Specify <tt>null</tt> for
@@ -62,7 +63,7 @@ public abstract class SchemaConnectionPanel extends JPanel {
 	 * @param template
 	 *            the template to reset the fields for.
 	 */
-	public abstract void resetFields(Schema template);
+	public abstract void copySettingsFromSchema(Schema template);
 
 	/**
 	 * Validates the current values of the fields in the panel.
@@ -71,15 +72,16 @@ public abstract class SchemaConnectionPanel extends JPanel {
 	 *         possible pop up some messages for the user to read en route.
 	 */
 	public abstract boolean validateFields();
-	
+
 	/**
 	 * Using a properties object from history that matches this class, copy
 	 * settings and populate the dialog from it.
 	 * 
-	 * @param template the properties to copy into the dialog.
+	 * @param template
+	 *            the properties to copy into the dialog.
 	 */
-	public abstract void copySettingsFrom(final Properties template);
-	
+	public abstract void copySettingsFromProperties(final Properties template);
+
 	/**
 	 * Work out what class of {@link Schema} objects this panel edits.
 	 * 

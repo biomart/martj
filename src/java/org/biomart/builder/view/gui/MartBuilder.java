@@ -195,7 +195,7 @@ public class MartBuilder extends JFrame {
 
 		// Ask if they want to see the full stack trace (show the first line of
 		// the stack trace as a hint).
-		final int choice = JOptionPane.showConfirmDialog(this, new Object[] {
+		final int choice = JOptionPane.showConfirmDialog(null, new Object[] {
 				mainMessage, Resources.get("stackTracePrompt") }, Resources
 				.get("stackTraceTitle"), JOptionPane.YES_NO_OPTION);
 
@@ -219,7 +219,7 @@ public class MartBuilder extends JFrame {
 			editorScrollPane.setPreferredSize(new Dimension(600, 400));
 
 			// Show the output.
-			JOptionPane.showMessageDialog(this, editorScrollPane, Resources
+			JOptionPane.showMessageDialog(null, editorScrollPane, Resources
 					.get("stackTraceTitle"), messageClass);
 		}
 	}

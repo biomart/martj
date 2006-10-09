@@ -40,16 +40,17 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 
 /**
- * This context applies to the general schema view, as seen when a dataset tab
- * has been selected. It allows dataset-specific things such as masked relations
- * to be set up, where those things have to be defined against the source schema
- * rather than the dataset's generated schema.
+ * This context applies to the general schema view, as seen via a dataset tab.
+ * It allows dataset-specific things such as masked relations to be set up,
+ * where those things have to be defined against the source schema rather than
+ * the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
-public class WindowContext extends SchemaContext {
+public class ExplainDataSetContext extends SchemaContext {
 	private DataSet dataset;
 
 	/**
@@ -59,11 +60,11 @@ public class WindowContext extends SchemaContext {
 	 * specified in the tabset.
 	 * 
 	 * @param martTab
-	 *            the mart tab that the schema window appears within.
+	 *            the mart tab that the dataset tab appears within.
 	 * @param dataset
 	 *            the dataset we are attached to.
 	 */
-	public WindowContext(final MartTab martTab, final DataSet dataset) {
+	public ExplainDataSetContext(final MartTab martTab, final DataSet dataset) {
 		super(martTab);
 		this.dataset = dataset;
 	}
@@ -80,7 +81,7 @@ public class WindowContext extends SchemaContext {
 		}
 
 		// This section customises the appearance of relation lines within
-		// the window schema diagram.
+		// the schema diagram.
 		if (object instanceof Relation) {
 
 			// Work out what relation we are dealing with.
@@ -162,7 +163,7 @@ public class WindowContext extends SchemaContext {
 					.charAt(0));
 			showTen.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this.getMartTab().getSchemaTabSet()
+					ExplainDataSetContext.this.getMartTab().getSchemaTabSet()
 							.requestShowRows(table, 0, 10);
 				}
 			});
@@ -177,10 +178,9 @@ public class WindowContext extends SchemaContext {
 			mask.setMnemonic(Resources.get("maskTableMnemonic").charAt(0));
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this
-							.getMartTab()
-							.getDataSetTabSet()
-							.requestMaskTable(WindowContext.this.dataset, table);
+					ExplainDataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestMaskTable(
+									ExplainDataSetContext.this.dataset, table);
 				}
 			});
 			contextMenu.add(mask);
@@ -192,10 +192,9 @@ public class WindowContext extends SchemaContext {
 			unmask.setMnemonic(Resources.get("unmaskTableMnemonic").charAt(0));
 			unmask.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this
-							.getMartTab()
-							.getDataSetTabSet()
-							.requestUnmaskTable(WindowContext.this.dataset, table);
+					ExplainDataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestUnmaskTable(
+									ExplainDataSetContext.this.dataset, table);
 				}
 			});
 			contextMenu.add(unmask);
@@ -215,11 +214,12 @@ public class WindowContext extends SchemaContext {
 						"modifyTableRestrictionMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						WindowContext.this.getMartTab().getDataSetTabSet()
+						ExplainDataSetContext.this.getMartTab()
+								.getDataSetTabSet()
 								.requestModifyTableRestriction(
-										WindowContext.this.dataset,
+										ExplainDataSetContext.this.dataset,
 										table,
-										WindowContext.this.dataset
+										ExplainDataSetContext.this.dataset
 												.getRestrictedTableType(table));
 					}
 				});
@@ -237,9 +237,10 @@ public class WindowContext extends SchemaContext {
 						"addTableRestrictionMnemonic").charAt(0));
 				restriction.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						WindowContext.this.getMartTab().getDataSetTabSet()
-								.requestAddTableRestriction(
-										WindowContext.this.dataset, table);
+						ExplainDataSetContext.this.getMartTab()
+								.getDataSetTabSet().requestAddTableRestriction(
+										ExplainDataSetContext.this.dataset,
+										table);
 					}
 				});
 				contextMenu.add(restriction);
@@ -252,9 +253,9 @@ public class WindowContext extends SchemaContext {
 					.charAt(0));
 			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this.getMartTab().getDataSetTabSet()
+					ExplainDataSetContext.this.getMartTab().getDataSetTabSet()
 							.requestRemoveTableRestriction(
-									WindowContext.this.dataset, table);
+									ExplainDataSetContext.this.dataset, table);
 				}
 			});
 			contextMenu.add(remove);
@@ -289,13 +290,15 @@ public class WindowContext extends SchemaContext {
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					if (mask.isSelected())
-						WindowContext.this.getMartTab().getDataSetTabSet()
-								.requestMaskRelation(
-										WindowContext.this.dataset, relation);
+						ExplainDataSetContext.this.getMartTab()
+								.getDataSetTabSet().requestMaskRelation(
+										ExplainDataSetContext.this.dataset,
+										relation);
 					else
-						WindowContext.this.getMartTab().getDataSetTabSet()
-								.requestUnmaskRelation(
-										WindowContext.this.dataset, relation);
+						ExplainDataSetContext.this.getMartTab()
+								.getDataSetTabSet().requestUnmaskRelation(
+										ExplainDataSetContext.this.dataset,
+										relation);
 				}
 			});
 			contextMenu.add(mask);
@@ -314,13 +317,15 @@ public class WindowContext extends SchemaContext {
 			subclass.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					if (subclass.isSelected())
-						WindowContext.this.getMartTab().getDataSetTabSet()
-								.requestSubclassRelation(
-										WindowContext.this.dataset, relation);
+						ExplainDataSetContext.this.getMartTab()
+								.getDataSetTabSet().requestSubclassRelation(
+										ExplainDataSetContext.this.dataset,
+										relation);
 					else
-						WindowContext.this.getMartTab().getDataSetTabSet()
-								.requestUnsubclassRelation(
-										WindowContext.this.dataset, relation);
+						ExplainDataSetContext.this.getMartTab()
+								.getDataSetTabSet().requestUnsubclassRelation(
+										ExplainDataSetContext.this.dataset,
+										relation);
 				}
 			});
 			contextMenu.add(subclass);
@@ -345,13 +350,13 @@ public class WindowContext extends SchemaContext {
 						.get("modifyConcatRelationMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						WindowContext.this
+						ExplainDataSetContext.this
 								.getMartTab()
 								.getDataSetTabSet()
 								.requestModifyConcatOnlyRelation(
-										WindowContext.this.dataset,
+										ExplainDataSetContext.this.dataset,
 										relation,
-										WindowContext.this.dataset
+										ExplainDataSetContext.this.dataset
 												.getConcatRelationType(relation));
 					}
 				});
@@ -369,9 +374,11 @@ public class WindowContext extends SchemaContext {
 						.charAt(0));
 				concat.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						WindowContext.this.getMartTab().getDataSetTabSet()
+						ExplainDataSetContext.this.getMartTab()
+								.getDataSetTabSet()
 								.requestCreateConcatOnlyRelation(
-										WindowContext.this.dataset, relation);
+										ExplainDataSetContext.this.dataset,
+										relation);
 					}
 				});
 				contextMenu.add(concat);
@@ -384,9 +391,10 @@ public class WindowContext extends SchemaContext {
 					.charAt(0));
 			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this.getMartTab().getDataSetTabSet()
+					ExplainDataSetContext.this.getMartTab().getDataSetTabSet()
 							.requestUnconcatOnlyRelation(
-									WindowContext.this.dataset, relation);
+									ExplainDataSetContext.this.dataset,
+									relation);
 				}
 			});
 			contextMenu.add(remove);
@@ -408,13 +416,13 @@ public class WindowContext extends SchemaContext {
 						"modifyRelationRestrictionMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						WindowContext.this
+						ExplainDataSetContext.this
 								.getMartTab()
 								.getDataSetTabSet()
 								.requestModifyRelationRestriction(
-										WindowContext.this.dataset,
+										ExplainDataSetContext.this.dataset,
 										relation,
-										WindowContext.this.dataset
+										ExplainDataSetContext.this.dataset
 												.getRestrictedRelationType(relation));
 					}
 				});
@@ -432,9 +440,11 @@ public class WindowContext extends SchemaContext {
 						"addRelationRestrictionMnemonic").charAt(0));
 				restriction.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						WindowContext.this.getMartTab().getDataSetTabSet()
+						ExplainDataSetContext.this.getMartTab()
+								.getDataSetTabSet()
 								.requestAddRelationRestriction(
-										WindowContext.this.dataset, relation);
+										ExplainDataSetContext.this.dataset,
+										relation);
 					}
 				});
 				contextMenu.add(restriction);
@@ -447,9 +457,10 @@ public class WindowContext extends SchemaContext {
 					"removeRelationRestrictionMnemonic").charAt(0));
 			removeRest.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					WindowContext.this.getMartTab().getDataSetTabSet()
+					ExplainDataSetContext.this.getMartTab().getDataSetTabSet()
 							.requestRemoveRelationRestriction(
-									WindowContext.this.dataset, relation);
+									ExplainDataSetContext.this.dataset,
+									relation);
 				}
 			});
 			contextMenu.add(removeRest);

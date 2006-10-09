@@ -47,14 +47,16 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.resources.Resources;
-import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
- * This dialog asks users what kind of invisible dataset suggestion they want to
- * do.
+ * This dialog asks users what kind of invisible dataset suggestion the user wants to
+ * do. It does this by giving them a list of tables from which columns in 
+ * the specified dataset table have been derived, then allowing them to
+ * select one or more columns from a single table on this list.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class SuggestInvisibleDataSetDialog extends JDialog {
@@ -66,27 +68,21 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 
 	private JButton execute;
 
-	private MartTab martTab;
-
 	private JComboBox tables;
 
 	/**
 	 * Creates (but does not open) a dialog requesting details of invisible
 	 * dataset suggestion.
 	 * 
-	 * @param martTab
-	 *            the mart tab set to centre ourselves over.
 	 * @param table
-	 *            the table to source columns from to show in the list.
+	 *            the main dataset table to source columns from to show in 
+	 *            the list.
 	 */
-	public SuggestInvisibleDataSetDialog(final MartTab martTab,
+	public SuggestInvisibleDataSetDialog(
 			final DataSetTable table) {
 		// Creates the basic dialog.
-		super(martTab.getMartTabSet().getMartBuilder(), Resources
+		super((JDialog)null, Resources
 				.get("suggestInvisibleDataSetDialogTitle"), true);
-
-		// Remembers the dataset tabset this dialog is referring to.
-		this.martTab = martTab;
 
 		// Create the content pane to store the create dialog panel.
 		final GridBagLayout gridBag = new GridBagLayout();
@@ -223,8 +219,7 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 		this.pack();
 
 		// Centre ourselves.
-		this.setLocationRelativeTo(this.martTab.getMartTabSet()
-				.getMartBuilder());
+		this.setLocationRelativeTo(null);
 	}
 
 	private boolean validateFields() {
@@ -237,7 +232,7 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 
 		// If there any messages, display them.
 		if (!messages.isEmpty())
-			JOptionPane.showMessageDialog(this,
+			JOptionPane.showMessageDialog(null,
 					messages.toArray(new String[0]), Resources
 							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);

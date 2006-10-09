@@ -52,7 +52,6 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.resources.Resources;
-import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * This dialog asks users to create or modify an expression column.
@@ -83,8 +82,6 @@ public class ExpressionColumnDialog extends JDialog {
 
 	private JButton insert;
 
-	private MartTab martTab;
-
 	private JButton remove;
 
 	private DataSetTable table;
@@ -93,22 +90,19 @@ public class ExpressionColumnDialog extends JDialog {
 	 * Creates (but does not open) a dialog requesting details of expression
 	 * column.
 	 * 
-	 * @param martTab
-	 *            the mart tab set to centre ourselves over.
 	 * @param table
 	 *            the table to source columns from.
 	 * @param template
 	 *            the column to use as a template, if any.
 	 */
-	public ExpressionColumnDialog(final MartTab martTab,
-			final DataSetTable table, final ExpressionColumn template) {
+	public ExpressionColumnDialog(final DataSetTable table, 
+			final ExpressionColumn template) {
 		// Creates the basic dialog.
-		super(martTab.getMartTabSet().getMartBuilder(),
+		super((JDialog)null,
 				template == null ? Resources.get("addExpColDialogTitle")
 						: Resources.get("modifyExpColDialogTitle"), true);
 
 		// Remembers the dataset tabset this dialog is referring to.
-		this.martTab = martTab;
 		this.table = table;
 		this.cancelled = true;
 
@@ -143,9 +137,11 @@ public class ExpressionColumnDialog extends JDialog {
 		this.expression = new JTextArea(10, 40); // Arbitrary size.
 		this.columnAliasModel = new ColumnAliasTableModel(table, template);
 		this.columnAliasTable = new JTable(this.columnAliasModel);
-		this.columnAliasTable.setGridColor(Color.LIGHT_GRAY); // Mac OSX fix.
+		this.columnAliasTable.setGridColor(Color.LIGHT_GRAY); // Mac OSX.
+		// Arbitrary size.
 		this.columnAliasTable.setPreferredScrollableViewportSize(new Dimension(
-				400, 100)); // Arbitrary size.
+				400, 100)); 
+		// Some buttons.
 		this.insert = new JButton(Resources.get("insertAliasButton"));
 		this.remove = new JButton(Resources.get("removeAliasButton"));
 		this.groupBy = new JCheckBox(Resources.get("groupbyLabel"));
@@ -284,8 +280,7 @@ public class ExpressionColumnDialog extends JDialog {
 		this.pack();
 
 		// Centre ourselves.
-		this.setLocationRelativeTo(this.martTab.getMartTabSet()
-				.getMartBuilder());
+		this.setLocationRelativeTo(null);
 
 		// Set some nice defaults.
 		if (template != null) {
@@ -338,7 +333,7 @@ public class ExpressionColumnDialog extends JDialog {
 
 		// If there any messages, display them.
 		if (!messages.isEmpty())
-			JOptionPane.showMessageDialog(this,
+			JOptionPane.showMessageDialog(null,
 					messages.toArray(new String[0]), Resources
 							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);

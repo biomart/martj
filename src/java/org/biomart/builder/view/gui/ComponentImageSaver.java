@@ -105,10 +105,11 @@ public class ComponentImageSaver {
 		fileChooser.setAcceptAllFileFilterUsed(false);
 		fileChooser.addChoosableFileFilter(new ImageSaverFilter("png",
 				Resources.get("PNGFileFilterDescription"),
-				new String[] { ".png" }));
+				new String[] { Resources.get("pngExtension") }));
 		fileChooser.addChoosableFileFilter(new ImageSaverFilter("jpeg",
 				Resources.get("JPEGFileFilterDescription"), new String[] {
-						".jpg", ".jpeg" }));
+						Resources.get("jpgExtension"),
+						Resources.get("jpegExtension") }));
 		if (fileChooser.showSaveDialog(this.martTab) == JFileChooser.APPROVE_OPTION)
 			// Call save() with the filename and format.
 			LongProcess.run(new Runnable() {

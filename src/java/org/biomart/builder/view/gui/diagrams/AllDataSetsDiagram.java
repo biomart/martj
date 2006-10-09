@@ -24,21 +24,20 @@ import java.util.Iterator;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
-import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
 
 /**
- * This diagram draws a box for each dataset in the mart, as a
- * {@link SchemaComponent}.
- * 
+ * This diagram draws a {@link DataSetComponent} for each dataset in a mart.
+ *  
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class AllDataSetsDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * Static reference to the background colour to use for components.
+	 * The background colour to use for the diagram.
 	 */
 	public static final Color BACKGROUND_COLOUR = Color.WHITE;
 
@@ -47,7 +46,7 @@ public class AllDataSetsDiagram extends Diagram {
 	 * tab.
 	 * 
 	 * @param martTab
-	 *            the mart tab to associate with this dataset. It will be used
+	 *            the mart tab to associate with this diagram. It will be used
 	 *            to work out who receives all user menu events, etc.
 	 */
 	public AllDataSetsDiagram(final MartTab martTab) {
@@ -66,7 +65,7 @@ public class AllDataSetsDiagram extends Diagram {
 		// Remove all existing components.
 		this.removeAll();
 
-		// Add a SchemaComponent for each dataset.
+		// Add a DataSetComponent for each dataset.
 		for (final Iterator i = this.getMartTab().getMart().getDataSets()
 				.iterator(); i.hasNext();) {
 			final DataSet ds = (DataSet) i.next();

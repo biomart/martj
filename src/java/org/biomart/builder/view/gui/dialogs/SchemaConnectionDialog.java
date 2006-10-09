@@ -50,7 +50,8 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * before the result is returned to the caller.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class SchemaConnectionDialog extends JDialog {
@@ -68,7 +69,7 @@ public class SchemaConnectionDialog extends JDialog {
 		final SchemaConnectionDialog dialog = new SchemaConnectionDialog(
 				martTab, Resources.get("newSchemaDialogTitle"), Resources
 						.get("addButton"), null);
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		return dialog.schema;
 	}
@@ -89,11 +90,11 @@ public class SchemaConnectionDialog extends JDialog {
 		final SchemaConnectionDialog dialog = new SchemaConnectionDialog(
 				martTab, Resources.get("modifySchemaDialogTitle"), Resources
 						.get("modifyButton"), schema);
-		dialog.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		if (dialog.schema != null && dialog.schema instanceof JDBCSchema)
 			return ((JDBCSchemaConnectionPanel) dialog.connectionPanel)
-					.modifySchema(schema) != null;
+					.copySettingsToExistingSchema(schema) != null;
 		else
 			return false;
 	}
@@ -169,7 +170,9 @@ public class SchemaConnectionDialog extends JDialog {
 								.add(SchemaConnectionDialog.this.connectionPanel);
 						SchemaConnectionDialog.this.pack();
 					}
-				// General stuff for all schema types.
+				// General stuff for all schema types, including populating
+				// the name combo-box with all historical schema objects
+				// of the same class as the currently selected type.
 				SchemaConnectionDialog.this.name.removeAllItems();
 				for (final Iterator i = SettingsCache.getHistoryNamesForClass(
 						SchemaConnectionDialog.this.connectionPanel
@@ -179,8 +182,8 @@ public class SchemaConnectionDialog extends JDialog {
 			}
 		});
 
-		// Build a combo box that lists all other JDBCSchema instances in
-		// the mart, and allows the user to copy settings from them.
+		// Build a combo box that allows the user to change the name
+		// of a schema, or select one from history to copy settings from.
 		this.name = new JComboBox();
 		this.name.setEditable(true);
 		this.name.addActionListener(new ActionListener() {
@@ -198,14 +201,13 @@ public class SchemaConnectionDialog extends JDialog {
 				// Copy the settings, if we found any that matched.
 				if (historyProps != null)
 					SchemaConnectionDialog.this.connectionPanel
-							.copySettingsFrom(historyProps);
+							.copySettingsFromProperties(historyProps);
 			}
 		});
 
 		// Make a default selection for the connection panel holder. Use JDBC
 		// as it is the most obvious choice. We have to do something here else
-		// the
-		// box won't size properly without one.
+		// the box won't size properly without one.
 		this.type.setSelectedItem(Resources.get("jdbcSchema"));
 
 		// Create buttons in dialog.
@@ -258,7 +260,7 @@ public class SchemaConnectionDialog extends JDialog {
 		this.test.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				final Schema testSchema = SchemaConnectionDialog.this
-						.createSchema();
+						.createSchemaFromSettings();
 				if (testSchema != null)
 					martTab.getSchemaTabSet().requestTestSchema(testSchema);
 			}
@@ -270,7 +272,7 @@ public class SchemaConnectionDialog extends JDialog {
 		this.execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				SchemaConnectionDialog.this.schema = SchemaConnectionDialog.this
-						.createSchema();
+						.createSchemaFromSettings();
 				if (SchemaConnectionDialog.this.schema != null)
 					SchemaConnectionDialog.this.hide();
 			}
@@ -280,13 +282,13 @@ public class SchemaConnectionDialog extends JDialog {
 		this.getRootPane().setDefaultButton(this.execute);
 
 		// Reset the fields to their default values.
-		this.resetFields(template);
+		this.copySettingsFromSchema(template);
 
 		// Pack and resize the window.
 		this.pack();
 	}
 
-	private Schema createSchema() {
+	private Schema createSchemaFromSettings() {
 		// Refuse to create a temporary schema object if we can't validate it.
 		if (!this.validateFields())
 			return null;
@@ -297,7 +299,7 @@ public class SchemaConnectionDialog extends JDialog {
 			final String type = (String) this.type.getSelectedItem();
 			if (type.equals(Resources.get("jdbcSchema")))
 				return ((JDBCSchemaConnectionPanel) this.connectionPanel)
-						.createSchema((String) this.name.getSelectedItem());
+						.createSchemaFromSettings((String) this.name.getSelectedItem());
 
 			// What kind of type is it then??
 			else
@@ -316,7 +318,7 @@ public class SchemaConnectionDialog extends JDialog {
 		return string == null || string.trim().length() == 0;
 	}
 
-	private void resetFields(final Schema template) {
+	private void copySettingsFromSchema(final Schema template) {
 		// If we are modifying something, use it to fill the details
 		// in the dialog.
 		if (template != null) {
@@ -341,7 +343,7 @@ public class SchemaConnectionDialog extends JDialog {
 		}
 
 		// Update the connection panel.
-		this.connectionPanel.resetFields(template);
+		this.connectionPanel.copySettingsFromSchema(template);
 	}
 
 	private boolean validateFields() {
@@ -358,7 +360,7 @@ public class SchemaConnectionDialog extends JDialog {
 
 		// If we have any messages, show them.
 		if (!messages.isEmpty())
-			JOptionPane.showMessageDialog(this,
+			JOptionPane.showMessageDialog(null,
 					messages.toArray(new String[0]), Resources
 							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);

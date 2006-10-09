@@ -31,13 +31,15 @@ import javax.swing.TransferHandler;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Key.PrimaryKey;
+import org.biomart.builder.view.gui.SchemaTabSet;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 
 /**
  * Represents a key by listing out in a set of labels each column in the key.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class KeyComponent extends BoxShapedComponent {
@@ -59,9 +61,9 @@ public class KeyComponent extends BoxShapedComponent {
 	public static Color INCORRECT_COLOUR = Color.RED;
 
 	/**
-	 * Italic font.
+	 * Plain font.
 	 */
-	public static Font ITALIC_FONT = Font.decode("SansSerif-PLAIN-10");
+	public static Font PLAIN_FONT = Font.decode("SansSerif-PLAIN-10");
 
 	/**
 	 * Constant referring to masked key colour.
@@ -98,7 +100,7 @@ public class KeyComponent extends BoxShapedComponent {
 		this.layout = new GridBagLayout();
 		this.setLayout(this.layout);
 
-		// Constraints for each field.
+		// Constraints for each column in the key.
 		this.constraints = new GridBagConstraints();
 		this.constraints.gridwidth = GridBagConstraints.REMAINDER;
 		this.constraints.fill = GridBagConstraints.HORIZONTAL;
@@ -141,7 +143,7 @@ public class KeyComponent extends BoxShapedComponent {
 		for (final Iterator i = this.getKey().getColumns().iterator(); i
 				.hasNext();) {
 			final JLabel label = new JLabel(((Column) i.next()).getName());
-			label.setFont(KeyComponent.ITALIC_FONT);
+			label.setFont(KeyComponent.PLAIN_FONT);
 			this.layout.setConstraints(label, this.constraints);
 			this.add(label);
 		}
@@ -149,7 +151,8 @@ public class KeyComponent extends BoxShapedComponent {
 
 	/**
 	 * For drag-and-drop, this receives an object that has been dragged from
-	 * another key, and creates a 1:M relation between the two.
+	 * another key, and creates a relation between the two using
+	 * {@link SchemaTabSet#requestCreateRelation(Key,Key)}.
 	 * 
 	 * @param key
 	 *            the key the user dropped on us with the mouse.

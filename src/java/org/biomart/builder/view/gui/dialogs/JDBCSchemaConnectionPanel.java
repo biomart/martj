@@ -62,11 +62,18 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * {@link JDBCSchema} implementation which represents the connection.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		DocumentListener {
+	private static final Map DRIVER_MAP = new HashMap();
+
+	private static final Map DRIVER_NAME_MAP = new HashMap();
+
+	private static final long serialVersionUID = 1;
+
 	// Please add any more default drivers that we support to this list. The
 	// keys are the driver classnames, and the values are arrays of strings.
 	// The first entry in the array should be the default port number for this
@@ -74,12 +81,6 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	// Within the URL, the keywords <HOSTNAME>, <PORT> and <DATABASE> must all
 	// appear in the order mentioned. Any other order will break the regex
 	// replacement function elsewhere in this class.
-	private static final Map DRIVER_MAP = new HashMap();
-
-	private static final Map DRIVER_NAME_MAP = new HashMap();
-
-	private static final long serialVersionUID = 1;
-
 	static {
 		// JDBC URL formats.
 		JDBCSchemaConnectionPanel.DRIVER_MAP
@@ -131,13 +132,13 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	/**
 	 * This constructor creates a panel with all the fields necessary to
 	 * construct a {@link JDBCSchema} instance, save the name which will be
-	 * passed in elsewhere. It optionally takes a template which is used to
-	 * populate the fields of the panel. If this template is null, then defaults
-	 * are used instead.
+	 * passed in elsewhere.
 	 * <p>
-	 * You must call {@link #resetFields(Schema)} before displaying this panel,
-	 * otherwise the values displayed are not defined and may result in
-	 * unpredictable behaviour.
+	 * You must call {@link #copySettingsFromSchema(Schema)} before displaying
+	 * this panel, otherwise the values displayed are not defined and may result
+	 * in unpredictable behaviour. Or, call
+	 * {@link #copySettingsFromProperties(Properties)} to achieve the same
+	 * results.
 	 * 
 	 * @param martTab
 	 *            the mart tab to which the schema to be created or modified
@@ -204,11 +205,11 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				// changed, either by the user typing in it, or using
 				// the drop-down to select a predefine value.
 
-				// Work out which database was selected.
+				// Work out which database type was selected.
 				final String classType = (String) JDBCSchemaConnectionPanel.this.predefinedDriverClass
 						.getSelectedItem();
 
-				// Use it to look up the default class for that database,
+				// Use it to look up the default class for that database type,
 				// then reset the drop-down to nothing-selected.
 				if (!JDBCSchemaConnectionPanel.this.isEmpty(classType)) {
 					final String driverClassName = (String) JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
@@ -328,8 +329,8 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		});
 	}
 
-	public void copySettingsFrom(final Properties template) {
-		// If it is, copy everything over from it.
+	public void copySettingsFromProperties(final Properties template) {
+		// Copy the driver class.
 		this.driverClass.setText(template.getProperty("driverClass"));
 		this.driverClassLocation.setText(template
 				.getProperty("driverClassLocation"));
@@ -349,52 +350,6 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		// of this class).
 		String regexURL = this.currentJDBCURLTemplate;
 		if (regexURL != null) {
-			// Replace the three placeholders in the JDBC URL template
-			// with regex patterns. Obviously, this depends on the
-			// three placeholders appearing in the correct order.
-			// If they don't, then you're stuffed.
-			regexURL = regexURL.replaceAll("<HOST>", "(.*)");
-			regexURL = regexURL.replaceAll("<PORT>", "(.*)");
-			regexURL = regexURL.replaceAll("<DATABASE>", "(.*)");
-
-			// Use the regex to parse out the host, port and database
-			// from the JDBC URL.
-			final Pattern regex = Pattern.compile(regexURL);
-			final Matcher matcher = regex.matcher(jdbcURL);
-			if (matcher.matches()) {
-				this.host.setText(matcher.group(1));
-				this.port.setText(matcher.group(2));
-				this.database.setText(matcher.group(3));
-			}
-		}
-	}
-
-	private void copySettingsFrom(final Schema template) {
-		// Test to make sure the template is a JDBC Schema.
-		if (template instanceof JDBCSchema) {
-			final JDBCSchema jdbcSchema = (JDBCSchema) template;
-
-			// If it is, copy everything over from it.
-			this.driverClass.setText(jdbcSchema.getDriverClassName());
-			this.driverClassLocation.setText(jdbcSchema
-					.getDriverClassLocation() == null ? null : jdbcSchema
-					.getDriverClassLocation().toString());
-
-			// Make sure the right fields get enabled.
-			this.driverClassChanged();
-
-			// Carry on copying.
-			final String jdbcURL = jdbcSchema.getJDBCURL();
-			this.jdbcURL.setText(jdbcURL);
-			this.username.setText(jdbcSchema.getUsername());
-			this.password.setText(jdbcSchema.getPassword());
-			this.schemaName.setText(jdbcSchema.getDatabaseSchema());
-
-			// Parse the JDBC URL into host, port and database, if the
-			// driver is known to us (defined in the map at the start
-			// of this class).
-			String regexURL = this.currentJDBCURLTemplate;
-
 			// Replace the three placeholders in the JDBC URL template
 			// with regex patterns. Obviously, this depends on the
 			// three placeholders appearing in the correct order.
@@ -549,7 +504,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	 *            the name to give the schema.
 	 * @return the created schema.
 	 */
-	public Schema createSchema(final String name) {
+	public Schema createSchemaFromSettings(final String name) {
 		// If the fields aren't valid, we can't create it.
 		if (!this.validateFields())
 			return null;
@@ -592,7 +547,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	 *            the schema to update.
 	 * @return the updated schema, or null if it was not updated.
 	 */
-	public Schema modifySchema(final Schema schema) {
+	public Schema copySettingsToExistingSchema(final Schema schema) {
 		// If the fields are not valid, we can't modify it.
 		if (!this.validateFields())
 			return null;
@@ -639,14 +594,54 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		this.documentEvent(e);
 	}
 
-	public void resetFields(final Schema template) {
+	public void copySettingsFromSchema(final Schema template) {
 		// Set the copy-settings box to nothing-selected.
 		this.predefinedDriverClass.setSelectedIndex(-1);
 
 		// If the template is a JDBC schema, copy the settings
 		// from it.
-		if (template instanceof JDBCSchema)
-			this.copySettingsFrom(template);
+		if (template instanceof JDBCSchema) {
+			final JDBCSchema jdbcSchema = (JDBCSchema) template;
+
+			// Copy the driver class.
+			this.driverClass.setText(jdbcSchema.getDriverClassName());
+			this.driverClassLocation.setText(jdbcSchema
+					.getDriverClassLocation() == null ? null : jdbcSchema
+					.getDriverClassLocation().toString());
+
+			// Make sure the right fields get enabled.
+			this.driverClassChanged();
+
+			// Carry on copying.
+			final String jdbcURL = jdbcSchema.getJDBCURL();
+			this.jdbcURL.setText(jdbcURL);
+			this.username.setText(jdbcSchema.getUsername());
+			this.password.setText(jdbcSchema.getPassword());
+			this.schemaName.setText(jdbcSchema.getDatabaseSchema());
+
+			// Parse the JDBC URL into host, port and database, if the
+			// driver is known to us (defined in the map at the start
+			// of this class).
+			String regexURL = this.currentJDBCURLTemplate;
+
+			// Replace the three placeholders in the JDBC URL template
+			// with regex patterns. Obviously, this depends on the
+			// three placeholders appearing in the correct order.
+			// If they don't, then you're stuffed.
+			regexURL = regexURL.replaceAll("<HOST>", "(.*)");
+			regexURL = regexURL.replaceAll("<PORT>", "(.*)");
+			regexURL = regexURL.replaceAll("<DATABASE>", "(.*)");
+
+			// Use the regex to parse out the host, port and database
+			// from the JDBC URL.
+			final Pattern regex = Pattern.compile(regexURL);
+			final Matcher matcher = regex.matcher(jdbcURL);
+			if (matcher.matches()) {
+				this.host.setText(matcher.group(1));
+				this.port.setText(matcher.group(2));
+				this.database.setText(matcher.group(3));
+			}
+		}
 
 		// Otherwise, set some sensible defaults.
 		else {
@@ -723,7 +718,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 
 		// If there any messages to show the user, show them.
 		if (!messages.isEmpty())
-			JOptionPane.showMessageDialog(this,
+			JOptionPane.showMessageDialog(null,
 					messages.toArray(new String[0]), Resources
 							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);

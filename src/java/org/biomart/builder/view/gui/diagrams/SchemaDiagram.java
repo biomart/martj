@@ -30,13 +30,14 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 
 /**
- * Displays the contents of a schema within a standard diagram object. It adds a
- * series of {@link TableComponent} and {@link RelationComponent} objects when
- * the diagram is recalculated, and treats the schema object it represents as
- * the basic background object of the diagram.
+ * Displays the contents of a schema within a diagram object. It adds a series
+ * of {@link TableComponent} and {@link RelationComponent} objects when the
+ * diagram is recalculated, and treats the schema object it represents as the
+ * basic background object of the diagram.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class SchemaDiagram extends Diagram {
@@ -91,11 +92,14 @@ public class SchemaDiagram extends Diagram {
 		this.recalculateDiagram();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * Uses the schema as the general background base object for this diagram.
+	 * This means that any click on the background will be treated as though the
+	 * schema object was clicked on.
+	 */
 	protected Object getContextMenuBaseObject() {
-		// Use the schema as the general background base object
-		// for this diagram. This means that any click on the
-		// background will be treated as though the schema object was clicked
-		// on.
 		return this.getSchema();
 	}
 
@@ -108,7 +112,7 @@ public class SchemaDiagram extends Diagram {
 		// First of all, remove all our existing components.
 		this.removeAll();
 
-		// Add a TableComponent for each table.
+		// Add a TableComponent for each table in the schema.
 		for (final Iterator i = this.getSchema().getTables().iterator(); i
 				.hasNext();)
 			this

@@ -21,36 +21,39 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 
+import org.biomart.builder.view.gui.diagrams.Diagram;
+
 /**
- * The diagram context received notification to populate context menus in
- * org.biomart.builder.view.gui.diagrams, or to change the colours of objects
- * displayed in the diagram. All objects in the diagram are passed to both
- * methods at some point, so anything displayed can be customised.
+ * The diagram context receives notification to populate context menus in
+ * {@link Diagram}s, or to change the colours of objects displayed in the
+ * diagram. All objects in the diagram are passed to both methods at some point,
+ * so anything displayed can be customised.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public interface DiagramContext {
 	/**
-	 * Customise the appearance of a component that represents the given model
-	 * object.
+	 * Customise the appearance of a component that represents the given
+	 * database object.
 	 * 
 	 * @param component
 	 *            the component that represents the object.
 	 * @param object
-	 *            the model object we wish to customise this component to.
+	 *            the database object we wish to customise this component to.
 	 */
 	public void customiseAppearance(JComponent component, Object object);
 
 	/**
-	 * Add items to a context menu for a given component. Must add separator
-	 * first if the menu is not empty.
+	 * Add items to a context menu for a given database object. Should add a
+	 * separator first if the menu is not empty.
 	 * 
 	 * @param contextMenu
 	 *            the context menu to add parameters to.
 	 * @param object
-	 *            the model object we wish to customise this menu to.
+	 *            the database object we wish to customise this menu to.
 	 */
 	public void populateContextMenu(JPopupMenu contextMenu, Object object);
 }

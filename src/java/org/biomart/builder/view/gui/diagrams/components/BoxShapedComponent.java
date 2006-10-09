@@ -38,11 +38,12 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 /**
  * Any diagram component that is box-shaped is derived from this class. It
  * handles all mouse-clicks and painting problems for them, and keeps track of
- * their sub-components in map, so that code can reference them by model object
- * rather than exact component.
+ * their sub-components in a map, so that code can reference them by database
+ * object rather than exact component.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public abstract class BoxShapedComponent extends JPanel implements
@@ -84,11 +85,11 @@ public abstract class BoxShapedComponent extends JPanel implements
 	private final Map subComponents = new HashMap();
 
 	/**
-	 * Constructs a box-shaped component around the given model object to be
+	 * Constructs a box-shaped component around the given database object to be
 	 * represented in the given diagram.
 	 * 
 	 * @param object
-	 *            the model object to represent.
+	 *            the database object to represent.
 	 * @param diagram
 	 *            the diagram to display ourselves in.
 	 */
@@ -116,7 +117,10 @@ public abstract class BoxShapedComponent extends JPanel implements
 	}
 
 	/**
-	 * Adds a sub-component to the map, but not to the diagram.
+	 * Adds a sub-component to the map, but not to the diagram. This means that
+	 * the component will take care of rendering these sub-components within its
+	 * own bounds, but it is possibly to directly query the diagram to find out
+	 * exactly how that sub-component has been rendered.
 	 * 
 	 * @param object
 	 *            the model object the component represents.
@@ -130,6 +134,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 
 	protected void paintBorder(final Graphics g) {
 		final Graphics2D g2d = (Graphics2D) g;
+		// Override the stroke so that we get dotted outlines when appropriate.
 		g2d.setStroke(this.stroke);
 		super.paintBorder(g2d);
 	}
@@ -140,7 +145,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 		if (evt.isPopupTrigger()) {
 			// Build the basic menu.
 			final JPopupMenu contextMenu = this.getContextMenu();
-			// Customise the context menu for this box's model object.
+			// Customise the context menu for this box's database object.
 			if (this.getDiagram().getDiagramContext() != null)
 				this.getDiagram().getDiagramContext().populateContextMenu(
 						contextMenu, this.getObject());
@@ -164,7 +169,6 @@ public abstract class BoxShapedComponent extends JPanel implements
 	public JPopupMenu getContextMenu() {
 		final JPopupMenu contextMenu = new JPopupMenu();
 		// No additional entries for us yet.
-		// Return it.
 		return contextMenu;
 	}
 
@@ -197,12 +201,13 @@ public abstract class BoxShapedComponent extends JPanel implements
 	public abstract void recalculateDiagramComponent();
 
 	public void repaintDiagramComponent() {
+		// To speed things up, we only repaint the visible bits.
 		this.repaint(this.getVisibleRect());
 	}
 
 	/**
 	 * If this is set to <tt>true</tt> then the component will appear with a
-	 * dotted/dashed outline.
+	 * dotted/dashed outline. Otherwise, it appears with a solid outline.
 	 * 
 	 * @param dotted
 	 *            <tt>true</tt> if the component is to appear with a dotted

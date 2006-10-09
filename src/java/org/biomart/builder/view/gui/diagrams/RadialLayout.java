@@ -40,19 +40,22 @@ import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 
 /**
- * This rather awkward piece of code will be replaced in the final version. It
- * is a placeholder that lays out components, based on how connected they are to
+ * This layout manager lays out components based on how connected they are to
  * other components. The more connected they are, the further to the centre of
- * the diagram they are placed. Components with the same connectedness form a
- * circle around a centre point.
+ * the diagram they are placed. Components with the same connectedness are
+ * placed in a ring around a centre point.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class RadialLayout implements LayoutManager {
+	// This is the space between rings.
 	private static final double INTER_PADDING = 10.0; // 72.0 = 1 inch
 
+	// This is the space along the circumference between components in the same
+	// ring.
 	private static final double INTRA_PADDING = 0.0; // 72.0 = 1 inch
 
 	private static final int RELATION_TAGSIZE = 10; // 72 = 1 inch at 72 dpi
@@ -78,8 +81,7 @@ public class RadialLayout implements LayoutManager {
 	}
 
 	private void setSizes(final Container parent) {
-		// This method calculates which components go in which rings, and
-		// the route that relations should take between them.
+		// This method calculates which components go in which rings.
 		synchronized (parent.getTreeLock()) {
 			// Ring radii contains the radii of the various rings of components.
 			this.ringRadii.clear();
@@ -88,9 +90,13 @@ public class RadialLayout implements LayoutManager {
 			this.ringSizes.clear();
 
 			// Ring numbers contains the ring number for each component.
+			// This is an arbitrary sequence of numbers, representing the
+			// unique set of connectedness values - ie. the unique set of
+			// responses
+			// from countRelations on the various database objects represented.
 			this.ringNumbers.clear();
 
-			// Ring details contains a map where they keys are the ring numbers,
+			// Ring details contains a map where the keys are the ring numbers,
 			// and the values are array objects. The array objects contain, in
 			// this order, a List of components in that ring, the circumference
 			// of the ring, and the maximum shortest side length of any
@@ -119,16 +125,22 @@ public class RadialLayout implements LayoutManager {
 					ringNumber = new Integer(((SchemaComponent) comp)
 							.countExternalRelations());
 
-				// Add the object to the appropriate ring and obtain
-				// circumference/max shortest side details for that ring.
+				// Create the ring for this ring number if it doesn't already
+				// exist.
 				if (!ringDetails.containsKey(ringNumber))
 					ringDetails.put(ringNumber, new Object[] { new ArrayList(),
 							new Integer(0), new Integer(0) });
+
+				// Get the details for the ring.
 				final Object[] details = (Object[]) ringDetails.get(ringNumber);
+
+				// Add the object to the ring.
 				final List ringMembers = (List) details[0];
+				ringMembers.add(comp);
+
+				// Obtain circumference/max shortest side details for that ring.
 				int circumference = ((Integer) details[1]).intValue();
 				int maxSide = ((Integer) details[2]).intValue();
-				ringMembers.add(comp);
 
 				// Increment circumference for this ring by adding the shortest
 				// side of the new component to the existing circumference, plus
@@ -156,7 +168,8 @@ public class RadialLayout implements LayoutManager {
 			final List ringNumbers = new ArrayList(ringDetails.keySet());
 			Collections.reverse(ringNumbers);
 
-			// Keep track of the radius of the last ring inside the current one.
+			// Keep track of the radius of the previous ring inside the current
+			// one.
 			double previousRadius = 0.0;
 
 			// Iterate over the rings, most-connected (innermost) first.
@@ -172,8 +185,8 @@ public class RadialLayout implements LayoutManager {
 				// Work out radius, which is based on the usual circumference
 				// calculation, plus the maximum shortest side length, plus
 				// some padding, plus the radius of the last ring before this
-				// one,
-				// which must appear fully inside this one, hence the padding.
+				// one, which must appear fully inside this one, hence the
+				// padding.
 				final double radius = circumference / (2.0 * Math.PI) + maxSide
 						/ 2.0 + RadialLayout.INTER_PADDING + previousRadius;
 
@@ -188,7 +201,8 @@ public class RadialLayout implements LayoutManager {
 				previousRadius = radius + maxSide / 2.0;
 			}
 
-			// Work out min/max/preferred sizes.
+			// Work out min/max/preferred sizes for the layout so that
+			// the largest ring fits nicely.
 			this.minSize = (int) (previousRadius + RadialLayout.INTER_PADDING) * 2;
 
 			// All done.
@@ -247,12 +261,9 @@ public class RadialLayout implements LayoutManager {
 				final Integer ringNumber = (Integer) this.ringNumbers.get(comp);
 
 				// Have we seen this ring before? If not, create a new map key
-				// to
-				// hold the number of items we have placed in this ring so far.
-				// If
-				// we have seen it before, look up that number instead,
-				// increment
-				// it, and store it back.
+				// to hold the number of items we have placed in this ring so
+				// far. If we have seen it before, look up that number
+				// instead, increment it, and store it back.
 				int ringCount = 0;
 				if (ringCounts.containsKey(ringNumber))
 					ringCount = ((Integer) ringCounts.get(ringNumber))
@@ -303,24 +314,24 @@ public class RadialLayout implements LayoutManager {
 				final KeyComponent firstKey = relationComponent
 						.getFirstKeyComponent();
 				final Rectangle firstKeyRectangle = firstKey.getBounds();
-				Container checkContainer = firstKey.getParent();
-				while (checkContainer != parent) {
+				Container keyParent = firstKey.getParent();
+				while (keyParent != parent) {
 					firstKeyRectangle.setLocation(firstKeyRectangle.x
-							+ checkContainer.getX(), firstKeyRectangle.y
-							+ checkContainer.getY());
-					checkContainer = checkContainer.getParent();
+							+ keyParent.getX(), firstKeyRectangle.y
+							+ keyParent.getY());
+					keyParent = keyParent.getParent();
 				}
 
 				// Do the same for the second key.
 				final KeyComponent secondKey = relationComponent
 						.getSecondKeyComponent();
 				final Rectangle secondKeyRectangle = secondKey.getBounds();
-				checkContainer = secondKey.getParent();
-				while (checkContainer != parent) {
+				keyParent = secondKey.getParent();
+				while (keyParent != parent) {
 					secondKeyRectangle.setLocation(secondKeyRectangle.x
-							+ checkContainer.getX(), secondKeyRectangle.y
-							+ checkContainer.getY());
-					checkContainer = checkContainer.getParent();
+							+ keyParent.getX(), secondKeyRectangle.y
+							+ keyParent.getY());
+					keyParent = keyParent.getParent();
 				}
 
 				// Find midpoints of both keys.
@@ -335,7 +346,9 @@ public class RadialLayout implements LayoutManager {
 				int centreLineX = (firstKeyMidpoint.x + secondKeyMidpoint.x) / 2;
 				int centreLineY = (firstKeyMidpoint.y + secondKeyMidpoint.y) / 2;
 
-				// Find start for first key, and tag position.
+				// Find start for first key, and tag position. Start
+				// will be the end of the key closest to the average
+				// coordinates just calculated.
 				int firstY = firstKeyMidpoint.y;
 				int firstX;
 				int firstTagX;
@@ -349,7 +362,9 @@ public class RadialLayout implements LayoutManager {
 					firstTagX = firstX + RadialLayout.RELATION_TAGSIZE;
 				}
 
-				// Find end for second key, and tag position.
+				// Find end for second key, and tag position. Start will
+				// be the end of the key closest to the average coordinates
+				// previously calculated.
 				int secondY = secondKeyMidpoint.y;
 				int secondX;
 				int secondTagX;
@@ -363,8 +378,8 @@ public class RadialLayout implements LayoutManager {
 					secondTagX = secondX + RadialLayout.RELATION_TAGSIZE;
 				}
 
-				// Create a bounding box around the whole lot plus 1 step size
-				// each side for mouse-sensitivity's sake.
+				// Create a bounding box containing both keys plus 1 step
+				// size each side for mouse-sensitivity's sake.
 				final int x = Math.min(firstX, secondX);
 				final int y = Math.min(firstY, secondY);
 				final int width = Math.max(firstX + firstKeyRectangle.width,
@@ -391,7 +406,9 @@ public class RadialLayout implements LayoutManager {
 				secondTagX -= bounds.x;
 				secondY -= bounds.y;
 
-				// Create a path to describe the relation shape.
+				// Create a path to describe the relation shape. It
+				// has 6 elements - move, across, down/up, across,
+				// down/up, across.
 				final GeneralPath path = new GeneralPath(
 						GeneralPath.WIND_EVEN_ODD, 6);
 

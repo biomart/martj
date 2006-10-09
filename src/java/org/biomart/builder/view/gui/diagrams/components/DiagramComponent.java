@@ -28,11 +28,12 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 /**
  * An element that can be drawn on a diagram. It can provide a context menu for
  * itself, the diagram it belongs to, its current state (and allow its state to
- * be set), and a list of any components it may contain inside that are of
+ * be set), and a map of any components it may contain inside that are of
  * interest to the diagram.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public interface DiagramComponent {
@@ -67,10 +68,11 @@ public interface DiagramComponent {
 	public Object getState();
 
 	/**
-	 * Returns a map of inner components inside the diagram. The keys are model
-	 * object references, and the values are the diagram components representing
-	 * them inside the current diagram component. This is useful for instance
-	 * when wanting to obtain key components for a table.
+	 * Returns a map of inner components inside the diagram. The keys are
+	 * database object references, and the values are the diagram components
+	 * representing them inside the current diagram component. This is useful
+	 * for instance when wanting to obtain key components for a database
+	 * component without knowing which diagram component it may be inside.
 	 * 
 	 * @return the map of inner components.
 	 */

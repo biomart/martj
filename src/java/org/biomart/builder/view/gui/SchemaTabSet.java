@@ -168,8 +168,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 	private String askUserForSchemaName(final String defaultResponse) {
 		// Ask user for a name, giving them the default suggestion.
-		String name = (String) JOptionPane.showInputDialog(this.martTab
-				.getMartTabSet().getMartBuilder(), Resources
+		String name = (String) JOptionPane.showInputDialog(null, Resources
 				.get("requestSchemaName"), Resources.get("questionTitle"),
 				JOptionPane.QUESTION_MESSAGE, null, null, defaultResponse);
 
@@ -209,7 +208,7 @@ public class SchemaTabSet extends JTabbedPane {
 		// Put up a box asking which key to link this key to, based on the
 		// list of candidates we just made. Return the key that the user
 		// selects, or null if none was selected.
-		return (Key) JOptionPane.showInputDialog(this, Resources
+		return (Key) JOptionPane.showInputDialog(null, Resources
 				.get("whichKeyToLinkRelationTo"), Resources
 				.get("questionTitle"), JOptionPane.QUESTION_MESSAGE, null,
 				candidates.toArray(), null);
@@ -508,8 +507,7 @@ public class SchemaTabSet extends JTabbedPane {
 		groupSchemas.add(newGroupName);
 
 		// Ask use which group to use.
-		String groupName = (String) JOptionPane.showInputDialog(this.martTab
-				.getMartTabSet().getMartBuilder(), Resources
+		String groupName = (String) JOptionPane.showInputDialog(null, Resources
 				.get("requestSchemaGroupName"), Resources.get("questionTitle"),
 				JOptionPane.QUESTION_MESSAGE, null, groupSchemas.toArray(),
 				newGroupName);
@@ -521,8 +519,7 @@ public class SchemaTabSet extends JTabbedPane {
 		// If they chose 'new group', get the new group name from a second
 		// dialog.
 		if (groupName.equals(newGroupName))
-			groupName = JOptionPane.showInputDialog(this.martTab
-					.getMartTabSet().getMartBuilder(), Resources
+			groupName = JOptionPane.showInputDialog(null, Resources
 					.get("requestNewSchemaGroupName"), Resources
 					.get("questionTitle"), JOptionPane.QUESTION_MESSAGE);
 
@@ -779,7 +776,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestCreateForeignKey(final Table table) {
 		// Pop up a dialog to ask which columns to use.
-		final List cols = KeyEditorDialog.createPrimaryKey(this.martTab, table);
+		final List cols = KeyEditorDialog.createForeignKey(table);
 
 		// If they chose some columns, create the key.
 		if (!cols.isEmpty())
@@ -841,7 +838,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestCreatePrimaryKey(final Table table) {
 		// Pop up a dialog to ask which columns to use.
-		final List cols = KeyEditorDialog.createPrimaryKey(this.martTab, table);
+		final List cols = KeyEditorDialog.createPrimaryKey(table);
 
 		// If they chose some columns, create the key.
 		if (!cols.isEmpty())
@@ -1036,7 +1033,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestEditKey(final Key key) {
 		// Pop up the dialog which describes the key, and obtain the
 		// list of columns they selected in response.
-		final List cols = KeyEditorDialog.editKey(this.martTab, key);
+		final List cols = KeyEditorDialog.editKey(key);
 
 		// If they selected any columns, and those columns are not
 		// the same as the ones already in the key, modify the key.
@@ -1280,7 +1277,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestRemoveSchema(final Schema schema) {
 		// Confirm if the user really wants to do it.
-		final int choice = JOptionPane.showConfirmDialog(this, Resources
+		final int choice = JOptionPane.showConfirmDialog(null, Resources
 				.get("confirmDelSchema"), Resources.get("questionTitle"),
 				JOptionPane.YES_NO_OPTION);
 
@@ -1340,7 +1337,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestRemoveSchemaFromSchemaGroup(final Schema schema,
 			final SchemaGroup schemaGroup) {
 		// Confirms with the user.
-		final int choice = JOptionPane.showConfirmDialog(this, Resources
+		final int choice = JOptionPane.showConfirmDialog(null, Resources
 				.get("confirmUngroupSchema"), Resources.get("questionTitle"),
 				JOptionPane.YES_NO_OPTION);
 
@@ -1504,7 +1501,7 @@ public class SchemaTabSet extends JTabbedPane {
 			final JTable jtable = new JTable(new DefaultTableModel(data,
 					colNames));
 			// Display them.
-			JOptionPane.showMessageDialog(this, new JScrollPane(jtable),
+			JOptionPane.showMessageDialog(null, new JScrollPane(jtable),
 					Resources.get("showRowsTitle"),
 					JOptionPane.INFORMATION_MESSAGE);
 		} catch (final Throwable t) {
@@ -1638,11 +1635,11 @@ public class SchemaTabSet extends JTabbedPane {
 
 		// Tell the user if we passed or failed.
 		if (passedTest)
-			JOptionPane.showMessageDialog(this, Resources
+			JOptionPane.showMessageDialog(null, Resources
 					.get("schemaTestPassed"), Resources.get("testTitle"),
 					JOptionPane.INFORMATION_MESSAGE);
 		else
-			JOptionPane.showMessageDialog(this, Resources
+			JOptionPane.showMessageDialog(null, Resources
 					.get("schemaTestFailed"), Resources.get("testTitle"),
 					JOptionPane.ERROR_MESSAGE);
 	}

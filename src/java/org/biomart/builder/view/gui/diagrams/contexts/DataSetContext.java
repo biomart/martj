@@ -47,18 +47,20 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 
 /**
- * This context adapts dataset org.biomart.builder.view.gui.diagrams to display
- * different colours, and provides the context menu for interacting with dataset
- * org.biomart.builder.view.gui.diagrams.
+ * This context adapts dataset diagrams to display different colours, and
+ * provides the context menu for interacting with dataset diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
-public class DataSetContext extends WindowContext {
+public class DataSetContext extends SchemaContext {
+	private DataSet dataset;
+
 	/**
-	 * Creates a new context that will adapt objects according to the settings
-	 * in the specified dataset.
+	 * Creates a new context that will adapt database objects according to the
+	 * settings in the specified dataset.
 	 * 
 	 * @param martTab
 	 *            the mart tab this context appears in.
@@ -67,7 +69,17 @@ public class DataSetContext extends WindowContext {
 	 *            colours.
 	 */
 	public DataSetContext(final MartTab martTab, final DataSet dataset) {
-		super(martTab, dataset);
+		super(martTab);
+		this.dataset = dataset;
+	}
+
+	/**
+	 * Obtain the dataset that this context is linked with.
+	 * 
+	 * @return our dataset.
+	 */
+	public DataSet getDataSet() {
+		return this.dataset;
 	}
 
 	public void customiseAppearance(final JComponent component,
@@ -278,13 +290,13 @@ public class DataSetContext extends WindowContext {
 					new ImageIcon(
 							Resources
 									.getResourceAsURL("org/biomart/builder/resources/help.gif")));
-			explain
-					.setMnemonic(Resources.get("explainDataSetMnemonic")
-							.charAt(0));
+			explain.setMnemonic(Resources.get("explainDataSetMnemonic").charAt(
+					0));
 			explain.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestExplainDataSet(DataSetContext.this.getDataSet());
+							.requestExplainDataSet(
+									DataSetContext.this.getDataSet());
 				}
 			});
 			contextMenu.add(explain);

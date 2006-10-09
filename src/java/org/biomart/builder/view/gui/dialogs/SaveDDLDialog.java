@@ -24,6 +24,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,19 +34,24 @@ import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.text.DefaultEditorKit;
 
 import org.biomart.builder.controller.SaveDDLMartConstructor;
 import org.biomart.builder.controller.SaveDDLMartConstructor.SaveDDLGranularity;
@@ -58,10 +65,13 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * A dialog which allows the user to choose some options about creating DDL over
- * a given set of datasets, then lets them actually do it.
+ * a given set of datasets, then lets them actually do it. The options include
+ * granularity of statements generated, and whether to output to file or to
+ * screen.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class SaveDDLDialog extends JDialog {
@@ -81,18 +91,16 @@ public class SaveDDLDialog extends JDialog {
 
 	private JCheckBox viewDDL;
 
-	private JFileChooser zipFileChooser;
+	private JFileChooser outputFileChooser;
 
-	private FileFilter zipFileFilter;
+	private JTextField outputFileLocation;
 
-	private JTextField zipFileLocation;
-
-	private JButton zipFileLocationButton;
+	private JButton outputFileLocationButton;
 
 	/**
 	 * Creates (but does not display) a dialog centred on the given tab, which
-	 * allows construction of the given datasets. When the OK button is chosen,
-	 * the datasets are made.
+	 * allows DDL generation for the given datasets. When the OK button is
+	 * chosen, the DDL is generated in the background.
 	 * 
 	 * @param martTab
 	 *            the tab in which this will be displayed.
@@ -160,9 +168,8 @@ public class SaveDDLDialog extends JDialog {
 		this.datasetsList
 				.setPrototypeCellValue("012345678901234567890123456789");
 
-		// Create a file chooser for finding the ZIP file where
-		// we will save.
-		this.zipFileChooser = new JFileChooser() {
+		// Create a file chooser for finding the DDL/ZIP file we will save.
+		this.outputFileChooser = new JFileChooser() {
 			private static final long serialVersionUID = 1L;
 
 			public File getSelectedFile() {
@@ -171,8 +178,9 @@ public class SaveDDLDialog extends JDialog {
 					final String filename = file.getName();
 					final SaveDDLGranularity gran = (SaveDDLGranularity) SaveDDLDialog.this.granularity
 							.getSelectedItem();
-					final String extension = gran != null && gran.getZipped() ? ".zip"
-							: ".ddl";
+					final String extension = gran != null && gran.getZipped() ? Resources
+							.get("zipExtension")
+							: Resources.get("ddlExtension");
 					if (!filename.endsWith(extension)
 							&& filename.indexOf('.') < 0)
 						file = new File(file.getParentFile(), filename
@@ -181,18 +189,19 @@ public class SaveDDLDialog extends JDialog {
 				return file;
 			}
 		};
-		this.zipFileFilter = new FileFilter() {
+		this.outputFileChooser.setFileFilter(new FileFilter() {
 			private boolean isZipped() {
 				final SaveDDLGranularity gran = (SaveDDLGranularity) SaveDDLDialog.this.granularity
 						.getSelectedItem();
 				return gran != null && gran.getZipped();
 			}
 
-			// Accepts only files ending in ".zip".
+			// Accepts only files ending in ".zip" or ".ddl".
 			public boolean accept(final File f) {
 				return f.isDirectory()
 						|| f.getName().toLowerCase().endsWith(
-								this.isZipped() ? ".zip" : ".ddl");
+								this.isZipped() ? Resources.get("zipExtension")
+										: Resources.get("ddlExtension"));
 			}
 
 			public String getDescription() {
@@ -200,36 +209,39 @@ public class SaveDDLDialog extends JDialog {
 						.get(this.isZipped() ? "ZipDDLFileFilterDescription"
 								: "DDLFileFilterDescription");
 			}
-		};
-		this.zipFileChooser.setFileFilter(this.zipFileFilter);
-		this.zipFileLocation = new JTextField(20);
-		this.zipFileLocationButton = new JButton(Resources.get("browseButton"));
+		});
+		this.outputFileLocation = new JTextField(20);
+		this.outputFileLocationButton = new JButton(Resources
+				.get("browseButton"));
 
-		// Attach the file chooser to the driver class location button.
-		this.zipFileLocationButton.addActionListener(new ActionListener() {
+		// Attach the file chooser to the output file location button.
+		this.outputFileLocationButton.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				if (SaveDDLDialog.this.zipFileChooser.showSaveDialog(content) == JFileChooser.APPROVE_OPTION) {
-					final File file = SaveDDLDialog.this.zipFileChooser
+				if (SaveDDLDialog.this.outputFileChooser
+						.showSaveDialog(content) == JFileChooser.APPROVE_OPTION) {
+					final File file = SaveDDLDialog.this.outputFileChooser
 							.getSelectedFile();
 					// When a file is chosen, put its name in the driver
 					// class location field.
 					if (file != null)
-						SaveDDLDialog.this.zipFileLocation.setText(file
+						SaveDDLDialog.this.outputFileLocation.setText(file
 								.toString());
 				}
 			}
 		});
 
-		// Add listeners to view DDL and granularity.
+		// Add listeners to view DDL and granularity options.
 		this.viewDDL.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				if (SaveDDLDialog.this.viewDDL.isSelected()) {
-					SaveDDLDialog.this.zipFileLocation.setText(null);
-					SaveDDLDialog.this.zipFileLocation.setEnabled(false);
-					SaveDDLDialog.this.zipFileLocationButton.setEnabled(false);
+					SaveDDLDialog.this.outputFileLocation.setText(null);
+					SaveDDLDialog.this.outputFileLocation.setEnabled(false);
+					SaveDDLDialog.this.outputFileLocationButton
+							.setEnabled(false);
 				} else {
-					SaveDDLDialog.this.zipFileLocation.setEnabled(true);
-					SaveDDLDialog.this.zipFileLocationButton.setEnabled(true);
+					SaveDDLDialog.this.outputFileLocation.setEnabled(true);
+					SaveDDLDialog.this.outputFileLocationButton
+							.setEnabled(true);
 				}
 			}
 		});
@@ -246,6 +258,8 @@ public class SaveDDLDialog extends JDialog {
 				}
 			}
 		});
+
+		// Set a default granularity.
 		this.granularity.setSelectedItem(SaveDDLGranularity.SINGLE);
 
 		// Lay out the window.
@@ -287,13 +301,13 @@ public class SaveDDLDialog extends JDialog {
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
-		// Add the zip DDL location label, field and file chooser button.
+		// Add the output location label, field and file chooser button.
 		label = new JLabel(Resources.get("saveDDLFileLocationLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		field = new JPanel();
-		field.add(this.zipFileLocation);
-		field.add(this.zipFileLocationButton);
+		field.add(this.outputFileLocation);
+		field.add(this.outputFileLocationButton);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
@@ -310,7 +324,7 @@ public class SaveDDLDialog extends JDialog {
 		});
 
 		// Intercept the execute button, which validates the fields
-		// then closes the dialog.
+		// then creates the DDL and closes the dialog.
 		execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				if (SaveDDLDialog.this.validateFields()) {
@@ -337,13 +351,20 @@ public class SaveDDLDialog extends JDialog {
 		this.pack();
 
 		// Move ourselves.
-		this.setLocationRelativeTo(martTab.getMartTabSet().getMartBuilder());
+		this.setLocationRelativeTo(null);
 	}
 
+	/**
+	 * This method takes the settings from the dialog, having already been
+	 * validated, and uses them to set up and start the DDL generation process.
+	 */
 	private void createDDL() {
+		// What datasets are we making DDL for?
 		final List selectedDataSets = Arrays.asList(this.datasetsList
 				.getSelectedValues());
+		// Make a stringbuffer in case we want screen output.
 		final StringBuffer sb = new StringBuffer();
+		// Make the constructor object which will create the DDL.
 		MartConstructor constructor;
 		if (this.viewDDL.isSelected())
 			constructor = new SaveDDLMartConstructor(
@@ -352,11 +373,16 @@ public class SaveDDLDialog extends JDialog {
 		else
 			constructor = new SaveDDLMartConstructor(
 					(SaveDDLGranularity) this.granularity.getSelectedItem(),
-					new File(this.zipFileLocation.getText()),
+					new File(this.outputFileLocation.getText()),
 					this.includeComments.isSelected());
 		try {
+			// Obtain the DDL generator from the constructor object.
 			final ConstructorRunnable cr = constructor.getConstructorRunnable(
 					this.targetSchemaName.getText(), selectedDataSets);
+			// If we want screen output, add a listener that listens for
+			// completion of construction. When completed, use the
+			// stringbuffer, which will contain the DDL, to pop up a simple
+			// text dialog for the user to view it with.
 			if (this.viewDDL.isSelected())
 				cr.addMartConstructorListener(new MartConstructorListener() {
 					public void martConstructorEventOccurred(final int event,
@@ -370,16 +396,83 @@ public class SaveDDLDialog extends JDialog {
 			this.martTab.getMartTabSet().requestMonitorConstructorRunnable(cr);
 		} catch (final Throwable t) {
 			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
-			JOptionPane.showMessageDialog(this.martTab.getMartTabSet()
-					.getMartBuilder(), Resources.get("martConstructionFailed"),
-					Resources.get("messageTitle"), JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog(null, Resources
+					.get("martConstructionFailed"), Resources
+					.get("messageTitle"), JOptionPane.WARNING_MESSAGE);
 		}
 	}
 
 	private void displayTextPane(final StringBuffer textBuffer) {
-		// Build the text pane.
-		final JEditorPane editorPane = new JEditorPane("text/plain", textBuffer
-				.toString());
+		// Build the text editor pane.
+		final JTextArea editorPane = new JTextArea(textBuffer.toString());
+
+		// Make it read-only and word-wrapped.
+		editorPane.setEditable(false);
+		editorPane.setWrapStyleWord(true);
+		editorPane.setLineWrap(true);
+
+		// Create a simple copy/select-all/wrap menu.
+		final JPopupMenu menu = new JPopupMenu();
+
+		// Copy.
+		final JMenuItem copy = new JMenuItem(editorPane.getActionMap().get(
+				DefaultEditorKit.copyAction));
+		copy.setText(Resources.get("copy"));
+		copy.setMnemonic(Resources.get("copyMnemonic").charAt(0));
+		menu.add(copy);
+
+		menu.addSeparator();
+
+		// Select-all.
+		final JMenuItem selectAll = new JMenuItem(editorPane.getActionMap()
+				.get(DefaultEditorKit.selectAllAction));
+		selectAll.setText(Resources.get("selectAll"));
+		selectAll.setMnemonic(Resources.get("selectAllMnemonic").charAt(0));
+		menu.add(selectAll);
+
+		// Wrap.
+		final JCheckBoxMenuItem wrap = new JCheckBoxMenuItem(Resources
+				.get("wordWrap"));
+		wrap.setMnemonic(Resources.get("wordWrapMnemonic").charAt(0));
+		wrap.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				editorPane.setLineWrap(wrap.isSelected());
+			}
+		});
+		wrap.setSelected(true);
+		menu.add(wrap);
+
+		// Attach a mouse listener to the editor pane that
+		// will open the menu on demand.
+		editorPane.addMouseListener(new MouseListener() {
+			public void mouseReleased(MouseEvent e) {
+				this.handleMouse(e);
+			}
+
+			public void mouseClicked(MouseEvent e) {
+				this.handleMouse(e);
+			}
+
+			public void mousePressed(MouseEvent e) {
+				this.handleMouse(e);
+			}
+
+			public void mouseEntered(MouseEvent e) {
+				this.handleMouse(e);
+			}
+
+			public void mouseExited(MouseEvent e) {
+				this.handleMouse(e);
+			}
+
+			private void handleMouse(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					copy.setEnabled(editorPane.getSelectedText() != null);
+					menu.show(e.getComponent(), e.getX(), e.getY());
+					e.consume();
+				}
+			}
+		});
 
 		// Put the editor pane in a scroll pane.
 		final JScrollPane editorScrollPane = new JScrollPane(editorPane);
@@ -389,9 +482,15 @@ public class SaveDDLDialog extends JDialog {
 		// Arbitrarily resize the scrollpane.
 		editorScrollPane.setPreferredSize(new Dimension(600, 400));
 
-		// Show the output.
-		JOptionPane.showMessageDialog(this.martTab, editorScrollPane, Resources
-				.get("mcViewDDLWindowTitle"), JOptionPane.INFORMATION_MESSAGE);
+		// Create a frame around the scrollpane.
+		final JFrame editorFrame = new JFrame(Resources
+				.get("mcViewDDLWindowTitle"));
+		editorFrame.setContentPane(editorScrollPane);
+
+		// Show the frame.
+		editorFrame.pack();
+		editorFrame.setLocationRelativeTo(null);
+		editorFrame.show();
 	}
 
 	private boolean isEmpty(final String string) {
@@ -410,7 +509,7 @@ public class SaveDDLDialog extends JDialog {
 
 		// Must have an output file.
 		if (!this.viewDDL.isSelected()
-				&& this.isEmpty(this.zipFileLocation.getText()))
+				&& this.isEmpty(this.outputFileLocation.getText()))
 			messages.add(Resources.get("fieldIsEmpty", Resources
 					.get("saveDDLFileLocation")));
 
@@ -421,7 +520,7 @@ public class SaveDDLDialog extends JDialog {
 
 		// Any messages to display? Show them.
 		if (!messages.isEmpty())
-			JOptionPane.showMessageDialog(this,
+			JOptionPane.showMessageDialog(null,
 					messages.toArray(new String[0]), Resources
 							.get("validationTitle"),
 					JOptionPane.INFORMATION_MESSAGE);
