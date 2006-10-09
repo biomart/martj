@@ -59,7 +59,6 @@ import org.biomart.builder.model.Table.GenericTable;
 import org.biomart.builder.resources.Resources;
 
 /**
- * <p>
  * This implementation of the {@link Schema} interface connects to a JDBC data
  * source and loads tables, keys and relations using database metadata.
  * <p>
@@ -150,6 +149,26 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		this.username = username;
 		this.password = password;
 		this.schemaName = schemaName;
+
+		// Add a thread so that any connection established gets closed when
+		// the application exits.
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
+				try {
+					JDBCSchema.this.closeConnection();
+				} catch (Exception e) {
+					// We don't care if it fails, so ignore it.
+				}
+			}
+		});
+	}
+
+	protected void finalize() throws Throwable {
+		try {
+			this.closeConnection();
+		} finally {
+			super.finalize();
+		}
 	}
 
 	/**
@@ -402,7 +421,6 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	}
 
 	/**
-	 * <p>
 	 * This method implements the key-guessing algorithm for foreign keys.
 	 * Basically, it iterates through all known primary keys, and looks for sets
 	 * of matching columns in other tables, either with the same names or with
@@ -782,6 +800,15 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		return this.connection;
 	}
 
+	private void closeConnection() throws SQLException {
+		if (this.connection != null)
+			try {
+				this.connection.close();
+			} finally {
+				this.connection = null;
+			}
+	}
+
 	public String getDatabaseSchema() {
 		return this.schemaName;
 	}
@@ -820,27 +847,77 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	}
 
 	public void setDatabaseSchema(final String schemaName) {
-		this.schemaName = schemaName;
+		if (this.schemaName != null && !this.schemaName.equals(schemaName)) {
+			this.schemaName = schemaName;
+			// Reset the cached database connection.
+			try {
+				this.closeConnection();
+			} catch (SQLException e) {
+				// We don't care.
+			}
+		}
 	}
 
 	public void setDriverClassLocation(final File driverClassLocation) {
-		this.driverClassLocation = driverClassLocation;
+		if (this.driverClassLocation != null
+				&& !this.driverClassLocation.equals(driverClassLocation)) {
+			this.driverClassLocation = driverClassLocation;
+			// Reset the cached database connection.
+			try {
+				this.closeConnection();
+			} catch (SQLException e) {
+				// We don't care.
+			}
+		}
 	}
 
 	public void setDriverClassName(final String driverClassName) {
-		this.driverClassName = driverClassName;
+		if (this.driverClassName != null
+				&& !this.driverClassName.equals(driverClassName)) {
+			this.driverClassName = driverClassName;
+			// Reset the cached database connection.
+			try {
+				this.closeConnection();
+			} catch (SQLException e) {
+				// We don't care.
+			}
+		}
 	}
 
 	public void setJDBCURL(final String url) {
-		this.url = url;
+		if (this.url != null && !this.url.equals(url)) {
+			this.url = url;
+			// Reset the cached database connection.
+			try {
+				this.closeConnection();
+			} catch (SQLException e) {
+				// We don't care.
+			}
+		}
 	}
 
 	public void setPassword(final String password) {
-		this.password = password;
+		if (this.password != null && !this.password.equals(password)) {
+			this.password = password;
+			// Reset the cached database connection.
+			try {
+				this.closeConnection();
+			} catch (SQLException e) {
+				// We don't care.
+			}
+		}
 	}
 
 	public void setUsername(final String username) {
-		this.username = username;
+		if (this.username != null && !this.username.equals(username)) {
+			this.username = username;
+			// Reset the cached database connection.
+			try {
+				this.closeConnection();
+			} catch (SQLException e) {
+				// We don't care.
+			}
+		}
 	}
 
 	public void synchronise() throws SQLException, BuilderException {
