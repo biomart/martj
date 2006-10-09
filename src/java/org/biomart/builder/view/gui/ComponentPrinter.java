@@ -39,7 +39,8 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * Swing Tutorial</a>.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class ComponentPrinter implements Printable {
@@ -99,7 +100,6 @@ public class ComponentPrinter implements Printable {
 		final int numPages = pagesAcross * pagesDown;
 		// If we are beyond the last page, we are done.
 		if (pageIndex >= numPages)
-			// We only have one page, which contains the entire component.
 			return Printable.NO_SUCH_PAGE;
 		else {
 			// Print the components.

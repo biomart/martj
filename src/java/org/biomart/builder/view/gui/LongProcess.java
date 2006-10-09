@@ -26,7 +26,6 @@ import javax.swing.SwingUtilities;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
 
 /**
- * <p>
  * This simple class wraps a thread, and displays an hourglass for as long as
  * that thread is running. It is synchronised so that if multiple threads are
  * running, only the first one will start the hourglass, and only the last one
@@ -39,7 +38,8 @@ import org.biomart.builder.exceptions.MartBuilderInternalError;
  * avoid concurrent modification problems.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public abstract class LongProcess {
@@ -64,19 +64,18 @@ public abstract class LongProcess {
 				try {
 					// Update the number of processes currently running.
 					synchronized (LongProcess.lockObject) {
-						LongProcess.longProcessCount++;
+						// If this is the first process to start, open the
+						// hourglass.
+						if (++LongProcess.longProcessCount == 1)
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									final Cursor normalCursor = new Cursor(
+											Cursor.WAIT_CURSOR);
+									LongProcess.container
+											.setCursor(normalCursor);
+								}
+							});
 					}
-
-					// If this is the first process to start, open the
-					// hourglass.
-					if (LongProcess.longProcessCount == 1)
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								final Cursor normalCursor = new Cursor(
-										Cursor.WAIT_CURSOR);
-								LongProcess.container.setCursor(normalCursor);
-							}
-						});
 
 					// Let the process run.
 					try {
@@ -89,18 +88,17 @@ public abstract class LongProcess {
 				} finally {
 					// Decrease the number of processes currently running.
 					synchronized (LongProcess.lockObject) {
-						LongProcess.longProcessCount--;
+						// If that was the last one, stop the hourglass.
+						if (--LongProcess.longProcessCount == 0)
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									final Cursor normalCursor = new Cursor(
+											Cursor.DEFAULT_CURSOR);
+									LongProcess.container
+											.setCursor(normalCursor);
+								}
+							});
 					}
-
-					// If that was the last one, stop the hourglass.
-					if (LongProcess.longProcessCount == 0)
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								final Cursor normalCursor = new Cursor(
-										Cursor.DEFAULT_CURSOR);
-								LongProcess.container.setCursor(normalCursor);
-							}
-						});
 				}
 			}
 		}).start();

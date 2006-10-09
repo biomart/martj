@@ -37,7 +37,8 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
  * Saves any given component to an image file.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class ComponentImageSaver {
@@ -79,7 +80,7 @@ public class ComponentImageSaver {
 
 	/**
 	 * Pops up a save-as dialog, and if the user completes it correctly, saves
-	 * the component.
+	 * the component as an image file.
 	 */
 	public void save() {
 		// Popup a save as dialog to request filename and image format.

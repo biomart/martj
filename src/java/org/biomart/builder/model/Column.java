@@ -21,7 +21,6 @@ package org.biomart.builder.model;
 import org.biomart.builder.resources.Resources;
 
 /**
- * <p>
  * A column is a simple representation of a column in some table. It has a name,
  * and knows which table it belongs to, but apart from that knows nothing much
  * else.
@@ -69,7 +68,7 @@ public interface Column extends Comparable {
 	public void setName(String newName);
 
 	/**
-	 * Use this to rename a column's original name. Use with extreme caution.
+	 * Use this to change a column's original name. Use with extreme caution.
 	 * The owning table doesn't need to know so won't be notified.
 	 * 
 	 * @param newName
@@ -100,7 +99,23 @@ public interface Column extends Comparable {
 		public GenericColumn(String name, final Table table) {
 			// Remember the values.
 			this.table = table;
-			// Make the name unique.
+			// Remember the name, and set it as the original name for
+			// this column.
+			name = this.makeUniqueName(name);
+			this.name = name;
+			this.originalName = name;
+			// Add it to the table.
+			table.addColumn(this);
+		}
+
+		private String makeUniqueName(String name) {
+			// Is it the same as our existing name? Reuse it.
+			if (this.name != null && this.name.equals(name))
+				return name;
+			// First we need to find out the base name, ie. the bit
+			// we append numbers to make it unique, but before any
+			// key suffix. If we appended numbers after the key
+			// suffix then it would confuse MartEditor.
 			String suffix = "";
 			String baseName = name;
 			if (name.endsWith(Resources.get("keySuffix"))) {
@@ -108,17 +123,16 @@ public interface Column extends Comparable {
 				baseName = name.substring(0, name.indexOf(Resources
 						.get("keySuffix")));
 			}
-			// Check there is no other column on this table with the same name.
+			// Now simply check to see if the name is used, and
+			// then add an incrementing number to it until it is unique.
 			for (int i = 1; table.getColumnByName(name) != null; name = baseName
 					+ "_" + i++ + suffix)
 				;
-			this.name = name;
-			this.originalName = name;
-			// Add it to the table.
-			table.addColumn(this);
+			// Return it.
+			return name;
 		}
 
-		public int compareTo(final Object o) throws ClassCastException {
+		public int compareTo(final Object o) {
 			final Column c = (Column) o;
 			return this.toString().compareTo(c.toString());
 		}
@@ -148,18 +162,8 @@ public interface Column extends Comparable {
 
 		public void setName(String newName) {
 			// Make the name unique.
-			String suffix = "";
-			String baseName = newName;
-			if (newName.endsWith(Resources.get("keySuffix"))) {
-				suffix = Resources.get("keySuffix");
-				baseName = newName.substring(0, newName.indexOf(Resources
-						.get("keySuffix")));
-			}
-			// Check there is no other column on this table with the same name.
-			for (int i = 1; this.table.getColumnByName(newName) != null
-					&& !newName.equals(this.name); newName = baseName + "_"
-					+ i++ + suffix)
-				;
+			newName = this.makeUniqueName(newName);
+			// Rename it.
 			this.getTable().changeColumnMapKey(this.name, newName);
 			this.name = newName;
 		}
@@ -168,6 +172,13 @@ public interface Column extends Comparable {
 			this.originalName = newName;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 * <p>
+		 * The format of the returned string is the output of
+		 * {@link Table#toString()} for the parent table, followed by a colon
+		 * and the output of {@link #getName()}.
+		 */
 		public String toString() {
 			return this.getTable().toString() + ":" + this.getName();
 		}

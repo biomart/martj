@@ -47,7 +47,8 @@ import org.biomart.builder.resources.Resources;
 import org.biomart.builder.resources.SettingsCache;
 
 /**
- * The main window housing the MartBuilder GUI.
+ * The main window housing the MartBuilder GUI. The {@link #main(String[])}
+ * method starts the GUI and opens this window.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
@@ -83,15 +84,19 @@ public class MartBuilder extends JFrame {
 
 	/**
 	 * Creates a new instance of MartBuilder. You can customise the
-	 * look-and-feel by speciying a system property on startup called
-	 * <tt>martbuilder.laf</tt>, which contains the classname of the
-	 * look-and-feel to use.
+	 * look-and-feel by speciying a configuration property called
+	 * <tt>lookandfeel</tt>, which contains the classname of the
+	 * look-and-feel to use. Details of where this file is can be found in
+	 * {@link SettingsCache}.
 	 */
 	public MartBuilder() {
 		// Create the window.
 		super(Resources.get("GUITitle", MartBuilderXML.DTD_VERSION));
 
 		// Assign ourselves to the long-process hourglass container.
+		// This means that whenever the hourglass is on, it appears
+		// over our entire window, not just the component that
+		// called for it.
 		LongProcess.setContainer(this);
 
 		// Load our cache of settings.
@@ -100,7 +105,6 @@ public class MartBuilder extends JFrame {
 		// Set the look and feel to the one specified by the user, or the system
 		// default if not specified by the user. This may be null.
 		String lookAndFeelClass = SettingsCache.getProperty("lookandfeel");
-
 		try {
 			UIManager.setLookAndFeel(lookAndFeelClass);
 		} catch (final Exception e) {
@@ -179,16 +183,15 @@ public class MartBuilder extends JFrame {
 		String mainMessage = t.getLocalizedMessage();
 		if (mainMessage == null)
 			mainMessage = "";
-		if (mainMessage.length() > 100)
-			mainMessage = mainMessage.substring(0, 100)
-					+ Resources.get("truncatedException");
-		else if (mainMessage.length() == 0)
+
+		// Missing message?
+		if (mainMessage.length() == 0)
 			mainMessage = Resources.get("missingException");
 
-		// Extract the full stack trace.
-		final StringWriter sw = new StringWriter();
-		t.printStackTrace(new PrintWriter(sw));
-		final String stackTraceText = sw.toString();
+		// Too-long message?
+		else if (mainMessage.length() > 100)
+			mainMessage = mainMessage.substring(0, 100)
+					+ Resources.get("truncatedException");
 
 		// Ask if they want to see the full stack trace (show the first line of
 		// the stack trace as a hint).
@@ -198,6 +201,11 @@ public class MartBuilder extends JFrame {
 
 		// Create and show the full stack trace dialog if they said yes.
 		if (choice == JOptionPane.YES_OPTION) {
+			// Extract the full stack trace.
+			final StringWriter sw = new StringWriter();
+			t.printStackTrace(new PrintWriter(sw));
+			final String stackTraceText = sw.toString();
+
 			// Build the text pane.
 			final JEditorPane editorPane = new JEditorPane("text/plain",
 					stackTraceText);

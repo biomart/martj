@@ -29,7 +29,6 @@ import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.resources.Resources;
 
 /**
- * <p>
  * The key interface is core to the way tables get associated. They are involved
  * in relations which link tables together in various ways, and provide
  * information about which columns at each end correspond.
@@ -47,16 +46,12 @@ import org.biomart.builder.resources.Resources;
  */
 public interface Key extends Comparable {
 	/**
-	 * Adds a particular relation to the set this key is involved in. It checks
-	 * first to make sure it is actually involved.
+	 * Adds a particular relation to the set this key is involved in.
 	 * 
 	 * @param relation
 	 *            the relation to add to this key.
-	 * @throws AssociationException
-	 *             if it is not actually involved in the given relation in any
-	 *             way.
 	 */
-	public void addRelation(Relation relation) throws AssociationException;
+	public void addRelation(Relation relation);
 
 	/**
 	 * Counts the columns this key is formed over.
@@ -94,7 +89,7 @@ public interface Key extends Comparable {
 
 	/**
 	 * Returns all relations this key is involved in. The set may be empty but
-	 * it will never be null.
+	 * it will never be <tt>null</tt>.
 	 * 
 	 * @return the set of all relations this key is involved in.
 	 */
@@ -140,7 +135,8 @@ public interface Key extends Comparable {
 	public void setStatus(ComponentStatus status);
 
 	/**
-	 * This interface is designed to mark key instances as foreign keys.
+	 * This interface is designed to mark key instances as foreign keys. It has
+	 * no unique methods of its own.
 	 */
 	public interface ForeignKey extends Key {
 	}
@@ -161,9 +157,13 @@ public interface Key extends Comparable {
 			super(columns);
 		}
 
+		/**
+		 * {@inheritDoc}
+		 * <p>
+		 * Always returns FK followed by the output from {@link #getName()}.
+		 */
 		public String getName() {
-			final String supername = super.getName();
-			return Resources.get("fkPrefix") + supername;
+			return Resources.get("fkPrefix") + super.getName();
 		}
 	}
 
@@ -208,17 +208,7 @@ public interface Key extends Comparable {
 			this.setColumns(columns);
 		}
 
-		public void addRelation(final Relation relation)
-				throws AssociationException {
-			// Does it refer to us?
-			try {
-				// Will throw an exception if we are not part of the relation.
-				relation.getOtherKey(this);
-			} catch (final IllegalArgumentException e) {
-				throw new AssociationException(Resources
-						.get("relationNotOfThisKey"));
-			}
-
+		public void addRelation(final Relation relation) {
 			// Add it.
 			this.relations.add(relation);
 		}
@@ -275,6 +265,12 @@ public interface Key extends Comparable {
 			return this.columns;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 * <p>
+		 * This will return a string that starts out with
+		 * {@link Table#toString()} followed by {@link #getColumnNames()}.
+		 */
 		public String getName() {
 			final StringBuffer sb = new StringBuffer();
 			sb.append(this.getTable().toString());
@@ -320,7 +316,8 @@ public interface Key extends Comparable {
 
 			// Invalidate all relations associated with this key. This means
 			// dropping all handmade relations, and marking all others as
-			// incorrect.
+			// incorrect. We do this because we can no longer be certain
+			// that the relations are intended if our columns have changed.
 			final List deadRels = new ArrayList();
 			for (final Iterator i = this.relations.iterator(); i.hasNext();) {
 				final Relation r = (Relation) i.next();
@@ -370,6 +367,11 @@ public interface Key extends Comparable {
 			}
 		}
 
+		/**
+		 * {@inheritDoc}
+		 * <p>
+		 * Always returns the output from {@link #getName()}.
+		 */
 		public String toString() {
 			return this.getName();
 		}
@@ -390,14 +392,19 @@ public interface Key extends Comparable {
 			super(columns);
 		}
 
+		/**
+		 * {@inheritDoc}
+		 * <p>
+		 * Always returns PK followed by the output from {@link #getName()}.
+		 */
 		public String getName() {
-			final String supername = super.getName();
-			return Resources.get("pkPrefix") + supername;
+			return Resources.get("pkPrefix") + super.getName();
 		}
 	}
 
 	/**
-	 * This interface is designed to mark key instances as primary keys.
+	 * This interface is designed to mark key instances as primary keys. It has
+	 * no unique methods of its own.
 	 */
 	public interface PrimaryKey extends Key {
 	}

@@ -22,7 +22,8 @@ package org.biomart.builder.exceptions;
  * This is a serious internal error.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class MartBuilderInternalError extends Error {

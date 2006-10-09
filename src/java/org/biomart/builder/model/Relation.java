@@ -27,7 +27,6 @@ import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.resources.Resources;
 
 /**
- * <p>
  * A relation represents the association between two keys. Relations between two
  * primary keys are always 1:1. Relations between two foreign keys are either
  * 1:1 or M:M. Relations between a foreign key and a primary key can either be
@@ -37,11 +36,12 @@ import org.biomart.builder.resources.Resources;
  * should appear in the same order in both keys. If they do not, then results
  * may be unpredictable.
  * <p>
- * An {@link GenericRelation} class is provided to form the basic functionality
+ * A {@link GenericRelation} class is provided to form the basic functionality
  * outlined above.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public interface Relation extends Comparable {
@@ -62,7 +62,9 @@ public interface Relation extends Comparable {
 	public Cardinality getCardinality();
 
 	/**
-	 * Returns the first key of this relation.
+	 * Returns the first key of this relation. The concept of which key is first
+	 * and which is second depends merely on the order they were passed to the
+	 * constructor.
 	 * 
 	 * @return the first key.
 	 */
@@ -98,14 +100,15 @@ public interface Relation extends Comparable {
 	 * 
 	 * @param key
 	 *            the key we know is in this relationship.
-	 * @return the other key in this relationship.
-	 * @throws IllegalArgumentException
-	 *             if the key specified is not in this relationship.
+	 * @return the other key in this relationship, or <tt>null</tt> if the key
+	 *         specified is not in this relationship.
 	 */
-	public Key getOtherKey(Key key) throws IllegalArgumentException;
+	public Key getOtherKey(Key key);
 
 	/**
-	 * Returns the second key of this relation.
+	 * Returns the second key of this relation. The concept of which key is
+	 * first and which is second depends merely on the order they were passed to
+	 * the constructor.
 	 * 
 	 * @return the second key.
 	 */
@@ -136,7 +139,8 @@ public interface Relation extends Comparable {
 	public boolean isManyToMany();
 
 	/**
-	 * Can this relation be M:M? Returns true where both keys are foreign keys.
+	 * Can this relation be M:M? Returns <tt>true</tt> where both keys are
+	 * foreign keys.
 	 * 
 	 * @return <tt>true</tt> if this can be M:M, <tt>false</tt> if not.
 	 */
@@ -151,8 +155,8 @@ public interface Relation extends Comparable {
 	public boolean isOneToMany();
 
 	/**
-	 * Can this relation be 1:M? Returns true in all cases where both keys are
-	 * of different types.
+	 * Can this relation be 1:M? Returns <tt>true</tt> in all cases where the
+	 * two keys are of different types.
 	 * 
 	 * @return <tt>true</tt> if this can be 1:M, <tt>false</tt> if not.
 	 */
@@ -190,7 +194,7 @@ public interface Relation extends Comparable {
 	public void setStatus(ComponentStatus status) throws AssociationException;
 
 	/**
-	 * This internal singleton class represents the cardinality of a foreign key
+	 * This internal singleton class represents the cardinality of a key
 	 * involved in a relation. Note that the names of cardinality objects are
 	 * case-sensitive.
 	 */
@@ -198,12 +202,12 @@ public interface Relation extends Comparable {
 		private static final Map singletons = new HashMap();
 
 		/**
-		 * Use this constant to refer to a 1:M relation.
+		 * Use this constant to refer to a key with many values.
 		 */
 		public static final Cardinality MANY = Cardinality.get("M");
 
 		/**
-		 * Use this constant to refer to 1:1 relation.
+		 * Use this constant to refer to a key with one value.
 		 */
 		public static final Cardinality ONE = Cardinality.get("1");
 
@@ -266,6 +270,11 @@ public interface Relation extends Comparable {
 			return this.toString().hashCode();
 		}
 
+		/**
+		 * {@inheritDoc}
+		 * <p>
+		 * Always returns the name of this cardinality.
+		 */
 		public String toString() {
 			return this.getName();
 		}
@@ -302,8 +311,7 @@ public interface Relation extends Comparable {
 		 *            M:M. See {@link #setCardinality(Cardinality)}.
 		 * @throws AssociationException
 		 *             if the number of columns in the keys don't match, or if
-		 *             the relation already exists, or if one of the keys is a
-		 *             foreign key which already has a valid relation elsewhere.
+		 *             the relation already exists.
 		 */
 		public GenericRelation(final Key firstKey, final Key secondKey,
 				final Cardinality cardinality) throws AssociationException {
@@ -377,13 +385,13 @@ public interface Relation extends Comparable {
 					: this.secondKey;
 		}
 
-		public Key getOtherKey(final Key key) throws IllegalArgumentException {
+		public Key getOtherKey(final Key key) {
 			if (key.equals(this.firstKey))
 				return this.secondKey;
 			else if (key.equals(this.secondKey))
 				return this.firstKey;
 			else
-				throw new IllegalArgumentException(Resources.get("keyNotInRel"));
+				return null;
 		}
 
 		public Key getSecondKey() {
@@ -449,6 +457,11 @@ public interface Relation extends Comparable {
 			this.status = status;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 * <p>
+		 * Always returns the output of {@link #getName()}.
+		 */
 		public String toString() {
 			return this.getName();
 		}

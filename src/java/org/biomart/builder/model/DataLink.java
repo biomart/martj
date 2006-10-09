@@ -19,28 +19,31 @@
 package org.biomart.builder.model;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * This interface defines the methods required to connect to and test a data
- * source. It doesn't define any data source specific methods, only those that
- * are required to make the rest of the system work without worrying about where
- * the data is coming from.
+ * This interface defines the methods required to connect to a data source. It
+ * doesn't define any data source specific methods, only those that are required
+ * to make the rest of the system work without worrying about where the data is
+ * coming from.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public interface DataLink {
 	/**
 	 * Checks to see if this datalink 'cohabits' with another one. Cohabitation
 	 * means that it would be possible to write a single SQL statement that
-	 * could read data from both datalinks simultaneously.
+	 * could read or write data from both this datalink and the specified
+	 * partner simultaneously.
 	 * 
 	 * @param partner
 	 *            the other datalink to test for cohabitation.
-	 * @return true if the two can cohabit, false if not.
+	 * @return <tt>true</tt> if the two can cohabit, <tt>false</tt> if not.
 	 */
 	public boolean canCohabit(DataLink partner);
 
@@ -53,12 +56,18 @@ public interface DataLink {
 	 *         <tt>false</tt>, as an exception will always be thrown if there
 	 *         is a problem.
 	 * @throws Exception
-	 *             if there is a problem.
+	 *             if there is a problem connecting to the data link. This
+	 *             exception could be one of a number of types - usually it is
+	 *             likely to be a {@link SQLException} if talking to a JDBC data
+	 *             source, or a {@link IOException} if talking to a file-based
+	 *             data source.
 	 */
 	public boolean test() throws Exception;
 
 	/**
-	 * This inner interface defines methods required for JDBC connections only.
+	 * This interface defines methods required for JDBC connections only. Note
+	 * that the schema name is the name of the owner of the tables. This is
+	 * distinct from the database name which is part of the JDBC URL.
 	 */
 	public interface JDBCDataLink extends DataLink {
 		/**
@@ -79,9 +88,13 @@ public interface DataLink {
 		public String getDatabaseSchema();
 
 		/**
-		 * Gets the location of the driver class, if specified. May return null.
+		 * Gets the location of the driver class, if specified. May return
+		 * <tt>null</tt> but only if the class should be looked for using the
+		 * default class loader. This location is a fully-qualified pathname
+		 * including the name of the JAR file that the driver lives in.
 		 * 
-		 * @return the location of the driver class.
+		 * @return the location of the driver class, or <tt>null</tt> if it is
+		 *         expected to be found by the default class loader.
 		 */
 		public File getDriverClassLocation();
 
@@ -96,12 +109,13 @@ public interface DataLink {
 		/**
 		 * Gets the JDBC URL.
 		 * 
-		 * @return the JDBC url.
+		 * @return the JDBC URL.
 		 */
 		public String getJDBCURL();
 
 		/**
-		 * Gets the password.
+		 * Gets the password. May be <tt>null</tt> which would indicate that
+		 * no password is required.
 		 * 
 		 * @return the password.
 		 */
@@ -124,8 +138,10 @@ public interface DataLink {
 
 		/**
 		 * Sets the location of the driver class. If the class is not found at
-		 * that location, or the location is null, the default system class
-		 * loader is used instead.
+		 * that location, or the location is <tt>null</tt>, the default
+		 * system class loader is used instead. The location should be a fully
+		 * qualified pathname including the name of the JAR file the driver
+		 * class lives in.
 		 * 
 		 * @param driverClassLocation
 		 *            the location of the driver class.
@@ -144,12 +160,13 @@ public interface DataLink {
 		 * Sets the JDBC URL.
 		 * 
 		 * @param url
-		 *            the JDBC url.
+		 *            the JDBC URL.
 		 */
 		public void setJDBCURL(String url);
 
 		/**
-		 * Sets the password. If null, then no password will be used.
+		 * Sets the password. If <tt>null</tt>, then no password will be
+		 * used.
 		 * 
 		 * @param password
 		 *            the password.
@@ -166,7 +183,7 @@ public interface DataLink {
 	}
 
 	/**
-	 * This inner interface defines methods required for XML files only.
+	 * This interface defines methods required for XML files only.
 	 * <p>
 	 * TODO: Work out how it's going to work, then define it.
 	 */

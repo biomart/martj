@@ -40,22 +40,21 @@ import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Table.GenericTable;
 
 /**
- * <p>
  * A schema provides one or more table objects with unique names for the user to
  * use. It could be a relational database, or an XML document, or any other
  * source of potentially tabular information.
  * <p>
- * The generic implementation provided should suffice for most tasks involved
- * with keeping track of the tables a schema provides.
+ * The generic implementation provided should suffice for most tasks involved in
+ * keeping track of the tables a schema provides.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public interface Schema extends Comparable, DataLink {
 	/**
-	 * Adds a table to this schema. The table must not already exist (ie. with
-	 * the same name).
+	 * Adds a table to this schema.
 	 * 
 	 * @param table
 	 *            the table to add.
@@ -63,10 +62,9 @@ public interface Schema extends Comparable, DataLink {
 	public void addTable(Table table);
 
 	/**
-	 * Attempts to rename a table. If the new name has already been taken by
-	 * another table, an exception is thrown. The rename does not affect the
-	 * table itself, only the representation of the table within this schema. If
-	 * the names are the same, nothing happens.
+	 * Attempts to rename a table. The rename does not affect the table itself,
+	 * only the representation of the table within this schema. If the names are
+	 * the same, nothing happens.
 	 * 
 	 * @param oldName
 	 *            the old name of the table.
@@ -114,8 +112,8 @@ public interface Schema extends Comparable, DataLink {
 	public String getName();
 
 	/**
-	 * Returns the tables from this schema with the given name. If there is no
-	 * such table, the method will return null.
+	 * Returns the table from this schema with the given name. If there is no
+	 * such table, the method will return <tt>null</tt>.
 	 * 
 	 * @param name
 	 *            the name of the table to retrieve.
@@ -125,7 +123,7 @@ public interface Schema extends Comparable, DataLink {
 
 	/**
 	 * Returns all the tables this schema provides. The set returned may be
-	 * empty but it will never be null.
+	 * empty but it will never be <tt>null</tt>.
 	 * 
 	 * @return the set of all tables in this schema.
 	 */
@@ -142,10 +140,24 @@ public interface Schema extends Comparable, DataLink {
 	public Schema replicate(String newName);
 
 	/**
+	 * Drops the table from this schema.
+	 * 
+	 * @param tableName
+	 *            the table to drop.
+	 */
+	public void removeTableByName(String tableName);
+
+	/**
+	 * Drops all the tables in this schema.
+	 */
+	public void removeAllTables();
+
+	/**
 	 * Copies all the tables, keys and relations from this schema into the
 	 * target schema. Reuses any which already exist. Any relations which are
 	 * {@link ComponentStatus#INFERRED_INCORRECT} and have keys with different
-	 * numbers of columns at either end will probably not be copied.
+	 * numbers of columns at either end will probably not be copied, but this
+	 * depends on the implementation.
 	 * 
 	 * @param targetSchema
 	 *            the schema to copy into.
@@ -175,7 +187,6 @@ public interface Schema extends Comparable, DataLink {
 	public void setName(String name);
 
 	/**
-	 * <p>
 	 * Synchronise this schema with the data source that is providing its
 	 * tables. Synchronisation means checking the list of tables available and
 	 * drop/add any that have changed, then check each column. and key and
@@ -211,18 +222,17 @@ public interface Schema extends Comparable, DataLink {
 	 * The generic implementation should suffice as the ground for most complex
 	 * implementations. It keeps track of tables it has seen, and performs
 	 * simple lookups for them.
+	 * <p>
+	 * This generic implementation obviously isn't connected to anything, and so
+	 * it's {@link #synchronise()} and {@link #synchroniseKeys()} methods do
+	 * nothing.
 	 */
 	public class GenericSchema implements Schema {
 		private boolean keyguessing;
 
 		private String name;
 
-		/**
-		 * Try not to use this unless absolutely necessary. The keys of this map
-		 * are table names, and the values are actual table objects. It is
-		 * protected to allow subclasses direct access for efficiency.
-		 */
-		protected final Map tables = new TreeMap();
+		private final Map tables = new TreeMap();
 
 		/**
 		 * The constructor creates a schema with the given name. Keyguessing is
@@ -350,6 +360,14 @@ public interface Schema extends Comparable, DataLink {
 
 		public int hashCode() {
 			return this.toString().hashCode();
+		}
+
+		public void removeTableByName(String tableName) {
+			this.tables.remove(tableName);
+		}
+
+		public void removeAllTables() {
+			this.tables.clear();
 		}
 
 		public Schema replicate(final String newName) {

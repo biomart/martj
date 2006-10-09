@@ -144,8 +144,8 @@ public class DataSetTabSet extends JTabbedPane {
 		datasetDiagram.setDiagramContext(new DataSetContext(this.martTab,
 				dataset));
 
-		// Update the all-schemas diagram so that it includes the new
-		// schema.
+		// Update the all-datasets diagram so that it includes the new
+		// dataset.
 		this.recalculateOverviewDiagram();
 
 		// Fake a click on the overview tab.
@@ -322,9 +322,8 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks all dataset org.biomart.builder.view.gui.diagrams in all dataset
-	 * tabs to recalculate themselves to match the current contents of the
-	 * datasets.
+	 * Asks all dataset {@link Diagram}s in all dataset tabs to recalculate
+	 * themselves to match the current contents of the datasets.
 	 */
 	public void recalculateAllDataSetDiagrams() {
 		for (final Iterator i = this.datasetToDiagram[1].iterator(); i
@@ -413,10 +412,9 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks all dataset org.biomart.builder.view.gui.diagrams in all dataset
-	 * tabs to repaint themselves, in case any components have changed
-	 * appearance. Do not use this if the components have changed size - use
-	 * recalculate instead.
+	 * Asks all dataset {@link Diagram}s in all dataset tabs to repaint
+	 * themselves, in case any components have changed appearance. Do not use
+	 * this if the components have changed size - use recalculate instead.
 	 */
 	public void repaintAllDataSetDiagrams() {
 		for (final Iterator i = this.datasetToDiagram[1].iterator(); i
@@ -954,7 +952,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * Requests that the dataset should be partitioned by the contents of the
 	 * specified column. A dialog is put up asking the user how to partition
 	 * this column. If it is already partitioned, the dialog will explain how
-	 * and allow the user to change it. The users input is then used to
+	 * and allow the user to change it. The user's input is then used to
 	 * partition the column appropriately (or re-partition using the new
 	 * settings if it was already partitioned).
 	 * 
@@ -1029,7 +1027,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 	/**
 	 * Asks the user if they are sure they want to remove all datasets, then
-	 * removes it from the mart (and the tabs) if they agree.
+	 * removes them from the mart (and the tabs) if they agree.
 	 */
 	public void requestRemoveAllDataSets() {
 		// Confirm the decision first.
@@ -1357,7 +1355,8 @@ public class DataSetTabSet extends JTabbedPane {
 
 	/**
 	 * Asks user for a name to use, then creates an exact copy of the given
-	 * dataset, giving the copy the name they chose.
+	 * dataset, giving the copy the name they chose. See also
+	 * {@link DataSet#replicate(String)}.
 	 * 
 	 * @param dataset
 	 *            the schema to dataset.
@@ -1423,8 +1422,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 * possible for that table.
 	 * 
 	 * @param table
-	 *            the table to suggest datasets for. If null, no default table
-	 *            is used.
+	 *            the table to suggest datasets for. If <tt>null</tt>, no
+	 *            default table is used.
 	 */
 	public void requestSuggestDataSets(final Table table) {
 		// Ask the user what tables they want to work with and what

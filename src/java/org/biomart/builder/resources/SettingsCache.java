@@ -21,23 +21,30 @@ package org.biomart.builder.resources;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 /**
  * Manages the on-disk cache of user settings.
+ * <p>
+ * Settings are contained in a folder called <tt>.martbuilder</tt> in the
+ * user's home directory. In there are two files - one called
+ * <tt>properties</tt> which contains general configuration settings such as
+ * look and feel, and the other called <tt>cache</tt> which is a directory
+ * containing history settings for various classes.
+ * <p>
+ * You should only ever need to modify the <tt>properties</tt> file, and
+ * <tt>cache</tt> should be left alone.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class SettingsCache {
@@ -99,10 +106,10 @@ public class SettingsCache {
 					final File classDir = new File(SettingsCache.classCacheDir,
 							clazz.getName());
 					classDir.mkdir();
-					// List existing ones.
-					final String[] files = classDir.list();
-					final List existingFiles = files == null ? new ArrayList()
-							: new ArrayList(Arrays.asList(files));
+					// Remove existing files.
+					File[] files = classDir.listFiles();
+					for (int j = 0; j < files.length; j++)
+						files[j].delete();
 					// Save current set. Must use Map.Entry else each
 					// call for map keys and values will change the
 					// structure of the LRU cache map, and hence cause
@@ -111,15 +118,10 @@ public class SettingsCache {
 							.entrySet().iterator(); j.hasNext();) {
 						final Map.Entry entry = (Map.Entry) j.next();
 						final String name = (String) entry.getKey();
-						existingFiles.remove(name);
 						final Properties props = (Properties) entry.getValue();
 						props.store(new FileOutputStream(new File(classDir,
 								name)), Resources.get("settingsCacheHeader"));
 					}
-					// Remove old files that were not updated.
-					for (final Iterator j = existingFiles.iterator(); j
-							.hasNext();)
-						(new File(classDir, (String) j.next())).delete();
 				}
 			} catch (final Throwable t) {
 				System.err.println(Resources.get("settingsCacheSaveFailed"));

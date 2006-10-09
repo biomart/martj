@@ -61,18 +61,18 @@ import org.biomart.builder.view.gui.dialogs.KeyEditorDialog;
 import org.biomart.builder.view.gui.dialogs.SchemaConnectionDialog;
 
 /**
- * <p>
  * This tabset has one tab for the diagram which represents all schemas, and one
  * tab each for each schema in the mart. It provides methods for working with a
  * given schema, such as adding or removing them, or grouping them together. It
  * can update itself based on the schemas in the mart on request.
  * <p>
  * Like a diagram, it can have a {@link DiagramContext} associated with it.
- * Whenever this context changes, all org.biomart.builder.view.gui.diagrams
- * represented in each of the tabs has the same context applied.
+ * Whenever this context changes, all {@link Diagram} instances represented in
+ * the tabs have the same context applied.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class SchemaTabSet extends JTabbedPane {
@@ -101,7 +101,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public SchemaTabSet(final MartTab martTab) {
 		super();
 
-		// Remember the dataset tabset we are shown inside.
+		// Remember the mart tabset we are shown inside.
 		this.martTab = martTab;
 
 		// Add the all-schemas overview tab. This tab displays a diagram
@@ -115,8 +115,7 @@ public class SchemaTabSet extends JTabbedPane {
 		this.addTab(Resources.get("multiSchemaOverviewTab"), scroller);
 
 		// Populate the map to hold the relation between schemas and the
-		// org.biomart.builder.view.gui.diagrams
-		// representing them.
+		// diagrams representing them.
 		this.recalculateSchemaTabs();
 	}
 
@@ -144,11 +143,12 @@ public class SchemaTabSet extends JTabbedPane {
 		// schema.
 		this.recalculateOverviewDiagram();
 
-		// Fake a click on the overview tab.
+		// Fake a click on the all-schemas tab and on the button
+		// that selects the schema editor in the current mart tabset.
 		this.setSelectedIndex(0);
 		this.martTab.selectSchemaEditor();
 
-		// Store the settings in the history file.
+		// Store the schema settings in the history file.
 		if (schema instanceof JDBCSchema) {
 			final JDBCSchema jschema = (JDBCSchema) schema;
 			final Properties history = new Properties();
@@ -166,13 +166,6 @@ public class SchemaTabSet extends JTabbedPane {
 		}
 	}
 
-	/**
-	 * Asks the user for a name for a schema.
-	 * 
-	 * @param defaultResponse
-	 *            the intial choice to display, which will get accepted by the
-	 *            default action if they don't type any replacement for it.
-	 */
 	private String askUserForSchemaName(final String defaultResponse) {
 		// Ask user for a name, giving them the default suggestion.
 		String name = (String) JOptionPane.showInputDialog(this.martTab
@@ -261,18 +254,19 @@ public class SchemaTabSet extends JTabbedPane {
 		// Work out the currently selected tab.
 		final int currentTab = this.getSelectedIndex();
 
-		// Work out which tab the schema lives in.
-		final int index = this.schemaToDiagram[0].indexOf(schema);
-
-		// Work out the tab index.
+		// Work out the tab index for the schema.
 		final int tabIndex = this.indexOfTab(schema.getName());
 
-		// Remove the tab, and it's mapping from the schema-to-tab map.
+		// Work out which diagram the schema is associated with.
+		final int index = this.schemaToDiagram[0].indexOf(schema);
+
+		// Remove the tab. Also remove schema mapping from the schema-to-diagram
+		// map.
 		this.removeTabAt(tabIndex);
 		this.schemaToDiagram[0].remove(index);
 		this.schemaToDiagram[1].remove(index);
 
-		// Update the overview diagram.
+		// Update the all-schemas diagram.
 		this.recalculateOverviewDiagram();
 
 		// Fake a click on the last tab before this one to ensure
@@ -326,8 +320,8 @@ public class SchemaTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Returns the diagram context currently being used by
-	 * org.biomart.builder.view.gui.diagrams in this schema tabset.
+	 * Returns the diagram context currently being used by {@link Diagram}s in
+	 * this schema tabset.
 	 * 
 	 * @return the diagram context currently being used.
 	 */
@@ -346,7 +340,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 	/**
 	 * Causes {@link Diagram#recalculateDiagram()} to be called on all the
-	 * individual schema tabs.
+	 * individual schema diagrams.
 	 */
 	public void recalculateAllSchemaDiagrams() {
 		for (final Iterator i = this.schemaToDiagram[1].iterator(); i.hasNext();)
@@ -405,7 +399,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 	/**
 	 * Causes {@link Diagram#repaintDiagram()} to be called on all the
-	 * individual schema tabs.
+	 * individual schema diagrams.
 	 */
 	public void repaintAllSchemaDiagrams() {
 		for (final Iterator i = this.schemaToDiagram[1].iterator(); i.hasNext();)
@@ -421,7 +415,7 @@ public class SchemaTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Causes {@link Diagram#repaintDiagram()} to be called on the tab which
+	 * Causes {@link Diagram#repaintDiagram()} to be called on the diagram which
 	 * represents the specified schema.
 	 * 
 	 * @param schema
@@ -470,7 +464,9 @@ public class SchemaTabSet extends JTabbedPane {
 					});
 				} finally {
 					// Must use a finally in case the schema gets created
-					// but won't sync.
+					// but won't sync. We still want to add it so that the
+					// user can edit it and retry syncing it, rather than
+					// having to add it all over again.
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							// Create and add the tab representing this schema.
@@ -625,27 +621,21 @@ public class SchemaTabSet extends JTabbedPane {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							// Recalculate the schema diagram this key appears
-							// in, as
-							// the table components will have changed size, and
-							// some
-							// relations may have disappeared.
+							// in, as the table components will have changed
+							// size, and some relations may have disappeared.
 							SchemaTabSet.this.recalculateSchemaDiagram(key
 									.getTable().getSchema());
 
 							// The same may have happened in the all-schemas
-							// diagram if
-							// this key had any external relations, or belonged
-							// to a
-							// table which had external relations on some other
-							// key.
+							// diagram if this key had any external
+							// relations, or belonged to a table which had
+							// external relations on some other key.
 							SchemaTabSet.this.recalculateOverviewDiagram();
 
 							// This may have caused new dimensions or subclass
-							// tables to
-							// appear in datasets referring to tables in this
-							// schema, so
-							// we need to recalculate all dataset
-							// org.biomart.builder.view.gui.diagrams just
+							// tables to appear in datasets referring to
+							// tables in this schema, so we need to
+							// recalculate all dataset diagrams just
 							// in case.
 							SchemaTabSet.this.martTab.getDataSetTabSet()
 									.recalculateAllDataSetDiagrams();
@@ -700,11 +690,9 @@ public class SchemaTabSet extends JTabbedPane {
 								SchemaTabSet.this.repaintOverviewDiagram();
 
 							// This may have caused new dimensions or subclass
-							// tables to
-							// appear in datasets referring to tables in this
-							// schema, so
-							// we need to recalculate all dataset
-							// org.biomart.builder.view.gui.diagrams just
+							// tables to appear in datasets referring to
+							// tables in this schema, so we need to
+							// recalculate all dataset diagrams just
 							// in case.
 							SchemaTabSet.this.martTab.getDataSetTabSet()
 									.recalculateAllDataSetDiagrams();
@@ -759,11 +747,9 @@ public class SchemaTabSet extends JTabbedPane {
 								SchemaTabSet.this.repaintOverviewDiagram();
 
 							// This may have caused new dimensions or subclass
-							// tables to
-							// appear in datasets referring to tables in this
-							// schema, so
-							// we need to recalculate all dataset
-							// org.biomart.builder.view.gui.diagrams just
+							// tables to appear in datasets referring to
+							// tables in this schema, so we need to
+							// recalculate all dataset diagrams just
 							// in case.
 							SchemaTabSet.this.martTab.getDataSetTabSet()
 									.recalculateAllDataSetDiagrams();
@@ -820,16 +806,14 @@ public class SchemaTabSet extends JTabbedPane {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							// Recalculate the schema diagram this key appears
-							// in, as
-							// the table components will have changed size.
+							// in, as the table components will have changed
+							// size.
 							SchemaTabSet.this.recalculateSchemaDiagram(table
 									.getSchema());
 
 							// The same may have happened in the all-schemas
-							// diagram if
-							// this key belonged to a table which has external
-							// relations
-							// on some other key.
+							// diagram if this key belonged to a table which
+							// has external relations on some other key.
 							SchemaTabSet.this.recalculateOverviewDiagram();
 
 							// Set the dataset tabset status to modified.
@@ -885,27 +869,21 @@ public class SchemaTabSet extends JTabbedPane {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							// Recalculate the schema diagram this key appears
-							// in, as
-							// the table components will have changed size, and
-							// some
-							// relations may have disappeared.
+							// in, as the table components will have changed
+							// size, and some relations may have disappeared.
 							SchemaTabSet.this.recalculateSchemaDiagram(table
 									.getSchema());
 
 							// The same may have happened in the all-schemas
-							// diagram if
-							// this key had any external relations, or belonged
-							// to a
-							// table which had external relations on some other
-							// key.
+							// diagram if this key had any external relations,
+							// or belonged to a table which had external
+							// relations on some other key.
 							SchemaTabSet.this.recalculateOverviewDiagram();
 
 							// This may have caused new dimensions or subclass
-							// tables to
-							// appear in datasets referring to tables in this
-							// schema, so
-							// we need to recalculate all dataset
-							// org.biomart.builder.view.gui.diagrams just
+							// tables to appear in datasets referring to
+							// tables in this schema, so we need to
+							// recalculate all dataset diagrams just
 							// in case.
 							SchemaTabSet.this.martTab.getDataSetTabSet()
 									.recalculateAllDataSetDiagrams();
@@ -944,8 +922,7 @@ public class SchemaTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Establish a relation between two keys. The relation will be 1:M. One of
-	 * the keys must be a primary key, and the other must be a foreign key.
+	 * Establish a relation between two keys.
 	 * 
 	 * @param from
 	 *            the key at one end of the relation-to-be.
@@ -977,10 +954,9 @@ public class SchemaTabSet extends JTabbedPane {
 								SchemaTabSet.this.recalculateOverviewDiagram();
 
 							// This may have caused dimensions or subclasses to
-							// change
-							// in some datasets, so recalculate all the dataset
-							// org.biomart.builder.view.gui.diagrams
-							// too.
+							// change in some datasets, so recalculate all the
+							// dataset
+							// diagrams too.
 							SchemaTabSet.this.martTab.getDataSetTabSet()
 									.recalculateAllDataSetDiagrams();
 
@@ -1027,12 +1003,9 @@ public class SchemaTabSet extends JTabbedPane {
 							SchemaTabSet.this.recalculateOverviewDiagram();
 
 							// It may have disappeared altogether, or lost some
-							// table
-							// upon which a dataset was based, so the datasets
-							// may have
-							// changed. In which case, recalculate the dataset
-							// tabset
-							// to reflect this.
+							// table upon which a dataset was based, so the
+							// datasets may have changed. In which case,
+							// recalculate the dataset tabset to reflect this.
 							SchemaTabSet.this.martTab.getDataSetTabSet()
 									.recalculateDataSetTabs();
 
@@ -1091,28 +1064,21 @@ public class SchemaTabSet extends JTabbedPane {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							// Recalculate the schema diagram this key appears
-							// in, as
-							// the table components will have changed size, and
-							// some
-							// relations may have disappeared.
+							// in, as the table components will have changed
+							// size, and some relations may have disappeared.
 							SchemaTabSet.this.recalculateSchemaDiagram(key
 									.getTable().getSchema());
 
 							// The same may have happened in the all-schemas
-							// diagram if
-							// this key had any external relations, or belonged
-							// to a
-							// table which had external relations on some other
-							// key.
+							// diagram if this key had any external relations,
+							// or belonged to a table which had external
+							// relations on some other key.
 							SchemaTabSet.this.recalculateOverviewDiagram();
 
 							// This may have caused new dimensions or subclass
-							// tables to
-							// appear in datasets referring to tables in this
-							// schema, so
-							// we need to recalculate all dataset
-							// org.biomart.builder.view.gui.diagrams just
-							// in case.
+							// tables to appear in datasets referring to tables
+							// in this schema, so we need to recalculate all
+							// dataset diagrams just in case.
 							SchemaTabSet.this.martTab.getDataSetTabSet()
 									.recalculateAllDataSetDiagrams();
 
@@ -1152,19 +1118,14 @@ public class SchemaTabSet extends JTabbedPane {
 							// Recalculate the diagram.
 							SchemaTabSet.this.recalculateSchemaDiagram(schema);
 
-							// As it may have lost or gained some external
-							// relations,
-							// the all-schemas diagram should also be
-							// recalculated.
+							// Recalculate the schema diagram this key appears
+							// in, as some relations may have disappeared.
 							SchemaTabSet.this.recalculateOverviewDiagram();
 
-							// It may have disappeared altogether, or lost some
-							// table
-							// upon which a dataset was based, so the datasets
-							// may have
-							// changed. In which case, recalculate the dataset
-							// tabset
-							// to reflect this.
+							// This may have caused new dimensions or subclass
+							// tables to appear in datasets referring to tables
+							// in this schema, so we need to recalculate all
+							// dataset diagrams just in case.
 							SchemaTabSet.this.martTab.getDataSetTabSet()
 									.recalculateDataSetTabs();
 
@@ -1220,27 +1181,21 @@ public class SchemaTabSet extends JTabbedPane {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							// Recalculate the schema diagram this key appears
-							// in, as
-							// the table components will have changed size, and
-							// some
-							// relations may have disappeared.
+							// in, as the table components will have changed
+							// size, and some relations may have disappeared.
 							SchemaTabSet.this.recalculateSchemaDiagram(key
 									.getTable().getSchema());
 
 							// The same may have happened in the all-schemas
-							// diagram if
-							// this key had any external relations, or belonged
-							// to a
-							// table which had external relations on some other
-							// key.
+							// diagram if this key had any external
+							// relations, or belonged to a table which had
+							// external relations on some other key.
 							SchemaTabSet.this.recalculateOverviewDiagram();
 
 							// This may have caused new dimensions or subclass
-							// tables to
-							// appear in datasets referring to tables in this
-							// schema, so
-							// we need to recalculate all dataset
-							// org.biomart.builder.view.gui.diagrams just
+							// tables to appear in datasets referring to
+							// tables in this schema, so we need to
+							// recalculate all dataset diagrams just
 							// in case.
 							SchemaTabSet.this.martTab.getDataSetTabSet()
 									.recalculateAllDataSetDiagrams();
@@ -1293,11 +1248,9 @@ public class SchemaTabSet extends JTabbedPane {
 								SchemaTabSet.this.recalculateOverviewDiagram();
 
 							// This may have caused new dimensions or subclass
-							// tables to
-							// appear in datasets referring to tables in this
-							// schema, so
-							// we need to recalculate all dataset
-							// org.biomart.builder.view.gui.diagrams just
+							// tables to appear in datasets referring to
+							// tables in this schema, so we need to
+							// recalculate all dataset diagrams just
 							// in case.
 							SchemaTabSet.this.martTab.getDataSetTabSet()
 									.recalculateAllDataSetDiagrams();
@@ -1589,11 +1542,9 @@ public class SchemaTabSet extends JTabbedPane {
 							SchemaTabSet.this.recalculateOverviewDiagram();
 
 							// Schemas may have disappeared altogether, or lost
-							// some
-							// table upon which a dataset was based, so the
-							// datasets
-							// may have changed. In which case, recalculate the
-							// dataset
+							// some table upon which a dataset was based,
+							// so the datasets may have changed. In which
+							// case, recalculate the dataset
 							// tabset to reflect this.
 							SchemaTabSet.this.martTab.getDataSetTabSet()
 									.recalculateDataSetTabs();
@@ -1635,17 +1586,14 @@ public class SchemaTabSet extends JTabbedPane {
 							SchemaTabSet.this.recalculateSchemaDiagram(schema);
 
 							// As it may have lost or gained some external
-							// relations,
-							// the all-schemas diagram should also be
-							// recalculated.
+							// relations, the all-schemas diagram should
+							// also be recalculated.
 							SchemaTabSet.this.recalculateOverviewDiagram();
 
 							// It may have disappeared altogether, or lost some
-							// table
-							// upon which a dataset was based, so the datasets
-							// may have
-							// changed. In which case, recalculate the dataset
-							// tabset
+							// table upon which a dataset was based, so the
+							// datasets may have changed. In which case,
+							// recalculate the dataset tabset
 							// to reflect this.
 							SchemaTabSet.this.martTab.getDataSetTabSet()
 									.recalculateDataSetTabs();
@@ -1700,15 +1648,15 @@ public class SchemaTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Sets the diagram context to use for all
-	 * org.biomart.builder.view.gui.diagrams inside this schema tabset. Once
-	 * set, {@link Diagram#setDiagramContext(DiagramContext)} is called on each
+	 * Sets the diagram context to use for all {@link Diagram}s inside this
+	 * schema tabset. Once set,
+	 * {@link Diagram#setDiagramContext(DiagramContext)} is called on each
 	 * diagram in the tabset in turn so that they are all working with the same
 	 * context.
 	 * 
 	 * @param diagramContext
-	 *            the context to use for all
-	 *            org.biomart.builder.view.gui.diagrams in this schema tabset.
+	 *            the context to use for all {@link Diagram}s in this schema
+	 *            tabset.
 	 */
 	public void setDiagramContext(final DiagramContext diagramContext) {
 		this.diagramContext = diagramContext;

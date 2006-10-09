@@ -23,10 +23,11 @@ package org.biomart.builder.exceptions;
  * but the two items are not associated or cannot be associated.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
-public class AssociationException extends Exception {
+public class AssociationException extends BuilderException {
 	private static final long serialVersionUID = 1;
 
 	/**

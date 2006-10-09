@@ -38,7 +38,6 @@ import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.resources.Resources;
 
 /**
- * <p>
  * The table interface provides the basic idea of what constitutes a database
  * table or an XML document entity. It has an optional primary key, zero or more
  * foreign keys, and one or more columns.
@@ -54,10 +53,7 @@ import org.biomart.builder.resources.Resources;
  */
 public interface Table extends Comparable {
 	/**
-	 * Attempts to add a column to this table. The column will already have had
-	 * it's table parameter set to match, otherwise an exception will be thrown.
-	 * An exception will also get thrown if the column has the same name as an
-	 * existing one on this table.
+	 * Attempts to add a column to this table.
 	 * 
 	 * @param column
 	 *            the column to add.
@@ -65,8 +61,8 @@ public interface Table extends Comparable {
 	public void addColumn(Column column);
 
 	/**
-	 * Adds a foreign key to this table. It may not be null. The foreign key
-	 * must refer to this table else an exception will be thrown.
+	 * Adds a foreign key to this table. The foreign key must refer to this
+	 * table else an exception will be thrown.
 	 * 
 	 * @param foreignKey
 	 *            the new foreign key to add to this table.
@@ -77,10 +73,9 @@ public interface Table extends Comparable {
 			throws AssociationException;
 
 	/**
-	 * Attempts to rename a column. If the new name has already been taken by
-	 * another column, an exception is thrown. The rename does not affect the
-	 * column itself, only the representation of the column within this table.
-	 * If the names are the same, nothing happens.
+	 * Attempts to rename a column. The rename does not affect the column
+	 * itself, only the representation of the column within this table. If the
+	 * names are the same, nothing happens.
 	 * 
 	 * @param oldName
 	 *            the old name of the column.
@@ -96,18 +91,19 @@ public interface Table extends Comparable {
 
 	/**
 	 * Attempts to locate a column in this table by name. If it finds it, it
-	 * returns it. If it doesn't, it returns null.
+	 * returns it. If it doesn't, it returns <tt>null</tt>.
 	 * 
 	 * @param name
 	 *            the name of the column to look up.
-	 * @return the corresponding column, or null if it couldn't be found.
+	 * @return the corresponding column, or <tt>null</tt> if it couldn't be
+	 *         found.
 	 */
 	public Column getColumnByName(String name);
 
 	/**
 	 * Returns a set of the columns of this table. It may be empty, indicating
 	 * that the table has no columns, however this is highly unlikely! It will
-	 * never return null.
+	 * never return <tt>null</tt>.
 	 * 
 	 * @return the set of columns for this table.
 	 */
@@ -115,7 +111,8 @@ public interface Table extends Comparable {
 
 	/**
 	 * Returns a set of the foreign keys of this table. It may be empty,
-	 * indicating that the table has no foreign keys. It will never return null.
+	 * indicating that the table has no foreign keys. It will never return
+	 * <tt>null</tt>.
 	 * 
 	 * @return the set of foreign keys for this table.
 	 */
@@ -124,7 +121,10 @@ public interface Table extends Comparable {
 	/**
 	 * Returns a set of the relations on all keys in this table that refer to
 	 * other keys in the same schema as this table. It may be empty, indicating
-	 * that the table has no internal relations. It will never return null.
+	 * that the table has no relations. It will never return <tt>null</tt>.
+	 * <p>
+	 * Internal relations are those that link this table to others within the
+	 * same schema.
 	 * 
 	 * @return the set of internal relations for this table.
 	 */
@@ -132,7 +132,7 @@ public interface Table extends Comparable {
 
 	/**
 	 * Returns a set of the keys on all columns in this table. It may be empty,
-	 * indicating that the table has no keys. It will never return null.
+	 * indicating that the table has no keys. It will never return <tt>null</tt>.
 	 * 
 	 * @return the set of keys for this table.
 	 */
@@ -155,8 +155,8 @@ public interface Table extends Comparable {
 	public String getOriginalName();
 
 	/**
-	 * Returns a reference to the primary key of this table. It may be null,
-	 * indicating that the table has no primary key.
+	 * Returns a reference to the primary key of this table. It may be
+	 * <tt>null</tt>, indicating that the table has no primary key.
 	 * 
 	 * @return the primary key of this table.
 	 */
@@ -165,7 +165,7 @@ public interface Table extends Comparable {
 	/**
 	 * Returns a set of the relations on all keys in this table. It may be
 	 * empty, indicating that the table has no relations. It will never return
-	 * null.
+	 * <tt>null</tt>.
 	 * 
 	 * @return the set of relations for this table.
 	 */
@@ -215,8 +215,8 @@ public interface Table extends Comparable {
 	public void setOriginalName(String newName);
 
 	/**
-	 * Sets the primary key of this table. It may be null, indicating that the
-	 * table has no primary key.
+	 * Sets the primary key of this table. It may be <tt>null</tt>,
+	 * indicating that the table has no primary key.
 	 * 
 	 * @param primaryKey
 	 *            the new primary key of this table.
@@ -229,6 +229,7 @@ public interface Table extends Comparable {
 	 * column and check for conflicts with existing columns.
 	 */
 	public class GenericTable implements Table {
+		// Use a TreeMap to keep columns in alphabetical order.
 		private final Map columns = new TreeMap();
 
 		private final List foreignKeys = new ArrayList();
@@ -253,15 +254,23 @@ public interface Table extends Comparable {
 		public GenericTable(String name, final Schema schema) {
 			// Remember the values.
 			this.schema = schema;
+			name = this.makeUniqueName(name);
 			this.originalName = name;
+			this.name = name;
+			// Add it to the schema.
+			schema.addTable(this);
+		}
+
+		private String makeUniqueName(String name) {
+			// Has it changed?
+			if (this.name != null && this.name.equals(name))
+				return name;
 			// Make the name unique.
 			final String baseName = name;
 			for (int i = 1; schema.getTableByName(name) != null; name = baseName
 					+ "_" + i++)
 				;
-			this.name = name;
-			// Add it to the schema.
-			schema.addTable(this);
+			return name;
 		}
 
 		public void addColumn(final Column column) {
@@ -413,11 +422,7 @@ public interface Table extends Comparable {
 
 		public void setName(String newName) {
 			// Make the name unique.
-			final String baseName = newName;
-			for (int i = 1; this.schema.getTableByName(newName) != null
-					&& !newName.equals(this.name); newName = baseName + "_"
-					+ i++)
-				;
+			newName = this.makeUniqueName(newName);
 			// Do it.
 			this.getSchema().changeTableMapKey(this.name, newName);
 			this.name = newName;
@@ -449,6 +454,12 @@ public interface Table extends Comparable {
 			this.primaryKey = primaryKey;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 * <p>
+		 * This will return the contents of {@link Schema#toString()} followed
+		 * by a colon and the output of {@link #getName()}.
+		 */
 		public String toString() {
 			return this.schema.toString() + ":" + this.getName();
 		}

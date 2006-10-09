@@ -29,6 +29,7 @@ import java.util.Map;
 import org.biomart.builder.controller.dialects.DatabaseDialect;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
+import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.DataSet;
@@ -57,9 +58,7 @@ import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
 /**
  * Tools for working with the mart from a GUI or CLI. These wrapper methods
  * exist to prevent the GUI or CLI having to know about the exact details of
- * manipulating the various objects in the data model. If the GUI or CLI are the
- * View of an MVC system, then this is a Controller, and the data model is
- * obviously the Model.
+ * manipulating the various objects in the data model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
@@ -427,11 +426,11 @@ public class MartBuilderUtils {
 	 *            the dataset to mask the column in.
 	 * @param column
 	 *            the column to mask.
-	 * @throws AssociationException
+	 * @throws ValidationException
 	 *             if the column is not maskable.
 	 */
 	public static void maskColumn(final DataSet dataset,
-			final DataSetColumn column) throws AssociationException {
+			final DataSetColumn column) throws ValidationException {
 		column.setMasked(true);
 	}
 
@@ -505,13 +504,13 @@ public class MartBuilderUtils {
 	 *            the column to partition on.
 	 * @param type
 	 *            the type of partitioning to use for this column.
-	 * @throws AssociationException
+	 * @throws ValidationException
 	 *             if the column could not be used for partitioning, for
 	 *             whatever reason.
 	 */
 	public static void partitionByColumn(final DataSet dataset,
 			final DataSetColumn column, final PartitionedColumnType type)
-			throws AssociationException {
+			throws ValidationException {
 		column.setPartitionType(type);
 	}
 
@@ -1003,12 +1002,12 @@ public class MartBuilderUtils {
 	 *            the dataset to unmask the column in.
 	 * @param column
 	 *            the column to unmask.
-	 * @throws AssociationException
+	 * @throws ValidationException
 	 *             if the column could not be used for masking, for whatever
 	 *             reason.
 	 */
 	public static void unmaskColumn(final DataSet dataset,
-			final DataSetColumn column) throws AssociationException {
+			final DataSetColumn column) throws ValidationException {
 		column.setMasked(false);
 	}
 
@@ -1058,12 +1057,12 @@ public class MartBuilderUtils {
 	 *            the dataset to turn off partitioning for on this column.
 	 * @param column
 	 *            the column to turn off partitioning for.
-	 * @throws AssociationException
+	 * @throws ValidationException
 	 *             if the column could not be used for partitioning, for
 	 *             whatever reason.
 	 */
 	public static void unpartitionByColumn(final DataSet dataset,
-			final DataSetColumn column) throws AssociationException {
+			final DataSetColumn column) throws ValidationException {
 		column.setPartitionType(null);
 	}
 

@@ -211,6 +211,8 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				final Relation relation, final Collection lIncludeCols,
 				final Collection rIncludeCols) {
 			super(martTab);
+			
+			System.err.println("TR: Linking temp from "+tempTableKeyColumns+" to "+key+" using "+relation);
 
 			// Remember the columns, and calculate the diagram.
 			this.tempTableSchemaName = tempTableSchemaName;
@@ -342,6 +344,8 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				final Collection rIncludeCols) {
 			super(martTab);
 
+			System.err.println("DR: Linking "+dsTable+" from "+dsTableKeyColumns+" to "+key);
+			
 			// Remember the columns, and calculate the diagram.
 			this.dsTable = dsTable;
 			this.dsTableKeyColumns = dsTableKeyColumns;
@@ -460,6 +464,8 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				final Relation relation, final Collection lIncludeCols,
 				final Collection rIncludeCols) {
 			super(martTab);
+
+			System.err.println("RR: Linking "+relation+" from "+key+" to "+relation.getOtherKey(key));
 
 			// Remember the columns, and calculate the diagram.
 			this.key = key;

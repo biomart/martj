@@ -30,7 +30,6 @@ import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.resources.Resources;
 
 /**
- * <p>
  * A schema group represents a collection of schema objects which all have
  * exactly the same table names and column names.
  * <p>
@@ -46,18 +45,18 @@ import org.biomart.builder.resources.Resources;
  * structure in the first member schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public interface SchemaGroup extends Schema {
 	/**
-	 * Adds a schema to this partition. No check is made to see if the new
-	 * schema is actually identical to the base one in terms of structure. An
-	 * exception will be thrown if you try to nest schema groups inside other
-	 * ones.
+	 * Adds a schema to this group. No check is made to see if the new schema is
+	 * actually identical to the base one in terms of structure. An exception
+	 * will be thrown if you try to nest schema groups inside other ones.
 	 * 
 	 * @param schema
-	 *            the schema to add as a new partition.
+	 *            the schema to add to the group.
 	 * @throws AssociationException
 	 *             if the schema to be added is a schema group.
 	 */
@@ -65,7 +64,7 @@ public interface SchemaGroup extends Schema {
 
 	/**
 	 * Returns the set of schema members of this schema group. It will never
-	 * return null but may return an empty set.
+	 * return <tt>null</tt> but may return an empty set.
 	 * 
 	 * @return the set of schemas in this schema group.
 	 */
@@ -80,8 +79,7 @@ public interface SchemaGroup extends Schema {
 	public void removeSchema(Schema schema);
 
 	/**
-	 * The generic implementation uses a simple collection of schemas to do the
-	 * work.
+	 * The generic implementation uses a simple collection to store the schemas.
 	 */
 	public class GenericSchemaGroup extends GenericSchema implements
 			SchemaGroup {

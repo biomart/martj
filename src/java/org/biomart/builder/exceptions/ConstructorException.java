@@ -23,10 +23,11 @@ package org.biomart.builder.exceptions;
  * construction.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
-public class ConstructorException extends Exception {
+public class ConstructorException extends BuilderException {
 	private static final long serialVersionUID = 1;
 
 	/**

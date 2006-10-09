@@ -20,13 +20,15 @@ package org.biomart.builder.exceptions;
 
 /**
  * This refers to exceptions where something has failed a validation test, eg.
- * incorrect input.
+ * incorrect input, or an attempt to set some parameter where it cannot be
+ * set.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
-public class ValidationException extends Exception {
+public class ValidationException extends BuilderException {
 	private static final long serialVersionUID = 1;
 
 	/**

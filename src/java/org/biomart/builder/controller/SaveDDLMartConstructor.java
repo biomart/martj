@@ -35,24 +35,39 @@ import java.util.zip.ZipOutputStream;
 import org.biomart.builder.controller.dialects.DatabaseDialect;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.Column;
+import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.MartConstructor;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.MartConstructorAction.MartConstructorActionGraph;
 import org.biomart.builder.model.MartConstructorAction.MartConstructorTableAction;
 import org.biomart.builder.model.MartConstructorAction.OptimiseUpdateColumn;
 import org.biomart.builder.resources.Resources;
 
 /**
- * This implementation of the {@link MartConstructor} interface connects to a
- * JDBC data source in order to create a mart. It has options to output DDL to
- * file instead of running it, to run DDL directly against the database, or to
- * use JDBC to fetch/retrieve data between two databases.
+ * This implementation of the {@link MartConstructor} interface generates DDL
+ * statements corresponding to each {@link MartConstructorAction} in the
+ * {@link MartConstructorActionGraph}.
+ * <p>
+ * The implementation depends on both the source and target databases being
+ * {@link JDBCSchema} instances, and that they are compatible as defined by
+ * {@link JDBCSchema#canCohabit(DataLink)}.
+ * <p>
+ * DDL statements are generated and output either to a text buffer, or to one or
+ * more files. There are a number of choices as to how those files are divided.
+ * Which of these is used depends on which constant from
+ * {@link SaveDDLGranularity} is passed to the constructor.
+ * <p>
+ * The databases must be available and online for the class to do anything, as
+ * it queries the database on a number of occasions to find out things such as
+ * partition values.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class SaveDDLMartConstructor implements MartConstructor {
@@ -70,31 +85,25 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 * mart and outputting DDL to a file.
 	 * 
 	 * @param granularity
-	 *            the granularity to which the DDL will be broken down.
+	 *            controls the way in which the output file(s) are broken down
+	 *            into smaller chunks.
 	 * @param outputFile
-	 *            the file to write the DDL to. If null, then the
-	 *            <tt>outputStringBuffer</tt> parameter must not be null.
+	 *            the file to write the DDL to. Single-file granularity will
+	 *            write this file in plain text. Multi-file granularity will
+	 *            write this file as a gzipped tar archive containing many plain
+	 *            text files.
 	 * @param includeComments
-	 *            <tt>true</tt> if comments are to be included, <tt>false</tt>
-	 *            if not.
-	 * @throws IllegalArgumentException
-	 *             if the combination of <tt>granularity</tt>,
-	 *             <tt>outputFile</tt> and <tt>outputStringBuffer</tt> do
-	 *             not make sense.
+	 *            <tt>true</tt> if comments are to be included in the DDL
+	 *            statements generated, <tt>false</tt> if not.
 	 */
 	public SaveDDLMartConstructor(final SaveDDLGranularity granularity,
-			final File outputFile, final boolean includeComments)
-			throws IllegalArgumentException {
-		// Check it's sensible.
-		if (outputFile == null)
-			throw new IllegalArgumentException(Resources
-					.get("mcDDLNoOutputSpecified"));
-
+			final File outputFile, final boolean includeComments) {
 		// Remember the settings.
 		this.granularity = granularity;
 		this.outputFile = outputFile;
-		this.outputStringBuffer = null;
 		this.includeComments = includeComments;
+		// This last call is redundant but is included for clarity.
+		this.outputStringBuffer = null;
 	}
 
 	/**
@@ -102,19 +111,17 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 * mart and outputting DDL to a string buffer.
 	 * 
 	 * @param granularity
-	 *            the granularity to which the DDL will be broken down.
+	 *            controls the way in which the output file(s) are broken down
+	 *            into smaller chunks.
 	 * @param outputStringBuffer
-	 *            the string buffer to write the DDL to. If null, then the
-	 *            <tt>outputFile</tt> parameter must not be null. This
-	 *            parameter can only be used if writing to a single file for all
-	 *            DDL. Any other granularity will cause an exception.
+	 *            the string buffer to write the DDL to. This parameter can only
+	 *            be used if writing to a single file for all DDL. Any other
+	 *            granularity will cause an exception.
 	 * @param includeComments
-	 *            <tt>true</tt> if comments are to be included, <tt>false</tt>
-	 *            if not.
+	 *            <tt>true</tt> if comments are to be included in the DDL
+	 *            statements generated, <tt>false</tt> if not.
 	 * @throws IllegalArgumentException
-	 *             if the combination of <tt>granularity</tt>,
-	 *             <tt>outputFile</tt> and <tt>outputStringBuffer</tt> do
-	 *             not make sense.
+	 *             if the granularity is not {@link SaveDDLGranularity#SINGLE}.
 	 */
 	public SaveDDLMartConstructor(final SaveDDLGranularity granularity,
 			final StringBuffer outputStringBuffer, final boolean includeComments)
@@ -123,18 +130,20 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		if (!granularity.equals(SaveDDLGranularity.SINGLE))
 			throw new IllegalArgumentException(Resources
 					.get("mcDDLStringBufferSingleFileOnly"));
-
 		// Remember the settings.
 		this.granularity = granularity;
-		this.outputFile = null;
 		this.outputStringBuffer = outputStringBuffer;
 		this.includeComments = includeComments;
+		// This last call is redundant but is included for clarity.
+		this.outputFile = null;
 	}
 
 	public ConstructorRunnable getConstructorRunnable(
 			final String targetSchemaName, final Collection datasets)
 			throws Exception {
-		// Work out what kind of helper to use.
+		// Work out what kind of helper to use. The helper will
+		// perform the actual conversion of action to DDL and divide
+		// the results into appropriate files or buffers.
 		DDLHelper helper;
 		if (this.granularity.equals(SaveDDLGranularity.SINGLE)) {
 			if (this.outputFile != null)
@@ -154,10 +163,12 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		else
 			helper = new StepAsFileHelper(this.outputFile, this.includeComments);
 
-		// Check that all the input schemas have are cohabitable.
+		// Check that all the input schemas involved are cohabitable.
+
 		// First, make a set of all input schemas. Note that some
 		// may be groups, but since canCohabit() works on groups
-		// we don't need to worry about this.
+		// we don't need to worry about this. We use a set to prevent
+		// duplicates.
 		final Set inputSchemas = new HashSet();
 		for (final Iterator i = datasets.iterator(); i.hasNext();)
 			for (final Iterator j = ((DataSet) i.next()).getTables().iterator(); j
@@ -190,7 +201,11 @@ public class SaveDDLMartConstructor implements MartConstructor {
 						.get("saveDDLMixedDataLinks"));
 		}
 
-		// Construct and return the runnable that uses the helper.
+		// Construct and return the runnable that uses the helper
+		// to do the actual work. Note how the helper is it's own
+		// listener - it provides both database query facilities,
+		// and converts action events back into DDL appropriate for
+		// the database it is connected to.
 		final ConstructorRunnable cr = new GenericConstructorRunnable(
 				targetSchemaName, datasets, helper);
 		cr.addMartConstructorListener(helper);
@@ -198,8 +213,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	}
 
 	/**
-	 * DataSetAsFileHelper extends DDLHelper, saves statements. Statements are
-	 * saved as a single SQL file per dataset inside a Zip file.
+	 * Statements are saved as a single SQL file per dataset inside a Zip file.
 	 */
 	public static class DataSetAsFileHelper extends DDLHelper {
 
@@ -233,6 +247,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		public void martConstructorEventOccurred(final int event,
 				final MartConstructorAction action) throws Exception {
 			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
+				// Start a new zip file.
 				this.outputFileStream = new FileOutputStream(this.getFile());
 				this.outputZipStream = new ZipOutputStream(
 						this.outputFileStream);
@@ -244,11 +259,13 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.outputFileStream.flush();
 				this.outputFileStream.close();
 			} else if (event == MartConstructorListener.DATASET_STARTED) {
+				// Start a new file within the zip file.
 				this.entry = new ZipEntry(this.martSequence + "/"
 						+ this.datasetSequence + ".sql");
 				this.entry.setTime(System.currentTimeMillis());
 				this.outputZipStream.putNextEntry(this.entry);
 			} else if (event == MartConstructorListener.DATASET_ENDED) {
+				// Close the current file within the zip file.
 				this.outputZipStream.closeEntry();
 				// Bump up the dataset count for the next one.
 				this.datasetSequence++;
@@ -270,7 +287,16 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	}
 
 	/**
-	 * DDLHelper generates DDL statements for each step.
+	 * An abstract class defining the way in which a {@link Helper} should
+	 * behave when required not just to read from a database, but also to
+	 * generate DDL statements appropriate for that database. This is done by
+	 * having it implement {@link MartConstructorListener} so that it can
+	 * intercept each action generated as it occurs.
+	 * <p>
+	 * Note that after construction,
+	 * {@link DDLHelper#setDialect(DatabaseDialect)} must be called before
+	 * construction begins, else the instance will not know what kind of
+	 * database it is supposed to be using.
 	 */
 	public abstract static class DDLHelper implements Helper,
 			MartConstructorListener {
@@ -289,7 +315,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            <tt>true</tt> if comments are to be included,
 		 *            <tt>false</tt> if not.
 		 */
-		public DDLHelper(final boolean includeComments) {
+		protected DDLHelper(final boolean includeComments) {
 			this.includeComments = includeComments;
 		}
 
@@ -302,7 +328,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            <tt>true</tt> if comments are to be included,
 		 *            <tt>false</tt> if not.
 		 */
-		public DDLHelper(final File file, final boolean includeComments) {
+		protected DDLHelper(final File file, final boolean includeComments) {
 			this.file = file;
 			this.includeComments = includeComments;
 		}
@@ -313,12 +339,17 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 * 
 		 * @param action
 		 *            the action to translate.
-		 * @return the translated action.
-		 * @throws Exception
+		 * @return the translated action. Usually the array will contain only
+		 *         one entry, but when including comments or in certain other
+		 *         circumstances, the DDL for the action may consist of a number
+		 *         of individual statements, in which case each statement will
+		 *         occupy one entry in the array. The array will be ordered in
+		 *         the order the statements should be executed.
+		 * @throws ConstructorException
 		 *             if anything went wrong.
 		 */
 		protected String[] getStatementsForAction(
-				final MartConstructorAction action) throws Exception {
+				final MartConstructorAction action) throws ConstructorException {
 			return this.dialect.getStatementsForAction(action,
 					this.includeComments);
 		}
@@ -354,8 +385,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	}
 
 	/**
-	 * MartAsFileHelper extends DDLHelper, saves statements. Statements are
-	 * saved as a single SQL file per mart inside a Zip file.
+	 * Statements are saved as a single SQL file per mart inside a Zip file.
 	 */
 	public static class MartAsFileHelper extends DDLHelper {
 
@@ -386,6 +416,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		public void martConstructorEventOccurred(final int event,
 				final MartConstructorAction action) throws Exception {
 			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
+				// Start a zip file.
 				this.outputFileStream = new FileOutputStream(this.getFile());
 				this.outputZipStream = new ZipOutputStream(
 						this.outputFileStream);
@@ -397,10 +428,12 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.outputFileStream.flush();
 				this.outputFileStream.close();
 			} else if (event == MartConstructorListener.MART_STARTED) {
+				// Start a new entry in the zip file.
 				this.entry = new ZipEntry(this.martSequence + ".sql");
 				this.entry.setTime(System.currentTimeMillis());
 				this.outputZipStream.putNextEntry(this.entry);
 			} else if (event == MartConstructorListener.MART_ENDED) {
+				// Finish the current entry in the zip file.
 				this.outputZipStream.closeEntry();
 				// Bump up the mart sequence.
 				this.martSequence++;
@@ -419,37 +452,43 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	}
 
 	/**
-	 * Represents the name of various methods of constructing a DDL zip file.
+	 * Defines some constants which represent the various methods of dividing
+	 * DDL into one or more files.
 	 */
 	public static class SaveDDLGranularity implements Comparable {
 		private static final Map singletons = new HashMap();
 
 		/**
-		 * Use this constant to refer to file-per-dataset output.
+		 * Use this constant to refer to file-per-dataset output, inside a zip
+		 * file.
 		 */
 		public static final SaveDDLGranularity DATASET = SaveDDLGranularity
 				.get(Resources.get("saveDDLDataSetGranularity"), true);
 
 		/**
-		 * Use this constant to refer to file-per-mart output.
+		 * Use this constant to refer to file-per-mart output, inside a zip
+		 * file.
 		 */
 		public static final SaveDDLGranularity MART = SaveDDLGranularity.get(
 				Resources.get("saveDDLMartGranularity"), true);
 
 		/**
-		 * Use this constant to refer to single-file for all output.
+		 * Use this constant to refer to single-file for all output, as one
+		 * plain text file.
 		 */
 		public static final SaveDDLGranularity SINGLE = SaveDDLGranularity.get(
 				Resources.get("saveDDLSingleGranularity"), false);
 
 		/**
-		 * Use this constant to refer to file-per-step output.
+		 * Use this constant to refer to file-per-step output, inside a zip
+		 * file.
 		 */
 		public static final SaveDDLGranularity STEP = SaveDDLGranularity.get(
 				Resources.get("saveDDLStepGranularity"), true);
 
 		/**
-		 * Use this constant to refer to file-per-tableoutput.
+		 * Use this constant to refer to file-per-table output, inside a zip
+		 * file.
 		 */
 		public static final SaveDDLGranularity TABLE = SaveDDLGranularity.get(
 				Resources.get("saveDDLTableGranularity"), true);
@@ -466,7 +505,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            <tt>false</tt> if not.
 		 * @return the type object.
 		 */
-		public static SaveDDLGranularity get(final String name,
+		private static SaveDDLGranularity get(final String name,
 				final boolean zipped) {
 			// Do we already have this one?
 			// If so, then return it.
@@ -541,19 +580,17 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	}
 
 	/**
-	 * SingleFileHelper extends DDLHelper, saves statements. Statements are
-	 * saved as a single SQL file inside a Zip file.
+	 * Statements are saved in a single plain text file.
 	 */
 	public static class SingleFileHelper extends DDLHelper {
 
 		private FileOutputStream outputFileStream;
 
 		/**
-		 * Constructs a helper which will output all DDL into a single file
-		 * inside the given zip file.
+		 * Constructs a helper which will output all DDL into a single file.
 		 * 
 		 * @param outputFile
-		 *            the zip file to write the DDL into.
+		 *            the file to write the DDL into.
 		 * @param includeComments
 		 *            <tt>true</tt> if comments are to be included,
 		 *            <tt>false</tt> if not.
@@ -566,8 +603,10 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		public void martConstructorEventOccurred(final int event,
 				final MartConstructorAction action) throws Exception {
 			if (event == MartConstructorListener.CONSTRUCTION_STARTED)
+				// Start writing to the file.
 				this.outputFileStream = new FileOutputStream(this.getFile());
 			else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
+				// Finish writing to the file.
 				this.outputFileStream.flush();
 				this.outputFileStream.close();
 			} else if (event == MartConstructorListener.ACTION_EVENT) {
@@ -585,8 +624,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	}
 
 	/**
-	 * SingleStringBufferHelper extends DDLHelper, saves statements. Statements
-	 * are saved altogether inside a string buffer.
+	 * Statements are saved altogether inside a string buffer.
 	 */
 	public static class SingleStringBufferHelper extends DDLHelper {
 
@@ -623,9 +661,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	}
 
 	/**
-	 * StepAsFileHelper extends DDLHelper, saves statements. Statements are
-	 * saved in folders. Folder 1 must be finished before folder 2, but files
-	 * within folder 1 can be executed in any order. And so on.
+	 * Statements are saved in folders. Folder 1 must be finished before folder
+	 * 2, but files within folder 1 can be executed in any order. And so on.
 	 */
 	public static class StepAsFileHelper extends DDLHelper {
 
@@ -651,6 +688,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		public void martConstructorEventOccurred(final int event,
 				final MartConstructorAction action) throws Exception {
 			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
+				// Start the zip file.
 				this.outputFileStream = new FileOutputStream(this.getFile());
 				this.outputZipStream = new ZipOutputStream(
 						this.outputFileStream);
@@ -662,11 +700,13 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.outputFileStream.flush();
 				this.outputFileStream.close();
 			} else if (event == MartConstructorListener.ACTION_EVENT)
+				// Writes the given action to file.
 				try {
 					// What level is this action? (ie. depth in graph)
 					final int level = action.getDepth();
-					// Writes the given action to file.
-					// Put the next entry to the zip file.
+					// Put the next entry to the zip file. Zip will
+					// create the folder structure for us if it does
+					// not already exist.
 					final ZipEntry entry = new ZipEntry(level + "/" + level
 							+ "-" + action.getSequence() + ".sql");
 					entry.setTime(System.currentTimeMillis());
@@ -692,8 +732,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	}
 
 	/**
-	 * TableAsFileHelper extends DDLHelper, saves statements. Statements are
-	 * saved as a single SQL file per table inside a Zip file.
+	 * Statements are saved as a single SQL file per table inside a Zip file.
 	 */
 	public static class TableAsFileHelper extends DDLHelper {
 
@@ -702,7 +741,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		private Map postInterimActions;
 
 		private List postInterimTables;
-		
+
 		private int datasetSequence;
 
 		private int martSequence;
@@ -713,11 +752,12 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		/**
 		 * Constructs a helper which will output all DDL into a single file per
-		 * table inside the given zip file. Actually what you get is a pair
-		 * of files - part1 and part2. All part1 files must run and complete
+		 * table inside the given zip file. Actually what you get is a pair of
+		 * files - part1 and part2. All part1 files must run and complete
 		 * successfully before you run any part2 files, as part2 files will
 		 * remove dependency temp tables that various part1 files may need.
-		 * There may also be a part3 file containing boolean column updates.
+		 * There may also be a part3 file containing boolean column updates,
+		 * which should be run after all part1 and part2 files are done.
 		 * 
 		 * @param outputFile
 		 *            the zip file to write the DDL into.
@@ -738,6 +778,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		public void martConstructorEventOccurred(final int event,
 				final MartConstructorAction action) throws Exception {
 			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
+				// Create and open the zip file.
 				this.outputFileStream = new FileOutputStream(this.getFile());
 				this.outputZipStream = new ZipOutputStream(
 						this.outputFileStream);
@@ -753,11 +794,10 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.preInterimActions.clear();
 				this.postInterimActions.clear();
 				this.postInterimTables.clear();
-			}	
-			else if (event == MartConstructorListener.DATASET_ENDED) {
-				// Write out one file per table in pre-interim action map.
-				for (final Iterator i = this.preInterimActions.entrySet().iterator(); i
-						.hasNext();) {
+			} else if (event == MartConstructorListener.DATASET_ENDED) {
+				// Write out one file per table in part1 files.
+				for (final Iterator i = this.preInterimActions.entrySet()
+						.iterator(); i.hasNext();) {
 					final Map.Entry actionEntry = (Map.Entry) i.next();
 					final String tableName = (String) actionEntry.getKey();
 					ZipEntry entry = new ZipEntry(this.martSequence + "/"
@@ -798,9 +838,9 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				}
 				// Make a list for optimise-update actions.
 				final Map optimiseUpdate = new HashMap();
-				// Write out one file per table in post-interim action map.
-				for (final Iterator i = this.postInterimActions.entrySet().iterator(); i
-						.hasNext();) {
+				// Write out one file per table in part2 files.
+				for (final Iterator i = this.postInterimActions.entrySet()
+						.iterator(); i.hasNext();) {
 					final Map.Entry actionEntry = (Map.Entry) i.next();
 					final String tableName = (String) actionEntry.getKey();
 					ZipEntry entry = new ZipEntry(this.martSequence + "/"
@@ -828,9 +868,13 @@ public class SaveDDLMartConstructor implements MartConstructor {
 						// Is it a optimise-update action? Save it for later and
 						// don't do DDL.
 						if (nextAction instanceof OptimiseUpdateColumn) {
-							if (!optimiseUpdate.containsKey(nextAction.getDataSetTableName()))
-								optimiseUpdate.put(nextAction.getDataSetTableName(), new ArrayList());
-							((List)optimiseUpdate.get(nextAction.getDataSetTableName())).add(nextAction);
+							if (!optimiseUpdate.containsKey(nextAction
+									.getDataSetTableName()))
+								optimiseUpdate
+										.put(nextAction.getDataSetTableName(),
+												new ArrayList());
+							((List) optimiseUpdate.get(nextAction
+									.getDataSetTableName())).add(nextAction);
 							continue;
 						}
 						// Convert the action to some DDL.
@@ -847,17 +891,18 @@ public class SaveDDLMartConstructor implements MartConstructor {
 					// Done with this entry.
 					this.outputZipStream.closeEntry();
 				}
-				// Write out the optimise-update actions in their own file.
-				for (final Iterator i = optimiseUpdate.entrySet().iterator(); i.hasNext(); ) {
-					Map.Entry mapEntry = (Map.Entry)i.next();
-					String tableName = (String)mapEntry.getKey();
+				// Write out the optimise-update actions in part3 files.
+				for (final Iterator i = optimiseUpdate.entrySet().iterator(); i
+						.hasNext();) {
+					Map.Entry mapEntry = (Map.Entry) i.next();
+					String tableName = (String) mapEntry.getKey();
 					ZipEntry entry = new ZipEntry(this.martSequence + "/"
 							+ this.datasetSequence + "/" + tableName
 							+ Resources.get("perTablePart3FileName") + ".sql");
 					entry.setTime(System.currentTimeMillis());
 					this.outputZipStream.putNextEntry(entry);
-					for (final Iterator j = ((List)mapEntry.getValue()).iterator(); j
-							.hasNext();) {
+					for (final Iterator j = ((List) mapEntry.getValue())
+							.iterator(); j.hasNext();) {
 						// Convert the action to some DDL.
 						final String[] cmd = this
 								.getStatementsForAction((MartConstructorAction) j
@@ -878,22 +923,27 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				// Bump up the mart count for the next one.
 				this.martSequence++;
 			else if (event == MartConstructorListener.ACTION_EVENT) {
-				// Add the action to the current map.
+				// Add the action to the current map, working out
+				// whether it is preInterim (part1), or postInterim
+				// (part2 and part3).
 				String dsTableName = action.getDataSetTableName();
 				if (postInterimTables.contains(dsTableName)) {
-					if (!this.postInterimActions.containsKey(action.getDataSetTableName()))
-						this.postInterimActions.put(action.getDataSetTableName(),
-								new ArrayList());
-					((ArrayList) this.postInterimActions.get(action.getDataSetTableName()))
-							.add(action);
+					if (!this.postInterimActions.containsKey(action
+							.getDataSetTableName()))
+						this.postInterimActions.put(action
+								.getDataSetTableName(), new ArrayList());
+					((ArrayList) this.postInterimActions.get(action
+							.getDataSetTableName())).add(action);
 				} else {
-				if (!this.preInterimActions.containsKey(action.getDataSetTableName()))
-					this.preInterimActions.put(action.getDataSetTableName(),
-							new ArrayList());
-				((ArrayList) this.preInterimActions.get(action.getDataSetTableName()))
-						.add(action);
+					if (!this.preInterimActions.containsKey(action
+							.getDataSetTableName()))
+						this.preInterimActions.put(
+								action.getDataSetTableName(), new ArrayList());
+					((ArrayList) this.preInterimActions.get(action
+							.getDataSetTableName())).add(action);
 				}
-				if (action.getInterim()) postInterimTables.add(dsTableName);
+				if (action.getInterim())
+					postInterimTables.add(dsTableName);
 			}
 		}
 	}

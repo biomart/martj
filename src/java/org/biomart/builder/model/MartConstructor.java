@@ -74,22 +74,27 @@ import org.biomart.builder.resources.Resources;
  */
 public interface MartConstructor {
 	/**
-	 * This method takes a dataset and generates a script for the user to run
-	 * later to construct a mart.
+	 * This method takes a dataset and generates a {@link Runnable} which when
+	 * run will construct a graph of actions describing how to construct the
+	 * mart, then emit those actions as events to whatever may be listening.
 	 * <p>
-	 * The work is done inside a thread, which is returned unstarted. The user
-	 * should create a new {@link Thread} instance around this, and start it by
-	 * calling {@link Thread#run()}. They can then monitor it using the methods
-	 * provided by the {@link ConstructorRunnable} interface.
+	 * The {@link Runnable} can be started by calling {@link Runnable#run()} on
+	 * it. Ideally this should be done within it's own {@link Thread}, so that
+	 * the thread can do the work in the background.
+	 * <p>
+	 * Once started, the {@link Runnable} can be monitored using the methods
+	 * available in the {@link ConstructorRunnable} interface.
 	 * 
 	 * @param targetSchemaName
 	 *            the name of the schema to create the dataset tables in.
 	 * @param datasets
 	 *            a set of datasets to construct. An empty set means nothing
 	 *            will get constructed.
-	 * @return the thread that will build it.
+	 * @return the {@link Runnable} object that when run will construct the
+	 *         action graph and start emitting action events.
 	 * @throws Exception
-	 *             if there was any problem creating the builder thread.
+	 *             if there was any problem creating the {@link Runnable}
+	 *             object.
 	 */
 	public ConstructorRunnable getConstructorRunnable(String targetSchemaName,
 			Collection datasets) throws Exception;
@@ -121,9 +126,9 @@ public interface MartConstructor {
 		public void cancel();
 
 		/**
-		 * If the thread failed, this method should return an exception
-		 * describing the failure. If it succeeded, or is still in progress and
-		 * hasn't failed yet, it should return <tt>null</tt>.
+		 * If the thread failed or was cancelled, this method should return an
+		 * exception describing the failure. If it succeeded, or is still in
+		 * progress and hasn't failed yet, it should return <tt>null</tt>.
 		 * 
 		 * @return the exception that caused the thread to fail, if any, or
 		 *         <tt>null</tt> otherwise.
@@ -133,8 +138,7 @@ public interface MartConstructor {
 		/**
 		 * This method should return a value between 0 and 100 indicating how
 		 * the thread is getting along in the general scheme of things. 0
-		 * indicates just starting, 100 indicates complete or very nearly
-		 * complete.
+		 * indicates just starting, 100 indicates complete.
 		 * 
 		 * @return a percentage indicating how far the thread has got.
 		 */
@@ -150,7 +154,11 @@ public interface MartConstructor {
 	}
 
 	/**
-	 * Defines the generic way of constructing a mart.
+	 * Defines the generic way of constructing a mart. Generates a graph of
+	 * actions then iterates through that graph in an ordered manner, ensuring
+	 * that no action is reached before all actions it depends on have been
+	 * reached. Each action it iterates over fires an action event to all
+	 * listeners registered with it.
 	 */
 	public static class GenericConstructorRunnable implements
 			ConstructorRunnable {
@@ -171,8 +179,13 @@ public interface MartConstructor {
 		private String statusMessage = Resources.get("mcCreatingGraph");
 
 		/**
-		 * Constructs a mart builder that will build the mart in the given
-		 * dataset, using the given helper.
+		 * Constructs a builder object that will construct an action graph
+		 * containing all actions necessary to build the given dataset, then
+		 * emit events related to those actions.
+		 * <p>
+		 * The helper specified will interface between the builder object and
+		 * the data source, providing it with bits of data it may need in order
+		 * to construct the graph.
 		 * 
 		 * @param datasetSchemaName
 		 *            the name of the database schema into which the transformed
@@ -196,8 +209,27 @@ public interface MartConstructor {
 				throw new ConstructorException(Resources.get("mcCancelled"));
 		}
 
-		private void doIt(final DataSet dataset, final int totalDataSetCount)
-				throws Exception {
+		/**
+		 * This is the starting point for the conversion of a dataset into a set
+		 * of actions. Internally, it constructs a graph of actions specific to
+		 * this dataset, populates the graph, then iterates over the graph at
+		 * the end emitting those actions as events in the correct order, so
+		 * that any action that depends on another action is guaranteed to be
+		 * emitted after the action it depends on.
+		 * 
+		 * @param dataset
+		 *            the dataset to build an action graph for and then emit
+		 *            actions from that graph.
+		 * @param totalDataSetCount
+		 *            a counter informing this method how many datasets in total
+		 *            there are to process. It is used to work out percentage
+		 *            process.
+		 * @throws Exception
+		 *             if anything goes wrong at all during the transformation
+		 *             process.
+		 */
+		private void makeActionsForDataset(final DataSet dataset,
+				final int totalDataSetCount) throws Exception {
 			// Find the main table of the dataset.
 			DataSetTable dsMainTable = null;
 			for (final Iterator i = dataset.getTables().iterator(); i.hasNext()
@@ -210,8 +242,9 @@ public interface MartConstructor {
 			// Work out if we are dealing with a main table that is in a group
 			// schema. If it is, we make a list of all the schemas in the group,
 			// otherwise the list is a singleton list containing the schema of
-			// the main table. This list will be used later to merge schema
-			// results together, unless partitioning by schema.
+			// the main table. This list will be used later to merge
+			// multi-schema
+			// results together into a single table.
 			final Schema rMainTableSchema = dsMainTable.getUnderlyingTable()
 					.getSchema();
 			Collection rSchemas = null;
@@ -232,27 +265,28 @@ public interface MartConstructor {
 					this.datasetSchemaName);
 			actionGraph.addAction(rootAction);
 
-			// Make a list to hold the table representations.
+			// Make a list to hold the virtual (temp) table representations.
 			final List vTables = new ArrayList();
 
-			// For each schema, we process all the tables.
+			// For each schema, we process all the tables into actions.
 			for (final Iterator i = rSchemas.iterator(); i.hasNext();) {
 				final Schema rSchema = (Schema) i.next();
 
 				// Make a list of tables for this schema.
 				final List rSchemaVirtualTables = new ArrayList();
 
-				// Process the main table.
+				// Process the main table into actions.
 				VirtualTable vMainTable = new VirtualTable(dsMainTable, null);
-				this.processTable(null, rootAction, actionGraph,
+				this.makeActionsForDatasetTable(null, rootAction, actionGraph,
 						rMainTableSchema, rSchema, vMainTable);
 				rSchemaVirtualTables.add(vMainTable);
 
 				// Check not cancelled.
 				this.checkCancelled();
 
-				// Set up a map to hold the last actions for each source table
-				// we encounter.
+				// Set up a map to hold the last actions for each table
+				// we encounter. Start off by putting the last action
+				// for the main table into the map.
 				final Map dsTableLastActions = new HashMap();
 				dsTableLastActions.put(dsMainTable, vMainTable
 						.getLastActionPerformed());
@@ -266,7 +300,7 @@ public interface MartConstructor {
 				for (int x = 0; x < dsParentRelations.size(); x++)
 					vParents.add(vMainTable);
 
-				// Process all main dimensions and subclasses.
+				// Process all main dimensions and subclasses into actions.
 				for (int j = 0; j < dsParentRelations.size(); j++) {
 					final VirtualTable vParentTable = (VirtualTable) vParents
 							.get(j);
@@ -280,13 +314,14 @@ public interface MartConstructor {
 					// Create the subclass or dimension table.
 					VirtualTable vChildTable = new VirtualTable(dsChildTable,
 							dsParentRelation);
-					this.processTable(vParentTable,
+					this.makeActionsForDatasetTable(vParentTable,
 							(MartConstructorAction) dsTableLastActions
 									.get(dsParentTable), actionGraph,
 							rMainTableSchema, rSchema, vChildTable);
 					rSchemaVirtualTables.add(vChildTable);
 
-					// Add target table to definitions list.
+					// Add last action for newly created table to the last
+					// actions list.
 					dsTableLastActions.put(dsChildTable, vChildTable
 							.getLastActionPerformed());
 
@@ -303,12 +338,12 @@ public interface MartConstructor {
 					this.checkCancelled();
 				}
 
-				// Add tables for this schema to list of all tables.
+				// Add all tables for this schema to list of all tables.
 				vTables.addAll(rSchemaVirtualTables);
 			}
 
 			// Set up a break-point last action that waits for all
-			// tables to complete.
+			// tables to complete being turned into actions.
 			MartConstructorAction prePartitionAction = new PlaceHolder(
 					this.datasetSchemaName);
 			for (final Iterator i = vTables.iterator(); i.hasNext();)
@@ -317,12 +352,18 @@ public interface MartConstructor {
 			actionGraph.addAction(prePartitionAction);
 
 			// If main table schema is a schema group, do a union on all schemas
-			// for each table.
+			// for each table to create one mega union table.
 			if (rMainTableSchema instanceof SchemaGroup) {
-				// Merge each set of tables.
+				// Merge each set of tables into one.
 				final List vUnionTables = new ArrayList();
 				for (int i = 0; i < vTables.size() / rSchemas.size(); i++) {
 					final List vTablesToUnion = new ArrayList();
+					// We build the set of tables to merge simply by iterating
+					// through the temp tables in steps as large as the total
+					// number of temp tables in one schema. This is based
+					// on the assumption that the temp tables will be generated
+					// in the same order in each schema, and each schema will
+					// have the same number of temp tables.
 					for (int j = i; j < vTables.size(); j += rSchemas.size())
 						vTablesToUnion.add(vTables.get(j));
 					// Create the VirtualTable entry for the union table.
@@ -376,7 +417,8 @@ public interface MartConstructor {
 					if (dsPartCol.getPartitionType() == null)
 						continue;
 
-					// Make a list to hold actions.
+					// Make a list to hold actions that dropping the
+					// original table depends on.
 					final List preDropChildActions = new ArrayList();
 
 					// Look up the VirtualTable(s) containing the parent table.
@@ -411,9 +453,8 @@ public interface MartConstructor {
 						else if (dsPartCol instanceof SchemaNameColumn)
 							// Unique values for the schema column are the names
 							// of all schemas involved in this dataset table.
-							// Ie.
-							// the
-							// schemas for each key in the underlying keys.
+							// ie. the schemas for each key in the underlying
+							// keys.
 							for (final Iterator j = vParentTables.iterator(); j
 									.hasNext();) {
 								final VirtualTable vTable = (VirtualTable) j
@@ -439,13 +480,11 @@ public interface MartConstructor {
 							throw new MartBuilderInternalError();
 
 					// Do the partitioning. First, partition the table the
-					// column
-					// belongs to. Then, partition every child, and every child
-					// of every child, and so on recursively.
+					// column belongs to. Then, partition every child, and
+					// every child of every child, and so on recursively.
 
 					// Construct the recursive list of child tables that will
-					// also
-					// require partitioning.
+					// also require partitioning.
 					final List dsTablesToPartition = new ArrayList();
 					dsTablesToPartition.add(dsParentTable);
 					for (int j = 0; j < dsTablesToPartition.size(); j++) {
@@ -466,6 +505,8 @@ public interface MartConstructor {
 					// tablesToPartition. This will result in grouped schema
 					// tables being partitioned for every value in the group,
 					// regardless of the values in their individual schemas.
+					// Therefore you may end up with some empty partition
+					// tables.
 					final List vTablesToReduce = new ArrayList();
 					for (final Iterator j = dsTablesToPartition.iterator(); j
 							.hasNext();) {
@@ -764,8 +805,8 @@ public interface MartConstructor {
 					// If we are using column join, add columns to the
 					// main or subclass table directly.
 					VirtualTable vHasTable = vParentTable;
-					// But if we are using table join, create a 'has' table
-					// and add columns to that instead.
+					// But if we are using table join, create a 'boolean'
+					// table and add columns to that instead.
 					if (dsOptimiserType.equals(DataSetOptimiserType.TABLE)) {
 						vHasTable = new VirtualHasTable(vParentTable
 								.getDataSetTable());
@@ -778,7 +819,7 @@ public interface MartConstructor {
 						// main/subclass table.
 						final List dsPKCols = vParentTable.getDataSetTable()
 								.getPrimaryKey().getColumns();
-						// Create the new 'has' table with the columns
+						// Create the new 'boolean' table with the columns
 						// from the main/subclass table.
 						final MartConstructorAction create = new Create(
 								this.datasetSchemaName, vHasTable
@@ -787,7 +828,7 @@ public interface MartConstructor {
 								vParentTable.getTempTableName(), dsPKCols,
 								false, null, false, false);
 						actionGraph.addActionWithParent(create, preDOAction);
-						// Create the PK on the 'has' table using the same
+						// Create the PK on the 'boolean' table using the same
 						// columns, as an index.
 						final MartConstructorAction pkIndex = new Index(
 								this.datasetSchemaName, vHasTable
@@ -821,7 +862,7 @@ public interface MartConstructor {
 								vParentPartitionValues.size()).equals(
 								vParentPartitionValues))
 							continue;
-						// Work out 'has' column name.
+						// Work out 'boolean' column name.
 						final String vHasColumnName = vChildTable
 								.createContentName()
 								+ Resources.get("hasColSuffix");
@@ -945,7 +986,37 @@ public interface MartConstructor {
 						.martConstructorEventOccurred(event, action);
 		}
 
-		private void processTable(final VirtualTable vParentTable,
+		/**
+		 * This takes a dataset table and converts it into a set of actions that
+		 * will create that dataset table, before partioning etc. occurs
+		 * elsewhere, eg. in {@link #makeActionsForDataset(DataSet, int)}.
+		 * 
+		 * @param vParentTable
+		 *            if the dataset table is going to be linked to another one,
+		 *            eg. if it is a dimension of a main table, then this
+		 *            parameter contains the temp table name that holds the
+		 *            parent table.
+		 * @param firstActionDependsOn
+		 *            the action that must be completed before actions for this
+		 *            table can begin being processed.
+		 * @param actionGraph
+		 *            the graph of actions for the dataset this table lives in.
+		 *            This method will update the graph with actions for this
+		 *            table.
+		 * @param rMainTableSchema
+		 *            the schema that the original central table
+		 *            {@link DataSet#getCentralTable()} lives in.
+		 * @param rSchema
+		 *            the schema that this table lives in, from
+		 *            {@link Table#getSchema()}.
+		 * @param vConstructionTable
+		 *            the temp table object to create the definition for this
+		 *            dataset table inside.
+		 * @throws Exception
+		 *             if anythign goes wrong.
+		 */
+		private void makeActionsForDatasetTable(
+				final VirtualTable vParentTable,
 				final MartConstructorAction firstActionDependsOn,
 				final MartConstructorActionGraph actionGraph,
 				final Schema rMainTableSchema, final Schema rSchema,
@@ -954,14 +1025,18 @@ public interface MartConstructor {
 			MartConstructorAction lastActionPerformed = firstActionDependsOn;
 
 			// Mark temp table from dependent action as an interim table.
+			// Interim tables are not dropped until everything is complete,
+			// so that things like dimension tables can be restarted if
+			// they fail, without having to recreate the temp table they
+			// sourced their inherited columns from.
 			lastActionPerformed.setInterim(true);
 
 			// Placeholder for name of the target temp table that will
 			// contain the constructed table.
 			String vTableTempName = vConstructionTable.getTempTableName();
 
-			// First table to select from is the underlying table if MAIN,
-			// or the parent DS table if not MAIN.
+			// First table to select from is the underlying real table if
+			// MAIN, or the parent DS table if not MAIN.
 			Schema replacementFirstSchema;
 			Table replacementFirstTable;
 			String replacementFirstTableName;
@@ -1519,10 +1594,11 @@ public interface MartConstructor {
 
 					try {
 						// Loop over all the datasets we want included from this
-						// mart.
+						// mart. Build actions for each one.
 						for (final Iterator i = ((List) j.next()).iterator(); i
 								.hasNext();)
-							this.doIt((DataSet) i.next(), totalDataSetCount);
+							this.makeActionsForDataset((DataSet) i.next(),
+									totalDataSetCount);
 					} finally {
 						this
 								.issueListenerEvent(MartConstructorListener.MART_ENDED);
@@ -1544,11 +1620,13 @@ public interface MartConstructor {
 			}
 		}
 
-		// Internal use only, serves as a convenient wrapper for tracking
-		// info about a particular 'has' table.
+		/**
+		 * Internal use only, serves as a convenient wrapper for tracking info
+		 * about a particular 'boolean' table.
+		 */
 		private class VirtualHasTable extends VirtualTable {
 			/**
-			 * Constructor starts tracking a 'has' table that contains
+			 * Constructor starts tracking a 'boolean' table that contains
 			 * optimisations for the given table.
 			 * 
 			 * @param datasetTable
@@ -1561,7 +1639,7 @@ public interface MartConstructor {
 			public String createFinalName() {
 				// TODO - come up with a better naming scheme
 				// Currently the name is:
-				// datasetname__{content}_has__dm
+				// datasetname__{content}_bool__dm
 
 				// Work out what dataset we are in.
 				final DataSet dataset = this.getDataSet();
@@ -1575,7 +1653,7 @@ public interface MartConstructor {
 				// Content name.
 				name.append(this.createContentName());
 
-				// _ separator, 'has', and __ separator.
+				// _ separator, 'bool', and __ separator.
 				name.append(Resources.get("tablenameSubSep"));
 				name.append(Resources.get("hasTblSuffix"));
 				name.append(Resources.get("tablenameSep"));
@@ -1587,8 +1665,10 @@ public interface MartConstructor {
 			}
 		}
 
-		// Internal use only, serves as a convenient wrapper for tracking
-		// info about a particular dataset table.
+		/**
+		 * Internal use only, serves as a convenient wrapper for tracking info
+		 * about a particular dataset table.
+		 */
 		private class VirtualTable {
 
 			private DataSetTable datasetTable;
@@ -1824,7 +1904,8 @@ public interface MartConstructor {
 
 	/**
 	 * Helpers provide methods to give useful information to the constructor as
-	 * it builds the action graph.
+	 * it builds the action graph. Helper instances are usually database aware
+	 * and are able to connect to a database to get this information.
 	 */
 	public interface Helper {
 
@@ -1850,7 +1931,10 @@ public interface MartConstructor {
 
 	/**
 	 * This interface defines a listener which hears events about mart
-	 * construction. The events are defined as constants in this interface.
+	 * construction. The events are defined as constants in this interface. The
+	 * listener will take these events and either build scripts for later
+	 * execution, or will execute them directly in order to physically construct
+	 * the mart.
 	 */
 	public interface MartConstructorListener {
 
@@ -1859,7 +1943,7 @@ public interface MartConstructor {
 		 * accompanied by a {@link MartConstructorAction} object describing what
 		 * needs doing.
 		 */
-		public static final int ACTION_EVENT = 6;
+		public static final int ACTION_EVENT = 0;
 
 		/**
 		 * This event will occur when mart construction ends.
@@ -1869,12 +1953,12 @@ public interface MartConstructor {
 		/**
 		 * This event will occur when mart construction begins.
 		 */
-		public static final int CONSTRUCTION_STARTED = 0;
+		public static final int CONSTRUCTION_STARTED = 2;
 
 		/**
 		 * This event will occur when an individual dataset ends.
 		 */
-		public static final int DATASET_ENDED = 5;
+		public static final int DATASET_ENDED = 3;
 
 		/**
 		 * This event will occur when an individual dataset begins.
@@ -1884,12 +1968,12 @@ public interface MartConstructor {
 		/**
 		 * This event will occur when an individual mart ends.
 		 */
-		public static final int MART_ENDED = 3;
+		public static final int MART_ENDED = 5;
 
 		/**
 		 * This event will occur when an individual mart begins.
 		 */
-		public static final int MART_STARTED = 2;
+		public static final int MART_STARTED = 6;
 
 		/**
 		 * This method will be called when an event occurs.
@@ -1898,8 +1982,8 @@ public interface MartConstructor {
 		 *            the event that occurred. See the constants defined
 		 *            elsewhere in this interface for possible events.
 		 * @param action
-		 *            an action object that belongs to this event. Will be null
-		 *            in all cases except where the event is
+		 *            an action object that belongs to this event. Will be
+		 *            <tt>null</tt> in all cases except where the event is
 		 *            {@link #ACTION_EVENT}.
 		 * @throws Exception
 		 *             if anything goes wrong whilst handling the event.

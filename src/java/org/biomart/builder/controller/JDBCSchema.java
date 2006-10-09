@@ -80,7 +80,8 @@ import org.biomart.builder.resources.Resources;
  * or keys, or to reinstate any that have previously been marked as incorrect.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -175,7 +176,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			final String catalog) throws SQLException, BuilderException {
 		// Loop through all the tables in the database, which is the same
 		// as looping through all the primary keys.
-		for (final Iterator i = this.tables.values().iterator(); i.hasNext();) {
+		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
 			// Obtain the table and its primary key.
 			final Table pkTable = (Table) i.next();
 			final PrimaryKey pk = pkTable.getPrimaryKey();
@@ -427,7 +428,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			throws SQLException, BuilderException {
 		// Loop through all the tables in the database, which is the same
 		// as looping through all the primary keys.
-		for (final Iterator i = this.tables.values().iterator(); i.hasNext();) {
+		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
 			// Obtain the table and its primary key.
 			final Table pkTable = (Table) i.next();
 			final PrimaryKey pk = pkTable.getPrimaryKey();
@@ -479,8 +480,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// sets of columns with identical names, or with '_key' appended.
 			// Any set that we find is going to be an FK with a relation back to
 			// this PK.
-			for (final Iterator l = this.tables.values().iterator(); l
-					.hasNext();) {
+			for (final Iterator l = this.getTables().iterator(); l.hasNext();) {
 				// Obtain the next table to look at.
 				final Table fkTable = (Table) l.next();
 
@@ -852,7 +852,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		// this list all tables that still exist in the database. At the end of
 		// the method, the list contains only those tables which no longer
 		// exist, so they will be dropped.
-		final List tablesToBeDropped = new ArrayList(this.tables.values());
+		final List tablesToBeDropped = new ArrayList(this.getTables());
 
 		// Load tables and views from database, then loop over them.
 		final ResultSet dbTables = dmd.getTables(catalog, this.schemaName, "%",
@@ -1007,7 +1007,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			final Table existingTable = (Table) i.next();
 			final String tableName = existingTable.getName();
 			existingTable.destroy();
-			this.tables.remove(tableName);
+			this.removeTableByName(tableName);
 		}
 
 		// Sync the keys.
@@ -1022,7 +1022,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		// Work out a list of all foreign keys currently existing.
 		// Any remaining in this list later will be dropped.
 		final List fksToBeDropped = new ArrayList();
-		for (final Iterator i = this.tables.values().iterator(); i.hasNext();) {
+		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
 			final Table t = (Table) i.next();
 			fksToBeDropped.addAll(t.getForeignKeys());
 		}

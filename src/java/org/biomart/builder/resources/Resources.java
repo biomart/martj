@@ -24,10 +24,12 @@ import java.text.MessageFormat;
 import java.util.ResourceBundle;
 
 /**
- * Simple wrapper for resources.
+ * Simple wrapper for locating file resources within this package, and for
+ * reading internationalisation messages from the messages file.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class Resources {
@@ -99,17 +101,17 @@ public class Resources {
 	 */
 	public static InputStream getResourceAsStream(final String resource) {
 		final ClassLoader cl = Resources.class.getClassLoader();
-        return (InputStream)java.security.AccessController.doPrivileged(
-            new java.security.PrivilegedAction() {
-                public Object run() {
-                    if (cl != null) {
-                        return cl.getResourceAsStream(resource);
-                    } else {
-                        return ClassLoader.getSystemResourceAsStream(resource);
-                    }
-                }
-            }
-        );
+		return (InputStream) java.security.AccessController
+				.doPrivileged(new java.security.PrivilegedAction() {
+					public Object run() {
+						if (cl != null) {
+							return cl.getResourceAsStream(resource);
+						} else {
+							return ClassLoader
+									.getSystemResourceAsStream(resource);
+						}
+					}
+				});
 	}
 
 	/**
@@ -123,16 +125,15 @@ public class Resources {
 	 */
 	public static URL getResourceAsURL(final String resource) {
 		final ClassLoader cl = Resources.class.getClassLoader();
-        return (URL)java.security.AccessController.doPrivileged(
-            new java.security.PrivilegedAction() {
-                public Object run() {
-                    if (cl != null) {
-                        return cl.getResource(resource);
-                    } else {
-                        return ClassLoader.getSystemResource(resource);
-                    }
-                }
-            }
-        );
+		return (URL) java.security.AccessController
+				.doPrivileged(new java.security.PrivilegedAction() {
+					public Object run() {
+						if (cl != null) {
+							return cl.getResource(resource);
+						} else {
+							return ClassLoader.getSystemResource(resource);
+						}
+					}
+				});
 	}
 }

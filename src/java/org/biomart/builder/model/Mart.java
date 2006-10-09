@@ -31,9 +31,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
+import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.resources.Resources;
 
@@ -42,7 +42,8 @@ import org.biomart.builder.resources.Resources;
  * mart. It also has zero or more datasets based around these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class Mart {
@@ -54,9 +55,32 @@ public class Mart {
 	// Use tree map to keep them in alphabetical order.
 	private final Map schemas = new TreeMap();
 
+	/**
+	 * This internal method takes a bunch of tables that the user would like to
+	 * see as subclass or main tables in a single dataset, and attempts to find
+	 * a subclass path between them. For each subclass path it can build, it
+	 * produces one dataset based on that path. Each path contains as many
+	 * tables as possible. The paths do not overlap. If there is a choice, the
+	 * one chosen is arbitrary.
+	 * 
+	 * @param includeTables
+	 *            the tables we want to include as main or subclass tables.
+	 * @param tablesIncluded
+	 *            the tables we have managed to include in a path so far.
+	 * @param dataset
+	 *            the dataset we started out from which contains just the main
+	 *            table on its own with no subclassing.
+	 * @param table
+	 *            the real table we are looking at to see if there is a subclass
+	 *            path between any of the include tables and any of the existing
+	 *            subclassed or main tables via this real table.
+	 * @return the datasets we have created - one per subclass path, or if there
+	 *         were none, then a singleton collection containing the dataset
+	 *         originally passed in.
+	 */
 	private Collection continueSubclassing(final Collection includeTables,
 			final Collection tablesIncluded, final DataSet dataset,
-			final Table table)  {
+			final Table table) {
 		// Check table has a primary key.
 		final Key pk = table.getPrimaryKey();
 
@@ -154,8 +178,8 @@ public class Mart {
 				suggestedDataSet = (DataSet) dataset.replicate(dataset
 						.getName());
 			try {
-			suggestedDataSet.flagSubclassRelation(r);
-			} catch (AssociationException e) {
+				suggestedDataSet.flagSubclassRelation(r);
+			} catch (ValidationException e) {
 				// Eh? We asked for it, dammit!
 				throw new MartBuilderInternalError(e);
 			}
@@ -187,9 +211,8 @@ public class Mart {
 	}
 
 	/**
-	 * Adds a schema to the set which this mart includes. An exception is thrown
-	 * if it already is in this set, or if it is null.
-	 * 
+	 * Adds a schema to the set which this mart includes. It is renamed if one
+	 * with that name already exists.
 	 * 
 	 * @param schema
 	 *            the schema to add.
@@ -219,7 +242,7 @@ public class Mart {
 
 	/**
 	 * Returns the set of dataset objects which this mart includes. The set may
-	 * be empty but it is never null.
+	 * be empty but it is never <tt>null</tt>.
 	 * 
 	 * @return a set of dataset objects.
 	 */
@@ -228,8 +251,8 @@ public class Mart {
 	}
 
 	/**
-	 * Returns the schema object with the given name. If it doesn't exist, null
-	 * is returned. If the name was null, you'll get an exception.
+	 * Returns the schema object with the given name. If it doesn't exist,
+	 * <tt>null</tt> is returned.
 	 * 
 	 * @param name
 	 *            the name to look for.
@@ -240,8 +263,8 @@ public class Mart {
 	}
 
 	/**
-	 * Returns the set of schema objects which this mart includes when building
-	 * a mart. The set may be empty but it is never null.
+	 * Returns the set of schema objects which this mart includes. The set may
+	 * be empty but it is never <tt>null</tt>.
 	 * 
 	 * @return a set of schema objects.
 	 */
@@ -302,9 +325,8 @@ public class Mart {
 	}
 
 	/**
-	 * Renames a schema. An exception is thrown if that names has already been
-	 * used, or if it is null. This call cascades to the schema and renames that
-	 * as well.
+	 * Renames a schema. This call cascades to the schema and renames that as
+	 * well. If the name clashes, it is altered until it does not.
 	 * 
 	 * @param schema
 	 *            the schema to rename.
@@ -338,6 +360,9 @@ public class Mart {
 	 * Datasets will be named after their central tables. If a dataset with that
 	 * name already exists, a '_' and sequence number will be appended to make
 	 * the new dataset name unique.
+	 * <p>
+	 * See also
+	 * {@link #continueSubclassing(Collection, Collection, DataSet, Table)}.
 	 * 
 	 * @param includeTables
 	 *            the tables that must appear in the final set of datasets.
@@ -460,12 +485,11 @@ public class Mart {
 	 *             if synchronisation fails.
 	 */
 	public Collection suggestInvisibleDataSets(final DataSet dataset,
-			final Collection columns) throws 
-			SQLException, BuilderException {
+			final Collection columns) throws SQLException, BuilderException {
 		final List invisibleDataSets = new ArrayList();
 		final Table sourceTable = ((Column) columns.iterator().next())
 				.getTable();
-		// Find all tables which mention them.
+		// Find all tables which mention the columns specified.
 		final List candidates = new ArrayList();
 		for (final Iterator i = this.schemas.values().iterator(); i.hasNext();)
 			for (final Iterator j = ((Schema) i.next()).getTables().iterator(); j

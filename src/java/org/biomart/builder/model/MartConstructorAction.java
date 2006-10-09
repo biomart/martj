@@ -978,7 +978,7 @@ public abstract class MartConstructorAction {
 
 	/**
 	 * This action creates a column on a table ready for use as an optimisation
-	 * ('has') column.
+	 * ('boolean') column.
 	 */
 	public static class OptimiseAddColumn extends MartConstructorTableAction {
 

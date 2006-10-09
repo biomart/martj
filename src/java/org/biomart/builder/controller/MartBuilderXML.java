@@ -81,7 +81,6 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * <p>
  * The MartBuilderXML class provides two static methods which serialize and
  * deserialize {@link Mart} objects to/from a basic XML format.
  * <p>
@@ -96,10 +95,12 @@ import org.xml.sax.helpers.DefaultHandler;
  * NOTE: The XML is version-specific. A formal DTD will be included with each
  * official release of MartBuilder, and subsequent releases will include new
  * DTDs (if any aspects have changed) and converter tools to translate your old
- * files.
+ * files. This DTD will be found in the <tt>org.biomart.builder.resources</tt>
+ * package.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class MartBuilderXML extends DefaultHandler {
@@ -150,13 +151,13 @@ public class MartBuilderXML extends DefaultHandler {
 			throw new BuilderException(Resources.get("XMLUnparseable"), e);
 		}
 		// Get the constructed object.
-		final Mart s = loader.constructedMart;
-		// Check that it is a schema.
-		if (s == null)
+		final Mart mart = loader.getConstructedMart();
+		// Check that we got something useful.
+		if (mart == null)
 			throw new BuilderException(Resources.get("fileNotSchemaVersion",
 					MartBuilderXML.DTD_VERSION));
 		// Return.
-		return s;
+		return mart;
 	}
 
 	/**
@@ -164,7 +165,7 @@ public class MartBuilderXML extends DefaultHandler {
 	 * it to the given {@link File}. This XML can be read by the
 	 * {@link MartBuilderXML#load(File)} method.
 	 * 
-	 * @param schema
+	 * @param mart
 	 *            {@link Mart} object containing the data for the file.
 	 * @param file
 	 *            the {@link File} to save the data to.
@@ -174,13 +175,13 @@ public class MartBuilderXML extends DefaultHandler {
 	 *             if it encounters an object not writable under the current
 	 *             DTD.
 	 */
-	public static void save(final Mart schema, final File file)
+	public static void save(final Mart mart, final File file)
 			throws IOException, BuilderException {
 		// Open the file.
 		final FileWriter fw = new FileWriter(file);
 		try {
 			// Write it out.
-			(new MartBuilderXML()).writeXML(schema, fw);
+			(new MartBuilderXML()).writeXML(mart, fw);
 		} catch (final IOException e) {
 			throw e;
 		} catch (final BuilderException e) {
@@ -206,13 +207,18 @@ public class MartBuilderXML extends DefaultHandler {
 	private Map reverseMappedObjects;
 
 	/**
-	 * This class is intended to be used only in a static context.
+	 * This class is intended to be used only in a static context. It creates
+	 * its own instances internally as required.
 	 */
 	private MartBuilderXML() {
 		this.constructedMart = null;
 		this.currentOutputElement = null;
 		this.currentOutputIndent = 0;
 		this.currentElementID = 1;
+	}
+
+	private Mart getConstructedMart() {
+		return this.constructedMart;
 	}
 
 	/**
@@ -237,7 +243,6 @@ public class MartBuilderXML extends DefaultHandler {
 			// No, so use the full technique.
 			// Decrease the indent.
 			this.currentOutputIndent--;
-
 			// Output any indent required.
 			for (int i = this.currentOutputIndent; i > 0; i--)
 				xmlWriter.write("\t");
@@ -246,6 +251,7 @@ public class MartBuilderXML extends DefaultHandler {
 			xmlWriter.write(name);
 			xmlWriter.write(">\n");
 		}
+		// Reset the current tag.
 		this.currentOutputElement = null;
 	}
 
@@ -278,7 +284,7 @@ public class MartBuilderXML extends DefaultHandler {
 		// Write the tag.
 		xmlWriter.write(name);
 
-		// Update are note of what we are currently writing.
+		// Update tag that we are currently writing.
 		this.currentOutputElement = name;
 	}
 
@@ -342,11 +348,15 @@ public class MartBuilderXML extends DefaultHandler {
 	 */
 	private void writeRelations(final Collection relations,
 			final Writer xmlWriter) throws IOException {
-		// Write out relations.
+		// Write out each relation in turn.
 		for (final Iterator i = relations.iterator(); i.hasNext();) {
 			final Relation r = (Relation) i.next();
+
+			// Assign the relation an ID.
 			final String relMappedID = "" + this.currentElementID++;
 			this.reverseMappedObjects.put(r, relMappedID);
+
+			// Write the relation.
 			this.openElement("relation", xmlWriter);
 			this.writeAttribute("id", relMappedID, xmlWriter);
 			this.writeAttribute("cardinality", r.getCardinality().getName(),
@@ -380,8 +390,10 @@ public class MartBuilderXML extends DefaultHandler {
 		// What kind of schema is it?
 		if (schema instanceof JDBCSchema) {
 			// It's a JDBC schema.
-			this.openElement("jdbcSchema", xmlWriter);
 			final JDBCSchema jdbcSchema = (JDBCSchema) schema;
+
+			// Begin the schema element.
+			this.openElement("jdbcSchema", xmlWriter);
 
 			if (jdbcSchema.getDriverClassLocation() != null)
 				this.writeAttribute("driverClassLocation", jdbcSchema
@@ -406,9 +418,10 @@ public class MartBuilderXML extends DefaultHandler {
 			throw new BuilderException(Resources.get("unknownSchemaType",
 					schema.getClass().getName()));
 
-		// Write out the contents, and note the relations.
+		// Write out the contents.
 		this.writeSchemaContents(schema, xmlWriter);
 
+		// Close the schema element.
 		// What kind of schema was it?
 		// JDBC?
 		if (schema instanceof JDBCSchema)
@@ -420,14 +433,10 @@ public class MartBuilderXML extends DefaultHandler {
 	}
 
 	/**
-	 * Internal method which writes out the tables of a schema and remembers the
-	 * relations it saw as it goes along.
-	 * 
+	 * Internal method which writes out the contents of a schema.
 	 * 
 	 * @param schema
 	 *            the {@link Schema} to write out the tables of.
-	 * @param relations
-	 *            the set of {@link Relation}s we found on the way.
 	 * @param xmlWriter
 	 *            the writer to write to.
 	 * @throws IOException
@@ -441,6 +450,8 @@ public class MartBuilderXML extends DefaultHandler {
 		// only. This is to allow inherited columns to reference
 		// earlier columns.
 		final List tables = new ArrayList();
+
+		// Dataset tables must be written in an ordered manner.
 		if (schema instanceof DataSet) {
 			// Add the main table first.
 			for (final Iterator i = schema.getTables().iterator(); i.hasNext();) {
@@ -457,11 +468,16 @@ public class MartBuilderXML extends DefaultHandler {
 						tables.add(((Relation) j.next()).getManyKey()
 								.getTable());
 			}
-		} else
+		}
+		// Non dataset tables can be written in any order.
+		else
 			tables.addAll(schema.getTables());
+
 		// Write out tables inside each schema.
 		for (final Iterator ti = tables.iterator(); ti.hasNext();) {
 			final Table table = (Table) ti.next();
+
+			// Give the table an ID.
 			final String tableMappedID = "" + this.currentElementID++;
 			this.reverseMappedObjects.put(table, tableMappedID);
 
@@ -525,6 +541,7 @@ public class MartBuilderXML extends DefaultHandler {
 				}
 
 				// Otherwise continue as normal.
+				// Give the column an ID.
 				final String colMappedID = "" + this.currentElementID++;
 				this.reverseMappedObjects.put(col, colMappedID);
 
@@ -538,6 +555,8 @@ public class MartBuilderXML extends DefaultHandler {
 				// Dataset column?
 				if (col instanceof DataSetColumn) {
 					final DataSetColumn dcol = (DataSetColumn) col;
+
+					// Stuff that's common to all dataset columns.
 					final Relation underlyingRelation = dcol
 							.getUnderlyingRelation();
 					String underlyingRelationId = "null";
@@ -596,10 +615,12 @@ public class MartBuilderXML extends DefaultHandler {
 								"unknownDatasetColumnType", dcol.getClass()
 										.getName()));
 
-					// What kind of partition is it?
+					// What kind of partition is it, if any?
 					PartitionedColumnType ptc = dcol.getPartitionType();
+					// Not partitioned?
 					if (ptc == null)
 						this.writeAttribute("partitionType", "null", xmlWriter);
+					// Single value partition?
 					else if (ptc instanceof SingleValue) {
 						final SingleValue sv = (SingleValue) ptc;
 						this.writeAttribute("partitionType", "singleValue",
@@ -654,6 +675,8 @@ public class MartBuilderXML extends DefaultHandler {
 			// Write out expression columns, if any.
 			for (Iterator i = expressionColumns.iterator(); i.hasNext();) {
 				ExpressionColumn col = (ExpressionColumn) i.next();
+
+				// Give expression column an ID.
 				final String colMappedID = "" + this.currentElementID++;
 				this.reverseMappedObjects.put(col, colMappedID);
 
@@ -664,6 +687,7 @@ public class MartBuilderXML extends DefaultHandler {
 				this.writeAttribute("originalName", col.getOriginalName(),
 						xmlWriter);
 
+				// Same as dataset columns.
 				final Relation underlyingRelation = col.getUnderlyingRelation();
 				String underlyingRelationId = "null";
 				if (underlyingRelation != null)
@@ -677,6 +701,7 @@ public class MartBuilderXML extends DefaultHandler {
 				this.writeAttribute("alt", underlyingRelation == null ? "null"
 						: underlyingRelation.toString(), xmlWriter);
 
+				// Note special type that is not same as dataset columns.
 				this.writeAttribute("type", "expression", xmlWriter);
 
 				// AliasCols, AliasNames - wrapped obj to string map
@@ -701,7 +726,7 @@ public class MartBuilderXML extends DefaultHandler {
 				this.writeAttribute("aliasNames", aliasNames.toString(),
 						xmlWriter);
 
-				// Other properties.
+				// Other expression-specific properties.
 				this.writeAttribute("expression", col.getExpression(),
 						xmlWriter);
 				this.writeAttribute("groupBy", Boolean.toString(col
@@ -715,9 +740,12 @@ public class MartBuilderXML extends DefaultHandler {
 			// we go along.
 			for (final Iterator ki = table.getKeys().iterator(); ki.hasNext();) {
 				final Key key = (Key) ki.next();
+
+				// Give the key an ID.
 				final String keyMappedID = "" + this.currentElementID++;
 				this.reverseMappedObjects.put(key, keyMappedID);
 
+				// What kind of key is it?
 				String elem = null;
 				if (key instanceof PrimaryKey)
 					elem = "primaryKey";
@@ -727,6 +755,7 @@ public class MartBuilderXML extends DefaultHandler {
 					throw new BuilderException(Resources.get("unknownKey", key
 							.getClass().getName()));
 
+				// Write the key.
 				this.openElement(elem, xmlWriter);
 				this.writeAttribute("id", keyMappedID, xmlWriter);
 				final List columnIds = new ArrayList();
@@ -799,7 +828,7 @@ public class MartBuilderXML extends DefaultHandler {
 		// Write out relations.
 		this.writeRelations(externalRelations, xmlWriter);
 
-		// Write out windows.
+		// Write out datasets.
 		for (final Iterator dsi = mart.getDataSets().iterator(); dsi.hasNext();) {
 			final DataSet ds = (DataSet) dsi.next();
 			this.openElement("dataset", xmlWriter);
@@ -850,7 +879,7 @@ public class MartBuilderXML extends DefaultHandler {
 				this.closeElement("concatRelation", xmlWriter);
 			}
 
-			// Write out restricted tables inside window.
+			// Write out restricted tables inside dataset.
 			for (final Iterator x = ds.getRestrictedTables().iterator(); x
 					.hasNext();) {
 				final Table t = (Table) x.next();
@@ -887,7 +916,7 @@ public class MartBuilderXML extends DefaultHandler {
 				this.closeElement("restrictedTable", xmlWriter);
 			}
 
-			// Write out restricted relations inside window.
+			// Write out restricted relations inside dataset.
 			for (final Iterator x = ds.getRestrictedRelations().iterator(); x
 					.hasNext();) {
 				final Relation r = (Relation) x.next();
@@ -943,11 +972,13 @@ public class MartBuilderXML extends DefaultHandler {
 				this.writeAttribute("secondTableAliasNames", secondAliasNames
 						.toString(), xmlWriter);
 
+				// Restricted relation bits.
 				this.writeAttribute("alt", r.toString(), xmlWriter);
 				this.closeElement("restrictedRelation", xmlWriter);
 			}
 
-			// Write out masked relations inside window. Can go before or after.
+			// Write out masked relations inside dataset. Can go before or
+			// after.
 			for (final Iterator x = ds.getMaskedRelations().iterator(); x
 					.hasNext();) {
 				final Relation r = (Relation) x.next();
@@ -958,7 +989,7 @@ public class MartBuilderXML extends DefaultHandler {
 				this.closeElement("maskedRelation", xmlWriter);
 			}
 
-			// Write out subclass relations inside window. Can go before or
+			// Write out subclass relations inside dataset. Can go before or
 			// after.
 			for (final Iterator x = ds.getSubclassedRelations().iterator(); x
 					.hasNext();) {
@@ -992,7 +1023,8 @@ public class MartBuilderXML extends DefaultHandler {
 		if ("".equals(eName))
 			eName = qName;
 
-		// Pop the element off the stack.
+		// Pop the element off the stack so that the next element
+		// knows that it is inside the parent of this one.
 		this.objectStack.pop();
 	}
 
@@ -1002,9 +1034,10 @@ public class MartBuilderXML extends DefaultHandler {
 		// own copy of the DTD in our resources bundle.
 		if (MartBuilderXML.DTD_PUBLIC_ID.equals(publicId)
 				|| MartBuilderXML.DTD_URL.equals(systemId))
-			return new InputSource(Resources.getResourceAsStream(
-					"org/biomart/builder/resources/MartBuilder-"
-							+ MartBuilderXML.DTD_VERSION + ".dtd"));
+			return new InputSource(
+					Resources
+							.getResourceAsStream("org/biomart/builder/resources/MartBuilder-"
+									+ MartBuilderXML.DTD_VERSION + ".dtd"));
 		// By returning null we allow the default behaviour for all other
 		// DTDs.
 		else
@@ -1012,6 +1045,8 @@ public class MartBuilderXML extends DefaultHandler {
 	}
 
 	public void startDocument() throws SAXException {
+		// Reset all our maps of objects to IDs and clear
+		// the stack of objects waiting to be processed.
 		this.mappedObjects = new HashMap();
 		this.reverseMappedObjects = new HashMap();
 		this.objectStack = new Stack();
@@ -1676,7 +1711,8 @@ public class MartBuilderXML extends DefaultHandler {
 		else
 			throw new SAXException(Resources.get("unknownTag", eName));
 
-		// Stick the element on the stack.
+		// Stick the element on the stack so that the next element
+		// knows what it is inside.
 		if (element != null)
 			this.objectStack.push(element);
 	}

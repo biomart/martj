@@ -56,7 +56,8 @@ import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
  * of the mart inside it, including all datasets and schemas.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class MartTabSet extends JTabbedPane {
@@ -83,7 +84,7 @@ public class MartTabSet extends JTabbedPane {
 		// Tabbed-pane stuff first.
 		super();
 
-		// Create the file chooser.
+		// Create the file chooser for opening MartBuilder XML files.
 		this.xmlFileChooser = new JFileChooser() {
 			private static final long serialVersionUID = 1L;
 
@@ -125,7 +126,8 @@ public class MartTabSet extends JTabbedPane {
 	 * @param mart
 	 *            the mart to put in the tab.
 	 * @param martXMLFile
-	 *            the file the mart came from. May be null if the mart is new.
+	 *            the file the mart came from. May be <tt>null</tt> if the
+	 *            mart is new.
 	 * @param initialState
 	 *            <tt>true</tt> if the mart should start out modified,
 	 *            <tt>false</tt> if not.
@@ -146,7 +148,8 @@ public class MartTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Construct a context menu for a given mart tab.
+	 * Construct a context menu for a given mart tab. This is the context menu
+	 * on the tab itself, not it's contents.
 	 * 
 	 * @return the popup menu.
 	 */
@@ -168,6 +171,22 @@ public class MartTabSet extends JTabbedPane {
 		return contextMenu;
 	}
 
+	/**
+	 * This method monitors a {@link ConstructorRunnable} and pops up a progress
+	 * monitor for the user so they can see how it is doing. It notes if the
+	 * process fails and throws up an exception message if necessary, or a
+	 * success message if all goes well.
+	 * 
+	 * @param thread
+	 *            the process to monitor.
+	 * @param timer
+	 *            the timer which triggers events to update the monitor.
+	 * @param progressMonitor
+	 *            the monitor displaying the current status of events.
+	 * @param constructor
+	 *            the {@link ConstructorRunnable} being run inside the thread
+	 *            being monitored.
+	 */
 	private void monitorConstructionProgress(final Thread thread,
 			final Timer timer, final ProgressMonitor progressMonitor,
 			final ConstructorRunnable constructor) {
@@ -199,7 +218,8 @@ public class MartTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Suggests a tab name based on a filename.
+	 * Suggests a tab name based on a mart's filename. If the mart has no
+	 * filename, "unsaved" is used.
 	 */
 	private String suggestTabName(final Mart mart) {
 
@@ -320,7 +340,8 @@ public class MartTabSet extends JTabbedPane {
 	/**
 	 * Works out which mart tab is selected, and return it.
 	 * 
-	 * @return the currently selected mart tab, or null if none is selected.
+	 * @return the currently selected mart tab, or <tt>null</tt> if none is
+	 *         selected.
 	 */
 	public MartTab getSelectedMartTab() {
 		return (MartTab) this.getSelectedComponent();
@@ -328,7 +349,8 @@ public class MartTabSet extends JTabbedPane {
 
 	/**
 	 * Loads a schema from a user-specified file(s), by popping up a dialog
-	 * allowing them to choose the file(s).
+	 * allowing them to choose the file(s). If they choose a file, it is loaded
+	 * and parsed and a new tab is added representing its contents.
 	 */
 	public void loadMart() {
 		// Open the file chooser.
@@ -385,6 +407,8 @@ public class MartTabSet extends JTabbedPane {
 
 	/**
 	 * Runs the given {@link ConstructorRunnable} and monitors it's progress.
+	 * See also
+	 * {@link #monitorConstructionProgress(Thread, Timer, ProgressMonitor, ConstructorRunnable)}.
 	 * 
 	 * @param constructor
 	 *            the constructor that will build a mart.
@@ -425,14 +449,14 @@ public class MartTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Creates a new, empty mart.
+	 * Creates a new, empty mart and adds a tab for it.
 	 */
 	public void requestNewMart() {
 		this.addMartTab(new Mart(), null, true);
 	}
 
 	/**
-	 * Saves the current mart to the current file.
+	 * Saves the current mart to the file currently defined for it.
 	 */
 	public void saveMart() {
 		// If nothing selected, refuse.
@@ -472,7 +496,7 @@ public class MartTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Saves the schema to a user-specified file, by popping up a file-chooser.
+	 * Saves the mart to a user-specified file, by popping up a file-chooser.
 	 */
 	public void saveMartAs() {
 		// If nothing selected at present, refuse.
@@ -570,7 +594,7 @@ public class MartTabSet extends JTabbedPane {
 
 			// Create panel which contains the buttons.
 			final JPanel buttonsPanel = new JPanel();
-			
+
 			// Create the button that selects the window card. It reattaches
 			// it every time in case it has been attached somewhere else
 			// whilst we weren't looking.
