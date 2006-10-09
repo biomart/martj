@@ -106,7 +106,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
   static final private String COPY = "Copy";
   static final private String CUT = "Cut";
   static final private String PASTE = "Paste";
-  static final private String DELETE = "Delete";
+  static final private String DELETE = "Delete ";
   static final private String UNDO = "Undo";
   static final private String REDO = "Redo";
   static final private String HELP = "Copy";
@@ -324,45 +324,41 @@ System.out.println ("getting driver "+ driver);
 
     menu.addSeparator();
 
-    menuItem = new JMenuItem("Naive Dataset");
+    menuItem = new JMenuItem("Naive");
     menuItem.addActionListener(menuActionListener);
     menu.add(menuItem);
 
-    menuItem = new JMenuItem("Apply Template to Dataset");
+    menuItem = new JMenuItem("Naive using Template");
     menuItem.addActionListener(menuActionListener);
     menu.add(menuItem);
 
-    menuItem = new JMenuItem("Import Template");
+    menuItem = new JMenuItem("Import");
     menuItem.addActionListener(menuActionListener);
     menu.add(menuItem);
 
-	menuItem = new JMenuItem("Import Dataset (read-only)");
+    menuItem = new JMenuItem("Export");
+    menuItem.addActionListener(menuActionListener);
+    menu.add(menuItem);
+
+    
+	menuItem = new JMenuItem("Validate");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);
 
-    menu.addSeparator();
-    
-	menuItem = new JMenuItem("Update All Templates");
+
+    menuItem = new JMenuItem("Delete");
     menuItem.addActionListener(menuActionListener);
     menu.add(menuItem);
 
     menu.addSeparator();
+
     
-	menuItem = new JMenuItem("Validate Template");
+    menuItem = new JMenuItem("View Dataset Configuration");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);
-
-	menuItem = new JMenuItem("Export Template");
-    menuItem.addActionListener(menuActionListener);
-    menu.add(menuItem);
-
-    menuItem = new JMenuItem("Delete Template");
-    menuItem.addActionListener(menuActionListener);
-    menu.add(menuItem);
-
-    menu.addSeparator();
-
-    menuItem = new JMenuItem("Delete Dataset");
+    
+    
+    menuItem = new JMenuItem("Delete Dataset Configuration");
     menuItem.addActionListener(menuActionListener);
     menu.add(menuItem);
 
@@ -389,16 +385,28 @@ System.out.println ("getting driver "+ driver);
 //	menuItem = new JMenuItem("Validate All");
 //	menuItem.addActionListener(menuActionListener);
 //	menu.add(menuItem);	
-	
-	menuItem = new JMenuItem("Save Configuration");
+
+    
+    
+
+    //menu.addSeparator();
+    
+	menuItem = new JMenuItem("Update All");
+    menuItem.addActionListener(menuActionListener);
+    menu.add(menuItem);
+
+   // menu.addSeparator();
+    
+    
+	menuItem = new JMenuItem("Save All");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);	
 	
-	menuItem = new JMenuItem("Upload Configuration");
+	menuItem = new JMenuItem("Upload All");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);	
 
-	menuItem = new JMenuItem("Move Configuration");
+	menuItem = new JMenuItem("Move All");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);		
 
@@ -604,7 +612,7 @@ System.out.println ("getting driver "+ driver);
         paste();
       else if (e.getActionCommand().equals("Insert"))
         insert();
-      else if (e.getActionCommand().equals("Delete"))
+      else if (e.getActionCommand().equals("Delete "))
         delete();
       else if (e.getActionCommand().equals("Undo"))
           undo();
@@ -626,35 +634,35 @@ System.out.println ("getting driver "+ driver);
         databaseConnection("");
 	  //else if (e.getActionCommand().startsWith("Import Template")){
 		//importTemplate(); DISABLED
-	  else if (e.getActionCommand().equals("Import Template"))
+	  else if (e.getActionCommand().equals("Import"))
 	  	importTemplateConfig();	 
-      else if (e.getActionCommand().equals("Import Dataset (read-only)"))
+      else if (e.getActionCommand().equals("View Dataset Configuration"))
         importDatasetConfig(); 
-	  else if (e.getActionCommand().equals("Export Template"))
+	  else if (e.getActionCommand().equals("Export"))
 		exportTemplate();  
       //else if (e.getActionCommand().startsWith("Export"))
       //  exportDatasetConfig();
-      else if (e.getActionCommand().equals("Apply Template to Dataset"))
+      else if (e.getActionCommand().equals("Naive using Template"))
           naiveTemplateDatasetConfig();
-      else if (e.getActionCommand().equals("Naive Dataset"))
+      else if (e.getActionCommand().equals("Naive"))
     	  naiveDatasetConfig();
-	  else if (e.getActionCommand().equals("Update All Templates"))
+	  else if (e.getActionCommand().equals("Update All"))
 		updateAllTemplates();
-	  else if (e.getActionCommand().equals("Validate Template"))
+	  else if (e.getActionCommand().equals("Validate"))
 		  validateTemplate();		
-	  else if (e.getActionCommand().equals("Move Configuration"))
+	  else if (e.getActionCommand().equals("Move All"))
 		  moveAll();		
-	  else if (e.getActionCommand().equals("Save Configuration"))
+	  else if (e.getActionCommand().equals("Save All"))
 		  saveAll();	
-	  else if (e.getActionCommand().equals("Upload Configuration"))
+	  else if (e.getActionCommand().equals("Upload All"))
 			uploadAll();			  	
 //      else if (e.getActionCommand().startsWith("Update"))
 //        updateDatasetConfig();
 //	  else if (e.getActionCommand().startsWith("Validate"))
 //		  validateDatasetConfig();  
-      else if (e.getActionCommand().equals("Delete Template"))
+      else if (e.getActionCommand().equals("Delete"))
         deleteTemplateConfig();
-      else if (e.getActionCommand().equals("Delete Dataset"))
+      else if (e.getActionCommand().equals("Delete Dataset Configuration"))
           deleteDatasetConfig();
       //else if (e.getActionCommand().startsWith("hide"))
       //  makeHidden();
