@@ -1530,9 +1530,14 @@ public class DataSet extends GenericSchema {
 		 */
 		public void setPartitionType(PartitionedColumnType partitionType)
 				throws ValidationException {
-			// Check to see if we already have a partitioned column in this
-			// table, that is not the same column as this one.
-			if (partitionType != null)
+			if (partitionType != null) {
+				// Refuse to partition subclass tables.
+				if (((DataSetTable) this.getTable()).getType().equals(
+						DataSetTableType.MAIN_SUBCLASS))
+					throw new ValidationException(Resources
+							.get("cannotPartitionSubclassTables"));
+				// Check to see if we already have a partitioned column in this
+				// table, that is not the same column as this one.
 				for (final Iterator i = this.getTable().getColumns().iterator(); i
 						.hasNext();) {
 					final DataSetColumn testCol = (DataSetColumn) i.next();
@@ -1541,10 +1546,7 @@ public class DataSet extends GenericSchema {
 						throw new ValidationException(Resources
 								.get("cannotPartitionMultiColumns"));
 				}
-			// Refuse to partition subclass tables.
-			if (((DataSetTable)this.getTable()).getType().equals(DataSetTableType.MAIN_SUBCLASS))
-				throw new ValidationException(Resources
-						.get("cannotPartitionSubclassTables"));
+			}
 
 			// Do it.
 			this.partitionType = partitionType;
