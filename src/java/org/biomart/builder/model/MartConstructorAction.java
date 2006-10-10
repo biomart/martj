@@ -42,7 +42,8 @@ import org.biomart.builder.resources.Resources;
  * schema instead, as specified by the datasetSchemaName parameter.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public abstract class MartConstructorAction {
@@ -826,7 +827,7 @@ public abstract class MartConstructorAction {
 		private DataSetTableRestriction targetTableRestriction;
 
 		private boolean useLHSAliases;
-		
+
 		private boolean useRHSAliases;
 
 		private boolean useDistinct;
@@ -850,8 +851,8 @@ public abstract class MartConstructorAction {
 		 * @param sourceTableJoinColumns
 		 *            the columns on the LHS to use to make the join.
 		 * @param sourceTableSelectColumns
-		 *            the columns to select from the LHS of the join.
-		 *            If null is specified, all columns are selected.
+		 *            the columns to select from the LHS of the join. If null is
+		 *            specified, all columns are selected.
 		 * @param mergeTableSchema
 		 *            the schema the RHS of the join lives in.
 		 * @param mergeTableName
@@ -871,26 +872,29 @@ public abstract class MartConstructorAction {
 		 * @param targetTableRestriction
 		 *            a restriction to place on the RHS table.
 		 * @param useLHSAliases
-		 *            if <tt>true</tt>, then the items in sourceTableSelectColumns
-		 *            are expected to be {@link WrappedColumn} or
-		 *            {@link SchemaNameColumn} instances, and the names used are
-		 *            the names of the real {@link Column} instances which these
-		 *            columns wrap. Otherwise, the names used are those returned
-		 *            by the {@link Column#getName()} function on each column in
-		 *            the list.
+		 *            if <tt>true</tt>, then the items in
+		 *            sourceTableSelectColumns are expected to be
+		 *            {@link WrappedColumn} or {@link SchemaNameColumn}
+		 *            instances, and the names used are the names of the real
+		 *            {@link Column} instances which these columns wrap.
+		 *            Otherwise, the names used are those returned by the
+		 *            {@link Column#getName()} function on each column in the
+		 *            list.
 		 * @param useRHSAliases
-		 *            if <tt>true</tt>, then the items in mergeTableSelectColumns
-		 *            are expected to be {@link WrappedColumn} or
-		 *            {@link SchemaNameColumn} instances, and the names used are
-		 *            the names of the real {@link Column} instances which these
-		 *            columns wrap. Otherwise, the names used are those returned
-		 *            by the {@link Column#getName()} function on each column in
-		 *            the list.
+		 *            if <tt>true</tt>, then the items in
+		 *            mergeTableSelectColumns are expected to be
+		 *            {@link WrappedColumn} or {@link SchemaNameColumn}
+		 *            instances, and the names used are the names of the real
+		 *            {@link Column} instances which these columns wrap.
+		 *            Otherwise, the names used are those returned by the
+		 *            {@link Column#getName()} function on each column in the
+		 *            list.
 		 */
 		public Merge(final String dsSchemaName, final String dsTableName,
 				final Schema targetTableSchema, final String targetTableName,
 				final Schema sourceTableSchema, final String sourceTableName,
-				final List sourceTableJoinColumns, final List sourceTableSelectColumns,
+				final List sourceTableJoinColumns,
+				final List sourceTableSelectColumns,
 				final Schema mergeTableSchema, final String mergeTableName,
 				final List mergeTableJoinColumns,
 				final List mergeTableSelectColumns,
@@ -1031,6 +1035,8 @@ public abstract class MartConstructorAction {
 
 		private List targetTablePKColumns;
 
+		private boolean useBoolInstead;
+
 		/**
 		 * Updates an optimisation column ('has' column) on the pkTable based on
 		 * whether or not rows exist in the fkTable that match the rows in the
@@ -1064,13 +1070,15 @@ public abstract class MartConstructorAction {
 		 * @param optimiseColumnName
 		 *            the name of the optimiser column which needs to be
 		 *            updated.
+		 * @param useBoolInstead
+		 *            instead of counting columns, use 0/1 values instead.
 		 */
 		public OptimiseUpdateColumn(final String dsSchemaName,
 				final String dsTableName, final Schema targetTableSchema,
 				final String targetTableName, final Schema countTableSchema,
 				final String countTableName, final List countTableFKColumns,
 				List countTableNotNullColumns, final List targetTablePKColumns,
-				final String optimiseColumnName) {
+				final String optimiseColumnName, final boolean useBoolInstead) {
 			super(dsSchemaName, dsTableName, targetTableSchema, targetTableName);
 			this.countTableSchema = countTableSchema;
 			this.countTableName = countTableName;
@@ -1078,6 +1086,7 @@ public abstract class MartConstructorAction {
 			this.countTableNotNullColumns = countTableNotNullColumns;
 			this.targetTablePKColumns = targetTablePKColumns;
 			this.optimiseColumnName = optimiseColumnName;
+			this.useBoolInstead = useBoolInstead;
 		}
 
 		public List getCountTableFKColumns() {
@@ -1106,6 +1115,125 @@ public abstract class MartConstructorAction {
 
 		public List getTargetTablePKColumns() {
 			return this.targetTablePKColumns;
+		}
+
+		public boolean getUseBoolInstead() {
+			return this.useBoolInstead;
+		}
+	}
+
+	/**
+	 * This class performs an in-place update that changes the value of every
+	 * row in the PK table which has a corresponding row in the FK table.
+	 */
+	public static class OptimiseCopyColumn extends MartConstructorTableAction {
+		private List countTableFKColumns;
+
+		private String countTableName;
+
+		private Schema countTableSchema;
+
+		private String intermediateTableName;
+
+		private Schema intermediateTableSchema;
+
+		private String optimiseColumnName;
+
+		private List targetTablePKColumns;
+
+		private boolean useBoolInstead;
+
+		/**
+		 * Updates an optimisation column ('has' column) in the pkTable where it
+		 * matches rows in the fkTable.
+		 * 
+		 * @param dsSchemaName
+		 *            the dataset schema name to use by default.
+		 * @param dsTableName
+		 *            the dataset table this action is associated with.
+		 * @param countTableSchema
+		 *            the schema the fkTable lives in.
+		 * @param countTableName
+		 *            the name of the fkTable. This table is the one which
+		 *            contains child rows to the parent pkTable.
+		 * @param intermediateTableSchema
+		 *            the schema the intermediate fkTable lives in.
+		 * @param intermediateTableName
+		 *            the name of the intermediate fkTable. This table is the
+		 *            one which contains child rows to the parent pkTable.
+		 * @param countTableFKColumns
+		 *            the columns of the foreign key. Items are {@link Column}
+		 *            instances. The same columns are expected to exist on the
+		 *            intermediate table.
+		 * @param targetTableSchema
+		 *            the schema the pkTable lives in.
+		 * @param targetTableName
+		 *            the name of the pkTable. This is the one that has the
+		 *            optimiser column attached which needs updating based on
+		 *            the presence or absence of corresponding fkTable entries.
+		 * @param targetTablePKColumns
+		 *            the columns of the primary key. Items are {@link Column}
+		 *            instances. The same columns are expected to exist on the
+		 *            intermediate table.
+		 * @param optimiseColumnName
+		 *            the name of the optimiser column which needs to be
+		 *            updated.
+		 * @param useBoolInstead
+		 *            instead of counting columns, use 0/1 values instead.
+		 */
+		public OptimiseCopyColumn(final String dsSchemaName,
+				final String dsTableName, final Schema targetTableSchema,
+				final String targetTableName, final Schema countTableSchema,
+				final String intermediateTableName,
+				final Schema intermediateTableSchema,
+				final String countTableName, final List countTableFKColumns,
+				final List targetTablePKColumns,
+				final String optimiseColumnName, final boolean useBoolInstead) {
+			super(dsSchemaName, dsTableName, targetTableSchema, targetTableName);
+			this.countTableSchema = countTableSchema;
+			this.countTableName = countTableName;
+			this.intermediateTableSchema = intermediateTableSchema;
+			this.intermediateTableName = intermediateTableName;
+			this.countTableFKColumns = countTableFKColumns;
+			this.targetTablePKColumns = targetTablePKColumns;
+			this.optimiseColumnName = optimiseColumnName;
+			this.useBoolInstead = useBoolInstead;
+		}
+
+		public List getCountTableFKColumns() {
+			return this.countTableFKColumns;
+		}
+
+		public String getCountTableName() {
+			return this.countTableName;
+		}
+
+		public Schema getCountTableSchema() {
+			return this.countTableSchema;
+		}
+
+		public String getIntermediateTableName() {
+			return this.intermediateTableName;
+		}
+
+		public Schema getIntermediateTableSchema() {
+			return this.intermediateTableSchema;
+		}
+
+		public String getOptimiseColumnName() {
+			return this.optimiseColumnName;
+		}
+
+		public String getStatusMessage() {
+			return Resources.get("mcOptimiseCopy");
+		}
+
+		public List getTargetTablePKColumns() {
+			return this.targetTablePKColumns;
+		}
+
+		public boolean getUseBoolInstead() {
+			return this.useBoolInstead;
 		}
 	}
 

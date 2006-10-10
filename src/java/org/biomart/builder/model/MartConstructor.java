@@ -53,6 +53,7 @@ import org.biomart.builder.model.MartConstructorAction.Index;
 import org.biomart.builder.model.MartConstructorAction.MartConstructorActionGraph;
 import org.biomart.builder.model.MartConstructorAction.Merge;
 import org.biomart.builder.model.MartConstructorAction.OptimiseAddColumn;
+import org.biomart.builder.model.MartConstructorAction.OptimiseCopyColumn;
 import org.biomart.builder.model.MartConstructorAction.OptimiseUpdateColumn;
 import org.biomart.builder.model.MartConstructorAction.Partition;
 import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
@@ -789,6 +790,7 @@ public interface MartConstructor {
 			for (final Iterator i = renameActions.iterator(); i.hasNext();)
 				prePCOAction.addParent((MartConstructorAction) i.next());
 			actionGraph.addAction(prePCOAction);
+			final List optimiseActions = new ArrayList();
 			final DataSetOptimiserType dsOptimiserType = dataset
 					.getDataSetOptimiserType();
 			if (!dsOptimiserType.equals(DataSetOptimiserType.NONE)) {
@@ -807,9 +809,9 @@ public interface MartConstructor {
 					VirtualTable vHasTable = vParentTable;
 					// But if we are using table join, create a 'boolean'
 					// table and add columns to that instead.
-					if (dsOptimiserType.equals(DataSetOptimiserType.TABLE)) {
+					if (dsOptimiserType.getTable()) {
 						vHasTable = new VirtualHasTable(vParentTable
-								.getDataSetTable());
+								.getDataSetTable(), dsOptimiserType);
 						vHasTables.add(vHasTable);
 						vHasTable.getPartitionValues().addAll(
 								vParentTable.getPartitionValues());
@@ -838,15 +840,21 @@ public interface MartConstructor {
 						preDOAction = pkIndex;
 					}
 
-					// For each main or subclass table, identify all dimensions.
+					// Add the has table to the parent table for
+					// future reference.
+					vParentTable.setHasTable(vHasTable);
+
+					// Identify all dimensions in dataset.
 					for (final Iterator j = vTables.iterator(); j.hasNext();) {
 						final VirtualTable vChildTable = (VirtualTable) j
 								.next();
 						if (!vChildTable.getDataSetTable().getType().equals(
 								DataSetTableType.DIMENSION))
 							continue;
-						else if (!vChildTable.getParentDataSetRelation()
-								.getOneKey().getTable().equals(
+						// Dimensions are only useful if they hang off
+						// acceptable tables.
+						if (!vChildTable.getParentDataSetRelation().getOneKey()
+								.getTable().equals(
 										vParentTable.getDataSetTable()))
 							continue;
 						// Child tables are tables that have the same child
@@ -865,7 +873,10 @@ public interface MartConstructor {
 						// Work out 'boolean' column name.
 						final String vHasColumnName = vChildTable
 								.createContentName()
-								+ Resources.get("hasColSuffix");
+								+ Resources
+										.get((dsOptimiserType.getBool() ? "bool"
+												: "count")
+												+ "ColSuffix");
 						// Add columns to the main or subclass table or
 						// 'has' table.
 						final MartConstructorAction optimiseAdd = new OptimiseAddColumn(
@@ -874,6 +885,7 @@ public interface MartConstructor {
 								vHasTable.getTempTableName(), vHasColumnName);
 						actionGraph.addActionWithParent(optimiseAdd,
 								preDOAction);
+						vHasTable.addHasColumn(vHasColumnName);
 						// Work out what the non-null columns to check are.
 						// By default it's the primary key, but if not, then
 						// it is all columns except the foreign key.
@@ -912,11 +924,114 @@ public interface MartConstructor {
 										.getManyKey().getColumns(),
 								vChildTableNonNullCols, vHasTable
 										.getDataSetTable().getPrimaryKey()
-										.getColumns(), vHasColumnName);
+										.getColumns(), vHasColumnName,
+								dsOptimiserType.getBool());
 						actionGraph.addActionWithParent(optimiseUpd,
 								optimiseAdd);
+						optimiseActions.add(optimiseUpd);
 					}
 				}
+
+				// Inheriting anything?
+				if (dsOptimiserType.getInherit()) {
+					// Pause and wait for optimisation to finish.
+					final MartConstructorAction postPCOAction = new PlaceHolder(
+							this.datasetSchemaName);
+					for (final Iterator i = optimiseActions.iterator(); i
+							.hasNext();)
+						postPCOAction.addParent((MartConstructorAction) i
+								.next());
+					actionGraph.addAction(postPCOAction);
+
+					// Inherit optimiser columns from child subclasses.
+					for (final Iterator i = vTables.iterator(); i.hasNext();) {
+						final VirtualTable vParentTable = (VirtualTable) i
+								.next();
+						if (vParentTable.getDataSetTable().getType().equals(
+								DataSetTableType.DIMENSION))
+							continue;
+
+						// Work out what the child subclass tables are by
+						// iterating over all virtual tables and adding in any
+						// that refer to a dataset table that has a subclass
+						// relation from any dataset table already in the list
+						// and shares the exact same partition values.
+						final List inheritTables = new ArrayList();
+						inheritTables.add(vParentTable); // Temporarily.
+						for (int k = 0; k < inheritTables.size(); k++) {
+							final VirtualTable vPrevTable = (VirtualTable) inheritTables
+									.get(k);
+							for (final Iterator j = vTables.iterator(); j
+									.hasNext();) {
+								final VirtualTable vNextTable = (VirtualTable) j
+										.next();
+								if (vNextTable.getDataSetTable().getType()
+										.equals(DataSetTableType.MAIN_SUBCLASS)
+										&& vNextTable
+												.getParentDataSetRelation()
+												.getOneKey().getTable() == vPrevTable
+												.getDataSetTable()
+										&& vNextTable
+												.getPartitionValues()
+												.equals(
+														vPrevTable
+																.getPartitionValues()))
+									inheritTables.add(vNextTable);
+							}
+						}
+						// Remove parent table as is finished with now.
+						inheritTables.remove(vParentTable);
+
+						// The parent has a 'has' table.
+						final VirtualTable vParentHasTable = vParentTable
+								.getHasTable();
+
+						// Find out the 'has' table for each of the subclass
+						// tables and copy over all 'has' columns for it.
+						for (final Iterator k = inheritTables.iterator(); k
+								.hasNext();) {
+							final VirtualTable vInheritTable = (VirtualTable) k
+									.next();
+							final VirtualTable vHasTable = vInheritTable
+									.getHasTable();
+							final Collection vHasColumnNames = vHasTable
+									.getHasColumns();
+							// Add all the columns to the parent 'has' table.
+							for (final Iterator l = vHasColumnNames.iterator(); l
+									.hasNext();) {
+								final String vHasColumnName = (String) l.next();
+								final MartConstructorAction optimiseAdd = new OptimiseAddColumn(
+										this.datasetSchemaName, vParentHasTable
+												.getDataSetTable().getName(),
+										null, vParentHasTable
+												.getTempTableName(),
+										vHasColumnName);
+								actionGraph.addActionWithParent(optimiseAdd,
+										postPCOAction);
+								// Copy the column value over using the PK of
+								// the parent 'has' table.
+								final MartConstructorAction optimiseCopy = new OptimiseCopyColumn(
+										this.datasetSchemaName, vParentHasTable
+												.getDataSetTable().getName(),
+										null, vParentHasTable
+												.getTempTableName(), null,
+										vHasTable.getTempTableName(), null,
+										vInheritTable.getTempTableName(),
+										vHasTable.getDataSetTable()
+												.getPrimaryKey().getColumns(),
+										vParentHasTable.getDataSetTable()
+												.getPrimaryKey().getColumns(),
+										vHasColumnName, dsOptimiserType
+												.getBool());
+								actionGraph.addActionWithParent(optimiseCopy,
+										optimiseAdd);
+							}
+						}
+					}
+				}
+
+				// Remember 'has' tables that we made. Must do this
+				// last else they'll get included in the inheritance loop.
 				vTables.addAll(vHasTables);
 			}
 
@@ -1048,9 +1163,11 @@ public interface MartConstructor {
 				replacementFirstTableName = replacementFirstTable.getName();
 
 				// Work out what columns to include from the first table.
-				replacementFirstTableCols.addAll(vConstructionTable
-						.getDataSetTable().getUnmaskedDataSetColumns(
-								replacementFirstTable.getColumns(), null));
+				replacementFirstTableCols
+						.addAll(vConstructionTable.getDataSetTable()
+								.getUnmaskedDataSetColumns(
+										replacementFirstTable.getColumns(),
+										null, null));
 
 				// Include the schema name column if there is one (don't need
 				// to do this for dimension/subclass tables as it will be part
@@ -1076,6 +1193,10 @@ public interface MartConstructor {
 					}
 				}
 			}
+
+			// Make a list to keep track of columns used so far,
+			// and populate it with the columns from the first table.
+			final List colsSoFar = new ArrayList(replacementFirstTableCols);
 
 			// If no underlying relations, CREATE from replacement first.
 			if (vConstructionTable.getDataSetTable().getUnderlyingKeys()
@@ -1113,11 +1234,13 @@ public interface MartConstructor {
 				// that correspond to the key on the previous table?
 				final List dsSourceKeyCols = vConstructionTable
 						.getDataSetTable().getUnmaskedDataSetColumns(
-								rSourceKey.getColumns(), rSourceRelation);
+								rSourceKey.getColumns(), rSourceRelation,
+								colsSoFar);
 				// What are the columns we should merge from this new table?
 				final List dsTargetIncludeCols = vConstructionTable
 						.getDataSetTable().getUnmaskedDataSetColumns(
 								rSourceRelation);
+				colsSoFar.addAll(dsTargetIncludeCols);
 				// If targetTable is in a group schema that is not the
 				// same group schema we started with, create a union table
 				// containing all the targetTable copies, then merge with
@@ -1212,11 +1335,13 @@ public interface MartConstructor {
 				// that correspond to the key on the previous table?
 				final List dsSourceKeyCols = vConstructionTable
 						.getDataSetTable().getUnmaskedDataSetColumns(
-								rSourceKey.getColumns(), rSourceRelation);
+								rSourceKey.getColumns(), rSourceRelation,
+								colsSoFar);
 				// What are the columns we should merge from this new table?
 				final List dsTargetIncludeCols = vConstructionTable
 						.getDataSetTable().getUnmaskedDataSetColumns(
 								rSourceRelation);
+				colsSoFar.addAll(dsTargetIncludeCols);
 				// Skip the merge if we won't gain anything from it.
 				if (dsTargetIncludeCols.isEmpty())
 					continue;
@@ -1328,7 +1453,8 @@ public interface MartConstructor {
 				// that correspond to the source key?
 				final List vSourceKeyCols = vConstructionTable
 						.getDataSetTable().getUnmaskedDataSetColumns(
-								rConcatSourceKey.getColumns(), rConcatRelation);
+								rConcatSourceKey.getColumns(), rConcatRelation,
+								null);
 				// If concatColumn is in a table in a group schema
 				// that is not the same group schema we started with, create
 				// a union table containing all the concatTable copies, then
@@ -1625,15 +1751,21 @@ public interface MartConstructor {
 		 * about a particular 'boolean' table.
 		 */
 		private class VirtualHasTable extends VirtualTable {
+			private final DataSetOptimiserType dsOptimiserType;
+
 			/**
 			 * Constructor starts tracking a 'boolean' table that contains
 			 * optimisations for the given table.
 			 * 
 			 * @param datasetTable
 			 *            the table to contain optimisations for.
+			 * @param dsOptimiserType
+			 *            the optimiser type for this table.
 			 */
-			public VirtualHasTable(final DataSetTable datasetTable) {
+			public VirtualHasTable(final DataSetTable datasetTable,
+					final DataSetOptimiserType dsOptimiserType) {
 				super(datasetTable, null);
+				this.dsOptimiserType = dsOptimiserType;
 			}
 
 			public String createFinalName() {
@@ -1655,7 +1787,11 @@ public interface MartConstructor {
 
 				// _ separator, 'bool', and __ separator.
 				name.append(Resources.get("tablenameSubSep"));
-				name.append(Resources.get("hasTblSuffix"));
+				name
+						.append(Resources
+								.get((this.dsOptimiserType.getBool() ? "bool"
+										: "count")
+										+ "TblSuffix"));
 				name.append(Resources.get("tablenameSep"));
 
 				// Type.
@@ -1681,6 +1817,10 @@ public interface MartConstructor {
 
 			private String tempTableName;
 
+			private VirtualTable hasTable;
+
+			private Collection hasColumns;
+
 			/**
 			 * Constructor starts tracking a dataset table.
 			 * 
@@ -1697,6 +1837,8 @@ public interface MartConstructor {
 				this.datasetTable = datasetTable;
 				this.parentDataSetRelation = parentDataSetRelation;
 				this.partitionValues = new ArrayList();
+				this.hasTable = this;
+				this.hasColumns = new ArrayList();
 			}
 
 			/**
@@ -1898,6 +2040,45 @@ public interface MartConstructor {
 			 */
 			public void setTempTableName(final String tempTableName) {
 				this.tempTableName = tempTableName;
+			}
+
+			/**
+			 * Set the 'has' table for this parent table, which will either be
+			 * the same as itself, or an actual has table.
+			 * 
+			 * @param hasTable
+			 *            the 'has' table for this table.
+			 */
+			public void setHasTable(VirtualTable hasTable) {
+				this.hasTable = hasTable;
+			}
+
+			/**
+			 * Retrieve the 'has' table for this parent table.
+			 * 
+			 * @return the 'has' table.
+			 */
+			public VirtualTable getHasTable() {
+				return this.hasTable;
+			}
+
+			/**
+			 * Add a 'has' column to the table.
+			 * 
+			 * @param hasColumn
+			 *            the name of the column to add.
+			 */
+			public void addHasColumn(String hasColumn) {
+				this.hasColumns.add(hasColumn);
+			}
+
+			/**
+			 * Retrieve the 'has' columns for the table.
+			 * 
+			 * @return the list, in no particular order, of 'has' columns.
+			 */
+			public Collection getHasColumns() {
+				return this.hasColumns;
 			}
 		}
 	}

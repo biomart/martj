@@ -1541,6 +1541,10 @@ public class DataSet extends GenericSchema {
 						throw new ValidationException(Resources
 								.get("cannotPartitionMultiColumns"));
 				}
+			// Refuse to partition subclass tables.
+			if (((DataSetTable)this.getTable()).getType().equals(DataSetTableType.MAIN_SUBCLASS))
+				throw new ValidationException(Resources
+						.get("cannotPartitionSubclassTables"));
 
 			// Do it.
 			this.partitionType = partitionType;
@@ -1993,18 +1997,18 @@ public class DataSet extends GenericSchema {
 	public static class DataSetOptimiserType implements Comparable {
 
 		/**
+		 * Use this constant to refer to no optimisation.
+		 */
+		public static final DataSetOptimiserType NONE = new DataSetOptimiserType(
+				"NONE", false, false, false);
+
+		/**
 		 * Use this constant to refer to optimising by including an extra column
 		 * on the main table for each dimension and populating it with the
 		 * number of matching rows in that dimension.
 		 */
 		public static final DataSetOptimiserType COLUMN = new DataSetOptimiserType(
-				"COLUMN");
-
-		/**
-		 * Use this constant to refer to no optimisation.
-		 */
-		public static final DataSetOptimiserType NONE = new DataSetOptimiserType(
-				"NONE");
+				"COLUMN", false, false, false);
 
 		/**
 		 * Use this constant to refer to no optimising by creating a separate
@@ -2013,9 +2017,60 @@ public class DataSet extends GenericSchema {
 		 * dimension.
 		 */
 		public static final DataSetOptimiserType TABLE = new DataSetOptimiserType(
-				"TABLE");
+				"TABLE", false, true, false);
+
+		/**
+		 * Use this constant to refer to optimising by including an extra column
+		 * on the main table for each dimension and populating it with 1 or 0
+		 * depending whether matching rows exist in that dimension.
+		 */
+		public static final DataSetOptimiserType COLUMN_BOOL = new DataSetOptimiserType(
+				"COLUMN_BOOL", true, false, false);
+
+		/**
+		 * Use this constant to refer to no optimising by creating a separate
+		 * table linked on a 1:1 basis with the main table, with one column per
+		 * dimension populated with 1 or 0 depending whether matching rows exist
+		 * in that dimension.
+		 */
+		public static final DataSetOptimiserType TABLE_BOOL = new DataSetOptimiserType(
+				"TABLE_BOOL", true, true, false);
+
+		/**
+		 * See {@link #COLUMN} but parent tables will inherit copies of count
+		 * columns from child tables.
+		 */
+		public static final DataSetOptimiserType COLUMN_INHERIT = new DataSetOptimiserType(
+				"COLUMN_INHERIT", false, false, true);
+
+		/**
+		 * See {@link #TABLE} but parent tables will inherit copies of count
+		 * tables from child tables.
+		 */
+		public static final DataSetOptimiserType TABLE_INHERIT = new DataSetOptimiserType(
+				"TABLE_INHERIT", false, true, true);
+
+		/**
+		 * See {@link #COLUMN_BOOL} but parent tables will inherit copies of
+		 * bool columns from child tables.
+		 */
+		public static final DataSetOptimiserType COLUMN_BOOL_INHERIT = new DataSetOptimiserType(
+				"COLUMN_BOOL_INHERIT", true, false, true);
+
+		/**
+		 * See {@link #TABLE_BOOL} but parent tables will inherit copies of bool
+		 * tables from child tables.
+		 */
+		public static final DataSetOptimiserType TABLE_BOOL_INHERIT = new DataSetOptimiserType(
+				"TABLE_BOOL_INHERIT", true, true, true);
 
 		private final String name;
+
+		private final boolean bool;
+
+		private final boolean table;
+
+		private final boolean inherit;
 
 		/**
 		 * The private constructor takes a single parameter, which defines the
@@ -2023,9 +2078,23 @@ public class DataSet extends GenericSchema {
 		 * 
 		 * @param name
 		 *            the name of the optimiser type.
+		 * @param bool
+		 *            <tt>true</tt> if bool values (0,1) should be used
+		 *            instead of counts.
+		 * @param table
+		 *            <tt>true</tt> if columns should live in their own
+		 *            tables.
+		 * @param inherit
+		 *            <tt>true</tt> if parent main tables of a subclass table
+		 *            should also inherit the column and/or table of this
+		 *            optimiser type.
 		 */
-		private DataSetOptimiserType(final String name) {
+		private DataSetOptimiserType(final String name, final boolean bool,
+				final boolean table, final boolean inherit) {
 			this.name = name;
+			this.bool = bool;
+			this.table = table;
+			this.inherit = inherit;
 		}
 
 		public int compareTo(final Object o) throws ClassCastException {
@@ -2045,6 +2114,37 @@ public class DataSet extends GenericSchema {
 		 */
 		public String getName() {
 			return this.name;
+		}
+
+		/**
+		 * Return <tt>true</tt> if columns counts should be replaced by 0/1
+		 * boolean-style values.
+		 * 
+		 * @return <tt>true</tt> if if columns counts should be replaced by
+		 *         0/1 boolean-style values.
+		 */
+		public boolean getBool() {
+			return this.bool;
+		}
+
+		/**
+		 * Return <tt>true</tt> if columns should live in their own table.
+		 * 
+		 * @return <tt>true</tt> if columns should live in their own table.
+		 */
+		public boolean getTable() {
+			return this.table;
+		}
+
+		/**
+		 * Return <tt>true</tt> if parent tables should inherit columns/tables
+		 * generated by this optimise.
+		 * 
+		 * @return <tt>true</tt> if parent tables should inherit,
+		 *         <tt>false</tt> otherwise.
+		 */
+		public boolean getInherit() {
+			return this.inherit;
 		}
 
 		public int hashCode() {
@@ -2244,17 +2344,28 @@ public class DataSet extends GenericSchema {
 		 * column. If that real column appears more than once, only the first
 		 * appearance is returned. Note that masked columns are ignored, unless
 		 * they are also dependencies.
+		 * <p>
+		 * The set of columns passed in is the set of columns to search for a
+		 * match in, for instance if the table is only half-built so far. If
+		 * <tt>null</tt>, all the columns on this table are included in the
+		 * search.
 		 * 
 		 * @param realColumn
 		 *            the real column to look for in this dataset table.
 		 * @param ignoreRelation
 		 *            a relation to ignore when walking through M/1:1 relations
 		 *            to find if the real column came from elsewhere.
+		 * @param searchColumns
+		 *            the columns to search in. If <tt>null</tt>, all columns
+		 *            in this table are searched.
 		 * @return the dataset column that is based on the real column, or
 		 *         <tt>null</tt> if it could not be found.
 		 */
 		public DataSetColumn getUnmaskedDataSetColumn(final Column realColumn,
-				final Relation ignoreRelation) {
+				final Relation ignoreRelation, Collection searchColumns) {
+			// No search columns? Use all our own.
+			if (searchColumns == null || searchColumns.isEmpty())
+				searchColumns = this.getColumns();
 			// We must look not only for this column, but all columns
 			// involved in relations with it, because it could have been
 			// introduced via another route.
@@ -2262,8 +2373,7 @@ public class DataSet extends GenericSchema {
 			candidates.add(realColumn);
 			for (int j = 0; j < candidates.size(); j++) {
 				final Column searchColumn = (Column) candidates.get(j);
-				for (final Iterator i = this.getColumns().iterator(); i
-						.hasNext();) {
+				for (final Iterator i = searchColumns.iterator(); i.hasNext();) {
 					final DataSetColumn candidate = (DataSetColumn) i.next();
 					DataSetColumn test = candidate;
 					while (test instanceof InheritedColumn)
@@ -2340,6 +2450,11 @@ public class DataSet extends GenericSchema {
 		/**
 		 * Given a set of interesting columns from normal tables (not dataset
 		 * tables), return the set of matching dataset columns.
+		 * <p>
+		 * The set of columns passed in is the set of columns to search for a
+		 * match in, for instance if the table is only half-built so far. If
+		 * <tt>null</tt>, all the columns on this table are included in the
+		 * search.
 		 * 
 		 * @param interestingColumns
 		 *            the set of normal columns to find matching dataset columns
@@ -2347,15 +2462,18 @@ public class DataSet extends GenericSchema {
 		 * @param ignoreRelation
 		 *            don't follow this relation when trying to resolve indirect
 		 *            references.
+		 * @param searchColumns
+		 *            the columns to search in. If <tt>null</tt>, all columns
+		 *            in this table are searched.
 		 * @return the set of matching dataset columns.
 		 */
 		public List getUnmaskedDataSetColumns(
 				final Collection interestingColumns,
-				final Relation ignoreRelation) {
+				final Relation ignoreRelation, final Collection searchColumns) {
 			final List list = new ArrayList();
 			for (final Iterator i = interestingColumns.iterator(); i.hasNext();) {
 				final DataSetColumn col = this.getUnmaskedDataSetColumn(
-						(Column) i.next(), ignoreRelation);
+						(Column) i.next(), ignoreRelation, searchColumns);
 				if (col != null)
 					list.add(col);
 			}

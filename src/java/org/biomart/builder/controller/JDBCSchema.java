@@ -156,7 +156,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			public void run() {
 				try {
 					JDBCSchema.this.closeConnection();
-				} catch (Exception e) {
+				} catch (Throwable t) {
 					// We don't care if it fails, so ignore it.
 				}
 			}
@@ -734,7 +734,13 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		// If we are already connected, test to see if we are
 		// still connected. If not, reset our connection.
 		if (this.connection != null && this.connection.isClosed())
-			this.connection = null;
+			try {
+				this.connection.close();
+			} catch (SQLException e) {
+				// We don't care. Ignore it.
+			} finally {
+				this.connection = null;
+			}
 
 		// If we are not connected, we should attempt to (re)connect now.
 		if (this.connection == null) {
@@ -902,7 +908,8 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	}
 
 	public void setPassword(final String password) {
-		if (this.password != null && !this.password.equals(password)) {
+		if ((this.password == null && this.password != password)
+				|| (this.password != null && !this.password.equals(password))) {
 			this.password = password;
 			// Reset the cached database connection.
 			try {

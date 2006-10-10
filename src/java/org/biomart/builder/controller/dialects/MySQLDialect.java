@@ -53,6 +53,7 @@ import org.biomart.builder.model.MartConstructorAction.ExpressionAddColumns;
 import org.biomart.builder.model.MartConstructorAction.Index;
 import org.biomart.builder.model.MartConstructorAction.Merge;
 import org.biomart.builder.model.MartConstructorAction.OptimiseAddColumn;
+import org.biomart.builder.model.MartConstructorAction.OptimiseCopyColumn;
 import org.biomart.builder.model.MartConstructorAction.OptimiseUpdateColumn;
 import org.biomart.builder.model.MartConstructorAction.Partition;
 import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
@@ -208,12 +209,12 @@ public class MySQLDialect extends DatabaseDialect {
 					// Ouch!
 					throw new MartBuilderInternalError();
 			} else if (action.isUseInheritedAliases()) {
-				if (col instanceof InheritedColumn) 
+				if (col instanceof InheritedColumn)
 					sb.append('`');
-					sb.append(((InheritedColumn) col).getInheritedColumn()
-							.getName());
-					sb.append("` as ");
-				}
+				sb.append(((InheritedColumn) col).getInheritedColumn()
+						.getName());
+				sb.append("` as ");
+			}
 			sb.append('`');
 			sb.append(col.getName());
 			sb.append('`');
@@ -450,10 +451,13 @@ public class MySQLDialect extends DatabaseDialect {
 		final String fkTableName = action.getCountTableName();
 		final String colName = action.getOptimiseColumnName();
 
+		final String countStmt = action.getUseBoolInstead() ? "case count(1) when 0 then 0 else 1 end"
+				: "count(1)";
+
 		final StringBuffer sb = new StringBuffer();
-		sb.append("update " + pkSchemaName + ".`" + pkTableName + "` a set "
-				+ colName + "=(select count(1) from " + fkSchemaName + ".`"
-				+ fkTableName + "` b where ");
+		sb.append("update " + pkSchemaName + ".`" + pkTableName + "` a set `"
+				+ colName + "`=(select " + countStmt + " from " + fkSchemaName
+				+ ".`" + fkTableName + "` b where ");
 		for (int i = 0; i < action.getTargetTablePKColumns().size(); i++) {
 			if (i > 0)
 				sb.append(" and ");
@@ -479,6 +483,86 @@ public class MySQLDialect extends DatabaseDialect {
 			sb.append("` is not null");
 		}
 		sb.append(')');
+
+		statements.add(sb.toString());
+	}
+
+	public void doOptimiseCopyColumn(final OptimiseCopyColumn action,
+			final List statements) throws Exception {
+		final String pkSchemaName = action.getTargetTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getTargetTableSchema())
+						.getDatabaseSchema();
+		final String pkTableName = action.getTargetTableName();
+		final String interSchemaName = action.getIntermediateTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getIntermediateTableSchema())
+						.getDatabaseSchema();
+		final String interTableName = action.getIntermediateTableName();
+		final String fkSchemaName = action.getCountTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getCountTableSchema())
+						.getDatabaseSchema();
+		final String fkTableName = action.getCountTableName();
+		final String colName = action.getOptimiseColumnName();
+
+		final String countStmt = action.getUseBoolInstead() ? "max" : "sum";
+		final StringBuffer sb = new StringBuffer();
+
+		if (interTableName.equals(fkTableName)
+				&& ((interSchemaName == fkSchemaName) || (interSchemaName != null && interSchemaName
+						.equals(fkSchemaName)))
+
+		) {
+			// Direct link.
+			sb.append("update " + pkSchemaName + ".`" + pkTableName
+					+ "` a set `" + colName + "`=(select " + countStmt + "(c.`"
+					+ colName + "`) from " + fkSchemaName + ".`" + fkTableName
+					+ "` as c where ");
+			for (int i = 0; i < action.getTargetTablePKColumns().size(); i++) {
+				if (i > 0)
+					sb.append(" and ");
+				final Column pkCol = (Column) action.getTargetTablePKColumns()
+						.get(i);
+				sb.append("a.`");
+				sb.append(pkCol.getName());
+				sb.append("`=c.`");
+				sb.append(pkCol.getName());
+				sb.append("`");
+			}
+			sb.append(')');
+		} else {
+			// Intermediate table link.
+			sb.append("update " + pkSchemaName + ".`" + pkTableName
+					+ "` a set `" + colName + "`=(select " + countStmt + "(c.`"
+					+ colName + "`) from " + fkSchemaName + ".`" + fkTableName
+					+ "` as b inner join " + interSchemaName + ".`"
+					+ interTableName + "` as c on ");
+			for (int i = 0; i < action.getCountTableFKColumns().size(); i++) {
+				if (i > 0)
+					sb.append(" and ");
+				final Column fkCol = (Column) action.getCountTableFKColumns()
+						.get(i);
+				sb.append("b.`");
+				sb.append(fkCol.getName());
+				sb.append("`=c.`");
+				sb.append(fkCol.getName());
+				sb.append("`");
+			}
+			sb.append(" where ");
+			for (int i = 0; i < action.getTargetTablePKColumns().size(); i++) {
+				if (i > 0)
+					sb.append(" and ");
+				final Column pkCol = (Column) action.getTargetTablePKColumns()
+						.get(i);
+				sb.append("a.`");
+				sb.append(pkCol.getName());
+				sb.append("`=b.`");
+				sb.append(pkCol.getName());
+				sb.append("`");
+			}
+			sb.append(')');
+		}
 
 		statements.add(sb.toString());
 	}

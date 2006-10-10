@@ -309,8 +309,9 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 				JPanel field = new JPanel();
 				Diagram diagram = new ExplainTransformationDiagram.DatasetReal(
 						this.martTab, parentDSTable, parentDSTable
-								.getUnmaskedDataSetColumns(k.getColumns(), r),
-						k, r, lIncludeCols, rIncludeCols);
+								.getUnmaskedDataSetColumns(k.getColumns(), r,
+										lIncludeCols), k, r, lIncludeCols,
+						rIncludeCols);
 				diagram.setDiagramContext(this.explainTransformationContext);
 				field.add(diagram);
 				this.gridBag.setConstraints(field, this.fieldConstraints);
@@ -376,8 +377,8 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			JPanel field = new JPanel();
 			Diagram diagram = new ExplainTransformationDiagram.TempReal(
 					this.martTab, this.dsTable.getSchema().getName(),
-					this.dsTable.getUnmaskedDataSetColumns(k.getColumns(), r),
-					k, r, lIncludeCols, rIncludeCols);
+					this.dsTable.getUnmaskedDataSetColumns(k.getColumns(), r,
+							columnsSoFar), k, r, lIncludeCols, rIncludeCols);
 			diagram.setDiagramContext(this.explainTransformationContext);
 			field.add(diagram);
 			this.gridBag.setConstraints(field, this.fieldConstraints);

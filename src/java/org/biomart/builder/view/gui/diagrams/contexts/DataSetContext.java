@@ -20,11 +20,15 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
@@ -198,66 +202,51 @@ public class DataSetContext extends SchemaContext {
 			contextMenu.add(remove);
 
 			contextMenu.addSeparator();
+			
+			// Make a submenu for the optimiser type.
+			final JMenu optSubmenu = new JMenu(Resources.get("optimiserTitle"));
+			optSubmenu.setMnemonic(Resources.get("optimiserMnemonic").charAt(0));
+			contextMenu.add(optSubmenu);
 
 			// Make a group for the different optimiser types.
 			final ButtonGroup optGroup = new ButtonGroup();
-
-			// The no-optimiser option turns post-construction optimisation off.
-			final JRadioButtonMenuItem optNone = new JRadioButtonMenuItem(
-					Resources.get("optimiserNoneTitle"));
-			optNone.setMnemonic(Resources.get("optimiserNoneMnemonic")
-					.charAt(0));
-			optNone.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestChangeOptimiserType(
-									DataSetContext.this.getDataSet(),
-									DataSetOptimiserType.NONE);
-				}
-			});
-			optGroup.add(optNone);
-			contextMenu.add(optNone);
-			if (this.getDataSet().getDataSetOptimiserType().equals(
-					DataSetOptimiserType.NONE))
-				optNone.setSelected(true);
-
-			// The column option turns on has-column optimisation.
-			final JRadioButtonMenuItem optCol = new JRadioButtonMenuItem(
-					Resources.get("optimiserColumnTitle"));
-			optCol.setMnemonic(Resources.get("optimiserColumnMnemonic").charAt(
-					0));
-			optCol.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestChangeOptimiserType(
-									DataSetContext.this.getDataSet(),
-									DataSetOptimiserType.COLUMN);
-				}
-			});
-			optGroup.add(optCol);
-			contextMenu.add(optCol);
-			if (this.getDataSet().getDataSetOptimiserType().equals(
-					DataSetOptimiserType.COLUMN))
-				optCol.setSelected(true);
-
-			// The table option turns on table-of-has-column optimisation.
-			final JRadioButtonMenuItem optTbl = new JRadioButtonMenuItem(
-					Resources.get("optimiserTableTitle"));
-			optTbl.setMnemonic(Resources.get("optimiserTableMnemonic")
-					.charAt(0));
-			optTbl.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestChangeOptimiserType(
-									DataSetContext.this.getDataSet(),
-									DataSetOptimiserType.TABLE);
-				}
-			});
-			optGroup.add(optTbl);
-			contextMenu.add(optTbl);
-			if (this.getDataSet().getDataSetOptimiserType().equals(
-					DataSetOptimiserType.TABLE))
-				optTbl.setSelected(true);
+			
+			// Set up a temporary map to store the optimiser types.
+			// Use LinkedHashMap to preserve the order they appear in here.
+			final Map optimiserTypes = new LinkedHashMap();
+			optimiserTypes.put("None", DataSetOptimiserType.NONE);
+			optimiserTypes.put("Column", DataSetOptimiserType.COLUMN);
+			optimiserTypes.put("ColumnInherit", DataSetOptimiserType.COLUMN_INHERIT);
+			optimiserTypes.put("ColumnBool", DataSetOptimiserType.COLUMN_BOOL);
+			optimiserTypes.put("ColumnBoolInherit", DataSetOptimiserType.COLUMN_BOOL_INHERIT);
+			optimiserTypes.put("Table", DataSetOptimiserType.TABLE);
+			optimiserTypes.put("TableInherit", DataSetOptimiserType.TABLE_INHERIT);
+			optimiserTypes.put("TableBool", DataSetOptimiserType.TABLE_BOOL);
+			optimiserTypes.put("TableBoolInherit", DataSetOptimiserType.TABLE_BOOL_INHERIT);
+			
+			// Loop through the map to create the submenu.
+			for (final Iterator i = optimiserTypes.entrySet().iterator(); i.hasNext(); ) {
+				final Map.Entry entry = (Map.Entry)i.next();	
+				final String name = (String)entry.getKey();
+				final DataSetOptimiserType value = (DataSetOptimiserType)entry.getValue();
+				final JRadioButtonMenuItem opt = new JRadioButtonMenuItem(
+						Resources.get("optimiser"+name+"Title"));
+				opt.setMnemonic(Resources.get("optimiser"+name+"Mnemonic")
+						.charAt(0));
+				opt.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestChangeOptimiserType(
+										DataSetContext.this.getDataSet(),
+										value);
+					}
+				});
+				optGroup.add(opt);
+				optSubmenu.add(opt);
+				if (this.getDataSet().getDataSetOptimiserType().equals(
+						value))
+					opt.setSelected(true);
+			}
 
 			contextMenu.addSeparator();
 

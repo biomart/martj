@@ -1529,8 +1529,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							// Recalculate all schema
-							// org.biomart.builder.view.gui.diagrams.
+							// Recalculate all schema diagrams.
 							SchemaTabSet.this.recalculateAllSchemaDiagrams();
 
 							// As schemas may have lost or gained some external

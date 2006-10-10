@@ -307,23 +307,6 @@ public class SchemaContext implements DiagramContext {
 
 			contextMenu.addSeparator();
 
-			// Add an option to synchronise this schema against it's datasource
-			// or database.
-			final JMenuItem sync = new JMenuItem(
-					Resources.get("synchroniseSchemaTitle"),
-					new ImageIcon(
-							Resources
-									.getResourceAsURL("org/biomart/builder/resources/refresh.gif")));
-			sync.setMnemonic(Resources.get("synchroniseSchemaMnemonic").charAt(
-					0));
-			sync.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestSynchroniseSchema(schema);
-				}
-			});
-			contextMenu.add(sync);
-
 			// Add a checkbox menu item to turn keyguessing on/off.
 			final JCheckBoxMenuItem keyguess = new JCheckBoxMenuItem(Resources
 					.get("enableKeyGuessingTitle"));
@@ -357,21 +340,45 @@ public class SchemaContext implements DiagramContext {
 			});
 			contextMenu.add(rename);
 
+			// If this schema IS a schema group...
+			if (schema instanceof SchemaGroup) {
+				// Add an option to synchronise this schema against it's datasource
+				// or database.
+				final JMenuItem update = new JMenuItem(
+						Resources.get("updateSchemaGroupTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("org/biomart/builder/resources/refresh.gif")));
+				update.setMnemonic(Resources.get("updateSchemaGroupMnemonic").charAt(
+						0));
+				update.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						SchemaContext.this.martTab.getSchemaTabSet()
+								.requestSynchroniseSchema(schema);
+					}
+				});
+				contextMenu.add(update);
+			}
+			
 			// If this schema is NOT a schema group, there are more options!
-			if (!(schema instanceof SchemaGroup)) {
+			else {
 
-				// Option to modify the schema details.
-				final JMenuItem modify = new JMenuItem(Resources
-						.get("modifySchemaTitle"));
-				modify.setMnemonic(Resources.get("modifySchemaMnemonic")
-						.charAt(0));
-				modify.addActionListener(new ActionListener() {
+				// Add an option to synchronise this schema against it's datasource
+				// or database.
+				final JMenuItem update = new JMenuItem(
+						Resources.get("updateSchemaTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("org/biomart/builder/resources/refresh.gif")));
+				update.setMnemonic(Resources.get("updateSchemaMnemonic").charAt(
+						0));
+				update.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
 						SchemaContext.this.martTab.getSchemaTabSet()
 								.requestModifySchema(schema);
 					}
 				});
-				contextMenu.add(modify);
+				contextMenu.add(update);
 
 				// Option to test the schema to see if it works.
 				final JMenuItem test = new JMenuItem(Resources

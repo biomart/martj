@@ -56,6 +56,7 @@ import org.biomart.builder.model.MartConstructorAction.ExpressionAddColumns;
 import org.biomart.builder.model.MartConstructorAction.Index;
 import org.biomart.builder.model.MartConstructorAction.Merge;
 import org.biomart.builder.model.MartConstructorAction.OptimiseAddColumn;
+import org.biomart.builder.model.MartConstructorAction.OptimiseCopyColumn;
 import org.biomart.builder.model.MartConstructorAction.OptimiseUpdateColumn;
 import org.biomart.builder.model.MartConstructorAction.Partition;
 import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
@@ -68,7 +69,8 @@ import org.biomart.builder.resources.Resources;
  * Understands how to create SQL and DDL for an Oracle database.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class OracleDialect extends DatabaseDialect {
@@ -365,7 +367,7 @@ public class OracleDialect extends DatabaseDialect {
 		if (useDistinct)
 			sb.append("distinct ");
 		final List sourceCols = action.getSourceTableSelectColumns();
-		if (sourceCols==null)
+		if (sourceCols == null)
 			sb.append("a.*");
 		else
 			for (final Iterator i = sourceCols.iterator(); i.hasNext();) {
@@ -469,10 +471,15 @@ public class OracleDialect extends DatabaseDialect {
 		final String fkTableName = action.getCountTableName();
 		final String colName = action.getOptimiseColumnName();
 
+		final String countStmt = action.getUseBoolInstead() ? "decode(count(1),0,0,1)"
+				: "count(1)";
+
 		final StringBuffer sb = new StringBuffer();
-		sb.append("update " + pkSchemaName + ".\"" + pkTableName
-				+ "\" a set \"" + colName + "\"=(select count(1) from "
-				+ fkSchemaName + ".\"" + fkTableName + "\" b where ");
+		sb
+				.append("update " + pkSchemaName + ".\"" + pkTableName
+						+ "\" a set \"" + colName + "\"=(select " + countStmt
+						+ " from " + fkSchemaName + ".\"" + fkTableName
+						+ "\" b where ");
 		for (int i = 0; i < action.getTargetTablePKColumns().size(); i++) {
 			if (i > 0)
 				sb.append(" and ");
@@ -498,6 +505,86 @@ public class OracleDialect extends DatabaseDialect {
 			sb.append("\" is not null");
 		}
 		sb.append(')');
+
+		statements.add(sb.toString());
+	}
+
+	public void doOptimiseCopyColumn(final OptimiseCopyColumn action,
+			final List statements) throws Exception {
+		final String pkSchemaName = action.getTargetTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getTargetTableSchema())
+						.getDatabaseSchema();
+		final String pkTableName = action.getTargetTableName();
+		final String fkSchemaName = action.getCountTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getCountTableSchema())
+						.getDatabaseSchema();
+		final String fkTableName = action.getCountTableName();
+		final String interSchemaName = action.getIntermediateTableSchema() == null ? action
+				.getDataSetSchemaName()
+				: ((JDBCSchema) action.getIntermediateTableSchema())
+						.getDatabaseSchema();
+		final String interTableName = action.getIntermediateTableName();
+		final String colName = action.getOptimiseColumnName();
+
+		final String countStmt = action.getUseBoolInstead() ? "max" : "sum";
+		final StringBuffer sb = new StringBuffer();
+
+		if (interTableName.equals(fkTableName)
+				&& ((interSchemaName == fkSchemaName) || (interSchemaName != null && interSchemaName
+						.equals(fkSchemaName)))
+
+		) {
+			// Direct link.
+			sb.append("update " + pkSchemaName + ".\"" + pkTableName
+					+ "\" a set \"" + colName + "\"=(select " + countStmt
+					+ "(c.\"" + colName + "\") from " + fkSchemaName + ".`"
+					+ fkTableName + "` c where ");
+			for (int i = 0; i < action.getTargetTablePKColumns().size(); i++) {
+				if (i > 0)
+					sb.append(" and ");
+				final Column pkCol = (Column) action.getTargetTablePKColumns()
+						.get(i);
+				sb.append("a.\"");
+				sb.append(pkCol.getName());
+				sb.append("\"=c.\"");
+				sb.append(pkCol.getName());
+				sb.append("\"");
+			}
+			sb.append(')');
+		} else {
+			// Intermediate table link.
+			sb.append("update " + pkSchemaName + ".\"" + pkTableName
+					+ "\" a set \"" + colName + "\"=(select " + countStmt
+					+ "(c.\"" + colName + "\") from " + fkSchemaName + ".\""
+					+ fkTableName + "\" b inner join " + interSchemaName
+					+ ".\"" + interTableName + "\" c on ");
+			for (int i = 0; i < action.getCountTableFKColumns().size(); i++) {
+				if (i > 0)
+					sb.append(" and ");
+				final Column fkCol = (Column) action.getCountTableFKColumns()
+						.get(i);
+				sb.append("b.\"");
+				sb.append(fkCol.getName());
+				sb.append("\"=c.\"");
+				sb.append(fkCol.getName());
+				sb.append("\"");
+			}			
+			sb.append(" where ");
+			for (int i = 0; i < action.getTargetTablePKColumns().size(); i++) {
+				if (i > 0)
+					sb.append(" and ");
+				final Column pkCol = (Column) action.getTargetTablePKColumns()
+						.get(i);
+				sb.append("a.\"");
+				sb.append(pkCol.getName());
+				sb.append("\"=b.\"");
+				sb.append(pkCol.getName());
+				sb.append("\"");
+			}
+			sb.append(')');
+		}
 
 		statements.add(sb.toString());
 	}
