@@ -401,6 +401,9 @@ public class MySQLDialect extends DatabaseDialect {
 			sb.append(col.getName());
 			sb.append('`');
 		}
+		sb.append(" from " + srcSchemaName + ".`" + srcTableName
+				+ "` as a left join " + trgtSchemaName + ".`" + trgtTableName
+				+ "` as b on ");
 		for (int i = 0; i < action.getMergeTableJoinColumns().size(); i++) {
 			if (i > 0)
 				sb.append(" and ");
