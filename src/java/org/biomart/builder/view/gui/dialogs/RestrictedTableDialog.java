@@ -89,9 +89,11 @@ public class RestrictedTableDialog extends JDialog {
 	public RestrictedTableDialog(final Table table,
 			final DataSetTableRestriction template) {
 		// Creates the basic dialog.
-		super((JDialog)null,
-				template == null ? Resources.get("addTblRestrictDialogTitle")
-						: Resources.get("modifyTblRestrictDialogTitle"), true);
+		super();
+		this.setTitle(template == null ? Resources
+				.get("addTblRestrictDialogTitle") : Resources
+				.get("modifyTblRestrictDialogTitle"));
+		this.setModal(true);
 
 		// Remembers the dataset tabset this dialog is referring to.
 		this.cancelled = true;

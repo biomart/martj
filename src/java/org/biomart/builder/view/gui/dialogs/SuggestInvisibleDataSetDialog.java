@@ -49,9 +49,9 @@ import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.resources.Resources;
 
 /**
- * This dialog asks users what kind of invisible dataset suggestion the user wants to
- * do. It does this by giving them a list of tables from which columns in 
- * the specified dataset table have been derived, then allowing them to
+ * This dialog asks users what kind of invisible dataset suggestion the user
+ * wants to do. It does this by giving them a list of tables from which columns
+ * in the specified dataset table have been derived, then allowing them to
  * select one or more columns from a single table on this list.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
@@ -75,14 +75,14 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 	 * dataset suggestion.
 	 * 
 	 * @param table
-	 *            the main dataset table to source columns from to show in 
-	 *            the list.
+	 *            the main dataset table to source columns from to show in the
+	 *            list.
 	 */
-	public SuggestInvisibleDataSetDialog(
-			final DataSetTable table) {
+	public SuggestInvisibleDataSetDialog(final DataSetTable table) {
 		// Creates the basic dialog.
-		super((JDialog)null, Resources
-				.get("suggestInvisibleDataSetDialogTitle"), true);
+		super();
+		this.setTitle(Resources.get("suggestInvisibleDataSetDialogTitle"));
+		this.setModal(true);
 
 		// Create the content pane to store the create dialog panel.
 		final GridBagLayout gridBag = new GridBagLayout();

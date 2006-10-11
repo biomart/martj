@@ -113,7 +113,9 @@ public class KeyEditorDialog extends JDialog {
 	private KeyEditorDialog(final Table table,
 			final String title, final String action, final List columns) {
 		// Create the base dialog.
-		super((JDialog)null, title, true);
+		super();
+		this.setTitle(title);
+		this.setModal(true);
 
 		// The list of table columns is populated with the names of columns.
 		this.tableColumns = new DefaultListModel();

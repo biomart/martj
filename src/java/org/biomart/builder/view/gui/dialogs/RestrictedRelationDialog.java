@@ -95,12 +95,14 @@ public class RestrictedRelationDialog extends JDialog {
 	 * @param template
 	 *            the restriction to use as a template, if any.
 	 */
-	public RestrictedRelationDialog(final Relation relation, 
+	public RestrictedRelationDialog(final Relation relation,
 			final DataSetRelationRestriction template) {
 		// Creates the basic dialog.
-		super((JDialog)null,
-				template == null ? Resources.get("addRelRestrictDialogTitle")
-						: Resources.get("modifyRelRestrictDialogTitle"), true);
+		super();
+		this.setTitle(template == null ? Resources
+				.get("addRelRestrictDialogTitle") : Resources
+				.get("modifyRelRestrictDialogTitle"));
+		this.setModal(true);
 
 		// Remembers the dataset tabset this dialog is referring to.
 		this.cancelled = true;

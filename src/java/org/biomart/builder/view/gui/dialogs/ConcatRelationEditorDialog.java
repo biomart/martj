@@ -115,7 +115,9 @@ public class ConcatRelationEditorDialog extends JDialog {
 			final String action, final String defaultColumnSep,
 			final String defaultRowSep, final List columns) {
 		// Create the base dialog.
-		super((JDialog) null, title, true);
+		super();
+		this.setTitle(title);
+		this.setModal(true);
 		this.type = null;
 
 		// Create the layout manager for this panel.

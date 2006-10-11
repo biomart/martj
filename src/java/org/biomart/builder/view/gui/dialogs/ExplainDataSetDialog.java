@@ -31,13 +31,13 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainDataSetContext;
 
 /**
- * This simple dialog explains a dataset by drawing the schema diagram 
- * for the underlying schemas, then applying the {@link ExplainDataSetContext}
- * to the diagrams.
+ * This simple dialog explains a dataset by drawing the schema diagram for the
+ * underlying schemas, then applying the {@link ExplainDataSetContext} to the
+ * diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
@@ -68,17 +68,19 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 
 	private ExplainDataSetDialog(final MartTab martTab, final DataSet dataset) {
 		// Create the blank dialog, and give it an appropriate title.
-		super(martTab.getMartTabSet().getMartBuilder(), Resources.get(
-				"explainDataSetDialogTitle", dataset.getName()), true);
+		super();
+		this.setTitle(Resources.get("explainDataSetDialogTitle", dataset
+				.getName()));
+		this.setModal(true);
 		this.dataset = dataset;
 		this.schemaTabSet = martTab.getSchemaTabSet();
 
 		// Make a content pane.
 		final JPanel content = new JPanel(new BorderLayout());
-		
+
 		// The content pane is the schema tab set with an explain context.
-		final ExplainDataSetContext context = new ExplainDataSetContext(martTab,
-				this.dataset);
+		final ExplainDataSetContext context = new ExplainDataSetContext(
+				martTab, this.dataset);
 		this.schemaTabSet.setDiagramContext(context);
 		content.add(this.schemaTabSet, BorderLayout.CENTER);
 		// Must be set visible as previous display location is invisible.

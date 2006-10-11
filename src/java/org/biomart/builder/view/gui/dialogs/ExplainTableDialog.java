@@ -115,8 +115,10 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 
 	private ExplainTableDialog(final MartTab martTab, final DataSetTable dsTable) {
 		// Create the blank dialog, and give it an appropriate title.
-		super(martTab.getMartTabSet().getMartBuilder(), Resources.get(
-				"explainTableDialogTitle", dsTable.getName()), true);
+		super();
+		this.setTitle(Resources.get("explainTableDialogTitle", dsTable
+				.getName()));
+		this.setModal(true);
 		this.dsTable = dsTable;
 		this.martTab = martTab;
 

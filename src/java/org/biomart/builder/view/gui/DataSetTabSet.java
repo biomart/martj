@@ -1428,7 +1428,7 @@ public class DataSetTabSet extends JTabbedPane {
 		// Ask the user what tables they want to work with and what
 		// mode they want.
 		final SuggestDataSetDialog dialog = new SuggestDataSetDialog(
-				this.martTab, table);
+				this.martTab.getMart().getSchemas(), table);
 		dialog.show();
 
 		// If they cancelled it, return without doing anything.

@@ -109,8 +109,9 @@ public class SaveDDLDialog extends JDialog {
 	 */
 	public SaveDDLDialog(final MartTab martTab, final Collection datasets) {
 		// Create the base dialog.
-		super(martTab.getMartTabSet().getMartBuilder(), Resources
-				.get("saveDDLDialogTitle"), true);
+		super();
+		this.setTitle(Resources.get("saveDDLDialogTitle"));
+		this.setModal(true);
 
 		// Remember the tabset that the schema we are working with is part of
 		// (or will be part of if it's not been created yet).

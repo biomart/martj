@@ -119,8 +119,9 @@ public class PartitionColumnDialog extends JDialog {
 	private PartitionColumnDialog(final MartTab martTab,
 			final String executeButtonText, final PartitionedColumnType template) {
 		// Creates the basic dialog.
-		super(martTab.getMartTabSet().getMartBuilder(), Resources
-				.get("partitionColumnDialogTitle"), true);
+		super();
+		this.setTitle(Resources.get("partitionColumnDialogTitle"));
+		this.setModal(true);
 
 		// Remembers the dataset tabset this dialog is referring to.
 		this.martTab = martTab;

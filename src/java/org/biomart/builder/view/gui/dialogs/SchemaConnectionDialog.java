@@ -118,7 +118,9 @@ public class SchemaConnectionDialog extends JDialog {
 	private SchemaConnectionDialog(final MartTab martTab, final String title,
 			final String executeButtonText, final Schema template) {
 		// Create the basic dialog centred on the main mart builder window.
-		super(martTab.getMartTabSet().getMartBuilder(), title, true);
+		super();
+		this.setTitle(title);
+		this.setModal(true);
 
 		// Remember the tabset that the schema we are working with is part of
 		// (or will be part of if it's not been created yet).

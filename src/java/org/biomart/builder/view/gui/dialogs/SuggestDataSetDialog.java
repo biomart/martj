@@ -42,12 +42,11 @@ import javax.swing.ListSelectionModel;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.resources.Resources;
-import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
- * This dialog asks users what kind of dataset suggestion they want to do.
- * It does this by presenting a list of tables in all available schemas
- * and asking the user to select one or more of them for inclusion.
+ * This dialog asks users what kind of dataset suggestion they want to do. It
+ * does this by presenting a list of tables in all available schemas and asking
+ * the user to select one or more of them for inclusion.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by 
@@ -67,16 +66,18 @@ public class SuggestDataSetDialog extends JDialog {
 	 * Creates (but does not open) a dialog requesting details of dataset
 	 * suggestion.
 	 * 
-	 * @param martTab
-	 *            the mart tab set to centre ourselves over and obtain
-	 *            details of schemas and tables from.
+	 * @param schemas
+	 *            the schemas to include when listing tables for the user to
+	 *            choose.
 	 * @param initialTable
 	 *            the initial table to select in the list of tables.
 	 */
-	public SuggestDataSetDialog(final MartTab martTab, final Table initialTable) {
+	public SuggestDataSetDialog(final Collection schemas,
+			final Table initialTable) {
 		// Creates the basic dialog.
-		super((JDialog)null, Resources
-				.get("suggestDataSetDialogTitle"), true);
+		super();
+		this.setTitle(Resources.get("suggestDataSetDialogTitle"));
+		this.setModal(true);
 
 		// Create the content pane to store the create dialog panel.
 		final GridBagLayout gridBag = new GridBagLayout();
@@ -105,8 +106,7 @@ public class SuggestDataSetDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		final List availableTables = new ArrayList();
-		for (final Iterator i = martTab.getMart().getSchemas().iterator(); i
-				.hasNext();)
+		for (final Iterator i = schemas.iterator(); i.hasNext();)
 			for (final Iterator j = ((Schema) i.next()).getTables().iterator(); j
 					.hasNext();)
 				availableTables.add(j.next());

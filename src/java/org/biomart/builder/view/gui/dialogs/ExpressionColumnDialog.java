@@ -57,8 +57,8 @@ import org.biomart.builder.resources.Resources;
  * This dialog asks users to create or modify an expression column.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class ExpressionColumnDialog extends JDialog {
@@ -95,12 +95,13 @@ public class ExpressionColumnDialog extends JDialog {
 	 * @param template
 	 *            the column to use as a template, if any.
 	 */
-	public ExpressionColumnDialog(final DataSetTable table, 
+	public ExpressionColumnDialog(final DataSetTable table,
 			final ExpressionColumn template) {
 		// Creates the basic dialog.
-		super((JDialog)null,
-				template == null ? Resources.get("addExpColDialogTitle")
-						: Resources.get("modifyExpColDialogTitle"), true);
+		super();
+		this.setTitle(template == null ? Resources.get("addExpColDialogTitle")
+				: Resources.get("modifyExpColDialogTitle"));
+		this.setModal(true);
 
 		// Remembers the dataset tabset this dialog is referring to.
 		this.table = table;
@@ -140,7 +141,7 @@ public class ExpressionColumnDialog extends JDialog {
 		this.columnAliasTable.setGridColor(Color.LIGHT_GRAY); // Mac OSX.
 		// Arbitrary size.
 		this.columnAliasTable.setPreferredScrollableViewportSize(new Dimension(
-				400, 100)); 
+				400, 100));
 		// Some buttons.
 		this.insert = new JButton(Resources.get("insertAliasButton"));
 		this.remove = new JButton(Resources.get("removeAliasButton"));
