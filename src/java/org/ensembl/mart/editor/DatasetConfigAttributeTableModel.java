@@ -18,14 +18,14 @@
 
 package org.ensembl.mart.editor;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.ArrayList;
 import java.util.List;
-import javax.swing.JOptionPane;
+import java.util.Vector;
 
+import javax.swing.JOptionPane;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
@@ -33,15 +33,16 @@ import javax.swing.table.TableModel;
 import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributeGroup;
+import org.ensembl.mart.lib.config.AttributeList;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.BaseConfigurationObject;
 import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
 import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.DynamicAttributeContent;
-import org.ensembl.mart.lib.config.DynamicFilterContent;
 import org.ensembl.mart.lib.config.DynamicDatasetContent;
-import org.ensembl.mart.lib.config.DynamicImportableContent;
 import org.ensembl.mart.lib.config.DynamicExportableContent;
+import org.ensembl.mart.lib.config.DynamicFilterContent;
+import org.ensembl.mart.lib.config.DynamicImportableContent;
 import org.ensembl.mart.lib.config.Exportable;
 import org.ensembl.mart.lib.config.FilterCollection;
 import org.ensembl.mart.lib.config.FilterDescription;
@@ -280,6 +281,18 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 							setValueAt(newName,rowIndex,columnIndex);
 							return;
 						}
+					}					
+					else if (child instanceof org.ensembl.mart.lib.config.AttributeList){
+						if (checkUniqueness((String) aValue, rowIndex, dsConfig)){				
+							ac.removeAttributeList((AttributeList) node.getUserObject());
+						}
+						else{
+							//new Exception().printStackTrace();// good debugging tool
+							String newName = JOptionPane.showInputDialog("This internal name is duplicated. Choose another");
+							ac.removeAttributeList((AttributeList) node.getUserObject());
+							setValueAt(newName,rowIndex,columnIndex);
+							return;
+						}
 					}
 				}  else if (parent instanceof org.ensembl.mart.lib.config.AttributeDescription) {
 					AttributeDescription ad = (AttributeDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
@@ -355,6 +368,8 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 					AttributeCollection ac = (AttributeCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.AttributeDescription){		
 						ac.insertAttributeDescription(index, (AttributeDescription) obj);
+					} else if (child instanceof org.ensembl.mart.lib.config.AttributeList){		
+						ac.insertAttributeList(index, (AttributeList) obj);
 					}
 				} else if (parent instanceof org.ensembl.mart.lib.config.AttributeDescription) {
 					AttributeDescription ad = (AttributeDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
@@ -399,6 +414,15 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 			  for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
 				  Object testAtt = iter.next();
 				  AttributeDescription testAD = (AttributeDescription) testAtt;
+				  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
+					  continue;
+				  }
+				  descriptionsMap.put(testAD.getInternalName(),"1");
+			  }
+			  testAtts = apage.getAllAttributeLists();
+			  for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+				  Object testAtt = iter.next();
+				  AttributeList testAD = (AttributeList) testAtt;
 				  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 					  continue;
 				  }

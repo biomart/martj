@@ -40,6 +40,7 @@ public final class AttributeGroup extends BaseNamedConfigurationObject {
 
   //cache one AttributeDescription for call to containsUIAttributeDescription or getAttributeDescriptionByName
   private AttributeDescription lastAtt = null;
+  private AttributeList lastAttList = null;
   //cache one AttributeCollecton for call to getCollectionForAttribute
   private AttributeCollection lastColl = null;
   //cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
@@ -269,6 +270,53 @@ public final class AttributeGroup extends BaseNamedConfigurationObject {
 	}
 
 	/**
+		* Convenience method for non graphical UI.  Allows a call against the AttributeGroup for a particular AttributeList.
+	  * Note, it is best to first call containsUIAttributeList,
+		* as there is a caching system to cache a AttributeList during a call to containsUIAttributeList.
+		* 
+		* @param internalName name of the requested AttributeList
+		* @return AttributeList requested, or null
+		*/
+	public AttributeList getAttributeListByInternalName(String internalName) {
+		if ( containsAttributeList(internalName) )
+			return lastAttList;
+		else
+			return null;
+	}
+
+	/**
+		* Convenience method for non graphical UI.  Can determine if the AttributeGroup contains a specific AttributeList.
+		*  As an optimization for initial calls to containsUIAttributeList with an immediate call to getUIAttributeListByName if
+		*  found, this method caches the AttributeList it has found.
+		* 
+		* @param internalName name of the requested AttributeList
+		* @return boolean, true if found, false if not.
+		*/
+	public boolean containsAttributeList(String internalName){
+		boolean found = false;
+
+    if (lastAttList == null) {
+			for (Iterator iter = (Iterator) attributeCollections.iterator(); iter.hasNext();) {
+				AttributeCollection collection = (AttributeCollection) iter.next();
+				if (collection.containsAttributeList(internalName)) {
+					lastAttList = collection.getAttributeListByInternalName(internalName);
+					found = true;
+					break;
+				}
+			}    	
+    }
+    else {
+			if (lastAttList.getInternalName().equals(internalName))
+			  found = true;
+			else {
+			  lastAttList = null;
+			  found = containsAttributeList(internalName);
+			} 
+		}
+		return found;
+	}
+
+	/**
 	 * Retrieve a specific AttributeDescription that supports a given field and tableConstraint.
 	 * @param field
 	 * @param tableConstraint
@@ -322,6 +370,24 @@ public final class AttributeGroup extends BaseNamedConfigurationObject {
   }
   
   /**
+   * Convenience method. Returns all of the AttributeList objects 
+   * contained in all of the AttributeCollections.
+   * 
+   * @return List of AttributeList objects
+   */
+  public List getAllAttributeLists() {
+  	List atts = new ArrayList();
+  	
+  	for (Iterator iter = attributeCollections.iterator(); iter.hasNext();) {
+  		AttributeCollection ac = (AttributeCollection) iter.next();
+  		
+			atts.addAll(ac.getAttributeLists());
+		}
+		
+		return atts;
+  }
+  
+  /**
    * Returns the AttributeCollection for a particular Attribute (AttributeDescription or UIDSAttributeDescription)
    * based on its internalName.
    * 
@@ -347,6 +413,36 @@ public final class AttributeGroup extends BaseNamedConfigurationObject {
   		else {
   			lastColl = null;
   			return getCollectionForAttributeDescription(internalName);
+  		}
+  	}
+  }
+  
+  /**
+   * Returns the AttributeCollection for a particular Attribute (AttributeList or UIDSAttributeList)
+   * based on its internalName.
+   * 
+   * @param internalName - String internalName of the Attribute List for which the collection is being requested.
+   * @return AttributeCollection for the AttributeList provided, or null
+   */
+  public AttributeCollection getCollectionForAttributeList(String internalName) {
+  	if (! containsAttributeList(internalName))
+  	  return null;
+  	else if (lastColl == null) {
+			for (Iterator iter = attributeCollections.iterator(); iter.hasNext();) {
+				AttributeCollection ac = (AttributeCollection) iter.next();
+				if (ac.containsAttributeList(internalName)) {
+					lastColl = ac;
+					break;
+				}
+			}
+			return lastColl;
+  	}
+  	else {
+  		if (lastColl.getInternalName().equals(internalName))
+  		  return lastColl;
+  		else {
+  			lastColl = null;
+  			return getCollectionForAttributeList(internalName);
   		}
   	}
   }

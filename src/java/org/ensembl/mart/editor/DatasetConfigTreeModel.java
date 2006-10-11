@@ -148,6 +148,9 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 			if (childClassName.equals("org.ensembl.mart.lib.config.AttributeDescription")) {
 				AttributeCollection ac = (AttributeCollection) parentNode.getUserObject();
 				ac.addAttributeDescription((AttributeDescription) editingNode.getUserObject());
+			} else if (childClassName.equals("org.ensembl.mart.lib.config.AttributeList")) {
+				AttributeCollection ac = (AttributeCollection) parentNode.getUserObject();
+				ac.addAttributeList((AttributeList) editingNode.getUserObject());
 			}
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.AttributeDescription")) {
 			if (childClassName.equals("org.ensembl.mart.lib.config.DynamicAttributeContent")) {
@@ -331,6 +334,9 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 			if (child instanceof org.ensembl.mart.lib.config.AttributeDescription) {
 				AttributeCollection ac = (AttributeCollection) parentNode.getUserObject();
 				ac.insertAttributeDescription(objIndex, (AttributeDescription) editingNode.getUserObject());
+			} else if (child instanceof org.ensembl.mart.lib.config.AttributeList) {
+				AttributeCollection ac = (AttributeCollection) parentNode.getUserObject();
+				ac.insertAttributeList(objIndex, (AttributeList) editingNode.getUserObject());
 			} else {
 				String error_string = "Error: " + childName + " cannot be inserted in an AttributeCollection.";
 				return error_string;
@@ -451,6 +457,9 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 			if (child instanceof org.ensembl.mart.lib.config.AttributeDescription) {
 				AttributeCollection ac = (AttributeCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 				ac.removeAttributeDescription((AttributeDescription) node.getUserObject());
+			} else if (child instanceof org.ensembl.mart.lib.config.AttributeList) {
+				AttributeCollection ac = (AttributeCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+				ac.removeAttributeList((AttributeList) node.getUserObject());
 			}
 		} else if (parent instanceof org.ensembl.mart.lib.config.AttributeDescription) {
 			if (child instanceof org.ensembl.mart.lib.config.DynamicAttributeContent) {

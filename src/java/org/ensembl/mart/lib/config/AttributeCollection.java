@@ -43,6 +43,9 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
   
   private List AttributeDescriptions = new ArrayList();
   private Hashtable attributeDescriptionNameMap = new Hashtable();
+  
+  private List AttributeLists = new ArrayList();
+  private Hashtable attributeListNameMap = new Hashtable();
 
   //cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
   private AttributeDescription lastSupportingAttribute = null;
@@ -61,7 +64,14 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
       if (ad instanceof AttributeDescription)
         addAttributeDescription( new AttributeDescription( (AttributeDescription) ad ) );
       //else not needed      
-    }  
+    } 
+  	ads = ac.getAttributeLists();
+  	for (int i = 0, n = ads.size(); i < n; i++) {
+        Object ad = ads.get(i);
+        if (ad instanceof AttributeList)
+          addAttributeList( new AttributeList( (AttributeList) ad ) );
+        //else not needed      
+      }   
   }
   /**
    * Empty Constructor should only be used by DatasetConfigEditor.
@@ -266,6 +276,109 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
   	return supports;
   }
   
+	/**
+	 * Add a AttributeList to the AtttributeCollection.
+	 * 
+	 * @param a a AttributeList object.
+	 */
+	public void addAttributeList(AttributeList a) {
+		AttributeLists.add(a);
+		attributeListNameMap.put(a.getInternalName(), a);
+	}
+
+/**
+ * Remove an AttributeList from this AttributeCollection.
+ * @param a -- AttributeList to be removed.
+ */
+public void removeAttributeList(AttributeList a) {
+  attributeListNameMap.remove(a.getInternalName());
+  AttributeLists.remove(a);
+}
+
+/**
+ * Insert an AttributeList at a particular position within the AttributeCollection.
+ * AttributeLists set at or after the given position are shift right.
+ * @param position -- position at which to insert the given AttributeList
+ * @param a -- AttributeList to insert
+ */
+public void insertAttributeList(int position, AttributeList a) {
+  AttributeLists.add(position, a);
+  attributeListNameMap.put(a.getInternalName(), a);
+}
+
+/**
+ * Insert an AttributeList before a specific AttributeList, named by internalName.
+ * @param internalName -- AttributeList before which the given AttributeList should be inserted.
+ * @param a -- AttributeList to insert.
+ * @throws ConfigurationException when the AttributeCollection does not contain an AttributeList named by internalName.
+ */
+public void insertAttributeListBeforeAttributeList(String internalName, AttributeList a) throws ConfigurationException {
+  if (!attributeListNameMap.containsKey(internalName))
+    throw new ConfigurationException("AttributeCollection does not contain AttributeList " + internalName + "\n");
+  insertAttributeList( AttributeLists.indexOf( attributeListNameMap.get(internalName) ), a );
+}
+
+/**
+ * Insert an AttributeList after a specific AttributeList, named by internalName.
+ * @param internalName -- AttributeList after which the given AttributeList should be inserted.
+ * @param a -- AttributeList to insert.
+ * @throws ConfigurationException when the AttributeCollection does not contain an AttributeList named by internalName.
+ */
+public void insertAttributeListAfterAttributeList(String internalName, AttributeList a) throws ConfigurationException {
+  if (!attributeListNameMap.containsKey(internalName))
+    throw new ConfigurationException("AttributeCollection does not contain AttributeList " + internalName + "\n");
+  insertAttributeList( AttributeLists.indexOf( attributeListNameMap.get(internalName) ) + 1, a );
+}
+
+	/**
+	 * Add a group of AttributeList objects in one call.  Note, subsequent calls to addAttributeList or addAttributeLists
+ * will add to what was added before.
+	 * 
+	 * @param a an Array of AttributeList objects.
+	 */
+	public void addAttributeLists(AttributeList[] a) {
+		for (int i = 0, n = a.length; i < n; i++) {
+			AttributeLists.add(a[i]);
+			attributeListNameMap.put(a[i].getInternalName(), a[i]);
+		}
+	}
+	
+	/**
+	 * Returns a List of AttributeList objects, in the order they were added.
+	 * 
+	 * @return List of AttributeList objects.
+	 */
+	public List getAttributeLists() {
+  //return a copy
+		return new ArrayList(AttributeLists);
+	}
+
+
+	/**
+		* Get a specific AttributeList, named by internalName.
+		*  
+		* @param internalName name of the requested AttributeList
+		* @return AttributeList requested, or null
+		*/
+	public AttributeList getAttributeListByInternalName(String internalName) {
+		if ( containsAttributeList(internalName) )
+			return (AttributeList) attributeListNameMap.get(internalName);
+		else
+			return null;
+	}
+
+	/**
+		* Check if this AttributeCollection contains a specific AttributeList named
+		* by internalName.
+		*  
+		* @param internalName name of the requested AttributeList object
+		* @return boolean, true if found, false if not.
+		*/
+	public boolean containsAttributeList(String internalName) {
+	return attributeListNameMap.containsKey(internalName);
+	}
+
+  
   /**
    * Returns a List of possible internalNames to add to the MartCompleter command completion system.
    * @return List of possible completions.
@@ -275,6 +388,16 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
   	
   	for (Iterator iter = AttributeDescriptions.iterator(); iter.hasNext();) {
 			AttributeDescription element = (AttributeDescription) iter.next();
+            if (element.getHidden() != null && element.getHidden().equals("true")) continue;
+            if (element.getDisplay() != null && element.getDisplay().equals("true")) continue;
+            
+			//skip placeholders
+			if ( !(element.getInternalName().indexOf('.') > 0) )
+			  names.add(element.getInternalName());
+		}
+  	
+  	for (Iterator iter = AttributeLists.iterator(); iter.hasNext();) {
+			AttributeList element = (AttributeList) iter.next();
             if (element.getHidden() != null && element.getHidden().equals("true")) continue;
             if (element.getDisplay() != null && element.getDisplay().equals("true")) continue;
             
@@ -295,6 +418,10 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
 			AttributeDescription element = (AttributeDescription) iter.next();			
   		    names.add(element.getInternalName());
 		}
+  	for (Iterator iter = AttributeLists.iterator(); iter.hasNext();) {
+		AttributeList element = (AttributeList) iter.next();			
+		    names.add(element.getInternalName());
+	}
   	return names;
   }
   
@@ -304,6 +431,7 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
 		buf.append("[");
 		buf.append( super.toString() );
 		buf.append(", AttributeDescriptions=").append(AttributeDescriptions);
+		buf.append(", AttributeLists=").append(AttributeLists);
 		buf.append("]");
 
 		return buf.toString();
@@ -321,6 +449,10 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
 		
 		for (Iterator iter = AttributeDescriptions.iterator(); iter.hasNext();) {
 			AttributeDescription element = (AttributeDescription) iter.next();
+			tmp = (31 * tmp) + element.hashCode();
+		}
+		for (Iterator iter = AttributeLists.iterator(); iter.hasNext();) {
+			AttributeList element = (AttributeList) iter.next();
 			tmp = (31 * tmp) + element.hashCode();
 		}
 		return tmp;
@@ -354,6 +486,14 @@ public boolean containsOnlyPointerAttributes() {
     List atts = getAttributeDescriptions();
     for (int i = 0, n = atts.size(); i < n; i++) {
         AttributeDescription element = (AttributeDescription) atts.get(i);
+        if (element.getInternalName().indexOf('.') < 1) {
+            ret = false;
+            break;
+        }
+    }
+    atts = getAttributeLists();
+    for (int i = 0, n = atts.size(); i < n; i++) {
+        AttributeList element = (AttributeList) atts.get(i);
         if (element.getInternalName().indexOf('.') < 1) {
             ret = false;
             break;

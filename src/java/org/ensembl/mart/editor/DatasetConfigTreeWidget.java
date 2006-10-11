@@ -43,6 +43,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributeGroup;
+import org.ensembl.mart.lib.config.AttributeList;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.BaseConfigurationObject;
 import org.ensembl.mart.lib.config.ConfigurationException;
@@ -351,6 +352,13 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 							List ads = acoll.getAttributeDescriptions();
 							for (int l = 0; l < ads.size(); l++){
 								AttributeDescription ad = (AttributeDescription) ads.get(l);
+								if (!ad.getInternalName().matches("\\w+\\.\\w+") 
+									&& !ad.getInternalName().matches("\\w+\\.\\w+\\.\\w+"))
+									ad.setTemplateDrivenFlag(1);	
+							}
+							ads = acoll.getAttributeLists();
+							for (int l = 0; l < ads.size(); l++){
+								AttributeList ad = (AttributeList) ads.get(l);
 								if (!ad.getInternalName().matches("\\w+\\.\\w+") 
 									&& !ad.getInternalName().matches("\\w+\\.\\w+\\.\\w+"))
 									ad.setTemplateDrivenFlag(1);	

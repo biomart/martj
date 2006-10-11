@@ -264,6 +264,10 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					FilterDescription fd = new FilterDescription();
 					fd.setAttribute("internalName", "new");
 					insert(fd, "FilterDescription");
+				} else if (e.getActionCommand().equals("insert attribute list")) {
+					AttributeList ad = new AttributeList();
+					ad.setAttribute("internalName", "new");
+					insert(ad, "AttributeList");
 				} else if (e.getActionCommand().equals("insert attribute")) {
 					AttributeDescription ad = new AttributeDescription();
 					ad.setAttribute("internalName", "new");
@@ -586,7 +590,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterCollection"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle",  "hideDisplay toggle","insert filter" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeCollection"))
-			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle",  "hideDisplay toggle","insert attribute" };
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle",  "hideDisplay toggle","insert attribute", "insert attribute list" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterDescription"))
 			menuItems =
 				new String[] {
@@ -609,6 +613,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert option", "insert push action" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "hideDisplay toggle", "insert dynamic attribute content"};
+		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeList"))
+			menuItems = new String[] { "copy", "cut", "paste", "delete"};
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DynamicAttributeContent"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "hideDisplay toggle",};  
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DynamicFilterContent"))
@@ -703,6 +709,11 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				new DatasetConfigTreeNode(
 					editingNode.toString(),
 					new AttributeDescription((AttributeDescription) editingNode.getUserObject()));
+		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.AttributeList"))
+			copiedNode =
+				new DatasetConfigTreeNode(
+					editingNode.toString(),
+					new AttributeList((AttributeList) editingNode.getUserObject()));
 		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.DynamicAttributeContent"))
 			copiedNode =
 				new DatasetConfigTreeNode(
@@ -870,7 +881,9 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					else if (selnodeName.equals("org.ensembl.mart.lib.config.AttributeCollection"))
 						newSel = new AttributeCollection((AttributeCollection)sel);
 					else if (selnodeName.equals("org.ensembl.mart.lib.config.AttributeDescription"))
-						newSel = new AttributeDescription((AttributeDescription)sel);						
+						newSel = new AttributeDescription((AttributeDescription)sel);
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.AttributeList"))
+						newSel = new AttributeList((AttributeList)sel);						
 					else if (selnodeName.equals("org.ensembl.mart.lib.config.DynamicAttributeContent"))
 						newSel = new DynamicAttributeContent((DynamicAttributeContent)sel);			
 					else if (selnodeName.equals("org.ensembl.mart.lib.config.DynamicFilterContent"))
@@ -1372,6 +1385,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			}
 			else if (obj instanceof AttributeCollection) {
 				toCheck.addAll(((AttributeCollection)obj).getAttributeDescriptions());
+				toCheck.addAll(((AttributeCollection)obj).getAttributeLists());
 			}
 			else if (obj instanceof AttributeDescription) {
 				toCheck.addAll(((AttributeDescription)obj).getDynamicAttributeContents());

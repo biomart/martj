@@ -385,6 +385,7 @@ public class DatabaseDatasetConfigUtils {
 	  
 		Hashtable descriptionsMap = new Hashtable();// atts should have a unique internal name
 		Hashtable attributeDuplicationMap = new Hashtable();
+		Hashtable attributeListDuplicationMap = new Hashtable();
 		
 		Hashtable descriptionsTCFieldMap = new Hashtable();// atts should have a unique TC and field
 		Hashtable attributeDuplicationTCFieldMap = new Hashtable();
@@ -411,6 +412,7 @@ public class DatabaseDatasetConfigUtils {
 				  spaceErrors = spaceErrors + "AttributeCollection " + testColl.getInternalName() + " in dataset " + dsConfig.getDataset() + "\n";
 				}					  			
 				List testAtts = new ArrayList();
+
 				testAtts = testColl.getAttributeDescriptions();		    
 
 			  for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
@@ -456,6 +458,41 @@ public class DatabaseDatasetConfigUtils {
 				  
 				  
 			  }
+			  
+				testAtts = testColl.getAttributeLists();		    
+
+				  for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+					  Object testAtt = iter.next();
+					  AttributeList testAD = (AttributeList) testAtt;
+
+					  if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+							continue;//placeholder atts can be duplicated	
+					  }
+					  
+					  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
+						  continue;
+					  }
+
+					  if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
+						  spaceErrors = spaceErrors + testAD.getInternalName() + " in page " + apage.getInternalName() + "\n";
+					  }
+					  if (descriptionsMap.containsKey(testAD.getInternalName())){
+						 attributeDuplicationMap.put(testAD.getInternalName(),dsConfig.getDataset()); 
+					  }
+					  descriptionsMap.put(testAD.getInternalName(),"1");
+					  
+					  if (dsConfig.getType().equals("GenomicSequence"))
+					  	continue;//no point in checking fields
+					  
+					  // test has all its fields defined - if not add a message to brokenString
+					  if (testAD.getInternalName() == null || testAD.getInternalName().equals("")){
+							brokenString = brokenString + "AttributeList " + testAD.getInternalName() + " in dataset " + dsConfig.getDataset() + 
+																			  " and page " + apage.getInternalName() + "\n";	
+					  }
+					  
+					  
+				  }
+
 			 }
 		 }
 		}
@@ -620,6 +657,14 @@ public class DatabaseDatasetConfigUtils {
 				duplicationString = duplicationString+"Attribute "+intName+" in dataset "+dsConfig.getDataset()+"\n";	
 			}
 		}
+		else if (attributeListDuplicationMap.size() > 0){
+			duplicationString = "The following attributeList internal names are duplicated and will cause client problems:\n";
+			Enumeration enum = attributeListDuplicationMap.keys();
+			while (enum.hasMoreElements()){
+				String intName = (String) enum.nextElement();
+				duplicationString = duplicationString+"AttributeList "+intName+" in dataset "+dsConfig.getDataset()+"\n";	
+			}
+		}
 		else if (filterDuplicationMap.size() > 0){
 			duplicationString = duplicationString + "The following filter/option internal names are duplicated and will cause client problems:\n";
 			Enumeration enum = filterDuplicationMap.keys();
@@ -682,6 +727,44 @@ public class DatabaseDatasetConfigUtils {
 						for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
 							Object testAtt = iter.next();
 							AttributeDescription testAD = (AttributeDescription) testAtt;
+							if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
+									continue;
+							}
+							if (testAD.getInternalName().matches("\\w+\\.\\w+")){
+								 continue;//placeholder atts can be duplicated	
+							}
+									  
+							if (testAD.getInternalName().equals(testName)){
+								if (first != 0){
+									testAD.setInternalName(testName + "_" + first);
+									doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
+									
+									//continue OUTER;	  
+								}
+								first++;
+										  
+							}
+					    }	
+		  	 	    }		 
+		         }
+				
+
+				enum = attributeListDuplicationMap.keys();
+				while (enum.hasMoreElements()){
+					testName = (String) enum.nextElement();
+									
+		 			int first = 0;
+					for (int j = 0; j < apages.length; j++){
+						apage = apages[j];
+						if ((apage.getHidden() != null) && (apage.getHidden().equals("true"))){
+							continue;
+						}
+		    
+						List testAtts = new ArrayList();
+						testAtts = apage.getAllAttributeLists();
+						for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+							Object testAtt = iter.next();
+							AttributeList testAD = (AttributeList) testAtt;
 							if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 									continue;
 							}
@@ -839,6 +922,25 @@ public class DatabaseDatasetConfigUtils {
 			if (ad.getTableConstraint() != null && !ad.getTableConstraint().equals("") && !ad.getTableConstraint().equals("main"))
 				ad.setTableConstraint(ad.getTableConstraint().split("__")[1]+"__"+ad.getTableConstraint().split("__")[2]);		
 			
+			//ad.setLinkoutURL("");		
+		}
+		
+
+		List attributeLists = templateConfig.getAllAttributeLists();
+		for (int i = 0; i < attributeLists.size(); i++){
+			AttributeList ad = (AttributeList) attributeLists.get(i);		
+			String internalName = ad.getInternalName();
+			if (internalName.matches(".+\\..+")){
+				
+				ad.setDisplayName("");
+				ad.setDescription("");
+				ad.setAttributes("");
+				ad.setDefault("");	
+			}
+			// change internal placeholders to template.placeholder
+			if (ad.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
+				ad.setInternalName(ad.getInternalName().replaceFirst(dsConfig.getDataset(),template));
+			}
 			//ad.setLinkoutURL("");		
 		}
 		
@@ -1033,6 +1135,7 @@ public class DatabaseDatasetConfigUtils {
 	String spaceErrors = "";
 	String brokenFields = "";
 	Hashtable attributeDuplicationMap = new Hashtable();
+	Hashtable attributeListDuplicationMap = new Hashtable();
 	Hashtable filterDuplicationMap = new Hashtable();
 	
 	  // check uniqueness of internal names per page	  
@@ -1062,6 +1165,7 @@ public class DatabaseDatasetConfigUtils {
 			 spaceErrors = spaceErrors + "AttributeCollection " + testColl.getInternalName() + " in dataset " + config.getDataset() + "\n";
 		   }					  			
 		   List testAtts = new ArrayList();
+
 		   testAtts = testColl.getAttributeDescriptions();
 					  
 		   for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
@@ -1097,6 +1201,42 @@ public class DatabaseDatasetConfigUtils {
 						  (config.getVisible() != null && config.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals("")))				  
 						  ){	
 							  brokenFields = brokenFields + "Attribute " + testAD.getInternalName() + " in dataset " + config.getDataset() + 
+									  ", page "+apage.getInternalName()+", group "+testGroup.getInternalName()+", collection "+testColl.getInternalName() + "\n";
+			  }
+						  
+		   }
+		   
+		   testAtts = testColl.getAttributeLists();
+					  
+		   for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+				Object testAtt = iter.next();
+				AttributeList testAD = (AttributeList) testAtt;
+				if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
+					continue;
+				}
+				if (testAD.getInternalName().matches("\\w+\\.\\w+") ||
+					testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+					continue;//placeholder atts can be duplicated	
+				}
+						  
+				if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
+				   spaceErrors = spaceErrors + "AttributeList " + testAD.getInternalName() + " in dataset " + config.getDataset() + "\n";
+				}					
+				if (descriptionsMap.containsKey(testAD.getInternalName())){
+					//duplicationString = duplicationString + "Attribute " + testAD.getInternalName() + " in dataset " + config.getDataset() + 
+					//" and page " + apage.getInternalName() + "\n";
+					attributeListDuplicationMap.put(testAD.getInternalName(),config.getDataset());   
+					//brokenDatasets.add(config.getDataset());							  
+				}
+				descriptionsMap.put(testAD.getInternalName(),"1");
+						  
+				if (config.getType().equals("GenomicSequence"))
+				  continue;//no point in checking fields
+						  
+						  
+			  // test has all its fields defined - if not add a message to brokenString
+			  if (testAD.getInternalName() == null || testAD.getInternalName().equals("")){	
+							  brokenFields = brokenFields + "AttributeList " + testAD.getInternalName() + " in dataset " + config.getDataset() + 
 									  ", page "+apage.getInternalName()+", group "+testGroup.getInternalName()+", collection "+testColl.getInternalName() + "\n";
 			  }
 						  
@@ -1216,6 +1356,14 @@ public class DatabaseDatasetConfigUtils {
 	  while (enum.hasMoreElements()){
 		  String intName = (String) enum.nextElement();
 		  duplicationString = duplicationString+"Attribute "+intName+" in dataset "+attributeDuplicationMap.get(intName)+"\n";	
+	  }
+  }
+  else if (attributeListDuplicationMap.size() > 0){
+	  duplicationString = "The following attributeList internal names are duplicated and will cause client problems:\n";
+	  Enumeration enum = attributeListDuplicationMap.keys();
+	  while (enum.hasMoreElements()){
+		  String intName = (String) enum.nextElement();
+		  duplicationString = duplicationString+"AttributeList "+intName+" in dataset "+attributeDuplicationMap.get(intName)+"\n";	
 	  }
   }
   else if (filterDuplicationMap.size() > 0){
@@ -1631,8 +1779,6 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 			templateCollection.addAttributeDescription(templateAttToAdd);					
 		}
 }
-
-
 
 
 
@@ -2420,6 +2566,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			AttributeCollection[] templateCollections = templateGroup.getAttributeCollections();
 			for (int k = 0; k < templateCollections.length; k++){
 				AttributeCollection templateCollection = templateCollections[k];
+				
 				List templateAttributes = templateCollection.getAttributeDescriptions();
 				for (int l = 0; l < templateAttributes.size(); l++){
 
@@ -2583,6 +2730,77 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					//if (!configCollection.containsAttributeDescription(configAttName)) 
 					//	configCollection.addAttributeDescription(configAttToAdd);					
 				}
+				
+
+				 templateAttributes = templateCollection.getAttributeLists();
+				for (int l = 0; l < templateAttributes.size(); l++){
+
+					AttributeList templateAtt = (AttributeList) templateAttributes.get(l);
+					String templateAttName = templateAtt.getInternalName();
+					
+					//else{
+						// for now just ignore external placeholders
+						// later implement some sort of mapping in template to handle auto replacement of these
+					//	continue;
+					//}
+					// add the missing placeholder to the dsConfig			
+					AttributePage configPage = dsConfig.getAttributePageByInternalName(templatePage.getInternalName());
+					if (configPage == null){
+						// for now continue rather than adding a completely new page consisting purely of
+						// internal placeholders - this stops empty SNP pages being created for the datasets
+						// without other SNP attributes 
+						//continue;// BUT THIS STOPS SEQ AND STRUCTURE PAGE BEING ADDED FOR NEW NAIVE DATASETS
+						
+						configPage = new AttributePage(templatePage.getInternalName(),
+											  templatePage.getDisplayName(),
+											  templatePage.getDescription(),
+											  templatePage.getOutFormats(),
+											  templatePage.getMaxSelectString());
+						dsConfig.addAttributePage(configPage);				
+						
+					}
+			
+					AttributeGroup configGroup = (AttributeGroup) configPage.getAttributeGroupByName(templateGroup.getInternalName());
+					if (configGroup == null){
+						configGroup = new AttributeGroup(templateGroup.getInternalName(),
+											  templateGroup.getDisplayName(),
+											  templateGroup.getDescription());
+						configPage.addAttributeGroup(configGroup);				
+					}
+			
+					AttributeCollection configCollection = (AttributeCollection) configGroup.getAttributeCollectionByName(templateCollection.getInternalName());
+					if (configCollection == null){
+						configCollection = new AttributeCollection(templateCollection.getInternalName(),
+												  "",
+												  templateCollection.getDisplayName(),
+												  templateCollection.getDescription());
+						configGroup.addAttributeCollection(configCollection);				
+					}
+
+					AttributeList configAttToAdd = new AttributeList(templateAtt);							
+					if (!configCollection.containsAttributeList(configAttToAdd.getInternalName())) {
+						//System.out.println("ADDING PLACEHOLDE 2 ATT "+configAttToAdd.getInternalName());	
+						configCollection.addAttributeList(configAttToAdd);
+					}
+					
+										
+					if (!(configCollection.getAttributeDescriptions().size()+configCollection.getAttributeLists().size() > 0)){
+						configGroup.removeAttributeCollection(configCollection);
+						if (!(configGroup.getAttributeCollections().length > 0)){
+							configPage.removeAttributeGroup(configGroup);
+							if (!(configPage.getAttributeGroups().size() > 0)){
+								dsConfig.removeAttributePage(configPage);
+							}					
+						}
+					}					
+			
+			
+					//AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
+					//configAttToAdd.setInternalName(configAttName);
+					//if (!configCollection.containsAttributeDescription(configAttName)) 
+					//	configCollection.addAttributeDescription(configAttToAdd);					
+				}
+
 			}
 		}	  		
 	}
@@ -2630,6 +2848,18 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 									if (descriptionCounter >= dsConfigCollection.getAttributeDescriptions().size()) continue;//array problems because of duplicate internalNames in unwanted pages usually
 									dsConfigCollection.removeAttributeDescription(dsConfigDescription);
 									dsConfigCollection.insertAttributeDescription(descriptionCounter,dsConfigDescription);
+									descriptionCounter++;
+								}			
+							}	
+							descriptionCounter = 0;		
+							List templateLists = templateCollection.getAttributeLists();
+							for (int l =0; l < templateLists.size(); l++){
+								AttributeList templateDescription = (AttributeList) templateLists.get(l);
+								if (dsConfigCollection.containsAttributeList(templateDescription.getInternalName())){
+									AttributeList dsConfigDescription = dsConfigCollection.getAttributeListByInternalName(templateDescription.getInternalName());
+									if (descriptionCounter >= dsConfigCollection.getAttributeLists().size()) continue;//array problems because of duplicate internalNames in unwanted pages usually
+									dsConfigCollection.removeAttributeList(dsConfigDescription);
+									dsConfigCollection.insertAttributeList(descriptionCounter,dsConfigDescription);
 									descriptionCounter++;
 								}			
 							}			

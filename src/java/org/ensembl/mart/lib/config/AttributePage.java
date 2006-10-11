@@ -37,6 +37,7 @@ public class AttributePage extends BaseNamedConfigurationObject {
 
   //cache one AttributeDescription object for call to containsAttributeDescription or getAttributeDescriptionByName
   private AttributeDescription lastAtt = null;
+  private AttributeList lastAttList = null;
 
   //cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
   private AttributeDescription lastSupportingAttribute = null;
@@ -249,6 +250,52 @@ public class AttributePage extends BaseNamedConfigurationObject {
 	}
 
 	/**
+		* Convenience method for non graphical UI.  Allows a call against the AttributePage for a particular AttributeList.
+	 *  Note, it is best to first call containsAttributeList,  
+		*  as there is a caching system to cache a AttributeList during a call to containsAttributeList.
+		*  
+		* @param internalName name of the requested AttributeList
+		* @return AttributeList requested, or null
+		*/
+	public AttributeList getAttributeListByInternalName(String internalName) {
+		if (containsAttributeList(internalName))
+			return lastAttList;
+		else
+			return null;
+	}
+
+	/**
+		* Convenience method for non graphical UI.  Can determine if the AttributePage contains a specific AttributeList.
+		*  As an optimization for initial calls to containsAttributeList with an immediate call to getAttributeListByName if
+		*  found, this method caches the AttributeList it has found.
+		* 
+		* @param internalName name of the requested AttributeList
+		* @return boolean, true if found, false if not.
+		*/
+	public boolean containsAttributeList(String internalName) {
+		boolean found = false;
+
+		if (lastAttList == null) {
+			for (Iterator iter = (Iterator) attributeGroups.iterator(); iter.hasNext();) {
+				Object group = iter.next();
+				if (group instanceof AttributeGroup && ((AttributeGroup) group).containsAttributeList(internalName)) {
+					lastAttList = ((AttributeGroup) group).getAttributeListByInternalName(internalName);
+					found = true;
+					break;
+				}
+			}
+		} else {
+			if (lastAttList.getInternalName().equals(internalName))
+				found = true;
+			else {
+				lastAttList = null;
+				found = containsAttributeList(internalName);
+			}
+		}
+		return found;
+	}
+
+	/**
 	 * Retrieve a specific AttributeDescription that supports a given field and tableConstraint.
 	 * @param field
 	 * @param tableConstraint
@@ -362,6 +409,82 @@ public class AttributePage extends BaseNamedConfigurationObject {
 		}
 	}
 
+	/**
+	 * Convenience method. Returns all of the AttributeLists contained in all of the AttributeGroups.
+	 * 
+	 * @return List of AttributeList objects
+	 */
+	public List getAllAttributeLists() {
+		List atts = new ArrayList();
+
+		for (Iterator iter = attributeGroups.iterator(); iter.hasNext();) {
+			Object ag = iter.next();
+
+			if (ag instanceof AttributeGroup)
+				atts.addAll(((AttributeGroup) ag).getAllAttributeLists());
+		}
+
+		return atts;
+	}
+
+	/**
+	 * Returns a AttributeGroup for a particular Attribute List (AttributeList or UIDSAttributeList)
+	 * based on its internalName.
+	 * 
+	 * @param internalName - String internalname for which a group is requested
+	 * @return AttributeGroup containing Attribute List with given internalName, or null.
+	 */
+	public AttributeGroup getGroupForAttributeList(String internalName) {
+		if (!containsAttributeList(internalName))
+			return null;
+		else if (lastGroup == null) {
+			for (Iterator iter = attributeGroups.iterator(); iter.hasNext();) {
+				Object groupo = iter.next();
+
+				if (groupo instanceof AttributeGroup) {
+
+					AttributeGroup group = (AttributeGroup) groupo;
+
+					if (group.containsAttributeList(internalName)) {
+						lastGroup = group;
+						break;
+					}
+				}
+			}
+			return lastGroup;
+		} else {
+			if (lastGroup.getInternalName().equals(internalName))
+				return lastGroup;
+			else {
+				lastGroup = null;
+				return getGroupForAttributeList(internalName);
+			}
+		}
+	}
+
+	/**
+	 * Returns a AttributeCollection for a particular Attribute List (AttributeList or UIDSAttributeList)
+	 * based on its internalName.
+	 * 
+	 * @param internalName - String internalname for which a collection is requested
+	 * @return AttributeCollection object containing Attribute List with given internalName, or null.
+	 */
+	public AttributeCollection getCollectionForAttributeList(String internalName) {
+		if (!containsAttributeList(internalName))
+			return null;
+		else if (lastColl == null) {
+			lastColl = getGroupForAttributeList(internalName).getCollectionForAttributeList(internalName);
+			return lastColl;
+		} else {
+			if (lastColl.getInternalName().equals(internalName))
+				return lastColl;
+			else {
+				lastColl = null;
+				return getCollectionForAttributeList(internalName);
+			}
+		}
+	}
+	
 	/**
 	 * Retruns a List of possible Completion names for filters to the MartCompleter command completion system.
 	 * @return List possible completions

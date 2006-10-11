@@ -72,6 +72,7 @@ public class DatasetConfigXMLUtils {
   private final String ATTRIBUTEGROUP = "AttributeGroup";
   private final String ATTRIBUTECOLLECTION = "AttributeCollection";
   private final String ATTRIBUTEDESCRIPTION = "AttributeDescription";
+  private final String ATTRIBUTELIST = "AttributeList";
   private final String DYNAMICATTRIBUTECONTENT = "DynamicAttributeContent";
   private final String DYNAMICFILTERCONTENT = "DynamicFilterContent";
   private final String DYNAMICDATASETCONTENT = "DynamicDatasetContent";
@@ -536,9 +537,22 @@ public class DatasetConfigXMLUtils {
       Element element = (Element) iter.next();
       ac.addAttributeDescription(getAttributeDescription(element));
     }
+    for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, ATTRIBUTELIST));
+    iter.hasNext();
+    ) {
+    Element element = (Element) iter.next();
+    ac.addAttributeList(getAttributeList(element));
+  }
 
     return ac;
   }
+  
+  private AttributeList getAttributeList(Element thisElement) throws ConfigurationException {
+	    AttributeList a = new AttributeList();
+	    loadAttributesFromElement(thisElement, a);
+	    
+	    return a;
+	  }
 
   private AttributeDescription getAttributeDescription(Element thisElement) throws ConfigurationException {
     AttributeDescription a = new AttributeDescription();
@@ -763,12 +777,20 @@ public class DatasetConfigXMLUtils {
     loadElementAttributesFromObject(collection, ac);
 
     List ads = collection.getAttributeDescriptions();
-    //currently there are only AttributeDescription objects, may be DSAttributeDescription in the future
     for (Iterator iter = ads.iterator(); iter.hasNext();)
       ac.addContent(getAttributeDescriptionElement((AttributeDescription) iter.next()));
+    ads = collection.getAttributeLists();
+    for (Iterator iter = ads.iterator(); iter.hasNext();)
+      ac.addContent(getAttributeListElement((AttributeList) iter.next()));
 
     return ac;
   }
+  
+  private Element getAttributeListElement(AttributeList attribute) {
+	    Element att = new Element(ATTRIBUTELIST);
+	    loadElementAttributesFromObject(attribute, att);
+	    return att;
+	  }
 
   private Element getAttributeDescriptionElement(AttributeDescription attribute) {
     Element att = new Element(ATTRIBUTEDESCRIPTION);

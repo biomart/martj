@@ -21,23 +21,19 @@ package org.ensembl.mart.editor;
 import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Hashtable;
 
 import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributeGroup;
+import org.ensembl.mart.lib.config.AttributeList;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
 import org.ensembl.mart.lib.config.DatasetConfig;
-//import org.ensembl.mart.lib.config.Disable;
-//import org.ensembl.mart.lib.config.Enable;
 import org.ensembl.mart.lib.config.DynamicAttributeContent;
-import org.ensembl.mart.lib.config.DynamicImportableContent;
+import org.ensembl.mart.lib.config.DynamicDatasetContent;
 import org.ensembl.mart.lib.config.DynamicExportableContent;
 import org.ensembl.mart.lib.config.DynamicFilterContent;
-import org.ensembl.mart.lib.config.DynamicDatasetContent;
+import org.ensembl.mart.lib.config.DynamicImportableContent;
 import org.ensembl.mart.lib.config.Exportable;
 import org.ensembl.mart.lib.config.FilterCollection;
 import org.ensembl.mart.lib.config.FilterDescription;
@@ -341,6 +337,13 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 										dynNode.setUserObject(dynAtt);	
 									}
 								}
+								descriptions = atCollection.getAttributeLists();
+								for (int y = 0; y < descriptions.size(); y++) {
+									AttributeList atDescription = (AttributeList) descriptions.get(y);
+									String desName = atDescription.getInternalName();
+									DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("AttributeList:" + desName);
+									desNode.setUserObject(atDescription);
+								}
 							}
 						} 
 					}
@@ -484,6 +487,13 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 								dynNode.setUserObject(dynAtt);	
 							}
 						}
+						 descriptions = atCollection.getAttributeLists();
+						for (int y = 0; y < descriptions.size(); y++) {
+							AttributeList atDescription = (AttributeList) descriptions.get(y);
+							String desName = atDescription.getInternalName();
+							DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("AttributeList:" + desName);
+							desNode.setUserObject(atDescription);
+						}
 					}
 				} 
 			}
@@ -608,6 +618,14 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 						dynNode.setUserObject(dynAtt);	
 					}
 				}
+				descriptions = atCollection.getAttributeLists();
+				for (int y = 0; y < descriptions.size(); y++) {
+					AttributeList atDescription = (AttributeList) descriptions.get(y);
+					String desName = atDescription.getInternalName();
+					DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("AttributeList:" + desName);
+					desNode.setUserObject(atDescription);
+					//colNode.add(desNode);
+				}
 			}
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DSAttributeGroup")) {
 			setName("DSAttributeGroup: " + ((BaseNamedConfigurationObject) obj).getInternalName());
@@ -720,6 +738,14 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 					dynNode.setUserObject(dynAtt);	
 				}
 			}
+			descriptions = atCollection.getAttributeLists();
+			for (int y = 0; y < descriptions.size(); y++) {
+				AttributeList atDescription = (AttributeList) descriptions.get(y);
+				String desName = atDescription.getInternalName();
+				DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("AttributeList:" + desName);
+				desNode.setUserObject(atDescription);
+				this.add(desNode);
+			}
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterDescription")) {
 			//System.out.println("FILT\t" + ((BaseNamedConfigurationObject) obj).getInternalName());
 			setName("Filter: " + ((BaseNamedConfigurationObject) obj).getInternalName());
@@ -818,6 +844,11 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				dynNode.setUserObject(dynAtt);	
 				this.add(dynNode);
 			}	
+			
+		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeList")) {
+			
+			//checkUniqueness((BaseNamedConfigurationObject)obj);
+			setName("AttributeList: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 			
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DynamicAttributeContent")) {
 			setName("DynamicAttributeContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );

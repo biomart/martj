@@ -103,7 +103,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 
   // cache one AttributeDescription for call to containsAttributeDescription or getAttributeDescriptionByInternalName
   private AttributeDescription lastAtt = null;
-
+  private AttributeList lastAttList = null;
+  
   //cache one AttributeDescription for call to supportsAttributeDescription/getAttributeDescriptionByFieldNameTableConstraint
   private AttributeDescription lastSupportingAttribute = null;
 
@@ -1146,6 +1147,53 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     }
     return found;
   }
+  /**
+	* Convenience method for non graphical UI.  Allows a call against the DatasetConfig for a particular AttributeList.
+	* Note, it is best to first call containsAttributeList,
+	* as there is a caching system to cache a AttributeList during a call to containsAttributeList.
+	* 
+	* @param internalName name of the requested AttributeList
+	* @return AttributeList
+	*/
+public AttributeList getAttributeListByInternalName(String internalName) {
+  lazyLoad();
+  if (containsAttributeList(internalName))
+    return lastAttList;
+  else
+    return null;
+}
+
+/**
+	* Convenience method for non graphical UI.  Can determine if the DatasetConfig contains a specific AttributeList.
+	*  As an optimization for initial calls to containsAttributeList with an immediate call to getAttributeListByName if
+	*  found, this method caches the AttributeList it has found.
+	* 
+	* @param internalName name of the requested AttributeList
+	* @return boolean, true if found, false if not.
+	*/
+public boolean containsAttributeList(String internalName) {
+  lazyLoad();
+  boolean found = false;
+
+  if (lastAttList == null) {
+    for (Iterator iter = (Iterator) attributePages.iterator(); iter.hasNext();) {
+      AttributePage page = (AttributePage) iter.next();
+      if (page.containsAttributeList(internalName)) {
+        lastAttList = page.getAttributeListByInternalName(internalName);
+        found = true;
+        break;
+      }
+    }
+  } else {
+    if (lastAttList.getInternalName().equals(internalName))
+      found = true;
+    else {
+      lastAttList = null;
+      found = containsAttributeList(internalName);
+    }
+  }
+  return found;
+}
 
   /**
   	* Convenience method for non graphical UI.  Allows a call against the DatasetConfig for a particular 
@@ -1454,7 +1502,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     for (Iterator iter = (Iterator) attributePages.iterator(); iter.hasNext();) {
       AttributePage page = (AttributePage) iter.next();
 
-      if (page.containsAttributeDescription(internalName))
+      if (page.containsAttributeDescription(internalName)||page.containsAttributeList(internalName))
         return page;
     }
     return null;
@@ -1472,7 +1520,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     for (Iterator iter = (Iterator) attributePages.iterator(); iter.hasNext();) {
       AttributePage page = (AttributePage) iter.next();
 
-      if (page.containsAttributeDescription(internalName))
+      if (page.containsAttributeDescription(internalName)||page.containsAttributeList(internalName))
         pages.add(page);
     }
 
@@ -1515,6 +1563,27 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
       if (apo instanceof AttributePage) {
         AttributePage ap = (AttributePage) apo;
         atts.addAll(ap.getAllAttributeDescriptions());
+      }
+    }
+
+    return atts;
+  }
+
+  /**
+   * Convenience Method to get all AttributeList objects in all Pages/Groups/Collections within a DatasetConfig.
+   * 
+   * @return List of AttributeList objects
+   */
+  public List getAllAttributeLists() {
+    lazyLoad();
+    List atts = new ArrayList();
+
+    for (Iterator iter = attributePages.iterator(); iter.hasNext();) {
+      Object apo = iter.next();
+
+      if (apo instanceof AttributePage) {
+        AttributePage ap = (AttributePage) apo;
+        atts.addAll(ap.getAllAttributeLists());
       }
     }
 
@@ -1599,11 +1668,15 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public AttributeGroup getGroupForAttribute(String internalName) {
     lazyLoad();
-    if (!containsAttributeDescription(internalName))
+    if (!containsAttributeDescription(internalName) && !containsAttributeList(internalName))
       return null;
     else if (lastAttGroup == null) {
-      lastAttGroup = getPageForAttribute(internalName).getGroupForAttributeDescription(internalName);
-      return lastAttGroup;
+    	if (containsAttributeList(internalName)) {
+    		lastAttGroup = getPageForAttribute(internalName).getGroupForAttributeList(internalName);
+    	} else {
+    		lastAttGroup = getPageForAttribute(internalName).getGroupForAttributeDescription(internalName);
+    	}
+    	return lastAttGroup;
     } else {
       if (lastAttGroup.getInternalName().equals(internalName))
         return lastAttGroup;
@@ -1623,16 +1696,20 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public AttributeCollection getCollectionForAttribute(String internalName) {
     lazyLoad();
-    if (!containsAttributeDescription(internalName)) {
+    if (!containsAttributeDescription(internalName) && !containsAttributeList(internalName)) {
       return null;
-    } else if (lastFiltColl == null) {
-      lastAttColl = getGroupForAttribute(internalName).getCollectionForAttributeDescription(internalName);
-      return lastAttColl;
+    } else if (lastAttColl == null) {
+    	if (containsAttributeList(internalName)) {
+    		lastAttColl = getGroupForAttribute(internalName).getCollectionForAttributeList(internalName);
+    	} else {
+    		lastAttColl = getGroupForAttribute(internalName).getCollectionForAttributeDescription(internalName);
+    	}
+    	return lastAttColl;
     } else {
-      if (lastFiltColl.getInternalName().equals(internalName))
+      if (lastAttColl.getInternalName().equals(internalName))
         return lastAttColl;
       else {
-        lastFiltColl = null;
+    	  lastAttColl = null;
         return getCollectionForAttribute(internalName);
       }
     }
