@@ -22,7 +22,6 @@ import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
-//import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
@@ -48,14 +47,15 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.awt.Color;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -78,11 +78,36 @@ import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.TableCellEditor;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
-import org.ensembl.mart.lib.config.*;
+import org.ensembl.mart.lib.DetailedDataSource;
+import org.ensembl.mart.lib.config.AttributeCollection;
+import org.ensembl.mart.lib.config.AttributeDescription;
+import org.ensembl.mart.lib.config.AttributeGroup;
+import org.ensembl.mart.lib.config.AttributeList;
+import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.BaseConfigurationObject;
+import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
+import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatasetConfig;
+import org.ensembl.mart.lib.config.DatasetConfigIterator;
+import org.ensembl.mart.lib.config.DynamicAttributeContent;
+import org.ensembl.mart.lib.config.DynamicDatasetContent;
+import org.ensembl.mart.lib.config.DynamicExportableContent;
+import org.ensembl.mart.lib.config.DynamicFilterContent;
+import org.ensembl.mart.lib.config.DynamicImportableContent;
+import org.ensembl.mart.lib.config.Exportable;
+import org.ensembl.mart.lib.config.FilterCollection;
+import org.ensembl.mart.lib.config.FilterDescription;
+import org.ensembl.mart.lib.config.FilterGroup;
+import org.ensembl.mart.lib.config.FilterPage;
+import org.ensembl.mart.lib.config.Importable;
+import org.ensembl.mart.lib.config.Option;
+import org.ensembl.mart.lib.config.PushAction;
+import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 
 /**
  * Class DatasetConfigTree extends JTree.
@@ -1333,7 +1358,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		MartEditor.getDatabaseDatasetConfigUtils().updateConfigsToTemplate(dsConfig.getTemplate(),dsConfig);
 	}
 	
-	public void validateTemplate() throws ConfigurationException {
+	public void validateTemplate() throws ConfigurationException {		
 		dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
 		if (dsConfig.getTemplateFlag() == null){
 			JOptionPane.showMessageDialog(null,"This is not a template config","",JOptionPane.ERROR_MESSAGE);
@@ -1350,11 +1375,11 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			// Spaces in internal names.
 			if (obj.getInternalName().indexOf(' ')>=0) 
 				problems.add("Space found in internal name: '"+obj.getInternalName()+"'");
-			
-			//
-			// TO TURN REQUIRED FILEDS OFF, COMMENT FROM HERE...
-			//
-			
+						
+			/* CANNOT DO THIS AS CANNOT TELL WHICH FIELDS
+			 * ARE GENUINELY REQUIRED IN EACH OBJECT.
+			 */
+			/*
 			// Missing values in required (red) fields.
 			int[] required = obj.getRequiredFields();
 			String[] keys = obj.getXmlAttributeTitles();
@@ -1364,14 +1389,11 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				if (value==null || value.equals(""))
 					problems.add("Missing value for "+key+" in "+obj.getInternalName());
 			}			
-			
-			//
-			// ... TO HERE, TO TURN REQUIRED FIELDS OFF
-			//
-			
+			*/
+						
 			// Append objects to list for checking.
 			if (obj instanceof DatasetConfig) {
-				toCheck.addAll(((DatasetConfig)obj).getDynamicDatasetContents());
+				//toCheck.addAll(((DatasetConfig)obj).getDynamicDatasetContents());
 				toCheck.addAll(Arrays.asList(((DatasetConfig)obj).getAttributePages()));
 				toCheck.addAll(Arrays.asList(((DatasetConfig)obj).getFilterPages()));
 				toCheck.addAll(Arrays.asList(((DatasetConfig)obj).getExportables()));
@@ -1388,7 +1410,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				toCheck.addAll(((AttributeCollection)obj).getAttributeLists());
 			}
 			else if (obj instanceof AttributeDescription) {
-				toCheck.addAll(((AttributeDescription)obj).getDynamicAttributeContents());
+				//toCheck.addAll(((AttributeDescription)obj).getDynamicAttributeContents());
 			}
 			else if (obj instanceof FilterPage) {
 				toCheck.addAll(((FilterPage)obj).getFilterGroups());
@@ -1400,8 +1422,20 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				toCheck.addAll(((FilterCollection)obj).getFilterDescriptions());
 			}
 			else if (obj instanceof FilterDescription) {
-				toCheck.addAll(((FilterDescription)obj).getDynamicFilterContents());
+				//toCheck.addAll(((FilterDescription)obj).getDynamicFilterContents());
 			}
+			else if (obj instanceof AttributeList) {
+				AttributeList attr = (AttributeList)obj;
+
+				// Non-existent attributes.
+				if (attr.getAttributes()!=null) {
+					String[] attrs = attr.getAttributes().split(",");
+					for (int j = 0; j < attrs.length; j++) {
+						if (!dsConfig.containsAttributeDescription(attrs[j]))
+							problems.add("AttributeList "+attr.getInternalName()+" refers to non-existent attribute "+attrs[j]);
+					}
+				}
+				}
 			else if (obj instanceof Exportable) {
 				Exportable exp = (Exportable)obj;
 
@@ -1415,7 +1449,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				}
 				
 				// Recurse.
-				toCheck.addAll(exp.getDynamicExportableContents());
+				//toCheck.addAll(exp.getDynamicExportableContents());
 				}
 			else if (obj instanceof Importable) {
 				Importable imp = (Importable)obj;
@@ -1430,7 +1464,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				}
 				
 				// Recurse.
-				toCheck.addAll(imp.getDynamicImportableContents());		
+				//toCheck.addAll(imp.getDynamicImportableContents());		
 			}
 		}
 		

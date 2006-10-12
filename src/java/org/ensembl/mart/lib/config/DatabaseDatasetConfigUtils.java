@@ -20,7 +20,6 @@ package org.ensembl.mart.lib.config;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -35,12 +34,14 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -48,7 +49,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+
 import javax.swing.JOptionPane;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamSource;
 
 import oracle.sql.BLOB;
 import oracle.sql.CLOB;
@@ -58,26 +63,9 @@ import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.util.ColumnDescription;
 import org.ensembl.mart.util.TableDescription;
 import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.output.DOMOutputter;
 import org.jdom.output.XMLOutputter;
 import org.jdom.transform.JDOMResult;
 import org.jdom.transform.JDOMSource;
-
-// XSLT imports
-import org.jdom.input.SAXBuilder;
-import org.w3c.dom.Node;
-
-import com.sun.media.sound.HsbParser;
-
-import javax.xml.transform.Templates;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.transform.stream.StreamResult;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 
 /**
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
@@ -1563,8 +1551,6 @@ public class DatabaseDatasetConfigUtils {
 		 DetailedDataSource.close(conn);
 	}
   }
-
-
 
 private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetConfig dsConfig, DatasetConfig templateConfig)
 	  throws ConfigurationException{
