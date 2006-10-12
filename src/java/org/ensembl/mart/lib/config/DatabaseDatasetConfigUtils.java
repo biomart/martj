@@ -2731,7 +2731,46 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					//	configCollection.addAttributeDescription(configAttToAdd);					
 				}
 				
+				// Wipe all existing attribute lists from the dataset config.
+				List dsAttrLists = dsConfig.getAllAttributeLists();
+				for (int l = 0; l < dsAttrLists.size(); l++){
 
+					AttributeList dsAtt = (AttributeList) dsAttrLists.get(l);
+					
+					//else{
+						// for now just ignore external placeholders
+						// later implement some sort of mapping in template to handle auto replacement of these
+					//	continue;
+					//}
+					// add the missing placeholder to the dsConfig			
+					AttributePage configPage = dsConfig.getAttributePageByInternalName(templatePage.getInternalName());
+					
+			
+					AttributeGroup configGroup = (AttributeGroup) configPage.getAttributeGroupByName(templateGroup.getInternalName());
+					
+			
+					AttributeCollection configCollection = (AttributeCollection) configGroup.getAttributeCollectionByName(templateCollection.getInternalName());
+					
+					configCollection.removeAttributeList(dsAtt);
+										
+					if (!(configCollection.getAttributeDescriptions().size()+configCollection.getAttributeLists().size() > 0)){
+						configGroup.removeAttributeCollection(configCollection);
+						if (!(configGroup.getAttributeCollections().length > 0)){
+							configPage.removeAttributeGroup(configGroup);
+							if (!(configPage.getAttributeGroups().size() > 0)){
+								dsConfig.removeAttributePage(configPage);
+							}					
+						}
+					}					
+			
+			
+					//AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
+					//configAttToAdd.setInternalName(configAttName);
+					//if (!configCollection.containsAttributeDescription(configAttName)) 
+					//	configCollection.addAttributeDescription(configAttToAdd);					
+				}
+
+				// Insert all attribute lists from the template into the dataset.
 				 templateAttributes = templateCollection.getAttributeLists();
 				for (int l = 0; l < templateAttributes.size(); l++){
 
