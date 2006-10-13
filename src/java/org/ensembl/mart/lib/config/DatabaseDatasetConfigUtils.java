@@ -349,7 +349,6 @@ public class DatabaseDatasetConfigUtils {
 	String interfaces,
     DatasetConfig dsConfig)
     throws ConfigurationException {
-		System.err.println("CALLED: storeDSConf   "+dsConfig.getDisplayName()+" "+dsConfig.getTemplate());
 
     	
     	if (martUsers.equals(""))	
@@ -4446,6 +4445,15 @@ public boolean naiveExportWouldOverrideExistingConfig(
 	*/
 
 public void deleteTemplateConfigs(String template) throws ConfigurationException {
+	// Get all ds and delete those first.
+	String[] dsNs = getDatasetNamesForTemplate(template);
+	for (int i = 0; i < dsNs.length; i++) {
+		String dsN = dsNs[i];
+		String[] ids = getAllDatasetIDsForDataset(MartEditor.getUser(), dsN);
+		for (int j = 0; j < ids.length; j++) 
+		this.deleteDatasetConfigsForDatasetID(dsN, ids[j], MartEditor.getUser(), template);
+	}
+	
 	String deleteTemplateSQL = "delete from "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" where template = ?";
 	String deleteRealTemplateSQL = "delete from "+getSchema()[0]+"."+MARTTEMPLATEDMTABLE+" where template = ?";
 	  if (readonly) throw new ConfigurationException("Cannot delete config from a read-only database");
