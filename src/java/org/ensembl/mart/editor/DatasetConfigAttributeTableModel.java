@@ -329,7 +329,7 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 				}  
 
 				obj.setAttribute(firstColumnData[rowIndex], (String) aValue);
-
+				if (collectionIndex==-1) collectionIndex = 0;
 
 				if (parent instanceof org.ensembl.mart.lib.config.DatasetConfig) {
 					DatasetConfig config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();

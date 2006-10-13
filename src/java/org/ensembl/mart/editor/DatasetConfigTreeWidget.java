@@ -109,6 +109,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             	  
             	  		else{// naive
             	  			config = MartEditor.getDatabaseDatasetConfigUtils().getNaiveDatasetConfigFor(schema,dataset);
+                    		config.setDSConfigAdaptor(new SimpleDSConfigAdaptor(config)); //prevents lazyLoading
             	  			if (config.getPrimaryKeys().length == 0 || !config.getPrimaryKeys()[0].toLowerCase().endsWith("_key")){
             	  				JOptionPane.showMessageDialog(null,"Your main table must contain a primary key ending _key");
             	  				return;
@@ -129,7 +130,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 								// Generate template document based on existing config.
 								templateConfig.setInternalName("template");
 								templateConfig.setDataset(template+"_template");
-								templateConfig.setTemplate("template");
+								//templateConfig.setTemplate(template);
 							} else {
 								MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, templateDocument);
 							}

@@ -1328,6 +1328,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			if (JOptionPane.showConfirmDialog(null,"This action will override the existing config for this dataset. Are you sure?")!=JOptionPane.YES_OPTION)
 				return false;
 		}
+		System.err.println("CALLING: storeDSConf   "+dsConfig.getDisplayName()+" "+dsConfig.getTemplate());
+
 		MartEditor.getDatabaseDatasetConfigUtils().storeDatasetConfiguration(
 			MartEditor.getUser(),
 			dsConfig.getInternalName(),
@@ -1353,8 +1355,10 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			return;
 		}
 		if (!MartEditor.getDatabaseDatasetConfigUtils().uniqueCheckConfig(dsConfig)) return;
+		System.err.println("CALLING storeTemplateXML  "+dsConfig.getDisplayName()+" "+dsConfig.getTemplate());
 		MartEditor.getDatabaseDatasetConfigUtils().storeTemplateXML(dsConfig,dsConfig.getTemplate());
 		// update config to template
+		System.err.println("CALLING updateConfs  "+dsConfig.getDisplayName()+" "+dsConfig.getTemplate());
 		MartEditor.getDatabaseDatasetConfigUtils().updateConfigsToTemplate(dsConfig.getTemplate(),dsConfig);
 	}
 	

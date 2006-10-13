@@ -349,7 +349,8 @@ public class DatabaseDatasetConfigUtils {
 	String interfaces,
     DatasetConfig dsConfig)
     throws ConfigurationException {
-    	
+		System.err.println("CALLED: storeDSConf   "+dsConfig.getDisplayName()+" "+dsConfig.getTemplate());
+
     	
     	if (martUsers.equals(""))	
     		martUsers = "default";
@@ -1398,7 +1399,8 @@ public class DatabaseDatasetConfigUtils {
   
 
   public void updateConfigsToTemplate(String template, DatasetConfig templateConfig) throws ConfigurationException{
-  	
+		System.err.println("CALLED: updateConfigsToTemplate   "+templateConfig.getDisplayName()+" "+template);
+
   	// extract all the dataset configs matching template and call updateConfigToTemplate storing each one as returned
 	Connection conn = null;
 	try {
@@ -2093,6 +2095,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
   public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig, int storeFlag) throws ConfigurationException, SQLException{
 	String template = dsConfig.getTemplate();
 	
+	System.err.println("CALLED: updateConfigToTemp   "+dsConfig.getDisplayName()+" "+dsConfig.getTemplate());
+	
 	DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
 	dscutils.loadDatasetConfigWithDocument(templateConfig,getTemplateDocument(template));
 	
@@ -2173,6 +2177,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		updateAttributeToTemplate(configAtt,dsConfig,templateConfig);
 	}
 	
+	/* Why copy these? They are template-defined not dataset-defined.
 	// imps/exps merge
 	
 	// first add extra config importables to template
@@ -2306,8 +2311,9 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		Exportable newExp = new Exportable(configExps[i]);
 		templateConfig.addExportable(newExp);
 	}
-
+	*/
 	
+
 	// add any missing placeholders from template to the dataset - useful for naive
 	// don't bother with MULTI settings as XSLT transformation will remove anyhow
 	
@@ -2433,24 +2439,12 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						configAttToAdd.setTableConstraint(dsConfig.getDataset()+"__"+configAttToAdd.getTableConstraint());
 					}
 					
-						//if (!configCollection.containsFilterDescription(configAttToAdd.getInternalName())){ 
-							// make sure no other placeholders filters already exist with the same name in this page
-					if (configPage.containsFilterDescription(configAttToAdd.getInternalName())){
-								//System.out.println(configPage.getInternalName()+" already has placeholder att "+configAttToAdd.getInternalName());
-						List configGroups = configPage.getFilterGroups();
-						for (int a = 0; a < configGroups.size(); a++){
-							FilterGroup tempConfigGroup = (FilterGroup) configGroups.get(a);
-							FilterCollection[] configCollections = tempConfigGroup.getFilterCollections();
-							for (int b = 0; b < configCollections.length; b++){
-								FilterCollection tempConfigCollection = configCollections[b];
-								if (tempConfigCollection.containsFilterDescription(configAttToAdd.getInternalName())){
-									//System.out.println("Removing it:"+configAttToAdd.getInternalName());
-									tempConfigCollection.removeFilterDescription(tempConfigCollection.getFilterDescriptionByInternalName(configAttToAdd.getInternalName()));
-								}
-							}
-						}								
+				
+					if (configAttToAdd.getTableConstraint()==null || "".equals(configAttToAdd.getTableConstraint()) || dsConfig.supportsFilterDescription(configAttToAdd.getField(), configAttToAdd.getTableConstraint(), configAttToAdd.getQualifier())){
+						if (configCollection.containsFilterDescription(configAttToAdd.getInternalName()))
+							configCollection.removeFilterDescription(configAttToAdd);
+						configCollection.addFilterDescription(configAttToAdd);
 					}
-					configCollection.addFilterDescription(configAttToAdd);
 					
 					if (!(configCollection.getFilterDescriptions().size() > 0)){
 						configGroup.removeFilterCollection(configCollection);
@@ -2621,22 +2615,11 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						configAttToAdd.setTableConstraint(dsConfig.getDataset()+"__"+configAttToAdd.getTableConstraint());
 					}
 					
-					if (configPage.containsAttributeDescription(configAttToAdd.getInternalName())){
-								//System.out.println(configPage.getInternalName()+" already has placeholder att "+configAttToAdd.getInternalName());
-						List configGroups = configPage.getAttributeGroups();
-						for (int a = 0; a < configGroups.size(); a++){
-							AttributeGroup tempConfigGroup = (AttributeGroup) configGroups.get(a);
-							AttributeCollection[] configCollections = tempConfigGroup.getAttributeCollections();
-							for (int b = 0; b < configCollections.length; b++){
-								AttributeCollection tempConfigCollection = configCollections[b];
-								if (tempConfigCollection.containsAttributeDescription(configAttToAdd.getInternalName())){
-									//System.out.println("Removing it:"+configAttToAdd.getInternalName());
-									tempConfigCollection.removeAttributeDescription(tempConfigCollection.getAttributeDescriptionByInternalName(configAttToAdd.getInternalName()));
-								}
-							}
-						}								
+					if (configAttToAdd.getTableConstraint()==null || "".equals(configAttToAdd.getTableConstraint()) || dsConfig.supportsAttributeDescription(configAttToAdd.getField(), configAttToAdd.getTableConstraint())) {
+						if (configCollection.containsAttributeDescription(configAttToAdd.getInternalName()))
+								configCollection.removeAttributeDescription(configAttToAdd);
+						configCollection.addAttributeDescription(configAttToAdd);
 					}
-					configCollection.addAttributeDescription(configAttToAdd);
 					
 					if (!(configCollection.getAttributeDescriptions().size() > 0)){
 						configGroup.removeAttributeCollection(configCollection);
@@ -2649,45 +2632,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					}
 					
 					
-			
-			
-					//AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
-					//configAttToAdd.setInternalName(configAttName);
-					//if (!configCollection.containsAttributeDescription(configAttName)) 
-					//	configCollection.addAttributeDescription(configAttToAdd);					
-				}
-				
-				// Wipe all existing attribute lists from the dataset config.
-				List dsAttrLists = dsConfig.getAllAttributeLists();
-				for (int l = 0; l < dsAttrLists.size(); l++){
-
-					AttributeList dsAtt = (AttributeList) dsAttrLists.get(l);
-					
-					//else{
-						// for now just ignore external placeholders
-						// later implement some sort of mapping in template to handle auto replacement of these
-					//	continue;
-					//}
-					// add the missing placeholder to the dsConfig			
-					AttributePage configPage = dsConfig.getAttributePageByInternalName(templatePage.getInternalName());
-					
-			
-					AttributeGroup configGroup = (AttributeGroup) configPage.getAttributeGroupByName(templateGroup.getInternalName());
-					
-			
-					AttributeCollection configCollection = (AttributeCollection) configGroup.getAttributeCollectionByName(templateCollection.getInternalName());
-					
-					configCollection.removeAttributeList(dsAtt);
-										
-					if (!(configCollection.getAttributeDescriptions().size()+configCollection.getAttributeLists().size() > 0)){
-						configGroup.removeAttributeCollection(configCollection);
-						if (!(configGroup.getAttributeCollections().length > 0)){
-							configPage.removeAttributeGroup(configGroup);
-							if (!(configPage.getAttributeGroups().size() > 0)){
-								dsConfig.removeAttributePage(configPage);
-							}					
-						}
-					}					
 			
 			
 					//AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
@@ -2743,10 +2687,10 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					}
 
 					AttributeList configAttToAdd = new AttributeList(templateAtt);	
-					if (!configCollection.containsAttributeList(configAttToAdd.getInternalName())) {
 						//System.out.println("ADDING PLACEHOLDE 2 ATT "+configAttToAdd.getInternalName());	
+					if (configCollection.containsAttributeList(configAttToAdd.getInternalName())) 
+							configCollection.removeAttributeList(configAttToAdd);
 						configCollection.addAttributeList(configAttToAdd);
-					}
 					
 										
 					if (!(configCollection.getAttributeDescriptions().size()+configCollection.getAttributeLists().size() > 0)){
@@ -2781,19 +2725,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			// why can we not copy over importables with linkversions??
 			// (tempImps[i].getLinkVersion() != null && !tempImps[i].getLinkVersion().equals("")))
 				continue;
-				
-		configImps = dsConfig.getImportables();
-		for (int j = 0; j < configImps.length; j++){
-			// skip if importable with same internalName already exists in dsConfig
-			if (tempImps[i].getInternalName().equals(configImps[j].getInternalName())
-				|| (tempImps[i].getFilters().equals(configImps[j].getFilters()))) continue OUTER;
-		}
-		
-		// skip if templateConfig contains other Importables with the same filters setting as wouldn't know which one to use
-		for (int j = 0; j < tempImps.length; j++){
-			if (i == j) continue;
-			if (tempImps[i].getFilters().equals(tempImps[j].getFilters())) continue OUTER;	
-		}
 		
 		String[] filterNames = tempImps[i].getFilters().split(",");
 		for (int j = 0; j < filterNames.length; j++){
@@ -2806,6 +2737,11 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		
 		// if passsed all above tests then add template Importable to datasetConfig 
 		Importable newImp = new Importable(tempImps[i]);
+
+		Importable[] dsImps = dsConfig.getImportables();
+		for (int j = 0; j < dsImps.length; j++) 
+			if (dsImps[j].getInternalName().equals(newImp.getInternalName()))
+				dsConfig.removeImportable(dsImps[j]);
 		dsConfig.addImportable(newImp);
 	}
 	
@@ -2818,19 +2754,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			// why can we not copy over exportables with linkversions??
 			//(tempExps[i].getLinkVersion() != null && !tempExps[i].getLinkVersion().equals("")))
 				continue;
-				
-		configExps = dsConfig.getExportables();
-		for (int j = 0; j < configExps.length; j++){
-			// skip if importable with same internalName already exists in dsConfig
-			if (tempExps[i].getInternalName().equals(configExps[j].getInternalName())
-				|| (tempExps[i].getAttributes().equals(configExps[j].getAttributes()))) continue OUTER;
-		}
-		
-		// skip if templateConfig contains other Importables with the same filters setting as wouldn't know which one to use
-		for (int j = 0; j < tempExps.length; j++){
-			if (i == j) continue;
-			if (tempExps[i].getAttributes().equals(tempExps[j].getAttributes())) continue OUTER;	
-		}
 		
 		String[] filterNames = tempExps[i].getAttributes().split(",");
 		for (int j = 0; j < filterNames.length; j++){
@@ -2843,7 +2766,49 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		
 		// if passsed all above tests then add template Importable to datasetConfig 
 		Exportable newExp = new Exportable(tempExps[i]);
+
+		Exportable[] dsExps = dsConfig.getExportables();
+		for (int j = 0; j < dsExps.length; j++) 
+			if (dsExps[j].getInternalName().equals(newExp.getInternalName()))
+				dsConfig.removeExportable(dsExps[j]);
 		dsConfig.addExportable(newExp);
+	}
+
+
+	
+	// Wipe redundant attributes, attribute lists, filters, importables, exportables from the dataset config.
+	for (Iterator j = dsConfig.getAllAttributeDescriptions().iterator(); j.hasNext(); ) {
+		AttributeDescription ad = (AttributeDescription)j.next();
+		if (!templateConfig.containsAttributeDescription(ad.getInternalName()))
+			dsConfig.getCollectionForAttribute(ad.getInternalName()).removeAttributeDescription(ad);
+	}
+	for (Iterator j = dsConfig.getAllAttributeLists().iterator(); j.hasNext(); ) {
+		AttributeList ad = (AttributeList)j.next();
+		if (!templateConfig.containsAttributeList(ad.getInternalName()))
+			dsConfig.getCollectionForAttribute(ad.getInternalName()).removeAttributeList(ad);
+	}
+	for (Iterator j = dsConfig.getAllFilterDescriptions().iterator(); j.hasNext(); ) {
+		FilterDescription ad = (FilterDescription)j.next();
+		if (!templateConfig.containsFilterDescription(ad.getInternalName()))
+			dsConfig.getCollectionForFilter(ad.getInternalName()).removeFilterDescription(ad);
+	}
+	Importable[] dsImps = dsConfig.getImportables();
+	for (int j = 0; j < dsImps.length; j++) {
+		Importable[] tImps = templateConfig.getImportables();
+		boolean has = false;
+		for (int k = 0; k < tImps.length && !has; k++) {
+			if (tImps[k].getInternalName().equals(dsImps[j].getInternalName())) has = true;
+		}
+		if (!has) dsConfig.removeImportable(dsImps[j]);
+	}
+	Exportable[] dsExps = dsConfig.getExportables();
+	for (int j = 0; j < dsExps.length; j++) {
+		Exportable[] tExps = templateConfig.getExportables();
+		boolean has = false;
+		for (int k = 0; k < tExps.length && !has; k++) {
+			if (tExps[k].getInternalName().equals(dsExps[j].getInternalName())) has = true;
+		}
+		if (!has) dsConfig.removeExportable(dsExps[j]);
 	}
 	
 	// put dsConfig back in same order as templateConfig
@@ -3085,6 +3050,8 @@ public boolean naiveExportWouldOverrideExistingConfig(
       return storeCompressedXMLOracle(user, internalName, displayName, dataset, description, doc, type, visible, version, datasetID, martUsers, interfaces,dsConfig);
 	  if (readonly) throw new ConfigurationException("Cannot store config into read-only database");
 
+	  System.err.println("STORING XML: "+dsConfig.getInternalName()+" "+dsConfig.getTemplate());
+	  
     Connection conn = null;
     try {
 		conn = dsource.getConnection();	
