@@ -19,6 +19,7 @@
 package org.ensembl.mart.editor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -175,48 +176,60 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 				Object parent = ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 				int index = node.getParent().getIndex(node) - DatasetConfigTreeNode.getHeterogenousOffset(parent, child);
 
+				int collectionIndex = 0;
+				
 				if (parent instanceof org.ensembl.mart.lib.config.DatasetConfig) {
 					DatasetConfig config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 
 					if (child instanceof org.ensembl.mart.lib.config.Importable){
+						collectionIndex=Arrays.asList(config.getImportables()).indexOf(node.getUserObject());
 						config.removeImportable((Importable) node.getUserObject());
 					}
 					else if (child instanceof Exportable){
+						collectionIndex=Arrays.asList(config.getExportables()).indexOf(node.getUserObject());
 						config.removeExportable((Exportable) node.getUserObject());
 					}
 					else if (child instanceof org.ensembl.mart.lib.config.FilterPage){
+						collectionIndex=Arrays.asList(config.getFilterPages()).indexOf(node.getUserObject());
 						config.removeFilterPage((FilterPage) node.getUserObject());
 					}
 					else if (child instanceof org.ensembl.mart.lib.config.AttributePage){
+						collectionIndex=Arrays.asList(config.getAttributePages()).indexOf(node.getUserObject());
 						config.removeAttributePage((AttributePage) node.getUserObject());
 					}
 					else if (child instanceof DynamicDatasetContent){
+						collectionIndex=config.getDynamicDatasetContents().indexOf(node.getUserObject());
 						config.removeDynamicDatasetContent((DynamicDatasetContent) node.getUserObject());
 					}
 				} else if (parent instanceof org.ensembl.mart.lib.config.Importable) {
 						Importable imp = (Importable) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 						if (child instanceof DynamicImportableContent){
+							collectionIndex=imp.getDynamicImportableContents().indexOf(node.getUserObject());
 							imp.removeDynamicImportableContent((DynamicImportableContent) node.getUserObject());
 						}
 				} else if (parent instanceof org.ensembl.mart.lib.config.Exportable) {
 						Exportable exp = (Exportable) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 						if (child instanceof DynamicExportableContent){
+							collectionIndex=exp.getDynamicExportableContents().indexOf(node.getUserObject());
 							exp.removeDynamicExportableContent((DynamicExportableContent) node.getUserObject());
 						}
 				} else if (parent instanceof org.ensembl.mart.lib.config.FilterPage) {
 					FilterPage fp = (FilterPage) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.FilterGroup){
+						collectionIndex=fp.getFilterGroups().indexOf(node.getUserObject());
 						fp.removeFilterGroup((FilterGroup) node.getUserObject());
 					}
 				} else if (parent instanceof org.ensembl.mart.lib.config.FilterGroup) {
 					FilterGroup fg = (FilterGroup) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.FilterCollection){
+						collectionIndex=Arrays.asList(fg.getFilterCollections()).indexOf(node.getUserObject());
 						fg.removeFilterCollection((FilterCollection) node.getUserObject());
 					}
 				} else if (parent instanceof org.ensembl.mart.lib.config.FilterCollection) {
 					FilterCollection fc = (FilterCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.FilterDescription){
 						if (checkFilterUniqueness((String) aValue, rowIndex, dsConfig)){				
+							collectionIndex=fc.getFilterDescriptions().indexOf(node.getUserObject());
 								fc.removeFilterDescription((FilterDescription) node.getUserObject());
 						}
 						else{
@@ -231,6 +244,7 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 					if (child instanceof Option){
 						
 						//if (checkOptionUniqueness((String) aValue, dsConfig)){	
+						collectionIndex=Arrays.asList(fdesc.getOptions()).indexOf(node.getUserObject());
 							fdesc.removeOption((Option) node.getUserObject());			
 						//}
 						//else{
@@ -240,38 +254,49 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 						//	return;
 						//}	
 					} else if (child instanceof org.ensembl.mart.lib.config.DynamicFilterContent){
+						collectionIndex=fdesc.getDynamicFilterContents().indexOf(node.getUserObject());
 						fdesc.removeDynamicFilterContent((DynamicFilterContent) node.getUserObject());
 				    }
 				} else if (parent instanceof DynamicFilterContent){
 					DynamicFilterContent fdesc = (DynamicFilterContent) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof Option){						
+						collectionIndex=Arrays.asList(fdesc.getOptions()).indexOf(node.getUserObject());
 						fdesc.removeOption((Option) node.getUserObject());			
 					}
 						
 				} else if (parent instanceof Option) {
 					Option op = (Option) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof Option)
+					if (child instanceof Option) {
+						collectionIndex=Arrays.asList(op.getOptions()).indexOf(node.getUserObject());
 						op.removeOption((Option) node.getUserObject());
-					else if (child instanceof PushAction)
+					}
+					else if (child instanceof PushAction) {
+						collectionIndex=Arrays.asList(op.getPushActions()).indexOf(node.getUserObject());
 						op.removePushAction((PushAction) node.getUserObject());
+					}
 				} else if (parent instanceof PushAction) {
 					PushAction pa = (PushAction) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof Option)
+					if (child instanceof Option) {
+						collectionIndex=Arrays.asList(pa.getOptions()).indexOf(node.getUserObject());
 						pa.removeOption((Option) node.getUserObject());
+					}
 				} else if (parent instanceof org.ensembl.mart.lib.config.AttributePage) {
 					AttributePage ap = (AttributePage) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.AttributeGroup){
+						collectionIndex=ap.getAttributeGroups().indexOf(node.getUserObject());
 						ap.removeAttributeGroup((AttributeGroup) node.getUserObject());
 					}
 				} else if (parent instanceof org.ensembl.mart.lib.config.AttributeGroup) {
 					AttributeGroup ag = (AttributeGroup) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.AttributeCollection){
+						collectionIndex=Arrays.asList(ag.getAttributeCollections()).indexOf(node.getUserObject());
 						ag.removeAttributeCollection((AttributeCollection) node.getUserObject());
 					}
 				} else if (parent instanceof org.ensembl.mart.lib.config.AttributeCollection) {
 					AttributeCollection ac = (AttributeCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.AttributeDescription){
 						if (checkUniqueness((String) aValue, rowIndex, dsConfig)){				
+							collectionIndex=ac.getAttributeDescriptions().indexOf(node.getUserObject());
 							ac.removeAttributeDescription((AttributeDescription) node.getUserObject());
 						}
 						else{
@@ -284,6 +309,7 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 					}					
 					else if (child instanceof org.ensembl.mart.lib.config.AttributeList){
 						if (checkUniqueness((String) aValue, rowIndex, dsConfig)){				
+							collectionIndex=ac.getAttributeLists().indexOf(node.getUserObject());
 							ac.removeAttributeList((AttributeList) node.getUserObject());
 						}
 						else{
@@ -297,6 +323,7 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 				}  else if (parent instanceof org.ensembl.mart.lib.config.AttributeDescription) {
 					AttributeDescription ad = (AttributeDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.DynamicAttributeContent){
+						collectionIndex=ad.getDynamicAttributeContents().indexOf(node.getUserObject());
 						ad.removeDynamicAttributeContent((DynamicAttributeContent) node.getUserObject());
 					}
 				}  
@@ -307,74 +334,74 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 				if (parent instanceof org.ensembl.mart.lib.config.DatasetConfig) {
 					DatasetConfig config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.FilterPage)
-						config.insertFilterPage(index, (FilterPage) obj);
+						config.insertFilterPage(collectionIndex, (FilterPage) obj);
 					else if (child instanceof org.ensembl.mart.lib.config.AttributePage)
-						config.insertAttributePage(index, (AttributePage) obj);
+						config.insertAttributePage(collectionIndex, (AttributePage) obj);
 					else if (child instanceof Importable)
-						config.insertImportable(index, (Importable) obj);
+						config.insertImportable(collectionIndex, (Importable) obj);
 					else if (child instanceof Exportable)
-						config.insertExportable(index, (Exportable) obj);          
+						config.insertExportable(collectionIndex, (Exportable) obj);          
 					else if (child instanceof DynamicDatasetContent)
-						config.insertDynamicDatasetContent(index, (DynamicDatasetContent) obj);          						  
+						config.insertDynamicDatasetContent(collectionIndex, (DynamicDatasetContent) obj);          						  
 				} else if (parent instanceof Importable) {
 					Importable imp = (Importable) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof DynamicImportableContent)
-						imp.insertDynamicImportableContent(index, (DynamicImportableContent) obj);
+						imp.insertDynamicImportableContent(collectionIndex, (DynamicImportableContent) obj);
 				} else if (parent instanceof Exportable) {
 					Exportable exp = (Exportable) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof DynamicExportableContent)
-						exp.insertDynamicExportableContent(index, (DynamicExportableContent) obj);
+						exp.insertDynamicExportableContent(collectionIndex, (DynamicExportableContent) obj);
 				} else if (parent instanceof org.ensembl.mart.lib.config.FilterPage) {
 					FilterPage fp = (FilterPage) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.FilterGroup)
-						fp.insertFilterGroup(index, (FilterGroup) obj);
+						fp.insertFilterGroup(collectionIndex, (FilterGroup) obj);
 				} else if (parent instanceof org.ensembl.mart.lib.config.FilterGroup) {
 					FilterGroup fg = (FilterGroup) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.FilterCollection)
-						fg.insertFilterCollection(index, (FilterCollection) obj);
+						fg.insertFilterCollection(collectionIndex, (FilterCollection) obj);
 				} else if (parent instanceof org.ensembl.mart.lib.config.FilterCollection) {
 					FilterCollection fc = (FilterCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.FilterDescription)
-						fc.insertFilterDescription(index, (FilterDescription) obj);
+						fc.insertFilterDescription(collectionIndex, (FilterDescription) obj);
 				} else if (parent instanceof FilterDescription) {
 					FilterDescription fdesc = (FilterDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof Option)
-						fdesc.insertOption(index, (Option) obj);
+						fdesc.insertOption(collectionIndex, (Option) obj);
 				    else if (child instanceof org.ensembl.mart.lib.config.DynamicFilterContent)	
-						fdesc.insertDynamicFilterContent(index, (DynamicFilterContent) obj);		
+						fdesc.insertDynamicFilterContent(collectionIndex, (DynamicFilterContent) obj);		
 				} else if (parent instanceof DynamicFilterContent) {
 					DynamicFilterContent dynFilter = (DynamicFilterContent) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof Option)
-						dynFilter.insertOption(index, (Option) obj);	
+						dynFilter.insertOption(collectionIndex, (Option) obj);	
 				}  else if (parent instanceof Option) {
 					Option op = (Option) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof Option)
-						op.insertOption(index, (Option) obj);
+						op.insertOption(collectionIndex, (Option) obj);
 					else if (child instanceof PushAction)
-						op.insertPushAction(index, (PushAction) obj);
+						op.insertPushAction(collectionIndex, (PushAction) obj);
 				} else if (parent instanceof PushAction) {
 					PushAction pa = (PushAction) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof Option)
-						pa.insertOption(index, (Option) obj);
+						pa.insertOption(collectionIndex, (Option) obj);
 				} else if (parent instanceof org.ensembl.mart.lib.config.AttributePage) {
 					AttributePage ap = (AttributePage) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.AttributeGroup)
-						ap.insertAttributeGroup(index, (AttributeGroup) obj);
+						ap.insertAttributeGroup(collectionIndex, (AttributeGroup) obj);
 				} else if (parent instanceof org.ensembl.mart.lib.config.AttributeGroup) {
 					AttributeGroup ag = (AttributeGroup) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.AttributeCollection)
-						ag.insertAttributeCollection(index, (AttributeCollection) obj);
+						ag.insertAttributeCollection(collectionIndex, (AttributeCollection) obj);
 				} else if (parent instanceof org.ensembl.mart.lib.config.AttributeCollection) {
 					AttributeCollection ac = (AttributeCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.AttributeDescription){		
-						ac.insertAttributeDescription(index, (AttributeDescription) obj);
+						ac.insertAttributeDescription(collectionIndex, (AttributeDescription) obj);
 					} else if (child instanceof org.ensembl.mart.lib.config.AttributeList){		
-						ac.insertAttributeList(index, (AttributeList) obj);
+						ac.insertAttributeList(collectionIndex, (AttributeList) obj);
 					}
 				} else if (parent instanceof org.ensembl.mart.lib.config.AttributeDescription) {
 					AttributeDescription ad = (AttributeDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.DynamicAttributeContent){		
-						ad.insertDynamicAttributeContent(index, (DynamicAttributeContent) obj);
+						ad.insertDynamicAttributeContent(collectionIndex, (DynamicAttributeContent) obj);
 					}
 				}
 			}

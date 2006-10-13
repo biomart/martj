@@ -407,7 +407,8 @@ public class DatabaseDatasetConfigUtils {
 				  Object testAtt = iter.next();
 				  AttributeDescription testAD = (AttributeDescription) testAtt;
 
-				  if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+				  //if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+				  if (testAD.getPointerDataset()!=null && !"".equals(testAD.getPointerDataset())){
 						continue;//placeholder atts can be duplicated	
 				  }
 				  
@@ -446,16 +447,13 @@ public class DatabaseDatasetConfigUtils {
 				  
 				  
 			  }
-			  
+
+				descriptionsMap.clear();
 				testAtts = testColl.getAttributeLists();		    
 
 				  for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
 					  Object testAtt = iter.next();
 					  AttributeList testAD = (AttributeList) testAtt;
-
-					  if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
-							continue;//placeholder atts can be duplicated	
-					  }
 					  
 					  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 						  continue;
@@ -465,7 +463,7 @@ public class DatabaseDatasetConfigUtils {
 						  spaceErrors = spaceErrors + testAD.getInternalName() + " in page " + apage.getInternalName() + "\n";
 					  }
 					  if (descriptionsMap.containsKey(testAD.getInternalName())){
-						 attributeDuplicationMap.put(testAD.getInternalName(),dsConfig.getDataset()); 
+						 attributeListDuplicationMap.put(testAD.getInternalName(),dsConfig.getDataset()); 
 					  }
 					  descriptionsMap.put(testAD.getInternalName(),"1");
 					  
@@ -537,7 +535,9 @@ public class DatabaseDatasetConfigUtils {
 						if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 							  continue;
 						}
-						if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+
+						  //if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+						  if (testAD.getPointerDataset()!=null && !"".equals(testAD.getPointerDataset())){
 							continue;//placeholder filts can be duplicated	
 						}
 						if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
@@ -718,7 +718,9 @@ public class DatabaseDatasetConfigUtils {
 							if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 									continue;
 							}
-							if (testAD.getInternalName().matches("\\w+\\.\\w+")){
+
+							  //if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+							  if (testAD.getPointerDataset()!=null && !"".equals(testAD.getPointerDataset())){
 								 continue;//placeholder atts can be duplicated	
 							}
 									  
@@ -756,9 +758,6 @@ public class DatabaseDatasetConfigUtils {
 							if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 									continue;
 							}
-							if (testAD.getInternalName().matches("\\w+\\.\\w+")){
-								 continue;//placeholder atts can be duplicated	
-							}
 									  
 							if (testAD.getInternalName().equals(testName)){
 								if (first != 0){
@@ -792,7 +791,8 @@ public class DatabaseDatasetConfigUtils {
 						if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 								continue;
 						}
-						if (testAD.getInternalName().matches("\\w+\\.\\w+")){
+						  //if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+						  if (testAD.getPointerDataset()!=null && !"".equals(testAD.getPointerDataset())){
 							 continue;//placeholder atts can be duplicated	
 						}
 									  
@@ -842,7 +842,8 @@ public class DatabaseDatasetConfigUtils {
 			FilterDescription fd = (FilterDescription) filterDescriptions.get(i);
 		    // make sure placeholders only have an internalName
 		    String internalName = fd.getInternalName();
-		    if (internalName.matches(".+\\..+")){
+			  //if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+			  if (fd.getPointerDataset()!=null && !"".equals(fd.getPointerDataset())){
 				fd.setTableConstraint("");
 				fd.setField("");
 				fd.setDisplayName("");
@@ -851,14 +852,14 @@ public class DatabaseDatasetConfigUtils {
 				fd.setLegalQualifiers("");		
 		    }
 
-			if (fd.getInternalName().matches(".+\\..+")){			
-				fd.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),
-															"",fd.getPointerDataset(),fd.getPointerInterface(),fd.getPointerFilter()));
-			}
+			//if (fd.getInternalName().matches(".+\\..+")){			
+			//	fd.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),
+			//												"",fd.getPointerDataset(),fd.getPointerInterface(),fd.getPointerFilter()));
+			//}
 			// change internal placeholders to template.filter
-			if (fd.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
-					fd.setInternalName(fd.getInternalName().replaceFirst(dsConfig.getDataset(),template));
-			}
+			//if (fd.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
+			//		fd.setInternalName(fd.getInternalName().replaceFirst(dsConfig.getDataset(),template));
+			//}
 												
 			 
 			// hack to fix broken types in existing XML as updateConfigToTemplate uses list type to specify options	
@@ -881,8 +882,8 @@ public class DatabaseDatasetConfigUtils {
 					continue;		
 				}
 				// if a filter option remove dataset part from tableConstraint
-				if (!op.getTableConstraint().equals("main"))
-					op.setTableConstraint(op.getTableConstraint().split("__")[1]+"__"+op.getTableConstraint().split("__")[2]);
+				//if (!op.getTableConstraint().equals("main"))
+				//	op.setTableConstraint(op.getTableConstraint().split("__")[1]+"__"+op.getTableConstraint().split("__")[2]);
 				//op.setOtherFilters("");
 			}
 		}
@@ -891,7 +892,8 @@ public class DatabaseDatasetConfigUtils {
 		for (int i = 0; i < attributeDescriptions.size(); i++){
 			AttributeDescription ad = (AttributeDescription) attributeDescriptions.get(i);		
 			String internalName = ad.getInternalName();
-			if (internalName.matches(".+\\..+")){
+			  //if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+			  if (ad.getPointerDataset()!=null && !"".equals(ad.getPointerDataset())){
 				
 				ad.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),"",ad.getPointerDataset(),
 					ad.getPointerInterface(),ad.getPointerAttribute(),ad.getPointerFilter()));
@@ -904,33 +906,15 @@ public class DatabaseDatasetConfigUtils {
 				ad.setLinkoutURL("");	
 			}
 			// change internal placeholders to template.placeholder
-			if (ad.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
-				ad.setInternalName(ad.getInternalName().replaceFirst(dsConfig.getDataset(),template));
-			}
+			//if (ad.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
+			//	ad.setInternalName(ad.getInternalName().replaceFirst(dsConfig.getDataset(),template));
+			//}
 			if (ad.getTableConstraint() != null && !ad.getTableConstraint().equals("") && !ad.getTableConstraint().equals("main"))
 				ad.setTableConstraint(ad.getTableConstraint().split("__")[1]+"__"+ad.getTableConstraint().split("__")[2]);		
 			
 			//ad.setLinkoutURL("");		
 		}
 		
-
-		List attributeLists = templateConfig.getAllAttributeLists();
-		for (int i = 0; i < attributeLists.size(); i++){
-			AttributeList ad = (AttributeList) attributeLists.get(i);		
-			String internalName = ad.getInternalName();
-			if (internalName.matches(".+\\..+")){
-				
-				ad.setDisplayName("");
-				ad.setDescription("");
-				ad.setAttributes("");
-				ad.setDefault("");	
-			}
-			// change internal placeholders to template.placeholder
-			if (ad.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
-				ad.setInternalName(ad.getInternalName().replaceFirst(dsConfig.getDataset(),template));
-			}
-			//ad.setLinkoutURL("");		
-		}
 		
 		//Exportable[] exps = templateConfig.getExportables();
 		//for (int i = 0; i < exps.length; i++){
@@ -1022,7 +1006,8 @@ public class DatabaseDatasetConfigUtils {
 	List attributeDescriptions = config.getAllAttributeDescriptions();
 	for (int i = 0; i < attributeDescriptions.size(); i++){
 		AttributeDescription ad = (AttributeDescription) attributeDescriptions.get(i);
-		if (ad.getInternalName().matches("\\w+\\.\\w+") || ad.getInternalName().matches("\\w+\\.\\w+\\.\\w+") ||
+		  //if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+		  if ((ad.getPointerDataset()!=null && !"".equals(ad.getPointerDataset())) || 
 			ad.getTableConstraint() == null || ad.getTableConstraint().equals("")){
 				continue;//placeholder atts or non-tableSet ones eg GenomicSequence can be duplicated	
 		}
@@ -1061,7 +1046,8 @@ public class DatabaseDatasetConfigUtils {
 	List filterDescriptions = config.getAllFilterDescriptions();
 	for (int i = 0; i < filterDescriptions.size(); i++){
 		FilterDescription fd = (FilterDescription) filterDescriptions.get(i);
-		if (fd.getInternalName().matches("\\w+\\.\\w+") || fd.getInternalName().matches("\\w+\\.\\w+\\.\\w+") ||
+		  //if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+		  if ((fd.getPointerDataset()!=null && !"".equals(fd.getPointerDataset())) ||
 		    fd.getTableConstraint() == null || fd.getTableConstraint().equals("")){
 			continue;//placeholder atts can be duplicated	
 		}
@@ -1162,8 +1148,8 @@ public class DatabaseDatasetConfigUtils {
 				if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 					continue;
 				}
-				if (testAD.getInternalName().matches("\\w+\\.\\w+") ||
-					testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+				  //if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+				  if (testAD.getPointerDataset()!=null && !"".equals(testAD.getPointerDataset())){
 					continue;//placeholder atts can be duplicated	
 				}
 						  
@@ -1194,6 +1180,7 @@ public class DatabaseDatasetConfigUtils {
 						  
 		   }
 		   
+		   descriptionsMap.clear();
 		   testAtts = testColl.getAttributeLists();
 					  
 		   for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
@@ -1201,10 +1188,6 @@ public class DatabaseDatasetConfigUtils {
 				AttributeList testAD = (AttributeList) testAtt;
 				if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 					continue;
-				}
-				if (testAD.getInternalName().matches("\\w+\\.\\w+") ||
-					testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
-					continue;//placeholder atts can be duplicated	
 				}
 						  
 				if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
@@ -1264,8 +1247,8 @@ public class DatabaseDatasetConfigUtils {
 					  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 							continue;
 					  }
-					  if (testAD.getInternalName().matches("\\w+\\.\\w+") ||
-						  testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+					  //if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+					  if (testAD.getPointerDataset()!=null && !"".equals(testAD.getPointerDataset())){
 						  continue;		
 					  }
 								
@@ -1447,7 +1430,7 @@ public class DatabaseDatasetConfigUtils {
 			for (int i = 0; i < attributeDescriptions.size(); i++){
 				AttributeDescription configAtt = (AttributeDescription) attributeDescriptions.get(i);
 				String configAttName = configAtt.getInternalName();
-				if (configAttName.matches(".+\\..+")) continue;
+				if (!"".equals(configAtt.getPointerDataset())) continue;
 				String configAttTC;
 				if (configAtt.getTableConstraint().equals("main"))
 					configAttTC = "main";
@@ -1478,7 +1461,7 @@ public class DatabaseDatasetConfigUtils {
 			for (int i = 0; i < filterDescriptions.size(); i++){
 				FilterDescription configAtt = (FilterDescription) filterDescriptions.get(i);
 				String configAttName = configAtt.getInternalName();
-				if (configAttName.matches(".+\\..+")) continue;
+				if (!"".equals(configAtt.getPointerDataset())) continue;
 				String configAttTC;
 				
 				if (configAtt.getOptions().length > 0 && (configAtt.getTableConstraint() == null || 
@@ -1555,6 +1538,11 @@ public class DatabaseDatasetConfigUtils {
 private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetConfig dsConfig, DatasetConfig templateConfig)
 	  throws ConfigurationException{
 		
+	// Don't bother with placeholders.
+	if (configAtt.getTableConstraint().equals("") || configAtt.getTableConstraint()==null || (configAtt.getPointerDataset()!=null && !"".equals(configAtt.getPointerDataset())))
+		return;
+	
+	
 		String configAttName = configAtt.getInternalName();	  	
 		String configAttTC;
 		if (configAtt.getTableConstraint().equals("main"))
@@ -1770,6 +1758,10 @@ private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetCon
 
 private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig dsConfig, DatasetConfig templateConfig, String upstreamFilterName)
 	throws ConfigurationException, SQLException{
+	
+	// Skip placeholders.
+	if (configAtt.getTableConstraint().equals("") || configAtt.getTableConstraint()==null || (configAtt.getPointerDataset()!=null && !"".equals(configAtt.getPointerDataset())))
+		return;
 
   String configAttName = configAtt.getInternalName();
   String configAttTC;
@@ -2153,7 +2145,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	for (int i = 0; i < filters.size(); i++){
 		FilterDescription configAtt = (FilterDescription) filters.get(i);
 		String configAttName = configAtt.getInternalName();
-		if (configAttName.matches(".+\\..+")) continue;
+		  //if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+		  if (configAtt.getPointerDataset()!=null && !"".equals(configAtt.getPointerDataset())) continue;
 		
 		
 		if (configAtt.getTableConstraint() == null || configAtt.getTableConstraint().equals("")){
@@ -2174,7 +2167,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	for (int i = 0; i < attributes.size(); i++){
 		AttributeDescription configAtt = (AttributeDescription) attributes.get(i);
 		String configAttName = configAtt.getInternalName();
-		if (configAttName.matches(".+\\..+")) continue;
+		  //if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+		  if (configAtt.getPointerDataset()!=null && !"".equals(configAtt.getPointerDataset())) continue;
 		if (configAtt.getTableConstraint() == null || configAtt.getTableConstraint().equals("")) continue;//sorts out GenomicSeq atts
 		updateAttributeToTemplate(configAtt,dsConfig,templateConfig);
 	}
@@ -2248,44 +2242,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		templateConfig.addImportable(newImp);
 	}
 	
-	// then add extra template config importables to config if correct conditions
-	Importable[] tempImps = templateConfig.getImportables();
-	OUTER:for (int i = 0; i < tempImps.length; i++){
-		// skip if the importable has dynamic content or a linkVersion as won't know what to use
-		if (tempImps[i].getDynamicImportableContents().size() > 0 || 
-			(tempImps[i].getLinkVersion() != null && !tempImps[i].getLinkVersion().equals("")))
-				continue;
-				
-		configImps = dsConfig.getImportables();
-		for (int j = 0; j < configImps.length; j++){
-			// skip if importable with same internalName already exists in dsConfig
-			if (tempImps[i].getInternalName().equals(configImps[j].getInternalName())
-				|| (tempImps[i].getFilters().equals(configImps[j].getFilters()))) continue OUTER;
-		}
-		
-		// skip if templateConfig contains other Importables with the same filters setting as wouldn't know which one to use
-		for (int j = 0; j < tempImps.length; j++){
-			if (i == j) continue;
-			if (tempImps[i].getFilters().equals(tempImps[j].getFilters())) continue OUTER;	
-		}
-		
-		String[] filterNames = tempImps[i].getFilters().split(",");
-		for (int j = 0; j < filterNames.length; j++){
-			// skip if filters are not defined in the dsConfig
-			if (!dsConfig.containsFilterDescription(filterNames[j]) || 
-				(dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden() != null
-					&& dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden().equals("true"))) 
-						continue OUTER;
-		}
-		
-		// if passsed all above tests then add template Importable to datasetConfig 
-		Importable newImp = new Importable(tempImps[i]);
-		dsConfig.addImportable(newImp);
-	}
-	
-	
-	
-	
 	Exportable[] configExps = dsConfig.getExportables();
 	OUTER:for (int i = 0; i < configExps.length; i++){
 		Exportable[] tempExps = templateConfig.getExportables();
@@ -2351,40 +2307,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		templateConfig.addExportable(newExp);
 	}
 
-
-	Exportable[] tempExps = templateConfig.getExportables();
-	OUTER:for (int i = 0; i < tempExps.length; i++){
-		// skip if the importable has dynamic content or a linkVersion as won't know what to use
-		if (tempExps[i].getDynamicExportableContents().size() > 0 || 
-			(tempExps[i].getLinkVersion() != null && !tempExps[i].getLinkVersion().equals("")))
-				continue;
-				
-		configExps = dsConfig.getExportables();
-		for (int j = 0; j < configExps.length; j++){
-			// skip if importable with same internalName already exists in dsConfig
-			if (tempExps[i].getInternalName().equals(configExps[j].getInternalName())
-				|| (tempExps[i].getAttributes().equals(configExps[j].getAttributes()))) continue OUTER;
-		}
-		
-		// skip if templateConfig contains other Importables with the same filters setting as wouldn't know which one to use
-		for (int j = 0; j < tempExps.length; j++){
-			if (i == j) continue;
-			if (tempExps[i].getAttributes().equals(tempExps[j].getAttributes())) continue OUTER;	
-		}
-		
-		String[] filterNames = tempExps[i].getAttributes().split(",");
-		for (int j = 0; j < filterNames.length; j++){
-			// skip if filters are not defined in the dsConfig
-			if (!dsConfig.containsFilterDescription(filterNames[j]) || 
-				(dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden() != null
-					&& dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden().equals("true"))) 
-						continue OUTER;
-		}
-		
-		// if passsed all above tests then add template Importable to datasetConfig 
-		Exportable newExp = new Exportable(tempExps[i]);
-		dsConfig.addExportable(newExp);
-	}
 	
 	// add any missing placeholders from template to the dataset - useful for naive
 	// don't bother with MULTI settings as XSLT transformation will remove anyhow
@@ -2403,12 +2325,12 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 
 					FilterDescription templateAtt = (FilterDescription) templateFilters.get(l);
 					String templateAttName = templateAtt.getInternalName();
-					if (!templateAttName.matches(".+\\..+"))
+					/*if (!templateAttName.matches(".+\\..+"))
 						continue;
 					String configAttName = templateAttName;	
 					if (templateAttName.matches(dsConfig.getTemplate()+"\\..+")){
 						configAttName = templateAttName.replaceFirst(dsConfig.getTemplate(),dsConfig.getDataset());			
-					}
+					}*/
 					//else{
 						// for now just ignore external placeholders
 						// later implement some sort of mapping in template to handle auto replacement of these						
@@ -2438,7 +2360,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 												  templateCollection.getDescription());
 						configGroup.addFilterCollection(configCollection);				
 					}
-			
+			/*
 					// resolve what to do depending on type of placeholder
 					if (configAttName.equals(templateAttName)){
 						// external placeholder
@@ -2453,7 +2375,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 								if (existingFilter.getInternalName().split("\\.")[1].equals(templateAttName.split("\\.")[1])){
 									
 									// BELOW ENDS UP ADDING ENCODE ENTRIES FOR EVERY DATASET - WRONG
-									/*
+									
 									if (templateAtt.getDynamicFilterContents().size() > 0){}
 									else{
 										String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
@@ -2465,7 +2387,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 											templateAtt.addDynamicFilterContent(new DynamicFilterContent(datasetName,"",templateAtt.getPointerDataset(),templateAtt.getPointerInterface(),templateAtt.getPointerFilter()));
 										}
 									}
-									*/
+									
 									
 									templateAtt.addDynamicFilterContent(new DynamicFilterContent(dsConfig.getDataset(),
 												"",existingFilter.getPointerDataset(),existingFilter.getPointerInterface(),existingFilter.getPointerFilter()));					
@@ -2496,36 +2418,39 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 							//templateAtt.setPointerFilter("MULTI");						
 							 	
 						}
-					}
+					}*/
 					
+					FilterDescription configAttToAdd = new FilterDescription(templateAtt);
 					if (templateAtt.containsDynamicFilterContent(dsConfig.getDataset())){
-						FilterDescription configAttToAdd = new FilterDescription(templateAtt);
 						DynamicFilterContent templateSettings = templateAtt.getDynamicFilterContentByInternalName(dsConfig.getDataset());
 						configAttToAdd.setInternalName(templateSettings.getPointerDataset()+"."+templateSettings.getPointerFilter());
 						configAttToAdd.setPointerDataset(templateSettings.getPointerDataset());
 						configAttToAdd.setPointerInterface(templateSettings.getPointerInterface());
 						configAttToAdd.setPointerFilter(templateSettings.getPointerFilter());
-								
+					}
+					
+					if (configAttToAdd.getTableConstraint()!=null && !configAttToAdd.getTableConstraint().equals("main")) {
+						configAttToAdd.setTableConstraint(dsConfig.getDataset()+"__"+configAttToAdd.getTableConstraint());
+					}
+					
 						//if (!configCollection.containsFilterDescription(configAttToAdd.getInternalName())){ 
 							// make sure no other placeholders filters already exist with the same name in this page
-							if (configPage.containsFilterDescription(configAttToAdd.getInternalName())){
+					if (configPage.containsFilterDescription(configAttToAdd.getInternalName())){
 								//System.out.println(configPage.getInternalName()+" already has placeholder att "+configAttToAdd.getInternalName());
-								List configGroups = configPage.getFilterGroups();
-								for (int a = 0; a < configGroups.size(); a++){
-									FilterGroup tempConfigGroup = (FilterGroup) configGroups.get(a);
-									FilterCollection[] configCollections = tempConfigGroup.getFilterCollections();
-									for (int b = 0; b < configCollections.length; b++){
-										FilterCollection tempConfigCollection = configCollections[b];
-										if (tempConfigCollection.containsFilterDescription(configAttToAdd.getInternalName())){
-											//System.out.println("Removing it:"+configAttToAdd.getInternalName());
-											tempConfigCollection.removeFilterDescription(tempConfigCollection.getFilterDescriptionByInternalName(configAttToAdd.getInternalName()));
-										}
-									}
-								}								
+						List configGroups = configPage.getFilterGroups();
+						for (int a = 0; a < configGroups.size(); a++){
+							FilterGroup tempConfigGroup = (FilterGroup) configGroups.get(a);
+							FilterCollection[] configCollections = tempConfigGroup.getFilterCollections();
+							for (int b = 0; b < configCollections.length; b++){
+								FilterCollection tempConfigCollection = configCollections[b];
+								if (tempConfigCollection.containsFilterDescription(configAttToAdd.getInternalName())){
+									//System.out.println("Removing it:"+configAttToAdd.getInternalName());
+									tempConfigCollection.removeFilterDescription(tempConfigCollection.getFilterDescriptionByInternalName(configAttToAdd.getInternalName()));
+								}
 							}
-							configCollection.addFilterDescription(configAttToAdd);
-						//}
+						}								
 					}
+					configCollection.addFilterDescription(configAttToAdd);
 					
 					if (!(configCollection.getFilterDescriptions().size() > 0)){
 						configGroup.removeFilterCollection(configCollection);
@@ -2559,13 +2484,13 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					AttributeDescription templateAtt = (AttributeDescription) templateAttributes.get(l);
 					String templateAttName = templateAtt.getInternalName();
 					
-					if (!templateAttName.matches(".+\\..+"))
+					/*if (!templateAttName.matches(".+\\..+"))
 						continue;
 					
 					String configAttName = templateAttName;	
 					if (templateAttName.matches(dsConfig.getTemplate()+"\\..+")){
 						configAttName = templateAttName.replaceFirst(dsConfig.getTemplate(),dsConfig.getDataset());			
-					}
+					}*/
 					//else{
 						// for now just ignore external placeholders
 						// later implement some sort of mapping in template to handle auto replacement of these
@@ -2608,7 +2533,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					
 					
 					// resolve what to do depending on type of placeholder
-					if (configAttName.equals(templateAttName)){
+					/*if (configAttName.equals(templateAttName)){
 						// external placeholders - if dsConfig contains a placeholder att with the same internalName
 						// AND in exactly the same page,group,collection defined by internalName then add
 						// new dynamic content entry for it to the template
@@ -2622,7 +2547,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 								
 								if (existingAtt.getInternalName().split("\\.")[1].equals(templateAttName.split("\\.")[1])){
 									
-									/* REMOVED AS FOR FILTERS - SEE ABOVE
+									 REMOVED AS FOR FILTERS - SEE ABOVE
 									if (templateAtt.getDynamicAttributeContents().size() > 0){}
 									else{
 										String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
@@ -2632,7 +2557,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 											templateAtt.addDynamicAttributeContent(new DynamicAttributeContent(datasetName,"",templateAtt.getPointerDataset(),templateAtt.getPointerInterface(),templateAtt.getPointerAttribute(),templateAtt.getPointerFilter()));
 										}	
 									}
-									*/
+									
 									
 									templateAtt.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),
 												"",existingAtt.getPointerDataset(),existingAtt.getPointerInterface(),existingAtt.getPointerAttribute(),existingAtt.getPointerFilter()));
@@ -2663,7 +2588,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 							
 							
 							// always add an entry but make sure previous datasets also have one
-							/*
+							
 							if (templateAtt.getDynamicAttributeContents().size() > 0){}
 							else{
 								String[] datasetNames = getDatasetNamesForTemplate(dsConfig.getTemplate());
@@ -2676,27 +2601,42 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 							}
 							templateAtt.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),
 								"",dsConfig.getDataset(),templateAtt.getPointerInterface(),templateAtt.getPointerAttribute(),templateAtt.getPointerFilter()));
-							*/
+							
 							
 							 	
 						}
-					}
+					}*/
 					
+					AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
 					if (templateAtt.containsDynamicAttributeContent(dsConfig.getDataset())){
-						AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
 						DynamicAttributeContent templateSettings = templateAtt.getDynamicAttributeContentByInternalName(dsConfig.getDataset());
 						configAttToAdd.setInternalName(templateSettings.getPointerDataset()+"."+templateSettings.getPointerAttribute());
 						configAttToAdd.setPointerDataset(templateSettings.getPointerDataset());
 						configAttToAdd.setPointerInterface(templateSettings.getPointerInterface());
 						configAttToAdd.setPointerAttribute(templateSettings.getPointerAttribute());
 						configAttToAdd.setPointerFilter(templateSettings.getPointerFilter());
-								
-						if (!configCollection.containsAttributeDescription(configAttToAdd.getInternalName()) &&
-							templateSettings.getPointerAttribute() != null) {
-							//System.out.println("ADDING PLACEHOLDE ATT "+configAttToAdd.getInternalName());	
-							configCollection.addAttributeDescription(configAttToAdd);
-						}
 					}
+					
+					if (configAttToAdd.getTableConstraint()!=null && !configAttToAdd.getTableConstraint().equals("main")) {
+						configAttToAdd.setTableConstraint(dsConfig.getDataset()+"__"+configAttToAdd.getTableConstraint());
+					}
+					
+					if (configPage.containsAttributeDescription(configAttToAdd.getInternalName())){
+								//System.out.println(configPage.getInternalName()+" already has placeholder att "+configAttToAdd.getInternalName());
+						List configGroups = configPage.getAttributeGroups();
+						for (int a = 0; a < configGroups.size(); a++){
+							AttributeGroup tempConfigGroup = (AttributeGroup) configGroups.get(a);
+							AttributeCollection[] configCollections = tempConfigGroup.getAttributeCollections();
+							for (int b = 0; b < configCollections.length; b++){
+								AttributeCollection tempConfigCollection = configCollections[b];
+								if (tempConfigCollection.containsAttributeDescription(configAttToAdd.getInternalName())){
+									//System.out.println("Removing it:"+configAttToAdd.getInternalName());
+									tempConfigCollection.removeAttributeDescription(tempConfigCollection.getAttributeDescriptionByInternalName(configAttToAdd.getInternalName()));
+								}
+							}
+						}								
+					}
+					configCollection.addAttributeDescription(configAttToAdd);
 					
 					if (!(configCollection.getAttributeDescriptions().size() > 0)){
 						configGroup.removeAttributeCollection(configCollection);
@@ -2802,7 +2742,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						configGroup.addAttributeCollection(configCollection);				
 					}
 
-					AttributeList configAttToAdd = new AttributeList(templateAtt);							
+					AttributeList configAttToAdd = new AttributeList(templateAtt);	
 					if (!configCollection.containsAttributeList(configAttToAdd.getInternalName())) {
 						//System.out.println("ADDING PLACEHOLDE 2 ATT "+configAttToAdd.getInternalName());	
 						configCollection.addAttributeList(configAttToAdd);
@@ -2829,6 +2769,83 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			}
 		}	  		
 	}
+	
+
+
+	
+	// then add extra template config importables to config if correct conditions
+	Importable[] tempImps = templateConfig.getImportables();
+	OUTER:for (int i = 0; i < tempImps.length; i++){
+		// skip if the importable has dynamic content or a linkVersion as won't know what to use
+		if (tempImps[i].getDynamicImportableContents().size() > 0)
+			// why can we not copy over importables with linkversions??
+			// (tempImps[i].getLinkVersion() != null && !tempImps[i].getLinkVersion().equals("")))
+				continue;
+				
+		configImps = dsConfig.getImportables();
+		for (int j = 0; j < configImps.length; j++){
+			// skip if importable with same internalName already exists in dsConfig
+			if (tempImps[i].getInternalName().equals(configImps[j].getInternalName())
+				|| (tempImps[i].getFilters().equals(configImps[j].getFilters()))) continue OUTER;
+		}
+		
+		// skip if templateConfig contains other Importables with the same filters setting as wouldn't know which one to use
+		for (int j = 0; j < tempImps.length; j++){
+			if (i == j) continue;
+			if (tempImps[i].getFilters().equals(tempImps[j].getFilters())) continue OUTER;	
+		}
+		
+		String[] filterNames = tempImps[i].getFilters().split(",");
+		for (int j = 0; j < filterNames.length; j++){
+			// skip if filters are not defined in the dsConfig
+			if (!dsConfig.containsFilterDescription(filterNames[j]) || 
+				(dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden() != null
+					&& dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden().equals("true"))) 
+						continue OUTER;
+		}
+		
+		// if passsed all above tests then add template Importable to datasetConfig 
+		Importable newImp = new Importable(tempImps[i]);
+		dsConfig.addImportable(newImp);
+	}
+	
+	
+	
+	Exportable[] tempExps = templateConfig.getExportables();
+	OUTER:for (int i = 0; i < tempExps.length; i++){
+		// skip if the importable has dynamic content or a linkVersion as won't know what to use
+		if (tempExps[i].getDynamicExportableContents().size() > 0)
+			// why can we not copy over exportables with linkversions??
+			//(tempExps[i].getLinkVersion() != null && !tempExps[i].getLinkVersion().equals("")))
+				continue;
+				
+		configExps = dsConfig.getExportables();
+		for (int j = 0; j < configExps.length; j++){
+			// skip if importable with same internalName already exists in dsConfig
+			if (tempExps[i].getInternalName().equals(configExps[j].getInternalName())
+				|| (tempExps[i].getAttributes().equals(configExps[j].getAttributes()))) continue OUTER;
+		}
+		
+		// skip if templateConfig contains other Importables with the same filters setting as wouldn't know which one to use
+		for (int j = 0; j < tempExps.length; j++){
+			if (i == j) continue;
+			if (tempExps[i].getAttributes().equals(tempExps[j].getAttributes())) continue OUTER;	
+		}
+		
+		String[] filterNames = tempExps[i].getAttributes().split(",");
+		for (int j = 0; j < filterNames.length; j++){
+			// skip if filters are not defined in the dsConfig
+			if (!dsConfig.containsFilterDescription(filterNames[j]) || 
+				(dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden() != null
+					&& dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden().equals("true"))) 
+						continue OUTER;
+		}
+		
+		// if passsed all above tests then add template Importable to datasetConfig 
+		Exportable newExp = new Exportable(tempExps[i]);
+		dsConfig.addExportable(newExp);
+	}
+	
 	// put dsConfig back in same order as templateConfig
 	int pageCounter = 0;
 	int groupCounter = 0;
@@ -5083,7 +5100,8 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     
     DatasetConfig otherDataset = null;
     // if a placeholder get the real filter
-    if (validatedFilter.getInternalName().matches("\\w+\\.\\w+")){
+	  //if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+	  if (validatedFilter.getPointerDataset()!=null && !"".equals(validatedFilter.getPointerDataset())){
     	return validatedFilter;
     }
         
@@ -5722,7 +5740,8 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     boolean fieldValid = false;
     boolean tableValid = false;
 
-	if (validatedAttribute.getInternalName().matches("\\w+\\.\\w+")){
+	  //if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+	  if (validatedAttribute.getPointerDataset()!=null && !"".equals(validatedAttribute.getPointerDataset())){
 		return validatedAttribute;
 	}
 
