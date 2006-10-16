@@ -868,9 +868,9 @@ public class DatabaseDatasetConfigUtils {
 			}
 			
 			// remove dataset part from tableConstraint if present
-			if (fd.getTableConstraint() != null && !fd.getTableConstraint().equals("") 
-					&& !fd.getTableConstraint().equals("main"))			
-				fd.setTableConstraint(fd.getTableConstraint().split("__")[1]+"__"+fd.getTableConstraint().split("__")[2]);
+			//if (fd.getTableConstraint() != null && !fd.getTableConstraint().equals("") 
+			//		&& !fd.getTableConstraint().equals("main"))			
+			//	fd.setTableConstraint(fd.getTableConstraint().split("__")[1]+"__"+fd.getTableConstraint().split("__")[2]);
 			//fd.setOtherFilters("");
 			
 			Option[] ops = fd.getOptions();
@@ -909,8 +909,8 @@ public class DatabaseDatasetConfigUtils {
 			//if (ad.getInternalName().matches(dsConfig.getDataset()+"\\..+")){
 			//	ad.setInternalName(ad.getInternalName().replaceFirst(dsConfig.getDataset(),template));
 			//}
-			if (ad.getTableConstraint() != null && !ad.getTableConstraint().equals("") && !ad.getTableConstraint().equals("main"))
-				ad.setTableConstraint(ad.getTableConstraint().split("__")[1]+"__"+ad.getTableConstraint().split("__")[2]);		
+			//if (ad.getTableConstraint() != null && !ad.getTableConstraint().equals("") && !ad.getTableConstraint().equals("main"))
+			//	ad.setTableConstraint(ad.getTableConstraint().split("__")[1]+"__"+ad.getTableConstraint().split("__")[2]);		
 			
 			//ad.setLinkoutURL("");		
 		}
@@ -1398,7 +1398,7 @@ public class DatabaseDatasetConfigUtils {
   
 
   public void updateConfigsToTemplate(String template, DatasetConfig templateConfig) throws ConfigurationException{
-		System.err.println("CALLED: updateConfigsToTemplate   "+templateConfig.getDisplayName()+" "+template);
+	//	System.err.println("CALLED: updateConfigsToTemplate   "+templateConfig.getDisplayName()+" "+template);
 
   	// extract all the dataset configs matching template and call updateConfigToTemplate storing each one as returned
 	Connection conn = null;
@@ -1424,6 +1424,7 @@ public class DatabaseDatasetConfigUtils {
 			
 			getXSLTransformedConfig(dsConfig);// transform XML to latest version
 			
+			/*
 			// delete any non-placeholder filts/atts that are no longer in the template
 			if (dsConfig.getType().equals("TableSet")){
 			
@@ -1509,6 +1510,7 @@ public class DatabaseDatasetConfigUtils {
 				}			
 			}
 			}	
+			*/
 			System.out.println("STORING WITH "+dsConfig.getDisplayName()+":"+dsConfig.getVersion());			
 			storeDatasetConfiguration(
 										MartEditor.getUser(),
@@ -2094,7 +2096,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
   public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig, int storeFlag) throws ConfigurationException, SQLException{
 	String template = dsConfig.getTemplate();
 	
-	System.err.println("CALLED: updateConfigToTemp   "+dsConfig.getDisplayName()+" "+dsConfig.getTemplate());
+	//System.err.println("CALLED: updateConfigToTemp   "+dsConfig.getDisplayName()+" "+dsConfig.getTemplate());
 	
 	DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
 	dscutils.loadDatasetConfigWithDocument(templateConfig,getTemplateDocument(template));
@@ -2142,6 +2144,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 				}
 	}
 	
+	/* Redundant if using update to template and not dataset.
 	// filter merge
 	List filters = dsConfig.getAllFilterDescriptions();
 
@@ -2175,6 +2178,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		if (configAtt.getTableConstraint() == null || configAtt.getTableConstraint().equals("")) continue;//sorts out GenomicSeq atts
 		updateAttributeToTemplate(configAtt,dsConfig,templateConfig);
 	}
+	*/
 	
 	/* Why copy these? They are template-defined not dataset-defined.
 	// imps/exps merge
@@ -2313,7 +2317,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	*/
 	
 
-	// add any missing placeholders from template to the dataset - useful for naive
+	// add any missing stuff from template to the dataset - useful for naive
 	// don't bother with MULTI settings as XSLT transformation will remove anyhow
 	
 	FilterPage[] templatePages = templateConfig.getFilterPages();	
@@ -2439,12 +2443,19 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					}
 					
 				
-					if (configAttToAdd.getTableConstraint()==null || "".equals(configAttToAdd.getTableConstraint()) || dsConfig.supportsFilterDescription(configAttToAdd.getField(), configAttToAdd.getTableConstraint(), configAttToAdd.getQualifier())){
-						if (configCollection.containsFilterDescription(configAttToAdd.getInternalName()))
-							configCollection.removeFilterDescription(configAttToAdd);
-						configCollection.addFilterDescription(configAttToAdd);
-					}
+					//if (configAttToAdd.getTableConstraint()==null || "".equals(configAttToAdd.getTableConstraint())) {
+//							|| dsConfig.supportsFilterDescription(configAttToAdd.getField(), configAttToAdd.getTableConstraint(), configAttToAdd.getQualifier())){
+					String internalName = configAttToAdd.getInternalName();
+					FilterCollection filtcoll = null;
+					do {
+						filtcoll = dsConfig.getCollectionForFilter(internalName);
+						if (filtcoll!=null)
+							filtcoll.removeFilterDescription(filtcoll.getFilterDescriptionByInternalName(internalName));
+					} while (filtcoll!=null);
+					configCollection.addFilterDescription(configAttToAdd);
+					//}
 					
+						/*
 					if (!(configCollection.getFilterDescriptions().size() > 0)){
 						configGroup.removeFilterCollection(configCollection);
 						if (!(configGroup.getFilterCollections().length > 0)){
@@ -2454,7 +2465,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 							}					
 						}
 					}
-					
+					*/
 									
 				}
 			}
@@ -2612,14 +2623,25 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					
 					if (configAttToAdd.getTableConstraint()!=null && !configAttToAdd.getTableConstraint().equals("main")) {
 						configAttToAdd.setTableConstraint(dsConfig.getDataset()+"__"+configAttToAdd.getTableConstraint());
+						//System.err.println("Renamed "+configAttToAdd.getTableConstraint()+"."+configAttToAdd.getField());
 					}
 					
-					if (configAttToAdd.getTableConstraint()==null || "".equals(configAttToAdd.getTableConstraint()) || dsConfig.supportsAttributeDescription(configAttToAdd.getField(), configAttToAdd.getTableConstraint())) {
-						if (configCollection.containsAttributeDescription(configAttToAdd.getInternalName()))
-								configCollection.removeAttributeDescription(configAttToAdd);
+					//if (configAttToAdd.getTableConstraint()==null || "".equals(configAttToAdd.getTableConstraint())) {
+						//|| dsConfig.supportsAttributeDescription(configAttToAdd.getField(), configAttToAdd.getTableConstraint())) {
+//						if (configCollection.containsAttributeDescription(configAttToAdd.getInternalName()))
+//							configCollection.removeAttributeDescription(dsConfig.getAttributeDescriptionByInternalName(configAttToAdd.getInternalName()));
+					String internalName = configAttToAdd.getInternalName();
+					AttributeCollection filtcoll = null;
+					do {
+						filtcoll = dsConfig.getCollectionForAttribute(internalName);
+						if (filtcoll!=null)
+							filtcoll.removeAttributeDescription(filtcoll.getAttributeDescriptionByInternalName(internalName));
+					} while (filtcoll!=null);
 						configCollection.addAttributeDescription(configAttToAdd);
-					}
+						//System.err.println("Added "+configAttToAdd.getTableConstraint()+"."+configAttToAdd.getField());
+					//}
 					
+						/*
 					if (!(configCollection.getAttributeDescriptions().size() > 0)){
 						configGroup.removeAttributeCollection(configCollection);
 						if (!(configGroup.getAttributeCollections().length > 0)){
@@ -2629,7 +2651,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 							}					
 						}
 					}
-					
+					*/
 					
 			
 			
@@ -2687,10 +2709,17 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 
 					AttributeList configAttToAdd = new AttributeList(templateAtt);	
 						//System.out.println("ADDING PLACEHOLDE 2 ATT "+configAttToAdd.getInternalName());	
-					if (configCollection.containsAttributeList(configAttToAdd.getInternalName())) 
-							configCollection.removeAttributeList(configAttToAdd);
-						configCollection.addAttributeList(configAttToAdd);
-					
+//					if (configCollection.containsAttributeList(configAttToAdd.getInternalName())) 
+//						configCollection.removeAttributeList(dsConfig.getAttributeListByInternalName(configAttToAdd.getInternalName()));
+					String internalName = configAttToAdd.getInternalName();
+					AttributeCollection filtcoll = null;
+					do {
+						filtcoll = dsConfig.getCollectionForAttribute(internalName);
+						if (filtcoll!=null)
+							filtcoll.removeAttributeList(filtcoll.getAttributeListByInternalName(internalName));
+					} while (filtcoll!=null);
+					configCollection.addAttributeList(configAttToAdd);
+					/*
 										
 					if (!(configCollection.getAttributeDescriptions().size()+configCollection.getAttributeLists().size() > 0)){
 						configGroup.removeAttributeCollection(configCollection);
@@ -2701,7 +2730,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 							}					
 						}
 					}					
-			
+*/			
 			
 					//AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
 					//configAttToAdd.setInternalName(configAttName);
@@ -2772,8 +2801,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 				dsConfig.removeExportable(dsExps[j]);
 		dsConfig.addExportable(newExp);
 	}
-
-
 	
 	// Wipe redundant attributes, attribute lists, filters, importables, exportables from the dataset config.
 	for (Iterator j = dsConfig.getAllAttributeDescriptions().iterator(); j.hasNext(); ) {
@@ -2809,6 +2836,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		}
 		if (!has) dsConfig.removeExportable(dsExps[j]);
 	}
+	
+
 	
 	// put dsConfig back in same order as templateConfig
 	int pageCounter = 0;
@@ -2945,6 +2974,60 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		}
 	}
 
+	Connection  conn = null;
+	try {
+		conn = dsource.getConnection();	
+
+	// Iterate through dsConfig and remove empty collections/groups/pages.
+	AttributePage apages[] = dsConfig.getAttributePages();
+	for (int pi = 0 ; pi < apages.length; pi ++) {
+		for (Iterator li = apages[pi].getAttributeGroups().iterator(); li.hasNext(); ) {
+			AttributeGroup agroup = (AttributeGroup)li.next();
+			AttributeCollection[] acolls = agroup.getAttributeCollections();
+			for (int ci = 0; ci < acolls.length; ci++) {
+				AttributeCollection validAttrs = this.getValidatedAttributeCollection(acolls[ci],dsConfig.getDataset(),conn);				
+				for (Iterator ai = acolls[ci].getAttributeDescriptions().iterator(); ai.hasNext(); ) {
+					AttributeDescription attr = (AttributeDescription)ai.next();
+					if (validAttrs.getAttributeDescriptionByInternalName(attr.getInternalName()).isBroken()) acolls[ci].removeAttributeDescription(attr);
+				}
+			if (!(acolls[ci].getAttributeDescriptions().size()+acolls[ci].getAttributeLists().size() > 0)){
+				agroup.removeAttributeCollection(acolls[ci]);
+			}
+			}
+				if (!(agroup.getAttributeCollections().length > 0)){
+					apages[pi].removeAttributeGroup(agroup);
+				}
+					if (!(apages[pi].getAttributeGroups().size() > 0)){
+						dsConfig.removeAttributePage(apages[pi]);
+					}					
+		}
+	}	
+	FilterPage fpages[] = dsConfig.getFilterPages();
+	for (int pi = 0 ; pi < fpages.length; pi ++) {
+		for (Iterator li = fpages[pi].getFilterGroups().iterator(); li.hasNext(); ) {
+			FilterGroup agroup = (FilterGroup)li.next();
+			FilterCollection[] acolls = agroup.getFilterCollections();
+			for (int ci = 0; ci < acolls.length; ci++) {
+				FilterCollection validAttrs = this.getValidatedFilterCollection(acolls[ci],dsConfig.getDataset(),dsConfig,conn);				
+				for (Iterator ai = acolls[ci].getFilterDescriptions().iterator(); ai.hasNext(); ) {
+					FilterDescription attr = (FilterDescription)ai.next();
+					if (validAttrs.getFilterDescriptionByInternalName(attr.getInternalName()).isBroken()) acolls[ci].removeFilterDescription(attr);
+				}
+			if (!(acolls[ci].getFilterDescriptions().size() > 0)){
+				agroup.removeFilterCollection(acolls[ci]);
+			}
+			}
+				if (!(agroup.getFilterCollections().length > 0)){
+					fpages[pi].removeFilterGroup(agroup);
+				}
+					if (!(fpages[pi].getFilterGroups().size() > 0)){
+						dsConfig.removeFilterPage(fpages[pi]);
+					}					
+		}
+	}
+	} finally {
+		DetailedDataSource.close(conn);
+	}
 	
 	if (storeFlag == 1) storeTemplateXML(templateConfig,template);
 	//doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
@@ -4422,6 +4505,7 @@ public boolean naiveExportWouldOverrideExistingConfig(
 	  ds.executeUpdate();
 	  
 	  if (template!=null) {
+		  System.err.println("delete");
 	  ds = conn.prepareStatement(deleteRealTemplateSQL);
 	  ds.setString(1,template);
 	  ds.executeUpdate();
@@ -6312,15 +6396,20 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
         if (logger.isLoggable(Level.FINE))
           logger.fine(tableName + ": " + cname + "-- type : " + ctype + "\n");
 
+
+        String shortTableName = isMainTable(tableName)?"main":
+      	  	tableName.indexOf("__")>0 ?
+        	tableName.substring(tableName.indexOf("__")+2) :
+        	tableName;
+        
         if (isMainTable(tableName) || isDimensionTable(tableName)) {
 //System.out.println ("tableName before AllNULL "+tableName);
           if (isAllNull(cname, fullTableName))
             continue;
-
+          
           //System.out.println ("tableName after AllNULL "+tableName);
           
           if (isMainTable(tableName)) {
-            tableName = "main";
              //System.out.println("Resetting table name to: "+ tableName);
 
             allCols.add(cname);
@@ -6329,13 +6418,13 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 					duplicated = 1;		
 				}
 			  	filtMap.put(cname,"1");
-              	fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated));
+              	fc.addFilterDescription(getFilterDescription(cname, shortTableName, ctype, joinKey, dsv, duplicated));
             } else {
 				if (filtMap.containsKey(cname)){
 					duplicated = 1;		
 				}
 				filtMap.put(cname,"1");	
-              	FilterDescription fdBool = getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated);
+              	FilterDescription fdBool = getFilterDescription(cname, shortTableName, ctype, joinKey, dsv, duplicated);
 
               	Option opBool = new Option(fdBool);
               	fdBools.addOption(opBool);
@@ -6346,7 +6435,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 				duplicated = 1;		
 			}
 			attMap.put(cname,"1");
-            AttributeDescription ad = getAttributeDescription(cname, tableName, csize, joinKey, duplicated);
+            AttributeDescription ad = getAttributeDescription(cname, shortTableName, csize, joinKey, duplicated);
             //ad.setHidden("false");
             ac.addAttributeDescription(ad);
             if (cname.endsWith("_list") || cname.equals("dbprimary_id")) {
@@ -6358,7 +6447,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 			  		}
 			  		filtMap.put(cname,"1");
 				}
-                FilterDescription fdList = getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated);
+                FilterDescription fdList = getFilterDescription(cname, shortTableName, ctype, joinKey, dsv, duplicated);
                 Option op = new Option(fdList);
                 fdLists.addOption(op);
 
@@ -6376,7 +6465,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 				duplicated = 1;		
 			}
 			filtMap.put(cname,"1");
-            fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated));
+            fc.addFilterDescription(getFilterDescription(cname, shortTableName, ctype, joinKey, dsv, duplicated));
 
           }
         } else {
@@ -6412,7 +6501,10 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     throws ConfigurationException, SQLException {
 
   	//System.out.println ("************* SCHEMA FROM GET NEW ATTT "+schema);
-  	
+	  String template = dsv.getTemplate();
+		DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
+		MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, this.getTemplateDocument(template));
+
   	
   	//if (dsource.getDatabaseType().equals("oracle")) databaseName=getSchema();
   //System.out.println("databaseType() "+dsource.getDatabaseType());	
@@ -6544,6 +6636,12 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
         if (cname.endsWith("_key"))
           continue;
 
+        String shortTableName = isMainTable(tableName)?"main":
+      	  	tableName.indexOf("__")>0 ?
+        	tableName.substring(tableName.indexOf("__")+2) :
+        	tableName;
+        	
+        	
         // if the column already seen in a higher resolution
         // main table ignore
 
@@ -6565,17 +6663,17 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
             allCols.add(cname);
             if (!cname.endsWith("_bool")) {
               FilterDescription currFilt = null;
-              if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName, null) != null)
+              if (templateConfig.getFilterDescriptionByFieldNameTableConstraint(cname, shortTableName, null) != null)
 
               	//System.out.println("cname "+ cname+ " tableName " + tableName);
-              	currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName,null);
+              	currFilt = templateConfig.getFilterDescriptionByFieldNameTableConstraint(cname, shortTableName,null);
 				//System.out.println(currFilt);
               if (currFilt == null) {
 				if (filtMap.containsKey(cname)){
 					duplicated = 1;		
 				}
 				filtMap.put(cname,"1");	
-                fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated));
+                fc.addFilterDescription(getFilterDescription(cname, shortTableName, ctype, joinKey, templateConfig, duplicated));
 //System.out.println("Going to null ");
               }
               else { // update options if has any
@@ -6589,13 +6687,13 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 					duplicated = 1;		
 				}
 				filtMap.put(cname,"1");	            	
-              FilterDescription fdBool = getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated);
+              FilterDescription fdBool = getFilterDescription(cname, shortTableName, ctype, joinKey, templateConfig, duplicated);
 
               Option opBool = new Option(fdBool);
               boolean newOption = true;
 
               // cycle through all options looking for a match
-              FilterPage[] fps = dsv.getFilterPages();
+              FilterPage[] fps = templateConfig.getFilterPages();
               outer : for (int k = 0; k < fps.length; k++) {
                 List fds = new ArrayList();
                 fds = fps[k].getAllFilterDescriptions();
@@ -6604,7 +6702,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
                   Option[] ops = fdCurrent.getOptions();
                   for (int p = 0, q = ops.length; p < q; p++) {
                     if ((ops[p].getField() != null && ops[p].getField().equals(cname))
-                      && (ops[p].getTableConstraint() != null && ops[p].getTableConstraint().equals(tableName))) {
+                      && (ops[p].getTableConstraint() != null && ops[p].getTableConstraint().equals(shortTableName))) {
                       newOption = false;
                       break outer;
                     }
@@ -6614,8 +6712,8 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 
               // could be present as a FD as well
               FilterDescription currFilt = null;
-              if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName,null) != null)
-                currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName,null);
+              if (templateConfig.getFilterDescriptionByFieldNameTableConstraint(cname, shortTableName,null) != null)
+                currFilt = templateConfig.getFilterDescriptionByFieldNameTableConstraint(cname, shortTableName,null);
               if (currFilt != null)
                 newOption = false;
 
@@ -6629,9 +6727,9 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 				duplicated = 1;		
 			}
 			attMap.put(cname,"1");	          	
-            AttributeDescription ad = getAttributeDescription(cname, tableName, csize, joinKey, duplicated);
+            AttributeDescription ad = getAttributeDescription(cname, shortTableName, csize, joinKey, duplicated);
 
-            if (dsv.getAttributeDescriptionByFieldNameTableConstraint(cname, tableName) == null) {
+            if (templateConfig.getAttributeDescriptionByFieldNameTableConstraint(cname, shortTableName) == null) {
               ac.addAttributeDescription(ad);
             }
             if (cname.endsWith("_list") || cname.equals("dbprimary_id")) {
@@ -6639,13 +6737,13 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 					duplicated = 1;		
 				}
 				filtMap.put(cname,"1");	
-              FilterDescription fdList = getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated);
+              FilterDescription fdList = getFilterDescription(cname, shortTableName, ctype, joinKey, templateConfig, duplicated);
               Option op = new Option(fdList);
 
               boolean newOption = true;
 
               // cycle through all options looking for a match
-              FilterPage[] fps = dsv.getFilterPages();
+              FilterPage[] fps = templateConfig.getFilterPages();
               outer : for (int k = 0; k < fps.length; k++) {
                 List fds = new ArrayList();
                 fds = fps[k].getAllFilterDescriptions();
@@ -6654,7 +6752,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
                   Option[] ops = fdCurrent.getOptions();
                   for (int p = 0, q = ops.length; p < q; p++) {
                     if ((ops[p].getField() != null && ops[p].getField().equals(cname))
-                      && (ops[p].getTableConstraint() != null && ops[p].getTableConstraint().equals(tableName))) {
+                      && (ops[p].getTableConstraint() != null && ops[p].getTableConstraint().equals(shortTableName))) {
                       newOption = false;
                       break outer;
                     }
@@ -6664,8 +6762,8 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 
               // could be present as a FD as well
               FilterDescription currFilt = null;
-              if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName,null) != null)
-                currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName,null);
+              if (templateConfig.getFilterDescriptionByFieldNameTableConstraint(cname, shortTableName,null) != null)
+                currFilt = templateConfig.getFilterDescriptionByFieldNameTableConstraint(cname, shortTableName,null);
               if (currFilt != null)
                 newOption = false;
 
@@ -6683,13 +6781,13 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
               fc.setDisplayName(content.replaceAll("_", " "));
             }
 
-            FilterDescription currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName,null);
+            FilterDescription currFilt = templateConfig.getFilterDescriptionByFieldNameTableConstraint(cname,shortTableName ,null);
             if (currFilt == null){
 				if (filtMap.containsKey(cname)){
 					duplicated = 1;		
 				}
 				filtMap.put(cname,"1");	
-              fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated));
+              fc.addFilterDescription(getFilterDescription(cname, shortTableName, ctype, joinKey, templateConfig, duplicated));
             }
             else { // update options if has any
               //if (currFilt.hasOptions())
@@ -6722,11 +6820,13 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     if (fg != null && fg.getFilterCollections().length > 0)
       fp.addFilterGroup(fg);
     if (ap != null && ap.getAttributeGroups().size() > 0) {
-      dsv.addAttributePage(ap);
+      templateConfig.addAttributePage(ap);
     }
     if (fp != null && fp.getFilterGroups().size() > 0)
-      dsv.addFilterPage(fp);
+      templateConfig.addFilterPage(fp);
 
+    this.storeTemplateXML(templateConfig, template);
+    
     return dsv;
   }
 

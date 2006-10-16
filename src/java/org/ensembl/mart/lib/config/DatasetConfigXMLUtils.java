@@ -227,7 +227,7 @@ public class DatasetConfigXMLUtils {
    *         that of the dsv reference, and for any other underlying Exception
    */
   public void loadDatasetConfigWithDocument(DatasetConfig dsv, Document doc) throws ConfigurationException {
-    Element thisElement = doc.getRootElement();
+	  Element thisElement = doc.getRootElement();
     String intName = thisElement.getAttributeValue(INTERNALNAME, "");
     String optParam = thisElement.getAttributeValue(OPTPARAM, "");
 	String softwareVersion = thisElement.getAttributeValue(SOFTWAREVERSION, "");

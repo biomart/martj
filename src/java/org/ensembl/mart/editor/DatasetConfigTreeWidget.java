@@ -130,7 +130,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 								// Generate template document based on existing config.
 								templateConfig.setInternalName("template");
 								templateConfig.setDataset(template+"_template");
-								//templateConfig.setTemplate(template);
+								templateConfig.setTemplate(template);
 							} else {
 								MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, templateDocument);
 							}

@@ -2665,7 +2665,7 @@ System.out.println ("getting driver "+ driver);
         	if (JOptionPane.showConfirmDialog(null, 
         			"The template for this dataset will be orphaned if this dataset is deleted.\n" +
         			"Do you want to delete the template too?")
-        			==JOptionPane.YES_OPTION) 
+        			!=JOptionPane.YES_OPTION) 
         		template = null;
         }
         
