@@ -79,6 +79,12 @@ public class PushAction extends BaseNamedConfigurationObject {
 		setAttribute(orderByKey, orderBy);
 		setRequiredFields(reqFields);
 	}
+	  
+	  public void resolveText(DynamicDataset ds) {
+		  ds.resolveText(this, this);
+		  for (Iterator i = this.options.iterator(); i.hasNext(); )
+			  ((Option)i.next()).resolveText(ds);
+	  }
 
   /**
    * Set the internalName of the FilterDescription to push options when this PushAction is activated

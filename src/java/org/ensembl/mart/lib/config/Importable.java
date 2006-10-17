@@ -35,9 +35,6 @@ public class Importable extends BaseNamedConfigurationObject {
   private final String filtersKey = "filters";
   private final String orderByKey = "orderBy";
   private int[] reqFields = {0,5,7,8};// rendered red in AttributeTable
-
-  private DynamicImportableContent dynamicImportableContents = null;
-
  
 	/**
 	 * Copy Constructor. Constructs a new Importable that is a
@@ -90,33 +87,6 @@ public class Importable extends BaseNamedConfigurationObject {
 	setAttribute(filtersKey, filters);
     setAttribute(orderByKey, orderBy);
     setRequiredFields(reqFields);
-  }
-
-  /**
-   * Add a dynamicImportableContent to the AttributeDescription.
-   * 
-   * @param a dynamicImportableContent object.
-   */
-  public void setDynamicImportableContent(DynamicImportableContent a) {
-	  if (dynamicImportableContents==null)
-	  dynamicImportableContents=a;
-  }
-
-  /**
-   * Add a dynamicImportableContent to the AttributeDescription.
-   * 
-   * @param a dynamicImportableContent object.
-   */
-  public DynamicImportableContent getDynamicImportableContent() {
-	  return dynamicImportableContents;
-  }
-
-  /**
-   * Remove an dynamicImportableContent from this AttributeDescription.
-   * @param a -- dynamicImportableContent to be removed.
-   */
-  public void removeDynamicImportableContent() {
-	dynamicImportableContents=null;
   }
 	
 	/**

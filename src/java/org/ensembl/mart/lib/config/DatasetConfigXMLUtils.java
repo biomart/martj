@@ -73,12 +73,8 @@ public class DatasetConfigXMLUtils {
   private final String ATTRIBUTECOLLECTION = "AttributeCollection";
   private final String ATTRIBUTEDESCRIPTION = "AttributeDescription";
   private final String ATTRIBUTELIST = "AttributeList";
-  private final String DYNAMICATTRIBUTECONTENT = "DynamicAttributeContent";
-  private final String DYNAMICFILTERCONTENT = "DynamicFilterContent";
+  private final String SPECIFICFILTERCONTENT = "SpecificFilterContent";
   private final String DYNAMICDATASET = "DynamicDataset";
-  private final String DYNAMICDATASETCONTENT = "DynamicDatasetContent";
-  private final String DYNAMICIMPORTABLECONTENT = "DynamicImportableContent";
-  private final String DYNAMICEXPORTABLECONTENT = "DynamicExportableContent";
   private final String DSATTRIBUTEGROUP = "DSAttributeGroup";
   private final String OPTION = "Option";
   private final String PUSHACTION = "PushAction";
@@ -318,13 +314,6 @@ public class DatasetConfigXMLUtils {
 	  Element element = (Element) iter.next();
 	  dsv.addDynamicDataset(getDynamicDataset(element));
 	}
-
-	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, DYNAMICDATASETCONTENT));
-	  iter.hasNext();
-	  ) {
-	  Element element = (Element) iter.next();
-	  dsv.setDynamicDatasetContent(getDynamicDatasetContent(element));
-	}
 	
 	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, IMPORTABLE));
 	  iter.hasNext();
@@ -367,28 +356,14 @@ public class DatasetConfigXMLUtils {
   private Importable getImportable(Element thisElement) throws ConfigurationException {
 	Importable im = new Importable();
 	loadAttributesFromElement(thisElement, im);
-	
-	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, DYNAMICIMPORTABLECONTENT));
-	  iter.hasNext();
-	  ) {
-	  Element element = (Element) iter.next();
-	  im.setDynamicImportableContent(getDynamicImportableContent(element));
-	}	
-	
+		
 	return im;
   }
   
   private Exportable getExportable(Element thisElement) throws ConfigurationException {
 	Exportable ex = new Exportable();
 	loadAttributesFromElement(thisElement, ex);
-	
-	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, DYNAMICEXPORTABLECONTENT));
-	  iter.hasNext();
-	  ) {
-	  Element element = (Element) iter.next();
-	  ex.setDynamicExportableContent(getDynamicExportableContent(element));
-	}
-	
+		
 	return ex;
   }
 
@@ -481,14 +456,14 @@ public class DatasetConfigXMLUtils {
   private FilterDescription getFilterDescription(Element thisElement) throws ConfigurationException {
     FilterDescription f = new FilterDescription();
     loadAttributesFromElement(thisElement, f);
-	
-	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, DYNAMICFILTERCONTENT));
+
+	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, SPECIFICFILTERCONTENT));
 	  iter.hasNext();
 	  ) {
 	  Element element = (Element) iter.next();
-	  f.setDynamicFilterContent(getDynamicFilterContent(element));
+	  f.addSpecificFilterContent(getSpecificFilterContent(element));
 	}
-	
+		
     for (Iterator iter = thisElement.getChildren(OPTION).iterator(); iter.hasNext();) {
       Element option = (Element) iter.next();
       if (includeHiddenMembers){
@@ -565,25 +540,12 @@ public class DatasetConfigXMLUtils {
   private AttributeDescription getAttributeDescription(Element thisElement) throws ConfigurationException {
     AttributeDescription a = new AttributeDescription();
     loadAttributesFromElement(thisElement, a);
-    
-	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, DYNAMICATTRIBUTECONTENT));
-	  iter.hasNext();
-	  ) {
-	  Element element = (Element) iter.next();
-	  a.setDynamicAttributeContent(getDynamicAttributeContent(element));
-	}
-    
+        
     return a;
   }
   
-  private DynamicAttributeContent getDynamicAttributeContent(Element thisElement) throws ConfigurationException {
-	 DynamicAttributeContent a = new DynamicAttributeContent();
-	 loadAttributesFromElement(thisElement, a);
-	 return a;	 
-  }
-  
-  private DynamicFilterContent getDynamicFilterContent(Element thisElement) throws ConfigurationException {
-	 DynamicFilterContent f = new DynamicFilterContent();
+  private SpecificFilterContent getSpecificFilterContent(Element thisElement) throws ConfigurationException {
+	  SpecificFilterContent f = new SpecificFilterContent();
 	 loadAttributesFromElement(thisElement, f);
 	 
 	for (Iterator iter = thisElement.getChildren(OPTION).iterator(); iter.hasNext();) {
@@ -607,24 +569,6 @@ public class DatasetConfigXMLUtils {
   
   private DynamicDataset getDynamicDataset(Element thisElement) throws ConfigurationException {
 	 DynamicDataset a = new DynamicDataset();
-	 loadAttributesFromElement(thisElement, a);
-	 return a;	 
-  }
-  
-  private DynamicDatasetContent getDynamicDatasetContent(Element thisElement) throws ConfigurationException {
-	 DynamicDatasetContent a = new DynamicDatasetContent();
-	 loadAttributesFromElement(thisElement, a);
-	 return a;	 
-  }
-
-  private DynamicImportableContent getDynamicImportableContent(Element thisElement) throws ConfigurationException {
-	 DynamicImportableContent a = new DynamicImportableContent();
-	 loadAttributesFromElement(thisElement, a);
-	 return a;	 
-  }
-  
-  private DynamicExportableContent getDynamicExportableContent(Element thisElement) throws ConfigurationException {
-	 DynamicExportableContent a = new DynamicExportableContent();
 	 loadAttributesFromElement(thisElement, a);
 	 return a;	 
   }
@@ -718,9 +662,6 @@ public class DatasetConfigXMLUtils {
 	for (Iterator iter = ads.iterator(); iter.hasNext();)
 	   root.addContent(getDynamicDatasetElement((DynamicDataset) iter.next()));
 
-	if (dsconfig.getDynamicDatasetContent()!=null) 
-		root.addContent(getDynamicDatasetContentElement(dsconfig.getDynamicDatasetContent()));
-	
     Option[] os = dsconfig.getOptions();
     for (int i = 0, n = os.length; i < n; i++)
       root.addContent(getOptionElement(os[i]));
@@ -812,21 +753,12 @@ public class DatasetConfigXMLUtils {
   private Element getAttributeDescriptionElement(AttributeDescription attribute) {
     Element att = new Element(ATTRIBUTEDESCRIPTION);
     loadElementAttributesFromObject(attribute, att);
-
-	if (attribute.getDynamicAttributeContent()!=null) 
-		att.addContent(getDynamicAttributeContentElement(attribute.getDynamicAttributeContent()));
-
     return att;
   }
   
-  private Element getDynamicAttributeContentElement(DynamicAttributeContent dynAttribute) {
-	 Element datt = new Element(DYNAMICATTRIBUTECONTENT);
-	 loadElementAttributesFromObject(dynAttribute, datt);
-	 return datt;
-  }
-  
-  private Element getDynamicFilterContentElement(DynamicFilterContent dynAttribute) {
-	 Element datt = new Element(DYNAMICFILTERCONTENT);
+
+  private Element getSpecificFilterContentElement(SpecificFilterContent dynAttribute) {
+	 Element datt = new Element(SPECIFICFILTERCONTENT);
 	 loadElementAttributesFromObject(dynAttribute, datt);
 	 Option[] subops = dynAttribute.getOptions();
 	 for (int i = 0, n = subops.length; i < n; i++){
@@ -841,24 +773,6 @@ public class DatasetConfigXMLUtils {
 	 return datt;
   }
   
-  private Element getDynamicDatasetContentElement(DynamicDatasetContent dynAttribute) {
-	 Element datt = new Element(DYNAMICDATASETCONTENT);
-	 loadElementAttributesFromObject(dynAttribute, datt);
-	 return datt;
-  }
-
-  private Element getDynamicImportableContentElement(DynamicImportableContent dynAttribute) {
-	 Element datt = new Element(DYNAMICIMPORTABLECONTENT);
-	 loadElementAttributesFromObject(dynAttribute, datt);
-	 return datt;
-  }
-  
-  private Element getDynamicExportableContentElement(DynamicExportableContent dynAttribute) {
-	 Element datt = new Element(DYNAMICEXPORTABLECONTENT);
-	 loadElementAttributesFromObject(dynAttribute, datt);
-	 return datt;
-  }
-
   private Element getFilterPageElement(FilterPage fpage) {
     Element page = new Element(FILTERPAGE);
     loadElementAttributesFromObject(fpage, page);
@@ -919,9 +833,6 @@ public class DatasetConfigXMLUtils {
 	Element module = new Element(IMPORTABLE);
 	loadElementAttributesFromObject(smodule, module);
 
-	if (smodule.getDynamicImportableContent()!=null) 
-		module.addContent(getDynamicImportableContentElement(smodule.getDynamicImportableContent()));
-
 	return module;
   }
   
@@ -929,9 +840,6 @@ public class DatasetConfigXMLUtils {
 	Element module = new Element(EXPORTABLE);
 	loadElementAttributesFromObject(smodule, module);
 	
-	if (smodule.getDynamicExportableContent()!=null) 
-		module.addContent(getDynamicExportableContentElement(smodule.getDynamicExportableContent()));
-
 	return module;
   }
 
@@ -973,9 +881,8 @@ public class DatasetConfigXMLUtils {
     Element fdesc = new Element(FILTERDESCRIPTION);
     loadElementAttributesFromObject(filter, fdesc);
 
-    if (filter.getDynamicFilterContent()!=null) 
-    	fdesc.addContent(getDynamicFilterContentElement(filter.getDynamicFilterContent()));
-
+    for (Iterator i = filter.getSpecificFilterContents().iterator(); i.hasNext(); ) 
+    	fdesc.addContent(getSpecificFilterContentElement((SpecificFilterContent)i.next()));
 
     Option[] subops = filter.getOptions();
     for (int i = 0, n = subops.length; i < n; i++)

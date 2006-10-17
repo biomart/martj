@@ -30,4 +30,7 @@ SET com=%com% %test%
 GOTO ARGUMENT
 
 :PROCESS
-%TMP_ROOT%\jre\windows\bin\java -ea -cp %TMP_CLASSPATH% %com%
+REM Note: If you get Java "Out of memory" errors, try increasing the numbers
+REM in the -Xmx and -Xms parameters in the java command below. For performance
+REM sake it is best if they are both the same value.
+%TMP_ROOT%\jre\windows\bin\java -Xmx128m -Xms128m -ea -cp %TMP_CLASSPATH% %com%

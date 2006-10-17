@@ -44,4 +44,8 @@ esac
 
 echo "Starting MartExplorer please wait .... "
 
-$JAVA -Xmx128m -ea -cp $TMP_CLASSPATH org.ensembl.mart.explorer.MartExplorer $@
+# Note: If you get Java "Out of memory" errors, try increasing the numbers
+# in the -Xmx and -Xms parameters in the java command below. For performance
+# sake it is best if they are both the same value.
+
+$JAVA -Xmx128m -Xms128m -ea -cp $TMP_CLASSPATH org.ensembl.mart.explorer.MartExplorer $@

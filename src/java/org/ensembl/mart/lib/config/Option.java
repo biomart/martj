@@ -68,6 +68,14 @@ public class Option extends QueryFilterSettings {
     	setRequiredFields(reqFields);
     }
   }
+  
+  public void resolveText(DynamicDataset ds) {
+	  ds.resolveText(this, this);
+	  for (Iterator i = this.uiOptions.iterator(); i.hasNext(); )
+		  ((Option)i.next()).resolveText(ds);
+	  for (Iterator i = this.pushActions.iterator(); i.hasNext(); )
+		  ((PushAction)i.next()).resolveText(ds);
+  }
 
   /**
    * Special Copy constructor allowing a FilterDescription to

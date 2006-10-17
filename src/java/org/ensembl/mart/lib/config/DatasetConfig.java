@@ -131,7 +131,6 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 
   private Logger logger = Logger.getLogger(DatasetConfig.class.getName());
 
-  private DynamicDatasetContent dynamicDatasetContents = null;
 
   /**
    * Copy Constructor allowing client to specify whether to lazyLoad the copy at initiation, rather
@@ -355,33 +354,6 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   
   public DynamicDataset getDynamicDataset(String name) {
 	  return (DynamicDataset)this.dynamicDatasetNameMap.get(name);
-  }
-
-  /**
-   * Add a dynamicDatasetContent to the AttributeDescription.
-   * 
-   * @param a dynamicDatasetContent object.
-   */
-  public void setDynamicDatasetContent(DynamicDatasetContent a) {
-	  if (dynamicDatasetContents==null)
-	  dynamicDatasetContents=a;
-  }
-
-  /**
-   * Add a dynamicDatasetContent to the AttributeDescription.
-   * 
-   * @param a dynamicDatasetContent object.
-   */
-  public DynamicDatasetContent getDynamicDatasetContent() {
-	  return dynamicDatasetContents;
-  }
-
-  /**
-   * Remove an dynamicDatasetContent from this AttributeDescription.
-   * @param a -- dynamicDatasetContent to be removed.
-   */
-  public void removeDynamicDatasetContent() {
-	dynamicDatasetContents=null;
   }
 
 	public void setTemplateFlag(String flag) {

@@ -18,6 +18,7 @@
 
 package org.ensembl.mart.editor;
 
+import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -29,12 +30,7 @@ import org.ensembl.mart.lib.config.AttributeList;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
 import org.ensembl.mart.lib.config.DatasetConfig;
-import org.ensembl.mart.lib.config.DynamicAttributeContent;
 import org.ensembl.mart.lib.config.DynamicDataset;
-import org.ensembl.mart.lib.config.DynamicDatasetContent;
-import org.ensembl.mart.lib.config.DynamicExportableContent;
-import org.ensembl.mart.lib.config.DynamicFilterContent;
-import org.ensembl.mart.lib.config.DynamicImportableContent;
 import org.ensembl.mart.lib.config.Exportable;
 import org.ensembl.mart.lib.config.FilterCollection;
 import org.ensembl.mart.lib.config.FilterDescription;
@@ -43,6 +39,7 @@ import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.Importable;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.PushAction;
+import org.ensembl.mart.lib.config.SpecificFilterContent;
 
 //import org.ensembl.mart.lib.config.SeqModule;
  
@@ -81,24 +78,23 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 	if (child instanceof org.ensembl.mart.lib.config.Importable) {
 		DatasetConfig dsc = (DatasetConfig) parent;
 		hetOffset = 
-			((dsc.getTemplateFlag()==null && dsc.getTemplateFlag().equals("1"))?1:0)
-		+ (dsc.getDynamicDatasetContent()==null?0:1);
+			((dsc.getTemplateFlag()==null && dsc.getTemplateFlag().equals("1"))?1:0);
 	}
     else if (child instanceof org.ensembl.mart.lib.config.Exportable) {
       //Exportables go after Importables within a DatasetConfig
 	  DatasetConfig dsc = (DatasetConfig) parent;
       hetOffset = ((dsc.getTemplateFlag()==null && dsc.getTemplateFlag().equals("1"))?1:0)
-		+ (dsc.getDynamicDatasetContent()==null?0:1) + dsc.getImportables().length;
+		+ dsc.getImportables().length;
     } else if (child instanceof org.ensembl.mart.lib.config.FilterPage) {
       //FilterPages go after Importables and Exportables within a DatasetConfig
       DatasetConfig dsc = (DatasetConfig) parent;
       hetOffset = ((dsc.getTemplateFlag()==null && dsc.getTemplateFlag().equals("1"))?1:0)
-		+ (dsc.getDynamicDatasetContent()==null?0:1) + dsc.getImportables().length + dsc.getExportables().length;
+		+ dsc.getImportables().length + dsc.getExportables().length;
     } else if (child instanceof org.ensembl.mart.lib.config.AttributePage) {
       //AttributePages go after Importables, Exportables, and FilterPages within a DatasetConfig
       DatasetConfig dsc = (DatasetConfig) parent;
       hetOffset = ((dsc.getTemplateFlag()==null && dsc.getTemplateFlag().equals("1"))?1:0)
-		+ (dsc.getDynamicDatasetContent()==null?0:1) + dsc.getImportables().length + dsc.getExportables().length + dsc.getFilterPages().length;
+		+ dsc.getImportables().length + dsc.getExportables().length + dsc.getFilterPages().length;
     //} //else if (child instanceof org.ensembl.mart.lib.config.Disable) {
       //Disables go after Enables within a FilterDescription
       //FilterDescription fdesc = (FilterDescription) parent;
@@ -170,14 +166,6 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 			this.add(fpNode);
 			}
 			
-			DynamicDatasetContent dynAtt = dsv.getDynamicDatasetContent();
-			if (dynAtt!=null) {
-				String dynName = dynAtt.getInternalName();
-				DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicDatasetContent:" + dynName);
-				dynNode.setUserObject(dynAtt);	
-				this.add(dynNode);
-			}
-
 			Importable[] imps = dsv.getImportables();
 			for (int i = 0; i < imps.length; i++) {
 				Importable importable = imps[i];
@@ -185,13 +173,6 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				DatasetConfigTreeNode impNode = new DatasetConfigTreeNode("Importable:" + impName);
 				impNode.setUserObject(importable);
 				this.add(impNode);
-
-				DynamicImportableContent impAtt = importable.getDynamicImportableContent();
-				if (impAtt!=null) {
-					String dynName = impAtt.getInternalName();
-					DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicImportableContent:" + dynName);
-					dynNode.setUserObject(impAtt);	
-				}		
 				
 			}
 			Exportable[] exps = dsv.getExportables();
@@ -201,14 +182,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				DatasetConfigTreeNode expNode = new DatasetConfigTreeNode("Exportable:" + expName);
 				expNode.setUserObject(exportable);
 				this.add(expNode);
-				
-				DynamicExportableContent expAtt = exportable.getDynamicExportableContent();
-				if (expAtt!=null) {
-					String dynName = expAtt.getInternalName();
-					DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicExportableContent:" + dynName);
-					dynNode.setUserObject(expAtt);	
-				}	
-							
+											
 			}
 			
 			FilterPage[] fpages = dsv.getFilterPages();
@@ -240,10 +214,10 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 									DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Filter:" + desName);
 									desNode.setUserObject(fiDescription);
 									
-									DynamicFilterContent filtAtt = fiDescription.getDynamicFilterContent();
-									if (filtAtt!=null) {
+								for (Iterator r = fiDescription.getSpecificFilterContents().iterator(); r.hasNext(); ) {
+									SpecificFilterContent filtAtt = (SpecificFilterContent)r.next();
 									String dynName = filtAtt.getInternalName();
-										DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicFilterContent:" + dynName);
+										DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("SpecificFilterContent:" + dynName);
 										dynNode.setUserObject(filtAtt);
 										
 										Option[] options = filtAtt.getOptions();
@@ -349,12 +323,6 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 									String desName = atDescription.getInternalName();
 									DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Attribute:" + desName);
 									desNode.setUserObject(atDescription);
-									DynamicAttributeContent aAtt = atDescription.getDynamicAttributeContent();
-									if (aAtt!=null) {
-										String dynName = aAtt.getInternalName();
-										DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicAttributeContent:" + dynName);
-										dynNode.setUserObject(aAtt);	
-									}
 								}
 								descriptions = atCollection.getAttributeLists();
 								for (int y = 0; y < descriptions.size(); y++) {
@@ -393,10 +361,11 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 							DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Filter:" + desName);
 							desNode.setUserObject(fiDescription);
 
-							DynamicFilterContent filtAtt = fiDescription.getDynamicFilterContent();
-							if (filtAtt!=null) {
+							for (Iterator r = fiDescription.getSpecificFilterContents().iterator(); r.hasNext(); ) {
+					SpecificFilterContent filtAtt = (SpecificFilterContent)r.next();
+								
 								String dynName = filtAtt.getInternalName();
-								DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicFilterContent:" + dynName);
+								DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("SpecificFilterContent:" + dynName);
 								dynNode.setUserObject(filtAtt);
 								
 								Option[] options = filtAtt.getOptions();
@@ -496,12 +465,6 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 							String desName = atDescription.getInternalName();
 							DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Attribute:" + desName);
 							desNode.setUserObject(atDescription);
-							DynamicAttributeContent aAtt = atDescription.getDynamicAttributeContent();
-							if (aAtt!=null) {
-								String dynName = aAtt.getInternalName();
-							DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicAttributeContent:" + dynName);
-							dynNode.setUserObject(aAtt);	
-							}
 						}
 						 descriptions = atCollection.getAttributeLists();
 						for (int y = 0; y < descriptions.size(); y++) {
@@ -531,10 +494,10 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 					DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Filter:" + desName);
 					desNode.setUserObject(fiDescription);
 
-					DynamicFilterContent filtAtt = fiDescription.getDynamicFilterContent();
-					if (filtAtt!=null) {
+					for (Iterator r = fiDescription.getSpecificFilterContents().iterator(); r.hasNext(); ) {
+						SpecificFilterContent filtAtt = (SpecificFilterContent)r.next();
 						String dynName = filtAtt.getInternalName();
-						DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicFilterContent:" + dynName);
+						DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("SpecificFilterContent:" + dynName);
 						dynNode.setUserObject(filtAtt);
 						
 						Option[] options = filtAtt.getOptions();
@@ -623,12 +586,6 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 					DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Attribute:" + desName);
 					desNode.setUserObject(atDescription);
 					//colNode.add(desNode);
-					DynamicAttributeContent aAtt = atDescription.getDynamicAttributeContent();
-					if (aAtt!=null) {
-						String dynName = aAtt.getInternalName();
-					DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicAttributeContent:" + dynName);
-					dynNode.setUserObject(aAtt);	
-					}
 				}
 				descriptions = atCollection.getAttributeLists();
 				for (int y = 0; y < descriptions.size(); y++) {
@@ -654,10 +611,10 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				desNode.setUserObject(fiDescription);
 				this.add(desNode);
 
-				DynamicFilterContent filtAtt = fiDescription.getDynamicFilterContent();
-				if (filtAtt!=null) {
+				for (Iterator r = fiDescription.getSpecificFilterContents().iterator(); r.hasNext(); ) {
+					SpecificFilterContent filtAtt = (SpecificFilterContent)r.next();
 					String dynName = filtAtt.getInternalName();
-					DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicFilterContent:" + dynName);
+					DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("SpecificFilterContent:" + dynName);
 					dynNode.setUserObject(filtAtt);
 					
 					Option[] options = filtAtt.getOptions();
@@ -740,12 +697,6 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Attribute:" + desName);
 				desNode.setUserObject(atDescription);
 				this.add(desNode);
-				DynamicAttributeContent aAtt = atDescription.getDynamicAttributeContent();
-				if (aAtt!=null) {
-				String dynName = aAtt.getInternalName();
-				DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicAttributeContent:" + dynName);
-				dynNode.setUserObject(aAtt);	
-				}
 			}
 			descriptions = atCollection.getAttributeLists();
 			for (int y = 0; y < descriptions.size(); y++) {
@@ -761,12 +712,12 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 
 			//setName("FilterCollection: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 			FilterDescription fiDescription = (FilterDescription) obj;
-
-			DynamicFilterContent filtAtt = fiDescription.getDynamicFilterContent();
-			if (filtAtt!=null) {
+			for (Iterator r = fiDescription.getSpecificFilterContents().iterator(); r.hasNext(); ) {
+				SpecificFilterContent filtAtt = (SpecificFilterContent)r.next();
 				String dynName = filtAtt.getInternalName();
-				DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicFilterContent:" + dynName);
+				DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("SpecificFilterContent:" + dynName);
 				dynNode.setUserObject(filtAtt);
+				this.add(dynNode);
 				
 				Option[] options = filtAtt.getOptions();
 			
@@ -843,27 +794,17 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 			setName("Attribute: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 			AttributeDescription ad = (AttributeDescription) obj;
 			//System.out.println("ATT\t" + ((BaseNamedConfigurationObject) obj).getInternalName()+":"+ad.getDynamicAttributeContents().size());
-			DynamicAttributeContent aAtt = ad.getDynamicAttributeContent();
-			if (aAtt!=null) {
-			String dynName = aAtt.getInternalName();
-			DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicAttributeContent:" + dynName);
-			dynNode.setUserObject(aAtt);	
-			this.add(dynNode);
-			}
+			
 			
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeList")) {
 			
 			//checkUniqueness((BaseNamedConfigurationObject)obj);
 			setName("AttributeList: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 			
-		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DynamicAttributeContent")) {
-			setName("DynamicAttributeContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
 			
-			
-			
-		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DynamicFilterContent")) {
-			setName("DynamicFilterContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
-			DynamicFilterContent dynAtt = (DynamicFilterContent) obj;
+		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.SpecificFilterContent")) {
+			setName("SpecificFilterContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
+			SpecificFilterContent dynAtt = (SpecificFilterContent) obj;
 			Option[] options = dynAtt.getOptions();
 									
 												for (int k = 0; k < options.length; k++) {
@@ -900,36 +841,18 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 													//end of new code
 												}
 			
-		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DynamicDatasetContent")) {
-			setName("DynamicDatasetContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
-		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DynamicImportableContent")) {
-			setName("DynamicImportableContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
-		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DynamicExportableContent")) {
-			setName("DynamicExportableContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Exportable")) {
 			//System.out.println("EXP\t" + ((BaseNamedConfigurationObject) obj).getInternalName());
 			setName("Exportable: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 			Exportable ad = (Exportable) obj;
 			//System.out.println("ATT\t" + ((BaseNamedConfigurationObject) obj).getInternalName()+":"+ad.getDynamicAttributeContents().size());
-			DynamicExportableContent dynAtt= ad.getDynamicExportableContent();
-			if (dynAtt!=null) {
-				String dynName = dynAtt.getInternalName();
-				DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicExportableContent:" + dynName);
-				dynNode.setUserObject(dynAtt);	
-				this.add(dynNode);
-			}
+			
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Importable")) {
 			//System.out.println("IMP\t" + ((BaseNamedConfigurationObject) obj).getInternalName());
 			setName("Importable: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 			Importable ad = (Importable) obj;
 			//System.out.println("ATT\t" + ((BaseNamedConfigurationObject) obj).getInternalName()+":"+ad.getDynamicAttributeContents().size());
-			DynamicImportableContent dynAtt = ad.getDynamicImportableContent();
-			if (dynAtt!=null) {
-				String dynName = dynAtt.getInternalName();
-				DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("DynamicImportableContent:" + dynName);
-				dynNode.setUserObject(dynAtt);	
-				this.add(dynNode);
-			}
+			
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Enable")) {
 			//setName("Enable");
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Disable")) {

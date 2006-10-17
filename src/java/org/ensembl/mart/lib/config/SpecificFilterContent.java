@@ -28,14 +28,14 @@ import java.util.logging.Logger;
  * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
  */
 
-public class DynamicFilterContent extends BaseNamedConfigurationObject {
+public class SpecificFilterContent extends BaseNamedConfigurationObject {
 
 	private Hashtable uiOptionNameMap = new Hashtable();
 	private List uiOptions = new ArrayList();
 	private boolean hasOptions = false;
 
 	private Logger logger =
-	  Logger.getLogger(DynamicFilterContent.class.getName());
+	  Logger.getLogger(SpecificFilterContent.class.getName());
 
 
   private final String otherFiltersKey = "otherFilters"; 
@@ -50,7 +50,7 @@ public class DynamicFilterContent extends BaseNamedConfigurationObject {
    * Copy constructor. Constructs an exact copy of an existing DynamiacFilterContent.
    * @param a DynamicFilterContent to copy.
    */
-  public DynamicFilterContent(DynamicFilterContent a) {
+  public SpecificFilterContent(SpecificFilterContent a) {
     super(a);
 	setRequiredFields(reqFields);
   }
@@ -59,7 +59,7 @@ public class DynamicFilterContent extends BaseNamedConfigurationObject {
    * Empty Constructor should only be used by DatasetConfigEditor
    *
    */
-  public DynamicFilterContent() {
+  public SpecificFilterContent() {
     super();
     
     setAttribute(otherFiltersKey, null);
@@ -77,7 +77,7 @@ public class DynamicFilterContent extends BaseNamedConfigurationObject {
    * @param otherFilters .
    * @throws ConfigurationException when required parameters are null or empty
    */
-  public DynamicFilterContent(String internalName,String otherFilters) throws ConfigurationException {
+  public SpecificFilterContent(String internalName,String otherFilters) throws ConfigurationException {
     super(internalName, "","");
 
     setAttribute(otherFiltersKey, otherFilters);
@@ -95,7 +95,7 @@ public class DynamicFilterContent extends BaseNamedConfigurationObject {
    * @param otherFilters .
    * @throws ConfigurationException when required parameters are null or empty
    */
-  public DynamicFilterContent(String internalName,String otherFilters,String pointerDataset,String pointerInterface,String pointerFilter) throws ConfigurationException {
+  public SpecificFilterContent(String internalName,String otherFilters,String pointerDataset,String pointerInterface,String pointerFilter) throws ConfigurationException {
 	super(internalName, "","");
 
 	setAttribute(otherFiltersKey, otherFilters);
@@ -316,8 +316,8 @@ public void addOptions(Option[] o) {
    * Allows Equality Comparisons of DynamicFilterContent objects
    */
   public boolean equals(Object o) {
-    return o instanceof DynamicFilterContent
-      && hashCode() == ((DynamicFilterContent) o).hashCode();
+    return o instanceof SpecificFilterContent
+      && hashCode() == ((SpecificFilterContent) o).hashCode();
   }
 
   public boolean isBroken() {

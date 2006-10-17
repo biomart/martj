@@ -2115,14 +2115,15 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	
 	if (templateConfig.getEntryLabel() != null) dsConfig.setEntryLabel(templateConfig.getEntryLabel());
 		
-	if (templateConfig.getDynamicDatasetContent()!=null){
+	//if (templateConfig.getDynamicDatasetContent()!=null){
 		// already got multiple settings for this template
 		//if (!templateConfig.containsDynamicDatasetContent(dsConfig.getDataset()))
 		//	templateConfig.addDynamicDatasetContent(new DynamicDatasetContent(dsConfig.getDataset(),dsConfig.getDisplayName(),dsConfig.getVersion()));
 				
-		dsConfig.setDisplayName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(templateConfig.getDynamicDatasetContent().getDisplayName()));
-		dsConfig.setVersion(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(templateConfig.getDynamicDatasetContent().getVersion()));
-	}
+
+	templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(dsConfig, dsConfig);
+		
+		//}
 	/*
 	else if (!dsConfig.getDisplayName().equals(templateConfig.getDisplayName()) || 
 	         !dsConfig.getVersion().equals(templateConfig.getVersion())){
@@ -2436,27 +2437,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					}*/
 					
 					FilterDescription configAttToAdd = new FilterDescription(templateAtt);
-
-					if (templateAtt.getDynamicFilterContent()!=null) {
-						DynamicFilterContent templateSettings = templateAtt.getDynamicFilterContent();
-
-						//configAttToAdd.setInternalName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-						//		templateSettings.getPointerDataset()+"."+templateSettings.getPointerFilter()));
-						configAttToAdd.setPointerDataset(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-								templateSettings.getPointerDataset()));
-						configAttToAdd.setPointerInterface(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-								templateSettings.getPointerInterface()));
-						configAttToAdd.setPointerFilter(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-								templateSettings.getPointerFilter()));
-					}
 					
-					if (configAttToAdd.getTableConstraint()!=null && !configAttToAdd.getTableConstraint().equals("main")) {
-						configAttToAdd.setTableConstraint(dsConfig.getDataset()+"__"+configAttToAdd.getTableConstraint());
-					}
-					
-				
-					//if (configAttToAdd.getTableConstraint()==null || "".equals(configAttToAdd.getTableConstraint())) {
-//							|| dsConfig.supportsFilterDescription(configAttToAdd.getField(), configAttToAdd.getTableConstraint(), configAttToAdd.getQualifier())){
 					String internalName = configAttToAdd.getInternalName();
 					FilterCollection filtcoll = null;
 					do {
@@ -2464,6 +2445,40 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						if (filtcoll!=null)
 							filtcoll.removeFilterDescription(filtcoll.getFilterDescriptionByInternalName(internalName));
 					} while (filtcoll!=null);
+					
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configAttToAdd,templateAtt);
+					
+					if (!templateAtt.getSpecificFilterContents().isEmpty()) {
+						SpecificFilterContent sf = templateAtt.getSpecificFilterContent(dsConfig.getDataset());
+						if (sf==null) continue;
+						//configAttToAdd.setInternalName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+						//		sf.getPointerDataset()+"."+templateSettings.getPointerFilter()));
+						//configAttToAdd.setPointerDataset(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+						//		sf.getPointerDataset()));
+						//configAttToAdd.setPointerInterface(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+						//		sf.getPointerInterface()));
+						//configAttToAdd.setPointerFilter(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+						//		sf.getPointerFilter()));
+						Option[] options = sf.getOptions();
+						for (int r = 0; r < options.length; r++)
+							configAttToAdd.addOption(new Option(options[r]));
+
+						templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configAttToAdd,sf);
+					}
+										
+					if (configAttToAdd.getTableConstraint()!=null && !configAttToAdd.getTableConstraint().equals("main")) {
+						configAttToAdd.setTableConstraint(dsConfig.getDataset()+"__"+configAttToAdd.getTableConstraint());
+					}
+					
+
+					// Resolve options.
+					Option[] options = configAttToAdd.getOptions();
+					for (int r = 0; r < options.length; r++)
+						options[r].resolveText(templateConfig.getDynamicDataset(dsConfig.getDataset()));
+					
+					//if (configAttToAdd.getTableConstraint()==null || "".equals(configAttToAdd.getTableConstraint())) {
+//							|| dsConfig.supportsFilterDescription(configAttToAdd.getField(), configAttToAdd.getTableConstraint(), configAttToAdd.getQualifier())){
+
 					configCollection.addFilterDescription(configAttToAdd);
 					//}
 					
@@ -2625,20 +2640,15 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					
 					AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
 				
-					if (templateAtt.getDynamicAttributeContent()!=null) {
-						DynamicAttributeContent templateSettings = templateAtt.getDynamicAttributeContent();
+					//if (templateAtt.getDynamicAttributeContent()!=null) {
+					//	DynamicAttributeContent templateSettings = templateAtt.getDynamicAttributeContent();
 
 						//configAttToAdd.setInternalName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
 						//		templateSettings.getPointerDataset()+"."+templateSettings.getPointerFilter()));
-						configAttToAdd.setPointerDataset(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-								templateSettings.getPointerDataset()));
-						configAttToAdd.setPointerInterface(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-								templateSettings.getPointerInterface()));
-						configAttToAdd.setPointerFilter(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-								templateSettings.getPointerFilter()));
-						configAttToAdd.setPointerAttribute(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-								templateSettings.getPointerAttribute()));
-					}
+				
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configAttToAdd,templateAtt);
+
+					//}
 					
 					
 					if (configAttToAdd.getTableConstraint()!=null && !configAttToAdd.getTableConstraint().equals("main")) {
@@ -2731,6 +2741,12 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						//System.out.println("ADDING PLACEHOLDE 2 ATT "+configAttToAdd.getInternalName());	
 //					if (configCollection.containsAttributeList(configAttToAdd.getInternalName())) 
 //						configCollection.removeAttributeList(dsConfig.getAttributeListByInternalName(configAttToAdd.getInternalName()));
+
+					
+
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configAttToAdd,templateAtt);
+					
+					
 					String internalName = configAttToAdd.getInternalName();
 					AttributeCollection filtcoll = null;
 					do {
@@ -2786,20 +2802,11 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		// if passsed all above tests then add template Importable to datasetConfig 
 		Importable newImp = new Importable(tempImps[i]);
 
-		if (tempImps[i].getDynamicImportableContent()!=null) {
-			DynamicImportableContent templateSettings = tempImps[i].getDynamicImportableContent();
-
-			newImp.setLinkName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-					templateSettings.getLinkName()));
-			newImp.setLinkVersion(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-					templateSettings.getLinkVersion()));
-			newImp.setName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-					templateSettings.getName()));
-			newImp.setFilters(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-					templateSettings.getFilters()));
-			newImp.setOrderBy(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-					templateSettings.getOrderBy()));
-		}
+		//if (tempImps[i].getDynamicImportableContent()!=null) {
+		//	DynamicImportableContent templateSettings = tempImps[i].getDynamicImportableContent();
+		
+		templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(newImp, tempImps[i]);
+		//}
 		
 		Importable[] dsImps = dsConfig.getImportables();
 		for (int j = 0; j < dsImps.length; j++) 
@@ -2830,20 +2837,12 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		// if passsed all above tests then add template Importable to datasetConfig 
 		Exportable newExp = new Exportable(tempExps[i]);
 
-		if (tempExps[i].getDynamicExportableContent()!=null) {
-			DynamicExportableContent templateSettings = tempExps[i].getDynamicExportableContent();
+		//if (tempExps[i].getDynamicExportableContent()!=null) {
+		//	DynamicExportableContent templateSettings = tempExps[i].getDynamicExportableContent();
 
-			newExp.setLinkName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-					templateSettings.getLinkName()));
-			newExp.setLinkVersion(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-					templateSettings.getLinkVersion()));
-			newExp.setName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-					templateSettings.getName()));
-			newExp.setAttributes(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-					templateSettings.getAttributes()));
-			newExp.setOrderBy(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
-					templateSettings.getOrderBy()));
-		}
+
+		templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(newExp, tempExps[i]);
+		//}
 		
 		
 		Exportable[] dsExps = dsConfig.getExportables();
@@ -3062,7 +3061,9 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 				FilterCollection validAttrs = this.getValidatedFilterCollection(acolls[ci],dsConfig.getDataset(),dsConfig,conn);				
 				for (Iterator ai = acolls[ci].getFilterDescriptions().iterator(); ai.hasNext(); ) {
 					FilterDescription attr = (FilterDescription)ai.next();
-					if (validAttrs.getFilterDescriptionByInternalName(attr.getInternalName()).isBroken()) acolls[ci].removeFilterDescription(attr);
+					if (validAttrs.getFilterDescriptionByInternalName(attr.getInternalName()).isBroken()) {
+						acolls[ci].removeFilterDescription(attr);
+					}
 				}
 			if (!(acolls[ci].getFilterDescriptions().size() > 0)){
 				agroup.removeFilterCollection(acolls[ci]);

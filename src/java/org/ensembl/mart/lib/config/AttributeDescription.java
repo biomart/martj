@@ -59,7 +59,6 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
   //private final String hiddenKey = "hidden";
   // helper field so that only setter/constructors will throw ConfigurationExceptions when string values are converted to integers
 
-  private DynamicAttributeContent dynamicAttributeContents = null;
 
 
   private boolean hasBrokenField = false;
@@ -167,34 +166,6 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 	setAttribute(pointerFilterKey, pointerFilter);
 	
 	setRequiredFields(reqFields);
-  }
-
-
-  /**
-   * Add a dynamicAttributeContent to the AttributeDescription.
-   * 
-   * @param a dynamicAttributeContent object.
-   */
-  public void setDynamicAttributeContent(DynamicAttributeContent a) {
-	  if (dynamicAttributeContents==null)
-	  dynamicAttributeContents=a;
-  }
-
-  /**
-   * Add a dynamicAttributeContent to the AttributeDescription.
-   * 
-   * @param a dynamicAttributeContent object.
-   */
-  public DynamicAttributeContent getDynamicAttributeContent() {
-	  return dynamicAttributeContents;
-  }
-
-  /**
-   * Remove an dynamicAttributeContent from this AttributeDescription.
-   * @param a -- dynamicAttributeContent to be removed.
-   */
-  public void removeDynamicAttributeContent() {
-	dynamicAttributeContents=null;
   }
 
   

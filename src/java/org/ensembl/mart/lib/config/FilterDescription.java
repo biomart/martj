@@ -41,8 +41,9 @@ public class FilterDescription extends QueryFilterSettings {
 	private List Enables = new ArrayList();
 	private List Disables = new ArrayList();
 	private List PushActions = new ArrayList();
-
-	private DynamicFilterContent dynamicFilterContents = null;
+	
+	private List specificFilterContents = new ArrayList();
+	private Hashtable specificFilterContentNameMap = new Hashtable();
 	
 	private boolean hasBrokenOptions = false;
 	
@@ -171,14 +172,15 @@ public class FilterDescription extends QueryFilterSettings {
 			throw new ConfigurationException("FilterDescription requires a type.");
 	}
 
+	  
 	  /**
 	   * Add a dynamicImportableContent to the AttributeDescription.
 	   * 
 	   * @param a dynamicImportableContent object.
 	   */
-	  public void setDynamicFilterContent(DynamicFilterContent a) {
-		  if (dynamicFilterContents==null)
-		  dynamicFilterContents=a;
+	  public void addSpecificFilterContent(SpecificFilterContent a) {
+		  specificFilterContents.add(a);
+		  specificFilterContentNameMap.put(a.getInternalName(),a);
 	  }
 
 	  /**
@@ -186,16 +188,35 @@ public class FilterDescription extends QueryFilterSettings {
 	   * 
 	   * @param a dynamicFilterContent object.
 	   */
-	  public DynamicFilterContent getDynamicFilterContent() {
-		  return dynamicFilterContents;
+	  public SpecificFilterContent getSpecificFilterContent(String name) {
+		  return (SpecificFilterContent)specificFilterContentNameMap.get(name);
+	  }
+	  
+	  /**
+	   * Add a dynamicFilterContent to the AttributeDescription.
+	   * 
+	   * @param a dynamicFilterContent object.
+	   */
+	  public List getSpecificFilterContents() {
+		  return this.specificFilterContents;
 	  }
 
 	  /**
 	   * Remove an dynamicFilterContent from this AttributeDescription.
 	   * @param a -- dynamicFilterContent to be removed.
 	   */
-	  public void removeDynamicFilterContent() {
-		dynamicFilterContents=null;
+	  public void insertSpecificFilterContent(int index, SpecificFilterContent a) {
+		specificFilterContents.add(index,a);
+		specificFilterContentNameMap.put(a.getInternalName(),a);
+	  }
+
+	  /**
+	   * Remove an dynamicFilterContent from this AttributeDescription.
+	   * @param a -- dynamicFilterContent to be removed.
+	   */
+	  public void removeSpecificFilterContent(SpecificFilterContent a) {
+		specificFilterContents.remove(a);
+		specificFilterContentNameMap.remove(a.getInternalName());
 	  }
 
 

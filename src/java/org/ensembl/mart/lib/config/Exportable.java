@@ -37,7 +37,6 @@ public class Exportable extends BaseNamedConfigurationObject {
   private final String defaultKey = "default";
   private int[] reqFields = {0,5,7,8};// rendered red in AttributeTable
 
-  private DynamicExportableContent dynamicExportableContents = null;
    
 	/**
 	 * Copy Constructor. Constructs a new Importable that is a
@@ -95,33 +94,6 @@ public class Exportable extends BaseNamedConfigurationObject {
 	setRequiredFields(reqFields);
   }
 
-
-  /**
-   * Add a dynamicImportableContent to the AttributeDescription.
-   * 
-   * @param a dynamicExportableContent object.
-   */
-  public void setDynamicExportableContent(DynamicExportableContent a) {
-	  if (dynamicExportableContents==null)
-	  dynamicExportableContents=a;
-  }
-
-  /**
-   * Add a dynamicExportableContent to the AttributeDescription.
-   * 
-   * @param a dynamicExportableContent object.
-   */
-  public DynamicExportableContent getDynamicExportableContent() {
-	  return dynamicExportableContents;
-  }
-
-  /**
-   * Remove an dynamicExportableContent from this AttributeDescription.
-   * @param a -- dynamicExportableContent to be removed.
-   */
-  public void removeDynamicExportableContent() {
-	dynamicExportableContents=null;
-  }
 
 	/**
 	 * Get the Reference for this Importable.  Refers to the internalName of a FilterDescription to Importable.

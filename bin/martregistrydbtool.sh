@@ -33,4 +33,9 @@ TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/ojdbc14.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/pg73jdbc3.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${CLASSPATH}
 
-java -ea -classpath ${TMP_CLASSPATH} org.ensembl.mart.util.MartRegistryDBTool $@
+
+# Note: If you get Java "Out of memory" errors, try increasing the numbers
+# in the -Xmx and -Xms parameters in the java command below. For performance
+# sake it is best if they are both the same value.
+
+java -Xmx128m -Xms128m -ea -classpath ${TMP_CLASSPATH} org.ensembl.mart.util.MartRegistryDBTool $@
