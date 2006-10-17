@@ -135,14 +135,14 @@ private InputPage[] getAttributeWidgets(AttributeCollection collection, AdaptorM
 
         AttributeDescription a = (AttributeDescription) element;
         if (tree.skipConfigurationObject(a)) continue;
-        
+
         if (a.getInternalName().indexOf('.') > 0) 
         {
         	String[] info = a.getInternalName().split("\\.");
             String dname = info[0];
             String aname = info[1];
             String main_dataset = dsv.getDataset(); // returns data set name hsapiens_gene_ensembl
-            
+                   
         	if (dname.compareTo(main_dataset) == 0) /// check if its  a self pointing place holder
         	{        		     		
         		// getting the page from xml which contains this attribute, could be more than one pages, here we get the first 1
@@ -192,9 +192,13 @@ private InputPage[] getAttributeWidgets(AttributeCollection collection, AdaptorM
         	}                 	
         	else 
         	{
+        		try {
         		a.setDisplayName(manager.getPointerAttribute(a.getInternalName()).getDisplayName());
         		a.setField(a.getInternalName());
         		a.setTableConstraint(a.getInternalName());
+        		} catch (RuntimeException e) {
+                	continue; // This is not a resolvable placeholder. Skip to the next.
+        		}
         	}
         }
         
