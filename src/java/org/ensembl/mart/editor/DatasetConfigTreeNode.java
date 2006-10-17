@@ -152,7 +152,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 			// Is it a template?
 			if (dsv.getTemplateFlag()!=null && dsv.getTemplateFlag().equals("1")) {
 				// Find out what DSs it uses.
-			DatasetConfigTreeNode fpNode = new DatasetConfigTreeNode("Template Datasets");
+			DatasetConfigTreeNode fpNode = new DatasetConfigTreeNode("PartitionTable: Datasets");
 			fpNode.setUserObject(new BaseNamedConfigurationObject() {
 				public boolean isBroken() { return false; }
 			});
