@@ -42,8 +42,7 @@ public class FilterDescription extends QueryFilterSettings {
 	private List Disables = new ArrayList();
 	private List PushActions = new ArrayList();
 
-	private List dynamicFilterContents = new ArrayList();
-	private Hashtable dynamicFilterContentNameMap = new Hashtable();
+	private DynamicFilterContent dynamicFilterContents = null;
 	
 	private boolean hasBrokenOptions = false;
 	
@@ -172,70 +171,32 @@ public class FilterDescription extends QueryFilterSettings {
 			throw new ConfigurationException("FilterDescription requires a type.");
 	}
 
+	  /**
+	   * Add a dynamicImportableContent to the AttributeDescription.
+	   * 
+	   * @param a dynamicImportableContent object.
+	   */
+	  public void setDynamicFilterContent(DynamicFilterContent a) {
+		  if (dynamicFilterContents==null)
+		  dynamicFilterContents=a;
+	  }
 
-	/**
-	 * Add a dynamicFilterContent to the FilterDescription.
-	 * 
-	 * @param a dynamicFilterContent object.
-	 */
-	public void addDynamicFilterContent(DynamicFilterContent a) {
-		dynamicFilterContents.add(a);
-		dynamicFilterContentNameMap.put(a.getInternalName(), a);
-	}
+	  /**
+	   * Add a dynamicFilterContent to the AttributeDescription.
+	   * 
+	   * @param a dynamicFilterContent object.
+	   */
+	  public DynamicFilterContent getDynamicFilterContent() {
+		  return dynamicFilterContents;
+	  }
 
-	/**
-	 * Remove an dynamicFilterContent from this FilterDescription.
-	 * @param a -- dynamicFilterContent to be removed.
-	 */
-	public void removeDynamicFilterContent(DynamicFilterContent a) {
-	  dynamicFilterContentNameMap.remove(a.getInternalName());
-	  dynamicFilterContents.remove(a);
-	}
-
-	/**
-	 * Insert an dynamicFilterContent at a particular position within the Filter.
-	 * dynamicFilterContent set at or after the given position are shift right.
-	 * @param position -- position at which to insert the given dynamicFilterContent
-	 * @param a -- dynamicFilterContent to insert
-	 */
-	public void insertDynamicFilterContent(int position, DynamicFilterContent a) {
-	  dynamicFilterContents.add(position, a);
-	  dynamicFilterContentNameMap.put(a.getInternalName(), a);
-	}
-
-	/**
-	  * Get a specific dynamicFilterContent, named by internalName.
-	  *  
-	  * @param internalName name of the requested dynamicFilterContent
-	  * @return dynamicFilterContent requested, or null
-	  */
-	public DynamicFilterContent getDynamicFilterContentByInternalName(String internalName) {
-	  if ( containsDynamicFilterContent(internalName) )
-		  return (DynamicFilterContent) dynamicFilterContentNameMap.get(internalName);
-	  else
-		  return null;
-	}
-  
-	/**
-		* Check if this FilterDescription contains a specific dynamicFilterContent named
-		* by internalName.
-		*  
-		* @param internalName name of the requested dynamicFilterContent object
-		* @return boolean, true if found, false if not.
-		*/
-	public boolean containsDynamicFilterContent(String internalName) {
-	  return dynamicFilterContentNameMap.containsKey(internalName);
-	}
-  
-	
-	/**
-	 * Returns a List of dynamicFilterContent objects, in the order they were added.
-	 * 
-	 * @return List of dynamicFilterContent objects.
-	 */
-	public List getDynamicFilterContents() {
-		return new ArrayList(dynamicFilterContents);
-	}
+	  /**
+	   * Remove an dynamicFilterContent from this AttributeDescription.
+	   * @param a -- dynamicFilterContent to be removed.
+	   */
+	  public void removeDynamicFilterContent() {
+		dynamicFilterContents=null;
+	  }
 
 
 	/**

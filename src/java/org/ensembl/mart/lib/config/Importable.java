@@ -36,8 +36,7 @@ public class Importable extends BaseNamedConfigurationObject {
   private final String orderByKey = "orderBy";
   private int[] reqFields = {0,5,7,8};// rendered red in AttributeTable
 
-  private List dynamicImportableContents = new ArrayList();
-  private Hashtable dynamicImportableContentNameMap = new Hashtable();
+  private DynamicImportableContent dynamicImportableContents = null;
 
  
 	/**
@@ -98,66 +97,28 @@ public class Importable extends BaseNamedConfigurationObject {
    * 
    * @param a dynamicImportableContent object.
    */
-  public void addDynamicImportableContent(DynamicImportableContent a) {
-	  dynamicImportableContents.add(a);
-	  dynamicImportableContentNameMap.put(a.getInternalName(), a);
+  public void setDynamicImportableContent(DynamicImportableContent a) {
+	  if (dynamicImportableContents==null)
+	  dynamicImportableContents=a;
+  }
+
+  /**
+   * Add a dynamicImportableContent to the AttributeDescription.
+   * 
+   * @param a dynamicImportableContent object.
+   */
+  public DynamicImportableContent getDynamicImportableContent() {
+	  return dynamicImportableContents;
   }
 
   /**
    * Remove an dynamicImportableContent from this AttributeDescription.
    * @param a -- dynamicImportableContent to be removed.
    */
-  public void removeDynamicImportableContent(DynamicImportableContent a) {
-	dynamicImportableContentNameMap.remove(a.getInternalName());
-	dynamicImportableContents.remove(a);
+  public void removeDynamicImportableContent() {
+	dynamicImportableContents=null;
   }
-
-  /**
-   * Insert an DynamicImportableContent at a particular position within the Attribute.
-   * DynamicImportableContent set at or after the given position are shift right.
-   * @param position -- position at which to insert the given DynamicImportableContent
-   * @param a -- DynamicImportableContent to insert
-   */
-  public void insertDynamicImportableContent(int position, DynamicImportableContent a) {
-	dynamicImportableContents.add(position, a);
-	dynamicImportableContentNameMap.put(a.getInternalName(), a);
-  }
-
-  /**
-	* Get a specific DynamicImportableContent, named by internalName.
-	*  
-	* @param internalName name of the requested dynamicImportableContent
-	* @return DynamicImportableContent requested, or null
-	*/
-  public DynamicImportableContent getDynamicImportableContentByInternalName(String internalName) {
-	if ( containsDynamicImportableContent(internalName) )
-		return (DynamicImportableContent) dynamicImportableContentNameMap.get(internalName);
-	else
-		return null;
-  }
-  
-  /**
-	  * Check if this AttributeDescription contains a specific DynamicImportableContent named
-	  * by internalName.
-	  *  
-	  * @param internalName name of the requested DynamicImportableContent object
-	  * @return boolean, true if found, false if not.
-	  */
-  public boolean containsDynamicImportableContent(String internalName) {
-	return dynamicImportableContentNameMap.containsKey(internalName);
-  }
-  
 	
-  /**
-   * Returns a List of DynamicImportableContent objects, in the order they were added.
-   * 
-   * @return List of DynamicImportableContent objects.
-   */
-  public List getDynamicImportableContents() {
-	  return new ArrayList(dynamicImportableContents);
-  }
-
-
 	/**
 	 * Get the Reference for this Importable.  Refers to the internalName of a FilterDescription to Importable.
 	 * @return String internalName of the referring FilterDescription.

@@ -51,6 +51,7 @@ import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.DatasetConfigIterator;
+import org.ensembl.mart.lib.config.DynamicDataset;
 import org.ensembl.mart.lib.config.Exportable;
 import org.ensembl.mart.lib.config.FilterCollection;
 import org.ensembl.mart.lib.config.FilterDescription;
@@ -134,6 +135,8 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 							} else {
 								MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, templateDocument);
 							}
+							if (templateConfig.getDynamicDataset(dataset)==null)
+								templateConfig.addDynamicDataset(new DynamicDataset(dataset,null));
 							templateConfig.setTemplateFlag("1");
 							config = templateConfig;
             	  	
@@ -239,6 +242,8 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 							else {
 								MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, templateDocument);
 							}							
+							if (templateConfig.getDynamicDataset(dataset)==null)
+								templateConfig.addDynamicDataset(new DynamicDataset(dataset,null));
 							templateConfig.setTemplateFlag("1");							
 							config = templateConfig;
 														

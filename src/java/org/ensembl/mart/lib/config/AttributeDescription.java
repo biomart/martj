@@ -59,8 +59,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
   //private final String hiddenKey = "hidden";
   // helper field so that only setter/constructors will throw ConfigurationExceptions when string values are converted to integers
 
-  private List dynamicAttributeContents = new ArrayList();
-  private Hashtable dynamicAttributeContentNameMap = new Hashtable();
+  private DynamicAttributeContent dynamicAttributeContents = null;
 
 
   private boolean hasBrokenField = false;
@@ -170,69 +169,34 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 	setRequiredFields(reqFields);
   }
 
+
   /**
    * Add a dynamicAttributeContent to the AttributeDescription.
    * 
    * @param a dynamicAttributeContent object.
    */
-  public void addDynamicAttributeContent(DynamicAttributeContent a) {
-	  dynamicAttributeContents.add(a);
-	  dynamicAttributeContentNameMap.put(a.getInternalName(), a);
+  public void setDynamicAttributeContent(DynamicAttributeContent a) {
+	  if (dynamicAttributeContents==null)
+	  dynamicAttributeContents=a;
+  }
+
+  /**
+   * Add a dynamicAttributeContent to the AttributeDescription.
+   * 
+   * @param a dynamicAttributeContent object.
+   */
+  public DynamicAttributeContent getDynamicAttributeContent() {
+	  return dynamicAttributeContents;
   }
 
   /**
    * Remove an dynamicAttributeContent from this AttributeDescription.
    * @param a -- dynamicAttributeContent to be removed.
    */
-  public void removeDynamicAttributeContent(DynamicAttributeContent a) {
-    dynamicAttributeContentNameMap.remove(a.getInternalName());
-    dynamicAttributeContents.remove(a);
+  public void removeDynamicAttributeContent() {
+	dynamicAttributeContents=null;
   }
 
-  /**
-   * Insert an DynamicAttributeContent at a particular position within the Attribute.
-   * DynamicAttributeContent set at or after the given position are shift right.
-   * @param position -- position at which to insert the given DynamicAttributeContent
-   * @param a -- DynamicAttributeContent to insert
-   */
-  public void insertDynamicAttributeContent(int position, DynamicAttributeContent a) {
-	dynamicAttributeContents.add(position, a);
-	dynamicAttributeContentNameMap.put(a.getInternalName(), a);
-  }
-
-  /**
-	* Get a specific DynamicAttributeContent, named by internalName.
-	*  
-	* @param internalName name of the requested dynamicAttributeContent
-	* @return DynamicAttributeContent requested, or null
-	*/
-  public DynamicAttributeContent getDynamicAttributeContentByInternalName(String internalName) {
-	if ( containsDynamicAttributeContent(internalName) )
-		return (DynamicAttributeContent) dynamicAttributeContentNameMap.get(internalName);
-	else
-		return null;
-  }
-  
-  /**
-	  * Check if this AttributeDescription contains a specific DynamicAttributeContent named
-	  * by internalName.
-	  *  
-	  * @param internalName name of the requested DynamicAttributeContent object
-	  * @return boolean, true if found, false if not.
-	  */
-  public boolean containsDynamicAttributeContent(String internalName) {
-  	return dynamicAttributeContentNameMap.containsKey(internalName);
-  }
-  
-	
-  /**
-   * Returns a List of DynamicAttributeContent objects, in the order they were added.
-   * 
-   * @return List of DynamicAttributeContent objects.
-   */
-  public List getDynamicAttributeContents() {
-	  return new ArrayList(dynamicAttributeContents);
-  }
   
   /**
    * @param homePageURL - url to homepage for the data source

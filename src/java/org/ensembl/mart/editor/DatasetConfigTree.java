@@ -654,7 +654,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			menuItems = new String[] { "copy", "cut", "paste", "delete","insert dynamic importable content" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Exportable"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete","insert dynamic exportable content" };
-
+		else menuItems = new String[0];
+		
 		for (int i = 0; i < menuItems.length; i++) {
 			JMenuItem menuItem = new JMenuItem(menuItems[i]);
 			MenuActionListener menuActionListener = new MenuActionListener();
@@ -670,7 +671,9 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		editingNode = setEditingNode();
 
 		if (editingNode == null)
-			return;
+			return;		
+		if (editingNode.getParent()==null) return; // Can't remove root node.
+
 		editingNodeParent = (DatasetConfigTreeNode) editingNode.getParent();
 		editingNodeIndex = editingNode.getParent().getIndex(editingNode);
 		treemodel.removeNodeFromParent(editingNode);
@@ -1252,6 +1255,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		DatasetConfigTreeNode node = setEditingNode();
 		if (node == null)
 			return;
+		if (node.getParent()==null) return; // Can't remove root node.
 		//DatasetConfigTreeNode node = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
 		treemodel.removeNodeFromParent(node);
 	}

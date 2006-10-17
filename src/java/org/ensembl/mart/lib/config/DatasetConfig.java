@@ -100,6 +100,9 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   private Hashtable uiOptionNameMap = new Hashtable();
   private boolean hasOptions = false;
   private boolean hasBrokenOptions = false;
+  
+  private List dynamicDatasets = new ArrayList();
+  private Hashtable dynamicDatasetNameMap = new Hashtable();
 
   // cache one AttributeDescription for call to containsAttributeDescription or getAttributeDescriptionByInternalName
   private AttributeDescription lastAtt = null;
@@ -128,8 +131,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 
   private Logger logger = Logger.getLogger(DatasetConfig.class.getName());
 
-  private List dynamicDatasetContents = new ArrayList();
-  private Hashtable dynamicDatasetContentNameMap = new Hashtable();
+  private DynamicDatasetContent dynamicDatasetContents = null;
 
   /**
    * Copy Constructor allowing client to specify whether to lazyLoad the copy at initiation, rather
@@ -326,75 +328,61 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(entryLabelKey,entryLabel);
 	setRequiredFields(reqFields);
   }
-  
+
   
   /**
    * Add a dynamicDatasetContent to the DatasetConfig.
    * 
    * @param a dynamicDatasetContent object.
    */
-  public void addDynamicDatasetContent(DynamicDatasetContent a) {
-	  dynamicDatasetContents.add(a);
-	  dynamicDatasetContentNameMap.put(a.getInternalName(), a);
+  public void addDynamicDataset(DynamicDataset a) {
+	  dynamicDatasets.add(a);
+	  dynamicDatasetNameMap.put(a.getInternalName(), a);
   }
 
   /**
    * Remove an dynamicDatasetContent from this DatasetConfig.
    * @param a -- dynamicDatasetContent to be removed.
    */
-  public void removeDynamicDatasetContent(DynamicDatasetContent a) {
-	dynamicDatasetContentNameMap.remove(a.getInternalName());
-	dynamicDatasetContents.remove(a);
+  public void removeDynamicDataset(DynamicDataset a) {
+		dynamicDatasetNameMap.remove(a.getInternalName());
+	dynamicDatasets.remove(a);
+  }
+  
+  public List getDynamicDatasets() {
+		return this.dynamicDatasets;
+	}
+  
+  public DynamicDataset getDynamicDataset(String name) {
+	  return (DynamicDataset)this.dynamicDatasetNameMap.get(name);
   }
 
   /**
-   * Insert an DynamicDatasetContent at a particular position within the Attribute.
-   * DynamicDatasetContent set at or after the given position are shift right.
-   * @param position -- position at which to insert the given DynamicDatasetContent
-   * @param a -- DynamicDatasetContent to insert
-   */
-  public void insertDynamicDatasetContent(int position, DynamicDatasetContent a) {
-	dynamicDatasetContents.add(position, a);
-	dynamicDatasetContentNameMap.put(a.getInternalName(), a);
-  }
-
-  /**
-	* Get a specific DynamicDatasetContent, named by internalName.
-	*  
-	* @param internalName name of the requested dynamicDatasetContent
-	* @return DynamicDatasetContent requested, or null
-	*/
-  public DynamicDatasetContent getDynamicDatasetContentByInternalName(String internalName) {
-	if ( containsDynamicDatasetContent(internalName) )
-		return (DynamicDatasetContent) dynamicDatasetContentNameMap.get(internalName);
-	else
-		return null;
-  }
-  
-  /**
-	  * Check if this DatasetConfig contains a specific DynamicDatasetContent named
-	  * by internalName.
-	  *  
-	  * @param internalName name of the requested DynamicDatasetContent object
-	  * @return boolean, true if found, false if not.
-	  */
-  public boolean containsDynamicDatasetContent(String internalName) {
-	return dynamicDatasetContentNameMap.containsKey(internalName);
-  }
-  
-	
-  /**
-   * Returns a List of DynamicDatasetContent objects, in the order they were added.
+   * Add a dynamicDatasetContent to the AttributeDescription.
    * 
-   * @return List of DynamicDatasetContent objects.
+   * @param a dynamicDatasetContent object.
    */
-  public List getDynamicDatasetContents() {
-	  return new ArrayList(dynamicDatasetContents);
+  public void setDynamicDatasetContent(DynamicDatasetContent a) {
+	  if (dynamicDatasetContents==null)
+	  dynamicDatasetContents=a;
   }
-  
-  
-  
-  
+
+  /**
+   * Add a dynamicDatasetContent to the AttributeDescription.
+   * 
+   * @param a dynamicDatasetContent object.
+   */
+  public DynamicDatasetContent getDynamicDatasetContent() {
+	  return dynamicDatasetContents;
+  }
+
+  /**
+   * Remove an dynamicDatasetContent from this AttributeDescription.
+   * @param a -- dynamicDatasetContent to be removed.
+   */
+  public void removeDynamicDatasetContent() {
+	dynamicDatasetContents=null;
+  }
 
 	public void setTemplateFlag(String flag) {
 	  templateFlag = flag;

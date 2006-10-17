@@ -873,6 +873,7 @@ public class DatabaseDatasetConfigUtils {
 			//	fd.setTableConstraint(fd.getTableConstraint().split("__")[1]+"__"+fd.getTableConstraint().split("__")[2]);
 			//fd.setOtherFilters("");
 			
+			/*
 			Option[] ops = fd.getOptions();
 			for (int j = 0; j < ops.length; j++){
 				Option op = ops[j];
@@ -886,6 +887,7 @@ public class DatabaseDatasetConfigUtils {
 				//	op.setTableConstraint(op.getTableConstraint().split("__")[1]+"__"+op.getTableConstraint().split("__")[2]);
 				//op.setOtherFilters("");
 			}
+			*/
 		}
 		
 		List attributeDescriptions = templateConfig.getAllAttributeDescriptions();
@@ -895,8 +897,8 @@ public class DatabaseDatasetConfigUtils {
 			  //if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
 			  if (ad.getPointerDataset()!=null && !"".equals(ad.getPointerDataset())){
 				
-				ad.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),"",ad.getPointerDataset(),
-					ad.getPointerInterface(),ad.getPointerAttribute(),ad.getPointerFilter()));
+				//ad.addDynamicAttributeContent(new DynamicAttributeContent(dsConfig.getDataset(),"",ad.getPointerDataset(),
+				//	ad.getPointerInterface(),ad.getPointerAttribute(),ad.getPointerFilter()));
 				
 				ad.setTableConstraint("");
 				ad.setField("");
@@ -1537,7 +1539,7 @@ public class DatabaseDatasetConfigUtils {
 		 DetailedDataSource.close(conn);
 	}
   }
-
+/*
 private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetConfig dsConfig, DatasetConfig templateConfig)
 	  throws ConfigurationException{
 		
@@ -1929,8 +1931,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 				configAttToAdd.insertOption(k,options[k]);
 			}		  			  	
 		  }
-		  */
-		  
+		  *
+		 
 	  }
 	  
 	  
@@ -2091,7 +2093,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	  }
   }
 }
-
+*/
 
   public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig, int storeFlag) throws ConfigurationException, SQLException{
 	String template = dsConfig.getTemplate();
@@ -2101,6 +2103,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
 	dscutils.loadDatasetConfigWithDocument(templateConfig,getTemplateDocument(template));
 	
+	if (templateConfig.getDynamicDataset(dsConfig.getDataset())==null) 
+		templateConfig.addDynamicDataset(new DynamicDataset(dsConfig.getDataset(),null));
 	
 	// dynamic content handling eg linkoutURL
 	if (dsConfig.getDisplayName() == null) dsConfig.setDisplayName("");// avoids template problems
@@ -2111,14 +2115,15 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	
 	if (templateConfig.getEntryLabel() != null) dsConfig.setEntryLabel(templateConfig.getEntryLabel());
 		
-	if (templateConfig.getDynamicDatasetContents().size() > 0){
+	if (templateConfig.getDynamicDatasetContent()!=null){
 		// already got multiple settings for this template
-		if (!templateConfig.containsDynamicDatasetContent(dsConfig.getDataset()))
-			templateConfig.addDynamicDatasetContent(new DynamicDatasetContent(dsConfig.getDataset(),dsConfig.getDisplayName(),dsConfig.getVersion()));
+		//if (!templateConfig.containsDynamicDatasetContent(dsConfig.getDataset()))
+		//	templateConfig.addDynamicDatasetContent(new DynamicDatasetContent(dsConfig.getDataset(),dsConfig.getDisplayName(),dsConfig.getVersion()));
 				
-		dsConfig.setDisplayName(templateConfig.getDynamicDatasetContentByInternalName(dsConfig.getDataset()).getDisplayName());
-		dsConfig.setVersion(templateConfig.getDynamicDatasetContentByInternalName(dsConfig.getDataset()).getVersion());
+		dsConfig.setDisplayName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(templateConfig.getDynamicDatasetContent().getDisplayName()));
+		dsConfig.setVersion(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(templateConfig.getDynamicDatasetContent().getVersion()));
 	}
+	/*
 	else if (!dsConfig.getDisplayName().equals(templateConfig.getDisplayName()) || 
 	         !dsConfig.getVersion().equals(templateConfig.getVersion())){
 				// if this config has a different setting then start using dynamic objects
@@ -2143,6 +2148,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					dsConfig.setVersion(templateConfig.getDynamicDatasetContentByInternalName(dsConfig.getDataset()).getVersion());			
 				}
 	}
+	*/
 	
 	/* Redundant if using update to template and not dataset.
 	// filter merge
@@ -2430,12 +2436,18 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					}*/
 					
 					FilterDescription configAttToAdd = new FilterDescription(templateAtt);
-					if (templateAtt.containsDynamicFilterContent(dsConfig.getDataset())){
-						DynamicFilterContent templateSettings = templateAtt.getDynamicFilterContentByInternalName(dsConfig.getDataset());
-						configAttToAdd.setInternalName(templateSettings.getPointerDataset()+"."+templateSettings.getPointerFilter());
-						configAttToAdd.setPointerDataset(templateSettings.getPointerDataset());
-						configAttToAdd.setPointerInterface(templateSettings.getPointerInterface());
-						configAttToAdd.setPointerFilter(templateSettings.getPointerFilter());
+
+					if (templateAtt.getDynamicFilterContent()!=null) {
+						DynamicFilterContent templateSettings = templateAtt.getDynamicFilterContent();
+
+						//configAttToAdd.setInternalName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+						//		templateSettings.getPointerDataset()+"."+templateSettings.getPointerFilter()));
+						configAttToAdd.setPointerDataset(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+								templateSettings.getPointerDataset()));
+						configAttToAdd.setPointerInterface(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+								templateSettings.getPointerInterface()));
+						configAttToAdd.setPointerFilter(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+								templateSettings.getPointerFilter()));
 					}
 					
 					if (configAttToAdd.getTableConstraint()!=null && !configAttToAdd.getTableConstraint().equals("main")) {
@@ -2612,14 +2624,22 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					}*/
 					
 					AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
-					if (templateAtt.containsDynamicAttributeContent(dsConfig.getDataset())){
-						DynamicAttributeContent templateSettings = templateAtt.getDynamicAttributeContentByInternalName(dsConfig.getDataset());
-						configAttToAdd.setInternalName(templateSettings.getPointerDataset()+"."+templateSettings.getPointerAttribute());
-						configAttToAdd.setPointerDataset(templateSettings.getPointerDataset());
-						configAttToAdd.setPointerInterface(templateSettings.getPointerInterface());
-						configAttToAdd.setPointerAttribute(templateSettings.getPointerAttribute());
-						configAttToAdd.setPointerFilter(templateSettings.getPointerFilter());
+				
+					if (templateAtt.getDynamicAttributeContent()!=null) {
+						DynamicAttributeContent templateSettings = templateAtt.getDynamicAttributeContent();
+
+						//configAttToAdd.setInternalName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+						//		templateSettings.getPointerDataset()+"."+templateSettings.getPointerFilter()));
+						configAttToAdd.setPointerDataset(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+								templateSettings.getPointerDataset()));
+						configAttToAdd.setPointerInterface(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+								templateSettings.getPointerInterface()));
+						configAttToAdd.setPointerFilter(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+								templateSettings.getPointerFilter()));
+						configAttToAdd.setPointerAttribute(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+								templateSettings.getPointerAttribute()));
 					}
+					
 					
 					if (configAttToAdd.getTableConstraint()!=null && !configAttToAdd.getTableConstraint().equals("main")) {
 						configAttToAdd.setTableConstraint(dsConfig.getDataset()+"__"+configAttToAdd.getTableConstraint());
@@ -2749,10 +2769,10 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	Importable[] tempImps = templateConfig.getImportables();
 	OUTER:for (int i = 0; i < tempImps.length; i++){
 		// skip if the importable has dynamic content or a linkVersion as won't know what to use
-		if (tempImps[i].getDynamicImportableContents().size() > 0)
+		//if (tempImps[i].getDynamicImportableContents().size() > 0)
 			// why can we not copy over importables with linkversions??
 			// (tempImps[i].getLinkVersion() != null && !tempImps[i].getLinkVersion().equals("")))
-				continue;
+				//continue;
 		
 		String[] filterNames = tempImps[i].getFilters().split(",");
 		for (int j = 0; j < filterNames.length; j++){
@@ -2766,6 +2786,21 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		// if passsed all above tests then add template Importable to datasetConfig 
 		Importable newImp = new Importable(tempImps[i]);
 
+		if (tempImps[i].getDynamicImportableContent()!=null) {
+			DynamicImportableContent templateSettings = tempImps[i].getDynamicImportableContent();
+
+			newImp.setLinkName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+					templateSettings.getLinkName()));
+			newImp.setLinkVersion(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+					templateSettings.getLinkVersion()));
+			newImp.setName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+					templateSettings.getName()));
+			newImp.setFilters(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+					templateSettings.getFilters()));
+			newImp.setOrderBy(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+					templateSettings.getOrderBy()));
+		}
+		
 		Importable[] dsImps = dsConfig.getImportables();
 		for (int j = 0; j < dsImps.length; j++) 
 			if (dsImps[j].getInternalName().equals(newImp.getInternalName()))
@@ -2778,10 +2813,10 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	Exportable[] tempExps = templateConfig.getExportables();
 	OUTER:for (int i = 0; i < tempExps.length; i++){
 		// skip if the importable has dynamic content or a linkVersion as won't know what to use
-		if (tempExps[i].getDynamicExportableContents().size() > 0)
+		//if (tempExps[i].getDynamicExportableContents().size() > 0)
 			// why can we not copy over exportables with linkversions??
 			//(tempExps[i].getLinkVersion() != null && !tempExps[i].getLinkVersion().equals("")))
-				continue;
+		//		continue;
 		
 		String[] filterNames = tempExps[i].getAttributes().split(",");
 		for (int j = 0; j < filterNames.length; j++){
@@ -2795,6 +2830,22 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		// if passsed all above tests then add template Importable to datasetConfig 
 		Exportable newExp = new Exportable(tempExps[i]);
 
+		if (tempExps[i].getDynamicExportableContent()!=null) {
+			DynamicExportableContent templateSettings = tempExps[i].getDynamicExportableContent();
+
+			newExp.setLinkName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+					templateSettings.getLinkName()));
+			newExp.setLinkVersion(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+					templateSettings.getLinkVersion()));
+			newExp.setName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+					templateSettings.getName()));
+			newExp.setAttributes(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+					templateSettings.getAttributes()));
+			newExp.setOrderBy(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+					templateSettings.getOrderBy()));
+		}
+		
+		
 		Exportable[] dsExps = dsConfig.getExportables();
 		for (int j = 0; j < dsExps.length; j++) 
 			if (dsExps[j].getInternalName().equals(newExp.getInternalName()))

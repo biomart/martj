@@ -85,17 +85,17 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 				config.addExportable((Exportable) editingNode.getUserObject());
 			} else if (childClassName.equals("org.ensembl.mart.lib.config.DynamicDatasetContent")) {
 				config = (DatasetConfig) parentNode.getUserObject();
-				config.addDynamicDatasetContent((DynamicDatasetContent) editingNode.getUserObject());
+				config.setDynamicDatasetContent((DynamicDatasetContent) editingNode.getUserObject());
 			}	
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.Importable")) {
 			if (childClassName.equals("org.ensembl.mart.lib.config.DynamicImportableContent")) {
 				Importable imp = (Importable) parentNode.getUserObject();
-				imp.addDynamicImportableContent((DynamicImportableContent) editingNode.getUserObject());
+				imp.setDynamicImportableContent((DynamicImportableContent) editingNode.getUserObject());
 			}
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.Exportable")) {
 			if (childClassName.equals("org.ensembl.mart.lib.config.DynamicExportableContent")) {
 				Exportable exp = (Exportable) parentNode.getUserObject();
-				exp.addDynamicExportableContent((DynamicExportableContent) editingNode.getUserObject());
+				exp.setDynamicExportableContent((DynamicExportableContent) editingNode.getUserObject());
 			}
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.FilterPage")) {
 			if (childClassName.equals("org.ensembl.mart.lib.config.FilterGroup")) {
@@ -121,7 +121,7 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 			}
 			else if (childClassName.equals("org.ensembl.mart.lib.config.DynamicFilterContent")) {
 				FilterDescription ad = (FilterDescription) parentNode.getUserObject();
-				ad.addDynamicFilterContent((DynamicFilterContent) editingNode.getUserObject());
+				ad.setDynamicFilterContent((DynamicFilterContent) editingNode.getUserObject());
 			}	 
 
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.Option")) {
@@ -155,7 +155,7 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.AttributeDescription")) {
 			if (childClassName.equals("org.ensembl.mart.lib.config.DynamicAttributeContent")) {
 				AttributeDescription ad = (AttributeDescription) parentNode.getUserObject();
-				ad.addDynamicAttributeContent((DynamicAttributeContent) editingNode.getUserObject());
+				ad.setDynamicAttributeContent((DynamicAttributeContent) editingNode.getUserObject());
 			}			
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.DynamicAttributeContent")) {
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.DynamicFilterContent")) {
@@ -217,7 +217,9 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 				config.insertExportable(objIndex, (Exportable) editingNode.getUserObject());
 			} else if (child instanceof org.ensembl.mart.lib.config.DynamicDatasetContent) {
 				config = (DatasetConfig) parentNode.getUserObject();
-				config.insertDynamicDatasetContent(objIndex, (DynamicDatasetContent) editingNode.getUserObject());
+				if (config.getDynamicDatasetContent()!=null)
+					return "Error: " + childName + " cannot be inserted as it already has one.";
+				config.setDynamicDatasetContent((DynamicDatasetContent) editingNode.getUserObject());
 			} else {
 				String error_string = "Error: " + childName + " cannot be inserted in a DatasetConfig.";
 				return error_string;
@@ -299,7 +301,9 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 				//fd.insertPushAction(objIndex, (PushAction) editingNode.getUserObject());
 			} else if (child instanceof org.ensembl.mart.lib.config.DynamicFilterContent) {
 				FilterDescription ad = (FilterDescription) parentNode.getUserObject();
-				ad.insertDynamicFilterContent(objIndex, (DynamicFilterContent) editingNode.getUserObject());
+				if (ad.getDynamicFilterContent()!=null)
+					return "Error: " + childName + " cannot be inserted as it already has one.";
+				ad.setDynamicFilterContent((DynamicFilterContent) editingNode.getUserObject());
 			} else {
 				String error_string = "Error: " + childName + " cannot be inserted in a FilterDescription.";
 				return error_string;
@@ -344,7 +348,9 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 		} else if (parent instanceof org.ensembl.mart.lib.config.AttributeDescription) {
 			if (child instanceof org.ensembl.mart.lib.config.DynamicAttributeContent) {
 				AttributeDescription ad = (AttributeDescription) parentNode.getUserObject();
-				ad.insertDynamicAttributeContent(objIndex, (DynamicAttributeContent) editingNode.getUserObject());
+				if (ad.getDynamicAttributeContent()!=null)
+					return "Error: " + childName + " cannot be inserted as it already has one.";
+				ad.setDynamicAttributeContent((DynamicAttributeContent) editingNode.getUserObject());
 			} else {
 				String error_string = "Error: " + childName + " cannot be inserted in an AttributeDescription.";
 				return error_string;
@@ -379,6 +385,7 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 
 	public void removeNodeFromParent(DatasetConfigTreeNode node) {
 		Object child = node.getUserObject();
+		if (node.getParent()==null) return; // Can't remove root node.
 		Object parent = ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 		if (parent instanceof org.ensembl.mart.lib.config.DatasetConfig) {
 			if (child instanceof org.ensembl.mart.lib.config.FilterPage) {
@@ -395,17 +402,17 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 				config.removeImportable((Importable) node.getUserObject());
 			} else if (child instanceof org.ensembl.mart.lib.config.DynamicDatasetContent) {
 				config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
-				config.removeDynamicDatasetContent((DynamicDatasetContent) node.getUserObject());
+				config.removeDynamicDatasetContent();
 			}
 		}  else if (parent instanceof org.ensembl.mart.lib.config.Importable) {
 			if (child instanceof DynamicImportableContent) {
 				Importable imp = (Importable) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
-				imp.removeDynamicImportableContent((DynamicImportableContent) node.getUserObject());
+				imp.removeDynamicImportableContent();
 			}
 		}  else if (parent instanceof Exportable) {
 			if (child instanceof DynamicExportableContent) {
 				Exportable exp = (Exportable) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
-				exp.removeDynamicExportableContent((DynamicExportableContent) node.getUserObject());
+				exp.removeDynamicExportableContent();
 			}
 		} else if (parent instanceof org.ensembl.mart.lib.config.FilterPage) {
 			if (child instanceof org.ensembl.mart.lib.config.FilterGroup) {
@@ -428,7 +435,7 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 				fd.removeOption((Option) node.getUserObject());
 			} else if (child instanceof org.ensembl.mart.lib.config.DynamicFilterContent) {
 				FilterDescription ad = (FilterDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
-				ad.removeDynamicFilterContent((DynamicFilterContent) node.getUserObject());
+				ad.removeDynamicFilterContent();
 			}
 		} else if (parent instanceof org.ensembl.mart.lib.config.Option) {
 			if (child instanceof org.ensembl.mart.lib.config.PushAction) {
@@ -464,7 +471,7 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 		} else if (parent instanceof org.ensembl.mart.lib.config.AttributeDescription) {
 			if (child instanceof org.ensembl.mart.lib.config.DynamicAttributeContent) {
 				AttributeDescription ad = (AttributeDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
-				ad.removeDynamicAttributeContent((DynamicAttributeContent) node.getUserObject());
+				ad.removeDynamicAttributeContent();
 			}
 		} else if (parent instanceof DynamicFilterContent) {
 			if (child instanceof org.ensembl.mart.lib.config.Option) {

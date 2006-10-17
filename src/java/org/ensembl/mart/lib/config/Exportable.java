@@ -37,8 +37,7 @@ public class Exportable extends BaseNamedConfigurationObject {
   private final String defaultKey = "default";
   private int[] reqFields = {0,5,7,8};// rendered red in AttributeTable
 
-  private List dynamicExportableContents = new ArrayList();
-  private Hashtable dynamicExportableContentNameMap = new Hashtable();
+  private DynamicExportableContent dynamicExportableContents = null;
    
 	/**
 	 * Copy Constructor. Constructs a new Importable that is a
@@ -96,70 +95,33 @@ public class Exportable extends BaseNamedConfigurationObject {
 	setRequiredFields(reqFields);
   }
 
+
+  /**
+   * Add a dynamicImportableContent to the AttributeDescription.
+   * 
+   * @param a dynamicExportableContent object.
+   */
+  public void setDynamicExportableContent(DynamicExportableContent a) {
+	  if (dynamicExportableContents==null)
+	  dynamicExportableContents=a;
+  }
+
   /**
    * Add a dynamicExportableContent to the AttributeDescription.
    * 
    * @param a dynamicExportableContent object.
    */
-  public void addDynamicExportableContent(DynamicExportableContent a) {
-	  dynamicExportableContents.add(a);
-	  dynamicExportableContentNameMap.put(a.getInternalName(), a);
+  public DynamicExportableContent getDynamicExportableContent() {
+	  return dynamicExportableContents;
   }
 
   /**
    * Remove an dynamicExportableContent from this AttributeDescription.
    * @param a -- dynamicExportableContent to be removed.
    */
-  public void removeDynamicExportableContent(DynamicExportableContent a) {
-	dynamicExportableContentNameMap.remove(a.getInternalName());
-	dynamicExportableContents.remove(a);
+  public void removeDynamicExportableContent() {
+	dynamicExportableContents=null;
   }
-
-  /**
-   * Insert an DynamicExportableContent at a particular position within the Attribute.
-   * DynamicExportableContent set at or after the given position are shift right.
-   * @param position -- position at which to insert the given DynamicExportableContent
-   * @param a -- DynamicExportableContent to insert
-   */
-  public void insertDynamicExportableContent(int position, DynamicExportableContent a) {
-	dynamicExportableContents.add(position, a);
-	dynamicExportableContentNameMap.put(a.getInternalName(), a);
-  }
-
-  /**
-	* Get a specific DynamicExportableContent, named by internalName.
-	*  
-	* @param internalName name of the requested dynamicExportableContent
-	* @return DynamicExportableContent requested, or null
-	*/
-  public DynamicExportableContent getDynamicExportableContentByInternalName(String internalName) {
-	if ( containsDynamicExportableContent(internalName) )
-		return (DynamicExportableContent) dynamicExportableContentNameMap.get(internalName);
-	else
-		return null;
-  }
-  
-  /**
-	  * Check if this AttributeDescription contains a specific DynamicExportableContent named
-	  * by internalName.
-	  *  
-	  * @param internalName name of the requested DynamicExportableContent object
-	  * @return boolean, true if found, false if not.
-	  */
-  public boolean containsDynamicExportableContent(String internalName) {
-	return dynamicExportableContentNameMap.containsKey(internalName);
-  }
-  
-	
-  /**
-   * Returns a List of DynamicExportableContent objects, in the order they were added.
-   * 
-   * @return List of DynamicExportableContent objects.
-   */
-  public List getDynamicExportableContents() {
-	  return new ArrayList(dynamicExportableContents);
-  }
-
 
 	/**
 	 * Get the Reference for this Importable.  Refers to the internalName of a FilterDescription to Importable.
