@@ -292,7 +292,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					if (dsConfig.getTemplateFlag()!=null && dsConfig.getTemplateFlag().equals("1")) {
 					String[] datasets = MartEditor.getDatabaseDatasetConfigUtils().getDatasetNamesForTemplate(dsConfig.getDisplayName());
 					FilterDescription fd = (FilterDescription)((DatasetConfigTreeNode) clickedPath.getLastPathComponent()).getUserObject();					
-					String intName = (String)JOptionPane.showInputDialog(null, null, "Select dataset:", JOptionPane.QUESTION_MESSAGE, null, datasets, datasets[0]);
+					String intName = datasets.length==0?"new":(String)JOptionPane.showInputDialog(null, null, "Select dataset:", JOptionPane.QUESTION_MESSAGE, null, datasets, datasets[0]);
 					dynAtt.setAttribute("internalName", intName==null?"new":intName);
 					dynAtt.setAttribute("tableConstraint", fd.getTableConstraint());
 					dynAtt.setAttribute("field", fd.getField());
@@ -311,6 +311,12 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					addPushAction();
 				} else if (e.getActionCommand().equals("make drop down")) {
 					makeDropDown();
+				} else if (e.getActionCommand().equals("auto specific filters")) {
+					autoSpecifics();
+				} else if (e.getActionCommand().equals("auto specific dropdowns")) {
+					autoSpecificDropDowns();
+				} else if (e.getActionCommand().equals("auto specific push actions")) {
+					autoSpecificPushActions();
 				} else if (e.getActionCommand().equals("add ontology")) {
 					addOntology();		
 				} else if (e.getActionCommand().equals("delete"))
@@ -610,7 +616,10 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					"insert option",
 					"make drop down",
 					"add ontology",
-					"automate push action",					"insert specific filter content" };
+					"automate push action",					"insert specific filter content",
+					"auto specific filters",
+					"auto specific dropdowns",
+					"auto specific push actions",};
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.PushAction"))
 			menuItems =
 				new String[] { "copy", "cut", "paste", "delete", "hide toggle",  "hideDisplay toggle","insert push action", "automate push action" };
@@ -904,9 +913,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 
 	}
 
-	public void insert(BaseConfigurationObject obj, String name) throws ConfigurationException{
+	public DatasetConfigTreeNode insert(DatasetConfigTreeNode parentNode, BaseConfigurationObject obj, String name) throws ConfigurationException{
 
-		DatasetConfigTreeNode parentNode = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
 		DatasetConfigTreeNode newNode = new DatasetConfigTreeNode(name + "newNode", obj);
 
 		String result =
@@ -917,10 +925,82 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 
 		if (result.startsWith("Error")) {
 			JOptionPane.showMessageDialog(frame, result, "Error", JOptionPane.ERROR_MESSAGE);
-			return;
+			return null;
+		}
+		return newNode;
+	}
+
+	public DatasetConfigTreeNode insert(BaseConfigurationObject obj, String name) throws ConfigurationException{
+
+		return this.insert((DatasetConfigTreeNode) clickedPath.getLastPathComponent(),obj,name);
+	}
+
+	public void autoSpecifics() throws ConfigurationException, SQLException {
+		DatasetConfig dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) DatasetConfigTree.this.getModel().getRoot()).getUserObject();
+		if (dsConfig.getTemplateFlag()!=null && dsConfig.getTemplateFlag().equals("1")) {
+		String[] datasets = MartEditor.getDatabaseDatasetConfigUtils().getDatasetNamesForTemplate(dsConfig.getDisplayName());
+		FilterDescription fd = (FilterDescription)((DatasetConfigTreeNode) clickedPath.getLastPathComponent()).getUserObject();					
+		for (int i = 0; i < datasets.length; i++) {
+			SpecificFilterContent dynAtt = new SpecificFilterContent();
+		dynAtt.setAttribute("internalName", datasets[i]);
+		dynAtt.setAttribute("tableConstraint", fd.getTableConstraint());
+		dynAtt.setAttribute("field", fd.getField());
+		dynAtt.setAttribute("key", fd.getKey());
+		insert(dynAtt, "SpecificFilterContent");
+		}
 		}
 	}
 
+	public void autoSpecificDropDowns() throws ConfigurationException, SQLException {
+		DatasetConfig dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) DatasetConfigTree.this.getModel().getRoot()).getUserObject();
+		if (dsConfig.getTemplateFlag()!=null && dsConfig.getTemplateFlag().equals("1")) {
+		String[] datasets = MartEditor.getDatabaseDatasetConfigUtils().getDatasetNamesForTemplate(dsConfig.getDisplayName());
+		FilterDescription fd = (FilterDescription)((DatasetConfigTreeNode) clickedPath.getLastPathComponent()).getUserObject();					
+		for (int i = 0; i < datasets.length; i++) {
+			SpecificFilterContent dynAtt = new SpecificFilterContent();
+		dynAtt.setAttribute("internalName", datasets[i]);
+		dynAtt.setAttribute("tableConstraint", fd.getTableConstraint());
+		dynAtt.setAttribute("field", fd.getField());
+		dynAtt.setAttribute("key", fd.getKey());
+		this.doDropDown(dsConfig, insert(dynAtt, "SpecificFilterContent"));
+		}
+		}
+	}
+
+	public void autoSpecificPushActions() throws ConfigurationException, SQLException {
+		  
+		// Work out what filter to link to.		  
+	String filter2 = JOptionPane.showInputDialog("Select second Filter Description (internal name):");
+	String orderSQL = JOptionPane.showInputDialog("Optional column name to order menu by:");
+
+		DatasetConfig dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) DatasetConfigTree.this.getModel().getRoot()).getUserObject();
+		if (dsConfig.getTemplateFlag()!=null && dsConfig.getTemplateFlag().equals("1")) {
+		String[] datasets = MartEditor.getDatabaseDatasetConfigUtils().getDatasetNamesForTemplate(dsConfig.getDisplayName());
+		FilterDescription fd = (FilterDescription)((DatasetConfigTreeNode) clickedPath.getLastPathComponent()).getUserObject();					
+		for (int i = 0; i < datasets.length; i++) {
+			SpecificFilterContent dynAtt = new SpecificFilterContent();
+		dynAtt.setAttribute("internalName", datasets[i]);
+		dynAtt.setAttribute("tableConstraint", fd.getTableConstraint());
+		dynAtt.setAttribute("field", fd.getField());
+		dynAtt.setAttribute("key", fd.getKey());
+		DatasetConfigTreeNode node = insert(dynAtt, "SpecificFilterContent");
+		this.doDropDown(dsConfig, node);			
+		// Work out what dataset to select in the second filter.
+		DatasetConfig ourConf = dsConfig;
+
+		if (dsConfig.getTemplateFlag()!=null && dsConfig.getTemplateFlag().equals("1")) {
+			String dataset = ((SpecificFilterContent)node.getUserObject()).getInternalName();
+			String[] ids = MartEditor.getDatabaseDatasetConfigUtils().getAllDatasetIDsForDataset(MartEditor.getUser(), dataset);
+			String id = ids[0];
+			if (ids.length>1) 
+				id = (String)JOptionPane.showInputDialog(null, null, "Select second dataset id for "+datasets[i]+":", JOptionPane.QUESTION_MESSAGE, null, ids, ids[0]);
+			ourConf = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(MartEditor.getUser(), dataset, id, MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);
+		}	
+		this.doPushAction(node, dsConfig, ourConf, filter2, orderSQL);
+		}
+		}
+	}
+	
 	public void addPushAction() throws ConfigurationException, SQLException {
 	  try{	
 			// set FilterDescription fd1 = to current node
@@ -952,6 +1032,87 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			// Work out what filter to link to.		  
 		String filter2 = JOptionPane.showInputDialog("Select second Filter Description (internal name):");
 		String orderSQL = JOptionPane.showInputDialog("Optional column name to order menu by:");
+		
+		this.doPushAction(node, dsConfig, ourConf, filter2, orderSQL);
+	  }
+	  catch (Exception e){
+	  	System.out.println("PROBLEM ADDING PUSH ACTION");	
+		 e.printStackTrace();
+	  }	
+	}
+
+	public void makeDropDown() throws ConfigurationException, SQLException {
+     try{
+		DatasetConfigTreeNode node = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
+		this.doDropDown(dsConfig, node);
+	  }	
+	  catch (Exception e){
+		 System.out.println("PROBLEM MAKING DROP DOWN");	
+		 e.printStackTrace();
+      }
+	}
+	
+	private void doDropDown(DatasetConfig dsConfig, DatasetConfigTreeNode node) throws ConfigurationException, SQLException {
+	     try{
+			FilterDescription fd1 = (FilterDescription) node.getUserObject();
+
+			dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
+
+			String field = fd1.getField();
+			String tableName = fd1.getTableConstraint();
+			String joinKey = fd1.getKey();
+			fd1.setType("list");
+			fd1.setDisplayType("list");
+			 fd1.setStyle("menu");
+			fd1.setQualifier("=");
+			fd1.setLegalQualifiers("=");
+			String colForDisplay = "";
+			if (fd1.getColForDisplay() != null){
+				colForDisplay = fd1.getColForDisplay();
+			}
+			System.out.println("COL FOR DISPLAY:"+colForDisplay);
+
+			DatasetConfig ourConf = dsConfig;
+			if (dsConfig.getTemplateFlag()!=null && dsConfig.getTemplateFlag().equals("1")) {
+				String dataset;
+				if (fd1 instanceof SpecificFilterContent) 
+					dataset = fd1.getInternalName();
+				else {
+					String[] datasets = MartEditor.getDatabaseDatasetConfigUtils().getDatasetNamesForTemplate(dsConfig.getDisplayName());
+					if (datasets.length>1) {
+						dataset = (String)JOptionPane.showInputDialog(null, null, "Select dataset name:", JOptionPane.QUESTION_MESSAGE, null, datasets, datasets[0]);
+					} else {
+						dataset = datasets[0];
+					}
+				}
+				String[] ids = MartEditor.getDatabaseDatasetConfigUtils().getAllDatasetIDsForDataset(MartEditor.getUser(), dataset);
+				String id = ids[0];
+				if (ids.length>1) {
+					id = (String)JOptionPane.showInputDialog(null, null, "Select dataset id:", JOptionPane.QUESTION_MESSAGE, null, ids, ids[0]);
+				}
+				ourConf = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(MartEditor.getUser(), dataset, id, MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);
+			}
+
+			if (!tableName.endsWith("main") && dsConfig.getTemplateFlag()!=null && dsConfig.getTemplateFlag().equals("1")) {
+				tableName = ourConf.getDataset()+"__"+tableName;
+			}
+
+			Option[] options = MartEditor.getDatabaseDatasetConfigUtils().getOptions(field, tableName, joinKey, dsConfig, ourConf.getDataset(), colForDisplay);
+
+			for (int k = options.length - 1; k > -1; k--) {
+
+				insert(node, options[k], "Option");
+			}
+		  }	
+		  catch (Exception e){
+			 System.out.println("PROBLEM MAKING DROP DOWN");	
+			 e.printStackTrace();
+	      }
+		}
+	
+
+	private void doPushAction(DatasetConfigTreeNode node, DatasetConfig dsConfig, DatasetConfig ourConf, String filter2, String orderSQL) throws ConfigurationException, SQLException {
+	  try{	
 		//String filter2 = JOptionPane.showInputDialog("Filter Description to set (TableName:ColName):");	
 		//String[] filterTokens = filter2.split(":");
 		//		FilterDescription fd2 = dsConfig.getFilterDescriptionByFieldNameTableConstraint(filterTokens[1],filterTokens[0]);
@@ -1047,8 +1208,6 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		
 		String joinKey = fd2.getKey();
 		
-		DatasetConfigTreeNode parentNode = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
-
 		for (int i = 0; i < options.length; i++) {			
 			
 			Option op = options[i];
@@ -1059,7 +1218,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				MartEditor.getDatabaseDatasetConfigUtils().getLookupOptions(pushField, pushTableName, dsConfig, joinKey, ourConf.getDataset(), field, opName, orderSQL,MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0],pushColForDisplay));
 
 			if (pa.getOptions().length > 0) {
-				Enumeration children = parentNode.children();
+				Enumeration children = node.children();
 				DatasetConfigTreeNode childNode = null;
 				while (children.hasMoreElements()) {
 					childNode = (DatasetConfigTreeNode) children.nextElement();
@@ -1084,65 +1243,6 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 	  	System.out.println("PROBLEM ADDING PUSH ACTION");	
 		 e.printStackTrace();
 	  }	
-	}
-
-	public void makeDropDown() throws ConfigurationException, SQLException {
-     try{
-		DatasetConfigTreeNode node = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
-		FilterDescription fd1 = (FilterDescription) node.getUserObject();
-
-		dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
-
-		String field = fd1.getField();
-		String tableName = fd1.getTableConstraint();
-		String joinKey = fd1.getKey();
-		fd1.setType("list");
-		fd1.setDisplayType("list");
-		 fd1.setStyle("menu");
-		fd1.setQualifier("=");
-		fd1.setLegalQualifiers("=");
-		String colForDisplay = "";
-		if (fd1.getColForDisplay() != null){
-			colForDisplay = fd1.getColForDisplay();
-		}
-		System.out.println("COL FOR DISPLAY:"+colForDisplay);
-
-		DatasetConfig ourConf = dsConfig;
-		if (dsConfig.getTemplateFlag()!=null && dsConfig.getTemplateFlag().equals("1")) {
-			String dataset;
-			if (fd1 instanceof SpecificFilterContent) 
-				dataset = fd1.getInternalName();
-			else {
-				String[] datasets = MartEditor.getDatabaseDatasetConfigUtils().getDatasetNamesForTemplate(dsConfig.getDisplayName());
-				if (datasets.length>1) {
-					dataset = (String)JOptionPane.showInputDialog(null, null, "Select dataset name:", JOptionPane.QUESTION_MESSAGE, null, datasets, datasets[0]);
-				} else {
-					dataset = datasets[0];
-				}
-			}
-			String[] ids = MartEditor.getDatabaseDatasetConfigUtils().getAllDatasetIDsForDataset(MartEditor.getUser(), dataset);
-			String id = ids[0];
-			if (ids.length>1) {
-				id = (String)JOptionPane.showInputDialog(null, null, "Select dataset id:", JOptionPane.QUESTION_MESSAGE, null, ids, ids[0]);
-			}
-			ourConf = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(MartEditor.getUser(), dataset, id, MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);
-		}
-
-		if (!tableName.endsWith("main") && dsConfig.getTemplateFlag()!=null && dsConfig.getTemplateFlag().equals("1")) {
-			tableName = ourConf.getDataset()+"__"+tableName;
-		}
-
-		Option[] options = MartEditor.getDatabaseDatasetConfigUtils().getOptions(field, tableName, joinKey, dsConfig, ourConf.getDataset(), colForDisplay);
-
-		for (int k = options.length - 1; k > -1; k--) {
-
-			insert(options[k], "Option");
-		}
-	  }	
-	  catch (Exception e){
-		 System.out.println("PROBLEM MAKING DROP DOWN");	
-		 e.printStackTrace();
-      }
 	}
 	
 	public void addOntology() throws ConfigurationException, SQLException {
