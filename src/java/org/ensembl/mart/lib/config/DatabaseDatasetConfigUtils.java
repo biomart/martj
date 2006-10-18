@@ -2360,6 +2360,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 											  templatePage.getDescription());
 						dsConfig.addFilterPage(configPage);				
 					}
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configPage, configPage);
 			
 					FilterGroup configGroup = (FilterGroup) configPage.getFilterGroupByName(templateGroup.getInternalName());
 					if (configGroup == null){
@@ -2368,6 +2369,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 											  templateGroup.getDescription());
 						configPage.addFilterGroup(configGroup);				
 					}
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configGroup, configGroup);
 			
 					FilterCollection configCollection = (FilterCollection) configGroup.getFilterCollectionByName(templateCollection.getInternalName());
 					if (configCollection == null){
@@ -2376,7 +2378,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 												  templateCollection.getDescription());
 						configGroup.addFilterCollection(configCollection);				
 					}
-			/*
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configCollection, configCollection);
+		/*
 					// resolve what to do depending on type of placeholder
 					if (configAttName.equals(templateAttName)){
 						// external placeholder
@@ -2543,7 +2546,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						dsConfig.addAttributePage(configPage);				
 						
 					}
-			
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configPage, configPage);
+
 					AttributeGroup configGroup = (AttributeGroup) configPage.getAttributeGroupByName(templateGroup.getInternalName());
 					if (configGroup == null){
 						configGroup = new AttributeGroup(templateGroup.getInternalName(),
@@ -2551,7 +2555,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 											  templateGroup.getDescription());
 						configPage.addAttributeGroup(configGroup);				
 					}
-			
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configGroup, configGroup);
+
 					AttributeCollection configCollection = (AttributeCollection) configGroup.getAttributeCollectionByName(templateCollection.getInternalName());
 					if (configCollection == null){
 						configCollection = new AttributeCollection(templateCollection.getInternalName(),
@@ -2560,7 +2565,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 												  templateCollection.getDescription());
 						configGroup.addAttributeCollection(configCollection);				
 					}
-			
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configCollection, configCollection);
+
 					
 					
 					// resolve what to do depending on type of placeholder
@@ -2719,6 +2725,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						dsConfig.addAttributePage(configPage);				
 						
 					}
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configPage, configPage);
 			
 					AttributeGroup configGroup = (AttributeGroup) configPage.getAttributeGroupByName(templateGroup.getInternalName());
 					if (configGroup == null){
@@ -2727,7 +2734,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 											  templateGroup.getDescription());
 						configPage.addAttributeGroup(configGroup);				
 					}
-			
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configGroup, configGroup);
+
 					AttributeCollection configCollection = (AttributeCollection) configGroup.getAttributeCollectionByName(templateCollection.getInternalName());
 					if (configCollection == null){
 						configCollection = new AttributeCollection(templateCollection.getInternalName(),
@@ -2736,6 +2744,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 												  templateCollection.getDescription());
 						configGroup.addAttributeCollection(configCollection);				
 					}
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configCollection, configCollection);
 
 					AttributeList configAttToAdd = new AttributeList(templateAtt);	
 						//System.out.println("ADDING PLACEHOLDE 2 ATT "+configAttToAdd.getInternalName());	
@@ -5326,10 +5335,10 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 			String colForDisplay = validatedFilter.getColForDisplay();
 			Option[] ops;
 			if (otherDataset != null){
-				ops = getOptions(field, tableName, joinKey, otherDataset, colForDisplay);
+				ops = getOptions(field, tableName, joinKey, otherDataset, otherDataset.getDataset(), colForDisplay);
 			}
 			else{
-				ops = getOptions(field, tableName, joinKey, dsv, colForDisplay);
+				ops = getOptions(field, tableName, joinKey, dsv, dsv.getDataset(), colForDisplay);
 			}
 			// add back any options
 			HashMap valMap = new HashMap();// use to keep options in existing order if possible	
@@ -5402,10 +5411,6 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 						pushInternalName = pushInternalName.split("\\.")[0]+"__"+pushInternalName.split("\\.")[1];
 					String pushTableName = fd2.getTableConstraint();
 
-					if (pushTableName.equals("main")) {
-							String[] mains = otherDataset.getStarBases();
-							pushTableName = mains[0];
-					}
 					Option[] options2;
 					
 					String pafield = otherDataset.getFilterDescriptionByInternalName(otherDatasetFilter1).getField(); 
@@ -5417,7 +5422,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 						String opName = op.getDisplayName();
 						PushAction pa = new PushAction(pushInternalName + "_push_" + opName.replaceAll(" ","_"), null, null, pushInternalName, orderSQL);
 						//System.out.println("1A"+pushField+"\t"+pushTableName+"\t"+field+"\t"+opName+"\t"+orderSQL);
-						pa.addOptions(getLookupOptions(pushField, pushTableName, pafield, opName, orderSQL,schema,pushColForDisplay));
+						pa.addOptions(getLookupOptions(pushField, pushTableName, otherDataset,fd2.getKey(),otherDataset.getDataset(), pafield, opName, orderSQL,schema,pushColForDisplay));
 						
 						// ADD ANY SECONDARY PUSH ACTIONS
 						for (int p = 0; p < secondaryPushActions.length; p++){
@@ -5444,10 +5449,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 								String secColForDisplay = fd3.getColForDisplay();
 								String secPushInternalName = fd3.getInternalName();
 								String secPushTableName = fd3.getTableConstraint();
-								if (secPushTableName.equals("main")) {
-										String[] mains = secOtherDataset.getStarBases();
-										secPushTableName = mains[0];
-								}
+								
 								String secPafield = secOtherDataset.getFilterDescriptionByInternalName(secOtherDatasetFilter1).getField(); 			
 								Option[] options3 = pa.getOptions();
 								for (int r = 0; r < options3.length; r++) {
@@ -5455,7 +5457,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 									String secOpName = op3.getDisplayName();
 									PushAction secondaryPA = new PushAction(secPushInternalName + "_push_" + secOpName.replaceAll(" ","_"), null, null, secPushInternalName, secOrderSQL);
 									//System.out.println("1B"+pushField+"\t"+pushTableName+"\t"+field+"\t"+opName+"\t"+orderSQL);
-									secondaryPA.addOptions(getLookupOptions(secPushField, secPushTableName, secPafield, secOpName, secOrderSQL,schema,secColForDisplay));
+									secondaryPA.addOptions(getLookupOptions(secPushField, secPushTableName, secOtherDataset,fd3.getKey(),secOtherDataset.getDataset(), secPafield, secOpName, secOrderSQL,schema,secColForDisplay));
 									options3[r].addPushAction(secondaryPA); 
 								}
 							}
@@ -5477,10 +5479,6 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 						pushInternalName = pushInternalName.split("\\.")[0]+"__"+pushInternalName.split("\\.")[1];
 				 	String pushTableName = fd2.getTableConstraint();
 
-					 if (pushTableName.equals("main")) {
-						String[] mains = dsv.getStarBases();
-						pushTableName = mains[0];
-					 }
 					 String pafield;
 					 Option[] options2;
 					 pafield = validatedFilter.getField();			
@@ -5492,7 +5490,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 						PushAction pa = new PushAction(pushInternalName + "_push_" + opName.replaceAll(" ","_"), null, null, pushInternalName, orderSQL);
 						
 						//System.out.println("2A"+pushField+"\t"+pushTableName+"\t"+field+"\t"+opName+"\t"+orderSQL);
-						pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderSQL,schema,pushColForDisplay));
+						pa.addOptions(getLookupOptions(pushField, pushTableName,dsv,fd2.getKey(),dsv.getDataset(),  field, opName, orderSQL,schema,pushColForDisplay));
 						// ADD ANY SECONDARY PUSH ACTION
 						for (int p = 0; p < secondaryPushActions.length; p++){
 							String secFilter2 = secondaryPushActions[p];
@@ -5518,10 +5516,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 								String secColForDisplay = fd3.getColForDisplay();
 								String secPushInternalName = fd3.getInternalName();
 								String secPushTableName = fd3.getTableConstraint();
-								if (secPushTableName.equals("main")) {
-										String[] mains = secOtherDataset.getStarBases();
-										secPushTableName = mains[0];
-								}
+								
 								String secPafield = secOtherDataset.getFilterDescriptionByInternalName(secOtherDatasetFilter1).getField(); 			
 								Option[] options3 = pa.getOptions();
 								for (int r = 0; r < options3.length; r++) {
@@ -5529,7 +5524,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 									String secOpName = op3.getDisplayName();
 									PushAction secondaryPA = new PushAction(secPushInternalName + "_push_" + secOpName.replaceAll(" ","_"), null, null, secPushInternalName, secOrderSQL);
 									//System.out.println("2B"+secPushField+"\t"+secPushTableName+"\t"+secPafield+"\t"+secOpName+"\t"+secOrderSQL);
-									secondaryPA.addOptions(getLookupOptions(secPushField, secPushTableName, secPafield, secOpName, secOrderSQL,schema,secColForDisplay));
+									secondaryPA.addOptions(getLookupOptions(secPushField, secPushTableName, secOtherDataset,fd3.getKey(),secOtherDataset.getDataset(), secPafield, secOpName, secOrderSQL,schema,secColForDisplay));
 									options3[r].addPushAction(secondaryPA); 
 								}
 							}
@@ -5543,7 +5538,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 					}
 				}
 			}// end of add push actions code
-		    validatedFilter.setOptionsBroken();// need to set broken so getValidatedCollection knows to change it
+		    //validatedFilter.setOptionsBroken();// need to set broken so getValidatedCollection knows to change it
 		    return validatedFilter;      	
       }// END OF ADD VALUE OPTIONS
       
@@ -6882,6 +6877,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     return dsv;
   }
 
+  /*
   private void updateDropDown(DatasetConfig dsConfig, FilterDescription fd1)
     throws ConfigurationException, SQLException {
 
@@ -7020,7 +7016,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     }
 
   }
-
+*/
   private boolean isDimensionTable(String tableName) {
     if (tableName.toLowerCase().endsWith(DIMENSIONTABLESUFFIX))
       return true;
@@ -7136,7 +7132,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     return filt;
   }
 
-  public Option[] getOptions(String columnName, String tableName, String joinKey, DatasetConfig dsConfig, String colForDisplay)
+  public Option[] getOptions(String columnName, String tableName, String joinKey, DatasetConfig dsConfig, String dataset, String colForDisplay)
     throws SQLException, ConfigurationException {
 
     List options = new ArrayList();
@@ -7152,6 +7148,12 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
       }
     }
 
+    if (!tableName.startsWith(dataset+"__")) 
+    	if (tableName.matches(".*__.*__.*"))
+    		tableName = dataset+"__"+tableName.split("__")[1]+"__"+tableName.split("__")[2];
+    	else
+    		tableName = dataset+"__"+tableName.split("__")[0]+"__"+tableName.split("__")[1];
+    		
     Connection conn = dsource.getConnection();
     String sql;
     if (colForDisplay != null && !colForDisplay.equals("")){
@@ -7318,9 +7320,26 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 	return retOptions;
   }*/
 
-  public Option[] getLookupOptions(String columnName, String tableName, String whereName, String whereValue, String orderSQL, String schema, String colForDisplay)
+  public Option[] getLookupOptions(String columnName, String tableName, DatasetConfig dsConfig, String joinKey, String dataset, String whereName, String whereValue, String orderSQL, String schema, String colForDisplay)
     throws SQLException, ConfigurationException {
+		
+	    if (tableName.equalsIgnoreCase("main")) {
+	      String[] starNames = dsConfig.getStarBases();
+	      String[] primaryKeys = dsConfig.getPrimaryKeys();
+	      tableName = starNames[0];// in case no keys for a lookup type dataset
+	      for (int k = 0; k < primaryKeys.length; k++) {
+	      	//System.out.println(joinKey+":"+primaryKeys[k]);
+	        if (primaryKeys[k].equalsIgnoreCase(joinKey))
+	          tableName = starNames[k];
+	      }
+	    }
 
+	    if (!tableName.startsWith(dataset+"__")) 
+	    	if (tableName.matches(".*__.*__.*"))
+	    		tableName = dataset+"__"+tableName.split("__")[1]+"__"+tableName.split("__")[2];
+	    	else
+	    		tableName = dataset+"__"+tableName.split("__")[0]+"__"+tableName.split("__")[1];
+	    		
     List options = new ArrayList();
     Connection conn = dsource.getConnection();
     if (orderSQL == null || orderSQL.equals(""))

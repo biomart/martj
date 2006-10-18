@@ -18,310 +18,143 @@
 
 package org.ensembl.mart.lib.config;
 
-
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Logger;
+
+
 /**
+ * Contains all of the information necessary for the UI to display the information for a specific filter,
+ * and add this filter as a Filter to a Query.
  * 
- * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
+ * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
+ * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-
-public class SpecificFilterContent extends BaseNamedConfigurationObject {
-
-	private Hashtable uiOptionNameMap = new Hashtable();
-	private List uiOptions = new ArrayList();
-	private boolean hasOptions = false;
-
-	private Logger logger =
-	  Logger.getLogger(SpecificFilterContent.class.getName());
-
-
-  private final String otherFiltersKey = "otherFilters"; 
-  private final String pointerDatasetKey = "pointerDataset";
-  private final String pointerInterfaceKey = "pointerInterface";
-  //private final String pointerAttributeKey = "pointerAttribute";
-  private final String pointerFilterKey = "pointerFilter";
-  
-  private int[] reqFields = {0,1};// rendered red in AttributeTable
+public class SpecificFilterContent extends FilterDescription {
 
   /**
-   * Copy constructor. Constructs an exact copy of an existing DynamiacFilterContent.
-   * @param a DynamicFilterContent to copy.
+   * Copy Constructor. Constructs a new FilterDescription which is an
+   * exact copy of the given FilterDescription.
+   * @param fd - FilterDescription to be copied.
    */
-  public SpecificFilterContent(SpecificFilterContent a) {
-    super(a);
-	setRequiredFields(reqFields);
+  public SpecificFilterContent(SpecificFilterContent fd) {
+    super( fd );
   }
 
   /**
-   * Empty Constructor should only be used by DatasetConfigEditor
-   *
+   * Special Copy constructor that allows an Option to be converted
+   * to a FilterDescription based upon their common fields. This is
+   * a destructive action, in that not all fields in an Option are 
+   * represented in a FilterDescription, and FilterDescription objects
+   * do not contain PushAction objects, whild Option objects do not
+   * contain Enable or Disable objects.  For this reason, this method
+   * is strictly reserved for use for the DatasetConfigEditor application,
+   * to facilitate conversions between these objects, with subsequent editing by the user. 
+   * @param o - Option to be converted to a FilterDescription.
    */
-  public SpecificFilterContent() {
-    super();
-    
-    setAttribute(otherFiltersKey, null);
-	setAttribute(pointerDatasetKey, null);
-	setAttribute(pointerInterfaceKey, null);
-	//setAttribute(pointerAttributeKey, null);
-	setAttribute(pointerFilterKey, null);
-	setRequiredFields(reqFields);
-  }
-
-  /**
-   * Constructor for a DynamicFilterContent.
-   * 
-   * @param internalName String name to internally represent the DynamicFilterContent. Must not be null or empty.
-   * @param otherFilters .
-   * @throws ConfigurationException when required parameters are null or empty
-   */
-  public SpecificFilterContent(String internalName,String otherFilters) throws ConfigurationException {
-    super(internalName, "","");
-
-    setAttribute(otherFiltersKey, otherFilters);
-	setAttribute(pointerDatasetKey, "");
-	setAttribute(pointerInterfaceKey, "");
-//	setAttribute(pointerAttributeKey, pointerAttribute);
-	setAttribute(pointerFilterKey, "");
-	setRequiredFields(reqFields);
+  public SpecificFilterContent(Option o) {
+  	super(o);
   }
   
-  /**
-   * Constructor for a DynamicFilterContent.
+	/**
+	 * Empty Constructor should only be used by DatasetConfigEditor
+	 *
+	 */
+	public SpecificFilterContent() {
+		super();
+	}
+
+	/**
+	 * Constructor for a FilterDescription named by internalName internally, with a field, type, 
+   * and legalQualifiers. not used anywhere yet and should probably add tableConstraint and Key
    * 
-   * @param internalName String name to internally represent the DynamicFilterContent. Must not be null or empty.
-   * @param otherFilters .
-   * @throws ConfigurationException when required parameters are null or empty
-   */
-  public SpecificFilterContent(String internalName,String otherFilters,String pointerDataset,String pointerInterface,String pointerFilter) throws ConfigurationException {
-	super(internalName, "","");
+	 * @param internalName String internal name of the FilterDescription. Must not be null or empty.
+	 * @param field String name of the field to reference in the mart.
+	 * @param type String type of filter.  Must not be null or empty.
+	 * @param legalQualifiers String, comma-separated list of legalQualifiers to use in a MartShell MQL
+	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
+	 */
+	public SpecificFilterContent(String internalName, String field, String type, String legalQualifiers) throws ConfigurationException {
+		super(internalName, field, type, "", legalQualifiers, "", "", null, "", "", "", "", "", "", "", "", "", "", "", "","", "", "", "", "", "","","");
+	}
 
-	setAttribute(otherFiltersKey, otherFilters);
-	setAttribute(pointerDatasetKey, pointerDataset);
-	setAttribute(pointerInterfaceKey, pointerInterface);
-//	setAttribute(pointerAttributeKey, pointerAttribute);
-	setAttribute(pointerFilterKey, pointerFilter);
-	setRequiredFields(reqFields);
-  }
+	/**
+	 * Constructor for a fully defined FilterDescription
+	 * 
+	 * @param internalName String internal name of the FilterDescription. Must not be null or empty.
+	 * @param field String name of the field to reference in the mart.
+	 * @param type String type of filter.  Must not be null or empty.
+	 * @param qualifier String qualifier to apply to a filter for this Filter.
+	 * @param legal_qualifiers String, comma-separated list of legalQualifiers to use in a MartShell MQL
+	 * @param displayName String name to display in a UI
+	 * @param tableConstraint String table basename to constrain SQL field
+	 * @param key String join field key
+	 * @param description String description of the Filter
+	 * 
+	 * @throws ConfigurationException when required values are null or empty
+	 * @see SpecificFilterContent
+	 */
+	public SpecificFilterContent(
+		String internalName,
+		String field,
+		String type,
+		String qualifier,
+		String legalQualifiers,
+		String displayName,
+		String tableConstraint,
+		String key,
+		String description,
+		String otherFilters,
+		String buttonURL,
+		String regexp,
+		String defaultValue,
+		String defaultOn,
+		String filterList,
+		String attributePage,
+		String attribute,
+		String colForDisplay,
+		String pointerDataset,
+	    String pointerInterface,
+		String pointerFilter,
+		String displayType,
+		String multipleValues,
+		String graph,
+		String style,
+		String autoCompletion,
+		String dependsOnType,
+		String dependsOn)
+		throws ConfigurationException {
 
-  /**
-   * @param otherFilters - String 
-   */
-  public void setOtherFilters(String otherFilters) {
-    setAttribute(otherFiltersKey, otherFilters);
-  }
-
-  /**
-   * Returns the otherFilters
-   * @return String otherFilters.
-   */
-  public String getOtherFilters() {
-    return getAttribute(otherFiltersKey);
-  }
-
-  /**
-   * @param pointerDataset - pointer dataset, used for placeholder attributes
-   */
-  public void setPointerDataset(String pointerDataset) {
-	setAttribute(pointerDatasetKey, pointerDataset);
-  }
-
-  /**
-   * Returns the pointerDataset.
-   * 
-   * @return String pointerDataset
-   */
-  public String getPointerDataset() {
-	return getAttribute(pointerDatasetKey);
-  }
-
-  /**
-   * @param pointerInterface - pointer interface, used for placeholder attributes
-   */
-  public void setPointerInterface(String pointerInterface) {
-	setAttribute(pointerInterfaceKey, pointerInterface);
-  }
-
-  /**
-   * Returns the pointerInterface.
-   * 
-   * @return String pointerInterface
-   */
-  public String getPointerInterface() {
-	return getAttribute(pointerInterfaceKey);
-  }
-  
-  /**
-   * @param pointerfilter - pointer filter, used for placeholder filters
-   */
-  public void setPointerFilter(String pointerFilter) {
-	setAttribute(pointerFilterKey, pointerFilter);
-  }
-
-  /**
-   * Returns the pointerDataset.
-   * 
-   * @return String pointerFilter
-   */
-  public String getPointerFilter() {
-	return getAttribute(pointerFilterKey);
-  }
-
-  /**
-   * add an Option object to this FilterDescription.  Options are stored in the order that they are added.
-   * @param o - an Option object
-   */
-  public void addOption(Option o) {
-	  uiOptions.add(o);
-	  uiOptionNameMap.put(o.getInternalName(), o);
-	  hasOptions = true;
-  }
-
-/**
- * Remove an Option from the FilterDescription.
- * @param o -- Option to be removed
- */
-public void removeOption(Option o) {
-  uiOptionNameMap.remove(o.getInternalName());
-  uiOptions.remove(o);
-  if (uiOptions.size() < 1)
-   hasOptions = false;
-}
- 
-/**
- * Remove Options from the FilterDescription.
- */
-public void removeOptions() {
-  //uiOptionNameMap.clear();
-  //uiOptions.clear();
-  uiOptionNameMap = new Hashtable();
-  uiOptions = new ArrayList();
-  hasOptions = false;
-  //Option[] ops = getOptions();
-  //for (int i = 0; i < ops.length; i++){
-  //	removeOption(ops[i]);
-  //}
-}
-  
-/**
- * Insert an Option at a specific position within the list of Options for this FilterDescription.
- * Options occuring at or after the given position are shifted right.
- * @param position -- position to insert the given Option
- * @param o -- Option to be inserted.
- */
-public void insertOption(int position, Option o) {
-  uiOptions.add(position, o);
-  uiOptionNameMap.put(o.getInternalName(), o);
-  hasOptions = true;
-}
-
-  
-    
-/**
- * Insert an Option before a specified Option, named by internalName.
- * @param internalName -- String internalName of the Option before which the given Option should be inserted.
- * @param o -- Option to insert.
- * @throws ConfigurationException when the FilterDescription does not contain an Option named by internalName.
- */
-public void insertOptionBeforeOption(String internalName, Option o) throws ConfigurationException {
-  if (!uiOptionNameMap.containsKey(internalName))
-	throw new ConfigurationException("FilterDescription does not contain an Option " + internalName + "\n");
-  insertOption( uiOptions.indexOf( uiOptionNameMap.get(internalName) ), o );
-}
-  
-/**
- * Insert an Option after a specified Option, named by internalName.
- * @param internalName -- String internalName of the Option after which the given Option should be inserted.
- * @param o -- Option to insert.
- * @throws ConfigurationException when the FilterDescription does not contain an Option named by internalName.
- */
-public void insertOptionAfterOption(String internalName, Option o) throws ConfigurationException {
-  if (!uiOptionNameMap.containsKey(internalName))
-	throw new ConfigurationException("FilterDescription does not contain an Option " + internalName + "\n");
-  insertOption( uiOptions.indexOf( uiOptionNameMap.get(internalName) ) + 1, o );
-}
-  
-/**
- * Add a group of Option objects in one call.  Subsequent calls to
- * addOption or addOptions will add to what was added before, in the order that they are added.
- * @param o - an array of Option objects
- */
-public void addOptions(Option[] o) {
-  for (int i = 0, n = o.length; i < n; i++) {
-	uiOptions.add(o[i]);
-	uiOptionNameMap.put(o[i].getInternalName(), o[i]);
-  }
-  hasOptions = true;
-}
-    
-  /**
-   * Determine if this FilterDescription contains an Option.  This only determines if the specified internalName
-   * maps to a specific Option in the FilterDescription during a shallow search.  It does not do a deep search
-   * within the Options.
-   * 
-   * @param internalName - String name of the requested Option
-   * @return boolean, true if found, false if not found.
-   */
-  public boolean containsOption(String internalName) {
-	  return uiOptionNameMap.containsKey(internalName);
-  }
-
-  /**
-   * Get a specific Option named by internalName.  This does not do a deep search within Options.
-   * 
-   * @param internalName - String name of the requested Option.   * 
-   * @return Option object named by internalName
-   */
-  public Option getOptionByInternalName(String internalName) {
-	  if (uiOptionNameMap.containsKey(internalName))
-		  return (Option) uiOptionNameMap.get(internalName);
-	  else
-		  return null;
-  }
-
-/**
-   * Get all Option objects available as an array.  Options are returned in the order they were added.
-   * @return Option[]
-   */
-  public Option[] getOptions() {
-	  Option[] ret = new Option[uiOptions.size()];
-	  uiOptions.toArray(ret);
-	  return ret;
-  }
-
-  /**
-   * Determine if this FilterCollection has Options Available.
-   * 
-   * @return boolean, true if Options are available, false if not.
-   */
-  public boolean hasOptions() {
-	  return hasOptions;
-  }
-
-
-
-  public String toString() {
-    StringBuffer buf = new StringBuffer();
-
-    buf.append("[ DynamicFilterContent:");
-    buf.append(super.toString());
-    buf.append("]");
-
-    return buf.toString();
-  }
-
-  /**
-   * Allows Equality Comparisons of DynamicFilterContent objects
-   */
-  public boolean equals(Object o) {
-    return o instanceof SpecificFilterContent
-      && hashCode() == ((SpecificFilterContent) o).hashCode();
-  }
-
-  public boolean isBroken() {
-	return false;
-  }
+		super( internalName,
+				 field,
+				 type,
+				 qualifier,
+				 legalQualifiers,
+				 displayName,
+				 tableConstraint,
+				 key,
+				 description,
+				 otherFilters,
+				 buttonURL,
+				 regexp,
+				 defaultValue,
+				 defaultOn,
+				 filterList,
+				 attributePage,
+				 attribute,
+				 colForDisplay,
+				 pointerDataset,
+			     pointerInterface,
+				 pointerFilter,
+				 displayType,
+				 multipleValues,
+				 graph,
+				 style,
+				 autoCompletion,
+				 dependsOnType,
+				 dependsOn);
+	}
 
 }

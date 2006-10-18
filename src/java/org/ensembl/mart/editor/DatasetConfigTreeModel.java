@@ -261,7 +261,10 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 				return error_string;
 			}
 		} else if (parent instanceof org.ensembl.mart.lib.config.FilterDescription) {
-			if (child instanceof org.ensembl.mart.lib.config.FilterDescription) {
+			if (child instanceof org.ensembl.mart.lib.config.SpecificFilterContent) {
+				FilterDescription ad = (FilterDescription) parentNode.getUserObject();
+				ad.insertSpecificFilterContent(objIndex, (SpecificFilterContent) editingNode.getUserObject());
+			} else if (child instanceof org.ensembl.mart.lib.config.FilterDescription) {
 				FilterDescription fd = (FilterDescription) parentNode.getUserObject();
 				Option opConvert = new Option((FilterDescription) editingNode.getUserObject());
 				fd.insertOption(objIndex, opConvert);
@@ -272,9 +275,6 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 			} else if (child instanceof org.ensembl.mart.lib.config.PushAction) {
 				FilterDescription fd = (FilterDescription) parentNode.getUserObject();
 				//fd.insertPushAction(objIndex, (PushAction) editingNode.getUserObject());
-			} else if (child instanceof org.ensembl.mart.lib.config.SpecificFilterContent) {
-				FilterDescription ad = (FilterDescription) parentNode.getUserObject();
-				ad.insertSpecificFilterContent(objIndex, (SpecificFilterContent) editingNode.getUserObject());
 			} else {
 				String error_string = "Error: " + childName + " cannot be inserted in a FilterDescription.";
 				return error_string;
