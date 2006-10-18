@@ -290,7 +290,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					SpecificFilterContent dynAtt = new SpecificFilterContent();
 					DatasetConfig dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) DatasetConfigTree.this.getModel().getRoot()).getUserObject();
 					if (dsConfig.getTemplateFlag()!=null && dsConfig.getTemplateFlag().equals("1")) {
-					String[] datasets = MartEditor.getDatabaseDatasetConfigUtils().getDatasetNamesForTemplate(dsConfig.getDisplayName());
+					String[] datasets = dsConfig.getDynamicDatasetNames();
 					FilterDescription fd = (FilterDescription)((DatasetConfigTreeNode) clickedPath.getLastPathComponent()).getUserObject();					
 					String intName = datasets.length==0?"new":(String)JOptionPane.showInputDialog(null, null, "Select dataset:", JOptionPane.QUESTION_MESSAGE, null, datasets, datasets[0]);
 					dynAtt.setAttribute("internalName", intName==null?"new":intName);
@@ -938,7 +938,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 	public void autoSpecifics() throws ConfigurationException, SQLException {
 		DatasetConfig dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) DatasetConfigTree.this.getModel().getRoot()).getUserObject();
 		if (dsConfig.getTemplateFlag()!=null && dsConfig.getTemplateFlag().equals("1")) {
-		String[] datasets = MartEditor.getDatabaseDatasetConfigUtils().getDatasetNamesForTemplate(dsConfig.getDisplayName());
+		String[] datasets = dsConfig.getDynamicDatasetNames();
 		FilterDescription fd = (FilterDescription)((DatasetConfigTreeNode) clickedPath.getLastPathComponent()).getUserObject();					
 		for (int i = 0; i < datasets.length; i++) {
 			SpecificFilterContent dynAtt = new SpecificFilterContent();
@@ -954,7 +954,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 	public void autoSpecificDropDowns() throws ConfigurationException, SQLException {
 		DatasetConfig dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) DatasetConfigTree.this.getModel().getRoot()).getUserObject();
 		if (dsConfig.getTemplateFlag()!=null && dsConfig.getTemplateFlag().equals("1")) {
-		String[] datasets = MartEditor.getDatabaseDatasetConfigUtils().getDatasetNamesForTemplate(dsConfig.getDisplayName());
+		String[] datasets = dsConfig.getDynamicDatasetNames();
 		FilterDescription fd = (FilterDescription)((DatasetConfigTreeNode) clickedPath.getLastPathComponent()).getUserObject();					
 		for (int i = 0; i < datasets.length; i++) {
 			SpecificFilterContent dynAtt = new SpecificFilterContent();
@@ -975,7 +975,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 
 		DatasetConfig dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) DatasetConfigTree.this.getModel().getRoot()).getUserObject();
 		if (dsConfig.getTemplateFlag()!=null && dsConfig.getTemplateFlag().equals("1")) {
-		String[] datasets = MartEditor.getDatabaseDatasetConfigUtils().getDatasetNamesForTemplate(dsConfig.getDisplayName());
+		String[] datasets = dsConfig.getDynamicDatasetNames();
 		FilterDescription fd = (FilterDescription)((DatasetConfigTreeNode) clickedPath.getLastPathComponent()).getUserObject();					
 		for (int i = 0; i < datasets.length; i++) {
 			SpecificFilterContent dynAtt = new SpecificFilterContent();
@@ -991,9 +991,14 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		if (dsConfig.getTemplateFlag()!=null && dsConfig.getTemplateFlag().equals("1")) {
 			String dataset = ((SpecificFilterContent)node.getUserObject()).getInternalName();
 			String[] ids = MartEditor.getDatabaseDatasetConfigUtils().getAllDatasetIDsForDataset(MartEditor.getUser(), dataset);
-			String id = ids[0];
-			if (ids.length>1) 
+			String id;
+			if (ids.length>1) {
 				id = (String)JOptionPane.showInputDialog(null, null, "Select second dataset id for "+datasets[i]+":", JOptionPane.QUESTION_MESSAGE, null, ids, ids[0]);
+			} else if (ids.length==1){
+				id = ids[0];
+			} else {
+				id = "";
+			}
 			ourConf = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(MartEditor.getUser(), dataset, id, MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);
 		}	
 		this.doPushAction(node, dsConfig, ourConf, filter2, orderSQL);
@@ -1014,7 +1019,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				if (node.getUserObject() instanceof SpecificFilterContent) 
 					dataset = ((SpecificFilterContent)node.getUserObject()).getInternalName();
 				else {
-					String[] datasets = MartEditor.getDatabaseDatasetConfigUtils().getDatasetNamesForTemplate(dsConfig.getDisplayName());
+					String[] datasets = dsConfig.getDynamicDatasetNames();
 					if (datasets.length>1) {
 						dataset = (String)JOptionPane.showInputDialog(null, null, "Select second dataset name:", JOptionPane.QUESTION_MESSAGE, null, datasets, datasets[0]);
 					} else {
@@ -1022,9 +1027,13 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					}
 				}
 				String[] ids = MartEditor.getDatabaseDatasetConfigUtils().getAllDatasetIDsForDataset(MartEditor.getUser(), dataset);
-				String id = ids[0];
+				String id;
 				if (ids.length>1) {
 					id = (String)JOptionPane.showInputDialog(null, null, "Select second dataset id:", JOptionPane.QUESTION_MESSAGE, null, ids, ids[0]);
+				} else if (ids.length==1){
+					id = ids[0];
+				} else {
+					id = "";
 				}
 				ourConf = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(MartEditor.getUser(), dataset, id, MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);
 			}
@@ -1078,7 +1087,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				if (fd1 instanceof SpecificFilterContent) 
 					dataset = fd1.getInternalName();
 				else {
-					String[] datasets = MartEditor.getDatabaseDatasetConfigUtils().getDatasetNamesForTemplate(dsConfig.getDisplayName());
+					String[] datasets = dsConfig.getDynamicDatasetNames();
 					if (datasets.length>1) {
 						dataset = (String)JOptionPane.showInputDialog(null, null, "Select dataset name:", JOptionPane.QUESTION_MESSAGE, null, datasets, datasets[0]);
 					} else {
@@ -1086,9 +1095,13 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					}
 				}
 				String[] ids = MartEditor.getDatabaseDatasetConfigUtils().getAllDatasetIDsForDataset(MartEditor.getUser(), dataset);
-				String id = ids[0];
+				String id;
 				if (ids.length>1) {
 					id = (String)JOptionPane.showInputDialog(null, null, "Select dataset id:", JOptionPane.QUESTION_MESSAGE, null, ids, ids[0]);
+				} else if (ids.length==1){
+					id = ids[0];
+				} else {
+					id = "";
 				}
 				ourConf = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(MartEditor.getUser(), dataset, id, MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);
 			}

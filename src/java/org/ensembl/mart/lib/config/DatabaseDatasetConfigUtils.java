@@ -6541,6 +6541,20 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     if (fp != null && fp.getFilterGroups().size() > 0)
       dsv.addFilterPage(fp);
 
+    
+    if (!configInfo.containsKey(MartEditor.getUser()))
+    	configInfo.put(MartEditor.getUser(), new HashMap());
+    HashMap userMap = (HashMap) configInfo.get(MartEditor.getUser());
+    
+    if (!userMap.containsKey(datasetName)) {
+      HashMap dsetMap = new HashMap();
+      userMap.put(datasetName, dsetMap);
+    }
+    
+    HashMap dsetMap = (HashMap) userMap.get(datasetName);
+    //dsetMap.put(iname, dsv);
+	dsetMap.put("", dsv);
+    
     return dsv;
   }
 

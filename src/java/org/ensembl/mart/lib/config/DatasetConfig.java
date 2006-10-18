@@ -355,6 +355,10 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   public DynamicDataset getDynamicDataset(String name) {
 	  return (DynamicDataset)this.dynamicDatasetNameMap.get(name);
   }
+  
+  public String[] getDynamicDatasetNames() {
+	  return (String[])this.dynamicDatasetNameMap.keySet().toArray(new String[0]);
+  }
 
 	public void setTemplateFlag(String flag) {
 	  templateFlag = flag;
