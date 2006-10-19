@@ -5583,7 +5583,16 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
       String tableConstraint = option.getTableConstraint();
       
       // if the tableConstraint is null, this field must be available in one of the main tables
-      String table = (!tableConstraint.equals("main")) ? dset+"__"+tableConstraint : dset + "%" + MAINTABLESUFFIX;
+
+      if (!tableConstraint.equals("main")) {
+      if (!tableConstraint.startsWith(dset+"__")) 
+      	if (tableConstraint.matches(".*__.*__.*"))
+      		tableConstraint = dset+"__"+tableConstraint.split("__")[1]+"__"+tableConstraint.split("__")[2];
+      	else
+      		tableConstraint = dset+"__"+tableConstraint.split("__")[0]+"__"+tableConstraint.split("__")[1];
+      } 
+      
+      String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
       //String table = (tableConstraint != null) ? "%" + tableConstraint + "%" : "%" + MAINTABLESUFFIX;
       
 	  if(dsource.getDatabaseType().equals("oracle")) table=table.toUpperCase();
