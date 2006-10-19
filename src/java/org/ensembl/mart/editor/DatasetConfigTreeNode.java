@@ -159,7 +159,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 			List datasetAtts = dsv.getDynamicDatasets();
 			for (int a = 0; a < datasetAtts.size(); a++){
 				DynamicDataset ds = (DynamicDataset)datasetAtts.get(a);
-				DatasetConfigTreeNode fp = new DatasetConfigTreeNode("Dataset: "+ds.getInternalName());
+				DatasetConfigTreeNode fp = new DatasetConfigTreeNode("Partition: "+ds.getInternalName());
 				fp.setUserObject(ds);
 				fpNode.add(fp);
 			}
@@ -857,6 +857,8 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 			//setName("Enable");
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Disable")) {
 			setName("Disable");
+		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DynamicDataset")) {
+			setName("Partition: " + ((DynamicDataset) obj).getInternalName());
 		}
 
 		//else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.PushAction")) {
