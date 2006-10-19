@@ -42,20 +42,35 @@ import org.biomart.common.view.gui.StackTrace;
 public class BioMartLauncher {
 	private static final long serialVersionUID = 1L;
 
-	private final String[] args;
-
 	/**
-	 * Run this application and open the main window. The window stays open and
-	 * the application keeps running until the window is closed.
+	 * Runs the chooser and prompts the user for which class to use.
 	 * 
 	 * @param args
-	 *            any command line arguments that the user specified will be in
-	 *            this array.
+	 *            any args passed in are passed on to the main class of the
+	 *            chosen class.
 	 */
-	public BioMartLauncher(String[] args) {
-		// Remember our arguments.
-		this.args = args;
-
+	public static void main(final String[] args) {
+		// Initialise resources.
+		Resources.setResourceLocation("org/biomart/launcher/resources");
+		// Start the application.
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				// Create it.
+				final BioMartLauncher bml = new BioMartLauncher();
+				// Start it.
+				bml.promptUser(args);
+			}
+		});
+	}
+	
+	/**
+	 * Creates a new instance of BioMartLauncher. You can customise the
+	 * look-and-feel by speciying a configuration property called
+	 * <tt>lookandfeel</tt>, which contains the classname of the
+	 * look-and-feel to use. Details of where this file is can be found in
+	 * {@link SettingsCache}.
+	 */
+	private BioMartLauncher() {
 		// Load our cache of settings.
 		SettingsCache.load();
 
@@ -84,7 +99,7 @@ public class BioMartLauncher {
 		}
 	}
 
-	private void promptUser() {
+	private void promptUser(final String[] args) {
 		// Make a list of available apps.
 		Map classes = new TreeMap();
 		classes.put(Resources.get("MartBuilder"),
@@ -102,36 +117,14 @@ public class BioMartLauncher {
 
 		// Load that class and run it.
 		if (chosenClass != null)
-			this.launchApp((String) classes.get(chosenClass));
+			try {
+				Class.forName(chosenClass).getMethod("main",
+						new Class[] { String[].class }).invoke(null,
+						new Object[] { args });
+			} catch (Throwable t) {
+				StackTrace.showStackTrace(t);
+			}
 		else
 			System.exit(0);
 	}
-
-	private void launchApp(String className) {
-		try {
-			Class.forName(className).getMethod("main",
-					new Class[] { String[].class }).invoke(null,
-					new Object[] { this.args });
-		} catch (Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
-	}
-
-	/**
-	 * @param args
-	 */
-	public static void main(final String[] args) {
-		// Initialise resources.
-		Resources.setResourceLocation("org/biomart/launcher/resources");
-		// Start the application.
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				// Create it.
-				final BioMartLauncher bml = new BioMartLauncher(args);
-				// Start it.
-				bml.promptUser();
-			}
-		});
-	}
-
 }

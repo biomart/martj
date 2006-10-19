@@ -85,7 +85,7 @@ public class MartBuilder extends JFrame {
 	 * look-and-feel to use. Details of where this file is can be found in
 	 * {@link SettingsCache}.
 	 */
-	public MartBuilder() {
+	private MartBuilder() {
 		// Create the window.
 		super(Resources.get("GUITitle", Resources.BIOMART_VERSION));
 
