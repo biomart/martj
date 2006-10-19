@@ -19,8 +19,8 @@
 package org.biomart.launcher.view.gui;
 
 import java.awt.EventQueue;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
@@ -85,10 +85,16 @@ public class BioMartLauncher {
 	}
 
 	private void promptUser() {
-		// Ask the user which class they want to run.
-		Map classes = new HashMap();
+		// Make a list of available apps.
+		Map classes = new TreeMap();
 		classes.put(Resources.get("MartBuilder"),
 				"org.biomart.builder.view.gui.MartBuilder");
+		classes.put(Resources.get("MartEditor"),
+				"org.ensembl.mart.editor.MartEditor");
+		classes.put(Resources.get("MartExplorer"),
+				"org.ensembl.mart.explorer.MartExplorer");
+
+		// Ask the user to choose one.
 		String chosenClass = (String) JOptionPane.showInputDialog(null,
 				Resources.get("promptMessage"), Resources.get("questionTitle"),
 				JOptionPane.QUESTION_MESSAGE, null, classes.keySet().toArray(),

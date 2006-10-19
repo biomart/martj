@@ -287,9 +287,6 @@
 
     </target>
 
-	<taskdef name="jarbundler" 
-         classname="net.sourceforge.jarbundler.JarBundler" />
-
     <target name="jar" depends="compile"
         description="Creates martj.jar in 'build' directory."
         >
@@ -398,7 +395,9 @@
 	<!-- creates the BioMartLauncher.app -->
 	<target name="dist-bin-mac" 
 	description="Requires JarBundler ANT task. Creates the binary distributions, including the Mac one. Only works on MacOSX."
-	depends="dist-bin">	       
+	depends="dist-bin">	   
+		<taskdef name="jarbundler" 
+      	   classname="net.sourceforge.jarbundler.JarBundler" />	    
 		<jarbundler dir="${dist.dir}/bin"
             name="BioMartLauncher"
             mainclass="org.biomart.launcher.view.gui.BioMartLauncher">
