@@ -577,7 +577,8 @@ public class DatabaseDatasetConfigUtils {
 									  continue;
 							  }
 							  if (descriptionsMap.containsKey(op.getInternalName())){
-								filterDuplicationMap.put(testAD.getInternalName(),dsConfig.getDataset());
+								filterDuplicationMap.put(op.getInternalName(),dsConfig.getDataset());
+								//System.out.println("FOUND DUPLICATED OP INT NAME "+op.getInternalName()+ " IN COLLECTION "+testColl.getInternalName());
 							  }
 							  descriptionsMap.put(op.getInternalName(),"1");
 						  }
@@ -6487,13 +6488,20 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
             ac.addAttributeDescription(ad);
             if (cname.endsWith("_list") || cname.equals("dbprimary_id")) {
             	duplicated = 0;
-				if (!cname.equals("display_id_list")){
-			  		if (filtMap.containsKey(cname)){
-			  	    	//System.out.println(cname + " is duplicated");
-						duplicated = 1;		
-			  		}
-			  		filtMap.put(cname,"1");
+				
+				String descriptiveName = shortTableName.split("__")[0].replaceFirst("xref_", "");
+				if (filtMap.containsKey(descriptiveName)){
+					duplicated = 1;
 				}
+				filtMap.put(descriptiveName,"1");
+				
+				//if (!cname.equals("display_id_list")){
+			  	//	if (filtMap.containsKey(cname)){
+			  	//    	//System.out.println(cname + " is duplicated");
+				//		duplicated = 1;		
+			  	//	}
+			  	//	filtMap.put(cname,"1");
+				//}
                 FilterDescription fdList = getFilterDescription(cname, shortTableName, ctype, joinKey, dsv, duplicated);
                 Option op = new Option(fdList);
                 fdLists.addOption(op);
@@ -7106,14 +7114,14 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
  		filt.addOption(op1);
  		filt.addOption(op2);
     } 
-    else if (columnName.endsWith("_list")) {
+    else if (columnName.endsWith("_list") || columnName.equals("dbprimary_id")) {
         descriptiveName = columnName.replaceFirst("_list", "");
         filt.setType("list");
         filt.setQualifier("=");
         filt.setLegalQualifiers("=,in");
         // hack for multiple display_id in ensembl xref tables
-        if (descriptiveName.equals("display_id")) {
-          descriptiveName = tableName.split("__")[1].replaceFirst("xref_", "");
+        if (descriptiveName.equals("display_id") || descriptiveName.equals("dbprimary_id")) {
+          descriptiveName = tableName.split("__")[0].replaceFirst("xref_", "");
         }
         
 		if (duplicated == 1){
