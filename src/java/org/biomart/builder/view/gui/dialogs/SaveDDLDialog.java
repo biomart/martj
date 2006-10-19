@@ -60,8 +60,9 @@ import org.biomart.builder.model.MartConstructor;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.model.MartConstructor.MartConstructorListener;
-import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.common.resources.Resources;
+import org.biomart.common.view.gui.StackTrace;
 
 /**
  * A dialog which allows the user to choose some options about creating DDL over
@@ -396,7 +397,7 @@ public class SaveDDLDialog extends JDialog {
 				});
 			this.martTab.getMartTabSet().requestMonitorConstructorRunnable(cr);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 			JOptionPane.showMessageDialog(null, Resources
 					.get("martConstructionFailed"), Resources
 					.get("messageTitle"), JOptionPane.WARNING_MESSAGE);

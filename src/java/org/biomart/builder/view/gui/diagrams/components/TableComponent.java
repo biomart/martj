@@ -35,8 +35,8 @@ import javax.swing.JPanel;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Table;
-import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.diagrams.Diagram;
+import org.biomart.common.resources.Resources;
 
 /**
  * Table components are box-shaped, and represent an individual table. Inside

@@ -40,11 +40,11 @@ import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Relation.Cardinality;
-import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
+import org.biomart.common.resources.Resources;
 
 /**
  * Provides the context menus and colour schemes to use when viewing a schema in
@@ -183,7 +183,7 @@ public class SchemaContext implements DiagramContext {
 					Resources.get("synchroniseAllSchemasTitle"),
 					new ImageIcon(
 							Resources
-									.getResourceAsURL("org/biomart/builder/resources/refresh.gif")));
+									.getResourceAsURL("refresh.gif")));
 			syncAll.setMnemonic(Resources.get("synchroniseAllSchemasMnemonic")
 					.charAt(0));
 			syncAll.addActionListener(new ActionListener() {
@@ -201,7 +201,7 @@ public class SchemaContext implements DiagramContext {
 					Resources.get("addSchemaTitle"),
 					new ImageIcon(
 							Resources
-									.getResourceAsURL("org/biomart/builder/resources/add.gif")));
+									.getResourceAsURL("add.gif")));
 			add.setMnemonic(Resources.get("addSchemaMnemonic").charAt(0));
 			add.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
@@ -348,7 +348,7 @@ public class SchemaContext implements DiagramContext {
 						Resources.get("updateSchemaGroupTitle"),
 						new ImageIcon(
 								Resources
-										.getResourceAsURL("org/biomart/builder/resources/refresh.gif")));
+										.getResourceAsURL("refresh.gif")));
 				update.setMnemonic(Resources.get("updateSchemaGroupMnemonic").charAt(
 						0));
 				update.addActionListener(new ActionListener() {
@@ -369,7 +369,7 @@ public class SchemaContext implements DiagramContext {
 						Resources.get("updateSchemaTitle"),
 						new ImageIcon(
 								Resources
-										.getResourceAsURL("org/biomart/builder/resources/refresh.gif")));
+										.getResourceAsURL("refresh.gif")));
 				update.setMnemonic(Resources.get("updateSchemaMnemonic").charAt(
 						0));
 				update.addActionListener(new ActionListener() {
@@ -397,7 +397,7 @@ public class SchemaContext implements DiagramContext {
 						Resources.get("removeSchemaTitle"),
 						new ImageIcon(
 								Resources
-										.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
+										.getResourceAsURL("cut.gif")));
 				remove.setMnemonic(Resources.get("removeSchemaMnemonic")
 						.charAt(0));
 				remove.addActionListener(new ActionListener() {
@@ -560,7 +560,7 @@ public class SchemaContext implements DiagramContext {
 			// Remove the relation from the schema, but only if handmade.
 			final JMenuItem remove = new JMenuItem(Resources
 					.get("removeRelationTitle"), new ImageIcon(Resources
-					.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
+					.getResourceAsURL("cut.gif")));
 			remove.setMnemonic(Resources.get("removeRelationMnemonic")
 					.charAt(0));
 			remove.addActionListener(new ActionListener() {
@@ -603,7 +603,7 @@ public class SchemaContext implements DiagramContext {
 			// Remove the key from the table, but only if handmade.
 			final JMenuItem remove = new JMenuItem(Resources
 					.get("removeKeyTitle"), new ImageIcon(Resources
-					.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
+					.getResourceAsURL("cut.gif")));
 			remove.setMnemonic(Resources.get("removeKeyMnemonic").charAt(0));
 			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {

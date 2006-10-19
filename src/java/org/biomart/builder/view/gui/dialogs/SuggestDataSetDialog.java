@@ -41,7 +41,7 @@ import javax.swing.ListSelectionModel;
 
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * This dialog asks users what kind of dataset suggestion they want to do. It

@@ -60,7 +60,7 @@ import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
 import org.biomart.builder.model.MartConstructorAction.Reduce;
 import org.biomart.builder.model.MartConstructorAction.RenameTable;
 import org.biomart.builder.model.MartConstructorAction.Union;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * This interface defines the behaviour expected from an object which can take a

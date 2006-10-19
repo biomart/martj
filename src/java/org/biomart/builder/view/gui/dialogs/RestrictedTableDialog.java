@@ -47,7 +47,7 @@ import javax.swing.table.TableColumn;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Column.GenericColumn;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * This dialog asks users to create or modify a restriction over a particular

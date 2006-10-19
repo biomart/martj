@@ -36,8 +36,8 @@ import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
-import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.diagrams.Diagram;
+import org.biomart.common.resources.Resources;
 
 /**
  * A diagram component that represents a schema. It usually only has a label in

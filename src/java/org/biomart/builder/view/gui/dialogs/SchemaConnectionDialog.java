@@ -38,9 +38,10 @@ import javax.swing.JPanel;
 import org.biomart.builder.controller.JDBCSchema;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.model.Schema;
-import org.biomart.builder.resources.Resources;
-import org.biomart.builder.resources.SettingsCache;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.SettingsCache;
+import org.biomart.common.view.gui.StackTrace;
 
 /**
  * This dialog box allows the user to define or modify a schema, by giving it a
@@ -166,8 +167,7 @@ public class SchemaConnectionDialog extends JDialog {
 						Resources.get("jdbcSchema")))
 					if (!(SchemaConnectionDialog.this.connectionPanel instanceof JDBCSchemaConnectionPanel)) {
 						connectionPanelHolder.removeAll();
-						SchemaConnectionDialog.this.connectionPanel = new JDBCSchemaConnectionPanel(
-								martTab);
+						SchemaConnectionDialog.this.connectionPanel = new JDBCSchemaConnectionPanel();
 						connectionPanelHolder
 								.add(SchemaConnectionDialog.this.connectionPanel);
 						SchemaConnectionDialog.this.pack();
@@ -199,7 +199,7 @@ public class SchemaConnectionDialog extends JDialog {
 						.getHistoryProperties(
 								SchemaConnectionDialog.this.connectionPanel
 										.getSchemaClass(), (String) obj);
-				
+
 				// Copy the settings, if we found any that matched.
 				if (historyProps != null)
 					SchemaConnectionDialog.this.connectionPanel
@@ -301,13 +301,14 @@ public class SchemaConnectionDialog extends JDialog {
 			final String type = (String) this.type.getSelectedItem();
 			if (type.equals(Resources.get("jdbcSchema")))
 				return ((JDBCSchemaConnectionPanel) this.connectionPanel)
-						.createSchemaFromSettings((String) this.name.getSelectedItem());
+						.createSchemaFromSettings((String) this.name
+								.getSelectedItem());
 
 			// What kind of type is it then??
 			else
 				throw new MartBuilderInternalError();
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 
 		// If we got here, something went wrong with creation, so we

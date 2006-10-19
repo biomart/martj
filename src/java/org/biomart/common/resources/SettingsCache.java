@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.resources;
+package org.biomart.common.resources;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+
 
 /**
  * Manages the on-disk cache of user settings.
@@ -50,7 +51,7 @@ import java.util.Properties;
 public class SettingsCache {
 
 	private static final File homeDir = new File(System
-			.getProperty("user.home"), ".martbuilder");
+			.getProperty("user.home"), ".biomart");
 
 	private static final Map classCache = new HashMap();
 
@@ -179,7 +180,11 @@ public class SettingsCache {
 	 */
 	public static synchronized void load() {
 		SettingsCache.initialising = true;
+		
+		// Clear the existing settings.
+		SettingsCache.properties.clear();
 
+		// Load the settings.
 		try {
 			SettingsCache.properties.load(new FileInputStream(
 					SettingsCache.propertiesFile));
@@ -188,6 +193,7 @@ public class SettingsCache {
 			t.printStackTrace(System.err);
 		}
 
+		// Set up the cache.
 		final String newClassCacheSize = SettingsCache.properties
 				.getProperty("classCacheSize");
 		try {

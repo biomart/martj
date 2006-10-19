@@ -25,26 +25,20 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 import javax.swing.ImageIcon;
-import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.ScrollPaneConstants;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
-import org.biomart.builder.controller.MartBuilderXML;
-import org.biomart.builder.resources.Resources;
-import org.biomart.builder.resources.SettingsCache;
+import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.SettingsCache;
+import org.biomart.common.view.gui.LongProcess;
 
 /**
  * The main window housing the MartBuilder GUI. The {@link #main(String[])}
@@ -67,6 +61,8 @@ public class MartBuilder extends JFrame {
 	 *            this array.
 	 */
 	public static void main(final String[] args) {
+		// Initialise resources.
+		Resources.setResourceLocation("org/biomart/builder/resources");
 		// Start the application.
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -91,7 +87,7 @@ public class MartBuilder extends JFrame {
 	 */
 	public MartBuilder() {
 		// Create the window.
-		super(Resources.get("GUITitle", MartBuilderXML.DTD_VERSION));
+		super(Resources.get("GUITitle", Resources.BIOMART_VERSION));
 
 		// Assign ourselves to the long-process hourglass container.
 		// This means that whenever the hourglass is on, it appears
@@ -170,60 +166,6 @@ public class MartBuilder extends JFrame {
 			System.exit(0);
 	}
 
-	/**
-	 * Display a nice friendly stack trace window.
-	 * 
-	 * @param t
-	 *            the throwable to display the stack trace for.
-	 */
-	public void showStackTrace(final Throwable t) {
-		// Create the main message.
-		final int messageClass = t instanceof Error ? JOptionPane.ERROR_MESSAGE
-				: JOptionPane.WARNING_MESSAGE;
-		String mainMessage = t.getLocalizedMessage();
-		if (mainMessage == null)
-			mainMessage = "";
-
-		// Missing message?
-		if (mainMessage.length() == 0)
-			mainMessage = Resources.get("missingException");
-
-		// Too-long message?
-		else if (mainMessage.length() > 100)
-			mainMessage = mainMessage.substring(0, 100)
-					+ Resources.get("truncatedException");
-
-		// Ask if they want to see the full stack trace (show the first line of
-		// the stack trace as a hint).
-		final int choice = JOptionPane.showConfirmDialog(null, new Object[] {
-				mainMessage, Resources.get("stackTracePrompt") }, Resources
-				.get("stackTraceTitle"), JOptionPane.YES_NO_OPTION);
-
-		// Create and show the full stack trace dialog if they said yes.
-		if (choice == JOptionPane.YES_OPTION) {
-			// Extract the full stack trace.
-			final StringWriter sw = new StringWriter();
-			t.printStackTrace(new PrintWriter(sw));
-			final String stackTraceText = sw.toString();
-
-			// Build the text pane.
-			final JEditorPane editorPane = new JEditorPane("text/plain",
-					stackTraceText);
-
-			// Put the editor pane in a scroll pane.
-			final JScrollPane editorScrollPane = new JScrollPane(editorPane);
-			editorScrollPane
-					.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-
-			// Arbitrarily resize the scrollpane.
-			editorScrollPane.setPreferredSize(new Dimension(600, 400));
-
-			// Show the output.
-			JOptionPane.showMessageDialog(null, editorScrollPane, Resources
-					.get("stackTraceTitle"), messageClass);
-		}
-	}
-
 	// This is the main menu bar.
 	private class MartBuilderMenuBar extends JMenuBar implements ActionListener {
 		private static final long serialVersionUID = 1;
@@ -261,51 +203,36 @@ public class MartBuilder extends JFrame {
 			fileMenu.setMnemonic(Resources.get("fileMenuMnemonic").charAt(0));
 
 			// New mart.
-			this.newMart = new JMenuItem(
-					Resources.get("newMartTitle"),
-					new ImageIcon(
-							Resources
-									.getResourceAsURL("org/biomart/builder/resources/new.gif")));
+			this.newMart = new JMenuItem(Resources.get("newMartTitle"),
+					new ImageIcon(Resources.getResourceAsURL("new.gif")));
 			this.newMart
 					.setMnemonic(Resources.get("newMartMnemonic").charAt(0));
 			this.newMart.addActionListener(this);
 
 			// Open existing mart.
-			this.openMart = new JMenuItem(
-					Resources.get("openMartTitle"),
-					new ImageIcon(
-							Resources
-									.getResourceAsURL("org/biomart/builder/resources/open.gif")));
+			this.openMart = new JMenuItem(Resources.get("openMartTitle"),
+					new ImageIcon(Resources.getResourceAsURL("open.gif")));
 			this.openMart.setMnemonic(Resources.get("openMartMnemonic").charAt(
 					0));
 			this.openMart.addActionListener(this);
 
 			// Save current mart.
-			this.saveMart = new JMenuItem(
-					Resources.get("saveMartTitle"),
-					new ImageIcon(
-							Resources
-									.getResourceAsURL("org/biomart/builder/resources/save.gif")));
+			this.saveMart = new JMenuItem(Resources.get("saveMartTitle"),
+					new ImageIcon(Resources.getResourceAsURL("save.gif")));
 			this.saveMart.setMnemonic(Resources.get("saveMartMnemonic").charAt(
 					0));
 			this.saveMart.addActionListener(this);
 
 			// Save current mart as.
-			this.saveMartAs = new JMenuItem(
-					Resources.get("saveMartAsTitle"),
-					new ImageIcon(
-							Resources
-									.getResourceAsURL("org/biomart/builder/resources/save.gif")));
+			this.saveMartAs = new JMenuItem(Resources.get("saveMartAsTitle"),
+					new ImageIcon(Resources.getResourceAsURL("save.gif")));
 			this.saveMartAs.setMnemonic(Resources.get("saveMartAsMnemonic")
 					.charAt(0));
 			this.saveMartAs.addActionListener(this);
 
 			// Create DDL for current mart.
-			this.saveDDL = new JMenuItem(
-					Resources.get("saveDDLTitle"),
-					new ImageIcon(
-							Resources
-									.getResourceAsURL("org/biomart/builder/resources/saveText.gif")));
+			this.saveDDL = new JMenuItem(Resources.get("saveDDLTitle"),
+					new ImageIcon(Resources.getResourceAsURL("saveText.gif")));
 			this.saveDDL
 					.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
 			this.saveDDL.addActionListener(this);

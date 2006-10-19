@@ -47,7 +47,7 @@ import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Schema.GenericSchema;
 import org.biomart.builder.model.Table.GenericTable;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * A {@link DataSet} instance serves two purposes. First, it contains lists of

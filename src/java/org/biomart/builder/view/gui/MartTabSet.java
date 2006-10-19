@@ -47,9 +47,11 @@ import org.biomart.builder.controller.MartBuilderXML;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.MartConstructor.ConstructorRunnable;
-import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.diagrams.contexts.SchemaContext;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
+import org.biomart.common.resources.Resources;
+import org.biomart.common.view.gui.LongProcess;
+import org.biomart.common.view.gui.StackTrace;
 
 /**
  * Displays a set of tabs, one per mart currently loaded. Each tab keeps track
@@ -207,9 +209,8 @@ public class MartTabSet extends JTabbedPane {
 			// If it failed, show the exception.
 			final Exception failure = constructor.getFailureException();
 			if (failure != null)
-				this.getMartBuilder().showStackTrace(
-						new ConstructorException(Resources
-								.get("martConstructionFailed"), failure));
+				StackTrace.showStackTrace(new ConstructorException(
+						Resources.get("martConstructionFailed"), failure));
 			// Inform user of success, if it succeeded.
 			else
 				JOptionPane.showMessageDialog(null, Resources
@@ -378,8 +379,7 @@ public class MartTabSet extends JTabbedPane {
 						} catch (final Throwable t) {
 							SwingUtilities.invokeLater(new Runnable() {
 								public void run() {
-									MartTabSet.this.martBuilder
-											.showStackTrace(t);
+									StackTrace.showStackTrace(t);
 								}
 							});
 						}
@@ -488,7 +488,7 @@ public class MartTabSet extends JTabbedPane {
 					} catch (final Throwable t) {
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
-								MartTabSet.this.martBuilder.showStackTrace(t);
+								StackTrace.showStackTrace(t);
 							}
 						});
 					}
@@ -619,11 +619,8 @@ public class MartTabSet extends JTabbedPane {
 			buttonsPanel.add(this.schemaButton);
 
 			// Add the Biomart logo to the buttons panel.
-			buttonsPanel
-					.add(new JLabel(
-							new ImageIcon(
-									Resources
-											.getResourceAsURL("org/biomart/builder/resources/biomart-logo.gif"))));
+			buttonsPanel.add(new JLabel(new ImageIcon(Resources
+					.getResourceAsURL("biomart-logo.gif"))));
 
 			// Create the dataset tabset.
 			this.datasetTabSet = new DataSetTabSet(this);

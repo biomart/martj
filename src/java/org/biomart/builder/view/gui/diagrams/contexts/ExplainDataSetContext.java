@@ -33,11 +33,11 @@ import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
-import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
+import org.biomart.common.resources.Resources;
 
 /**
  * This context applies to the general schema view, as seen via a dataset tab.
@@ -209,7 +209,7 @@ public class ExplainDataSetContext extends SchemaContext {
 						Resources.get("modifyTableRestrictionTitle"),
 						new ImageIcon(
 								Resources
-										.getResourceAsURL("org/biomart/builder/resources/filter.gif")));
+										.getResourceAsURL("filter.gif")));
 				modify.setMnemonic(Resources.get(
 						"modifyTableRestrictionMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
@@ -232,7 +232,7 @@ public class ExplainDataSetContext extends SchemaContext {
 						Resources.get("addTableRestrictionTitle"),
 						new ImageIcon(
 								Resources
-										.getResourceAsURL("org/biomart/builder/resources/filter.gif")));
+										.getResourceAsURL("filter.gif")));
 				restriction.setMnemonic(Resources.get(
 						"addTableRestrictionMnemonic").charAt(0));
 				restriction.addActionListener(new ActionListener() {
@@ -345,7 +345,7 @@ public class ExplainDataSetContext extends SchemaContext {
 						Resources.get("modifyConcatRelationTitle"),
 						new ImageIcon(
 								Resources
-										.getResourceAsURL("org/biomart/builder/resources/collapseAll.gif")));
+										.getResourceAsURL("collapseAll.gif")));
 				modify.setMnemonic(Resources
 						.get("modifyConcatRelationMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
@@ -369,7 +369,7 @@ public class ExplainDataSetContext extends SchemaContext {
 						Resources.get("addConcatRelationTitle"),
 						new ImageIcon(
 								Resources
-										.getResourceAsURL("org/biomart/builder/resources/collapseAll.gif")));
+										.getResourceAsURL("collapseAll.gif")));
 				concat.setMnemonic(Resources.get("addConcatRelationMnemonic")
 						.charAt(0));
 				concat.addActionListener(new ActionListener() {
@@ -411,7 +411,7 @@ public class ExplainDataSetContext extends SchemaContext {
 						Resources.get("modifyRelationRestrictionTitle"),
 						new ImageIcon(
 								Resources
-										.getResourceAsURL("org/biomart/builder/resources/filter.gif")));
+										.getResourceAsURL("filter.gif")));
 				modify.setMnemonic(Resources.get(
 						"modifyRelationRestrictionMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
@@ -435,7 +435,7 @@ public class ExplainDataSetContext extends SchemaContext {
 						Resources.get("addRelationRestrictionTitle"),
 						new ImageIcon(
 								Resources
-										.getResourceAsURL("org/biomart/builder/resources/filter.gif")));
+										.getResourceAsURL("filter.gif")));
 				restriction.setMnemonic(Resources.get(
 						"addRelationRestrictionMnemonic").charAt(0));
 				restriction.addActionListener(new ActionListener() {

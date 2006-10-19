@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.view.gui;
+package org.biomart.common.view.gui;
 
 import java.awt.Container;
 import java.awt.Cursor;
@@ -46,7 +46,7 @@ public abstract class LongProcess {
 
 	private static Container container;
 
-	private static final Object lockObject = "My MartBuilder Hourglass Lock";
+	private static final Object lockObject = "My Hourglass Lock";
 
 	private static int longProcessCount = 0;
 

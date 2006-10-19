@@ -50,8 +50,6 @@ import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Relation.Cardinality;
-import org.biomart.builder.resources.Resources;
-import org.biomart.builder.resources.SettingsCache;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.AllSchemasDiagram;
 import org.biomart.builder.view.gui.diagrams.Diagram;
@@ -59,6 +57,10 @@ import org.biomart.builder.view.gui.diagrams.SchemaDiagram;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 import org.biomart.builder.view.gui.dialogs.KeyEditorDialog;
 import org.biomart.builder.view.gui.dialogs.SchemaConnectionDialog;
+import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.SettingsCache;
+import org.biomart.common.view.gui.LongProcess;
+import org.biomart.common.view.gui.StackTrace;
 
 /**
  * This tabset has one tab for the diagram which represents all schemas, and one
@@ -225,7 +227,7 @@ public class SchemaTabSet extends JTabbedPane {
 		// associated schema from the mart.
 		final JMenuItem close = new JMenuItem(Resources
 				.get("removeSchemaTitle"), new ImageIcon(Resources
-				.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
+				.getResourceAsURL("cut.gif")));
 		close.setMnemonic(Resources.get("removeSchemaMnemonic").charAt(0));
 		close.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
@@ -457,8 +459,7 @@ public class SchemaTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				} finally {
@@ -584,8 +585,7 @@ public class SchemaTabSet extends JTabbedPane {
 						} catch (final Throwable t) {
 							SwingUtilities.invokeLater(new Runnable() {
 								public void run() {
-									SchemaTabSet.this.martTab.getMartTabSet()
-											.getMartBuilder().showStackTrace(t);
+									StackTrace.showStackTrace(t);
 								}
 							});
 						}
@@ -593,7 +593,7 @@ public class SchemaTabSet extends JTabbedPane {
 				});
 			}
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -645,8 +645,7 @@ public class SchemaTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -702,8 +701,7 @@ public class SchemaTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -759,8 +757,7 @@ public class SchemaTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -821,8 +818,7 @@ public class SchemaTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -893,8 +889,7 @@ public class SchemaTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -965,8 +960,7 @@ public class SchemaTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -1014,8 +1008,7 @@ public class SchemaTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -1087,8 +1080,7 @@ public class SchemaTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -1134,8 +1126,7 @@ public class SchemaTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -1157,7 +1148,7 @@ public class SchemaTabSet extends JTabbedPane {
 			if (SchemaConnectionDialog.modifySchema(this.martTab, schema))
 				this.requestSynchroniseSchema(schema);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -1205,8 +1196,7 @@ public class SchemaTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -1260,8 +1250,7 @@ public class SchemaTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -1316,8 +1305,7 @@ public class SchemaTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -1375,8 +1363,7 @@ public class SchemaTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -1465,7 +1452,7 @@ public class SchemaTabSet extends JTabbedPane {
 			// replicated schema.
 			this.requestModifySchema(newSchema);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -1507,8 +1494,7 @@ public class SchemaTabSet extends JTabbedPane {
 		} catch (final Throwable t) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
-					SchemaTabSet.this.martTab.getMartTabSet().getMartBuilder()
-							.showStackTrace(t);
+					StackTrace.showStackTrace(t);
 				}
 			});
 		}
@@ -1553,8 +1539,7 @@ public class SchemaTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -1602,8 +1587,7 @@ public class SchemaTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -1629,7 +1613,7 @@ public class SchemaTabSet extends JTabbedPane {
 			// If we get an exception, we failed the test, and should
 			// tell the user why.
 			passedTest = false;
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 
 		// Tell the user if we passed or failed.

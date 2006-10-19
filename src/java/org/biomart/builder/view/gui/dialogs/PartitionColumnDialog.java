@@ -43,8 +43,8 @@ import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.UniqueValues;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.ValueCollection;
-import org.biomart.builder.resources.Resources;
-import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.common.resources.Resources;
+import org.biomart.common.view.gui.StackTrace;
 
 /**
  * This dialog asks users what kind of partitioning they want to set up on a
@@ -63,14 +63,11 @@ public class PartitionColumnDialog extends JDialog {
 	 * This opens a dialog in order for the user to create a new partition type.
 	 * It returns that type, or null if they cancelled it.
 	 * 
-	 * @param martTab
-	 *            the mart tab this dialog is creating a partition type for.
 	 * @return the newly created partition type, or null if the dialog was
 	 *         cancelled.
 	 */
-	public static PartitionedColumnType createPartitionedColumnType(
-			final MartTab martTab) {
-		final PartitionColumnDialog dialog = new PartitionColumnDialog(martTab,
+	public static PartitionedColumnType createPartitionedColumnType() {
+		final PartitionColumnDialog dialog = new PartitionColumnDialog(
 				Resources.get("createPartitionButton"), null);
 		dialog.setLocationRelativeTo(null);
 		dialog.show();
@@ -84,16 +81,14 @@ public class PartitionColumnDialog extends JDialog {
 	 * the existing one is untouched. If it returns null, the user cancelled the
 	 * dialog.
 	 * 
-	 * @param martTab
-	 *            the mart tab this dialog is creating a partition type for.
 	 * @param template
 	 *            the template to copy settings from. Can be null.
 	 * @return the replacement, updated, partition type, or null if the dialog
 	 *         was cancelled.
 	 */
 	public static PartitionedColumnType updatePartitionedColumnType(
-			final MartTab martTab, final PartitionedColumnType template) {
-		final PartitionColumnDialog dialog = new PartitionColumnDialog(martTab,
+			final PartitionedColumnType template) {
+		final PartitionColumnDialog dialog = new PartitionColumnDialog(
 				Resources.get("updatePartitionButton"), template);
 		dialog.setLocationRelativeTo(null);
 		dialog.show();
@@ -103,8 +98,6 @@ public class PartitionColumnDialog extends JDialog {
 	private JButton cancel;
 
 	private JButton execute;
-
-	private MartTab martTab;
 
 	private JTextArea multiValue;
 
@@ -116,15 +109,12 @@ public class PartitionColumnDialog extends JDialog {
 
 	private JComboBox type;
 
-	private PartitionColumnDialog(final MartTab martTab,
-			final String executeButtonText, final PartitionedColumnType template) {
+	private PartitionColumnDialog(final String executeButtonText, 
+			final PartitionedColumnType template) {
 		// Creates the basic dialog.
 		super();
 		this.setTitle(Resources.get("partitionColumnDialogTitle"));
 		this.setModal(true);
-
-		// Remembers the dataset tabset this dialog is referring to.
-		this.martTab = martTab;
 
 		// Create the content pane to store the create dialog panel.
 		final GridBagLayout gridBag = new GridBagLayout();
@@ -324,7 +314,7 @@ public class PartitionColumnDialog extends JDialog {
 			else
 				throw new MartBuilderInternalError();
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 
 		// If we get here, we failed, so act as if validation failed.

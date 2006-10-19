@@ -51,7 +51,7 @@ import org.biomart.builder.model.Key;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * This dialog asks users to create or modify an expression column.

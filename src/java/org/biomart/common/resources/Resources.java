@@ -16,25 +16,69 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.resources;
+package org.biomart.common.resources;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.text.MessageFormat;
+import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 /**
  * Simple wrapper for locating file resources within this package, and for
  * reading internationalisation messages from the messages file.
+ * <p>
+ * The {@link #setResourceLocation(String)} method must be called before this
+ * class is used.
+ * <p>
+ * Note that it will search <tt>org/biomart/common/resources</tt> if it cannot
+ * find the requested resource in the location specified using
+ * {@link #setResourceLocation(String)}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class Resources {
-	private static final ResourceBundle bundle = ResourceBundle
-			.getBundle("org/biomart/builder/resources/messages");
+	/**
+	 * The current version of the BioMart software.
+	 */
+	public static String BIOMART_VERSION = "0.5";
+
+	private static String location = null;
+
+	private static ResourceBundle bundle = null;
+
+	private final static ResourceBundle commonBundle = ResourceBundle
+			.getBundle("org/biomart/common/resources/messages");
+
+	/**
+	 * Sets the resource location for the application.
+	 * 
+	 * @param location
+	 *            the resource location, e.g.
+	 *            <tt>org/biomart/builder/resources</tt>. The messages file
+	 *            <tt>messages.properties</tt> and other resources requested
+	 *            from now on will be found in this location.
+	 */
+	public static void setResourceLocation(String location) {
+		Resources.location = location;
+		Resources.bundle = ResourceBundle.getBundle(location + "/messages");
+	}
+
+	private static String getValue(final String key) {
+		String value = null;
+		if (Resources.bundle != null)
+			try {
+				value = Resources.bundle.getString(key);
+			} catch (MissingResourceException e) {
+				value = null;
+			}
+		if (value == null)
+			value = Resources.commonBundle.getString(key);
+		return value;
+	}
 
 	/**
 	 * Obtains a string from the resource bundle
@@ -48,8 +92,7 @@ public class Resources {
 	 * @return the matching string.
 	 */
 	public static String get(final String key) {
-		return MessageFormat.format(Resources.bundle.getString(key),
-				new Object[] {});
+		return MessageFormat.format(Resources.getValue(key), new Object[] {});
 	}
 
 	/**
@@ -67,7 +110,7 @@ public class Resources {
 	 * @return the matching string.
 	 */
 	public static String get(final String key, final String value) {
-		return MessageFormat.format(Resources.bundle.getString(key),
+		return MessageFormat.format(Resources.getValue(key),
 				new Object[] { value });
 	}
 
@@ -87,7 +130,7 @@ public class Resources {
 	 * @return the matching string.
 	 */
 	public static String get(final String key, final String[] values) {
-		return MessageFormat.format(Resources.bundle.getString(key), values);
+		return MessageFormat.format(Resources.getValue(key), values);
 	}
 
 	/**
@@ -95,21 +138,32 @@ public class Resources {
 	 * stream that will read the contents of that file.
 	 * 
 	 * @param resource
-	 *            the classpath of the resource to lookup, e.g.
-	 *            "org/biomart/builder/resources/myfile.txt".
+	 *            the classpath of the resource to lookup, e.g. "myfile.txt".
 	 * @return a stream that will read that file.
 	 */
 	public static InputStream getResourceAsStream(final String resource) {
+		final String commonResource = "org/biomart/common/resources/"
+				+ resource;
+		final String locationResource = Resources.location == null ? commonResource
+				: (Resources.location + "/" + resource);
 		final ClassLoader cl = Resources.class.getClassLoader();
 		return (InputStream) java.security.AccessController
 				.doPrivileged(new java.security.PrivilegedAction() {
 					public Object run() {
+						InputStream resource;
 						if (cl != null) {
-							return cl.getResourceAsStream(resource);
+							resource = cl.getResourceAsStream(locationResource);
+							if (resource == null)
+								resource = cl
+										.getResourceAsStream(commonResource);
 						} else {
-							return ClassLoader
-									.getSystemResourceAsStream(resource);
+							resource = ClassLoader
+									.getSystemResourceAsStream(locationResource);
+							if (resource == null)
+								resource = ClassLoader
+										.getSystemResourceAsStream(commonResource);
 						}
+						return resource;
 					}
 				});
 	}
@@ -119,20 +173,31 @@ public class Resources {
 	 * URL pointing to it.
 	 * 
 	 * @param resource
-	 *            the classpath of the resource to lookup, e.g.
-	 *            "org/biomart/builder/resources/myfile.txt".
+	 *            the classpath of the resource to lookup, e.g. "myfile.txt".
 	 * @return a URL pointing to that file.
 	 */
 	public static URL getResourceAsURL(final String resource) {
+		final String commonResource = "org/biomart/common/resources/"
+				+ resource;
+		final String locationResource = Resources.location == null ? commonResource
+				: (Resources.location + "/" + resource);
 		final ClassLoader cl = Resources.class.getClassLoader();
 		return (URL) java.security.AccessController
 				.doPrivileged(new java.security.PrivilegedAction() {
 					public Object run() {
+						URL resource;
 						if (cl != null) {
-							return cl.getResource(resource);
+							resource = cl.getResource(locationResource);
+							if (resource == null)
+								resource = cl.getResource(commonResource);
 						} else {
-							return ClassLoader.getSystemResource(resource);
+							resource = ClassLoader
+									.getSystemResource(locationResource);
+							if (resource == null)
+								resource = ClassLoader
+										.getSystemResource(commonResource);
 						}
+						return resource;
 					}
 				});
 	}

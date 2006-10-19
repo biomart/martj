@@ -27,7 +27,7 @@ import java.util.Set;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * A schema group represents a collection of schema objects which all have

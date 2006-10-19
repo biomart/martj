@@ -43,12 +43,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 
 import org.biomart.builder.model.Table;
-import org.biomart.builder.resources.Resources;
-import org.biomart.builder.view.gui.ComponentImageSaver;
-import org.biomart.builder.view.gui.ComponentPrinter;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.DiagramComponent;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
+import org.biomart.common.resources.Resources;
+import org.biomart.common.view.gui.ComponentImageSaver;
+import org.biomart.common.view.gui.ComponentPrinter;
 
 /**
  * A diagram represents a collection of database components. It usually contains
@@ -178,7 +178,7 @@ public abstract class Diagram extends JPanel {
 				Resources.get("saveDiagramTitle"),
 				new ImageIcon(
 						Resources
-								.getResourceAsURL("org/biomart/builder/resources/save.gif")));
+								.getResourceAsURL("save.gif")));
 		save.setMnemonic(Resources.get("saveDiagramMnemonic").charAt(0));
 		save.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
@@ -192,7 +192,7 @@ public abstract class Diagram extends JPanel {
 		// Add an item that allows the user to print this diagram.
 		final JMenuItem print = new JMenuItem(Resources
 				.get("printDiagramTitle"), new ImageIcon(Resources
-				.getResourceAsURL("org/biomart/builder/resources/print.gif")));
+				.getResourceAsURL("print.gif")));
 		print.setMnemonic(Resources.get("printDiagramMnemonic").charAt(0));
 		print.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
@@ -208,11 +208,11 @@ public abstract class Diagram extends JPanel {
 	}
 
 	private void printDiagram() {
-		new ComponentPrinter(this.getMartTab(), this).print();
+		new ComponentPrinter(this).print();
 	}
 
 	private void saveDiagram() {
-		new ComponentImageSaver(this.getMartTab(), this).save();
+		new ComponentImageSaver(this).save();
 	}
 
 	/**

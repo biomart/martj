@@ -31,9 +31,9 @@ import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
-import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
+import org.biomart.common.resources.Resources;
 
 /**
  * This context is basically the same as {@link DataSetContext}, except
@@ -151,7 +151,7 @@ public class ExplainTransformationContext extends DataSetContext {
 						Resources.get("changePartitionColumnTitle"),
 						new ImageIcon(
 								Resources
-										.getResourceAsURL("org/biomart/builder/resources/expandAll.gif")));
+										.getResourceAsURL("expandAll.gif")));
 				changepartition.setMnemonic(Resources.get(
 						"changePartitionColumnMnemonic").charAt(0));
 				changepartition.addActionListener(new ActionListener() {
@@ -175,7 +175,7 @@ public class ExplainTransformationContext extends DataSetContext {
 						Resources.get("partitionColumnTitle"),
 						new ImageIcon(
 								Resources
-										.getResourceAsURL("org/biomart/builder/resources/expandAll.gif")));
+										.getResourceAsURL("expandAll.gif")));
 				partition.setMnemonic(Resources.get("partitionColumnMnemonic")
 						.charAt(0));
 				partition.addActionListener(new ActionListener() {

@@ -74,7 +74,7 @@ import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Schema.GenericSchema;
 import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
 import org.biomart.builder.model.Table.GenericTable;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -1036,7 +1036,7 @@ public class MartBuilderXML extends DefaultHandler {
 				|| MartBuilderXML.DTD_URL.equals(systemId))
 			return new InputSource(
 					Resources
-							.getResourceAsStream("org/biomart/builder/resources/MartBuilder-"
+							.getResourceAsStream("MartBuilder-"
 									+ MartBuilderXML.DTD_VERSION + ".dtd"));
 		// By returning null we allow the default behaviour for all other
 		// DTDs.

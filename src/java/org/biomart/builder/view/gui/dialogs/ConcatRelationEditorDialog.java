@@ -45,7 +45,7 @@ import javax.swing.border.EmptyBorder;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * A dialog which lists all the columns in a concat relation, and all the
@@ -167,19 +167,19 @@ public class ConcatRelationEditorDialog extends JDialog {
 		// to move columns to/from the selected column list.
 		final JList tabColList = new JList(this.tableColumns);
 		final JButton insertButton = new JButton(new ImageIcon(Resources
-				.getResourceAsURL("org/biomart/builder/resources/add.gif")));
+				.getResourceAsURL("add.gif")));
 		final JButton removeButton = new JButton(new ImageIcon(Resources
-				.getResourceAsURL("org/biomart/builder/resources/remove.gif")));
+				.getResourceAsURL("remove.gif")));
 
 		// Create the key column list, and the buttons to
 		// move columns to/from the table columns list.
 		final JList keyColList = new JList(this.selectedColumns);
 		final JButton upButton = new JButton(new ImageIcon(Resources
-				.getResourceAsURL("org/biomart/builder/resources/arrowUp.gif")));
+				.getResourceAsURL("arrowUp.gif")));
 		final JButton downButton = new JButton(
 				new ImageIcon(
 						Resources
-								.getResourceAsURL("org/biomart/builder/resources/arrowDown.gif")));
+								.getResourceAsURL("arrowDown.gif")));
 
 		// Put the two halves of the dialog side-by-side in a horizontal box.
 		final Box columnContent = Box.createHorizontalBox();

@@ -24,7 +24,7 @@ import java.util.Map;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * A relation represents the association between two keys. Relations between two

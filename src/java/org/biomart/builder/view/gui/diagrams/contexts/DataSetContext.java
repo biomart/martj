@@ -44,11 +44,11 @@ import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.Relation.Cardinality;
-import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
+import org.biomart.common.resources.Resources;
 
 /**
  * This context adapts dataset diagrams to display different colours, and
@@ -188,7 +188,7 @@ public class DataSetContext extends SchemaContext {
 			// Option to remove the dataset from the mart.
 			final JMenuItem remove = new JMenuItem(Resources
 					.get("removeDataSetTitle"), new ImageIcon(Resources
-					.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
+					.getResourceAsURL("cut.gif")));
 			remove
 					.setMnemonic(Resources.get("removeDataSetMnemonic").charAt(
 							0));
@@ -278,7 +278,7 @@ public class DataSetContext extends SchemaContext {
 					Resources.get("explainDataSetTitle"),
 					new ImageIcon(
 							Resources
-									.getResourceAsURL("org/biomart/builder/resources/help.gif")));
+									.getResourceAsURL("help.gif")));
 			explain.setMnemonic(Resources.get("explainDataSetMnemonic").charAt(
 					0));
 			explain.addActionListener(new ActionListener() {
@@ -297,7 +297,7 @@ public class DataSetContext extends SchemaContext {
 					Resources.get("saveDDLTitle"),
 					new ImageIcon(
 							Resources
-									.getResourceAsURL("org/biomart/builder/resources/saveText.gif")));
+									.getResourceAsURL("saveText.gif")));
 			saveDDL.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
 			saveDDL.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
@@ -324,7 +324,7 @@ public class DataSetContext extends SchemaContext {
 					Resources.get("explainTableTitle"),
 					new ImageIcon(
 							Resources
-									.getResourceAsURL("org/biomart/builder/resources/help.gif")));
+									.getResourceAsURL("help.gif")));
 			explain
 					.setMnemonic(Resources.get("explainTableMnemonic")
 							.charAt(0));
@@ -375,7 +375,7 @@ public class DataSetContext extends SchemaContext {
 						Resources.get("mergeDimensionTitle"),
 						new ImageIcon(
 								Resources
-										.getResourceAsURL("org/biomart/builder/resources/collapseAll.gif")));
+										.getResourceAsURL("collapseAll.gif")));
 				mergeDM.setMnemonic(Resources.get("mergeDimensionMnemonic")
 						.charAt(0));
 				mergeDM.addActionListener(new ActionListener() {
@@ -394,7 +394,7 @@ public class DataSetContext extends SchemaContext {
 						Resources.get("removeDimensionTitle"),
 						new ImageIcon(
 								Resources
-										.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
+										.getResourceAsURL("cut.gif")));
 				removeDM.setMnemonic(Resources.get("removeDimensionMnemonic")
 						.charAt(0));
 				removeDM.addActionListener(new ActionListener() {
@@ -417,7 +417,7 @@ public class DataSetContext extends SchemaContext {
 						Resources.get("removeSubclassTitle"),
 						new ImageIcon(
 								Resources
-										.getResourceAsURL("org/biomart/builder/resources/collapseAll.gif")));
+										.getResourceAsURL("collapseAll.gif")));
 				unsubclass.setMnemonic(Resources.get("removeSubclassMnemonic")
 						.charAt(0));
 				unsubclass.addActionListener(new ActionListener() {
@@ -518,7 +518,7 @@ public class DataSetContext extends SchemaContext {
 						Resources.get("changePartitionColumnTitle"),
 						new ImageIcon(
 								Resources
-										.getResourceAsURL("org/biomart/builder/resources/expandAll.gif")));
+										.getResourceAsURL("expandAll.gif")));
 				changepartition.setMnemonic(Resources.get(
 						"changePartitionColumnMnemonic").charAt(0));
 				changepartition.addActionListener(new ActionListener() {
@@ -542,7 +542,7 @@ public class DataSetContext extends SchemaContext {
 						Resources.get("partitionColumnTitle"),
 						new ImageIcon(
 								Resources
-										.getResourceAsURL("org/biomart/builder/resources/expandAll.gif")));
+										.getResourceAsURL("expandAll.gif")));
 				partition.setMnemonic(Resources.get("partitionColumnMnemonic")
 						.charAt(0));
 				partition.addActionListener(new ActionListener() {

@@ -49,7 +49,6 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.AllDataSetsDiagram;
 import org.biomart.builder.view.gui.diagrams.DataSetDiagram;
@@ -68,6 +67,9 @@ import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
+import org.biomart.common.resources.Resources;
+import org.biomart.common.view.gui.LongProcess;
+import org.biomart.common.view.gui.StackTrace;
 
 /**
  * This tabset contains most of the core functionality of the entire GUI. It has
@@ -181,7 +183,7 @@ public class DataSetTabSet extends JTabbedPane {
 		// This item allows the user to remove the dataset from the mart.
 		final JMenuItem close = new JMenuItem(Resources
 				.get("removeDataSetTitle"), new ImageIcon(Resources
-				.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
+				.getResourceAsURL("cut.gif")));
 		close.setMnemonic(Resources.get("removeDataSetMnemonic").charAt(0));
 		close.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
@@ -254,7 +256,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -354,7 +356,7 @@ public class DataSetTabSet extends JTabbedPane {
 		try {
 			MartBuilderUtils.synchroniseMartDataSets(this.martTab.getMart());
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 			return;
 		}
 
@@ -498,8 +500,7 @@ public class DataSetTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -550,8 +551,7 @@ public class DataSetTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -600,8 +600,7 @@ public class DataSetTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -674,7 +673,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// can be updated as the user edits the dataset.
 			ExplainTableDialog.showTableExplanation(this.martTab, dsTable);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -692,7 +691,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// can be updated as the user edits the dataset.
 			ExplainDataSetDialog.showDataSetExplanation(this.martTab, dataset);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -736,7 +735,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// Update the modification status for this tabset.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -763,7 +762,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -790,7 +789,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -847,8 +846,7 @@ public class DataSetTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -894,8 +892,7 @@ public class DataSetTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -938,8 +935,7 @@ public class DataSetTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -968,8 +964,7 @@ public class DataSetTabSet extends JTabbedPane {
 		// explaining this and asking the user to edit the settings.
 		if (column.getPartitionType() != null) {
 			final PartitionedColumnType oldType = column.getPartitionType();
-			type = PartitionColumnDialog.updatePartitionedColumnType(
-					this.martTab, oldType);
+			type = PartitionColumnDialog.updatePartitionedColumnType(oldType);
 
 			// Check they didn't cancel the request, or left the
 			// scheme unchanged.
@@ -980,8 +975,7 @@ public class DataSetTabSet extends JTabbedPane {
 		// Otherwise, open a dialog asking the user to define the partitioning
 		// scheme.
 		else {
-			type = PartitionColumnDialog
-					.createPartitionedColumnType(this.martTab);
+			type = PartitionColumnDialog.createPartitionedColumnType();
 
 			// Check they didn't cancel the request.
 			if (type == null)
@@ -1020,7 +1014,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// Update the modified status on this tabset.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -1069,8 +1063,7 @@ public class DataSetTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -1119,8 +1112,7 @@ public class DataSetTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -1161,8 +1153,7 @@ public class DataSetTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -1201,8 +1192,7 @@ public class DataSetTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -1241,8 +1231,7 @@ public class DataSetTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				}
@@ -1384,7 +1373,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// Set the dataset tabset status as modified.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -1412,7 +1401,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -1447,8 +1436,7 @@ public class DataSetTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				} finally {
@@ -1514,8 +1502,7 @@ public class DataSetTabSet extends JTabbedPane {
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.getMartBuilder().showStackTrace(t);
+							StackTrace.showStackTrace(t);
 						}
 					});
 				} finally {
@@ -1563,7 +1550,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -1590,7 +1577,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// Update the modification status for this tabset.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -1617,7 +1604,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -1644,7 +1631,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -1673,7 +1660,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// Update the modified status on this tabset.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 
@@ -1701,7 +1688,7 @@ public class DataSetTabSet extends JTabbedPane {
 			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 	}
 

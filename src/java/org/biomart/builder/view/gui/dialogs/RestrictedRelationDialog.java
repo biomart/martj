@@ -48,7 +48,7 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Column.GenericColumn;
 import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * This dialog asks users to create or modify a restriction over a particular

@@ -63,7 +63,7 @@ import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
 import org.biomart.builder.model.MartConstructorAction.Reduce;
 import org.biomart.builder.model.MartConstructorAction.RenameTable;
 import org.biomart.builder.model.MartConstructorAction.Union;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * Understands how to create SQL and DDL for an Oracle database.
@@ -113,7 +113,7 @@ public class OracleDialect extends DatabaseDialect {
 			final BufferedReader br = new BufferedReader(
 					new InputStreamReader(
 							Resources
-									.getResourceAsStream("org/biomart/builder/resources/ora_group_concat.sql")));
+									.getResourceAsStream("ora_group_concat.sql")));
 			try {
 				String line;
 				while ((line = br.readLine()) != null) {

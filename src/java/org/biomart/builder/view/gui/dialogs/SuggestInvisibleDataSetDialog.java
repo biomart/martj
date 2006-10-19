@@ -46,7 +46,7 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * This dialog asks users what kind of invisible dataset suggestion the user

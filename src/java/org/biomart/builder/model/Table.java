@@ -35,7 +35,7 @@ import java.util.TreeMap;
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * The table interface provides the basic idea of what constitutes a database

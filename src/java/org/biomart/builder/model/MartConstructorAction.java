@@ -31,7 +31,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * Represents one task in the grand scheme of constructing a mart.

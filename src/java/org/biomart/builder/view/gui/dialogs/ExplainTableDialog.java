@@ -48,13 +48,13 @@ import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
-import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTableDiagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainTransformationContext;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainDataSetContext;
+import org.biomart.common.resources.Resources;
 
 /**
  * This simple dialog explains a table by drawing a series of diagrams of the

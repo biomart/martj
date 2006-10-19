@@ -45,7 +45,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.MartConstructorAction.MartConstructorActionGraph;
 import org.biomart.builder.model.MartConstructorAction.MartConstructorTableAction;
 import org.biomart.builder.model.MartConstructorAction.OptimiseUpdateColumn;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * This implementation of the {@link MartConstructor} interface generates DDL

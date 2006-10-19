@@ -40,11 +40,11 @@ import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.Schema.GenericSchema;
 import org.biomart.builder.model.Table.GenericTable;
-import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
+import org.biomart.common.resources.Resources;
 
 /**
  * Displays a transformation step, depending on what is passed to the

@@ -25,10 +25,10 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.SchemaTabSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainDataSetContext;
+import org.biomart.common.resources.Resources;
 
 /**
  * This simple dialog explains a dataset by drawing the schema diagram for the

@@ -35,7 +35,7 @@ import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * The mart contains the set of all schemas that are providing data to this

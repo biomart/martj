@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.view.gui;
+package org.biomart.common.view.gui;
 
 import java.awt.Component;
 import java.awt.Graphics2D;
@@ -30,8 +30,7 @@ import javax.swing.JFileChooser;
 import javax.swing.RepaintManager;
 import javax.swing.filechooser.FileFilter;
 
-import org.biomart.builder.resources.Resources;
-import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.common.resources.Resources;
 
 /**
  * Saves any given component to an image file.
@@ -45,19 +44,14 @@ public class ComponentImageSaver {
 
 	private Component component;
 
-	private MartTab martTab;
-
 	/**
 	 * Constructs a component saver that is associated with the given mart tab.
 	 * 
-	 * @param martTab
-	 *            the mart tab to associate it with.
 	 * @param component
 	 *            the component to save.
 	 */
-	public ComponentImageSaver(final MartTab martTab, final Component component) {
+	public ComponentImageSaver(final Component component) {
 		this.component = component;
-		this.martTab = martTab;
 	}
 
 	private void save(final File file, final ImageSaverFilter format)
@@ -110,7 +104,7 @@ public class ComponentImageSaver {
 				Resources.get("JPEGFileFilterDescription"), new String[] {
 						Resources.get("jpgExtension"),
 						Resources.get("jpegExtension") }));
-		if (fileChooser.showSaveDialog(this.martTab) == JFileChooser.APPROVE_OPTION)
+		if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION)
 			// Call save() with the filename and format.
 			LongProcess.run(new Runnable() {
 				public void run() {
@@ -119,8 +113,7 @@ public class ComponentImageSaver {
 								.getSelectedFile(),
 								(ImageSaverFilter) fileChooser.getFileFilter());
 					} catch (final IOException e) {
-						ComponentImageSaver.this.martTab.getMartTabSet()
-								.getMartBuilder().showStackTrace(e);
+						StackTrace.showStackTrace(e);
 					}
 				}
 			});

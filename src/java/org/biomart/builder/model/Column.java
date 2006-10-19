@@ -18,7 +18,7 @@
 
 package org.biomart.builder.model;
 
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * A column is a simple representation of a column in some table. It has a name,

@@ -26,7 +26,7 @@ import java.util.List;
 
 import org.biomart.builder.exceptions.AssociationException;
 import org.biomart.builder.exceptions.MartBuilderInternalError;
-import org.biomart.builder.resources.Resources;
+import org.biomart.common.resources.Resources;
 
 /**
  * The key interface is core to the way tables get associated. They are involved

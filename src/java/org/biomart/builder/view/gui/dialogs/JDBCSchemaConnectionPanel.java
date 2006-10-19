@@ -50,9 +50,9 @@ import javax.swing.filechooser.FileFilter;
 import org.biomart.builder.controller.JDBCSchema;
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.model.Schema;
-import org.biomart.builder.resources.Resources;
-import org.biomart.builder.resources.SettingsCache;
-import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.SettingsCache;
+import org.biomart.common.view.gui.StackTrace;
 
 /**
  * This connection panel implementation allows a user to define some JDBC
@@ -117,8 +117,6 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 
 	private JTextField jdbcURL;
 
-	private MartTab martTab;
-
 	private JPasswordField password;
 
 	private JFormattedTextField port;
@@ -139,16 +137,9 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 	 * in unpredictable behaviour. Or, call
 	 * {@link #copySettingsFromProperties(Properties)} to achieve the same
 	 * results.
-	 * 
-	 * @param martTab
-	 *            the mart tab to which the schema to be created or modified
-	 *            belongs.
 	 */
-	public JDBCSchemaConnectionPanel(final MartTab martTab) {
+	public JDBCSchemaConnectionPanel() {
 		super();
-
-		// Remember the schema tabset.
-		this.martTab = martTab;
 
 		// Create the layout manager for this panel.
 		final GridBagLayout gridBag = new GridBagLayout();
@@ -528,7 +519,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			// Return that schema.
 			return schema;
 		} catch (final Throwable t) {
-			this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+			StackTrace.showStackTrace(t);
 		}
 
 		// If we got here, something went wrong, so behave
@@ -582,7 +573,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				SettingsCache.saveHistoryProperties(JDBCSchema.class, schema
 						.getName(), history);
 			} catch (final Throwable t) {
-				this.martTab.getMartTabSet().getMartBuilder().showStackTrace(t);
+				StackTrace.showStackTrace(t);
 			}
 
 		// Return the modified schema, or the original schema if

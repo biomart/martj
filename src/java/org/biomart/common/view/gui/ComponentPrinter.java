@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.view.gui;
+package org.biomart.common.view.gui;
 
 import java.awt.Component;
 import java.awt.Graphics;
@@ -29,7 +29,6 @@ import java.awt.print.PrinterJob;
 
 import javax.swing.RepaintManager;
 
-import org.biomart.builder.view.gui.MartTabSet.MartTab;
 
 /**
  * Prints any given component.
@@ -47,20 +46,15 @@ public class ComponentPrinter implements Printable {
 
 	private Component component;
 
-	private MartTab martTab;
-
 	/**
 	 * Constructs a component printer that is associated with the given mart
 	 * tab.
 	 * 
-	 * @param martTab
-	 *            the mart tab to associate it with.
 	 * @param component
 	 *            the component to print.
 	 */
-	public ComponentPrinter(final MartTab martTab, final Component component) {
+	public ComponentPrinter(final Component component) {
 		this.component = component;
-		this.martTab = martTab;
 	}
 
 	/**
@@ -76,8 +70,7 @@ public class ComponentPrinter implements Printable {
 					try {
 						printJob.print();
 					} catch (final PrinterException pe) {
-						ComponentPrinter.this.martTab.getMartTabSet()
-								.getMartBuilder().showStackTrace(pe);
+						StackTrace.showStackTrace(pe);
 					}
 				}
 			});

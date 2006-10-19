@@ -222,6 +222,20 @@
         </javac>
 
         <copy
+        todir="${build.classes}/org/biomart/common/resources">
+        	<fileset dir="${src.dir}/org/biomart/common/resources/" casesensitive="yes">
+        	  <exclude name="**/*.java"/>
+        	</fileset>
+        </copy>
+
+        <copy
+        todir="${build.classes}/org/biomart/launcher/resources">
+        	<fileset dir="${src.dir}/org/biomart/launcher/resources/" casesensitive="yes">
+        	  <exclude name="**/*.java"/>
+        	</fileset>
+        </copy>
+
+        <copy
         todir="${build.classes}/org/biomart/builder/resources">
         	<fileset dir="${src.dir}/org/biomart/builder/resources/" casesensitive="yes">
         	  <exclude name="**/*.java"/>
@@ -273,7 +287,8 @@
 
     </target>
 
-
+	<taskdef name="jarbundler" 
+         classname="net.sourceforge.jarbundler.JarBundler" />
 
     <target name="jar" depends="compile"
         description="Creates martj.jar in 'build' directory."
@@ -291,8 +306,7 @@
                 <exclude name="data/examples/**" />
             </fileset>
         </jar>
-
-
+            
     </target>
 
 
@@ -381,6 +395,22 @@
     <target name="dist-all" depends="dist-bin, dist-test, dist-src, dist-api" 
     description="Build all file sets for distribution." />
 
+	<!-- creates the BioMartLauncher.app -->
+	<target name="dist-bin-mac" 
+	description="Requires JarBundler ANT task. Creates the binary distributions, including the Mac one. Only works on MacOSX."
+	depends="dist-bin">	       
+		<jarbundler dir="${dist.dir}/bin"
+            name="BioMartLauncher"
+            mainclass="org.biomart.launcher.view.gui.BioMartLauncher">
+            <jarfileset dir="${dist.dir}/${lib.dir}">
+		    	<include name="**/*.jar" />
+    			<exclude name="**/CVS" />
+  			</jarfileset>
+  			<javaproperty name="com.apple.macos.useScreenMenuBar" value="true"/>
+  			<javaproperty name="com.apple.macos.smallTabs" value="true"/>
+        </jarbundler>
+    </target>
+
     <!-- creates the dist-bin distribution set -->
     <target name="dist-bin" 
         description="Creates the dist-bin distribution set"
@@ -389,17 +419,14 @@
         <copy file="${build.dir}/${name}.jar" todir="${dist.dir}/lib" />
 
         <!-- copy the bat and shell martshell startup scripts -->
-        <copy file="${bin.dir}/martshell.bat" tofile="${dist.dir}/bin/martshell.bat" />
-        <copy file="${bin.dir}/martshell.sh" tofile="${dist.dir}/bin/martshell.sh" />
-        <copy file="${bin.dir}/martexplorer.bat" tofile="${dist.dir}/bin/martexplorer.bat" />
-        <copy file="${bin.dir}/martexplorer.sh" tofile="${dist.dir}/bin/martexplorer.sh" />
-        <copy file="${bin.dir}/simpleLibraryUsageExample.bat" tofile="${dist.dir}/bin/simpleLibraryUsageExample.bat" />
-        <copy file="${bin.dir}/simpleLibraryUsageExample.sh" tofile="${dist.dir}/bin/simpleLibraryUsageExample.sh" />
-        <copy file="${bin.dir}/marteditor.bat" tofile="${dist.dir}/bin/marteditor.bat" />
-        <copy file="${bin.dir}/marteditor.sh" tofile="${dist.dir}/bin/marteditor.sh" />
-        <copy file="${bin.dir}/martregistrydbtool.sh" tofile="${dist.dir}/bin/martregistrydbtool.sh" />
-        <copy file="${bin.dir}/martregistrydbtool.bat" tofile="${dist.dir}/bin/martregistrydbtool.bat" />
-
+        <copy todir="${dist.dir}/bin">
+			<fileset dir="${bin.dir}" casesensitive="yes">
+		  		<include name="*.sh"/>
+			  	<exclude name="*.bat"/>
+    			<exclude name="**/CVS" />
+			</fileset>
+        </copy>
+            
         <tar destfile="${build.dir}/${name}-bin.tar">
             <!-- distribution files -->
             <tarfileset dir="${dist.dir}"

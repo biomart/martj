@@ -31,8 +31,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.diagrams.Diagram;
+import org.biomart.common.resources.Resources;
 
 /**
  * A diagram component that represents a dataset. It usually only has a label in

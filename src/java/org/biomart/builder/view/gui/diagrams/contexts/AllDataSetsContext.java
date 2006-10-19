@@ -28,8 +28,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.resources.Resources;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.common.resources.Resources;
 
 /**
  * Provides the context menus and colour schemes to use when viewing the all
@@ -86,7 +86,7 @@ public class AllDataSetsContext implements DiagramContext {
 			// Option to remove all datasets from the mart.
 			final JMenuItem remove = new JMenuItem(Resources
 					.get("removeAllDataSetsTitle"), new ImageIcon(Resources
-					.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
+					.getResourceAsURL("cut.gif")));
 			remove.setMnemonic(Resources.get("removeAllDataSetsMnemonic")
 					.charAt(0));
 			remove.addActionListener(new ActionListener() {
@@ -127,7 +127,7 @@ public class AllDataSetsContext implements DiagramContext {
 			// Option to remove the dataset from the mart.
 			final JMenuItem remove = new JMenuItem(Resources
 					.get("removeDataSetTitle"), new ImageIcon(Resources
-					.getResourceAsURL("org/biomart/builder/resources/cut.gif")));
+					.getResourceAsURL("cut.gif")));
 			remove
 					.setMnemonic(Resources.get("removeDataSetMnemonic").charAt(
 							0));
@@ -167,7 +167,7 @@ public class AllDataSetsContext implements DiagramContext {
 					Resources.get("explainDataSetTitle"),
 					new ImageIcon(
 							Resources
-									.getResourceAsURL("org/biomart/builder/resources/help.gif")));
+									.getResourceAsURL("help.gif")));
 			explain.setMnemonic(Resources.get("explainDataSetMnemonic").charAt(
 					0));
 			explain.addActionListener(new ActionListener() {
@@ -185,7 +185,7 @@ public class AllDataSetsContext implements DiagramContext {
 					Resources.get("saveDDLTitle"),
 					new ImageIcon(
 							Resources
-									.getResourceAsURL("org/biomart/builder/resources/saveText.gif")));
+									.getResourceAsURL("saveText.gif")));
 			saveDDL.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
 			saveDDL.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
