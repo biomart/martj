@@ -408,25 +408,10 @@
 			</fileset>
         </copy>
 
-		<!-- creates the BioMartLauncher.app -->
-		<os family="mac">
-		<taskdef name="jarbundler" 
-      	   classname="net.sourceforge.jarbundler.JarBundler" />	    
-		<jarbundler dir="${dist.dir}/bin"
-            name="BioMartLauncher"
-            mainclass="org.biomart.launcher.view.gui.BioMartLauncher">
-            <jarfileset dir="${dist.dir}/${lib.dir}">
-		    	<include name="**/*.jar" />
-    			<exclude name="**/CVS" />
-  			</jarfileset>
-  			<javaproperty name="com.apple.macos.useScreenMenuBar" value="true"/>
-  			<javaproperty name="com.apple.macos.smallTabs" value="true"/>
-        </jarbundler>
-        <exec dir="${data.dir}" executable="makedmg" os="Mac OS X">
-  			<arg line="${dist.dir}/bin/BioMartLauncher.dmg BioMartLauncher ${dist.dir}/bin/BioMartLauncher.app"/>
-		</exec>
-		<delete file="${dist.dir}/bin/BioMartLauncher.app"/>
-		</os>
+		<condition property="isMacOS">
+	    <os family="mac"/>
+	 	</condition>
+	 	<antcall target="doMacOS"/>
 		            
         <tar destfile="${build.dir}/${name}-bin.tar">
             <!-- distribution files -->
@@ -508,6 +493,26 @@
 
         </zip>
     </target>
+    
+		<!-- creates the BioMartLauncher.app -->
+   		<target name="doMacOS" if="isMacOS">
+		<taskdef name="jarbundler" 
+      	   classname="net.sourceforge.jarbundler.JarBundler" if="isMacOS"/>	    
+		<jarbundler dir="${dist.dir}/bin"
+            name="BioMartLauncher"
+            mainclass="org.biomart.launcher.view.gui.BioMartLauncher">
+            <jarfileset dir="${dist.dir}/${lib.dir}">
+		    	<include name="**/*.jar" />
+    			<exclude name="**/CVS" />
+  			</jarfileset>
+  			<javaproperty name="com.apple.macos.useScreenMenuBar" value="true"/>
+  			<javaproperty name="com.apple.macos.smallTabs" value="true"/>
+        </jarbundler>
+        <exec dir="${data.dir}" executable="makedmg" os="Mac OS X">
+  			<arg line="${dist.dir}/bin/BioMartLauncher.dmg BioMartLauncher ${dist.dir}/bin/BioMartLauncher.app"/>
+		</exec>
+		<delete file="${dist.dir}/bin/BioMartLauncher.app"/>
+		</target>
 
     <!-- copies all JRE versions of the shell and bat scripts, renaming to make it easier to find -->
     <target name="prepare-jre-dist" description="copies JRE versions of shell and bat scripts as normal versions" >
