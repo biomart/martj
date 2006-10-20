@@ -40,10 +40,10 @@ case "$PLATFORM" in
   ;;
 esac
 
-echo "Starting BioMartLauncher, please wait ... "
+echo "Starting MartEditor please wait ... "
 
 # Note: If you get Java "Out of memory" errors, try increasing the numbers
 # in the -Xmx and -Xms parameters in the java command below. For performance
 # sake it is best if they are both the same value.
 
-$JAVA -Xmx128m -Xms128m -ea -cp $TMP_CLASSPATH org.biomart.launcher.view.gui.BioMartLauncher $@
+$JAVA -Xmx128m -Xms128m -ea -cp $TMP_CLASSPATH org.biomart.builder.view.gui.MartBuilder $@

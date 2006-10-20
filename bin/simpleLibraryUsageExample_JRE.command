@@ -3,12 +3,11 @@
 # Note: /bin/sh doesn't work on Alphas (need to use bash thexre) but
 # works everywhere else.
 
-# Starts the MartBuilder GUI application.
+# Starts the MartExplorer GUI application.
 
 # Usage:
 #
-# prompt> bin/martbuilder_JRE.sh
-
+# prompt> bin/martgui.sh
 TMP_ROOT=`dirname $0`/..
  
 TMP_CLASSPATH=${TMP_ROOT}
@@ -19,8 +18,8 @@ TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/jython.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/ensj-util.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/jdom.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/martj.jar 
+TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/p6spy.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/ojdbc14.jar
-TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/pg73jdbc3.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/ecp1_0beta.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${CLASSPATH}
 
@@ -40,10 +39,7 @@ case "$PLATFORM" in
   ;;
 esac
 
-echo "Starting BioMartLauncher, please wait ... "
-
 # Note: If you get Java "Out of memory" errors, try increasing the numbers
 # in the -Xmx and -Xms parameters in the java command below. For performance
 # sake it is best if they are both the same value.
-
-$JAVA -Xmx128m -Xms128m -ea -cp $TMP_CLASSPATH org.biomart.launcher.view.gui.BioMartLauncher $@
+$JAVA -Xmx128m -Xms128m  -cp $TMP_CLASSPATH org.ensembl.mart.example.SimpleLibraryUsageExample
