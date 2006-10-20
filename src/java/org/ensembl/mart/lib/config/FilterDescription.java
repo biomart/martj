@@ -1052,4 +1052,7 @@ public class FilterDescription extends QueryFilterSettings {
 	public boolean isBroken() {
 		return hasBrokenField || hasBrokenTableConstraint || hasBrokenOptions;
 	}
+	public boolean isBrokenExceptOpts() {
+		return hasBrokenField || hasBrokenTableConstraint;
+	}
 }

@@ -2875,7 +2875,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	}
 	for (Iterator j = dsConfig.getAllFilterDescriptions().iterator(); j.hasNext(); ) {
 		FilterDescription ad = (FilterDescription)j.next();
-		if (!templateConfig.containsFilterDescription(ad.getInternalName()))
+		if (!templateConfig.containsFilterDescription(ad.getInternalName())) 
 			dsConfig.getCollectionForFilter(ad.getInternalName()).removeFilterDescription(ad);
 	}
 	Importable[] dsImps = dsConfig.getImportables();
@@ -3071,9 +3071,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 				FilterCollection validAttrs = this.getValidatedFilterCollection(acolls[ci],dsConfig.getDataset(),dsConfig,conn);				
 				for (Iterator ai = acolls[ci].getFilterDescriptions().iterator(); ai.hasNext(); ) {
 					FilterDescription attr = (FilterDescription)ai.next();
-					if (validAttrs.getFilterDescriptionByInternalName(attr.getInternalName()).isBroken()) {
+					if (validAttrs.getFilterDescriptionByInternalName(attr.getInternalName()).isBrokenExceptOpts() || pruneBrokenOptions(attr,validAttrs.getFilterDescriptionByInternalName(attr.getInternalName()))) 
 						acolls[ci].removeFilterDescription(attr);
-					}
 				}
 			if (!(acolls[ci].getFilterDescriptions().size() > 0)){
 				agroup.removeFilterCollection(acolls[ci]);
@@ -5539,7 +5538,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 					}
 				}
 			}// end of add push actions code
-		    //validatedFilter.setOptionsBroken();// need to set broken so getValidatedCollection knows to change it
+		    validatedFilter.setOptionsBroken();// need to set broken so getValidatedCollection knows to change it
 		    return validatedFilter;      	
       }// END OF ADD VALUE OPTIONS
       
@@ -5598,7 +5597,6 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 	  if(dsource.getDatabaseType().equals("oracle")) table=table.toUpperCase();
           //System.out.println("databaseType() "+dsource.getDatabaseType());          
 
-     
       //Connection conn = dsource.getConnection();
       ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
       while (rs.next()) {
@@ -5608,7 +5606,6 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
         boolean[] valid = isValidDescription(columnName, field, tableName, tableConstraint);
         fieldValid = valid[0];
         tableValid = valid[1];
-
         if (valid[0] && valid[1])
           break;
       }
@@ -5685,6 +5682,69 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     }
 
     return validatedOption;
+  }
+  
+
+
+  private boolean pruneBrokenOptions(FilterDescription original, FilterDescription validated) throws SQLException {
+    	  
+	  Option[] originalOpts = original.getOptions();
+	  
+	  for (int i = 0; i < originalOpts.length; i++) {
+		  if (!validated.containsOption(originalOpts[i].getInternalName())) {
+			  original.removeOption(originalOpts[i]);
+		  } else {
+			  if (pruneBrokenOption(originalOpts[i], validated.getOptionByInternalName(originalOpts[i].getInternalName()))) {
+				  original.removeOption(originalOpts[i]);
+			  }
+		  }
+	  }
+
+	  return original.getOptions().length==0;
+  }
+  
+  private boolean pruneBrokenOption(Option original, Option validated) {
+	  
+	  if (original.getOptions().length+original.getPushActions().length==0
+			  || validated.hasBrokenField() || validated.hasBrokenTableConstraint())
+		  return validated.isBroken();
+	  	  
+	  Option[] originalOpts = original.getOptions();
+	  
+	  for (int i = 0; i < originalOpts.length; i++) {
+		  if (!validated.containsOption(originalOpts[i].getInternalName())) {
+			  original.removeOption(originalOpts[i]);
+		  } else {
+			  if (pruneBrokenOption(originalOpts[i], validated.getOptionByInternalName(originalOpts[i].getInternalName()))) {
+				  original.removeOption(originalOpts[i]);
+			  }
+		  }
+	  }
+	  	  
+	  PushAction[] originalPAs = original.getPushActions();
+	  
+	  for (int i = 0; i < originalPAs.length; i++) {
+		  original.removePushAction(originalPAs[i]);
+	  }
+	  
+	  PushAction[] validPAs = validated.getPushActions();
+	  
+	  for (int i = 0; i < validPAs.length; i++) {
+		  PushAction newPA = new PushAction(validPAs[i]);
+		  Option[] oldOpts = validPAs[i].getOptions();
+		  
+		  for (int j = 0; j < oldOpts.length; j++) {
+			  if (pruneBrokenOption(oldOpts[j], oldOpts[j])) {
+				  newPA.removeOption(oldOpts[j]);
+			  }
+		  }
+		  
+		  if (newPA.getOptions().length>0) {			  
+			  original.addPushAction(newPA);
+		  }
+	  }
+
+	  return original.getOptions().length+original.getPushActions().length==0;
   }
 
   private PushAction getValidatedPushAction(String schema, String catalog, PushAction action, String dset, Connection conn)
