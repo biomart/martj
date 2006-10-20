@@ -2101,6 +2101,17 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 */
 
   public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig, int storeFlag) throws ConfigurationException, SQLException{
+	
+	
+	// first of all call getNewFiltsAtts so any extra atts in a new config get added to the template
+	// ? if the new atts will already be in there though
+	
+	String schema = null;
+	if(dsource.getDatabaseType().equals("oracle")) schema = dsource.getSchema().toUpperCase();
+	else schema = dsource.getSchema();
+	getNewFiltsAtts(schema,dsConfig);
+	
+	
 	String template = dsConfig.getTemplate();
 	
 	//System.err.println("CALLED: updateConfigToTemp   "+dsConfig.getDisplayName()+" "+dsConfig.getTemplate());
@@ -2450,8 +2461,10 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					FilterCollection filtcoll = null;
 					do {
 						filtcoll = dsConfig.getCollectionForFilter(internalName);
-						if (filtcoll!=null)
+						if (filtcoll!=null){
+							System.out.println(internalName+"=>"+filtcoll.getInternalName()+":"+filtcoll.getFilterDescriptionByInternalName(internalName));
 							filtcoll.removeFilterDescription(filtcoll.getFilterDescriptionByInternalName(internalName));
+						}
 					} while (filtcoll!=null);
 					
 					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configAttToAdd,templateAtt);
