@@ -392,10 +392,24 @@
     <target name="dist-all" depends="dist-bin, dist-test, dist-src, dist-api" 
     description="Build all file sets for distribution." />
 
-	<!-- creates the BioMartLauncher.app -->
-	<target name="dist-bin-mac" 
-	description="Requires JarBundler ANT task. Creates the binary distributions, including the Mac one. Only works on MacOSX."
-	depends="dist-bin">	   
+    <!-- creates the dist-bin distribution set -->
+    <target name="dist-bin" 
+        description="Creates the dist-bin distribution set"
+        depends="jar, prepare-dist">
+
+        <copy file="${build.dir}/${name}.jar" todir="${dist.dir}/lib" />
+
+        <!-- copy the bat and shell martshell startup scripts -->
+        <copy todir="${dist.dir}/bin">
+			<fileset dir="${bin.dir}" casesensitive="yes">
+		  		<include name="*.sh"/>
+			  	<exclude name="*.bat"/>
+    			<exclude name="**/CVS" />
+			</fileset>
+        </copy>
+
+		<!-- creates the BioMartLauncher.app -->
+		<os family="mac">
 		<taskdef name="jarbundler" 
       	   classname="net.sourceforge.jarbundler.JarBundler" />	    
 		<jarbundler dir="${dist.dir}/bin"
@@ -412,24 +426,8 @@
   			<arg line="${dist.dir}/bin/BioMartLauncher.dmg BioMartLauncher ${dist.dir}/bin/BioMartLauncher.app"/>
 		</exec>
 		<delete file="${dist.dir}/bin/BioMartLauncher.app"/>
-    </target>
-
-    <!-- creates the dist-bin distribution set -->
-    <target name="dist-bin" 
-        description="Creates the dist-bin distribution set"
-        depends="jar, prepare-dist">
-
-        <copy file="${build.dir}/${name}.jar" todir="${dist.dir}/lib" />
-
-        <!-- copy the bat and shell martshell startup scripts -->
-        <copy todir="${dist.dir}/bin">
-			<fileset dir="${bin.dir}" casesensitive="yes">
-		  		<include name="*.sh"/>
-			  	<exclude name="*.bat"/>
-    			<exclude name="**/CVS" />
-			</fileset>
-        </copy>
-            
+		</os>
+		            
         <tar destfile="${build.dir}/${name}-bin.tar">
             <!-- distribution files -->
             <tarfileset dir="${dist.dir}"
