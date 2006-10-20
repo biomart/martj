@@ -31,10 +31,16 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.biomart.builder.exceptions.BuilderException;
-import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.exceptions.DataModelException;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.ComponentStatus;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -181,7 +187,7 @@ public class Mart {
 				suggestedDataSet.flagSubclassRelation(r);
 			} catch (ValidationException e) {
 				// Eh? We asked for it, dammit!
-				throw new MartBuilderInternalError(e);
+				throw new BioMartError(e);
 			}
 			suggestedDataSets.addAll(this.continueSubclassing(includeTables,
 					(List) relationTablesIncluded.get(r), suggestedDataSet, r
@@ -370,11 +376,11 @@ public class Mart {
 	 * @throws SQLException
 	 *             if there is any problem talking to the source database whilst
 	 *             generating the dataset.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if synchronisation fails.
 	 */
 	public Collection suggestDataSets(final Collection includeTables)
-			throws SQLException, BuilderException {
+			throws SQLException, DataModelException {
 		// The root tables are all those which do not have a M:1 relation
 		// to another one of the initial set of tables. This means that
 		// extra datasets will be created for each table at the end of
@@ -481,11 +487,11 @@ public class Mart {
 	 * @throws SQLException
 	 *             if there is any problem talking to the source database whilst
 	 *             generating the dataset.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if synchronisation fails.
 	 */
 	public Collection suggestInvisibleDataSets(final DataSet dataset,
-			final Collection columns) throws SQLException, BuilderException {
+			final Collection columns) throws SQLException, DataModelException {
 		final List invisibleDataSets = new ArrayList();
 		final Table sourceTable = ((Column) columns.iterator().next())
 				.getTable();
@@ -545,7 +551,7 @@ public class Mart {
 				try {
 					ds.synchronise();
 				} catch (final Throwable t) {
-					throw new MartBuilderInternalError(t);
+					throw new BioMartError(t);
 				}
 		}
 	}
@@ -557,10 +563,10 @@ public class Mart {
 	 * 
 	 * @throws SQLException
 	 *             if there was a problem connecting to the data source.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if there was any other kind of problem.
 	 */
-	public void synchroniseSchemas() throws SQLException, BuilderException {
+	public void synchroniseSchemas() throws SQLException, DataModelException {
 		// Schemas first
 		for (final Iterator i = this.schemas.values().iterator(); i.hasNext();) {
 			final Schema s = (Schema) i.next();

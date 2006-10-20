@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.biomart.builder.exceptions.ConstructorException;
-import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
@@ -44,7 +43,6 @@ import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.UniqueValues;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.ValueCollection;
-import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.MartConstructorAction.Concat;
 import org.biomart.builder.model.MartConstructorAction.Create;
 import org.biomart.builder.model.MartConstructorAction.Drop;
@@ -60,6 +58,13 @@ import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
 import org.biomart.builder.model.MartConstructorAction.Reduce;
 import org.biomart.builder.model.MartConstructorAction.RenameTable;
 import org.biomart.builder.model.MartConstructorAction.Union;
+import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
+import org.biomart.common.model.Key.PrimaryKey;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -478,7 +483,7 @@ public interface MartConstructor {
 							}
 						else
 							// Other column types not supported.
-							throw new MartBuilderInternalError();
+							throw new BioMartError();
 
 					// Do the partitioning. First, partition the table the
 					// column belongs to. Then, partition every child, and

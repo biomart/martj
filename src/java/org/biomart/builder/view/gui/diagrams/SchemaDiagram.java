@@ -22,12 +22,12 @@ import java.awt.Color;
 import java.awt.LayoutManager;
 import java.util.Iterator;
 
-import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Schema;
-import org.biomart.builder.model.Table;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
 
 /**
  * Displays the contents of a schema within a diagram object. It adds a series

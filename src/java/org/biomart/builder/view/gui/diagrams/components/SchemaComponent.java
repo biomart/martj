@@ -32,11 +32,11 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
-import org.biomart.builder.model.Key;
-import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
-import org.biomart.builder.model.Table;
 import org.biomart.builder.view.gui.diagrams.Diagram;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -172,18 +172,6 @@ public class SchemaComponent extends BoxShapedComponent {
 				}
 			});
 			schemaMenu.add(modifyM);
-
-			// Test the schema.
-			final JMenuItem testM = new JMenuItem(Resources
-					.get("testSchemaTitle"));
-			testM.setMnemonic(Resources.get("testSchemaMnemonic").charAt(0));
-			testM.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaComponent.this.getDiagram().getMartTab()
-							.getSchemaTabSet().requestTestSchema(schema);
-				}
-			});
-			schemaMenu.add(testM);
 
 			// Divide the ungroup option from the others.
 			schemaMenu.addSeparator();

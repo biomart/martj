@@ -35,8 +35,8 @@ import org.biomart.common.view.gui.StackTrace;
  * application.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class BioMartLauncher {
@@ -51,6 +51,7 @@ public class BioMartLauncher {
 	 */
 	public static void main(final String[] args) {
 		// Initialise resources.
+		SettingsCache.setApplication(SettingsCache.BIOMARTLAUNCHER);
 		Resources.setResourceLocation("org/biomart/launcher/resources");
 		// Start the application.
 		EventQueue.invokeLater(new Runnable() {

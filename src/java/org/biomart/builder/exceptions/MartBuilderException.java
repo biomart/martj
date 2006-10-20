@@ -18,41 +18,60 @@
 
 package org.biomart.builder.exceptions;
 
+import org.biomart.common.exceptions.BioMartException;
 
 /**
- * This refers to exceptions where something has failed a validation test, eg.
- * incorrect input, or an attempt to set some parameter where it cannot be
- * set.
+ * This is a basic {@link Exception} for all non-specific MartBuilder
+ * exceptions.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by 
  * 			$Author$
  * @since 0.1
  */
-public class ValidationException extends MartBuilderException {
+public class MartBuilderException extends BioMartException {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * Constructs an instance of <tt>ValidationException</tt> with the
-	 * specified detail message.
+	 * Creates a new instance of <tt>MartBuilderException</tt> without detail
+	 * message.
+	 */
+	public MartBuilderException() {
+		super();
+	}
+
+	/**
+	 * Constructs an instance of <tt>MartBuilderException</tt> with the specified
+	 * detail message.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 */
-	public ValidationException(final String msg) {
+	public MartBuilderException(final String msg) {
 		super(msg);
 	}
 
 	/**
-	 * Constructs an instance of <tt>ValidationException</tt> with the
-	 * specified detail message and initial cause.
+	 * Constructs an instance of <tt>MartBuilderException</tt> with the specified
+	 * detail message and cause.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 * @param t
-	 *            the initial cause.
+	 *            the underlying cause.
 	 */
-	public ValidationException(final String msg, final Throwable t) {
+	public MartBuilderException(final String msg, final Throwable t) {
 		super(msg, t);
+	}
+
+	/**
+	 * Constructs an instance of <tt>MartBuilderException</tt> with the specified
+	 * cause.
+	 * 
+	 * @param t
+	 *            the underlying cause.
+	 */
+	public MartBuilderException(final Throwable t) {
+		super(t);
 	}
 }

@@ -21,7 +21,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.model;
+package org.biomart.common.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,9 +32,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.biomart.builder.exceptions.AssociationException;
-import org.biomart.builder.model.Key.ForeignKey;
-import org.biomart.builder.model.Key.PrimaryKey;
+import org.biomart.common.exceptions.AssociationException;
+import org.biomart.common.model.Key.ForeignKey;
+import org.biomart.common.model.Key.PrimaryKey;
 import org.biomart.common.resources.Resources;
 
 /**

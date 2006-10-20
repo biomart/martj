@@ -42,10 +42,10 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 
-import org.biomart.builder.model.Table;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.DiagramComponent;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
+import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.ComponentImageSaver;
 import org.biomart.common.view.gui.ComponentPrinter;

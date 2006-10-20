@@ -18,7 +18,6 @@
 
 package org.biomart.builder.controller;
 
-import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,18 +26,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.biomart.builder.controller.dialects.DatabaseDialect;
-import org.biomart.builder.exceptions.AssociationException;
-import org.biomart.builder.exceptions.BuilderException;
 import org.biomart.builder.exceptions.ValidationException;
-import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Mart;
-import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
-import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
@@ -47,13 +39,16 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.builder.model.Key.ForeignKey;
-import org.biomart.builder.model.Key.GenericForeignKey;
-import org.biomart.builder.model.Key.GenericPrimaryKey;
-import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.model.Relation.Cardinality;
-import org.biomart.builder.model.Relation.GenericRelation;
 import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
+import org.biomart.common.exceptions.AssociationException;
+import org.biomart.common.exceptions.DataModelException;
+import org.biomart.common.model.ComponentStatus;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
+import org.biomart.common.model.Relation.Cardinality;
+import org.biomart.common.model.Relation.GenericRelation;
 
 /**
  * Tools for working with the mart from a GUI or CLI. These wrapper methods
@@ -123,7 +118,7 @@ public class MartBuilderUtils {
 	 * @return the group that the schema was added to.
 	 * @throws AssociationException
 	 *             if the schema is not part of the mart specified.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if there was any logical problem constructing a new group to
 	 *             place the schema in.
 	 * @throws SQLException
@@ -133,7 +128,7 @@ public class MartBuilderUtils {
 	 */
 	public static SchemaGroup addSchemaToSchemaGroup(final Mart mart,
 			final Schema schema, final String groupName)
-			throws AssociationException, BuilderException, SQLException {
+			throws AssociationException, DataModelException, SQLException {
 		SchemaGroup schemaGroup = (SchemaGroup) mart.getSchemaByName(groupName);
 		if (schemaGroup == null || !(schemaGroup instanceof SchemaGroup)) {
 			schemaGroup = new GenericSchemaGroup(groupName);
@@ -238,97 +233,19 @@ public class MartBuilderUtils {
 	 *            the relation to flag as concat-only.
 	 * @param type
 	 *            the type of concat-only relation this should be.
-	 * @throws AssociationException
-	 *             if the relation was not concat-able.
+	 * @throws ValidationException
+	 *             if the dataset could not be synchronised.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void concatOnlyRelation(final DataSet dataset,
 			final Relation relation, final DataSetConcatRelationType type)
-			throws AssociationException, SQLException, BuilderException {
+			throws SQLException, DataModelException, ValidationException {
 		dataset.flagConcatOnlyRelation(relation, type);
 		dataset.unflagSubclassRelation(relation);
 		dataset.synchronise();
-	}
-
-	/**
-	 * Attempts to create a foreign key on a table given a set of columns. The
-	 * new key will have a status of {@link ComponentStatus#HANDMADE}.
-	 * 
-	 * @param table
-	 *            the table to create the key on.
-	 * @param columns
-	 *            the colums, in order, to create the key over.
-	 * @throws AssociationException
-	 *             if any of the columns in the key are not part of the
-	 *             specified table.
-	 */
-	public static void createForeignKey(final Table table, final List columns)
-			throws AssociationException {
-		final ForeignKey fk = new GenericForeignKey(columns);
-		fk.setStatus(ComponentStatus.HANDMADE);
-		table.addForeignKey(fk);
-	}
-
-	/**
-	 * Creates a JDBC schema and returns it. No further action is taken - the
-	 * schema will not synchronise itself.
-	 * 
-	 * @param driverClassLocation
-	 *            the location, optional, of the JDBC driver class. This can
-	 *            either be a JAR file or a path to a class file. If null, the
-	 *            default system class loader is used to load the class. The
-	 *            system class loader is also used if the class could not be
-	 *            found in the location specified here.
-	 * @param driverClassName
-	 *            the name of the JDBC driver class, eg.
-	 *            <tt>com.mysql.jdbc.Driver</tt>
-	 * @param url
-	 *            the JDBC url to connect to.
-	 * @param schemaName
-	 *            the target schema to connect to.
-	 * @param username
-	 *            the username to connect with.
-	 * @param password
-	 *            the password to connect with. If the empty string is passed
-	 *            in, no password is given to the connection at all.
-	 * @param name
-	 *            the name to give the created schema.
-	 * @param keyGuessing
-	 *            a flag indicating whether to enable key-guessing on this JDBC
-	 *            schema or not. This can always be changed later.
-	 * @return the created schema.
-	 */
-	public static JDBCSchema createJDBCSchema(final File driverClassLocation,
-			final String driverClassName, final String url,
-			final String schemaName, final String username, String password,
-			final String name, final boolean keyGuessing) {
-		if (password != null && password.equals(""))
-			password = null;
-		return new JDBCSchema(driverClassLocation, driverClassName, url,
-				schemaName, username, password, name, keyGuessing);
-	}
-
-	/**
-	 * Attempts to create a primary key on a table given a set of columns. If
-	 * the table already has a primary key, then this one will replace it. The
-	 * new key will have a status of {@link ComponentStatus#HANDMADE}.
-	 * 
-	 * @param table
-	 *            the table to create the key on.
-	 * @param columns
-	 *            the colums, in order, to create the key over.
-	 * @throws AssociationException
-	 *             if any of the columns in the key are not part of the
-	 *             specified table.
-	 */
-	public static void createPrimaryKey(final Table table, final List columns)
-			throws AssociationException {
-		final PrimaryKey pk = new GenericPrimaryKey(columns);
-		pk.setStatus(ComponentStatus.HANDMADE);
-		table.setPrimaryKey(pk);
 	}
 
 	/**
@@ -357,21 +274,6 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Turns key-guessing off in a given schema.
-	 * 
-	 * @param schema
-	 *            the schema to disable key-guessing in.
-	 * @throws SQLException
-	 *             if after disabling keyguessing the key sync went wrong.
-	 * @throws BuilderException
-	 *             if after disabling keyguessing the key sync went wrong.
-	 */
-	public static void disableKeyGuessing(final Schema schema)
-			throws SQLException, BuilderException {
-		schema.setKeyGuessing(false);
-	}
-
-	/**
 	 * Attempts to alter the columns of the given key so that they match the set
 	 * of columns provided, in order. The altered key will have a status of
 	 * {@link ComponentStatus#HANDMADE}. All datasets will be synchronised
@@ -392,21 +294,6 @@ public class MartBuilderUtils {
 		key.setColumns(columns);
 		MartBuilderUtils.changeKeyStatus(mart, key, ComponentStatus.HANDMADE);
 		mart.synchroniseDataSets();
-	}
-
-	/**
-	 * Turns key-guessing on in a given schema.
-	 * 
-	 * @param schema
-	 *            the schema to enable key-guessing in.
-	 * @throws SQLException
-	 *             if after keyguessing the key sync went wrong.
-	 * @throws BuilderException
-	 *             if after keyguessing the key sync went wrong.
-	 */
-	public static void enableKeyGuessing(final Schema schema)
-			throws BuilderException, SQLException {
-		schema.setKeyGuessing(true);
 	}
 
 	/**
@@ -443,11 +330,11 @@ public class MartBuilderUtils {
 	 *            the relation to mask.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void maskRelation(final DataSet dataset,
-			final Relation relation) throws SQLException, BuilderException {
+			final Relation relation) throws SQLException, DataModelException {
 		dataset.maskRelation(relation);
 		dataset.synchronise();
 	}
@@ -462,11 +349,11 @@ public class MartBuilderUtils {
 	 *            the table to mask all relations for.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void maskTable(final DataSet dataset, final Table table)
-			throws SQLException, BuilderException {
+			throws SQLException, DataModelException {
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
 			dataset.maskRelation((Relation) i.next());
 		dataset.synchronise();
@@ -599,7 +486,7 @@ public class MartBuilderUtils {
 	 * @throws AssociationException
 	 *             if the schema is not part of the group, or the group is not
 	 *             part of the mart.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if there was any logical problem during synchronisation of
 	 *             the group after removal of the schema.
 	 * @throws SQLException
@@ -608,7 +495,7 @@ public class MartBuilderUtils {
 	 */
 	public static void removeSchemaFromSchemaGroup(final Mart mart,
 			final Schema schema, final SchemaGroup schemaGroup)
-			throws AssociationException, BuilderException, SQLException {
+			throws AssociationException, DataModelException, SQLException {
 		schemaGroup.removeSchema(schema);
 		if (schemaGroup.getSchemas().size() == 0) {
 			schemaGroup.replicateContents(schema);
@@ -837,17 +724,17 @@ public class MartBuilderUtils {
 	 *            the dataset to flag the relation within.
 	 * @param relation
 	 *            the subclassed relation.
-	 * @throws AssociationException
+	 * @throws ValidationException
 	 *             if the relation is not permitted to be a subclass relation in
 	 *             this dataset, for whatever reason.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void subclassRelation(final DataSet dataset,
-			final Relation relation) throws AssociationException, SQLException,
-			BuilderException {
+			final Relation relation) throws ValidationException, SQLException,
+			DataModelException {
 		dataset.flagSubclassRelation(relation);
 		dataset.unflagConcatOnlyRelation(relation);
 		dataset.synchronise();
@@ -868,12 +755,12 @@ public class MartBuilderUtils {
 	 * @throws SQLException
 	 *             if there is any trouble communicating with the data source or
 	 *             database during schema synchronisation.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if synchronisation fails.
 	 */
 	public static Collection suggestDataSets(final Mart mart,
 			final Collection tables) throws SQLException, AssociationException,
-			BuilderException {
+			DataModelException {
 		return mart.suggestDataSets(tables);
 	}
 
@@ -902,12 +789,12 @@ public class MartBuilderUtils {
 	 * @throws SQLException
 	 *             if there is any trouble communicating with the data source or
 	 *             database during schema synchronisation.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if synchronisation fails.
 	 */
 	public static Collection suggestInvisibleDataSets(final Mart mart,
 			final DataSet dataset, final Collection columns)
-			throws AssociationException, BuilderException, SQLException {
+			throws AssociationException, DataModelException, SQLException {
 		return mart.suggestInvisibleDataSets(dataset, columns);
 	}
 
@@ -931,51 +818,15 @@ public class MartBuilderUtils {
 	 * @throws SQLException
 	 *             if any of them have problems communicating with their data
 	 *             sources or databases.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if any of them find logical problems during the
 	 *             synchronisation process.
 	 */
 	public static void synchroniseMartSchemas(final Mart mart)
-			throws SQLException, BuilderException {
+			throws SQLException, DataModelException {
 		mart.synchroniseSchemas();
 	}
-
-	/**
-	 * Synchronises an individual schema against the data source or database it
-	 * represents. Datasets using this schema will also be synchronised.
-	 * 
-	 * @param schema
-	 *            the schema to synchronise.
-	 * @throws SQLException
-	 *             if there was any problem communicating with the data source
-	 *             or database.
-	 * @throws BuilderException
-	 *             if there were any logical problems with synchronisation.
-	 */
-	public static void synchroniseSchema(final Schema schema)
-			throws SQLException, BuilderException {
-		schema.synchronise();
-	}
-
-	/**
-	 * Tests a schema. In most cases, this simply tests the connection between
-	 * the schema and the data source or database it represents. The connection
-	 * between test failure and throwing an exception describing the failure
-	 * means that this routine will (probably) never return <tt>false</tt>,
-	 * only ever <tt>true</tt> or an exception.
-	 * 
-	 * @param schema
-	 *            the schema to test.
-	 * @return <tt>true</tt> if it passed the test, <tt>false</tt>
-	 *         otherwise.
-	 * @throws Exception
-	 *             if it failed the test. The exception will describe the reason
-	 *             for failure.
-	 */
-	public static boolean testSchema(final Schema schema) throws Exception {
-		return schema.test();
-	}
-
+	
 	/**
 	 * Unflags a relation as concat-only within a dataset, then regenerates the
 	 * dataset.
@@ -986,11 +837,11 @@ public class MartBuilderUtils {
 	 *            the relation to unflag.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void unconcatOnlyRelation(final DataSet dataset,
-			final Relation relation) throws SQLException, BuilderException {
+			final Relation relation) throws SQLException, DataModelException {
 		dataset.unflagConcatOnlyRelation(relation);
 		dataset.synchronise();
 	}
@@ -1021,11 +872,11 @@ public class MartBuilderUtils {
 	 *            the table to unmask all relations for.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void unmaskTable(final DataSet dataset, final Table table)
-			throws SQLException, BuilderException {
+			throws SQLException, DataModelException {
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
 			dataset.unmaskRelation((Relation) i.next());
 		dataset.synchronise();
@@ -1041,11 +892,11 @@ public class MartBuilderUtils {
 	 *            the relation to unmask.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void unmaskRelation(final DataSet dataset,
-			final Relation relation) throws SQLException, BuilderException {
+			final Relation relation) throws SQLException, DataModelException {
 		dataset.unmaskRelation(relation);
 		dataset.synchronise();
 	}
@@ -1100,11 +951,11 @@ public class MartBuilderUtils {
 	 *            the relation to unflag.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void unsubclassRelation(final DataSet dataset,
-			final Relation relation) throws SQLException, BuilderException {
+			final Relation relation) throws SQLException, DataModelException {
 		dataset.unflagSubclassRelation(relation);
 		dataset.synchronise();
 	}

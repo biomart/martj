@@ -37,18 +37,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.biomart.builder.exceptions.AssociationException;
-import org.biomart.builder.exceptions.BuilderException;
-import org.biomart.builder.model.Column;
-import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Mart;
-import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
-import org.biomart.builder.model.Table;
-import org.biomart.builder.model.Column.GenericColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
@@ -65,15 +56,25 @@ import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.UniqueValues;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.ValueCollection;
-import org.biomart.builder.model.Key.ForeignKey;
-import org.biomart.builder.model.Key.GenericForeignKey;
-import org.biomart.builder.model.Key.GenericPrimaryKey;
-import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.model.Relation.Cardinality;
-import org.biomart.builder.model.Relation.GenericRelation;
-import org.biomart.builder.model.Schema.GenericSchema;
 import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
-import org.biomart.builder.model.Table.GenericTable;
+import org.biomart.common.controller.JDBCSchema;
+import org.biomart.common.exceptions.AssociationException;
+import org.biomart.common.exceptions.DataModelException;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.ComponentStatus;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
+import org.biomart.common.model.Column.GenericColumn;
+import org.biomart.common.model.Key.ForeignKey;
+import org.biomart.common.model.Key.GenericForeignKey;
+import org.biomart.common.model.Key.GenericPrimaryKey;
+import org.biomart.common.model.Key.PrimaryKey;
+import org.biomart.common.model.Relation.Cardinality;
+import org.biomart.common.model.Relation.GenericRelation;
+import org.biomart.common.model.Schema.GenericSchema;
+import org.biomart.common.model.Table.GenericTable;
 import org.biomart.common.resources.Resources;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -132,12 +133,12 @@ public class MartBuilderXML extends DefaultHandler {
 	 * @return a {@link Mart} object containing the data from the file.
 	 * @throws IOException
 	 *             if there was any problem reading the file.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if the content of the file is not valid {@link Mart} XML, or
 	 *             has any logical problems.
 	 */
 	public static Mart load(final File file) throws IOException,
-			BuilderException {
+			DataModelException {
 		// Use the default (non-validating) parser
 		final SAXParserFactory factory = SAXParserFactory.newInstance();
 		// Parse the input
@@ -146,15 +147,15 @@ public class MartBuilderXML extends DefaultHandler {
 			final SAXParser saxParser = factory.newSAXParser();
 			saxParser.parse(file, loader);
 		} catch (final ParserConfigurationException e) {
-			throw new BuilderException(Resources.get("XMLConfigFailed"), e);
+			throw new DataModelException(Resources.get("XMLConfigFailed"), e);
 		} catch (final SAXException e) {
-			throw new BuilderException(Resources.get("XMLUnparseable"), e);
+			throw new DataModelException(Resources.get("XMLUnparseable"), e);
 		}
 		// Get the constructed object.
 		final Mart mart = loader.getConstructedMart();
 		// Check that we got something useful.
 		if (mart == null)
-			throw new BuilderException(Resources.get("fileNotSchemaVersion",
+			throw new DataModelException(Resources.get("fileNotSchemaVersion",
 					MartBuilderXML.DTD_VERSION));
 		// Return.
 		return mart;
@@ -171,12 +172,12 @@ public class MartBuilderXML extends DefaultHandler {
 	 *            the {@link File} to save the data to.
 	 * @throws IOException
 	 *             if there was any problem writing the file.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if it encounters an object not writable under the current
 	 *             DTD.
 	 */
 	public static void save(final Mart mart, final File file)
-			throws IOException, BuilderException {
+			throws IOException, DataModelException {
 		// Open the file.
 		final FileWriter fw = new FileWriter(file);
 		try {
@@ -184,7 +185,7 @@ public class MartBuilderXML extends DefaultHandler {
 			(new MartBuilderXML()).writeXML(mart, fw);
 		} catch (final IOException e) {
 			throw e;
-		} catch (final BuilderException e) {
+		} catch (final DataModelException e) {
 			throw e;
 		} finally {
 			// Close the output stream.
@@ -382,11 +383,11 @@ public class MartBuilderXML extends DefaultHandler {
 	 *            the writer to write to.
 	 * @throws IOException
 	 *             in case there was any problem writing the file.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if there were any logical problems with the schema.
 	 */
 	private void writeSchema(final Schema schema, final Writer xmlWriter)
-			throws IOException, BuilderException {
+			throws IOException, DataModelException {
 		// What kind of schema is it?
 		if (schema instanceof JDBCSchema) {
 			// It's a JDBC schema.
@@ -415,7 +416,7 @@ public class MartBuilderXML extends DefaultHandler {
 		}
 		// Other schema types are not recognised.
 		else
-			throw new BuilderException(Resources.get("unknownSchemaType",
+			throw new DataModelException(Resources.get("unknownSchemaType",
 					schema.getClass().getName()));
 
 		// Write out the contents.
@@ -428,7 +429,7 @@ public class MartBuilderXML extends DefaultHandler {
 			this.closeElement("jdbcSchema", xmlWriter);
 		// Others?
 		else
-			throw new BuilderException(Resources.get("unknownSchemaType",
+			throw new DataModelException(Resources.get("unknownSchemaType",
 					schema.getClass().getName()));
 	}
 
@@ -445,7 +446,7 @@ public class MartBuilderXML extends DefaultHandler {
 	 *             if an unwritable kind of object was found.
 	 */
 	private void writeSchemaContents(final Schema schema, final Writer xmlWriter)
-			throws IOException, BuilderException {
+			throws IOException, DataModelException {
 		// What tables to write? The order is important for datasets
 		// only. This is to allow inherited columns to reference
 		// earlier columns.
@@ -611,7 +612,7 @@ public class MartBuilderXML extends DefaultHandler {
 
 					// Others
 					else
-						throw new BuilderException(Resources.get(
+						throw new DataModelException(Resources.get(
 								"unknownDatasetColumnType", dcol.getClass()
 										.getName()));
 
@@ -655,7 +656,7 @@ public class MartBuilderXML extends DefaultHandler {
 					}
 					// Others.
 					else
-						throw new BuilderException(Resources.get(
+						throw new DataModelException(Resources.get(
 								"unknownPartitionColumnType", ptc.getClass()
 										.getName()));
 				}
@@ -665,7 +666,7 @@ public class MartBuilderXML extends DefaultHandler {
 				}
 				// Others
 				else
-					throw new BuilderException(Resources.get(
+					throw new DataModelException(Resources.get(
 							"unknownColumnType", col.getClass().getName()));
 
 				// Close off column element.
@@ -752,7 +753,7 @@ public class MartBuilderXML extends DefaultHandler {
 				else if (key instanceof ForeignKey)
 					elem = "foreignKey";
 				else
-					throw new BuilderException(Resources.get("unknownKey", key
+					throw new DataModelException(Resources.get("unknownKey", key
 							.getClass().getName()));
 
 				// Write the key.
@@ -788,12 +789,12 @@ public class MartBuilderXML extends DefaultHandler {
 	 *            the Writer to write the XML to.
 	 * @throws IOException
 	 *             if a write error occurs.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if it encounters an object not writable under the current
 	 *             DTD.
 	 */
 	private void writeXML(final Mart mart, final Writer xmlWriter)
-			throws IOException, BuilderException {
+			throws IOException, DataModelException {
 		// Write the headers.
 		xmlWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 		xmlWriter.write("<!DOCTYPE mart PUBLIC \""
@@ -1129,6 +1130,7 @@ public class MartBuilderXML extends DefaultHandler {
 				final Schema schema = new JDBCSchema(driverClassLocation,
 						driverClassName, url, schemaName, username, password,
 						name, keyguessing);
+				schema.storeInHistory();
 				// Are we inside a schema group?
 				if (!this.objectStack.empty()
 						&& this.objectStack.peek() instanceof SchemaGroup) {

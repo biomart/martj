@@ -30,23 +30,29 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.biomart.builder.exceptions.BuilderException;
-import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.exceptions.ValidationException;
-import org.biomart.builder.model.Column.GenericColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
-import org.biomart.builder.model.Key.ForeignKey;
-import org.biomart.builder.model.Key.GenericForeignKey;
-import org.biomart.builder.model.Key.GenericPrimaryKey;
-import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.model.Relation.Cardinality;
-import org.biomart.builder.model.Relation.GenericRelation;
-import org.biomart.builder.model.Schema.GenericSchema;
-import org.biomart.builder.model.Table.GenericTable;
+import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.exceptions.DataModelException;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.ComponentStatus;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
+import org.biomart.common.model.Column.GenericColumn;
+import org.biomart.common.model.Key.ForeignKey;
+import org.biomart.common.model.Key.GenericForeignKey;
+import org.biomart.common.model.Key.GenericPrimaryKey;
+import org.biomart.common.model.Key.PrimaryKey;
+import org.biomart.common.model.Relation.Cardinality;
+import org.biomart.common.model.Relation.GenericRelation;
+import org.biomart.common.model.Schema.GenericSchema;
+import org.biomart.common.model.Table.GenericTable;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -234,7 +240,7 @@ public class DataSet extends GenericSchema {
 				new GenericRelation(parentDSTablePK, dsTableFK,
 						Cardinality.MANY);
 			} catch (final Throwable t) {
-				throw new MartBuilderInternalError(t);
+				throw new BioMartError(t);
 			}
 		}
 
@@ -445,7 +451,7 @@ public class DataSet extends GenericSchema {
 								.get("concatColumnPrefix")
 								+ mergeTable.getName(), dsTable, r);
 					} catch (final Throwable t) {
-						throw new MartBuilderInternalError(t);
+						throw new BioMartError(t);
 					}
 
 				// Subclass subclassed relations, if we are currently
@@ -862,7 +868,7 @@ public class DataSet extends GenericSchema {
 			// Return the copy.
 			return newDataSet;
 		} catch (final Throwable t) {
-			throw new MartBuilderInternalError(t);
+			throw new BioMartError(t);
 		}
 	}
 
@@ -900,12 +906,12 @@ public class DataSet extends GenericSchema {
 	 *             never thrown - this is inherited from {@link Schema} but does
 	 *             not apply here because we are not doing any database
 	 *             communications.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             never thrown - this is inherited from {@link Schema} but does
 	 *             not apply here because we are not attempting any new logic
 	 *             with the schema.
 	 */
-	public void synchronise() throws SQLException, BuilderException {
+	public void synchronise() throws SQLException, DataModelException {
 		// Start off by marking all existing flagged relations as having been
 		// removed.
 		final Set deadRelations = new HashSet(this.maskedRelations);
@@ -1000,7 +1006,7 @@ public class DataSet extends GenericSchema {
 						try {
 							column.setMasked(true);
 						} catch (ValidationException e) {
-							throw new MartBuilderInternalError(e);
+							throw new BioMartError(e);
 						}
 				}
 			}
@@ -1056,7 +1062,7 @@ public class DataSet extends GenericSchema {
 							column.setPartitionType(partitionedColumn
 									.getPartitionType());
 						} catch (ValidationException e) {
-							throw new MartBuilderInternalError(e);
+							throw new BioMartError(e);
 						}
 				}
 			}
@@ -1363,7 +1369,7 @@ public class DataSet extends GenericSchema {
 							if (dcol.getMasked())
 								dcol.setMasked(false);
 						} catch (ValidationException e) {
-							throw new MartBuilderInternalError(e);
+							throw new BioMartError(e);
 						}
 				}
 			}

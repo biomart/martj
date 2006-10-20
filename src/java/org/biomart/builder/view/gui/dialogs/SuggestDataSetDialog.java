@@ -39,8 +39,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
-import org.biomart.builder.model.Schema;
-import org.biomart.builder.model.Table;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**

@@ -38,11 +38,11 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-import org.biomart.builder.exceptions.MartBuilderInternalError;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.UniqueValues;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.ValueCollection;
+import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.StackTrace;
 
@@ -312,7 +312,7 @@ public class PartitionColumnDialog extends JDialog {
 
 			// Eh? Don't know what this is!
 			else
-				throw new MartBuilderInternalError();
+				throw new BioMartError();
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		}

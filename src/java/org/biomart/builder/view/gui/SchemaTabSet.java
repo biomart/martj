@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 import java.util.Vector;
 
 import javax.swing.ImageIcon;
@@ -39,28 +38,27 @@ import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
-import org.biomart.builder.controller.JDBCSchema;
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.exceptions.ValidationException;
-import org.biomart.builder.model.Column;
-import org.biomart.builder.model.ComponentStatus;
-import org.biomart.builder.model.Key;
-import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
-import org.biomart.builder.model.Table;
-import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.AllSchemasDiagram;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.SchemaDiagram;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 import org.biomart.builder.view.gui.dialogs.KeyEditorDialog;
-import org.biomart.builder.view.gui.dialogs.SchemaConnectionDialog;
+import org.biomart.common.controller.CommonUtils;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.ComponentStatus;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
+import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.SettingsCache;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.StackTrace;
+import org.biomart.common.view.gui.dialogs.SchemaConnectionDialog;
 
 /**
  * This tabset has one tab for the diagram which represents all schemas, and one
@@ -149,23 +147,6 @@ public class SchemaTabSet extends JTabbedPane {
 		// that selects the schema editor in the current mart tabset.
 		this.setSelectedIndex(0);
 		this.martTab.selectSchemaEditor();
-
-		// Store the schema settings in the history file.
-		if (schema instanceof JDBCSchema) {
-			final JDBCSchema jschema = (JDBCSchema) schema;
-			final Properties history = new Properties();
-			history.setProperty("driverClass", jschema.getDriverClassName());
-			history.setProperty("driverClassLocation", jschema
-					.getDriverClassLocation() == null ? "" : jschema
-					.getDriverClassLocation().toString());
-			history.setProperty("jdbcURL", jschema.getJDBCURL());
-			history.setProperty("username", jschema.getUsername());
-			history.setProperty("password", jschema.getPassword() == null ? ""
-					: jschema.getPassword());
-			history.setProperty("schema", jschema.getDatabaseSchema());
-			SettingsCache.saveHistoryProperties(JDBCSchema.class, schema
-					.getName(), history);
-		}
 	}
 
 	private String askUserForSchemaName(final String defaultResponse) {
@@ -433,7 +414,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestAddSchema() {
 		// Pop up a dialog to get the details of the new schema, then
 		// obtain a copy of that schema.
-		final Schema schema = SchemaConnectionDialog.createSchema(this.martTab);
+		final Schema schema = SchemaConnectionDialog.createSchema();
 
 		// If no schema was defined, ignore the request.
 		if (schema == null)
@@ -448,14 +429,14 @@ public class SchemaTabSet extends JTabbedPane {
 							.getMart(), schema);
 
 					// Synchronise it.
-					MartBuilderUtils.synchroniseSchema(schema);
+					CommonUtils.synchroniseSchema(schema);
 
 					// If the schema has no internal relations, then maybe
 					// we should turn keyguessing on. The user can always
 					// turn it off again later. We need to resynchronise the
 					// schema after turning it on.
 					if (schema.getInternalRelations().size() == 0)
-						MartBuilderUtils.enableKeyGuessing(schema);
+						CommonUtils.enableKeyGuessing(schema);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -795,7 +776,7 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Create the key.
-					MartBuilderUtils.createForeignKey(table, columns);
+					CommonUtils.createForeignKey(table, columns);
 
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -857,7 +838,7 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Create the key.
-					MartBuilderUtils.createPrimaryKey(table, columns);
+					CommonUtils.createPrimaryKey(table, columns);
 
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -980,7 +961,7 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Do it.
-					MartBuilderUtils.disableKeyGuessing(schema);
+					CommonUtils.disableKeyGuessing(schema);
 
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1100,7 +1081,7 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Do it.
-					MartBuilderUtils.enableKeyGuessing(schema);
+					CommonUtils.enableKeyGuessing(schema);
 
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1145,7 +1126,7 @@ public class SchemaTabSet extends JTabbedPane {
 		try {
 			// If the user actually made any changes, then synchronise the
 			// schema to reflect them.
-			if (SchemaConnectionDialog.modifySchema(this.martTab, schema))
+			if (SchemaConnectionDialog.modifySchema(schema))
 				this.requestSynchroniseSchema(schema);
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
@@ -1559,7 +1540,7 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Synchronise it.
-					MartBuilderUtils.synchroniseSchema(schema);
+					CommonUtils.synchroniseSchema(schema);
 
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1593,38 +1574,6 @@ public class SchemaTabSet extends JTabbedPane {
 				}
 			}
 		});
-	}
-
-	/**
-	 * Test this schema to see if the datasource or database it represents is
-	 * contactable.
-	 * 
-	 * @param schema
-	 *            the schema to test.
-	 */
-	public void requestTestSchema(final Schema schema) {
-		// Assume we've failed.
-		boolean passedTest = false;
-
-		try {
-			// Attempt to pass the test.
-			passedTest = MartBuilderUtils.testSchema(schema);
-		} catch (final Throwable t) {
-			// If we get an exception, we failed the test, and should
-			// tell the user why.
-			passedTest = false;
-			StackTrace.showStackTrace(t);
-		}
-
-		// Tell the user if we passed or failed.
-		if (passedTest)
-			JOptionPane.showMessageDialog(null, Resources
-					.get("schemaTestPassed"), Resources.get("testTitle"),
-					JOptionPane.INFORMATION_MESSAGE);
-		else
-			JOptionPane.showMessageDialog(null, Resources
-					.get("schemaTestFailed"), Resources.get("testTitle"),
-					JOptionPane.ERROR_MESSAGE);
 	}
 
 	/**

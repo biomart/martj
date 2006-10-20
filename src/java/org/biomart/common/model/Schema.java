@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.model;
+package org.biomart.common.model;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -28,16 +28,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.biomart.builder.exceptions.BuilderException;
-import org.biomart.builder.exceptions.MartBuilderInternalError;
-import org.biomart.builder.model.Column.GenericColumn;
-import org.biomart.builder.model.Key.ForeignKey;
-import org.biomart.builder.model.Key.GenericForeignKey;
-import org.biomart.builder.model.Key.GenericPrimaryKey;
-import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.model.Relation.Cardinality;
-import org.biomart.builder.model.Relation.GenericRelation;
-import org.biomart.builder.model.Table.GenericTable;
+import org.biomart.builder.model.DataLink;
+import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.exceptions.DataModelException;
+import org.biomart.common.model.Column.GenericColumn;
+import org.biomart.common.model.Key.ForeignKey;
+import org.biomart.common.model.Key.GenericForeignKey;
+import org.biomart.common.model.Key.GenericPrimaryKey;
+import org.biomart.common.model.Key.PrimaryKey;
+import org.biomart.common.model.Relation.Cardinality;
+import org.biomart.common.model.Relation.GenericRelation;
+import org.biomart.common.model.Table.GenericTable;
 
 /**
  * A schema provides one or more table objects with unique names for the user to
@@ -172,11 +173,11 @@ public interface Schema extends Comparable, DataLink {
 	 *            <tt>true</tt> to enable it, <tt>false</tt> to disable it.
 	 * @throws SQLException
 	 *             See {@link #synchroniseKeys()}.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             See {@link #synchroniseKeys()}.
 	 */
 	public void setKeyGuessing(boolean keyguessing) throws SQLException,
-			BuilderException;
+			DataModelException;
 
 	/**
 	 * Sets the name of this schema.
@@ -197,10 +198,10 @@ public interface Schema extends Comparable, DataLink {
 	 * 
 	 * @throws SQLException
 	 *             if there was a problem connecting to the data source.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if there was any other kind of logical problem.
 	 */
-	public void synchronise() throws SQLException, BuilderException;
+	public void synchronise() throws SQLException, DataModelException;
 
 	/**
 	 * This method can be called at any time to recalculate the foreign keys and
@@ -210,13 +211,19 @@ public interface Schema extends Comparable, DataLink {
 	 * the underlying columns still exist, will not be affected by this
 	 * operation.
 	 * 
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if anything went wrong to do with the calculation of keys and
 	 *             relations.
 	 * @throws SQLException
 	 *             if anything went wrong whilst talking to the database.
 	 */
-	public void synchroniseKeys() throws SQLException, BuilderException;
+	public void synchroniseKeys() throws SQLException, DataModelException;
+
+	/**
+	 * Call this method if you want the settings from this schema to be stored
+	 * in the history file for later user.
+	 */
+	public void storeInHistory();
 
 	/**
 	 * The generic implementation should suffice as the ground for most complex
@@ -225,7 +232,8 @@ public interface Schema extends Comparable, DataLink {
 	 * <p>
 	 * This generic implementation obviously isn't connected to anything, and so
 	 * it's {@link #synchronise()} and {@link #synchroniseKeys()} methods do
-	 * nothing.
+	 * nothing. It also will not store anything when {@link #storeInHistory()}
+	 * is called.
 	 */
 	public class GenericSchema implements Schema {
 		private boolean keyguessing;
@@ -400,7 +408,7 @@ public interface Schema extends Comparable, DataLink {
 						newTable = new GenericTable(table.getName(),
 								targetSchema);
 					} catch (final Throwable t) {
-						throw new MartBuilderInternalError(t);
+						throw new BioMartError(t);
 					}
 				else
 					tablesToDrop.remove(newTable);
@@ -417,7 +425,7 @@ public interface Schema extends Comparable, DataLink {
 						try {
 							newCol = new GenericColumn(col.getName(), newTable);
 						} catch (final Throwable t) {
-							throw new MartBuilderInternalError(t);
+							throw new BioMartError(t);
 						}
 					else
 						colsToDrop.remove(newCol);
@@ -451,7 +459,7 @@ public interface Schema extends Comparable, DataLink {
 						}
 						newPK.setStatus(pk.getStatus());
 					} catch (final Throwable t) {
-						throw new MartBuilderInternalError(t);
+						throw new BioMartError(t);
 					}
 				}
 				// Otherwise, drop the primary key.
@@ -459,7 +467,7 @@ public interface Schema extends Comparable, DataLink {
 					try {
 						newTable.setPrimaryKey(null);
 					} catch (final Throwable t) {
-						throw new MartBuilderInternalError(t);
+						throw new BioMartError(t);
 					}
 
 				// List all the foreign keys to be dropped later.
@@ -496,7 +504,7 @@ public interface Schema extends Comparable, DataLink {
 							fksToDrop.remove(newFK);
 						newFK.setStatus(fk.getStatus());
 					} catch (final Throwable t) {
-						throw new MartBuilderInternalError(t);
+						throw new BioMartError(t);
 					}
 				}
 
@@ -628,7 +636,7 @@ public interface Schema extends Comparable, DataLink {
 							newRel.setCardinality(card);
 							newRel.setStatus(status);
 						} catch (final Throwable t) {
-							throw new MartBuilderInternalError(t);
+							throw new BioMartError(t);
 						}
 				}
 			}
@@ -639,7 +647,7 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public void setKeyGuessing(final boolean keyguessing)
-				throws SQLException, BuilderException {
+				throws SQLException, DataModelException {
 			this.keyguessing = keyguessing;
 			this.synchroniseKeys();
 		}
@@ -651,11 +659,14 @@ public interface Schema extends Comparable, DataLink {
 			this.name = name;
 		}
 
-		public void synchronise() throws SQLException, BuilderException {
+		public void synchronise() throws SQLException, DataModelException {
 			this.synchroniseKeys();
 		}
 
-		public void synchroniseKeys() throws SQLException, BuilderException {
+		public void synchroniseKeys() throws SQLException, DataModelException {
+		}
+
+		public void storeInHistory() {
 		}
 
 		public boolean test() throws Exception {

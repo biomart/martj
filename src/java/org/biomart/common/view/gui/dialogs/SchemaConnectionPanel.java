@@ -16,13 +16,13 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.view.gui.dialogs;
+package org.biomart.common.view.gui.dialogs;
 
 import java.util.Properties;
 
 import javax.swing.JPanel;
 
-import org.biomart.builder.model.Schema;
+import org.biomart.common.model.Schema;
 
 /**
  * Connection panels represent all the different options available when

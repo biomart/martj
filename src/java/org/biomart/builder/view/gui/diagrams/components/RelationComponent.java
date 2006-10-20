@@ -34,9 +34,9 @@ import java.util.Map;
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 
-import org.biomart.builder.model.Relation;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
+import org.biomart.common.model.Relation;
 
 /**
  * This component represents a relation between two keys, in the form of a line.

@@ -62,6 +62,7 @@ public class MartBuilder extends JFrame {
 	 */
 	public static void main(final String[] args) {
 		// Initialise resources.
+		SettingsCache.setApplication(SettingsCache.MARTBUILDER);
 		Resources.setResourceLocation("org/biomart/builder/resources");
 		// Start the application.
 		EventQueue.invokeLater(new Runnable() {

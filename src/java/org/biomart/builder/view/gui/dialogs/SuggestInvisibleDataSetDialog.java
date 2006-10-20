@@ -41,11 +41,11 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
-import org.biomart.builder.model.Column;
-import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.Relation;
 import org.biomart.common.resources.Resources;
 
 /**

@@ -16,41 +16,60 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.exceptions;
+package org.biomart.common.exceptions;
 
 /**
- * This refers to exceptions where something is being added to something else,
- * but the two items are not associated or cannot be associated.
+ * This is a basic {@link Exception} for all non-specific BioMart
+ * exceptions.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by 
  * 			$Author$
  * @since 0.1
  */
-public class AssociationException extends BuilderException {
+public class BioMartException extends Exception {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * Constructs an instance of <code>AssociationException</code> with the
-	 * specified detail message.
+	 * Creates a new instance of <tt>BioMartException</tt> without detail
+	 * message.
+	 */
+	public BioMartException() {
+		super();
+	}
+
+	/**
+	 * Constructs an instance of <tt>BioMartException</tt> with the specified
+	 * detail message.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 */
-	public AssociationException(final String msg) {
+	public BioMartException(final String msg) {
 		super(msg);
 	}
 
 	/**
-	 * Constructs an instance of <code>AssociationException</code> with the
-	 * specified detail message and initial cause.
+	 * Constructs an instance of <tt>BioMartException</tt> with the specified
+	 * detail message and cause.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 * @param t
-	 *            the initial cause.
+	 *            the underlying cause.
 	 */
-	public AssociationException(final String msg, final Throwable t) {
+	public BioMartException(final String msg, final Throwable t) {
 		super(msg, t);
+	}
+
+	/**
+	 * Constructs an instance of <tt>BioMartException</tt> with the specified
+	 * cause.
+	 * 
+	 * @param t
+	 *            the underlying cause.
+	 */
+	public BioMartException(final Throwable t) {
+		super(t);
 	}
 }

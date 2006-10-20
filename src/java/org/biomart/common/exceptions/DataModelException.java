@@ -16,59 +16,63 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.exceptions;
+package org.biomart.common.exceptions;
+
+import org.biomart.builder.exceptions.MartBuilderException;
+
 
 /**
- * This is a serious internal error.
+ * This is a basic {@link Exception} for all non-specific MartBuilder
+ * exceptions.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by 
  * 			$Author$
  * @since 0.1
  */
-public class MartBuilderInternalError extends Error {
+public class DataModelException extends MartBuilderException {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * Creates a new instance of <tt>MartBuilderInternalError</tt> without
-	 * detail message.
+	 * Creates a new instance of <tt>DataModelException</tt> without detail
+	 * message.
 	 */
-	public MartBuilderInternalError() {
+	public DataModelException() {
 		super();
 	}
 
 	/**
-	 * Constructs an instance of <tt>MartBuilderInternalError</tt> with the
-	 * specified detail message.
+	 * Constructs an instance of <tt>DataModelException</tt> with the specified
+	 * detail message.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 */
-	public MartBuilderInternalError(final String msg) {
+	public DataModelException(final String msg) {
 		super(msg);
 	}
 
 	/**
-	 * Constructs an instance of <tt>MartBuilderInternalError</tt> with the
-	 * specified detail message and cause.
+	 * Constructs an instance of <tt>DataModelException</tt> with the specified
+	 * detail message and cause.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 * @param t
 	 *            the underlying cause.
 	 */
-	public MartBuilderInternalError(final String msg, final Throwable t) {
+	public DataModelException(final String msg, final Throwable t) {
 		super(msg, t);
 	}
 
 	/**
-	 * Constructs an instance of <tt>MartBuilderInternalError</tt> with the
-	 * specified cause.
+	 * Constructs an instance of <tt>DataModelException</tt> with the specified
+	 * cause.
 	 * 
 	 * @param t
 	 *            the underlying cause.
 	 */
-	public MartBuilderInternalError(final Throwable t) {
+	public DataModelException(final Throwable t) {
 		super(t);
 	}
 }

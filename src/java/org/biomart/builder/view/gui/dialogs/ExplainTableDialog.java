@@ -38,9 +38,6 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.Key;
-import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
@@ -54,6 +51,9 @@ import org.biomart.builder.view.gui.diagrams.ExplainTableDiagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainTransformationContext;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainDataSetContext;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**

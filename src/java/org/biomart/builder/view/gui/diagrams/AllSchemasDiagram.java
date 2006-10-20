@@ -23,11 +23,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Schema;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
 
 /**
  * This diagram draws a {@link SchemaComponent} for each schema in the mart. If

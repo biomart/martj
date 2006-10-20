@@ -34,17 +34,18 @@ import java.util.zip.ZipOutputStream;
 
 import org.biomart.builder.controller.dialects.DatabaseDialect;
 import org.biomart.builder.exceptions.ConstructorException;
-import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.MartConstructor;
 import org.biomart.builder.model.MartConstructorAction;
-import org.biomart.builder.model.Schema;
-import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.MartConstructorAction.MartConstructorActionGraph;
 import org.biomart.builder.model.MartConstructorAction.MartConstructorTableAction;
 import org.biomart.builder.model.MartConstructorAction.OptimiseUpdateColumn;
+import org.biomart.common.controller.JDBCSchema;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**

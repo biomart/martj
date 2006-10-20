@@ -24,14 +24,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.biomart.builder.controller.JDBCSchema;
 import org.biomart.builder.exceptions.ConstructorException;
-import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.MartConstructorAction;
-import org.biomart.builder.model.Schema;
-import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
+import org.biomart.common.controller.JDBCSchema;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
 
 /**
  * This class provides methods which generate atomic DDL or SQL statements. It

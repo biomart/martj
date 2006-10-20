@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.view.gui.dialogs;
+package org.biomart.common.view.gui.dialogs;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -47,11 +47,10 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
 
-import org.biomart.builder.controller.JDBCSchema;
-import org.biomart.builder.controller.MartBuilderUtils;
-import org.biomart.builder.model.Schema;
+import org.biomart.common.controller.CommonUtils;
+import org.biomart.common.controller.JDBCSchema;
+import org.biomart.common.model.Schema;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.SettingsCache;
 import org.biomart.common.view.gui.StackTrace;
 
 /**
@@ -511,7 +510,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			final String password = new String(this.password.getPassword());
 
 			// Construct a JDBCSchema based on them.
-			final JDBCSchema schema = MartBuilderUtils.createJDBCSchema(
+			final JDBCSchema schema = CommonUtils.createJDBCSchema(
 					driverClassLocation == null ? null : new File(
 							driverClassLocation), driverClassName, url,
 					schemaName, username, password, name, false);
@@ -559,19 +558,6 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				jschema.setDatabaseSchema(this.schemaName.getText());
 				jschema.setUsername(this.username.getText());
 				jschema.setPassword(new String(this.password.getPassword()));
-
-				// Update the settings in the history file.
-				final Properties history = new Properties();
-				history.setProperty("driverClass", this.driverClass.getText());
-				history.setProperty("driverClassLocation",
-						this.driverClassLocation.getText());
-				history.setProperty("jdbcURL", this.jdbcURL.getText());
-				history.setProperty("username", this.username.getText());
-				history.setProperty("password", new String(this.password
-						.getPassword()));
-				history.setProperty("schema", this.schemaName.getText());
-				SettingsCache.saveHistoryProperties(JDBCSchema.class, schema
-						.getName(), history);
 			} catch (final Throwable t) {
 				StackTrace.showStackTrace(t);
 			}

@@ -16,35 +16,36 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.exceptions;
+package org.biomart.common.exceptions;
+
+import org.biomart.builder.exceptions.MartBuilderException;
 
 
 /**
- * This refers to exceptions where something has failed a validation test, eg.
- * incorrect input, or an attempt to set some parameter where it cannot be
- * set.
+ * This refers to exceptions where something is being added to something else,
+ * but the two items are not associated or cannot be associated.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by 
  * 			$Author$
  * @since 0.1
  */
-public class ValidationException extends MartBuilderException {
+public class AssociationException extends MartBuilderException {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * Constructs an instance of <tt>ValidationException</tt> with the
+	 * Constructs an instance of <code>AssociationException</code> with the
 	 * specified detail message.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 */
-	public ValidationException(final String msg) {
+	public AssociationException(final String msg) {
 		super(msg);
 	}
 
 	/**
-	 * Constructs an instance of <tt>ValidationException</tt> with the
+	 * Constructs an instance of <code>AssociationException</code> with the
 	 * specified detail message and initial cause.
 	 * 
 	 * @param msg
@@ -52,7 +53,7 @@ public class ValidationException extends MartBuilderException {
 	 * @param t
 	 *            the initial cause.
 	 */
-	public ValidationException(final String msg, final Throwable t) {
+	public AssociationException(final String msg, final Throwable t) {
 		super(msg, t);
 	}
 }

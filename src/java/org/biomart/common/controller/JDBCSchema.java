@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.controller;
+package org.biomart.common.controller;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -37,26 +37,27 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
-import org.biomart.builder.exceptions.BuilderException;
-import org.biomart.builder.exceptions.MartBuilderInternalError;
-import org.biomart.builder.model.Column;
-import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataLink;
-import org.biomart.builder.model.Key;
-import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Schema;
-import org.biomart.builder.model.Table;
-import org.biomart.builder.model.Column.GenericColumn;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
-import org.biomart.builder.model.Key.ForeignKey;
-import org.biomart.builder.model.Key.GenericForeignKey;
-import org.biomart.builder.model.Key.GenericPrimaryKey;
-import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.model.Relation.Cardinality;
-import org.biomart.builder.model.Relation.GenericRelation;
-import org.biomart.builder.model.Schema.GenericSchema;
-import org.biomart.builder.model.Table.GenericTable;
+import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.exceptions.DataModelException;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.ComponentStatus;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
+import org.biomart.common.model.Column.GenericColumn;
+import org.biomart.common.model.Key.ForeignKey;
+import org.biomart.common.model.Key.GenericForeignKey;
+import org.biomart.common.model.Key.GenericPrimaryKey;
+import org.biomart.common.model.Key.PrimaryKey;
+import org.biomart.common.model.Relation.Cardinality;
+import org.biomart.common.model.Relation.GenericRelation;
+import org.biomart.common.model.Schema.GenericSchema;
+import org.biomart.common.model.Table.GenericTable;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.SettingsCache;
 
 /**
  * This implementation of the {@link Schema} interface connects to a JDBC data
@@ -186,13 +187,13 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	 *            the database catalog to read metadata from.
 	 * @throws SQLException
 	 *             if there was a problem talking to the database.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if there was a logical problem during construction of the set
 	 *             of foreign keys.
 	 */
 	private void synchroniseKeysUsingDMD(final Collection fksToBeDropped,
 			final DatabaseMetaData dmd, final String schema,
-			final String catalog) throws SQLException, BuilderException {
+			final String catalog) throws SQLException, DataModelException {
 		// Loop through all the tables in the database, which is the same
 		// as looping through all the primary keys.
 		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
@@ -275,7 +276,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						fk = new GenericForeignKey(Arrays
 								.asList(candidateFKColumns));
 					} catch (final Throwable t) {
-						throw new MartBuilderInternalError(t);
+						throw new BioMartError(t);
 					}
 					final Table fkTable = fk.getTable();
 
@@ -308,7 +309,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						try {
 							fkTable.addForeignKey(fk);
 						} catch (final Throwable t) {
-							throw new MartBuilderInternalError(t);
+							throw new BioMartError(t);
 						}
 
 						// Work out whether the relation from the FK to the PK
@@ -326,7 +327,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						try {
 							new GenericRelation(pk, fk, card);
 						} catch (final Throwable t) {
-							throw new MartBuilderInternalError(t);
+							throw new BioMartError(t);
 						}
 					} else {
 						// If the FK has been reused, check to see if it already
@@ -358,7 +359,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 										candidateRel
 												.setStatus(ComponentStatus.INFERRED);
 									} catch (final Throwable t) {
-										throw new MartBuilderInternalError(t);
+										throw new BioMartError(t);
 									}
 								// Don't drop it at the end of the loop.
 								relationsToBeDropped.remove(candidateRel);
@@ -380,7 +381,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 							// somewhere else, which produces a logical
 							// impossibility.
 							else
-								throw new MartBuilderInternalError();
+								throw new BioMartError();
 						}
 
 						// If relation did not already exist, create it.
@@ -401,7 +402,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 							try {
 								new GenericRelation(pk, fk, card);
 							} catch (final Throwable t) {
-								throw new MartBuilderInternalError(t);
+								throw new BioMartError(t);
 							}
 						}
 					}
@@ -438,12 +439,12 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	 *            that no longer exist in the database and may be dropped.
 	 * @throws SQLException
 	 *             if there was a problem talking to the database.
-	 * @throws BuilderException
+	 * @throws DataModelException
 	 *             if there was a logical problem during construction of the set
 	 *             of foreign keys.
 	 */
 	private void synchroniseKeysUsingKeyGuessing(final Collection fksToBeDropped)
-			throws SQLException, BuilderException {
+			throws SQLException, DataModelException {
 		// Loop through all the tables in the database, which is the same
 		// as looping through all the primary keys.
 		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
@@ -554,7 +555,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						fk = new GenericForeignKey(Arrays
 								.asList(candidateFKColumns));
 					} catch (final Throwable t) {
-						throw new MartBuilderInternalError(t);
+						throw new BioMartError(t);
 					}
 
 					// If any FK already exists on the target table with the
@@ -586,7 +587,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						try {
 							fkTable.addForeignKey(fk);
 						} catch (final Throwable t) {
-							throw new MartBuilderInternalError(t);
+							throw new BioMartError(t);
 						}
 
 						// Work out whether the relation from the FK to the PK
@@ -604,7 +605,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 						try {
 							new GenericRelation(pk, fk, card);
 						} catch (final Throwable t) {
-							throw new MartBuilderInternalError(t);
+							throw new BioMartError(t);
 						}
 					} else {
 						// If the FK has been reused, check to see if it already
@@ -636,7 +637,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 										candidateRel
 												.setStatus(ComponentStatus.INFERRED);
 									} catch (final Throwable t) {
-										throw new MartBuilderInternalError(t);
+										throw new BioMartError(t);
 									}
 								// Don't drop it at the end of the loop.
 								relationsToBeDropped.remove(candidateRel);
@@ -659,7 +660,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 							// somewhere else, which produces a logical
 							// impossibility.
 							else
-								throw new MartBuilderInternalError();
+								throw new BioMartError();
 						}
 
 						// If relation did not already exist, create it.
@@ -680,7 +681,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 							try {
 								new GenericRelation(pk, fk, card);
 							} catch (final Throwable t) {
-								throw new MartBuilderInternalError(t);
+								throw new BioMartError(t);
 							}
 						}
 					}
@@ -762,7 +763,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 					e2.initCause(e);
 					throw e2;
 				} catch (final MalformedURLException e) {
-					throw new MartBuilderInternalError(e);
+					throw new BioMartError(e);
 				}
 
 			// If we failed to load the driver from the custom path, try the
@@ -932,7 +933,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		}
 	}
 
-	public void synchronise() throws SQLException, BuilderException {
+	public void synchronise() throws SQLException, DataModelException {
 		// Get database metadata, catalog, and schema details.
 		final DatabaseMetaData dmd = this.getConnection().getMetaData();
 		final String catalog = this.getConnection().getCatalog();
@@ -959,7 +960,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 				try {
 					dbTable = new GenericTable(dbTableName, this);
 				} catch (final Throwable t) {
-					throw new MartBuilderInternalError(t);
+					throw new BioMartError(t);
 				}
 
 			// Table exists, so remove it from our list of tables to be dropped
@@ -986,7 +987,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 					try {
 						dbTblCol = new GenericColumn(dbTblColName, dbTable);
 					} catch (final Throwable t) {
-						throw new MartBuilderInternalError(t);
+						throw new BioMartError(t);
 					}
 
 				// Column exists, so remove it from our list of columns to be
@@ -1056,7 +1057,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 					candidatePK = new GenericPrimaryKey(new ArrayList(pkCols
 							.values()));
 				} catch (final Throwable t) {
-					throw new MartBuilderInternalError(t);
+					throw new BioMartError(t);
 				}
 
 				// If the existing table has no PK, or has a PK which matches
@@ -1074,7 +1075,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 					try {
 						dbTable.setPrimaryKey(candidatePK);
 					} catch (final Throwable t) {
-						throw new MartBuilderInternalError(t);
+						throw new BioMartError(t);
 					}
 			} else // No, we did not find a PK on the database copy of the
 			// table,
@@ -1085,7 +1086,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 				try {
 					dbTable.setPrimaryKey(null);
 				} catch (final Throwable t) {
-					throw new MartBuilderInternalError(t);
+					throw new BioMartError(t);
 				}
 		}
 		dbTables.close();
@@ -1103,7 +1104,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		this.synchroniseKeys();
 	}
 
-	public void synchroniseKeys() throws SQLException, BuilderException {
+	public void synchroniseKeys() throws SQLException, DataModelException {
 		final DatabaseMetaData dmd = this.getConnection().getMetaData();
 		final String catalog = this.getConnection().getCatalog();
 		final String schema = this.schemaName;
@@ -1137,6 +1138,22 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		}
 	}
 
+	public void storeInHistory() {
+		// Store the schema settings in the history file.
+		final Properties history = new Properties();
+		history.setProperty("driverClass", this.getDriverClassName());
+		history.setProperty("driverClassLocation", this
+				.getDriverClassLocation() == null ? "" : this
+				.getDriverClassLocation().toString());
+		history.setProperty("jdbcURL", this.getJDBCURL());
+		history.setProperty("username", this.getUsername());
+		history.setProperty("password", this.getPassword() == null ? "" : this
+				.getPassword());
+		history.setProperty("schema", this.getDatabaseSchema());
+		SettingsCache.saveHistoryProperties(JDBCSchema.class, this.getName(),
+				history);
+	}
+	
 	public boolean test() throws Exception {
 		// Establish the JDBC connection. May throw an exception of its own,
 		// which is fine, just let it go.

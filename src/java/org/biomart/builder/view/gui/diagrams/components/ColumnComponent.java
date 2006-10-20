@@ -26,9 +26,9 @@ import java.awt.Insets;
 
 import javax.swing.JLabel;
 
-import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.view.gui.diagrams.Diagram;
+import org.biomart.common.model.Column;
 
 /**
  * This simple component represents a single column within a table.

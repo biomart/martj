@@ -28,11 +28,11 @@ import java.util.Iterator;
 import javax.swing.JLabel;
 import javax.swing.TransferHandler;
 
-import org.biomart.builder.model.Column;
-import org.biomart.builder.model.Key;
-import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.view.gui.SchemaTabSet;
 import org.biomart.builder.view.gui.diagrams.Diagram;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Key.PrimaryKey;
 
 /**
  * Represents a key by listing out in a set of labels each column in the key.

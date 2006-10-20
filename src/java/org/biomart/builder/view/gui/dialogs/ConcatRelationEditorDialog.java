@@ -42,9 +42,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
-import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**

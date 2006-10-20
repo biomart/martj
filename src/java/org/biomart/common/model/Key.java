@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.model;
+package org.biomart.common.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,8 +24,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.biomart.builder.exceptions.AssociationException;
-import org.biomart.builder.exceptions.MartBuilderInternalError;
+import org.biomart.common.exceptions.AssociationException;
+import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -236,12 +236,12 @@ public interface Key extends Comparable {
 				try {
 					this.getTable().setPrimaryKey(null);
 				} catch (final Throwable t) {
-					throw new MartBuilderInternalError(t);
+					throw new BioMartError(t);
 				}
 			else if (this instanceof ForeignKey)
 				this.getTable().removeForeignKey((ForeignKey) this);
 			else
-				throw new MartBuilderInternalError();
+				throw new BioMartError();
 
 		}
 
@@ -328,7 +328,7 @@ public interface Key extends Comparable {
 						r.setStatus(ComponentStatus.INFERRED_INCORRECT);
 					} catch (AssociationException e) {
 						// Never happens.
-						throw new MartBuilderInternalError(e);
+						throw new BioMartError(e);
 					}
 			}
 
@@ -355,7 +355,7 @@ public interface Key extends Comparable {
 						try {
 							r.setStatus(ComponentStatus.INFERRED_INCORRECT);
 						} catch (final Throwable t) {
-							throw new MartBuilderInternalError(t);
+							throw new BioMartError(t);
 						}
 				}
 

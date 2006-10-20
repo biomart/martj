@@ -23,7 +23,7 @@ import java.awt.Cursor;
 
 import javax.swing.SwingUtilities;
 
-import org.biomart.builder.exceptions.MartBuilderInternalError;
+import org.biomart.common.exceptions.BioMartError;
 
 /**
  * This simple class wraps a thread, and displays an hourglass for as long as
@@ -81,7 +81,7 @@ public abstract class LongProcess {
 					try {
 						process.run();
 					} catch (final Exception e) {
-						throw new MartBuilderInternalError(e);
+						throw new BioMartError(e);
 					}
 				} catch (final Error e) {
 					throw e;

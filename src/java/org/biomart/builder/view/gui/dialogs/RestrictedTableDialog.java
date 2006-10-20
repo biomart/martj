@@ -44,9 +44,9 @@ import javax.swing.JTextArea;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
-import org.biomart.builder.model.Table;
-import org.biomart.builder.model.Column.GenericColumn;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
+import org.biomart.common.model.Table;
+import org.biomart.common.model.Column.GenericColumn;
 import org.biomart.common.resources.Resources;
 
 /**

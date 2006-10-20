@@ -24,26 +24,26 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.biomart.builder.exceptions.AssociationException;
-import org.biomart.builder.exceptions.MartBuilderInternalError;
-import org.biomart.builder.model.Column;
-import org.biomart.builder.model.Key;
-import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Schema;
-import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
-import org.biomart.builder.model.Key.ForeignKey;
-import org.biomart.builder.model.Key.GenericForeignKey;
-import org.biomart.builder.model.Key.GenericPrimaryKey;
-import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.model.Relation.GenericRelation;
-import org.biomart.builder.model.Schema.GenericSchema;
-import org.biomart.builder.model.Table.GenericTable;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
+import org.biomart.common.exceptions.AssociationException;
+import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
+import org.biomart.common.model.Key.ForeignKey;
+import org.biomart.common.model.Key.GenericForeignKey;
+import org.biomart.common.model.Key.GenericPrimaryKey;
+import org.biomart.common.model.Key.PrimaryKey;
+import org.biomart.common.model.Relation.GenericRelation;
+import org.biomart.common.model.Schema.GenericSchema;
+import org.biomart.common.model.Table.GenericTable;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -244,7 +244,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					tempSource.addForeignKey((ForeignKey) tempSourceKey);
 				} catch (AssociationException e) {
 					// Really should never happen.
-					throw new MartBuilderInternalError(e);
+					throw new BioMartError(e);
 				}
 			} else {
 				tempSourceKey = new GenericPrimaryKey(new ArrayList(
@@ -269,7 +269,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					tempTarget.addForeignKey((ForeignKey) tempTargetKey);
 				} catch (AssociationException e) {
 					// Really should never happen.
-					throw new MartBuilderInternalError(e);
+					throw new BioMartError(e);
 				}
 			} else {
 				tempTargetKey = new GenericPrimaryKey(realTargetKey
@@ -285,7 +285,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 						tempTargetKey, this.relation.getCardinality());
 			} catch (AssociationException e) {
 				// Really should never happen.
-				throw new MartBuilderInternalError(e);
+				throw new BioMartError(e);
 			}
 
 			// Add source and target tables.
@@ -374,7 +374,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					tempSource.addForeignKey((ForeignKey) tempSourceKey);
 				} catch (AssociationException e) {
 					// Really should never happen.
-					throw new MartBuilderInternalError(e);
+					throw new BioMartError(e);
 				}
 			} else {
 				tempSourceKey = new GenericPrimaryKey(new ArrayList(
@@ -399,7 +399,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					tempTarget.addForeignKey((ForeignKey) tempTargetKey);
 				} catch (AssociationException e) {
 					// Really should never happen.
-					throw new MartBuilderInternalError(e);
+					throw new BioMartError(e);
 				}
 			} else {
 				tempTargetKey = new GenericPrimaryKey(realTargetKey
@@ -415,7 +415,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 						tempTargetKey, this.relation.getCardinality());
 			} catch (AssociationException e) {
 				// Really should never happen.
-				throw new MartBuilderInternalError(e);
+				throw new BioMartError(e);
 			}
 
 			// Add source and target tables.
@@ -500,7 +500,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					tempSource.addForeignKey((ForeignKey) tempSourceKey);
 				} catch (AssociationException e) {
 					// Really should never happen.
-					throw new MartBuilderInternalError(e);
+					throw new BioMartError(e);
 				}
 			} else {
 				tempSourceKey = new GenericPrimaryKey(tempKeyColumns);
@@ -524,7 +524,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					tempTarget.addForeignKey((ForeignKey) tempTargetKey);
 				} catch (AssociationException e) {
 					// Really should never happen.
-					throw new MartBuilderInternalError(e);
+					throw new BioMartError(e);
 				}
 			} else {
 				tempTargetKey = new GenericPrimaryKey(realTargetKey
@@ -540,7 +540,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 						tempTargetKey, this.relation.getCardinality());
 			} catch (AssociationException e) {
 				// Really should never happen.
-				throw new MartBuilderInternalError(e);
+				throw new BioMartError(e);
 			}
 
 			// Add source and target tables.

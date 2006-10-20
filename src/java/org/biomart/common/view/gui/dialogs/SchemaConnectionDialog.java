@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.view.gui.dialogs;
+package org.biomart.common.view.gui.dialogs;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -35,10 +35,10 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import org.biomart.builder.controller.JDBCSchema;
-import org.biomart.builder.exceptions.MartBuilderInternalError;
-import org.biomart.builder.model.Schema;
-import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.common.controller.CommonUtils;
+import org.biomart.common.controller.JDBCSchema;
+import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.model.Schema;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.SettingsCache;
 import org.biomart.common.view.gui.StackTrace;
@@ -51,8 +51,8 @@ import org.biomart.common.view.gui.StackTrace;
  * before the result is returned to the caller.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class SchemaConnectionDialog extends JDialog {
@@ -62,13 +62,11 @@ public class SchemaConnectionDialog extends JDialog {
 	 * Pop up a dialog asking the user for details for a new schema, then create
 	 * and return that schema.
 	 * 
-	 * @param martTab
-	 *            the mart tab to use when creating the schema.
 	 * @return the newly created schema, or null if it was cancelled.
 	 */
-	public static Schema createSchema(final MartTab martTab) {
+	public static Schema createSchema() {
 		final SchemaConnectionDialog dialog = new SchemaConnectionDialog(
-				martTab, Resources.get("newSchemaDialogTitle"), Resources
+				Resources.get("newSchemaDialogTitle"), Resources
 						.get("addButton"), null);
 		dialog.setLocationRelativeTo(null);
 		dialog.show();
@@ -79,17 +77,14 @@ public class SchemaConnectionDialog extends JDialog {
 	 * Pop up a dialog asking the user to modify details for a schema, then
 	 * modify that schema. Returns whether it was successful or not.
 	 * 
-	 * @param martTab
-	 *            the mart tab to use when creating the schema.
 	 * @param schema
 	 *            the schema to modify.
 	 * @return <tt>true</tt> if modification was successful, <tt>false</tt>
 	 *         if not.
 	 */
-	public static boolean modifySchema(final MartTab martTab,
-			final Schema schema) {
+	public static boolean modifySchema(final Schema schema) {
 		final SchemaConnectionDialog dialog = new SchemaConnectionDialog(
-				martTab, Resources.get("modifySchemaDialogTitle"), Resources
+				Resources.get("modifySchemaDialogTitle"), Resources
 						.get("modifyButton"), schema);
 		dialog.setLocationRelativeTo(null);
 		dialog.show();
@@ -106,8 +101,6 @@ public class SchemaConnectionDialog extends JDialog {
 
 	private JButton execute;
 
-	private MartTab martTab;
-
 	private JComboBox name;
 
 	private Schema schema;
@@ -116,16 +109,12 @@ public class SchemaConnectionDialog extends JDialog {
 
 	private JComboBox type;
 
-	private SchemaConnectionDialog(final MartTab martTab, final String title,
+	private SchemaConnectionDialog(final String title,
 			final String executeButtonText, final Schema template) {
 		// Create the basic dialog centred on the main mart builder window.
 		super();
 		this.setTitle(title);
 		this.setModal(true);
-
-		// Remember the tabset that the schema we are working with is part of
-		// (or will be part of if it's not been created yet).
-		this.martTab = martTab;
 
 		// Create the content pane for the dialog, ie. the bit that will hold
 		// all the various questions and answers.
@@ -264,7 +253,7 @@ public class SchemaConnectionDialog extends JDialog {
 				final Schema testSchema = SchemaConnectionDialog.this
 						.createSchemaFromSettings();
 				if (testSchema != null)
-					martTab.getSchemaTabSet().requestTestSchema(testSchema);
+					SchemaConnectionDialog.this.requestTestSchema(testSchema);
 			}
 		});
 
@@ -275,6 +264,7 @@ public class SchemaConnectionDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				SchemaConnectionDialog.this.schema = SchemaConnectionDialog.this
 						.createSchemaFromSettings();
+				SchemaConnectionDialog.this.schema.storeInHistory();
 				if (SchemaConnectionDialog.this.schema != null)
 					SchemaConnectionDialog.this.hide();
 			}
@@ -288,6 +278,31 @@ public class SchemaConnectionDialog extends JDialog {
 
 		// Pack and resize the window.
 		this.pack();
+	}
+
+	private void requestTestSchema(final Schema schema) {
+		// Assume we've failed.
+		boolean passedTest = false;
+
+		try {
+			// Attempt to pass the test.
+			passedTest = CommonUtils.testSchema(schema);
+		} catch (final Throwable t) {
+			// If we get an exception, we failed the test, and should
+			// tell the user why.
+			passedTest = false;
+			StackTrace.showStackTrace(t);
+		}
+
+		// Tell the user if we passed or failed.
+		if (passedTest)
+			JOptionPane.showMessageDialog(null, Resources
+					.get("schemaTestPassed"), Resources.get("testTitle"),
+					JOptionPane.INFORMATION_MESSAGE);
+		else
+			JOptionPane.showMessageDialog(null, Resources
+					.get("schemaTestFailed"), Resources.get("testTitle"),
+					JOptionPane.ERROR_MESSAGE);
 	}
 
 	private Schema createSchemaFromSettings() {
@@ -306,7 +321,7 @@ public class SchemaConnectionDialog extends JDialog {
 
 			// What kind of type is it then??
 			else
-				throw new MartBuilderInternalError();
+				throw new BioMartError();
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		}
@@ -331,7 +346,7 @@ public class SchemaConnectionDialog extends JDialog {
 
 			// Unknown schema type!
 			else
-				throw new MartBuilderInternalError();
+				throw new BioMartError();
 			this.type.setEnabled(false); // Gray out as we can't change this.
 
 			// Set the name.

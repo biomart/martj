@@ -19,8 +19,8 @@
 package org.biomart.builder.view.gui.diagrams;
 
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.Schema;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.common.model.Schema;
 
 /**
  * Displays the contents of a dataset within a standard diagram object. This is

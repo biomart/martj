@@ -16,60 +16,59 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.exceptions;
+package org.biomart.common.exceptions;
 
 /**
- * This is a basic {@link Exception} for all non-specific MartBuilder
- * exceptions.
+ * This is a serious internal error.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by 
  * 			$Author$
  * @since 0.1
  */
-public class BuilderException extends Exception {
+public class BioMartError extends Error {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * Creates a new instance of <tt>BuilderException</tt> without detail
-	 * message.
+	 * Creates a new instance of <tt>BioMartError</tt> without
+	 * detail message.
 	 */
-	public BuilderException() {
+	public BioMartError() {
 		super();
 	}
 
 	/**
-	 * Constructs an instance of <tt>BuilderException</tt> with the specified
-	 * detail message.
+	 * Constructs an instance of <tt>BioMartError</tt> with the
+	 * specified detail message.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 */
-	public BuilderException(final String msg) {
+	public BioMartError(final String msg) {
 		super(msg);
 	}
 
 	/**
-	 * Constructs an instance of <tt>BuilderException</tt> with the specified
-	 * detail message and cause.
+	 * Constructs an instance of <tt>BioMartError</tt> with the
+	 * specified detail message and cause.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 * @param t
 	 *            the underlying cause.
 	 */
-	public BuilderException(final String msg, final Throwable t) {
+	public BioMartError(final String msg, final Throwable t) {
 		super(msg, t);
 	}
 
 	/**
-	 * Constructs an instance of <tt>BuilderException</tt> with the specified
-	 * cause.
+	 * Constructs an instance of <tt>BioMartError</tt> with the
+	 * specified cause.
 	 * 
 	 * @param t
 	 *            the underlying cause.
 	 */
-	public BuilderException(final Throwable t) {
+	public BioMartError(final Throwable t) {
 		super(t);
 	}
 }

@@ -27,16 +27,16 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
-import org.biomart.builder.model.Column;
-import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.Key;
-import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Table;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.ComponentStatus;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**

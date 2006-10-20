@@ -44,19 +44,28 @@ import java.util.Properties;
  * <tt>cache</tt> should be left alone.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class SettingsCache {
 
+	/**
+	 * App reference for MartBuilder.
+	 */
+	public static final String MARTBUILDER = "martbuilder";
+
+	/**
+	 * App reference for BioMartLauncher.
+	 */
+	public static final String BIOMARTLAUNCHER = "biomartlauncher";
+		
 	private static final File homeDir = new File(System
 			.getProperty("user.home"), ".biomart");
 
 	private static final Map classCache = new HashMap();
 
-	private static final File classCacheDir = new File(SettingsCache.homeDir,
-			"cache");
+	private static File classCacheDir;
 
 	private static int classCacheSize = 10;
 
@@ -74,14 +83,26 @@ public class SettingsCache {
 		try {
 			if (!SettingsCache.homeDir.exists())
 				SettingsCache.homeDir.mkdir();
-			if (!SettingsCache.classCacheDir.exists())
-				SettingsCache.classCacheDir.mkdir();
 			if (!SettingsCache.propertiesFile.exists())
 				SettingsCache.propertiesFile.createNewFile();
 		} catch (final Throwable t) {
 			System.err.println(Resources.get("settingsCacheInitFailed"));
 			t.printStackTrace(System.err);
 		}
+	}
+	
+	/**
+	 * Set the current application.
+	 * 
+	 * @param app the current application.
+	 */
+	public static void setApplication(final String app) {
+		final File appDir = new File(SettingsCache.homeDir, app);
+		if (!appDir.exists())
+			appDir.mkdir();
+		SettingsCache.classCacheDir = new File(appDir, "cache");
+		if (!SettingsCache.classCacheDir.exists())
+			SettingsCache.classCacheDir.mkdir();
 	}
 
 	/**
@@ -149,7 +170,6 @@ public class SettingsCache {
 	/**
 	 * Given a class and a group name, return the set of properties from history
 	 * that match.
-	 * 
 	 * @param clazz
 	 *            the class to look up.
 	 * @param name

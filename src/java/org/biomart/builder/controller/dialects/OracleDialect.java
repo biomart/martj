@@ -32,15 +32,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.biomart.builder.controller.JDBCSchema;
 import org.biomart.builder.exceptions.ConstructorException;
-import org.biomart.builder.exceptions.MartBuilderInternalError;
-import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.MartConstructorAction;
-import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
-import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
@@ -63,6 +58,11 @@ import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
 import org.biomart.builder.model.MartConstructorAction.Reduce;
 import org.biomart.builder.model.MartConstructorAction.RenameTable;
 import org.biomart.builder.model.MartConstructorAction.Union;
+import org.biomart.common.controller.JDBCSchema;
+import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -121,7 +121,7 @@ public class OracleDialect extends DatabaseDialect {
 					sb.append(System.getProperty("line.separator"));
 				}
 			} catch (final IOException e) {
-				throw new MartBuilderInternalError(e);
+				throw new BioMartError(e);
 			}
 			OracleDialect.GROUP_CONCAT_CREATED = true;
 		}
@@ -221,7 +221,7 @@ public class OracleDialect extends DatabaseDialect {
 					sb.append("' as ");
 				} else
 					// Ouch!
-					throw new MartBuilderInternalError();
+					throw new BioMartError();
 			} else if (action.isUseInheritedAliases())
 				if (col instanceof InheritedColumn) {
 					sb.append('"');
@@ -327,7 +327,7 @@ public class OracleDialect extends DatabaseDialect {
 			} else if (obj instanceof String)
 				sb.append(obj);
 			else
-				throw new MartBuilderInternalError();
+				throw new BioMartError();
 			sb.append('"');
 			if (i.hasNext())
 				sb.append(',');
@@ -386,7 +386,7 @@ public class OracleDialect extends DatabaseDialect {
 						sb.append("' as ");
 					} else
 						// Ouch!
-						throw new MartBuilderInternalError();
+						throw new BioMartError();
 				}
 				sb.append('"');
 				sb.append(col.getName());
@@ -412,7 +412,7 @@ public class OracleDialect extends DatabaseDialect {
 					sb.append("' as ");
 				} else
 					// Ouch!
-					throw new MartBuilderInternalError();
+					throw new BioMartError();
 			}
 			sb.append('"');
 			sb.append(col.getName());
@@ -876,7 +876,7 @@ public class OracleDialect extends DatabaseDialect {
 			return jddl.getConnection().getMetaData().getDatabaseProductName()
 					.equals("Oracle");
 		} catch (final SQLException e) {
-			throw new MartBuilderInternalError(e);
+			throw new BioMartError(e);
 		}
 	}
 }

@@ -24,9 +24,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.biomart.builder.exceptions.AssociationException;
-import org.biomart.builder.exceptions.BuilderException;
-import org.biomart.builder.exceptions.MartBuilderInternalError;
+import org.biomart.common.exceptions.AssociationException;
+import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.exceptions.DataModelException;
+import org.biomart.common.model.Schema;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -113,7 +114,7 @@ public interface SchemaGroup extends Schema {
 		}
 
 		public Schema replicate(final String newName) {
-			throw new MartBuilderInternalError(Resources
+			throw new BioMartError(Resources
 					.get("noSchemaGroupReplication"));
 		}
 
@@ -124,7 +125,7 @@ public interface SchemaGroup extends Schema {
 		 * Then replication is used to copy all the tables etc. from the first
 		 * schema in the list of members and set them up as the group's own.
 		 */
-		public void synchronise() throws SQLException, BuilderException {
+		public void synchronise() throws SQLException, DataModelException {
 			// Synchronise our members.
 			for (final Iterator i = this.schemas.iterator(); i.hasNext();)
 				((Schema) i.next()).synchronise();

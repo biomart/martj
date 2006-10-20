@@ -18,6 +18,7 @@
 
 package org.biomart.builder.exceptions;
 
+
 /**
  * This is a basic {@link Exception} for all non-specific exceptions during mart
  * construction.
@@ -27,7 +28,7 @@ package org.biomart.builder.exceptions;
  * 			$Author$
  * @since 0.1
  */
-public class ConstructorException extends BuilderException {
+public class ConstructorException extends MartBuilderException {
 	private static final long serialVersionUID = 1;
 
 	/**

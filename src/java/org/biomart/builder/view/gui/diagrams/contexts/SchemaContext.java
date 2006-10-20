@@ -32,18 +32,18 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.TransferHandler;
 
-import org.biomart.builder.model.Column;
-import org.biomart.builder.model.ComponentStatus;
-import org.biomart.builder.model.Key;
-import org.biomart.builder.model.Relation;
-import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.SchemaGroup;
-import org.biomart.builder.model.Table;
-import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.ComponentStatus;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
+import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -379,18 +379,6 @@ public class SchemaContext implements DiagramContext {
 					}
 				});
 				contextMenu.add(update);
-
-				// Option to test the schema to see if it works.
-				final JMenuItem test = new JMenuItem(Resources
-						.get("testSchemaTitle"));
-				test.setMnemonic(Resources.get("testSchemaMnemonic").charAt(0));
-				test.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						SchemaContext.this.martTab.getSchemaTabSet()
-								.requestTestSchema(schema);
-					}
-				});
-				contextMenu.add(test);
 
 				// Option to remove the schema from the mart.
 				final JMenuItem remove = new JMenuItem(

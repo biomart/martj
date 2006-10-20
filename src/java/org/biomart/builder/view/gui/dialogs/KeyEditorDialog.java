@@ -38,8 +38,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
-import org.biomart.builder.model.Key;
-import org.biomart.builder.model.Table;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**
