@@ -1407,25 +1407,29 @@ public class DatabaseDatasetConfigUtils {
 	Connection conn = null;
 	try {
 		conn = dsource.getConnection();
-		String sql = "SELECT dataset_id_key FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE template='"+template+"'";
-		PreparedStatement ps = conn.prepareStatement(sql);
-		ResultSet rs = ps.executeQuery();
-		while(rs.next()){		
-			String datasetID = rs.getString(1);	
+		//String sql = "SELECT dataset_id_key FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE template='"+template+"'";
+		//PreparedStatement ps = conn.prepareStatement(sql);
+		//ResultSet rs = ps.executeQuery();
+		//while(rs.next()){		
+		//	String datasetID = rs.getString(1);	
+		String[] dsNames = templateConfig.getDynamicDatasetNames();
+		for (int i = 0; i < dsNames.length; i++) {
+			String dsName = dsNames[i];
 			DatasetConfig dsConfig = null;
 			DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),MartEditor.getUser(), MartEditor.getMartUser(), true, false, true, true);
 			DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 			while (configs.hasNext()){
 				DatasetConfig lconfig = (DatasetConfig) configs.next();
-				if (lconfig.getDatasetID().equals(datasetID)){
+//				if (lconfig.getDatasetID().equals(datasetID)){
+				if (lconfig.getDataset().equals(dsName)){
 						dsConfig = lconfig;
 						break;
 				}
 			}
-					
-			dsConfig.setTemplate(template);//needed otherwise gets set to dataset
 			
 			getXSLTransformedConfig(dsConfig);// transform XML to latest version
+			
+			dsConfig.setTemplate(template);//needed otherwise gets set to dataset
 			
 			/*
 			// delete any non-placeholder filts/atts that are no longer in the template
@@ -3193,7 +3197,7 @@ public boolean naiveExportWouldOverrideExistingConfig(
       return storeCompressedXMLOracle(user, internalName, displayName, dataset, description, doc, type, visible, version, datasetID, martUsers, interfaces,dsConfig);
 	  if (readonly) throw new ConfigurationException("Cannot store config into read-only database");
 
-	  System.err.println("STORING XML: "+dsConfig.getInternalName()+" "+dsConfig.getTemplate());
+	  System.err.println("STORING XML: "+dsConfig.getDisplayName()+" "+dsConfig.getTemplate());
 	  
     Connection conn = null;
     try {
