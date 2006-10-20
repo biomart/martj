@@ -404,6 +404,7 @@
 			<fileset dir="${bin.dir}" casesensitive="yes">
 		  		<include name="*.sh"/>
 			  	<exclude name="*.bat"/>
+			  	<exclude name="*.command"/>
     			<exclude name="**/CVS" />
 			</fileset>
         </copy>
@@ -427,6 +428,7 @@
                 mode="755"
                 preserveLeadingSlashes="true">
                 <include name="**/bin/*.sh"/>
+                <include name="**/bin/*.command"/>
             </tarfileset>
 
             <!-- bin/martshell.bat -->
@@ -434,6 +436,7 @@
                 prefix="${build.name}"
                 preserveLeadingSlashes="true">
                 <include name="**/bin/*.bat"/>
+                <include name="**/bin/*.dmg"/>
             </tarfileset>
         
             <!-- dist.bin.jars -->    
