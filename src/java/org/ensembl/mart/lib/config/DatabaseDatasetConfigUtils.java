@@ -5687,7 +5687,10 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 
 
   private boolean pruneBrokenOptions(FilterDescription original, FilterDescription validated) throws SQLException {
-    	  
+	  
+	  if (original.getOptions().length==0) 
+		  return validated.isBroken();
+	  
 	  Option[] originalOpts = original.getOptions();
 	  
 	  for (int i = 0; i < originalOpts.length; i++) {
