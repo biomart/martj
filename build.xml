@@ -436,7 +436,7 @@
                 prefix="${build.name}"
                 preserveLeadingSlashes="true">
                 <include name="**/bin/*.bat"/>
-                <include name="**/bin/*.dmg"/>
+                <include name="**/bin/*.app"/>
             </tarfileset>
         
             <!-- dist.bin.jars -->    
@@ -511,10 +511,6 @@
   			<javaproperty name="com.apple.macos.useScreenMenuBar" value="true"/>
   			<javaproperty name="com.apple.macos.smallTabs" value="true"/>
         </jarbundler>
-        <exec dir="${data.dir}" executable="makedmg" os="Mac OS X">
-  			<arg line="${dist.dir}/bin/BioMartLauncher.dmg BioMartLauncher ${dist.dir}/bin/BioMartLauncher.app"/>
-		</exec>
-		<delete file="${dist.dir}/bin/BioMartLauncher.app"/>
 		</target>
 
     <!-- copies all JRE versions of the shell and bat scripts, renaming to make it easier to find -->

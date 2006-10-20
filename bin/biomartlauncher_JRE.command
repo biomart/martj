@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Note: /bin/sh doesn't work on Alphas (need to use bash thexre) but
 # works everywhere else.
