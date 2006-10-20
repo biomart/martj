@@ -2462,7 +2462,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					do {
 						filtcoll = dsConfig.getCollectionForFilter(internalName);
 						if (filtcoll!=null){
-							System.out.println(internalName+"=>"+filtcoll.getInternalName()+":"+filtcoll.getFilterDescriptionByInternalName(internalName));
+							//System.out.println(internalName+"=>"+filtcoll.getInternalName()+":"+filtcoll.getFilterDescriptionByInternalName(internalName));
 							filtcoll.removeFilterDescription(filtcoll.getFilterDescriptionByInternalName(internalName));
 						}
 					} while (filtcoll!=null);
