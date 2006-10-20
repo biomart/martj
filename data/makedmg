@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# copyright 2003 Nick Howes / Bardac Corporation
+#
+# creates a dmg file, copies a file into it, compresses the copy and makes it "internet-enabled"
+#
+# Taken from http://lists.apple.com/archives/java-dev/2005/Aug/msg00191.html
+
+if [ $# != 3 ]; then
+echo "Usage: makedmg dmgfile volname srcfile"
+exit -1
+fi
+DMG="$1"
+VOL="$2"
+FILE="$3"
+TEMP="tempfile.dmg"
+
+
+# create dmg file
+hdiutil create ${TEMP} -megabytes 5 -fs HFS+ -volname ${VOL} -ov
+
+
+#mount dmg file
+DISK=`hdiutil attach ${TEMP} |awk '/scheme/ {print substr ($1, 6, length)}'`
+
+#copy source file
+cp -R "${FILE}" "/Volumes/${VOL}"
+
+
+# unmount DMG disk
+hdiutil detach ${DISK}
+
+
+#convert file to compressed form
+hdiutil convert ${TEMP} -format UDZO -imagekey 7 -o ${DMG}
+
+
+#make "internet-enabled" <http://developer.apple.com/ue/files/iedi.html>
+hdiutil internet-enable -yes ${DMG}
+
+
+#delete temp file
+rm -f ${TEMP}
+
