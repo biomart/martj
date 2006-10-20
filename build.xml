@@ -500,7 +500,7 @@
 		<!-- creates the BioMartLauncher.app -->
    		<target name="doMacOS" if="isMacOS">
 		<taskdef name="jarbundler" 
-      	   classname="net.sourceforge.jarbundler.JarBundler" if="isMacOS"/>	    
+      	   classname="net.sourceforge.jarbundler.JarBundler"/>	    
 		<jarbundler dir="${dist.dir}/bin"
             name="BioMartLauncher"
             mainclass="org.biomart.launcher.view.gui.BioMartLauncher">
