@@ -403,8 +403,8 @@
         <copy todir="${dist.dir}/bin">
 			<fileset dir="${bin.dir}" casesensitive="yes">
 		  		<include name="*.sh"/>
-			  	<exclude name="*.bat"/>
-			  	<exclude name="*.command"/>
+			  	<include name="*.bat"/>
+			  	<include name="*.command"/>
     			<exclude name="**/CVS" />
 			</fileset>
         </copy>
