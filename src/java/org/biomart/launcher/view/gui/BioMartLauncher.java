@@ -35,8 +35,8 @@ import org.biomart.common.view.gui.StackTrace;
  * application.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class BioMartLauncher {
@@ -63,7 +63,7 @@ public class BioMartLauncher {
 			}
 		});
 	}
-	
+
 	/**
 	 * Creates a new instance of BioMartLauncher. You can customise the
 	 * look-and-feel by speciying a configuration property called
@@ -119,8 +119,8 @@ public class BioMartLauncher {
 		// Load that class and run it.
 		if (chosenClass != null)
 			try {
-				Class.forName(chosenClass).getMethod("main",
-						new Class[] { String[].class }).invoke(null,
+				Class.forName((String) classes.get(chosenClass)).getMethod(
+						"main", new Class[] { String[].class }).invoke(null,
 						new Object[] { args });
 			} catch (Throwable t) {
 				StackTrace.showStackTrace(t);
