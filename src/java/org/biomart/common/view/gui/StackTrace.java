@@ -61,6 +61,12 @@ public class StackTrace {
 			mainMessage = mainMessage.substring(0, 100)
 					+ Resources.get("truncatedException");
 
+		// Prepend exception classname.
+		final String throwableClass = t.getClass().getName();
+		final int lastDot = throwableClass.lastIndexOf('.');
+		mainMessage = throwableClass.substring(lastDot + 1) + ":\n"
+				+ mainMessage;
+
 		// Ask if they want to see the full stack trace (show the first line of
 		// the stack trace as a hint).
 		final int choice = JOptionPane.showConfirmDialog(null, new Object[] {

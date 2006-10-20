@@ -124,6 +124,7 @@ public class BioMartLauncher {
 						new Object[] { args });
 			} catch (Throwable t) {
 				StackTrace.showStackTrace(t);
+				System.exit(1);
 			}
 		else
 			System.exit(0);
