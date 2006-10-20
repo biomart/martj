@@ -18,7 +18,6 @@
 
 package org.biomart.builder.exceptions;
 
-
 /**
  * This refers to exceptions where something has failed a validation test, eg.
  * incorrect input, or an attempt to set some parameter where it cannot be

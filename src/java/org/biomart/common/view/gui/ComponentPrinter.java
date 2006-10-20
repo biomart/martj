@@ -29,7 +29,6 @@ import java.awt.print.PrinterJob;
 
 import javax.swing.RepaintManager;
 
-
 /**
  * Prints any given component.
  * <p>
@@ -38,8 +37,8 @@ import javax.swing.RepaintManager;
  * Swing Tutorial</a>.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class ComponentPrinter implements Printable {
@@ -115,9 +114,11 @@ public class ComponentPrinter implements Printable {
 			// Do the printing.
 			final RepaintManager currentManager = RepaintManager
 					.currentManager(this.component);
+			final boolean doubleBufferingEnabled = currentManager
+					.isDoubleBufferingEnabled();
 			currentManager.setDoubleBufferingEnabled(false);
 			this.component.printAll(g2d);
-			currentManager.setDoubleBufferingEnabled(true);
+			currentManager.setDoubleBufferingEnabled(doubleBufferingEnabled);
 			return Printable.PAGE_EXISTS;
 		}
 	}

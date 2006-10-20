@@ -16,60 +16,60 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.exceptions;
+package org.biomart.common.exceptions;
 
 /**
- * This is a basic {@link Exception} for all non-specific exceptions during mart
- * construction.
+ * This is a basic {@link Exception} for all non-specific MartBuilder
+ * exceptions.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by 
  * 			$Author$
  * @since 0.1
  */
-public class ConstructorException extends MartBuilderException {
+public class CommonException extends BioMartException {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * Creates a new instance of <tt>ConstructorException</tt> without detail
+	 * Creates a new instance of <tt>CommonException</tt> without detail
 	 * message.
 	 */
-	public ConstructorException() {
+	public CommonException() {
 		super();
 	}
 
 	/**
-	 * Constructs an instance of <tt>ConstructorException</tt> with the
-	 * specified detail message.
+	 * Constructs an instance of <tt>CommonException</tt> with the specified
+	 * detail message.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 */
-	public ConstructorException(final String msg) {
+	public CommonException(final String msg) {
 		super(msg);
 	}
 
 	/**
-	 * Constructs an instance of <tt>ConstructorException</tt> with the
-	 * specified detail message and cause.
+	 * Constructs an instance of <tt>CommonException</tt> with the specified
+	 * detail message and cause.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 * @param t
 	 *            the underlying cause.
 	 */
-	public ConstructorException(final String msg, final Throwable t) {
+	public CommonException(final String msg, final Throwable t) {
 		super(msg, t);
 	}
 
 	/**
-	 * Constructs an instance of <tt>ConstructorException</tt> with the
-	 * specified cause.
+	 * Constructs an instance of <tt>CommonException</tt> with the specified
+	 * cause.
 	 * 
 	 * @param t
 	 *            the underlying cause.
 	 */
-	public ConstructorException(final Throwable t) {
+	public CommonException(final Throwable t) {
 		super(t);
 	}
 }

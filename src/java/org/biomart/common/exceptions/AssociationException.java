@@ -18,9 +18,6 @@
 
 package org.biomart.common.exceptions;
 
-import org.biomart.builder.exceptions.MartBuilderException;
-
-
 /**
  * This refers to exceptions where something is being added to something else,
  * but the two items are not associated or cannot be associated.
@@ -30,7 +27,7 @@ import org.biomart.builder.exceptions.MartBuilderException;
  * 			$Author$
  * @since 0.1
  */
-public class AssociationException extends MartBuilderException {
+public class AssociationException extends CommonException {
 	private static final long serialVersionUID = 1;
 
 	/**

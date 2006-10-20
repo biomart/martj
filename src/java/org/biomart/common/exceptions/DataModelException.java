@@ -18,9 +18,6 @@
 
 package org.biomart.common.exceptions;
 
-import org.biomart.builder.exceptions.MartBuilderException;
-
-
 /**
  * This is a basic {@link Exception} for all non-specific MartBuilder
  * exceptions.
@@ -30,7 +27,7 @@ import org.biomart.builder.exceptions.MartBuilderException;
  * 			$Author$
  * @since 0.1
  */
-public class DataModelException extends MartBuilderException {
+public class DataModelException extends CommonException {
 	private static final long serialVersionUID = 1;
 
 	/**
