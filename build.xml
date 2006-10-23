@@ -404,7 +404,6 @@
 			<fileset dir="${bin.dir}" casesensitive="yes">
 		  		<include name="*.sh"/>
 			  	<include name="*.bat"/>
-			  	<include name="*.command"/>
     			<exclude name="**/CVS" />
 			</fileset>
         </copy>
@@ -428,7 +427,6 @@
                 mode="755"
                 preserveLeadingSlashes="true">
                 <include name="**/bin/*.sh"/>
-                <include name="**/bin/*.command"/>
             </tarfileset>
 
             <!-- bin/martshell.bat -->
@@ -436,7 +434,6 @@
                 prefix="${build.name}"
                 preserveLeadingSlashes="true">
                 <include name="**/bin/*.bat"/>
-                <include name="**/bin/*.app"/>
             </tarfileset>
         
             <!-- dist.bin.jars -->    
@@ -502,8 +499,8 @@
 		<taskdef name="jarbundler" 
       	   classname="net.sourceforge.jarbundler.JarBundler"/>	    
 		<jarbundler dir="${dist.dir}/bin"
-            name="BioMartLauncher"
-            mainclass="org.biomart.launcher.view.gui.BioMartLauncher">
+            name="MartBuilder"
+            mainclass="org.biomart.launcher.view.gui.MartBuilder">
             <jarfileset dir="${dist.dir}/${lib.dir}">
 		    	<include name="**/*.jar" />
     			<exclude name="**/CVS" />
@@ -511,6 +508,39 @@
   			<javaproperty name="com.apple.macos.useScreenMenuBar" value="true"/>
   			<javaproperty name="com.apple.macos.smallTabs" value="true"/>
         </jarbundler>
+		<jarbundler dir="${dist.dir}/bin"
+            name="MartEditor"
+            mainclass="org.ensembl.mart.editor.MartEditor">
+            <jarfileset dir="${dist.dir}/${lib.dir}">
+		    	<include name="**/*.jar" />
+    			<exclude name="**/CVS" />
+  			</jarfileset>
+  			<javaproperty name="com.apple.macos.useScreenMenuBar" value="true"/>
+  			<javaproperty name="com.apple.macos.smallTabs" value="true"/>
+        </jarbundler>
+		<jarbundler dir="${dist.dir}/bin"
+            name="MartExplorer"
+            mainclass="org.ensembl.mart.editor.MartExplorer">
+            <jarfileset dir="${dist.dir}/${lib.dir}">
+		    	<include name="**/*.jar" />
+    			<exclude name="**/CVS" />
+  			</jarfileset>
+  			<javaproperty name="com.apple.macos.useScreenMenuBar" value="true"/>
+  			<javaproperty name="com.apple.macos.smallTabs" value="true"/>
+        </jarbundler>
+		<jarbundler dir="${dist.dir}/bin"
+            name="MartShell"
+            mainclass="org.ensembl.mart.editor.MartShell">
+            <jarfileset dir="${dist.dir}/${lib.dir}">
+		    	<include name="**/*.jar" />
+    			<exclude name="**/CVS" />
+  			</jarfileset>
+        </jarbundler>
+        <tar destfile="${build.dir}/${name}-macosx.dmg">
+        </tar>
+        <exec dir="${dist.dir}/data" executable="makedmg">
+         <arg line="${build.dir}/${name}-macosx.dmg BioMart ${dist.dir}/bin/MartShell.app"/>
+        </exec>
 		</target>
 
     <!-- copies all JRE versions of the shell and bat scripts, renaming to make it easier to find -->
