@@ -543,7 +543,7 @@ public class DatabaseDatasetConfigUtils {
 						if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
 							spaceErrors = spaceErrors + testAD.getInternalName() + " in page " + fpage.getInternalName() + "\n";
 						}	
-						if (descriptionsMap.containsKey(testAD.getInternalName())){
+						if (descriptionsMap.containsKey(testAD.getInternalName())){						 
 							filterDuplicationMap.put(testAD.getInternalName(),dsConfig.getDataset());
 							continue;//to stop options also being assessed
 						}
@@ -578,7 +578,6 @@ public class DatabaseDatasetConfigUtils {
 							  }
 							  if (descriptionsMap.containsKey(op.getInternalName())){
 								filterDuplicationMap.put(op.getInternalName(),dsConfig.getDataset());
-								//System.out.println("FOUND DUPLICATED OP INT NAME "+op.getInternalName()+ " IN COLLECTION "+testColl.getInternalName());
 							  }
 							  descriptionsMap.put(op.getInternalName(),"1");
 						  }
@@ -914,7 +913,7 @@ public class DatabaseDatasetConfigUtils {
 			//}
 			//if (ad.getTableConstraint() != null && !ad.getTableConstraint().equals("") && !ad.getTableConstraint().equals("main"))
 			//	ad.setTableConstraint(ad.getTableConstraint().split("__")[1]+"__"+ad.getTableConstraint().split("__")[2]);		
-			
+
 			//ad.setLinkoutURL("");		
 		}
 		
@@ -1261,7 +1260,7 @@ public class DatabaseDatasetConfigUtils {
 					  if (descriptionsMap.containsKey(testAD.getInternalName())){
 						  //duplicationString = duplicationString + testAD.getInternalName() + " in dataset " + config.getDataset() + "\n";
 						  //filterDuplicationString = filterDuplicationString + "Filter " + testAD.getInternalName() + " in dataset " + config.getDataset() + 
-						  //							  " and page " + fpage.getInternalName() + "\n";
+						  //							  " and page " + fpage.getInternalName() + "\n";							  
 						  filterDuplicationMap.put(testAD.getInternalName(),config.getDataset()); 
 						  //brokenDatasets.add(config.getDataset());							  
 						  continue;//to stop options also being assessed
@@ -1296,7 +1295,7 @@ public class DatabaseDatasetConfigUtils {
 							}
 							if (descriptionsMap.containsKey(op.getInternalName())){
 								//filterDuplicationString = filterDuplicationString + op.getInternalName() + " in dataset " + config.getDataset() + "\n";
-							  filterDuplicationMap.put(testAD.getInternalName(),config.getDataset()); 
+							  filterDuplicationMap.put(op.getInternalName(),config.getDataset()); 
 							  //brokenDatasets.add(config.getDataset());	
 							}
 							descriptionsMap.put(op.getInternalName(),"1");
@@ -2461,8 +2460,11 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					FilterCollection filtcoll = null;
 					do {
 						filtcoll = dsConfig.getCollectionForFilter(internalName);
-						if (filtcoll!=null){
-							//System.out.println(internalName+"=>"+filtcoll.getInternalName()+":"+filtcoll.getFilterDescriptionByInternalName(internalName));
+						if (filtcoll != null && filtcoll.getFilterDescriptionByInternalName(internalName) == null){
+							// not quite sure why need check but throws exceptions if don't
+							filtcoll = null;
+						}
+						if (filtcoll!=null){			
 							filtcoll.removeFilterDescription(filtcoll.getFilterDescriptionByInternalName(internalName));
 						}
 					} while (filtcoll!=null);
