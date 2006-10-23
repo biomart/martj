@@ -229,13 +229,6 @@
         </copy>
 
         <copy
-        todir="${build.classes}/org/biomart/launcher/resources">
-        	<fileset dir="${src.dir}/org/biomart/launcher/resources/" casesensitive="yes">
-        	  <exclude name="**/*.java"/>
-        	</fileset>
-        </copy>
-
-        <copy
         todir="${build.classes}/org/biomart/builder/resources">
         	<fileset dir="${src.dir}/org/biomart/builder/resources/" casesensitive="yes">
         	  <exclude name="**/*.java"/>
