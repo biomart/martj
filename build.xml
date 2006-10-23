@@ -498,49 +498,56 @@
    		<target name="doMacOS" if="isMacOS">
 		<taskdef name="jarbundler" 
       	   classname="net.sourceforge.jarbundler.JarBundler"/>	    
-		<jarbundler dir="${dist.dir}/bin"
+        <mkdir dir="${dist.dir}/dmg" />
+                <taskdef name="jarbundler"
+           classname="net.sourceforge.jarbundler.JarBundler"/>
+                <jarbundler dir="${dist.dir}/dmg"
             name="MartBuilder"
             mainclass="org.biomart.launcher.view.gui.MartBuilder">
             <jarfileset dir="${dist.dir}/${lib.dir}">
-		    	<include name="**/*.jar" />
-    			<exclude name="**/CVS" />
-  			</jarfileset>
-  			<javaproperty name="com.apple.macos.useScreenMenuBar" value="true"/>
-  			<javaproperty name="com.apple.macos.smallTabs" value="true"/>
+                        <include name="**/*.jar" />
+                        <exclude name="**/CVS" />
+                        </jarfileset>
+                        <javaproperty name="com.apple.macos.useScreenMenuBar" value="true"/>
+                        <javaproperty name="com.apple.macos.smallTabs" value="true"/>
         </jarbundler>
-		<jarbundler dir="${dist.dir}/bin"
+               <jarbundler dir="${dist.dir}/dmg"
             name="MartEditor"
             mainclass="org.ensembl.mart.editor.MartEditor">
             <jarfileset dir="${dist.dir}/${lib.dir}">
-		    	<include name="**/*.jar" />
-    			<exclude name="**/CVS" />
-  			</jarfileset>
-  			<javaproperty name="com.apple.macos.useScreenMenuBar" value="true"/>
-  			<javaproperty name="com.apple.macos.smallTabs" value="true"/>
+                        <include name="**/*.jar" />
+                        <exclude name="**/CVS" />
+                        </jarfileset>
+                        <javaproperty name="com.apple.macos.useScreenMenuBar" value="true"/>
+                        <javaproperty name="com.apple.macos.smallTabs" value="true"/>
         </jarbundler>
-		<jarbundler dir="${dist.dir}/bin"
+    <jarbundler dir="${dist.dir}/dmg"
             name="MartExplorer"
             mainclass="org.ensembl.mart.editor.MartExplorer">
             <jarfileset dir="${dist.dir}/${lib.dir}">
-		    	<include name="**/*.jar" />
-    			<exclude name="**/CVS" />
-  			</jarfileset>
-  			<javaproperty name="com.apple.macos.useScreenMenuBar" value="true"/>
-  			<javaproperty name="com.apple.macos.smallTabs" value="true"/>
+                        <include name="**/*.jar" />
+                        <exclude name="**/CVS" />
+                        </jarfileset>
+                        <javaproperty name="com.apple.macos.useScreenMenuBar" value="true"/>
+                        <javaproperty name="com.apple.macos.smallTabs" value="true"/>
         </jarbundler>
-		<jarbundler dir="${dist.dir}/bin"
+                <jarbundler dir="${dist.dir}/dmg"
             name="MartShell"
             mainclass="org.ensembl.mart.editor.MartShell">
             <jarfileset dir="${dist.dir}/${lib.dir}">
-		    	<include name="**/*.jar" />
-    			<exclude name="**/CVS" />
-  			</jarfileset>
+                        <include name="**/*.jar" />
+                        <exclude name="**/CVS" />
+                        </jarfileset>
         </jarbundler>
-        <tar destfile="${build.dir}/${name}-macosx.dmg">
-        </tar>
-        <exec dir="${dist.dir}/data" executable="makedmg">
-         <arg line="${build.dir}/${name}-macosx.dmg BioMart ${dist.dir}/bin/MartShell.app"/>
-        </exec>
+    <exec executable="/usr/bin/hdiutil">
+      <arg value="create"/>
+      <arg value="-srcfolder"/>
+      <arg value="${dist.dir}/dmg"/>
+      <arg value="-volname"/>
+      <arg value="${name} ${version}"/>
+      <arg value="-ov"/>
+      <arg value="${build.dir}/${name}-bin.dmg"/>
+    </exec>
 		</target>
 
     <!-- copies all JRE versions of the shell and bat scripts, renaming to make it easier to find -->
