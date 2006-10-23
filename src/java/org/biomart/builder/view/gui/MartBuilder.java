@@ -20,25 +20,19 @@ package org.biomart.builder.view.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
 import javax.swing.ImageIcon;
-import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.UIManager;
-import javax.swing.WindowConstants;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.SettingsCache;
-import org.biomart.common.view.gui.LongProcess;
+import org.biomart.common.view.gui.BioMartApplication;
 
 /**
  * The main window housing the MartBuilder GUI. The {@link #main(String[])}
@@ -49,7 +43,7 @@ import org.biomart.common.view.gui.LongProcess;
  *          $Author$
  * @since 0.1
  */
-public class MartBuilder extends JFrame {
+public class MartBuilder extends BioMartApplication {
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -65,91 +59,18 @@ public class MartBuilder extends JFrame {
 		SettingsCache.setApplication(SettingsCache.MARTBUILDER);
 		Resources.setResourceLocation("org/biomart/builder/resources");
 		// Start the application.
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				// Create it.
-				final MartBuilder mb = new MartBuilder();
-				// Centre it.
-				mb.setLocationRelativeTo(null);
-				// Open it.
-				mb.setVisible(true);
-			}
-		});
+		new MartBuilder().launch();
 	}
 
 	private MartTabSet martTabSet;
 
-	/**
-	 * Creates a new instance of MartBuilder. You can customise the
-	 * look-and-feel by speciying a configuration property called
-	 * <tt>lookandfeel</tt>, which contains the classname of the
-	 * look-and-feel to use. Details of where this file is can be found in
-	 * {@link SettingsCache}.
-	 */
-	private MartBuilder() {
-		// Create the window.
-		super(Resources.get("GUITitle", Resources.BIOMART_VERSION));
-
-		// Assign ourselves to the long-process hourglass container.
-		// This means that whenever the hourglass is on, it appears
-		// over our entire window, not just the component that
-		// called for it.
-		LongProcess.setContainer(this);
-
-		// Load our cache of settings.
-		SettingsCache.load();
-
-		// Set the look and feel to the one specified by the user, or the system
-		// default if not specified by the user. This may be null.
-		String lookAndFeelClass = SettingsCache.getProperty("lookandfeel");
-		try {
-			UIManager.setLookAndFeel(lookAndFeelClass);
-		} catch (final Exception e) {
-			// Ignore, as we'll end up with the system one if this one doesn't
-			// work.
-			if (lookAndFeelClass != null) // only worry if we were actually
-				// given one.
-				System.err.println(Resources.get("badLookAndFeel",
-						lookAndFeelClass));
-			// Use system default.
-			lookAndFeelClass = UIManager.getSystemLookAndFeelClassName();
-			try {
-				UIManager.setLookAndFeel(lookAndFeelClass);
-			} catch (final Exception e2) {
-				// Ignore, as we'll end up with the cross-platform one if there
-				// is no system one.
-				System.err.println(Resources.get("badLookAndFeel",
-						lookAndFeelClass));
-			}
-		}
-
-		// Set up our GUI components.
-		this.initComponents();
-
-		// Set a sensible size.
-		this.setSize(this.getMinimumSize());
-	}
-
-	private void initComponents() {
-		// Set up window listener and use it to handle windows closing.
-		final MartBuilder mb = this;
-		this.addWindowListener(new WindowAdapter() {
-			public void windowClosing(final WindowEvent e) {
-				if (e.getWindow() == mb)
-					MartBuilder.this.requestExitApp();
-			}
-		});
-		this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-
+	protected void initComponents() {
 		// Make a menu bar and add it.
 		this.setJMenuBar(new MartBuilderMenuBar(this));
 
 		// Set up the set of tabs to hold the various marts.
 		this.martTabSet = new MartTabSet(this);
 		this.getContentPane().add(this.martTabSet, BorderLayout.CENTER);
-
-		// Pack the window.
-		this.pack();
 	}
 
 	public Dimension getMinimumSize() {

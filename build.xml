@@ -508,8 +508,7 @@
                         <include name="**/*.jar" />
                         <exclude name="**/CVS" />
                         </jarfileset>
-                        <javaproperty name="com.apple.macos.useScreenMenuBar" value="true"/>
-                        <javaproperty name="com.apple.macos.smallTabs" value="true"/>
+                        <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
         </jarbundler>
                <jarbundler dir="${dist.dir}/dmg"
             name="MartEditor"
@@ -518,8 +517,7 @@
                         <include name="**/*.jar" />
                         <exclude name="**/CVS" />
                         </jarfileset>
-                        <javaproperty name="com.apple.macos.useScreenMenuBar" value="true"/>
-                        <javaproperty name="com.apple.macos.smallTabs" value="true"/>
+                        <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
         </jarbundler>
     <jarbundler dir="${dist.dir}/dmg"
             name="MartExplorer"
@@ -528,8 +526,7 @@
                         <include name="**/*.jar" />
                         <exclude name="**/CVS" />
                         </jarfileset>
-                        <javaproperty name="com.apple.macos.useScreenMenuBar" value="true"/>
-                        <javaproperty name="com.apple.macos.smallTabs" value="true"/>
+                        <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
         </jarbundler>
                 <jarbundler dir="${dist.dir}/dmg"
             name="MartShell"
@@ -539,6 +536,35 @@
                         <exclude name="**/CVS" />
                         </jarfileset>
         </jarbundler>
+        
+            <!-- bin/*.sh with correct unix file mode -->
+            <mkdir dir="${dist.dir}/dmg/bin"/>
+        <copy todir="${dist.dir}/dmg/bin">
+			<fileset dir="${bin.dir}" casesensitive="yes">
+		  		<include name="martshell.sh"/>
+    			<exclude name="**/CVS" />
+			</fileset>
+        </copy>
+        <rename from="${dist.dir}/dmg/bin/martshell.sh" to="${dist.dir}/dmg/bin/martshell.command"/>
+        <chmod mode="755" dir="${dist.dir}/dmg/bin" includes="**/*.command"/>
+        
+            <mkdir dir="${dist.dir}/dmg/lib"/>
+        <copy todir="${dist.dir}/dmg/lib">
+			<fileset dir="${dist.dir}/${lib.dir}" casesensitive="yes">
+                <patternset refid="dist.bin.jars"/>
+			</fileset>
+        </copy>
+        <copy todir="${dist.dir}/dmg/lib">
+			<fileset dir="${dist.dir}/${lib.dir}" casesensitive="yes">
+                <patternset refid="readline.libs"/>
+			</fileset>
+        </copy>
+            <mkdir dir="${dist.dir}/dmg/data"/>
+        <copy todir="${dist.dir}/dmg/data">
+			<fileset dir="${dist.dir}/${data.dir}" casesensitive="yes">
+                <patternset refid="dist.bin.data"/>
+			</fileset>
+        </copy>        
         <delete file="${build.dir}/${name}-bin.dmg" />
     <exec executable="/usr/bin/hdiutil">
       <arg value="create"/>
@@ -547,6 +573,11 @@
       <arg value="-volname"/>
       <arg value="${name} ${version}"/>
       <arg value="-ov"/>
+      <arg value="${build.dir}/${name}-bin.dmg"/>
+    </exec>
+    <exec executable="/usr/bin/hdiutil">
+      <arg value="internet-enable"/>
+      <arg value="-yes"/>
       <arg value="${build.dir}/${name}-bin.dmg"/>
     </exec>
 		</target>
