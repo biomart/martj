@@ -503,7 +503,7 @@
            classname="net.sourceforge.jarbundler.JarBundler"/>
                 <jarbundler dir="${dist.dir}/dmg"
             name="MartBuilder"
-            mainclass="org.biomart.launcher.view.gui.MartBuilder">
+            mainclass="org.biomart.builder.view.gui.MartBuilder">
             <jarfileset dir="${dist.dir}/${lib.dir}">
                         <include name="**/*.jar" />
                         <exclude name="**/CVS" />
@@ -523,7 +523,7 @@
         </jarbundler>
     <jarbundler dir="${dist.dir}/dmg"
             name="MartExplorer"
-            mainclass="org.ensembl.mart.editor.MartExplorer">
+            mainclass="org.ensembl.mart.explorer.MartExplorer">
             <jarfileset dir="${dist.dir}/${lib.dir}">
                         <include name="**/*.jar" />
                         <exclude name="**/CVS" />
@@ -533,12 +533,13 @@
         </jarbundler>
                 <jarbundler dir="${dist.dir}/dmg"
             name="MartShell"
-            mainclass="org.ensembl.mart.editor.MartShell">
+            mainclass="org.ensembl.mart.shell.MartShell">
             <jarfileset dir="${dist.dir}/${lib.dir}">
                         <include name="**/*.jar" />
                         <exclude name="**/CVS" />
                         </jarfileset>
         </jarbundler>
+        <delete file="${build.dir}/${name}-bin.dmg" />
     <exec executable="/usr/bin/hdiutil">
       <arg value="create"/>
       <arg value="-srcfolder"/>
@@ -555,6 +556,8 @@
 
         <copy file="${bin.dir}/martshell_JRE.bat" tofile="${dist.dir}/bin/martshell.bat" />
         <copy file="${bin.dir}/martshell_JRE.sh" tofile="${dist.dir}/bin/martshell.sh" />
+        <copy file="${bin.dir}/martbuilder_JRE.bat" tofile="${dist.dir}/bin/martbuilder.bat" />
+        <copy file="${bin.dir}/martbuilder_JRE.sh" tofile="${dist.dir}/bin/martbuilder.sh" />
         <copy file="${bin.dir}/martexplorer_JRE.bat" tofile="${dist.dir}/bin/martexplorer.bat" />
         <copy file="${bin.dir}/martexplorer_JRE.sh" tofile="${dist.dir}/bin/martexplorer.sh" />
         <copy file="${bin.dir}/simpleLibraryUsageExample_JRE.bat" tofile="${dist.dir}/bin/simpleLibraryUsageExample.bat" />
