@@ -538,7 +538,7 @@
     			<exclude name="**/CVS" />
 			</fileset>
         </copy>
-        <rename from="${dist.dir}/dmg/bin/martshell.sh" to="${dist.dir}/dmg/bin/martshell.command"/>
+        <rename src="${dist.dir}/dmg/bin/martshell.sh" dest="${dist.dir}/dmg/bin/martshell.command"/>
         <chmod mode="755" dir="${dist.dir}/dmg/bin" includes="**/*.command"/>
         
             <mkdir dir="${dist.dir}/dmg/lib"/>
