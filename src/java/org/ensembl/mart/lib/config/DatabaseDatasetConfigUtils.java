@@ -1427,11 +1427,16 @@ public class DatabaseDatasetConfigUtils {
 						break;
 				}
 			}
-			dsConfig.setTemplate(template);//repeat to override transform
 			
-			getXSLTransformedConfig(dsConfig);// transform XML to latest version
-			
+			String intName = dsConfig.getInternalName();
+			String dsID = dsConfig.getDatasetID();
+			dsConfig.attributes.clear();
+			dsConfig.attributes.putAll(templateConfig.attributes);
+			dsConfig.setInternalName(intName);
+			dsConfig.setDataset(dsName);
 			dsConfig.setTemplate(template);//repeat to override transform
+			dsConfig.setType("TableSet");
+			dsConfig.setDatasetID(dsID);
 			
 			updateConfigToTemplate(dsConfig,0);
 			
@@ -2367,27 +2372,21 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					// add the missing placeholder to the dsConfig			
 					FilterPage configPage = dsConfig.getFilterPageByName(templatePage.getInternalName());
 					if (configPage == null){
-						configPage = new FilterPage(templatePage.getInternalName(),
-											  templatePage.getDisplayName(),
-											  templatePage.getDescription());
+						configPage = new FilterPage(templatePage);
 						dsConfig.addFilterPage(configPage);				
 					}
 					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configPage, configPage);
 			
 					FilterGroup configGroup = (FilterGroup) configPage.getFilterGroupByName(templateGroup.getInternalName());
 					if (configGroup == null){
-						configGroup = new FilterGroup(templateGroup.getInternalName(),
-											  templateGroup.getDisplayName(),
-											  templateGroup.getDescription());
+						configGroup = new FilterGroup(templateGroup);
 						configPage.addFilterGroup(configGroup);				
 					}
 					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configGroup, configGroup);
 			
 					FilterCollection configCollection = (FilterCollection) configGroup.getFilterCollectionByName(templateCollection.getInternalName());
 					if (configCollection == null){
-						configCollection = new FilterCollection(templateCollection.getInternalName(),
-												  templateCollection.getDisplayName(),
-												  templateCollection.getDescription());
+						configCollection = new FilterCollection(templateCollection);
 						configGroup.addFilterCollection(configCollection);				
 					}
 					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configCollection, configCollection);
@@ -2555,11 +2554,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						// without other SNP attributes 
 						//continue;// BUT THIS STOPS SEQ AND STRUCTURE PAGE BEING ADDED FOR NEW NAIVE DATASETS
 						
-						configPage = new AttributePage(templatePage.getInternalName(),
-											  templatePage.getDisplayName(),
-											  templatePage.getDescription(),
-											  templatePage.getOutFormats(),
-											  templatePage.getMaxSelectString());
+						configPage = new AttributePage(templatePage);
 						dsConfig.addAttributePage(configPage);				
 						
 					}
@@ -2567,19 +2562,14 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 
 					AttributeGroup configGroup = (AttributeGroup) configPage.getAttributeGroupByName(templateGroup.getInternalName());
 					if (configGroup == null){
-						configGroup = new AttributeGroup(templateGroup.getInternalName(),
-											  templateGroup.getDisplayName(),
-											  templateGroup.getDescription());
+						configGroup = new AttributeGroup(templateGroup);
 						configPage.addAttributeGroup(configGroup);				
 					}
 					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configGroup, configGroup);
 
 					AttributeCollection configCollection = (AttributeCollection) configGroup.getAttributeCollectionByName(templateCollection.getInternalName());
 					if (configCollection == null){
-						configCollection = new AttributeCollection(templateCollection.getInternalName(),
-												  "",
-												  templateCollection.getDisplayName(),
-												  templateCollection.getDescription());
+						configCollection = new AttributeCollection(templateCollection);
 						configGroup.addAttributeCollection(configCollection);				
 					}
 					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configCollection, configCollection);
@@ -2734,11 +2724,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						// without other SNP attributes 
 						//continue;// BUT THIS STOPS SEQ AND STRUCTURE PAGE BEING ADDED FOR NEW NAIVE DATASETS
 						
-						configPage = new AttributePage(templatePage.getInternalName(),
-											  templatePage.getDisplayName(),
-											  templatePage.getDescription(),
-											  templatePage.getOutFormats(),
-											  templatePage.getMaxSelectString());
+						configPage = new AttributePage(templatePage);
 						dsConfig.addAttributePage(configPage);				
 						
 					}
@@ -2746,19 +2732,14 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			
 					AttributeGroup configGroup = (AttributeGroup) configPage.getAttributeGroupByName(templateGroup.getInternalName());
 					if (configGroup == null){
-						configGroup = new AttributeGroup(templateGroup.getInternalName(),
-											  templateGroup.getDisplayName(),
-											  templateGroup.getDescription());
+						configGroup = new AttributeGroup(templateGroup);
 						configPage.addAttributeGroup(configGroup);				
 					}
 					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configGroup, configGroup);
 
 					AttributeCollection configCollection = (AttributeCollection) configGroup.getAttributeCollectionByName(templateCollection.getInternalName());
 					if (configCollection == null){
-						configCollection = new AttributeCollection(templateCollection.getInternalName(),
-												  "",
-												  templateCollection.getDisplayName(),
-												  templateCollection.getDescription());
+						configCollection = new AttributeCollection(templateCollection);
 						configGroup.addAttributeCollection(configCollection);				
 					}
 					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configCollection, configCollection);
