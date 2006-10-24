@@ -2102,14 +2102,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
   public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig, int storeFlag) throws ConfigurationException, SQLException{
 	
 	
-	// first of all call getNewFiltsAtts so any extra atts in a new config get added to the template
-	// ? if the new atts will already be in there though
-	
-	String schema = null;
-	if(dsource.getDatabaseType().equals("oracle")) schema = dsource.getSchema().toUpperCase();
-	else schema = dsource.getSchema();
-	getNewFiltsAtts(schema,dsConfig);
-	
 	
 	String template = dsConfig.getTemplate();
 	
@@ -3330,8 +3322,10 @@ public boolean naiveExportWouldOverrideExistingConfig(
 	  //System.out.println(doc.getRootElement().getAttributeValue("modified").toString());
 
       
-      String insertSQL1 = "INSERT INTO " + getSchema()[0]+"." + metatable + " (display_name, dataset, description, " +	  	"type, visible, version,dataset_id_key,modified) values (?, ?, ?, ?, ?, ?,?,?)";
-      String insertSQL2 = "INSERT INTO " + getSchema()[0]+"."+MARTXMLTABLE+" (dataset_id_key, xml, compressed_xml, " +      	"message_digest) values (?, ?, ?, ?)";
+      String insertSQL1 = "INSERT INTO " + getSchema()[0]+"." + metatable + " (display_name, dataset, description, " +
+	  	"type, visible, version,dataset_id_key,modified) values (?, ?, ?, ?, ?, ?,?,?)";
+      String insertSQL2 = "INSERT INTO " + getSchema()[0]+"."+MARTXMLTABLE+" (dataset_id_key, xml, compressed_xml, " +
+      	"message_digest) values (?, ?, ?, ?)";
 	  
 
       if (logger.isLoggable(Level.FINE))
@@ -3656,7 +3650,8 @@ public boolean naiveExportWouldOverrideExistingConfig(
 				"md.dataset_id_key, modified " +
 				"FROM "+schema+"."+MARTINTERFACETABLE+" mi, "+schema+"."+BASEMETATABLE+" md, "+schema+"."+MARTXMLTABLE+" mx, "+
 				schema+"."+MARTUSERTABLE+" mu " +
-				"WHERE mu.dataset_id_key=md.dataset_id_key  AND md.dataset_id_key=mx.dataset_id_key AND md.dataset_id_key=mi.dataset_id_key AND mart_user = '" + martUser + "' " +				" AND visible = 1";
+				"WHERE mu.dataset_id_key=md.dataset_id_key  AND md.dataset_id_key=mx.dataset_id_key AND md.dataset_id_key=mi.dataset_id_key AND mart_user = '" + martUser + "' " +
+				" AND visible = 1";
 		}
 		else{
 			sql = "SELECT interface, display_name, dataset, description, message_digest, type, visible, version," +
@@ -3839,7 +3834,10 @@ public boolean naiveExportWouldOverrideExistingConfig(
 	try {
 		  createMetaTables("");
 		  HashMap importOptions = new HashMap();
-		  String sql = "SELECT DISTINCT IF (t.template IS NOT NULL, t.template, m.dataset) AS display_label," +		  	                           "IF (t.template IS NOT NULL, 1, 0) AS flag " +		  	                           "FROM "+getSchema()[0]+"."+BASEMETATABLE+" m LEFT JOIN " +										getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" t ON m.dataset_id_key=t.dataset_id_key";
+		  String sql = "SELECT DISTINCT IF (t.template IS NOT NULL, t.template, m.dataset) AS display_label," +
+		  	                           "IF (t.template IS NOT NULL, 1, 0) AS flag " +
+		  	                           "FROM "+getSchema()[0]+"."+BASEMETATABLE+" m LEFT JOIN " +
+										getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" t ON m.dataset_id_key=t.dataset_id_key";
 		  //System.out.println(sql);
 		  
 		  conn = dsource.getConnection();
@@ -4662,7 +4660,8 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     	String MYSQL_META1    = CREATETABLE+"."+BASEMETATABLE+
     		"(dataset_id_key int not null,dataset varchar(100),display_name varchar(100),description varchar(200),type varchar(20), " +
     		"visible int(1) unsigned, version varchar(25), modified TIMESTAMP NOT NULL,UNIQUE (dataset_id_key))"; 
-		String MYSQL_META2    = CREATETABLE+"."+MARTXMLTABLE+" ( dataset_id_key int not null, xml longblob, " +			"compressed_xml longblob, message_digest blob, UNIQUE (dataset_id_key))";
+		String MYSQL_META2    = CREATETABLE+"."+MARTXMLTABLE+" ( dataset_id_key int not null, xml longblob, " +
+			"compressed_xml longblob, message_digest blob, UNIQUE (dataset_id_key))";
     	String MYSQL_USER=CREATETABLE+"."+MARTUSERTABLE+" ( dataset_id_key int, mart_user varchar(100),UNIQUE(dataset_id_key,mart_user))";
 		String MYSQL_INTERFACE=CREATETABLE+"."+MARTINTERFACETABLE+" ( dataset_id_key int, interface varchar(100),UNIQUE(dataset_id_key,interface))"; 
 		String MYSQL_VERSION = CREATETABLE+"."+MARTVERSIONTABLE+" ( version varchar(10))";
@@ -4670,7 +4669,8 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 	    String MYSQL_TEMPLATE_DM = CREATETABLE+"."+MARTTEMPLATEDMTABLE+" ( template varchar(100), compressed_xml longblob, UNIQUE(template))";
 		
      	String ORACLE_META1   = CREATETABLE+"."+BASEMETATABLE+
-	        " (dataset_id_key number(1),dataset varchar2(100),display_name varchar2(100),description varchar2(200),type varchar2(20), " +	        "visible number(1), version varchar2(25),  modified timestamp,UNIQUE (dataset_id_key))";
+	        " (dataset_id_key number(1),dataset varchar2(100),display_name varchar2(100),description varchar2(200),type varchar2(20), " +
+	        "visible number(1), version varchar2(25),  modified timestamp,UNIQUE (dataset_id_key))";
 		String ORACLE_META2   = CREATETABLE+"."+MARTXMLTABLE+" (dataset_id_key number(1), xml clob, compressed_xml blob, message_digest blob,UNIQUE (dataset_id_key))";
      	String ORACLE_USER = CREATETABLE+"."+MARTUSERTABLE+" (dataset_id_key number(1), mart_user varchar2(100), UNIQUE(dataset_id_key,mart_user))";
 		String ORACLE_INTERFACE = CREATETABLE+"."+MARTINTERFACETABLE+" (dataset_id_key number(1), interface varchar2(100), UNIQUE(dataset_id_key,interface))";
@@ -4679,8 +4679,11 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 		String ORACLE_TEMPLATE_DM = CREATETABLE+"."+MARTTEMPLATEDMTABLE+" ( template varchar2(100), compressed_xml blob, UNIQUE(template))";
 
     
-    	String POSTGRES_META1 = CREATETABLE+"."+BASEMETATABLE+" (dataset_id_key integer," +    		"dataset varchar(100), display_name varchar(100),  description varchar(200),  type varchar(20), " +    		"visible integer, version varchar(25),  modified timestamp, UNIQUE (dataset_id_key))";
-		String POSTGRES_META2 = CREATETABLE+"."+MARTXMLTABLE+"(dataset_id_key integer," +			"xml text, compressed_xml bytea, message_digest bytea,UNIQUE (dataset_id_key))";
+    	String POSTGRES_META1 = CREATETABLE+"."+BASEMETATABLE+" (dataset_id_key integer," +
+    		"dataset varchar(100), display_name varchar(100),  description varchar(200),  type varchar(20), " +
+    		"visible integer, version varchar(25),  modified timestamp, UNIQUE (dataset_id_key))";
+		String POSTGRES_META2 = CREATETABLE+"."+MARTXMLTABLE+"(dataset_id_key integer," +
+			"xml text, compressed_xml bytea, message_digest bytea,UNIQUE (dataset_id_key))";
     	String POSTGRES_USER = CREATETABLE+"."+MARTUSERTABLE+" (dataset_id_key integer, mart_user varchar(100), UNIQUE(dataset_id_key,mart_user))";
 		String POSTGRES_INTERFACE = CREATETABLE+"."+MARTINTERFACETABLE+" (dataset_id_key integer, interface varchar(100), UNIQUE(dataset_id_key,interface))";
 	    String POSTGRES_VERSION = CREATETABLE+"."+MARTVERSIONTABLE+" ( version varchar(10))";
@@ -6657,15 +6660,41 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     return dsv;
   }
 
-  public DatasetConfig getNewFiltsAtts(String schema, DatasetConfig dsv)
+  public void stripTableConstraints(DatasetConfig config) {
+	  List thingsToChange = new ArrayList();
+	  // Attributes first.
+	  thingsToChange.addAll(config.getAllAttributeDescriptions());
+	  // Now filters.
+	  thingsToChange.addAll(config.getAllFilterDescriptions());
+	  // Iterate.
+	  for (int i = 0; i < thingsToChange.size(); i++) {
+		  BaseNamedConfigurationObject obj = (BaseNamedConfigurationObject)thingsToChange.get(i);
+		  String tblCon = obj.getAttribute("tableConstraint");
+		  if (tblCon!=null && !"".equals(tblCon) && !"main".equals(tblCon) && tblCon.split("__").length>2) { 
+			  tblCon = tblCon.split("__")[1]+"__"+tblCon.split("__")[2];
+			  obj.setAttribute("tableConstraint", tblCon);
+		  }
+		  // Add options and pushActions.
+		  if (obj instanceof FilterDescription) {
+			  thingsToChange.addAll(Arrays.asList(((FilterDescription)obj).getOptions()));
+		  } else if (obj instanceof Option) {
+			  thingsToChange.addAll(Arrays.asList(((Option)obj).getOptions()));
+			  thingsToChange.addAll(Arrays.asList(((Option)obj).getPushActions()));
+		  } else if (obj instanceof PushAction) {
+			  thingsToChange.addAll(Arrays.asList(((PushAction)obj).getOptions()));			  
+		  }
+	  }
+  }
+  
+  public DatasetConfig getNewFiltsAtts(String schema, DatasetConfig dsv, boolean store)
     throws ConfigurationException, SQLException {
+		if(dsource.getDatabaseType().equals("oracle")) schema = schema.toUpperCase();
 
   	//System.out.println ("************* SCHEMA FROM GET NEW ATTT "+schema);
 	  String template = dsv.getTemplate();
 		DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
 		MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, this.getTemplateDocument(template));
-
-  	
+		
   	//if (dsource.getDatabaseType().equals("oracle")) databaseName=getSchema();
   //System.out.println("databaseType() "+dsource.getDatabaseType());	
   	
@@ -6985,9 +7014,9 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     if (fp != null && fp.getFilterGroups().size() > 0)
       templateConfig.addFilterPage(fp);
 
-    this.storeTemplateXML(templateConfig, template);
+    if (store) this.storeTemplateXML(templateConfig, template);
     
-    return dsv;
+    return templateConfig;
   }
 
   /*

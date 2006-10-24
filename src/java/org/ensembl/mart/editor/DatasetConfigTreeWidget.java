@@ -138,11 +138,15 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 								templateConfig.setTemplate(template);
 							} else {
 								MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, templateDocument);
+
+								// first of all call getNewFiltsAtts so any extra atts in a new config get added to the template
+								templateConfig = MartEditor.getDatabaseDatasetConfigUtils().getNewFiltsAtts(schema,config,false);	
 							}
 							if (templateConfig.getDynamicDataset(dataset)==null)
 								templateConfig.addDynamicDataset(new DynamicDataset(dataset,null));
 							templateConfig.setTemplateFlag("1");
-							config = templateConfig;
+							
+							config = templateConfig;		
             	  	
 							//int templateCount = MartEditor.getDatabaseDatasetConfigUtils().templateCount(template);
 							//if (templateCount > 0)			            	  	
@@ -241,15 +245,20 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 								// Generate template document based on existing config.
 								templateConfig.setInternalName("template");
 								templateConfig.setDataset(template+"_template");
-								templateConfig.setTemplate("template");
+								templateConfig.setTemplate(template);
+								
+								// Convert tableConstraint names.
+								MartEditor.getDatabaseDatasetConfigUtils().stripTableConstraints(templateConfig);
 							}
-							else {
+							else {								
 								MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, templateDocument);
 							}							
 							if (templateConfig.getDynamicDataset(dataset)==null)
 								templateConfig.addDynamicDataset(new DynamicDataset(dataset,null));
-							templateConfig.setTemplateFlag("1");							
-							config = templateConfig;
+							
+							templateConfig.setTemplateFlag("1");
+							
+							config = templateConfig;	
 														
             			}
             		}

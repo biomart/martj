@@ -1829,7 +1829,7 @@ System.out.println ("getting driver "+ driver);
 				String schema = null;
 				if(databaseDialog.getDatabaseType().equals("oracle")) schema = databaseDialog.getSchema().toUpperCase();
 				else schema = databaseDialog.getSchema();
-				dsv = dbutils.getNewFiltsAtts(schema, dsv);
+				DatasetConfig templateConfig = dbutils.getNewFiltsAtts(schema, dsv, true);
 				// export it
 				// convert config to latest version using xslt
 				dsv = MartEditor.getDatabaseDatasetConfigUtils().getXSLTransformedConfig(dsv);
