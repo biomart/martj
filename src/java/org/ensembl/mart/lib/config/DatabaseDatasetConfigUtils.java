@@ -1427,9 +1427,13 @@ public class DatabaseDatasetConfigUtils {
 						break;
 				}
 			}
+			dsConfig.setTemplate(template);//repeat to override transform
+			
 			getXSLTransformedConfig(dsConfig);// transform XML to latest version
 			
 			dsConfig.setTemplate(template);//repeat to override transform
+			
+			updateConfigToTemplate(dsConfig,0);
 			
 			/*
 			// delete any non-placeholder filts/atts that are no longer in the template
