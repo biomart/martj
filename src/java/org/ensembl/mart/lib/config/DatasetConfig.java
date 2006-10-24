@@ -570,7 +570,10 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   public void insertOption(int position, Option o) {
     lazyLoad();
     uiOptionNameMap.put(o.getInternalName(), o);
-    uiOptions.add(position, o);
+    if (position>uiOptions.size()) 
+    	uiOptions.add(o);
+    else
+    	uiOptions.add(position, o);
     hasOptions = true;
   }
 
@@ -732,7 +735,10 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   public void insertAttributePage(int position, AttributePage a) {
     lazyLoad();
     //System.out.println("PAGES\t" + attributePages.size());
-    attributePages.add(position, a);
+    if (position>attributePages.size()) 
+    	attributePages.add(a);
+    else
+    	attributePages.add(position, a);
     attributePageNameMap.put(a.getInternalName(), a);
   }
 
@@ -810,7 +816,10 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public void insertImportable(int position, Importable a) {
 	lazyLoad();
-	importables.add(position, a);
+    if (position>importables.size()) 
+    	importables.add(a);
+    else
+    	importables.add(position, a);
 	//attributePageNameMap.put(a.getInternalName(), a);
   }
 
@@ -823,7 +832,10 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public void insertExportable(int position, Exportable a) {
 	lazyLoad();
-	exportables.add(position, a);
+    if (position>exportables.size()) 
+    	exportables.add(a);
+    else
+    	exportables.add(position, a);
 	//attributePageNameMap.put(a.getInternalName(), a);
   }
   
@@ -856,7 +868,10 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public void insertFilterPage(int position, FilterPage f) {
     lazyLoad();
-    filterPages.add(position, f);
+    if (position>filterPages.size()) 
+    	filterPages.add(f);
+    else
+    	filterPages.add(position, f);
     filterPageNameMap.put(f.getInternalName(), f);
   }
 

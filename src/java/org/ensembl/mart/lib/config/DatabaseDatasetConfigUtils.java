@@ -1402,6 +1402,8 @@ public class DatabaseDatasetConfigUtils {
   public void updateConfigsToTemplate(String template, DatasetConfig templateConfig) throws ConfigurationException{
 	//	System.err.println("CALLED: updateConfigsToTemplate   "+templateConfig.getDisplayName()+" "+template);
 
+		storeTemplateXML(templateConfig, template);
+		
   	// extract all the dataset configs matching template and call updateConfigToTemplate storing each one as returned
 	Connection conn = null;
 	try {
@@ -1425,10 +1427,9 @@ public class DatabaseDatasetConfigUtils {
 						break;
 				}
 			}
-			
 			getXSLTransformedConfig(dsConfig);// transform XML to latest version
 			
-			dsConfig.setTemplate(template);//needed otherwise gets set to dataset
+			dsConfig.setTemplate(template);//repeat to override transform
 			
 			/*
 			// delete any non-placeholder filts/atts that are no longer in the template
@@ -3268,11 +3269,11 @@ public boolean naiveExportWouldOverrideExistingConfig(
       
       // add new template setting
       String template = dsConfig.getTemplate();
-      if (template.equals("")){
+     /* if (template.equals("")){
       	template = dataset;
       	dsConfig.setTemplate(template);	
       }
-      
+      */
       // moved below sql after templateCount check as breaking new creation
 //	  sql = "DELETE FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE dataset_id_key="+datasetID;
 //	  ps = conn.prepareStatement(sql);
@@ -3291,7 +3292,7 @@ public boolean naiveExportWouldOverrideExistingConfig(
 	  //ResultSet rs = ps.executeQuery();
 	  //rs.next();
 	  //int result = rs.getInt(1);
-	  
+	  /*
       int result = templateCount(template);
       if (result > 0){//usual 1:1 dataset:template do not get template merging 
       	   // System.out.println("SHOULD MERGE CONFIG AND TEMPLATE TOGETHER NOW");
@@ -3304,7 +3305,8 @@ public boolean naiveExportWouldOverrideExistingConfig(
       else{
 	  	generateTemplateXML(dsConfig);
       }
-  		
+  		*/
+      
   	  // trial move from above	    
 	  sql = "DELETE FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE dataset_id_key="+datasetID;
 	  ps = conn.prepareStatement(sql);
@@ -3492,10 +3494,10 @@ public boolean naiveExportWouldOverrideExistingConfig(
       
 	  // add new template setting
 	  String template = dsConfig.getTemplate();
-	  if (template.equals("")){
+	  /*if (template.equals("")){
 		template = dataset;
 		dsConfig.setTemplate(template);	
-	  }
+	  }*/
 	  sql = "DELETE FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE dataset_id_key="+datasetID;
 	  ps = conn.prepareStatement(sql);
 	  ps.executeUpdate();
@@ -3504,7 +3506,7 @@ public boolean naiveExportWouldOverrideExistingConfig(
 					+template+"')");
 	  ps.executeUpdate();	
       
-      
+      /*
 	  sql = "SELECT count(*) FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE template='"+template+"'";
 	  ps = conn.prepareStatement(sql);
 	  ResultSet rs = ps.executeQuery();
@@ -3520,13 +3522,13 @@ public boolean naiveExportWouldOverrideExistingConfig(
 		   
 		   dsConfig = updateConfigToTemplate(dsConfig);
 		   doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
-		  */
+		  *
 	  }
 	  else{
 		System.out.println("OVERWRITE TEMPLATE WITH THIS LAYOUT");
 		generateTemplateXML(dsConfig);
 	  }
-      
+      */
       
 	  Timestamp tstamp = new Timestamp(System.currentTimeMillis());
       String [] mytimeStamp = new String[2];
@@ -3594,7 +3596,7 @@ public boolean naiveExportWouldOverrideExistingConfig(
       int ret = ps1.executeUpdate();
 	  ret = ps2.executeUpdate();
 
-      rs = ohack.executeQuery();
+      ResultSet rs = ohack.executeQuery();
 
       if (rs.next()) {
         BLOB blob = (BLOB) rs.getBlob(1);
