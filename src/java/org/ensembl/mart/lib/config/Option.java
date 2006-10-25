@@ -71,7 +71,7 @@ public class Option extends QueryFilterSettings {
   
   public void resolveText(DynamicDataset ds) {
 	  ds.resolveText(this, this);
-      if (getTableConstraint()!=null && !getTableConstraint().equals("main")) {
+      if (getTableConstraint()!=null && !getTableConstraint().equals("") && !getTableConstraint().equals("main")) {
           if (!getTableConstraint().startsWith(ds.getInternalName()+"__")) 
           	if (getTableConstraint().matches(".*__.*__.*"))
           		setTableConstraint(ds.getInternalName()+"__"+getTableConstraint().split("__")[1]+"__"+getTableConstraint().split("__")[2]);

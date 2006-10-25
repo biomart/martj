@@ -351,10 +351,10 @@ public class DatabaseDatasetConfigUtils {
     throws ConfigurationException {
 
     	
-    	if (martUsers.equals(""))	
+    	if (martUsers==null || martUsers.equals(""))	
     		martUsers = "default";
     		
-		if (interfaces.equals(""))	
+		if (interfaces==null || interfaces.equals(""))	
 			interfaces = "default";
 					
 	    // Before storing check attribute and filter names are unique per dataset (attribute and filter names
@@ -1428,17 +1428,11 @@ public class DatabaseDatasetConfigUtils {
 				}
 			}
 			
-			String intName = dsConfig.getInternalName();
-			String dsID = dsConfig.getDatasetID();
-			dsConfig.attributes.clear();
-			dsConfig.attributes.putAll(templateConfig.attributes);
-			dsConfig.setInternalName(intName);
-			dsConfig.setDataset(dsName);
-			dsConfig.setTemplate(template);//repeat to override transform
-			dsConfig.setType("TableSet");
-			dsConfig.setDatasetID(dsID);
+			//getXSLTransformedConfig(dsConfig);
+			//dsConfig.setDataset(dsName);
+			//dsConfig.setTemplate(template);
 			
-			updateConfigToTemplate(dsConfig,0);
+			dsConfig = updateConfigToTemplate(dsConfig,templateConfig);
 			
 			/*
 			// delete any non-placeholder filts/atts that are no longer in the template
@@ -2109,36 +2103,34 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 }
 */
 
-  public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig, int storeFlag) throws ConfigurationException, SQLException{
+  public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig, DatasetConfig templateConfig) throws ConfigurationException, SQLException{
 	
 	
 	
-	String template = dsConfig.getTemplate();
+	//String template = templateConfig.getTemplate();
 	
 	//System.err.println("CALLED: updateConfigToTemp   "+dsConfig.getDisplayName()+" "+dsConfig.getTemplate());
-	
+/*	
 	DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
 	dscutils.loadDatasetConfigWithDocument(templateConfig,getTemplateDocument(template));
 	
 	if (templateConfig.getDynamicDataset(dsConfig.getDataset())==null) 
 		templateConfig.addDynamicDataset(new DynamicDataset(dsConfig.getDataset(),null));
+	*/
 	
 	// dynamic content handling eg linkoutURL
-	if (dsConfig.getDisplayName() == null) dsConfig.setDisplayName("");// avoids template problems
-	if (dsConfig.getVersion() == null) dsConfig.setVersion("");// avoids template problems
-	if (templateConfig.getDisplayName() == null) templateConfig.setDisplayName("");// avoids template problems
-	if (templateConfig.getVersion() == null) templateConfig.setVersion("");// avoids template problems
+	//if (dsConfig.getDisplayName() == null) dsConfig.setDisplayName("");// avoids template problems
+	//if (dsConfig.getVersion() == null) dsConfig.setVersion("");// avoids template problems
+	//if (templateConfig.getDisplayName() == null) templateConfig.setDisplayName("");// avoids template problems
+	//if (templateConfig.getVersion() == null) templateConfig.setVersion("");// avoids template problems
+	//if (templateConfig.getEntryLabel() != null) dsConfig.setEntryLabel(templateConfig.getEntryLabel());
 	
+
 	
-	if (templateConfig.getEntryLabel() != null) dsConfig.setEntryLabel(templateConfig.getEntryLabel());
-		
 	//if (templateConfig.getDynamicDatasetContent()!=null){
 		// already got multiple settings for this template
 		//if (!templateConfig.containsDynamicDatasetContent(dsConfig.getDataset()))
 		//	templateConfig.addDynamicDatasetContent(new DynamicDatasetContent(dsConfig.getDataset(),dsConfig.getDisplayName(),dsConfig.getVersion()));
-				
-
-	templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(dsConfig, dsConfig);
 		
 		//}
 	/*
@@ -3086,8 +3078,19 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	} finally {
 		DetailedDataSource.close(conn);
 	}
+
+
+	String dsName = dsConfig.getDataset();
+	String intName = dsConfig.getInternalName();
+	String dsID = dsConfig.getDatasetID();
+templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(dsConfig, templateConfig);
+dsConfig.setDatasetID(dsID);
+dsConfig.setInternalName(intName);
+dsConfig.setDataset(dsName);
+dsConfig.setTemplate(templateConfig.getTemplate());
+dsConfig.setType("TableSet");
 	
-	if (storeFlag == 1) storeTemplateXML(templateConfig,template);
+	//if (storeFlag == 1) storeTemplateXML(templateConfig,template);
 	//doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
 	//updateMartConfigForUser(MartEditor.getUser(),getSchema()[0]);
 	return dsConfig;

@@ -225,6 +225,7 @@ public class DatasetConfigXMLUtils {
    */
   public void loadDatasetConfigWithDocument(DatasetConfig dsv, Document doc) throws ConfigurationException {
 	  Element thisElement = doc.getRootElement();
+	  /*
     String intName = thisElement.getAttributeValue(INTERNALNAME, "");
     String optParam = thisElement.getAttributeValue(OPTPARAM, "");
 	String softwareVersion = thisElement.getAttributeValue(SOFTWAREVERSION, "");
@@ -235,12 +236,15 @@ public class DatasetConfigXMLUtils {
 	String visibleFilterPageParam = thisElement.getAttributeValue(VISIBLEFILTERPAGEPARAM, "");
     
     String displayName = thisElement.getAttributeValue("displayName","");
+    String description = thisElement.getAttributeValue("description","");
 	String version = thisElement.getAttributeValue("version","");
     
     String entryLabel = thisElement.getAttributeValue("entryLabel","");
     
     if (displayName.length() > 0)
     	dsv.setDisplayName(displayName);
+    if (description.length() > 0)
+    	dsv.setDescription(description);
 	if (version.length() > 0)
 		dsv.setVersion(version);    	
     	
@@ -269,7 +273,7 @@ public class DatasetConfigXMLUtils {
       
 	if (defParam.length() > 0)
 	  dsv.setDefaultDataset(defParam); 
-	  
+	  */
 	       
 
     // a DatasetConfig object must have been constructed with an internalName
@@ -280,6 +284,8 @@ public class DatasetConfigXMLUtils {
     //if (!intName.equals(dsv.getInternalName()))
     //  throw new ConfigurationException("Document internalName does not match input dsv reference internalName, they may not represent the same data\n");
 
+		loadAttributesFromElement(thisElement, dsv);
+	  
     for (Iterator iter = thisElement.getChildren(OPTION).iterator(); iter.hasNext();) {
       Element option = (Element) iter.next();
       if (!(Boolean.valueOf(option.getAttributeValue(HIDDEN)).booleanValue()))
@@ -636,6 +642,7 @@ public class DatasetConfigXMLUtils {
 
   private void loadElementAttributesFromObject(BaseConfigurationObject obj, Element thisElement) {
     String[] titles = obj.getXmlAttributeTitles();
+	//String[] titles = (String[])obj.attributes.keySet().toArray(new String[0]);
 
     //sort the attribute titles before writing them out, so that MD5SUM is supported
     Arrays.sort(titles);

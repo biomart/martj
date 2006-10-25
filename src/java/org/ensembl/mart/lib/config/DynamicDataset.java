@@ -123,19 +123,23 @@ public class DynamicDataset extends BaseNamedConfigurationObject {
   
   public void resolveText(BaseConfigurationObject to, BaseConfigurationObject from) {
 	  String[] titles = from.getXmlAttributeTitles();
+	  //String[] titles = (String[])from.attributes.keySet().toArray(new String[0]);
 	  for (int x = 0 ; x < titles.length; x++) {
 		  String key = titles[x];
 		  if (key.equals("internalName")) continue; // Don't muck with these!
-		  String value = from.getAttribute(key);	
-		  if (value==null || this.getAliases()==null) {
+		  String value = from.getAttribute(key);
+		  String oldVal = value;
+		  if (value==null || value.equals("")) {
 			  value = to.getAttribute(key);
 		  } else {
+			  if (value.indexOf('*')>=0 && this.getAliases()!=null && !this.getAliases().equals("")) {
 			  	String[] pairs = this.getAliases().split(",");
 			  	for (int i = 0; i < pairs.length; i++) {
 			  		String[] parts= pairs[i].split("=");
 			  		if (parts.length<2) continue;
 			  		value = value.replaceAll("\\*"+parts[0]+"\\*", parts[1]);
 			  	}
+			  }
 		  }
 		  if (value!=null) to.setAttribute(key, value);
 	  }

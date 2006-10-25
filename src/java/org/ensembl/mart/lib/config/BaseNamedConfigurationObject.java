@@ -151,7 +151,7 @@ public abstract class BaseNamedConfigurationObject extends BaseConfigurationObje
 	 * @param string
 	 */
 	public void setDescription(String description) {
-		attributes.setProperty(descriptionKey, description);
+		setAttribute(descriptionKey, description);
 	}
 
 	/**
@@ -160,7 +160,7 @@ public abstract class BaseNamedConfigurationObject extends BaseConfigurationObje
 	 */
 	public void setDisplayName(String displayName) {
 		if (displayName == null) displayName = "";
-		attributes.setProperty(displayNameKey, displayName);
+		setAttribute(displayNameKey, displayName);
 	}
 
 	/**
@@ -168,7 +168,7 @@ public abstract class BaseNamedConfigurationObject extends BaseConfigurationObje
 	 * @param string
 	 */
 	public void setInternalName(String internalName) {
-		attributes.setProperty(internalNameKey, internalName);
+		setAttribute(internalNameKey, internalName);
 	}
 
 	/**
@@ -176,7 +176,7 @@ public abstract class BaseNamedConfigurationObject extends BaseConfigurationObje
 	 * @param string
 	 */
 	public void setHidden(String hidden) {
-		attributes.setProperty(hiddenKey, hidden);
+		setAttribute(hiddenKey, hidden);
 	}
 
 	/**
@@ -184,7 +184,7 @@ public abstract class BaseNamedConfigurationObject extends BaseConfigurationObje
 	 * @param string
 	 */
 	public void setDisplay(String display) {
-		attributes.setProperty(displayKey, display);
+		setAttribute(displayKey, display);
 	}
 
 	public int hashCode() {

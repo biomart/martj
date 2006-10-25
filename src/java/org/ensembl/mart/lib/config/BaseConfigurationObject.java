@@ -66,6 +66,9 @@ public abstract class BaseConfigurationObject implements Comparable {
    * @param value - String value for this attribute
    */
   public void setAttribute(String key, String value) {
+		if (key.equals("description") && this instanceof DatasetConfig) {
+			System.err.println("Reset to "+value);
+		}
     if (!xmlTitles.contains(key))
       xmlTitles.add(key);
     if (value != null)
