@@ -1626,7 +1626,8 @@ public boolean containsAttributeList(String internalName) {
     if (!containsFilterDescription(internalName)) {
       return null;
     } else if (lastFiltColl == null) {
-      lastFiltColl = getGroupForFilter(internalName).getCollectionForFilter(internalName);
+      if (getGroupForFilter(internalName) != null)
+      	lastFiltColl = getGroupForFilter(internalName).getCollectionForFilter(internalName);
       return lastFiltColl;
     } else {
       if (lastFiltColl.getInternalName().equals(internalName))

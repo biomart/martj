@@ -2779,7 +2779,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	
 
 
-	
+	/*
 	// then add extra template config importables to config if correct conditions
 	Importable[] tempImps = templateConfig.getImportables();
 	OUTER:for (int i = 0; i < tempImps.length; i++){
@@ -2792,10 +2792,13 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		String[] filterNames = tempImps[i].getFilters().split(",");
 		for (int j = 0; j < filterNames.length; j++){
 			// skip if filters are not defined in the dsConfig
+			System.out.println("TEST "+filterNames[j]+"=>"+dsConfig.getFilterDescriptionByInternalName(filterNames[j]));
 			if (!dsConfig.containsFilterDescription(filterNames[j]) || 
 				(dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden() != null
-					&& dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden().equals("true"))) 
+					&& dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden().equals("true"))) {
+						System.out.println("SKIPPIN IMP "+tempImps[i].getInternalName()+ " COZ NOT ALL FILTERS DEFINED");
 						continue OUTER;
+					}
 		}
 		
 		// if passsed all above tests then add template Importable to datasetConfig 
@@ -2811,6 +2814,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		for (int j = 0; j < dsImps.length; j++) 
 			if (dsImps[j].getInternalName().equals(newImp.getInternalName()))
 				dsConfig.removeImportable(dsImps[j]);
+		System.out.println("ADDING IMP "+newImp.getInternalName()+" TO CONFIG "+dsConfig.getDataset());		
 		dsConfig.addImportable(newImp);
 	}
 	
@@ -2824,12 +2828,12 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			//(tempExps[i].getLinkVersion() != null && !tempExps[i].getLinkVersion().equals("")))
 		//		continue;
 		
-		String[] filterNames = tempExps[i].getAttributes().split(",");
-		for (int j = 0; j < filterNames.length; j++){
+		String[] attNames = tempExps[i].getAttributes().split(",");
+		for (int j = 0; j < attNames.length; j++){
 			// skip if filters are not defined in the dsConfig
-			if (!dsConfig.containsFilterDescription(filterNames[j]) || 
-				(dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden() != null
-					&& dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden().equals("true"))) 
+			if (!dsConfig.containsAttributeDescription(attNames[j]) || 
+				(dsConfig.getAttributeDescriptionByInternalName(attNames[j]).getHidden() != null
+					&& dsConfig.getAttributeDescriptionByInternalName(attNames[j]).getHidden().equals("true")))
 						continue OUTER;
 		}
 		
@@ -2850,12 +2854,15 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 				dsConfig.removeExportable(dsExps[j]);
 		dsConfig.addExportable(newExp);
 	}
-	
+	*/
 	// Wipe redundant attributes, attribute lists, filters, importables, exportables from the dataset config.
 	for (Iterator j = dsConfig.getAllAttributeDescriptions().iterator(); j.hasNext(); ) {
 		AttributeDescription ad = (AttributeDescription)j.next();
-		if (!templateConfig.containsAttributeDescription(ad.getInternalName()))
-			dsConfig.getCollectionForAttribute(ad.getInternalName()).removeAttributeDescription(ad);
+		if (!templateConfig.containsAttributeDescription(ad.getInternalName())){
+			//System.out.println("TRYING TO REMOVE "+ad.getInternalName());
+			if (dsConfig.getCollectionForAttribute(ad.getInternalName()) != null )
+				dsConfig.getCollectionForAttribute(ad.getInternalName()).removeAttributeDescription(ad);
+		}
 	}
 	for (Iterator j = dsConfig.getAllAttributeLists().iterator(); j.hasNext(); ) {
 		AttributeList ad = (AttributeList)j.next();
@@ -2865,7 +2872,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	for (Iterator j = dsConfig.getAllFilterDescriptions().iterator(); j.hasNext(); ) {
 		FilterDescription ad = (FilterDescription)j.next();
 		if (!templateConfig.containsFilterDescription(ad.getInternalName())) 
-			dsConfig.getCollectionForFilter(ad.getInternalName()).removeFilterDescription(ad);
+			if (dsConfig.getCollectionForFilter(ad.getInternalName()) != null )	
+				dsConfig.getCollectionForFilter(ad.getInternalName()).removeFilterDescription(ad);
 	}
 	Importable[] dsImps = dsConfig.getImportables();
 	for (int j = 0; j < dsImps.length; j++) {
@@ -3075,6 +3083,86 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					}					
 		}
 	}
+	
+	
+	// then add extra template config importables to config if correct conditions
+	Importable[] tempImps = templateConfig.getImportables();
+	OUTER:for (int i = 0; i < tempImps.length; i++){
+		// skip if the importable has dynamic content or a linkVersion as won't know what to use
+		//if (tempImps[i].getDynamicImportableContents().size() > 0)
+			// why can we not copy over importables with linkversions??
+			// (tempImps[i].getLinkVersion() != null && !tempImps[i].getLinkVersion().equals("")))
+				//continue;
+		
+		String[] filterNames = tempImps[i].getFilters().split(",");
+		for (int j = 0; j < filterNames.length; j++){
+			// skip if filters are not defined in the dsConfig
+			if (!dsConfig.containsFilterDescription(filterNames[j]) || 
+				(dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden() != null
+					&& dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden().equals("true"))) {
+						System.out.println("SKIPPIN IMP "+tempImps[i].getInternalName()+ " COZ NOT ALL FILTERS DEFINED");
+						continue OUTER;
+					}
+		}
+		
+		// if passsed all above tests then add template Importable to datasetConfig 
+		Importable newImp = new Importable(tempImps[i]);
+
+		//if (tempImps[i].getDynamicImportableContent()!=null) {
+		//	DynamicImportableContent templateSettings = tempImps[i].getDynamicImportableContent();
+		
+		templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(newImp, tempImps[i]);
+		//}
+		
+		dsImps = dsConfig.getImportables();
+		for (int j = 0; j < dsImps.length; j++) 
+			if (dsImps[j].getInternalName().equals(newImp.getInternalName()))
+				dsConfig.removeImportable(dsImps[j]);
+		System.out.println("ADDING IMP "+newImp.getInternalName()+" TO CONFIG "+dsConfig.getDataset());		
+		dsConfig.addImportable(newImp);
+	}
+	
+	
+	
+	Exportable[] tempExps = templateConfig.getExportables();
+	OUTER:for (int i = 0; i < tempExps.length; i++){
+		// skip if the importable has dynamic content or a linkVersion as won't know what to use
+		//if (tempExps[i].getDynamicExportableContents().size() > 0)
+			// why can we not copy over exportables with linkversions??
+			//(tempExps[i].getLinkVersion() != null && !tempExps[i].getLinkVersion().equals("")))
+		//		continue;
+		
+		String[] attNames = tempExps[i].getAttributes().split(",");
+		for (int j = 0; j < attNames.length; j++){
+			// skip if filters are not defined in the dsConfig
+			if (!dsConfig.containsAttributeDescription(attNames[j]) || 
+				(dsConfig.getAttributeDescriptionByInternalName(attNames[j]).getHidden() != null
+					&& dsConfig.getAttributeDescriptionByInternalName(attNames[j]).getHidden().equals("true"))){
+			System.out.println("SKIPPIN EXP "+tempExps[i].getInternalName()+ " COZ NOT ALL ATTS DEFINED");
+						continue OUTER;
+					}
+		}
+		
+		// if passsed all above tests then add template Importable to datasetConfig 
+		Exportable newExp = new Exportable(tempExps[i]);
+
+		//if (tempExps[i].getDynamicExportableContent()!=null) {
+		//	DynamicExportableContent templateSettings = tempExps[i].getDynamicExportableContent();
+
+
+		templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(newExp, tempExps[i]);
+		//}
+		
+		
+		dsExps = dsConfig.getExportables();
+		for (int j = 0; j < dsExps.length; j++) 
+			if (dsExps[j].getInternalName().equals(newExp.getInternalName()))
+				dsConfig.removeExportable(dsExps[j]);
+		System.out.println("ADDING EXP "+newExp.getInternalName()+" TO CONFIG "+dsConfig.getDataset());		
+		dsConfig.addExportable(newExp);
+	}
+	
+	
 	} finally {
 		DetailedDataSource.close(conn);
 	}
@@ -3968,6 +4056,7 @@ public boolean naiveExportWouldOverrideExistingConfig(
       return null;
     
     DatasetConfig dsv = (DatasetConfig) dsetMap.get(datasetID);
+    
     return dsv;      
   }
 
@@ -6911,9 +7000,10 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
             if (templateConfig.getAttributeDescriptionByFieldNameTableConstraint(cname, shortTableName) == null) {
               ac.addAttributeDescription(ad);
             }
+            duplicated = 0;
             if (cname.endsWith("_list") || cname.equals("dbprimary_id")) {
 				if (filtMap.containsKey(cname)){
-					duplicated = 1;		
+				//	duplicated = 1;		
 				}
 				filtMap.put(cname,"1");	
               FilterDescription fdList = getFilterDescription(cname, shortTableName, ctype, joinKey, templateConfig, duplicated);
@@ -7171,15 +7261,24 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     throws ConfigurationException {
     AttributeDescription att = new AttributeDescription();
     att.setField(columnName);
-	if (duplicated == 1){
-		att.setInternalName(tableName + "_" + columnName.toLowerCase());
+	
+	if (columnName.endsWith("_list") || columnName.equals("dbprimary_id")) {
+		String descriptiveName = tableName.split("__")[0].replaceFirst("xref_", "");
+		att.setInternalName(descriptiveName.toLowerCase());  
+		String displayName = descriptiveName.replaceAll("_", " ");
+		att.setDisplayName(displayName.substring(0,1).toUpperCase() + displayName.substring(1));	  
 	}
 	else{
-		att.setInternalName(columnName.toLowerCase());	
-	}
-    
-	String displayName = columnName.replaceAll("_", " ");
-	att.setDisplayName(displayName.substring(0,1).toUpperCase() + displayName.substring(1));
+	
+		if (duplicated == 1){
+			att.setInternalName(tableName + "_" + columnName.toLowerCase());
+		}
+		else{
+			att.setInternalName(columnName.toLowerCase());	
+		}
+		String displayName = columnName.replaceAll("_", " ");
+		att.setDisplayName(displayName.substring(0,1).toUpperCase() + displayName.substring(1));
+    }
     //att.setDisplayName(columnName.replaceAll("_", " "));
     att.setKey(joinKey);
     att.setTableConstraint(tableName);
