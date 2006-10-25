@@ -1703,12 +1703,9 @@ public class DataSet extends GenericSchema {
 			 * Returns the expression, <i>with</i> substitution. This value is
 			 * RDBMS-specific.
 			 * 
-			 * @param escape
-			 *            the character to escape column names with.
-			 * 
 			 * @return the substituted expression.
 			 */
-			public String getSubstitutedExpression(char escape) {
+			public String getSubstitutedExpression() {
 				String sub = this.expr;
 				for (final Iterator i = this.aliases.entrySet().iterator(); i
 						.hasNext();) {
@@ -1716,8 +1713,7 @@ public class DataSet extends GenericSchema {
 					final DataSetColumn wrapped = (DataSetColumn) entry
 							.getKey();
 					final String alias = ":" + (String) entry.getValue();
-					sub = sub.replaceAll(alias, escape + wrapped.getName()
-							+ escape);
+					sub = sub.replaceAll(alias, wrapped.getName());
 				}
 				return sub;
 			}
@@ -2253,16 +2249,14 @@ public class DataSet extends GenericSchema {
 		 * substituion, eg. "a" if columns for the table for that key should be
 		 * prefixed as "a.mycolumn".
 		 * 
-		 * @param escape
-		 *            the escape character to wrap column names in.
 		 * @param firstTablePrefix
 		 *            the prefix to use in the expression for the first table.
 		 * @param secondTablePrefix
 		 *            the prefix to use in the expression for the second table.
 		 * @return the substituted expression.
 		 */
-		public String getSubstitutedExpression(char escape,
-				final String firstTablePrefix, final String secondTablePrefix) {
+		public String getSubstitutedExpression(final String firstTablePrefix,
+				final String secondTablePrefix) {
 			String sub = this.expr;
 			// First table first.
 			for (final Iterator i = this.firstTableAliases.entrySet()
@@ -2270,8 +2264,8 @@ public class DataSet extends GenericSchema {
 				final Map.Entry entry = (Map.Entry) i.next();
 				final Column col = (Column) entry.getKey();
 				final String alias = ":" + (String) entry.getValue();
-				sub = sub.replaceAll(alias, firstTablePrefix + "." + escape
-						+ col.getName() + escape);
+				sub = sub.replaceAll(alias, firstTablePrefix + "."
+						+ col.getName());
 			}
 			// Second table second.
 			for (final Iterator i = this.secondTableAliases.keySet().iterator(); i
@@ -2279,8 +2273,8 @@ public class DataSet extends GenericSchema {
 				final Column col = (Column) i.next();
 				final String alias = ":"
 						+ (String) this.secondTableAliases.get(col);
-				sub = sub.replaceAll(alias, secondTablePrefix + "." + escape
-						+ col.getName() + escape);
+				sub = sub.replaceAll(alias, secondTablePrefix + "."
+						+ col.getName());
 			}
 			// Return the substituted expression.
 			return sub;
@@ -2657,22 +2651,18 @@ public class DataSet extends GenericSchema {
 		 * substituion, eg. "a" if columns for the table for that key should be
 		 * prefixed as "a.mycolumn".
 		 * 
-		 * @param escape
-		 *            the character to wrap column names in.
 		 * @param tablePrefix
 		 *            the prefix to use for the table in the expression.
 		 * @return the substituted expression.
 		 */
-		public String getSubstitutedExpression(char escape,
-				final String tablePrefix) {
+		public String getSubstitutedExpression(final String tablePrefix) {
 			String sub = this.expr;
 			for (final Iterator i = this.aliases.entrySet().iterator(); i
 					.hasNext();) {
 				final Map.Entry entry = (Map.Entry) i.next();
 				final Column col = (Column) entry.getKey();
 				final String alias = ":" + (String) entry.getValue();
-				sub = sub.replaceAll(alias, tablePrefix + "." + escape
-						+ col.getName() + escape);
+				sub = sub.replaceAll(alias, tablePrefix + "." + col.getName());
 			}
 			return sub;
 		}
