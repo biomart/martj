@@ -3099,10 +3099,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			// skip if filters are not defined in the dsConfig
 			if (!dsConfig.containsFilterDescription(filterNames[j]) || 
 				(dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden() != null
-					&& dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden().equals("true"))) {
-						System.out.println("SKIPPIN IMP "+tempImps[i].getInternalName()+ " COZ NOT ALL FILTERS DEFINED");
+					&& dsConfig.getFilterDescriptionByInternalName(filterNames[j]).getHidden().equals("true")))
 						continue OUTER;
-					}
 		}
 		
 		// if passsed all above tests then add template Importable to datasetConfig 
@@ -3118,7 +3116,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		for (int j = 0; j < dsImps.length; j++) 
 			if (dsImps[j].getInternalName().equals(newImp.getInternalName()))
 				dsConfig.removeImportable(dsImps[j]);
-		System.out.println("ADDING IMP "+newImp.getInternalName()+" TO CONFIG "+dsConfig.getDataset());		
 		dsConfig.addImportable(newImp);
 	}
 	
@@ -3137,10 +3134,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			// skip if filters are not defined in the dsConfig
 			if (!dsConfig.containsAttributeDescription(attNames[j]) || 
 				(dsConfig.getAttributeDescriptionByInternalName(attNames[j]).getHidden() != null
-					&& dsConfig.getAttributeDescriptionByInternalName(attNames[j]).getHidden().equals("true"))){
-			System.out.println("SKIPPIN EXP "+tempExps[i].getInternalName()+ " COZ NOT ALL ATTS DEFINED");
-						continue OUTER;
-					}
+					&& dsConfig.getAttributeDescriptionByInternalName(attNames[j]).getHidden().equals("true")))
+					continue OUTER;
 		}
 		
 		// if passsed all above tests then add template Importable to datasetConfig 
@@ -3158,7 +3153,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		for (int j = 0; j < dsExps.length; j++) 
 			if (dsExps[j].getInternalName().equals(newExp.getInternalName()))
 				dsConfig.removeExportable(dsExps[j]);
-		System.out.println("ADDING EXP "+newExp.getInternalName()+" TO CONFIG "+dsConfig.getDataset());		
 		dsConfig.addExportable(newExp);
 	}
 	
