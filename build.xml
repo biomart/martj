@@ -539,7 +539,7 @@
 			</fileset>
         </copy>
         <rename src="${dist.dir}/dmg/bin/martshell.sh" dest="${dist.dir}/dmg/bin/martshell.command"/>
-        <chmod mode="755" dir="${dist.dir}/dmg/bin" includes="**/*.command"/>
+        <chmod perm="755" dir="${dist.dir}/dmg/bin" includes="**/*.command"/>
         
             <mkdir dir="${dist.dir}/dmg/lib"/>
         <copy todir="${dist.dir}/dmg/lib">
