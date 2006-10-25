@@ -3225,7 +3225,7 @@ public class DatabaseDatasetConfigUtils {
         ResultSet rsTab = dmd.getTables(null, schema, tablePattern, null);
 
         while (rsTab.next()) {
-          String tableName = schema+rsTab.getString(3);
+          String tableName = rsTab.getString(3);
           potentials.add(tableName);
         }
         rsTab.close();
@@ -3538,6 +3538,7 @@ public class DatabaseDatasetConfigUtils {
          
         ColumnDescription column = new ColumnDescription(cname, dbType, javaType, maxLength);
         columns.add(column);
+        //System.out.println("Got column "+cname);
       }
     }
     rset.close();
@@ -4647,7 +4648,6 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       conn = dsource.getConnection();
-       
       // added getSchema() to fully qualify this to work with 'non-public' postgres schemas
       StringBuffer sql = new StringBuffer("SELECT " + cname+ " FROM " + getSchema()[0]+"."+tableName + " WHERE " + cname + " IS NOT NULL");
       
