@@ -6119,7 +6119,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
         ResultSet rsTab = dmd.getTables(null, schema, tablePattern, null);
 
         while (rsTab.next()) {
-          String tableName = schema+rsTab.getString(3);
+          String tableName = rsTab.getString(3);
           potentials.add(tableName);
         }
         rsTab.close();
