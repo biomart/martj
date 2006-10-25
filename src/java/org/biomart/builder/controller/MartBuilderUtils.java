@@ -34,7 +34,6 @@ import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
-import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
@@ -626,31 +625,6 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Flags a relation as restricted within a dataset. If already flagged, this
-	 * updates the existing settings.
-	 * 
-	 * @param dataset
-	 *            the dataset to flag the relation in.
-	 * @param relation
-	 *            the relation to flag as restricted.
-	 * @param expression
-	 *            the expression to use for the restriction for the relation.
-	 * @param firstTableAliases
-	 *            the aliases to use for columns from the first table of the
-	 *            relation.
-	 * @param secondTableAliases
-	 *            the aliases to use for columns from the second table of the
-	 *            relation.
-	 */
-	public static void restrictRelation(final DataSet dataset,
-			final Relation relation, final String expression,
-			final Map firstTableAliases, final Map secondTableAliases) {
-		final DataSetRelationRestriction restriction = new DataSetRelationRestriction(
-				expression, firstTableAliases, secondTableAliases);
-		dataset.flagRestrictedRelation(relation, restriction);
-	}
-
-	/**
 	 * Flags a table as restricted within a dataset. If already flagged, this
 	 * updates the existing settings.
 	 * 
@@ -915,19 +889,6 @@ public class MartBuilderUtils {
 	public static void unpartitionByColumn(final DataSet dataset,
 			final DataSetColumn column) throws ValidationException {
 		column.setPartitionType(null);
-	}
-
-	/**
-	 * Unflags a relation as restricted within a dataset.
-	 * 
-	 * @param dataset
-	 *            the dataset to unflag the relation within.
-	 * @param relation
-	 *            the relation to unflag.
-	 */
-	public static void unrestrictRelation(final DataSet dataset,
-			final Relation relation) {
-		dataset.unflagRestrictedRelation(relation);
 	}
 
 	/**

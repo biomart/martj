@@ -103,11 +103,6 @@ public class ExplainDataSetContext extends SchemaContext {
 			// All others are normal.
 			else
 				component.setForeground(RelationComponent.NORMAL_COLOUR);
-
-			// Do the stroke.
-			final RelationComponent relcomp = (RelationComponent) component;
-			relcomp.setDotted(this.dataset.getRestrictedRelations().contains(
-					relation));
 		}
 
 		// This section customises the appearance of key objects within
@@ -400,72 +395,6 @@ public class ExplainDataSetContext extends SchemaContext {
 			contextMenu.add(remove);
 			if (!this.dataset.getConcatOnlyRelations().contains(relation))
 				remove.setEnabled(false);
-
-			contextMenu.addSeparator();
-
-			// If it's a restricted column...
-			if (this.dataset.getRestrictedRelations().contains(relation)) {
-
-				// Option to modify restriction.
-				final JMenuItem modify = new JMenuItem(
-						Resources.get("modifyRelationRestrictionTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("filter.gif")));
-				modify.setMnemonic(Resources.get(
-						"modifyRelationRestrictionMnemonic").charAt(0));
-				modify.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						ExplainDataSetContext.this
-								.getMartTab()
-								.getDataSetTabSet()
-								.requestModifyRelationRestriction(
-										ExplainDataSetContext.this.dataset,
-										relation,
-										ExplainDataSetContext.this.dataset
-												.getRestrictedRelationType(relation));
-					}
-				});
-				contextMenu.add(modify);
-
-			} else {
-
-				// Add a relation restriction.
-				final JMenuItem restriction = new JMenuItem(
-						Resources.get("addRelationRestrictionTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("filter.gif")));
-				restriction.setMnemonic(Resources.get(
-						"addRelationRestrictionMnemonic").charAt(0));
-				restriction.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						ExplainDataSetContext.this.getMartTab()
-								.getDataSetTabSet()
-								.requestAddRelationRestriction(
-										ExplainDataSetContext.this.dataset,
-										relation);
-					}
-				});
-				contextMenu.add(restriction);
-			}
-
-			// Option to remove restriction.
-			final JMenuItem removeRest = new JMenuItem(Resources
-					.get("removeRelationRestrictionTitle"));
-			removeRest.setMnemonic(Resources.get(
-					"removeRelationRestrictionMnemonic").charAt(0));
-			removeRest.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					ExplainDataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestRemoveRelationRestriction(
-									ExplainDataSetContext.this.dataset,
-									relation);
-				}
-			});
-			contextMenu.add(removeRest);
-			if (!this.dataset.getRestrictedRelations().contains(relation))
-				removeRest.setEnabled(false);
 		}
 
 		// This submenu applies when keys are clicked on.

@@ -49,10 +49,6 @@ import org.biomart.common.model.Relation;
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
-	private static final float RELATION_DASHSIZE = 7.0f; // 72 = 1 inch
-
-	private static final float RELATION_DOTSIZE = 3.0f; // 72 = 1 inch
-
 	private static final float RELATION_LINEWIDTH = 1.0f; // 72 = 1 inch
 
 	private static final float RELATION_MITRE_TRIM = 10.0f; // 72 = 1 inch
@@ -61,37 +57,13 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
 			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM);
 
-	private static final Stroke MANY_MANY_DOTTED = new BasicStroke(
-			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
-			new float[] { RelationComponent.RELATION_DASHSIZE,
-					RelationComponent.RELATION_DOTSIZE,
-					RelationComponent.RELATION_DOTSIZE,
-					RelationComponent.RELATION_DOTSIZE }, 0);
-
 	private static final Stroke ONE_MANY = new BasicStroke(
 			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
 			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM);
 
-	private static final Stroke ONE_MANY_DOTTED = new BasicStroke(
-			RelationComponent.RELATION_LINEWIDTH, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
-			new float[] { RelationComponent.RELATION_DASHSIZE,
-					RelationComponent.RELATION_DOTSIZE,
-					RelationComponent.RELATION_DOTSIZE,
-					RelationComponent.RELATION_DOTSIZE }, 0);
-
 	private static final Stroke ONE_ONE = new BasicStroke(
 			RelationComponent.RELATION_LINEWIDTH * 2.0f, BasicStroke.CAP_ROUND,
 			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM);
-
-	private static final Stroke ONE_ONE_DOTTED = new BasicStroke(
-			RelationComponent.RELATION_LINEWIDTH * 2.0f, BasicStroke.CAP_ROUND,
-			BasicStroke.JOIN_ROUND, RelationComponent.RELATION_MITRE_TRIM,
-			new float[] { RelationComponent.RELATION_DASHSIZE,
-					RelationComponent.RELATION_DOTSIZE,
-					RelationComponent.RELATION_DOTSIZE,
-					RelationComponent.RELATION_DOTSIZE }, 0);
 
 	private static final long serialVersionUID = 1;
 
@@ -126,8 +98,6 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	public static Color SUBCLASS_COLOUR = Color.RED;
 
 	private Diagram diagram;
-
-	private boolean dotted = false;
 
 	private Shape lineShape;
 
@@ -303,18 +273,6 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	}
 
 	/**
-	 * If this is set to <tt>true</tt> then the component will appear with a
-	 * dotted/dashed outline.
-	 * 
-	 * @param dotted
-	 *            <tt>true</tt> if the component is to appear with a dotted
-	 *            outline. The default is <tt>false</tt>.
-	 */
-	public void setDotted(final boolean dotted) {
-		this.dotted = dotted;
-	}
-
-	/**
 	 * Sets the shape for us to display the outline of. This will usually be a
 	 * line, however it's up to the layout manager entirely.
 	 * 
@@ -345,14 +303,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		if (mod != null)
 			mod.customiseAppearance(this, this.getObject());
 		// Work out what style to draw the relation line.
-		if (this.dotted) {
-			if (this.relation.isOneToOne())
-				this.stroke = RelationComponent.ONE_ONE_DOTTED;
-			else if (this.relation.isOneToMany())
-				this.stroke = RelationComponent.ONE_MANY_DOTTED;
-			else if (this.relation.isManyToMany())
-				this.stroke = RelationComponent.MANY_MANY_DOTTED;
-		} else if (this.relation.isOneToOne())
+		if (this.relation.isOneToOne())
 			this.stroke = RelationComponent.ONE_ONE;
 		else if (this.relation.isOneToMany())
 			this.stroke = RelationComponent.ONE_MANY;

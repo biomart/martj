@@ -106,10 +106,6 @@ public class DataSetContext extends SchemaContext {
 			// All the rest are normal.
 			else
 				component.setForeground(RelationComponent.NORMAL_COLOUR);
-
-			// Do the stroke.
-			final RelationComponent relcomp = (RelationComponent) component;
-			relcomp.setDotted(false);
 		}
 
 		// Is it a table?

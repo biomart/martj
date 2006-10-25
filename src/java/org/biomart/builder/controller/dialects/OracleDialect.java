@@ -38,7 +38,6 @@ import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
@@ -99,8 +98,6 @@ public class OracleDialect extends DatabaseDialect {
 		final String concatTableName = action.getTargetTableName();
 		final String columnSep = action.getColumnSeparator();
 		final String recordSep = action.getRecordSeparator();
-		final DataSetRelationRestriction relRestriction = action
-				.getConcatRelationRestriction();
 		final DataSetTableRestriction tblRestriction = action
 				.getConcatTableRestriction();
 		final boolean firstIsSource = action.isFirstTableSourceTable();
@@ -157,15 +154,10 @@ public class OracleDialect extends DatabaseDialect {
 		}
 
 		// Do restriction.
-		if (relRestriction != null || tblRestriction != null)
+		if (tblRestriction != null) {
 			sb.append(" where ");
-		if (relRestriction != null)
-			sb.append(relRestriction.getSubstitutedExpression(
-					firstIsSource ? "a" : "b", firstIsSource ? "b" : "a"));
-		if (relRestriction != null && tblRestriction != null)
-			sb.append(" and ");
-		if (tblRestriction != null)
 			sb.append(tblRestriction.getSubstitutedExpression("b"));
+		}
 
 		// Do group-by.
 		sb.append(" group by ");
@@ -339,8 +331,6 @@ public class OracleDialect extends DatabaseDialect {
 				: ((JDBCSchema) action.getTargetTableSchema())
 						.getDatabaseSchema();
 		final String mergeTableName = action.getTargetTableName();
-		final DataSetRelationRestriction relRestriction = action
-				.getMergeRelationRestriction();
 		final DataSetTableRestriction tblRestriction = action
 				.getTargetTableRestriction();
 		final boolean firstIsSource = action.isFirstTableSourceTable();
@@ -410,15 +400,10 @@ public class OracleDialect extends DatabaseDialect {
 		}
 
 		// Do restriction.
-		if (relRestriction != null || tblRestriction != null)
+		if (tblRestriction != null) {
 			sb.append(" where ");
-		if (relRestriction != null)
-			sb.append(relRestriction.getSubstitutedExpression(
-					firstIsSource ? "a" : "b", firstIsSource ? "b" : "a"));
-		if (relRestriction != null && tblRestriction != null)
-			sb.append(" and ");
-		if (tblRestriction != null)
 			sb.append(tblRestriction.getSubstitutedExpression("b"));
+		}
 
 		statements.add(sb.toString());
 	}

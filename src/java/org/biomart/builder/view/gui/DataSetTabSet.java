@@ -42,7 +42,6 @@ import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
-import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
@@ -60,7 +59,6 @@ import org.biomart.builder.view.gui.dialogs.ExplainDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainTableDialog;
 import org.biomart.builder.view.gui.dialogs.ExpressionColumnDialog;
 import org.biomart.builder.view.gui.dialogs.PartitionColumnDialog;
-import org.biomart.builder.view.gui.dialogs.RestrictedRelationDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
@@ -509,57 +507,6 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks for a relation restriction to be added to the dataset.
-	 * 
-	 * @param dataset
-	 *            the dataset we are dealing with.
-	 * @param relation
-	 *            the relation to add a restriction to.
-	 */
-	public void requestAddRelationRestriction(final DataSet dataset,
-			final Relation relation) {
-		final RestrictedRelationDialog dialog = new RestrictedRelationDialog(
-				relation, null);
-		dialog.show();
-		// Cancelled?
-		if (dialog.getCancelled())
-			return;
-		// Get the details.
-		final Map firstColumnAliases = dialog.getFirstColumnAliases();
-		final Map secondColumnAliases = dialog.getSecondColumnAliases();
-		final String expression = dialog.getExpression();
-		// Do this in the background.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Add the restriction.
-					MartBuilderUtils
-							.restrictRelation(dataset, relation, expression,
-									firstColumnAliases, secondColumnAliases);
-
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							// Update the explanation diagram so that it
-							// correctly reflects the changed objects.
-							DataSetTabSet.this.repaintExplanationDialog();
-
-							// Update the modified status for the tabset.
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.setModifiedStatus(true);
-						}
-					});
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							StackTrace.showStackTrace(t);
-						}
-					});
-				}
-			}
-		});
-	}
-
-	/**
 	 * Asks for a table restriction to be added to the dataset.
 	 * 
 	 * @param dataset
@@ -855,52 +802,6 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks for a relation restriction to be modified.
-	 * 
-	 * @param dataset
-	 *            the dataset we are working with.
-	 * @param relation
-	 *            the relation to modify the restriction for.
-	 * @param restriction
-	 *            the existing restriction.
-	 */
-	public void requestModifyRelationRestriction(final DataSet dataset,
-			final Relation relation,
-			final DataSetRelationRestriction restriction) {
-		final RestrictedRelationDialog dialog = new RestrictedRelationDialog(
-				relation, restriction);
-		dialog.show();
-		// Cancelled?
-		if (dialog.getCancelled())
-			return;
-		// Get updated details from the user.
-		final Map firstColumnAliases = dialog.getFirstColumnAliases();
-		final Map secondColumnAliases = dialog.getSecondColumnAliases();
-		final String expression = dialog.getExpression();
-		// Do this in the background.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Update the restriction.
-					MartBuilderUtils
-							.restrictRelation(dataset, relation, expression,
-									firstColumnAliases, secondColumnAliases);
-
-					// Update the modified status for the tabset.
-					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							StackTrace.showStackTrace(t);
-						}
-					});
-				}
-			}
-		});
-	}
-
-	/**
 	 * Asks for a table restriction to be modified.
 	 * 
 	 * @param dataset
@@ -1144,45 +1045,6 @@ public class DataSetTabSet extends JTabbedPane {
 
 							// Recalculate the explanation diagram too.
 							DataSetTabSet.this.recalculateExplanationDialog();
-
-							// Update the modified status for the tabset.
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.setModifiedStatus(true);
-						}
-					});
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							StackTrace.showStackTrace(t);
-						}
-					});
-				}
-			}
-		});
-	}
-
-	/**
-	 * Asks for a relation restriction to be removed.
-	 * 
-	 * @param dataset
-	 *            the dataset we are working with.
-	 * @param relation
-	 *            the relation to unrestrict.
-	 */
-	public void requestRemoveRelationRestriction(final DataSet dataset,
-			final Relation relation) {
-		// Do this in the background.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Remove the restriction.
-					MartBuilderUtils.unrestrictRelation(dataset, relation);
-
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							// Update the explanation diagram so that it
-							// correctly reflects the changed objects.
-							DataSetTabSet.this.repaintExplanationDialog();
 
 							// Update the modified status for the tabset.
 							DataSetTabSet.this.martTab.getMartTabSet()

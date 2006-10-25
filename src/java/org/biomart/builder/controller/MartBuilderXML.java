@@ -43,7 +43,6 @@ import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
-import org.biomart.builder.model.DataSet.DataSetRelationRestriction;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.DataSetTableType;
@@ -917,67 +916,6 @@ public class MartBuilderXML extends DefaultHandler {
 				this.closeElement("restrictedTable", xmlWriter);
 			}
 
-			// Write out restricted relations inside dataset.
-			for (final Iterator x = ds.getRestrictedRelations().iterator(); x
-					.hasNext();) {
-				final Relation r = (Relation) x.next();
-				final DataSetRelationRestriction restrict = ds
-						.getRestrictedRelationType(r);
-				this.openElement("restrictedRelation", xmlWriter);
-				this.writeAttribute("relationId",
-						(String) this.reverseMappedObjects.get(r), xmlWriter);
-				this.writeAttribute("expression", restrict.getExpression(),
-						xmlWriter);
-
-				// First table aliases.
-				// AliasCols, AliasNames - wrapped obj to string map
-				final StringBuffer firstAliasColumnIds = new StringBuffer();
-				final StringBuffer firstAliasNames = new StringBuffer();
-				for (final Iterator i = restrict.getFirstTableAliases()
-						.entrySet().iterator(); i.hasNext();) {
-					final Map.Entry entry = (Map.Entry) i.next();
-					final Column col = (Column) entry.getKey();
-					final String alias = (String) entry.getValue();
-					firstAliasColumnIds
-							.append((String) this.reverseMappedObjects.get(col));
-					firstAliasNames.append(alias);
-					if (i.hasNext()) {
-						firstAliasColumnIds.append(',');
-						firstAliasNames.append(',');
-					}
-				}
-				this.writeAttribute("firstTableAliasColumnIds",
-						firstAliasColumnIds.toString(), xmlWriter);
-				this.writeAttribute("firstTableAliasNames", firstAliasNames
-						.toString(), xmlWriter);
-
-				// Second table aliases.
-				// AliasCols, AliasNames - wrapped obj to string map
-				final StringBuffer secondAliasColumnIds = new StringBuffer();
-				final StringBuffer secondAliasNames = new StringBuffer();
-				for (final Iterator i = restrict.getSecondTableAliases()
-						.entrySet().iterator(); i.hasNext();) {
-					final Map.Entry entry = (Map.Entry) i.next();
-					final Column col = (Column) entry.getKey();
-					final String alias = (String) entry.getValue();
-					secondAliasColumnIds
-							.append((String) this.reverseMappedObjects.get(col));
-					secondAliasNames.append(alias);
-					if (i.hasNext()) {
-						secondAliasColumnIds.append(',');
-						secondAliasNames.append(',');
-					}
-				}
-				this.writeAttribute("secondTableAliasColumnIds",
-						secondAliasColumnIds.toString(), xmlWriter);
-				this.writeAttribute("secondTableAliasNames", secondAliasNames
-						.toString(), xmlWriter);
-
-				// Restricted relation bits.
-				this.writeAttribute("alt", r.toString(), xmlWriter);
-				this.closeElement("restrictedRelation", xmlWriter);
-			}
-
 			// Write out masked relations inside dataset. Can go before or
 			// after.
 			for (final Iterator x = ds.getMaskedRelations().iterator(); x
@@ -1565,60 +1503,6 @@ public class MartBuilderXML extends DefaultHandler {
 				DataSetConcatRelationType crType = new DataSetConcatRelationType(
 						columnSep, recordSep, concatColumns);
 				w.flagConcatOnlyRelation(rel, crType);
-				element = rel;
-			} catch (final Exception e) {
-				if (e instanceof SAXException)
-					throw (SAXException) e;
-				else
-					throw new SAXException(e);
-			}
-		}
-
-		// Restricted Relation (inside dataset).
-		else if ("restrictedRelation".equals(eName)) {
-			// What dataset does it belong to? Throw a wobbly if none.
-			if (this.objectStack.empty()
-					|| !(this.objectStack.peek() instanceof DataSet))
-				throw new SAXException(Resources
-						.get("restrictedRelationOutsideDataSet"));
-			final DataSet w = (DataSet) this.objectStack.peek();
-
-			try {
-				// Look up the relation.
-				final Relation rel = (Relation) this.mappedObjects
-						.get(attributes.get("relationId"));
-
-				// Get the expression to use.
-				final String expr = (String) attributes.get("expression");
-
-				// Get the aliases to use for the first table.
-				final Map first = new HashMap();
-				final String[] firstTableAliasColumnIds = ((String) attributes
-						.get("firstTableAliasColumnIds")).split(",");
-				final String[] firstTableAliasNames = ((String) attributes
-						.get("firstTableAliasNames")).split(",");
-				for (int i = 0; i < firstTableAliasColumnIds.length; i++) {
-					final Column wrapped = (Column) this.mappedObjects
-							.get(firstTableAliasColumnIds[i]);
-					first.put(wrapped, firstTableAliasNames[i]);
-				}
-
-				// Get the aliases to use for the second table.
-				final Map second = new HashMap();
-				final String[] secondTableAliasColumnIds = ((String) attributes
-						.get("secondTableAliasColumnIds")).split(",");
-				final String[] secondTableAliasNames = ((String) attributes
-						.get("secondTableAliasNames")).split(",");
-				for (int i = 0; i < secondTableAliasColumnIds.length; i++) {
-					final Column wrapped = (Column) this.mappedObjects
-							.get(secondTableAliasColumnIds[i]);
-					second.put(wrapped, secondTableAliasNames[i]);
-				}
-
-				// Flag it as restricted
-				final DataSetRelationRestriction restrict = new DataSetRelationRestriction(
-						expr, first, second);
-				w.flagRestrictedRelation(rel, restrict);
 				element = rel;
 			} catch (final Exception e) {
 				if (e instanceof SAXException)

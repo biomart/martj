@@ -118,10 +118,6 @@ public class SchemaContext implements DiagramContext {
 			// All others are normal.
 			else
 				component.setForeground(RelationComponent.NORMAL_COLOUR);
-
-			// Do the stroke.
-			final RelationComponent relcomp = (RelationComponent) component;
-			relcomp.setDotted(false);
 		}
 
 		// Keys also get pretty colours for being incorrect or handmade.

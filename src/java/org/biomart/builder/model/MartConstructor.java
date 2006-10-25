@@ -1293,8 +1293,7 @@ public interface MartConstructor {
 						replacementFirstTableName, dsSourceKeyCols,
 						replacementFirstTableCols, rTargetSchema,
 						rTargetTableName, rTargetKey.getColumns(),
-						dsTargetIncludeCols, vConstructionTable.getDataSet()
-								.getRestrictedRelationType(rSourceRelation),
+						dsTargetIncludeCols, 
 						rTargetTable.equals(rSourceRelation.getSecondKey()
 								.getTable()), rSourceRelation.isManyToMany(),
 						vConstructionTable.getDataSet().getRestrictedTableType(
@@ -1402,8 +1401,6 @@ public interface MartConstructor {
 						vMergedTableTempName, null, vTableTempName,
 						dsSourceKeyCols, null, rTargetSchema, rTargetTableName,
 						rTargetKey.getColumns(), dsTargetIncludeCols,
-						vConstructionTable.getDataSet()
-								.getRestrictedRelationType(rSourceRelation),
 						rTargetTable.equals(rSourceRelation.getSecondKey()
 								.getTable()), rSourceRelation.isManyToMany(),
 						vConstructionTable.getDataSet().getRestrictedTableType(
@@ -1532,8 +1529,6 @@ public interface MartConstructor {
 								rConcatRelation).getColumnSeparator(),
 						vConstructionTable.getDataSet().getConcatRelationType(
 								rConcatRelation).getRecordSeparator(),
-						vConstructionTable.getDataSet()
-								.getRestrictedRelationType(rConcatRelation),
 						rConcatTargetTable.equals(rConcatRelation
 								.getSecondKey().getTable()), vConstructionTable
 								.getDataSet().getRestrictedTableType(
@@ -1563,7 +1558,7 @@ public interface MartConstructor {
 						vConcatTableFinalTempName, null, vTableTempName,
 						vSourceKeyCols, null, null, vConcatTableTempName,
 						vSourceKeyCols, Collections.singletonList(dsConcatCol),
-						null, false, false, null, false, false);
+						false, false, null, false, false);
 				actionGraph.addActionWithParent(merge, indexCon);
 				lastActionPerformed = merge;
 				// Drop old temp table and replace with new one.
