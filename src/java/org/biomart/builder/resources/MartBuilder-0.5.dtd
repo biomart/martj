@@ -45,7 +45,7 @@
 <!ATTLIST relation status (HANDMADE|INFERRED|INFERRED_INCORRECT) #REQUIRED>
 <!ATTLIST relation alt CDATA #REQUIRED>
 
-<!ELEMENT dataset (table+,relation*,concatRelation*,restrictedTable*,restrictedRelation*,maskedRelation*,subclassRelation*)>
+<!ELEMENT dataset (table+,relation*,concatRelation*,restrictedTable*,maskedRelation*,subclassRelation*)>
 <!ATTLIST dataset name CDATA #REQUIRED>
 <!ATTLIST dataset centralTableId IDREF #REQUIRED>
 <!ATTLIST dataset alt CDATA #REQUIRED>
@@ -107,15 +107,6 @@
 <!ATTLIST restrictedTable aliasColumnIds IDREFS #REQUIRED>
 <!ATTLIST restrictedTable aliasColumnNames CDATA #REQUIRED>
 <!ATTLIST restrictedTable alt CDATA #REQUIRED>
-
-<!ELEMENT restrictedRelation EMPTY>
-<!ATTLIST restrictedRelation relationId IDREF #REQUIRED>
-<!ATTLIST restrictedRelation expression CDATA #REQUIRED>
-<!ATTLIST restrictedRelation firstTableAliasColumnIds IDREFS #REQUIRED>
-<!ATTLIST restrictedRelation firstTableAliasColumnNames CDATA #REQUIRED>
-<!ATTLIST restrictedRelation secondTableAliasColumnIds IDREFS #REQUIRED>
-<!ATTLIST restrictedRelation secondTableAliasColumnNames CDATA #REQUIRED>
-<!ATTLIST restrictedRelation alt CDATA #REQUIRED>
 
 <!ELEMENT maskedRelation EMPTY>
 <!ATTLIST maskedRelation relationId IDREF #REQUIRED>
