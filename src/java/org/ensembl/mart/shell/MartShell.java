@@ -568,7 +568,7 @@ public class MartShell {
         completionOn = true;
         readlineLoaded = true;
         myreader = new ConsoleReader();
-    	myreader.setDebug (new PrintWriter (new FileWriter ("writer.debug", true)));
+    	//myreader.setDebug (new PrintWriter (new FileWriter ("writer.debug", true)));
     	completors = new LinkedList ();
     	objSC= new SimpleCompletor (new String [] { "list", "add", "remove", "set", "unset", "help", "use", "using"});
     	completors.add(objSC);
