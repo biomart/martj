@@ -3132,10 +3132,11 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		String[] attNames = tempExps[i].getAttributes().split(",");
 		for (int j = 0; j < attNames.length; j++){
 			// skip if filters are not defined in the dsConfig
-			if (!dsConfig.containsAttributeDescription(attNames[j]) || 
+			if (!attNames[j].matches(".+__.+") && (!dsConfig.containsAttributeDescription(attNames[j]) || 
 				(dsConfig.getAttributeDescriptionByInternalName(attNames[j]).getHidden() != null
-					&& dsConfig.getAttributeDescriptionByInternalName(attNames[j]).getHidden().equals("true")))
+					&& dsConfig.getAttributeDescriptionByInternalName(attNames[j]).getHidden().equals("true")))){
 					continue OUTER;
+				}
 		}
 		
 		// if passsed all above tests then add template Importable to datasetConfig 
