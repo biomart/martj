@@ -564,7 +564,7 @@
       <arg value="-srcfolder"/>
       <arg value="${dist.dir}/dmg"/>
       <arg value="-volname"/>
-      <arg value="${name}-${version}"/>
+      <arg value="${name} ${version}"/>
       <arg value="-ov"/>
       <arg value="${build.dir}/${name}-bin.dmg"/>
     </exec>
