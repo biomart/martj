@@ -43,6 +43,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
@@ -58,6 +59,7 @@ import org.biomart.builder.view.gui.dialogs.ExplainDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainTableDialog;
 import org.biomart.builder.view.gui.dialogs.ExpressionColumnDialog;
 import org.biomart.builder.view.gui.dialogs.PartitionColumnDialog;
+import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
@@ -505,6 +507,55 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Asks for a table restriction to be added to the dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset we are dealing with.
+	 * @param table
+	 *            the table to add a restriction to.
+	 */
+	public void requestAddTableRestriction(final DataSet dataset,
+			final Table table) {
+		final RestrictedTableDialog dialog = new RestrictedTableDialog(table,
+				null);
+		dialog.show();
+		// Cancelled?
+		if (dialog.getCancelled())
+			return;
+		// Get the details.
+		final Map aliases = dialog.getColumnAliases();
+		final String expression = dialog.getExpression();
+		// Do this in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Add the restriction.
+					MartBuilderUtils.restrictTable(dataset, table, expression,
+							aliases);
+
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Update the explanation diagram so that it
+							// correctly reflects the changed objects.
+							DataSetTabSet.this.repaintExplanationDialog();
+
+							// Update the modified status for the tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	/**
 	 * Request that the optimiser type used post-construction of a dataset be
 	 * changed.
 	 * 
@@ -751,6 +802,49 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Asks for a table restriction to be modified.
+	 * 
+	 * @param dataset
+	 *            the dataset we are working with.
+	 * @param table
+	 *            the table to modify the restriction for.
+	 * @param restriction
+	 *            the existing restriction.
+	 */
+	public void requestModifyTableRestriction(final DataSet dataset,
+			final Table table, final DataSetTableRestriction restriction) {
+		final RestrictedTableDialog dialog = new RestrictedTableDialog(table,
+				restriction);
+		dialog.show();
+		// Cancelled?
+		if (dialog.getCancelled())
+			return;
+		// Get updated details from the user.
+		final Map aliases = dialog.getColumnAliases();
+		final String expression = dialog.getExpression();
+		// Do this in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Update the restriction.
+					MartBuilderUtils.restrictTable(dataset, table, expression,
+							aliases);
+
+					// Update the modified status for the tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	/**
 	 * Requests that the dataset should be partitioned by the contents of the
 	 * specified column. A dialog is put up asking the user how to partition
 	 * this column. If it is already partitioned, the dialog will explain how
@@ -951,6 +1045,45 @@ public class DataSetTabSet extends JTabbedPane {
 
 							// Recalculate the explanation diagram too.
 							DataSetTabSet.this.recalculateExplanationDialog();
+
+							// Update the modified status for the tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Asks for a table restriction to be removed.
+	 * 
+	 * @param dataset
+	 *            the dataset we are working with.
+	 * @param table
+	 *            the table to unrestrict.
+	 */
+	public void requestRemoveTableRestriction(final DataSet dataset,
+			final Table table) {
+		// Do this in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Remove the restriction.
+					MartBuilderUtils.unrestrictTable(dataset, table);
+
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Update the explanation diagram so that it
+							// correctly reflects the changed objects.
+							DataSetTabSet.this.repaintExplanationDialog();
 
 							// Update the modified status for the tabset.
 							DataSetTabSet.this.martTab.getMartTabSet()

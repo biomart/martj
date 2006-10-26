@@ -833,7 +833,7 @@ public interface MartConstructor {
 										.getDataSetTable().getName(), null,
 								vHasTable.getTempTableName(), null,
 								vParentTable.getTempTableName(), dsPKCols,
-								false, false, false);
+								false, null, false, false);
 						actionGraph.addActionWithParent(create, preDOAction);
 						// Create the PK on the 'boolean' table using the same
 						// columns, as an index.
@@ -1212,7 +1212,8 @@ public interface MartConstructor {
 						vTableTempName, replacementFirstSchema,
 						replacementFirstTableName, replacementFirstTableCols,
 						replacementFirstTable.getPrimaryKey() == null,
-						true, false);
+						vConstructionTable.getDataSet().getRestrictedTableType(
+								replacementFirstTable), true, false);
 				actionGraph.addActionWithParent(create, lastActionPerformed);
 				// Update last action performed, in case there are no merges.
 				lastActionPerformed = create;
@@ -1295,7 +1296,9 @@ public interface MartConstructor {
 						dsTargetIncludeCols, 
 						rTargetTable.equals(rSourceRelation.getSecondKey()
 								.getTable()), rSourceRelation.isManyToMany(),
-							replacementFirstSchema != null, true);
+						vConstructionTable.getDataSet().getRestrictedTableType(
+								rTargetTable), replacementFirstSchema != null,
+						true);
 				actionGraph.addActionWithParent(merge, lastActionPerformed);
 				// Last action performed for this table is the merge, as
 				// the drop can be carried out later at any time.
@@ -1400,7 +1403,8 @@ public interface MartConstructor {
 						rTargetKey.getColumns(), dsTargetIncludeCols,
 						rTargetTable.equals(rSourceRelation.getSecondKey()
 								.getTable()), rSourceRelation.isManyToMany(),
-						false, true);
+						vConstructionTable.getDataSet().getRestrictedTableType(
+								rTargetTable), false, true);
 				actionGraph.addActionWithParent(merge, index);
 				// Last action performed for this table is the merge, as
 				// the drop can be carried out later at any time.
@@ -1505,7 +1509,7 @@ public interface MartConstructor {
 						this.datasetSchemaName, vConstructionTable
 								.getDataSetTable().getName(), null,
 						vConcatTableTempName, null, vTableTempName,
-						vSourceKeyCols, false, false, false);
+						vSourceKeyCols, false, null, false, false);
 				actionGraph.addActionWithParent(createCon, lastActionPerformed);
 				// Generate new temp table name for populated concat table.
 				final String vPopulatedConcatTableTempName = this.helper
@@ -1526,7 +1530,9 @@ public interface MartConstructor {
 						vConstructionTable.getDataSet().getConcatRelationType(
 								rConcatRelation).getRecordSeparator(),
 						rConcatTargetTable.equals(rConcatRelation
-								.getSecondKey().getTable()));
+								.getSecondKey().getTable()), vConstructionTable
+								.getDataSet().getRestrictedTableType(
+										rConcatTargetTable));
 				actionGraph.addActionWithParent(concat, createCon);
 				// Drop old concat temp table and replace with new one.
 				MartConstructorAction drop = new Drop(this.datasetSchemaName,
@@ -1552,7 +1558,7 @@ public interface MartConstructor {
 						vConcatTableFinalTempName, null, vTableTempName,
 						vSourceKeyCols, null, null, vConcatTableTempName,
 						vSourceKeyCols, Collections.singletonList(dsConcatCol),
-						false, false, false, false);
+						false, false, null, false, false);
 				actionGraph.addActionWithParent(merge, indexCon);
 				lastActionPerformed = merge;
 				// Drop old temp table and replace with new one.
@@ -1648,7 +1654,7 @@ public interface MartConstructor {
 				final Create trim = new Create(this.datasetSchemaName,
 						vConstructionTable.getDataSetTable().getName(), null,
 						vTrimmedTableTempName, null, vTableTempName,
-						dsFinalColumns, false, false, false);
+						dsFinalColumns, false, null, false, false);
 				actionGraph.addActionWithParent(trim, lastActionPerformed);
 				lastActionPerformed = trim;
 				// Drop previous table.

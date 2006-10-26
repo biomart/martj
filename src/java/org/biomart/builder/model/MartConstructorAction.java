@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
@@ -271,6 +272,8 @@ public abstract class MartConstructorAction {
 
 		private String concatTableName;
 
+		private DataSetTableRestriction concatTableRestriction;
+
 		private Schema concatTableSchema;
 
 		private boolean firstTableSourceTable;
@@ -325,6 +328,8 @@ public abstract class MartConstructorAction {
 		 *            <tt>true</tt> if the first table of the relation
 		 *            restriction is the LHS side, <tt>false</tt> if it is the
 		 *            RHS side.
+		 * @param concatTableRestriction
+		 *            a restriction to place on the RHS table.
 		 */
 		public Concat(final String dsSchemaName, final String dsTableName,
 				final Schema targetTableSchema, final String targetTableName,
@@ -335,7 +340,8 @@ public abstract class MartConstructorAction {
 				final List concatTableConcatColumns,
 				final String targetTableConcatColumnName,
 				final String columnSeparator, final String recordSeparator,
-				final boolean firstTableSourceTable) {
+				final boolean firstTableSourceTable,
+				final DataSetTableRestriction concatTableRestriction) {
 			super(dsSchemaName, dsTableName, targetTableSchema, targetTableName);
 			this.sourceTableSchema = sourceTableSchema;
 			this.sourceTableName = sourceTableName;
@@ -348,6 +354,7 @@ public abstract class MartConstructorAction {
 			this.columnSeparator = columnSeparator;
 			this.recordSeparator = recordSeparator;
 			this.firstTableSourceTable = firstTableSourceTable;
+			this.concatTableRestriction = concatTableRestriction;
 		}
 
 		public String getColumnSeparator() {
@@ -364,6 +371,10 @@ public abstract class MartConstructorAction {
 
 		public String getConcatTableName() {
 			return this.concatTableName;
+		}
+
+		public DataSetTableRestriction getConcatTableRestriction() {
+			return this.concatTableRestriction;
 		}
 
 		public Schema getConcatTableSchema() {
@@ -411,6 +422,8 @@ public abstract class MartConstructorAction {
 
 		private String sourceTableName;
 
+		private DataSetTableRestriction sourceTableRestriction;
+
 		private Schema sourceTableSchema;
 
 		private boolean useAliases;
@@ -439,6 +452,9 @@ public abstract class MartConstructorAction {
 		 *            {@link Column} instances.
 		 * @param useDistinct
 		 *            if <tt>true</tt>, then a select distinct is performed.
+		 * @param tableRestriction
+		 *            any restrictions to place upon the selection from the
+		 *            table.
 		 * @param useAliases
 		 *            if <tt>true</tt>, then the items in selectFromColumns
 		 *            are expected to be {@link WrappedColumn} or
@@ -458,12 +474,14 @@ public abstract class MartConstructorAction {
 				final Schema targetTableSchema, final String targetTableName,
 				final Schema sourceTableSchema, final String sourceTableName,
 				final List selectFromColumns, final boolean useDistinct,
+				final DataSetTableRestriction tableRestriction,
 				final boolean useAliases, final boolean useInheritedAliases) {
 			super(dsSchemaName, dsTableName, targetTableSchema, targetTableName);
 			this.sourceTableSchema = sourceTableSchema;
 			this.sourceTableName = sourceTableName;
 			this.selectFromColumns = selectFromColumns;
 			this.useDistinct = useDistinct;
+			this.sourceTableRestriction = tableRestriction;
 			this.useAliases = useAliases;
 			this.useInheritedAliases = useInheritedAliases;
 		}
@@ -474,6 +492,10 @@ public abstract class MartConstructorAction {
 
 		public String getSourceTableName() {
 			return this.sourceTableName;
+		}
+
+		public DataSetTableRestriction getSourceTableRestriction() {
+			return this.sourceTableRestriction;
 		}
 
 		public Schema getSourceTableSchema() {
@@ -793,6 +815,8 @@ public abstract class MartConstructorAction {
 
 		private Schema sourceTableSchema;
 
+		private DataSetTableRestriction targetTableRestriction;
+
 		private boolean useLHSAliases;
 
 		private boolean useRHSAliases;
@@ -866,6 +890,7 @@ public abstract class MartConstructorAction {
 				final List mergeTableJoinColumns,
 				final List mergeTableSelectColumns,
 				final boolean firstTableSourceTable, final boolean useDistinct,
+				final DataSetTableRestriction targetTableRestriction,
 				final boolean useLHSAliases, final boolean useRHSAliases) {
 			super(dsSchemaName, dsTableName, targetTableSchema, targetTableName);
 			this.sourceTableSchema = sourceTableSchema;
@@ -878,6 +903,7 @@ public abstract class MartConstructorAction {
 			this.mergeTableSelectColumns = mergeTableSelectColumns;
 			this.firstTableSourceTable = firstTableSourceTable;
 			this.useDistinct = useDistinct;
+			this.targetTableRestriction = targetTableRestriction;
 			this.useLHSAliases = useLHSAliases;
 			this.useRHSAliases = useRHSAliases;
 		}
@@ -916,6 +942,10 @@ public abstract class MartConstructorAction {
 
 		public String getStatusMessage() {
 			return Resources.get("mcMerge");
+		}
+
+		public DataSetTableRestriction getTargetTableRestriction() {
+			return this.targetTableRestriction;
 		}
 
 		public boolean isFirstTableSourceTable() {

@@ -31,6 +31,7 @@ import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
+import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.ComponentStatus;
 import org.biomart.common.model.Key;
@@ -70,6 +71,14 @@ public class ExplainDataSetContext extends SchemaContext {
 
 	public void customiseAppearance(final JComponent component,
 			final Object object) {
+
+		// This bit adds a restricted outline to restricted tables.
+		if (object instanceof Table) {
+			final Table table = (Table) object;
+			final TableComponent tblcomp = (TableComponent) component;
+			tblcomp.setDotted(this.dataset.getRestrictedTables()
+					.contains(table));
+		}
 
 		// This section customises the appearance of relation lines within
 		// the schema diagram.
@@ -184,6 +193,69 @@ public class ExplainDataSetContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(unmask);
+
+			contextMenu.addSeparator();
+
+			// If it's a restricted table...
+			if (this.dataset.getRestrictedTables().contains(table)) {
+
+				// Option to modify restriction.
+				final JMenuItem modify = new JMenuItem(
+						Resources.get("modifyTableRestrictionTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("filter.gif")));
+				modify.setMnemonic(Resources.get(
+						"modifyTableRestrictionMnemonic").charAt(0));
+				modify.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						ExplainDataSetContext.this.getMartTab()
+								.getDataSetTabSet()
+								.requestModifyTableRestriction(
+										ExplainDataSetContext.this.dataset,
+										table,
+										ExplainDataSetContext.this.dataset
+												.getRestrictedTableType(table));
+					}
+				});
+				contextMenu.add(modify);
+
+			} else {
+
+				// Add a table restriction.
+				final JMenuItem restriction = new JMenuItem(
+						Resources.get("addTableRestrictionTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("filter.gif")));
+				restriction.setMnemonic(Resources.get(
+						"addTableRestrictionMnemonic").charAt(0));
+				restriction.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						ExplainDataSetContext.this.getMartTab()
+								.getDataSetTabSet().requestAddTableRestriction(
+										ExplainDataSetContext.this.dataset,
+										table);
+					}
+				});
+				contextMenu.add(restriction);
+			}
+
+			// Option to remove restriction.
+			final JMenuItem remove = new JMenuItem(Resources
+					.get("removeTableRestrictionTitle"));
+			remove.setMnemonic(Resources.get("removeTableRestrictionMnemonic")
+					.charAt(0));
+			remove.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					ExplainDataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestRemoveTableRestriction(
+									ExplainDataSetContext.this.dataset, table);
+				}
+			});
+			contextMenu.add(remove);
+			if (!this.dataset.getRestrictedTables().contains(table))
+				remove.setEnabled(false);
 		}
 
 		// This menu is attached to all the relation lines in the schema.
