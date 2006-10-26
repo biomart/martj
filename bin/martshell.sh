@@ -16,11 +16,16 @@
 
 CACHE_DIR="${HOME}/.martshell_cachedir"
 
-TMP_AROOT="`dirname $0`"
-TMP_ROOT=\"$TMP_AROOT\"/..
+TMP_AROOT=`dirname "$0"`
+if [ $TMP_AROOT == "" ]
+then
+	TMP_ROOT=..
+else
+	TMP_ROOT="$TMP_AROOT"/..
+fi
 
-TMP_CLASSPATH=\"${TMP_ROOT}\"
-TMP_CLASSPATH="${TMP_CLASSPATH}":"${TMP_ROOT}"/build/classes 
+TMP_CLASSPATH="${TMP_ROOT}"
+TMP_CLASSPATH="${TMP_CLASSPATH}":"${TMP_ROOT}"/build/classes
 TMP_CLASSPATH="${TMP_CLASSPATH}":"${TMP_ROOT}"/lib/martj.jar
 TMP_CLASSPATH="${TMP_CLASSPATH}":"${TMP_ROOT}"/lib/mysql-connector-java-3.0.16-ga-bin.jar
 TMP_CLASSPATH="${TMP_CLASSPATH}":"${TMP_ROOT}"/lib/java-getopt-1.0.9.jar
@@ -35,13 +40,14 @@ TMP_CLASSPATH="${TMP_CLASSPATH}":"${TMP_ROOT}"/lib/pg73jdbc3.jar
 TMP_CLASSPATH="${TMP_CLASSPATH}":"${TMP_ROOT}"/lib/jline.jar
 TMP_CLASSPATH="${TMP_CLASSPATH}":"${CLASSPATH}"
 
+TMP_CLASSPATH=`echo $TMP_CLASSPATH | sed 's/ /\\ /g'`
+
 TMP_LD_LIBPATH="${LD_LIBRARY_PATH}"
 
 # Note: If you get Java "Out of memory" errors, try increasing the numbers
 # in the -Xmx and -Xms parameters in the java command below. For performance
 # sake it is best if they are both the same value.
 
-echo $TMP_CLASSPATH
 
 PLATFORM=`uname -ms`
 case "$PLATFORM" in
