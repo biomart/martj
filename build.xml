@@ -492,9 +492,10 @@
 		<taskdef name="jarbundler" 
       	   classname="net.sourceforge.jarbundler.JarBundler"/>	    
         <mkdir dir="${dist.dir}/dmg" />
+        <mkdir dir="${dist.dir}/dmg/bin"/>
                 <taskdef name="jarbundler"
            classname="net.sourceforge.jarbundler.JarBundler"/>
-                <jarbundler dir="${dist.dir}/dmg"
+                <jarbundler dir="${dist.dir}/dmg/bin"
             name="MartBuilder"
             mainclass="org.biomart.builder.view.gui.MartBuilder">
             <jarfileset dir="${dist.dir}/${lib.dir}">
@@ -503,7 +504,7 @@
                         </jarfileset>
                         <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
         </jarbundler>
-               <jarbundler dir="${dist.dir}/dmg"
+               <jarbundler dir="${dist.dir}/dmg/bin"
             name="MartEditor"
             mainclass="org.ensembl.mart.editor.MartEditor">
             <jarfileset dir="${dist.dir}/${lib.dir}">
@@ -512,7 +513,7 @@
                         </jarfileset>
                         <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
         </jarbundler>
-    <jarbundler dir="${dist.dir}/dmg"
+    <jarbundler dir="${dist.dir}/dmg/bin"
             name="MartExplorer"
             mainclass="org.ensembl.mart.explorer.MartExplorer">
             <jarfileset dir="${dist.dir}/${lib.dir}">
@@ -521,7 +522,7 @@
                         </jarfileset>
                         <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
         </jarbundler>
-                <jarbundler dir="${dist.dir}/dmg"
+                <jarbundler dir="${dist.dir}/dmg/bin"
             name="MartShell"
             mainclass="org.ensembl.mart.shell.MartShell">
             <jarfileset dir="${dist.dir}/${lib.dir}">
@@ -531,7 +532,6 @@
         </jarbundler>
         
             <!-- bin/*.sh with correct unix file mode -->
-            <mkdir dir="${dist.dir}/dmg/bin"/>
         <copy todir="${dist.dir}/dmg/bin">
 			<fileset dir="${bin.dir}" casesensitive="yes">
 		  		<include name="martshell.sh"/>
@@ -539,7 +539,7 @@
 			</fileset>
         </copy>
         <rename src="${dist.dir}/dmg/bin/martshell.sh" dest="${dist.dir}/dmg/bin/martshell.command"/>
-        <chmod perm="755" dir="${dist.dir}/dmg/bin" includes="**/*.command"/>
+        <chmod perm="755" file="${dist.dir}/dmg/bin/martshell.command"/>
         
             <mkdir dir="${dist.dir}/dmg/lib"/>
         <copy todir="${dist.dir}/dmg/lib">
