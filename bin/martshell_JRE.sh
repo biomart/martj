@@ -33,33 +33,10 @@ TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/pg73jdbc3.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/jline.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${CLASSPATH}
 
-TMP_LD_LIBPATH=${LD_LIBRARY_PATH}
-
-PLATFORM=`uname -ms`
-case "$PLATFORM" in
-[Ll]inux*)
-  TMP_LD_LIBPATH="${TMP_LD_LIBPATH}:${TMP_ROOT}/lib/linux"
-  JAVA="${TMP_ROOT}/jre/linux/bin/java"
-  ;;
-*alpha*)
-  TMP_LD_LIBPATH="${TMP_LD_LIBPATH}:${TMP_ROOT}/lib/alpha"
-  JAVA="${TMP_ROOT}/jre/alpha/bin/java"
-  ;;
-# arp
-*Darwin*Power*Mac*)
-  TMP_LD_LIBPATH="${TMP_:D_LIBPATH}:${TMP_ROOT}/lib/macosx/"
-  ;;
-# arp
-*)
-  echo "warning, this platform is not known to be supported, using linux libraries\n"
-  TMP_LD_LIBPATH="${TMP_LD_LIBPATH}:${TMP_ROOT}/lib/linux"
-  JAVA="${TMP_ROOT}/jre/linux/bin/java"
-  ;;
-esac
-
+JAVA="${TMP_ROOT}/jre/linux/bin/java"
 
 # Note: If you get Java "Out of memory" errors, try increasing the numbers
 # in the -Xmx and -Xms parameters in the java command below. For performance
 # sake it is best if they are both the same value.
 
-LD_LIBRARY_PATH=$TMP_LD_LIBPATH $JAVA -Xmx128m -Xms128m -ea -classpath ${TMP_CLASSPATH} org.ensembl.mart.shell.MartShell $@
+$JAVA -Xmx128m -Xms128m -ea -classpath ${TMP_CLASSPATH} org.ensembl.mart.shell.MartShell $@
