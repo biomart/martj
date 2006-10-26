@@ -35,7 +35,6 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
@@ -625,26 +624,6 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Flags a table as restricted within a dataset. If already flagged, this
-	 * updates the existing settings.
-	 * 
-	 * @param dataset
-	 *            the dataset to flag the relation in.
-	 * @param table
-	 *            the table to flag as restricted.
-	 * @param expression
-	 *            the expression to use for the restriction for the relation.
-	 * @param aliases
-	 *            the aliases to use for columns.
-	 */
-	public static void restrictTable(final DataSet dataset, final Table table,
-			final String expression, final Map aliases) {
-		final DataSetTableRestriction restriction = new DataSetTableRestriction(
-				expression, aliases);
-		dataset.flagRestrictedTable(table, restriction);
-	}
-
-	/**
 	 * This method returns the first few rows from a given offset in the given
 	 * table. The results are a nested list, where each item in the main list is
 	 * another list containing all the column values in the same order as they
@@ -889,18 +868,6 @@ public class MartBuilderUtils {
 	public static void unpartitionByColumn(final DataSet dataset,
 			final DataSetColumn column) throws ValidationException {
 		column.setPartitionType(null);
-	}
-
-	/**
-	 * Unflags a table as restricted within a dataset.
-	 * 
-	 * @param dataset
-	 *            the dataset to unflag the table within.
-	 * @param table
-	 *            the table to unflag.
-	 */
-	public static void unrestrictTable(final DataSet dataset, final Table table) {
-		dataset.unflagRestrictedTable(table);
 	}
 
 	/**

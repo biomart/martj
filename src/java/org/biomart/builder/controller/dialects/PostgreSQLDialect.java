@@ -35,7 +35,6 @@ import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
@@ -94,8 +93,6 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final String concatTableName = action.getTargetTableName();
 		final String columnSep = action.getColumnSeparator();
 		final String recordSep = action.getRecordSeparator();
-		final DataSetTableRestriction tblRestriction = action
-				.getConcatTableRestriction();
 		final boolean firstIsSource = action.isFirstTableSourceTable();
 
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
@@ -130,12 +127,6 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			sb.append("a." + pkColName + "=b." + fkColName + "");
 		}
 
-		// Do restrictions.
-		if (tblRestriction != null) {
-			sb.append(" and ");
-			sb.append(tblRestriction.getSubstitutedExpression("b"));
-		}
-
 		sb.append("),'");
 		sb.append(recordSep);
 		sb.append("') as ");
@@ -167,8 +158,6 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				: ((JDBCSchema) action.getSourceTableSchema())
 						.getDatabaseSchema();
 		final String fromTableName = action.getSourceTableName();
-		final DataSetTableRestriction tblRestriction = action
-				.getSourceTableRestriction();
 		final boolean useDistinct = action.isUseDistinct();
 
 		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
@@ -209,12 +198,6 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		}
 		sb.append(" from " + fromTableSchema + "." + fromTableName
 				+ " as a");
-
-		// Do restriction.
-		if (tblRestriction != null) {
-			sb.append(" where ");
-			sb.append(tblRestriction.getSubstitutedExpression("a"));
-		}
 
 		statements.add(sb.toString());
 	}
@@ -329,8 +312,6 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				: ((JDBCSchema) action.getTargetTableSchema())
 						.getDatabaseSchema();
 		final String mergeTableName = action.getTargetTableName();
-		final DataSetTableRestriction tblRestriction = action
-				.getTargetTableRestriction();
 		final boolean firstIsSource = action.isFirstTableSourceTable();
 		final boolean useDistinct = action.isUseDistinct();
 
@@ -399,12 +380,6 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			final String fkColName = ((Column) action
 					.getMergeTableJoinColumns().get(i)).getName();
 			sb.append("a." + pkColName + "=b." + fkColName + "");
-		}
-
-		// Do restriction.
-		if (tblRestriction != null) {
-			sb.append(" where ");
-			sb.append(tblRestriction.getSubstitutedExpression("b"));
 		}
 
 		statements.add(sb.toString());
