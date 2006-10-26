@@ -16,9 +16,10 @@
 
 CACHE_DIR="${HOME}/.martshell_cachedir"
 
-TMP_ROOT="`dirname $0`/.."
+TMP_AROOT="`dirname $0`"
+TMP_ROOT=\"$TMP_AROOT\"/..
 
-TMP_CLASSPATH="${TMP_ROOT}"
+TMP_CLASSPATH=\"${TMP_ROOT}\"
 TMP_CLASSPATH="${TMP_CLASSPATH}":"${TMP_ROOT}"/build/classes 
 TMP_CLASSPATH="${TMP_CLASSPATH}":"${TMP_ROOT}"/lib/martj.jar
 TMP_CLASSPATH="${TMP_CLASSPATH}":"${TMP_ROOT}"/lib/mysql-connector-java-3.0.16-ga-bin.jar
@@ -40,6 +41,7 @@ TMP_LD_LIBPATH="${LD_LIBRARY_PATH}"
 # in the -Xmx and -Xms parameters in the java command below. For performance
 # sake it is best if they are both the same value.
 
+echo $TMP_CLASSPATH
 
 PLATFORM=`uname -ms`
 case "$PLATFORM" in
