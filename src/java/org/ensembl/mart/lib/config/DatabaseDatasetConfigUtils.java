@@ -7299,15 +7299,16 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     FilterDescription filt = new FilterDescription();
     filt.setField(columnName);
     String descriptiveName = columnName;
-
-    if (columnName.endsWith("_bool")) {
+	if (columnName.endsWith("_bool")) {
       	if (duplicated == 1){
 			filt.setInternalName(tableName + "_" + columnName.toLowerCase());
       	}
       	else{
-			filt.setInternalName(columnName.toLowerCase());	
+      		String internalName = columnName.replaceFirst("_bool","").toLowerCase();
+			filt.setInternalName("with_"+internalName);
       	}
-        descriptiveName = columnName.replaceFirst("_bool", "");
+		descriptiveName = descriptiveName.substring(0,1).toUpperCase() + descriptiveName.substring(1);
+        descriptiveName = "with "+descriptiveName.replaceFirst("_bool", "")+" ID(s)";
         filt.setType("boolean");
         filt.setQualifier("only");
         filt.setLegalQualifiers("only,excluded");
@@ -7336,6 +7337,8 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 		}
 		filt.setDisplayType("text");
 		filt.setMultipleValues("1");
+		descriptiveName = descriptiveName + " ID(s)";
+		descriptiveName = descriptiveName.substring(0,1).toUpperCase() + descriptiveName.substring(1);
     }
     else {
 		if (duplicated == 1){
@@ -7348,10 +7351,11 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
         filt.setQualifier(DEFAULTQUALIFIER);
         filt.setLegalQualifiers(DEFAULTLEGALQUALIFIERS);
 		filt.setDisplayType("text");
+		descriptiveName = descriptiveName.substring(0,1).toUpperCase() + descriptiveName.substring(1);
     }
     
     String displayName = descriptiveName.replaceAll("_", " ");
-    filt.setDisplayName(displayName.substring(0,1).toUpperCase() + displayName.substring(1));
+    filt.setDisplayName(displayName);//.substring(0,1).toUpperCase() + displayName.substring(1));
     filt.setTableConstraint(tableName);
     filt.setKey(joinKey);
 
