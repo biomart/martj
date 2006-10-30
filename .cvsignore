@@ -13,3 +13,4 @@ spy.log
 oracle.sql
 .settings
 .externalToolBuilders
+writer.debug
