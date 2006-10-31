@@ -86,6 +86,7 @@ import org.ensembl.mart.lib.config.BaseConfigurationObject;
 import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DatasetConfig;
+import org.ensembl.mart.lib.config.DynamicDataset;
 import org.ensembl.mart.lib.config.Exportable;
 import org.ensembl.mart.lib.config.FilterCollection;
 import org.ensembl.mart.lib.config.FilterDescription;
@@ -646,6 +647,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					"automate push action"};		
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Importable"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete" };
+		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DynamicDataset"))
+					menuItems = new String[] { "copy", "cut", "paste", "delete" };	
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Exportable"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete" };
 		else menuItems = new String[0];
@@ -753,6 +756,9 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.Exportable"))
 			copiedNode =
 				new DatasetConfigTreeNode(editingNode.toString(), new Exportable((Exportable) editingNode.getUserObject()));
+		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.DynamicDataset"))
+			copiedNode =
+				new DatasetConfigTreeNode(editingNode.toString(), new DynamicDataset((DynamicDataset) editingNode.getUserObject()));		
 
 		DatasetConfigTreeNodeSelection ss = new DatasetConfigTreeNodeSelection(copiedNode);
 		//clipboard.setContents(ss, this);
@@ -870,6 +876,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 						newSel = new FilterDescription((FilterDescription)sel);
 					else if (selnodeName.equals("org.ensembl.mart.lib.config.Importable"))
 						newSel = new Importable((Importable)sel);
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.DynamicDataset"))
+						newSel = new DynamicDataset((DynamicDataset)sel);	
 					else if (selnodeName.equals("org.ensembl.mart.lib.config.Exportable"))
 						newSel = new Exportable((Exportable)sel);
 					else if (selnodeName.equals("org.ensembl.mart.lib.config.Option"))
