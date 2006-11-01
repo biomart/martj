@@ -830,6 +830,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				String dynName = filtAtt.getInternalName();
 					DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("SpecificAttributeContent:" + dynName);
 					dynNode.setUserObject(filtAtt);
+					this.add(dynNode);
 				}
 			
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeList")) {

@@ -2643,9 +2643,23 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						}
 					}*/
 					
-					AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);
-				
-					//if (templateAtt.getDynamicAttributeContent()!=null) {
+					AttributeDescription configAttToAdd = new AttributeDescription(templateAtt);				
+					
+					//if (configAttToAdd.getTableConstraint()==null || "".equals(configAttToAdd.getTableConstraint())) {
+						//|| dsConfig.supportsAttributeDescription(configAttToAdd.getField(), configAttToAdd.getTableConstraint())) {
+//						if (configCollection.containsAttributeDescription(configAttToAdd.getInternalName()))
+//							configCollection.removeAttributeDescription(dsConfig.getAttributeDescriptionByInternalName(configAttToAdd.getInternalName()));
+					String internalName = configAttToAdd.getInternalName();
+					AttributeCollection filtcoll = null;
+					do {
+						filtcoll = dsConfig.getCollectionForAttribute(internalName);
+						if (filtcoll!=null)
+							filtcoll.removeAttributeDescription(filtcoll.getAttributeDescriptionByInternalName(internalName));
+					} while (filtcoll!=null);
+						//System.err.println("Added "+configAttToAdd.getTableConstraint()+"."+configAttToAdd.getField());
+					//}
+
+						//if (templateAtt.getDynamicAttributeContent()!=null) {
 					//	DynamicAttributeContent templateSettings = templateAtt.getDynamicAttributeContent();
 
 						//configAttToAdd.setInternalName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
@@ -2654,12 +2668,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configAttToAdd,templateAtt);
 
 					//}
-					
-					
-					if (configAttToAdd.getTableConstraint()!=null && !configAttToAdd.getTableConstraint().equals("main")) {
-						configAttToAdd.setTableConstraint(dsConfig.getDataset()+"__"+configAttToAdd.getTableConstraint());
-						//System.err.println("Renamed "+configAttToAdd.getTableConstraint()+"."+configAttToAdd.getField());
-					}
 
 					if (!templateAtt.getSpecificAttributeContents().isEmpty()) {
 						SpecificAttributeContent sf = templateAtt.getSpecificAttributeContent(dsConfig.getDataset());
@@ -2675,20 +2683,13 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configAttToAdd,sf);
 					}
 					
-					//if (configAttToAdd.getTableConstraint()==null || "".equals(configAttToAdd.getTableConstraint())) {
-						//|| dsConfig.supportsAttributeDescription(configAttToAdd.getField(), configAttToAdd.getTableConstraint())) {
-//						if (configCollection.containsAttributeDescription(configAttToAdd.getInternalName()))
-//							configCollection.removeAttributeDescription(dsConfig.getAttributeDescriptionByInternalName(configAttToAdd.getInternalName()));
-					String internalName = configAttToAdd.getInternalName();
-					AttributeCollection filtcoll = null;
-					do {
-						filtcoll = dsConfig.getCollectionForAttribute(internalName);
-						if (filtcoll!=null)
-							filtcoll.removeAttributeDescription(filtcoll.getAttributeDescriptionByInternalName(internalName));
-					} while (filtcoll!=null);
-						configCollection.addAttributeDescription(configAttToAdd);
-						//System.err.println("Added "+configAttToAdd.getTableConstraint()+"."+configAttToAdd.getField());
-					//}
+					
+					if (configAttToAdd.getTableConstraint()!=null && !configAttToAdd.getTableConstraint().equals("main")) {
+						configAttToAdd.setTableConstraint(dsConfig.getDataset()+"__"+configAttToAdd.getTableConstraint());
+						//System.err.println("Renamed "+configAttToAdd.getTableConstraint()+"."+configAttToAdd.getField());
+					}
+					
+					configCollection.addAttributeDescription(configAttToAdd);
 					
 						/*
 					if (!(configCollection.getAttributeDescriptions().size() > 0)){
@@ -6057,37 +6058,27 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     // if the tableConstraint is null, this field must be available in one of the main tables
     //String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
     String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
-    
-	if(dsource.getDatabaseType().equals("oracle")) table=table.toUpperCase();
-        //System.out.println("databaseType() "+dsource.getDatabaseType());   
-
-
- 
+	  	      
+	  if(dsource.getDatabaseType().equals("oracle")) table=table.toUpperCase();
+    //System.out.println("WAITING FOR CONNECTION");
     //Connection conn = dsource.getConnection();
-    catalog=null;
-    //schema=null;
-    //System.out.println("schema "+schema + " catalog: "+catalog+ " table "+ table+ " field "+field);
-
-	ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
-    
-    
-    
-    
+	  //System.out.println("GOT CONNECTION");
+	  
+	  ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
     while (rs.next()) {
       String columnName = rs.getString(4);
       String tableName = rs.getString(3);
-      
-      //System.out.println("ATTS:"+columnName+field+tableName+tableConstraint);
       boolean[] valid = isValidDescription(columnName, field, tableName, tableConstraint);
       fieldValid = valid[0];
       tableValid = valid[1];
-      if (valid[0] && valid[1]) {
 
+      if (valid[0] && valid[1]) {
+        //System.out.println(columnName + "\t" + tableName + "\t" + field);
         break;
       }
     }
-
-    //DetailedDataSource.close(conn);
+    //conn.close();
+	  //DetailedDataSource.close(conn);
     
     if (!(fieldValid) || !(tableValid)) {
       validatedAttribute.setHidden("true");
