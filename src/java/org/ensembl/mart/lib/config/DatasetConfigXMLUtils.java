@@ -74,6 +74,7 @@ public class DatasetConfigXMLUtils {
   private final String ATTRIBUTEDESCRIPTION = "AttributeDescription";
   private final String ATTRIBUTELIST = "AttributeList";
   private final String SPECIFICFILTERCONTENT = "SpecificFilterContent";
+  private final String SPECIFICATTRIBUTECONTENT = "SpecificAttributeContent";
   private final String DYNAMICDATASET = "DynamicDataset";
   private final String DSATTRIBUTEGROUP = "DSAttributeGroup";
   private final String OPTION = "Option";
@@ -546,8 +547,22 @@ public class DatasetConfigXMLUtils {
   private AttributeDescription getAttributeDescription(Element thisElement) throws ConfigurationException {
     AttributeDescription a = new AttributeDescription();
     loadAttributesFromElement(thisElement, a);
+
+	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, SPECIFICATTRIBUTECONTENT));
+	  iter.hasNext();
+	  ) {
+	  Element element = (Element) iter.next();
+	  a.addSpecificAttributeContent(getSpecificAttributeContent(element));
+	}
         
     return a;
+  }
+  
+  private SpecificAttributeContent getSpecificAttributeContent(Element thisElement) throws ConfigurationException {
+	  SpecificAttributeContent f = new SpecificAttributeContent();
+	 loadAttributesFromElement(thisElement, f);
+	 	 
+	 return f;	 
   }
   
   private SpecificFilterContent getSpecificFilterContent(Element thisElement) throws ConfigurationException {
@@ -760,9 +775,19 @@ public class DatasetConfigXMLUtils {
   private Element getAttributeDescriptionElement(AttributeDescription attribute) {
     Element att = new Element(ATTRIBUTEDESCRIPTION);
     loadElementAttributesFromObject(attribute, att);
+
+    for (Iterator i = attribute.getSpecificAttributeContents().iterator(); i.hasNext(); ) 
+    	att.addContent(getSpecificAttributeContentElement((SpecificAttributeContent)i.next()));
+
     return att;
   }
-  
+
+
+  private Element getSpecificAttributeContentElement(SpecificAttributeContent dynAttribute) {
+	 Element datt = new Element(SPECIFICATTRIBUTECONTENT);
+	 loadElementAttributesFromObject(dynAttribute, datt);
+	 return datt;
+  }
 
   private Element getSpecificFilterContentElement(SpecificFilterContent dynAttribute) {
 	 Element datt = new Element(SPECIFICFILTERCONTENT);

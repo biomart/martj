@@ -47,6 +47,7 @@ import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.Importable;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.PushAction;
+import org.ensembl.mart.lib.config.SpecificAttributeContent;
 import org.ensembl.mart.lib.config.SpecificFilterContent;
 
 /**
@@ -293,7 +294,13 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 							return;
 						}
 					}
-				} 
+				} else if (parent instanceof AttributeDescription) {
+					AttributeDescription fdesc = (AttributeDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+					if (child instanceof org.ensembl.mart.lib.config.SpecificAttributeContent){
+						collectionIndex=fdesc.getSpecificAttributeContents().indexOf(node.getUserObject());
+						fdesc.removeSpecificAttributeContent((SpecificAttributeContent)node.getUserObject());
+					}
+				}
 
 				obj.setAttribute(firstColumnData[rowIndex], (String) aValue);
 				if (collectionIndex==-1) collectionIndex = 0;
@@ -351,7 +358,11 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 					} else if (child instanceof org.ensembl.mart.lib.config.AttributeList){		
 						ac.insertAttributeList(collectionIndex, (AttributeList) obj);
 					}
-				}
+				} else if (parent instanceof AttributeDescription) {
+					AttributeDescription fdesc = (AttributeDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+					if (child instanceof org.ensembl.mart.lib.config.SpecificAttributeContent)	
+						fdesc.insertSpecificAttributeContent(collectionIndex, (SpecificAttributeContent) obj);		
+				} 
 			}
 			
 			DatasetConfigTreeNode newNode = new DatasetConfigTreeNode(obj.getAttribute("internalName"), obj);

@@ -65,6 +65,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   private final String softwareVersionKey="softwareVersion";
   private final String noCountKey="noCount";
   private final String entryLabelKey="entryLabel";
+  private final String splitNameUsingKey="splitNameUsing";
   
   private int[] reqFields = {0,3,4,5};// rendered red in AttributeTable
   
@@ -222,6 +223,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(softwareVersionKey, null);
 	setAttribute(noCountKey, null);
 	setAttribute(entryLabelKey, null);
+	setAttribute(splitNameUsingKey, null);
 	setRequiredFields(reqFields);
   }
 
@@ -254,7 +256,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     //super(internalName, displayName, description);
     
     
-	this(internalName, displayName, dataset, description, "", "0", "", "", "", "","","","","","","","","");
+	this(internalName, displayName, dataset, description, "", "0", "", "", "", "","","","","","","","","","");
 
     //if (dataset == null)
     //  throw new ConfigurationException("DatasetConfig objects must contain a dataset\n");
@@ -276,10 +278,10 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   public DatasetConfig(String internalName, String displayName, String dataset, String description, 
   		String type, String pub, String visibleFilterPage, String version, String optParam, String datasetID, 
   		String modified, String martUsers, String interfaces,String primaryKeyRestriction,String template,
-  		String softwareVersion,String noCount,String entryLabel)
+  		String softwareVersion,String noCount,String entryLabel,String splitNameUsing)
   throws ConfigurationException {
     this(internalName, displayName, dataset, description, type, pub, visibleFilterPage, version, null, null, 
-    	datasetID,modified,martUsers,interfaces,primaryKeyRestriction,template,softwareVersion,noCount,entryLabel);
+    	datasetID,modified,martUsers,interfaces,primaryKeyRestriction,template,softwareVersion,noCount,entryLabel,splitNameUsing);
   }
   
   
@@ -300,7 +302,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   public DatasetConfig(String internalName, String displayName, String dataset, String description, 
   		String type, String pub, String visibleFilterPage, String version, String optParameters, 
   		String defaultDataset,String datasetID,String modified, String martUsers,String interfaces,
-  		String primaryKeyRestriction,String template, String softwareVersion, String noCount, String entryLabel)
+  		String primaryKeyRestriction,String template, String softwareVersion, String noCount, String entryLabel,
+  		String splitNameUsing)
 		throws ConfigurationException {
 		
 	super(internalName, displayName, description);
@@ -325,6 +328,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(softwareVersionKey,softwareVersion);
 	setAttribute(noCountKey,noCount);
 	setAttribute(entryLabelKey,entryLabel);
+	setAttribute(splitNameUsingKey,splitNameUsing);
 	setRequiredFields(reqFields);
   }
 
@@ -472,6 +476,14 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   
   public String getEntryLabel(){
 	return attributes.getProperty(entryLabelKey);
+  }  
+  
+  public void setSplitNameUsing(String splitNameUsing) {
+	setAttribute(splitNameUsingKey, splitNameUsing);
+  }
+  
+  public String getSplitNameUsing(){
+	return attributes.getProperty(splitNameUsingKey);
   }    
   
   /**

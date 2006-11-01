@@ -1445,7 +1445,7 @@ System.out.println ("getting driver "+ driver);
 			  String[] templates = dbutils.getAllTemplateNames();
 			  for (int i = 0; i < templates.length; i++){
 				String template = templates[i];
-				DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
+				DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","","");
 				dscutils.loadDatasetConfigWithDocument(odsv,dbutils.getTemplateDocument(template));
 				try {
 						File newFile = new File(fc.getSelectedFile(), odsv.getDataset() + ".template.xml");
@@ -1647,7 +1647,7 @@ System.out.println ("getting driver "+ driver);
 				  String[] templates = dbutils.getAllTemplateNames();
 				  for (int i = 0; i < templates.length; i++){
 					String template = templates[i];
-					DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
+					DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","","");
 					dscutils.loadDatasetConfigWithDocument(odsv,dbutils.getTemplateDocument(template));
 					try {
 							File newFile = new File(tempFolder, odsv.getDataset() + ".template.xml");

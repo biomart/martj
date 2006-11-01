@@ -128,7 +128,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 				            setNaiveTree(tree);
 							
 							// THEN JUST OPEN UP TEMPLATE DOC
-							DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
+							DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","","");
 							Document templateDocument = MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template);
 							if (templateDocument==null) {
 								templateConfig = new DatasetConfig(config,true,false);
@@ -157,7 +157,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
             			if (template != null){
             				// import template
             				//config = MartEditor.getDatabaseDatasetConfigUtils().getTemplateConfig(template);
-							DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
+							DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","","");
 							Document templateDocument = MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template);
 							MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, templateDocument);
 							templateConfig.setTemplateFlag("1");
@@ -238,7 +238,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
 				            setNaiveTree(tree);
 							
 //							THEN JUST OPEN UP TEMPLATE DOC
-							DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
+							DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","","");
 							Document templateDocument = MartEditor.getDatabaseDatasetConfigUtils().getTemplateDocument(template);
 							if (templateDocument==null) {
 								templateConfig = new DatasetConfig(config,true,false);

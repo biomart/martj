@@ -39,6 +39,7 @@ import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.Importable;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.PushAction;
+import org.ensembl.mart.lib.config.SpecificAttributeContent;
 import org.ensembl.mart.lib.config.SpecificFilterContent;
 
 //import org.ensembl.mart.lib.config.SeqModule;
@@ -323,6 +324,13 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 									String desName = atDescription.getInternalName();
 									DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Attribute:" + desName);
 									desNode.setUserObject(atDescription);
+									
+									for (Iterator r = atDescription.getSpecificAttributeContents().iterator(); r.hasNext(); ) {
+										SpecificAttributeContent filtAtt = (SpecificAttributeContent)r.next();
+										String dynName = filtAtt.getInternalName();
+											DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("SpecificAttributeContent:" + dynName);
+											dynNode.setUserObject(filtAtt);
+										}
 								}
 								descriptions = atCollection.getAttributeLists();
 								for (int y = 0; y < descriptions.size(); y++) {
@@ -465,6 +473,13 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 							String desName = atDescription.getInternalName();
 							DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Attribute:" + desName);
 							desNode.setUserObject(atDescription);
+							
+							for (Iterator r = atDescription.getSpecificAttributeContents().iterator(); r.hasNext(); ) {
+								SpecificAttributeContent filtAtt = (SpecificAttributeContent)r.next();
+								String dynName = filtAtt.getInternalName();
+									DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("SpecificAttributeContent:" + dynName);
+									dynNode.setUserObject(filtAtt);
+								}
 						}
 						 descriptions = atCollection.getAttributeLists();
 						for (int y = 0; y < descriptions.size(); y++) {
@@ -586,6 +601,13 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 					DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Attribute:" + desName);
 					desNode.setUserObject(atDescription);
 					//colNode.add(desNode);
+					
+					for (Iterator r = atDescription.getSpecificAttributeContents().iterator(); r.hasNext(); ) {
+						SpecificAttributeContent filtAtt = (SpecificAttributeContent)r.next();
+						String dynName = filtAtt.getInternalName();
+							DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("SpecificAttributeContent:" + dynName);
+							dynNode.setUserObject(filtAtt);
+						}
 				}
 				descriptions = atCollection.getAttributeLists();
 				for (int y = 0; y < descriptions.size(); y++) {
@@ -697,6 +719,13 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Attribute:" + desName);
 				desNode.setUserObject(atDescription);
 				this.add(desNode);
+				
+				for (Iterator r = atDescription.getSpecificAttributeContents().iterator(); r.hasNext(); ) {
+					SpecificAttributeContent filtAtt = (SpecificAttributeContent)r.next();
+					String dynName = filtAtt.getInternalName();
+						DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("SpecificAttributeContent:" + dynName);
+						dynNode.setUserObject(filtAtt);
+					}
 			}
 			descriptions = atCollection.getAttributeLists();
 			for (int y = 0; y < descriptions.size(); y++) {
@@ -794,13 +823,24 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 			setName("Attribute: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 			AttributeDescription ad = (AttributeDescription) obj;
 			//System.out.println("ATT\t" + ((BaseNamedConfigurationObject) obj).getInternalName()+":"+ad.getDynamicAttributeContents().size());
+
 			
+			for (Iterator r = ad.getSpecificAttributeContents().iterator(); r.hasNext(); ) {
+				SpecificAttributeContent filtAtt = (SpecificAttributeContent)r.next();
+				String dynName = filtAtt.getInternalName();
+					DatasetConfigTreeNode dynNode = new DatasetConfigTreeNode("SpecificAttributeContent:" + dynName);
+					dynNode.setUserObject(filtAtt);
+				}
 			
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeList")) {
 			
 			//checkUniqueness((BaseNamedConfigurationObject)obj);
 			setName("AttributeList: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 			
+			
+		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.SpecificAttributeContent")) {
+			setName("SpecificAttributeContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
+			SpecificAttributeContent dynAtt = (SpecificAttributeContent) obj;
 			
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.SpecificFilterContent")) {
 			setName("SpecificFilterContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );

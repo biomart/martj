@@ -2660,6 +2660,20 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						configAttToAdd.setTableConstraint(dsConfig.getDataset()+"__"+configAttToAdd.getTableConstraint());
 						//System.err.println("Renamed "+configAttToAdd.getTableConstraint()+"."+configAttToAdd.getField());
 					}
+
+					if (!templateAtt.getSpecificAttributeContents().isEmpty()) {
+						SpecificAttributeContent sf = templateAtt.getSpecificAttributeContent(dsConfig.getDataset());
+						if (sf==null) continue;
+						//configAttToAdd.setInternalName(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+						//		sf.getPointerDataset()+"."+templateSettings.getPointerFilter()));
+						//configAttToAdd.setPointerDataset(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+						//		sf.getPointerDataset()));
+						//configAttToAdd.setPointerInterface(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+						//		sf.getPointerInterface()));
+						//configAttToAdd.setPointerFilter(templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(
+						//		sf.getPointerFilter()));
+						templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configAttToAdd,sf);
+					}
 					
 					//if (configAttToAdd.getTableConstraint()==null || "".equals(configAttToAdd.getTableConstraint())) {
 						//|| dsConfig.supportsAttributeDescription(configAttToAdd.getField(), configAttToAdd.getTableConstraint())) {
@@ -2744,7 +2758,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					
 
 					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configAttToAdd,templateAtt);
-					
 					
 					String internalName = configAttToAdd.getInternalName();
 					AttributeCollection filtcoll = null;
@@ -3799,7 +3812,7 @@ public boolean naiveExportWouldOverrideExistingConfig(
 		// always set internalName of dataset to default - not really used anywhere now
 		// internalName can probably be safely removed from DatasetConfig or at least from constructor
         DatasetConfig dsv = new DatasetConfig("default", dname, dset, description, type, visible,"",version,"",
-        	datasetID,modified,martUsers,interfaces,"","","","","");
+        	datasetID,modified,martUsers,interfaces,"","","","","","");
         dsv.setMessageDigest(digest);
         
         HashMap userMap = (HashMap) configInfo.get(user);
@@ -6466,7 +6479,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 	Timestamp tstamp = new Timestamp(System.currentTimeMillis());
 	Connection conn = dsource.getConnection();
 
-    DatasetConfig dsv = new DatasetConfig("default",datasetName,datasetName,"","TableSet","1","","","","",tstamp.toString(),"default","default","",datasetName,SOFTWAREVERSION,"","");
+    DatasetConfig dsv = new DatasetConfig("default",datasetName,datasetName,"","TableSet","1","","","","",tstamp.toString(),"default","default","",datasetName,SOFTWAREVERSION,"","","");
 
     AttributePage ap = new AttributePage();
     ap.setInternalName("naive_attributes");
@@ -6766,7 +6779,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 
   	//System.out.println ("************* SCHEMA FROM GET NEW ATTT "+schema);
 	  String template = dsv.getTemplate();
-		DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","");
+		DatasetConfig templateConfig = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","","");
 		MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(templateConfig, this.getTemplateDocument(template));
 		
   	//if (dsource.getDatabaseType().equals("oracle")) databaseName=getSchema();

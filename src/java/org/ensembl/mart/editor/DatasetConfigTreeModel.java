@@ -139,6 +139,13 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 				AttributeCollection ac = (AttributeCollection) parentNode.getUserObject();
 				ac.addAttributeList((AttributeList) editingNode.getUserObject());
 			}
+		} else if (parentClassName.equals("org.ensembl.mart.lib.config.AttributeDescription")) {
+
+			if (childClassName.equals("org.ensembl.mart.lib.config.SpecificAttributeContent")) {
+				AttributeDescription ad = (AttributeDescription) parentNode.getUserObject();
+				ad.addSpecificAttributeContent((SpecificAttributeContent) editingNode.getUserObject());
+			}	 
+
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.SpecificFilterContent")) {
 			if (childClassName.equals("org.ensembl.mart.lib.config.Option")) {
 				SpecificFilterContent fd = (SpecificFilterContent) parentNode.getUserObject();
@@ -316,6 +323,14 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 				String error_string = "Error: " + childName + " cannot be inserted in an AttributeCollection.";
 				return error_string;
 			}
+		} else if (parent instanceof org.ensembl.mart.lib.config.AttributeDescription) {
+			if (child instanceof org.ensembl.mart.lib.config.SpecificAttributeContent) {
+				AttributeDescription ad = (AttributeDescription) parentNode.getUserObject();
+				ad.insertSpecificAttributeContent(objIndex, (SpecificAttributeContent) editingNode.getUserObject());
+			} else {
+				String error_string = "Error: " + childName + " cannot be inserted in a FilterDescription.";
+				return error_string;
+			}
 		} else if (parent instanceof org.ensembl.mart.lib.config.SpecificFilterContent) {
 			if (child instanceof org.ensembl.mart.lib.config.Option) {
 				SpecificFilterContent fd = (SpecificFilterContent) parentNode.getUserObject();
@@ -327,6 +342,9 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 				String error_string = "Error: " + childName + " cannot be inserted in an DynamicFilterContent.";
 				return error_string;				
 			}
+		} else if (parent instanceof org.ensembl.mart.lib.config.SpecificAttributeContent) {
+				String error_string = "Error: " + childName + " cannot be inserted in an DynamicFilterContent.";
+				return error_string;				
 		}
 		super.insertNodeInto(editingNode, parentNode, index);
 		return "success";
@@ -404,7 +422,12 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 				AttributeCollection ac = (AttributeCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 				ac.removeAttributeList((AttributeList) node.getUserObject());
 			}
-	}
+		} else if (parent instanceof org.ensembl.mart.lib.config.AttributeDescription) {
+		    if (child instanceof org.ensembl.mart.lib.config.SpecificAttributeContent) {
+		    	AttributeDescription ad = (AttributeDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+				ad.removeSpecificAttributeContent((SpecificAttributeContent)node.getUserObject());
+			}
+		}
 		super.removeNodeFromParent(node);
 
 	}

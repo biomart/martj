@@ -60,6 +60,9 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
   // helper field so that only setter/constructors will throw ConfigurationExceptions when string values are converted to integers
 
 
+	
+	private List specificAttributeContents = new ArrayList();
+	private Hashtable specificAttributeContentNameMap = new Hashtable();
 
   private boolean hasBrokenField = false;
   private boolean hasBrokenTableConstraint = false;
@@ -166,6 +169,53 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 	setAttribute(pointerFilterKey, pointerFilter);
 	
 	setRequiredFields(reqFields);
+  }
+
+  
+  /**
+   * Add a dynamicImportableContent to the AttributeDescription.
+   * 
+   * @param a dynamicImportableContent object.
+   */
+  public void addSpecificAttributeContent(SpecificAttributeContent a) {
+	  specificAttributeContents.add(a);
+	  specificAttributeContentNameMap.put(a.getInternalName(),a);
+  }
+
+  /**
+   * Add a dynamicFilterContent to the AttributeDescription.
+   * 
+   * @param a dynamicFilterContent object.
+   */
+  public SpecificAttributeContent getSpecificAttributeContent(String name) {
+	  return (SpecificAttributeContent)specificAttributeContentNameMap.get(name);
+  }
+  
+  /**
+   * Add a dynamicFilterContent to the AttributeDescription.
+   * 
+   * @param a dynamicFilterContent object.
+   */
+  public List getSpecificAttributeContents() {
+	  return this.specificAttributeContents;
+  }
+
+  /**
+   * Remove an dynamicFilterContent from this AttributeDescription.
+   * @param a -- dynamicFilterContent to be removed.
+   */
+  public void insertSpecificAttributeContent(int index, SpecificAttributeContent a) {
+	specificAttributeContents.add(index,a);
+	specificAttributeContentNameMap.put(a.getInternalName(),a);
+  }
+
+  /**
+   * Remove an dynamicFilterContent from this AttributeDescription.
+   * @param a -- dynamicFilterContent to be removed.
+   */
+  public void removeSpecificAttributeContent(SpecificAttributeContent a) {
+	specificAttributeContents.remove(a);
+	specificAttributeContentNameMap.remove(a.getInternalName());
   }
 
   
