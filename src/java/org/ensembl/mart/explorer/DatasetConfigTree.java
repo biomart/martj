@@ -201,10 +201,10 @@ public class DatasetConfigTree extends PopUpTreeCombo {
 	 * @param newDatasetConfig
 	 */
 	public void setSelectedUserObject(DatasetConfig datasetConfig) {
-		Enumeration enum = rootNode.breadthFirstEnumeration();
+		Enumeration e = rootNode.breadthFirstEnumeration();
 
-		while (enum.hasMoreElements()) {
-			LabelledTreeNode next = (LabelledTreeNode) enum.nextElement();
+		while (e.hasMoreElements()) {
+			LabelledTreeNode next = (LabelledTreeNode) e.nextElement();
       if ( next.getUserObject()==datasetConfig) {
         setSelected(next);
         break;

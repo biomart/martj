@@ -639,25 +639,25 @@ public class DatabaseDatasetConfigUtils {
 */	  	  
 		if (attributeDuplicationMap.size() > 0){
 			duplicationString = "The following attribute internal names are duplicated and will cause client problems:\n";
-			Enumeration enum = attributeDuplicationMap.keys();
-			while (enum.hasMoreElements()){
-				String intName = (String) enum.nextElement();
+			Enumeration e = attributeDuplicationMap.keys();
+			while (e.hasMoreElements()){
+				String intName = (String) e.nextElement();
 				duplicationString = duplicationString+"Attribute "+intName+" in dataset "+dsConfig.getDataset()+"\n";	
 			}
 		}
 		else if (attributeListDuplicationMap.size() > 0){
 			duplicationString = "The following attributeList internal names are duplicated and will cause client problems:\n";
-			Enumeration enum = attributeListDuplicationMap.keys();
-			while (enum.hasMoreElements()){
-				String intName = (String) enum.nextElement();
+			Enumeration e = attributeListDuplicationMap.keys();
+			while (e.hasMoreElements()){
+				String intName = (String) e.nextElement();
 				duplicationString = duplicationString+"AttributeList "+intName+" in dataset "+dsConfig.getDataset()+"\n";	
 			}
 		}
 		else if (filterDuplicationMap.size() > 0){
 			duplicationString = duplicationString + "The following filter/option internal names are duplicated and will cause client problems:\n";
-			Enumeration enum = filterDuplicationMap.keys();
-			while (enum.hasMoreElements()){
-				String intName = (String) enum.nextElement();
+			Enumeration e = filterDuplicationMap.keys();
+			while (e.hasMoreElements()){
+				String intName = (String) e.nextElement();
 				duplicationString = duplicationString+"Filter "+intName+" in dataset "+dsConfig.getDataset()+"\n";	
 			}
 		} 	
@@ -699,9 +699,9 @@ public class DatabaseDatasetConfigUtils {
 		  	 	String testName;
 		  	 	int i;
 		 		
-				Enumeration enum = attributeDuplicationMap.keys();
-				while (enum.hasMoreElements()){
-					testName = (String) enum.nextElement();
+				Enumeration e = attributeDuplicationMap.keys();
+				while (e.hasMoreElements()){
+					testName = (String) e.nextElement();
 									
 		 			int first = 0;
 					for (int j = 0; j < apages.length; j++){
@@ -739,9 +739,9 @@ public class DatabaseDatasetConfigUtils {
 		         }
 				
 
-				enum = attributeListDuplicationMap.keys();
-				while (enum.hasMoreElements()){
-					testName = (String) enum.nextElement();
+				e = attributeListDuplicationMap.keys();
+				while (e.hasMoreElements()){
+					testName = (String) e.nextElement();
 									
 		 			int first = 0;
 					for (int j = 0; j < apages.length; j++){
@@ -773,9 +773,9 @@ public class DatabaseDatasetConfigUtils {
 		  	 	    }		 
 		         }
 				
-				enum = filterDuplicationMap.keys();
-				while (enum.hasMoreElements()){
-					testName = (String) enum.nextElement();				
+				e = filterDuplicationMap.keys();
+				while (e.hasMoreElements()){
+					testName = (String) e.nextElement();				
 				int first = 0;
 				for (int j = 0; j < fpages.length; j++){
 					fpage = fpages[j];
@@ -1028,9 +1028,9 @@ public class DatabaseDatasetConfigUtils {
 	}
 		
 	if (attributeDuplicationTCFieldMap.size() > 0){
-		Enumeration enum = attributeDuplicationTCFieldMap.keys();
-		while (enum.hasMoreElements()){
-			String intName = (String) enum.nextElement();
+		Enumeration e = attributeDuplicationTCFieldMap.keys();
+		while (e.hasMoreElements()){
+			String intName = (String) e.nextElement();
 			duplicatedAttString = duplicatedAttString+"Attribute for "+intName+" at "+attributeDuplicationTCFieldMap.get(intName)+"\n";	
 		}
 	}
@@ -1088,9 +1088,9 @@ public class DatabaseDatasetConfigUtils {
 	}
 		
 	if (filterDuplicationTCFieldMap.size() > 0){
-		Enumeration enum = filterDuplicationTCFieldMap.keys();
-		while (enum.hasMoreElements()){
-			String intName = (String) enum.nextElement();
+		Enumeration e = filterDuplicationTCFieldMap.keys();
+		while (e.hasMoreElements()){
+			String intName = (String) e.nextElement();
 			duplicatedFilterString = duplicatedFilterString+"Filter for "+intName+" at "+filterDuplicationTCFieldMap.get(intName)+"\n";	
 		}
 	}
@@ -1325,25 +1325,25 @@ public class DatabaseDatasetConfigUtils {
 
   if (attributeDuplicationMap.size() > 0){
 	  duplicationString = "The following attribute internal names are duplicated and will cause client problems:\n";
-	  Enumeration enum = attributeDuplicationMap.keys();
-	  while (enum.hasMoreElements()){
-		  String intName = (String) enum.nextElement();
+	  Enumeration e = attributeDuplicationMap.keys();
+	  while (e.hasMoreElements()){
+		  String intName = (String) e.nextElement();
 		  duplicationString = duplicationString+"Attribute "+intName+" in dataset "+attributeDuplicationMap.get(intName)+"\n";	
 	  }
   }
   else if (attributeListDuplicationMap.size() > 0){
 	  duplicationString = "The following attributeList internal names are duplicated and will cause client problems:\n";
-	  Enumeration enum = attributeListDuplicationMap.keys();
-	  while (enum.hasMoreElements()){
-		  String intName = (String) enum.nextElement();
+	  Enumeration e = attributeListDuplicationMap.keys();
+	  while (e.hasMoreElements()){
+		  String intName = (String) e.nextElement();
 		  duplicationString = duplicationString+"AttributeList "+intName+" in dataset "+attributeDuplicationMap.get(intName)+"\n";	
 	  }
   }
   else if (filterDuplicationMap.size() > 0){
 	  duplicationString = duplicationString + "The following filter/option internal names are duplicated and will cause client problems:\n";
-	  Enumeration enum = filterDuplicationMap.keys();
-	  while (enum.hasMoreElements()){
-		  String intName = (String) enum.nextElement();
+	  Enumeration e = filterDuplicationMap.keys();
+	  while (e.hasMoreElements()){
+		  String intName = (String) e.nextElement();
 		  duplicationString = duplicationString+"Filter "+intName+" in dataset "+filterDuplicationMap.get(intName)+"\n";	
 	  }
   } 	
