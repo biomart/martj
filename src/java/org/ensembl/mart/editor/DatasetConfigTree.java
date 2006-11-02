@@ -1166,7 +1166,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		//		FilterDescription fd2 = dsConfig.getFilterDescriptionByFieldNameTableConstraint(filterTokens[1],filterTokens[0]);
 		dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
 		FilterDescription fd2 = dsConfig.getFilterDescriptionByInternalName(filter2);
-
+		
 		fd2.setType("drop_down_basic_filter");
 
 		String pushField = fd2.getField();
@@ -1181,7 +1181,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		String field;
 		Option[] options;
 		
-		if (node.getUserObject() instanceof FilterDescription) {
+		if (node.getUserObject() instanceof FilterDescription) {		
 			FilterDescription fd1 = (FilterDescription) node.getUserObject();
 			field = fd1.getField();
 			//if (!fd1.getTableConstraint().equals(pushTableName))
@@ -1190,22 +1190,49 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					
 			//if (fd1.getOtherFilters() != null){// refers to a placeholder
 			if (fd2.getPointerFilter()!=null && !fd2.getPointerFilter().equals("")) {//placeholder)								
-				DatasetConfig otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(null,
-						fd2.getPointerDataset(),"",MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);;
+				
+				//DatasetConfig otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(null,
+				//		newFD.getPointerDataset(),"",MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);;
+				
+				String otherDatasetFilter1 = null;
+				DatasetConfig otherDataset = null;
+				FilterDescription newFD = new FilterDescription();
+				dsConfig.getDynamicDataset(ourConf.getDataset()).resolveText(newFD, fd1);
+
+				String[] otherFilters = newFD.getOtherFilters().split(";");
+				String pointerFilter = fd2.getPointerFilter();
+				fd2 = null;
+				for (int p = 0; p < otherFilters.length; p++){
+					String otherDS = otherFilters[p].split("\\.")[0];
+					String otherF = otherFilters[p].split("\\.")[1];
+					otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(null,otherDS,"",MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);  
+					MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigDocumentByDatasetID(null,otherDS,otherDataset.getDatasetID(),MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]));
+					if (otherDataset.containsFilterDescription(pointerFilter))
+						fd2 = otherDataset.getFilterDescriptionByInternalName(pointerFilter);
+					if (fd2 != null){
+						otherDatasetFilter1 = otherF;
+						break;
+					}
+				}
+				field = otherDataset.getFilterDescriptionByInternalName(otherDatasetFilter1).getField(); 	
+
+								
 				fd2.setType("drop_down_basic_filter");
 				pushField = fd2.getField();
 				pushColForDisplay = fd2.getColForDisplay();
-				//pushInternalName = fd2.getInternalName();// keep original full name
+				
 				pushTableName = fd2.getTableConstraint();
-
-				if (pushTableName.equals("main")) {
-					String[] mains = dsConfig.getStarBases();
+				
+				if (pushTableName!= null && pushTableName.equals("main")) {
+					String[] mains = otherDataset.getStarBases();
 					pushTableName = mains[0];
 				}
-				field = otherDataset.getFilterDescriptionByInternalName(fd2.getPointerFilter()).getField(); 
+				ourConf = otherDataset;
+				
+				//field = otherDataset.getFilterDescriptionByInternalName(fd2.getPointerFilter()).getField(); 
 																					 
 			}		
-		} else {
+		} else {		
 			PushAction pa1 = (PushAction) node.getUserObject();
 			String intName = pa1.getInternalName();
 			field = intName.split("_push")[0];
