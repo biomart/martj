@@ -1583,8 +1583,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				Option opt = (Option)obj;
 				//toCheck.addAll(((FilterDescription)obj).getDynamicFilterContents());
 				
-				if (!opt.getInternalName().equals(opt.getValue()))
-					problems.add("Option "+opt.getInternalName()+" does not have value field equal to internal name");
+				//if (!opt.getInternalName().equals(opt.getValue()))
+				//	problems.add("Option "+opt.getInternalName()+" does not have value field equal to internal name");
 
 				toCheck.addAll(Arrays.asList(opt.getPushActions()));
 				toCheck.addAll(Arrays.asList(opt.getOptions()));

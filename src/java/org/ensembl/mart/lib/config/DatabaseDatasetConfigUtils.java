@@ -2367,21 +2367,21 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						configPage = new FilterPage(templatePage);
 						dsConfig.addFilterPage(configPage);				
 					}
-					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configPage, configPage);
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configPage, templatePage);
 			
 					FilterGroup configGroup = (FilterGroup) configPage.getFilterGroupByName(templateGroup.getInternalName());
 					if (configGroup == null){
 						configGroup = new FilterGroup(templateGroup);
 						configPage.addFilterGroup(configGroup);				
 					}
-					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configGroup, configGroup);
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configGroup, templateGroup);
 			
 					FilterCollection configCollection = (FilterCollection) configGroup.getFilterCollectionByName(templateCollection.getInternalName());
 					if (configCollection == null){
 						configCollection = new FilterCollection(templateCollection);
 						configGroup.addFilterCollection(configCollection);				
 					}
-					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configCollection, configCollection);
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configCollection, templateCollection);
 		/*
 					// resolve what to do depending on type of placeholder
 					if (configAttName.equals(templateAttName)){
@@ -2550,21 +2550,21 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						dsConfig.addAttributePage(configPage);				
 						
 					}
-					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configPage, configPage);
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configPage, templatePage);
 
 					AttributeGroup configGroup = (AttributeGroup) configPage.getAttributeGroupByName(templateGroup.getInternalName());
 					if (configGroup == null){
 						configGroup = new AttributeGroup(templateGroup);
 						configPage.addAttributeGroup(configGroup);				
 					}
-					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configGroup, configGroup);
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configGroup, templateGroup);
 
 					AttributeCollection configCollection = (AttributeCollection) configGroup.getAttributeCollectionByName(templateCollection.getInternalName());
 					if (configCollection == null){
 						configCollection = new AttributeCollection(templateCollection);
 						configGroup.addAttributeCollection(configCollection);				
 					}
-					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configCollection, configCollection);
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configCollection, templateCollection);
 
 					
 					
@@ -2735,21 +2735,21 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 						dsConfig.addAttributePage(configPage);				
 						
 					}
-					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configPage, configPage);
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configPage, templatePage);
 			
 					AttributeGroup configGroup = (AttributeGroup) configPage.getAttributeGroupByName(templateGroup.getInternalName());
 					if (configGroup == null){
 						configGroup = new AttributeGroup(templateGroup);
 						configPage.addAttributeGroup(configGroup);				
 					}
-					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configGroup, configGroup);
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configGroup, templateGroup);
 
 					AttributeCollection configCollection = (AttributeCollection) configGroup.getAttributeCollectionByName(templateCollection.getInternalName());
 					if (configCollection == null){
 						configCollection = new AttributeCollection(templateCollection);
 						configGroup.addAttributeCollection(configCollection);				
 					}
-					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configCollection, configCollection);
+					templateConfig.getDynamicDataset(dsConfig.getDataset()).resolveText(configCollection, templateCollection);
 
 					AttributeList configAttToAdd = new AttributeList(templateAtt);	
 						//System.out.println("ADDING PLACEHOLDE 2 ATT "+configAttToAdd.getInternalName());	
