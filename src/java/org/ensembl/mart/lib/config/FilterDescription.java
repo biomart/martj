@@ -113,7 +113,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
 	 */
 	public FilterDescription(String internalName, String field, String type, String legalQualifiers) throws ConfigurationException {
-		this(internalName, field, type, "", legalQualifiers, "", "", null, "", "", "", "", "", "", "", "", "", "", "", "","", "", "", "", "", "","","");
+		this(internalName, field, type, "", legalQualifiers, "", "", null, "", "", "", "", "", "", "", "", "", "", "", "","", "", "", "", "", "","","","");
 	}
 
 	/**
@@ -160,13 +160,14 @@ public class FilterDescription extends QueryFilterSettings {
 		String style,
 		String autoCompletion,
 		String dependsOnType,
-		String dependsOn)
+		String dependsOn,
+		String checkForNulls)
 		throws ConfigurationException {
 
 		super(internalName, displayName, description, field, null, tableConstraint, key, type, qualifier, 
 			legalQualifiers, otherFilters, buttonURL, regexp, defaultValue, defaultOn, filterList, attributePage, 
 			attribute, colForDisplay,pointerDataset,pointerInterface,pointerFilter,displayType,multipleValues,
-			graph,style,autoCompletion,dependsOnType,dependsOn);
+			graph,style,autoCompletion,dependsOnType,dependsOn,checkForNulls);
 
 		if (type == null || type.equals(""))
 			throw new ConfigurationException("FilterDescription requires a type.");

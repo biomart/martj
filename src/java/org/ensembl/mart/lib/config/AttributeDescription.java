@@ -54,6 +54,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
   private final String pointerInterfaceKey = "pointerInterface";
   private final String pointerAttributeKey = "pointerAttribute";
   private final String pointerFilterKey = "pointerFilter";
+  private final String checkForNullsKey = "checkForNulls";
   
   private int[] reqFields = {0,5,8,9};// rendered red in AttributeTable
   //private final String hiddenKey = "hidden";
@@ -97,6 +98,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 	setAttribute(pointerInterfaceKey, null);
 	setAttribute(pointerAttributeKey, null);
 	setAttribute(pointerFilterKey, null);
+	setAttribute(checkForNullsKey, null);
 	
 	setRequiredFields(reqFields);
   }
@@ -110,7 +112,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
    */
   public AttributeDescription(String internalName, String field)
     throws ConfigurationException {
-    this(internalName, field, "", "0", "", "", "", "", "", "", "", "", "", "", "", "", "");
+    this(internalName, field, "", "0", "", "", "", "", "", "", "", "", "", "", "", "", "","");
   }
   /**
    * Constructor for an AttributeDescription.
@@ -145,7 +147,8 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     String pointerDataset,
     String pointerInterface,
     String pointerAttribute,
-    String pointerFilter)
+    String pointerFilter,
+    String checkForNulls)
     throws ConfigurationException {
 
     super(internalName, displayName, description);
@@ -167,6 +170,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 	setAttribute(pointerInterfaceKey, pointerInterface);
 	setAttribute(pointerAttributeKey, pointerAttribute);
 	setAttribute(pointerFilterKey, pointerFilter);
+	setAttribute(checkForNullsKey, checkForNulls);
 	
 	setRequiredFields(reqFields);
   }
@@ -361,6 +365,22 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
    */
   public String getPointerFilter() {
 	return getAttribute(pointerFilterKey);
+  }
+  
+  /**
+   * @param checkForNulls - 
+   */
+  public void setCheckForNulls(String checkForNulls) {
+	setAttribute(checkForNullsKey, checkForNulls);
+  }
+
+  /**
+   * Returns the pointerDataset.
+   * 
+   * @return String checkForNulls
+   */
+  public String getCheckForNulls() {
+	return getAttribute(checkForNullsKey);
   }
 
 

@@ -2653,8 +2653,11 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					AttributeCollection filtcoll = null;
 					do {
 						filtcoll = dsConfig.getCollectionForAttribute(internalName);
-						if (filtcoll!=null)
+						System.out.println(internalName);
+						if (filtcoll != null && filtcoll.getAttributeDescriptionByInternalName(internalName) == null) filtcoll = null;
+						if (filtcoll!=null){
 							filtcoll.removeAttributeDescription(filtcoll.getAttributeDescriptionByInternalName(internalName));
+						}
 					} while (filtcoll!=null);
 						//System.err.println("Added "+configAttToAdd.getTableConstraint()+"."+configAttToAdd.getField());
 					//}
@@ -3049,6 +3052,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	try {
 		conn = dsource.getConnection();	
 
+	String[] mains = dsConfig.getStarBases();
+	String[] keys = dsConfig.getPrimaryKeys();
 	// Iterate through dsConfig and remove empty collections/groups/pages.
 	AttributePage apages[] = dsConfig.getAttributePages();
 	for (int pi = 0 ; pi < apages.length; pi ++) {
@@ -3056,7 +3061,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			AttributeGroup agroup = (AttributeGroup)li.next();
 			AttributeCollection[] acolls = agroup.getAttributeCollections();
 			for (int ci = 0; ci < acolls.length; ci++) {
-				AttributeCollection validAttrs = this.getValidatedAttributeCollection(acolls[ci],dsConfig.getDataset(),conn);				
+				AttributeCollection validAttrs = this.getValidatedAttributeCollection(acolls[ci],dsConfig.getDataset(),conn,mains,keys);				
 				for (Iterator ai = acolls[ci].getAttributeDescriptions().iterator(); ai.hasNext(); ) {
 					AttributeDescription attr = (AttributeDescription)ai.next();
 					if (validAttrs.getAttributeDescriptionByInternalName(attr.getInternalName()).isBroken()) acolls[ci].removeAttributeDescription(attr);
@@ -3079,7 +3084,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 			FilterGroup agroup = (FilterGroup)li.next();
 			FilterCollection[] acolls = agroup.getFilterCollections();
 			for (int ci = 0; ci < acolls.length; ci++) {
-				FilterCollection validAttrs = this.getValidatedFilterCollection(acolls[ci],dsConfig.getDataset(),dsConfig,conn);				
+				FilterCollection validAttrs = this.getValidatedFilterCollection(acolls[ci],dsConfig.getDataset(),dsConfig,conn,mains,keys);				
 				for (Iterator ai = acolls[ci].getFilterDescriptions().iterator(); ai.hasNext(); ) {
 					FilterDescription attr = (FilterDescription)ai.next();
 					if (validAttrs.getFilterDescriptionByInternalName(attr.getInternalName()).isBrokenExceptOpts() || pruneBrokenOptions(attr,validAttrs.getFilterDescriptionByInternalName(attr.getInternalName()))) 
@@ -4933,9 +4938,10 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
         System.out.println("MAIN TABLE IS BROKEN AND NEEDS REMOVING AND RE-ADDING " + starbase);
         validatedDatasetConfig.removeMainTable(starbase);
       }
-
       validatedStars[i] = validatedStar;
     }
+
+	
 
     if (hasBrokenStars) {
       validatedDatasetConfig.setStarsBroken();
@@ -4968,12 +4974,13 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     
     List brokenFilters = new ArrayList();   
 
+/* DATASET OPTIONS DO NOT EXIST
     boolean hasBrokenOptions = false;
     Option[] options = validatedDatasetConfig.getOptions();
     HashMap brokenOptions = new HashMap();
 
     for (int i = 0, n = options.length; i < n; i++) {
-      Option validatedOption = getValidatedOption(schema, catalog, options[i], dset, conn);
+      Option validatedOption = getValidatedOption(schema, catalog, options[i], dset, conn,mains,keys);
 
       if (validatedOption.isBroken()) {
         hasBrokenOptions = true;
@@ -4992,13 +4999,13 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
         validatedDatasetConfig.insertOption(position.intValue(), brokenOption);
       }
     }
-
+*/
     boolean hasBrokenAttributePages = false;
     AttributePage[] apages = validatedDatasetConfig.getAttributePages();
     HashMap brokenAPages = new HashMap();
 		
     for (int i = 0, n = apages.length; i < n; i++) {
-      AttributePage validatedPage = getValidatedAttributePage(apages[i], dset, conn);
+      AttributePage validatedPage = getValidatedAttributePage(apages[i], dset, conn, starbases, pkeys);
 
       if (validatedPage.isBroken()) {
         hasBrokenAttributePages = true;
@@ -5023,7 +5030,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     FilterPage[] allPages = validatedDatasetConfig.getFilterPages();
 		
     for (int i = 0, n = allPages.length; i < n; i++) {	
-      FilterPage validatedPage = getValidatedFilterPage(allPages[i], dset,validatedDatasetConfig, conn);
+      FilterPage validatedPage = getValidatedFilterPage(allPages[i], dset,validatedDatasetConfig, conn, starbases, pkeys);
 	  if (validatedPage.isBroken()) {
         hasBrokenFilterPages = true;
         brokenFPages.put(new Integer(i), validatedPage);
@@ -5057,6 +5064,9 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 	
 	//List ads = dsv.getAllAttributeDescriptions();
 	
+	String[] mains = dsv.getStarBases();
+	String[] keys =dsv.getPrimaryKeys();
+	
 	AttributePage[] apages = dsv.getAttributePages();
 	for (int j = 0; j < apages.length; j++){
 		AttributePage apage = apages[j];
@@ -5071,7 +5081,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 				  AttributeDescription testAD = (AttributeDescription) ads.get(i);	
 				  if (testAD.getHidden() != null && testAD.getHidden().equals("true"))
 					  continue;		
-				  AttributeDescription validatedAD = getValidatedAttributeDescription(schema, catalog, testAD, dsv.getDataset(), conn);
+				  AttributeDescription validatedAD = getValidatedAttributeDescription(schema, catalog, testAD, dsv.getDataset(), conn, mains, keys);
 				  //if (validatedAD.isBroken()) {
 				  if (validatedAD.hasBrokenField() || validatedAD.hasBrokenTableConstraint()) {
 	  	
@@ -5097,7 +5107,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 				  FilterDescription testAD = (FilterDescription) ads.get(i);	
 				  if (testAD.getHidden() != null && testAD.getHidden().equals("true"))
 					  continue;		
-				  FilterDescription validatedAD = getValidatedFilterDescription(schema, catalog, testAD, dsv.getDataset(), dsv,conn);
+				  FilterDescription validatedAD = getValidatedFilterDescription(schema, catalog, testAD, dsv.getDataset(), dsv,conn,mains,keys);
 				  //if (validatedAD.isBroken()) {
 				  if (validatedAD.hasBrokenField() || validatedAD.hasBrokenTableConstraint()) {
 	  	
@@ -5195,7 +5205,9 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     return validatedPrimaryKey;
   }
 
-  private FilterPage getValidatedFilterPage(FilterPage page, String dset, DatasetConfig dsv, Connection conn) throws SQLException, ConfigurationException {
+  private FilterPage getValidatedFilterPage(FilterPage page, String dset, DatasetConfig dsv, Connection conn,
+  String[] mains,
+  String[] keys) throws SQLException, ConfigurationException {
     FilterPage validatedPage = new FilterPage(page);
 
     boolean hasBrokenGroups = false;
@@ -5209,7 +5221,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
         //FilterGroup gr = (FilterGroup) group;
         //if ((gr.getInternalName().equals("expression")))
         //	continue;// hack for expression - breaks current code - needs fixing
-        FilterGroup validatedGroup = getValidatedFilterGroup((FilterGroup) group, dset, dsv, conn);
+        FilterGroup validatedGroup = getValidatedFilterGroup((FilterGroup) group, dset, dsv, conn, mains,keys);
 
         if (validatedGroup.isBroken()) {
           hasBrokenGroups = true;
@@ -5238,7 +5250,9 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     return validatedPage;
   }
 
-  private FilterGroup getValidatedFilterGroup(FilterGroup group, String dset, DatasetConfig dsv, Connection conn) throws SQLException, ConfigurationException {
+  private FilterGroup getValidatedFilterGroup(FilterGroup group, String dset, DatasetConfig dsv, Connection conn,
+  String[] mains,
+  String[] keys) throws SQLException, ConfigurationException {
     FilterGroup validatedGroup = new FilterGroup(group);
 
     FilterCollection[] collections = validatedGroup.getFilterCollections();
@@ -5247,7 +5261,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     HashMap brokenCollections = new HashMap();
 
     for (int i = 0, n = collections.length; i < n; i++) {
-      FilterCollection validatedCollection = getValidatedFilterCollection(collections[i], dset, dsv, conn);
+      FilterCollection validatedCollection = getValidatedFilterCollection(collections[i], dset, dsv, conn, mains, keys);
 
       if (validatedCollection.isBroken()) {
         hasBrokenCollections = true;
@@ -5271,7 +5285,9 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     return validatedGroup;
   }
 
-  private FilterCollection getValidatedFilterCollection(FilterCollection collection, String dset, DatasetConfig dsv, Connection conn) throws SQLException, ConfigurationException {
+  private FilterCollection getValidatedFilterCollection(FilterCollection collection, String dset, DatasetConfig dsv, Connection conn,
+  String[] mains,
+  String[] keys) throws SQLException, ConfigurationException {
     
     String catalog="";
     String schema = getSchema()[0];
@@ -5289,7 +5305,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 
       if (element instanceof FilterDescription) {
         FilterDescription validatedFilter =
-          getValidatedFilterDescription(schema, catalog, (FilterDescription) element, dset, dsv, conn);
+          getValidatedFilterDescription(schema, catalog, (FilterDescription) element, dset, dsv, conn, mains, keys);
         if (validatedFilter.isBroken()) {
 
           filtersValid = false;
@@ -5324,7 +5340,9 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     FilterDescription filter,
     String dset,
 	DatasetConfig dsv,
-	Connection conn)
+	Connection conn,
+	String[] mains,
+	String[] keys)
     throws SQLException, ConfigurationException {
     FilterDescription validatedFilter = new FilterDescription(filter);
     
@@ -5371,6 +5389,21 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
       }
       //conn.close();
 	  //DetailedDataSource.close(conn);
+	  
+	  // test for all nulls as well if flagged and set fieldValid and tableValid = false if all nulls
+	  if (tableConstraint.equals("main")){
+		  //tableConstraint = [] mains;
+		  for (int i =0; i < keys.length; i++){
+			  tableConstraint = mains[i];	
+			  if (keys[i].equals(validatedFilter.getKey()))
+				  break;
+		  }
+	  }
+	  if ("true".equals(validatedFilter.getCheckForNulls()) && fieldValid && tableValid && 
+		  isAllNull(field,tableConstraint)){
+		  fieldValid = false;
+		  tableValid = false;
+	  }
 	  
 	  
       if (!(fieldValid) || !(tableValid)) {
@@ -5655,7 +5688,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
       // VALIDATE "FILTER-TYPE" OPTIONS       
 	  //Connection conn = dsource.getConnection();
       for (int j = 0; j < options.length; j++) {
-        	Option validatedOption = getValidatedOption(schema, catalog, options[j], dset, conn);
+        	Option validatedOption = getValidatedOption(schema, catalog, options[j], dset, conn,mains,keys);
         	if (validatedOption.isBroken()) {
           	optionsValid = false;
           	brokenOptions.put(new Integer(j), validatedOption);
@@ -5676,7 +5709,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 	  return validatedFilter;
   }	
 
-  private Option getValidatedOption(String schema, String catalog, Option option, String dset, Connection conn) throws SQLException {
+  private Option getValidatedOption(String schema, String catalog, Option option, String dset, Connection conn, String[] mains, String[] keys) throws ConfigurationException, SQLException {
     Option validatedOption = new Option(option);
     // hack to ignore the expression drop down menu
     
@@ -5721,6 +5754,22 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
       }
       //conn.close();
 	  //DetailedDataSource.close(conn);
+	  
+	  // test for all nulls as well if flagged and set fieldValid and tableValid = false if all nulls
+	  if (tableConstraint.equals("main")){
+		  //tableConstraint = [] mains;
+		  for (int i =0; i < keys.length; i++){
+			  tableConstraint = mains[i];	
+			  if (keys[i].equals(validatedOption.getKey()))
+				  break;
+		  }
+	  }
+	  if ("true".equals(validatedOption.getCheckForNulls()) && fieldValid && tableValid && 
+		  isAllNull(field,tableConstraint)){
+		  fieldValid = false;
+		  tableValid = false;
+	  }
+	  
       if (!(fieldValid) || !(tableValid)) {
         //System.out.println("CHNAGING OPTION\t" + validatedOption);
         validatedOption.setHidden("true");
@@ -5744,7 +5793,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 
       Option[] options = validatedOption.getOptions();
       for (int j = 0, m = options.length; j < m; j++) {
-        Option validatedSubOption = getValidatedOption(schema, catalog, options[j], dset, conn);
+        Option validatedSubOption = getValidatedOption(schema, catalog, options[j], dset, conn,mains,keys);
         if (validatedSubOption.isBroken()) {
           optionsValid = false;
           brokenOptions.put(new Integer(j), validatedSubOption);
@@ -5770,7 +5819,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
       HashMap brokenPushActions = new HashMap();
       PushAction[] pas = validatedOption.getPushActions();
       for (int j = 0, m = pas.length; j < m; j++) {
-        PushAction validatedAction = getValidatedPushAction(schema, catalog, pas[j], dset, conn);
+        PushAction validatedAction = getValidatedPushAction(schema, catalog, pas[j], dset, conn, mains, keys);
         if (validatedAction.isBroken()) {
           pushActionsValid = false;
           brokenPushActions.put(new Integer(j), validatedAction);
@@ -5860,8 +5909,8 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 	  return original.getOptions().length+original.getPushActions().length==0;
   }
 
-  private PushAction getValidatedPushAction(String schema, String catalog, PushAction action, String dset, Connection conn)
-    throws SQLException {
+  private PushAction getValidatedPushAction(String schema, String catalog, PushAction action, String dset, Connection conn,String[] mains, String[] keys)
+    throws ConfigurationException,SQLException {
     PushAction validatedPushAction = new PushAction(action);
 
     boolean optionsValid = true;
@@ -5875,7 +5924,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     
     
     for (int j = 0, m = options.length; j < m; j++) {
-    	Option validatedSubOption = getValidatedOption(schema, catalog, options[j], dset, conn);
+    	Option validatedSubOption = getValidatedOption(schema, catalog, options[j], dset, conn, mains, keys);
       	if (validatedSubOption.isBroken()) {
         	optionsValid = false;
         brokenOptions.put(new Integer(j), validatedSubOption);
@@ -5897,7 +5946,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     return validatedPushAction;
   }
 
-  private AttributePage getValidatedAttributePage(AttributePage page, String dset, Connection conn) throws SQLException {
+  private AttributePage getValidatedAttributePage(AttributePage page, String dset, Connection conn, String [] mains, String[] keys) throws ConfigurationException,SQLException {
     AttributePage validatedPage = new AttributePage(page);
 
     boolean hasBrokenGroups = false;
@@ -5908,7 +5957,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
       Object group = allGroups.get(i);
 
       if (group instanceof AttributeGroup) {
-        AttributeGroup validatedGroup = getValidatedAttributeGroup((AttributeGroup) group, dset, conn);
+        AttributeGroup validatedGroup = getValidatedAttributeGroup((AttributeGroup) group, dset, conn, mains, keys);
 
         if (validatedGroup.isBroken()) {
           hasBrokenGroups = true;
@@ -5939,7 +5988,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     return validatedPage;
   }
 
-  private AttributeGroup getValidatedAttributeGroup(AttributeGroup group, String dset, Connection conn) throws SQLException {
+  private AttributeGroup getValidatedAttributeGroup(AttributeGroup group, String dset, Connection conn, String [] mains, String[] keys) throws ConfigurationException,SQLException {
     AttributeGroup validatedGroup = new AttributeGroup(group);
 
     boolean hasBrokenCollections = false;
@@ -5947,7 +5996,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 
     AttributeCollection[] collections = group.getAttributeCollections();
     for (int i = 0, n = collections.length; i < n; i++) {
-      AttributeCollection validatedCollection = getValidatedAttributeCollection(collections[i], dset, conn);
+      AttributeCollection validatedCollection = getValidatedAttributeCollection(collections[i], dset, conn, mains, keys);
 
       if (validatedCollection.isBroken()) {
         hasBrokenCollections = true;
@@ -5970,8 +6019,8 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     return validatedGroup;
   }
 
-  private AttributeCollection getValidatedAttributeCollection(AttributeCollection collection, String dset, Connection conn)
-    throws SQLException {
+  private AttributeCollection getValidatedAttributeCollection(AttributeCollection collection, String dset, Connection conn, String [] mains, String[] keys)
+    throws ConfigurationException, SQLException {
     
     String catalog = "";
     String schema=getSchema()[0];
@@ -5987,7 +6036,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 
       if (attribute instanceof AttributeDescription) {
         AttributeDescription validatedAttributeDescription =
-          getValidatedAttributeDescription(schema, catalog, (AttributeDescription) attribute, dset, conn);
+          getValidatedAttributeDescription(schema, catalog, (AttributeDescription) attribute, dset, conn, mains, keys);
 
         if (validatedAttributeDescription.isBroken()) {
           hasBrokenAttributes = true;
@@ -6022,76 +6071,68 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     String catalog,
     AttributeDescription description,
     String dset,
-    Connection conn)
-    throws SQLException {
+    Connection conn, String [] mains, String [] keys)
+    throws ConfigurationException, SQLException {
     AttributeDescription validatedAttribute = new AttributeDescription(description);
 
     boolean fieldValid = false;
     boolean tableValid = false;
 
-	  //if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
-	  if (validatedAttribute.getPointerDataset()!=null && !"".equals(validatedAttribute.getPointerDataset())){
+	if (validatedAttribute.getPointerDataset() != null && !"".equals(validatedAttribute.getPointerDataset())){
 		return validatedAttribute;
 	}
 
-
     String field = description.getField();
-	if (field == null){
-		return validatedAttribute;
-		
+	if (field == null){// ? if need now - surely placeholder test above catches - maybe for GS atts
+		return validatedAttribute;		
 	}
     // oracle case sensitive
     if(dsource.getDatabaseType().equals("oracle")) field=field.toUpperCase();
-   //System.out.println("databaseType() "+dsource.getDatabaseType()); 
    
     String tableConstraint = description.getTableConstraint();
-
-    
-    
-	// have placeholders for attributes in XML now with no info other than internal_name
-	if (tableConstraint == null){
+	if (tableConstraint == null){// ? if need now - surely placeholder test above catches - maybe for GS atts
 		return validatedAttribute;
 		
 	}
-
-
-    // if the tableConstraint is null, this field must be available in one of the main tables
-    //String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
-    String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
-	  	      
-	  if(dsource.getDatabaseType().equals("oracle")) table=table.toUpperCase();
-    //System.out.println("WAITING FOR CONNECTION");
-    //Connection conn = dsource.getConnection();
-	  //System.out.println("GOT CONNECTION");
+    String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;	  	      
+    if(dsource.getDatabaseType().equals("oracle")) table=table.toUpperCase();
 	  
-	  ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
+	ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
     while (rs.next()) {
-      String columnName = rs.getString(4);
-      String tableName = rs.getString(3);
-      boolean[] valid = isValidDescription(columnName, field, tableName, tableConstraint);
-      fieldValid = valid[0];
-      tableValid = valid[1];
-
-      if (valid[0] && valid[1]) {
-        //System.out.println(columnName + "\t" + tableName + "\t" + field);
-        break;
-      }
+    	String columnName = rs.getString(4);
+      	String tableName = rs.getString(3);
+      	boolean[] valid = isValidDescription(columnName, field, tableName, tableConstraint);
+      	fieldValid = valid[0];
+      	tableValid = valid[1];
+      	if (valid[0] && valid[1])
+        	break;
     }
-    //conn.close();
-	  //DetailedDataSource.close(conn);
     
-    if (!(fieldValid) || !(tableValid)) {
-      validatedAttribute.setHidden("true");
-
-    } else if (validatedAttribute.getHidden() != null && validatedAttribute.getHidden().equals("true")) {
-      validatedAttribute.setHidden("false");
-      validatedAttribute.setFieldBroken(); //so gets changed in the update
+    // test for all nulls as well if flagged and set fieldValid and tableValid = false if all nulls
+    if (tableConstraint.equals("main")){
+    	//tableConstraint = [] mains;
+    	for (int i =0; i < keys.length; i++){
+    		tableConstraint = mains[i];	
+    		if (keys[i].equals(validatedAttribute.getKey()))
+    			break;
+    	}
+    }
+    if ("true".equals(validatedAttribute.getCheckForNulls()) && fieldValid && tableValid && 
+    	isAllNull(field,tableConstraint)){
+    	fieldValid = false;
+    	tableValid = false;
+    }
+    
+    if (!(fieldValid) || !(tableValid))
+      	validatedAttribute.setHidden("true");
+	else if (validatedAttribute.getHidden() != null && validatedAttribute.getHidden().equals("true")) {
+      	validatedAttribute.setHidden("false");
+      	validatedAttribute.setFieldBroken(); //so gets changed in the update
     }
 
     if (!(fieldValid && tableValid)) {
-
-      validatedAttribute.setFieldBroken();
-      validatedAttribute.setTableConstraintBroken();
+		validatedAttribute.setFieldBroken();
+      	validatedAttribute.setTableConstraintBroken();
     }
 
     return validatedAttribute;
@@ -7318,8 +7359,8 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
         filt.setLegalQualifiers("only,excluded");
         filt.setDisplayType("list");
         filt.setStyle("radio");
-        Option op1 = new Option("only","true","Only","","","","","only","","","","","","","","","","","","","","","","","","","","","","","");
-		Option op2 = new Option("excluded","true","Excluded","","","","","excluded","","","","","","","","","","","","","","","","","","","","","","","");
+        Option op1 = new Option("only","true","Only","","","","","only","","","","","","","","","","","","","","","","","","","","","","","","");
+		Option op2 = new Option("excluded","true","Excluded","","","","","excluded","","","","","","","","","","","","","","","","","","","","","","","","");
  		filt.addOption(op1);
  		filt.addOption(op2);
     } 
@@ -7667,8 +7708,8 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
       else if (dsource.getDatabaseType().equals("postgres")){
       	sql.append(" limit 1");
       } else { throw new ConfigurationException ("unsupported RDBMS type:"+dsource.getDatabaseType());}
-
-      PreparedStatement ps = conn.prepareStatement(sql.toString());
+	  
+	  PreparedStatement ps = conn.prepareStatement(sql.toString());
       ResultSet rs = ps.executeQuery();
       rs.next();
 

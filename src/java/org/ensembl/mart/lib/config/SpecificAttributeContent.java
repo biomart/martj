@@ -86,7 +86,8 @@ public class SpecificAttributeContent extends AttributeDescription {
     String pointerDataset,
     String pointerInterface,
     String pointerAttribute,
-    String pointerFilter)
+    String pointerFilter,
+    String checkForNulls)
     throws ConfigurationException {
 
     super(internalName,
@@ -105,7 +106,8 @@ public class SpecificAttributeContent extends AttributeDescription {
     	     pointerDataset,
     	     pointerInterface,
     	     pointerAttribute,
-    	     pointerFilter);
+    	     pointerFilter,
+    	     checkForNulls);
   }
 
   }

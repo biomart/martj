@@ -53,6 +53,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	protected final String autoCompletionKey = "autoCompletion";
 	protected final String dependsOnTypeKey = "dependsOnType";
 	protected final String dependsOnKey = "dependsOn";
+	protected final String checkForNullsKey = "checkForNulls";
 	
     //protected final String hiddenKey = "hidden";
 	private int[] reqFields = {0,5,7,8,10};// rendered red in AttributeTable
@@ -82,7 +83,8 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 											 	 styleKey,
 												 autoCompletionKey,
 												 dependsOnTypeKey,
-												 dependsOnKey,	 
+												 dependsOnKey,
+												 checkForNullsKey	 
   };
 
 	/**
@@ -122,7 +124,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	 */
 	public QueryFilterSettings(String internalName, String displayName, String description)
 		throws ConfigurationException {
-			this(internalName, displayName, description, "", "", null, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "","", "", "", "", "");
+			this(internalName, displayName, description, "", "", null, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "","", "", "", "", "","");
 	}
 
   public QueryFilterSettings(String internalName, String displayName, String description, String field, 
@@ -130,7 +132,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
   	String otherFilters, String buttonURL, String regexp, String defaultValue, String defaultOn, String filterList, 
   	String attributePage, String attribute, String colForDisplay, String pointerDataset, String pointerInterface,
 	String pointerFilter, String displayType, String multipleValues, String graph, String style, String autoCompletion,
-	String dependsOnType, String dependsOn) throws ConfigurationException {
+	String dependsOnType, String dependsOn, String checkForNulls) throws ConfigurationException {
 		super(internalName, displayName, description);
 		
     	setAttribute(fieldKey, field);
@@ -159,6 +161,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 		setAttribute(autoCompletionKey, autoCompletion);
 		setAttribute(dependsOnTypeKey, dependsOnType);
 		setAttribute(dependsOnKey, dependsOn);
+		setAttribute(checkForNullsKey, checkForNulls);
 	    setRequiredFields(reqFields);
   }
   
@@ -370,6 +373,14 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 
 	public String getDependsOn() {
 		return getAttribute(dependsOnKey);
+	}
+	
+	public void setCheckForNulls(String value) {
+		setAttribute(checkForNullsKey, value);
+	}
+
+	public String getCheckForNulls() {
+		return getAttribute(checkForNullsKey);
 	}
 	
 	public void setType(String type) {

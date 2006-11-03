@@ -77,7 +77,7 @@ public class SpecificFilterContent extends FilterDescription {
 	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
 	 */
 	public SpecificFilterContent(String internalName, String field, String type, String legalQualifiers) throws ConfigurationException {
-		super(internalName, field, type, "", legalQualifiers, "", "", null, "", "", "", "", "", "", "", "", "", "", "", "","", "", "", "", "", "","","");
+		super(internalName, field, type, "", legalQualifiers, "", "", null, "", "", "", "", "", "", "", "", "", "", "", "","", "", "", "", "", "","","","");
 	}
 
 	/**
@@ -124,7 +124,8 @@ public class SpecificFilterContent extends FilterDescription {
 		String style,
 		String autoCompletion,
 		String dependsOnType,
-		String dependsOn)
+		String dependsOn,
+		String checkForNulls)
 		throws ConfigurationException {
 
 		super( internalName,
@@ -154,7 +155,8 @@ public class SpecificFilterContent extends FilterDescription {
 				 style,
 				 autoCompletion,
 				 dependsOnType,
-				 dependsOn);
+				 dependsOn,
+				 checkForNulls);
 	}
 
 }
