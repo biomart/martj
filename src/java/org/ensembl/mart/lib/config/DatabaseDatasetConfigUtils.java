@@ -2653,7 +2653,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					AttributeCollection filtcoll = null;
 					do {
 						filtcoll = dsConfig.getCollectionForAttribute(internalName);
-						System.out.println(internalName);
 						if (filtcoll != null && filtcoll.getAttributeDescriptionByInternalName(internalName) == null) filtcoll = null;
 						if (filtcoll!=null){
 							filtcoll.removeAttributeDescription(filtcoll.getAttributeDescriptionByInternalName(internalName));
