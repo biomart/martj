@@ -44,7 +44,6 @@ import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
-import org.biomart.common.model.Column.GenericColumn;
 import org.biomart.common.model.Key.ForeignKey;
 import org.biomart.common.model.Key.GenericForeignKey;
 import org.biomart.common.model.Key.GenericPrimaryKey;
@@ -1246,10 +1245,13 @@ public class DataSet extends GenericSchema {
 
 	/**
 	 * A column on a dataset table has to be one of the types of dataset column
-	 * available from this class.
+	 * available from this class. 
 	 */
-	public static class DataSetColumn extends GenericColumn {
-		private boolean dependency;
+	public static class DataSetColumn extends
+			org.biomart.common.model.Column.GenericColumn {
+		// FIXME: Why do we need the full path to the class here? It works 
+		// with just a normal import in Java 1.4, so why not Java 1.5?
+	 	private boolean dependency;
 
 		private boolean masked;
 
