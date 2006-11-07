@@ -35,6 +35,7 @@ public class Exportable extends BaseNamedConfigurationObject {
   private final String attributesKey = "attributes";
   private final String orderByKey = "orderBy";
   private final String defaultKey = "default";
+  private final String pointerKey = "pointer";
   private int[] reqFields = {0,5,7,8};// rendered red in AttributeTable
 
    
@@ -57,11 +58,12 @@ public class Exportable extends BaseNamedConfigurationObject {
 	setAttribute(attributesKey, null);
     setAttribute(orderByKey, null);
 	setAttribute(defaultKey, null);
+	setAttribute(pointerKey, null);
 	setRequiredFields(reqFields);
   }
   
   public Exportable(String linkName)  throws ConfigurationException {
-    this(linkName, null, null, linkName, null, null, null, null, null);
+    this(linkName, null, null, linkName, null, null, null, null, null,null);
   }
   
   /**
@@ -70,7 +72,7 @@ public class Exportable extends BaseNamedConfigurationObject {
    * @throws ConfigurationException when ref is null or empty.
    */
   public Exportable(String internalName, String displayName, String description, String linkName) throws ConfigurationException {
-  	this(internalName, displayName, description, linkName, null, null, null, null, null);
+  	this(internalName, displayName, description, linkName, null, null, null, null, null,null);
   }
   
   /**
@@ -79,7 +81,7 @@ public class Exportable extends BaseNamedConfigurationObject {
    * @param valueCondition - String Condition for Value of the Enabling FilterDescription required for it to Importable the referent FilterDescription.
    * @throws ConfigurationException when ref is null or empty.
    */
-  public Exportable(String internalName, String displayName, String description, String linkName, String linkVersion, String moduleName, String attributes, String orderBy, String d) throws ConfigurationException {
+  public Exportable(String internalName, String displayName, String description, String linkName, String linkVersion, String moduleName, String attributes, String orderBy, String d, String pointer) throws ConfigurationException {
   	super(internalName, displayName, description);
   	
   	if (linkName == null || "".equals(linkName))
@@ -91,6 +93,7 @@ public class Exportable extends BaseNamedConfigurationObject {
 	setAttribute(attributesKey, attributes);
     setAttribute(orderByKey, orderBy);
 	setAttribute(defaultKey, d);
+	setAttribute(pointerKey, pointer);
 	setRequiredFields(reqFields);
   }
 
@@ -118,6 +121,15 @@ public class Exportable extends BaseNamedConfigurationObject {
 	public String getDefault() {
 		return getAttribute(defaultKey);
 	}
+	
+	/**
+	 * Get the Reference for this Importable.  Refers to the internalName of a FilterDescription to Importable.
+	 * @return String internalName of the referring FilterDescription.
+	 */
+	public String getPointer() {
+		return getAttribute(pointerKey);
+	}
+	
 
 	/**
 	 * Get the ValueCondition, if set.
@@ -169,7 +181,15 @@ public class Exportable extends BaseNamedConfigurationObject {
 	*/
    public void setDefault(String valueCondition) {
 		 setAttribute(defaultKey, valueCondition);
-   }	
+   }
+   
+   /**
+	 * Set a value at which the referenced Filter should be Importabled.
+	 * @param valueCondition -- value at which the referenced Filter should be Importabled.
+	 */
+	public void setPointer(String valueCondition) {
+		  setAttribute(pointerKey, valueCondition);
+	}	
 	
   /**
    * Set a value at which the referenced Filter should be Importabled.
