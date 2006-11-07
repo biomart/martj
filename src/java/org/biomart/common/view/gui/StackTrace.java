@@ -28,13 +28,14 @@ import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
 import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.Settings;
 
 /**
  * Displays pretty GUI things on demand.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class StackTrace {
@@ -45,6 +46,12 @@ public class StackTrace {
 	 *            the throwable to display the stack trace for.
 	 */
 	public static void showStackTrace(final Throwable t) {
+		// Log the error.
+		if (t instanceof Error) 
+			Settings.logger.error(Resources.get("stackTraceTitle"), t);
+		else 
+			Settings.logger.warn(Resources.get("stackTraceTitle"), t);
+		
 		// Create the main message.
 		final int messageClass = t instanceof Error ? JOptionPane.ERROR_MESSAGE
 				: JOptionPane.WARNING_MESSAGE;

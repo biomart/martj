@@ -40,7 +40,7 @@ import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Schema;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.SettingsCache;
+import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.StackTrace;
 
 /**
@@ -165,7 +165,7 @@ public class SchemaConnectionDialog extends JDialog {
 				// the name combo-box with all historical schema objects
 				// of the same class as the currently selected type.
 				SchemaConnectionDialog.this.name.removeAllItems();
-				for (final Iterator i = SettingsCache.getHistoryNamesForClass(
+				for (final Iterator i = Settings.getHistoryNamesForClass(
 						SchemaConnectionDialog.this.connectionPanel
 								.getSchemaClass()).iterator(); i.hasNext();)
 					SchemaConnectionDialog.this.name.addItem(i.next());
@@ -184,7 +184,7 @@ public class SchemaConnectionDialog extends JDialog {
 						.getSelectedItem();
 
 				// Load the schema settings from our history.
-				final Properties historyProps = SettingsCache
+				final Properties historyProps = Settings
 						.getHistoryProperties(
 								SchemaConnectionDialog.this.connectionPanel
 										.getSchemaClass(), (String) obj);

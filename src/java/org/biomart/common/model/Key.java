@@ -27,6 +27,7 @@ import java.util.List;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.Settings;
 
 /**
  * The key interface is core to the way tables get associated. They are involved
@@ -40,8 +41,8 @@ import org.biomart.common.resources.Resources;
  * {@link ComponentStatus#INFERRED}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public interface Key extends Comparable {
@@ -204,6 +205,7 @@ public interface Key extends Comparable {
 		 *            the set of columns to form the key over.
 		 */
 		public GenericKey(final List columns) {
+			Settings.logger.debug("Creating key over " + columns);
 			this.status = ComponentStatus.INFERRED;
 			this.setColumns(columns);
 		}
@@ -223,6 +225,7 @@ public interface Key extends Comparable {
 		}
 
 		public void destroy() {
+			Settings.logger.debug("Dropping key " + this.getName());
 			// Destroy all the relations. Work from a copy to prevent
 			// concurrent modification exceptions.
 			final List relationsCopy = new ArrayList(this.relations);
@@ -254,10 +257,11 @@ public interface Key extends Comparable {
 
 		public Collection getColumnNames() {
 			final List names = new ArrayList();
-			for (final Iterator i = this.columns.iterator(); i.hasNext();) {
-				final Column c = (Column) i.next();
-				names.add(c.getName());
-			}
+			if (this.columns != null)
+				for (final Iterator i = this.columns.iterator(); i.hasNext();) {
+					final Column c = (Column) i.next();
+					names.add(c.getName());
+				}
 			return names;
 		}
 
@@ -273,7 +277,8 @@ public interface Key extends Comparable {
 		 */
 		public String getName() {
 			final StringBuffer sb = new StringBuffer();
-			sb.append(this.getTable().toString());
+			sb.append(this.getTable() == null ? "<undef>" : this.getTable()
+					.toString());
 			sb.append(this.getColumnNames().toString());
 			return sb.toString();
 		}
@@ -299,6 +304,8 @@ public interface Key extends Comparable {
 		}
 
 		public void setColumns(final List columns) {
+			Settings.logger.debug("Changing columns on " + this.getName()
+					+ " to " + columns);
 			// Remove all existing columns.
 			this.columns.clear();
 
@@ -339,6 +346,8 @@ public interface Key extends Comparable {
 		}
 
 		public void setStatus(final ComponentStatus status) {
+			Settings.logger.debug("Changing status on " + this.getName()
+					+ " to " + status);
 			this.status = status;
 
 			// If we are invalidating the key, then we must also

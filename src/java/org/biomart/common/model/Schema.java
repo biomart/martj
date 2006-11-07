@@ -39,6 +39,8 @@ import org.biomart.common.model.Key.PrimaryKey;
 import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.model.Relation.GenericRelation;
 import org.biomart.common.model.Table.GenericTable;
+import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.Settings;
 
 /**
  * A schema provides one or more table objects with unique names for the user to
@@ -49,8 +51,8 @@ import org.biomart.common.model.Table.GenericTable;
  * keeping track of the tables a schema provides.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public interface Schema extends Comparable, DataLink {
@@ -264,11 +266,14 @@ public interface Schema extends Comparable, DataLink {
 		 *            if not.
 		 */
 		public GenericSchema(final String name, final boolean keyguessing) {
+			Settings.logger.info(Resources.get("logCreatingSchema",
+					new String[] { name, "" + keyguessing }));
 			this.name = name;
 			this.keyguessing = keyguessing;
 		}
 
 		public void addTable(final Table table) {
+			Settings.logger.debug("Adding " + table + " to " + this.getName());
 			// Add the table.
 			this.tables.put(table.getName(), table);
 		}
@@ -278,6 +283,8 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public void changeTableMapKey(final String oldName, final String newName) {
+			Settings.logger.debug("Remapping table " + oldName + " to "
+					+ newName + " in " + this.getName());
 			// If the names are the same, do nothing.
 			if (oldName.equals(newName))
 				return;
@@ -371,14 +378,18 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public void removeTableByName(String tableName) {
+			Settings.logger.debug("Removing table " + tableName + " from "
+					+ this.getName());
 			this.tables.remove(tableName);
 		}
 
 		public void removeAllTables() {
+			Settings.logger.debug("Removing all tables from " + this.getName());
 			this.tables.clear();
 		}
 
 		public Schema replicate(final String newName) {
+			Settings.logger.debug("Replicating " + this.getName() + " as " + newName);
 			// Create a new schema.
 			final Schema newSchema = new GenericSchema(newName);
 
@@ -390,6 +401,8 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public void replicateContents(final Schema targetSchema) {
+			Settings.logger.debug("Replicating contents from " + this.getName() + " to "
+					+ targetSchema);
 			// List all the tables we should drop at the end.
 			final List tablesToDrop = new ArrayList(targetSchema.getTables());
 
@@ -434,6 +447,7 @@ public interface Schema extends Comparable, DataLink {
 				// Drop the columns that have disappeared.
 				for (final Iterator j = colsToDrop.iterator(); j.hasNext();) {
 					final Column col = (Column) j.next();
+					Settings.logger.debug("Dropping redundant column " + col);
 					col.getTable().removeColumn(col);
 				}
 
@@ -509,16 +523,23 @@ public interface Schema extends Comparable, DataLink {
 				}
 
 				// Drop all the unused foreign keys.
-				for (final Iterator j = fksToDrop.iterator(); j.hasNext();)
-					((Key) j.next()).destroy();
+				for (final Iterator j = fksToDrop.iterator(); j.hasNext();) {
+					final ForeignKey key = (ForeignKey) j.next();
+					Settings.logger.debug("Dropping redundant foreign key "
+							+ key);
+					key.destroy();
+				}
 
 				// Remember the relations on this table for later.
 				relations.addAll(table.getRelations());
 			}
 
 			// Drop the tables that have disappeared.
-			for (final Iterator j = tablesToDrop.iterator(); j.hasNext();)
-				((Table) j.next()).destroy();
+			for (final Iterator j = tablesToDrop.iterator(); j.hasNext();) {
+				final Table table = (Table) j.next();
+				Settings.logger.debug("Dropping redundant table " + table);
+				table.destroy();
+			}
 
 			// Copy internal and external relations. Drop any existing
 			// internal relations that were not copied. Do not drop existing
@@ -642,17 +663,23 @@ public interface Schema extends Comparable, DataLink {
 			}
 
 			// Drop the redundant internal relations from the target schema.
-			for (final Iterator j = intRelsToDrop.iterator(); j.hasNext();)
-				((Relation) j.next()).destroy();
+			for (final Iterator j = intRelsToDrop.iterator(); j.hasNext();) {
+				final Relation rel = (Relation) j.next();
+				Settings.logger.debug("Dropping redundant relation " + rel);
+				rel.destroy();
+			}
 		}
 
 		public void setKeyGuessing(final boolean keyguessing)
 				throws SQLException, DataModelException {
+			Settings.logger.info(Resources.get("logChangeKeyguessing",
+					new String[] { "" + keyguessing, this.getName() }));
 			this.keyguessing = keyguessing;
 			this.synchroniseKeys();
 		}
 
 		public void setName(final String name) {
+			Settings.logger.debug("Renaming " + this.getName() + " to " + name);
 			// Don't duplicate effort.
 			if (name.equals(this.name))
 				return;
@@ -660,6 +687,7 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public void synchronise() throws SQLException, DataModelException {
+			Settings.logger.info(Resources.get("logSynchronising", this.getName()));
 			this.synchroniseKeys();
 		}
 

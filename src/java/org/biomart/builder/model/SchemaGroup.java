@@ -29,6 +29,7 @@ import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.Schema;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.Settings;
 
 /**
  * A schema group represents a collection of schema objects which all have
@@ -97,6 +98,7 @@ public interface SchemaGroup extends Schema {
 		}
 
 		public void addSchema(final Schema schema) throws AssociationException {
+			Settings.logger.debug("Adding " + schema + " to " + this.getName());
 			// Check the schema isn't a group itself.
 			if (schema instanceof SchemaGroup)
 				throw new AssociationException(Resources.get("nestedSchema"));
@@ -110,12 +112,14 @@ public interface SchemaGroup extends Schema {
 		}
 
 		public void removeSchema(final Schema schema) {
+			Settings.logger.debug("Removing " + schema + " from "
+					+ this.getName());
 			this.schemas.remove(schema);
 		}
 
 		public Schema replicate(final String newName) {
-			throw new BioMartError(Resources
-					.get("noSchemaGroupReplication"));
+			Settings.logger.debug("Replicating " + this + " as " + newName);
+			throw new BioMartError(Resources.get("noSchemaGroupReplication"));
 		}
 
 		/**
@@ -127,9 +131,13 @@ public interface SchemaGroup extends Schema {
 		 */
 		public void synchronise() throws SQLException, DataModelException {
 			// Synchronise our members.
+			Settings.logger.info(Resources.get("logSchGroupSyncing", ""
+					+ this.getName()));
 			for (final Iterator i = this.schemas.iterator(); i.hasNext();)
 				((Schema) i.next()).synchronise();
 			// Update our own list by using replication.
+			Settings.logger.info(Resources.get("logSchGroupCopying", ""
+					+ this.getName()));
 			if (!this.schemas.isEmpty())
 				((Schema) this.schemas.iterator().next())
 						.replicateContents(this);

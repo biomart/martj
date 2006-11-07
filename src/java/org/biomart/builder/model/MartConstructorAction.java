@@ -33,6 +33,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.Schema;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.Settings;
 
 /**
  * Represents one task in the grand scheme of constructing a mart.
@@ -85,6 +86,8 @@ public abstract class MartConstructorAction {
 		synchronized (MartConstructorAction.nextSequenceLock) {
 			this.sequence = MartConstructorAction.nextSequence++;
 		}
+		Settings.logger.debug("Constructor action #" + this.sequence
+				+ " created: " + this.getClass().getName());
 		this.children = new HashSet();
 		this.parents = new HashSet();
 		this.interim = false;

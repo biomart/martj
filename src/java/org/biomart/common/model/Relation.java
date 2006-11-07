@@ -25,6 +25,7 @@ import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.model.Key.ForeignKey;
 import org.biomart.common.model.Key.PrimaryKey;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.Settings;
 
 /**
  * A relation represents the association between two keys. Relations between two
@@ -40,8 +41,8 @@ import org.biomart.common.resources.Resources;
  * outlined above.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public interface Relation extends Comparable {
@@ -315,6 +316,8 @@ public interface Relation extends Comparable {
 		 */
 		public GenericRelation(final Key firstKey, final Key secondKey,
 				final Cardinality cardinality) throws AssociationException {
+			Settings.logger.debug("Creating relation between " + firstKey
+					+ " and " + secondKey + " with cardinality " + cardinality);
 			// Check the keys have the same number of columns.
 			if (firstKey.countColumns() != secondKey.countColumns())
 				throw new AssociationException(Resources
@@ -342,6 +345,7 @@ public interface Relation extends Comparable {
 		}
 
 		public void destroy() {
+			Settings.logger.debug("Dropping relation " + this.getName());
 			this.firstKey.removeRelation(this);
 			this.secondKey.removeRelation(this);
 		}
@@ -371,9 +375,9 @@ public interface Relation extends Comparable {
 
 		public String getName() {
 			final StringBuffer sb = new StringBuffer();
-			sb.append(this.getFirstKey().toString());
+			sb.append(this.getFirstKey() == null ? "<undef>":this.getFirstKey().toString());
 			sb.append(":");
-			sb.append(this.getSecondKey().toString());
+			sb.append(this.getSecondKey()==null?"<undef>":this.getSecondKey().toString());
 			return sb.toString();
 		}
 
@@ -435,14 +439,20 @@ public interface Relation extends Comparable {
 		}
 
 		public void setCardinality(Cardinality cardinality) {
+			Settings.logger.debug("Changing cardinality of " + this.getName()
+					+ " to " + cardinality);
 			if (this.firstKey instanceof PrimaryKey
-					&& this.secondKey instanceof PrimaryKey)
+					&& this.secondKey instanceof PrimaryKey) {
+				Settings.logger.debug("Overriding cardinality change to ONE");
 				cardinality = Cardinality.ONE;
+			}
 			this.cardinality = cardinality;
 		}
 
 		public void setStatus(final ComponentStatus status)
 				throws AssociationException {
+			Settings.logger.debug("Changing status of " + this.getName()
+					+ " to " + status);
 			// If the new status is not incorrect, we need to make sure we
 			// can legally do this, ie. the two keys have the same number of
 			// columns each.

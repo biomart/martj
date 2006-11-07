@@ -66,6 +66,7 @@ import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.model.Key.PrimaryKey;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.Settings;
 
 /**
  * This interface defines the behaviour expected from an object which can take a
@@ -204,6 +205,7 @@ public interface MartConstructor {
 		public GenericConstructorRunnable(final String datasetSchemaName,
 				final Collection datasets, final Helper helper) {
 			super();
+			Settings.logger.debug("Created generic constructor runnable");
 			this.datasets = datasets;
 			this.helper = helper;
 			this.martConstructorListeners = new ArrayList();
@@ -1293,12 +1295,13 @@ public interface MartConstructor {
 						replacementFirstTableName, dsSourceKeyCols,
 						replacementFirstTableCols, rTargetSchema,
 						rTargetTableName, rTargetKey.getColumns(),
-						dsTargetIncludeCols, 
-						rTargetTable.equals(rSourceRelation.getSecondKey()
-								.getTable()), rSourceRelation.isManyToMany(),
-						vConstructionTable.getDataSet().getRestrictedTableType(
-								rTargetTable), replacementFirstSchema != null,
-						true);
+						dsTargetIncludeCols, rTargetTable
+								.equals(rSourceRelation.getSecondKey()
+										.getTable()), rSourceRelation
+								.isManyToMany(), vConstructionTable
+								.getDataSet().getRestrictedTableType(
+										rTargetTable),
+						replacementFirstSchema != null, true);
 				actionGraph.addActionWithParent(merge, lastActionPerformed);
 				// Last action performed for this table is the merge, as
 				// the drop can be carried out later at any time.
@@ -1674,10 +1677,12 @@ public interface MartConstructor {
 
 		public void addMartConstructorListener(
 				final MartConstructorListener listener) {
+			Settings.logger.debug("Listener added to constructor runnable");
 			this.martConstructorListeners.add(listener);
 		}
 
 		public void cancel() {
+			Settings.logger.debug("Constructor runnable cancelled");
 			this.cancelled = true;
 		}
 
@@ -1694,6 +1699,7 @@ public interface MartConstructor {
 		}
 
 		public void run() {
+			Settings.logger.info(Resources.get("logConstructorStarted"));
 			try {
 				// Split the datasets into groups by mart.
 				final Map martDataSets = new HashMap();
@@ -1742,6 +1748,8 @@ public interface MartConstructor {
 					this.failure = e;
 				} catch (final Throwable t) {
 					this.failure = new ConstructorException(t);
+				} finally {
+					Settings.logger.info(Resources.get("logConstructorEnded"));
 				}
 			}
 		}

@@ -44,8 +44,8 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
  * relations in the diagram.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class LinearLayout implements LayoutManager {
@@ -215,7 +215,7 @@ public class LinearLayout implements LayoutManager {
 	}
 
 	public void layoutContainer(final Container parent) {
-		synchronized (parent.getTreeLock()) {
+		synchronized (parent.getTreeLock()) {		
 			// Calculate our size first using the method above.
 			if (this.sizeUnknown)
 				this.setSizes(parent);

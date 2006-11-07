@@ -29,6 +29,9 @@ import java.awt.print.PrinterJob;
 
 import javax.swing.RepaintManager;
 
+import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.Settings;
+
 /**
  * Prints any given component.
  * <p>
@@ -37,8 +40,8 @@ import javax.swing.RepaintManager;
  * Swing Tutorial</a>.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class ComponentPrinter implements Printable {
@@ -67,9 +70,13 @@ public class ComponentPrinter implements Printable {
 			LongProcess.run(new Runnable() {
 				public void run() {
 					try {
+						Settings.logger.info(Resources.get("printingImage"));
 						printJob.print();
 					} catch (final PrinterException pe) {
 						StackTrace.showStackTrace(pe);
+					} finally {
+						Settings.logger
+								.info(Resources.get("donePrintingImage"));
 					}
 				}
 			});
@@ -77,6 +84,7 @@ public class ComponentPrinter implements Printable {
 
 	public int print(final Graphics g, final PageFormat pageFormat,
 			final int pageIndex) {
+		Settings.logger.debug("Printing page " + pageIndex);
 		// Work out the printable area.
 		final Rectangle2D printableArea = new Rectangle2D.Double(pageFormat
 				.getImageableX(), pageFormat.getImageableY(), pageFormat
@@ -91,9 +99,10 @@ public class ComponentPrinter implements Printable {
 				* yscale / printableArea.getHeight());
 		final int numPages = pagesAcross * pagesDown;
 		// If we are beyond the last page, we are done.
-		if (pageIndex >= numPages)
+		if (pageIndex >= numPages) {
+			Settings.logger.debug("No such page - last page already printed.");
 			return Printable.NO_SUCH_PAGE;
-		else {
+		} else {
 			// Print the components.
 			final Graphics2D g2d = (Graphics2D) g;
 			// Translate our output to the printable area.
@@ -119,6 +128,7 @@ public class ComponentPrinter implements Printable {
 			currentManager.setDoubleBufferingEnabled(false);
 			this.component.printAll(g2d);
 			currentManager.setDoubleBufferingEnabled(doubleBufferingEnabled);
+			Settings.logger.debug("Page printed");
 			return Printable.PAGE_EXISTS;
 		}
 	}

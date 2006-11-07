@@ -31,8 +31,8 @@ import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.SettingsCache;
-import org.biomart.common.view.gui.BioMartApplication;
+import org.biomart.common.resources.Settings;
+import org.biomart.common.view.gui.BioMartGUI;
 
 /**
  * The main window housing the MartBuilder GUI. The {@link #main(String[])}
@@ -43,7 +43,7 @@ import org.biomart.common.view.gui.BioMartApplication;
  *          $Author$
  * @since 0.1
  */
-public class MartBuilder extends BioMartApplication {
+public class MartBuilder extends BioMartGUI {
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -56,7 +56,7 @@ public class MartBuilder extends BioMartApplication {
 	 */
 	public static void main(final String[] args) {
 		// Initialise resources.
-		SettingsCache.setApplication(SettingsCache.MARTBUILDER);
+		Settings.setApplication(Settings.MARTBUILDER);
 		Resources.setResourceLocation("org/biomart/builder/resources");
 		// Start the application.
 		new MartBuilder().launch();
@@ -81,11 +81,8 @@ public class MartBuilder extends BioMartApplication {
 	/**
 	 * Exits the application, but only with permission from the mart tabset.
 	 */
-	public void requestExitApp() {
-		// Only do it if the mart tabs say it's OK. They'll probably
-		// prompt the user on our behalf.
-		if (this.martTabSet.confirmCloseAllMarts())
-			System.exit(0);
+	public boolean confirmExitApp() {
+		return this.martTabSet.confirmCloseAllMarts();
 	}
 
 	// This is the main menu bar.

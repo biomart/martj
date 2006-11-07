@@ -32,6 +32,8 @@ import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
+import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.Settings;
 
 /**
  * This class provides methods which generate atomic DDL or SQL statements. It
@@ -41,8 +43,8 @@ import org.biomart.common.model.Table;
  * which dialect to use for a given {@link DataLink}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public abstract class DatabaseDialect {
@@ -60,6 +62,15 @@ public abstract class DatabaseDialect {
 	}
 
 	/**
+	 * Common constructor for subclasses does nothing except log that the
+	 * subclass has been created and registered.
+	 */
+	protected DatabaseDialect() {
+		Settings.logger.info(Resources.get("logRegisterDialect", this
+				.getClass().getName()));
+	}
+
+	/**
 	 * Work out what kind of dialect to use for the given data link. It does
 	 * this by checking each registered dialect to see if the
 	 * {@link DatabaseDialect#understandsDataLink(DataLink)} method returns
@@ -72,12 +83,16 @@ public abstract class DatabaseDialect {
 	 *         found.
 	 */
 	public static DatabaseDialect getDialect(final DataLink dataLink) {
+		Settings.logger.info(Resources.get("logGetDialect",""+dataLink));
 		for (final Iterator i = DatabaseDialect.dialects.iterator(); i
 				.hasNext();) {
 			final DatabaseDialect d = (DatabaseDialect) i.next();
-			if (d.understandsDataLink(dataLink))
+			if (d.understandsDataLink(dataLink)) {
+				Settings.logger.info(Resources.get("logGotDialect", d.getClass().getName()));
 				return d;
+			}
 		}
+		Settings.logger.info(Resources.get("logGotNoDialect"));
 		return null;
 	}
 

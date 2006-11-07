@@ -27,18 +27,18 @@ import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.SettingsCache;
+import org.biomart.common.resources.Settings;
 
 /**
  * This abstract class provides some useful common stuff for launcing any
  * BioMart Java appliaction.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
-public abstract class BioMartApplication extends JFrame {
+public abstract class BioMartGUI extends JFrame {
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -46,11 +46,14 @@ public abstract class BioMartApplication extends JFrame {
 	 * look-and-feel by speciying a configuration property called
 	 * <tt>lookandfeel</tt>, which contains the classname of the
 	 * look-and-feel to use. Details of where this file is can be found in
-	 * {@link SettingsCache}.
+	 * {@link Settings}.
 	 */
-	protected BioMartApplication() {
+	protected BioMartGUI() {
 		// Create the window.
 		super(Resources.get("GUITitle", Resources.BIOMART_VERSION));
+
+		// Load our cache of settings.
+		Settings.load();
 
 		// Assign ourselves to the long-process hourglass container.
 		// This means that whenever the hourglass is on, it appears
@@ -58,21 +61,19 @@ public abstract class BioMartApplication extends JFrame {
 		// called for it.
 		LongProcess.setContainer(this);
 
-		// Load our cache of settings.
-		SettingsCache.load();
-
 		// Set the look and feel to the one specified by the user, or the system
 		// default if not specified by the user. This may be null.
-		String lookAndFeelClass = SettingsCache.getProperty("lookandfeel");
+		Settings.logger.info(Resources.get("loadingLookAndFeel"));
+		String lookAndFeelClass = Settings.getProperty("lookandfeel");
 		try {
 			UIManager.setLookAndFeel(lookAndFeelClass);
 		} catch (final Exception e) {
 			// Ignore, as we'll end up with the system one if this one doesn't
 			// work.
-			if (lookAndFeelClass != null) // only worry if we were actually
-				// given one.
-				System.err.println(Resources.get("badLookAndFeel",
-						lookAndFeelClass));
+			if (lookAndFeelClass != null)
+				// only worry if we were actually given one.
+				Settings.logger.warn(Resources.get("badLookAndFeel",
+						lookAndFeelClass), e);
 			// Use system default.
 			lookAndFeelClass = UIManager.getSystemLookAndFeelClassName();
 			try {
@@ -80,22 +81,25 @@ public abstract class BioMartApplication extends JFrame {
 			} catch (final Exception e2) {
 				// Ignore, as we'll end up with the cross-platform one if there
 				// is no system one.
-				System.err.println(Resources.get("badLookAndFeel",
-						lookAndFeelClass));
+				Settings.logger.warn(Resources.get("badLookAndFeel",
+						lookAndFeelClass), e2);
 			}
 		}
 
 		// Set up window listener and use it to handle windows closing.
-		final BioMartApplication mb = this;
+		Settings.logger.info(Resources.get("createMainGUI"));
+		final BioMartGUI mb = this;
 		this.addWindowListener(new WindowAdapter() {
 			public void windowClosing(final WindowEvent e) {
 				if (e.getWindow() == mb)
-					BioMartApplication.this.requestExitApp();
+					Settings.logger.debug("Main window closing");
+				BioMartGUI.this.requestExitApp();
 			}
 		});
 		this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
 		// Set up our GUI components.
+		Settings.logger.debug("Initialising main window components");
 		this.initComponents();
 
 		// Pack the window.
@@ -110,12 +114,13 @@ public abstract class BioMartApplication extends JFrame {
 	 */
 	protected void launch() {
 		// Start the application.
+		Settings.logger.info(Resources.get("launchingGUI"));
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				// Centre it.
-				BioMartApplication.this.setLocationRelativeTo(null);
+				BioMartGUI.this.setLocationRelativeTo(null);
 				// Open it.
-				BioMartApplication.this.setVisible(true);
+				BioMartGUI.this.setVisible(true);
 			}
 		});
 	}
@@ -129,5 +134,23 @@ public abstract class BioMartApplication extends JFrame {
 	 * Requests the application to exit, allowing it to ask for permission from
 	 * the user first if necessary.
 	 */
-	public abstract void requestExitApp();
+	public void requestExitApp() {
+		Settings.logger.info(Resources.get("logRequestNormalExit"));
+		if (this.confirmExitApp()) {
+			Settings.logger.info(Resources.get("logRequestNormalExitGranted"));
+			System.exit(0);
+		} else {
+			Settings.logger.info(Resources.get("logRequestNormalExitDenied"));
+		}
+	}
+
+	/**
+	 * Override this method if you wish to ask the user for confirmation.
+	 * 
+	 * @return <tt>true</tt> if it is OK to exit, and <tt>false</tt> if the
+	 *         user asks not to.
+	 */
+	public boolean confirmExitApp() {
+		return true;
+	}
 }

@@ -19,6 +19,7 @@
 package org.biomart.common.model;
 
 import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.Settings;
 
 /**
  * A column is a simple representation of a column in some table. It has a name,
@@ -97,6 +98,7 @@ public interface Column extends Comparable {
 		 *            the parent table.
 		 */
 		public GenericColumn(String name, final Table table) {
+			Settings.logger.debug("Creating column "+name+" on table "+table);
 			// Remember the values.
 			this.table = table;
 			// Remember the name, and set it as the original name for
@@ -129,6 +131,7 @@ public interface Column extends Comparable {
 					+ "_" + i++ + suffix)
 				;
 			// Return it.
+			Settings.logger.debug("Unique name is "+name);
 			return name;
 		}
 
@@ -161,6 +164,7 @@ public interface Column extends Comparable {
 		}
 
 		public void setName(String newName) {
+			Settings.logger.debug("Renaming column "+this+" to "+newName);
 			// Make the name unique.
 			newName = this.makeUniqueName(newName);
 			// Rename it.

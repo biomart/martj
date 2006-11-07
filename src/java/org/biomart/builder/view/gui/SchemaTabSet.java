@@ -56,6 +56,7 @@ import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.StackTrace;
 import org.biomart.common.view.gui.dialogs.SchemaConnectionDialog;
@@ -101,6 +102,8 @@ public class SchemaTabSet extends JTabbedPane {
 	public SchemaTabSet(final MartTab martTab) {
 		super();
 
+		Settings.logger.info(Resources.get("logCreateSchemaTabs"));
+
 		// Remember the mart tabset we are shown inside.
 		this.martTab = martTab;
 
@@ -120,6 +123,7 @@ public class SchemaTabSet extends JTabbedPane {
 	}
 
 	private void addSchemaTab(final Schema schema) {
+		Settings.logger.info(Resources.get("logAddSchemaTab", "" + schema));
 		// Create the diagram to represent this schema.
 		final SchemaDiagram schemaDiagram = new SchemaDiagram(this.martTab,
 				schema);
@@ -233,6 +237,7 @@ public class SchemaTabSet extends JTabbedPane {
 	}
 
 	private void removeSchemaTab(final Schema schema) {
+		Settings.logger.info(Resources.get("logRemoveSchemaTab", "" + schema));
 		// Work out the currently selected tab.
 		final int currentTab = this.getSelectedIndex();
 
@@ -355,6 +360,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 * the same list. Also updates the overview diagram.
 	 */
 	public void recalculateSchemaTabs() {
+		Settings.logger.info(Resources.get("logRecalcSchemaTabs"));
 		// Add all schemas in the mart that we don't have yet.
 		// We work with a copy of the list of schemas else we get
 		// concurrent modification exceptions as new ones are added.
