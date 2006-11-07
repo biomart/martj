@@ -34,8 +34,8 @@ import java.util.Properties;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 import org.apache.log4j.RollingFileAppender;
-import org.apache.log4j.TTCCLayout;
 
 /**
  * Manages the on-disk cache of user settings.
@@ -130,7 +130,7 @@ public class Settings {
 		Settings.logger = Logger.getLogger(app);
 		try {
 			Settings.logger.addAppender(new RollingFileAppender(
-					new TTCCLayout(),
+					new PatternLayout("%d{ISO8601} %-5p [%t:%F:%L]: %m%n"),
 					(new File(logDir, "error.log")).getPath(), true));
 		} catch (IOException e) {
 			// Fall-back to the console if we can't write to file.
