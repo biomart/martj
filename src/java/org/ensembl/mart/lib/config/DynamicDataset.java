@@ -128,7 +128,7 @@ public class DynamicDataset extends BaseNamedConfigurationObject {
 		  String key = titles[x];
 		  if (key.equals("internalName")) continue; // Don't muck with these!
 		  String value = from.getAttribute(key);
-		  String oldVal = value;
+		  String oldVal = value;	  
 		  if (value==null || value.equals("")) {
 			  value = to.getAttribute(key);
 		  } else {
@@ -136,7 +136,10 @@ public class DynamicDataset extends BaseNamedConfigurationObject {
 			  	String[] pairs = this.getAliases().split(",");
 			  	for (int i = 0; i < pairs.length; i++) {
 			  		String[] parts= pairs[i].split("=");
-			  		if (parts.length<2) continue;
+			  		if (parts.length<2) {
+			  			if (parts.length==1) value = value.replaceAll("\\*"+parts[0]+"\\*", "");
+			  			continue;
+			  		} 
 			  		value = value.replaceAll("\\*"+parts[0]+"\\*", parts[1]);
 			  	}
 			  }
