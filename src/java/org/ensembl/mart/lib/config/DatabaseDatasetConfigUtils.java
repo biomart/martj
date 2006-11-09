@@ -4155,8 +4155,8 @@ public boolean naiveExportWouldOverrideExistingConfig(
         Document resultDoc = out.getDocument();
 		DatasetConfig newConfig = new DatasetConfig(config.getInternalName(),config.getDisplayName(),config.getDataset(),config.getDescription(), 
 			config.getType(),config.getVisible(),config.getVisibleFilterPage(),config.getVersion(),config.getOptionalParameter(), 
-			config.getDefaultDataset(),config.getDatasetID(),config.getModified(),config.getMartUsers(),config.getInterfaces(),
-			config.getprimaryKeyRestriction(),config.getTemplate(),SOFTWAREVERSION,config.getNoCount(),config.getEntryLabel());
+			config.getDatasetID(),config.getModified(),config.getMartUsers(),config.getInterfaces(),
+			config.getprimaryKeyRestriction(),config.getTemplate(),SOFTWAREVERSION,config.getNoCount(),config.getEntryLabel(),config.getSplitNameUsing());
 		dscutils.loadDatasetConfigWithDocument(newConfig,resultDoc);
 		newConfig.setTemplate(config.getTemplate());//hack as for some reason sourceDoc has template set to dataset and hence lose true template
 		newConfig.setTemplateFlag(config.getTemplateFlag());
