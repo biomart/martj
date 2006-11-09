@@ -163,7 +163,7 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 					//System.out.println("SHOULD NOT EDIT INTERNAL NAME");
 					JOptionPane.showMessageDialog(null,"SHOULD NOT EDIT INTERNAL NAME");
 				}
-				else if (rowIndex == 10){
+				else if (rowIndex == 12){
 					JOptionPane.showMessageDialog(null,"SHOULD NOT EDIT INTERNAL DATASET ID");
 				}		  
 				else {
