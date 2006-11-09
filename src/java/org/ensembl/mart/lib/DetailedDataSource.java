@@ -482,7 +482,7 @@ public class DetailedDataSource implements DataSource {
    * @throws java.sql.SQLException if any problem occurs making the connection.
    */
   public Connection getConnection() throws SQLException {
-
+	  try {
 	  try {
 		// load driver
 		if (dataSource != null) {
@@ -559,11 +559,15 @@ public class DetailedDataSource implements DataSource {
 		  "Failed to initialise database connection pool "
 			+ "(is the connection pool jar available?) : ");
 	  }
+	  }
 	  catch (SQLException e) {
-			  JOptionPane.showMessageDialog(null,"Include a correct meta_version__version__main table entry:" + e);
+		  String message = e.getMessage();
+		  if (message.indexOf('\n')>=0)
+			  message = message.substring(0, message.indexOf('\n'));
+		  JOptionPane.showMessageDialog(null,message);
 			  //return null;
 			   //e.printStackTrace();
-			  throw new SQLException("");
+			  throw e;
 	} 	  
 }
 /*    

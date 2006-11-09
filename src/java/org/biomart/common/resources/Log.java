@@ -22,8 +22,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
 
-import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Appender;
 import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
@@ -43,13 +44,18 @@ public class Log {
 
 	private static final Level DEFAULT_LOGGER_LEVEL = Level.INFO;
 
+	private static final Layout defaultLayout = new PatternLayout(
+	"%d{ISO8601} %-5p [%t:%F:%L]: %m%n");
+	
+	private static final Appender defaultAppender = 
+		new ConsoleAppender(Log.defaultLayout, ConsoleAppender.SYSTEM_ERR);
+	
 	private static Logger logger;
 	static {
-		// Set up a simple configuration that logs on the console.
-		BasicConfigurator.configure();
 		// Create the default logger.
 		Log.logger = Logger.getRootLogger();
 		Log.logger.setLevel(Log.DEFAULT_LOGGER_LEVEL);
+		Log.logger.addAppender(Log.defaultAppender);
 	}
 
 	/**
@@ -62,9 +68,8 @@ public class Log {
 	 * preference to the defaults. The logger name will be the same as the
 	 * application name in lower-case, eg. <tt>martbuilder</tt>.
 	 * <p>
-	 * Until this method is called, the default root logger is used, and is
-	 * configured using {@link BasicConfigurator#configure()}. The default
-	 * logging level is {@link Level#INFO}.
+	 * Until this method is called, the default root logger is used. 
+	 * The default logging level is {@link Level#INFO} and logs to STDERR.
 	 * 
 	 * @param app
 	 *            the name of the application we are logging for.
@@ -76,16 +81,17 @@ public class Log {
 		final File logDir = new File(appDir, "log");
 		if (!logDir.exists())
 			logDir.mkdir();
+		// Remove the default appender from the root logger.
+		Logger.getRootLogger().removeAppender(Log.defaultAppender);
 		// Set up the default logger.
+		Log.logger = Logger.getLogger(app);
+		Log.logger.setLevel(Log.DEFAULT_LOGGER_LEVEL);
 		try {
-			Log.logger = Logger.getLogger(app);
-			Log.logger.setLevel(Log.DEFAULT_LOGGER_LEVEL);
-			Log.logger.addAppender(new RollingFileAppender(new PatternLayout(
-					"%d{ISO8601} %-5p [%t:%F:%L]: %m%n"), (new File(logDir,
+			Log.logger.addAppender(new RollingFileAppender(Log.defaultLayout, (new File(logDir,
 					"error.log")).getPath(), true));
 		} catch (Throwable t) {
-			// Fall-back to the console if we can't write to file.
-			Log.logger.addAppender(new ConsoleAppender());
+			// Fall-back to the defaults if we can't write to file.
+			Log.logger.addAppender(Log.defaultAppender);
 			Log.warn(Resources.get("noRollingLogger"), t);
 		}
 		// Attempt to load any user-defined settings.
