@@ -24,8 +24,8 @@ import java.util.Map;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.model.Key.ForeignKey;
 import org.biomart.common.model.Key.PrimaryKey;
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.Settings;
 
 /**
  * A relation represents the association between two keys. Relations between two
@@ -316,7 +316,7 @@ public interface Relation extends Comparable {
 		 */
 		public GenericRelation(final Key firstKey, final Key secondKey,
 				final Cardinality cardinality) throws AssociationException {
-			Settings.logger.debug("Creating relation between " + firstKey
+			Log.debug("Creating relation between " + firstKey
 					+ " and " + secondKey + " with cardinality " + cardinality);
 			// Check the keys have the same number of columns.
 			if (firstKey.countColumns() != secondKey.countColumns())
@@ -345,7 +345,7 @@ public interface Relation extends Comparable {
 		}
 
 		public void destroy() {
-			Settings.logger.debug("Dropping relation " + this.getName());
+			Log.debug("Dropping relation " + this.getName());
 			this.firstKey.removeRelation(this);
 			this.secondKey.removeRelation(this);
 		}
@@ -439,11 +439,11 @@ public interface Relation extends Comparable {
 		}
 
 		public void setCardinality(Cardinality cardinality) {
-			Settings.logger.debug("Changing cardinality of " + this.getName()
+			Log.debug("Changing cardinality of " + this.getName()
 					+ " to " + cardinality);
 			if (this.firstKey instanceof PrimaryKey
 					&& this.secondKey instanceof PrimaryKey) {
-				Settings.logger.debug("Overriding cardinality change to ONE");
+				Log.debug("Overriding cardinality change to ONE");
 				cardinality = Cardinality.ONE;
 			}
 			this.cardinality = cardinality;
@@ -451,7 +451,7 @@ public interface Relation extends Comparable {
 
 		public void setStatus(final ComponentStatus status)
 				throws AssociationException {
-			Settings.logger.debug("Changing status of " + this.getName()
+			Log.debug("Changing status of " + this.getName()
 					+ " to " + status);
 			// If the new status is not incorrect, we need to make sure we
 			// can legally do this, ie. the two keys have the same number of

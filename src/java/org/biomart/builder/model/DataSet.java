@@ -52,8 +52,8 @@ import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.model.Relation.GenericRelation;
 import org.biomart.common.model.Schema.GenericSchema;
 import org.biomart.common.model.Table.GenericTable;
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.Settings;
 
 /**
  * A {@link DataSet} instance serves two purposes. First, it contains lists of
@@ -118,7 +118,7 @@ public class DataSet extends GenericSchema {
 		// Super first, to set the name.
 		super(name);
 
-		Settings.logger.info(Resources.get("logNewDataset", name));
+		Log.info(Resources.get("logNewDataset", name));
 
 		// Remember the settings and make some defaults.
 		this.invisible = false;
@@ -154,7 +154,7 @@ public class DataSet extends GenericSchema {
 	private void generateDataSetTable(final DataSetTableType type,
 			final DataSetTable parentDSTable, final Table realTable,
 			final Relation sourceRelation) {
-		Settings.logger.debug("Creating dataset table for " + realTable
+		Log.debug("Creating dataset table for " + realTable
 				+ " with parent relation " + sourceRelation + " as a " + type);
 		// Create the empty dataset table.
 		final DataSetTable dsTable = new DataSetTable(realTable.getName(),
@@ -350,7 +350,7 @@ public class DataSet extends GenericSchema {
 			final List normalQ, final List subclassQ, final List dimensionQ,
 			final Relation sourceRelation, final Set relationsFollowed,
 			final boolean makeDimensions) {
-		Settings.logger.debug("Processing table " + mergeTable);
+		Log.debug("Processing table " + mergeTable);
 
 		// Don't ignore any keys by default.
 		Key ignoreKey = null;
@@ -494,11 +494,11 @@ public class DataSet extends GenericSchema {
 	 * This method recreates all the tables in the dataset.
 	 */
 	private void regenerate() {
-		Settings.logger.debug("Regenerating dataset " + this.getName());
+		Log.debug("Regenerating dataset " + this.getName());
 		// Clear all our tables out as they will all be rebuilt.
 		this.removeAllTables();
 
-		Settings.logger.debug("Finding actual central table");
+		Log.debug("Finding actual central table");
 		// Identify main table.
 		Table centralTable = this.getCentralTable();
 		// If central table has subclass relations and is at the M key
@@ -517,7 +517,7 @@ public class DataSet extends GenericSchema {
 				}
 			}
 		} while (found);
-		Settings.logger.debug("Actual central table is " + centralTable);
+		Log.debug("Actual central table is " + centralTable);
 
 		// Generate the main table. It will recursively generate all the others.
 		this.generateDataSetTable(DataSetTableType.MAIN, null, centralTable,
@@ -538,7 +538,7 @@ public class DataSet extends GenericSchema {
 	 */
 	public void flagConcatOnlyRelation(final Relation relation,
 			final DataSetConcatRelationType type) throws ValidationException {
-		Settings.logger.debug("Flagging concat-only relation " + relation
+		Log.debug("Flagging concat-only relation " + relation
 				+ " in " + this.getName());
 
 		// Sanity check.
@@ -574,7 +574,7 @@ public class DataSet extends GenericSchema {
 	public void flagRestrictedTable(final Table table,
 			final DataSetTableRestriction restriction)
 			throws ValidationException {
-		Settings.logger.debug("Flagging restricted table " + table + " in "
+		Log.debug("Flagging restricted table " + table + " in "
 				+ this.getName());
 		// Check this is not a schema group.
 		if (table.getSchema() instanceof SchemaGroup)
@@ -612,7 +612,7 @@ public class DataSet extends GenericSchema {
 	 */
 	public void flagSubclassRelation(final Relation relation)
 			throws ValidationException {
-		Settings.logger.debug("Flagging subclassed relation " + relation
+		Log.debug("Flagging subclassed relation " + relation
 				+ " in " + this.getName());
 		// Skip if already subclassed.
 		if (this.subclassedRelations.contains(relation))
@@ -808,7 +808,7 @@ public class DataSet extends GenericSchema {
 	 *            the relation to mask.
 	 */
 	public void maskRelation(final Relation relation) {
-		Settings.logger.debug("Masking relation " + relation + " in "
+		Log.debug("Masking relation " + relation + " in "
 				+ this.getName());
 		// Skip if already masked.
 		if (!this.maskedRelations.contains(relation))
@@ -824,7 +824,7 @@ public class DataSet extends GenericSchema {
 	 * concat relations, etc.
 	 */
 	public Schema replicate(final String newName) {
-		Settings.logger.debug("Replicating dataset " + this.getName() + " as "
+		Log.debug("Replicating dataset " + this.getName() + " as "
 				+ newName);
 		try {
 			// Create the copy.
@@ -848,7 +848,7 @@ public class DataSet extends GenericSchema {
 	 *            the optimiser type to use.
 	 */
 	public void setDataSetOptimiserType(final DataSetOptimiserType optimiser) {
-		Settings.logger.debug("Setting optimiser " + optimiser + " in "
+		Log.debug("Setting optimiser " + optimiser + " in "
 				+ this.getName());
 		// Do it.
 		this.optimiser = optimiser;
@@ -862,7 +862,7 @@ public class DataSet extends GenericSchema {
 	 *            otherwise.
 	 */
 	public void setInvisible(final boolean invisible) {
-		Settings.logger.debug("Setting invisible flag in " + this.getName());
+		Log.debug("Setting invisible flag in " + this.getName());
 		this.invisible = invisible;
 	}
 
@@ -884,11 +884,11 @@ public class DataSet extends GenericSchema {
 	 *             with the schema.
 	 */
 	public void synchronise() throws SQLException, DataModelException {
-		Settings.logger.debug("Synchronising dataset " + this.getName());
+		Log.debug("Synchronising dataset " + this.getName());
 
 		// Start off by marking all existing flagged relations as having been
 		// removed.
-		Settings.logger.debug("Listing all potential dead relations");
+		Log.debug("Listing all potential dead relations");
 		final Set deadRelations = new HashSet(this.maskedRelations);
 		deadRelations.addAll(this.subclassedRelations);
 		deadRelations.addAll(this.concatOnlyRelations[0]);
@@ -896,7 +896,7 @@ public class DataSet extends GenericSchema {
 		// Iterate through tables in each schema. For each table,
 		// find all the relations on that table and remove them
 		// from the set of dead flagged relations.
-		Settings.logger
+		Log
 				.debug("Removing undead relations from dead relations list");
 		for (final Iterator i = this.getMart().getSchemas().iterator(); i
 				.hasNext();) {
@@ -909,7 +909,7 @@ public class DataSet extends GenericSchema {
 
 		// All that is left in the set of dead flagged relations no longer
 		// exists in the underlying schemas. Therefore, we can unflag them.
-		Settings.logger.debug("Dropping flags for dead relations");
+		Log.debug("Dropping flags for dead relations");
 		for (final Iterator i = deadRelations.iterator(); i.hasNext();) {
 			final Relation r = (Relation) i.next();
 			this.maskedRelations.remove(r);
@@ -919,7 +919,7 @@ public class DataSet extends GenericSchema {
 
 		// The user may have renamed some of the tables and columns in our
 		// dataset. Remember the columns and tables for which this happened.
-		Settings.logger.debug("Spotting renamed columns and tables");
+		Log.debug("Spotting renamed columns and tables");
 		final List renamedColumns = new ArrayList();
 		final List renamedTables = new ArrayList();
 		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
@@ -935,7 +935,7 @@ public class DataSet extends GenericSchema {
 
 		// Remember the masked, partition, and expression columns that
 		// the user flagged in this dataset.
-		Settings.logger.debug("Remembering existing flags");
+		Log.debug("Remembering existing flags");
 		final List maskedColumns = new ArrayList();
 		final List expressionColumns = new ArrayList();
 		final List partitionColumns = new ArrayList();
@@ -959,7 +959,7 @@ public class DataSet extends GenericSchema {
 		// Remask columns that were previously masked by looking for
 		// tables with the same name, and columns with matching original
 		// names. Don't remask them if they are now inherited.
-		Settings.logger.debug("Remasking columns");
+		Log.debug("Remasking columns");
 		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
 			DataSetTable table = (DataSetTable) i.next();
 			// Check the columns from this table.
@@ -995,7 +995,7 @@ public class DataSet extends GenericSchema {
 		// We have to store things in maps else we get concurrent modification
 		// exceptions from the iterators. Also reapply partition values to
 		// columns whilst we're at it.
-		Settings.logger.debug("Relisting tables and columns");
+		Log.debug("Relisting tables and columns");
 		Map newTableNames = new HashMap();
 		Map newColumnNames = new HashMap();
 		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
@@ -1011,7 +1011,7 @@ public class DataSet extends GenericSchema {
 					newTableNames.put(table, renamedTable.getName());
 			}
 			// Check the columns from this table.
-			Settings.logger.debug("Repartitioning columns in " + table);
+			Log.debug("Repartitioning columns in " + table);
 			for (final Iterator j = table.getColumns().iterator(); j.hasNext();) {
 				DataSetColumn column = (DataSetColumn) j.next();
 				// Has it been renamed? Check underlying relation and original
@@ -1051,7 +1051,7 @@ public class DataSet extends GenericSchema {
 			// their dependencies again. Drop any that refer to a column
 			// that no longer exists, even if others in the expression
 			// still do.
-			Settings.logger.debug("Regenerating expression columns");
+			Log.debug("Regenerating expression columns");
 			for (final Iterator j = expressionColumns.iterator(); j.hasNext();) {
 				final ExpressionColumn oldExpCol = (ExpressionColumn) j.next();
 				// Only regenerate expression columns from this table.
@@ -1102,7 +1102,7 @@ public class DataSet extends GenericSchema {
 		}
 
 		// Do the renames we queued up earlier.
-		Settings.logger.debug("Renaming tables and columns");
+		Log.debug("Renaming tables and columns");
 		for (final Iterator i = newTableNames.entrySet().iterator(); i
 				.hasNext();) {
 			Map.Entry entry = (Map.Entry) i.next();
@@ -1116,7 +1116,7 @@ public class DataSet extends GenericSchema {
 
 		// Remove any table restrictions that reference tables or columns that
 		// no longer exist.
-		Settings.logger.debug("Removing redundant table restrictions");
+		Log.debug("Removing redundant table restrictions");
 		final List deadTableRestrictions = new ArrayList();
 		for (int i = 0; i < this.restrictedTables[0].size(); i++) {
 			final Table table = (Table) this.restrictedTables[0].get(i);
@@ -1156,7 +1156,7 @@ public class DataSet extends GenericSchema {
 		// no longer exist. For those that do still exist but columns
 		// have gone missing, remove those columns but leave the concat
 		// in place.
-		Settings.logger.debug("Removing redundant concat relations");
+		Log.debug("Removing redundant concat relations");
 		final List deadConcatRelations = new ArrayList();
 		for (int i = 0; i < this.concatOnlyRelations[0].size(); i++) {
 			final Relation rel = (Relation) this.concatOnlyRelations[0].get(i);
@@ -1199,7 +1199,7 @@ public class DataSet extends GenericSchema {
 	 *            the relation to unmark.
 	 */
 	public void unflagConcatOnlyRelation(final Relation relation) {
-		Settings.logger.debug("Unflagging concat relation " + relation + " in "
+		Log.debug("Unflagging concat relation " + relation + " in "
 				+ this.getName());
 		final int index = this.concatOnlyRelations[0].indexOf(relation);
 		if (index >= 0) {
@@ -1215,7 +1215,7 @@ public class DataSet extends GenericSchema {
 	 *            the table to unmark.
 	 */
 	public void unflagRestrictedTable(final Table table) {
-		Settings.logger.debug("Unrestricting table " + table + " in "
+		Log.debug("Unrestricting table " + table + " in "
 				+ this.getName());
 		final int index = this.restrictedTables[0].indexOf(table);
 		if (index >= 0) {
@@ -1233,7 +1233,7 @@ public class DataSet extends GenericSchema {
 	 *            the relation to unmark.
 	 */
 	public void unflagSubclassRelation(final Relation relation) {
-		Settings.logger.debug("Unflagging subclass relation " + relation
+		Log.debug("Unflagging subclass relation " + relation
 				+ " in " + this.getName());
 		if (!this.subclassedRelations.contains(relation))
 			return;
@@ -1262,7 +1262,7 @@ public class DataSet extends GenericSchema {
 	 *            the relation to unmask.
 	 */
 	public void unmaskRelation(final Relation relation) {
-		Settings.logger.debug("Unmasking relation " + relation + " in "
+		Log.debug("Unmasking relation " + relation + " in "
 				+ this.getName());
 		if (!this.maskedRelations.contains(relation))
 			return;
@@ -1323,7 +1323,7 @@ public class DataSet extends GenericSchema {
 			// ensure we have a unique name.
 			super(name, dsTable);
 
-			Settings.logger.debug("Creating dataset column " + name
+			Log.debug("Creating dataset column " + name
 					+ " of type " + this.getClass().getName());
 
 			// Remember the rest.
@@ -1403,7 +1403,7 @@ public class DataSet extends GenericSchema {
 		 *             if masking is not allowed on this column.
 		 */
 		public void setMasked(boolean masked) throws ValidationException {
-			Settings.logger.debug((masked ? "Masking" : "Unmasking")
+			Log.debug((masked ? "Masking" : "Unmasking")
 					+ " column " + this.getName());
 			if (masked) {
 				// Work out where this column is coming from.
@@ -1456,7 +1456,7 @@ public class DataSet extends GenericSchema {
 		 */
 		public void setPartitionType(PartitionedColumnType partitionType)
 				throws ValidationException {
-			Settings.logger.debug("Setting partition type on column "
+			Log.debug("Setting partition type on column "
 					+ this.getName());
 			if (partitionType != null) {
 				// Refuse to partition subclass tables.
@@ -1569,7 +1569,7 @@ public class DataSet extends GenericSchema {
 			 * Drops all the unused aliases.
 			 */
 			public void dropUnusedAliases() {
-				Settings.logger.debug("Trimming unused aliases from "
+				Log.debug("Trimming unused aliases from "
 						+ this.getName());
 				final List usedColumns = new ArrayList();
 				for (final Iterator i = this.aliases.entrySet().iterator(); i
@@ -1630,7 +1630,7 @@ public class DataSet extends GenericSchema {
 			 * @return the substituted expression.
 			 */
 			public String getSubstitutedExpression() {
-				Settings.logger.debug("Constructing expression for "
+				Log.debug("Constructing expression for "
 						+ this.getName());
 				String sub = this.expr;
 				for (final Iterator i = this.aliases.entrySet().iterator(); i
@@ -1641,7 +1641,7 @@ public class DataSet extends GenericSchema {
 					final String alias = ":" + (String) entry.getValue();
 					sub = sub.replaceAll(alias, wrapped.getName());
 				}
-				Settings.logger.debug("Expression is: " + sub);
+				Log.debug("Expression is: " + sub);
 				return sub;
 			}
 
@@ -1828,7 +1828,7 @@ public class DataSet extends GenericSchema {
 			}
 
 			public void setMasked(boolean masked) throws ValidationException {
-				Settings.logger.debug((masked ? "Masking" : "Unmasking")
+				Log.debug((masked ? "Masking" : "Unmasking")
 						+ " column " + this.getName());
 				// If this column is part of the PK on the table it came
 				// from that has a 1:M relation, or is part of an FK with a
@@ -2134,7 +2134,7 @@ public class DataSet extends GenericSchema {
 			// Super constructor first, using an alias to prevent duplicates.
 			super(name, ds);
 
-			Settings.logger.debug("Creating dataset table " + name);
+			Log.debug("Creating dataset table " + name);
 
 			// Remember the other settings.
 			this.underlyingTable = underlyingTable;
@@ -2460,7 +2460,7 @@ public class DataSet extends GenericSchema {
 		 * @return the substituted expression.
 		 */
 		public String getSubstitutedExpression(final String tablePrefix) {
-			Settings.logger.debug("Calculating restricted table expression");
+			Log.debug("Calculating restricted table expression");
 			String sub = this.expr;
 			for (final Iterator i = this.aliases.entrySet().iterator(); i
 					.hasNext();) {
@@ -2469,7 +2469,7 @@ public class DataSet extends GenericSchema {
 				final String alias = ":" + (String) entry.getValue();
 				sub = sub.replaceAll(alias, tablePrefix + "." + col.getName());
 			}
-			Settings.logger.debug("Expression is: " + sub);
+			Log.debug("Expression is: " + sub);
 			return sub;
 		}
 

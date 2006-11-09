@@ -46,8 +46,8 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.DiagramComponent;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 import org.biomart.common.model.Table;
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.ComponentImageSaver;
 import org.biomart.common.view.gui.ComponentPrinter;
 
@@ -97,7 +97,7 @@ public abstract class Diagram extends JPanel {
 		// Set us up with the layout.
 		super(layout);
 
-		Settings.logger.debug("Creating new diagram of type "
+		Log.debug("Creating new diagram of type "
 				+ this.getClass().getName());
 
 		// Enable mouse events to be picked up all over the diagram.
@@ -423,7 +423,7 @@ public abstract class Diagram extends JPanel {
 	 * {@link Object#equals(Object)} method.
 	 */
 	public void recalculateDiagram() {
-		Settings.logger.debug("Recalculating diagram");
+		Log.debug("Recalculating diagram");
 		// Remember all the existing diagram component states.
 		final Map states = new HashMap();
 		for (final Iterator i = this.componentMap.entrySet().iterator(); i
@@ -510,7 +510,7 @@ public abstract class Diagram extends JPanel {
 	 *            the diagram context to use.
 	 */
 	public void setDiagramContext(final DiagramContext diagramContext) {
-		Settings.logger.debug("Switching diagram context");
+		Log.debug("Switching diagram context");
 		// Apply it to ourselves.
 		this.diagramContext = diagramContext;
 		this.contextChanged = true;

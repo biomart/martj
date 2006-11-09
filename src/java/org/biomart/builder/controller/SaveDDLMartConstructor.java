@@ -46,8 +46,8 @@ import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.Settings;
 
 /**
  * This implementation of the {@link MartConstructor} interface generates DDL
@@ -100,7 +100,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 */
 	public SaveDDLMartConstructor(final SaveDDLGranularity granularity,
 			final File outputFile, final boolean includeComments) {
-		Settings.logger.info(Resources.get("logSaveDDLFile", outputFile
+		Log.info(Resources.get("logSaveDDLFile", outputFile
 				.getPath()));
 		// Remember the settings.
 		this.granularity = granularity;
@@ -130,7 +130,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	public SaveDDLMartConstructor(final SaveDDLGranularity granularity,
 			final StringBuffer outputStringBuffer, final boolean includeComments)
 			throws IllegalArgumentException {
-		Settings.logger.info(Resources.get("logSaveDDLBuffer"));
+		Log.info(Resources.get("logSaveDDLBuffer"));
 		// Check it's sensible.
 		if (!granularity.equals(SaveDDLGranularity.SINGLE))
 			throw new IllegalArgumentException(Resources
@@ -146,7 +146,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	public ConstructorRunnable getConstructorRunnable(
 			final String targetSchemaName, final Collection datasets)
 			throws Exception {
-		Settings.logger.debug("Working out what DDL helper to use");
+		Log.debug("Working out what DDL helper to use");
 		// Work out what kind of helper to use. The helper will
 		// perform the actual conversion of action to DDL and divide
 		// the results into appropriate files or buffers.
@@ -169,9 +169,9 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		else
 			helper = new StepAsFileHelper(this.outputFile, this.includeComments);
 
-		Settings.logger.debug("Chose helper " + helper.getClass().getName());
+		Log.debug("Chose helper " + helper.getClass().getName());
 		// Check that all the input schemas involved are cohabitable.
-		Settings.logger.info(Resources.get("logCheckDDLCohabit"));
+		Log.info(Resources.get("logCheckDDLCohabit"));
 
 		// First, make a set of all input schemas. Note that some
 		// may be groups, but since canCohabit() works on groups
@@ -194,7 +194,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		final List inputSchemaList = new ArrayList(inputSchemas);
 
 		// Set the output dialect to match the first one in the list.
-		Settings.logger.debug("Getting dialect");
+		Log.debug("Getting dialect");
 		final DatabaseDialect dd = DatabaseDialect
 				.getDialect((Schema) inputSchemaList.get(0));
 		if (dd == null)
@@ -215,7 +215,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		// listener - it provides both database query facilities,
 		// and converts action events back into DDL appropriate for
 		// the database it is connected to.
-		Settings.logger.debug("Building constructor runnable");
+		Log.debug("Building constructor runnable");
 		final ConstructorRunnable cr = new GenericConstructorRunnable(
 				targetSchemaName, datasets, helper);
 		cr.addMartConstructorListener(helper);
@@ -258,7 +258,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				final MartConstructorAction action) throws Exception {
 			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
 				// Start a new zip file.
-				Settings.logger.debug("Starting zip file "
+				Log.debug("Starting zip file "
 						+ this.getFile().getPath());
 				this.outputFileStream = new FileOutputStream(this.getFile());
 				this.outputZipStream = new ZipOutputStream(
@@ -267,20 +267,20 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
 				// Close the zip stream. Will also close the
 				// file output stream by default.
-				Settings.logger.debug("Closing zip file");
+				Log.debug("Closing zip file");
 				this.outputZipStream.finish();
 				this.outputFileStream.flush();
 				this.outputFileStream.close();
 			} else if (event == MartConstructorListener.DATASET_STARTED) {
 				// Start a new file within the zip file.
-				Settings.logger.debug("Starting entry " + this.martSequence);
+				Log.debug("Starting entry " + this.martSequence);
 				this.entry = new ZipEntry(this.martSequence + "/"
 						+ this.datasetSequence + Resources.get("ddlExtension"));
 				this.entry.setTime(System.currentTimeMillis());
 				this.outputZipStream.putNextEntry(this.entry);
 			} else if (event == MartConstructorListener.DATASET_ENDED) {
 				// Close the current file within the zip file.
-				Settings.logger.debug("Closing entry");
+				Log.debug("Closing entry");
 				this.outputZipStream.closeEntry();
 				// Bump up the dataset count for the next one.
 				this.datasetSequence++;
@@ -383,7 +383,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		}
 
 		public List listDistinctValues(final Column col) throws SQLException {
-			Settings.logger.info(Resources.get("logDistinct", "" + col));
+			Log.info(Resources.get("logDistinct", "" + col));
 			return this.dialect.executeSelectDistinct(col);
 		}
 
@@ -433,7 +433,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				final MartConstructorAction action) throws Exception {
 			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
 				// Start a zip file.
-				Settings.logger.debug("Starting zip file "
+				Log.debug("Starting zip file "
 						+ this.getFile().getPath());
 				this.outputFileStream = new FileOutputStream(this.getFile());
 				this.outputZipStream = new ZipOutputStream(
@@ -442,20 +442,20 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
 				// Close the zip stream. Will also close the
 				// file output stream by default.
-				Settings.logger.debug("Closing zip file");
+				Log.debug("Closing zip file");
 				this.outputZipStream.finish();
 				this.outputFileStream.flush();
 				this.outputFileStream.close();
 			} else if (event == MartConstructorListener.MART_STARTED) {
 				// Start a new entry in the zip file.
-				Settings.logger.debug("Starting entry " + this.martSequence);
+				Log.debug("Starting entry " + this.martSequence);
 				this.entry = new ZipEntry(this.martSequence
 						+ Resources.get("ddlExtension"));
 				this.entry.setTime(System.currentTimeMillis());
 				this.outputZipStream.putNextEntry(this.entry);
 			} else if (event == MartConstructorListener.MART_ENDED) {
 				// Finish the current entry in the zip file.
-				Settings.logger.debug("Closing entry");
+				Log.debug("Closing entry");
 				this.outputZipStream.closeEntry();
 				// Bump up the mart sequence.
 				this.martSequence++;
@@ -626,12 +626,12 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				final MartConstructorAction action) throws Exception {
 			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
 				// Start writing to the file.
-				Settings.logger.debug("Starting file "
+				Log.debug("Starting file "
 						+ this.getFile().getPath());
 				this.outputFileStream = new FileOutputStream(this.getFile());
 			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
 				// Finish writing to the file.
-				Settings.logger.debug("Closing file");
+				Log.debug("Closing file");
 				this.outputFileStream.flush();
 				this.outputFileStream.close();
 			} else if (event == MartConstructorListener.ACTION_EVENT) {
@@ -714,7 +714,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				final MartConstructorAction action) throws Exception {
 			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
 				// Start the zip file.
-				Settings.logger.debug("Starting zip file "
+				Log.debug("Starting zip file "
 						+ this.getFile().getPath());
 				this.outputFileStream = new FileOutputStream(this.getFile());
 				this.outputZipStream = new ZipOutputStream(
@@ -723,7 +723,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
 				// Close the zip stream. Will also close the
 				// file output stream by default.
-				Settings.logger.debug("Closing zip file");
+				Log.debug("Closing zip file");
 				this.outputZipStream.finish();
 				this.outputFileStream.flush();
 				this.outputFileStream.close();
@@ -738,7 +738,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 					final String entryFilename = level + "/" + level + "-"
 							+ action.getSequence()
 							+ Resources.get("ddlExtension");
-					Settings.logger.debug("Starting entry " + entryFilename);
+					Log.debug("Starting entry " + entryFilename);
 					final ZipEntry entry = new ZipEntry(entryFilename);
 					entry.setTime(System.currentTimeMillis());
 					this.outputZipStream.putNextEntry(entry);
@@ -752,7 +752,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 								"line.separator").getBytes());
 					}
 					// Close the entry.
-					Settings.logger.debug("Closing entry");
+					Log.debug("Closing entry");
 					this.outputZipStream.closeEntry();
 				} catch (final Exception e) {
 					// Make sure we don't leave open entries lying around
@@ -811,7 +811,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				final MartConstructorAction action) throws Exception {
 			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
 				// Create and open the zip file.
-				Settings.logger.debug("Starting zip file "
+				Log.debug("Starting zip file "
 						+ this.getFile().getPath());
 				this.outputFileStream = new FileOutputStream(this.getFile());
 				this.outputZipStream = new ZipOutputStream(
@@ -820,19 +820,19 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
 				// Close the zip stream. Will also close the
 				// file output stream by default.
-				Settings.logger.debug("Closing zip file");
+				Log.debug("Closing zip file");
 				this.outputZipStream.finish();
 				this.outputFileStream.flush();
 				this.outputFileStream.close();
 			} else if (event == MartConstructorListener.DATASET_STARTED) {
 				// Clear out action map ready for next dataset.
-				Settings.logger.debug("Dataset starting");
+				Log.debug("Dataset starting");
 				this.preInterimActions.clear();
 				this.postInterimActions.clear();
 				this.postInterimTables.clear();
 			} else if (event == MartConstructorListener.DATASET_ENDED) {
 				// Write out one file per table in part1 files.
-				Settings.logger.debug("Dataset ending");
+				Log.debug("Dataset ending");
 				for (final Iterator i = this.preInterimActions.entrySet()
 						.iterator(); i.hasNext();) {
 					final Map.Entry actionEntry = (Map.Entry) i.next();
@@ -841,7 +841,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 							+ this.datasetSequence + "/" + tableName
 							+ Resources.get("perTablePart1FileName")
 							+ Resources.get("ddlExtension");
-					Settings.logger.debug("Starting entry " + entryFilename);
+					Log.debug("Starting entry " + entryFilename);
 					ZipEntry entry = new ZipEntry(entryFilename);
 					entry.setTime(System.currentTimeMillis());
 					this.outputZipStream.putNextEntry(entry);
@@ -874,7 +874,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 						}
 					}
 					// Done with this entry.
-					Settings.logger.debug("Closing entry");
+					Log.debug("Closing entry");
 					this.outputZipStream.closeEntry();
 				}
 				// Make a list for optimise-update actions.
@@ -888,7 +888,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 							+ this.datasetSequence + "/" + tableName
 							+ Resources.get("perTablePart2FileName")
 							+ Resources.get("ddlExtension");
-					Settings.logger.debug("Starting entry " + entryFilename);
+					Log.debug("Starting entry " + entryFilename);
 					ZipEntry entry = new ZipEntry(entryFilename);
 					entry.setTime(System.currentTimeMillis());
 					this.outputZipStream.putNextEntry(entry);
@@ -933,7 +933,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 						}
 					}
 					// Done with this entry.
-					Settings.logger.debug("Closing entry");
+					Log.debug("Closing entry");
 					this.outputZipStream.closeEntry();
 				}
 				// Write out the optimise-update actions in part3 files.
@@ -945,7 +945,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 							+ this.datasetSequence + "/" + tableName
 							+ Resources.get("perTablePart3FileName")
 							+ Resources.get("ddlExtension");
-					Settings.logger.debug("Starting entry " + entryFilename);
+					Log.debug("Starting entry " + entryFilename);
 					ZipEntry entry = new ZipEntry(entryFilename);
 					entry.setTime(System.currentTimeMillis());
 					this.outputZipStream.putNextEntry(entry);
@@ -963,7 +963,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 									"line.separator").getBytes());
 						}
 					}
-					Settings.logger.debug("Closing entry");
+					Log.debug("Closing entry");
 					this.outputZipStream.closeEntry();
 				}
 				// Bump up the dataset count for the next one.

@@ -48,8 +48,8 @@ import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.model.Relation.GenericRelation;
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.Settings;
 
 /**
  * Tools for working with the mart from a GUI or CLI. These wrapper methods
@@ -82,7 +82,7 @@ public class MartBuilderUtils {
 	public static void addExpressionColumn(final DataSetTable table,
 			final String columnName, final Map columnAliases,
 			final String expression, final boolean groupBy) {
-		Settings.logger.info(Resources.get("logReqAddExprCol"));
+		Log.info(Resources.get("logReqAddExprCol"));
 		final ExpressionColumn column = new ExpressionColumn(columnName, table);
 		column.getAliases().putAll(columnAliases);
 		column.setExpression(expression);
@@ -98,7 +98,7 @@ public class MartBuilderUtils {
 	 *            the schema to add to the mart.
 	 */
 	public static void addSchemaToMart(final Mart mart, final Schema schema) {
-		Settings.logger.info(Resources.get("logReqAddSchemaToMart"));
+		Log.info(Resources.get("logReqAddSchemaToMart"));
 		mart.addSchema(schema);
 	}
 
@@ -132,7 +132,7 @@ public class MartBuilderUtils {
 	public static SchemaGroup addSchemaToSchemaGroup(final Mart mart,
 			final Schema schema, final String groupName)
 			throws AssociationException, DataModelException, SQLException {
-		Settings.logger.info(Resources.get("logReqAddSchemaToGroup"));
+		Log.info(Resources.get("logReqAddSchemaToGroup"));
 		SchemaGroup schemaGroup = (SchemaGroup) mart.getSchemaByName(groupName);
 		if (schemaGroup == null || !(schemaGroup instanceof SchemaGroup)) {
 			schemaGroup = new GenericSchemaGroup(groupName);
@@ -157,7 +157,7 @@ public class MartBuilderUtils {
 	 */
 	public static void changeKeyStatus(final Mart mart, final Key key,
 			final ComponentStatus status) {
-		Settings.logger.info(Resources.get("logReqChangeKeyStatus"));
+		Log.info(Resources.get("logReqChangeKeyStatus"));
 		key.setStatus(status);
 		mart.synchroniseDataSets();
 	}
@@ -172,7 +172,7 @@ public class MartBuilderUtils {
 	 */
 	public static void changeOptimiserType(final DataSet dataset,
 			final DataSetOptimiserType type) {
-		Settings.logger.info(Resources.get("logReqChangeOptimiser"));
+		Log.info(Resources.get("logReqChangeOptimiser"));
 		dataset.setDataSetOptimiserType(type);
 	}
 
@@ -191,7 +191,7 @@ public class MartBuilderUtils {
 	 */
 	public static void changeRelationCardinality(final Mart mart,
 			final Relation relation, final Cardinality cardinality) {
-		Settings.logger.info(Resources.get("logReqChangeCardinality"));
+		Log.info(Resources.get("logReqChangeCardinality"));
 		// Change the cardinality.
 		relation.setCardinality(cardinality);
 
@@ -226,7 +226,7 @@ public class MartBuilderUtils {
 	public static void changeRelationStatus(final Mart mart,
 			final Relation relation, final ComponentStatus status)
 			throws AssociationException {
-		Settings.logger.info(Resources.get("logReqChangeRelStatus"));
+		Log.info(Resources.get("logReqChangeRelStatus"));
 		relation.setStatus(status);
 		mart.synchroniseDataSets();
 	}
@@ -251,7 +251,7 @@ public class MartBuilderUtils {
 	public static void concatOnlyRelation(final DataSet dataset,
 			final Relation relation, final DataSetConcatRelationType type)
 			throws SQLException, DataModelException, ValidationException {
-		Settings.logger.info(Resources.get("logReqConcatRel"));
+		Log.info(Resources.get("logReqConcatRel"));
 		dataset.flagConcatOnlyRelation(relation, type);
 		dataset.unflagSubclassRelation(relation);
 		dataset.synchronise();
@@ -273,7 +273,7 @@ public class MartBuilderUtils {
 	 */
 	public static void createRelation(final Mart mart, final Key from,
 			final Key to) throws AssociationException {
-		Settings.logger.info(Resources.get("logReqRelation"));
+		Log.info(Resources.get("logReqRelation"));
 
 		// Create the relation.
 		final Relation r = new GenericRelation(from, to, Cardinality.MANY);
@@ -301,7 +301,7 @@ public class MartBuilderUtils {
 	 */
 	public static void editKeyColumns(final Mart mart, final Key key,
 			final List columns) throws AssociationException {
-		Settings.logger.info(Resources.get("logReqEditKey"));
+		Log.info(Resources.get("logReqEditKey"));
 		key.setColumns(columns);
 		MartBuilderUtils.changeKeyStatus(mart, key, ComponentStatus.HANDMADE);
 		mart.synchroniseDataSets();
@@ -314,7 +314,7 @@ public class MartBuilderUtils {
 	 *            the dataset to enable invisibility in.
 	 */
 	public static void invisibleDataSet(final DataSet dataset) {
-		Settings.logger.info(Resources.get("logReqInvisibleDataset"));
+		Log.info(Resources.get("logReqInvisibleDataset"));
 		dataset.setInvisible(true);
 	}
 
@@ -330,7 +330,7 @@ public class MartBuilderUtils {
 	 */
 	public static void maskColumn(final DataSet dataset,
 			final DataSetColumn column) throws ValidationException {
-		Settings.logger.info(Resources.get("logReqMaskColumn"));
+		Log.info(Resources.get("logReqMaskColumn"));
 		column.setMasked(true);
 	}
 
@@ -348,7 +348,7 @@ public class MartBuilderUtils {
 	 */
 	public static void maskRelation(final DataSet dataset,
 			final Relation relation) throws SQLException, DataModelException {
-		Settings.logger.info(Resources.get("logReqMaskRelation"));
+		Log.info(Resources.get("logReqMaskRelation"));
 		dataset.maskRelation(relation);
 		dataset.synchronise();
 	}
@@ -368,7 +368,7 @@ public class MartBuilderUtils {
 	 */
 	public static void maskTable(final DataSet dataset, final Table table)
 			throws SQLException, DataModelException {
-		Settings.logger.info(Resources.get("logReqMaskTable"));
+		Log.info(Resources.get("logReqMaskTable"));
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
 			dataset.maskRelation((Relation) i.next());
 		dataset.synchronise();
@@ -391,7 +391,7 @@ public class MartBuilderUtils {
 	public static void modifyExpressionColumn(final ExpressionColumn column,
 			final Map columnAliases, final String expression,
 			final boolean groupBy) {
-		Settings.logger.info(Resources.get("logReqChangeExprCol"));
+		Log.info(Resources.get("logReqChangeExprCol"));
 		column.getAliases().clear();
 		column.getAliases().putAll(columnAliases);
 		column.setExpression(expression);
@@ -414,7 +414,7 @@ public class MartBuilderUtils {
 	public static void partitionByColumn(final DataSet dataset,
 			final DataSetColumn column, final PartitionedColumnType type)
 			throws ValidationException {
-		Settings.logger.info(Resources.get("logReqPartitionCol"));
+		Log.info(Resources.get("logReqPartitionCol"));
 		column.setPartitionType(type);
 	}
 
@@ -430,7 +430,7 @@ public class MartBuilderUtils {
 	 */
 	public static void removeDataSetFromMart(final Mart mart,
 			final DataSet dataset) {
-		Settings.logger.info(Resources.get("logReqRemoveDSFromMart"));
+		Log.info(Resources.get("logReqRemoveDSFromMart"));
 		mart.removeDataSet(dataset);
 	}
 
@@ -441,7 +441,7 @@ public class MartBuilderUtils {
 	 *            the expression column to remove.
 	 */
 	public static void removeExpressionColumn(final ExpressionColumn column) {
-		Settings.logger.info(Resources.get("logReqRemoveExprCol"));
+		Log.info(Resources.get("logReqRemoveExprCol"));
 		column.getTable().removeColumn(column);
 	}
 
@@ -454,7 +454,7 @@ public class MartBuilderUtils {
 	 *            the key to remove.
 	 */
 	public static void removeKey(final Mart mart, final Key key) {
-		Settings.logger.info(Resources.get("logReqRemoveKey"));
+		Log.info(Resources.get("logReqRemoveKey"));
 		key.destroy();
 		mart.synchroniseDataSets();
 	}
@@ -470,7 +470,7 @@ public class MartBuilderUtils {
 	 *            the relation to remove.
 	 */
 	public static void removeRelation(final Mart mart, final Relation relation) {
-		Settings.logger.info(Resources.get("logReqRemoveRelation"));
+		Log.info(Resources.get("logReqRemoveRelation"));
 		relation.destroy();
 		mart.synchroniseDataSets();
 	}
@@ -486,7 +486,7 @@ public class MartBuilderUtils {
 	 *            the schema to remove from the mart.
 	 */
 	public static void removeSchemaFromMart(final Mart mart, final Schema schema) {
-		Settings.logger.info(Resources.get("logReqRemoveSchemaFromMart"));
+		Log.info(Resources.get("logReqRemoveSchemaFromMart"));
 		mart.removeSchema(schema);
 	}
 
@@ -518,7 +518,7 @@ public class MartBuilderUtils {
 	public static void removeSchemaFromSchemaGroup(final Mart mart,
 			final Schema schema, final SchemaGroup schemaGroup)
 			throws AssociationException, DataModelException, SQLException {
-		Settings.logger.info(Resources.get("logReqRemoveSchemaFromGroup"));
+		Log.info(Resources.get("logReqRemoveSchemaFromGroup"));
 		schemaGroup.removeSchema(schema);
 		if (schemaGroup.getSchemas().size() == 0) {
 			schemaGroup.replicateContents(schema);
@@ -542,7 +542,7 @@ public class MartBuilderUtils {
 	 */
 	public static void renameDataSet(final Mart mart, final DataSet dataset,
 			final String newName) {
-		Settings.logger.info(Resources.get("logReqRenameDataset"));
+		Log.info(Resources.get("logReqRenameDataset"));
 		mart.renameDataSet(dataset, newName);
 	}
 
@@ -558,7 +558,7 @@ public class MartBuilderUtils {
 	 */
 	public static void renameDataSetColumn(final DataSetColumn col,
 			final String newName) {
-		Settings.logger.info(Resources.get("logReqRenameDSColumn"));
+		Log.info(Resources.get("logReqRenameDSColumn"));
 		col.setName(newName);
 	}
 
@@ -573,7 +573,7 @@ public class MartBuilderUtils {
 	 */
 	public static void renameDataSetTable(final DataSetTable tbl,
 			final String newName) {
-		Settings.logger.info(Resources.get("logReqRenameDSTable"));
+		Log.info(Resources.get("logReqRenameDSTable"));
 		tbl.setName(newName);
 	}
 
@@ -589,7 +589,7 @@ public class MartBuilderUtils {
 	 */
 	public static void renameSchema(final Mart mart, final Schema schema,
 			final String newName) {
-		Settings.logger.info(Resources.get("logReqRenameSchema"));
+		Log.info(Resources.get("logReqRenameSchema"));
 		mart.renameSchema(schema, newName);
 	}
 
@@ -608,7 +608,7 @@ public class MartBuilderUtils {
 	 */
 	public static void renameSchemaInSchemaGroup(final Schema schema,
 			final String newName) {
-		Settings.logger.info(Resources.get("logReqRenameSchemaInGroup"));
+		Log.info(Resources.get("logReqRenameSchemaInGroup"));
 		schema.setName(newName);
 	}
 
@@ -627,7 +627,7 @@ public class MartBuilderUtils {
 	 */
 	public static DataSet replicateDataSet(final Mart mart,
 			final DataSet dataset, final String newName) {
-		Settings.logger.info(Resources.get("logReqReplicateDataset"));
+		Log.info(Resources.get("logReqReplicateDataset"));
 		final DataSet newDataSet = (DataSet) dataset.replicate(newName);
 		return newDataSet;
 	}
@@ -649,7 +649,7 @@ public class MartBuilderUtils {
 	 */
 	public static Schema replicateSchema(final Mart mart, final Schema schema,
 			final String newName) {
-		Settings.logger.info(Resources.get("logReqReplicateSchema"));
+		Log.info(Resources.get("logReqReplicateSchema"));
 		final Schema newSchema = schema.replicate(newName);
 		mart.addSchema(newSchema);
 		return newSchema;
@@ -673,7 +673,7 @@ public class MartBuilderUtils {
 	public static void restrictTable(final DataSet dataset, final Table table,
 			final String expression, final Map aliases)
 			throws ValidationException {
-		Settings.logger.info(Resources.get("logReqRestrictTable"));
+		Log.info(Resources.get("logReqRestrictTable"));
 		final DataSetTableRestriction restriction = new DataSetTableRestriction(
 				expression, aliases);
 		dataset.flagRestrictedTable(table, restriction);
@@ -705,7 +705,7 @@ public class MartBuilderUtils {
 	 */
 	public static List selectRows(final Table table, final int offset,
 			final int count) throws SQLException {
-		Settings.logger.info(Resources.get("logReqSelectRows"));
+		Log.info(Resources.get("logReqSelectRows"));
 		final Schema schema = table.getSchema();
 		final List results = new ArrayList();
 		if (schema instanceof SchemaGroup)
@@ -745,7 +745,7 @@ public class MartBuilderUtils {
 	public static void subclassRelation(final DataSet dataset,
 			final Relation relation) throws ValidationException, SQLException,
 			DataModelException {
-		Settings.logger.info(Resources.get("logReqSubclassRel"));
+		Log.info(Resources.get("logReqSubclassRel"));
 		dataset.flagSubclassRelation(relation);
 		dataset.unflagConcatOnlyRelation(relation);
 		dataset.synchronise();
@@ -772,7 +772,7 @@ public class MartBuilderUtils {
 	public static Collection suggestDataSets(final Mart mart,
 			final Collection tables) throws SQLException, AssociationException,
 			DataModelException {
-		Settings.logger.info(Resources.get("logReqSuggestDatasets"));
+		Log.info(Resources.get("logReqSuggestDatasets"));
 		return mart.suggestDataSets(tables);
 	}
 
@@ -807,7 +807,7 @@ public class MartBuilderUtils {
 	public static Collection suggestInvisibleDataSets(final Mart mart,
 			final DataSet dataset, final Collection columns)
 			throws AssociationException, DataModelException, SQLException {
-		Settings.logger.info(Resources.get("logReqSuggestInvDatasets"));
+		Log.info(Resources.get("logReqSuggestInvDatasets"));
 		return mart.suggestInvisibleDataSets(dataset, columns);
 	}
 
@@ -819,7 +819,7 @@ public class MartBuilderUtils {
 	 *            the mart you wish to synchronise all the datasets in.
 	 */
 	public static void synchroniseMartDataSets(final Mart mart) {
-		Settings.logger.info(Resources.get("logReqSyncMartDS"));
+		Log.info(Resources.get("logReqSyncMartDS"));
 		mart.synchroniseDataSets();
 	}
 
@@ -838,7 +838,7 @@ public class MartBuilderUtils {
 	 */
 	public static void synchroniseMartSchemas(final Mart mart)
 			throws SQLException, DataModelException {
-		Settings.logger.info(Resources.get("logReqSyncMartSchema"));
+		Log.info(Resources.get("logReqSyncMartSchema"));
 		mart.synchroniseSchemas();
 	}
 
@@ -857,7 +857,7 @@ public class MartBuilderUtils {
 	 */
 	public static void unconcatOnlyRelation(final DataSet dataset,
 			final Relation relation) throws SQLException, DataModelException {
-		Settings.logger.info(Resources.get("logReqUnconcatRelation"));
+		Log.info(Resources.get("logReqUnconcatRelation"));
 		dataset.unflagConcatOnlyRelation(relation);
 		dataset.synchronise();
 	}
@@ -875,7 +875,7 @@ public class MartBuilderUtils {
 	 */
 	public static void unmaskColumn(final DataSet dataset,
 			final DataSetColumn column) throws ValidationException {
-		Settings.logger.info(Resources.get("logReqUnmaskColumn"));
+		Log.info(Resources.get("logReqUnmaskColumn"));
 		column.setMasked(false);
 	}
 
@@ -894,7 +894,7 @@ public class MartBuilderUtils {
 	 */
 	public static void unmaskTable(final DataSet dataset, final Table table)
 			throws SQLException, DataModelException {
-		Settings.logger.info(Resources.get("logReqUnmaskTable"));
+		Log.info(Resources.get("logReqUnmaskTable"));
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
 			dataset.unmaskRelation((Relation) i.next());
 		dataset.synchronise();
@@ -915,7 +915,7 @@ public class MartBuilderUtils {
 	 */
 	public static void unmaskRelation(final DataSet dataset,
 			final Relation relation) throws SQLException, DataModelException {
-		Settings.logger.info(Resources.get("logReqUnmaskRelation"));
+		Log.info(Resources.get("logReqUnmaskRelation"));
 		dataset.unmaskRelation(relation);
 		dataset.synchronise();
 	}
@@ -933,7 +933,7 @@ public class MartBuilderUtils {
 	 */
 	public static void unpartitionByColumn(final DataSet dataset,
 			final DataSetColumn column) throws ValidationException {
-		Settings.logger.info(Resources.get("logReqUnpartitionCol"));
+		Log.info(Resources.get("logReqUnpartitionCol"));
 		column.setPartitionType(null);
 	}
 
@@ -946,7 +946,7 @@ public class MartBuilderUtils {
 	 *            the table to unflag.
 	 */
 	public static void unrestrictTable(final DataSet dataset, final Table table) {
-		Settings.logger.info(Resources.get("logReqUnrestrictTable"));
+		Log.info(Resources.get("logReqUnrestrictTable"));
 		dataset.unflagRestrictedTable(table);
 	}
 
@@ -964,7 +964,7 @@ public class MartBuilderUtils {
 	 */
 	public static void unsubclassRelation(final DataSet dataset,
 			final Relation relation) throws SQLException, DataModelException {
-		Settings.logger.info(Resources.get("logReqUnsubclassRel"));
+		Log.info(Resources.get("logReqUnsubclassRel"));
 		dataset.unflagSubclassRelation(relation);
 		dataset.synchronise();
 	}
@@ -976,7 +976,7 @@ public class MartBuilderUtils {
 	 *            the dataset to disable invisibility in.
 	 */
 	public static void visibleDataSet(final DataSet dataset) {
-		Settings.logger.info(Resources.get("logReqVisibleDataset"));
+		Log.info(Resources.get("logReqVisibleDataset"));
 		dataset.setInvisible(false);
 	}
 

@@ -65,8 +65,8 @@ import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.model.Key.PrimaryKey;
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.Settings;
 
 /**
  * This interface defines the behaviour expected from an object which can take a
@@ -205,7 +205,7 @@ public interface MartConstructor {
 		public GenericConstructorRunnable(final String datasetSchemaName,
 				final Collection datasets, final Helper helper) {
 			super();
-			Settings.logger.debug("Created generic constructor runnable");
+			Log.debug("Created generic constructor runnable");
 			this.datasets = datasets;
 			this.helper = helper;
 			this.martConstructorListeners = new ArrayList();
@@ -1677,12 +1677,12 @@ public interface MartConstructor {
 
 		public void addMartConstructorListener(
 				final MartConstructorListener listener) {
-			Settings.logger.debug("Listener added to constructor runnable");
+			Log.debug("Listener added to constructor runnable");
 			this.martConstructorListeners.add(listener);
 		}
 
 		public void cancel() {
-			Settings.logger.debug("Constructor runnable cancelled");
+			Log.debug("Constructor runnable cancelled");
 			this.cancelled = true;
 		}
 
@@ -1699,7 +1699,7 @@ public interface MartConstructor {
 		}
 
 		public void run() {
-			Settings.logger.info(Resources.get("logConstructorStarted"));
+			Log.info(Resources.get("logConstructorStarted"));
 			try {
 				// Split the datasets into groups by mart.
 				final Map martDataSets = new HashMap();
@@ -1749,7 +1749,7 @@ public interface MartConstructor {
 				} catch (final Throwable t) {
 					this.failure = new ConstructorException(t);
 				} finally {
-					Settings.logger.info(Resources.get("logConstructorEnded"));
+					Log.info(Resources.get("logConstructorEnded"));
 				}
 			}
 		}

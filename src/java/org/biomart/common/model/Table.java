@@ -35,8 +35,8 @@ import java.util.TreeMap;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.model.Key.ForeignKey;
 import org.biomart.common.model.Key.PrimaryKey;
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.Settings;
 
 /**
  * The table interface provides the basic idea of what constitutes a database
@@ -253,7 +253,7 @@ public interface Table extends Comparable {
 		 *            the schema this table is associated with.
 		 */
 		public GenericTable(String name, final Schema schema) {
-			Settings.logger.debug("Creating table " + name + " in " + schema);
+			Log.debug("Creating table " + name + " in " + schema);
 			// Remember the values.
 			this.schema = schema;
 			name = this.makeUniqueName(name);
@@ -272,12 +272,12 @@ public interface Table extends Comparable {
 			for (int i = 1; schema.getTableByName(name) != null; name = baseName
 					+ "_" + i++)
 				;
-			Settings.logger.debug("Unique name is " + name);
+			Log.debug("Unique name is " + name);
 			return name;
 		}
 
 		public void addColumn(final Column column) {
-			Settings.logger.debug("Adding column " + column + " to "
+			Log.debug("Adding column " + column + " to "
 					+ this.getName());
 			// Add it.
 			this.columns.put(column.getName(), column);
@@ -285,7 +285,7 @@ public interface Table extends Comparable {
 
 		public void addForeignKey(final ForeignKey foreignKey)
 				throws AssociationException {
-			Settings.logger.debug("Adding foreign key " + foreignKey + " to "
+			Log.debug("Adding foreign key " + foreignKey + " to "
 					+ this.getName());
 			// Check that the key lives in this table first.
 			if (this.foreignKeys.contains(foreignKey))
@@ -297,7 +297,7 @@ public interface Table extends Comparable {
 
 		public void changeColumnMapKey(final String oldName,
 				final String newName) {
-			Settings.logger.debug("Remapping column " + oldName + " as "
+			Log.debug("Remapping column " + oldName + " as "
 					+ newName + " in table " + this.getName());
 			// If the names are the same, do nothing.
 			if (oldName.equals(newName))
@@ -314,7 +314,7 @@ public interface Table extends Comparable {
 		}
 
 		public void destroy() {
-			Settings.logger.debug("Dropping table " + this.getName());
+			Log.debug("Dropping table " + this.getName());
 			// Remove each column we have. This will recursively cause
 			// keys etc. to be removed.
 			// Must use a copy else we'll get concurrent modification problems.
@@ -413,7 +413,7 @@ public interface Table extends Comparable {
 		}
 
 		public void removeColumn(final Column column) {
-			Settings.logger.debug("Removing column " + column + " from "
+			Log.debug("Removing column " + column + " from "
 					+ this.getName());
 			// Remove all keys involving this column
 			for (final Iterator i = this.getKeys().iterator(); i.hasNext();) {
@@ -429,13 +429,13 @@ public interface Table extends Comparable {
 		}
 
 		public void removeForeignKey(final ForeignKey foreignKey) {
-			Settings.logger.debug("Removing foreign key " + foreignKey
+			Log.debug("Removing foreign key " + foreignKey
 					+ " from " + this.getName());
 			this.foreignKeys.remove(foreignKey);
 		}
 
 		public void setName(String newName) {
-			Settings.logger.debug("Renaming " + this.getName() + " to "
+			Log.debug("Renaming " + this.getName() + " to "
 					+ newName);
 			// Make the name unique.
 			newName = this.makeUniqueName(newName);
@@ -449,7 +449,7 @@ public interface Table extends Comparable {
 		}
 
 		public void setPrimaryKey(final PrimaryKey primaryKey) {
-			Settings.logger.debug("Setting primary key on " + this.getName()
+			Log.debug("Setting primary key on " + this.getName()
 					+ " to " + primaryKey);
 			// If the key is the same, do nothing.
 			if (primaryKey != null && this.primaryKey != null

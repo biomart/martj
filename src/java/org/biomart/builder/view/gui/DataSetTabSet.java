@@ -65,8 +65,8 @@ import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Table;
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.StackTrace;
 
@@ -106,7 +106,7 @@ public class DataSetTabSet extends JTabbedPane {
 	public DataSetTabSet(final MartTab martTab) {
 		super();
 
-		Settings.logger.info(Resources.get("logCreateDatasetTabs"));
+		Log.info(Resources.get("logCreateDatasetTabs"));
 
 		// Remember the settings.
 		this.martTab = martTab;
@@ -127,7 +127,7 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	private void addDataSetTab(final DataSet dataset) {
-		Settings.logger.info(Resources.get("logAddDatasetTab", "" + dataset));
+		Log.info(Resources.get("logAddDatasetTab", "" + dataset));
 		// Create the diagram to represent this dataset.
 		final DataSetDiagram datasetDiagram = new DataSetDiagram(this.martTab,
 				dataset);
@@ -210,7 +210,7 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	private void removeDataSetTab(final DataSet dataset) {
-		Settings.logger
+		Log
 				.info(Resources.get("logRemoveDatasetTab", "" + dataset));
 		// Work out the currently selected tab.
 		final int currentTab = this.getSelectedIndex();
@@ -356,7 +356,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * are in the mart but not yet displayed.
 	 */
 	public void recalculateDataSetTabs() {
-		Settings.logger.info(Resources.get("logRecalcDatasetTabs"));
+		Log.info(Resources.get("logRecalcDatasetTabs"));
 		// Synchronise the datasets first.
 		try {
 			MartBuilderUtils.synchroniseMartDataSets(this.martTab.getMart());

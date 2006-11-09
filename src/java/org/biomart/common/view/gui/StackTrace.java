@@ -27,8 +27,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.Settings;
 
 /**
  * Displays pretty GUI things on demand.
@@ -48,9 +48,9 @@ public class StackTrace {
 	public static void showStackTrace(final Throwable t) {
 		// Log the error.
 		if (t instanceof Error) 
-			Settings.logger.error(Resources.get("stackTraceTitle"), t);
+			Log.error(Resources.get("stackTraceTitle"), t);
 		else 
-			Settings.logger.warn(Resources.get("stackTraceTitle"), t);
+			Log.warn(Resources.get("stackTraceTitle"), t);
 		
 		// Create the main message.
 		final int messageClass = t instanceof Error ? JOptionPane.ERROR_MESSAGE

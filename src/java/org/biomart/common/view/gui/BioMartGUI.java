@@ -26,6 +26,7 @@ import javax.swing.JFrame;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 
@@ -63,7 +64,7 @@ public abstract class BioMartGUI extends JFrame {
 
 		// Set the look and feel to the one specified by the user, or the system
 		// default if not specified by the user. This may be null.
-		Settings.logger.info(Resources.get("loadingLookAndFeel"));
+		Log.info(Resources.get("loadingLookAndFeel"));
 		String lookAndFeelClass = Settings.getProperty("lookandfeel");
 		try {
 			UIManager.setLookAndFeel(lookAndFeelClass);
@@ -72,7 +73,7 @@ public abstract class BioMartGUI extends JFrame {
 			// work.
 			if (lookAndFeelClass != null)
 				// only worry if we were actually given one.
-				Settings.logger.warn(Resources.get("badLookAndFeel",
+				Log.warn(Resources.get("badLookAndFeel",
 						lookAndFeelClass), e);
 			// Use system default.
 			lookAndFeelClass = UIManager.getSystemLookAndFeelClassName();
@@ -81,25 +82,25 @@ public abstract class BioMartGUI extends JFrame {
 			} catch (final Exception e2) {
 				// Ignore, as we'll end up with the cross-platform one if there
 				// is no system one.
-				Settings.logger.warn(Resources.get("badLookAndFeel",
+				Log.warn(Resources.get("badLookAndFeel",
 						lookAndFeelClass), e2);
 			}
 		}
 
 		// Set up window listener and use it to handle windows closing.
-		Settings.logger.info(Resources.get("createMainGUI"));
+		Log.info(Resources.get("createMainGUI"));
 		final BioMartGUI mb = this;
 		this.addWindowListener(new WindowAdapter() {
 			public void windowClosing(final WindowEvent e) {
 				if (e.getWindow() == mb)
-					Settings.logger.debug("Main window closing");
+					Log.debug("Main window closing");
 				BioMartGUI.this.requestExitApp();
 			}
 		});
 		this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
 		// Set up our GUI components.
-		Settings.logger.debug("Initialising main window components");
+		Log.debug("Initialising main window components");
 		this.initComponents();
 
 		// Pack the window.
@@ -114,7 +115,7 @@ public abstract class BioMartGUI extends JFrame {
 	 */
 	protected void launch() {
 		// Start the application.
-		Settings.logger.info(Resources.get("launchingGUI"));
+		Log.info(Resources.get("launchingGUI"));
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				// Centre it.
@@ -135,12 +136,12 @@ public abstract class BioMartGUI extends JFrame {
 	 * the user first if necessary.
 	 */
 	public void requestExitApp() {
-		Settings.logger.info(Resources.get("logRequestNormalExit"));
+		Log.info(Resources.get("logRequestNormalExit"));
 		if (this.confirmExitApp()) {
-			Settings.logger.info(Resources.get("logRequestNormalExitGranted"));
+			Log.info(Resources.get("logRequestNormalExitGranted"));
 			System.exit(0);
 		} else {
-			Settings.logger.info(Resources.get("logRequestNormalExitDenied"));
+			Log.info(Resources.get("logRequestNormalExitDenied"));
 		}
 	}
 

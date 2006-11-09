@@ -41,8 +41,8 @@ import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.Settings;
 
 /**
  * The mart contains the set of all schemas that are providing data to this
@@ -67,7 +67,7 @@ public class Mart {
 	 * been created.
 	 */
 	public Mart() {
-		Settings.logger.info(Resources.get("logNewMart"));
+		Log.info(Resources.get("logNewMart"));
 	}
 
 	/**
@@ -214,7 +214,7 @@ public class Mart {
 	 *            the dataset to add.
 	 */
 	public void addDataSet(final DataSet dataset) {
-		Settings.logger.debug("Adding dataset " + dataset);
+		Log.debug("Adding dataset " + dataset);
 		String name = dataset.getName();
 		final String baseName = dataset.getName();
 		// Check we don't have one by this name already. Alias if we do.
@@ -222,7 +222,7 @@ public class Mart {
 				+ i++)
 			;
 		dataset.setName(name);
-		Settings.logger.debug("Unique name is " + name);
+		Log.debug("Unique name is " + name);
 		// Add it.
 		this.datasets.put(dataset.getName(), dataset);
 	}
@@ -235,7 +235,7 @@ public class Mart {
 	 *            the schema to add.
 	 */
 	public void addSchema(final Schema schema) {
-		Settings.logger.debug("Adding schema " + schema);
+		Log.debug("Adding schema " + schema);
 		String name = schema.getName();
 		final String baseName = schema.getName();
 		// Check we don't have one by this name already. Alias if we do.
@@ -243,7 +243,7 @@ public class Mart {
 				+ i++)
 			;
 		schema.setName(name);
-		Settings.logger.debug("Unique name is " + name);
+		Log.debug("Unique name is " + name);
 		// Add it.
 		this.schemas.put(name, schema);
 	}
@@ -298,7 +298,7 @@ public class Mart {
 	 *            the dataset to remove.
 	 */
 	public void removeDataSet(final DataSet dataset) {
-		Settings.logger.debug("Removing dataset " + dataset);
+		Log.debug("Removing dataset " + dataset);
 		this.datasets.remove(dataset.getName());
 	}
 
@@ -311,7 +311,7 @@ public class Mart {
 	 *            the schema to remove.
 	 */
 	public void removeSchema(final Schema schema) {
-		Settings.logger.debug("Removing schema " + schema);
+		Log.debug("Removing schema " + schema);
 		final List datasets = new ArrayList(this.getDataSets());
 		for (final Iterator i = datasets.iterator(); i.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
@@ -334,13 +334,13 @@ public class Mart {
 	 *            the new name for it.
 	 */
 	public void renameDataSet(final DataSet dataset, String name) {
-		Settings.logger.debug("Renaming dataset " + dataset + " as " + name);
+		Log.debug("Renaming dataset " + dataset + " as " + name);
 		final String baseName = name;
 		// Check we don't have one by this name already. Alias if we do.
 		for (int i = 1; this.datasets.containsKey(name)
 				&& !name.equals(dataset.getName()); name = baseName + "_" + i++)
 			;
-		Settings.logger.debug("Unique name is " + name);
+		Log.debug("Unique name is " + name);
 		// Rename it.
 		this.datasets.remove(dataset.getName());
 		dataset.setName(name);
@@ -357,13 +357,13 @@ public class Mart {
 	 *            the new name for it.
 	 */
 	public void renameSchema(final Schema schema, String name) {
-		Settings.logger.debug("Renaming schema " + schema + " as " + name);
+		Log.debug("Renaming schema " + schema + " as " + name);
 		final String baseName = name;
 		// Check we don't have one by this name already. Alias if we do.
 		for (int i = 1; this.schemas.containsKey(name)
 				&& !name.equals(schema.getName()); name = baseName + "_" + i++)
 			;
-		Settings.logger.debug("Unique name is " + name);
+		Log.debug("Unique name is " + name);
 		// Rename it.
 		this.schemas.remove(schema.getName());
 		schema.setName(name);
@@ -400,13 +400,13 @@ public class Mart {
 	 */
 	public Collection suggestDataSets(final Collection includeTables)
 			throws SQLException, DataModelException {
-		Settings.logger.debug("Suggesting datasets for " + includeTables);
+		Log.debug("Suggesting datasets for " + includeTables);
 		// The root tables are all those which do not have a M:1 relation
 		// to another one of the initial set of tables. This means that
 		// extra datasets will be created for each table at the end of
 		// 1:M:1 relation, so that any further tables past it will still
 		// be included.
-		Settings.logger.debug("Finding root tables");
+		Log.debug("Finding root tables");
 		final List rootTables = new ArrayList(includeTables);
 		for (final Iterator i = includeTables.iterator(); i.hasNext();) {
 			final Table candidate = (Table) i.next();
@@ -427,27 +427,27 @@ public class Mart {
 		final Set suggestedDataSets = new TreeSet();
 		for (final Iterator i = rootTables.iterator(); i.hasNext();) {
 			final Table rootTable = (Table) i.next();
-			Settings.logger.debug("Constructing dataset for root table "
+			Log.debug("Constructing dataset for root table "
 					+ rootTable);
 			final DataSet dataset = new DataSet(this, rootTable, rootTable
 					.getName());
 			// Process it.
 			final List tablesIncluded = new ArrayList();
 			tablesIncluded.add(rootTable);
-			Settings.logger.debug("Attempting to find subclass datasets");
+			Log.debug("Attempting to find subclass datasets");
 			suggestedDataSets.addAll(this.continueSubclassing(includeTables,
 					tablesIncluded, dataset, rootTable));
 		}
 
 		// Synchronise them all.
-		Settings.logger.debug("Synchronising constructed datasets");
+		Log.debug("Synchronising constructed datasets");
 		for (final Iterator i = suggestedDataSets.iterator(); i.hasNext();)
 			((DataSet) i.next()).synchronise();
 
 		// Do any of the resulting datasets contain all the tables
 		// exactly with subclass relations between each?
 		// If so, just use that one dataset and forget the rest.
-		Settings.logger.debug("Finding perfect candidate");
+		Log.debug("Finding perfect candidate");
 		DataSet perfectDS = null;
 		for (final Iterator i = suggestedDataSets.iterator(); i.hasNext()
 				&& perfectDS == null;) {
@@ -468,7 +468,7 @@ public class Mart {
 				perfectDS = candidate;
 		}
 		if (perfectDS != null) {
-			Settings.logger.debug("Perfect candidate found - dropping others");
+			Log.debug("Perfect candidate found - dropping others");
 			// Drop the others.
 			for (final Iterator i = suggestedDataSets.iterator(); i.hasNext();) {
 				final DataSet candidate = (DataSet) i.next();
@@ -482,7 +482,7 @@ public class Mart {
 					.renameDataSet(perfectDS, perfectDS.getCentralTable()
 							.getName());
 		} else {
-			Settings.logger.debug("No perfect candidate found - retaining all");
+			Log.debug("No perfect candidate found - retaining all");
 		}
 
 		// Return the final set of suggested datasets.
@@ -521,13 +521,13 @@ public class Mart {
 	 */
 	public Collection suggestInvisibleDataSets(final DataSet dataset,
 			final Collection columns) throws SQLException, DataModelException {
-		Settings.logger.debug("Suggesting invisible datasets for " + dataset
+		Log.debug("Suggesting invisible datasets for " + dataset
 				+ " columns " + columns);
 		final List invisibleDataSets = new ArrayList();
 		final Table sourceTable = ((Column) columns.iterator().next())
 				.getTable();
 		// Find all tables which mention the columns specified.
-		Settings.logger.debug("Finding candidate tables");
+		Log.debug("Finding candidate tables");
 		final List candidates = new ArrayList();
 		for (final Iterator i = this.schemas.values().iterator(); i.hasNext();)
 			for (final Iterator j = ((Schema) i.next()).getTables().iterator(); j
@@ -546,19 +546,19 @@ public class Mart {
 			}
 		// Remove from the found tables all those which are already
 		// used, and the one from which the original columns came.
-		Settings.logger
+		Log
 				.debug("Removing candidates that are already in other datasets");
 		candidates.remove(sourceTable);
 		for (final Iterator i = dataset.getTables().iterator(); i.hasNext();)
 			candidates.remove(((DataSetTable) i.next()).getUnderlyingTable());
 		// Generate the dataset for each.
-		Settings.logger.debug("Creating datasets for remaining candidates");
+		Log.debug("Creating datasets for remaining candidates");
 		for (final Iterator i = candidates.iterator(); i.hasNext();) {
 			final Table table = (Table) i.next();
 			invisibleDataSets.add(new DataSet(this, table, table.getName()));
 		}
 		// Synchronise them all and make them all invisible.
-		Settings.logger.debug("Synchronising suggested datasets");
+		Log.debug("Synchronising suggested datasets");
 		for (final Iterator i = invisibleDataSets.iterator(); i.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
 			ds.setInvisible(true);
@@ -575,7 +575,7 @@ public class Mart {
 	 * does no real work itself.
 	 */
 	public void synchroniseDataSets() {
-		Settings.logger.debug("Synchronising all datasets");
+		Log.debug("Synchronising all datasets");
 		for (final Iterator i = this.datasets.values().iterator(); i.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
 
@@ -604,7 +604,7 @@ public class Mart {
 	 *             if there was any other kind of problem.
 	 */
 	public void synchroniseSchemas() throws SQLException, DataModelException {
-		Settings.logger.debug("Synchronising all schemas");
+		Log.debug("Synchronising all schemas");
 		// Schemas first
 		for (final Iterator i = this.schemas.values().iterator(); i.hasNext();) {
 			final Schema s = (Schema) i.next();

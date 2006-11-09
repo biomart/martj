@@ -49,8 +49,8 @@ import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.view.gui.diagrams.contexts.SchemaContext;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.StackTrace;
 
@@ -87,7 +87,7 @@ public class MartTabSet extends JTabbedPane {
 		// Tabbed-pane stuff first.
 		super();
 		
-		Settings.logger.info(Resources.get("logCreateMartTabs"));
+		Log.info(Resources.get("logCreateMartTabs"));
 
 		// Create the file chooser for opening MartBuilder XML files.
 		this.xmlFileChooser = new JFileChooser() {
@@ -144,7 +144,7 @@ public class MartTabSet extends JTabbedPane {
 		this.martModifiedStatus.put(mart, Boolean.valueOf(initialState));
 		final MartTab martTab = new MartTab(this, mart);
 		final String martTabName = this.suggestTabName(mart);
-		Settings.logger.info(Resources.get("logAddMartTab",martTabName));
+		Log.info(Resources.get("logAddMartTab",martTabName));
 		this.addTab(martTabName, martTab);
 
 		// Select the tab we just created.

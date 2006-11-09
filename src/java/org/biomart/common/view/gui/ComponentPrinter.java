@@ -29,8 +29,8 @@ import java.awt.print.PrinterJob;
 
 import javax.swing.RepaintManager;
 
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.Settings;
 
 /**
  * Prints any given component.
@@ -70,12 +70,12 @@ public class ComponentPrinter implements Printable {
 			LongProcess.run(new Runnable() {
 				public void run() {
 					try {
-						Settings.logger.info(Resources.get("printingImage"));
+						Log.info(Resources.get("printingImage"));
 						printJob.print();
 					} catch (final PrinterException pe) {
 						StackTrace.showStackTrace(pe);
 					} finally {
-						Settings.logger
+						Log
 								.info(Resources.get("donePrintingImage"));
 					}
 				}
@@ -84,7 +84,7 @@ public class ComponentPrinter implements Printable {
 
 	public int print(final Graphics g, final PageFormat pageFormat,
 			final int pageIndex) {
-		Settings.logger.debug("Printing page " + pageIndex);
+		Log.debug("Printing page " + pageIndex);
 		// Work out the printable area.
 		final Rectangle2D printableArea = new Rectangle2D.Double(pageFormat
 				.getImageableX(), pageFormat.getImageableY(), pageFormat
@@ -100,7 +100,7 @@ public class ComponentPrinter implements Printable {
 		final int numPages = pagesAcross * pagesDown;
 		// If we are beyond the last page, we are done.
 		if (pageIndex >= numPages) {
-			Settings.logger.debug("No such page - last page already printed.");
+			Log.debug("No such page - last page already printed.");
 			return Printable.NO_SUCH_PAGE;
 		} else {
 			// Print the components.
@@ -128,7 +128,7 @@ public class ComponentPrinter implements Printable {
 			currentManager.setDoubleBufferingEnabled(false);
 			this.component.printAll(g2d);
 			currentManager.setDoubleBufferingEnabled(doubleBufferingEnabled);
-			Settings.logger.debug("Page printed");
+			Log.debug("Page printed");
 			return Printable.PAGE_EXISTS;
 		}
 	}

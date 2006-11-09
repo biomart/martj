@@ -65,9 +65,9 @@ public class Resources {
 	public static void setResourceLocation(String location) {
 		Resources.location = location;
 		final String resourcesFileName = location + "/messages";
-		Settings.logger.info(Resources.get("loadingResources",resourcesFileName));
+		Log.info(Resources.get("loadingResources",resourcesFileName));
 		Resources.bundle = ResourceBundle.getBundle(resourcesFileName);
-		Settings.logger.info(Resources.get("doneLoadingResources"));
+		Log.info(Resources.get("doneLoadingResources"));
 	}
 
 	private static String getValue(final String key) {

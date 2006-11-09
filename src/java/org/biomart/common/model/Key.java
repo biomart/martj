@@ -26,8 +26,8 @@ import java.util.List;
 
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.Settings;
 
 /**
  * The key interface is core to the way tables get associated. They are involved
@@ -205,7 +205,7 @@ public interface Key extends Comparable {
 		 *            the set of columns to form the key over.
 		 */
 		public GenericKey(final List columns) {
-			Settings.logger.debug("Creating key over " + columns);
+			Log.debug("Creating key over " + columns);
 			this.status = ComponentStatus.INFERRED;
 			this.setColumns(columns);
 		}
@@ -225,7 +225,7 @@ public interface Key extends Comparable {
 		}
 
 		public void destroy() {
-			Settings.logger.debug("Dropping key " + this.getName());
+			Log.debug("Dropping key " + this.getName());
 			// Destroy all the relations. Work from a copy to prevent
 			// concurrent modification exceptions.
 			final List relationsCopy = new ArrayList(this.relations);
@@ -304,7 +304,7 @@ public interface Key extends Comparable {
 		}
 
 		public void setColumns(final List columns) {
-			Settings.logger.debug("Changing columns on " + this.getName()
+			Log.debug("Changing columns on " + this.getName()
 					+ " to " + columns);
 			// Remove all existing columns.
 			this.columns.clear();
@@ -346,7 +346,7 @@ public interface Key extends Comparable {
 		}
 
 		public void setStatus(final ComponentStatus status) {
-			Settings.logger.debug("Changing status on " + this.getName()
+			Log.debug("Changing status on " + this.getName()
 					+ " to " + status);
 			this.status = status;
 

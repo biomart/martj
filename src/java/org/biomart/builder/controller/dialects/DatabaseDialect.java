@@ -32,8 +32,8 @@ import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.Settings;
 
 /**
  * This class provides methods which generate atomic DDL or SQL statements. It
@@ -66,7 +66,7 @@ public abstract class DatabaseDialect {
 	 * subclass has been created and registered.
 	 */
 	protected DatabaseDialect() {
-		Settings.logger.info(Resources.get("logRegisterDialect", this
+		Log.info(Resources.get("logRegisterDialect", this
 				.getClass().getName()));
 	}
 
@@ -83,16 +83,16 @@ public abstract class DatabaseDialect {
 	 *         found.
 	 */
 	public static DatabaseDialect getDialect(final DataLink dataLink) {
-		Settings.logger.info(Resources.get("logGetDialect",""+dataLink));
+		Log.info(Resources.get("logGetDialect",""+dataLink));
 		for (final Iterator i = DatabaseDialect.dialects.iterator(); i
 				.hasNext();) {
 			final DatabaseDialect d = (DatabaseDialect) i.next();
 			if (d.understandsDataLink(dataLink)) {
-				Settings.logger.info(Resources.get("logGotDialect", d.getClass().getName()));
+				Log.info(Resources.get("logGotDialect", d.getClass().getName()));
 				return d;
 			}
 		}
-		Settings.logger.info(Resources.get("logGotNoDialect"));
+		Log.info(Resources.get("logGotNoDialect"));
 		return null;
 	}
 

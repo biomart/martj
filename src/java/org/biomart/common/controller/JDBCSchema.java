@@ -56,6 +56,7 @@ import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.model.Relation.GenericRelation;
 import org.biomart.common.model.Schema.GenericSchema;
 import org.biomart.common.model.Table.GenericTable;
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 
@@ -139,7 +140,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		// set up keyguessing.
 		super(name, keyGuessing);
 
-		Settings.logger.debug("Creating JDBC schema");
+		Log.debug("Creating JDBC schema");
 
 		// Sensible defaults.
 		if (driverClassLocation != null && !driverClassLocation.exists())
@@ -196,10 +197,10 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	private void synchroniseKeysUsingDMD(final Collection fksToBeDropped,
 			final DatabaseMetaData dmd, final String schema,
 			final String catalog) throws SQLException, DataModelException {
-		Settings.logger.debug("Running DMD key synchronisation");
+		Log.debug("Running DMD key synchronisation");
 		// Loop through all the tables in the database, which is the same
 		// as looping through all the primary keys.
-		Settings.logger.debug("Finding tables");
+		Log.debug("Finding tables");
 		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
 			// Obtain the table and its primary key.
 			final Table pkTable = (Table) i.next();
@@ -208,7 +209,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			if (pk == null)
 				continue;
 
-			Settings.logger.debug("Processing primary key " + pk);
+			Log.debug("Processing primary key " + pk);
 
 			// Make a list of relations that already exist in this schema, from
 			// some previous run. Any relations that are left in this list by
@@ -218,7 +219,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 			// Identify all foreign keys in the database metadata that refer
 			// to the current primary key.
-			Settings.logger.debug("Finding referring foreign keys");
+			Log.debug("Finding referring foreign keys");
 			final ResultSet dbTblFKCols = dmd.getExportedKeys(catalog, schema,
 					pkTable.getName());
 
@@ -452,10 +453,10 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	 */
 	private void synchroniseKeysUsingKeyGuessing(final Collection fksToBeDropped)
 			throws SQLException, DataModelException {
-		Settings.logger.debug("Running non-DMD key synchronisation");
+		Log.debug("Running non-DMD key synchronisation");
 		// Loop through all the tables in the database, which is the same
 		// as looping through all the primary keys.
-		Settings.logger.debug("Finding tables");
+		Log.debug("Finding tables");
 		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
 			// Obtain the table and its primary key.
 			final Table pkTable = (Table) i.next();
@@ -464,7 +465,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			if (pk == null)
 				continue;
 
-			Settings.logger.debug("Processing primary key " + pk);
+			Log.debug("Processing primary key " + pk);
 
 			// If an FK exists on the PK table with the same columns as the PK,
 			// then we cannot use this PK to make relations to other tables.
@@ -510,7 +511,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// sets of columns with identical names, or with '_key' appended.
 			// Any set that we find is going to be an FK with a relation back to
 			// this PK.
-			Settings.logger
+			Log
 					.debug("Searching for possible referring foreign keys");
 			for (final Iterator l = this.getTables().iterator(); l.hasNext();) {
 				// Obtain the next table to look at.
@@ -722,7 +723,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	 * username.
 	 */
 	public boolean canCohabit(final DataLink partner) {
-		Settings.logger.debug("Testing " + partner + " against " + this
+		Log.debug("Testing " + partner + " against " + this
 				+ " for cohabitation");
 		// We can't cohabit with non-JDBCDataLink partners.
 		if (!(partner instanceof JDBCDataLink))
@@ -751,7 +752,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		// still connected. If not, reset our connection.
 		if (this.connection != null && this.connection.isClosed())
 			try {
-				Settings.logger.debug("Closing dead JDBC connection");
+				Log.debug("Closing dead JDBC connection");
 				this.connection.close();
 			} catch (SQLException e) {
 				// We don't care. Ignore it.
@@ -761,7 +762,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 		// If we are not connected, we should attempt to (re)connect now.
 		if (this.connection == null) {
-			Settings.logger.debug("Establishing JDBC connection");
+			Log.debug("Establishing JDBC connection");
 			// Start out with no driver at all.
 			Class loadedDriverClass = null;
 
@@ -830,7 +831,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	}
 
 	private void closeConnection() throws SQLException {
-		Settings.logger.debug("Closing JDBC connection");
+		Log.debug("Closing JDBC connection");
 		if (this.connection != null)
 			try {
 				this.connection.close();
@@ -864,7 +865,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	}
 
 	public Schema replicate(final String newName) {
-		Settings.logger.debug("Replicating JDBC schema " + this + " as "
+		Log.debug("Replicating JDBC schema " + this + " as "
 				+ newName);
 		// Make an empty copy.
 		final Schema newSchema = new JDBCSchema(this.driverClassLocation,
@@ -954,11 +955,11 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	}
 
 	public void synchronise() throws SQLException, DataModelException {
-		Settings.logger.info(Resources.get("logSyncJDBCSchema", "" + this));
+		Log.info(Resources.get("logSyncJDBCSchema", "" + this));
 		// Get database metadata, catalog, and schema details.
-		Settings.logger.debug("Loading connection metadata");
+		Log.debug("Loading connection metadata");
 		final DatabaseMetaData dmd = this.getConnection().getMetaData();
-		Settings.logger.debug("Loading database catalog");
+		Log.debug("Loading database catalog");
 		final String catalog = this.getConnection().getCatalog();
 
 		// Create a list of existing tables. During this method, we remove from
@@ -968,7 +969,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		final List tablesToBeDropped = new ArrayList(this.getTables());
 
 		// Load tables and views from database, then loop over them.
-		Settings.logger.debug("Loading database table list");
+		Log.debug("Loading database table list");
 		final ResultSet dbTables = dmd.getTables(catalog, this.schemaName, "%",
 				new String[] { "TABLE", "VIEW", "ALIAS", "SYNONYM" });
 
@@ -976,7 +977,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		while (dbTables.next()) {
 			// What is the table called?
 			final String dbTableName = dbTables.getString("TABLE_NAME");
-			Settings.logger.debug("Processing table " + dbTableName);
+			Log.debug("Processing table " + dbTableName);
 
 			// Look to see if we already have a table by this name defined. If
 			// we do, reuse it. If not, create a new table.
@@ -997,7 +998,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			final List colsToBeDropped = new ArrayList(dbTable.getColumns());
 
 			// Load the table columns from the database, then loop over them.
-			Settings.logger.debug("Loading table column list");
+			Log.debug("Loading table column list");
 			final ResultSet dbTblCols = dmd.getColumns(catalog,
 					this.schemaName, dbTableName, "%");
 			// FIXME: When using Oracle, if the table is a synonym then the
@@ -1005,7 +1006,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			while (dbTblCols.next()) {
 				// What is the column called, and is it nullable?
 				final String dbTblColName = dbTblCols.getString("COLUMN_NAME");
-				Settings.logger.debug("Processing column " + dbTblColName);
+				Log.debug("Processing column " + dbTblColName);
 
 				// Look to see if the column already exists on this table. If it
 				// does, reuse it. Else, create it.
@@ -1027,14 +1028,14 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// exist in the database.
 			for (final Iterator i = colsToBeDropped.iterator(); i.hasNext();) {
 				final Column column = (Column) i.next();
-				Settings.logger.debug("Dropping redundant column " + column);
+				Log.debug("Dropping redundant column " + column);
 				dbTable.removeColumn(column);
 			}
 
 			// Obtain the primary key from the database. Even in databases
 			// without referential integrity, the primary key is still defined
 			// and can be obtained from the metadata.
-			Settings.logger.debug("Loading table primary keys");
+			Log.debug("Loading table primary keys");
 			final ResultSet dbTblPKCols = dmd.getPrimaryKeys(catalog,
 					this.schemaName, dbTableName);
 
@@ -1060,7 +1061,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// column with the same name as the table or with '_id' appended.
 			// Only do this if we are using key-guessing.
 			if (pkCols.isEmpty() && this.getKeyGuessing()) {
-				Settings.logger
+				Log
 						.debug("Found no primary key, so attempting to guess one");
 				// Plain version first.
 				Column candidateCol = dbTable.getColumnByName(dbTableName);
@@ -1125,7 +1126,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		// list we constructed above.
 		for (final Iterator i = tablesToBeDropped.iterator(); i.hasNext();) {
 			final Table existingTable = (Table) i.next();
-			Settings.logger.debug("Dropping redundant table " + existingTable);
+			Log.debug("Dropping redundant table " + existingTable);
 			final String tableName = existingTable.getName();
 			existingTable.destroy();
 			this.removeTableByName(tableName);
@@ -1133,14 +1134,14 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 		// Sync the keys.
 		this.synchroniseKeys();
-		Settings.logger.info(Resources.get("logDoneSyncJDBCSchema"));
+		Log.info(Resources.get("logDoneSyncJDBCSchema"));
 	}
 
 	public void synchroniseKeys() throws SQLException, DataModelException {
-		Settings.logger.debug("Synchronising JDBC schema keys");
-		Settings.logger.debug("Loading connection metadata");
+		Log.debug("Synchronising JDBC schema keys");
+		Log.debug("Loading connection metadata");
 		final DatabaseMetaData dmd = this.getConnection().getMetaData();
-		Settings.logger.debug("Loading database catalog");
+		Log.debug("Loading database catalog");
 		final String catalog = this.getConnection().getCatalog();
 		final String schema = this.schemaName;
 
@@ -1169,10 +1170,10 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			final Key k = (Key) i.next();
 			if (k.getStatus().equals(ComponentStatus.HANDMADE))
 				continue;
-			Settings.logger.debug("Dropping redundant foreign key " + k);
+			Log.debug("Dropping redundant foreign key " + k);
 			k.destroy();
 		}
-		Settings.logger.debug("Done synchronising JDBC schema keys");
+		Log.debug("Done synchronising JDBC schema keys");
 	}
 
 	public void storeInHistory() {
@@ -1192,7 +1193,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	}
 
 	public boolean test() throws Exception {
-		Settings.logger.info(Resources.get("logTestJDBCSchema", "" + this));
+		Log.info(Resources.get("logTestJDBCSchema", "" + this));
 		// Establish the JDBC connection. May throw an exception of its own,
 		// which is fine, just let it go.
 		final Connection connection = this.getConnection();
@@ -1201,21 +1202,21 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			return false;
 
 		// Get the metadata.
-		Settings.logger.debug("Loading connection metadata");
+		Log.debug("Loading connection metadata");
 		final DatabaseMetaData dmd = connection.getMetaData();
 
 		// By opening, executing, then closing a DMD query we will test
 		// the connection fully without actually having to read anything from
 		// it.
-		Settings.logger.debug("Loading database catalog");
+		Log.debug("Loading database catalog");
 		final String catalog = connection.getCatalog();
-		Settings.logger.debug("Loading list of database tables");
+		Log.debug("Loading list of database tables");
 		final ResultSet rs = dmd.getTables(catalog, this.schemaName, "%", null);
 		final boolean worked = rs.isBeforeFirst();
 		rs.close();
 
 		// If we get here, it worked.
-		Settings.logger.info(Resources.get("logDoneTestJDBCSchema"));
+		Log.info(Resources.get("logDoneTestJDBCSchema"));
 		return worked;
 	}
 }

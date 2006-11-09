@@ -30,8 +30,8 @@ import javax.swing.JFileChooser;
 import javax.swing.RepaintManager;
 import javax.swing.filechooser.FileFilter;
 
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.resources.Settings;
 
 /**
  * Saves any given component to an image file.
@@ -63,7 +63,7 @@ public class ComponentImageSaver {
 				.getDefaultConfiguration().createCompatibleImage(
 						this.component.getWidth(), this.component.getHeight());
 		// Render the component onto the image.
-		Settings.logger.debug("Rendering graphics for saved image");
+		Log.debug("Rendering graphics for saved image");
 		final Graphics2D g2d = image.createGraphics();
 		final RepaintManager currentManager = RepaintManager
 				.currentManager(this.component);
@@ -71,7 +71,7 @@ public class ComponentImageSaver {
 		this.component.paintAll(g2d);
 		currentManager.setDoubleBufferingEnabled(true);
 		// Save the image in the given format to the given filename.
-		Settings.logger.debug("Writing saved image file");
+		Log.debug("Writing saved image file");
 		ImageIO.write(image, format.getFormat(), file);
 	}
 
@@ -112,14 +112,14 @@ public class ComponentImageSaver {
 			LongProcess.run(new Runnable() {
 				public void run() {
 					try {
-						Settings.logger.info(Resources.get("savingImage"));
+						Log.info(Resources.get("savingImage"));
 						ComponentImageSaver.this.save(fileChooser
 								.getSelectedFile(),
 								(ImageSaverFilter) fileChooser.getFileFilter());
 					} catch (final IOException e) {
 						StackTrace.showStackTrace(e);
 					} finally {
-						Settings.logger.info(Resources.get("doneSavingImage"));
+						Log.info(Resources.get("doneSavingImage"));
 					}
 				}
 			});

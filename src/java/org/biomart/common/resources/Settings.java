@@ -21,7 +21,6 @@ package org.biomart.common.resources;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,12 +29,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
-
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.RollingFileAppender;
 
 /**
  * Manages the on-disk cache of user settings.
@@ -50,8 +43,8 @@ import org.apache.log4j.RollingFileAppender;
  * <tt>cache</tt> should be left alone.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ * 			$Author$
  * @since 0.1
  */
 public class Settings {
@@ -63,25 +56,6 @@ public class Settings {
 
 	private static final File homeDir = new File(System
 			.getProperty("user.home"), ".biomart");
-
-	/**
-	 * Reference this logger to log to the application-wide logger. It will
-	 * write logs to a folder called "log" under a folder specific to the
-	 * current application, inside ".biomart" in the user's home directory.
-	 * Rolling logs are used. The default logging level is {@link Level#INFO}.
-	 * You can override this by specifying the "log4j.level" property in the
-	 * environment for this application. This setting is passed to
-	 * {@link Level#toLevel(String)} for processing.
-	 * <p>
-	 * The logger is initialised by the {@link #setApplication(String)} method.
-	 * Until that point, the root logger is used along with its default
-	 * configuration.
-	 */
-	public static Logger logger = Logger.getRootLogger();
-	
-	private static final String DEFAULT_LOGGER_LEVEL = "INFO";
-
-	private static File logDir;	
 
 	private static final Map classCache = new HashMap();
 
@@ -106,8 +80,7 @@ public class Settings {
 			if (!Settings.propertiesFile.exists())
 				Settings.propertiesFile.createNewFile();
 		} catch (final Throwable t) {
-			System.err.println(Resources.get("settingsCacheInitFailed"));
-			t.printStackTrace(System.err);
+			Log.error(Resources.get("settingsCacheInitFailed"));
 		}
 	}
 
@@ -122,31 +95,14 @@ public class Settings {
 		final File appDir = new File(Settings.homeDir, app);
 		if (!appDir.exists())
 			appDir.mkdir();
-		// Make the log directory.
-		Settings.logDir = new File(appDir, "log");
-		if (!Settings.logDir.exists())
-			Settings.logDir.mkdir();
 		// Set up the logger.
-		Settings.logger = Logger.getLogger(app);
-		try {
-			Settings.logger.addAppender(new RollingFileAppender(
-					new PatternLayout("%d{ISO8601} %-5p [%t:%F:%L]: %m%n"),
-					(new File(logDir, "error.log")).getPath(), true));
-		} catch (IOException e) {
-			// Fall-back to the console if we can't write to file.
-			Settings.logger.addAppender(new ConsoleAppender());
-			Settings.logger.warn(Resources.get("noRollingLogger"), e);
-		}
-		// Set the logger level.
-		Settings.logger.setLevel(Level.toLevel(System.getProperty(
-				"log4j.level", Settings.DEFAULT_LOGGER_LEVEL)));
+		Log.configure(app, appDir);
 		// Use it to log application startup.
-		Settings.logger.info(Resources.get("appStarted", app));
+		Log.info(Resources.get("appStarted", app));
 		// Make the class cache directory.
 		Settings.classCacheDir = new File(appDir, "cache");
 		if (!Settings.classCacheDir.exists())
 			Settings.classCacheDir.mkdir();
-		Settings.logger.debug("Created class cache directory");
 	}
 
 	/**
@@ -156,35 +112,33 @@ public class Settings {
 	private static void save() {
 		// Don't save if we're still loading.
 		if (Settings.initialising) {
-			Settings.logger
-					.debug("Still loading settings, so won't save settings yet");
+			Log.debug("Still loading settings, so won't save settings yet");
 			return;
 		}
 
 		synchronized (Settings.SAVE_LOCK) {
 
-			Settings.logger.info(Resources.get("startingSaveSettings"));
+			Log.info(Resources.get("startingSaveSettings"));
 
 			try {
-				Settings.logger.debug("Saving settings to "
+				Log.debug("Saving settings to "
 						+ Settings.propertiesFile.getPath());
 				Settings.properties.store(new FileOutputStream(
 						Settings.propertiesFile), Resources
 						.get("settingsCacheHeader"));
 				// Save the class-by-class properties.
-				Settings.logger.debug("Saving class caches");
+				Log.debug("Saving class caches");
 				for (final Iterator i = Settings.classCache.entrySet()
 						.iterator(); i.hasNext();) {
 					final Map.Entry classCacheEntry = (Map.Entry) i.next();
 					final Class clazz = (Class) classCacheEntry.getKey();
 					final File classDir = new File(Settings.classCacheDir,
 							clazz.getName());
-					Settings.logger.debug("Creating class cache directory for "
+					Log.debug("Creating class cache directory for "
 							+ clazz.getName());
 					classDir.mkdir();
 					// Remove existing files.
-					Settings.logger
-							.debug("Clearing existing class cache files");
+					Log.debug("Clearing existing class cache files");
 					File[] files = classDir.listFiles();
 					for (int j = 0; j < files.length; j++)
 						files[j].delete();
@@ -198,18 +152,18 @@ public class Settings {
 						final String name = (String) entry.getKey();
 						final Properties props = (Properties) entry.getValue();
 						final File propsFile = new File(classDir, name);
-						Settings.logger.debug("Saving properties to "
-								+ propsFile.getPath());
+						Log
+								.debug("Saving properties to "
+										+ propsFile.getPath());
 						props.store(new FileOutputStream(propsFile), Resources
 								.get("settingsCacheHeader"));
 					}
 				}
 			} catch (final Throwable t) {
-				Settings.logger.error(Resources.get("settingsCacheSaveFailed"),
-						t);
+				Log.error(Resources.get("settingsCacheSaveFailed"), t);
 			}
 
-			Settings.logger.info(Resources.get("doneSaveSettings"));
+			Log.info(Resources.get("doneSaveSettings"));
 		}
 	}
 
@@ -261,67 +215,63 @@ public class Settings {
 	 * <tt>~/.martbuilder</tt>.
 	 */
 	public static synchronized void load() {
-		Settings.logger.info(Resources.get("startingLoadSettings"));
+		Log.info(Resources.get("startingLoadSettings"));
 		Settings.initialising = true;
 
 		// Clear the existing settings.
-		Settings.logger.debug("Clearing existing settings");
+		Log.debug("Clearing existing settings");
 		Settings.properties.clear();
 
 		// Load the settings.
 		try {
-			Settings.logger.debug("Loading settings from "
+			Log.debug("Loading settings from "
 					+ Settings.propertiesFile.getPath());
 			Settings.properties.load(new FileInputStream(
 					Settings.propertiesFile));
 		} catch (final Throwable t) {
-			Settings.logger.error(Resources.get("settingsCacheLoadFailed"), t);
+			Log.error(Resources.get("settingsCacheLoadFailed"), t);
 		}
 
 		// Set up the cache.
 		final String newClassCacheSize = Settings.properties
 				.getProperty("classCacheSize");
 		try {
-			Settings.logger.debug("Setting class cache size to "
-					+ newClassCacheSize);
+			Log.debug("Setting class cache size to " + newClassCacheSize);
 			Settings.classCacheSize = Integer.parseInt(newClassCacheSize);
 		} catch (final NumberFormatException e) {
 			// Ignore and use the default.
 			Settings.classCacheSize = 10;
-			Settings.logger.debug("Using default class cache size of "
-					+ classCacheSize);
+			Log.debug("Using default class cache size of " + classCacheSize);
 			Settings
 					.setProperty("classCacheSize", "" + Settings.classCacheSize);
 		}
 
 		// Loop over classCacheDir to find classes.
-		Settings.logger.debug("Loading class caches");
+		Log.debug("Loading class caches");
 		final String[] classes = Settings.classCacheDir.list();
 		if (classes != null)
 			for (int i = 0; i < classes.length; i++)
 				try {
 					final Class clazz = Class.forName(classes[i]);
-					Settings.logger.debug("Loading class cache for "
-							+ clazz.getName());
+					Log.debug("Loading class cache for " + clazz.getName());
 					final File classDir = new File(Settings.classCacheDir,
 							classes[i]);
 					final String[] entries = classDir.list();
 					for (int j = 0; j < entries.length; j++) {
 						final Properties props = new Properties();
 						final File propsFile = new File(classDir, entries[j]);
-						Settings.logger.debug("Loading properties from "
+						Log.debug("Loading properties from "
 								+ propsFile.getPath());
 						props.load(new FileInputStream(propsFile));
 						Settings
 								.saveHistoryProperties(clazz, entries[j], props);
 					}
 				} catch (final Throwable t) {
-					Settings.logger.error(Resources
-							.get("settingsCacheLoadFailed"), t);
+					Log.error(Resources.get("settingsCacheLoadFailed"), t);
 				}
 
 		Settings.initialising = false;
-		Settings.logger.info(Resources.get("doneLoadSettings"));
+		Log.info(Resources.get("doneLoadSettings"));
 	}
 
 	/**
@@ -337,11 +287,9 @@ public class Settings {
 	 */
 	public static void saveHistoryProperties(final Class clazz,
 			final String name, final Properties properties) {
-		Settings.logger.debug("Adding history entry for " + clazz.getName()
-				+ ":" + name);
+		Log.debug("Adding history entry for " + clazz.getName() + ":" + name);
 		if (!Settings.classCache.containsKey(clazz)) {
-			Settings.logger.debug("Creating new cache for class "
-					+ clazz.getName());
+			Log.debug("Creating new cache for class " + clazz.getName());
 			final LinkedHashMap history = new LinkedHashMap(
 					Settings.classCacheSize, 0.75f, true) {
 				private static final long serialVersionUID = 1;
@@ -352,7 +300,7 @@ public class Settings {
 			};
 			Settings.classCache.put(clazz, history);
 		}
-		Settings.logger.debug("History properties are: " + properties);
+		Log.debug("History properties are: " + properties);
 		((Map) Settings.classCache.get(clazz)).put(name, properties);
 		Settings.save();
 	}
@@ -366,7 +314,7 @@ public class Settings {
 	 *            the value to give it.
 	 */
 	public static void setProperty(final String property, final String value) {
-		Settings.logger.debug("Setting property " + property + "=" + value);
+		Log.debug("Setting property " + property + "=" + value);
 		Settings.properties.setProperty(property, value);
 		Settings.save();
 	}
