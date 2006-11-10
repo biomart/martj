@@ -1556,6 +1556,10 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			// Spaces in internal names.
 			if (obj.getInternalName().indexOf(' ')>=0) 
 				problems.add("Space found in internal name: '"+obj.getInternalName()+"'");
+			if (obj.getInternalName().indexOf('\'')>=0) 
+				problems.add("Single quote found in internal name: '"+obj.getInternalName()+"'");
+			if (obj.getInternalName().indexOf('"')>=0) 
+				problems.add("Double quote found in internal name: '"+obj.getInternalName()+"'");
 						
 			/* CANNOT DO THIS AS CANNOT TELL WHICH FIELDS
 			 * ARE GENUINELY REQUIRED IN EACH OBJECT.
