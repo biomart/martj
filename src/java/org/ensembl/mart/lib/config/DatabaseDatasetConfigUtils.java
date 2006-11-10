@@ -3189,7 +3189,7 @@ dsConfig.setDatasetID(dsID);
 dsConfig.setInternalName(intName);
 dsConfig.setDataset(dsName);
 dsConfig.setTemplate(templateConfig.getTemplate());
-dsConfig.setType("TableSet");
+//dsConfig.setType("TableSet");
 	
 	//if (storeFlag == 1) storeTemplateXML(templateConfig,template);
 	//doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
