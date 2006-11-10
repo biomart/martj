@@ -3922,7 +3922,9 @@ public boolean naiveExportWouldOverrideExistingConfig(
 	Connection conn = null;
 	
 	try {
+		  setReadonly(false);//needed to make sure template tables are created if missing
 		  createMetaTables("");
+		  setReadonly(true);
 		  HashMap importOptions = new HashMap();
 		  String sql = "SELECT DISTINCT IF (t.template IS NOT NULL, t.template, m.dataset) AS display_label," +
 		  	                           "IF (t.template IS NOT NULL, 1, 0) AS flag " +
@@ -4783,7 +4785,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
     
     	//override if user not null
     	if (datasetConfigUserTableExists(user))
-      		metatable += "_" + user;
+      		metatable += "_" + user;   	
     	else {
 
 		  if (!templateTableExists()){
@@ -4795,8 +4797,6 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 				if(dsource.getDatabaseType().equals("oracle")) {CREATE_SQL1=ORACLE_TEMPLATE_MAIN; CREATE_SQL2=ORACLE_TEMPLATE_DM;}
 				if(dsource.getDatabaseType().equals("postgres")) {CREATE_SQL1=POSTGRES_TEMPLATE_MAIN;CREATE_SQL2=POSTGRES_TEMPLATE_DM;}
 				if(dsource.getDatabaseType().equals("mysql")) {CREATE_SQL1 = MYSQL_TEMPLATE_MAIN;CREATE_SQL2 = MYSQL_TEMPLATE_DM;}
-			  
-				//System.out.println("CREATE_SQL: "+CREATE_SQL+" CREATE_USER: "+CREATE_USER);
 			  
 				PreparedStatement ps = conn.prepareStatement(CREATE_SQL1);
 				ps.executeUpdate();

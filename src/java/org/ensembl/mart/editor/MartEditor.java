@@ -972,7 +972,7 @@ System.out.println ("getting driver "+ driver);
 	  }
 	} catch (ConfigurationException e) {
 	  JOptionPane.showMessageDialog(this, "No datasets available for import - is this a BioMart compatible schema? Missing  meta_configuration tables?" +
-			" Empty meta_configuration tables?", "ERROR", 0);
+			" Empty meta_configuration tables or lack of write access?", "ERROR", 0);
 	} finally {
 	  enableCursor();
 	}
