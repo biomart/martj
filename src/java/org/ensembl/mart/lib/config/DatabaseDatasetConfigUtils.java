@@ -2486,7 +2486,6 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					Option[] options = configAttToAdd.getOptions();
 					for (int r = 0; r < options.length; r++)
 						options[r].resolveText(templateConfig.getDynamicDataset(dsConfig.getDataset()));
-					
 					//if (configAttToAdd.getTableConstraint()==null || "".equals(configAttToAdd.getTableConstraint())) {
 //							|| dsConfig.supportsFilterDescription(configAttToAdd.getField(), configAttToAdd.getTableConstraint(), configAttToAdd.getQualifier())){
 
@@ -5848,6 +5847,9 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 	  
 	  if (original.getOptions().length==0) 
 		  return validated.isBroken();
+	  
+	  // to keep ontology filters working with nested options
+	  if ("1".equals(original.getGraph())) return false;
 	  
 	  Option[] originalOpts = original.getOptions();
 	  
