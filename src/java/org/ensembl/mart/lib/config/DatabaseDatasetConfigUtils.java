@@ -2906,12 +2906,13 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 	}
 	Exportable[] dsExps = dsConfig.getExportables();
 	for (int j = 0; j < dsExps.length; j++) {
-		Exportable[] tExps = templateConfig.getExportables();
-		boolean has = false;
-		for (int k = 0; k < tExps.length && !has; k++) {
-			if (tExps[k].getInternalName().equals(dsExps[j].getInternalName())) has = true;
-		}
-		if (!has) dsConfig.removeExportable(dsExps[j]);
+		//Exportable[] tExps = templateConfig.getExportables();
+		//boolean has = false;
+		//for (int k = 0; k < tExps.length && !has; k++) {
+		//	if (tExps[k].getInternalName().equals(dsExps[j].getInternalName())) has = true;
+		//}
+		//if (!has) dsConfig.removeExportable(dsExps[j]);
+		dsConfig.removeExportable(dsExps[j]);// remove all as added back in correctly below
 	}
 	
 
@@ -3153,12 +3154,15 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		
 		String[] attNames = tempExps[i].getAttributes().split(",");
 		for (int j = 0; j < attNames.length; j++){
+			// don't test if using placeholder atts as will always fail
+			if ("true".equals(tempExps[i].getPointer())) continue;
+			
 			// skip if filters are not defined in the dsConfig
 			if (!attNames[j].matches(".+__.+") && (!dsConfig.containsAttributeDescription(attNames[j]) || 
 				(dsConfig.getAttributeDescriptionByInternalName(attNames[j]).getHidden() != null
 					&& dsConfig.getAttributeDescriptionByInternalName(attNames[j]).getHidden().equals("true")))){
 					continue OUTER;
-				}
+			}
 		}
 		
 		// if passsed all above tests then add template Importable to datasetConfig 
