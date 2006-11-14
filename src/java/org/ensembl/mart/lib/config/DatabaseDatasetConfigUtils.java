@@ -185,6 +185,7 @@ public class DatabaseDatasetConfigUtils {
           logger.fine("Returned Wrong table for verifyTable: wanted " + table + " got " + tcheck + "\n");
         ret = false;
       }
+      conn.close();
     } finally {
       //this throws any non-SQLException, but always closes the connection
       DetailedDataSource.close(conn);
@@ -204,6 +205,7 @@ public class DatabaseDatasetConfigUtils {
 	  rs.next();
 	  version = rs.getString(1);
 	  rs.close();
+	  conn.close();
 	} catch (SQLException e) {
 	  
 		System.out.println("Include a "+MARTRELEASETABLE+" table entry for dataset " +
@@ -250,7 +252,8 @@ public class DatabaseDatasetConfigUtils {
 					updated = true;
 				}
 	  	
-	  }	  
+	  }
+	  conn.close();	  
 	} catch (SQLException e) {
 			  System.out.println("Include a "+MARTRELEASETABLE+" table entry for dataset " +
 			  dsv.getDataset() + " if you want auto link version updating");
@@ -980,6 +983,7 @@ public class DatabaseDatasetConfigUtils {
 			}
 			
 			ps.close();	
+			conn.close();
   		}
 		catch (IOException e) {
 			throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage());
@@ -1538,6 +1542,7 @@ public class DatabaseDatasetConfigUtils {
 										dsConfig.getInterfaces(),
 										dsConfig);
 		}
+		conn.close();
 	}
 	catch (SQLException e) {
 		  throw new ConfigurationException(
@@ -3174,7 +3179,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 		dsConfig.addExportable(newExp);
 	}
 	
-	
+		conn.close();
 	} finally {
 		DetailedDataSource.close(conn);
 	}
@@ -3231,6 +3236,7 @@ public int templateCount(String template) throws ConfigurationException{
   	ResultSet rs = ps.executeQuery();
   	rs.next();
 	int result = rs.getInt(1);
+	conn.close();
 	return result;
   }
   catch (SQLException e) {
@@ -3250,8 +3256,9 @@ public boolean naiveExportWouldOverrideExistingConfig(
 	    String type,
 	    String version) throws ConfigurationException {
 	boolean exists = false;
+	Connection conn = null;
 	try {
-	Connection conn = dsource.getConnection();	
+	  conn = dsource.getConnection();	
 	  String metatable = createMetaTables(user);
 	  // Name/version/type already exists? Reuse it.
 	  if (datasetID == null || datasetID.equals("")){
@@ -3266,12 +3273,16 @@ public boolean naiveExportWouldOverrideExistingConfig(
 		rs.close();
 		ps.close();
 	  }
+	  conn.close();
 	  return exists;
 	} catch (ConfigurationException e) {
 		throw e;
 	} catch (Exception e) {
 		throw new ConfigurationException(e);
 	}
+	finally {
+		DetailedDataSource.close(conn);
+	 }
 }
 
   private int storeCompressedXML(
@@ -3487,7 +3498,7 @@ public boolean naiveExportWouldOverrideExistingConfig(
 	  ps1.close();
 	  ps2.close();
 	  //ps3.close();
-	  	
+	  conn.close();	
       return ret;
     } catch (IOException e) {
       throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage());
@@ -3700,7 +3711,7 @@ public boolean naiveExportWouldOverrideExistingConfig(
 	  ps1.close();
 	  ps2.close();
       ps.close();
-
+	  conn.close();
       return ret;
     } catch (IOException e) {
       throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage(), e);
@@ -3831,7 +3842,7 @@ public boolean naiveExportWouldOverrideExistingConfig(
 		dsetMap.put(datasetID, dsv);
       }
       rs.close();
-      
+      conn.close();
     } catch (SQLException e) {
       throw new ConfigurationException("Caught SQL Exception during fetch of requested digest: " + e.getMessage(), e);
     } finally {
@@ -3862,6 +3873,7 @@ public boolean naiveExportWouldOverrideExistingConfig(
 		  ps.close();
 		  String[] templateNames = new String[results.size()];
 		  results.toArray(templateNames);
+		  conn.close();
 		  return templateNames;
 	}
 	catch(SQLException e){
@@ -3938,6 +3950,7 @@ public boolean naiveExportWouldOverrideExistingConfig(
 		  while (rs.next()) {
 		  	importOptions.put(rs.getString(1),rs.getString(2));
 		  }
+		  conn.close();
 		  return importOptions;
 	}
 	catch(SQLException e){
@@ -4121,6 +4134,7 @@ public boolean naiveExportWouldOverrideExistingConfig(
         rstream = new GZIPInputStream(new ByteArrayInputStream(cstream));
       else
         rstream = new ByteArrayInputStream(stream);
+       conn.close(); 
       return dscutils.getDocumentForXMLStream(rstream);
     } catch (SQLException e) {
       throw new ConfigurationException(
@@ -4212,6 +4226,7 @@ public boolean naiveExportWouldOverrideExistingConfig(
 	  	byte[] cstream = rs.getBytes(1);	
 	  	rstream =  new GZIPInputStream(new ByteArrayInputStream(cstream));
 	  }
+	  conn.close();
 	  return dscutils.getDocumentForXMLStream(rstream);
 	  
 	//} catch (SQLException e) {
@@ -4788,7 +4803,53 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
       		metatable += "_" + user;   	
     	else {
 
-		  if (!templateTableExists()){
+
+		  // if version not up to date and template tables exist then delete them
+		  if (templateTableExists()){
+				Connection conn = null;
+					try {
+						conn = dsource.getConnection();		  
+		  				ResultSet vr = conn.getMetaData().getTables(conn.getCatalog(), dsource.getSchema(), "meta_version__version__main", null);
+		  				//expect at most one result, if no results, tcheck will remain null
+		  				String tcheck = null;
+		  				if (vr.next())
+			  				tcheck = vr.getString(3);
+			  			vr.close();
+					    if (tcheck != null) {// don't check databases with no version table yet
+		  					PreparedStatement ps = conn.prepareStatement("select version from "+getSchema()[0]+".meta_version__version__main");
+		  					ResultSet rs = ps.executeQuery();
+		  					rs.next();
+		  					String version = rs.getString(1);
+		  					rs.close();
+		  					if (!version.equals(SOFTWAREVERSION)){
+								// REMOVE THE TEMPLATE TABLES - PUT IN ONCE SURE IS SAFE
+								String TEMPLATEMAIN   = "delete from "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE;
+								String TEMPLATEDM   = "delete from "+getSchema()[0]+"."+MARTTEMPLATEDMTABLE;
+								String VERSIONSQL   = "update "+getSchema()[0]+"."+MARTVERSIONTABLE+" set version='"+SOFTWAREVERSION+"'";
+								
+								if (JOptionPane.showConfirmDialog(null,"WARNING - EXISTING TEMPLATES ARE NOT 0.5 COMPATIBLE AND NEED DELETING.\n" +									"Are you sure you want to do this?","DELETE TEMPLATES?",JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION) return metatable;
+								
+								//System.out.println("THE VERSIONS DO NOT MATCH FOR DB - LINES TO RUN (NOT PUT IN YET)\n"+TEMPLATEMAIN+"\n"+TEMPLATEDM+"\n"+VERSIONSQL);
+								PreparedStatement ps1=conn.prepareStatement(TEMPLATEMAIN);
+								ps1.executeUpdate();	
+								PreparedStatement ps2=conn.prepareStatement(TEMPLATEDM);
+								ps2.executeUpdate();
+								PreparedStatement ps3=conn.prepareStatement(VERSIONSQL);
+								ps3.executeUpdate();
+									
+			  				}
+		  				}
+		  				conn.close(); 
+					}
+					catch (SQLException e) {
+						throw new ConfigurationException("Caught SQLException during create meta tables\n" +e);
+					}
+					finally {
+						DetailedDataSource.close(conn);
+					}
+		  }
+		  
+		  else {
 			  Connection conn = null;
 			  try {
 				conn = dsource.getConnection();
@@ -4809,7 +4870,9 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 			  } catch (SQLException e) {
 				throw new ConfigurationException("Caught SQLException during create meta tables\n" +e);
 			  }
-      	
+			  finally {
+					DetailedDataSource.close(conn);
+			  }
 		  }
       	
       	  if (!baseDSConfigTableExists()){
@@ -4821,7 +4884,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 			  String CREATE_USER =new String();
 			  String CREATE_INTERFACE = new String();
 			  String CREATE_VERSION = new String();
-			  String INSERT_VERSION = "INSERT INTO "+getSchema()[0]+"."+MARTVERSIONTABLE+" VALUES ('0.4')";
+			  String INSERT_VERSION = "INSERT INTO "+getSchema()[0]+"."+MARTVERSIONTABLE+" VALUES ('"+SOFTWAREVERSION+"')";
 			  if(dsource.getDatabaseType().equals("oracle")) {CREATE_SQL1=ORACLE_META1; CREATE_SQL2=ORACLE_META2; CREATE_USER=ORACLE_USER; CREATE_INTERFACE=ORACLE_INTERFACE; CREATE_VERSION=ORACLE_VERSION;}
 			  if(dsource.getDatabaseType().equals("postgres")) {CREATE_SQL1=POSTGRES_META1;CREATE_SQL2=POSTGRES_META2;CREATE_USER=POSTGRES_USER; CREATE_INTERFACE=POSTGRES_INTERFACE; CREATE_VERSION=POSTGRES_VERSION;}
 			  if(dsource.getDatabaseType().equals("mysql")) {CREATE_SQL1 = MYSQL_META1;CREATE_SQL2 = MYSQL_META2;CREATE_USER=MYSQL_USER; CREATE_INTERFACE=MYSQL_INTERFACE; CREATE_VERSION=MYSQL_VERSION;}
@@ -4849,6 +4912,9 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 			  conn.close();
 			} catch (SQLException e) {
 			  throw new ConfigurationException("Caught SQLException during create meta tables\n" +e);
+			}
+			finally {
+							DetailedDataSource.close(conn);
 			}
       	
       }

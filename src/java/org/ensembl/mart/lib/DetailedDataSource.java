@@ -510,7 +510,9 @@ public class DetailedDataSource implements DataSource {
 		String version = null;
 			//try {
  	    conn = dataSource.getConnection();
-		  
+		
+		// remove version check 
+        /*  
 		ResultSet vr = conn.getMetaData().getTables(conn.getCatalog(), this.schema, "meta_version__version__main", null);
 		//expect at most one result, if no results, tcheck will remain null
 		String tcheck = null;
@@ -522,10 +524,13 @@ public class DetailedDataSource implements DataSource {
 		if (tcheck == null) {// don't check databases with no version table yet
 			return conn;
 		}
+		
 		String[] schemas = null;
 		if(getDatabaseType().equals("oracle")) schemas = getSchema().toUpperCase().split(";");
 		else schemas = getSchema().split(";");
-		  
+		
+		// remove version check 
+ 
 		PreparedStatement ps = conn.prepareStatement("select version from "+schemas[0]+".meta_version__version__main");
 		ResultSet rs = ps.executeQuery();
 		rs.next();
@@ -534,6 +539,7 @@ public class DetailedDataSource implements DataSource {
 		if (!version.equals(VERSION)){
 			throw new SQLException("Database version "+version+" and software version "+VERSION+" do not match");	
 		 }
+		 */
 		 return conn;
 
 
