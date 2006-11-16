@@ -3951,10 +3951,20 @@ public boolean naiveExportWouldOverrideExistingConfig(
 		  createMetaTables("");
 		  setReadonly(true);
 		  HashMap importOptions = new HashMap();
-		  String sql = "SELECT DISTINCT IF (t.template IS NOT NULL, t.template, m.dataset) AS display_label," +
+		  String sql = null;
+		  if ("oracle".equals(dsource.getDatabaseType())){
+			sql = "SELECT DISTINCT decode(t.template,null,m.dataset,t.template) AS display_label," +
+						"decode(t.template,null,0,1) AS flag " +
+						"FROM "+getSchema()[0]+"."+BASEMETATABLE+" m LEFT JOIN " +
+						getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" t ON m.dataset_id_key=t.dataset_id_key";
+		  
+		  }
+		  else{
+		  	sql = "SELECT DISTINCT IF (t.template IS NOT NULL, t.template, m.dataset) AS display_label," +
 		  	                           "IF (t.template IS NOT NULL, 1, 0) AS flag " +
 		  	                           "FROM "+getSchema()[0]+"."+BASEMETATABLE+" m LEFT JOIN " +
 										getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" t ON m.dataset_id_key=t.dataset_id_key";
+		  }
 		  //System.out.println(sql);
 		  
 		  conn = dsource.getConnection();
@@ -6281,7 +6291,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 
     for (int i = 0, n = potentials.length; i < n; i++) {
       String curval = potentials[i];
-	  if (curval.startsWith("meta"))
+	  if (curval.startsWith("meta") || curval.startsWith("META"))
 	  	continue;
 	  	
       retSet.add(curval.replaceFirst("__.+__[Mm][Aa][Ii][Nn]", ""));
@@ -6341,7 +6351,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
           //System.out.println(tableName);
 
           if (!potentials.contains(tableName))
-            potentials.add(tableName);
+             potentials.add(tableName);
         }
         rsTab.close();
       
