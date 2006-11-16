@@ -3275,12 +3275,18 @@ public boolean naiveExportWouldOverrideExistingConfig(
 	  String metatable = createMetaTables(user);
 	  // Name/version/type already exists? Reuse it.
 	  if (datasetID == null || datasetID.equals("")){
-		String sql = "SELECT dataset_id_key FROM " + getSchema()[0]+"." + metatable + " where display_name=? and dataset=? and type=? and version=?";
+		String sql = "SELECT dataset_id_key FROM " + getSchema()[0]+"." + metatable + " where dataset='"+dataset+"' and type='"+type+"'";//? and version=?";
+		if (displayName != null && !displayName.equals("")) sql += " and display_name='"+displayName+"'";
+		if (version != null && !version.equals("")) sql += " and version='"+version+"'"; 
+		System.out.println(sql);
+		//String sql = "SELECT dataset_id_key FROM " + getSchema()[0]+"." + metatable.toUpperCase() + " where display_name=? and dataset=? and type=? and version=?";
+		
 		PreparedStatement ps = conn.prepareStatement(sql);
-		ps.setString(1, displayName);
-		ps.setString(2, dataset);
-		ps.setString(3, type);
-		ps.setString(4, version);
+		//ps.setString(1, displayName);
+		//ps.setString(2, dataset);
+		//ps.setString(3, type);
+		//ps.setString(4, version);
+		
 		ResultSet rs = ps.executeQuery();
 		if (rs.next()) exists = true;
 		rs.close();
@@ -3553,12 +3559,14 @@ public boolean naiveExportWouldOverrideExistingConfig(
 	  conn.setAutoCommit(false);	
 	  // Name/version/type already exists? Reuse it.
 	  if (datasetID == null || datasetID.equals("")){
-		String sql = "SELECT dataset_id_key FROM " + getSchema()[0]+"." + metatable + " where display_name=? and dataset=? and type=? and version=?";
+		String sql = "SELECT dataset_id_key FROM " + getSchema()[0]+"." + metatable + " where dataset='"+dataset+"' and type='"+type+"'";//? and version=?";
+		if (displayName != null && !displayName.equals("")) sql += " and display_name='"+displayName+"'";
+		if (version != null && !version.equals("")) sql += " and version='"+version+"'";
 		PreparedStatement ps = conn.prepareStatement(sql);
-		ps.setString(1, displayName);
-		ps.setString(2, dataset);
-		ps.setString(3, type);
-		ps.setString(4, version);
+		//ps.setString(1, displayName);
+		//ps.setString(2, dataset);
+		//ps.setString(3, type);
+		//ps.setString(4, version);
 		ResultSet rs = ps.executeQuery();
 		if (rs.next()) datasetID = ""+rs.getInt(1);
 		rs.close();
@@ -3959,6 +3967,13 @@ public boolean naiveExportWouldOverrideExistingConfig(
 						getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" t ON m.dataset_id_key=t.dataset_id_key";
 		  
 		  }
+		  else if ("postgres".equals(dsource.getDatabaseType())){
+			sql = "SELECT DISTINCT case t.template when null then m.dataset else t.template end AS display_label," +
+					"case t.template when null then 0 else 1 end AS flag " +
+					"FROM "+getSchema()[0]+"."+BASEMETATABLE+" m LEFT JOIN " +
+					getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" t ON m.dataset_id_key=t.dataset_id_key";
+		  
+	  	  }
 		  else{
 		  	sql = "SELECT DISTINCT IF (t.template IS NOT NULL, t.template, m.dataset) AS display_label," +
 		  	                           "IF (t.template IS NOT NULL, 1, 0) AS flag " +
