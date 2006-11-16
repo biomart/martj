@@ -958,6 +958,10 @@ public class DatabaseDatasetConfigUtils {
 			gout.finish();
 			byte[] xml = bout.toByteArray();
 		
+
+			if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0){
+				conn.setAutoCommit(false);
+			}
 			sql = "INSERT INTO " + getSchema()[0]+"."+MARTTEMPLATEDMTABLE+" (template, compressed_xml) values (?, ?)";
 			ps = conn.prepareStatement(sql);
 			ps.setString(1,template);
@@ -966,12 +970,14 @@ public class DatabaseDatasetConfigUtils {
 			else
 				ps.setBinaryStream(2, new ByteArrayInputStream(xml), xml.length);
 			ps.executeUpdate();
+			ps.close();	
 			
 			
 			if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0){
 				// oracle hack
-				String oraclehackSQL = "SELECT compressed_xml FROM "+getSchema()[0]+"." + MARTXMLTABLE + " WHERE dataset_id_key = ? FOR UPDATE";
+				String oraclehackSQL = "SELECT compressed_xml FROM "+getSchema()[0]+"." + MARTTEMPLATEDMTABLE + " WHERE template = ? FOR UPDATE";
 				PreparedStatement ohack = conn.prepareStatement(oraclehackSQL);
+				ohack.setString(1, template);
 				ResultSet rs = ohack.executeQuery();
 
 				if (rs.next()) {
@@ -980,17 +986,20 @@ public class DatabaseDatasetConfigUtils {
 					blobout.write(xml);
 					blobout.close();
 				}
+				rs.close();
+				conn.commit();
 			}
 			
-			ps.close();	
 			conn.close();
   		}
 		catch (IOException e) {
 			throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage());
 		} 
 		catch (SQLException e) {
-			throw new ConfigurationException(
+			ConfigurationException ce = new ConfigurationException(
 			"Caught SQLException updating xml for " + e.getMessage());
+			ce.initCause(e);
+			throw ce;
 		} 
 		catch (NoSuchAlgorithmException e) {
 			throw new ConfigurationException(
