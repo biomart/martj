@@ -31,6 +31,7 @@ import java.util.List;
 public class AttributeList extends BaseNamedConfigurationObject {
   private final String attributesKey = "attributes";
   private final String defaultKey = "default";
+  private final String imageURLKey = "imageURL";
   private int[] reqFields = {0,5};// rendered red in AttributeTable
    
 	/**
@@ -42,6 +43,7 @@ public class AttributeList extends BaseNamedConfigurationObject {
   	super(e);
 	setAttribute(attributesKey, e.getAttributes());
 	setAttribute(defaultKey, e.getDefault());
+	setAttribute(imageURLKey, e.getImageURL());
   	setRequiredFields(reqFields); 
   }
   
@@ -50,6 +52,7 @@ public class AttributeList extends BaseNamedConfigurationObject {
     
 	setAttribute(attributesKey, null);
 	setAttribute(defaultKey, null);
+	setAttribute(imageURLKey, null);
 	setRequiredFields(reqFields);
   }
     
@@ -73,6 +76,7 @@ public class AttributeList extends BaseNamedConfigurationObject {
   	
 	setAttribute(attributesKey, attributes);
 	setAttribute(defaultKey, d);
+	setAttribute(imageURLKey, null);
 	setRequiredFields(reqFields);
   }
 
@@ -108,6 +112,22 @@ public class AttributeList extends BaseNamedConfigurationObject {
   public void setAttributes(String valueCondition) {
 		setAttribute(attributesKey, valueCondition);
   }
+
+	/**
+	 * Get the ValueCondition, if set.
+	 * @return String valueCondition
+	 */
+	public String getImageURL() {
+		return getAttribute(imageURLKey);
+	}
+
+	/**
+	* Set a value at which the referenced Filter should be Importabled.
+	* @param valueCondition -- value at which the referenced Filter should be Importabled.
+	*/
+	public void setImageURL(String imageURL) {
+		 setAttribute(imageURLKey, imageURL);
+	}	
   
   public String toString() {
 		StringBuffer buf = new StringBuffer();
