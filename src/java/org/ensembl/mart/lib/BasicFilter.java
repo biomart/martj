@@ -135,7 +135,7 @@ public class BasicFilter implements Filter {
 	 * @return String where clause
 	 */
 	public String getWhereClause() {
-		return field + qualifier + "?";
+		return field + ("like".equals(qualifier)?" like ":qualifier) + "?";
 	}
 
 	/**
@@ -143,7 +143,7 @@ public class BasicFilter implements Filter {
 	 * a bind value suitable for inclusion into a SQL PreparedStatement.
 	 */
 	public String getRightHandClause() {
-		return qualifier + "?";
+		return ("like".equals(qualifier)?" like ":qualifier) + "?";
 	}
 
 	/**
