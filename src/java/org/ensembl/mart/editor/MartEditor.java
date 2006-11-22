@@ -49,12 +49,14 @@ import javax.swing.JButton;
 import javax.swing.JDesktopPane;
 import javax.swing.JFileChooser;
 
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 
 import org.apache.xalan.processor.StopParseException;
@@ -235,6 +237,10 @@ System.out.println ("getting driver "+ driver);
     this.getContentPane().add(desktop, BorderLayout.CENTER);
     setJMenuBar(createMenuBar());
 	
+	//desktop.registerKeyboardAction(new MenuActionListener(),"Naive using Template",KeyStroke.getKeyStroke(KeyEvent.VK_N,8),JComponent.WHEN_FOCUSED);
+	
+	
+	
     //Make dragging a little faster but perhaps uglier.
     desktop.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE);
 
@@ -328,10 +334,12 @@ System.out.println ("getting driver "+ driver);
     menuItem.addActionListener(menuActionListener);
     menu.add(menuItem);
 
-    menuItem = new JMenuItem("Naive using Template");
-    menuItem.addActionListener(menuActionListener);
-    menu.add(menuItem);
-
+    //menuItem = new JMenuItem("Naive using Template");
+    //menuItem.addActionListener(menuActionListener);
+    //menu.add(menuItem); now done with short-cut keys only:
+	menu.registerKeyboardAction(menuActionListener,"Naive using Template",
+		KeyStroke.getKeyStroke(KeyEvent.VK_N,8),JComponent.WHEN_FOCUSED);
+	
     menuItem = new JMenuItem("Import");
     menuItem.addActionListener(menuActionListener);
     menu.add(menuItem);
@@ -353,16 +361,18 @@ System.out.println ("getting driver "+ driver);
     menu.addSeparator();
 
     
-    menuItem = new JMenuItem("View Dataset Configuration");
-	menuItem.addActionListener(menuActionListener);
-	menu.add(menuItem);
+    //menuItem = new JMenuItem("View Dataset Configuration");
+	//menuItem.addActionListener(menuActionListener);
+	//menu.add(menuItem); now done with short-cut keys only
+	menu.registerKeyboardAction(menuActionListener,"View Dataset Configuration",
+			KeyStroke.getKeyStroke(KeyEvent.VK_V,8),JComponent.WHEN_FOCUSED);
     
-    
-    menuItem = new JMenuItem("Delete Dataset Configuration");
-    menuItem.addActionListener(menuActionListener);
-    menu.add(menuItem);
-
-    menu.addSeparator();
+    //menuItem = new JMenuItem("Delete Dataset Configuration");
+    //menuItem.addActionListener(menuActionListener);
+    //menu.add(menuItem); now done with short-cut keys only
+	menu.registerKeyboardAction(menuActionListener,"Delete Dataset Configuration",
+			KeyStroke.getKeyStroke(KeyEvent.VK_D,8),JComponent.WHEN_FOCUSED);
+    //menu.addSeparator();
 
 //	menuItem = new JMenuItem("Import Config");
 //	menuItem.addActionListener(menuActionListener);
