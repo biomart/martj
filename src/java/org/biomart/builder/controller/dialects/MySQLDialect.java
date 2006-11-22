@@ -425,7 +425,6 @@ public class MySQLDialect extends DatabaseDialect {
 			sb.append(pkCol.getName());
 			sb.append("=b.");
 			sb.append(fkCol.getName());
-			sb.append("");
 		}
 		for (int i = 0; i < action.getCountTableNotNullColumns().size(); i++) {
 			final Column col = (Column) action.getCountTableNotNullColumns()
@@ -484,7 +483,6 @@ public class MySQLDialect extends DatabaseDialect {
 				sb.append(pkCol.getName());
 				sb.append("=c.");
 				sb.append(pkCol.getName());
-				sb.append("");
 			}
 			sb.append(')');
 		} else {
@@ -503,7 +501,6 @@ public class MySQLDialect extends DatabaseDialect {
 				sb.append(fkCol.getName());
 				sb.append("=c.");
 				sb.append(fkCol.getName());
-				sb.append("");
 			}
 			sb.append(" where ");
 			for (int i = 0; i < action.getTargetTablePKColumns().size(); i++) {
@@ -515,7 +512,6 @@ public class MySQLDialect extends DatabaseDialect {
 				sb.append(pkCol.getName());
 				sb.append("=b.");
 				sb.append(pkCol.getName());
-				sb.append("");
 			}
 			sb.append(')');
 		}

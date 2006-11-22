@@ -497,7 +497,6 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				sb.append(pkCol.getName());
 				sb.append("=c.");
 				sb.append(pkCol.getName());
-				sb.append("");
 			}
 			sb.append(')');
 		} else {

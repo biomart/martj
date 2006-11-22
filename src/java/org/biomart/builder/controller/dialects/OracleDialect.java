@@ -487,7 +487,6 @@ public class OracleDialect extends DatabaseDialect {
 				sb.append(pkCol.getName());
 				sb.append("=c.");
 				sb.append(pkCol.getName());
-				sb.append("");
 			}
 			sb.append(')');
 		} else {
@@ -506,7 +505,6 @@ public class OracleDialect extends DatabaseDialect {
 				sb.append(fkCol.getName());
 				sb.append("=c.");
 				sb.append(fkCol.getName());
-				sb.append("");
 			}			
 			sb.append(" where ");
 			for (int i = 0; i < action.getTargetTablePKColumns().size(); i++) {
@@ -518,7 +516,6 @@ public class OracleDialect extends DatabaseDialect {
 				sb.append(pkCol.getName());
 				sb.append("=b.");
 				sb.append(pkCol.getName());
-				sb.append("");
 			}
 			sb.append(')');
 		}
