@@ -1653,7 +1653,7 @@ public class MartShellLib {
             throw new InvalidQueryException(
               "Invalid Query Recieved, where clause after where clause: " + newquery + "\n");
 
-          else if (thisToken.equalsIgnoreCase(FILTERDELIMITER)) {
+          else if (thisToken.equalsIgnoreCase(FILTERDELIMITER) && !inQuotedValue) {
             whereFilterCond = false;
             whereFilterVal = false;
             whereFilterName = true;
@@ -1666,6 +1666,7 @@ public class MartShellLib {
 
               m.find(); // know its there, just have to find it
               filterCondition = m.group(1);
+              whereFilterCond = false;
 
               StringTokenizer filtToks = new StringTokenizer(thisToken, filterCondition);
 
@@ -1693,8 +1694,6 @@ public class MartShellLib {
                     filterValue = new StringBuffer();
                     filterName = null;
                     filterCondition = null;
-                    whereFilterName = false;
-                    whereFilterCond = false;
                     whereFilterVal = false;
                   } else
                     filterValue.append(valTok);
@@ -1706,8 +1705,6 @@ public class MartShellLib {
                   filterValue = new StringBuffer();
                   filterName = null;
                   filterCondition = null;
-                  whereFilterName = false;
-                  whereFilterCond = false;
                   whereFilterVal = false;
                 }
               } else {
@@ -1754,6 +1751,8 @@ public class MartShellLib {
                   valTok = valTok.substring(1);                  
                 
                 inQuotedValue = true;
+                whereFilterName = false;
+                whereFilterCond = false;
                   
                 if (valTok.endsWith(QUOTE) || valTok.endsWith(QUOTEESCEND)) {
                   valTok = valTok.substring(0, valTok.length() - 1);
@@ -1764,8 +1763,6 @@ public class MartShellLib {
                   filterValue = new StringBuffer();
                   filterName = null;
                   filterCondition = null;
-                  whereFilterName = false;
-                  whereFilterCond = false;
                   whereFilterVal = false;
                 } else
                   filterValue.append(valTok);
@@ -1798,6 +1795,8 @@ public class MartShellLib {
                 tok = thisToken.substring(1);
 
               inQuotedValue = true;
+              whereFilterName = false;
+              whereFilterCond = false;
 
               if (thisToken.endsWith(QUOTE) || thisToken.endsWith(QUOTEESCEND)) {
                 tok = tok.substring(0, tok.length() - 1);
@@ -1808,8 +1807,6 @@ public class MartShellLib {
                 filterValue = new StringBuffer();
                 filterName = null;
                 filterCondition = null;
-                whereFilterName = false;
-                whereFilterCond = false;
                 whereFilterVal = false;
               } else
                 filterValue.append(tok);
