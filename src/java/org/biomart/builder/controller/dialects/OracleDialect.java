@@ -27,15 +27,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.MartConstructorAction;
-import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
@@ -55,7 +52,6 @@ import org.biomart.builder.model.MartConstructorAction.Partition;
 import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
 import org.biomart.builder.model.MartConstructorAction.Reduce;
 import org.biomart.builder.model.MartConstructorAction.RenameTable;
-import org.biomart.builder.model.MartConstructorAction.Union;
 import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Column;
@@ -666,49 +662,10 @@ public class OracleDialect extends DatabaseDialect {
 				+ " rename to " + newTableName + "");
 	}
 
-	public void doUnion(final Union action, final List statements)
-			throws Exception {
-		final String schemaName = action.getTargetTableSchema() == null ? action
-				.getDataSetSchemaName()
-				: ((JDBCSchema) action.getTargetTableSchema())
-						.getDatabaseSchema();
-		final String tableName = action.getTargetTableName();
-		final StringBuffer sb = new StringBuffer();
-		sb.append("create table " + schemaName + "." + tableName
-				+ " as select * from ");
-		for (int i = 0; i < action.getSourceTableSchemas().size(); i++) {
-			if (i > 0)
-				sb.append(" union select * from ");
-			final String targetSchemaName = action.getSourceTableSchemas().get(
-					i) == null ? action.getDataSetSchemaName()
-					: ((Schema) action.getSourceTableSchemas().get(i))
-							.getName();
-			final String targetTableName = (String) action
-					.getSourceTableNames().get(i);
-			sb.append(targetSchemaName);
-			sb.append(".");
-			sb.append(targetTableName);
-		}
-		statements.add(sb.toString());
-	}
-
 	public List executeSelectDistinct(final Column col) throws SQLException {
 		final String colName = col.getName();
 		final String tableName = col.getTable().getName();
 		final Schema schema = col.getTable().getSchema();
-
-		// The complex case - where we need to do a union of
-		// select distincts.
-		if (schema instanceof SchemaGroup) {
-			final Set results = new HashSet();
-			for (final Iterator i = ((SchemaGroup) schema).getSchemas()
-					.iterator(); i.hasNext();) {
-				final Schema member = (Schema) i.next();
-				results.addAll(this.executeSelectDistinct(member
-						.getTableByName(tableName).getColumnByName(colName)));
-			}
-			return new ArrayList(results);
-		}
 
 		// The simple case where we actually do a select distinct.
 		final List results = new ArrayList();

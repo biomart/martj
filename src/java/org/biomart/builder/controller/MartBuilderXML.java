@@ -39,7 +39,6 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Mart;
-import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
@@ -55,7 +54,6 @@ import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.UniqueValues;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.ValueCollection;
-import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
 import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
@@ -139,8 +137,7 @@ public class MartBuilderXML extends DefaultHandler {
 	 */
 	public static Mart load(final File file) throws IOException,
 			DataModelException {
-		Log.info(Resources.get("logStartLoadingXMLFile", file
-				.getPath()));
+		Log.info(Resources.get("logStartLoadingXMLFile", file.getPath()));
 		// Use the default (non-validating) parser
 		final SAXParserFactory factory = SAXParserFactory.newInstance();
 		// Parse the input
@@ -181,8 +178,7 @@ public class MartBuilderXML extends DefaultHandler {
 	 */
 	public static void save(final Mart mart, final File file)
 			throws IOException, DataModelException {
-		Log.info(Resources.get("logStartSavingXMLFile", file
-				.getPath()));
+		Log.info(Resources.get("logStartSavingXMLFile", file.getPath()));
 		// Open the file.
 		final FileWriter fw = new FileWriter(file);
 		try {
@@ -550,8 +546,7 @@ public class MartBuilderXML extends DefaultHandler {
 				Log.debug("Writing column: " + col);
 				// Skip expression columns till later.
 				if (col instanceof ExpressionColumn) {
-					Log
-							.debug("Saving expression column till later");
+					Log.debug("Saving expression column till later");
 					expressionColumns.add(col);
 					continue;
 				}
@@ -830,19 +825,7 @@ public class MartBuilderXML extends DefaultHandler {
 		final Set externalRelations = new HashSet();
 		for (final Iterator i = mart.getSchemas().iterator(); i.hasNext();) {
 			final Schema schema = (Schema) i.next();
-			if (schema instanceof SchemaGroup) {
-				Log.debug("Writing schema group: " + schema);
-				this.openElement("schemaGroup", xmlWriter);
-				this.writeAttribute("name", schema.getName(), xmlWriter);
-				// Write group itself.
-				this.writeSchemaContents(schema, xmlWriter);
-				// Write member schemas.
-				for (final Iterator j = ((SchemaGroup) schema).getSchemas()
-						.iterator(); j.hasNext();)
-					this.writeSchema((Schema) j.next(), xmlWriter);
-				this.closeElement("schemaGroup", xmlWriter);
-			} else
-				this.writeSchema(schema, xmlWriter);
+			this.writeSchema(schema, xmlWriter);
 			externalRelations.addAll(schema.getExternalRelations());
 		}
 
@@ -995,8 +978,7 @@ public class MartBuilderXML extends DefaultHandler {
 
 	public InputSource resolveEntity(String publicId, String systemId)
 			throws SAXException {
-		Log.debug("Resolving XML entity " + publicId + " "
-				+ systemId);
+		Log.debug("Resolving XML entity " + publicId + " " + systemId);
 		// If the public ID is our own DTD version, then we can use our
 		// own copy of the DTD in our resources bundle.
 		if (MartBuilderXML.DTD_PUBLIC_ID.equals(publicId)
@@ -1059,16 +1041,6 @@ public class MartBuilderXML extends DefaultHandler {
 			// per file, as if more than one is found, the later tags
 			// will override the earlier ones.
 			element = this.constructedMart = new Mart();
-		} else if ("schemaGroup".equals(eName)) {
-			// Start a new group of schemas.
-			final String name = (String) attributes.get("name");
-			try {
-				final SchemaGroup schemaGroup = new GenericSchemaGroup(name);
-				this.constructedMart.addSchema(schemaGroup);
-				element = schemaGroup;
-			} catch (final Exception e) {
-				throw new SAXException(e);
-			}
 		}
 
 		// JDBC schema (anywhere, optionally inside schema group).
@@ -1102,16 +1074,8 @@ public class MartBuilderXML extends DefaultHandler {
 						driverClassName, url, schemaName, username, password,
 						name, keyguessing);
 				schema.storeInHistory();
-				// Are we inside a schema group?
-				if (!this.objectStack.empty()
-						&& this.objectStack.peek() instanceof SchemaGroup) {
-					// Add the schema to the group if we are in a group.
-					final SchemaGroup group = (SchemaGroup) this.objectStack
-							.peek();
-					group.addSchema(schema);
-				} else
-					// Add the schema directly to the mart if outside a group.
-					this.constructedMart.addSchema(schema);
+				// Add the schema directly to the mart if outside a group.
+				this.constructedMart.addSchema(schema);
 				element = schema;
 			} catch (final Exception e) {
 				throw new SAXException(e);

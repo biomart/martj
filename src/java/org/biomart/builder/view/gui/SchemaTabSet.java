@@ -39,8 +39,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 import org.biomart.builder.controller.MartBuilderUtils;
-import org.biomart.builder.exceptions.ValidationException;
-import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.AllSchemasDiagram;
 import org.biomart.builder.view.gui.diagrams.Diagram;
@@ -478,118 +476,6 @@ public class SchemaTabSet extends JTabbedPane {
 				}
 			}
 		});
-	}
-
-	/**
-	 * Asks the user which group to add a schema to, or to define a name for a
-	 * new group, then adds that schema to the group.
-	 * 
-	 * @param schema
-	 *            the schema to add to a group.
-	 */
-	public void requestAddSchemaToSchemaGroup(final Schema schema) {
-		// Find out what groups already exist and make a list.
-		final List groupSchemas = new ArrayList();
-		for (final Iterator i = this.martTab.getMart().getSchemas().iterator(); i
-				.hasNext();) {
-			final Schema groupSchema = (Schema) i.next();
-			if (groupSchema instanceof SchemaGroup)
-				groupSchemas.add(groupSchema.getName());
-		}
-
-		// Add an option to define a new group.
-		final String newGroupName = Resources.get("newSchemaGroup");
-		groupSchemas.add(newGroupName);
-
-		// Ask use which group to use.
-		String groupName = (String) JOptionPane.showInputDialog(null, Resources
-				.get("requestSchemaGroupName"), Resources.get("questionTitle"),
-				JOptionPane.QUESTION_MESSAGE, null, groupSchemas.toArray(),
-				newGroupName);
-
-		// If they cancelled the choice, cancel the add group request too.
-		if (groupName == null)
-			return;
-
-		// If they chose 'new group', get the new group name from a second
-		// dialog.
-		if (groupName.equals(newGroupName))
-			groupName = JOptionPane.showInputDialog(null, Resources
-					.get("requestNewSchemaGroupName"), Resources
-					.get("questionTitle"), JOptionPane.QUESTION_MESSAGE);
-
-		// If they cancelled the second dialog, cancel the add group request
-		// too.
-		if (groupName == null)
-			return;
-
-		// Add schema to group
-		try {
-			// Make sure they actually entered something that wasn't empty.
-			if (groupName.trim().length() == 0)
-				throw new ValidationException(Resources
-						.get("schemaGroupNameIsNull"));
-			else {
-				// Make a final reference to the group name, as we can't make
-				// the name itself final, and we can't use non-final variables
-				// inside the long process loop below.
-				final String groupNameRef = groupName;
-
-				// In the background, add the schema to the group.
-				LongProcess.run(new Runnable() {
-					public void run() {
-						try {
-							// Lookup or create the group, add the schema to it,
-							// then obtain the group that it was added to.
-							final SchemaGroup group = MartBuilderUtils
-									.addSchemaToSchemaGroup(
-											SchemaTabSet.this.martTab.getMart(),
-											schema, groupNameRef);
-
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									// Remove the tab for the individual schema.
-									SchemaTabSet.this.removeSchemaTab(schema);
-
-									// If the group is a new group, ie. contains
-									// only one schema, then add a tab to
-									// represent it.
-									if (group.getSchemas().size() == 1)
-										SchemaTabSet.this.addSchemaTab(group,
-												true);
-
-									// Recalculate the overview diagram.
-									SchemaTabSet.this
-											.recalculateOverviewDiagram();
-
-									// Some datasets may have referred to the
-									// individual schema. As it is no longer
-									// individual, they will have been dropped,
-									// so the dataset tabset needs to be
-									// recalculated.
-									SchemaTabSet.this.martTab
-											.getDataSetTabSet()
-											.recalculateDataSetTabs();
-
-									// Set the dataset tabset status as
-									// modified.
-									SchemaTabSet.this.martTab.getMartTabSet()
-											.setModifiedStatus(true);
-								}
-							});
-						} catch (final Throwable t) {
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									StackTrace.showStackTrace(t);
-								}
-							});
-						}
-					}
-				});
-			}
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
 	}
 
 	/**
@@ -1307,65 +1193,7 @@ public class SchemaTabSet extends JTabbedPane {
 			}
 		});
 	}
-
-	/**
-	 * Confirms with the user, then removes the schema from the group and
-	 * reinstates it as an individual schema.
-	 * 
-	 * @param schema
-	 *            the schema to remove from the group.
-	 * @param schemaGroup
-	 *            the group to remove it from.
-	 */
-	public void requestRemoveSchemaFromSchemaGroup(final Schema schema,
-			final SchemaGroup schemaGroup) {
-		// Confirms with the user.
-		final int choice = JOptionPane.showConfirmDialog(null, Resources
-				.get("confirmUngroupSchema"), Resources.get("questionTitle"),
-				JOptionPane.YES_NO_OPTION);
-
-		// If they didn't say yes, don't do it.
-		if (choice != JOptionPane.YES_OPTION)
-			return;
-
-		// In the background, remove the schema from the group.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Remove the schema from the group and reinstate
-					// it as an individual schema.
-					MartBuilderUtils.removeSchemaFromSchemaGroup(
-							SchemaTabSet.this.martTab.getMart(), schema,
-							schemaGroup);
-
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							// Reinstate the tab for the individual schema.
-							SchemaTabSet.this.addSchemaTab(schema, true);
-
-							// If the group is now empty, remove the tab for it.
-							if (schemaGroup.getSchemas().size() == 0)
-								SchemaTabSet.this.removeSchemaTab(schemaGroup);
-
-							// Recalculate the overview diagram.
-							SchemaTabSet.this.recalculateOverviewDiagram();
-
-							// Set the dataset tabset status as modified.
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.setModifiedStatus(true);
-						}
-					});
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							StackTrace.showStackTrace(t);
-						}
-					});
-				}
-			}
-		});
-	}
-
+	
 	/**
 	 * Asks user for a new name, then renames a schema, which is optionally part
 	 * of a schema group.

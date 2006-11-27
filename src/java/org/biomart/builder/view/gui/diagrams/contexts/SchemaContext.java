@@ -32,7 +32,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.TransferHandler;
 
-import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
@@ -175,11 +174,9 @@ public class SchemaContext implements DiagramContext {
 			contextMenu.addSeparator();
 
 			// Synchronise all schemas in the mart.
-			final JMenuItem syncAll = new JMenuItem(
-					Resources.get("synchroniseAllSchemasTitle"),
-					new ImageIcon(
-							Resources
-									.getResourceAsURL("refresh.gif")));
+			final JMenuItem syncAll = new JMenuItem(Resources
+					.get("synchroniseAllSchemasTitle"), new ImageIcon(Resources
+					.getResourceAsURL("refresh.gif")));
 			syncAll.setMnemonic(Resources.get("synchroniseAllSchemasMnemonic")
 					.charAt(0));
 			syncAll.addActionListener(new ActionListener() {
@@ -194,10 +191,8 @@ public class SchemaContext implements DiagramContext {
 
 			// Add a new schema to the mart.
 			final JMenuItem add = new JMenuItem(
-					Resources.get("addSchemaTitle"),
-					new ImageIcon(
-							Resources
-									.getResourceAsURL("add.gif")));
+					Resources.get("addSchemaTitle"), new ImageIcon(Resources
+							.getResourceAsURL("add.gif")));
 			add.setMnemonic(Resources.get("addSchemaMnemonic").charAt(0));
 			add.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
@@ -336,92 +331,47 @@ public class SchemaContext implements DiagramContext {
 			});
 			contextMenu.add(rename);
 
-			// If this schema IS a schema group...
-			if (schema instanceof SchemaGroup) {
-				// Add an option to synchronise this schema against it's datasource
-				// or database.
-				final JMenuItem update = new JMenuItem(
-						Resources.get("updateSchemaGroupTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("refresh.gif")));
-				update.setMnemonic(Resources.get("updateSchemaGroupMnemonic").charAt(
-						0));
-				update.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						SchemaContext.this.martTab.getSchemaTabSet()
-								.requestSynchroniseSchema(schema);
-					}
-				});
-				contextMenu.add(update);
-			}
-			
-			// If this schema is NOT a schema group, there are more options!
-			else {
+			// Add an option to synchronise this schema against it's datasource
+			// or database.
+			final JMenuItem update = new JMenuItem(Resources
+					.get("updateSchemaTitle"), new ImageIcon(Resources
+					.getResourceAsURL("refresh.gif")));
+			update.setMnemonic(Resources.get("updateSchemaMnemonic").charAt(0));
+			update.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaContext.this.martTab.getSchemaTabSet()
+							.requestModifySchema(schema);
+				}
+			});
+			contextMenu.add(update);
 
-				// Add an option to synchronise this schema against it's datasource
-				// or database.
-				final JMenuItem update = new JMenuItem(
-						Resources.get("updateSchemaTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("refresh.gif")));
-				update.setMnemonic(Resources.get("updateSchemaMnemonic").charAt(
-						0));
-				update.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						SchemaContext.this.martTab.getSchemaTabSet()
-								.requestModifySchema(schema);
-					}
-				});
-				contextMenu.add(update);
+			// Option to remove the schema from the mart.
+			final JMenuItem remove = new JMenuItem(Resources
+					.get("removeSchemaTitle"), new ImageIcon(Resources
+					.getResourceAsURL("cut.gif")));
+			remove.setMnemonic(Resources.get("removeSchemaMnemonic").charAt(0));
+			remove.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaContext.this.martTab.getSchemaTabSet()
+							.requestRemoveSchema(schema);
+				}
+			});
+			contextMenu.add(remove);
 
-				// Option to remove the schema from the mart.
-				final JMenuItem remove = new JMenuItem(
-						Resources.get("removeSchemaTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("cut.gif")));
-				remove.setMnemonic(Resources.get("removeSchemaMnemonic")
-						.charAt(0));
-				remove.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						SchemaContext.this.martTab.getSchemaTabSet()
-								.requestRemoveSchema(schema);
-					}
-				});
-				contextMenu.add(remove);
+			contextMenu.addSeparator();
 
-				contextMenu.addSeparator();
-
-				// Option to replicate the schema.
-				final JMenuItem replicate = new JMenuItem(Resources
-						.get("replicateSchemaTitle"));
-				replicate.setMnemonic(Resources.get("replicateSchemaMnemonic")
-						.charAt(0));
-				replicate.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						SchemaContext.this.martTab.getSchemaTabSet()
-								.requestReplicateSchema(schema);
-					}
-				});
-				contextMenu.add(replicate);
-
-				contextMenu.addSeparator();
-
-				// Option to add the schema to a schema group.
-				final JMenuItem addToGroup = new JMenuItem(Resources
-						.get("addToGroupTitle"));
-				addToGroup.setMnemonic(Resources.get("addToGroupMnemonic")
-						.charAt(0));
-				addToGroup.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						SchemaContext.this.martTab.getSchemaTabSet()
-								.requestAddSchemaToSchemaGroup(schema);
-					}
-				});
-				contextMenu.add(addToGroup);
-			}
+			// Option to replicate the schema.
+			final JMenuItem replicate = new JMenuItem(Resources
+					.get("replicateSchemaTitle"));
+			replicate.setMnemonic(Resources.get("replicateSchemaMnemonic")
+					.charAt(0));
+			replicate.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaContext.this.martTab.getSchemaTabSet()
+							.requestReplicateSchema(schema);
+				}
+			});
+			contextMenu.add(replicate);
 		}
 
 		// Relations have their own menus too.

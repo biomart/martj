@@ -28,11 +28,9 @@ import java.awt.event.ActionListener;
 import java.util.Iterator;
 
 import javax.swing.JLabel;
-import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
-import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Schema;
@@ -98,117 +96,21 @@ public class SchemaComponent extends BoxShapedComponent {
 		this.recalculateDiagramComponent();
 	}
 
-	private JPopupMenu getGroupContextMenu() {
-		// First of all, work out what would have been shown by default.
-		final JPopupMenu contextMenu = super.getContextMenu();
-
-		// Add a divider if necessary.
-		if (contextMenu.getComponentCount() > 0)
-			contextMenu.addSeparator();
-
-		// Add the 'show tables' option, which opens the tab representing
-		// this schema.
-		final JMenuItem showTables = new JMenuItem(Resources
-				.get("showTablesTitle"));
-		showTables.setMnemonic(Resources.get("showTablesMnemonic").charAt(0));
-		showTables.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent evt) {
-				final int index = SchemaComponent.this
-						.getDiagram()
-						.getMartTab()
-						.getSchemaTabSet()
-						.indexOfTab(
-								SchemaComponent.this.getSchemaGroup().getName());
-				SchemaComponent.this.getDiagram().getMartTab()
-						.getSchemaTabSet().setSelectedIndex(index);
-			}
-		});
-		contextMenu.add(showTables);
-
-		contextMenu.addSeparator();
-
-		// Create a submenu containing all the members of the group. Each one
-		// of these will have their own submenu providing the usual functions
-		// available as if they had schema objects which had been clicked on
-		// directly in the diagram.
-		final JMenu groupMembers = new JMenu(Resources.get("groupMembersTitle"));
-		groupMembers.setMnemonic(Resources.get("groupMembersMnemonic")
-				.charAt(0));
-		contextMenu.add(groupMembers);
-
-		// Loop through the schemas in the group.
-		for (final Iterator i = this.getSchemaGroup().getSchemas().iterator(); i
-				.hasNext();) {
-			final Schema schema = (Schema) i.next();
-
-			// Name the menu after the schema.
-			final JMenu schemaMenu = new JMenu(schema.getName());
-
-			// Rename the schema within the group.
-			final JMenuItem renameM = new JMenuItem(Resources
-					.get("renameSchemaTitle"));
-			renameM
-					.setMnemonic(Resources.get("renameSchemaMnemonic")
-							.charAt(0));
-			renameM.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaComponent.this.getDiagram().getMartTab()
-							.getSchemaTabSet().requestRenameSchema(schema,
-									SchemaComponent.this.getSchemaGroup());
-				}
-			});
-			schemaMenu.add(renameM);
-
-			// Modify the schema.
-			final JMenuItem modifyM = new JMenuItem(Resources
-					.get("modifySchemaTitle"));
-			modifyM
-					.setMnemonic(Resources.get("modifySchemaMnemonic")
-							.charAt(0));
-			modifyM.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaComponent.this.getDiagram().getMartTab()
-							.getSchemaTabSet().requestModifySchema(schema);
-				}
-			});
-			schemaMenu.add(modifyM);
-
-			// Divide the ungroup option from the others.
-			schemaMenu.addSeparator();
-
-			// Remove the schema from the group and reinstate as an individual
-			// schema.
-			final JMenuItem unGroup = new JMenuItem(Resources
-					.get("ungroupMemberTitle"));
-			unGroup.setMnemonic(Resources.get("ungroupMemberMnemonic")
-					.charAt(0));
-			unGroup.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaComponent.this.getDiagram().getMartTab()
-							.getSchemaTabSet()
-							.requestRemoveSchemaFromSchemaGroup(schema,
-									SchemaComponent.this.getSchemaGroup());
-				}
-			});
-			schemaMenu.add(unGroup);
-
-			// Add the submenu to the main menu.
-			groupMembers.add(schemaMenu);
-		}
-
-		// Return it. Will be further adapted by a listener elsewhere.
-		return contextMenu;
-	}
-
 	private Schema getSchema() {
 		return (Schema) this.getObject();
 	}
 
-	private SchemaGroup getSchemaGroup() {
-		return (SchemaGroup) this.getObject();
+	/**
+	 * Count the external relations in this schema. This delegates to
+	 * {@link Schema#getExternalRelations()}.
+	 * 
+	 * @return the number of external relations in this schema.
+	 */
+	public int countExternalRelations() {
+		return this.getSchema().getExternalRelations().size();
 	}
 
-	private JPopupMenu getSingleContextMenu() {
+	public JPopupMenu getContextMenu() {
 		// First of all, work out what would have been shown by default.
 		final JPopupMenu contextMenu = super.getContextMenu();
 
@@ -232,25 +134,6 @@ public class SchemaComponent extends BoxShapedComponent {
 		return contextMenu;
 	}
 
-	/**
-	 * Count the external relations in this schema. This delegates to
-	 * {@link Schema#getExternalRelations()}.
-	 * 
-	 * @return the number of external relations in this schema.
-	 */
-	public int countExternalRelations() {
-		return this.getSchema().getExternalRelations().size();
-	}
-
-	public JPopupMenu getContextMenu() {
-		// To obtain the base context menu for this schema object, we
-		// need to know if it is a group or not.
-		if (this.getObject() instanceof SchemaGroup)
-			return this.getGroupContextMenu();
-		else
-			return this.getSingleContextMenu();
-	}
-
 	public void recalculateDiagramComponent() {
 		// Remove all our components.
 		this.removeAll();
@@ -263,25 +146,6 @@ public class SchemaComponent extends BoxShapedComponent {
 		label.setFont(SchemaComponent.BOLD_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
-
-		// Is it a group?
-		if (this.getSchema() instanceof SchemaGroup) {
-			// Add a 'contains' label.
-			label = new JLabel(Resources.get("schemaGroupContains"));
-			label.setFont(SchemaComponent.PLAIN_FONT);
-			this.layout.setConstraints(label, this.constraints);
-			this.add(label);
-
-			// Add a label for each member of the group.
-			for (final Iterator i = ((SchemaGroup) this.getSchema())
-					.getSchemas().iterator(); i.hasNext();) {
-				final Schema s = (Schema) i.next();
-				label = new JLabel(s.getName());
-				label.setFont(SchemaComponent.PLAIN_FONT);
-				this.layout.setConstraints(label, this.constraints);
-				this.add(label);
-			}
-		}
 
 		// Now add any tables with external relations. Loop through the
 		// external keys to identify the tables to do this.

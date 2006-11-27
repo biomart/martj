@@ -34,7 +34,6 @@ import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.exceptions.DataModelException;
@@ -265,11 +264,6 @@ public class DataSet extends GenericSchema {
 					subclassQ, dimensionQ, mergeSourceRelation,
 					relationsFollowed, makeDimensions);
 		}
-
-		// Add a schema name column, if we are partitioning by schema name.
-		if (type.equals(DataSetTableType.MAIN)
-				&& realTable.getSchema() instanceof SchemaGroup)
-			new SchemaNameColumn(Resources.get("schemaColumnName"), dsTable);
 
 		// Create the primary key on this table, but only if it has one.
 		// Don't bother for dimensions.
@@ -576,10 +570,6 @@ public class DataSet extends GenericSchema {
 			throws ValidationException {
 		Log.debug("Flagging restricted table " + table + " in "
 				+ this.getName());
-		// Check this is not a schema group.
-		if (table.getSchema() instanceof SchemaGroup)
-			throw new ValidationException(Resources
-					.get("noTblRestrictSchemaGroup"));
 		// Restrict the table. If the table has already been restricted,
 		// this will override the type.
 		final int index = this.restrictedTables[0].indexOf(table);

@@ -30,7 +30,6 @@ import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Mart;
-import org.biomart.builder.model.SchemaGroup;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
@@ -38,7 +37,6 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableRestriction;
 import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.builder.model.SchemaGroup.GenericSchemaGroup;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.ComponentStatus;
@@ -100,48 +98,6 @@ public class MartBuilderUtils {
 	public static void addSchemaToMart(final Mart mart, final Schema schema) {
 		Log.info(Resources.get("logReqAddSchemaToMart"));
 		mart.addSchema(schema);
-	}
-
-	/**
-	 * This method takes a schema, removes it as an individual schema from a
-	 * mart, and adds it to a group instead. If the group with that name does
-	 * not exist yet, it is created first and added to the mart. The group will
-	 * be synchronised immediately after adding the schema to it. External
-	 * relations will be copied into the group.
-	 * 
-	 * @param mart
-	 *            the mart to remove the schema from, and which contains the
-	 *            group the schema will be added to.
-	 * @param schema
-	 *            the schema to remove from the mart and add to the group.
-	 * @param groupName
-	 *            the name of the group to use. If a group already exists with
-	 *            this name, the schema will be added to it. If not, then the
-	 *            group will be created first.
-	 * @return the group that the schema was added to.
-	 * @throws AssociationException
-	 *             if the schema is not part of the mart specified.
-	 * @throws DataModelException
-	 *             if there was any logical problem constructing a new group to
-	 *             place the schema in.
-	 * @throws SQLException
-	 *             if during synchronisation of the group there was any problem
-	 *             communicating with the data source or database of the newly
-	 *             added schema.
-	 */
-	public static SchemaGroup addSchemaToSchemaGroup(final Mart mart,
-			final Schema schema, final String groupName)
-			throws AssociationException, DataModelException, SQLException {
-		Log.info(Resources.get("logReqAddSchemaToGroup"));
-		SchemaGroup schemaGroup = (SchemaGroup) mart.getSchemaByName(groupName);
-		if (schemaGroup == null || !(schemaGroup instanceof SchemaGroup)) {
-			schemaGroup = new GenericSchemaGroup(groupName);
-			mart.addSchema(schemaGroup);
-		}
-		schemaGroup.addSchema(schema);
-		schemaGroup.synchronise();
-		mart.removeSchema(schema);
-		return schemaGroup;
 	}
 
 	/**
@@ -491,44 +447,6 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Removes a schema from a group and places it back into the mart as an
-	 * individual schema. If that was the last schema in the group, the group
-	 * itself is disbanded. Otherwise, the group is synchronised but the schema
-	 * itself is not. External relations will not be exported to the schema
-	 * unless it is the last schema in the group and the group is now going to
-	 * be disbanded.
-	 * 
-	 * @param mart
-	 *            the mart to add the schema to once it has been removed from
-	 *            the group.
-	 * @param schema
-	 *            the schema to remove from the group.
-	 * @param schemaGroup
-	 *            the group to remove the schema from.
-	 * @throws AssociationException
-	 *             if the schema is not part of the group, or the group is not
-	 *             part of the mart.
-	 * @throws DataModelException
-	 *             if there was any logical problem during synchronisation of
-	 *             the group after removal of the schema.
-	 * @throws SQLException
-	 *             if there was any problem connecting to a data source or
-	 *             database during synchronisation of the group.
-	 */
-	public static void removeSchemaFromSchemaGroup(final Mart mart,
-			final Schema schema, final SchemaGroup schemaGroup)
-			throws AssociationException, DataModelException, SQLException {
-		Log.info(Resources.get("logReqRemoveSchemaFromGroup"));
-		schemaGroup.removeSchema(schema);
-		if (schemaGroup.getSchemas().size() == 0) {
-			schemaGroup.replicateContents(schema);
-			mart.removeSchema(schemaGroup);
-		} else
-			schemaGroup.synchronise();
-		mart.addSchema(schema);
-	}
-
-	/**
 	 * Renames a dataset within a mart. The new name is checked to see if it
 	 * already exists, in which case an exception will be thrown.
 	 * 
@@ -708,21 +626,9 @@ public class MartBuilderUtils {
 		Log.info(Resources.get("logReqSelectRows"));
 		final Schema schema = table.getSchema();
 		final List results = new ArrayList();
-		if (schema instanceof SchemaGroup)
-			for (final Iterator i = ((SchemaGroup) schema).getSchemas()
-					.iterator(); i.hasNext();) {
-				final Schema internalSchema = (Schema) i.next();
-				final DatabaseDialect dd = DatabaseDialect
-						.getDialect(internalSchema);
-				if (dd != null)
-					results.addAll(dd.executeSelectRows(internalSchema
-							.getTableByName(table.getName()), offset, count));
-			}
-		else {
-			final DatabaseDialect dd = DatabaseDialect.getDialect(schema);
-			if (dd != null)
-				results.addAll(dd.executeSelectRows(table, offset, count));
-		}
+		final DatabaseDialect dd = DatabaseDialect.getDialect(schema);
+		if (dd != null)
+			results.addAll(dd.executeSelectRows(table, offset, count));
 		return results;
 	}
 

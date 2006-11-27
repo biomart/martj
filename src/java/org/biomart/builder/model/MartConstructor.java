@@ -57,7 +57,6 @@ import org.biomart.builder.model.MartConstructorAction.Partition;
 import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
 import org.biomart.builder.model.MartConstructorAction.Reduce;
 import org.biomart.builder.model.MartConstructorAction.RenameTable;
-import org.biomart.builder.model.MartConstructorAction.Union;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
@@ -246,21 +245,7 @@ public interface MartConstructor {
 				if (table.getType().equals(DataSetTableType.MAIN))
 					dsMainTable = table;
 			}
-
-			// Work out if we are dealing with a main table that is in a group
-			// schema. If it is, we make a list of all the schemas in the group,
-			// otherwise the list is a singleton list containing the schema of
-			// the main table. This list will be used later to merge
-			// multi-schema
-			// results together into a single table.
-			final Schema rMainTableSchema = dsMainTable.getUnderlyingTable()
-					.getSchema();
-			Collection rSchemas = null;
-			if (rMainTableSchema instanceof SchemaGroup)
-				rSchemas = ((SchemaGroup) rMainTableSchema).getSchemas();
-			else
-				rSchemas = Collections.singletonList(rMainTableSchema);
-
+			
 			// Check not cancelled.
 			this.checkCancelled();
 
@@ -276,9 +261,9 @@ public interface MartConstructor {
 			// Make a list to hold the virtual (temp) table representations.
 			final List vTables = new ArrayList();
 
-			// For each schema, we process all the tables into actions.
-			for (final Iterator i = rSchemas.iterator(); i.hasNext();) {
-				final Schema rSchema = (Schema) i.next();
+			// We process all the tables into actions.
+				final Schema rSchema = dsMainTable.getUnderlyingTable()
+				.getSchema();
 
 				// Make a list of tables for this schema.
 				final List rSchemaVirtualTables = new ArrayList();
@@ -286,7 +271,7 @@ public interface MartConstructor {
 				// Process the main table into actions.
 				VirtualTable vMainTable = new VirtualTable(dsMainTable, null);
 				this.makeActionsForDatasetTable(null, rootAction, actionGraph,
-						rMainTableSchema, rSchema, vMainTable);
+						rSchema, rSchema, vMainTable);
 				rSchemaVirtualTables.add(vMainTable);
 
 				// Check not cancelled.
@@ -325,7 +310,7 @@ public interface MartConstructor {
 					this.makeActionsForDatasetTable(vParentTable,
 							(MartConstructorAction) dsTableLastActions
 									.get(dsParentTable), actionGraph,
-							rMainTableSchema, rSchema, vChildTable);
+							rSchema, rSchema, vChildTable);
 					rSchemaVirtualTables.add(vChildTable);
 
 					// Add last action for newly created table to the last
@@ -348,7 +333,6 @@ public interface MartConstructor {
 
 				// Add all tables for this schema to list of all tables.
 				vTables.addAll(rSchemaVirtualTables);
-			}
 
 			// Set up a break-point last action that waits for all
 			// tables to complete being turned into actions.
@@ -358,62 +342,6 @@ public interface MartConstructor {
 				prePartitionAction.addParent(((VirtualTable) i.next())
 						.getLastActionPerformed());
 			actionGraph.addAction(prePartitionAction);
-
-			// If main table schema is a schema group, do a union on all schemas
-			// for each table to create one mega union table.
-			if (rMainTableSchema instanceof SchemaGroup) {
-				// Merge each set of tables into one.
-				final List vUnionTables = new ArrayList();
-				for (int i = 0; i < vTables.size() / rSchemas.size(); i++) {
-					final List vTablesToUnion = new ArrayList();
-					// We build the set of tables to merge simply by iterating
-					// through the temp tables in steps as large as the total
-					// number of temp tables in one schema. This is based
-					// on the assumption that the temp tables will be generated
-					// in the same order in each schema, and each schema will
-					// have the same number of temp tables.
-					for (int j = i; j < vTables.size(); j += rSchemas.size())
-						vTablesToUnion.add(vTables.get(j));
-					// Create the VirtualTable entry for the union table.
-					final VirtualTable vUnionTable = new VirtualTable(
-							((VirtualTable) vTablesToUnion.get(0))
-									.getDataSetTable(),
-							((VirtualTable) vTablesToUnion.get(0))
-									.getParentDataSetRelation());
-					// Create a new union table based on tablesToUnion.
-					// Action depends on prePartitionAction.
-					final MartConstructorAction union = new Union(
-							this.datasetSchemaName, vUnionTable
-									.getDataSetTable().getName(), null,
-							vUnionTable.getTempTableName(), null,
-							vTablesToUnion);
-					actionGraph.addActionWithParent(union, prePartitionAction);
-					vUnionTable.setLastActionPerformed(union);
-					// Add the union table to the list of unionTables.
-					vUnionTables.add(vUnionTable);
-					// Drop all the original tables that have been unioned now.
-					for (int k = 0; k < vTablesToUnion.size(); k++) {
-						final VirtualTable vTable = (VirtualTable) vTablesToUnion
-								.get(k);
-						// Drop table.
-						final MartConstructorAction drop = new Drop(
-								this.datasetSchemaName, vTable
-										.getDataSetTable().getName(), null,
-								vTable.getTempTableName());
-						actionGraph.addActionWithParent(drop, union);
-					}
-				}
-				vTables.clear();
-				vTables.addAll(vUnionTables);
-
-				// Set up a break-point last action that waits again for all
-				// tables to complete.
-				prePartitionAction = new PlaceHolder(this.datasetSchemaName);
-				for (final Iterator i = vTables.iterator(); i.hasNext();)
-					prePartitionAction.addParent(((VirtualTable) i.next())
-							.getLastActionPerformed());
-				actionGraph.addAction(prePartitionAction);
-			}
 
 			// Partition all partitioned columns.
 			for (final Iterator x = dataset.getTables().iterator(); x.hasNext();)
@@ -475,12 +403,7 @@ public interface MartConstructor {
 										final Key key = (Key) l.next();
 										final Schema keySchema = key.getTable()
 												.getSchema();
-										if (keySchema instanceof SchemaGroup)
-											partitionValues
-													.addAll(((SchemaGroup) keySchema)
-															.getSchemas());
-										else
-											partitionValues.add(keySchema);
+										partitionValues.add(keySchema);
 									}
 							}
 						else
@@ -1234,9 +1157,6 @@ public interface MartConstructor {
 				final Table rTargetTable = rTargetKey.getTable();
 				String rTargetTableName = rTargetTable.getName();
 				Schema rTargetSchema = rTargetTable.getSchema();
-				// Is the target table going to need a union merge?
-				final boolean useUnionMerge = rTargetSchema instanceof SchemaGroup
-						&& !rTargetSchema.equals(rMainTableSchema);
 				// What are the equivalent columns on the existing temp table
 				// that correspond to the key on the previous table?
 				final List dsSourceKeyCols = vConstructionTable
@@ -1247,42 +1167,7 @@ public interface MartConstructor {
 				final List dsTargetIncludeCols = vConstructionTable
 						.getDataSetTable().getUnmaskedDataSetColumns(
 								rSourceRelation);
-				colsSoFar.addAll(dsTargetIncludeCols);
-				// If targetTable is in a group schema that is not the
-				// same group schema we started with, create a union table
-				// containing all the targetTable copies, then merge with
-				// that instead.
-				if (useUnionMerge) {
-					// Build a list of schemas to union tables from.
-					final List rUnionSchemas = new ArrayList();
-					final List rUnionTableNames = new ArrayList();
-					for (final Iterator j = ((SchemaGroup) rTargetTable
-							.getSchema()).getSchemas().iterator(); j.hasNext();) {
-						final Schema rUnionSchema = (Schema) j.next();
-						rUnionSchemas.add(rUnionSchema);
-						rUnionTableNames.add(rTargetTableName);
-					}
-					// Make name for union table, which is now the target table.
-					rTargetTableName = this.helper.getNewTempTableName();
-					// Create union table.
-					final MartConstructorAction union = new Union(
-							this.datasetSchemaName, vConstructionTable
-									.getDataSetTable().getName(), null,
-							rTargetTableName, rUnionSchemas, rUnionTableNames);
-					actionGraph.addActionWithParent(union, lastActionPerformed);
-					// Create index on targetKey on union table.
-					final MartConstructorAction index = new Index(
-							this.datasetSchemaName, vConstructionTable
-									.getDataSetTable().getName(), null,
-							rTargetTableName, rTargetKey.getColumns());
-					actionGraph.addActionWithParent(index, union);
-					// Update the last action performed to reflect the index
-					// of the union table.
-					lastActionPerformed = index;
-					// Target schema is now the dataset schema. Null
-					// represents this.
-					rTargetSchema = null;
-				}
+				colsSoFar.addAll(dsTargetIncludeCols);				
 				// Generate new temp table name for merged table.
 				final String vMergedTableTempName = this.helper
 						.getNewTempTableName();
@@ -1308,15 +1193,6 @@ public interface MartConstructor {
 				lastActionPerformed = merge;
 				// Update temp table name to point to newly merged table.
 				vTableTempName = vMergedTableTempName;
-				// If targetTable was a union table, drop it.
-				if (useUnionMerge) {
-					// Drop union target table. Dependent on
-					// lastActionPerformed, but does not update it.
-					final Drop drop = new Drop(this.datasetSchemaName,
-							vConstructionTable.getDataSetTable().getName(),
-							null, rTargetTableName);
-					actionGraph.addActionWithParent(drop, merge);
-				}
 			}
 
 			// Merge subsequent tables based on underlying relations,
@@ -1335,9 +1211,6 @@ public interface MartConstructor {
 				final Table rTargetTable = rTargetKey.getTable();
 				String rTargetTableName = rTargetTable.getName();
 				Schema rTargetSchema = rTargetTable.getSchema();
-				// Is the target table going to need a union merge?
-				final boolean useUnionMerge = rTargetSchema instanceof SchemaGroup
-						&& !rTargetSchema.equals(rMainTableSchema);
 				// What are the equivalent columns on the existing temp table
 				// that correspond to the key on the previous table?
 				final List dsSourceKeyCols = vConstructionTable
@@ -1352,41 +1225,6 @@ public interface MartConstructor {
 				// Skip the merge if we won't gain anything from it.
 				if (dsTargetIncludeCols.isEmpty())
 					continue;
-				// If targetTable is in a group schema that is not the
-				// same group schema we started with, create a union table
-				// containing all the targetTable copies, then merge with
-				// that instead.
-				if (useUnionMerge) {
-					// Build a list of schemas to union tables from.
-					final List rUnionSchemas = new ArrayList();
-					final List rUnionTableNames = new ArrayList();
-					for (final Iterator j = ((SchemaGroup) rTargetTable
-							.getSchema()).getSchemas().iterator(); j.hasNext();) {
-						final Schema rUnionSchema = (Schema) j.next();
-						rUnionSchemas.add(rUnionSchema);
-						rUnionTableNames.add(rTargetTableName);
-					}
-					// Make name for union table, which is now the target table.
-					rTargetTableName = this.helper.getNewTempTableName();
-					// Create union table.
-					final MartConstructorAction union = new Union(
-							this.datasetSchemaName, vConstructionTable
-									.getDataSetTable().getName(), null,
-							rTargetTableName, rUnionSchemas, rUnionTableNames);
-					actionGraph.addActionWithParent(union, lastActionPerformed);
-					// Create index on targetKey on union table.
-					final MartConstructorAction index = new Index(
-							this.datasetSchemaName, vConstructionTable
-									.getDataSetTable().getName(), null,
-							rTargetTableName, rTargetKey.getColumns());
-					actionGraph.addActionWithParent(index, union);
-					// Update the last action performed to reflect the index
-					// of the union table.
-					lastActionPerformed = index;
-					// Target schema is now the dataset schema. Null
-					// represents this.
-					rTargetSchema = null;
-				}
 				// Index sourceDSKey columns.
 				final MartConstructorAction index = new Index(
 						this.datasetSchemaName, vConstructionTable
@@ -1419,15 +1257,6 @@ public interface MartConstructor {
 				actionGraph.addActionWithParent(drop, merge);
 				// Update temp table name to point to newly merged table.
 				vTableTempName = vMergedTableTempName;
-				// If targetTable was a union table, drop it.
-				if (useUnionMerge) {
-					// Drop union target table. Dependent on
-					// lastActionPerformed, but does not update it.
-					drop = new Drop(this.datasetSchemaName, vConstructionTable
-							.getDataSetTable().getName(), null,
-							rTargetTableName);
-					actionGraph.addActionWithParent(drop, merge);
-				}
 			}
 
 			// Add in all the concat-relation columns.
@@ -1447,9 +1276,6 @@ public interface MartConstructor {
 				// What is the table to be concatted?
 				final Table rConcatTargetTable = rConcatTargetKey.getTable();
 				String rConcatTargetTableName = rConcatTargetTable.getName();
-				// Is the target table going to need a union merge?
-				final boolean useUnionMerge = !rConcatTargetTable.getSchema()
-						.equals(rMainTableSchema);
 				// What columns on the table should be concatted?
 				final List rConcatTargetCols = vConstructionTable.getDataSet()
 						.getConcatRelationType(rConcatRelation)
@@ -1460,52 +1286,6 @@ public interface MartConstructor {
 						.getDataSetTable().getUnmaskedDataSetColumns(
 								rConcatSourceKey.getColumns(), rConcatRelation,
 								null);
-				// If concatColumn is in a table in a group schema
-				// that is not the same group schema we started with, create
-				// a union table containing all the concatTable copies, then
-				// concat that instead.
-				Schema rConcatTargetSchema;
-				if (useUnionMerge) {
-					// Build a list of schemas to union tables from.
-					final List rUnionTableSchemas = new ArrayList();
-					final List rUnionTableNames = new ArrayList();
-					if (rConcatTargetTable.getSchema() instanceof SchemaGroup)
-						for (final Iterator j = ((SchemaGroup) rConcatTargetTable
-								.getSchema()).getSchemas().iterator(); j
-								.hasNext();) {
-							final Schema rUnionSchema = (Schema) j.next();
-							rUnionTableSchemas.add(rUnionSchema);
-							rUnionTableNames.add(rConcatTargetTable.getName());
-						}
-					else {
-						rUnionTableSchemas.add(rConcatTargetTable.getSchema());
-						rUnionTableNames.add(rConcatTargetTable.getName());
-					}
-					// Make name for union table, which is now the target table.
-					// Note how the target table is now a temp table.
-					rConcatTargetTableName = this.helper.getNewTempTableName();
-					// Create union table.
-					final MartConstructorAction union = new Union(
-							this.datasetSchemaName, vConstructionTable
-									.getDataSetTable().getName(), null,
-							rConcatTargetTableName, rUnionTableSchemas,
-							rUnionTableNames);
-					actionGraph.addActionWithParent(union, lastActionPerformed);
-					// Create index on targetKey on union table. Dependent
-					// on lastActionPerformed, and updates it.
-					final MartConstructorAction index = new Index(
-							this.datasetSchemaName, vConstructionTable
-									.getDataSetTable().getName(), null,
-							rConcatTargetTableName, rConcatTargetKey
-									.getColumns());
-					actionGraph.addActionWithParent(index, union);
-					lastActionPerformed = index;
-					// Target schema is now the dataset schema. Null
-					// represents this.
-					rConcatTargetSchema = null;
-				} else
-					// Target schema name is same as source schema.
-					rConcatTargetSchema = rSchema;
 				// Create the concat table by selecting sourceKey.
 				String vConcatTableTempName = this.helper.getNewTempTableName();
 				final MartConstructorAction createCon = new Create(
@@ -1525,7 +1305,7 @@ public interface MartConstructor {
 						this.datasetSchemaName, vConstructionTable
 								.getDataSetTable().getName(), null,
 						vPopulatedConcatTableTempName, null, vTableTempName,
-						vSourceKeyCols, rConcatTargetSchema,
+						vSourceKeyCols, rSchema,
 						rConcatTargetTableName, rConcatTargetKey.getColumns(),
 						rConcatTargetCols, dsConcatCol.getName(),
 						vConstructionTable.getDataSet().getConcatRelationType(
@@ -1576,15 +1356,6 @@ public interface MartConstructor {
 								.getDataSetTable().getName(), null,
 						vConcatTableTempName);
 				actionGraph.addActionWithParent(dropCon, merge);
-				// If concat table was a union table, drop it.
-				if (useUnionMerge) {
-					// Drop union concat table. Dependent on
-					// lastActionPerformed, but does not update it.
-					drop = new Drop(this.datasetSchemaName, vConstructionTable
-							.getDataSetTable().getName(), null,
-							rConcatTargetTableName);
-					actionGraph.addActionWithParent(drop, merge);
-				}
 			}
 
 			// Add all the expression columns.
