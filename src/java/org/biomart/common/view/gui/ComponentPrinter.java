@@ -121,13 +121,13 @@ public class ComponentPrinter implements Printable {
 			// huge on paper.
 			g2d.scale(xscale, yscale);
 			// Do the printing.
-			final RepaintManager currentManager = RepaintManager
+			final RepaintManager repaintManager = RepaintManager
 					.currentManager(this.component);
-			final boolean doubleBufferingEnabled = currentManager
+			final boolean doubleBufferingEnabled = repaintManager
 					.isDoubleBufferingEnabled();
-			currentManager.setDoubleBufferingEnabled(false);
+			repaintManager.setDoubleBufferingEnabled(false);
 			this.component.printAll(g2d);
-			currentManager.setDoubleBufferingEnabled(doubleBufferingEnabled);
+			repaintManager.setDoubleBufferingEnabled(doubleBufferingEnabled);
 			Log.debug("Page printed");
 			return Printable.PAGE_EXISTS;
 		}
