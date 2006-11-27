@@ -122,7 +122,7 @@ public class SchemaTabSet extends JTabbedPane {
 		this.recalculateSchemaTabs();
 	}
 
-	private void addSchemaTab(final Schema schema) {
+	private void addSchemaTab(final Schema schema, final boolean selectNewSchema) {
 		Log.info(Resources.get("logAddSchemaTab", "" + schema));
 		// Create the diagram to represent this schema.
 		final SchemaDiagram schemaDiagram = new SchemaDiagram(this.martTab,
@@ -147,10 +147,17 @@ public class SchemaTabSet extends JTabbedPane {
 		// schema.
 		this.recalculateOverviewDiagram();
 
-		// Fake a click on the all-schemas tab and on the button
-		// that selects the schema editor in the current mart tabset.
-		this.setSelectedIndex(0);
-		this.martTab.selectSchemaEditor();
+		if (selectNewSchema) {
+			// Fake a click on the schema tab and on the button
+			// that selects the schema editor in the current mart tabset.
+			this.setSelectedIndex(this.indexOfTab(schema.getName()));
+			this.martTab.selectSchemaEditor();
+		} else {
+			// Fake a click on the all-schemas tab and on the button
+			// that selects the schema editor in the current mart tabset.
+			this.setSelectedIndex(0);
+			this.martTab.selectSchemaEditor();
+		}
 	}
 
 	private String askUserForSchemaName(final String defaultResponse) {
@@ -368,7 +375,7 @@ public class SchemaTabSet extends JTabbedPane {
 				.hasNext();) {
 			final Schema schema = (Schema) i.next();
 			if (!this.schemaToDiagram[0].contains(schema))
-				this.addSchemaTab(schema);
+				this.addSchemaTab(schema, false);
 		}
 
 		// Remove all schemas we have that are no longer in the mart.
@@ -457,7 +464,7 @@ public class SchemaTabSet extends JTabbedPane {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							// Create and add the tab representing this schema.
-							SchemaTabSet.this.addSchemaTab(schema);
+							SchemaTabSet.this.addSchemaTab(schema, true);
 
 							// Update the diagram to match the synchronised
 							// contents.
@@ -548,7 +555,8 @@ public class SchemaTabSet extends JTabbedPane {
 									// only one schema, then add a tab to
 									// represent it.
 									if (group.getSchemas().size() == 1)
-										SchemaTabSet.this.addSchemaTab(group);
+										SchemaTabSet.this.addSchemaTab(group,
+												true);
 
 									// Recalculate the overview diagram.
 									SchemaTabSet.this
@@ -1333,7 +1341,7 @@ public class SchemaTabSet extends JTabbedPane {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							// Reinstate the tab for the individual schema.
-							SchemaTabSet.this.addSchemaTab(schema);
+							SchemaTabSet.this.addSchemaTab(schema, true);
 
 							// If the group is now empty, remove the tab for it.
 							if (schemaGroup.getSchemas().size() == 0)
@@ -1429,7 +1437,7 @@ public class SchemaTabSet extends JTabbedPane {
 					this.martTab.getMart(), schema, newName);
 
 			// Add a tab to represent the replicate.
-			this.addSchemaTab(newSchema);
+			this.addSchemaTab(newSchema, true);
 
 			// Set the dataset tabset status as modified.
 			this.martTab.getMartTabSet().setModifiedStatus(true);

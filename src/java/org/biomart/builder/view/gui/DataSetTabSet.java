@@ -126,7 +126,8 @@ public class DataSetTabSet extends JTabbedPane {
 		this.recalculateDataSetTabs();
 	}
 
-	private void addDataSetTab(final DataSet dataset) {
+	private void addDataSetTab(final DataSet dataset,
+			final boolean selectDataset) {
 		Log.info(Resources.get("logAddDatasetTab", "" + dataset));
 		// Create the diagram to represent this dataset.
 		final DataSetDiagram datasetDiagram = new DataSetDiagram(this.martTab,
@@ -152,9 +153,15 @@ public class DataSetTabSet extends JTabbedPane {
 		// dataset.
 		this.recalculateOverviewDiagram();
 
-		// Fake a click on the overview tab.
-		this.setSelectedIndex(0);
-		this.martTab.selectDataSetEditor();
+		if (selectDataset) {
+			// Fake a click on the dataset tab.
+			this.setSelectedIndex(this.indexOfTab(dataset.getName()));
+			this.martTab.selectDataSetEditor();
+		} else {
+			// Fake a click on the overview tab.
+			this.setSelectedIndex(0);
+			this.martTab.selectDataSetEditor();
+		}
 	}
 
 	private String askUserForName(final String message,
@@ -210,8 +217,7 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	private void removeDataSetTab(final DataSet dataset) {
-		Log
-				.info(Resources.get("logRemoveDatasetTab", "" + dataset));
+		Log.info(Resources.get("logRemoveDatasetTab", "" + dataset));
 		// Work out the currently selected tab.
 		final int currentTab = this.getSelectedIndex();
 
@@ -372,7 +378,7 @@ public class DataSetTabSet extends JTabbedPane {
 				.hasNext();) {
 			final DataSet dataset = (DataSet) i.next();
 			if (!this.datasetToDiagram[0].contains(dataset))
-				this.addDataSetTab(dataset);
+				this.addDataSetTab(dataset, false);
 		}
 
 		// Remove all datasets we have that are no longer in the mart.
@@ -1234,7 +1240,7 @@ public class DataSetTabSet extends JTabbedPane {
 					this.martTab.getMart(), dataset, newName);
 
 			// Add a tab to represent the replicate.
-			this.addDataSetTab(newDataSet);
+			this.addDataSetTab(newDataSet, true);
 
 			// Update the overview diagram.
 			this.recalculateOverviewDiagram();
@@ -1320,7 +1326,8 @@ public class DataSetTabSet extends JTabbedPane {
 								for (final Iterator i = dssRef.iterator(); i
 										.hasNext();) {
 									final DataSet dataset = (DataSet) i.next();
-									DataSetTabSet.this.addDataSetTab(dataset);
+									DataSetTabSet.this.addDataSetTab(dataset,
+											true);
 								}
 
 								// Update the overview diagram.
@@ -1380,7 +1387,7 @@ public class DataSetTabSet extends JTabbedPane {
 						// it.
 						for (final Iterator i = dss.iterator(); i.hasNext();) {
 							final DataSet dataset = (DataSet) i.next();
-							DataSetTabSet.this.addDataSetTab(dataset);
+							DataSetTabSet.this.addDataSetTab(dataset, false);
 						}
 
 						// Update the overview diagram.

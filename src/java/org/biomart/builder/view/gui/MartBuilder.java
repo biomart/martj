@@ -19,7 +19,6 @@
 package org.biomart.builder.view.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -71,11 +70,9 @@ public class MartBuilder extends BioMartGUI {
 		// Set up the set of tabs to hold the various marts.
 		this.martTabSet = new MartTabSet(this);
 		this.getContentPane().add(this.martTabSet, BorderLayout.CENTER);
-	}
-
-	public Dimension getMinimumSize() {
-		// An arbitrary minimum size.
-		return new Dimension(400, 400);
+		
+		// Go straight to the 'New' page.
+		this.martTabSet.requestNewMart();
 	}
 
 	/**

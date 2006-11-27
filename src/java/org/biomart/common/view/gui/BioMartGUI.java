@@ -19,6 +19,7 @@
 package org.biomart.common.view.gui;
 
 import java.awt.EventQueue;
+import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -107,7 +108,7 @@ public abstract class BioMartGUI extends JFrame {
 		this.pack();
 
 		// Set a sensible size.
-		this.setSize(this.getMinimumSize());
+		this.setSize(this.getToolkit().getScreenSize());
 	}
 
 	/**
