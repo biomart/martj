@@ -19,7 +19,6 @@
 package org.biomart.common.view.gui;
 
 import java.awt.EventQueue;
-import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
