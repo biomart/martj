@@ -136,70 +136,26 @@ private InputPage[] getAttributeWidgets(AttributeCollection collection, AdaptorM
         AttributeDescription a = (AttributeDescription) element;
         if (tree.skipConfigurationObject(a)) continue;
 
-        if (a.getInternalName().indexOf('.') > 0) 
+        if (a.getPointerDataset()!=null && !"".equals(a.getPointerDataset())) 
         {
-        	String[] info = a.getInternalName().split("\\.");
-            String dname = info[0];
-            String aname = info[1];
-            String main_dataset = dsv.getDataset(); // returns data set name hsapiens_gene_ensembl
-                   
-        	if (dname.compareTo(main_dataset) == 0) /// check if its  a self pointing place holder
-        	{        		     		
-        		// getting the page from xml which contains this attribute, could be more than one pages, here we get the first 1
-        		AttributePage  attpage_PH = dsv.getPageForAttribute(aname);
-        		
-        		if (attpage_PH != null) // snp_mart_* caused problems due to some errros in XML        		
-        		{
-        			AttributeCollection collection_PH = attpage_PH.getCollectionForAttributeDescription(aname);  		        		
-	        			
-	        		List attributeDescriptions_PH = collection_PH.getAttributeDescriptions();
-	        	    
-	        		List pages_PH = new ArrayList();
-	
-	        	    for (Iterator iter_PH = attributeDescriptions_PH.iterator(); iter_PH.hasNext();) 
-	        	    {
-	        	      Object element_PH = iter_PH.next();
-	        	      
-	        	      if (element_PH instanceof AttributeDescription) 
-	        	      {
-	
-	        	        AttributeDescription a_PH = (AttributeDescription) element_PH;
-	        	        if (tree.skipConfigurationObject(a_PH)) continue;
-	        	       
-	        	        if(a_PH.getInternalName().compareTo(aname) == 0) // means same
-	        	        {
-	        	            a.setInternalName(a_PH.getInternalName());
-		        	        a.setDisplayName(a_PH.getDisplayName());
-		        	        a.setField(a_PH.getField());
-		        	        a.setTableConstraint(a_PH.getTableConstraint());	        	 
-		        	        a.setKey(a_PH.getKey());
-		        	       
-		        	        break;
-	        	        }
-	        	      }
-	        	    }
-        		}
-        		else
-        		{
-        			// else placed specially for snps_mart_38, where some self pointing place holders points to nowhere
-        			a.setInternalName(aname);
-        	        a.setDisplayName(aname);
-        	        a.setHidden("true");
-        			a.setDisplay("true"); // means hideDisplay = true
-        			
-        			
-        		}
-        	}                 	
-        	else 
-        	{
+            String dname = a.getPointerDataset();
+            String aname = a.getPointerAttribute();
+
         		try {
-        		a.setDisplayName(manager.getPointerAttribute(a.getInternalName()).getDisplayName());
-        		a.setField(a.getInternalName());
-        		a.setTableConstraint(a.getInternalName());
+                    DatasetConfig ds = dsv.getAdaptor().getDatasetConfigByDatasetInternalName(dname, "default");
+                    AttributeDescription a2 = ds.getAttributeDescriptionByInternalName(aname);
+                    a.setDisplayName(a2.getDisplayName());
+                    a.setInternalName(a2.getInternalName());
+                    a.setField(a2.getField());
+                    a.setTableConstraint(a2.getTableConstraint());
+                    a.setKey(a2.getKey());
+        		}  catch (ConfigurationException e) {
+        			e.printStackTrace();
+                	continue; // This is not a resolvable placeholder. Skip to the next.
         		} catch (RuntimeException e) {
+        			e.printStackTrace();
                 	continue; // This is not a resolvable placeholder. Skip to the next.
         		}
-        	}
         }
         
         AttributeDescriptionWidget w = new AttributeDescriptionWidget(query, a, tree);

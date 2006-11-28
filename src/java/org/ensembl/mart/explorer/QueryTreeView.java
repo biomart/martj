@@ -399,7 +399,7 @@ public class QueryTreeView extends JTree implements QueryListener {
         //TODO: remove hard-coded sequence description
         try {
           query.setSequenceDescription(
-            new SequenceDescription("hsapiens_genomic_sequence.coding", testAdaptor));
+            new SequenceDescription("hsapiens_gene_ensembl","hsapiens_genomic_sequence","coding", testAdaptor));
         } catch (InvalidQueryException e1) {
           e1.printStackTrace();
         }

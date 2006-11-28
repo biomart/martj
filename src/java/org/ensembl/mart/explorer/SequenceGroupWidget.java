@@ -213,7 +213,7 @@ public class SequenceGroupWidget
   
   for (int i = 0, n = seq_atts.size(); i < n; i++) {
       AttributeDescription pointer = (AttributeDescription) seq_atts.get(i);
-      AttributeDescription realAtt =  manager.getPointerAttribute(pointer.getInternalName());
+      AttributeDescription realAtt =  manager.getPointerAttribute(pointer);
       
       JRadioButton button = new JRadioButton(realAtt.getDisplayName());
       button.addActionListener(this);
@@ -305,7 +305,7 @@ public class SequenceGroupWidget
     
     for (int i = 0, n = seq_atts.size(); i < n; i++) {
         AttributeDescription pointer = (AttributeDescription) seq_atts.get(i);
-        AttributeDescription realAtt =  manager.getPointerAttribute(pointer.getInternalName());
+        AttributeDescription realAtt =  manager.getPointerAttribute(pointer);
         
         JRadioButton button = new JRadioButton(realAtt.getDisplayName());
         button.addActionListener(this);
@@ -314,7 +314,7 @@ public class SequenceGroupWidget
         includeButtons[i] = button;
         seqTypes[i] = pointer.getInternalName();
         
-        if (gene_excludes.contains(pointer.getInternalName().split("\\.")[1]))
+        if (pointer.getPointerAttribute()!=null && gene_excludes.contains(pointer.getPointerAttribute()))
             tran_atts.add(button);
         else
             gene_atts.add(button);
@@ -564,7 +564,7 @@ public class SequenceGroupWidget
     else {
       if (containsImage) {
         //just need to know which image to load
-        String seqD = sd.getSeqDescription().split("\\.")[1];
+    	String seqD = sd.getSeqDescription();
         if (sd.getLeftFlank() > 0)
           seqD += "_5";
         if (sd.getRightFlank() > 0)
@@ -596,8 +596,16 @@ public class SequenceGroupWidget
 
       try {
 
+			AttributePage seqPage = dsv.getAttributePageByInternalName("sequences");
+			// for wormmart
+			if (seqPage == null) seqPage = dsv.getAttributePageByInternalName("sequence");
+
+			AttributeDescription attrDesc = seqPage.getAttributeDescriptionByInternalName(sequenceType);
+			String seqDs = attrDesc.getPointerDataset();
+			if (seqDs==null || "".equals(seqDs)) seqDs = dsv.getDataset();
+			
         SequenceDescription newAttribute =
-          new SequenceDescription(sequenceType, manager.getRootAdaptor(), leftFlank, rightFlank);
+          new SequenceDescription(dsv.getDataset(), seqDs, sequenceType, manager.getRootAdaptor(), leftFlank, rightFlank);
 
         SequenceDescription oldAttribute = query.getSequenceDescription();
 
@@ -608,9 +616,6 @@ public class SequenceGroupWidget
             		
 		  	// try to add remove atts logic here
 		  			
-			AttributePage seqPage = dsv.getAttributePageByInternalName("sequences");
-			// for wormmart
-			if (seqPage == null) seqPage = dsv.getAttributePageByInternalName("sequence");
 		  	ArrayList attsToRemove = new ArrayList();       
 			boolean removeSeq = false;
           

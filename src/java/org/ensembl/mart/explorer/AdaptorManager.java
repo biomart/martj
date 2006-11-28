@@ -447,27 +447,24 @@ public class AdaptorManager extends Box {
     rootAdaptor.clearCache();
   }
 
-public AttributeDescription getPointerAttribute(String internalName) {
-    String[] info = internalName.split("\\.");
-    String dname = info[0];
-    String aname = info[1];
+public AttributeDescription getPointerAttribute(AttributeDescription pointer) {
     
     DatasetConfig d = null;
     try {
-        d = getRootAdaptor().getDatasetConfigByDatasetInternalName(dname, "default");
+        d = getRootAdaptor().getDatasetConfigByDatasetInternalName(pointer.getPointerDataset(), "default");
     } catch (ConfigurationException e) {
-       throw new RuntimeException("Could not get pointer dataset for " + internalName + "\n");
+       throw new RuntimeException("Could not get pointer dataset for " + pointer.getInternalName() + "\n");
     }
     
     if (d == null)
-        throw new RuntimeException("Could not get pointer dataset for " + internalName + "\n");
+        throw new RuntimeException("Could not get pointer dataset for " + pointer.getInternalName() + "\n");
     
     AttributeDescription ret = null;
     
-    ret = d.getAttributeDescriptionByInternalName(aname);
+    ret = d.getAttributeDescriptionByInternalName(pointer.getPointerAttribute());
     
     if ( ret == null )
-        throw new RuntimeException("Could not get pointer attribute for " + internalName + "\n");
+        throw new RuntimeException("Could not get pointer attribute for " + pointer.getInternalName() + "\n");
     
     return ret;
 }

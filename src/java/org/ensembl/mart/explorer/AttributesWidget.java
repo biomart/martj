@@ -125,7 +125,7 @@ public class AttributesWidget extends InputPage {
                   if (!skip) {
                       //test for presence of sequence dataset
                       AttributeDescription seqDesc = (AttributeDescription) seqCol.getAttributeDescriptions().get(0);
-                      String seqDataset = seqDesc.getInternalName().split("\\.")[0];
+                      String seqDataset = seqDesc.getPointerDataset();
                       if (manager.getRootAdaptor().getNumDatasetConfigsByDataset(seqDataset) < 1) {
                           feedback.info("You must load sequence dataset " 
                                        + seqDataset 
@@ -149,9 +149,9 @@ public class AttributesWidget extends InputPage {
                   
                 //get the first attribute, and test its dataset to see if it is duplicated
                 AttributeDescription firstAtt = (AttributeDescription) nonSeqGroup.getAttributeCollections()[0].getAttributeDescriptions().get(0);
-                String dataset = firstAtt.getInternalName().split("\\.")[0];
+                String dataset = firstAtt.getPointerDataset();
                 
-                if (manager.getRootAdaptor().getNumDatasetConfigsByDataset(dataset) > 1) {
+                if (dataset!=null && manager.getRootAdaptor().getNumDatasetConfigsByDataset(dataset) > 1) {
                     feedback.info("Dataset " + dataset + " with sequence support has been loaded more than once, skipping sequence page\n");
                     skip = true;
                 }   

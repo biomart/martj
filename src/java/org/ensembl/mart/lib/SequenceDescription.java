@@ -51,6 +51,18 @@ public final class SequenceDescription {
         return refDataSource;
     }
     /**
+     * @return Returns the refDatasetName.
+     */
+    public String getRefDatasetName() {
+        return refDatasetName;
+    }
+    /**
+     * @return Returns the seqDatasetName.
+     */
+    public String getSeqDatasetName() {
+        return seqDatasetName;
+    }
+    /**
      * @return Returns the seqDescription.
      */
     public String getSeqDescription() {
@@ -76,8 +88,8 @@ public final class SequenceDescription {
 	 * 
 	 * @param type int
 	 */
-	public SequenceDescription(String seqDescription, DSConfigAdaptor adaptor) throws InvalidQueryException {
-		this(seqDescription, adaptor, 0, 0);
+	public SequenceDescription(String refDatasetName, String seqDatasetName, String seqDescription, DSConfigAdaptor adaptor) throws InvalidQueryException {
+		this(refDatasetName, seqDatasetName, seqDescription, adaptor, 0, 0);
 	}
 	
 	/**
@@ -90,8 +102,10 @@ public final class SequenceDescription {
 	 * @throws InvalidQueryException if the client requests an unknown sequence type,
 	 *         or requests flanking sequence for a sequence which is not applicable for flanking sequence.
 	 */
-	public SequenceDescription(String seqDescription, DSConfigAdaptor adaptor, int lflank, int rflank) throws InvalidQueryException {
+	public SequenceDescription(String refDatasetName, String seqDatasetName, String seqDescription, DSConfigAdaptor adaptor, int lflank, int rflank) throws InvalidQueryException {
+		this.seqDatasetName = seqDatasetName;
       this.seqDescription = seqDescription;
+      this.refDatasetName = refDatasetName;
       this.adaptor = adaptor;
       this.leftFlank = lflank;
       this.rightFlank = rflank;
@@ -102,14 +116,14 @@ public final class SequenceDescription {
       seqInfo = refDataset.getOptionalParameter();
 	}
 
-	private void addSeqConfig() throws InvalidQueryException {
-	      String[] pts = seqDescription.split("\\."); //split on the period to get the dataset and seqType
-	      String seqDatasetName = pts[0];
-	      seqType = pts[1];
-	      
+	private void addSeqConfig() throws InvalidQueryException {      
 	      try {
-	          refDataset = adaptor.getDatasetConfigByDatasetInternalName(seqDatasetName, "default"); //assume default for now
-	      } catch (ConfigurationException e) {
+	    	  seqType = seqDescription;
+	          refDataset = adaptor.getDatasetConfigByDatasetInternalName(refDatasetName, "default"); //assume default for now
+	          finalDatasetName = seqDatasetName;
+	          finalDataset = adaptor.getDatasetConfigByDatasetInternalName(seqDatasetName, "default");
+              finalDataSource = finalDataset.getAdaptor().getDataSource();
+          } catch (ConfigurationException e) {
 	          throw new InvalidQueryException("addSeqConfig: Could not get Sequence Dataset for " + seqDatasetName + "\n", e);
 	      }
 	}
@@ -133,6 +147,8 @@ public final class SequenceDescription {
 	    finalDataSource = o.getFinalDataSource();
 	    finalLink = o.getFinalLink();
 		subQuery = o.getSubQuery();
+		seqDatasetName = o.getSeqDatasetName();
+		refDatasetName = o.getRefDatasetName();
 	}
 	
     /**
@@ -158,37 +174,21 @@ public final class SequenceDescription {
     }
     
     public Attribute getAttribute(Attribute attribute) throws InvalidQueryException {
-        if (attribute.getField().indexOf('.') < 1)
-            return attribute;
-        
-        String[] structureAttInfo = attribute.getField().split("\\.");
-        String structureAttName = structureAttInfo[1];
-        
-        if (finalDataset == null) {
-            try {
-              finalDatasetName = structureAttInfo[0];
-              
-              if (finalDatasetName.equals(refDataset.getDataset())) {
-                  finalDataset = refDataset;
-                  finalDataSource = refDataSource;
-              } else {
-                finalDataset = adaptor.getDatasetConfigByDatasetInternalName(finalDatasetName, "default");
-                finalDataSource = finalDataset.getAdaptor().getDataSource();
-              }
-              
+        AttributeDescription attrDesc = refDataset.getAttributeDescriptionByInternalName(attribute.getField());
+        System.err.println("Attribute field name: "+attribute.getField()+" gave "+attrDesc);
+
               if (subQuery != null)
                   initializeSubQuery();
-            } catch (ConfigurationException e) {
-              throw new InvalidQueryException("getAttribute: Could not determine sequence information\n", e);
-            }
-        }
-        
-        AttributeDescription structAttD = finalDataset.getAttributeDescriptionByInternalName(structureAttName);
-        
-        if (structAttD == null)
-            throw new InvalidQueryException("getAttribute: Could not get attribute " + structureAttName + " from " + finalDataset.getDisplayName() + "\n");
-        
-        return new FieldAttribute(structAttD.getField(), structAttD.getTableConstraint(), structAttD.getKey());
+        	
+        	if (attrDesc!=null && attrDesc.getPointerDataset()!=null && !"".equals(attrDesc.getPointerDataset())) {        	
+              AttributeDescription structAttD = finalDataset.getAttributeDescriptionByInternalName(attrDesc.getPointerAttribute());
+              
+              if (structAttD == null)
+                  throw new InvalidQueryException("getAttribute: Could not get attribute " + attrDesc.getPointerAttribute() + " from " + finalDataset.getDisplayName() + "\n");
+              
+              attribute = new FieldAttribute(structAttD.getField(), structAttD.getTableConstraint(), structAttD.getKey());
+        	}
+        return attribute;
     }
     
     public IDListFilter getFilter(Filter filter) throws InvalidQueryException {
@@ -291,8 +291,8 @@ public final class SequenceDescription {
             }
         } else {
             //use final exportable <-> reference importable            
-            Exportable[] finalExps = finalDataset.getExportables();
-            Importable refImp = getReferenceImportable();
+            Exportable[] finalExps = refDataset.getExportables();
+            Importable refImp = getFinalImportable();
             
             for (int i = 0, n = finalExps.length; i < n; i++) {
                 if (finalExps[i].getLinkName().equals(refImp.getLinkName())) {
@@ -301,7 +301,7 @@ public final class SequenceDescription {
                     finalLink = new Attribute[attNames.length];
                     
                     for (int j = 0, m = attNames.length; j < m; j++) {
-                        AttributeDescription att = finalDataset.getAttributeDescriptionByInternalName(
+                        AttributeDescription att = refDataset.getAttributeDescriptionByInternalName(
                                 attNames[j]);
                         
                         finalLink[j] = new FieldAttribute(att.getField(),
@@ -449,6 +449,7 @@ public final class SequenceDescription {
 	private int rightFlank = 0;
 	private Attribute[] finalLink;
 	Query subQuery;
+	private String seqDatasetName, refDatasetName;
 	
 	private Logger logger = Logger.getLogger(SequenceDescription.class.getName());
 }

@@ -2195,7 +2195,11 @@ public class MartShellLib {
         seqDescription = seqrequest;
         break;
     }
-    newQuery.setSequenceDescription(new SequenceDescription(seqDescription, adaptorManager, left, right));
+    
+	AttributeDescription attrDesc = currentApage.getAttributeDescriptionByInternalName(seqDescription);
+	String seqDs = attrDesc.getPointerDataset();
+	if (seqDs==null || "".equals(seqDs)) seqDs = dset.getDataset();
+    newQuery.setSequenceDescription(new SequenceDescription(dset.getDataset(), seqDs, seqDescription, adaptorManager, left, right));
     return newQuery;
   }
 
@@ -2205,9 +2209,10 @@ public class MartShellLib {
     Query newQuery = new Query(inquery);
     AttributeDescription attdesc = (AttributeDescription) dset.getAttributeDescriptionByInternalName(attname);
     Attribute attr = null;
-    if (attdesc.getInternalName().indexOf('.') > 0)
+    if (attdesc.getPointerDataset()!=null && !"".equals(attdesc.getPointerDataset())) {
         //placeholder sequence attribute
         attr = new FieldAttribute(attdesc.getInternalName(), attdesc.getTableConstraint(), attdesc.getKey());
+    }
     else
       attr = new FieldAttribute(attdesc.getField(), attdesc.getTableConstraint(), attdesc.getKey());
     
