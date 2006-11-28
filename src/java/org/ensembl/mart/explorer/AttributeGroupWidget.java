@@ -90,6 +90,8 @@ public class AttributeGroupWidget extends GroupWidget {
 				continue;
 
 			if (group.getInternalName().equals("sequence")) {
+				// We don't support sequences any more.
+				/*
 				if (collections[i].getInternalName().matches(
 						"\\w*seq_scope\\w*")) {
 					SequenceGroupWidget w = new SequenceGroupWidget(
@@ -99,6 +101,7 @@ public class AttributeGroupWidget extends GroupWidget {
 					widgets.add(w);
 					container.add(w);
 				} else
+				*/
 					continue;
 			} else {
 				AttributeCollection collection = collections[i];
@@ -142,16 +145,14 @@ private InputPage[] getAttributeWidgets(AttributeCollection collection, AdaptorM
             String aname = a.getPointerAttribute();
 
         		try {
-                    DatasetConfig ds = dsv.getAdaptor().getDatasetConfigByDatasetInternalName(dname, "default");
+                    DatasetConfig ds = (dname.equals(dsv.getDataset()))?dsv:null;
+                    if (ds==null) continue; // We don't like pointer attributes.
                     AttributeDescription a2 = ds.getAttributeDescriptionByInternalName(aname);
                     a.setDisplayName(a2.getDisplayName());
                     a.setInternalName(a2.getInternalName());
                     a.setField(a2.getField());
                     a.setTableConstraint(a2.getTableConstraint());
                     a.setKey(a2.getKey());
-        		}  catch (ConfigurationException e) {
-        			e.printStackTrace();
-                	continue; // This is not a resolvable placeholder. Skip to the next.
         		} catch (RuntimeException e) {
         			e.printStackTrace();
                 	continue; // This is not a resolvable placeholder. Skip to the next.

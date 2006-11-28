@@ -95,16 +95,24 @@ public class AttributesWidget extends InputPage {
       boolean skip = tree.skipConfigurationObject(page);
       
       //skip the structure page for now
-      if (!skip && page.getInternalName().equals("structure"))
+      if (!skip && page.getInternalName().equalsIgnoreCase("structure"))
           skip = true;
-            
+      
+      if (!skip && page.getInternalName().equalsIgnoreCase("sequence"))
+          skip = true;
+      
+      if (!skip && page.getInternalName().equalsIgnoreCase("sequences"))
+          skip = true;
+
+      /*
       //we only support sequences with pointer attributes
       if (!skip) {
           if (page.containsOnlyPointerAttributes()) {
-              AttributeGroup seqGroup = (AttributeGroup) page.getAttributeGroupByName("sequence");
+              //AttributeGroup seqGroup = (AttributeGroup) page.getAttributeGroupByName("sequence");
               
               //skip if this does not contain a sequence group (non ensembl)
-              if (seqGroup == null)
+              // We hate sequences!
+              //if (seqGroup == null)
                   skip = true;
               else {
                   AttributeCollection seqCol = null;
@@ -158,6 +166,7 @@ public class AttributesWidget extends InputPage {
               }
           }
       }
+              */
       return skip;
   }
 
