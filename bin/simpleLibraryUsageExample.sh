@@ -27,7 +27,7 @@ TMP_CLASSPATH=${TMP_CLASSPATH}:${CLASSPATH}
 # Note: If you get Java "Out of memory" errors, try increasing the numbers
 # in the -Xmx and -Xms parameters in the java command below. For performance
 # sake it is best if they are both the same value.
-java -Xmx128m -Xms128m -cp $TMP_CLASSPATH org.ensembl.mart.example.SimpleLibraryUsageExample
+java -Xmx128m -Xms128m -cp "$TMP_CLASSPATH" org.ensembl.mart.example.SimpleLibraryUsageExample
 
 
 

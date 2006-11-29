@@ -34,7 +34,7 @@ echo "Starting MartExplorer please wait .... "
 # in the -Xmx and -Xms parameters in the java command below. For performance
 # sake it is best if they are both the same value.
 
-java -Xmx128m -Xms128m -ea -cp $TMP_CLASSPATH org.ensembl.mart.explorer.MartExplorer $@
+java -Xmx128m -Xms128m -ea -cp "$TMP_CLASSPATH" org.ensembl.mart.explorer.MartExplorer $@
 
 
 
