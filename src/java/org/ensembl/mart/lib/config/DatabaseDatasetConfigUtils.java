@@ -985,7 +985,8 @@ public class DatabaseDatasetConfigUtils {
 					OutputStream blobout = blob.getBinaryOutputStream();
 					blobout.write(xml);
 					blobout.close();
-				}
+				} 
+				ohack.close();
 				rs.close();
 				conn.commit();
 			}
@@ -1412,15 +1413,15 @@ public class DatabaseDatasetConfigUtils {
   }
   
 
-  public void updateConfigsToTemplate(String template, DatasetConfig templateConfig) throws ConfigurationException{
+  public void updateConfigsToTemplate(String template, DatasetConfig templateConfig) throws ConfigurationException {
 	//	System.err.println("CALLED: updateConfigsToTemplate   "+templateConfig.getDisplayName()+" "+template);
 
 		storeTemplateXML(templateConfig, template);
 		
   	// extract all the dataset configs matching template and call updateConfigToTemplate storing each one as returned
-	Connection conn = null;
-	try {
-		conn = dsource.getConnection();
+	//Connection conn = null;
+	//try {
+		//conn = dsource.getConnection();
 		//String sql = "SELECT dataset_id_key FROM "+getSchema()[0]+"."+MARTTEMPLATEMAINTABLE+" WHERE template='"+template+"'";
 		//PreparedStatement ps = conn.prepareStatement(sql);
 		//ResultSet rs = ps.executeQuery();
@@ -1440,6 +1441,9 @@ public class DatabaseDatasetConfigUtils {
 						break;
 				}
 			}
+			
+			
+			if (dsConfig == null) continue;
 			
 			//getXSLTransformedConfig(dsConfig);
 			//dsConfig.setDataset(dsName);
@@ -1551,15 +1555,15 @@ public class DatabaseDatasetConfigUtils {
 										dsConfig.getInterfaces(),
 										dsConfig);
 		}
-		conn.close();
-	}
-	catch (SQLException e) {
-		  throw new ConfigurationException(
-			"Caught SQLException performing updating configs to template: " + e.getMessage());
-	} 
-	finally {
-		 DetailedDataSource.close(conn);
-	}
+		//conn.close();
+	//}
+	//catch (SQLException e) {
+	//	  throw new ConfigurationException(
+	//		"Caught SQLException performing updating configs to template: " + e.getMessage());
+	//} 
+	//finally {
+	//	 //DetailedDataSource.close(conn);
+	//}
   }
 /*
 private void updateAttributeToTemplate(AttributeDescription configAtt,DatasetConfig dsConfig, DatasetConfig templateConfig)
@@ -2117,7 +2121,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 }
 */
 
-  public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig, DatasetConfig templateConfig) throws ConfigurationException, SQLException{
+  public DatasetConfig updateConfigToTemplate(DatasetConfig dsConfig, DatasetConfig templateConfig) 
+  	throws ConfigurationException {
 	
 	
 	
@@ -3191,9 +3196,11 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 				dsConfig.removeExportable(dsExps[j]);
 		dsConfig.addExportable(newExp);
 	}
-	
+	    
 		conn.close();
-	} finally {
+	} catch (SQLException e){ 
+		
+	}	finally {
 		DetailedDataSource.close(conn);
 	}
 
@@ -5489,6 +5496,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
           break;
         }
       }
+      rs.close();
       //conn.close();
 	  //DetailedDataSource.close(conn);
 	  
@@ -5854,6 +5862,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
         if (valid[0] && valid[1])
           break;
       }
+      rs.close();
       //conn.close();
 	  //DetailedDataSource.close(conn);
 	  
@@ -6212,7 +6221,9 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
       	if (valid[0] && valid[1])
         	break;
     }
-    
+    rs.close();
+    //conn.close();
+    //DetailedDataSource.close(conn);
     // test for all nulls as well if flagged and set fieldValid and tableValid = false if all nulls
     if (tableConstraint.equals("main")){
     	//tableConstraint = [] mains;
@@ -7819,11 +7830,13 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
       rs.next();
 
       if (rs.isFirst()) {
+      	ps.close();
         rs.close();
         conn.close();
         return false;
       } else {
         //System.out.println("ALL NULLS\t" + cname + "\t" + tableName);
+        ps.close();
         rs.close();
         conn.close();
         return true;
