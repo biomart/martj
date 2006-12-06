@@ -43,14 +43,13 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTableDiagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram;
-import org.biomart.builder.view.gui.diagrams.contexts.ExplainTransformationContext;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainDataSetContext;
+import org.biomart.builder.view.gui.diagrams.contexts.ExplainTransformationContext;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Table;
@@ -267,9 +266,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			for (final Iterator i = this.dsTable.getColumns().iterator(); i
 					.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) i.next();
-				if (col instanceof SchemaNameColumn)
-					includeCols.add(col);
-				else if (col instanceof WrappedColumn) {
+				if (col instanceof WrappedColumn) {
 					final WrappedColumn wcol = (WrappedColumn) col;
 					if (wcol.getWrappedColumn().getTable().equals(firstTable))
 						includeCols.add(wcol);

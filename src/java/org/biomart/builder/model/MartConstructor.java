@@ -38,7 +38,6 @@ import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.UniqueValues;
@@ -386,26 +385,6 @@ public interface MartConstructor {
 									.addAll(this.helper
 											.listDistinctValues(((WrappedColumn) dsPartCol)
 													.getWrappedColumn()));
-						else if (dsPartCol instanceof SchemaNameColumn)
-							// Unique values for the schema column are the names
-							// of all schemas involved in this dataset table.
-							// ie. the schemas for each key in the underlying
-							// keys.
-							for (final Iterator j = vParentTables.iterator(); j
-									.hasNext();) {
-								final VirtualTable vTable = (VirtualTable) j
-										.next();
-								for (final Iterator k = vTable.getDataSet()
-										.getTables().iterator(); k.hasNext();)
-									for (final Iterator l = ((DataSetTable) k
-											.next()).getUnderlyingKeys()
-											.iterator(); l.hasNext();) {
-										final Key key = (Key) l.next();
-										final Schema keySchema = key.getTable()
-												.getSchema();
-										partitionValues.add(keySchema);
-									}
-							}
 						else
 							// Other column types not supported.
 							throw new BioMartError();
@@ -1098,16 +1077,6 @@ public interface MartConstructor {
 								.getUnmaskedDataSetColumns(
 										replacementFirstTable.getColumns(),
 										null, null));
-
-				// Include the schema name column if there is one (don't need
-				// to do this for dimension/subclass tables as it will be part
-				// of the primary key inherited from the parent table).
-				for (final Iterator i = vConstructionTable.getDataSetTable()
-						.getColumns().iterator(); i.hasNext();) {
-					final DataSetColumn dsCol = (DataSetColumn) i.next();
-					if (dsCol instanceof SchemaNameColumn)
-						replacementFirstTableCols.add(dsCol);
-				}
 			} else {
 				replacementFirstSchema = null;
 				replacementFirstTable = null;

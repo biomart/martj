@@ -34,7 +34,6 @@ import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.MartConstructorAction.Concat;
 import org.biomart.builder.model.MartConstructorAction.Create;
@@ -174,10 +173,6 @@ public class MySQLDialect extends DatabaseDialect {
 					sb.append(((WrappedColumn) dsCol).getWrappedColumn()
 							.getName());
 					sb.append(" as ");
-				} else if (dsCol instanceof SchemaNameColumn) {
-					sb.append("'");
-					sb.append(fromTableSchema);
-					sb.append("' as ");
 				} else
 					// Ouch!
 					throw new BioMartError();
@@ -316,10 +311,6 @@ public class MySQLDialect extends DatabaseDialect {
 						sb.append(((WrappedColumn) dsCol).getWrappedColumn()
 								.getName());
 						sb.append(" as ");
-					} else if (dsCol instanceof SchemaNameColumn) {
-						sb.append('\'');
-						sb.append(trgtSchemaName);
-						sb.append("' as ");
 					} else
 						// Ouch!
 						throw new BioMartError();
@@ -339,10 +330,6 @@ public class MySQLDialect extends DatabaseDialect {
 					sb.append(((WrappedColumn) dsCol).getWrappedColumn()
 							.getName());
 					sb.append(" as ");
-				} else if (dsCol instanceof SchemaNameColumn) {
-					sb.append('\'');
-					sb.append(trgtSchemaName);
-					sb.append("' as ");
 				} else
 					// Ouch!
 					throw new BioMartError();

@@ -20,6 +20,8 @@ package org.biomart.common.resources;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.text.MessageFormat;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -65,7 +67,7 @@ public class Resources {
 	public static void setResourceLocation(String location) {
 		Resources.location = location;
 		final String resourcesFileName = location + "/messages";
-		Log.info(Resources.get("loadingResources",resourcesFileName));
+		Log.info(Resources.get("loadingResources", resourcesFileName));
 		Resources.bundle = ResourceBundle.getBundle(resourcesFileName);
 		Log.info(Resources.get("doneLoadingResources"));
 	}
@@ -84,8 +86,7 @@ public class Resources {
 	}
 
 	/**
-	 * Obtains a string from the resource bundle
-	 * "org/biomart/builder/resources/messages.properties". Runs it through
+	 * Obtains a string from the messages resource bundle. Runs it through
 	 * MessageFormat before returning. See
 	 * {@link ResourceBundle#getString(String)} for full description of
 	 * behaviour.
@@ -99,8 +100,7 @@ public class Resources {
 	}
 
 	/**
-	 * Obtains a string from the resource bundle
-	 * "org/biomart/builder/resources/messages.properties". Substitutes the
+	 * Obtains a string from the messages resource bundle. Substitutes the
 	 * first parameter in the resulting string for the specified value using
 	 * MessageFormat. See {@link ResourceBundle#getString(String)} for full
 	 * description of behaviour.
@@ -118,8 +118,7 @@ public class Resources {
 	}
 
 	/**
-	 * Obtains a string from the resource bundle
-	 * "org/biomart/builder/resources/messages.properties". Substitutes all
+	 * Obtains a string from the messages resource bundle. Substitutes all
 	 * parameters in the resulting string for the specified values using
 	 * MessageFormat. See {@link ResourceBundle#getString(String)} for full
 	 * description of behaviour.
@@ -150,8 +149,8 @@ public class Resources {
 		final String locationResource = Resources.location == null ? commonResource
 				: (Resources.location + "/" + resource);
 		final ClassLoader cl = Resources.class.getClassLoader();
-		return (InputStream) java.security.AccessController
-				.doPrivileged(new java.security.PrivilegedAction() {
+		return (InputStream) AccessController
+				.doPrivileged(new PrivilegedAction() {
 					public Object run() {
 						InputStream resource;
 						if (cl != null) {
@@ -185,23 +184,21 @@ public class Resources {
 		final String locationResource = Resources.location == null ? commonResource
 				: (Resources.location + "/" + resource);
 		final ClassLoader cl = Resources.class.getClassLoader();
-		return (URL) java.security.AccessController
-				.doPrivileged(new java.security.PrivilegedAction() {
-					public Object run() {
-						URL resource;
-						if (cl != null) {
-							resource = cl.getResource(locationResource);
-							if (resource == null)
-								resource = cl.getResource(commonResource);
-						} else {
-							resource = ClassLoader
-									.getSystemResource(locationResource);
-							if (resource == null)
-								resource = ClassLoader
-										.getSystemResource(commonResource);
-						}
-						return resource;
-					}
-				});
+		return (URL) AccessController.doPrivileged(new PrivilegedAction() {
+			public Object run() {
+				URL resource;
+				if (cl != null) {
+					resource = cl.getResource(locationResource);
+					if (resource == null)
+						resource = cl.getResource(commonResource);
+				} else {
+					resource = ClassLoader.getSystemResource(locationResource);
+					if (resource == null)
+						resource = ClassLoader
+								.getSystemResource(commonResource);
+				}
+				return resource;
+			}
+		});
 	}
 }

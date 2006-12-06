@@ -49,7 +49,6 @@ import org.biomart.builder.model.DataSet.PartitionedColumnType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.SchemaNameColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
 import org.biomart.builder.model.DataSet.PartitionedColumnType.UniqueValues;
@@ -590,10 +589,7 @@ public class MartBuilderXML extends DefaultHandler {
 						this
 								.writeAttribute("type", "concatRelation",
 										xmlWriter);
-					// Schema name column?
-					else if (dcol instanceof SchemaNameColumn)
-						this.writeAttribute("type", "schemaName", xmlWriter);
-
+					
 					// Wrapped column?
 					else if (dcol instanceof WrappedColumn) {
 						this.writeAttribute("type", "wrapped", xmlWriter);
@@ -1213,8 +1209,6 @@ public class MartBuilderXML extends DefaultHandler {
 					if ("concatRelation".equals(type))
 						column = new ConcatRelationColumn(name,
 								(DataSetTable) tbl, underlyingRelation);
-					else if ("schemaName".equals(type))
-						column = new SchemaNameColumn(name, (DataSetTable) tbl);
 					else if ("wrapped".equals(type)) {
 						final Column wrappedCol = (Column) this.mappedObjects
 								.get(attributes.get("wrappedColumnId"));

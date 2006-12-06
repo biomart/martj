@@ -1302,10 +1302,8 @@ public class DataSet extends GenericSchema {
 		 *            the parent dataset table.
 		 * @param underlyingRelation
 		 *            the relation that provided this column. The underlying
-		 *            relation can be <tt>null</tt> in only two cases - when
-		 *            the table is a {@link DataSetTableType#MAIN} table, and
-		 *            also <tt>null</tt> for {@link SchemaNameColumn}
-		 *            instances.
+		 *            relation can be <tt>null</tt> in only one cases - when
+		 *            the table is a {@link DataSetTableType#MAIN} table.
 		 */
 		public DataSetColumn(final String name, final DataSetTable dsTable,
 				final Relation underlyingRelation) {
@@ -1360,8 +1358,7 @@ public class DataSet extends GenericSchema {
 		 * Returns the underlying relation that provided this column. If it
 		 * returns <tt>null</tt> and this table is a
 		 * {@link DataSetTableType#MAIN} table, then that means the column came
-		 * from the table's real table. {@link SchemaNameColumn} instances will
-		 * always return <tt>null</tt>.
+		 * from the table's real table.
 		 * 
 		 * @return the relation that underpins this column.
 		 */
@@ -1742,33 +1739,6 @@ public class DataSet extends GenericSchema {
 				if (partitionType != null)
 					throw new ValidationException(Resources
 							.get("cannotPartitionNonWrapSchColumns"));
-			}
-		}
-
-		/**
-		 * A column on a dataset table that should be populated with the name of
-		 * the table provider providing the data in this row.
-		 */
-		public static class SchemaNameColumn extends DataSetColumn {
-			/**
-			 * This constructor gives the column a name. The underlying relation
-			 * is not required here.
-			 * 
-			 * @param name
-			 *            the name to give this column.
-			 * @param dsTable
-			 *            the dataset table to add the wrapped column to.
-			 */
-			public SchemaNameColumn(final String name,
-					final DataSetTable dsTable) {
-				// The super constructor will make the alias for us.
-				super(name, dsTable, null);
-			}
-
-			public void setMasked(boolean masked) throws ValidationException {
-				if (masked)
-					throw new ValidationException(Resources
-							.get("cannotMaskSchemaNameColumn"));
 			}
 		}
 
