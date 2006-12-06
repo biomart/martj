@@ -5583,6 +5583,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 			validatedFilter.setType("list");
 		    validatedFilter.setDisplayType("list");
 		    validatedFilter.setStyle("menu");
+		    validatedFilter.setGraph(filter.getGraph());
 			validatedFilter.setQualifier("=");
 			validatedFilter.setLegalQualifiers("=");
 			String colForDisplay = validatedFilter.getColForDisplay();
