@@ -349,6 +349,9 @@ public class DataSet extends GenericSchema {
 		// Don't ignore any keys by default.
 		Key ignoreKey = null;
 
+		// By default we didn't land on any key to get here.
+		Key mergeKey = null;
+
 		// Did we get here via somewhere else?
 		if (sourceRelation != null) {
 			// Work out what key to ignore by working out at which end
@@ -356,13 +359,13 @@ public class DataSet extends GenericSchema {
 			ignoreKey = sourceRelation.getFirstKey().getTable().equals(
 					mergeTable) ? sourceRelation.getFirstKey() : sourceRelation
 					.getSecondKey();
+			mergeKey = sourceRelation.getOtherKey(ignoreKey);
 
 			// Add the relation and key to the list that the table depends on.
 			// This list is what defines the path required to construct
 			// the DDL for this table.
 			dsTable.getUnderlyingRelations().add(sourceRelation);
-			dsTable.getUnderlyingKeys().add(
-					sourceRelation.getOtherKey(ignoreKey));
+			dsTable.getUnderlyingKeys().add(mergeKey);
 
 			// Mark the source relation as followed so that we don't
 			// follow it again whilst processing this table.
@@ -422,7 +425,7 @@ public class DataSet extends GenericSchema {
 
 			// Don't follow masked or incorrect relations, or relations
 			// between incorrect keys.
-			if (this.maskedRelations.contains(r)
+			else if (this.maskedRelations.contains(r)
 					|| r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
 					|| r.getFirstKey().getStatus().equals(
 							ComponentStatus.INFERRED_INCORRECT)
@@ -467,6 +470,15 @@ public class DataSet extends GenericSchema {
 					relationsFollowed.add(r);
 					dimensionQ.add(r);
 				}
+			}
+
+			// We're at the M end of a 1:M. Don't follow it if it has
+			// multiple relations.
+			else if (r.isOneToMany()
+					&& r.getManyKey().getTable().equals(mergeTable)
+					&& r.getManyKey().getRelations().size() > 1) {
+				relationsFollowed.add(r);
+				continue;
 			}
 
 			// Follow all others. If we follow a 1:1, and we are currently
@@ -532,8 +544,8 @@ public class DataSet extends GenericSchema {
 	 */
 	public void flagConcatOnlyRelation(final Relation relation,
 			final DataSetConcatRelationType type) throws ValidationException {
-		Log.debug("Flagging concat-only relation " + relation
-				+ " in " + this.getName());
+		Log.debug("Flagging concat-only relation " + relation + " in "
+				+ this.getName());
 
 		// Sanity check.
 		if (!relation.isOneToMany())
@@ -602,8 +614,8 @@ public class DataSet extends GenericSchema {
 	 */
 	public void flagSubclassRelation(final Relation relation)
 			throws ValidationException {
-		Log.debug("Flagging subclassed relation " + relation
-				+ " in " + this.getName());
+		Log.debug("Flagging subclassed relation " + relation + " in "
+				+ this.getName());
 		// Skip if already subclassed.
 		if (this.subclassedRelations.contains(relation))
 			return;
@@ -798,8 +810,7 @@ public class DataSet extends GenericSchema {
 	 *            the relation to mask.
 	 */
 	public void maskRelation(final Relation relation) {
-		Log.debug("Masking relation " + relation + " in "
-				+ this.getName());
+		Log.debug("Masking relation " + relation + " in " + this.getName());
 		// Skip if already masked.
 		if (!this.maskedRelations.contains(relation))
 			this.maskedRelations.add(relation);
@@ -814,8 +825,7 @@ public class DataSet extends GenericSchema {
 	 * concat relations, etc.
 	 */
 	public Schema replicate(final String newName) {
-		Log.debug("Replicating dataset " + this.getName() + " as "
-				+ newName);
+		Log.debug("Replicating dataset " + this.getName() + " as " + newName);
 		try {
 			// Create the copy.
 			final DataSet newDataSet = new DataSet(this.mart,
@@ -838,8 +848,7 @@ public class DataSet extends GenericSchema {
 	 *            the optimiser type to use.
 	 */
 	public void setDataSetOptimiserType(final DataSetOptimiserType optimiser) {
-		Log.debug("Setting optimiser " + optimiser + " in "
-				+ this.getName());
+		Log.debug("Setting optimiser " + optimiser + " in " + this.getName());
 		// Do it.
 		this.optimiser = optimiser;
 	}
@@ -886,8 +895,7 @@ public class DataSet extends GenericSchema {
 		// Iterate through tables in each schema. For each table,
 		// find all the relations on that table and remove them
 		// from the set of dead flagged relations.
-		Log
-				.debug("Removing undead relations from dead relations list");
+		Log.debug("Removing undead relations from dead relations list");
 		for (final Iterator i = this.getMart().getSchemas().iterator(); i
 				.hasNext();) {
 			final Schema s = (Schema) i.next();
@@ -1205,8 +1213,7 @@ public class DataSet extends GenericSchema {
 	 *            the table to unmark.
 	 */
 	public void unflagRestrictedTable(final Table table) {
-		Log.debug("Unrestricting table " + table + " in "
-				+ this.getName());
+		Log.debug("Unrestricting table " + table + " in " + this.getName());
 		final int index = this.restrictedTables[0].indexOf(table);
 		if (index >= 0) {
 			this.restrictedTables[0].remove(index);
@@ -1223,8 +1230,8 @@ public class DataSet extends GenericSchema {
 	 *            the relation to unmark.
 	 */
 	public void unflagSubclassRelation(final Relation relation) {
-		Log.debug("Unflagging subclass relation " + relation
-				+ " in " + this.getName());
+		Log.debug("Unflagging subclass relation " + relation + " in "
+				+ this.getName());
 		if (!this.subclassedRelations.contains(relation))
 			return;
 		// Break the chain first.
@@ -1252,8 +1259,7 @@ public class DataSet extends GenericSchema {
 	 *            the relation to unmask.
 	 */
 	public void unmaskRelation(final Relation relation) {
-		Log.debug("Unmasking relation " + relation + " in "
-				+ this.getName());
+		Log.debug("Unmasking relation " + relation + " in " + this.getName());
 		if (!this.maskedRelations.contains(relation))
 			return;
 		this.maskedRelations.remove(relation);
@@ -1311,8 +1317,8 @@ public class DataSet extends GenericSchema {
 			// ensure we have a unique name.
 			super(name, dsTable);
 
-			Log.debug("Creating dataset column " + name
-					+ " of type " + this.getClass().getName());
+			Log.debug("Creating dataset column " + name + " of type "
+					+ this.getClass().getName());
 
 			// Remember the rest.
 			this.underlyingRelation = underlyingRelation;
@@ -1390,8 +1396,8 @@ public class DataSet extends GenericSchema {
 		 *             if masking is not allowed on this column.
 		 */
 		public void setMasked(boolean masked) throws ValidationException {
-			Log.debug((masked ? "Masking" : "Unmasking")
-					+ " column " + this.getName());
+			Log.debug((masked ? "Masking" : "Unmasking") + " column "
+					+ this.getName());
 			if (masked) {
 				// Work out where this column is coming from.
 				final DataSetTable dsTable = (DataSetTable) this.getTable();
@@ -1443,8 +1449,7 @@ public class DataSet extends GenericSchema {
 		 */
 		public void setPartitionType(PartitionedColumnType partitionType)
 				throws ValidationException {
-			Log.debug("Setting partition type on column "
-					+ this.getName());
+			Log.debug("Setting partition type on column " + this.getName());
 			if (partitionType != null) {
 				// Refuse to partition subclass tables.
 				if (((DataSetTable) this.getTable()).getType().equals(
@@ -1556,8 +1561,7 @@ public class DataSet extends GenericSchema {
 			 * Drops all the unused aliases.
 			 */
 			public void dropUnusedAliases() {
-				Log.debug("Trimming unused aliases from "
-						+ this.getName());
+				Log.debug("Trimming unused aliases from " + this.getName());
 				final List usedColumns = new ArrayList();
 				for (final Iterator i = this.aliases.entrySet().iterator(); i
 						.hasNext();) {
@@ -1617,8 +1621,7 @@ public class DataSet extends GenericSchema {
 			 * @return the substituted expression.
 			 */
 			public String getSubstitutedExpression() {
-				Log.debug("Constructing expression for "
-						+ this.getName());
+				Log.debug("Constructing expression for " + this.getName());
 				String sub = this.expr;
 				for (final Iterator i = this.aliases.entrySet().iterator(); i
 						.hasNext();) {
@@ -1788,8 +1791,8 @@ public class DataSet extends GenericSchema {
 			}
 
 			public void setMasked(boolean masked) throws ValidationException {
-				Log.debug((masked ? "Masking" : "Unmasking")
-						+ " column " + this.getName());
+				Log.debug((masked ? "Masking" : "Unmasking") + " column "
+						+ this.getName());
 				// If this column is part of the PK on the table it came
 				// from that has a 1:M relation, or is part of an FK with a
 				// M:M relation, then we can only mask this column if the
@@ -2153,7 +2156,7 @@ public class DataSet extends GenericSchema {
 						return candidate;
 				}
 				// If got here, didn't find this search candidate, so
-				// work out all other columns in any M/1:1 chains linked
+				// work out all other columns in any chains linked
 				// to the candidate and try those.
 				List furtherCandidates = new ArrayList();
 				furtherCandidates.add(searchColumn);
@@ -2637,7 +2640,9 @@ public class DataSet extends GenericSchema {
 			 * {@link #getValues()}.
 			 */
 			public String toString() {
-				return "ValueCollection:" + (this.values==null?"<undef>":this.values.toString());
+				return "ValueCollection:"
+						+ (this.values == null ? "<undef>" : this.values
+								.toString());
 			}
 		}
 	}
