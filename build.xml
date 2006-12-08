@@ -108,34 +108,12 @@
 
     <!-- binary distribution jars -->
     <patternset id="dist.bin.jars" >
-        <include name="ecp1_0beta.jar" />
-        <include name="ensj-util.jar" />
-        <include name="java-getopt-1.0.9.jar" />
-        <include name="jdbc2_0-stdext.jar" /> 
-        <include name="jdom.jar" />
-        <include name="libreadline-java.jar" />
-        <include name="martj.jar" />
-        <include name="mysql-connector-java-3.0.16-ga-bin.jar" />
-        <include name="pg73jdbc3.jar"/>
-        <include name="ojdbc14.jar" />
-        <include name="p6spy.jar" />     
-        <include name="junit.jar" />
-       <include name="jline.jar" />     
+        <include name= "*.jar" />  
     </patternset>
 
     <!-- test distribution jars -->
     <patternset id="dist.test.jars" >
         <include name= "*.jar" />
-        <exclude name="ecp1_0beta.jar" />
-        <exclude name="ensj-util.jar" />
-        <exclude name="java-getopt-1.0.9.jar" />
-        <exclude name="jdbc2_0-stdext.jar" /> 
-        <exclude name="jdom.jar" />
-        <exclude name="libreadline-java.jar" />
-        <exclude name="martj.jar" />
-        <exclude name="mysql-connector-java-3.0.16-ga-bin.jar" />
-        <exclude name="pg73jdbc3.jar"/>
-       <exclude name="jline.jar" />
     </patternset>
 
     <!-- readline platform dependant libraries -->
