@@ -18,40 +18,7 @@
 
 package org.biomart.builder.view.gui.dialogs;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.swing.DefaultCellEditor;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
-
-import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.common.model.Key;
-import org.biomart.common.resources.Resources;
 
 /**
  * This dialog asks users to create or modify an expression column.
@@ -63,6 +30,8 @@ import org.biomart.common.resources.Resources;
  */
 public class ExpressionColumnDialog extends JDialog {
 	private static final long serialVersionUID = 1;
+	// FIXME: Reinstate.
+	/*
 
 	private JButton cancel;
 
@@ -94,7 +63,7 @@ public class ExpressionColumnDialog extends JDialog {
 	 *            the table to source columns from.
 	 * @param template
 	 *            the column to use as a template, if any.
-	 */
+	 *
 	public ExpressionColumnDialog(final DataSetTable table,
 			final ExpressionColumn template) {
 		// Creates the basic dialog.
@@ -347,7 +316,7 @@ public class ExpressionColumnDialog extends JDialog {
 	 * Return <tt>true</tt> if the user cancelled the box.
 	 * 
 	 * @return <tt>true</tt> if the box was cancelled.
-	 */
+	 *
 	public boolean getCancelled() {
 		return this.cancelled;
 	}
@@ -356,7 +325,7 @@ public class ExpressionColumnDialog extends JDialog {
 	 * Return the column aliases the user selected.
 	 * 
 	 * @return the aliases.
-	 */
+	 *
 	public Map getColumnAliases() {
 		return this.columnAliasModel.getColumnAliases();
 	}
@@ -365,7 +334,7 @@ public class ExpressionColumnDialog extends JDialog {
 	 * Return the name the user selected.
 	 * 
 	 * @return the selected name.
-	 */
+	 *
 	public String getColumnName() {
 		return this.columnName.getText().trim();
 	}
@@ -374,7 +343,7 @@ public class ExpressionColumnDialog extends JDialog {
 	 * Return the expression the user selected.
 	 * 
 	 * @return the expression.
-	 */
+	 *
 	public String getExpression() {
 		return this.expression.getText().trim();
 	}
@@ -383,14 +352,14 @@ public class ExpressionColumnDialog extends JDialog {
 	 * Return <tt>true</tt> if the user selected the group-by box.
 	 * 
 	 * @return the group-by flag.
-	 */
+	 *
 	public boolean getGroupBy() {
 		return this.groupBy.isSelected();
 	}
 
 	/**
 	 * This internal class represents a map of dataset columns to aliases.
-	 */
+	 *
 	private static class ColumnAliasTableModel extends DefaultTableModel {
 		private static final Class[] colClasses = new Class[] {
 				DataSetColumn.class, String.class };
@@ -405,7 +374,7 @@ public class ExpressionColumnDialog extends JDialog {
 		 *            the table we are showing columns for.
 		 * @param template
 		 *            the existing alises to copy.
-		 */
+		 *
 		public ColumnAliasTableModel(final DataSetTable table,
 				final ExpressionColumn template) {
 			super(new Object[] { Resources.get("columnAliasTableColHeader"),
@@ -425,7 +394,7 @@ public class ExpressionColumnDialog extends JDialog {
 		 * Find out what aliases the user has defined.
 		 * 
 		 * @return a map where the keys are columns and the values are aliases.
-		 */
+		 *
 		public Map getColumnAliases() {
 			// Return the map of column to alias.
 			final HashMap aliases = new HashMap();
@@ -443,4 +412,5 @@ public class ExpressionColumnDialog extends JDialog {
 			return ColumnAliasTableModel.colClasses[column];
 		}
 	}
+	*/
 }

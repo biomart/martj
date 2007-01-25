@@ -437,7 +437,7 @@ public class Query {
    * 0 mean no limit
 	 */
 	public synchronized void setLimit(int inlimit) {
-		assert inlimit > -1 : "invalid limit should be >=0 but is " + inlimit;
+		//assert inlimit > -1 : "invalid limit should be >=0 but is " + inlimit;
 		int old = this.limit;
 		this.limit = inlimit;
 		log();

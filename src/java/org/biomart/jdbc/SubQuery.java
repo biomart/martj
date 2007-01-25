@@ -18,7 +18,11 @@
 
 package org.biomart.jdbc;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,8 +30,9 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -108,20 +113,32 @@ public abstract class SubQuery {
 	 * @throws SQLException
 	 *             if the connection could not be closed.
 	 */
-	abstract void close() throws SQLException;
+	void close() throws SQLException {
+		this.closeSubQuery();
+		for (final Iterator i = this.subQueries.iterator(); i.hasNext();)
+			try {
+				((SubQuery) i.next()).close();
+			} catch (final Exception e) {
+				// Don't care.
+			}
+	}
 
 	/**
-	 * Returns the next row of the query, as determined by any importables that
-	 * may have been assigned beforehand. If no importables, a single entry of
-	 * Object[] will be returned representing one row. If importables are
-	 * present, multiple Object[] rows will be returned, one for each row
-	 * matching the importable. If there are no more rows, return an empty list.
+	 * Closes only this subquery.
+	 * 
+	 * @throws SQLException
+	 *             if it could not be closed.
+	 */
+	abstract void closeSubQuery() throws SQLException;
+
+	/**
+	 * Returns the next row of the query.
 	 * 
 	 * @return a list of Object[] rows of results.
 	 * @throws SQLException
 	 *             if anything went wrong getting the results.
 	 */
-	abstract List getNextRow() throws SQLException;
+	abstract Object[] getNextRow() throws SQLException;
 
 	/**
 	 * Check to see if this query has another row to return. Generally only
@@ -365,8 +382,8 @@ public abstract class SubQuery {
 	 * @throws SQLException
 	 *             if something went wrong.
 	 */
-	protected List getAttributes() throws SQLException {
-		return new ArrayList(this.attributes.values());
+	protected Collection getAttributes() throws SQLException {
+		return this.attributes.values();
 	}
 
 	/**
@@ -388,8 +405,8 @@ public abstract class SubQuery {
 	 * @throws SQLException
 	 *             if something went wrong.
 	 */
-	protected List getFilters() throws SQLException {
-		return new ArrayList(this.filters.values());
+	protected Collection getFilters() throws SQLException {
+		return this.filters.values();
 	}
 
 	/**
@@ -402,9 +419,9 @@ public abstract class SubQuery {
 
 		private int rowsReturned;
 
-		private int currentRow;
+		private BufferedReader br;
 
-		private List rows;
+		private Object[] nextRow;
 
 		/**
 		 * Delegates to {@link SubQuery#SubQuery(Registry)}.
@@ -416,9 +433,8 @@ public abstract class SubQuery {
 		}
 
 		void open() throws SQLException {
-			if (this.rows != null)
+			if (this.br != null)
 				return;
-			this.rows = new ArrayList();
 			try {
 				final XMLMart mart = (XMLMart) this.getRegistry().getMart(
 						this.getMartName());
@@ -429,32 +445,71 @@ public abstract class SubQuery {
 				throw se;
 			}
 			this.rowsReturned = 0;
-			this.currentRow = 0;
 			this.parameters = new HashMap();
 		}
 
 		private void startQuery() throws SQLException {
 			if (this.parameters == null)
 				throw new SQLException(Resources.get("subqueryNotOpen"));
-			// TODO - submit the query and retrieve all results into a list.
-			// Submit it to this.serverURL.
-			this.rows = Collections.EMPTY_LIST;
+			// Construct Query XML
+			final StringBuffer queryXML = new StringBuffer();
+			// TODO Construct the XML, taking note of any importables set.
+			// Submit the query.
+			try {
+				final URLConnection conn = this.serverURL.openConnection();
+				conn.addRequestProperty("query", queryXML.toString());
+				conn.connect();
+				this.br = new BufferedReader(new InputStreamReader(conn
+						.getInputStream()));
+			} catch (final IOException ie) {
+				final SQLException e = new SQLException();
+				e.initCause(ie);
+				throw e;
+			}
+			// Read the first row.
+			this.readNextRow();
 		}
 
-		void close() throws SQLException {
-			// Nothing to do here.
+		private void readNextRow() throws SQLException {
+			if (this.br == null)
+				return;
+			try {
+				final String line = this.br.readLine();
+				if (line == null)
+					this.nextRow = null;
+				else
+					this.nextRow = line.split("\t");
+			} catch (final IOException ie) {
+				final SQLException se = new SQLException();
+				se.initCause(ie);
+				throw se;
+			}
 		}
 
-		List getNextRow() throws SQLException {
+		void closeSubQuery() throws SQLException {
+			if (this.br != null)
+				try {
+					this.br.close();
+				} catch (final IOException ie) {
+					final SQLException se = new SQLException();
+					se.initCause(ie);
+					throw se;
+				}
+		}
+
+		Object[] getNextRow() throws SQLException {
 			if (!this.hasNextRow())
-				return Collections.EMPTY_LIST;
-			return (List) this.rows.get(this.currentRow++);
+				return new Object[0];
+			final Object[] currentRow = this.nextRow;
+			this.rowsReturned++;
+			this.readNextRow();
+			return currentRow;
 		}
 
 		boolean hasNextRow() throws SQLException {
-			if (this.rows == null)
+			if (this.br == null)
 				this.startQuery();
-			return (this.currentRow < this.rows.size())
+			return (this.nextRow != null)
 					&& (this.getMaxRows() != 0 && this.rowsReturned < this
 							.getMaxRows());
 		}
@@ -475,7 +530,7 @@ public abstract class SubQuery {
 			if (paramIndex < 1 || paramIndex > this.getFilters().size())
 				throw new SQLException(Resources.get("paramIndexOutRange", ""
 						+ paramIndex));
-			parameters.put(new Integer(paramIndex - 1), value == null ? ""
+			this.parameters.put(new Integer(paramIndex - 1), value == null ? ""
 					: value);
 		}
 	}
@@ -522,7 +577,7 @@ public abstract class SubQuery {
 			this.stmt = conn.prepareStatement(sql);
 		}
 
-		void close() throws SQLException {
+		void closeSubQuery() throws SQLException {
 			try {
 				this.rs.close();
 			} catch (SQLException e) {
@@ -550,13 +605,13 @@ public abstract class SubQuery {
 			this.colCount = this.rs.getMetaData().getColumnCount();
 		}
 
-		List getNextRow() throws SQLException {
+		Object[] getNextRow() throws SQLException {
 			if (!this.hasNextRow() || !this.rs.next())
-				return Collections.EMPTY_LIST;
+				return new Object[0];
 			final List row = new ArrayList();
 			for (int i = 1; i <= this.colCount; i++)
 				row.add(i - 1, this.rs.getObject(i));
-			return row;
+			return row.toArray();
 		}
 
 		boolean hasNextRow() throws SQLException {

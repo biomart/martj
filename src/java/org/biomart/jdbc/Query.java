@@ -44,8 +44,8 @@ import org.biomart.jdbc.resources.Resources;
 
 /**
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.6
  */
 public class Query {
@@ -115,11 +115,6 @@ public class Query {
 	 */
 	static final int URL = -112;
 
-	/**
-	 * A unicode stream object type.
-	 */
-	static final int UNICODE_STREAM = -113;
-
 	// What statement do we belong to?
 	private QueryStatement stmt;
 
@@ -140,6 +135,9 @@ public class Query {
 
 	// Our sub query has pointers to the other sub queries.
 	private SubQuery subQuery;
+
+	// The current rowset.
+	private Iterator currentRowset;
 
 	/**
 	 * Create and compiles a query object based around the given SQL.
@@ -177,6 +175,9 @@ public class Query {
 		// from registry. (Catalog=Mart)
 		// Use schemas as given in query, otherwise use default
 		// schema from mart in registry. (Schema=Dataset)
+		// Create one parent subquery that exports to an
+		// array of child subqueries. Each child exports to
+		// own array of children, etc., never across to other child.
 	}
 
 	/**
@@ -196,16 +197,10 @@ public class Query {
 	public void close() throws SQLException {
 		if (this.isClosed() || !this.initialised)
 			return;
-		final List subQueries = new ArrayList();
-		subQueries.add(this.subQuery);
-		for (int i = 0; i < subQueries.size(); i++) {
-			final SubQuery sq = (SubQuery) subQueries.get(i);
-			try {
-				sq.close();
-			} catch (SQLException e) {
-				// Ignore. We don't care.
-			}
-			subQueries.addAll(sq.getAllSubQueries());
+		try {
+			this.subQuery.close();
+		} catch (final Exception e) {
+			// Don't care.
 		}
 		// Close all query connections.
 		this.closed = true;
@@ -244,15 +239,17 @@ public class Query {
 		if (parameterIndex < 0 || parameterIndex >= this.queryParams.length)
 			throw new SQLException(Resources.get("paramIndexOutRange", ""
 					+ parameterIndex));
-		this.queryParams[parameterIndex-1] = param;
+		this.queryParams[parameterIndex - 1] = param;
 	}
 
 	private void initialise() throws SQLException {
 		for (int i = 0; i < this.queryParams.length; i++)
 			if (this.queryParams[i] == null)
-				throw new SQLException(Resources.get("paramMissing", "" + i+1));
+				throw new SQLException(Resources
+						.get("paramMissing", "" + i + 1));
 		final List subQueries = new ArrayList();
 		subQueries.add(this.subQuery);
+		// Use int as list grows whilst iterating.
 		for (int i = 0; i < subQueries.size(); i++) {
 			final SubQuery sq = (SubQuery) subQueries.get(i);
 			subQueries.addAll(sq.getAllSubQueries());
@@ -261,17 +258,17 @@ public class Query {
 			// Set the type maps etc. on each from our own connection.
 			// This applies to JDBC connections only.
 			if (sq instanceof JDBCSubQuery) {
-				final JDBCSubQuery jsq = (JDBCSubQuery)sq;
+				final JDBCSubQuery jsq = (JDBCSubQuery) sq;
 				jsq.setTypeMap(this.stmt.getConnection().getTypeMap());
 				jsq.setMaxFieldSize(this.stmt.getMaxFieldSize());
 			}
 			// Set the parameters.
-			final Map paramMap = sq.getParameterMapping();
-			for (final Iterator m = paramMap.entrySet().iterator(); m.hasNext();) {
-				final Map.Entry me = (Map.Entry) m.next();
+			for (final Iterator entries = sq.getParameterMapping().entrySet()
+					.iterator(); entries.hasNext();) {
+				final Map.Entry me = (Map.Entry) entries.next();
 				final int sqIndex = ((Integer) me.getKey()).intValue();
 				final int qIndex = ((Integer) me.getValue()).intValue();
-				final QueryParam param = this.queryParams[qIndex-1];
+				final QueryParam param = this.queryParams[qIndex - 1];
 				if (sq instanceof XMLSubQuery)
 					((XMLSubQuery) sq).setParameter(sqIndex, param
 							.toXMLParameter());
@@ -290,32 +287,32 @@ public class Query {
 	}
 
 	/**
-	 * Returns the next row from the query. Note that this is a list because the
-	 * next row could actually be several rows, depending on how the joins to
-	 * other datasets multiply it (or not). Each member of the list will be an
-	 * object array. If there is no current row, the returned list will be
-	 * empty.
+	 * Returns the next row from the query.
 	 * 
-	 * @return a list of rows returned. The list will never be <tt>null</tt>.
+	 * @return a list of rows returned. The list will be <tt>null</tt> if
+	 *         there are no more rows.
 	 * @throws SQLException
 	 *             if something goes wrong fetching the rows.
 	 */
-	public List getNextRow() throws SQLException {
+	public Object[] getNextRow() throws SQLException {
 		// Nothing more? Don't do it then.
 		if (!this.hasMoreRows())
-			return Collections.EMPTY_LIST;
+			return null;
+		if (this.currentRowset != null && this.currentRowset.hasNext())
+			return (Object[]) this.currentRowset.next();
 		// Set up a place to hold results.
 		List results = new ArrayList();
 		// Process first query.
 		// First row will always be a single row.
 		final Object[] firstRow = new Object[this.columnNames.size()];
 		Map colMap = this.subQuery.getResultMapping();
-		final Object[] firstSubQueryRow = (Object[]) this.subQuery.getNextRow().get(0);
-		for (final Iterator m = colMap.entrySet().iterator(); m.hasNext();) {
-			final Map.Entry me = (Map.Entry) m.next();
+		final Object[] firstSubQueryRow = this.subQuery.getNextRow();
+		for (final Iterator entries = colMap.entrySet().iterator(); entries
+				.hasNext();) {
+			final Map.Entry me = (Map.Entry) entries.next();
 			final int sqIndex = ((Integer) me.getKey()).intValue();
 			final int qIndex = ((Integer) me.getValue()).intValue();
-			firstRow[qIndex-1] = firstSubQueryRow[sqIndex-1];
+			firstRow[qIndex - 1] = firstSubQueryRow[sqIndex - 1];
 		}
 		results.add(firstRow);
 		// Set up a place to hold all exported values for each subquery.
@@ -324,23 +321,26 @@ public class Query {
 		// First row will always be a single row of exportables.
 		Map expMap = this.subQuery.getExportableMapping();
 		final Object[] firstExports = new Object[expMap.size()];
-		for (final Iterator m = expMap.entrySet().iterator(); m.hasNext();) {
-			final Map.Entry me = (Map.Entry) m.next();
+		for (final Iterator entries = expMap.entrySet().iterator(); entries
+				.hasNext();) {
+			final Map.Entry me = (Map.Entry) entries.next();
 			final int sqIndex = ((Integer) me.getKey()).intValue();
 			final int qIndex = ((Integer) me.getValue()).intValue();
-			firstExports[qIndex-1] = firstSubQueryRow[sqIndex-1];
-		}		
-		exportedValues.put(this.subQuery, Collections.singletonList(firstExports));
+			firstExports[qIndex - 1] = firstSubQueryRow[sqIndex - 1];
+		}
+		exportedValues.put(this.subQuery, Collections
+				.singletonList(firstExports));
 		// Somewhere to keep track of combinations of importables
 		// and sub queries so that we don't execute them twice
-		// for the same importables. 
+		// for the same importables.
 		final Map seenImportables = new HashMap();
 		// Somewhere to keep track of the exportables produced
-		// by each set of importables. 
+		// by each set of importables.
 		final Map seenExportables = new HashMap();
 		// Process recursive links to child subqueries.
 		final List subQueries = new ArrayList();
-		subQueries.add(this.subQuery.getAllSubQueries());
+		subQueries.addAll(this.subQuery.getAllSubQueries());
+		// Use int as list changes as we go along.
 		for (int i = 0; i < subQueries.size(); i++) {
 			// Get the child and parent subqueries.
 			final SubQuery sq = (SubQuery) subQueries.get(i);
@@ -357,60 +357,74 @@ public class Query {
 			final List sqExportedValues = new ArrayList();
 			// Loop over each input row, which we can gather from the
 			// size of the importedValues set which will have one set
-			// of values for each parent row.
+			// of values for each parent row. Need to use proper iterator
+			// as must keep track of parent row number for imp/exportables.
 			for (int parentRowNum = 0; parentRowNum < importedValues.size(); parentRowNum++) {
-				final Object[] importedValue = (Object[]) importedValues.get(parentRowNum);
-				final List importedRows = seenImportables.containsKey(importedValue) ? (List)seenImportables.get(importedValue) : new ArrayList();
-				final List exportedRows = seenExportables.containsKey(importedValue) ? (List)seenExportables.get(importedValue) : new ArrayList();
+				final Object[] importedValue = (Object[]) importedValues
+						.get(parentRowNum);
+				final List importedRows = seenImportables
+						.containsKey(importedValue) ? (List) seenImportables
+						.get(importedValue) : new ArrayList();
+				final List exportedRows = seenExportables
+						.containsKey(importedValue) ? (List) seenExportables
+						.get(importedValue) : new ArrayList();
 				// If not seen this subquery/importables combo before,
 				// populate it and remember results.
-				if (importedRows.isEmpty()){
+				if (importedRows.isEmpty()) {
 					// Set up the importable into the subquery.
-					final Map impMap = sq.getImportableMapping();
-					for (final Iterator m = impMap.entrySet().iterator(); m
-							.hasNext();) {
-						final Map.Entry me = (Map.Entry) m.next();
+					for (final Iterator entries = sq.getImportableMapping()
+							.entrySet().iterator(); entries.hasNext();) {
+						final Map.Entry me = (Map.Entry) entries.next();
 						final int sqIndex = ((Integer) me.getKey()).intValue();
 						final int qIndex = ((Integer) me.getValue()).intValue();
-						firstExports[qIndex-1] = firstRow[sqIndex-1];
 						if (sq instanceof XMLSubQuery)
 							((XMLSubQuery) sq).setParameter(sqIndex, ""
-									+ importedValue[qIndex-1]);
+									+ importedValue[qIndex - 1]);
 						else if (sq instanceof JDBCSubQuery)
-							((JDBCSubQuery) sq).getPreparedStatement().setObject(
-									sqIndex, importedValue[qIndex-1]);
+							((JDBCSubQuery) sq).getPreparedStatement()
+									.setObject(sqIndex,
+											importedValue[qIndex - 1]);
 						else
-							throw new RuntimeException(); // Should never happen.
+							throw new RuntimeException(); // Should never
+						// happen.
 					}
 					// Get exportable and column mappings from subquery.
-					expMap = sq.getExportableMapping();
-					colMap = sq.getResultMapping();
+					expMap = (Map) sq.getExportableMapping();
+					colMap = (Map) sq.getResultMapping();
 					// Execute query and loop over results.
-					for (final Iterator nextRowIterator = sq.getNextRow().iterator(); nextRowIterator.hasNext();) {
-						// For each row returned, we need to construct a template
-						// the same size as the eventual combined results of the whole
-						// query, and populate it accordingly. This template will
+					while (sq.hasNextRow()) {
+						// For each row returned, we need to construct a
+						// template
+						// the same size as the eventual combined results of the
+						// whole
+						// query, and populate it accordingly. This template
+						// will
 						// be used later to construct the combined row.
-						final Object[] sqRow = (Object[]) nextRowIterator.next();
-						final Object[] importedRow = new Object[this.columnNames.size()];
-						for (final Iterator m = colMap.entrySet().iterator(); m
-								.hasNext();) {
-							final Map.Entry me = (Map.Entry) m.next();
-							final int sqIndex = ((Integer) me.getKey()).intValue();
-							final int qIndex = ((Integer) me.getValue()).intValue();
-							importedRow[qIndex-1] = sqRow[sqIndex-1];
+						final Object[] sqRow = sq.getNextRow();
+						final Object[] importedRow = new Object[this.columnNames
+								.size()];
+						for (final Iterator entries = colMap.entrySet()
+								.iterator(); entries.hasNext();) {
+							final Map.Entry me = (Map.Entry) entries.next();
+							final int sqIndex = ((Integer) me.getKey())
+									.intValue();
+							final int qIndex = ((Integer) me.getValue())
+									.intValue();
+							importedRow[qIndex - 1] = sqRow[sqIndex - 1];
 						}
 						importedRows.add(importedRow);
 						// For each row returned, we also need to grab the
 						// exportable values and remember those too.
-						expMap = sq.getExportableMapping();
+						expMap = (Map) sq.getExportableMapping();
 						final Object[] exportedRow = new Object[expMap.size()];
-						for (final Iterator m = expMap.entrySet().iterator(); m
-								.hasNext();) {
-							final Map.Entry me = (Map.Entry) m.next();
-							final int sqIndex = ((Integer) me.getKey()).intValue();
-							final int qIndex = ((Integer) me.getValue()).intValue();
-							exportedRow[qIndex-1] = sqRow[sqIndex-1];
+						for (final Iterator entries = expMap.entrySet()
+								.iterator(); entries.hasNext();) {
+							final Map.Entry me = (Map.Entry) entries.next();
+							final int sqIndex = ((Integer) me.getKey())
+									.intValue();
+							final int qIndex = ((Integer) me.getValue())
+									.intValue();
+							exportedRow[qIndex - 1] = sqRow[sqIndex - 1];
 						}
 						exportedRows.add(exportedRow);
 					}
@@ -420,14 +434,16 @@ public class Query {
 				// Now that we have results from the subquery, loop over
 				// each row from the subquery and merge it with the parent
 				// row. Remember the combinations.
-				final Object[] combinedRow = (Object[]) results.get(parentRowNum);
-				for (final Iterator importedRowIterator = importedRows.iterator(); importedRowIterator.hasNext(); ) {
-					final Object[] importedRow = (Object[])importedRowIterator.next();
+				final Object[] combinedRow = (Object[]) results
+						.get(parentRowNum);
+				for (final Iterator rows = importedRows.iterator(); rows
+						.hasNext();) {
+					final Object[] importedRow = (Object[]) rows.next();
 					for (int impColNum = 0; impColNum < importedRow.length; impColNum++)
-						if (importedRow[impColNum]!=null)
+						if (importedRow[impColNum] != null)
 							combinedRow[impColNum] = importedRow[impColNum];
 					combinedRows.add(combinedRow);
-				}	
+				}
 				// Add entries to the exported rows for each of the
 				// imported rows, which will be in the same order.
 				// We do this several times so that the exported values
@@ -446,7 +462,10 @@ public class Query {
 			// Add any further subqueries to the end of our list.
 			subQueries.addAll(sq.getAllSubQueries());
 		}
-		return results;
+		// Set up new rowset iterator and return first row from it.
+		this.currentRowset = results.iterator();
+		return this.currentRowset.hasNext() ? (Object[]) this.currentRowset
+				.next() : null;
 	}
 
 	/**
@@ -459,7 +478,8 @@ public class Query {
 	public boolean hasMoreRows() throws SQLException {
 		if (!this.initialised)
 			this.initialise();
-		return this.subQuery.hasNextRow();
+		return (this.currentRowset != null && this.currentRowset.hasNext())
+				|| this.subQuery.hasNextRow();
 	}
 
 	/**
@@ -550,7 +570,6 @@ public class Query {
 				switch (this.sqlType) {
 				case Query.ASCII_STREAM:
 				case Query.BINARY_STREAM:
-				case Query.UNICODE_STREAM:
 					final byte[] bytes = new byte[((Integer) this.operator)
 							.intValue()];
 					try {
@@ -666,10 +685,6 @@ public class Query {
 					break;
 				case Query.URL:
 					stmt.setURL(index, (URL) this.value);
-					break;
-				case Query.UNICODE_STREAM:
-					stmt.setUnicodeStream(index, (InputStream) this.value,
-							((Integer) this.operator).intValue());
 					break;
 				default:
 					// Otherwise, default.

@@ -40,6 +40,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Iterator;
 import java.util.List;
 
 import org.biomart.jdbc.Query.QueryParam;
@@ -313,8 +314,7 @@ public class QueryStatement implements PreparedStatement {
 
 	public void setUnicodeStream(int parameterIndex, InputStream x, int length)
 			throws SQLException {
-		this.setObject(parameterIndex, x, Query.UNICODE_STREAM, null, new Integer(
-				length));
+		throw new SQLException(Resources.get("deprecated"));
 	}
 
 	public void addBatch(String sql) throws SQLException {
@@ -335,17 +335,13 @@ public class QueryStatement implements PreparedStatement {
 
 	public void close() throws SQLException {
 		// We need to track and close all the statements we issued.
-		while (this.openResultSets.size() > 0) {
-			final ResultSet rs = (ResultSet) this.openResultSets.get(0);
+		for (final Iterator i = this.openResultSets.iterator(); i.hasNext(); )
 			try {
-				rs.close();
+				((ResultSet)i.next()).close();
 			} catch (SQLException e) {
 				// We don't care. Get rid of it anyway.
-			} finally {
-				// Just to make sure, although it should already have gone.
-				this.openResultSets.remove(rs);
 			}
-		}
+		this.openResultSets.clear();
 		this.closed = true;
 		this.registryConn.statementClosed(this);
 	}
@@ -446,7 +442,7 @@ public class QueryStatement implements PreparedStatement {
 		if (this.openResultSets.isEmpty())
 			throw new SQLException(Resources.get("plainStmtReqSQL"));
 		// We return the most recent result set.
-		return (ResultSet) this.openResultSets
+		return (ResultSet)this.openResultSets
 				.get(this.openResultSets.size() - 1);
 	}
 

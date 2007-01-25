@@ -38,7 +38,6 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
-import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
@@ -47,7 +46,6 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Table;
-import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -99,8 +97,16 @@ public class DataSetContext extends SchemaContext {
 			final DataSetTable target = (DataSetTable) relation.getManyKey()
 					.getTable();
 
+			// Fade MASKED DIMENSION relations.
+			if (this.getDataSet().getDataSetModifications().isMaskedTable(target))
+				component.setForeground(RelationComponent.MASKED_COLOUR);
+			
+			// Fade MERGED DIMENSION relations.
+			else if (this.getDataSet().getSchemaModifications().isMergedRelation(target.getFocusRelation())) 
+				component.setForeground(TableComponent.MASKED_COLOUR);
+			
 			// Highlight SUBCLASS relations.
-			if (target.getType().equals(DataSetTableType.MAIN_SUBCLASS))
+			 else if (target.getType().equals(DataSetTableType.MAIN_SUBCLASS))
 				component.setForeground(RelationComponent.SUBCLASS_COLOUR);
 
 			// All the rest are normal.
@@ -115,8 +121,16 @@ public class DataSetContext extends SchemaContext {
 			final DataSetTableType tableType = ((DataSetTable) object)
 					.getType();
 
+			// Fade MASKED DIMENSION relations.
+			if (this.getDataSet().getDataSetModifications().isMaskedTable((DataSetTable)object))
+				component.setForeground(TableComponent.MASKED_COLOUR);
+			
+			// Fade MERGED DIMENSION tables.
+			else if (this.getDataSet().getSchemaModifications().isMergedRelation(((DataSetTable)object).getFocusRelation())) 
+				component.setForeground(TableComponent.MASKED_COLOUR);
+			
 			// Highlight SUBCLASS tables.
-			if (tableType.equals(DataSetTableType.MAIN_SUBCLASS))
+			else if (tableType.equals(DataSetTableType.MAIN_SUBCLASS))
 				component.setForeground(TableComponent.SUBCLASS_COLOUR);
 
 			// Highlight DIMENSION tables.
@@ -137,10 +151,12 @@ public class DataSetContext extends SchemaContext {
 			// Magenta EXPRESSION columns.
 			if (column instanceof InheritedColumn)
 				component.setBackground(ColumnComponent.INHERITED_COLOUR);
-
 			// Fade out all MASKED columns.
-			else if (column.getMasked())
+			else if (((DataSet)column.getTable().getSchema()).getDataSetModifications().isMaskedColumn(column))
 				component.setBackground(ColumnComponent.FADED_COLOUR);
+
+			// FIXME: Reinstate.
+			/*
 
 			// Blue PARTITIONED columns.
 			else if (column.getPartitionType() != null)
@@ -149,7 +165,7 @@ public class DataSetContext extends SchemaContext {
 			// Magenta EXPRESSION columns.
 			else if (column instanceof ExpressionColumn)
 				component.setBackground(ColumnComponent.EXPRESSION_COLOUR);
-
+			 */
 			// All others are normal.
 			else
 				component.setBackground(ColumnComponent.NORMAL_COLOUR);
@@ -196,6 +212,21 @@ public class DataSetContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(remove);
+
+			contextMenu.addSeparator();
+
+			// Option to replicate the dataset.
+			final JMenuItem replicate = new JMenuItem(Resources
+					.get("replicateDataSetTitle"));
+			replicate.setMnemonic(Resources.get("replicateDataSetMnemonic")
+					.charAt(0));
+			replicate.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestReplicateDataSet(DataSetContext.this.getDataSet());
+				}
+			});
+			contextMenu.add(replicate);
 
 			contextMenu.addSeparator();
 			
@@ -346,6 +377,8 @@ public class DataSetContext extends SchemaContext {
 			});
 			contextMenu.add(rename);
 
+			// FIXME: Reinstate.
+			/*
 			// Add an expression column.
 			final JMenuItem expression = new JMenuItem(Resources
 					.get("addExpressionColumnTitle"));
@@ -358,6 +391,7 @@ public class DataSetContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(expression);
+			*/
 
 			contextMenu.addSeparator();
 
@@ -365,48 +399,62 @@ public class DataSetContext extends SchemaContext {
 			if (tableType.equals(DataSetTableType.DIMENSION)) {
 
 				// The dimension can be merged by using this option. This
-				// simply changes the relation cardinality to 1:1. This
-				// affects ALL datasets, not just this one!
-				final JMenuItem mergeDM = new JMenuItem(
-						Resources.get("mergeDimensionTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("collapseAll.gif")));
+				// affects all dimensions based on this relation.
+				final boolean isMerged = this.getDataSet().getSchemaModifications().isMergedRelation(table.getFocusRelation());
+				final JCheckBoxMenuItem mergeDM = new JCheckBoxMenuItem(
+						Resources.get("mergeDimensionTitle"));
 				mergeDM.setMnemonic(Resources.get("mergeDimensionMnemonic")
 						.charAt(0));
 				mergeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this.getMartTab().getSchemaTabSet()
-								.requestChangeRelationCardinality(
-										table.getSourceRelation(),
-										Cardinality.ONE);
+						if (mergeDM.isSelected())
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestMergeDimension(
+										DataSetContext.this.getDataSet(),
+										table
+										);
+						else
+							DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestUnmergeDimension(
+									DataSetContext.this.getDataSet(),
+									table
+									);
 					}
 				});
 				contextMenu.add(mergeDM);
+				mergeDM.setSelected(isMerged);
 
 				// The dimension can be removed by using this option. This
 				// simply masks the relation that caused the dimension to exist.
-				final JMenuItem removeDM = new JMenuItem(
-						Resources.get("removeDimensionTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("cut.gif")));
-				removeDM.setMnemonic(Resources.get("removeDimensionMnemonic")
+				final boolean isMasked = this.getDataSet().getDataSetModifications().isMaskedTable(table);
+				final JCheckBoxMenuItem removeDM = new JCheckBoxMenuItem(
+						Resources.get("maskDimensionTitle"));
+				removeDM.setMnemonic(Resources.get("maskDimensionMnemonic")
 						.charAt(0));
 				removeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
+						if (removeDM.isSelected())
 						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestMaskRelation(
+								.requestMaskDimension(
 										DataSetContext.this.getDataSet(),
-										table.getSourceRelation());
+										table);
+						else
+							DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestUnmaskDimension(
+									DataSetContext.this.getDataSet(),
+									table);
 					}
 				});
 				contextMenu.add(removeDM);
+				removeDM.setEnabled(!isMerged);
+				removeDM.setSelected(isMasked && !isMerged);
 			}
 
 			// Subclass tables have their own options too.
 			else if (tableType.equals(DataSetTableType.MAIN_SUBCLASS)) {
 
+				// FIXME: Reinstate.
+				/*
 				// The subclass table can be removed by using this option. This
 				// simply masks the relation that caused the subclass to exist.
 				final JMenuItem unsubclass = new JMenuItem(
@@ -421,10 +469,11 @@ public class DataSetContext extends SchemaContext {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestUnsubclassRelation(
 										DataSetContext.this.getDataSet(),
-										table.getSourceRelation());
+										table.getUnderlyingRelation());
 					}
 				});
 				contextMenu.add(unsubclass);
+				*/
 			}
 
 			// Main tables have their own stuff as well.
@@ -481,7 +530,7 @@ public class DataSetContext extends SchemaContext {
 			contextMenu.add(rename);
 
 			contextMenu.addSeparator();
-
+			
 			// Mask the column.
 			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
 					.get("maskColumnTitle"));
@@ -501,8 +550,11 @@ public class DataSetContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(mask);
-			mask.setSelected(column.getMasked());
+			mask.setSelected(((DataSet)column.getTable().getSchema()).getDataSetModifications().isMaskedColumn(column));
 
+
+			// FIXME: Reinstate.
+			/*
 			contextMenu.addSeparator();
 
 			// If it is partitioned, make a submenu to change the partition
@@ -602,6 +654,7 @@ public class DataSetContext extends SchemaContext {
 				contextMenu.add(remove);
 
 			}
+			 */
 		}
 	}
 }

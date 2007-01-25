@@ -28,6 +28,7 @@ import java.util.Iterator;
 import javax.swing.JLabel;
 import javax.swing.TransferHandler;
 
+import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.view.gui.SchemaTabSet;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.common.model.Column;
@@ -38,8 +39,8 @@ import org.biomart.common.model.Key.PrimaryKey;
  * Represents a key by listing out in a set of labels each column in the key.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.1
  */
 public class KeyComponent extends BoxShapedComponent {
@@ -142,7 +143,10 @@ public class KeyComponent extends BoxShapedComponent {
 		// Add the labels for each column.
 		for (final Iterator i = this.getKey().getColumns().iterator(); i
 				.hasNext();) {
-			final JLabel label = new JLabel(((Column) i.next()).getName());
+			final Column column = (Column) i.next();
+			final JLabel label = new JLabel(
+					column instanceof DataSetColumn ? ((DataSetColumn) column)
+							.getModifiedName() : column.getName());
 			label.setFont(KeyComponent.PLAIN_FONT);
 			this.layout.setConstraints(label, this.constraints);
 			this.add(label);

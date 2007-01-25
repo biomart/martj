@@ -29,6 +29,7 @@ import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -89,17 +90,13 @@ public class RegistryConnection implements Connection {
 
 	public void close() throws SQLException {
 		// We need to track and close all the statements we issued.
-		while (this.openStatements.size() > 0) {
-			final Statement stmt = (Statement) this.openStatements.get(0);
+		for (final Iterator i = this.openStatements.iterator(); i.hasNext(); )
 			try {
-				stmt.close();
+				((Statement)i.next()).close();
 			} catch (SQLException e) {
 				// We don't care. Get rid of it anyway.
-			} finally {
-				// Just to make sure, although it should already have gone.
-				this.openStatements.remove(stmt);
 			}
-		}
+		this.openStatements.clear();
 		this.closed = true;
 		this.dataSource.connectionClosed(this);
 	}
@@ -143,7 +140,7 @@ public class RegistryConnection implements Connection {
 		// We don't care what holdability or concurrency get used.
 		if (resultSetType != ResultSet.TYPE_FORWARD_ONLY)
 			throw new SQLException(Resources.get("forwardOnly"));
-		Statement stmt = new QueryStatement(this);
+		QueryStatement stmt = new QueryStatement(this);
 		synchronized (this.openStatements) {
 			this.openStatements.add(stmt);
 		}
@@ -249,7 +246,7 @@ public class RegistryConnection implements Connection {
 		// We don't care what holdability or concurrency get used.
 		if (resultSetType != ResultSet.TYPE_FORWARD_ONLY)
 			throw new SQLException(Resources.get("forwardOnly"));
-		PreparedStatement stmt = new QueryStatement(this, sql);
+		QueryStatement stmt = new QueryStatement(this, sql);
 		synchronized (this.openStatements) {
 			this.openStatements.add(stmt);
 		}

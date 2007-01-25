@@ -107,7 +107,6 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 			this.schemaTabSet.recalculateAllSchemaDiagrams();
 			this.schemaTabSet.recalculateOverviewDiagram();
 		}
-		this.validate();
 	}
 
 	public void repaintDialog() {
@@ -115,6 +114,5 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 			this.schemaTabSet.repaintAllSchemaDiagrams();
 			this.schemaTabSet.repaintOverviewDiagram();
 		}
-		this.validate();
 	}
 }

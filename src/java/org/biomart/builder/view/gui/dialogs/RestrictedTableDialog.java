@@ -18,36 +18,7 @@
 
 package org.biomart.builder.view.gui.dialogs;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.swing.DefaultCellEditor;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
-
-import org.biomart.builder.model.DataSet.DataSetTableRestriction;
-import org.biomart.common.model.Table;
-import org.biomart.common.model.Column.GenericColumn;
-import org.biomart.common.resources.Resources;
 
 /**
  * This dialog asks users to create or modify a restriction over a particular
@@ -61,6 +32,8 @@ import org.biomart.common.resources.Resources;
 public class RestrictedTableDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
+	// FIXME: Reinstate.
+	/*
 	private JButton cancel;
 
 	private boolean cancelled;
@@ -85,7 +58,7 @@ public class RestrictedTableDialog extends JDialog {
 	 *            the table to restrict.
 	 * @param template
 	 *            the restriction to use as a template, if any.
-	 */
+	 *
 	public RestrictedTableDialog(final Table table,
 			final DataSetTableRestriction template) {
 		// Creates the basic dialog.
@@ -291,7 +264,7 @@ public class RestrictedTableDialog extends JDialog {
 	 * Return <tt>true</tt> if the user cancelled the box.
 	 * 
 	 * @return <tt>true</tt> if the box was cancelled.
-	 */
+	 *
 	public boolean getCancelled() {
 		return this.cancelled;
 	}
@@ -300,7 +273,7 @@ public class RestrictedTableDialog extends JDialog {
 	 * Return the column aliases the user selected.
 	 * 
 	 * @return the aliases.
-	 */
+	 *
 	public Map getColumnAliases() {
 		return this.columnAliasModel.getColumnAliases();
 	}
@@ -309,14 +282,14 @@ public class RestrictedTableDialog extends JDialog {
 	 * Return the expression the user selected.
 	 * 
 	 * @return the expression.
-	 */
+	 *
 	public String getExpression() {
 		return this.expression.getText().trim();
 	}
 
 	/**
 	 * This internal class represents a map of dataset columns to aliases.
-	 */
+	 *
 	private static class ColumnAliasTableModel extends DefaultTableModel {
 		private static final Class[] colClasses = new Class[] {
 				GenericColumn.class, String.class };
@@ -331,7 +304,7 @@ public class RestrictedTableDialog extends JDialog {
 		 *            the table we are showing columns from.
 		 * @param template
 		 *            the model to copy existing settings from.
-		 */
+		 *
 		public ColumnAliasTableModel(final Table table,
 				final DataSetTableRestriction template) {
 			super(new Object[] { Resources.get("columnAliasTableColHeader"),
@@ -352,7 +325,7 @@ public class RestrictedTableDialog extends JDialog {
 		 * 
 		 * @return a map of aliases. Keys are column instances, values are the
 		 *         aliases the user assigned.
-		 */
+		 *
 		public Map getColumnAliases() {
 			// Return the map of column to alias.
 			final HashMap aliases = new HashMap();
@@ -370,4 +343,5 @@ public class RestrictedTableDialog extends JDialog {
 			return ColumnAliasTableModel.colClasses[column];
 		}
 	}
+	*/
 }

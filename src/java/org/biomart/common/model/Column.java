@@ -44,15 +44,6 @@ public interface Column extends Comparable {
 	public String getName();
 
 	/**
-	 * Retrieve the original name of this column, as it was first created. This
-	 * is useful when the user has renamed a column but you need to know what it
-	 * started out as for purposes of comparison.
-	 * 
-	 * @return the original name of this column.
-	 */
-	public String getOriginalName();
-
-	/**
 	 * Retrieve the parent table of this column.
 	 * 
 	 * @return the parent table of this column.
@@ -60,31 +51,11 @@ public interface Column extends Comparable {
 	public Table getTable();
 
 	/**
-	 * Use this to rename a column. The table will be informed of the change as
-	 * well.
-	 * 
-	 * @param newName
-	 *            the new name to give the column.
-	 */
-	public void setName(String newName);
-
-	/**
-	 * Use this to change a column's original name. Use with extreme caution.
-	 * The owning table doesn't need to know so won't be notified.
-	 * 
-	 * @param newName
-	 *            the new original name to give the column.
-	 */
-	public void setOriginalName(String newName);
-
-	/**
 	 * A generic implementation which provides the basic functionality required
 	 * for a column to function.
 	 */
 	public class GenericColumn implements Column {
 		private String name;
-
-		private String originalName;
 
 		private final Table table;
 
@@ -101,19 +72,6 @@ public interface Column extends Comparable {
 			Log.debug("Creating column "+name+" on table "+table);
 			// Remember the values.
 			this.table = table;
-			// Remember the name, and set it as the original name for
-			// this column.
-			name = this.makeUniqueName(name);
-			this.name = name;
-			this.originalName = name;
-			// Add it to the table.
-			table.addColumn(this);
-		}
-
-		private String makeUniqueName(String name) {
-			// Is it the same as our existing name? Reuse it.
-			if (this.name != null && this.name.equals(name))
-				return name;
 			// First we need to find out the base name, ie. the bit
 			// we append numbers to make it unique, but before any
 			// key suffix. If we appended numbers after the key
@@ -132,7 +90,7 @@ public interface Column extends Comparable {
 				;
 			// Return it.
 			Log.debug("Unique name is "+name);
-			return name;
+			this.name = name;
 		}
 
 		public int compareTo(final Object o) {
@@ -151,29 +109,12 @@ public interface Column extends Comparable {
 			return this.name;
 		}
 
-		public String getOriginalName() {
-			return this.originalName;
-		}
-
 		public Table getTable() {
 			return this.table;
 		}
 
 		public int hashCode() {
 			return this.toString().hashCode();
-		}
-
-		public void setName(String newName) {
-			Log.debug("Renaming column "+this+" to "+newName);
-			// Make the name unique.
-			newName = this.makeUniqueName(newName);
-			// Rename it.
-			this.getTable().changeColumnMapKey(this.name, newName);
-			this.name = newName;
-		}
-
-		public void setOriginalName(final String newName) {
-			this.originalName = newName;
 		}
 
 		/**

@@ -19,9 +19,8 @@
 package org.biomart.jdbc.model;
 
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.biomart.common.resources.Resources;
@@ -66,8 +65,8 @@ public class Registry {
 	 * Find out what marts are in this registry.
 	 * @return the list of marts. May be empty but never <tt>null</tt>.
 	 */
-	public List getMartNames() {
-		return new ArrayList(this.marts.keySet());
+	public Collection getMartNames() {
+		return this.marts.keySet();
 	}
 
 	/**

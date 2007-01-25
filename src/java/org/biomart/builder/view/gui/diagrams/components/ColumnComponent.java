@@ -26,6 +26,7 @@ import java.awt.Insets;
 
 import javax.swing.JLabel;
 
+import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.common.model.Column;
@@ -34,8 +35,8 @@ import org.biomart.common.model.Column;
  * This simple component represents a single column within a table.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class ColumnComponent extends BoxShapedComponent {
@@ -124,7 +125,10 @@ public class ColumnComponent extends BoxShapedComponent {
 		this.setBackground(ColumnComponent.NORMAL_COLOUR);
 
 		// Add the label for the column name.
-		JLabel label = new JLabel(this.getColumn().getName());
+		final String name = (this.getColumn() instanceof DataSetColumn) ? ((DataSetColumn) this
+				.getColumn()).getModifiedName()
+				: this.getColumn().getName();
+		JLabel label = new JLabel(name);
 		label.setFont(ColumnComponent.NORMAL_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);

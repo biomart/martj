@@ -32,8 +32,8 @@ import org.biomart.jdbc.resources.Resources;
 
 /**
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.6
  */
 public class SubQueryMetaData implements ResultSetMetaData {
@@ -66,16 +66,16 @@ public class SubQueryMetaData implements ResultSetMetaData {
 		// Copy column details from subquery objects.
 		final List subQueries = new ArrayList();
 		subQueries.add(this.subQuery);
+		// Use int as set changes whilst iterating.
 		for (int i = 0; i < subQueries.size(); i++) {
 			final SubQuery sq = (SubQuery) subQueries.get(i);
 			subQueries.addAll(sq.getAllSubQueries());
 			final MetaData md = new MetaData();
 			if (sq instanceof XMLSubQuery) {
 				// Fake it all with strings.
-				final Map colMap = sq.getResultMapping();
-				for (final Iterator m = colMap.entrySet().iterator(); m
-						.hasNext();) {
-					final Map.Entry me = (Map.Entry) m.next();
+				for (final Iterator entries = sq.getResultMapping().entrySet()
+						.iterator(); entries.hasNext();) {
+					final Map.Entry me = (Map.Entry) entries.next();
 					final int qIndex = ((Integer) me.getValue()).intValue();
 					md.columnTypeName = "String";
 					md.columnClassName = "java.lang.String";
@@ -88,7 +88,7 @@ public class SubQueryMetaData implements ResultSetMetaData {
 					md.schemaName = sq.getDatasetName();
 					md.tableName = md.schemaName;
 					md.columnName = (String) this.query.getColumnNames().get(
-							qIndex-1);
+							qIndex - 1);
 					md.columnLabel = md.columnName;
 					md.columnDisplaySize = Integer.MAX_VALUE;
 				}
@@ -96,10 +96,9 @@ public class SubQueryMetaData implements ResultSetMetaData {
 				// Copy the data from the JDBC connection.
 				final ResultSetMetaData sqMetaData = ((JDBCSubQuery) sq)
 						.getMetaData();
-				final Map colMap = sq.getResultMapping();
-				for (final Iterator m = colMap.entrySet().iterator(); m
-						.hasNext();) {
-					final Map.Entry me = (Map.Entry) m.next();
+				for (final Iterator entries = sq.getResultMapping().entrySet()
+						.iterator(); entries.hasNext();) {
+					final Map.Entry me = (Map.Entry) entries.next();
 					final int sqIndex = ((Integer) me.getKey()).intValue();
 					final int qIndex = ((Integer) me.getValue()).intValue();
 					md.columnTypeName = sqMetaData.getColumnTypeName(sqIndex);
@@ -113,7 +112,7 @@ public class SubQueryMetaData implements ResultSetMetaData {
 					md.schemaName = sq.getDatasetName();
 					md.tableName = md.schemaName;
 					md.columnName = (String) this.query.getColumnNames().get(
-							qIndex-1);
+							qIndex - 1);
 					md.columnLabel = md.columnName;
 					md.columnDisplaySize = sqMetaData
 							.getColumnDisplaySize(sqIndex);
@@ -127,7 +126,7 @@ public class SubQueryMetaData implements ResultSetMetaData {
 		if (column < 1 || column >= this.metaData.length)
 			throw new SQLException(Resources.get("colIndexOutRange", ""
 					+ column));
-		return this.metaData[column-1];
+		return this.metaData[column - 1];
 	}
 
 	public String getCatalogName(int column) throws SQLException {

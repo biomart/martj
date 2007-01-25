@@ -38,36 +38,31 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.DataSet.DataSetTableType;
-import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.TransformationUnit.LeftJoinTable;
+import org.biomart.builder.model.TransformationUnit.SelectFromTable;
+import org.biomart.builder.view.gui.SchemaTabSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.Diagram;
-import org.biomart.builder.view.gui.diagrams.ExplainTableDiagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainDataSetContext;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainTransformationContext;
-import org.biomart.common.model.Key;
-import org.biomart.common.model.Relation;
-import org.biomart.common.model.Table;
+import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.resources.Resources;
 
 /**
  * This simple dialog explains a table by drawing a series of diagrams of the
  * underlying tables and relations involved in it.
  * <p>
- * It has two tabs. In the first tab goes an overview diagram, an instance of
- * {@link ExplainTableDiagram}. In the second tab goes a series of smaller
- * diagrams, each one an instance of {@link ExplainTransformationDiagram} which
- * represents a single step in the transformation process required to produce
- * the table being explained.
+ * It has two tabs. In the first tab goes an overview diagram. In the second tab
+ * goes a series of smaller diagrams, each one an instance of
+ * {@link ExplainTransformationDiagram} which represents a single step in the
+ * transformation process required to produce the table being explained.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class ExplainTableDialog extends JDialog implements ExplainDialog {
@@ -92,9 +87,11 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		martTab.getDataSetTabSet().removeCurrentExplanationDialog(dialog);
 	}
 
-	private ExplainTableDiagram diagram;
+	private SchemaTabSet schemaTabSet;
 
-	private DataSetTable dsTable;
+	private DataSet ds;
+
+	private String tableName;
 
 	private GridBagConstraints fieldConstraints;
 
@@ -118,18 +115,21 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		this.setTitle(Resources.get("explainTableDialogTitle", dsTable
 				.getName()));
 		this.setModal(true);
-		this.dsTable = dsTable;
+		this.ds = (DataSet) dsTable.getSchema();
+		this.tableName = dsTable.getName();
 		this.martTab = martTab;
+		this.schemaTabSet = martTab.getSchemaTabSet();
 
 		// Make the content pane.
 		final JPanel displayArea = new JPanel(new CardLayout());
 
 		// Compute the overview diagram, and assign it the appropriate context.
-		this.diagram = new ExplainTableDiagram(this.martTab, this.dsTable);
 		final ExplainDataSetContext context = new ExplainDataSetContext(
-				this.martTab, (DataSet) this.dsTable.getSchema());
-		this.diagram.setDiagramContext(context);
-		displayArea.add(new JScrollPane(this.diagram), "WINDOW_CARD");
+				martTab, dsTable);
+		this.schemaTabSet.setDiagramContext(context);
+		// Must be set visible as previous display location is invisible.
+		this.schemaTabSet.setVisible(true);
+		displayArea.add(this.schemaTabSet, "WINDOW_CARD");
 
 		// Create the content pane to store the create dialog panel.
 		this.gridBag = new GridBagLayout();
@@ -207,7 +207,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		content.add(displayArea, BorderLayout.CENTER);
 
 		// Work out what size we want the diagram to be.
-		final Dimension size = this.diagram.getPreferredSize();
+		final Dimension size = this.schemaTabSet.getPreferredSize();
 		final Dimension maxSize = this.martTab.getSize();
 		// The +20s in the following are to cater for scrollbar widths
 		// and window borders.
@@ -227,16 +227,14 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		// Pack the window.
 		this.pack();
 
-		// Select the default button (which shows the diagram card).
+		// Select the default button (which shows the transformation card).
 		// We must physically click on it to make the card show.
-		windowButton.doClick();
+		transformationButton.doClick();
 	}
 
 	private void recalculateTransformation() {
 		// Clear the transformation box.
 		this.transformation.removeAll();
-
-		// Redisplay it.
 
 		// Keep track of columns counted so far.
 		List columnsSoFar = new ArrayList();
@@ -244,223 +242,99 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		// Count our steps.
 		int stepNumber = 1;
 
-		// First step LHS is parent DS table for non-MAIN and
-		// for MAIN tables it is the underlying table.
-		// First step RHS is the second table in the chain of relations.
-		// If chain is empty, there is no RHS.
-		// First step columns selected are from _both_ of the tables
-		// shown.
-		final Table firstTable = this.dsTable.getType().equals(
-				DataSetTableType.MAIN) ? this.dsTable.getUnderlyingTable()
-				: ((Relation) ((Key) this.dsTable.getForeignKeys().iterator()
-						.next()).getRelations().iterator().next()).getOneKey()
-						.getTable();
-		if (this.dsTable.getUnderlyingKeys().isEmpty()) {
-			// Do a single-step select.
-			JLabel label = new JLabel(Resources.get("stepTableLabel",
-					new String[] { "" + stepNumber,
-							Resources.get("explainSelectLabel") }));
-			this.gridBag.setConstraints(label, this.labelConstraints);
-			this.transformation.add(label);
-			final List includeCols = new ArrayList();
-			for (final Iterator i = this.dsTable.getColumns().iterator(); i
-					.hasNext();) {
-				final DataSetColumn col = (DataSetColumn) i.next();
-				if (col instanceof WrappedColumn) {
-					final WrappedColumn wcol = (WrappedColumn) col;
-					if (wcol.getWrappedColumn().getTable().equals(firstTable))
-						includeCols.add(wcol);
-				}
-			}
-			JPanel field = new JPanel();
-			Diagram diagram = new ExplainTransformationDiagram.SingleTable(
-					this.martTab, firstTable, includeCols);
-			diagram.setDiagramContext(this.explainTransformationContext);
-			field.add(diagram);
-			this.gridBag.setConstraints(field, this.fieldConstraints);
-			this.transformation.add(field);
-			columnsSoFar.addAll(includeCols);
-			stepNumber++;
-		} else {
-			final Key k = (Key) this.dsTable.getUnderlyingKeys().get(0);
-			final Relation r = (Relation) this.dsTable.getUnderlyingRelations()
-					.get(0);
-			if (firstTable instanceof DataSetTable) {
-				// Do a dataset-real merge.
-				final DataSetTable parentDSTable = (DataSetTable) ((Relation) (((Key) this.dsTable
-						.getForeignKeys().iterator().next()).getRelations()
-						.iterator().next())).getOneKey().getTable();
-				JLabel label = new JLabel(Resources.get("stepTableLabel",
+		// Iterate over transformation units.
+		for (final Iterator i = ((DataSetTable) this.ds
+				.getTableByName(this.tableName)).getTransformationUnits()
+				.iterator(); i.hasNext();) {
+			final TransformationUnit tu = (TransformationUnit) i.next();
+			// Holders for our stuff.
+			final JLabel label;
+			final Diagram diagram;
+			// Draw the unit.
+			if (tu instanceof LeftJoinTable) {
+				// Temp table to schema table join.
+				label = new JLabel(Resources.get("stepTableLabel",
 						new String[] { "" + stepNumber,
 								Resources.get("explainMergeLabel") }));
-				this.gridBag.setConstraints(label, this.labelConstraints);
-				this.transformation.add(label);
-				final List lIncludeCols = new ArrayList();
-				final List rIncludeCols = new ArrayList();
-				for (final Iterator j = this.dsTable.getColumns().iterator(); j
-						.hasNext();) {
-					final DataSetColumn col = (DataSetColumn) j.next();
-					if (col instanceof InheritedColumn)
-						lIncludeCols.add(col);
-					else if (col.getUnderlyingRelation().equals(r))
-						rIncludeCols.add(col);
-				}
-				JPanel field = new JPanel();
-				Diagram diagram = new ExplainTransformationDiagram.DatasetReal(
-						this.martTab, parentDSTable, parentDSTable
-								.getUnmaskedDataSetColumns(k.getColumns(), r,
-										lIncludeCols), k, r, lIncludeCols,
-						rIncludeCols);
-				diagram.setDiagramContext(this.explainTransformationContext);
-				field.add(diagram);
-				this.gridBag.setConstraints(field, this.fieldConstraints);
-				this.transformation.add(field);
-				columnsSoFar.addAll(lIncludeCols);
-				columnsSoFar.addAll(rIncludeCols);
-				stepNumber++;
-			} else {
-				// Do a real-real merge.
-				JLabel label = new JLabel(Resources.get("stepTableLabel",
+
+				diagram = new ExplainTransformationDiagram.TempReal(
+						this.martTab, (LeftJoinTable) tu, columnsSoFar);
+			} else if (tu instanceof SelectFromTable) {
+				// Do a single-step select.
+				label = new JLabel(Resources.get("stepTableLabel",
 						new String[] { "" + stepNumber,
-								Resources.get("explainMergeLabel") }));
-				this.gridBag.setConstraints(label, this.labelConstraints);
-				this.transformation.add(label);
-				final List lIncludeCols = new ArrayList();
-				final List rIncludeCols = new ArrayList();
-				for (final Iterator j = this.dsTable.getColumns().iterator(); j
-						.hasNext();) {
-					final DataSetColumn col = (DataSetColumn) j.next();
-					// Wrapped columns with no relation are from the LHS.
-					if (col instanceof WrappedColumn
-							&& col.getUnderlyingRelation() == null)
-						lIncludeCols.add(col);
-					// Columns based on the relation are from the RHS.
-					else if (r.equals(col.getUnderlyingRelation()))
-						rIncludeCols.add(col);
-				}
-				JPanel field = new JPanel();
-				Diagram diagram = new ExplainTransformationDiagram.RealReal(
-						this.martTab, k, r, lIncludeCols, rIncludeCols);
-				diagram.setDiagramContext(this.explainTransformationContext);
-				field.add(diagram);
-				this.gridBag.setConstraints(field, this.fieldConstraints);
-				this.transformation.add(field);
-				columnsSoFar.addAll(lIncludeCols);
-				columnsSoFar.addAll(rIncludeCols);
-				stepNumber++;
-			}
-		}
-
-		// Subsequent steps show LHS temp table and RHS real table
-		// for each subsequent underlying key/relation pair.
-		for (int i = 1; i < this.dsTable.getUnderlyingKeys().size(); i++) {
-			final Key k = (Key) this.dsTable.getUnderlyingKeys().get(i);
-			final Relation r = (Relation) this.dsTable.getUnderlyingRelations()
-					.get(i);
-			JLabel label = new JLabel(Resources.get("stepTableLabel",
-					new String[] { "" + stepNumber,
-							Resources.get("explainMergeLabel") }));
+								Resources.get("explainSelectLabel") }));
+				diagram = new ExplainTransformationDiagram.SingleTable(
+						this.martTab, (SelectFromTable) tu);
+			} else
+				throw new BioMartError();
 			this.gridBag.setConstraints(label, this.labelConstraints);
 			this.transformation.add(label);
-			final List lIncludeCols = new ArrayList(columnsSoFar);
-			final List rIncludeCols = new ArrayList();
-			for (final Iterator j = this.dsTable.getColumns().iterator(); j
-					.hasNext();) {
-				final DataSetColumn col = (DataSetColumn) j.next();
-				if (col instanceof WrappedColumn) {
-					final WrappedColumn wcol = (WrappedColumn) col;
-					if (r.equals(wcol.getUnderlyingRelation()))
-						rIncludeCols.add(wcol);
-				}
-			}
-			JPanel field = new JPanel();
-			Diagram diagram = new ExplainTransformationDiagram.TempReal(
-					this.martTab, this.dsTable.getSchema().getName(),
-					this.dsTable.getUnmaskedDataSetColumns(k.getColumns(), r,
-							columnsSoFar), k, r, lIncludeCols, rIncludeCols);
 			diagram.setDiagramContext(this.explainTransformationContext);
+			JPanel field = new JPanel();
 			field.add(diagram);
 			this.gridBag.setConstraints(field, this.fieldConstraints);
 			this.transformation.add(field);
-			columnsSoFar.addAll(rIncludeCols);
+			// Add columns from this unit to the transformed table.
+			columnsSoFar.addAll(tu.getNewColumnNameMap().values());
 			stepNumber++;
 		}
 
-		// Work out expression and partitioned columns.
-		final List expressionCols = new ArrayList();
-		final List partCols = new ArrayList();
-		for (final Iterator i = this.dsTable.getColumns().iterator(); i
-				.hasNext();) {
-			final DataSetColumn c = (DataSetColumn) i.next();
-			if (c instanceof ExpressionColumn)
-				expressionCols.add(c);
-			if (c.getPartitionType() != null)
-				partCols.add(c);
-		}
+		// FIXME: Reinstate.
+		/*
+		 * // Work out expression and partitioned columns. final List
+		 * expressionCols = new ArrayList(); final List partCols = new
+		 * ArrayList(); for (final Iterator i =
+		 * this.dsTable.getColumns().iterator(); i .hasNext();) { final
+		 * DataSetColumn c = (DataSetColumn) i.next(); if (c instanceof
+		 * ExpressionColumn) expressionCols.add(c); if (c.getPartitionType() !=
+		 * null) partCols.add(c); } // Show partitioned columns. if
+		 * (!partCols.isEmpty()) { JLabel label = new
+		 * JLabel(Resources.get("stepTableLabel", new String[] { "" +
+		 * stepNumber, Resources.get("explainPartitionsLabel") }));
+		 * this.gridBag.setConstraints(label, this.labelConstraints);
+		 * this.transformation.add(label); JPanel field = new JPanel(); Diagram
+		 * diagram = new ExplainTransformationDiagram.Columns( this.martTab,
+		 * partCols);
+		 * diagram.setDiagramContext(this.explainTransformationContext);
+		 * field.add(diagram); this.gridBag.setConstraints(field,
+		 * this.fieldConstraints); this.transformation.add(field); stepNumber++; } //
+		 * Show expression columns. if (!expressionCols.isEmpty()) { JLabel
+		 * label = new JLabel(Resources.get("stepTableLabel", new String[] { "" +
+		 * stepNumber, Resources.get("explainExpressionsLabel") }));
+		 * this.gridBag.setConstraints(label, this.labelConstraints);
+		 * this.transformation.add(label); JPanel field = new JPanel(); Diagram
+		 * diagram = new ExplainTransformationDiagram.Columns( this.martTab,
+		 * expressionCols);
+		 * diagram.setDiagramContext(this.explainTransformationContext);
+		 * field.add(diagram); this.gridBag.setConstraints(field,
+		 * this.fieldConstraints); this.transformation.add(field);
+		 * columnsSoFar.addAll(expressionCols); stepNumber++; }
+		 */
 
-		// Show partitioned columns.
-		if (!partCols.isEmpty()) {
-			JLabel label = new JLabel(Resources.get("stepTableLabel",
-					new String[] { "" + stepNumber,
-							Resources.get("explainPartitionsLabel") }));
-			this.gridBag.setConstraints(label, this.labelConstraints);
-			this.transformation.add(label);
-			JPanel field = new JPanel();
-			Diagram diagram = new ExplainTransformationDiagram.Columns(
-					this.martTab, partCols);
-			diagram.setDiagramContext(this.explainTransformationContext);
-			field.add(diagram);
-			this.gridBag.setConstraints(field, this.fieldConstraints);
-			this.transformation.add(field);
-			stepNumber++;
-		}
+		// Resize the diagram to fit the components.
+		this.transformation.validate();
+	}
 
-		// Show expression columns.
-		if (!expressionCols.isEmpty()) {
-			JLabel label = new JLabel(Resources.get("stepTableLabel",
-					new String[] { "" + stepNumber,
-							Resources.get("explainExpressionsLabel") }));
-			this.gridBag.setConstraints(label, this.labelConstraints);
-			this.transformation.add(label);
-			JPanel field = new JPanel();
-			Diagram diagram = new ExplainTransformationDiagram.Columns(
-					this.martTab, expressionCols);
-			diagram.setDiagramContext(this.explainTransformationContext);
-			field.add(diagram);
-			this.gridBag.setConstraints(field, this.fieldConstraints);
-			this.transformation.add(field);
-			columnsSoFar.addAll(expressionCols);
-			stepNumber++;
-		}
-
-		// Add the final table definition at the bottom.
-		JLabel label = new JLabel(Resources.get("stepTableLabel", new String[] {
-				"" + stepNumber, Resources.get("explainRenameLabel") }));
-		this.gridBag.setConstraints(label, this.labelLastRowConstraints);
-		this.transformation.add(label);
-		JPanel field = new JPanel();
-		Diagram diagram = new ExplainTransformationDiagram.SingleTable(
-				this.martTab, this.dsTable, columnsSoFar);
-		diagram.setDiagramContext(this.explainTransformationContext);
-		field.add(diagram);
-		this.gridBag.setConstraints(field, this.fieldLastRowConstraints);
-		this.transformation.add(field);
-		stepNumber++;
+	private void repaintTransformation() {
+		this.transformation.repaint(this.transformation.getVisibleRect());
 	}
 
 	public void recalculateDialog() {
-		if (this.diagram != null)
-			this.diagram.recalculateDiagram();
+		if (this.schemaTabSet != null) {
+			this.schemaTabSet.recalculateAllSchemaDiagrams();
+			this.schemaTabSet.recalculateOverviewDiagram();
+		}
 		if (this.transformation != null)
 			this.recalculateTransformation();
-		this.validate();
 	}
 
 	public void repaintDialog() {
-		if (this.diagram != null)
-			this.diagram.repaintDiagram();
+		if (this.schemaTabSet != null) {
+			this.schemaTabSet.repaintAllSchemaDiagrams();
+			this.schemaTabSet.repaintOverviewDiagram();
+		}
 		if (this.transformation != null)
-			this.recalculateTransformation();
-		this.validate();
+			this.repaintTransformation();
 	}
 }

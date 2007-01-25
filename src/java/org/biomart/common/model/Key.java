@@ -71,7 +71,7 @@ public interface Key extends Comparable {
 	 * 
 	 * @return the names of the columns in this key.
 	 */
-	public Collection getColumnNames();
+	public List getColumnNames();
 
 	/**
 	 * Returns the list of columns this key is formed over. It may return an
@@ -255,7 +255,7 @@ public interface Key extends Comparable {
 			return k.toString().equals(this.toString());
 		}
 
-		public Collection getColumnNames() {
+		public List getColumnNames() {
 			final List names = new ArrayList();
 			if (this.columns != null)
 				for (final Iterator i = this.columns.iterator(); i.hasNext();) {

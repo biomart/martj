@@ -333,10 +333,6 @@ public interface Relation extends Comparable {
 			if (firstKey.getRelations().contains(this))
 				throw new AssociationException(Resources
 						.get("relationAlreadyExists"));
-
-			// Add ourselves to the keys at both ends.
-			firstKey.addRelation(this);
-			secondKey.addRelation(this);
 		}
 
 		public int compareTo(final Object o) throws ClassCastException {

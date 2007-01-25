@@ -22,27 +22,28 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.biomart.builder.exceptions.ValidationException;
-import org.biomart.builder.model.DataSet.DataSetColumn.ConcatRelationColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.TransformationUnit.LeftJoinTable;
+import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.Column;
+import org.biomart.common.model.Column.GenericColumn;
 import org.biomart.common.model.ComponentStatus;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
+import org.biomart.common.model.Table.GenericTable;
 import org.biomart.common.model.Key.ForeignKey;
 import org.biomart.common.model.Key.GenericForeignKey;
 import org.biomart.common.model.Key.GenericPrimaryKey;
@@ -50,7 +51,6 @@ import org.biomart.common.model.Key.PrimaryKey;
 import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.model.Relation.GenericRelation;
 import org.biomart.common.model.Schema.GenericSchema;
-import org.biomart.common.model.Table.GenericTable;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -78,25 +78,37 @@ import org.biomart.common.resources.Resources;
 public class DataSet extends GenericSchema {
 	private final Table centralTable;
 
-	// Use double-List to avoid problems with hashcodes changing.
-	private final List[] concatOnlyRelations = new List[] { new ArrayList(),
-			new ArrayList() };
-
 	private boolean invisible;
 
 	private final Mart mart;
+	
+	private final Collection allRelations;
 
-	// Use List to avoid problems with hashcodes changing.
-	private final List maskedRelations = new ArrayList();
+	// TODO SchemaModMaps for source schema changes.
+	// Restricted tables.
+	// Replicated relations - CREATE COMPOUND RELATION.
+	// Restricted relations - INDEX INTO COMPOUND RELATION.
+	// Concat-only relations with concat definitions incl. 
+	//   expressions inside concat definition (DST only).
+	//   INDEX INTO COMPOUND RELATION.
+	//   ADDS A CONCAT TUNIT TO THE CHAIN WITH ONE CONCAT DS COLUMN
+	//   IN IT - COLUMN HAS DEFAULT NAME AND CAN BE RENAMED BY
+	//   USER AS PER ANY OTHER COLUMN - need synch() after this.
+	private final SchemaModificationSet schemaMods;
+
+	// TODO DataSetModMaps for renames/masking.
+	// Partition columns.
+	// Not-inherited columns (DST only = choose col in parent
+	//    table that won't be copied to child table. On generation
+	//    requires check that child table has all same named cols
+	//    as parent table)
+	// Expression column definitions with nesting resolution.
+	//   ADDS AN EXPRESSION TUNIT(S) TO THE CHAIN WITH EACH NESTED
+	//   EXPRESSION CLUSTER OF DS COLUMNS - COLUMNS HAVE DEFAULT NAME
+	//   AND CAN BE RENAMED BY USER - need synch() after this.
+	private final DataSetModificationSet dsMods;
 
 	private DataSetOptimiserType optimiser;
-
-	// Use double-List to avoid problems with hashcodes changing.
-	private final List[] restrictedTables = new List[] { new ArrayList(),
-			new ArrayList() };
-
-	// Use List to avoid problems with hashcodes changing.
-	private final List subclassedRelations = new ArrayList();
 
 	/**
 	 * The constructor creates a dataset around one central table and gives the
@@ -124,9 +136,33 @@ public class DataSet extends GenericSchema {
 		this.mart = mart;
 		this.centralTable = centralTable;
 		this.optimiser = DataSetOptimiserType.NONE;
-
-		// Add ourselves to the mart.
-		mart.addDataSet(this);
+		this.schemaMods = new SchemaModificationSet(this);
+		this.dsMods = new DataSetModificationSet();
+		this.allRelations = new HashSet();
+	}
+	
+	/**
+	 * Obtain all relations used by this dataset.
+	 * @return all relations.
+	 */
+	public Collection getAllRelations() {
+		return this.allRelations;
+	}
+	
+	/**
+	 * Obtain the set of schema modifiers for this dataset.
+	 * @return the set of modifiers.
+	 */
+	public SchemaModificationSet getSchemaModifications() {
+		return this.schemaMods;
+	}
+	
+	/**
+	 * Obtain the set of dataset modifiers for this dataset.
+	 * @return the set of modifiers.
+	 */
+	public DataSetModificationSet getDataSetModifications() {
+		return this.dsMods;
 	}
 
 	/**
@@ -152,12 +188,13 @@ public class DataSet extends GenericSchema {
 	 */
 	private void generateDataSetTable(final DataSetTableType type,
 			final DataSetTable parentDSTable, final Table realTable,
-			final Relation sourceRelation) {
+			final List sourceDSCols, final Relation sourceRelation) {
 		Log.debug("Creating dataset table for " + realTable
 				+ " with parent relation " + sourceRelation + " as a " + type);
 		// Create the empty dataset table.
 		final DataSetTable dsTable = new DataSetTable(realTable.getName(),
 				this, type, realTable, sourceRelation);
+		this.addTable(dsTable);
 
 		// Create the three relation-table pair queues we will work with. The
 		// normal queue holds pairs of relations and tables. The other two hold
@@ -169,9 +206,6 @@ public class DataSet extends GenericSchema {
 		final List subclassQ = new ArrayList();
 		final List dimensionQ = new ArrayList();
 
-		// Set up a set of relations that have been followed so far.
-		final Set relationsFollowed = new HashSet();
-
 		// Set up a list to hold columns for this table's primary key.
 		final List dsTablePKCols = new ArrayList();
 
@@ -181,17 +215,15 @@ public class DataSet extends GenericSchema {
 		// the PK with FK link, plus all the relations we followed to
 		// get these columns.
 		if (parentDSTable != null) {
+			final TransformationUnit tu = new SelectFromTable(
+					parentDSTable);
+			dsTable.addTransformationUnit(tu);
+
 			// Make a list to hold the child table's FK cols.
 			final List dsTableFKCols = new ArrayList();
 
 			// Get the primary key of the parent DS table.
 			final PrimaryKey parentDSTablePK = parentDSTable.getPrimaryKey();
-
-			// Don't follow the parent's relations again, if this is
-			// a subclass table. Otherwise, follow everything as normal.
-			if (type.equals(DataSetTableType.MAIN_SUBCLASS))
-				relationsFollowed
-						.addAll(parentDSTable.getUnderlyingRelations());
 
 			// Loop over each column in the parent table. If this is
 			// a subclass table, add it. If it is a dimension table,
@@ -218,12 +250,15 @@ public class DataSet extends GenericSchema {
 					if (!inPK && !inSourceKey)
 						continue;
 				}
+				// If column is masked, don't inherit it.
+				if (this.dsMods.isMaskedColumn(parentDSCol))
+					continue;
 				// Only unfiltered columns reach this point. Create a copy of
 				// the column.
 				InheritedColumn dsCol = new InheritedColumn(dsTable,
 						parentDSCol);
-				// Copy the original name, too.
-				dsCol.setOriginalName(parentDSCol.getOriginalName());
+				dsTable.addColumn(dsCol);
+				tu.getNewColumnNameMap().put(parentDSCol.getName(), dsCol);
 				// Add the column to the child's FK, but only if it was in
 				// the parent PK.
 				if (parentDSTablePK.getColumns().contains(parentDSCol))
@@ -236,71 +271,105 @@ public class DataSet extends GenericSchema {
 						dsTableFKCols);
 				dsTable.addForeignKey(dsTableFK);
 				// Link the child FK to the parent PK.
-				new GenericRelation(parentDSTablePK, dsTableFK,
-						Cardinality.MANY);
+				final Relation rel = new GenericRelation(parentDSTablePK,
+						dsTableFK, Cardinality.MANY);
+				parentDSTablePK.addRelation(rel);
+				dsTableFK.addRelation(rel);
 			} catch (final Throwable t) {
 				throw new BioMartError(t);
 			}
 		}
 
+		// How many times are allowed to iterate over each relation?
+		final Map relationCount = new HashMap();
+		final Set allRelations = new HashSet();
+		for (final Iterator i = this.getMart().getSchemas().iterator(); i.hasNext(); ) 
+			allRelations.addAll(((Schema)i.next()).getRelations());
+		for (final Iterator i = allRelations.iterator(); i.hasNext();) {
+			final Relation rel = (Relation)i.next();
+			final int compounded = 
+				this.schemaMods.isCompoundRelation(dsTable, rel)
+				? this.schemaMods.getCompoundRelation(dsTable, rel)
+						: 1;
+			relationCount.put(rel, new Integer(compounded));		
+		}
+		
+		// Don't follow the source relation again.
+		relationCount.put(sourceRelation, new Integer(0));
+		// Don't follow the parent's relations again, if this is
+		// a subclass table. Otherwise, follow everything as normal.
+		if (type.equals(DataSetTableType.MAIN_SUBCLASS))
+			for (final Iterator i = parentDSTable.getTransformationUnits()
+					.iterator(); i.hasNext();) {
+				final TransformationUnit u = (TransformationUnit) i.next();
+				if (u instanceof LeftJoinTable)
+					relationCount.put(((LeftJoinTable) u)
+							.getSchemaRelation(), new Integer(0));
+			}
+		
 		// Process the table. This operation will populate the initial
 		// values in the normal, subclass and dimension queues. We only
 		// want dimensions constructed if we are not already constructing
 		// a dimension ourselves.
-		this.processTable(dsTable, dsTablePKCols, realTable, normalQ,
-				subclassQ, dimensionQ, sourceRelation, relationsFollowed, !type
-						.equals(DataSetTableType.DIMENSION));
+		this.processTable(null, dsTable, dsTablePKCols, realTable, normalQ,
+				subclassQ, dimensionQ, sourceDSCols, sourceRelation,
+				relationCount, !type.equals(DataSetTableType.DIMENSION));
 
 		// Process the normal queue. This merges tables into the dataset
 		// table using the relation specified in each pair in the queue.
-		// The third value of each entry in the queue determines whether or
+		// The third value is the dataset parent table columns to link from.
+		// The fourth value of each entry in the queue determines whether or
 		// not to continue making dimensions off each table in the queue.
 		for (int i = 0; i < normalQ.size(); i++) {
 			final Object[] triple = (Object[]) normalQ.get(i);
 			final Relation mergeSourceRelation = (Relation) triple[0];
-			final Table mergeTable = (Table) triple[1];
-			final boolean makeDimensions = ((Boolean) triple[2]).booleanValue();
-			this.processTable(dsTable, dsTablePKCols, mergeTable, normalQ,
-					subclassQ, dimensionQ, mergeSourceRelation,
-					relationsFollowed, makeDimensions);
+			final List newSourceDSCols = (List) triple[1];
+			final Table mergeTable = (Table) triple[2];
+			final TransformationUnit previousUnit = (TransformationUnit)triple[3];
+			final boolean makeDimensions = ((Boolean) triple[4]).booleanValue();
+			this.processTable(previousUnit, dsTable, dsTablePKCols, mergeTable, normalQ,
+				subclassQ, dimensionQ, newSourceDSCols,
+				mergeSourceRelation, relationCount, makeDimensions);
 		}
 
 		// Create the primary key on this table, but only if it has one.
 		// Don't bother for dimensions.
 		if (!dsTablePKCols.isEmpty()
-				&& !dsTable.getType().equals(DataSetTableType.DIMENSION)) {
-			// Rename all PK columns to have the '_key' suffix.
-			for (final Iterator i = dsTablePKCols.iterator(); i.hasNext();) {
-				DataSetColumn col = (DataSetColumn) i.next();
-				if (!col.getName().endsWith(Resources.get("keySuffix")))
-					col.setName(col.getName() + Resources.get("keySuffix"));
-			}
+				&& !dsTable.getType().equals(DataSetTableType.DIMENSION)) 
 			// Create the key.
 			dsTable.setPrimaryKey(new GenericPrimaryKey(dsTablePKCols));
-		}
 
 		// Process the subclass relations of this table.
 		for (int i = 0; i < subclassQ.size(); i++) {
-			final Relation subclassRelation = (Relation) subclassQ.get(i);
+			final Object[] triple = (Object[]) subclassQ.get(i);
+			final List newSourceDSCols = (List) triple[0];
+			final Relation subclassRelation = (Relation) triple[1];
 			this.generateDataSetTable(DataSetTableType.MAIN_SUBCLASS, dsTable,
-					subclassRelation.getManyKey().getTable(), subclassRelation);
+					subclassRelation.getManyKey().getTable(), newSourceDSCols,
+					subclassRelation);
 		}
 
 		// Process the dimension relations of this table. For 1:M it's easy.
 		// For M:M, we have to work out which end is connected to the real
 		// table, then process the table at the other end of the relation.
 		for (int i = 0; i < dimensionQ.size(); i++) {
-			final Relation dimensionRelation = (Relation) dimensionQ.get(i);
+			final Object[] triple = (Object[]) dimensionQ.get(i);
+			final List newSourceDSCols = (List) triple[0];
+			final Relation dimensionRelation = (Relation) triple[1];
 			if (dimensionRelation.isOneToMany())
 				this.generateDataSetTable(DataSetTableType.DIMENSION, dsTable,
 						dimensionRelation.getManyKey().getTable(),
-						dimensionRelation);
+						newSourceDSCols, dimensionRelation);
 			else
-				this.generateDataSetTable(DataSetTableType.DIMENSION, dsTable,
-						dimensionRelation.getFirstKey().getTable().equals(
-								realTable) ? dimensionRelation.getSecondKey()
-								.getTable() : dimensionRelation.getFirstKey()
-								.getTable(), dimensionRelation);
+				this
+						.generateDataSetTable(DataSetTableType.DIMENSION,
+								dsTable,
+								dimensionRelation.getFirstKey().getTable()
+										.equals(realTable) ? dimensionRelation
+										.getSecondKey().getTable()
+										: dimensionRelation.getFirstKey()
+												.getTable(), newSourceDSCols,
+								dimensionRelation);
 		}
 	}
 
@@ -330,20 +399,20 @@ public class DataSet extends GenericSchema {
 	 *            the queue to add starting points for dimension tables we find.
 	 * @param sourceRelation
 	 *            the real relation we followed to reach this table.
-	 * @param relationsFollowed
-	 *            all relations we have followed so far during construction of
-	 *            this table, so that we don't follow them twice.
+	 * @param relationCount
+	 *            how many times we have left to follow each relation, so that 
+	 *            we don't follow them too often.
 	 * @param makeDimensions
 	 *            <tt>true</tt> if we should add potential dimension tables to
 	 *            the dimension queue, <tt>false</tt> if we should just ignore
 	 *            them. This is useful for preventing dimensions from gaining
 	 *            dimensions of their own.
 	 */
-	private void processTable(final DataSetTable dsTable,
+	private void processTable(final TransformationUnit previousUnit, final DataSetTable dsTable,
 			final List dsTablePKCols, final Table mergeTable,
 			final List normalQ, final List subclassQ, final List dimensionQ,
-			final Relation sourceRelation, final Set relationsFollowed,
-			final boolean makeDimensions) {
+			final List sourceDataSetCols, final Relation sourceRelation,
+			final Map relationCount, final boolean makeDimensions) {
 		Log.debug("Processing table " + mergeTable);
 
 		// Don't ignore any keys by default.
@@ -351,6 +420,8 @@ public class DataSet extends GenericSchema {
 
 		// By default we didn't land on any key to get here.
 		Key mergeKey = null;
+
+		final TransformationUnit tu;
 
 		// Did we get here via somewhere else?
 		if (sourceRelation != null) {
@@ -364,13 +435,17 @@ public class DataSet extends GenericSchema {
 			// Add the relation and key to the list that the table depends on.
 			// This list is what defines the path required to construct
 			// the DDL for this table.
-			dsTable.getUnderlyingRelations().add(sourceRelation);
-			dsTable.getUnderlyingKeys().add(mergeKey);
+			// TODO Don't bother if this is a concat relation. Just add
+			// a concat unit instead.
+			tu = new LeftJoinTable(previousUnit, mergeTable, sourceDataSetCols,
+					mergeKey, sourceRelation);
 
-			// Mark the source relation as followed so that we don't
-			// follow it again whilst processing this table.
-			relationsFollowed.add(sourceRelation);
+			// Remember we've been here.
+			this.allRelations.add(sourceRelation);
+		} else {
+			tu = new SelectFromTable(mergeTable);
 		}
+		dsTable.addTransformationUnit(tu);
 
 		// Work out the merge table's PK.
 		final PrimaryKey mergeTablePK = mergeTable.getPrimaryKey();
@@ -388,6 +463,8 @@ public class DataSet extends GenericSchema {
 
 		// Add all columns from merge table to dataset table, except those in
 		// the ignore key.
+		// TODO Don't bother if this is a concat relation. Just add
+		// a concat column instead.
 		for (final Iterator i = mergeTable.getColumns().iterator(); i.hasNext();) {
 			final Column c = (Column) i.next();
 
@@ -396,8 +473,15 @@ public class DataSet extends GenericSchema {
 				continue;
 
 			// Create a wrapped column for this column.
-			final WrappedColumn wc = new WrappedColumn(c, dsTable,
+			String colName = c.getName();
+			// Rename all PK columns to have the '_key' suffix.
+			if (includeMergeTablePK && mergeTablePK.getColumns().contains(c)
+					&& !colName.endsWith(Resources.get("keySuffix")))
+						colName = colName + Resources.get("keySuffix");
+			final WrappedColumn wc = new WrappedColumn(c, colName, dsTable,
 					sourceRelation);
+			tu.getNewColumnNameMap().put(c.getName(), wc);
+			dsTable.addColumn(wc);
 
 			// If the column is in any key on this table then it is a
 			// dependency for possible future linking, which must be flagged.
@@ -420,45 +504,54 @@ public class DataSet extends GenericSchema {
 			final Relation r = (Relation) i.next();
 
 			// Don't repeat relations.
-			if (relationsFollowed.contains(r))
+			// Note that it won't loop back up to parent, because 
+			// to do that would mean having two 1:1 relations,
+			// or a 1:M parent:child and separate M:1 child:parent, which 
+			// would be silly.
+			if (((Integer)relationCount.get(r)).intValue()<=0
+					|| r.equals(sourceRelation))
 				continue;
 
-			// Don't follow masked or incorrect relations, or relations
+			// Don't follow masked relations.
+			if (this.schemaMods.isMaskedRelation(dsTable, r))
+				continue;
+			
+			// Don't follow incorrect relations, or relations
 			// between incorrect keys.
-			else if (this.maskedRelations.contains(r)
-					|| r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
+			if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
 					|| r.getFirstKey().getStatus().equals(
 							ComponentStatus.INFERRED_INCORRECT)
 					|| r.getSecondKey().getStatus().equals(
 							ComponentStatus.INFERRED_INCORRECT)) {
-				relationsFollowed.add(r);
 				continue;
 			}
+			
+			// Decrement the relation counter.
+			relationCount.put(r, new Integer(((Integer)relationCount.get(r)).intValue() - 1));
+			
+			// Set up a holder to indicate whether or not to follow
+			// the relation.
+			boolean followRelation = false;
+			boolean forceFollowRelation = false;
 
 			// Are we at the 1 end of a 1:M, or at either end of a M:M?
 			// If so, we may need to make a dimension, a subclass, or
 			// a concat column.
-			else if (r.isManyToMany() || r.isOneToMany()
+			if (r.isManyToMany() || r.isOneToMany()
 					&& r.getOneKey().getTable().equals(mergeTable)) {
-
-				// Concatenate concat-only relations.
-				if (this.concatOnlyRelations[0].contains(r))
-					try {
-						relationsFollowed.add(r);
-						new ConcatRelationColumn(Resources
-								.get("concatColumnPrefix")
-								+ mergeTable.getName(), dsTable, r);
-					} catch (final Throwable t) {
-						throw new BioMartError(t);
-					}
-
 				// Subclass subclassed relations, if we are currently
 				// not building a dimension table.
-				else if (this.subclassedRelations.contains(r)
+				if (this.schemaMods.isSubclassedRelation(r)
 						&& !dsTable.getType()
 								.equals(DataSetTableType.DIMENSION)) {
-					relationsFollowed.add(r);
-					subclassQ.add(r);
+					final Key sourceKey = r.getFirstKey().getTable().equals(
+							mergeTable) ? r.getFirstKey() : r.getSecondKey();
+					final List newSourceDSCols = new ArrayList();
+					for (final Iterator j = sourceKey.getColumnNames()
+							.iterator(); j.hasNext();)
+						newSourceDSCols.add(tu.getDataSetColumnFor((String)
+								j.next()));
+					subclassQ.add(new Object[] { newSourceDSCols, r });
 				}
 
 				// Dimensionize dimension relations, which are all other 1:M
@@ -467,67 +560,73 @@ public class DataSet extends GenericSchema {
 				else if (makeDimensions
 						&& !dsTable.getType()
 								.equals(DataSetTableType.DIMENSION)) {
-					relationsFollowed.add(r);
-					dimensionQ.add(r);
+					final Key sourceKey = r.getFirstKey().getTable().equals(
+							mergeTable) ? r.getFirstKey() : r.getSecondKey();
+					final List newSourceDSCols = new ArrayList();
+					for (final Iterator j = sourceKey.getColumnNames()
+							.iterator(); j.hasNext();)
+						newSourceDSCols.add(tu.getDataSetColumnFor((String)
+								j.next()));
+					dimensionQ.add(new Object[] { newSourceDSCols, r });
+					if (this.schemaMods.isMergedRelation(r))
+						forceFollowRelation = true;
 				}
+				
+				// TODO Forcibly follow concat relations.
+				//else if (this.schemaMods.isForceIncludeRelation(dsTable, r)) 
+				//	forceFollowRelation = true;
+				
+				// Forcibly follow forced relations.
+				else if (this.schemaMods.isForceIncludeRelation(dsTable, r)) 
+					forceFollowRelation = true;
 			}
 
 			// We're at the M end of a 1:M. Don't follow it if it has
-			// multiple relations.
+			// multiple relations, as it is likely to be an artifact
+			// of a non-normalised schema (e.g. Ensembl) and is best
+			// included from the opposite direction, if at all.
 			else if (r.isOneToMany()
 					&& r.getManyKey().getTable().equals(mergeTable)
 					&& r.getManyKey().getRelations().size() > 1) {
-				relationsFollowed.add(r);
-				continue;
+				// Do nothing.
 			}
+			
+			// Follow all others.
+			else 
+				followRelation = true;
 
-			// Follow all others. If we follow a 1:1, and we are currently
+			// If we follow a 1:1, and we are currently
 			// including dimensions, include them from the 1:1 as well.
 			// Otherwise, stop including dimensions on subsequent tables.
-			else {
-				relationsFollowed.add(r);
-				normalQ.add(new Object[] {
-						r,
-						(r.getFirstKey().getTable().equals(mergeTable) ? r
-								.getSecondKey().getTable() : r.getFirstKey()
-								.getTable()),
-						Boolean.valueOf(makeDimensions && r.isOneToOne()) });
+			if (followRelation || forceFollowRelation) {
+				this.allRelations.add(r);
+				dsTable.allRelations.add(r);
+				final Key targetKey = r.getFirstKey().getTable().equals(
+						mergeTable) ? r.getSecondKey() : r.getFirstKey();
+				final Key sourceKey = r.getOtherKey(targetKey);
+				final List newSourceDSCols = new ArrayList();
+				for (final Iterator j = sourceKey
+						.getColumnNames().iterator(); j.hasNext();) 
+					newSourceDSCols.add(tu.getDataSetColumnFor((String)j.next()));
+				// Repeat queueing of relation N times if compounded.
+				// Note that we only spin off one child per parent if
+				// the parent was compounded. If the child compound value
+				// is less than the parent, this results in only some
+				// nested compounding. If it is greater, only the parent
+				// value number of compounds appears.
+				final int parentCompounded = sourceRelation==null ? 1 : (this.schemaMods.isCompoundRelation(dsTable, sourceRelation)
+				? this.schemaMods.getCompoundRelation(dsTable, sourceRelation)
+						: 1);
+				final int childCompounded = parentCompounded>1 ? 1 :
+					(this.schemaMods.isCompoundRelation(dsTable, r)
+					? this.schemaMods.getCompoundRelation(dsTable, r)
+							: 1);
+				for (int k = 0; k < childCompounded; k++)
+					normalQ.add(new Object[] { r, newSourceDSCols,
+						targetKey.getTable(), tu,
+						Boolean.valueOf(makeDimensions && (r.isOneToOne()) || forceFollowRelation) });
 			}
 		}
-	}
-
-	/**
-	 * This method recreates all the tables in the dataset.
-	 */
-	private void regenerate() {
-		Log.debug("Regenerating dataset " + this.getName());
-		// Clear all our tables out as they will all be rebuilt.
-		this.removeAllTables();
-
-		Log.debug("Finding actual central table");
-		// Identify main table.
-		Table centralTable = this.getCentralTable();
-		// If central table has subclass relations and is at the M key
-		// end, then follow them to the real central table.
-		boolean found;
-		do {
-			found = false;
-			for (final Iterator i = centralTable.getRelations().iterator(); i
-					.hasNext()
-					&& !found;) {
-				final Relation r = (Relation) i.next();
-				if (this.getSubclassedRelations().contains(r)
-						&& r.getManyKey().getTable().equals(centralTable)) {
-					centralTable = r.getOneKey().getTable();
-					found = true;
-				}
-			}
-		} while (found);
-		Log.debug("Actual central table is " + centralTable);
-
-		// Generate the main table. It will recursively generate all the others.
-		this.generateDataSetTable(DataSetTableType.MAIN, null, centralTable,
-				null);
 	}
 
 	/**
@@ -541,7 +640,8 @@ public class DataSet extends GenericSchema {
 	 *            the concat type to use for the relation.
 	 * @throws ValidationException
 	 *             if it is not possible to concat this relation.
-	 */
+	 *
+	 * FIXME: Reinstate.
 	public void flagConcatOnlyRelation(final Relation relation,
 			final DataSetConcatRelationType type) throws ValidationException {
 		Log.debug("Flagging concat-only relation " + relation + " in "
@@ -565,131 +665,7 @@ public class DataSet extends GenericSchema {
 			this.concatOnlyRelations[1].add(type);
 		}
 	}
-
-	/**
-	 * Mark a table as restricted. If previously marked as restricted, this call
-	 * will override the previous request.
-	 * 
-	 * @param table
-	 *            the table to mark as restricted.
-	 * @param restriction
-	 *            the restriction to use for the table.
-	 * @throws ValidationException
-	 *             if the table cannot be restricted.
-	 */
-	public void flagRestrictedTable(final Table table,
-			final DataSetTableRestriction restriction)
-			throws ValidationException {
-		Log.debug("Flagging restricted table " + table + " in "
-				+ this.getName());
-		// Restrict the table. If the table has already been restricted,
-		// this will override the type.
-		final int index = this.restrictedTables[0].indexOf(table);
-		if (index >= 0) {
-			this.restrictedTables[0].set(index, table);
-			this.restrictedTables[1].set(index, restriction);
-		} else {
-			this.restrictedTables[0].add(table);
-			this.restrictedTables[1].add(restriction);
-		}
-	}
-
-	/**
-	 * Mark a table as a subclass of another by marking the relation between
-	 * them. The M end of the relation is the child table, and the 1 end is the
-	 * parent table, but the parent table may not actually be the central table
-	 * in this dataset - instead it may be linked to that central table by an
-	 * existing chain of subclassed relations. Each table of the dataset may
-	 * have at most one subclass relation in each direction.
-	 * 
-	 * @param relation
-	 *            the relation to mark as a subclass relation, where the PK end
-	 *            is the parent table and the FK end is the subclass table.
-	 * @throws ValidationException
-	 *             if one end of the relation is not the central table for this
-	 *             window, or is not another subclass table, or if both ends of
-	 *             the relation point to the same table, or if the rule about
-	 *             maximum numbers of subclass relations of certain types
-	 *             applies (see above).
-	 */
-	public void flagSubclassRelation(final Relation relation)
-			throws ValidationException {
-		Log.debug("Flagging subclassed relation " + relation + " in "
-				+ this.getName());
-		// Skip if already subclassed.
-		if (this.subclassedRelations.contains(relation))
-			return;
-
-		// Check that the relation is a 1:M relation and isn't a loop-back.
-		if (!relation.isOneToMany())
-			throw new ValidationException(Resources.get("subclassNotOneMany"));
-		if (relation.getFirstKey().getTable().equals(
-				relation.getSecondKey().getTable()))
-			throw new ValidationException(Resources
-					.get("subclassNotBetweenTwoTables"));
-
-		// Work out the child end of the relation - the M end. The parent is
-		// the 1 end.
-		final Table parentTable = relation.getOneKey().getTable();
-		final Table childTable = relation.getManyKey().getTable();
-
-		// If there are no existing subclass relations, then we only
-		// need to test that either the parent or the child is the central
-		// table.
-		if (this.subclassedRelations.isEmpty()) {
-			if (!(parentTable.equals(this.centralTable) || childTable
-					.equals(this.centralTable)))
-				throw new ValidationException(Resources
-						.get("subclassNotOnCentralTable"));
-		}
-
-		// We have existing subclass relations.
-		else {
-			// We need to test if the selected relation links to
-			// a table which itself has subclass relations, or
-			// is the central table, and has not got an
-			// existing subclass relation in the direction we
-			// are working in.
-
-			// Check that child has no M:1s and parent has no 1:Ms already.
-			// Check that parent has M:1, and child has 1:M.
-			boolean parentHasM1 = false;
-			boolean childHasM1 = false;
-			boolean parentHas1M = false;
-			boolean childHas1M = false;
-			for (final Iterator i = this.subclassedRelations.iterator(); i
-					.hasNext();) {
-				final Relation rel = (Relation) i.next();
-				if (rel.getOneKey().getTable().equals(parentTable))
-					parentHas1M = true;
-				else if (rel.getOneKey().getTable().equals(childTable))
-					childHas1M = true;
-				if (rel.getManyKey().getTable().equals(parentTable))
-					parentHasM1 = true;
-				else if (rel.getManyKey().getTable().equals(childTable))
-					childHasM1 = true;
-			}
-
-			// If child has M:1 or parent has 1:M, we cannot do this.
-			if (childHasM1 || parentHas1M)
-				throw new ValidationException(Resources
-						.get("mixedCardinalitySubclasses"));
-
-			// If parent is not central or doesn't have M:1, and
-			// child is not central or doesn't have 1:M, we cannot do this.
-			final boolean parentIsCentral = parentTable
-					.equals(this.centralTable);
-			final boolean childIsCentral = parentTable
-					.equals(this.centralTable);
-			if (!(parentIsCentral || childIsCentral)
-					&& !(parentHasM1 || childHas1M))
-				throw new ValidationException(Resources
-						.get("subclassNotOnCentralTable"));
-		}
-
-		// Mark the relation.
-		this.subclassedRelations.add(relation);
-	}
+	*/
 
 	/**
 	 * Returns the central table of this dataset.
@@ -698,35 +674,6 @@ public class DataSet extends GenericSchema {
 	 */
 	public Table getCentralTable() {
 		return this.centralTable;
-	}
-
-	/**
-	 * Return the set of concat-only relations. It may be empty, but never
-	 * <tt>null</tt>.
-	 * 
-	 * @return the set of concat-only relations.
-	 */
-	public Collection getConcatOnlyRelations() {
-		return this.concatOnlyRelations[0];
-	}
-
-	/**
-	 * Return the concat type of concat-only relation relation. It will return
-	 * <tt>null</tt> if there is no such concat-only relation.
-	 * 
-	 * @param relation
-	 *            the relation to return the concat type for.
-	 * @return the concat type of the relation, or <tt>null</tt> if it is not
-	 *         flagged as concat-only.
-	 */
-	public DataSetConcatRelationType getConcatRelationType(
-			final Relation relation) {
-		final int index = this.concatOnlyRelations[0].indexOf(relation);
-		if (index >= 0)
-			return (DataSetConcatRelationType) this.concatOnlyRelations[1]
-					.get(index);
-		else
-			return null;
 	}
 
 	/**
@@ -757,72 +704,8 @@ public class DataSet extends GenericSchema {
 	}
 
 	/**
-	 * Return the set of masked relations. It may be empty, but never null.
-	 * 
-	 * @return the set of masked relations.
-	 */
-	public Collection getMaskedRelations() {
-		return this.maskedRelations;
-	}
-
-	/**
-	 * Return the set of restricted tables. It may be empty, but never
-	 * <tt>null</tt>.
-	 * 
-	 * @return the set of restricted tables.
-	 */
-	public Collection getRestrictedTables() {
-		return this.restrictedTables[0];
-	}
-
-	/**
-	 * Return the restriction for a restricted table. It will return
-	 * <tt>null</tt> if there is no such restricted table.
-	 * 
-	 * @param table
-	 *            the table to check the restriction type for.
-	 * @return the restriction type of the table, or <tt>null</tt> if it is
-	 *         not restricted.
-	 */
-	public DataSetTableRestriction getRestrictedTableType(final Table table) {
-		final int index = this.restrictedTables[0].indexOf(table);
-		if (index >= 0)
-			return (DataSetTableRestriction) this.restrictedTables[1]
-					.get(index);
-		else
-			return null;
-	}
-
-	/**
-	 * Return the set of subclassed relations. It may be empty, but never
-	 * <tt>null</tt>.
-	 * 
-	 * @return the set of subclassed relations.
-	 */
-	public Collection getSubclassedRelations() {
-		return this.subclassedRelations;
-	}
-
-	/**
-	 * Mask a relation.
-	 * 
-	 * @param relation
-	 *            the relation to mask.
-	 */
-	public void maskRelation(final Relation relation) {
-		Log.debug("Masking relation " + relation + " in " + this.getName());
-		// Skip if already masked.
-		if (!this.maskedRelations.contains(relation))
-			this.maskedRelations.add(relation);
-	}
-
-	/**
 	 * {@inheritDoc}
 	 * <p>
-	 * FIXME: This isn't really replication, it is merely creating a new dataset
-	 * with the same central table as us. We should also be copying over custom
-	 * stuff like masks, subclasses, expressions, restrictions, partitioning,
-	 * concat relations, etc.
 	 */
 	public Schema replicate(final String newName) {
 		Log.debug("Replicating dataset " + this.getName() + " as " + newName);
@@ -830,6 +713,9 @@ public class DataSet extends GenericSchema {
 			// Create the copy.
 			final DataSet newDataSet = new DataSet(this.mart,
 					this.centralTable, newName);
+			this.getSchemaModifications().replicate(newDataSet.getSchemaModifications());
+			// FIXME: Copy dsmods too.
+			this.mart.addDataSet(newDataSet);
 
 			// Synchronise it.
 			newDataSet.synchronise();
@@ -883,421 +769,46 @@ public class DataSet extends GenericSchema {
 	 *             with the schema.
 	 */
 	public void synchronise() throws SQLException, DataModelException {
-		Log.debug("Synchronising dataset " + this.getName());
+		Log.debug("Regenerating dataset " + this.getName());
+		// Clear all our tables out as they will all be rebuilt.
+		this.removeAllTables();
+		this.allRelations.clear();
 
-		// Start off by marking all existing flagged relations as having been
-		// removed.
-		Log.debug("Listing all potential dead relations");
-		final Set deadRelations = new HashSet(this.maskedRelations);
-		deadRelations.addAll(this.subclassedRelations);
-		deadRelations.addAll(this.concatOnlyRelations[0]);
-
-		// Iterate through tables in each schema. For each table,
-		// find all the relations on that table and remove them
-		// from the set of dead flagged relations.
-		Log.debug("Removing undead relations from dead relations list");
-		for (final Iterator i = this.getMart().getSchemas().iterator(); i
-				.hasNext();) {
-			final Schema s = (Schema) i.next();
-			for (final Iterator j = s.getTables().iterator(); j.hasNext();) {
-				final Table t = (Table) j.next();
-				deadRelations.removeAll(t.getRelations());
-			}
-		}
-
-		// All that is left in the set of dead flagged relations no longer
-		// exists in the underlying schemas. Therefore, we can unflag them.
-		Log.debug("Dropping flags for dead relations");
-		for (final Iterator i = deadRelations.iterator(); i.hasNext();) {
-			final Relation r = (Relation) i.next();
-			this.maskedRelations.remove(r);
-			this.unflagSubclassRelation(r);
-			this.unflagConcatOnlyRelation(r);
-		}
-
-		// The user may have renamed some of the tables and columns in our
-		// dataset. Remember the columns and tables for which this happened.
-		Log.debug("Spotting renamed columns and tables");
-		final List renamedColumns = new ArrayList();
-		final List renamedTables = new ArrayList();
-		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
-			final Table tbl = (Table) i.next();
-			if (!tbl.getOriginalName().equals(tbl.getName()))
-				renamedTables.add(tbl);
-			for (final Iterator j = tbl.getColumns().iterator(); j.hasNext();) {
-				final Column col = (Column) j.next();
-				if (!col.getOriginalName().equals(col.getName()))
-					renamedColumns.add(col);
-			}
-		}
-
-		// Remember the masked, partition, and expression columns that
-		// the user flagged in this dataset.
-		Log.debug("Remembering existing flags");
-		final List maskedColumns = new ArrayList();
-		final List expressionColumns = new ArrayList();
-		final List partitionColumns = new ArrayList();
-		for (final Iterator i = this.getTables().iterator(); i.hasNext();)
-			for (final Iterator j = ((Table) i.next()).getColumns().iterator(); j
-					.hasNext();) {
-				final DataSetColumn col = (DataSetColumn) j.next();
-				if (col instanceof ExpressionColumn)
-					expressionColumns.add(col);
-				else if (col.getMasked())
-					maskedColumns.add(col);
-				else if (col.getPartitionType() != null)
-					partitionColumns.add(col);
-			}
-
-		// Regenerate the dataset. This wipes out all the tables and
-		// columns and creates new ones based on the current contents
-		// of the schemas it draws data from.
-		this.regenerate();
-
-		// Remask columns that were previously masked by looking for
-		// tables with the same name, and columns with matching original
-		// names. Don't remask them if they are now inherited.
-		Log.debug("Remasking columns");
-		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
-			DataSetTable table = (DataSetTable) i.next();
-			// Check the columns from this table.
-			for (final Iterator j = table.getColumns().iterator(); j.hasNext();) {
-				DataSetColumn column = (DataSetColumn) j.next();
-				// Mask previously masked columns.
-				for (Iterator k = maskedColumns.iterator(); k.hasNext();) {
-					DataSetColumn maskedColumn = (DataSetColumn) k.next();
-					// Is the new column the same one? Check underlying
-					// relation and original name, and check that it is
-					// not now inherited.
-					if (maskedColumn.getTable().getOriginalName().equals(
-							table.getOriginalName())
-							&& ((DataSetTable) maskedColumn.getTable())
-									.getSourceRelation() == table
-									.getSourceRelation()
-							&& maskedColumn.getOriginalName().equals(
-									column.getOriginalName())
-							&& maskedColumn.getUnderlyingRelation() == column
-									.getUnderlyingRelation()
-							&& !(column instanceof InheritedColumn))
-						try {
-							column.setMasked(true);
-						} catch (ValidationException e) {
-							throw new BioMartError(e);
-						}
+		Log.debug("Finding actual central table");
+		// Identify main table.
+		Table centralTable = this.getCentralTable();
+		// If central table has subclass relations and is at the M key
+		// end, then follow them to the real central table.
+		boolean found;
+		do {
+			found = false;
+			for (final Iterator i = centralTable.getRelations().iterator(); i
+					.hasNext()
+					&& !found;) {
+				final Relation r = (Relation) i.next();
+				if (this.schemaMods.isSubclassedRelation(r)
+						&& r.getManyKey().getTable().equals(centralTable)) {
+					centralTable = r.getOneKey().getTable();
+					found = true;
 				}
 			}
-		}
+		} while (found);
+		Log.debug("Actual central table is " + centralTable);
 
-		// Reapply the names for renamed tables and columns. Look up using
-		// original names and underlying relations else they won't be found.
-		// We have to store things in maps else we get concurrent modification
-		// exceptions from the iterators. Also reapply partition values to
-		// columns whilst we're at it.
-		Log.debug("Relisting tables and columns");
-		Map newTableNames = new HashMap();
-		Map newColumnNames = new HashMap();
-		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
-			DataSetTable table = (DataSetTable) i.next();
-			// Has it been renamed? Check underlying relation and original
-			// name against ones we know have changed.
-			for (final Iterator k = renamedTables.iterator(); k.hasNext();) {
-				DataSetTable renamedTable = (DataSetTable) k.next();
-				if (renamedTable.getOriginalName().equals(
-						table.getOriginalName())
-						&& renamedTable.getSourceRelation() == table
-								.getSourceRelation())
-					newTableNames.put(table, renamedTable.getName());
-			}
-			// Check the columns from this table.
-			Log.debug("Repartitioning columns in " + table);
-			for (final Iterator j = table.getColumns().iterator(); j.hasNext();) {
-				DataSetColumn column = (DataSetColumn) j.next();
-				// Has it been renamed? Check underlying relation and original
-				// name against ones we know have changed.
-				for (final Iterator k = renamedColumns.iterator(); k.hasNext();) {
-					DataSetColumn renamedColumn = (DataSetColumn) k.next();
-					if (renamedColumn.getOriginalName().equals(
-							column.getOriginalName())
-							&& renamedColumn.getUnderlyingRelation() == column
-									.getUnderlyingRelation())
-						newColumnNames.put(column, renamedColumn.getName());
-				}
-				// Partition previously partitioned columns.
-				for (Iterator k = partitionColumns.iterator(); k.hasNext();) {
-					DataSetColumn partitionedColumn = (DataSetColumn) k.next();
-					// Is the new column the same one? Check underlying relation
-					// and original name.
-					if (partitionedColumn.getTable().getOriginalName().equals(
-							table.getOriginalName())
-							&& ((DataSetTable) partitionedColumn.getTable())
-									.getSourceRelation() == table
-									.getSourceRelation()
-							&& partitionedColumn.getOriginalName().equals(
-									column.getOriginalName())
-							&& partitionedColumn.getUnderlyingRelation() == column
-									.getUnderlyingRelation())
-						try {
-							column.setPartitionType(partitionedColumn
-									.getPartitionType());
-						} catch (ValidationException e) {
-							throw new BioMartError(e);
-						}
-				}
-			}
-
-			// Regenerate all the ExpressionColumns and mark all
-			// their dependencies again. Drop any that refer to a column
-			// that no longer exists, even if others in the expression
-			// still do.
-			Log.debug("Regenerating expression columns");
-			for (final Iterator j = expressionColumns.iterator(); j.hasNext();) {
-				final ExpressionColumn oldExpCol = (ExpressionColumn) j.next();
-				// Only regenerate expression columns from this table.
-				final DataSetTable oldExpColTable = (DataSetTable) oldExpCol
-						.getTable();
-				if (!(oldExpColTable.getOriginalName().equals(
-						table.getOriginalName()) && oldExpColTable
-						.getSourceRelation() == table.getSourceRelation()))
-					continue;
-				// Get all the dependent columns. Any gone? Drop.
-				boolean allFound = true;
-				final Map newDependencies = new TreeMap();
-				for (final Iterator k = oldExpCol.getAliases().entrySet()
-						.iterator(); k.hasNext();) {
-					final Map.Entry entry = (Map.Entry) k.next();
-					final DataSetColumn origDependency = (DataSetColumn) entry
-							.getKey();
-					final String alias = (String) entry.getValue();
-					// Find column.
-					DataSetColumn dependency = null;
-					for (final Iterator l = table.getColumns().iterator(); l
-							.hasNext()
-							&& dependency == null;) {
-						DataSetColumn column = (DataSetColumn) l.next();
-						if (column.getOriginalName().equals(
-								origDependency.getOriginalName())
-								&& column.getUnderlyingRelation() == origDependency
-										.getUnderlyingRelation())
-							dependency = column;
-					}
-					if (dependency == null)
-						allFound = false;
-					else
-						newDependencies.put(dependency, alias);
-				}
-				if (!allFound)
-					continue;
-				// Create a new ExpressionColumn based on the new columns.
-				final ExpressionColumn newExpCol = new ExpressionColumn(
-						oldExpCol.getName(), table);
-				newExpCol.getAliases().putAll(newDependencies);
-				newExpCol.setExpression(oldExpCol.getExpression());
-				newExpCol.setGroupBy(oldExpCol.getGroupBy());
-				for (final Iterator k = newDependencies.keySet().iterator(); k
-						.hasNext();)
-					((DataSetColumn) k.next()).setDependency(true);
-			}
-		}
-
-		// Do the renames we queued up earlier.
-		Log.debug("Renaming tables and columns");
-		for (final Iterator i = newTableNames.entrySet().iterator(); i
-				.hasNext();) {
-			Map.Entry entry = (Map.Entry) i.next();
-			((DataSetTable) entry.getKey()).setName((String) entry.getValue());
-		}
-		for (final Iterator i = newColumnNames.entrySet().iterator(); i
-				.hasNext();) {
-			Map.Entry entry = (Map.Entry) i.next();
-			((DataSetColumn) entry.getKey()).setName((String) entry.getValue());
-		}
-
-		// Remove any table restrictions that reference tables or columns that
-		// no longer exist.
-		Log.debug("Removing redundant table restrictions");
-		final List deadTableRestrictions = new ArrayList();
-		for (int i = 0; i < this.restrictedTables[0].size(); i++) {
-			final Table table = (Table) this.restrictedTables[0].get(i);
-			final DataSetTableRestriction restriction = (DataSetTableRestriction) this.restrictedTables[1]
-					.get(i);
-			// Cannot use map iterator as will get concurrent modifications.
-			List oldAliases = new ArrayList(restriction.getAliases().keySet());
-			boolean destroy = false;
-			for (final Iterator j = oldAliases.iterator(); j.hasNext()
-					&& !destroy;) {
-				final Column oldCol = (Column) j.next();
-				final Table newTbl = oldCol.getTable().getSchema()
-						.getTableByName(oldCol.getTable().getName());
-				if (newTbl == null)
-					destroy = true;
-				else {
-					final String alias = (String) restriction.getAliases().get(
-							oldCol);
-					final Column newCol = newTbl.getColumnByName(oldCol
-							.getName());
-					if (newCol == null)
-						destroy = true;
-					else {
-						restriction.getAliases().remove(oldCol);
-						restriction.getAliases().put(newCol, alias);
-					}
-				}
-			}
-			if (destroy)
-				deadTableRestrictions.add(table);
-		}
-		// Remove the dead ones that reference columns that no longer exist.
-		for (final Iterator i = deadTableRestrictions.iterator(); i.hasNext();)
-			this.unflagRestrictedTable((Table) i.next());
-
-		// Remove any concat relations that reference tables or columns that
-		// no longer exist. For those that do still exist but columns
-		// have gone missing, remove those columns but leave the concat
-		// in place.
-		Log.debug("Removing redundant concat relations");
-		final List deadConcatRelations = new ArrayList();
-		for (int i = 0; i < this.concatOnlyRelations[0].size(); i++) {
-			final Relation rel = (Relation) this.concatOnlyRelations[0].get(i);
-			final DataSetConcatRelationType concatType = (DataSetConcatRelationType) this.concatOnlyRelations[1]
-					.get(i);
-			// Iterate over columns.
-			// Update the column references.
-			List replacementColumns = new ArrayList();
-			for (Iterator j = concatType.getConcatColumns().iterator(); j
-					.hasNext();) {
-				Column oldCol = (Column) j.next();
-				// Look up the equivalent and remember it.
-				final Table newTbl = oldCol.getTable().getSchema()
-						.getTableByName(oldCol.getTable().getName());
-				if (newTbl != null) {
-					final Column newCol = newTbl.getColumnByName(oldCol
-							.getName());
-					if (newCol != null)
-						replacementColumns.add(newCol);
-				}
-			}
-			// Drop concat relations where no columns were found.
-			if (replacementColumns.isEmpty())
-				deadConcatRelations.add(rel);
-			else if (!replacementColumns.equals(concatType.getConcatColumns())) {
-				// Update the relationship.
-				concatType.getConcatColumns().clear();
-				concatType.getConcatColumns().addAll(replacementColumns);
-			}
-		}
-		// Remove the dead ones that reference columns that no longer exist.
-		for (final Iterator i = deadConcatRelations.iterator(); i.hasNext();)
-			this.unflagConcatOnlyRelation((Relation) i.next());
-	}
-
-	/**
-	 * Unmark a relation as concat-only.
-	 * 
-	 * @param relation
-	 *            the relation to unmark.
-	 */
-	public void unflagConcatOnlyRelation(final Relation relation) {
-		Log.debug("Unflagging concat relation " + relation + " in "
-				+ this.getName());
-		final int index = this.concatOnlyRelations[0].indexOf(relation);
-		if (index >= 0) {
-			this.concatOnlyRelations[0].remove(index);
-			this.concatOnlyRelations[1].remove(index);
-		}
-	}
-
-	/**
-	 * Unmark a table as restricted.
-	 * 
-	 * @param table
-	 *            the table to unmark.
-	 */
-	public void unflagRestrictedTable(final Table table) {
-		Log.debug("Unrestricting table " + table + " in " + this.getName());
-		final int index = this.restrictedTables[0].indexOf(table);
-		if (index >= 0) {
-			this.restrictedTables[0].remove(index);
-			this.restrictedTables[1].remove(index);
-		}
-	}
-
-	/**
-	 * Unmark a relation as a subclass relation. If this breaks a chain, then
-	 * all subsequent subclass relations having a 1:M from the M end of this
-	 * relation are also unmarked.
-	 * 
-	 * @param relation
-	 *            the relation to unmark.
-	 */
-	public void unflagSubclassRelation(final Relation relation) {
-		Log.debug("Unflagging subclass relation " + relation + " in "
-				+ this.getName());
-		if (!this.subclassedRelations.contains(relation))
-			return;
-		// Break the chain first.
-		final Key key = relation.getManyKey();
-		if (key != null) {
-			final Table target = key.getTable();
-			if (!target.equals(this.centralTable))
-				if (target.getPrimaryKey() != null)
-					for (final Iterator i = target.getPrimaryKey()
-							.getRelations().iterator(); i.hasNext();) {
-						final Relation rel = (Relation) i.next();
-						if (rel.isOneToMany())
-							this.unflagSubclassRelation(rel);
-					}
-		}
-		// Then remove the head of the chain.
-		this.subclassedRelations.remove(relation);
-	}
-
-	/**
-	 * Unmask a relation. Also unmasks all columns in keys at both ends of the
-	 * relation.
-	 * 
-	 * @param relation
-	 *            the relation to unmask.
-	 */
-	public void unmaskRelation(final Relation relation) {
-		Log.debug("Unmasking relation " + relation + " in " + this.getName());
-		if (!this.maskedRelations.contains(relation))
-			return;
-		this.maskedRelations.remove(relation);
-		// Also unmask all columns which wrap those in keys at both ends.
-		for (Iterator i = this.getTables().iterator(); i.hasNext();)
-			for (Iterator j = ((Table) i.next()).getColumns().iterator(); j
-					.hasNext();) {
-				DataSetColumn dcol = (DataSetColumn) j.next();
-				if (dcol instanceof WrappedColumn) {
-					Column col = ((WrappedColumn) dcol).getWrappedColumn();
-					if (relation.getFirstKey().getColumns().contains(col)
-							|| relation.getSecondKey().getColumns().contains(
-									col))
-						try {
-							if (dcol.getMasked())
-								dcol.setMasked(false);
-						} catch (ValidationException e) {
-							throw new BioMartError(e);
-						}
-				}
-			}
+		// Generate the main table. It will recursively generate all the others.
+		this.generateDataSetTable(DataSetTableType.MAIN, null, centralTable,
+				null, null);
 	}
 
 	/**
 	 * A column on a dataset table has to be one of the types of dataset column
 	 * available from this class.
 	 */
-	public static class DataSetColumn extends
-			org.biomart.common.model.Column.GenericColumn {
-		// FIXME: Why do we need the full path to the class here? It works
-		// with just a normal import in Java 1.4, so why not Java 1.5?
+	public static class DataSetColumn extends GenericColumn {
 		private boolean dependency;
 
-		private boolean masked;
-
-		private PartitionedColumnType partitionType;
-
-		private final Relation underlyingRelation;
+		// FIXME: Reinstate.
+		// private PartitionedColumnType partitionType;
 
 		/**
 		 * This constructor gives the column a name.
@@ -1306,13 +817,8 @@ public class DataSet extends GenericSchema {
 		 *            the name to give this column.
 		 * @param dsTable
 		 *            the parent dataset table.
-		 * @param underlyingRelation
-		 *            the relation that provided this column. The underlying
-		 *            relation can be <tt>null</tt> in only one cases - when
-		 *            the table is a {@link DataSetTableType#MAIN} table.
 		 */
-		public DataSetColumn(final String name, final DataSetTable dsTable,
-				final Relation underlyingRelation) {
+		public DataSetColumn(final String name, final DataSetTable dsTable) {
 			// Call the super constructor using the alias generator to
 			// ensure we have a unique name.
 			super(name, dsTable);
@@ -1320,15 +826,11 @@ public class DataSet extends GenericSchema {
 			Log.debug("Creating dataset column " + name + " of type "
 					+ this.getClass().getName());
 
-			// Remember the rest.
-			this.underlyingRelation = underlyingRelation;
-
-			// Set up default dependency.
-			this.dependency = false;
-
 			// Set up default mask/partition values.
-			this.masked = false;
-			this.partitionType = null;
+			this.dependency = false;
+			// FIXME: Reinstate
+			// this.masked = false;
+			// this.partitionType = null;
 		}
 
 		/**
@@ -1340,36 +842,15 @@ public class DataSet extends GenericSchema {
 		public boolean getDependency() {
 			return this.dependency;
 		}
-
+		
 		/**
-		 * Is this column masked?
-		 * 
-		 * @return <tt>true</tt> if it is, <tt>false</tt> if it is not.
+		 * Return this modified name including any renames etc.
+		 * @return the modified name.
 		 */
-		public boolean getMasked() {
-			return this.masked;
-		}
-
-		/**
-		 * Is this column partitioned?
-		 * 
-		 * @return <tt>null</tt> if it is not, or the partition type
-		 *         otherwise.
-		 */
-		public PartitionedColumnType getPartitionType() {
-			return this.partitionType;
-		}
-
-		/**
-		 * Returns the underlying relation that provided this column. If it
-		 * returns <tt>null</tt> and this table is a
-		 * {@link DataSetTableType#MAIN} table, then that means the column came
-		 * from the table's real table.
-		 * 
-		 * @return the relation that underpins this column.
-		 */
-		public Relation getUnderlyingRelation() {
-			return this.underlyingRelation;
+		public String getModifiedName() {		
+			final DataSetModificationSet mods = 
+			((DataSet)this.getTable().getSchema()).getDataSetModifications();
+			return mods.isColumnRename(this) ? mods.getColumnRename(this) : this.getName();
 		}
 
 		/**
@@ -1377,65 +858,14 @@ public class DataSet extends GenericSchema {
 		 * 
 		 * @param dependency
 		 *            the new dependency flag. <tt>true</tt> indicates that
-		 *            this column is a dependency for an expression column. If
-		 *            this is the case, then the column will get selected
+		 *            this column is required for the fundamental structure
+		 *            of the dataset table to exist. The column will get selected
 		 *            regardless of it's masking flag. However, if it is masked,
 		 *            it will be removed again after the dependency is
 		 *            satisified.
 		 */
 		public void setDependency(final boolean dependency) {
 			this.dependency = dependency;
-		}
-
-		/**
-		 * Mask/unmask this column.
-		 * 
-		 * @param masked
-		 *            <tt>true</tt> if the column should be masked.
-		 * @throws ValidationException
-		 *             if masking is not allowed on this column.
-		 */
-		public void setMasked(boolean masked) throws ValidationException {
-			Log.debug((masked ? "Masking" : "Unmasking") + " column "
-					+ this.getName());
-			if (masked) {
-				// Work out where this column is coming from.
-				final DataSetTable dsTable = (DataSetTable) this.getTable();
-				final Table centralTable = ((DataSet) dsTable.getSchema())
-						.getCentralTable();
-
-				// Make a list of columns that are OK to mask.
-				final List okToMask = new ArrayList(dsTable.getColumns());
-
-				// Cannot mask PK cols if they are on central table
-				// or underlying table.
-				final Key dsTablePK = dsTable.getPrimaryKey();
-				if (dsTablePK != null)
-					for (final Iterator i = dsTablePK.getColumns().iterator(); i
-							.hasNext();) {
-						final DataSetColumn col = (DataSetColumn) i.next();
-						final Table underlyingTable = ((DataSetTable) col
-								.getTable()).getUnderlyingTable();
-						if (underlyingTable != null
-								&& (underlyingTable.equals(centralTable) || underlyingTable
-										.equals(dsTable.getUnderlyingTable())))
-							okToMask.remove(col);
-					}
-
-				// Can't mask any FK cols.
-				for (final Iterator i = dsTable.getForeignKeys().iterator(); i
-						.hasNext();)
-					okToMask.removeAll(((Key) i.next()).getColumns());
-
-				// Refuse to mask the column if it does not appear in the list
-				// of OK columns to mask.
-				if (!okToMask.contains(this))
-					throw new ValidationException(Resources
-							.get("cannotMaskNecessaryColumn"));
-			}
-
-			// Do it.
-			this.masked = masked;
 		}
 
 		/**
@@ -1446,7 +876,7 @@ public class DataSet extends GenericSchema {
 		 *            or a type if it should be.
 		 * @throws ValidationException
 		 *             if partitioning is not allowed on this column.
-		 */
+		 * FIXME: Reinstate.
 		public void setPartitionType(PartitionedColumnType partitionType)
 				throws ValidationException {
 			Log.debug("Setting partition type on column " + this.getName());
@@ -1471,12 +901,13 @@ public class DataSet extends GenericSchema {
 			// Do it.
 			this.partitionType = partitionType;
 		}
+		*/
 
 		/**
 		 * A column on a dataset table that indicates the concatenation of the
 		 * columns of a record in some table beyond a concat-only relation. They
 		 * take a reference to the concat-only relation.
-		 */
+		 * FIXME: Reinstate.
 		public static class ConcatRelationColumn extends DataSetColumn {
 			/**
 			 * The constructor takes a name for this column-to-be, and the
@@ -1491,7 +922,7 @@ public class DataSet extends GenericSchema {
 			 *            the concat-only relation that provided this column.
 			 * @throws ValidationException
 			 *             if the relation is not a concat relation.
-			 */
+			 *
 			public ConcatRelationColumn(final String name,
 					final DataSetTable dsTable, final Relation concatRelation)
 					throws ValidationException {
@@ -1519,6 +950,7 @@ public class DataSet extends GenericSchema {
 			}
 
 		}
+		*/
 
 		/**
 		 * A column on a dataset table that is an expression bringing together
@@ -1528,7 +960,7 @@ public class DataSet extends GenericSchema {
 		 * dependent expression column has been added.
 		 * <p>
 		 * Note that all expression columns should be added in a single step.
-		 */
+		 * FIXME: Reinstate.
 		public static class ExpressionColumn extends DataSetColumn {
 
 			private Map aliases;
@@ -1545,11 +977,11 @@ public class DataSet extends GenericSchema {
 			 *            the name to give this column.
 			 * @param dsTable
 			 *            the dataset table to add the wrapped column to.
-			 */
+			 *
 			public ExpressionColumn(final String name,
 					final DataSetTable dsTable) {
 				// The super constructor will make the alias for us.
-				super(name, dsTable, null);
+				super(name, dsTable);
 
 				// Set some defaults.
 				this.aliases = new TreeMap();
@@ -1559,7 +991,7 @@ public class DataSet extends GenericSchema {
 
 			/**
 			 * Drops all the unused aliases.
-			 */
+			 *
 			public void dropUnusedAliases() {
 				Log.debug("Trimming unused aliases from " + this.getName());
 				final List usedColumns = new ArrayList();
@@ -1580,7 +1012,7 @@ public class DataSet extends GenericSchema {
 			 * 
 			 * @return the aliases map. Keys must be {@link DataSetColumn}
 			 *         instances, and values are aliases used in the expression.
-			 */
+			 *
 			public Map getAliases() {
 				return this.aliases;
 			}
@@ -1589,7 +1021,7 @@ public class DataSet extends GenericSchema {
 			 * Returns the set of dependent columns.
 			 * 
 			 * @return the collection of dependent columns.
-			 */
+			 *
 			public Collection getDependentColumns() {
 				return this.aliases.keySet();
 			}
@@ -1599,7 +1031,7 @@ public class DataSet extends GenericSchema {
 			 * is RDBMS-specific.
 			 * 
 			 * @return the unsubstituted expression.
-			 */
+			 *
 			public String getExpression() {
 				return this.expr;
 			}
@@ -1609,7 +1041,7 @@ public class DataSet extends GenericSchema {
 			 * {@link #setGroupBy(boolean)} for details.
 			 * 
 			 * @return the flag indicating the group-by requirement.
-			 */
+			 *
 			public boolean getGroupBy() {
 				return this.groupBy;
 			}
@@ -1619,7 +1051,7 @@ public class DataSet extends GenericSchema {
 			 * RDBMS-specific.
 			 * 
 			 * @return the substituted expression.
-			 */
+			 *
 			public String getSubstitutedExpression() {
 				Log.debug("Constructing expression for " + this.getName());
 				String sub = this.expr;
@@ -1641,7 +1073,7 @@ public class DataSet extends GenericSchema {
 			 * 
 			 * @param expr
 			 *            the actual expression to use.
-			 */
+			 *
 			public void setExpression(final String expr) {
 				this.expr = expr;
 			}
@@ -1655,24 +1087,31 @@ public class DataSet extends GenericSchema {
 			 * 
 			 * @param groupBy
 			 *            the flag indicating the group-by requirement.
-			 */
+			 *
 			public void setGroupBy(final boolean groupBy) {
 				this.groupBy = groupBy;
 			}
 
+			/*
+			 * FIXME: Reinstate.
 			public void setMasked(boolean masked) throws ValidationException {
 				if (masked)
 					((DataSetTable) this.getTable()).removeColumn(this);
 			}
+			*
 
+			/*
+			 * FIXME: Reinstate.
 			public void setPartitionType(PartitionedColumnType partitionType)
 					throws ValidationException {
 				if (partitionType != null)
 					throw new ValidationException(Resources
 							.get("cannotPartitionNonWrapSchColumns"));
 			}
+			*
 
 		}
+	    */
 
 		/**
 		 * A column on a dataset table that is inherited from a parent dataset
@@ -1693,7 +1132,7 @@ public class DataSet extends GenericSchema {
 			public InheritedColumn(final DataSetTable dsTable,
 					final DataSetColumn dsColumn) {
 				// The super constructor will make the alias for us.
-				super(dsColumn.getName(), dsTable, null);
+				super(dsColumn.getName(), dsTable);
 				// Remember the inherited column.
 				this.dsColumn = dsColumn;
 			}
@@ -1711,38 +1150,21 @@ public class DataSet extends GenericSchema {
 				return this.dsColumn == null ? super.getName() : this.dsColumn
 						.getName();
 			}
-
-			public String getOriginalName() {
-				return this.dsColumn == null ? super.getOriginalName()
-						: this.dsColumn.getOriginalName();
+			
+			public String getModifiedName() {
+				return this.dsColumn == null ? super.getModifiedName() : this.dsColumn
+						.getModifiedName();
 			}
 
-			public void setMasked(boolean masked) throws ValidationException {
-				if (masked)
-					throw new ValidationException(Resources
-							.get("cannotMaskInheritedColumn"));
-			}
-
-			public void setName(String name) {
-				if (this.dsColumn == null)
-					super.setName(name);
-				else
-					this.dsColumn.setName(name);
-			}
-
-			public void setOriginalName(String name) {
-				if (this.dsColumn == null)
-					super.setOriginalName(name);
-				else
-					this.dsColumn.setOriginalName(name);
-			}
-
+			/*
+			 * FIXME: Reinstate.
 			public void setPartitionType(PartitionedColumnType partitionType)
 					throws ValidationException {
 				if (partitionType != null)
 					throw new ValidationException(Resources
 							.get("cannotPartitionNonWrapSchColumns"));
 			}
+		    */
 		}
 
 		/**
@@ -1760,6 +1182,7 @@ public class DataSet extends GenericSchema {
 			 * 
 			 * @param column
 			 *            the column to wrap.
+			 *            @param colName the name to give the wrapped column.
 			 * @param dsTable
 			 *            the dataset table to add the wrapped column to.
 			 * @param underlyingRelation
@@ -1768,14 +1191,14 @@ public class DataSet extends GenericSchema {
 			 *            is a {@link DataSetTableType#MAIN} table.
 			 */
 			public WrappedColumn(final Column column,
+					final String colName,
 					final DataSetTable dsTable,
 					final Relation underlyingRelation) {
 				// Call the parent which will use the alias generator for us.
 				super(
-						dsTable.getColumnByName(column.getName()) != null ? column
-								.getName()
+						dsTable.getColumnByName(colName) != null ? colName
 								+ "_" + column.getTable().getName()
-								: column.getName(), dsTable, underlyingRelation);
+								: colName, dsTable);
 
 				// Remember the wrapped column.
 				this.column = column;
@@ -1789,41 +1212,6 @@ public class DataSet extends GenericSchema {
 			public Column getWrappedColumn() {
 				return this.column;
 			}
-
-			public void setMasked(boolean masked) throws ValidationException {
-				Log.debug((masked ? "Masking" : "Unmasking") + " column "
-						+ this.getName());
-				// If this column is part of the PK on the table it came
-				// from that has a 1:M relation, or is part of an FK with a
-				// M:M relation, then we can only mask this column if the
-				// relation is already masked (ie. there are no dependent
-				// dimensions).
-				if (masked) {
-					boolean hasUnmaskedRel = false;
-					for (final Iterator i = this.getWrappedColumn().getTable()
-							.getKeys().iterator(); i.hasNext()
-							&& !hasUnmaskedRel;) {
-						Key k = (Key) i.next();
-						if (k.getColumns().contains(this.getWrappedColumn()))
-							for (final Iterator j = k.getRelations().iterator(); j
-									.hasNext()
-									&& !hasUnmaskedRel;) {
-								Relation r = (Relation) j.next();
-								if (k instanceof PrimaryKey && r.isOneToMany()
-										|| k instanceof ForeignKey
-										&& r.isManyToMany())
-									if (!((DataSet) this.getTable().getSchema())
-											.getMaskedRelations().contains(r))
-										hasUnmaskedRel = true;
-							}
-					}
-					if (hasUnmaskedRel)
-						throw new ValidationException(Resources
-								.get("dimDependsOnCol"));
-				}
-				// Do the (un)masking.
-				super.setMasked(masked);
-			}
 		}
 	}
 
@@ -1831,7 +1219,7 @@ public class DataSet extends GenericSchema {
 	 * Represents a method of concatenating values in a key referenced by a
 	 * concat-only {@link Relation}. It simply represents the separator to use
 	 * and the columns to include.
-	 */
+	 * FIXME: Reinstate.
 	public static class DataSetConcatRelationType {
 		private final String columnSeparator;
 
@@ -1850,7 +1238,7 @@ public class DataSet extends GenericSchema {
 		 *            the separator for records in this concat type.
 		 * @param concatColumns
 		 *            the columns to concatenate.
-		 */
+		 *
 		public DataSetConcatRelationType(final String columnSeparator,
 				final String recordSeparator, final List concatColumns) {
 			this.concatColumns = concatColumns;
@@ -1862,7 +1250,7 @@ public class DataSet extends GenericSchema {
 		 * Displays the value separator for this concat type object.
 		 * 
 		 * @return the value separator for this concat type object.
-		 */
+		 *
 		public String getColumnSeparator() {
 			return this.columnSeparator;
 		}
@@ -1871,7 +1259,7 @@ public class DataSet extends GenericSchema {
 		 * Displays the columns concatenated by this concat type object.
 		 * 
 		 * @return the columns concatenated by this concat type object.
-		 */
+		 *
 		public List getConcatColumns() {
 			return this.concatColumns;
 		}
@@ -1880,11 +1268,12 @@ public class DataSet extends GenericSchema {
 		 * Displays the record separator for this concat type object.
 		 * 
 		 * @return the record separator for this concat type object.
-		 */
+		 *
 		public String getRecordSeparator() {
 			return this.recordSeparator;
 		}
 	}
+    */
 
 	/**
 	 * This class defines the various different ways of optimising a dataset
@@ -2064,15 +1453,15 @@ public class DataSet extends GenericSchema {
 	 * table and is given an alias.
 	 */
 	public static class DataSetTable extends GenericTable {
-		private final Relation sourceRelation;
+		private final List transformationUnits;
 
 		private final DataSetTableType type;
 
-		private final List underlyingKeys;
+		private final Table focusTable;
 
-		private final List underlyingRelations;
-
-		private final Table underlyingTable;
+		private final Relation focusRelation;
+		
+		private final Collection allRelations;
 
 		/**
 		 * The constructor calls the parent table constructor. It uses a dataset
@@ -2081,213 +1470,85 @@ public class DataSet extends GenericSchema {
 		 * 
 		 * @param name
 		 *            the table name.
-		 * @param underlyingTable
-		 *            the real table this dataset table is based on.
 		 * @param ds
 		 *            the dataset to hold this table in.
 		 * @param type
 		 *            the type that best describes this table.
-		 * @param sourceRelation
-		 *            the relation that controls the existence of this table.
-		 *            Can be null.
+		 * @param focusTable
+		 *            the schema table this dataset table starts from.
+		 * @param focusRelation
+		 *            the schema relation used to reach the focus table.
+		 *            Can be <tt>null</tt>.
 		 */
 		public DataSetTable(final String name, final DataSet ds,
-				final DataSetTableType type, final Table underlyingTable,
-				final Relation sourceRelation) {
+				final DataSetTableType type, final Table focusTable,
+				final Relation focusRelation) {
 			// Super constructor first, using an alias to prevent duplicates.
 			super(name, ds);
 
 			Log.debug("Creating dataset table " + name);
 
 			// Remember the other settings.
-			this.underlyingTable = underlyingTable;
 			this.type = type;
-			this.sourceRelation = sourceRelation;
-			this.underlyingRelations = new ArrayList();
-			this.underlyingKeys = new ArrayList();
+			this.focusTable = focusTable;
+			this.focusRelation = focusRelation;
+			this.transformationUnits = new ArrayList();
+			this.allRelations = new HashSet();
+		}
+		
+		/**
+		 * Obtain all relations used by this dataset table.
+		 * @return all relations.
+		 */
+		public Collection getAllRelations() {
+			return this.allRelations;
+		}
+		
+		/**
+		 * Return this modified name including any renames etc.
+		 * @return the modified name.
+		 */
+		public String getModifiedName() {
+			final DataSetModificationSet mods = 
+				((DataSet)this.getSchema()).getDataSetModifications();
+			return mods.isTableRename(this) ? mods.getTableRename(this) : this.getName();
+		}
+		
+		/**
+		 * Obtain the focus relation for this dataset table. The focus relation
+		 * is the one which the transformation uses to reach the focus table.
+		 * @return the focus relation.
+		 */
+		public Relation getFocusRelation() {
+			return this.focusRelation;
+		}
+		
+		/**
+		 * Obtain the focus table for this dataset table. The focus table
+		 * is the one which the transformation starts from.
+		 * @return the focus table.
+		 */
+		public Table getFocusTable() {
+			return this.focusTable;
 		}
 
 		/**
-		 * Given a real column, and a relation to ignore whilst doing the work,
-		 * find out which column in this dataset table is derived from that real
-		 * column. If that real column appears more than once, only the first
-		 * appearance is returned. Note that masked columns are ignored, unless
-		 * they are also dependencies.
-		 * <p>
-		 * The set of columns passed in is the set of columns to search for a
-		 * match in, for instance if the table is only half-built so far. If
-		 * <tt>null</tt>, all the columns on this table are included in the
-		 * search.
+		 * Adds a transformation unit to the end of the chain.
 		 * 
-		 * @param realColumn
-		 *            the real column to look for in this dataset table.
-		 * @param ignoreRelation
-		 *            a relation to ignore when walking through M/1:1 relations
-		 *            to find if the real column came from elsewhere.
-		 * @param searchColumns
-		 *            the columns to search in. If <tt>null</tt>, all columns
-		 *            in this table are searched.
-		 * @return the dataset column that is based on the real column, or
-		 *         <tt>null</tt> if it could not be found.
+		 * @param tu
+		 *            the unit to add.
 		 */
-		public DataSetColumn getUnmaskedDataSetColumn(final Column realColumn,
-				final Relation ignoreRelation, Collection searchColumns) {
-			// No search columns? Use all our own.
-			if (searchColumns == null || searchColumns.isEmpty())
-				searchColumns = this.getColumns();
-			// We must look not only for this column, but all columns
-			// involved in relations with it, because it could have been
-			// introduced via another route.
-			final List candidates = new ArrayList();
-			candidates.add(realColumn);
-			for (int j = 0; j < candidates.size(); j++) {
-				final Column searchColumn = (Column) candidates.get(j);
-				for (final Iterator i = searchColumns.iterator(); i.hasNext();) {
-					final DataSetColumn candidate = (DataSetColumn) i.next();
-					DataSetColumn test = candidate;
-					while (test instanceof InheritedColumn)
-						test = ((InheritedColumn) test).getInheritedColumn();
-					if (!(test instanceof WrappedColumn))
-						continue;
-					final WrappedColumn wc = (WrappedColumn) test;
-					if (wc.getMasked() && !wc.getDependency())
-						continue;
-					if (searchColumn.equals(wc.getWrappedColumn()))
-						return candidate;
-				}
-				// If got here, didn't find this search candidate, so
-				// work out all other columns in any chains linked
-				// to the candidate and try those.
-				List furtherCandidates = new ArrayList();
-				furtherCandidates.add(searchColumn);
-				for (int l = 0; l < furtherCandidates.size(); l++) {
-					Column oneOneCandidate = (Column) furtherCandidates.get(l);
-					for (final Iterator i = oneOneCandidate.getTable()
-							.getKeys().iterator(); i.hasNext();) {
-						final Key key = (Key) i.next();
-						final int colIndex = key.getColumns().indexOf(
-								oneOneCandidate);
-						if (colIndex < 0)
-							continue;
-						for (final Iterator k = key.getRelations().iterator(); k
-								.hasNext();) {
-							final Relation rel = (Relation) k.next();
-							if (rel.equals(ignoreRelation))
-								continue;
-							if (rel.isOneToMany()
-									&& rel.getManyKey().equals(key))
-								continue;
-							final Key otherKey = rel.getOtherKey(key);
-							final Column nextOneOneCandidate = (Column) otherKey
-									.getColumns().get(colIndex);
-							if (!furtherCandidates
-									.contains(nextOneOneCandidate))
-								furtherCandidates.add(nextOneOneCandidate);
-						}
-					}
-				}
-				for (final Iterator i = furtherCandidates.iterator(); i
-						.hasNext();) {
-					Column nextCandidate = (Column) i.next();
-					if (!candidates.contains(nextCandidate))
-						candidates.add(nextCandidate);
-				}
-			}
-			// If we get here, it means the specified column is not part
-			// of this dataset table, at least not unmasked.
-			return null;
+		void addTransformationUnit(final TransformationUnit tu) {
+			this.transformationUnits.add(tu);
 		}
 
 		/**
-		 * Find all columns in this dataset table that are not masked, or are
-		 * dependencies.
+		 * Gets the ordered list of transformation units.
 		 * 
-		 * @return the columns that meet this criteria. May be empty but never
-		 *         null.
+		 * @return the list of units.
 		 */
-		public List getUnmaskedDataSetColumns() {
-			final List list = new ArrayList();
-			for (final Iterator i = this.getColumns().iterator(); i.hasNext();) {
-				final DataSetColumn candidate = (DataSetColumn) i.next();
-				if (candidate.getMasked() && !candidate.getDependency())
-					continue;
-				list.add(candidate);
-			}
-			return list;
-		}
-
-		/**
-		 * Given a set of interesting columns from normal tables (not dataset
-		 * tables), return the set of matching dataset columns.
-		 * <p>
-		 * The set of columns passed in is the set of columns to search for a
-		 * match in, for instance if the table is only half-built so far. If
-		 * <tt>null</tt>, all the columns on this table are included in the
-		 * search.
-		 * 
-		 * @param interestingColumns
-		 *            the set of normal columns to find matching dataset columns
-		 *            for.
-		 * @param ignoreRelation
-		 *            don't follow this relation when trying to resolve indirect
-		 *            references.
-		 * @param searchColumns
-		 *            the columns to search in. If <tt>null</tt>, all columns
-		 *            in this table are searched.
-		 * @return the set of matching dataset columns.
-		 */
-		public List getUnmaskedDataSetColumns(
-				final Collection interestingColumns,
-				final Relation ignoreRelation, final Collection searchColumns) {
-			final List list = new ArrayList();
-			for (final Iterator i = interestingColumns.iterator(); i.hasNext();) {
-				final DataSetColumn col = this.getUnmaskedDataSetColumn(
-						(Column) i.next(), ignoreRelation, searchColumns);
-				if (col != null)
-					list.add(col);
-			}
-			return list;
-		}
-
-		/**
-		 * Given a relation, find all columns in this dataset table that were
-		 * added as a result of following this relation.
-		 * 
-		 * @param underlyingRelation
-		 *            the relation to look for associated columns for.
-		 * @return the columns added to this table by that relation. May be
-		 *         empty but never null.
-		 */
-		public List getUnmaskedDataSetColumns(final Relation underlyingRelation) {
-			final List list = new ArrayList();
-			for (final Iterator i = this.getColumns().iterator(); i.hasNext();) {
-				final DataSetColumn candidate = (DataSetColumn) i.next();
-				if (!(candidate instanceof WrappedColumn))
-					continue;
-				final WrappedColumn wc = (WrappedColumn) candidate;
-				if (wc.getMasked() && !wc.getDependency())
-					continue;
-				final Relation wcRel = wc.getUnderlyingRelation();
-				if (wcRel == underlyingRelation)
-					list.add(candidate);
-				else if (wcRel != null
-						&& underlyingRelation != null
-						&& wc.getUnderlyingRelation()
-								.equals(underlyingRelation))
-					list.add(candidate);
-			}
-			return list;
-		}
-
-		/**
-		 * Gets the relation which controls the existence of this table.
-		 * Modifying that relation will directly affect the structure or
-		 * existence of this table. It can be <tt>null</tt>.
-		 * 
-		 * @return the source relation.
-		 */
-		public Relation getSourceRelation() {
-			return this.sourceRelation;
+		public List getTransformationUnits() {
+			return this.transformationUnits;
 		}
 
 		/**
@@ -2297,62 +1558,6 @@ public class DataSet extends GenericSchema {
 		 */
 		public DataSetTableType getType() {
 			return this.type;
-		}
-
-		/**
-		 * Returns the list of keys used to construct this table. These keys are
-		 * in the same order as the relations, and indicate which key to root
-		 * each relation at.
-		 * 
-		 * @return the list of keys of this table. May be empty but never null.
-		 */
-		public List getUnderlyingKeys() {
-			return this.underlyingKeys;
-		}
-
-		/**
-		 * Returns the list of relations used to construct this table.
-		 * 
-		 * @return the list of relations of this table. May be empty but never
-		 *         null.
-		 */
-		public List getUnderlyingRelations() {
-			return this.underlyingRelations;
-		}
-
-		/**
-		 * Returns the real table upon which this dataset table is based.
-		 * 
-		 * @return the real table providing the basis for this dataset table.
-		 */
-		public Table getUnderlyingTable() {
-			return this.underlyingTable;
-		}
-
-		/**
-		 * Sets the list of keys used to construct this table.
-		 * 
-		 * @param keys
-		 *            the list of keys of this table. May be empty but never
-		 *            null.
-		 */
-		public void setUnderlyingKeys(final List keys) {
-			// Check the keys and save them.
-			this.underlyingKeys.clear();
-			this.underlyingKeys.addAll(keys);
-		}
-
-		/**
-		 * Sets the list of relations used to construct this table.
-		 * 
-		 * @param relations
-		 *            the list of relations of this table. May be empty but
-		 *            never null.
-		 */
-		public void setUnderlyingRelations(final List relations) {
-			// Check the relations and save them.
-			this.underlyingRelations.clear();
-			this.underlyingRelations.addAll(relations);
 		}
 	}
 

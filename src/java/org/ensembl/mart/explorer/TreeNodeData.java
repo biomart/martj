@@ -34,7 +34,7 @@ public class TreeNodeData {
     private String label;
 
     public Type(String label) {
-      assert label != null;
+      //assert label != null;
       this.label = label;
     }
 

@@ -28,8 +28,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -41,11 +39,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
+import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.common.model.Column;
-import org.biomart.common.model.Relation;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -111,17 +110,12 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Create a drop-down list of underlying tables.
-		final Set underlyingTables = new TreeSet();
-		underlyingTables.add(table.getUnderlyingTable());
 		this.tables = new JComboBox();
-		for (final Iterator i = table.getUnderlyingRelations().iterator(); i
-				.hasNext();) {
-			final Relation rel = (Relation) i.next();
-			underlyingTables.add(rel.getFirstKey().getTable());
-			underlyingTables.add(rel.getSecondKey().getTable());
+		for (final Iterator i = table.getTransformationUnits().iterator(); i.hasNext(); ) {
+			final TransformationUnit tu = (TransformationUnit)i.next();
+			if (tu instanceof SelectFromTable && !(((SelectFromTable)tu).getTable() instanceof DataSetTable))
+				this.tables.addItem(((SelectFromTable)tu).getTable());
 		}
-		for (final Iterator i = underlyingTables.iterator(); i.hasNext();)
-			this.tables.addItem(i.next());
 
 		// Start with an empty available columns list.
 		this.columns = new JList();

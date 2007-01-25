@@ -21,7 +21,6 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -29,7 +28,6 @@ import javax.swing.JPopupMenu;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
@@ -73,10 +71,12 @@ public class ExplainTransformationContext extends DataSetContext {
 			// Magenta EXPRESSION columns.
 			if (column instanceof InheritedColumn)
 				component.setBackground(ColumnComponent.INHERITED_COLOUR);
-
 			// Fade out all MASKED columns.
-			else if (column.getMasked())
+			else if (((DataSet)column.getTable().getSchema()).getDataSetModifications().isMaskedColumn(column))
 				component.setBackground(ColumnComponent.FADED_COLOUR);
+
+			// FIXME: Reinstate.
+			/*
 
 			// Blue PARTITIONED columns.
 			else if (column.getPartitionType() != null)
@@ -85,6 +85,7 @@ public class ExplainTransformationContext extends DataSetContext {
 			// Magenta EXPRESSION columns.
 			else if (column instanceof ExpressionColumn)
 				component.setBackground(ColumnComponent.EXPRESSION_COLOUR);
+			*/
 
 			// All others are normal.
 			else
@@ -138,8 +139,10 @@ public class ExplainTransformationContext extends DataSetContext {
 				}
 			});
 			contextMenu.add(mask);
-			mask.setSelected(column.getMasked());
+			mask.setSelected(((DataSet)column.getTable().getSchema()).getDataSetModifications().isMaskedColumn(column));
 
+			// FIXME: Reinstate.
+			/*
 			contextMenu.addSeparator();
 
 			// If it is partitioned, make a submenu to change the partition
@@ -242,6 +245,7 @@ public class ExplainTransformationContext extends DataSetContext {
 				contextMenu.add(remove);
 
 			}
+			*/
 		}
 	}
 }

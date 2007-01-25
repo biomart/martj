@@ -18,13 +18,12 @@
 
 package org.biomart.jdbc.model;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.biomart.jdbc.resources.Resources;
 import org.biomart.jdbc.exceptions.RegistryException;
+import org.biomart.jdbc.resources.Resources;
 
 /**
  * @author Richard Holland <holland@ebi.ac.uk>
@@ -32,7 +31,7 @@ import org.biomart.jdbc.exceptions.RegistryException;
  * 			$Author$
  * @since 0.6
  */
-public class Dataset {	
+public class DataSet {	
 	private String datasetName;
 	
 	private Map attributes = new HashMap();
@@ -42,7 +41,7 @@ public class Dataset {
 	 * Construct a dataset with the given name.
 	 * @param datasetName the name of this dataset.
 	 */
-	public Dataset(final String datasetName) {
+	public DataSet(final String datasetName) {
 		this.datasetName = datasetName;
 	}
 	
@@ -58,8 +57,8 @@ public class Dataset {
 	 * Find out what attributes are in this dataset.
 	 * @return the list of attributes. May be empty but never <tt>null</tt>.
 	 */
-	public List getAttributeNames() {
-		return new ArrayList(this.attributes.keySet());
+	public Collection getAttributeNames() {
+		return this.attributes.keySet();
 	}
 
 	/**
@@ -78,8 +77,8 @@ public class Dataset {
 	 * Find out what filters are in this dataset.
 	 * @return the list of filters. May be empty but never <tt>null</tt>.
 	 */
-	public List getFilterNames() {
-		return new ArrayList(this.filters.keySet());
+	public Collection getFilterNames() {
+		return this.filters.keySet();
 	}
 
 	/**

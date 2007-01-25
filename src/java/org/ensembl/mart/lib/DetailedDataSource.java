@@ -138,6 +138,7 @@ public class DetailedDataSource implements DataSource {
     String jdbcDriverClassName,
     String displayName) {
 
+	  /**
     assert dbType != null : "dbType is null";
     assert host != null : "host is null";
     assert port != null : "port is null";
@@ -151,7 +152,8 @@ public class DetailedDataSource implements DataSource {
     assert user != null : "user is null";
     assert maxPoolSize >= 0;
     assert jdbcDriverClassName != null : "jdbcDriver is null";
-
+	   */
+	  
     this.databaseType = dbType;
     this.host = host;
     this.port = port;

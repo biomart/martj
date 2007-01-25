@@ -25,6 +25,7 @@ import java.sql.Connection;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -62,28 +63,32 @@ public class RegistryDataSource implements DataSource {
 
 	// Our set of open connections.
 	private List openConnections = new ArrayList();
-	
+
 	// Are we initialised?
 	private Registry registry;
-	
+
 	/**
 	 * Loads the registry XML and parses it into {@link Registry} objects.
-	 * @throws RegistryException if there was a problem talking to
-	 * the registry XML URL, or a problem parsing the response.
+	 * 
+	 * @throws RegistryException
+	 *             if there was a problem talking to the registry XML URL, or a
+	 *             problem parsing the response.
 	 */
 	void initialise() throws RegistryException {
-		if (this.registry!=null) 
+		if (this.registry != null)
 			return;
-		// We can assume that URL has already been set, as we 
+		// We can assume that URL has already been set, as we
 		// will only get called via a connection, which will
 		// already have checked via getConnection() on this object.
 		this.registry = new Registry(this.registryURL);
 	}
-	
+
 	/**
 	 * Obtains the registry from this data source.
+	 * 
 	 * @return the registry.
-	 * @throws RegistryException if there was a problem constructing it.
+	 * @throws RegistryException
+	 *             if there was a problem constructing it.
 	 */
 	Registry getRegistry() throws RegistryException {
 		this.initialise();
@@ -149,8 +154,7 @@ public class RegistryDataSource implements DataSource {
 			missingProp.description = Resources.get("registryURLDescription");
 			missingProperties.add(missingProp);
 		}
-		return (DriverPropertyInfo[]) missingProperties
-				.toArray(new DriverPropertyInfo[0]);
+		return (DriverPropertyInfo[])missingProperties.toArray(new DriverPropertyInfo[0]);
 	}
 
 	/**
@@ -216,17 +220,12 @@ public class RegistryDataSource implements DataSource {
 
 	public void finalize() {
 		// We need to track and close all the connections we issued.
-		while (this.openConnections.size() > 0) {
-			final RegistryConnection conn = (RegistryConnection) this.openConnections
-					.get(0);
+		for (final Iterator i = this.openConnections.iterator(); i.hasNext(); )
 			try {
-				conn.close();
+				((Connection)i.next()).close();
 			} catch (SQLException e) {
 				// We don't care. Get rid of it anyway.
-			} finally {
-				// Just to make sure, although it should already have gone.
-				this.openConnections.remove(conn);
 			}
-		}
+		this.openConnections.clear();
 	}
 }

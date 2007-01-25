@@ -52,9 +52,6 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.biomart.jdbc.exceptions.RegistryException;
-import org.biomart.jdbc.model.Attribute;
-import org.biomart.jdbc.model.Dataset;
-import org.biomart.jdbc.model.Mart;
 import org.biomart.jdbc.model.Registry;
 import org.biomart.jdbc.resources.Resources;
 
@@ -147,7 +144,7 @@ public class RegistryMetaData implements DatabaseMetaData {
 		colNames.add("BUFFER_LENGTH");
 		colNames.add("DECIMAL_DIGITS");
 		colNames.add("PSEUDO_COLUMN");
-		return new RegistryResultSet(colNames, Collections.EMPTY_LIST);
+		return new RegistryResultSet(colNames, RegistryResultSet.EMPTY_RESULTS);
 	}
 
 	public String getCatalogSeparator() throws SQLException {
@@ -166,11 +163,11 @@ public class RegistryMetaData implements DatabaseMetaData {
 		final List rows = new ArrayList();
 		try {
 			final Registry registry = this.dataSource.getRegistry();
-			for (final Iterator i = registry.getMartNames().iterator(); i
+			for (final Iterator martNames = registry.getMartNames().iterator(); martNames
 					.hasNext();) {
-				final Mart mart = registry.getMart((String) i.next());
+				final String martName = (String) martNames.next();
 				final Map row = new HashMap();
-				row.put("TABLE_CAT", mart.getName());
+				row.put("TABLE_CAT", martName);
 				rows.add(row);
 			}
 		} catch (RegistryException e) {
@@ -239,30 +236,30 @@ public class RegistryMetaData implements DatabaseMetaData {
 		final List rows = new ArrayList();
 		try {
 			final Registry registry = this.dataSource.getRegistry();
-			for (final Iterator i = registry.getMartNames().iterator(); i
+			for (final Iterator martNames = registry.getMartNames().iterator(); martNames
 					.hasNext();) {
-				final Mart mart = registry.getMart((String) i.next());
-				if (!this.match(mart.getName(), catalog))
+				final String martName = (String) martNames.next();
+				if (!this.match(martName, catalog))
 					continue;
-				for (final Iterator j = mart.getDatasetNames().iterator(); j
-						.hasNext();) {
-					final Dataset dataset = mart.getDataset((String) j.next());
-					if (!this.match(dataset.getName(), schemaPattern))
+				for (final Iterator dataSetNames = registry.getMart(martName)
+						.getDatasetNames().iterator(); dataSetNames.hasNext();) {
+					final String dataSetName = (String) dataSetNames.next();
+					if (!this.match(dataSetName, schemaPattern))
 						continue;
-					if (!this.match(dataset.getName(), tableNamePattern))
+					if (!this.match(dataSetName, tableNamePattern))
 						continue;
 					int ordinal = 1; // Column pos within table.
-					for (final Iterator k = dataset.getAttributeNames()
-							.iterator(); k.hasNext();) {
-						final Attribute attr = dataset.getAttribute((String) k
-								.next());
-						if (!this.match(attr.getName(), columnNamePattern))
+					for (final Iterator attrNames = registry.getMart(martName)
+							.getDataset(dataSetName).getAttributeNames()
+							.iterator(); attrNames.hasNext();) {
+						final String attrName = (String) attrNames.next();
+						if (!this.match(attrName, columnNamePattern))
 							continue;
 						final Map row = new HashMap();
-						row.put("TABLE_CAT", mart.getName());
-						row.put("TABLE_SCHEM", dataset.getName());
-						row.put("TABLE_NAME", dataset.getName());
-						row.put("COLUMN_NAME", attr.getName());
+						row.put("TABLE_CAT", martName);
+						row.put("TABLE_SCHEM", dataSetName);
+						row.put("TABLE_NAME", dataSetName);
+						row.put("COLUMN_NAME", attrName);
 						row.put("DATA_TYPE", "String");
 						row.put("TYPE_NAME", "" + Types.VARCHAR);
 						row.put("COLUMN_SIZE", "0");
@@ -317,7 +314,7 @@ public class RegistryMetaData implements DatabaseMetaData {
 		colNames.add("FK_NAME");
 		colNames.add("PK_NAME");
 		colNames.add("DEFERRABILITY");
-		return new RegistryResultSet(colNames, Collections.EMPTY_LIST);
+		return new RegistryResultSet(colNames, RegistryResultSet.EMPTY_RESULTS);
 	}
 
 	public int getDatabaseMajorVersion() throws SQLException {
@@ -377,7 +374,7 @@ public class RegistryMetaData implements DatabaseMetaData {
 		colNames.add("FK_NAME");
 		colNames.add("PK_NAME");
 		colNames.add("DEFERRABILITY");
-		return new RegistryResultSet(colNames, Collections.EMPTY_LIST);
+		return new RegistryResultSet(colNames, RegistryResultSet.EMPTY_RESULTS);
 	}
 
 	public String getExtraNameCharacters() throws SQLException {
@@ -408,7 +405,7 @@ public class RegistryMetaData implements DatabaseMetaData {
 		colNames.add("FK_NAME");
 		colNames.add("PK_NAME");
 		colNames.add("DEFERRABILITY");
-		return new RegistryResultSet(colNames, Collections.EMPTY_LIST);
+		return new RegistryResultSet(colNames, RegistryResultSet.EMPTY_RESULTS);
 	}
 
 	public ResultSet getIndexInfo(String catalog, String schema, String table,
@@ -428,7 +425,7 @@ public class RegistryMetaData implements DatabaseMetaData {
 		colNames.add("CARDINALITY");
 		colNames.add("PAGES");
 		colNames.add("FILTER_CONDITION");
-		return new RegistryResultSet(colNames, Collections.EMPTY_LIST);
+		return new RegistryResultSet(colNames, RegistryResultSet.EMPTY_RESULTS);
 	}
 
 	public int getJDBCMajorVersion() throws SQLException {
@@ -554,7 +551,7 @@ public class RegistryMetaData implements DatabaseMetaData {
 		colNames.add("COLUMN_NAME");
 		colNames.add("KEY_SEQ");
 		colNames.add("PK_NAME");
-		return new RegistryResultSet(colNames, Collections.EMPTY_LIST);
+		return new RegistryResultSet(colNames, RegistryResultSet.EMPTY_RESULTS);
 	}
 
 	public ResultSet getProcedureColumns(String catalog, String schemaPattern,
@@ -575,7 +572,7 @@ public class RegistryMetaData implements DatabaseMetaData {
 		colNames.add("RADIX");
 		colNames.add("NULLABLE");
 		colNames.add("REMARKS");
-		return new RegistryResultSet(colNames, Collections.EMPTY_LIST);
+		return new RegistryResultSet(colNames, RegistryResultSet.EMPTY_RESULTS);
 	}
 
 	public String getProcedureTerm() throws SQLException {
@@ -594,7 +591,7 @@ public class RegistryMetaData implements DatabaseMetaData {
 		colNames.add("reserved3");
 		colNames.add("REMARKS");
 		colNames.add("PROCEDURE_TYPE");
-		return new RegistryResultSet(colNames, Collections.EMPTY_LIST);
+		return new RegistryResultSet(colNames, RegistryResultSet.EMPTY_RESULTS);
 	}
 
 	public int getResultSetHoldability() throws SQLException {
@@ -624,15 +621,15 @@ public class RegistryMetaData implements DatabaseMetaData {
 		final List rows = new ArrayList();
 		try {
 			final Registry registry = this.dataSource.getRegistry();
-			for (final Iterator i = registry.getMartNames().iterator(); i
+			for (final Iterator martNames = registry.getMartNames().iterator(); martNames
 					.hasNext();) {
-				final Mart mart = registry.getMart((String) i.next());
-				for (final Iterator j = mart.getDatasetNames().iterator(); j
-						.hasNext();) {
-					final Dataset dataset = mart.getDataset((String) j.next());
+				final String martName = (String) martNames.next();
+				for (final Iterator dataSetNames = registry.getMart(martName)
+						.getDatasetNames().iterator(); dataSetNames.hasNext();) {
+					final String dataSetName = (String) dataSetNames.next();
 					final Map row = new HashMap();
-					row.put("TABLE_SCHEM", dataset.getName());
-					row.put("TABLE_CATALOG", mart.getName());
+					row.put("TABLE_SCHEM", dataSetName);
+					row.put("TABLE_CATALOG", martName);
 					rows.add(row);
 				}
 			}
@@ -662,7 +659,7 @@ public class RegistryMetaData implements DatabaseMetaData {
 		colNames.add("TABLE_SCHEMA");
 		colNames.add("TABLE_NAME");
 		colNames.add("SUPERTABLE_NAME");
-		return new RegistryResultSet(colNames, Collections.EMPTY_LIST);
+		return new RegistryResultSet(colNames, RegistryResultSet.EMPTY_RESULTS);
 	}
 
 	public ResultSet getSuperTypes(String catalog, String schemaPattern,
@@ -675,7 +672,7 @@ public class RegistryMetaData implements DatabaseMetaData {
 		colNames.add("SUPERTYPE_CAT");
 		colNames.add("SUPERTYPE_SCHEMA");
 		colNames.add("SUPERTYPE_NAME");
-		return new RegistryResultSet(colNames, Collections.EMPTY_LIST);
+		return new RegistryResultSet(colNames, RegistryResultSet.EMPTY_RESULTS);
 	}
 
 	public String getSystemFunctions() throws SQLException {
@@ -694,7 +691,7 @@ public class RegistryMetaData implements DatabaseMetaData {
 		colNames.add("GRANTEE");
 		colNames.add("PRIVILEGE");
 		colNames.add("IS_GRANTABLE");
-		return new RegistryResultSet(colNames, Collections.EMPTY_LIST);
+		return new RegistryResultSet(colNames, RegistryResultSet.EMPTY_RESULTS);
 	}
 
 	public ResultSet getTableTypes() throws SQLException {
@@ -807,7 +804,7 @@ public class RegistryMetaData implements DatabaseMetaData {
 		colNames.add("DATA_TYPE");
 		colNames.add("REMARKS");
 		colNames.add("BASE_TYPE");
-		return new RegistryResultSet(colNames, Collections.EMPTY_LIST);
+		return new RegistryResultSet(colNames, RegistryResultSet.EMPTY_RESULTS);
 	}
 
 	public String getURL() throws SQLException {
@@ -831,7 +828,7 @@ public class RegistryMetaData implements DatabaseMetaData {
 		colNames.add("BUFFER_LENGTH");
 		colNames.add("DECIMAL_DIGITS");
 		colNames.add("PSEUDO_COLUMN");
-		return new RegistryResultSet(colNames, Collections.EMPTY_LIST);
+		return new RegistryResultSet(colNames, RegistryResultSet.EMPTY_RESULTS);
 	}
 
 	public boolean insertsAreDetected(int type) throws SQLException {
@@ -1289,7 +1286,7 @@ public class RegistryMetaData implements DatabaseMetaData {
 		return false;
 	}
 
-	private class RegistryResultSet implements ResultSet {
+	private static class RegistryResultSet implements ResultSet {
 
 		private List rows;
 
@@ -1300,6 +1297,11 @@ public class RegistryMetaData implements DatabaseMetaData {
 		private boolean lastColWasNull = false;
 
 		private RegistryResultsMetaData metaData;
+
+		/**
+		 * Use this to specify no results.
+		 */
+		public static final List EMPTY_RESULTS = Collections.EMPTY_LIST;
 
 		/**
 		 * Construct a result set based around the given rows.
@@ -2211,31 +2213,23 @@ public class RegistryMetaData implements DatabaseMetaData {
 
 	}
 
-	public class RegistryResultsMetaData implements ResultSetMetaData {
+	private static class RegistryResultsMetaData implements ResultSetMetaData {
 
 		private RegistryResultSet rs;
 
 		private MetaData[] metaData;
 
-		/**
-		 * Build metadata from the given sub query.
-		 * 
-		 * @param query
-		 *            the query object the subquery belongs to.
-		 * @param subQuery
-		 *            the sub query containing our info.
-		 * @throws SQLException
-		 *             if metadata could not be built.
-		 */
-		RegistryResultsMetaData(final RegistryResultSet rs) throws SQLException {
+		private RegistryResultsMetaData(final RegistryResultSet rs)
+				throws SQLException {
 			this.rs = rs;
 			this.populate();
 		}
 
 		private void populate() throws SQLException {
 			// Copy column details from columns in result set.
-			for (final Iterator i = rs.colNames.iterator(); i.hasNext();) {
-				final String colName = (String) i.next();
+			for (final Iterator colNames = this.rs.colNames.iterator(); colNames
+					.hasNext();) {
+				final String colName = (String) colNames.next();
 				final MetaData md = new MetaData();
 				// Fake it all with strings.
 				md.columnTypeName = "String";
@@ -2248,7 +2242,7 @@ public class RegistryMetaData implements DatabaseMetaData {
 				md.catalogName = "BioMart";
 				md.schemaName = "BioMart";
 				md.tableName = md.schemaName;
-				md.columnName = (String) colName;
+				md.columnName = colName;
 				md.columnLabel = md.columnName;
 				md.columnDisplaySize = Integer.MAX_VALUE;
 			}

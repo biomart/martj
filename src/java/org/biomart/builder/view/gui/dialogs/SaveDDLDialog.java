@@ -35,7 +35,6 @@ import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -54,7 +53,6 @@ import javax.swing.filechooser.FileFilter;
 import javax.swing.text.DefaultEditorKit;
 
 import org.biomart.builder.controller.SaveDDLMartConstructor;
-import org.biomart.builder.controller.SaveDDLMartConstructor.SaveDDLGranularity;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.MartConstructor;
 import org.biomart.builder.model.MartConstructorAction;
@@ -71,8 +69,8 @@ import org.biomart.common.view.gui.StackTrace;
  * screen.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class SaveDDLDialog extends JDialog {
@@ -81,8 +79,6 @@ public class SaveDDLDialog extends JDialog {
 	private Collection datasets;
 
 	private JList datasetsList;
-
-	private JComboBox granularity;
 
 	private JCheckBox includeComments;
 
@@ -154,10 +150,6 @@ public class SaveDDLDialog extends JDialog {
 				.get("includeCommentsLabel"));
 		this.includeComments.setSelected(true);
 		this.viewDDL = new JCheckBox(Resources.get("viewDDLOnCompletion"));
-		this.granularity = new JComboBox(new Object[] {
-				SaveDDLGranularity.SINGLE, SaveDDLGranularity.MART,
-				SaveDDLGranularity.DATASET, SaveDDLGranularity.TABLE,
-				SaveDDLGranularity.STEP });
 
 		// Create the list for choosing datasets.
 		this.datasetsList = new JList(datasets.toArray(new DataSet[0]));
@@ -178,11 +170,7 @@ public class SaveDDLDialog extends JDialog {
 				File file = super.getSelectedFile();
 				if (file != null && !file.exists()) {
 					final String filename = file.getName();
-					final SaveDDLGranularity gran = (SaveDDLGranularity) SaveDDLDialog.this.granularity
-							.getSelectedItem();
-					final String extension = gran != null && gran.getZipped() ? Resources
-							.get("zipExtension")
-							: Resources.get("ddlExtension");
+					final String extension = Resources.get("zipExtension");
 					if (!filename.endsWith(extension)
 							&& filename.indexOf('.') < 0)
 						file = new File(file.getParentFile(), filename
@@ -192,24 +180,16 @@ public class SaveDDLDialog extends JDialog {
 			}
 		};
 		this.outputFileChooser.setFileFilter(new FileFilter() {
-			private boolean isZipped() {
-				final SaveDDLGranularity gran = (SaveDDLGranularity) SaveDDLDialog.this.granularity
-						.getSelectedItem();
-				return gran != null && gran.getZipped();
-			}
 
 			// Accepts only files ending in ".zip" or ".ddl".
 			public boolean accept(final File f) {
 				return f.isDirectory()
 						|| f.getName().toLowerCase().endsWith(
-								this.isZipped() ? Resources.get("zipExtension")
-										: Resources.get("ddlExtension"));
+								Resources.get("zipExtension"));
 			}
 
 			public String getDescription() {
-				return Resources
-						.get(this.isZipped() ? "ZipDDLFileFilterDescription"
-								: "DDLFileFilterDescription");
+				return Resources.get("ZipDDLFileFilterDescription");
 			}
 		});
 		this.outputFileLocation = new JTextField(20);
@@ -247,22 +227,6 @@ public class SaveDDLDialog extends JDialog {
 				}
 			}
 		});
-		this.granularity.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				if (SaveDDLDialog.this.granularity.getSelectedItem() != null
-						&& SaveDDLDialog.this.granularity.getSelectedItem()
-								.equals(SaveDDLGranularity.SINGLE))
-					SaveDDLDialog.this.viewDDL.setEnabled(true);
-				else {
-					if (SaveDDLDialog.this.viewDDL.isSelected())
-						SaveDDLDialog.this.viewDDL.doClick();
-					SaveDDLDialog.this.viewDDL.setEnabled(false);
-				}
-			}
-		});
-
-		// Set a default granularity.
-		this.granularity.setSelectedItem(SaveDDLGranularity.SINGLE);
 
 		// Lay out the window.
 
@@ -284,22 +248,21 @@ public class SaveDDLDialog extends JDialog {
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
-		// Add the granularity label and field, and the comments checkbox.
-		label = new JLabel(Resources.get("granularityLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
-		field = new JPanel();
-		field.add(this.granularity);
-		field.add(this.includeComments);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-
 		// Add the view DDL field.
 		label = new JLabel();
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		field = new JPanel();
 		field.add(this.viewDDL);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+
+		// Add the include cpmments field.
+		label = new JLabel();
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		field = new JPanel();
+		field.add(this.includeComments);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
@@ -369,14 +332,12 @@ public class SaveDDLDialog extends JDialog {
 		// Make the constructor object which will create the DDL.
 		MartConstructor constructor;
 		if (this.viewDDL.isSelected())
-			constructor = new SaveDDLMartConstructor(
-					(SaveDDLGranularity) this.granularity.getSelectedItem(),
-					sb, this.includeComments.isSelected());
+			constructor = new SaveDDLMartConstructor(sb, this.includeComments
+					.isSelected());
 		else
-			constructor = new SaveDDLMartConstructor(
-					(SaveDDLGranularity) this.granularity.getSelectedItem(),
-					new File(this.outputFileLocation.getText()),
-					this.includeComments.isSelected());
+			constructor = new SaveDDLMartConstructor(new File(
+					this.outputFileLocation.getText()), this.includeComments
+					.isSelected());
 		try {
 			// Obtain the DDL generator from the constructor object.
 			final ConstructorRunnable cr = constructor.getConstructorRunnable(

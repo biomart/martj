@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
@@ -40,12 +39,8 @@ import javax.swing.SwingUtilities;
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.DataSet.DataSetTableRestriction;
-import org.biomart.builder.model.DataSet.PartitionedColumnType;
-import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.AllDataSetsDiagram;
 import org.biomart.builder.view.gui.diagrams.DataSetDiagram;
@@ -53,13 +48,10 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.contexts.AllDataSetsContext;
 import org.biomart.builder.view.gui.diagrams.contexts.DataSetContext;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
-import org.biomart.builder.view.gui.dialogs.ConcatRelationEditorDialog;
+import org.biomart.builder.view.gui.dialogs.CompoundRelationEditorDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainTableDialog;
-import org.biomart.builder.view.gui.dialogs.ExpressionColumnDialog;
-import org.biomart.builder.view.gui.dialogs.PartitionColumnDialog;
-import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
@@ -240,7 +232,7 @@ public class DataSetTabSet extends JTabbedPane {
 		this.setSelectedIndex(currentTab == 0 ? 0 : Math.max(tabIndex - 1, 0));
 	}
 
-	/**
+	/*
 	 * Request that a relation be marked as concat-only.
 	 * 
 	 * @param ds
@@ -249,7 +241,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the relation to mark.
 	 * @param type
 	 *            the type of concatenation to use on this relation.
-	 */
+	 * FIXME: Reinstate.
 	private void requestConcatOnlyRelation(final DataSet ds,
 			final Relation relation, final DataSetConcatRelationType type) {
 		try {
@@ -269,6 +261,7 @@ public class DataSetTabSet extends JTabbedPane {
 			StackTrace.showStackTrace(t);
 		}
 	}
+	*/
 
 	protected void processMouseEvent(final MouseEvent evt) {
 		boolean eventProcessed = false;
@@ -471,7 +464,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * 
 	 * @param table
 	 *            the table to add the expression column to.
-	 */
+	 * FIXME: Reinstate.
 	public void requestAddExpressionColumn(final DataSetTable table) {
 		final ExpressionColumnDialog dialog = new ExpressionColumnDialog(table,
 				null);
@@ -526,7 +519,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset we are dealing with.
 	 * @param table
 	 *            the table to add a restriction to.
-	 */
+	 *
 	public void requestAddTableRestriction(final DataSet dataset,
 			final Table table) {
 		final RestrictedTableDialog dialog = new RestrictedTableDialog(table,
@@ -567,6 +560,7 @@ public class DataSetTabSet extends JTabbedPane {
 			}
 		});
 	}
+	*/
 
 	/**
 	 * Request that the optimiser type used post-construction of a dataset be
@@ -594,7 +588,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset we are working with.
 	 * @param relation
 	 *            the relation to mark.
-	 */
+	 * FIXME: Reinstate.
 	public void requestCreateConcatOnlyRelation(final DataSet ds,
 			final Relation relation) {
 		// Pop up a dialog to ask which columns to use.
@@ -605,6 +599,7 @@ public class DataSetTabSet extends JTabbedPane {
 		if (newType != null)
 			this.requestConcatOnlyRelation(ds, relation, newType);
 	}
+	*/
 
 	/**
 	 * On a request to create DDL for the current dataset, open the DDL creation
@@ -686,6 +681,60 @@ public class DataSetTabSet extends JTabbedPane {
 			MartBuilderUtils.maskColumn(ds, column);
 
 			// Repaint the dataset diagram based on the modified dataset.
+			this.recalculateDataSetDiagram(ds);
+
+			// Update the explanation diagram so that it
+			// correctly reflects any changed relation.
+			this.recalculateExplanationDialog();
+
+			// Update the modification status for this tabset.
+			this.martTab.getMartTabSet().setModifiedStatus(true);
+		} catch (final Throwable t) {
+			StackTrace.showStackTrace(t);
+		}
+	}
+
+	/**
+	 * Requests that a dimension be masked.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param dim
+	 *            the dimension to mask.
+	 */
+	public void requestMaskDimension(final DataSet ds, final DataSetTable dim) {
+		try {
+			// Mask the column.
+			MartBuilderUtils.maskTable(ds, dim);
+
+			// Repaint the dataset diagram based on the modified dataset.
+			this.repaintDataSetDiagram(ds);
+
+			// Update the explanation diagram so that it
+			// correctly reflects any changed relation.
+			this.repaintExplanationDialog();
+
+			// Update the modification status for this tabset.
+			this.martTab.getMartTabSet().setModifiedStatus(true);
+		} catch (final Throwable t) {
+			StackTrace.showStackTrace(t);
+		}
+	}
+	
+	/**
+	 * Requests that a dimension be unmasked.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param dim
+	 *            the dimension to unmask.
+	 */
+	public void requestUnmaskDimension(final DataSet ds, final DataSetTable dim) {
+		try {
+			// Mask the column.
+			MartBuilderUtils.unmaskTable(ds, dim);
+
+			// Repaint the dataset diagram based on the modified dataset.
 			this.repaintDataSetDiagram(ds);
 
 			// Update the explanation diagram so that it
@@ -700,6 +749,111 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Asks that a dimension by merged.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param dst
+	 *            the dimension to merge.
+	 */
+	public void requestMergeDimension(final DataSet ds, final DataSetTable dst) {
+		try {
+			// Merge the relation.
+			MartBuilderUtils.mergeRelation(ds, dst.getFocusRelation());				
+
+			// Recalculate the dataset diagram based on the modified dataset.
+			this.recalculateDataSetDiagram(ds);
+
+			// Update the explanation diagram so that it
+			// correctly reflects the changed relation.
+			this.recalculateExplanationDialog();
+
+			// Update the modified status.
+			this.martTab.getMartTabSet().setModifiedStatus(true);
+		} catch (final Throwable t) {
+			StackTrace.showStackTrace(t);
+		}
+	}
+
+	/**
+	 * Asks that a dimension by unmerged.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param dst
+	 *            the dimension to unmerge.
+	 */
+	public void requestUnmergeDimension(final DataSet ds, final DataSetTable dst) {
+		try {
+			// Merge the relation.
+			MartBuilderUtils.unmergeRelation(ds, dst.getFocusRelation());				
+
+			// Recalculate the dataset diagram based on the modified dataset.
+			this.recalculateDataSetDiagram(ds);
+
+			// Update the explanation diagram so that it
+			// correctly reflects the changed relation.
+			this.recalculateExplanationDialog();
+
+			// Update the modified status.
+			this.martTab.getMartTabSet().setModifiedStatus(true);
+		} catch (final Throwable t) {
+			StackTrace.showStackTrace(t);
+		}
+	}
+
+	/**
+	 * Asks that a relation be compounded.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param relation
+	 *            the schema relation to mask.
+	 */
+	public void requestCompoundRelation(final DataSet ds, final DataSetTable dst, final Relation relation) {
+		try {
+			// Work out if it is already compounded.
+			int n = 1;
+			if (ds.getSchemaModifications().isCompoundRelation(dst, relation))
+				n = ds.getSchemaModifications().getCompoundRelation(dst, relation);
+			
+			// Pop up a dialog and update 'compound'.
+			final int newN = CompoundRelationEditorDialog.getCompoundValue(n);
+			
+			// Skip altogether if no change.
+			if (newN==n) 
+				return;
+			
+			// Do the work.
+			if (newN<=1) {				
+				// Uncompound the relation.
+				if (dst!=null)
+					MartBuilderUtils.uncompoundRelation(dst, relation);
+				else
+					MartBuilderUtils.uncompoundRelation(ds, relation);				
+			} else {
+				// Compound the relation.
+				if (dst!=null)
+					MartBuilderUtils.compoundRelation(dst, relation, newN);
+				else
+					MartBuilderUtils.compoundRelation(ds, relation, newN);				
+			}
+
+			// Recalculate the dataset diagram based on the modified dataset.
+			this.recalculateDataSetDiagram(ds);
+
+			// Update the explanation diagram so that it
+			// correctly reflects the changed relation.
+			this.recalculateExplanationDialog();
+
+			// Update the modified status.
+			this.martTab.getMartTabSet().setModifiedStatus(true);
+		} catch (final Throwable t) {
+			StackTrace.showStackTrace(t);
+		}
+	}
+
+	/**
 	 * Asks that a relation be masked.
 	 * 
 	 * @param ds
@@ -707,10 +861,43 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param relation
 	 *            the schema relation to mask.
 	 */
-	public void requestMaskRelation(final DataSet ds, final Relation relation) {
+	public void requestMaskRelation(final DataSet ds, final DataSetTable dst, final Relation relation) {
 		try {
 			// Mask the relation.
-			MartBuilderUtils.maskRelation(ds, relation);
+			if (dst!=null)
+				MartBuilderUtils.maskRelation(dst, relation);
+			else
+				MartBuilderUtils.maskRelation(ds, relation);				
+
+			// Recalculate the dataset diagram based on the modified dataset.
+			this.recalculateDataSetDiagram(ds);
+
+			// Update the explanation diagram so that it
+			// correctly reflects the changed relation.
+			this.recalculateExplanationDialog();
+
+			// Update the modified status.
+			this.martTab.getMartTabSet().setModifiedStatus(true);
+		} catch (final Throwable t) {
+			StackTrace.showStackTrace(t);
+		}
+	}
+
+	/**
+	 * Asks that a relation be forced.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param relation
+	 *            the schema relation to force.
+	 */
+	public void requestForceRelation(final DataSet ds, final DataSetTable dst, final Relation relation) {
+		try {
+			// Mask the relation.
+			if (dst!=null)
+				MartBuilderUtils.forceRelation(dst, relation);
+			else
+				MartBuilderUtils.forceRelation(ds, relation);				
 
 			// Recalculate the dataset diagram based on the modified dataset.
 			this.recalculateDataSetDiagram(ds);
@@ -734,10 +921,13 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param table
 	 *            the schema table to mask all relations for.
 	 */
-	public void requestMaskTable(final DataSet ds, final Table table) {
+	public void requestMaskTable(final DataSet ds, final DataSetTable dst, final Table table) {
 		try {
 			// Mask all the relations on the table.
-			MartBuilderUtils.maskTable(ds, table);
+			if (dst!=null)
+				MartBuilderUtils.maskTable(dst, table);
+			else
+				MartBuilderUtils.maskTable(ds, table);
 
 			// Recalculate the dataset diagram based on the modified dataset.
 			this.recalculateDataSetDiagram(ds);
@@ -763,7 +953,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the relation to mark.
 	 * @param type
 	 *            the existing concat-relation type.
-	 */
+	 *
 	public void requestModifyConcatOnlyRelation(final DataSet ds,
 			final Relation relation, final DataSetConcatRelationType type) {
 		// Pop up a dialog to ask which columns to use.
@@ -780,7 +970,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * 
 	 * @param column
 	 *            the expression column to modify.
-	 */
+	 *
 	public void requestModifyExpressionColumn(final ExpressionColumn column) {
 		final ExpressionColumnDialog dialog = new ExpressionColumnDialog(
 				(DataSetTable) column.getTable(), column);
@@ -823,7 +1013,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the table to modify the restriction for.
 	 * @param restriction
 	 *            the existing restriction.
-	 */
+	 *
 	public void requestModifyTableRestriction(final DataSet dataset,
 			final Table table, final DataSetTableRestriction restriction) {
 		final RestrictedTableDialog dialog = new RestrictedTableDialog(table,
@@ -869,7 +1059,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset we are working with.
 	 * @param column
 	 *            the column to partition.
-	 */
+	 *
 	public void requestPartitionByColumn(final DataSet dataset,
 			final DataSetColumn column) {
 		PartitionedColumnType type;
@@ -910,7 +1100,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the column to partition.
 	 * @param type
 	 *            how to partition it.
-	 */
+	 *
 	public void requestPartitionByColumn(final DataSet dataset,
 			final DataSetColumn column, final PartitionedColumnType type) {
 		try {
@@ -931,6 +1121,7 @@ public class DataSetTabSet extends JTabbedPane {
 			StackTrace.showStackTrace(t);
 		}
 	}
+	*/
 
 	/**
 	 * Asks the user if they are sure they want to remove all datasets, then
@@ -1039,7 +1230,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * 
 	 * @param column
 	 *            the expression column to remove.
-	 */
+	 * FIXME: Reinstate.
 	public void requestRemoveExpressionColumn(final ExpressionColumn column) {
 		// Do this in the background.
 		LongProcess.run(new Runnable() {
@@ -1082,7 +1273,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset we are working with.
 	 * @param table
 	 *            the table to unrestrict.
-	 */
+	 *
 	public void requestRemoveTableRestriction(final DataSet dataset,
 			final Table table) {
 		// Do this in the background.
@@ -1113,6 +1304,7 @@ public class DataSetTabSet extends JTabbedPane {
 			}
 		});
 	}
+	*/
 
 	/**
 	 * Renames a dataset, then renames the tab too.
@@ -1160,13 +1352,14 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the column to rename.
 	 */
 	public void requestRenameDataSetColumn(final DataSetColumn dsColumn) {
+		try {
 		// Ask user for the new name.
 		final String newName = this.askUserForName(Resources
-				.get("requestDataSetColumnName"), dsColumn.getName());
+				.get("requestDataSetColumnName"), dsColumn.getModifiedName());
 
 		// If the new name is null (user cancelled), or has
 		// not changed, don't rename it.
-		if (newName == null || newName.equals(dsColumn.getName()))
+		if (newName == null || newName.equals(dsColumn.getModifiedName()))
 			return;
 
 		// Rename the dataset.
@@ -1182,6 +1375,9 @@ public class DataSetTabSet extends JTabbedPane {
 
 		// Set the tabset as modified.
 		this.martTab.getMartTabSet().setModifiedStatus(true);
+	} catch (final Throwable t) {
+		StackTrace.showStackTrace(t);
+	}
 	}
 
 	/**
@@ -1195,11 +1391,11 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestRenameDataSetTable(final DataSetTable dsTable) {
 		// Ask user for the new name.
 		final String newName = this.askUserForName(Resources
-				.get("requestDataSetTableName"), dsTable.getName());
+				.get("requestDataSetTableName"), dsTable.getModifiedName());
 
 		// If the new name is null (user cancelled), or has
 		// not changed, don't rename it.
-		if (newName == null || newName.equals(dsTable.getName()))
+		if (newName == null || newName.equals(dsTable.getModifiedName()))
 			return;
 
 		// Rename the dataset.
@@ -1409,7 +1605,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset we are working with.
 	 * @param relation
 	 *            the relation to un-concat-only.
-	 */
+	 * FIXME: Reinstate.
 	public void requestUnconcatOnlyRelation(final DataSet ds,
 			final Relation relation) {
 		try {
@@ -1428,7 +1624,7 @@ public class DataSetTabSet extends JTabbedPane {
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		}
-	}
+	}*/
 
 	/**
 	 * Requests that a column be unmasked.
@@ -1448,9 +1644,39 @@ public class DataSetTabSet extends JTabbedPane {
 
 			// Update the explanation diagram so that it
 			// correctly reflects any changed relation.
-			this.repaintExplanationDialog();
+			this.recalculateExplanationDialog();
 
 			// Update the modification status for this tabset.
+			this.martTab.getMartTabSet().setModifiedStatus(true);
+		} catch (final Throwable t) {
+			StackTrace.showStackTrace(t);
+		}
+	}
+
+	/**
+	 * Asks that a relation be unforced.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param relation
+	 *            the schema relation to unforce.
+	 */
+	public void requestUnforceRelation(final DataSet ds, final DataSetTable dst, final Relation relation) {
+		try {
+			// Unmasks the relation.
+			if (dst!=null)
+				MartBuilderUtils.unforceRelation(dst, relation);
+			else
+				MartBuilderUtils.unforceRelation(ds, relation);
+
+			// Recalculate the dataset diagram based on the modified dataset.
+			this.recalculateDataSetDiagram(ds);
+
+			// Update the explanation diagram so that it
+			// correctly reflects the changed relation.
+			this.recalculateExplanationDialog();
+
+			// Update the modified status.
 			this.martTab.getMartTabSet().setModifiedStatus(true);
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
@@ -1465,10 +1691,13 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param relation
 	 *            the schema relation to unmask.
 	 */
-	public void requestUnmaskRelation(final DataSet ds, final Relation relation) {
+	public void requestUnmaskRelation(final DataSet ds, final DataSetTable dst, final Relation relation) {
 		try {
 			// Unmasks the relation.
-			MartBuilderUtils.unmaskRelation(ds, relation);
+			if (dst!=null)
+				MartBuilderUtils.unmaskRelation(dst, relation);
+			else
+				MartBuilderUtils.unmaskRelation(ds, relation);
 
 			// Recalculate the dataset diagram based on the modified dataset.
 			this.recalculateDataSetDiagram(ds);
@@ -1492,10 +1721,13 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param table
 	 *            the schema table to unmask all relations for.
 	 */
-	public void requestUnmaskTable(final DataSet ds, final Table table) {
+	public void requestUnmaskTable(final DataSet ds, final DataSetTable dst, final Table table) {
 		try {
 			// Mask all the relations on the table.
-			MartBuilderUtils.unmaskTable(ds, table);
+			if (dst!=null)
+				MartBuilderUtils.unmaskTable(dst, table);
+			else
+				MartBuilderUtils.unmaskTable(ds, table);
 
 			// Recalculate the dataset diagram based on the modified dataset.
 			this.recalculateDataSetDiagram(ds);
@@ -1518,7 +1750,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset we are working with.
 	 * @param column
 	 *            the column to turn partioning off for.
-	 */
+	 *
 	public void requestUnpartitionByColumn(final DataSet dataset,
 			final DataSetColumn column) {
 		try {
@@ -1539,6 +1771,7 @@ public class DataSetTabSet extends JTabbedPane {
 			StackTrace.showStackTrace(t);
 		}
 	}
+	*/
 
 	/**
 	 * Requests that the subclass flag be removed from a relation.

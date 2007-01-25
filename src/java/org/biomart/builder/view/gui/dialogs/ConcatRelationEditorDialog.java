@@ -18,34 +18,7 @@
 
 package org.biomart.builder.view.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.swing.Box;
-import javax.swing.DefaultListModel;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.border.EmptyBorder;
-
-import org.biomart.builder.model.DataSet.DataSetConcatRelationType;
-import org.biomart.common.model.Relation;
-import org.biomart.common.model.Table;
-import org.biomart.common.resources.Resources;
 
 /**
  * A dialog which lists all the columns in a concat relation, and all the
@@ -62,13 +35,15 @@ import org.biomart.common.resources.Resources;
 public class ConcatRelationEditorDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
+	// FIXME: Reinstate.
+	/*
 	/**
 	 * Creates a new concat-relation type.
 	 * 
 	 * @param relation
 	 *            the relation the concat is to be created on.
 	 * @return the concat type the user defined.
-	 */
+	 *
 	public static DataSetConcatRelationType createConcatRelation(
 			final Relation relation) {
 		final ConcatRelationEditorDialog dialog = new ConcatRelationEditorDialog(
@@ -88,7 +63,7 @@ public class ConcatRelationEditorDialog extends JDialog {
 	 * @param type
 	 *            the existing concat type for this relation.
 	 * @return the new concat type the user defined.
-	 */
+	 *
 	public static DataSetConcatRelationType modifyConcatRelation(
 			final Relation relation, final DataSetConcatRelationType type) {
 		final ConcatRelationEditorDialog dialog = new ConcatRelationEditorDialog(
@@ -372,4 +347,5 @@ public class ConcatRelationEditorDialog extends JDialog {
 		// Validation succeeds if there are no messages.
 		return messages.isEmpty();
 	}
+	*/
 }

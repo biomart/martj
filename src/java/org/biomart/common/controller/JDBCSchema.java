@@ -333,7 +333,10 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 						// Establish the relation.
 						try {
-							new GenericRelation(pk, fk, card);
+							final Relation rel = new GenericRelation(pk, fk,
+									card);
+							pk.addRelation(rel);
+							fk.addRelation(rel);
 						} catch (final Throwable t) {
 							throw new BioMartError(t);
 						}
@@ -511,8 +514,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// sets of columns with identical names, or with '_key' appended.
 			// Any set that we find is going to be an FK with a relation back to
 			// this PK.
-			Log
-					.debug("Searching for possible referring foreign keys");
+			Log.debug("Searching for possible referring foreign keys");
 			for (final Iterator l = this.getTables().iterator(); l.hasNext();) {
 				// Obtain the next table to look at.
 				final Table fkTable = (Table) l.next();
@@ -532,8 +534,8 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 				// If found, add that target column to the candidate FK column
 				// set.
 				for (int columnIndex = 0; columnIndex < pk.countColumns(); columnIndex++) {
-					final String pkColumnName = ((Column) pk.getColumns().get(
-							columnIndex)).getName();
+					final String pkColumnName = (String) pk.getColumnNames()
+							.get(columnIndex);
 					// Start out by assuming no match.
 					Column candidateFKColumn = null;
 					// Don't try to find 'id' or 'id_key' columns as that
@@ -617,7 +619,10 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 						// Establish the relation.
 						try {
-							new GenericRelation(pk, fk, card);
+							final Relation rel = new GenericRelation(pk, fk,
+									card);
+							pk.addRelation(rel);
+							fk.addRelation(rel);
 						} catch (final Throwable t) {
 							throw new BioMartError(t);
 						}
@@ -865,8 +870,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	}
 
 	public Schema replicate(final String newName) {
-		Log.debug("Replicating JDBC schema " + this + " as "
-				+ newName);
+		Log.debug("Replicating JDBC schema " + this + " as " + newName);
 		// Make an empty copy.
 		final Schema newSchema = new JDBCSchema(this.driverClassLocation,
 				this.driverClassName, this.url, this.schemaName, this.username,
@@ -985,6 +989,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			if (dbTable == null)
 				try {
 					dbTable = new GenericTable(dbTableName, this);
+					this.addTable(dbTable);
 				} catch (final Throwable t) {
 					throw new BioMartError(t);
 				}
@@ -1014,6 +1019,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 				if (dbTblCol == null)
 					try {
 						dbTblCol = new GenericColumn(dbTblColName, dbTable);
+						dbTable.addColumn(dbTblCol);
 					} catch (final Throwable t) {
 						throw new BioMartError(t);
 					}
@@ -1031,94 +1037,6 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 				Log.debug("Dropping redundant column " + column);
 				dbTable.removeColumn(column);
 			}
-
-			// Obtain the primary key from the database. Even in databases
-			// without referential integrity, the primary key is still defined
-			// and can be obtained from the metadata.
-			Log.debug("Loading table primary keys");
-			final ResultSet dbTblPKCols = dmd.getPrimaryKeys(catalog,
-					this.schemaName, dbTableName);
-
-			// Load the primary key columns into a map keyed by column position.
-			// In other words, the first column in the key has a map key of 1,
-			// and so on. We do this because we can't guarantee we'll read the
-			// key columns from the database in the correct order. We keep the
-			// map
-			// sorted, so that when we iterate over it later we get back the
-			// columns in the correct order.
-			final Map pkCols = new TreeMap();
-			while (dbTblPKCols.next()) {
-				final String pkColName = dbTblPKCols.getString("COLUMN_NAME");
-				final Short pkColPosition = new Short(dbTblPKCols
-						.getShort("KEY_SEQ"));
-				pkCols.put(pkColPosition, dbTable.getColumnByName(pkColName));
-			}
-			dbTblPKCols.close();
-
-			// Did DMD find a PK? If not, which is really unusual but
-			// potentially may happen, attempt to find one by looking for a
-			// single
-			// column with the same name as the table or with '_id' appended.
-			// Only do this if we are using key-guessing.
-			if (pkCols.isEmpty() && this.getKeyGuessing()) {
-				Log
-						.debug("Found no primary key, so attempting to guess one");
-				// Plain version first.
-				Column candidateCol = dbTable.getColumnByName(dbTableName);
-				// Try with '_id' appended if plain version turned up nothing.
-				if (candidateCol == null)
-					candidateCol = dbTable.getColumnByName(dbTableName
-							+ Resources.get("primaryKeySuffix"));
-				// Found something? Add it to the primary key columns map, with
-				// a dummy key of 1. (Use Short for the key because that is what
-				// DMD would have used had it found anything itself).
-				if (candidateCol != null)
-					pkCols.put(Short.valueOf("1"), candidateCol);
-			}
-
-			// Obtain the existing primary key on the table, if the table
-			// previously existed and even had one in the first place.
-			final PrimaryKey existingPK = dbTable.getPrimaryKey();
-
-			// Did we find a PK on the database copy of the table?
-			if (!pkCols.isEmpty()) {
-				// Yes, we found a PK on the database copy of the table. So,
-				// create a new key based around the columns we identified.
-				PrimaryKey candidatePK;
-				try {
-					candidatePK = new GenericPrimaryKey(new ArrayList(pkCols
-							.values()));
-				} catch (final Throwable t) {
-					throw new BioMartError(t);
-				}
-
-				// If the existing table has no PK, or has a PK which matches
-				// and is handmade, or has a PK which does not match and is not
-				// handmade, replace that PK with the one we found. This way we
-				// preserve any existing handmade PKs, and don't override any
-				// marked as incorrect.
-				if (existingPK == null
-						|| existingPK.equals(candidatePK)
-						&& existingPK.getStatus().equals(
-								ComponentStatus.HANDMADE)
-						|| !existingPK.equals(candidatePK)
-						&& !existingPK.getStatus().equals(
-								ComponentStatus.HANDMADE))
-					try {
-						dbTable.setPrimaryKey(candidatePK);
-					} catch (final Throwable t) {
-						throw new BioMartError(t);
-					}
-			} else // No, we did not find a PK on the database copy of the
-			// table, so that table should not have a PK at all. So if the
-			// existing table has a PK which is not handmade, remove it.
-			if (existingPK != null
-					&& !existingPK.getStatus().equals(ComponentStatus.HANDMADE))
-				try {
-					dbTable.setPrimaryKey(null);
-				} catch (final Throwable t) {
-					throw new BioMartError(t);
-				}
 		}
 		dbTables.close();
 
@@ -1145,12 +1063,99 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		final String catalog = this.getConnection().getCatalog();
 		final String schema = this.schemaName;
 
+		// Get and create primary keys.
 		// Work out a list of all foreign keys currently existing.
 		// Any remaining in this list later will be dropped.
 		final List fksToBeDropped = new ArrayList();
 		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
 			final Table t = (Table) i.next();
 			fksToBeDropped.addAll(t.getForeignKeys());
+
+			// Obtain the primary key from the database. Even in databases
+			// without referential integrity, the primary key is still defined
+			// and can be obtained from the metadata.
+			Log.debug("Loading table primary keys");
+			final ResultSet dbTblPKCols = dmd.getPrimaryKeys(catalog,
+					this.schemaName, t.getName());
+
+			// Load the primary key columns into a map keyed by column position.
+			// In other words, the first column in the key has a map key of 1,
+			// and so on. We do this because we can't guarantee we'll read the
+			// key columns from the database in the correct order. We keep the
+			// map
+			// sorted, so that when we iterate over it later we get back the
+			// columns in the correct order.
+			final Map pkCols = new TreeMap();
+			while (dbTblPKCols.next()) {
+				final String pkColName = dbTblPKCols.getString("COLUMN_NAME");
+				final Short pkColPosition = new Short(dbTblPKCols
+						.getShort("KEY_SEQ"));
+				pkCols.put(pkColPosition, t.getColumnByName(pkColName));
+			}
+			dbTblPKCols.close();
+
+			// Did DMD find a PK? If not, which is really unusual but
+			// potentially may happen, attempt to find one by looking for a
+			// single
+			// column with the same name as the table or with '_id' appended.
+			// Only do this if we are using key-guessing.
+			if (pkCols.isEmpty() && this.getKeyGuessing()) {
+				Log.debug("Found no primary key, so attempting to guess one");
+				// Plain version first.
+				Column candidateCol = t.getColumnByName(t.getName());
+				// Try with '_id' appended if plain version turned up nothing.
+				if (candidateCol == null)
+					candidateCol = t.getColumnByName(t.getName()
+							+ Resources.get("primaryKeySuffix"));
+				// Found something? Add it to the primary key columns map, with
+				// a dummy key of 1. (Use Short for the key because that is what
+				// DMD would have used had it found anything itself).
+				if (candidateCol != null)
+					pkCols.put(Short.valueOf("1"), candidateCol);
+			}
+
+			// Obtain the existing primary key on the table, if the table
+			// previously existed and even had one in the first place.
+			final PrimaryKey existingPK = t.getPrimaryKey();
+
+			// Did we find a PK on the database copy of the table?
+			if (!pkCols.isEmpty()) {
+
+				// Yes, we found a PK on the database copy of the table. So,
+				// create a new key based around the columns we identified.
+				PrimaryKey candidatePK;
+				try {
+					candidatePK = new GenericPrimaryKey(new ArrayList(pkCols
+							.values()));
+				} catch (final Throwable th) {
+					throw new BioMartError(th);
+				}
+
+				// If the existing table has no PK, or has a PK which matches
+				// and is handmade, or has a PK which does not match and is not
+				// handmade, replace that PK with the one we found. This way we
+				// preserve any existing handmade PKs, and don't override any
+				// marked as incorrect.
+				if (existingPK == null
+						|| (existingPK.equals(candidatePK) && existingPK
+								.getStatus().equals(ComponentStatus.HANDMADE))
+						|| (!existingPK.equals(candidatePK) && !existingPK
+								.getStatus().equals(ComponentStatus.HANDMADE)))
+					try {
+						t.setPrimaryKey(candidatePK);
+					} catch (final Throwable th) {
+						throw new BioMartError(th);
+					}
+			} else // No, we did not find a PK on the database copy of the
+			// table, so that table should not have a PK at all. So if the
+			// existing table has a PK which is not handmade, remove it.
+			if (existingPK != null
+					&& !existingPK.getStatus().equals(ComponentStatus.HANDMADE))
+				try {
+					t.setPrimaryKey(null);
+				} catch (final Throwable th) {
+					throw new BioMartError(th);
+				}
 		}
 
 		// Are we key-guessing? Key guess the foreign keys, passing in a

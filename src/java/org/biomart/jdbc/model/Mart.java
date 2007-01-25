@@ -22,6 +22,7 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -29,19 +30,19 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.biomart.jdbc.resources.Resources;
 import org.biomart.jdbc.exceptions.RegistryException;
+import org.biomart.jdbc.resources.Resources;
 
 /**
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 	
+ * 			$Author$
  * @since 0.6
  */
 public abstract class Mart {
 	private String martName;
 
-	private Map datasets = new HashMap();
+	private Map dataSets = new HashMap();
 
 	/**
 	 * Construct a mart with the given name.
@@ -67,8 +68,8 @@ public abstract class Mart {
 	 * 
 	 * @return the list of datasets. May be empty but never <tt>null</tt>.
 	 */
-	public List getDatasetNames() {
-		return new ArrayList(this.datasets.keySet());
+	public Collection getDatasetNames() {
+		return this.dataSets.keySet();
 	}
 
 	/**
@@ -80,11 +81,11 @@ public abstract class Mart {
 	 * @throws RegistryException
 	 *             if the dataset could not be found.
 	 */
-	public Dataset getDataset(String datasetName) throws RegistryException {
-		if (!this.datasets.containsKey(datasetName))
+	public DataSet getDataset(String datasetName) throws RegistryException {
+		if (!this.dataSets.containsKey(datasetName))
 			throw new RegistryException(Resources.get("noSuchDataset",
 					datasetName));
-		return (Dataset) this.datasets.get(datasetName);
+		return (DataSet) this.dataSets.get(datasetName);
 	}
 
 	/**
@@ -101,7 +102,8 @@ public abstract class Mart {
 		 * 
 		 * @param martName
 		 *            the name of the mart.
-		 *            @param dataSource the data source the mart lives in.
+		 * @param dataSource
+		 *            the data source the mart lives in.
 		 */
 		public JDBCMart(String martName, DataSource dataSource) {
 			super(martName);
@@ -110,18 +112,22 @@ public abstract class Mart {
 
 		/**
 		 * Establish a JDBC connection to the mart.
+		 * 
 		 * @return the connection.
-		 * @throws SQLException if the connection could not be established.
+		 * @throws SQLException
+		 *             if the connection could not be established.
 		 */
 		public Connection getConnection() throws SQLException {
 			final Connection conn = this.dataSource.getConnection();
 			this.connections.add(conn);
 			return conn;
 		}
-			
+
 		/**
 		 * Inform us that the connection is finished with.
-		 * @param conn the connection that is no longer required.
+		 * 
+		 * @param conn
+		 *            the connection that is no longer required.
 		 */
 		public void connectionClosed(final Connection conn) {
 			try {
@@ -129,8 +135,9 @@ public abstract class Mart {
 					conn.close();
 			} catch (SQLException e) {
 				// We don't care.
+			} finally {
+				this.connections.remove(conn);
 			}
-			this.connections.remove(conn);
 		}
 
 		public void finalize() {
@@ -143,6 +150,7 @@ public abstract class Mart {
 					// We don't care.
 				}
 			}
+			this.connections.clear();
 		}
 	}
 
@@ -158,7 +166,8 @@ public abstract class Mart {
 		 * 
 		 * @param martName
 		 *            the name of the mart.
-		 *            @param serverURL the server the mart lives in.
+		 * @param serverURL
+		 *            the server the mart lives in.
 		 */
 		public XMLMart(String martName, URL serverURL) {
 			super(martName);
@@ -167,6 +176,7 @@ public abstract class Mart {
 
 		/**
 		 * Get the server to send queries to.
+		 * 
 		 * @return the server to send queries to.
 		 */
 		public URL getServerURL() {

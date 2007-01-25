@@ -156,10 +156,6 @@ public abstract class Diagram extends JPanel {
 		if (contextMenu.getComponentCount() > 0)
 			contextMenu.addSeparator();
 
-		// Work out whether to gray these options out or not. Gray out if
-		// there are no objects in the diagram.
-		boolean grayOut = this.getComponentCount() <= 1;
-
 		// Add an item that allows the user to search for a particular
 		// table in the diagram, and scroll to that table when selected.
 		final JMenuItem find = new JMenuItem(Resources.get("findTableTitle"));
@@ -171,8 +167,6 @@ public abstract class Diagram extends JPanel {
 					Diagram.this.findObject(table);
 			}
 		});
-		if (grayOut)
-			find.setEnabled(false);
 		contextMenu.add(find);
 
 		contextMenu.addSeparator();
@@ -186,8 +180,6 @@ public abstract class Diagram extends JPanel {
 				Diagram.this.saveDiagram();
 			}
 		});
-		if (grayOut)
-			save.setEnabled(false);
 		contextMenu.add(save);
 
 		// Add an item that allows the user to print this diagram.
@@ -200,8 +192,6 @@ public abstract class Diagram extends JPanel {
 				Diagram.this.printDiagram();
 			}
 		});
-		if (grayOut)
-			print.setEnabled(false);
 		contextMenu.add(print);
 
 		// Return the completed context menu.

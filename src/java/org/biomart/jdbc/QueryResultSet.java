@@ -136,7 +136,7 @@ public class QueryResultSet implements ResultSet {
 		final int index = this.query.getColumnNames().indexOf(columnName);
 		if (index < 0)
 			throw new SQLException(Resources.get("unknownColName", columnName));
-		return index+1;
+		return index + 1;
 	}
 
 	public boolean first() throws SQLException {
@@ -514,14 +514,15 @@ public class QueryResultSet implements ResultSet {
 			throw new SQLException(Resources.get("queryExhausted"));
 		else if (i < 1 || i > this.query.getColumnNames().size())
 			throw new SQLException(Resources.get("colIndexOutRange", "" + i));
-		Object obj = ((Object[]) this.currentBatch.get(this.currentBatchRowNum))[i-1];
+		final Object obj = ((Object[]) this.currentBatch
+				.get(this.currentBatchRowNum))[i - 1];
 		this.lastWasNull = obj == null;
 		return obj;
 	}
 
 	public Object getObject(String colName, Map map) throws SQLException {
 		int index = this.findColumn(colName);
-		return this.getObject(index+1, map);
+		return this.getObject(index + 1, map);
 	}
 
 	public Ref getRef(int i) throws SQLException {
@@ -756,7 +757,7 @@ public class QueryResultSet implements ResultSet {
 			this.currentBatchRowNum = 0;
 			this.currentBatch.clear();
 			for (int i = 0; i < this.fetchSize && this.query.hasMoreRows(); i++)
-				this.currentBatch.addAll(this.query.getNextRow());
+				this.currentBatch.add(this.query.getNextRow());
 			// If last batch, set this.lastRowNum to this.currentRowNum plus
 			// current batch size minus 1.
 			if (!this.query.hasMoreRows())

@@ -46,7 +46,7 @@ public class Resources {
 	/**
 	 * The current version of the BioMart software.
 	 */
-	public static String BIOMART_VERSION = "0.5";
+	public static String BIOMART_VERSION = "0.6";
 
 	private static String location = null;
 

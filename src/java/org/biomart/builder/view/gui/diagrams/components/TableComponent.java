@@ -32,6 +32,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
@@ -56,6 +57,11 @@ public class TableComponent extends BoxShapedComponent {
 	 * Colour for background.
 	 */
 	public static Color BACKGROUND_COLOUR = Color.PINK;
+
+	/**
+	 * Constant referring to masked table colour.
+	 */
+	public static Color MASKED_COLOUR = Color.LIGHT_GRAY;
 
 	/**
 	 * Bold font.
@@ -148,7 +154,10 @@ public class TableComponent extends BoxShapedComponent {
 		this.setBackground(TableComponent.BACKGROUND_COLOUR);
 
 		// Add the table name label.
-		JLabel label = new JLabel(this.getTable().getName());
+		final String name = (this.getTable() instanceof DataSetTable) ? ((DataSetTable) this
+				.getTable()).getModifiedName()
+				: this.getTable().getName();
+		JLabel label = new JLabel(name);
 		label.setFont(TableComponent.BOLD_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);

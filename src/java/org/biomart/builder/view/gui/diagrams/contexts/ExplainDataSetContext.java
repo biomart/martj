@@ -20,14 +20,16 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashSet;
+import java.util.Set;
 
-import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
@@ -53,6 +55,25 @@ import org.biomart.common.resources.Resources;
 public class ExplainDataSetContext extends SchemaContext {
 	private DataSet dataset;
 
+	private DataSetTable datasetTable;
+	
+	/**
+	 * Creates a new context within a given set of tabs, which applies to a
+	 * specific dataset table. All menu options will apply to this dataset, and
+	 * operations working with these datasets will be delegated to the methods
+	 * specified in the tabset.
+	 * 
+	 * @param martTab
+	 *            the mart tab that the dataset tab appears within.
+	 * @param datasetTable
+	 *            the dataset table we are attached to.
+	 */
+	public ExplainDataSetContext(final MartTab martTab, final DataSetTable datasetTable) {
+		super(martTab);
+		this.dataset = (DataSet)datasetTable.getSchema();
+		this.datasetTable = datasetTable;
+	}
+	
 	/**
 	 * Creates a new context within a given set of tabs, which applies to a
 	 * specific dataset. All menu options will apply to this dataset, and
@@ -67,11 +88,14 @@ public class ExplainDataSetContext extends SchemaContext {
 	public ExplainDataSetContext(final MartTab martTab, final DataSet dataset) {
 		super(martTab);
 		this.dataset = dataset;
+		this.datasetTable = null;
 	}
 
 	public void customiseAppearance(final JComponent component,
 			final Object object) {
 
+		// FIXME: Reinstate.
+		/*
 		// This bit adds a restricted outline to restricted tables.
 		if (object instanceof Table) {
 			final Table table = (Table) object;
@@ -79,7 +103,8 @@ public class ExplainDataSetContext extends SchemaContext {
 			tblcomp.setDotted(this.dataset.getRestrictedTables()
 					.contains(table));
 		}
-
+		*/
+		
 		// This section customises the appearance of relation lines within
 		// the schema diagram.
 		if (object instanceof Relation) {
@@ -87,17 +112,21 @@ public class ExplainDataSetContext extends SchemaContext {
 			// Work out what relation we are dealing with.
 			final Relation relation = (Relation) object;
 
-			// Fade out all INFERRED_INCORRECT and MASKED relations.
-			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
-					|| this.dataset.getMaskedRelations().contains(relation))
+			// Fade out all UNINCLUDED, INFERRED_INCORRECT and MASKED relations.
+			final boolean included = this.datasetTable==null?
+					this.dataset.getAllRelations().contains(relation)
+					: this.datasetTable.getAllRelations().contains(relation);
+			if (!included || relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
+					|| this.dataset.getSchemaModifications().isMaskedRelation(this.datasetTable, relation))
 				component.setForeground(RelationComponent.MASKED_COLOUR);
 
+			// FIXME: Reinstate.
 			// Highlight CONCAT-ONLY relations.
-			else if (this.dataset.getConcatOnlyRelations().contains(relation))
-				component.setForeground(RelationComponent.CONCAT_COLOUR);
-
+			//else if (this.dataset.getConcatOnlyRelations().contains(relation))
+			//	component.setForeground(RelationComponent.CONCAT_COLOUR);
+			
 			// Highlight SUBCLASS relations.
-			else if (this.dataset.getSubclassedRelations().contains(relation))
+			else if (this.dataset.getSchemaModifications().isSubclassedRelation(relation))
 				component.setForeground(RelationComponent.SUBCLASS_COLOUR);
 
 			// All others are normal.
@@ -105,6 +134,19 @@ public class ExplainDataSetContext extends SchemaContext {
 				component.setForeground(RelationComponent.NORMAL_COLOUR);
 		}
 
+		// This section customises table objects.
+		else if (object instanceof Table) {
+			// Fade out UNINCLUDED tables.
+			final boolean isFocus = this.datasetTable!=null && this.datasetTable.getFocusTable().equals((Table)object);
+			final Set included = new HashSet(this.datasetTable!=null ? this.datasetTable.getAllRelations() : this.dataset.getAllRelations());
+			included.retainAll(((Table)object).getRelations());
+			if (included.isEmpty() && !isFocus)
+				component.setForeground(TableComponent.MASKED_COLOUR);
+			// All others are normal.
+			else
+				component.setForeground(TableComponent.NORMAL_COLOUR);
+		}
+		
 		// This section customises the appearance of key objects within
 		// table objects in the diagram.
 		else if (object instanceof Key) {
@@ -115,10 +157,6 @@ public class ExplainDataSetContext extends SchemaContext {
 			// Fade out all INFERRED_INCORRECT keys.
 			if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
 				component.setForeground(KeyComponent.MASKED_COLOUR);
-
-			// Highlight all HANDMADE keys.
-			else if (key.getStatus().equals(ComponentStatus.HANDMADE))
-				component.setForeground(KeyComponent.HANDMADE_COLOUR);
 
 			// All others are normal.
 			else
@@ -175,7 +213,8 @@ public class ExplainDataSetContext extends SchemaContext {
 				public void actionPerformed(final ActionEvent evt) {
 					ExplainDataSetContext.this.getMartTab().getDataSetTabSet()
 							.requestMaskTable(
-									ExplainDataSetContext.this.dataset, table);
+									ExplainDataSetContext.this.dataset, 
+									ExplainDataSetContext.this.datasetTable, table);
 				}
 			});
 			contextMenu.add(mask);
@@ -189,13 +228,16 @@ public class ExplainDataSetContext extends SchemaContext {
 				public void actionPerformed(final ActionEvent evt) {
 					ExplainDataSetContext.this.getMartTab().getDataSetTabSet()
 							.requestUnmaskTable(
-									ExplainDataSetContext.this.dataset, table);
+									ExplainDataSetContext.this.dataset,
+									ExplainDataSetContext.this.datasetTable, table);
 				}
 			});
 			contextMenu.add(unmask);
 
 			contextMenu.addSeparator();
-
+			
+			// FIXME: Reinstate.
+			/*
 			// If it's a restricted table...
 			if (this.dataset.getRestrictedTables().contains(table)) {
 
@@ -256,6 +298,7 @@ public class ExplainDataSetContext extends SchemaContext {
 			contextMenu.add(remove);
 			if (!this.dataset.getRestrictedTables().contains(table))
 				remove.setEnabled(false);
+			 */
 		}
 
 		// This menu is attached to all the relation lines in the schema.
@@ -271,12 +314,19 @@ public class ExplainDataSetContext extends SchemaContext {
 			// Work out what state the relation is already in.
 			final boolean incorrect = relation.getStatus().equals(
 					ComponentStatus.INFERRED_INCORRECT);
-			final boolean relationMasked = this.dataset.getMaskedRelations()
-					.contains(relation);
+			final boolean relationMasked = this.dataset.getSchemaModifications().isMaskedRelation(this.datasetTable, relation);
+			// FIXME: Reinstate.
+			/*
 			final boolean relationConcated = this.dataset
 					.getConcatOnlyRelations().contains(relation);
+			*/
 			final boolean relationSubclassed = this.dataset
-					.getSubclassedRelations().contains(relation);
+					.getSchemaModifications().isSubclassedRelation(relation);
+			final boolean relationCompounded = this.dataset
+			.getSchemaModifications().isCompoundRelation(this.datasetTable, relation);
+			final boolean relationForced = this.dataset
+			.getSchemaModifications().isForceIncludeRelation(this.datasetTable, relation);
+			final boolean relationIncluded = this.datasetTable==null ? this.dataset.getAllRelations().contains(relation) : this.datasetTable.getAllRelations().contains(relation);
 
 			// The mask/unmask option allows the user to mask/unmask a relation.
 			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
@@ -288,20 +338,70 @@ public class ExplainDataSetContext extends SchemaContext {
 						ExplainDataSetContext.this.getMartTab()
 								.getDataSetTabSet().requestMaskRelation(
 										ExplainDataSetContext.this.dataset,
+										ExplainDataSetContext.this.datasetTable,
 										relation);
 					else
 						ExplainDataSetContext.this.getMartTab()
 								.getDataSetTabSet().requestUnmaskRelation(
 										ExplainDataSetContext.this.dataset,
+										ExplainDataSetContext.this.datasetTable,
 										relation);
 				}
 			});
 			contextMenu.add(mask);
-			if (incorrect)
+			if (incorrect || relationCompounded || (!relationMasked && !relationIncluded))
 				mask.setEnabled(false);
 			if (relationMasked)
 				mask.setSelected(true);
-
+			
+			// The force option allows the user to forcibly include a relation
+			// that would otherwise remain unincluded.
+			final JCheckBoxMenuItem force = new JCheckBoxMenuItem(Resources
+					.get("forceIncludeRelationTitle"));
+			force.setMnemonic(Resources.get("forceIncludeRelationMnemonic").charAt(0));
+			force.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					if (force.isSelected())
+						ExplainDataSetContext.this.getMartTab()
+								.getDataSetTabSet().requestForceRelation(
+										ExplainDataSetContext.this.dataset,
+										ExplainDataSetContext.this.datasetTable,
+										relation);
+					else
+						ExplainDataSetContext.this.getMartTab()
+								.getDataSetTabSet().requestUnforceRelation(
+										ExplainDataSetContext.this.dataset,
+										ExplainDataSetContext.this.datasetTable,
+										relation);
+				}
+			});
+			contextMenu.add(force);
+			if (incorrect || relationMasked || (relationIncluded && !relationForced))
+				force.setEnabled(false);
+			if (relationForced)
+				force.setSelected(true);
+			
+			// The compound option allows the user to compound a relation.
+			final JCheckBoxMenuItem compound = new JCheckBoxMenuItem(Resources
+					.get("compoundRelationTitle"));
+			compound.setMnemonic(Resources.get("compoundRelationMnemonic").charAt(0));
+			compound.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					ExplainDataSetContext.this.getMartTab()
+							.getDataSetTabSet().requestCompoundRelation(
+									ExplainDataSetContext.this.dataset,
+									ExplainDataSetContext.this.datasetTable,
+									relation);
+					compound.setSelected(ExplainDataSetContext.this.dataset
+							.getSchemaModifications().isCompoundRelation(ExplainDataSetContext.this.datasetTable, relation));
+				}
+			});
+			contextMenu.add(compound);
+			if (incorrect || relationMasked || relationSubclassed)
+				compound.setEnabled(false);
+			if (relationCompounded)
+				compound.setSelected(true);
+						
 			// The subclass/unsubclass option allows subclassing, but is
 			// only selectable when the relation is unmasked and not
 			// incorrect or already flagged as being in any conflicting state.
@@ -324,14 +424,17 @@ public class ExplainDataSetContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(subclass);
+			if (incorrect || relationCompounded || relationMasked || relation.isOneToOne() || this.datasetTable!=null)
+				// FIXME: Reinstate
+				//	|| relationConcated)
+				subclass.setEnabled(false);
 			if (relationSubclassed)
 				subclass.setSelected(true);
-			if (incorrect || relation.isOneToOne() || relationMasked
-					|| relationConcated)
-				subclass.setEnabled(false);
 
 			contextMenu.addSeparator();
 
+			// FIXME: Reinstate.
+			/*
 			// If it's a concat column...
 			if (this.dataset.getConcatOnlyRelations().contains(relation)) {
 
@@ -395,6 +498,7 @@ public class ExplainDataSetContext extends SchemaContext {
 			contextMenu.add(remove);
 			if (!this.dataset.getConcatOnlyRelations().contains(relation))
 				remove.setEnabled(false);
+			*/
 		}
 
 		// This submenu applies when keys are clicked on.

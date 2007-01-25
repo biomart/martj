@@ -50,8 +50,7 @@ public class Resources {
 	}
 
 	/**
-	 * Obtains a string from the resource bundle
-	 * "org/biomart/jdbc/resources/messages.properties". Runs it through
+	 * Obtains a string from the messages resource bundle. Runs it through
 	 * MessageFormat before returning. See
 	 * {@link ResourceBundle#getString(String)} for full description of
 	 * behaviour.
@@ -65,8 +64,7 @@ public class Resources {
 	}
 
 	/**
-	 * Obtains a string from the resource bundle
-	 * "org/biomart/jdbc/resources/messages.properties". Substitutes the first
+	 * Obtains a string from the messages resource bundle. Substitutes the first
 	 * parameter in the resulting string for the specified value using
 	 * MessageFormat. See {@link ResourceBundle#getString(String)} for full
 	 * description of behaviour.
@@ -84,8 +82,7 @@ public class Resources {
 	}
 
 	/**
-	 * Obtains a string from the resource bundle
-	 * "org/biomart/jdbc/resources/messages.properties". Substitutes all
+	 * Obtains a string from the messages resource bundle. Substitutes all
 	 * parameters in the resulting string for the specified values using
 	 * MessageFormat. See {@link ResourceBundle#getString(String)} for full
 	 * description of behaviour.

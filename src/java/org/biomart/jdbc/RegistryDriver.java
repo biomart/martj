@@ -85,8 +85,8 @@ public class RegistryDriver extends RegistryDataSource implements Driver {
 
 	// Use JavaBeans stuff to set properties on ourself.
 	private void setProperties(final Properties info) throws SQLException {
-		for (final Iterator i = info.entrySet().iterator(); i.hasNext();) {
-			final Map.Entry entry = (Map.Entry) i.next();
+		for (final Iterator entries = info.entrySet().iterator(); entries.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)entries.next();
 			final String fieldName = entry.getKey().toString();
 			String methodName = "set" + fieldName.toUpperCase().charAt(0);
 			if (fieldName.length() > 1)

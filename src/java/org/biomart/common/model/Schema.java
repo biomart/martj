@@ -101,6 +101,13 @@ public interface Schema extends Comparable, DataLink {
 	public Collection getInternalRelations();
 
 	/**
+	 * Returns a collection of all the relations in this schema.
+	 * 
+	 * @return a set of relations.
+	 */
+	public Collection getRelations();
+
+	/**
 	 * Checks whether this schema uses key-guessing or not.
 	 * 
 	 * @return <tt>true</tt> if it does, <tt>false</tt> if it doesn't.
@@ -321,6 +328,13 @@ public interface Schema extends Comparable, DataLink {
 			}
 			return keys;
 		}
+		
+		public Collection getRelations() {
+			final Set relations = new HashSet();
+			for (final Iterator i = this.getTables().iterator(); i.hasNext();) 
+				relations.addAll(((Table)i.next()).getRelations());
+			return relations;
+		}
 
 		public Collection getExternalRelations() {
 			// Relations are external if one end points to a key
@@ -403,8 +417,8 @@ public interface Schema extends Comparable, DataLink {
 		public void replicateContents(final Schema targetSchema) {
 			Log.debug("Replicating contents from " + this.getName() + " to "
 					+ targetSchema);
-			// List all the tables we should drop at the end.
-			final List tablesToDrop = new ArrayList(targetSchema.getTables());
+			// Drop all tables in target schema.
+			targetSchema.removeAllTables();
 
 			// Set up a set to contain all the relations to replicate.
 			final Set relations = new HashSet();
@@ -414,41 +428,25 @@ public interface Schema extends Comparable, DataLink {
 					.hasNext();) {
 				final Table table = (Table) i.next();
 
-				// Create a copy of the table if it doesn't already exist.
-				Table newTable = targetSchema.getTableByName(table.getName());
-				if (newTable == null)
-					try {
-						newTable = new GenericTable(table.getName(),
-								targetSchema);
-					} catch (final Throwable t) {
-						throw new BioMartError(t);
-					}
-				else
-					tablesToDrop.remove(newTable);
-
-				// List all the columns we should drop at the end.
-				final List colsToDrop = new ArrayList(newTable.getColumns());
+				// Create a copy of the table.
+				final Table newTable = new GenericTable(table.getName(),
+						targetSchema);
+				try {
+					targetSchema.addTable(newTable);
+				} catch (final Throwable t) {
+					throw new BioMartError(t);
+				}
 
 				// Iterate over all the columns and copy them too.
 				for (final Iterator j = table.getColumns().iterator(); j
 						.hasNext();) {
 					final Column col = (Column) j.next();
-					Column newCol = newTable.getColumnByName(col.getName());
-					if (newCol == null)
-						try {
-							newCol = new GenericColumn(col.getName(), newTable);
-						} catch (final Throwable t) {
-							throw new BioMartError(t);
-						}
-					else
-						colsToDrop.remove(newCol);
-				}
-
-				// Drop the columns that have disappeared.
-				for (final Iterator j = colsToDrop.iterator(); j.hasNext();) {
-					final Column col = (Column) j.next();
-					Log.debug("Dropping redundant column " + col);
-					col.getTable().removeColumn(col);
+					try {
+						final Column newCol = new GenericColumn(col.getName(), newTable);
+						newTable.addColumn(newCol);
+					} catch (final Throwable t) {
+						throw new BioMartError(t);
+					}
 				}
 
 				// Copy the primary key, if it exists.
@@ -464,28 +462,13 @@ public interface Schema extends Comparable, DataLink {
 
 					// Create the key.
 					try {
-						// Check to see if PK already set.
-						PrimaryKey newPK = newTable.getPrimaryKey();
-						if (newPK == null
-								|| !newPK.getColumns().equals(columns)) {
-							newPK = new GenericPrimaryKey(columns);
-							newTable.setPrimaryKey(newPK);
-						}
+						final PrimaryKey newPK = new GenericPrimaryKey(columns);
 						newPK.setStatus(pk.getStatus());
+						newTable.setPrimaryKey(newPK);
 					} catch (final Throwable t) {
 						throw new BioMartError(t);
 					}
 				}
-				// Otherwise, drop the primary key.
-				else
-					try {
-						newTable.setPrimaryKey(null);
-					} catch (final Throwable t) {
-						throw new BioMartError(t);
-					}
-
-				// List all the foreign keys to be dropped later.
-				final List fksToDrop = new ArrayList(newTable.getForeignKeys());
 
 				// Copy the foreign keys.
 				for (final Iterator j = table.getForeignKeys().iterator(); j
@@ -502,54 +485,17 @@ public interface Schema extends Comparable, DataLink {
 
 					// Create the key.
 					try {
-						ForeignKey newFK = null;
-						// Lookup existing key.
-						for (final Iterator k = newTable.getForeignKeys()
-								.iterator(); k.hasNext() && newFK == null;) {
-							final ForeignKey candKey = (ForeignKey) k.next();
-							if (candKey.getColumns().equals(columns))
-								newFK = candKey;
-						}
-						// Reuse it, or create it?
-						if (newFK == null) {
-							newFK = new GenericForeignKey(columns);
-							newTable.addForeignKey(newFK);
-						} else
-							fksToDrop.remove(newFK);
+						final ForeignKey newFK = new GenericForeignKey(columns);
 						newFK.setStatus(fk.getStatus());
+						newTable.addForeignKey(newFK);
 					} catch (final Throwable t) {
 						throw new BioMartError(t);
 					}
 				}
 
-				// Drop all the unused foreign keys.
-				for (final Iterator j = fksToDrop.iterator(); j.hasNext();) {
-					final ForeignKey key = (ForeignKey) j.next();
-					Log.debug("Dropping redundant foreign key "
-							+ key);
-					key.destroy();
-				}
-
 				// Remember the relations on this table for later.
 				relations.addAll(table.getRelations());
 			}
-
-			// Drop the tables that have disappeared.
-			for (final Iterator j = tablesToDrop.iterator(); j.hasNext();) {
-				final Table table = (Table) j.next();
-				Log.debug("Dropping redundant table " + table);
-				table.destroy();
-			}
-
-			// Copy internal and external relations. Drop any existing
-			// internal relations that were not copied. Do not drop existing
-			// external relations as the target schema may have them undefined
-			// to prevent multipled-relation-per-foreign-key exceptions.
-
-			// Make a list of all the existing internal relations that can
-			// be dropped.
-			final List intRelsToDrop = new ArrayList(targetSchema
-					.getInternalRelations());
 
 			// Iterate through all the relations we found and
 			// copy them too.
@@ -586,19 +532,14 @@ public interface Schema extends Comparable, DataLink {
 					}
 
 					// Create the relation in the duplicate schema.
-					// Drop the original relation first to prevent duplicate
-					// relation problems.
 					try {
-						r.destroy();
 						final Relation newRel = new GenericRelation(
 								newInternalKey, externalKey, card);
 						newRel.setStatus(status);
-					} catch (final Exception e) {
-						// Ignore. This can only happen if incorrect relations
-						// are copied across which have different-arity keys at
-						// each end, or if the foreign keys involved already
-						// have relations elsewhere, or the relation already
-						// exists and therefore can be reused.
+						newInternalKey.addRelation(newRel);
+						externalKey.addRelation(newRel);
+					} catch (final Throwable t) {
+						throw new BioMartError(t);
 					}
 				}
 
@@ -626,47 +567,17 @@ public interface Schema extends Comparable, DataLink {
 							newSecondKey = candidate;
 					}
 
-					// Does the relation already exist? If so, reuse it.
-					Relation newRel = null;
-					for (final Iterator j = newFirstKey.getRelations()
-							.iterator(); j.hasNext() && newRel == null;) {
-						final Relation candRel = (Relation) j.next();
-						if (candRel.getOtherKey(newFirstKey).equals(
-								newSecondKey))
-							newRel = candRel;
+					try {
+						final Relation newRel = new GenericRelation(newFirstKey,
+								newSecondKey, card);
+						newRel.setCardinality(card);
+						newRel.setStatus(status);
+						newFirstKey.addRelation(newRel);
+						newSecondKey.addRelation(newRel);
+					} catch (final Throwable t) {
+						throw new BioMartError(t);
 					}
-					// Otherwise, create the relation in the duplicate schema.
-					if (newRel == null)
-						try {
-							newRel = new GenericRelation(newFirstKey,
-									newSecondKey, card);
-						} catch (final Exception e) {
-							// Ignore. This can only happen if incorrect
-							// relations are copied across which have
-							// different-arity keys at each end, or if the
-							// foreign keys involved already have relations
-							// elsewhere.
-						}
-					else
-						intRelsToDrop.remove(newRel);
-					// Update the relation's status. Only do this if not null.
-					// May be null if the existing relation was not in a valid
-					// state for copying.
-					if (newRel != null)
-						try {
-							newRel.setCardinality(card);
-							newRel.setStatus(status);
-						} catch (final Throwable t) {
-							throw new BioMartError(t);
-						}
 				}
-			}
-
-			// Drop the redundant internal relations from the target schema.
-			for (final Iterator j = intRelsToDrop.iterator(); j.hasNext();) {
-				final Relation rel = (Relation) j.next();
-				Log.debug("Dropping redundant relation " + rel);
-				rel.destroy();
 			}
 		}
 

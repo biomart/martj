@@ -193,7 +193,7 @@ public class Mart {
 				suggestedDataSet = (DataSet) dataset.replicate(dataset
 						.getName());
 			try {
-				suggestedDataSet.flagSubclassRelation(r);
+				suggestedDataSet.getSchemaModifications().setSubclassedRelation(r);
 			} catch (ValidationException e) {
 				// Eh? We asked for it, dammit!
 				throw new BioMartError(e);
@@ -431,6 +431,7 @@ public class Mart {
 					+ rootTable);
 			final DataSet dataset = new DataSet(this, rootTable, rootTable
 					.getName());
+			this.addDataSet(dataset);
 			// Process it.
 			final List tablesIncluded = new ArrayList();
 			tablesIncluded.add(rootTable);
@@ -457,7 +458,7 @@ public class Mart {
 			// covered by the subclass relations is the same as the
 			// original set of tables requested.
 			final Set scTables = new HashSet();
-			for (final Iterator j = candidate.getSubclassedRelations()
+			for (final Iterator j = candidate.getSchemaModifications().getSubclassedRelations()
 					.iterator(); j.hasNext();) {
 				final Relation r = (Relation) j.next();
 				scTables.add(r.getFirstKey().getTable());
@@ -547,15 +548,17 @@ public class Mart {
 		// Remove from the found tables all those which are already
 		// used, and the one from which the original columns came.
 		Log
-				.debug("Removing candidates that are already in other datasets");
+				.debug("Removing candidates that are already used in this dataset");
 		candidates.remove(sourceTable);
 		for (final Iterator i = dataset.getTables().iterator(); i.hasNext();)
-			candidates.remove(((DataSetTable) i.next()).getUnderlyingTable());
+			candidates.remove(((DataSetTable) i.next()).getFocusTable());
 		// Generate the dataset for each.
 		Log.debug("Creating datasets for remaining candidates");
 		for (final Iterator i = candidates.iterator(); i.hasNext();) {
 			final Table table = (Table) i.next();
-			invisibleDataSets.add(new DataSet(this, table, table.getName()));
+			final DataSet inv = new DataSet(this, table, table.getName());
+			this.addDataSet(inv);
+			invisibleDataSets.add(inv);
 		}
 		// Synchronise them all and make them all invisible.
 		Log.debug("Synchronising suggested datasets");

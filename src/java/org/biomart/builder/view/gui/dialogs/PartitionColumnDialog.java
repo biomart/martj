@@ -18,33 +18,7 @@
 
 package org.biomart.builder.view.gui.dialogs;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-
-import org.biomart.builder.model.DataSet.PartitionedColumnType;
-import org.biomart.builder.model.DataSet.PartitionedColumnType.SingleValue;
-import org.biomart.builder.model.DataSet.PartitionedColumnType.UniqueValues;
-import org.biomart.builder.model.DataSet.PartitionedColumnType.ValueCollection;
-import org.biomart.common.exceptions.BioMartError;
-import org.biomart.common.resources.Resources;
-import org.biomart.common.view.gui.StackTrace;
 
 /**
  * This dialog asks users what kind of partitioning they want to set up on a
@@ -59,13 +33,14 @@ import org.biomart.common.view.gui.StackTrace;
 public class PartitionColumnDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
+	// FIXME: Reinstate.
 	/**
 	 * This opens a dialog in order for the user to create a new partition type.
 	 * It returns that type, or null if they cancelled it.
 	 * 
 	 * @return the newly created partition type, or null if the dialog was
 	 *         cancelled.
-	 */
+	 *
 	public static PartitionedColumnType createPartitionedColumnType() {
 		final PartitionColumnDialog dialog = new PartitionColumnDialog(
 				Resources.get("createPartitionButton"), null);
@@ -85,7 +60,7 @@ public class PartitionColumnDialog extends JDialog {
 	 *            the template to copy settings from. Can be null.
 	 * @return the replacement, updated, partition type, or null if the dialog
 	 *         was cancelled.
-	 */
+	 *
 	public static PartitionedColumnType updatePartitionedColumnType(
 			final PartitionedColumnType template) {
 		final PartitionColumnDialog dialog = new PartitionColumnDialog(
@@ -398,4 +373,5 @@ public class PartitionColumnDialog extends JDialog {
 		// Validation succeeds if there are no messages.
 		return messages.isEmpty();
 	}
+	*/
 }

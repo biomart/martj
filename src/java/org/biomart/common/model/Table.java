@@ -147,15 +147,6 @@ public interface Table extends Comparable {
 	public String getName();
 
 	/**
-	 * Returns the original name of this table. This is useful if the user
-	 * renames the table but you need to refer to it by the name it started life
-	 * out as.
-	 * 
-	 * @return the original name of this table.
-	 */
-	public String getOriginalName();
-
-	/**
 	 * Returns a reference to the primary key of this table. It may be
 	 * <tt>null</tt>, indicating that the table has no primary key.
 	 * 
@@ -198,24 +189,6 @@ public interface Table extends Comparable {
 	public void removeForeignKey(ForeignKey foreignKey);
 
 	/**
-	 * Sets a new name for this table. This will also rename the table in the
-	 * schema map.
-	 * 
-	 * @param newName
-	 *            the new name.
-	 */
-	public void setName(String newName);
-
-	/**
-	 * Use this to rename a table's original name. Use with extreme caution. The
-	 * owning schema doesn't need to know so won't be notified.
-	 * 
-	 * @param newName
-	 *            the new original name to give the table.
-	 */
-	public void setOriginalName(String newName);
-
-	/**
 	 * Sets the primary key of this table. It may be <tt>null</tt>,
 	 * indicating that the table has no primary key.
 	 * 
@@ -237,8 +210,6 @@ public interface Table extends Comparable {
 
 		private String name;
 
-		private String originalName;
-
 		private PrimaryKey primaryKey;
 
 		private final Schema schema;
@@ -256,24 +227,13 @@ public interface Table extends Comparable {
 			Log.debug("Creating table " + name + " in " + schema);
 			// Remember the values.
 			this.schema = schema;
-			name = this.makeUniqueName(name);
-			this.originalName = name;
-			this.name = name;
-			// Add it to the schema.
-			schema.addTable(this);
-		}
-
-		private String makeUniqueName(String name) {
-			// Has it changed?
-			if (this.name != null && this.name.equals(name))
-				return name;
 			// Make the name unique.
 			final String baseName = name;
 			for (int i = 1; schema.getTableByName(name) != null; name = baseName
 					+ "_" + i++)
 				;
 			Log.debug("Unique name is " + name);
-			return name;
+			this.name = name;
 		}
 
 		public void addColumn(final Column column) {
@@ -387,10 +347,6 @@ public interface Table extends Comparable {
 			return this.name;
 		}
 
-		public String getOriginalName() {
-			return this.originalName;
-		}
-
 		public PrimaryKey getPrimaryKey() {
 			return this.primaryKey;
 		}
@@ -432,20 +388,6 @@ public interface Table extends Comparable {
 			Log.debug("Removing foreign key " + foreignKey
 					+ " from " + this.getName());
 			this.foreignKeys.remove(foreignKey);
-		}
-
-		public void setName(String newName) {
-			Log.debug("Renaming " + this.getName() + " to "
-					+ newName);
-			// Make the name unique.
-			newName = this.makeUniqueName(newName);
-			// Do it.
-			this.getSchema().changeTableMapKey(this.name, newName);
-			this.name = newName;
-		}
-
-		public void setOriginalName(final String newName) {
-			this.originalName = newName;
 		}
 
 		public void setPrimaryKey(final PrimaryKey primaryKey) {

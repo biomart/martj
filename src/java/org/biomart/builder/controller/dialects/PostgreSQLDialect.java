@@ -23,31 +23,23 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
-import org.biomart.builder.model.MartConstructorAction.Concat;
-import org.biomart.builder.model.MartConstructorAction.Create;
+import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Drop;
-import org.biomart.builder.model.MartConstructorAction.ExpressionAddColumns;
+import org.biomart.builder.model.MartConstructorAction.DropColumns;
 import org.biomart.builder.model.MartConstructorAction.Index;
-import org.biomart.builder.model.MartConstructorAction.Merge;
-import org.biomart.builder.model.MartConstructorAction.OptimiseAddColumn;
-import org.biomart.builder.model.MartConstructorAction.OptimiseCopyColumn;
-import org.biomart.builder.model.MartConstructorAction.OptimiseUpdateColumn;
-import org.biomart.builder.model.MartConstructorAction.Partition;
-import org.biomart.builder.model.MartConstructorAction.PlaceHolder;
-import org.biomart.builder.model.MartConstructorAction.Reduce;
-import org.biomart.builder.model.MartConstructorAction.RenameTable;
+import org.biomart.builder.model.MartConstructorAction.LeftJoin;
+import org.biomart.builder.model.MartConstructorAction.Rename;
+import org.biomart.builder.model.MartConstructorAction.Select;
+import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
 import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Column;
@@ -68,6 +60,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 
 	private int indexCount;
 
+	/*
 	public void doConcat(final Concat action, final List statements) {
 		final String srcSchemaName = action.getSourceTableSchema() == null ? action
 				.getDataSetSchemaName()
@@ -142,71 +135,6 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
-	public void doCreate(final Create action, final List statements) {
-		final String createTableSchema = action.getTargetTableSchema() == null ? action
-				.getDataSetSchemaName()
-				: ((JDBCSchema) action.getTargetTableSchema())
-						.getDatabaseSchema();
-		final String createTableName = action.getTargetTableName();
-		final String fromTableSchema = action.getSourceTableSchema() == null ? action
-				.getDataSetSchemaName()
-				: ((JDBCSchema) action.getSourceTableSchema())
-						.getDatabaseSchema();
-		final String fromTableName = action.getSourceTableName();
-		final boolean useDistinct = action.isUseDistinct();
-
-		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
-				+ createTableSchema + "," + fromTableSchema + ",pg_catalog");
-
-		final StringBuffer sb = new StringBuffer();
-		sb.append("create table " + createTableSchema + "." + createTableName
-				+ " as select ");
-		if (useDistinct)
-			sb.append("distinct ");
-		for (final Iterator i = action.getSelectFromColumns().iterator(); i
-				.hasNext();) {
-			final Column col = (Column) i.next();
-			sb.append("a.");
-			if (action.isUseAliases()) {
-				final DataSetColumn dsCol = (DataSetColumn) col;
-				if (dsCol instanceof WrappedColumn) {
-					sb.append(((WrappedColumn) dsCol).getWrappedColumn()
-							.getName());
-					sb.append(" as ");
-				} else
-					// Ouch!
-					throw new BioMartError();
-			} else if (action.isUseInheritedAliases())
-				if (col instanceof InheritedColumn) {
-					sb.append(((InheritedColumn) col).getInheritedColumn()
-							.getName());
-					sb.append(" as ");
-				}
-
-			sb.append(col.getName());
-			if (i.hasNext())
-				sb.append(',');
-		}
-		sb.append(" from " + fromTableSchema + "." + fromTableName
-				+ " as a");
-
-		statements.add(sb.toString());
-	}
-
-	public void doDrop(final Drop action, final List statements)
-			throws Exception {
-		final String schemaName = action.getTargetTableSchema() == null ? action
-				.getDataSetSchemaName()
-				: ((JDBCSchema) action.getTargetTableSchema())
-						.getDatabaseSchema();
-		final String tableName = action.getTargetTableName();
-
-		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
-				+ schemaName + ",pg_catalog");
-
-		statements.add("drop table " + schemaName + "." + tableName + "");
-	}
-
 	public void doExpressionAddColumns(final ExpressionAddColumns action,
 			final List statements) throws Exception {
 		final String srcSchemaName = action.getSourceTableSchema() == null ? action
@@ -234,6 +162,8 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			sb.append(col.getName());
 			sb.append(',');
 		}
+		// FIXME: Reinstate.
+		/*
 		for (final Iterator i = expressCols.iterator(); i.hasNext();) {
 			final ExpressionColumn col = (ExpressionColumn) i.next();
 			sb.append(col.getSubstitutedExpression());
@@ -252,119 +182,6 @@ public class PostgreSQLDialect extends DatabaseDialect {
 					sb.append(',');
 			}
 		}
-		statements.add(sb.toString());
-	}
-
-	public void doIndex(final Index action, final List statements) {
-		final String schemaName = action.getTargetTableSchema() == null ? action
-				.getDataSetSchemaName()
-				: ((JDBCSchema) action.getTargetTableSchema())
-						.getDatabaseSchema();
-		final String tableName = action.getTargetTableName();
-		final StringBuffer sb = new StringBuffer();
-
-		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
-				+ schemaName + ",pg_catalog");
-
-		sb.append("create index " + tableName + "_I_" + this.indexCount++
-				+ " on " + schemaName + "." + tableName + "(");
-		for (final Iterator i = action.getIndexColumns().iterator(); i
-				.hasNext();) {
-			final Object obj = i.next();
-			if (obj instanceof Column) {
-				final Column col = (Column) obj;
-				sb.append(col.getName());
-			} else if (obj instanceof String)
-				sb.append(obj);
-			else
-				throw new BioMartError();
-			if (i.hasNext())
-				sb.append(',');
-		}
-		sb.append(")");
-
-		statements.add(sb.toString());
-	}
-
-	public void doMerge(final Merge action, final List statements)
-			throws Exception {
-		final String srcSchemaName = action.getSourceTableSchema() == null ? action
-				.getDataSetSchemaName()
-				: ((JDBCSchema) action.getSourceTableSchema())
-						.getDatabaseSchema();
-		final String srcTableName = action.getSourceTableName();
-		final String trgtSchemaName = action.getMergeTableSchema() == null ? action
-				.getDataSetSchemaName()
-				: ((JDBCSchema) action.getMergeTableSchema())
-						.getDatabaseSchema();
-		final String trgtTableName = action.getMergeTableName();
-		final String mergeSchemaName = action.getTargetTableSchema() == null ? action
-				.getDataSetSchemaName()
-				: ((JDBCSchema) action.getTargetTableSchema())
-						.getDatabaseSchema();
-		final String mergeTableName = action.getTargetTableName();
-		final boolean firstIsSource = action.isFirstTableSourceTable();
-		final boolean useDistinct = action.isUseDistinct();
-
-		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
-				+ srcSchemaName + "," + trgtSchemaName + "," + mergeSchemaName
-				+ ",pg_catalog");
-
-		final StringBuffer sb = new StringBuffer();
-		sb.append("create table " + mergeSchemaName + "." + mergeTableName
-				+ " as select ");
-		if (useDistinct)
-			sb.append("distinct ");
-		final List sourceCols = action.getSourceTableSelectColumns();
-		if (sourceCols == null)
-			sb.append("a.*");
-		else
-			for (final Iterator i = sourceCols.iterator(); i.hasNext();) {
-				final Column col = (Column) i.next();
-				sb.append("a.");
-				if (action.isUseLHSAliases()) {
-					final DataSetColumn dsCol = (DataSetColumn) col;
-					if (dsCol instanceof WrappedColumn) {
-						sb.append(((WrappedColumn) dsCol).getWrappedColumn()
-								.getName());
-						sb.append(" as ");
-					} else
-						// Ouch!
-						throw new BioMartError();
-				}
-				sb.append(col.getName());
-				if (i.hasNext())
-					sb.append(',');
-			}
-		for (final Iterator i = action.getMergeTableSelectColumns().iterator(); i
-				.hasNext();) {
-			sb.append(",b.");
-			final Column col = (Column) i.next();
-			if (action.isUseRHSAliases()) {
-				final DataSetColumn dsCol = (DataSetColumn) col;
-				if (dsCol instanceof WrappedColumn) {
-					sb.append(((WrappedColumn) dsCol).getWrappedColumn()
-							.getName());
-					sb.append(" as ");
-				} else
-					// Ouch!
-					throw new BioMartError();
-			}
-			sb.append(col.getName());
-		}
-		sb.append(" from " + srcSchemaName + "." + srcTableName
-				+ " as a left join " + trgtSchemaName + "." + trgtTableName
-				+ " as b on ");
-		for (int i = 0; i < action.getMergeTableJoinColumns().size(); i++) {
-			if (i > 0)
-				sb.append(" and ");
-			final String pkColName = ((Column) action
-					.getSourceTableJoinColumns().get(i)).getName();
-			final String fkColName = ((Column) action
-					.getMergeTableJoinColumns().get(i)).getName();
-			sb.append("a." + pkColName + "=b." + fkColName + "");
-		}
-
 		statements.add(sb.toString());
 	}
 
@@ -651,21 +468,185 @@ public class PostgreSQLDialect extends DatabaseDialect {
 
 		statements.add(sb.toString());
 	}
-
-	public void doRenameTable(final RenameTable action, final List statements)
+	 */
+	
+	public void doRename(final Rename action, final List statements)
 			throws Exception {
-		final String schemaName = action.getTargetTableSchema() == null ? action
-				.getDataSetSchemaName()
-				: ((JDBCSchema) action.getTargetTableSchema())
-						.getDatabaseSchema();
-		final String oldTableName = action.getTargetTableOldName();
-		final String newTableName = action.getTargetTableName();
+		final String schemaName = action.getDataSetSchemaName();
+		final String oldTableName = action.getFrom();
+		final String newTableName = action.getTo();
 
-		statements.add("set search_path=" + action.getDataSetSchemaName() + ","
+		statements.add("set search_path=" + schemaName + ","
 				+ schemaName + ",pg_catalog");
 
 		statements.add("alter table " + schemaName + "." + oldTableName
 				+ " rename to " + newTableName + "");
+	}
+
+	public void doSelect(final Select action, final List statements) {
+		final String createTableSchema = action.getDataSetSchemaName();
+		final String createTableName = action.getResultTable();
+		final String fromTableSchema = action.getSchema();
+		final String fromTableName = action.getTable();
+
+		statements.add("set search_path=" + 
+				createTableSchema + "," + fromTableSchema + ",pg_catalog");
+
+		final StringBuffer sb = new StringBuffer();
+		sb.append("create table " + createTableSchema + "." + createTableName
+				+ " as select ");
+		for (final Iterator i = action.getSelectColumns().entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry)i.next();
+			sb.append("a.");
+			sb.append(entry.getKey());
+			if (!entry.getKey().equals(entry.getValue())) {
+				sb.append(" as ");
+				sb.append(entry.getValue());
+			}
+			if (i.hasNext())
+				sb.append(',');
+		}
+		sb.append(" from " + fromTableSchema + "." + fromTableName
+				+ " as a");
+
+		statements.add(sb.toString());
+	}
+
+	public void doIndex(final Index action, final List statements) {
+		final String schemaName = action.getDataSetSchemaName();
+		final String tableName = action.getTable();
+		final StringBuffer sb = new StringBuffer();
+
+		statements.add("set search_path=" + schemaName + ",pg_catalog");
+
+		sb.append("create index " + tableName + "_I_" + this.indexCount++
+				+ " on " + schemaName + "." + tableName + "(");
+		for (final Iterator i = action.getColumns().iterator(); i
+				.hasNext();) {	
+			sb.append(i.next());
+			if (i.hasNext())
+				sb.append(',');
+		}
+		sb.append(")");
+
+		statements.add(sb.toString());
+	}
+
+	public void doLeftJoin(final LeftJoin action, final List statements)
+			throws Exception {
+		final String srcSchemaName = action.getDataSetSchemaName();
+		final String srcTableName = action.getLeftTable();
+		final String trgtSchemaName = action.getRightSchema();
+		final String trgtTableName = action.getRightTable();
+		final String mergeTableName = action.getResultTable();
+
+		statements.add("set search_path=" + srcSchemaName + "," + trgtSchemaName 
+				+ ",pg_catalog");
+
+		final StringBuffer sb = new StringBuffer();
+		sb.append("create table " + action.getDataSetSchemaName() + "." + mergeTableName
+				+ " as select a.*");
+		for (final Iterator i = action.getSelectColumns().entrySet().iterator(); i.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)i.next();
+			sb.append(",b.");
+			sb.append(entry.getKey());
+			if (!entry.getKey().equals(entry.getValue())) {
+				sb.append(" as ");
+				sb.append(entry.getValue());
+			}
+		}
+		sb.append(" from " + srcSchemaName + "." + srcTableName
+				+ " as a left join " + trgtSchemaName + "." + trgtTableName
+				+ " as b on ");
+		for (int i = 0; i < action.getLeftJoinColumns().size(); i++) {
+			if (i > 0)
+				sb.append(" and ");
+			final String pkColName = (String) action
+					.getLeftJoinColumns().get(i);
+			final String fkColName = (String) action
+					.getRightJoinColumns().get(i);
+			sb.append("a." + pkColName + "=b." + fkColName + "");
+		}
+
+		statements.add(sb.toString());
+	}
+
+	public void doDropColumns(final DropColumns action, final List statements)
+			throws Exception {
+		final String schemaName = action.getDataSetSchemaName();
+		final String tableName = action.getDataSetTableName();
+
+		statements.add("set search_path=" + schemaName + ",pg_catalog");
+
+		for (final Iterator i = action.getColumns().iterator(); i.hasNext(); )
+			statements.add("alter table " + schemaName + "." + tableName + " drop column "+(String)i.next());
+	}
+
+	public void doDrop(final Drop action, final List statements)
+			throws Exception {
+		final String schemaName = action.getDataSetSchemaName();
+		final String tableName = action.getTable();
+
+		statements.add("set search_path=" + schemaName + ",pg_catalog");
+
+		statements.add("drop table " + schemaName + "." + tableName + "");
+	}
+	
+	public void doCreateOptimiser(final CreateOptimiser action, final List statements) {
+		final String schemaName = action.getDataSetSchemaName();
+		final String sourceTableName = action.getDataSetTableName();
+		final String optTableName = action.getOptTableName();
+
+		statements.add("set search_path=" + schemaName + ",pg_catalog");
+		
+		final StringBuffer sb = new StringBuffer();
+		sb.append("create table "+schemaName+"."+optTableName+" as select distinct ");
+		for (final Iterator i = action.getKeyColumns().iterator(); i.hasNext(); ) {
+			sb.append((String)i.next());
+			if (i.hasNext())
+				sb.append(',');
+		}
+		sb.append(" from "+schemaName+"."+sourceTableName);
+		statements.add(sb.toString());
+	}
+	
+	public void doUpdateOptimiser(final UpdateOptimiser action, final List statements) {
+		final String schemaName = action.getDataSetSchemaName();
+		final String sourceTableName = action.getDataSetTableName();
+		final String optTableName = action.getOptTableName();
+		final String optColName = action.getOptColumnName();
+
+		statements.add("set search_path=" + schemaName + ",pg_catalog");
+
+		statements.add("alter table "+schemaName+"."+optTableName+" add "+optColName+" integer default 0");
+
+		final String countStmt = action.isCountNotBool() ? "count(1)" : "case count(1) when 0 then 0 else 1 end";
+
+		final StringBuffer sb = new StringBuffer();
+		sb.append("update " + schemaName + "." + optTableName + " set "
+				+ optColName + "=(select " + countStmt + " from " + schemaName
+				+ "." + sourceTableName + " b where ");
+		for (final Iterator i = action.getKeyColumns().iterator(); i.hasNext(); ) {
+			final String keyCol = (String)i.next();
+			sb.append(schemaName);
+			sb.append('.');
+			sb.append(optTableName);
+			sb.append('.');
+			sb.append(keyCol);
+			sb.append("=b.");
+			sb.append(keyCol);
+			sb.append(" and ");
+		}
+		for (final Iterator i = action.getNonNullColumns().iterator(); i.hasNext(); ) {
+			sb.append("b.");
+			sb.append((String)i.next());
+			sb.append(" is not null");
+			if (i.hasNext())
+				sb.append(" and ");
+		}
+		sb.append(')');
+		statements.add(sb.toString());
 	}
 
 	public List executeSelectDistinct(final Column col) throws SQLException {
