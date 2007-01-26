@@ -23,6 +23,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,6 @@ import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
-import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Drop;
 import org.biomart.builder.model.MartConstructorAction.DropColumns;
@@ -649,13 +649,13 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
-	public List executeSelectDistinct(final Column col) throws SQLException {
+	public Collection executeSelectDistinct(final Column col) throws SQLException {
 		final String colName = col.getName();
 		final String tableName = col.getTable().getName();
 		final Schema schema = col.getTable().getSchema();
 
 		// The simple case where we actually do a select distinct.
-		final List results = new ArrayList();
+		final Collection results = new ArrayList();
 		final String schemaName = ((JDBCSchema) schema).getDatabaseSchema();
 		final Connection conn = ((JDBCSchema) schema).getConnection();
 		final ResultSet rs = conn.prepareStatement(
@@ -667,7 +667,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		return results;
 	}
 
-	public List executeSelectRows(final Table table, final int offset,
+	public Collection executeSelectRows(final Table table, final int offset,
 			final int count) throws SQLException {
 		final String tableName = table.getName();
 		final Schema schema = table.getSchema();
@@ -681,7 +681,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		}
 
 		// The simple case where we actually do a select.
-		final List results = new ArrayList();
+		final Collection results = new ArrayList();
 		final String schemaName = ((JDBCSchema) schema).getDatabaseSchema();
 		final Connection conn = ((JDBCSchema) schema).getConnection();
 		final ResultSet rs = conn

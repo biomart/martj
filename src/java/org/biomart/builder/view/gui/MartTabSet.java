@@ -45,6 +45,7 @@ import javax.swing.filechooser.FileFilter;
 
 import org.biomart.builder.controller.MartBuilderXML;
 import org.biomart.builder.exceptions.ConstructorException;
+import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.view.gui.diagrams.contexts.SchemaContext;
@@ -86,7 +87,7 @@ public class MartTabSet extends JTabbedPane {
 	public MartTabSet(final MartBuilder martBuilder) {
 		// Tabbed-pane stuff first.
 		super();
-		
+
 		Log.info(Resources.get("logCreateMartTabs"));
 
 		// Create the file chooser for opening MartBuilder XML files.
@@ -144,7 +145,7 @@ public class MartTabSet extends JTabbedPane {
 		this.martModifiedStatus.put(mart, Boolean.valueOf(initialState));
 		final MartTab martTab = new MartTab(this, mart);
 		final String martTabName = this.suggestTabName(mart);
-		Log.info(Resources.get("logAddMartTab",martTabName));
+		Log.info(Resources.get("logAddMartTab", martTabName));
 		this.addTab(martTabName, martTab);
 
 		// Select the tab we just created.
@@ -213,9 +214,13 @@ public class MartTabSet extends JTabbedPane {
 			progressMonitor.close();
 			// If it failed, show the exception.
 			final Exception failure = constructor.getFailureException();
-			if (failure != null)
-				StackTrace.showStackTrace(new ConstructorException(
-						Resources.get("martConstructionFailed"), failure));
+			// By singling out ValidationException we can show users useful
+			// messages straight away.
+			if (failure != null) 
+				StackTrace
+						.showStackTrace(failure instanceof ValidationException ? failure
+								: new ConstructorException(Resources
+										.get("martConstructionFailed"), failure));
 			// Inform user of success, if it succeeded.
 			else
 				JOptionPane.showMessageDialog(null, Resources

@@ -21,11 +21,10 @@ package org.biomart.jdbc.model;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import javax.sql.DataSource;
@@ -95,7 +94,7 @@ public abstract class Mart {
 
 		private DataSource dataSource;
 
-		private List connections = new ArrayList();
+		private Collection connections = new HashSet();
 
 		/**
 		 * Calls {@link Mart#Mart(String)}, and remembers the data source.

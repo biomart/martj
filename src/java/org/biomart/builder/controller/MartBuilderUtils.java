@@ -316,6 +316,48 @@ public class MartBuilderUtils {
 	}
 
 	/**
+	 * Non-inherits a column within a dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to uninherit the column in.
+	 * @param column
+	 *            the column to uninherit.
+	 * @throws ValidationException
+	 *             if the column is not uninheritable.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws DataModelException
+	 *             if the dataset could not be synchronised.
+	 */
+	public static void nonInheritColumn(final DataSet dataset,
+			final DataSetColumn column) throws ValidationException,
+			SQLException, DataModelException {
+		Log.info(Resources.get("logReqNonInheritColumn"));
+		dataset.getDataSetModifications().setNonInheritedColumn(column);
+		dataset.synchronise();
+	}
+
+	/**
+	 * Un-non-inherits a column within a dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to un-uninherit the column in.
+	 * @param column
+	 *            the column to un-uninherit.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws DataModelException
+	 *             if the dataset could not be synchronised.
+	 */
+	public static void unNonInheritColumn(final DataSet dataset,
+			final DataSetColumn column) throws 
+			SQLException, DataModelException {
+		Log.info(Resources.get("logReqUnNonInheritColumn"));
+		dataset.getDataSetModifications().unsetNonInheritedColumn(column);
+		dataset.synchronise();
+	}
+
+	/**
 	 * Masks a column within a dataset.
 	 * 
 	 * @param dataset
@@ -869,11 +911,11 @@ public class MartBuilderUtils {
 	 * @throws SQLException
 	 *             if anything goes wrong whilst fetching the rows.
 	 */
-	public static List selectRows(final Table table, final int offset,
+	public static Collection selectRows(final Table table, final int offset,
 			final int count) throws SQLException {
 		Log.info(Resources.get("logReqSelectRows"));
 		final Schema schema = table.getSchema();
-		final List results = new ArrayList();
+		final Collection results = new ArrayList();
 		final DatabaseDialect dd = DatabaseDialect.getDialect(schema);
 		if (dd != null)
 			results.addAll(dd.executeSelectRows(table, offset, count));

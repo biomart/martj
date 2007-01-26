@@ -23,6 +23,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -788,13 +789,13 @@ public class OracleDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
-	public List executeSelectDistinct(final Column col) throws SQLException {
+	public Collection executeSelectDistinct(final Column col) throws SQLException {
 		final String colName = col.getName();
 		final String tableName = col.getTable().getName();
 		final Schema schema = col.getTable().getSchema();
 
 		// The simple case where we actually do a select distinct.
-		final List results = new ArrayList();
+		final Collection results = new ArrayList();
 		final String schemaName = ((JDBCSchema) schema).getDatabaseSchema();
 		final Connection conn = ((JDBCSchema) schema).getConnection();
 		final ResultSet rs = conn.prepareStatement(
@@ -806,7 +807,7 @@ public class OracleDialect extends DatabaseDialect {
 		return results;
 	}
 
-	public List executeSelectRows(final Table table, final int offset,
+	public Collection executeSelectRows(final Table table, final int offset,
 			final int count) throws SQLException {
 		final String tableName = table.getName();
 		final Schema schema = table.getSchema();
@@ -818,7 +819,7 @@ public class OracleDialect extends DatabaseDialect {
 				colNames.append(',');
 		}
 
-		final List results = new ArrayList();
+		final Collection results = new ArrayList();
 		final String schemaName = ((JDBCSchema) schema).getDatabaseSchema();
 		final Connection conn = ((JDBCSchema) schema).getConnection();
 		final ResultSet rs = conn.prepareStatement(

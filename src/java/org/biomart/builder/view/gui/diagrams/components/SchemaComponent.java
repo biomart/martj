@@ -33,6 +33,7 @@ import javax.swing.JPopupMenu;
 
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.common.model.Key;
+import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
@@ -100,16 +101,6 @@ public class SchemaComponent extends BoxShapedComponent {
 		return (Schema) this.getObject();
 	}
 
-	/**
-	 * Count the external relations in this schema. This delegates to
-	 * {@link Schema#getExternalRelations()}.
-	 * 
-	 * @return the number of external relations in this schema.
-	 */
-	public int countExternalRelations() {
-		return this.getSchema().getExternalRelations().size();
-	}
-
 	public JPopupMenu getContextMenu() {
 		// First of all, work out what would have been shown by default.
 		final JPopupMenu contextMenu = super.getContextMenu();
@@ -149,9 +140,13 @@ public class SchemaComponent extends BoxShapedComponent {
 
 		// Now add any tables with external relations. Loop through the
 		// external keys to identify the tables to do this.
-		for (final Iterator i = this.getSchema().getExternalKeys().iterator(); i
+		for (final Iterator i = this.getSchema().getRelations().iterator(); i
 				.hasNext();) {
-			final Key key = (Key) i.next();
+			final Relation rel = (Relation)i.next();
+			if (!rel.isExternal())
+				continue;
+			final Key key = rel.getFirstKey().getTable().getSchema().equals(this.getSchema())
+			 ? rel.getFirstKey() : rel.getSecondKey();
 			final Table table = key.getTable();
 
 			// Only add the table if it's not already added!

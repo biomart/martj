@@ -474,7 +474,7 @@ public abstract class MartConstructorAction {
 	 */
 	public static class DropColumns extends MartConstructorAction {
 
-		private List columns;
+		private Collection columns;
 
 		/**
 		 * Creates a new DropColumns action.
@@ -495,14 +495,14 @@ public abstract class MartConstructorAction {
 		/**
 		 * @return the columns
 		 */
-		public List getColumns() {
+		public Collection getColumns() {
 			return columns;
 		}
 
 		/**
 		 * @param columns the columns to set
 		 */
-		public void setColumns(List columns) {
+		public void setColumns(Collection columns) {
 			this.columns = columns;
 		}
 	}

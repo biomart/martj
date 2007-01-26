@@ -82,7 +82,7 @@ public class DataSet extends GenericSchema {
 
 	private final Mart mart;
 	
-	private final Collection allRelations;
+	private final Collection includedRelations;
 
 	// TODO SchemaModMaps for source schema changes.
 	// Restricted tables.
@@ -94,14 +94,11 @@ public class DataSet extends GenericSchema {
 	//   ADDS A CONCAT TUNIT TO THE CHAIN WITH ONE CONCAT DS COLUMN
 	//   IN IT - COLUMN HAS DEFAULT NAME AND CAN BE RENAMED BY
 	//   USER AS PER ANY OTHER COLUMN - need synch() after this.
+	// Recursion.
 	private final SchemaModificationSet schemaMods;
 
 	// TODO DataSetModMaps for renames/masking.
 	// Partition columns.
-	// Not-inherited columns (DST only = choose col in parent
-	//    table that won't be copied to child table. On generation
-	//    requires check that child table has all same named cols
-	//    as parent table)
 	// Expression column definitions with nesting resolution.
 	//   ADDS AN EXPRESSION TUNIT(S) TO THE CHAIN WITH EACH NESTED
 	//   EXPRESSION CLUSTER OF DS COLUMNS - COLUMNS HAVE DEFAULT NAME
@@ -138,15 +135,15 @@ public class DataSet extends GenericSchema {
 		this.optimiser = DataSetOptimiserType.NONE;
 		this.schemaMods = new SchemaModificationSet(this);
 		this.dsMods = new DataSetModificationSet();
-		this.allRelations = new HashSet();
+		this.includedRelations = new HashSet();
 	}
 	
 	/**
 	 * Obtain all relations used by this dataset.
 	 * @return all relations.
 	 */
-	public Collection getAllRelations() {
-		return this.allRelations;
+	public Collection getIncludedRelations() {
+		return this.includedRelations;
 	}
 	
 	/**
@@ -251,7 +248,8 @@ public class DataSet extends GenericSchema {
 						continue;
 				}
 				// If column is masked, don't inherit it.
-				if (this.dsMods.isMaskedColumn(parentDSCol))
+				if (this.dsMods.isMaskedColumn(parentDSCol)
+						|| this.dsMods.isNonInheritedColumn(parentDSCol))
 					continue;
 				// Only unfiltered columns reach this point. Create a copy of
 				// the column.
@@ -441,7 +439,7 @@ public class DataSet extends GenericSchema {
 					mergeKey, sourceRelation);
 
 			// Remember we've been here.
-			this.allRelations.add(sourceRelation);
+			this.includedRelations.add(sourceRelation);
 		} else {
 			tu = new SelectFromTable(mergeTable);
 		}
@@ -459,7 +457,8 @@ public class DataSet extends GenericSchema {
 			// involve our PK and was NOT 1:1.
 			includeMergeTablePK = !sourceRelation.isOneToOne()
 					&& !sourceRelation.getFirstKey().equals(mergeTablePK)
-					&& !sourceRelation.getSecondKey().equals(mergeTablePK);
+					&& !sourceRelation.getSecondKey().equals(mergeTablePK)
+					&& dsTablePKCols.isEmpty();
 
 		// Add all columns from merge table to dataset table, except those in
 		// the ignore key.
@@ -599,8 +598,8 @@ public class DataSet extends GenericSchema {
 			// including dimensions, include them from the 1:1 as well.
 			// Otherwise, stop including dimensions on subsequent tables.
 			if (followRelation || forceFollowRelation) {
-				this.allRelations.add(r);
-				dsTable.allRelations.add(r);
+				this.includedRelations.add(r);
+				dsTable.includedRelations.add(r);
 				final Key targetKey = r.getFirstKey().getTable().equals(
 						mergeTable) ? r.getSecondKey() : r.getFirstKey();
 				final Key sourceKey = r.getOtherKey(targetKey);
@@ -772,7 +771,7 @@ public class DataSet extends GenericSchema {
 		Log.debug("Regenerating dataset " + this.getName());
 		// Clear all our tables out as they will all be rebuilt.
 		this.removeAllTables();
-		this.allRelations.clear();
+		this.includedRelations.clear();
 
 		Log.debug("Finding actual central table");
 		// Identify main table.
@@ -1461,7 +1460,7 @@ public class DataSet extends GenericSchema {
 
 		private final Relation focusRelation;
 		
-		private final Collection allRelations;
+		private final Collection includedRelations;
 
 		/**
 		 * The constructor calls the parent table constructor. It uses a dataset
@@ -1493,15 +1492,15 @@ public class DataSet extends GenericSchema {
 			this.focusTable = focusTable;
 			this.focusRelation = focusRelation;
 			this.transformationUnits = new ArrayList();
-			this.allRelations = new HashSet();
+			this.includedRelations = new HashSet();
 		}
 		
 		/**
 		 * Obtain all relations used by this dataset table.
 		 * @return all relations.
 		 */
-		public Collection getAllRelations() {
-			return this.allRelations;
+		public Collection getIncludedRelations() {
+			return this.includedRelations;
 		}
 		
 		/**

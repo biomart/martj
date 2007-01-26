@@ -206,6 +206,7 @@ public interface Table extends Comparable {
 		// Use a TreeMap to keep columns in alphabetical order.
 		private final Map columns = new TreeMap();
 
+		// We must use a list as key hash codes can change.
 		private final List foreignKeys = new ArrayList();
 
 		private String name;
@@ -337,7 +338,7 @@ public interface Table extends Comparable {
 		}
 
 		public Collection getKeys() {
-			final List allKeys = new ArrayList(this.foreignKeys);
+			final Collection allKeys = new HashSet(this.foreignKeys);
 			if (this.primaryKey != null)
 				allKeys.add(this.primaryKey);
 			return allKeys;
@@ -402,7 +403,7 @@ public interface Table extends Comparable {
 			if (this.primaryKey != null) {
 				// Destroy relations on the old primary key.
 				// Must use a copy else get concurrent-modification problems.
-				final List relations = new ArrayList(this.primaryKey
+				final Collection relations = new HashSet(this.primaryKey
 						.getRelations());
 				for (final Iterator i = relations.iterator(); i.hasNext();) {
 					final Relation r = (Relation) i.next();

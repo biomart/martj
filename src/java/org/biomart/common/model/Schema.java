@@ -77,30 +77,6 @@ public interface Schema extends Comparable, DataLink {
 	public void changeTableMapKey(String oldName, String newName);
 
 	/**
-	 * Returns a collection of all the keys in this schema which have relations
-	 * referring to keys in other schemas.
-	 * 
-	 * @return a set of keys with relations linking to keys in other schemas.
-	 */
-	public Collection getExternalKeys();
-
-	/**
-	 * Returns a collection of all the relations in this schema which refer to
-	 * keys in other schemas.
-	 * 
-	 * @return a set of relations linking to keys in other schemas.
-	 */
-	public Collection getExternalRelations();
-
-	/**
-	 * Returns a collection of all the relations in this schema which refer to
-	 * keys in the same schema.
-	 * 
-	 * @return a set of relations linking to keys in the same schema.
-	 */
-	public Collection getInternalRelations();
-
-	/**
 	 * Returns a collection of all the relations in this schema.
 	 * 
 	 * @return a set of relations.
@@ -312,62 +288,11 @@ public interface Schema extends Comparable, DataLink {
 			final Schema t = (Schema) o;
 			return t.toString().equals(this.toString());
 		}
-
-		public Collection getExternalKeys() {
-			// Keys are external if they have a relation which
-			// points, at the other end, to a key in some schema
-			// other than ourselves.
-			final List keys = new ArrayList();
-			final Collection relations = this.getExternalRelations();
-			for (final Iterator i = relations.iterator(); i.hasNext();) {
-				final Relation relation = (Relation) i.next();
-				if (relation.getFirstKey().getTable().getSchema().equals(this))
-					keys.add(relation.getFirstKey());
-				else
-					keys.add(relation.getSecondKey());
-			}
-			return keys;
-		}
 		
 		public Collection getRelations() {
 			final Set relations = new HashSet();
 			for (final Iterator i = this.getTables().iterator(); i.hasNext();) 
 				relations.addAll(((Table)i.next()).getRelations());
-			return relations;
-		}
-
-		public Collection getExternalRelations() {
-			// Relations are external if one end points to a key
-			// in a schema other than ourselves.
-			final Set relations = new HashSet();
-			for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
-				final Table table = (Table) i.next();
-				for (final Iterator j = table.getKeys().iterator(); j.hasNext();) {
-					final Key key = (Key) j.next();
-					for (final Iterator l = key.getRelations().iterator(); l
-							.hasNext();) {
-						final Relation relation = (Relation) l.next();
-						if (relation.isExternal())
-							relations.add(relation);
-					}
-				}
-			}
-			return relations;
-		}
-
-		public Collection getInternalRelations() {
-			// Relations are internal if both ends point to keys
-			// in this schema.
-			final Set relations = new HashSet();
-			for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
-				final Table table = (Table) i.next();
-				for (final Iterator j = table.getRelations().iterator(); j
-						.hasNext();) {
-					final Relation relation = (Relation) j.next();
-					if (!relation.isExternal())
-						relations.add(relation);
-				}
-			}
 			return relations;
 		}
 

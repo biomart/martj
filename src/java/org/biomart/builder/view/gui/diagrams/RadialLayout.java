@@ -27,8 +27,10 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +40,9 @@ import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
 
 /**
  * This layout manager lays out components based on how connected they are to
@@ -118,12 +123,23 @@ public class RadialLayout implements LayoutManager {
 				// Calculate ring number! If not a TableComponent or
 				// SchemaComponent, it's zero.
 				Integer ringNumber = new Integer(0);
-				if (comp instanceof TableComponent)
-					ringNumber = new Integer(((TableComponent) comp)
-							.countInternalRelations());
-				else if (comp instanceof SchemaComponent)
-					ringNumber = new Integer(((SchemaComponent) comp)
-							.countExternalRelations());
+				if (comp instanceof TableComponent) {
+					final Collection rels = new HashSet();
+					for (final Iterator j = ((Table)((TableComponent)comp).getObject()).getRelations().iterator(); j.hasNext(); )  {
+						final Relation rel = (Relation)j.next();
+				 		if (!rel.isExternal())
+				 			rels.add(rel);
+					}
+					ringNumber = new Integer(rels.size());
+				} else if (comp instanceof SchemaComponent) {
+					final Collection rels = new HashSet();
+					for (final Iterator j = ((Schema)((SchemaComponent)comp).getObject()).getRelations().iterator(); j.hasNext(); )  {
+						final Relation rel = (Relation)j.next();
+				 		if (rel.isExternal())
+				 			rels.add(rel);
+					}
+					ringNumber = new Integer(rels.size());
+				}
 
 				// Create the ring for this ring number if it doesn't already
 				// exist.
@@ -238,7 +254,7 @@ public class RadialLayout implements LayoutManager {
 			final Map ringCounts = new HashMap();
 
 			// A collection of relations we come across on the way.
-			final List relationComponents = new ArrayList();
+			final Collection relationComponents = new HashSet();
 
 			// Just iterate through components and add them to the various
 			// rings.

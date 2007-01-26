@@ -19,6 +19,7 @@ package org.biomart.builder.controller.dialects;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -119,7 +120,7 @@ public abstract class DatabaseDialect {
 	 * @throws SQLException
 	 *             in case of problems.
 	 */
-	public abstract List executeSelectDistinct(Column col) throws SQLException;
+	public abstract Collection executeSelectDistinct(Column col) throws SQLException;
 
 	/**
 	 * Gets rows from the given table. This method should perform the select and
@@ -160,7 +161,7 @@ public abstract class DatabaseDialect {
 	 * @throws SQLException
 	 *             in case of problems.
 	 */
-	public abstract List executeSelectRows(Table table, int offset, int count)
+	public abstract Collection executeSelectRows(Table table, int offset, int count)
 			throws SQLException;
 
 	/**

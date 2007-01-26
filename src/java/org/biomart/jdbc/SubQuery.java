@@ -32,6 +32,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +56,7 @@ public abstract class SubQuery {
 
 	private SubQuery parentSubQuery;
 
-	private List subQueries = new ArrayList();
+	private Collection subQueries = new HashSet();
 
 	private Map importableMapping = new HashMap();
 
@@ -176,7 +177,7 @@ public abstract class SubQuery {
 	 * 
 	 * @return a list of subqueries.
 	 */
-	List getAllSubQueries() {
+	Collection getAllSubQueries() {
 		return this.subQueries;
 	}
 

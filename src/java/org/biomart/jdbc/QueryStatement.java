@@ -38,10 +38,10 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 
 import org.biomart.jdbc.Query.QueryParam;
 import org.biomart.jdbc.resources.Resources;
@@ -70,7 +70,7 @@ public class QueryStatement implements PreparedStatement {
 	private SQLWarning warnings;
 
 	// Do we have current result sets?
-	private List openResultSets = new ArrayList();
+	private Collection openResultSets = new HashSet();
 
 	// Do we have a limited number of results?
 	private int maxRowCount = 0;
@@ -442,8 +442,7 @@ public class QueryStatement implements PreparedStatement {
 		if (this.openResultSets.isEmpty())
 			throw new SQLException(Resources.get("plainStmtReqSQL"));
 		// We return the most recent result set.
-		return (ResultSet)this.openResultSets
-				.get(this.openResultSets.size() - 1);
+		return (ResultSet)this.openResultSets.iterator().next();
 	}
 
 	public int getResultSetConcurrency() throws SQLException {

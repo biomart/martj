@@ -114,8 +114,8 @@ public class ExplainDataSetContext extends SchemaContext {
 
 			// Fade out all UNINCLUDED, INFERRED_INCORRECT and MASKED relations.
 			final boolean included = this.datasetTable==null?
-					this.dataset.getAllRelations().contains(relation)
-					: this.datasetTable.getAllRelations().contains(relation);
+					this.dataset.getIncludedRelations().contains(relation)
+					: this.datasetTable.getIncludedRelations().contains(relation);
 			if (!included || relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
 					|| this.dataset.getSchemaModifications().isMaskedRelation(this.datasetTable, relation))
 				component.setForeground(RelationComponent.MASKED_COLOUR);
@@ -138,7 +138,7 @@ public class ExplainDataSetContext extends SchemaContext {
 		else if (object instanceof Table) {
 			// Fade out UNINCLUDED tables.
 			final boolean isFocus = this.datasetTable!=null && this.datasetTable.getFocusTable().equals((Table)object);
-			final Set included = new HashSet(this.datasetTable!=null ? this.datasetTable.getAllRelations() : this.dataset.getAllRelations());
+			final Set included = new HashSet(this.datasetTable!=null ? this.datasetTable.getIncludedRelations() : this.dataset.getIncludedRelations());
 			included.retainAll(((Table)object).getRelations());
 			if (included.isEmpty() && !isFocus)
 				component.setForeground(TableComponent.MASKED_COLOUR);
@@ -326,7 +326,7 @@ public class ExplainDataSetContext extends SchemaContext {
 			.getSchemaModifications().isCompoundRelation(this.datasetTable, relation);
 			final boolean relationForced = this.dataset
 			.getSchemaModifications().isForceIncludeRelation(this.datasetTable, relation);
-			final boolean relationIncluded = this.datasetTable==null ? this.dataset.getAllRelations().contains(relation) : this.datasetTable.getAllRelations().contains(relation);
+			final boolean relationIncluded = this.datasetTable==null ? this.dataset.getIncludedRelations().contains(relation) : this.datasetTable.getIncludedRelations().contains(relation);
 
 			// The mask/unmask option allows the user to mask/unmask a relation.
 			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources

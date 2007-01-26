@@ -27,10 +27,10 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Savepoint;
 import java.sql.Statement;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.biomart.jdbc.exceptions.RegistryException;
@@ -58,7 +58,7 @@ public class RegistryConnection implements Connection {
 	private Map customTypes = Collections.EMPTY_MAP;
 
 	// Our set of open statements.
-	private List openStatements = new ArrayList();
+	private Collection openStatements = new HashSet();
 	
 	// Currently selected catalog?
 	private String catalog;

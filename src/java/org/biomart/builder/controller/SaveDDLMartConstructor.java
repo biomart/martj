@@ -264,7 +264,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			return "TEMP__" + this.tempTableSeq++;
 		}
 
-		public List listDistinctValues(final Column col) throws SQLException {
+		public Collection listDistinctValues(final Column col) throws SQLException {
 			Log.info(Resources.get("logDistinct", "" + col));
 			return this.dialect.executeSelectDistinct(col);
 		}
@@ -420,7 +420,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				if (!this.actions.containsKey(dsTableName))
 					this.actions.put(dsTableName,
 							new ArrayList());
-				((ArrayList) this.actions.get(dsTableName))
+				((List) this.actions.get(dsTableName))
 						.add(action);
 			}
 		}

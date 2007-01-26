@@ -49,6 +49,8 @@ public class DataSetModificationSet {
 	private Collection maskedTables = new HashSet();
 	
 	private Map maskedColumns = new HashMap();
+	
+	private Map nonInheritedColumns = new HashMap();
 
 	public void setMaskedColumn(final DataSetColumn column) throws ValidationException {
 		final String tableKey = column.getTable().getName();
@@ -83,6 +85,37 @@ public class DataSetModificationSet {
 		return this.maskedColumns;
 	}
 
+	public void setNonInheritedColumn(final DataSetColumn column) throws ValidationException {
+		final String tableKey = column.getTable().getName();
+		if (!this.isNonInheritedColumn(column)) {
+			for (final Iterator i = column.getTable().getKeys().iterator(); i.hasNext(); ) 
+				if (((Key)i.next()).getColumns().contains(column))
+					throw new ValidationException(Resources.get("cannotNonInheritNecessaryColumn"));
+			if (!this.nonInheritedColumns.containsKey(tableKey))
+				this.nonInheritedColumns.put(tableKey, new HashSet());
+			((Collection)this.nonInheritedColumns.get(tableKey)).add(column.getName());
+		}
+	}
+
+	public void unsetNonInheritedColumn(final DataSetColumn column) {
+		final String tableKey = column.getTable().getName();
+		if (this.nonInheritedColumns.containsKey(tableKey)) {
+			((Collection)this.nonInheritedColumns.get(tableKey)).remove(column.getName());
+			if (((Collection)this.nonInheritedColumns.get(tableKey)).isEmpty())
+				this.nonInheritedColumns.remove(tableKey);
+		}		
+	}
+
+	public boolean isNonInheritedColumn(final DataSetColumn column) {
+		final String tableKey = column.getTable().getName();
+		return this.nonInheritedColumns.containsKey(tableKey)
+		 && ((Collection)this.nonInheritedColumns.get(tableKey)).contains(column.getName());
+	}
+
+	public Map getNonInheritedColumns() {
+		return this.nonInheritedColumns;
+	}
+
 	public void setTableRename(final DataSetTable table, String name) {
 		if (name.equals(table.getName()))
 			this.renamedTables.remove(table.getName());
@@ -109,8 +142,7 @@ public class DataSetModificationSet {
 	}
 	
 	public void setMaskedTable(final DataSetTable table) {
-		if (!this.maskedTables.contains(table.getName()))
-			this.maskedTables.add(table.getName());
+		this.maskedTables.add(table.getName());
 	}
 	
 	public void unsetMaskedTable(final DataSetTable table) {

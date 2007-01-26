@@ -25,6 +25,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -79,7 +80,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 	private AllDataSetsDiagram allDataSetsDiagram;
 
-	private final List currentExplanationDialogs = new ArrayList();
+	private final Collection currentExplanationDialogs = new HashSet();
 
 	// Use double-list to prevent problems with hashcodes changing.
 	private final List[] datasetToDiagram = new List[] { new ArrayList(),
@@ -235,33 +236,20 @@ public class DataSetTabSet extends JTabbedPane {
 	/*
 	 * Request that a relation be marked as concat-only.
 	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param relation
-	 *            the relation to mark.
-	 * @param type
-	 *            the type of concatenation to use on this relation.
-	 * FIXME: Reinstate.
-	private void requestConcatOnlyRelation(final DataSet ds,
-			final Relation relation, final DataSetConcatRelationType type) {
-		try {
-			// Mark the relation concat-only.
-			MartBuilderUtils.concatOnlyRelation(ds, relation, type);
-
-			// Recalculate the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
-
-			// Update the explanation diagram so that it
-			// correctly reflects the changed relation.
-			this.recalculateExplanationDialog();
-
-			// Update the modified status.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
-	}
-	*/
+	 * @param ds the dataset we are working with. @param relation the relation
+	 * to mark. @param type the type of concatenation to use on this relation.
+	 * FIXME: Reinstate. private void requestConcatOnlyRelation(final DataSet
+	 * ds, final Relation relation, final DataSetConcatRelationType type) { try { //
+	 * Mark the relation concat-only. MartBuilderUtils.concatOnlyRelation(ds,
+	 * relation, type);
+	 *  // Recalculate the dataset diagram based on the modified dataset.
+	 * this.recalculateDataSetDiagram(ds);
+	 *  // Update the explanation diagram so that it // correctly reflects the
+	 * changed relation. this.recalculateExplanationDialog();
+	 *  // Update the modified status.
+	 * this.martTab.getMartTabSet().setModifiedStatus(true); } catch (final
+	 * Throwable t) { StackTrace.showStackTrace(t); } }
+	 */
 
 	protected void processMouseEvent(final MouseEvent evt) {
 		boolean eventProcessed = false;
@@ -463,104 +451,56 @@ public class DataSetTabSet extends JTabbedPane {
 	 * Asks for an expression column to be added to the table.
 	 * 
 	 * @param table
-	 *            the table to add the expression column to.
-	 * FIXME: Reinstate.
-	public void requestAddExpressionColumn(final DataSetTable table) {
-		final ExpressionColumnDialog dialog = new ExpressionColumnDialog(table,
-				null);
-		dialog.show();
-		// Cancelled?
-		if (dialog.getCancelled())
-			return;
-		// Get the details.
-		final String columnName = dialog.getColumnName();
-		final Map columnAliases = dialog.getColumnAliases();
-		final String expression = dialog.getExpression();
-		final boolean groupBy = dialog.getGroupBy();
-		// Do this in the background.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Add the column.
-					MartBuilderUtils.addExpressionColumn(table, columnName,
-							columnAliases, expression, groupBy);
-
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							// Recalculate the dataset diagram based on the
-							// newly modified dataset.
-							DataSetTabSet.this
-									.recalculateDataSetDiagram((DataSet) table
-											.getSchema());
-
-							// Recalculate the explanation diagram too.
-							DataSetTabSet.this.recalculateExplanationDialog();
-
-							// Update the modified status for the tabset.
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.setModifiedStatus(true);
-						}
-					});
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							StackTrace.showStackTrace(t);
-						}
-					});
-				}
-			}
-		});
-	}
-
-	/**
-	 * Asks for a table restriction to be added to the dataset.
+	 *            the table to add the expression column to. FIXME: Reinstate.
+	 *            public void requestAddExpressionColumn(final DataSetTable
+	 *            table) { final ExpressionColumnDialog dialog = new
+	 *            ExpressionColumnDialog(table, null); dialog.show(); //
+	 *            Cancelled? if (dialog.getCancelled()) return; // Get the
+	 *            details. final String columnName = dialog.getColumnName();
+	 *            final Map columnAliases = dialog.getColumnAliases(); final
+	 *            String expression = dialog.getExpression(); final boolean
+	 *            groupBy = dialog.getGroupBy(); // Do this in the background.
+	 *            LongProcess.run(new Runnable() { public void run() { try { //
+	 *            Add the column. MartBuilderUtils.addExpressionColumn(table,
+	 *            columnName, columnAliases, expression, groupBy);
+	 * 
+	 * SwingUtilities.invokeLater(new Runnable() { public void run() { //
+	 * Recalculate the dataset diagram based on the // newly modified dataset.
+	 * DataSetTabSet.this .recalculateDataSetDiagram((DataSet) table
+	 * .getSchema());
+	 *  // Recalculate the explanation diagram too.
+	 * DataSetTabSet.this.recalculateExplanationDialog();
+	 *  // Update the modified status for the tabset.
+	 * DataSetTabSet.this.martTab.getMartTabSet() .setModifiedStatus(true); }
+	 * }); } catch (final Throwable t) { SwingUtilities.invokeLater(new
+	 * Runnable() { public void run() { StackTrace.showStackTrace(t); } }); } }
+	 * }); }
+	 * 
+	 * /** Asks for a table restriction to be added to the dataset.
 	 * 
 	 * @param dataset
 	 *            the dataset we are dealing with.
 	 * @param table
 	 *            the table to add a restriction to.
-	 *
-	public void requestAddTableRestriction(final DataSet dataset,
-			final Table table) {
-		final RestrictedTableDialog dialog = new RestrictedTableDialog(table,
-				null);
-		dialog.show();
-		// Cancelled?
-		if (dialog.getCancelled())
-			return;
-		// Get the details.
-		final Map aliases = dialog.getColumnAliases();
-		final String expression = dialog.getExpression();
-		// Do this in the background.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Add the restriction.
-					MartBuilderUtils.restrictTable(dataset, table, expression,
-							aliases);
-
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							// Update the explanation diagram so that it
-							// correctly reflects the changed objects.
-							DataSetTabSet.this.repaintExplanationDialog();
-
-							// Update the modified status for the tabset.
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.setModifiedStatus(true);
-						}
-					});
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							StackTrace.showStackTrace(t);
-						}
-					});
-				}
-			}
-		});
-	}
-	*/
+	 * 
+	 * public void requestAddTableRestriction(final DataSet dataset, final Table
+	 * table) { final RestrictedTableDialog dialog = new
+	 * RestrictedTableDialog(table, null); dialog.show(); // Cancelled? if
+	 * (dialog.getCancelled()) return; // Get the details. final Map aliases =
+	 * dialog.getColumnAliases(); final String expression =
+	 * dialog.getExpression(); // Do this in the background. LongProcess.run(new
+	 * Runnable() { public void run() { try { // Add the restriction.
+	 * MartBuilderUtils.restrictTable(dataset, table, expression, aliases);
+	 * 
+	 * SwingUtilities.invokeLater(new Runnable() { public void run() { // Update
+	 * the explanation diagram so that it // correctly reflects the changed
+	 * objects. DataSetTabSet.this.repaintExplanationDialog();
+	 *  // Update the modified status for the tabset.
+	 * DataSetTabSet.this.martTab.getMartTabSet() .setModifiedStatus(true); }
+	 * }); } catch (final Throwable t) { SwingUtilities.invokeLater(new
+	 * Runnable() { public void run() { StackTrace.showStackTrace(t); } }); } }
+	 * }); }
+	 */
 
 	/**
 	 * Request that the optimiser type used post-construction of a dataset be
@@ -587,19 +527,14 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param ds
 	 *            the dataset we are working with.
 	 * @param relation
-	 *            the relation to mark.
-	 * FIXME: Reinstate.
-	public void requestCreateConcatOnlyRelation(final DataSet ds,
-			final Relation relation) {
-		// Pop up a dialog to ask which columns to use.
-		final DataSetConcatRelationType newType = ConcatRelationEditorDialog
-				.createConcatRelation(relation);
-
-		// If they chose some columns, create the key.
-		if (newType != null)
-			this.requestConcatOnlyRelation(ds, relation, newType);
-	}
-	*/
+	 *            the relation to mark. FIXME: Reinstate. public void
+	 *            requestCreateConcatOnlyRelation(final DataSet ds, final
+	 *            Relation relation) { // Pop up a dialog to ask which columns
+	 *            to use. final DataSetConcatRelationType newType =
+	 *            ConcatRelationEditorDialog .createConcatRelation(relation);
+	 *  // If they chose some columns, create the key. if (newType !=
+	 * null) this.requestConcatOnlyRelation(ds, relation, newType); }
+	 */
 
 	/**
 	 * On a request to create DDL for the current dataset, open the DDL creation
@@ -668,6 +603,40 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Requests that a column be non-inherited.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param column
+	 *            the column to non-inherit.
+	 */
+	public void requestNonInheritColumn(final DataSet ds,
+			final DataSetColumn column) {
+		try {
+			// Mask the column.
+			MartBuilderUtils.nonInheritColumn(ds, column);
+
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					// Repaint the dataset diagram based on the modified
+					// dataset.
+					DataSetTabSet.this.recalculateDataSetDiagram(ds);
+
+					// Update the explanation diagram so that it
+					// correctly reflects any changed relation.
+					DataSetTabSet.this.recalculateExplanationDialog();
+
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
+				}
+			});
+		} catch (final Throwable t) {
+			StackTrace.showStackTrace(t);
+		}
+	}
+
+	/**
 	 * Requests that a column be masked.
 	 * 
 	 * @param ds
@@ -680,15 +649,21 @@ public class DataSetTabSet extends JTabbedPane {
 			// Mask the column.
 			MartBuilderUtils.maskColumn(ds, column);
 
-			// Repaint the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					// Repaint the dataset diagram based on the modified
+					// dataset.
+					DataSetTabSet.this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it
-			// correctly reflects any changed relation.
-			this.recalculateExplanationDialog();
+					// Update the explanation diagram so that it
+					// correctly reflects any changed relation.
+					DataSetTabSet.this.recalculateExplanationDialog();
 
-			// Update the modification status for this tabset.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
+				}
+			});
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		}
@@ -707,20 +682,26 @@ public class DataSetTabSet extends JTabbedPane {
 			// Mask the column.
 			MartBuilderUtils.maskTable(ds, dim);
 
-			// Repaint the dataset diagram based on the modified dataset.
-			this.repaintDataSetDiagram(ds);
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					// Repaint the dataset diagram based on the modified
+					// dataset.
+					DataSetTabSet.this.repaintDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it
-			// correctly reflects any changed relation.
-			this.repaintExplanationDialog();
+					// Update the explanation diagram so that it
+					// correctly reflects any changed relation.
+					DataSetTabSet.this.repaintExplanationDialog();
 
-			// Update the modification status for this tabset.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
+				}
+			});
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		}
 	}
-	
+
 	/**
 	 * Requests that a dimension be unmasked.
 	 * 
@@ -734,15 +715,21 @@ public class DataSetTabSet extends JTabbedPane {
 			// Mask the column.
 			MartBuilderUtils.unmaskTable(ds, dim);
 
-			// Repaint the dataset diagram based on the modified dataset.
-			this.repaintDataSetDiagram(ds);
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					// Repaint the dataset diagram based on the modified
+					// dataset.
+					DataSetTabSet.this.repaintDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it
-			// correctly reflects any changed relation.
-			this.repaintExplanationDialog();
+					// Update the explanation diagram so that it
+					// correctly reflects any changed relation.
+					DataSetTabSet.this.repaintExplanationDialog();
 
-			// Update the modification status for this tabset.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
+				}
+			});
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		}
@@ -759,17 +746,23 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestMergeDimension(final DataSet ds, final DataSetTable dst) {
 		try {
 			// Merge the relation.
-			MartBuilderUtils.mergeRelation(ds, dst.getFocusRelation());				
+			MartBuilderUtils.mergeRelation(ds, dst.getFocusRelation());
 
-			// Recalculate the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					// Repaint the dataset diagram based on the modified
+					// dataset.
+					DataSetTabSet.this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it
-			// correctly reflects the changed relation.
-			this.recalculateExplanationDialog();
+					// Update the explanation diagram so that it
+					// correctly reflects any changed relation.
+					DataSetTabSet.this.recalculateExplanationDialog();
 
-			// Update the modified status.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
+				}
+			});
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		}
@@ -786,17 +779,23 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestUnmergeDimension(final DataSet ds, final DataSetTable dst) {
 		try {
 			// Merge the relation.
-			MartBuilderUtils.unmergeRelation(ds, dst.getFocusRelation());				
+			MartBuilderUtils.unmergeRelation(ds, dst.getFocusRelation());
 
-			// Recalculate the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					// Repaint the dataset diagram based on the modified
+					// dataset.
+					DataSetTabSet.this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it
-			// correctly reflects the changed relation.
-			this.recalculateExplanationDialog();
+					// Update the explanation diagram so that it
+					// correctly reflects any changed relation.
+					DataSetTabSet.this.recalculateExplanationDialog();
 
-			// Update the modified status.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
+				}
+			});
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		}
@@ -810,47 +809,64 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param relation
 	 *            the schema relation to mask.
 	 */
-	public void requestCompoundRelation(final DataSet ds, final DataSetTable dst, final Relation relation) {
-		try {
-			// Work out if it is already compounded.
-			int n = 1;
-			if (ds.getSchemaModifications().isCompoundRelation(dst, relation))
-				n = ds.getSchemaModifications().getCompoundRelation(dst, relation);
-			
-			// Pop up a dialog and update 'compound'.
-			final int newN = CompoundRelationEditorDialog.getCompoundValue(n);
-			
-			// Skip altogether if no change.
-			if (newN==n) 
-				return;
-			
-			// Do the work.
-			if (newN<=1) {				
-				// Uncompound the relation.
-				if (dst!=null)
-					MartBuilderUtils.uncompoundRelation(dst, relation);
-				else
-					MartBuilderUtils.uncompoundRelation(ds, relation);				
-			} else {
-				// Compound the relation.
-				if (dst!=null)
-					MartBuilderUtils.compoundRelation(dst, relation, newN);
-				else
-					MartBuilderUtils.compoundRelation(ds, relation, newN);				
+	public void requestCompoundRelation(final DataSet ds,
+			final DataSetTable dst, final Relation relation) {
+		// Work out if it is already compounded.
+		int n = 1;
+		if (ds.getSchemaModifications().isCompoundRelation(dst, relation))
+			n = ds.getSchemaModifications().getCompoundRelation(dst, relation);
+
+		// Pop up a dialog and update 'compound'.
+		final int newN = CompoundRelationEditorDialog.getCompoundValue(n);
+
+		// Skip altogether if no change.
+		if (newN == n)
+			return;
+
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Do the work.
+					if (newN <= 1) {
+						// Uncompound the relation.
+						if (dst != null)
+							MartBuilderUtils.uncompoundRelation(dst, relation);
+						else
+							MartBuilderUtils.uncompoundRelation(ds, relation);
+					} else {
+						// Compound the relation.
+						if (dst != null)
+							MartBuilderUtils.compoundRelation(dst, relation,
+									newN);
+						else
+							MartBuilderUtils.compoundRelation(ds, relation,
+									newN);
+					}
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the dataset diagram based on the modified
+							// dataset.
+							DataSetTabSet.this.recalculateDataSetDiagram(ds);
+
+							// Update the explanation diagram so that it
+							// correctly reflects any changed relation.
+							DataSetTabSet.this.recalculateExplanationDialog();
+
+							// Update the modified status for this tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				}
 			}
-
-			// Recalculate the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
-
-			// Update the explanation diagram so that it
-			// correctly reflects the changed relation.
-			this.recalculateExplanationDialog();
-
-			// Update the modified status.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
+		});
 	}
 
 	/**
@@ -861,26 +877,42 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param relation
 	 *            the schema relation to mask.
 	 */
-	public void requestMaskRelation(final DataSet ds, final DataSetTable dst, final Relation relation) {
-		try {
-			// Mask the relation.
-			if (dst!=null)
-				MartBuilderUtils.maskRelation(dst, relation);
-			else
-				MartBuilderUtils.maskRelation(ds, relation);				
+	public void requestMaskRelation(final DataSet ds, final DataSetTable dst,
+			final Relation relation) {
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Mask the relation.
+					if (dst != null)
+						MartBuilderUtils.maskRelation(dst, relation);
+					else
+						MartBuilderUtils.maskRelation(ds, relation);
 
-			// Recalculate the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the dataset diagram based on the modified
+							// dataset.
+							DataSetTabSet.this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it
-			// correctly reflects the changed relation.
-			this.recalculateExplanationDialog();
+							// Update the explanation diagram so that it
+							// correctly reflects any changed relation.
+							DataSetTabSet.this.recalculateExplanationDialog();
 
-			// Update the modified status.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
+							// Update the modified status for this tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				}
+			}
+		});
 	}
 
 	/**
@@ -891,26 +923,42 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param relation
 	 *            the schema relation to force.
 	 */
-	public void requestForceRelation(final DataSet ds, final DataSetTable dst, final Relation relation) {
-		try {
-			// Mask the relation.
-			if (dst!=null)
-				MartBuilderUtils.forceRelation(dst, relation);
-			else
-				MartBuilderUtils.forceRelation(ds, relation);				
+	public void requestForceRelation(final DataSet ds, final DataSetTable dst,
+			final Relation relation) {
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Mask the relation.
+					if (dst != null)
+						MartBuilderUtils.forceRelation(dst, relation);
+					else
+						MartBuilderUtils.forceRelation(ds, relation);
 
-			// Recalculate the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the dataset diagram based on the modified
+							// dataset.
+							DataSetTabSet.this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it
-			// correctly reflects the changed relation.
-			this.recalculateExplanationDialog();
+							// Update the explanation diagram so that it
+							// correctly reflects any changed relation.
+							DataSetTabSet.this.recalculateExplanationDialog();
 
-			// Update the modified status.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
+							// Update the modified status for this tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				}
+			}
+		});
 	}
 
 	/**
@@ -921,26 +969,42 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param table
 	 *            the schema table to mask all relations for.
 	 */
-	public void requestMaskTable(final DataSet ds, final DataSetTable dst, final Table table) {
-		try {
-			// Mask all the relations on the table.
-			if (dst!=null)
-				MartBuilderUtils.maskTable(dst, table);
-			else
-				MartBuilderUtils.maskTable(ds, table);
+	public void requestMaskTable(final DataSet ds, final DataSetTable dst,
+			final Table table) {
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Mask all the relations on the table.
+					if (dst != null)
+						MartBuilderUtils.maskTable(dst, table);
+					else
+						MartBuilderUtils.maskTable(ds, table);
 
-			// Recalculate the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the dataset diagram based on the modified
+							// dataset.
+							DataSetTabSet.this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it
-			// correctly reflects the changed table.
-			this.recalculateExplanationDialog();
+							// Update the explanation diagram so that it
+							// correctly reflects any changed relation.
+							DataSetTabSet.this.recalculateExplanationDialog();
 
-			// Update the modified status.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
+							// Update the modified status for this tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				}
+			}
+		});
 	}
 
 	/**
@@ -953,59 +1017,36 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the relation to mark.
 	 * @param type
 	 *            the existing concat-relation type.
-	 *
-	public void requestModifyConcatOnlyRelation(final DataSet ds,
-			final Relation relation, final DataSetConcatRelationType type) {
-		// Pop up a dialog to ask which columns to use.
-		final DataSetConcatRelationType newType = ConcatRelationEditorDialog
-				.modifyConcatRelation(relation, type);
-
-		// If they chose some columns, create the key.
-		if (newType != null)
-			this.requestConcatOnlyRelation(ds, relation, newType);
-	}
-
-	/**
-	 * Asks for an expression column to be modified.
+	 * 
+	 * public void requestModifyConcatOnlyRelation(final DataSet ds, final
+	 * Relation relation, final DataSetConcatRelationType type) { // Pop up a
+	 * dialog to ask which columns to use. final DataSetConcatRelationType
+	 * newType = ConcatRelationEditorDialog .modifyConcatRelation(relation,
+	 * type);
+	 *  // If they chose some columns, create the key. if (newType != null)
+	 * this.requestConcatOnlyRelation(ds, relation, newType); }
+	 * 
+	 * /** Asks for an expression column to be modified.
 	 * 
 	 * @param column
 	 *            the expression column to modify.
-	 *
-	public void requestModifyExpressionColumn(final ExpressionColumn column) {
-		final ExpressionColumnDialog dialog = new ExpressionColumnDialog(
-				(DataSetTable) column.getTable(), column);
-		dialog.show();
-		// Cancelled?
-		if (dialog.getCancelled())
-			return;
-		// Get updated details from the user.
-		final Map columnAliases = dialog.getColumnAliases();
-		final String expression = dialog.getExpression();
-		final boolean groupBy = dialog.getGroupBy();
-		// Do this in the background.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Modify the column.
-					MartBuilderUtils.modifyExpressionColumn(column,
-							columnAliases, expression, groupBy);
-
-					// Update the modified status for the tabset.
-					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							StackTrace.showStackTrace(t);
-						}
-					});
-				}
-			}
-		});
-	}
-
-	/**
-	 * Asks for a table restriction to be modified.
+	 * 
+	 * public void requestModifyExpressionColumn(final ExpressionColumn column) {
+	 * final ExpressionColumnDialog dialog = new ExpressionColumnDialog(
+	 * (DataSetTable) column.getTable(), column); dialog.show(); // Cancelled?
+	 * if (dialog.getCancelled()) return; // Get updated details from the user.
+	 * final Map columnAliases = dialog.getColumnAliases(); final String
+	 * expression = dialog.getExpression(); final boolean groupBy =
+	 * dialog.getGroupBy(); // Do this in the background. LongProcess.run(new
+	 * Runnable() { public void run() { try { // Modify the column.
+	 * MartBuilderUtils.modifyExpressionColumn(column, columnAliases,
+	 * expression, groupBy);
+	 *  // Update the modified status for the tabset.
+	 * DataSetTabSet.this.martTab.getMartTabSet() .setModifiedStatus(true); }
+	 * catch (final Throwable t) { SwingUtilities.invokeLater(new Runnable() {
+	 * public void run() { StackTrace.showStackTrace(t); } }); } } }); }
+	 * 
+	 * /** Asks for a table restriction to be modified.
 	 * 
 	 * @param dataset
 	 *            the dataset we are working with.
@@ -1013,43 +1054,23 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the table to modify the restriction for.
 	 * @param restriction
 	 *            the existing restriction.
-	 *
-	public void requestModifyTableRestriction(final DataSet dataset,
-			final Table table, final DataSetTableRestriction restriction) {
-		final RestrictedTableDialog dialog = new RestrictedTableDialog(table,
-				restriction);
-		dialog.show();
-		// Cancelled?
-		if (dialog.getCancelled())
-			return;
-		// Get updated details from the user.
-		final Map aliases = dialog.getColumnAliases();
-		final String expression = dialog.getExpression();
-		// Do this in the background.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Update the restriction.
-					MartBuilderUtils.restrictTable(dataset, table, expression,
-							aliases);
-
-					// Update the modified status for the tabset.
-					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							StackTrace.showStackTrace(t);
-						}
-					});
-				}
-			}
-		});
-	}
-
-	/**
-	 * Requests that the dataset should be partitioned by the contents of the
-	 * specified column. A dialog is put up asking the user how to partition
+	 * 
+	 * public void requestModifyTableRestriction(final DataSet dataset, final
+	 * Table table, final DataSetTableRestriction restriction) { final
+	 * RestrictedTableDialog dialog = new RestrictedTableDialog(table,
+	 * restriction); dialog.show(); // Cancelled? if (dialog.getCancelled())
+	 * return; // Get updated details from the user. final Map aliases =
+	 * dialog.getColumnAliases(); final String expression =
+	 * dialog.getExpression(); // Do this in the background. LongProcess.run(new
+	 * Runnable() { public void run() { try { // Update the restriction.
+	 * MartBuilderUtils.restrictTable(dataset, table, expression, aliases);
+	 *  // Update the modified status for the tabset.
+	 * DataSetTabSet.this.martTab.getMartTabSet() .setModifiedStatus(true); }
+	 * catch (final Throwable t) { SwingUtilities.invokeLater(new Runnable() {
+	 * public void run() { StackTrace.showStackTrace(t); } }); } } }); }
+	 * 
+	 * /** Requests that the dataset should be partitioned by the contents of
+	 * the specified column. A dialog is put up asking the user how to partition
 	 * this column. If it is already partitioned, the dialog will explain how
 	 * and allow the user to change it. The user's input is then used to
 	 * partition the column appropriately (or re-partition using the new
@@ -1059,39 +1080,24 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset we are working with.
 	 * @param column
 	 *            the column to partition.
-	 *
-	public void requestPartitionByColumn(final DataSet dataset,
-			final DataSetColumn column) {
-		PartitionedColumnType type;
-
-		// If the column is already partitioned, open a dialog
-		// explaining this and asking the user to edit the settings.
-		if (column.getPartitionType() != null) {
-			final PartitionedColumnType oldType = column.getPartitionType();
-			type = PartitionColumnDialog.updatePartitionedColumnType(oldType);
-
-			// Check they didn't cancel the request, or left the
-			// scheme unchanged.
-			if (type == null || type.equals(oldType))
-				return;
-		}
-
-		// Otherwise, open a dialog asking the user to define the partitioning
-		// scheme.
-		else {
-			type = PartitionColumnDialog.createPartitionedColumnType();
-
-			// Check they didn't cancel the request.
-			if (type == null)
-				return;
-		}
-
-		// Do the partitioning.
-		this.requestPartitionByColumn(dataset, column, type);
-	}
-
-	/**
-	 * Requests that a column be partitioned using the given partitioning
+	 * 
+	 * public void requestPartitionByColumn(final DataSet dataset, final
+	 * DataSetColumn column) { PartitionedColumnType type;
+	 *  // If the column is already partitioned, open a dialog // explaining
+	 * this and asking the user to edit the settings. if
+	 * (column.getPartitionType() != null) { final PartitionedColumnType oldType =
+	 * column.getPartitionType(); type =
+	 * PartitionColumnDialog.updatePartitionedColumnType(oldType);
+	 *  // Check they didn't cancel the request, or left the // scheme
+	 * unchanged. if (type == null || type.equals(oldType)) return; }
+	 *  // Otherwise, open a dialog asking the user to define the partitioning //
+	 * scheme. else { type =
+	 * PartitionColumnDialog.createPartitionedColumnType();
+	 *  // Check they didn't cancel the request. if (type == null) return; }
+	 *  // Do the partitioning. this.requestPartitionByColumn(dataset, column,
+	 * type); }
+	 * 
+	 * /** Requests that a column be partitioned using the given partitioning
 	 * scheme.
 	 * 
 	 * @param dataset
@@ -1100,28 +1106,18 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the column to partition.
 	 * @param type
 	 *            how to partition it.
-	 *
-	public void requestPartitionByColumn(final DataSet dataset,
-			final DataSetColumn column, final PartitionedColumnType type) {
-		try {
-			// Do the partitioning.
-			MartBuilderUtils.partitionByColumn(dataset, column, type);
-
-			// Repaint the dataset, as the partitioned column
-			// will have changed colour.
-			this.repaintDataSetDiagram(dataset);
-
-			// Update the explanation diagram so that it
-			// correctly reflects the changed objects.
-			this.recalculateExplanationDialog();
-
-			// Update the modified status on this tabset.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
-	}
-	*/
+	 * 
+	 * public void requestPartitionByColumn(final DataSet dataset, final
+	 * DataSetColumn column, final PartitionedColumnType type) { try { // Do the
+	 * partitioning. MartBuilderUtils.partitionByColumn(dataset, column, type);
+	 *  // Repaint the dataset, as the partitioned column // will have changed
+	 * colour. this.repaintDataSetDiagram(dataset);
+	 *  // Update the explanation diagram so that it // correctly reflects the
+	 * changed objects. this.recalculateExplanationDialog();
+	 *  // Update the modified status on this tabset.
+	 * this.martTab.getMartTabSet().setModifiedStatus(true); } catch (final
+	 * Throwable t) { StackTrace.showStackTrace(t); } }
+	 */
 
 	/**
 	 * Asks the user if they are sure they want to remove all datasets, then
@@ -1229,82 +1225,45 @@ public class DataSetTabSet extends JTabbedPane {
 	 * Asks for an expression column to be removed from the table.
 	 * 
 	 * @param column
-	 *            the expression column to remove.
-	 * FIXME: Reinstate.
-	public void requestRemoveExpressionColumn(final ExpressionColumn column) {
-		// Do this in the background.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Remove the column.
-					MartBuilderUtils.removeExpressionColumn(column);
-
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							// Recalculate the dataset diagram based on the
-							// newly modified dataset.
-							DataSetTabSet.this
-									.recalculateDataSetDiagram((DataSet) column
-											.getTable().getSchema());
-
-							// Recalculate the explanation diagram too.
-							DataSetTabSet.this.recalculateExplanationDialog();
-
-							// Update the modified status for the tabset.
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.setModifiedStatus(true);
-						}
-					});
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							StackTrace.showStackTrace(t);
-						}
-					});
-				}
-			}
-		});
-	}
-
-	/**
-	 * Asks for a table restriction to be removed.
+	 *            the expression column to remove. FIXME: Reinstate. public void
+	 *            requestRemoveExpressionColumn(final ExpressionColumn column) { //
+	 *            Do this in the background. LongProcess.run(new Runnable() {
+	 *            public void run() { try { // Remove the column.
+	 *            MartBuilderUtils.removeExpressionColumn(column);
+	 * 
+	 * SwingUtilities.invokeLater(new Runnable() { public void run() { //
+	 * Recalculate the dataset diagram based on the // newly modified dataset.
+	 * DataSetTabSet.this .recalculateDataSetDiagram((DataSet) column
+	 * .getTable().getSchema());
+	 *  // Recalculate the explanation diagram too.
+	 * DataSetTabSet.this.recalculateExplanationDialog();
+	 *  // Update the modified status for the tabset.
+	 * DataSetTabSet.this.martTab.getMartTabSet() .setModifiedStatus(true); }
+	 * }); } catch (final Throwable t) { SwingUtilities.invokeLater(new
+	 * Runnable() { public void run() { StackTrace.showStackTrace(t); } }); } }
+	 * }); }
+	 * 
+	 * /** Asks for a table restriction to be removed.
 	 * 
 	 * @param dataset
 	 *            the dataset we are working with.
 	 * @param table
 	 *            the table to unrestrict.
-	 *
-	public void requestRemoveTableRestriction(final DataSet dataset,
-			final Table table) {
-		// Do this in the background.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Remove the restriction.
-					MartBuilderUtils.unrestrictTable(dataset, table);
-
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							// Update the explanation diagram so that it
-							// correctly reflects the changed objects.
-							DataSetTabSet.this.repaintExplanationDialog();
-
-							// Update the modified status for the tabset.
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.setModifiedStatus(true);
-						}
-					});
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							StackTrace.showStackTrace(t);
-						}
-					});
-				}
-			}
-		});
-	}
-	*/
+	 * 
+	 * public void requestRemoveTableRestriction(final DataSet dataset, final
+	 * Table table) { // Do this in the background. LongProcess.run(new
+	 * Runnable() { public void run() { try { // Remove the restriction.
+	 * MartBuilderUtils.unrestrictTable(dataset, table);
+	 * 
+	 * SwingUtilities.invokeLater(new Runnable() { public void run() { // Update
+	 * the explanation diagram so that it // correctly reflects the changed
+	 * objects. DataSetTabSet.this.repaintExplanationDialog();
+	 *  // Update the modified status for the tabset.
+	 * DataSetTabSet.this.martTab.getMartTabSet() .setModifiedStatus(true); }
+	 * }); } catch (final Throwable t) { SwingUtilities.invokeLater(new
+	 * Runnable() { public void run() { StackTrace.showStackTrace(t); } }); } }
+	 * }); }
+	 */
 
 	/**
 	 * Renames a dataset, then renames the tab too.
@@ -1332,15 +1291,20 @@ public class DataSetTabSet extends JTabbedPane {
 		// Rename the tab displaying it.
 		this.setTitleAt(idx, dataset.getName());
 
-		// Update the overview diagram. (Recalc not repaint
-		// as the name will have changed the size of components).
-		this.recalculateOverviewDiagram();
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				// Update the overview diagram. (Recalc not repaint
+				// as the name will have changed the size of components).
+				DataSetTabSet.this.recalculateOverviewDiagram();
 
-		// And update the explanation diagram.
-		this.recalculateExplanationDialog();
+				// And update the explanation diagram.
+				DataSetTabSet.this.recalculateExplanationDialog();
 
-		// Set the tabset as modified.
-		this.martTab.getMartTabSet().setModifiedStatus(true);
+				// Set the tabset as modified.
+				DataSetTabSet.this.martTab.getMartTabSet().setModifiedStatus(
+						true);
+			}
+		});
 	}
 
 	/**
@@ -1352,7 +1316,6 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the column to rename.
 	 */
 	public void requestRenameDataSetColumn(final DataSetColumn dsColumn) {
-		try {
 		// Ask user for the new name.
 		final String newName = this.askUserForName(Resources
 				.get("requestDataSetColumnName"), dsColumn.getModifiedName());
@@ -1361,23 +1324,40 @@ public class DataSetTabSet extends JTabbedPane {
 		// not changed, don't rename it.
 		if (newName == null || newName.equals(dsColumn.getModifiedName()))
 			return;
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Rename the dataset.
+					MartBuilderUtils.renameDataSetColumn(dsColumn, newName);
 
-		// Rename the dataset.
-		MartBuilderUtils.renameDataSetColumn(dsColumn, newName);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the dataset diagram based on the modified
+							// dataset.
+							DataSetTabSet.this
+									.recalculateDataSetDiagram((DataSet) dsColumn
+											.getTable().getSchema());
 
-		// Recalculate the dataset diagram as the column name will have
-		// caused the column and the table to resize themselves.
-		this.recalculateDataSetDiagram((DataSet) dsColumn.getTable()
-				.getSchema());
+							// Update the explanation diagram so that it
+							// correctly reflects any changed relation.
+							DataSetTabSet.this.recalculateExplanationDialog();
 
-		// Recalc the explanation too.
-		this.recalculateExplanationDialog();
+							// Update the modified status for this tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				}
+			}
+		});
 
-		// Set the tabset as modified.
-		this.martTab.getMartTabSet().setModifiedStatus(true);
-	} catch (final Throwable t) {
-		StackTrace.showStackTrace(t);
-	}
 	}
 
 	/**
@@ -1398,18 +1378,39 @@ public class DataSetTabSet extends JTabbedPane {
 		if (newName == null || newName.equals(dsTable.getModifiedName()))
 			return;
 
-		// Rename the dataset.
-		MartBuilderUtils.renameDataSetTable(dsTable, newName);
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Rename the dataset.
+					MartBuilderUtils.renameDataSetTable(dsTable, newName);
 
-		// Recalculate the dataset diagram as the table name will have
-		// caused the table to resize itself.
-		this.recalculateDataSetDiagram((DataSet) dsTable.getSchema());
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the dataset diagram based on the modified
+							// dataset.
+							DataSetTabSet.this
+									.recalculateDataSetDiagram((DataSet) dsTable
+											.getSchema());
 
-		// Recalc the explanation diagram too.
-		this.recalculateExplanationDialog();
+							// Update the explanation diagram so that it
+							// correctly reflects any changed relation.
+							DataSetTabSet.this.recalculateExplanationDialog();
 
-		// Set the tabset as modified.
-		this.martTab.getMartTabSet().setModifiedStatus(true);
+							// Update the modified status for this tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				}
+			}
+		});
 	}
 
 	/**
@@ -1438,11 +1439,17 @@ public class DataSetTabSet extends JTabbedPane {
 			// Add a tab to represent the replicate.
 			this.addDataSetTab(newDataSet, true);
 
-			// Update the overview diagram.
-			this.recalculateOverviewDiagram();
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					// Repaint the dataset diagram based on the modified
+					// dataset.
+					DataSetTabSet.this.recalculateOverviewDiagram();
 
-			// Set the dataset tabset status as modified.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
+				}
+			});
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		}
@@ -1458,22 +1465,38 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestSubclassRelation(final DataSet ds,
 			final Relation relation) {
-		try {
-			// Subclass the relation.
-			MartBuilderUtils.subclassRelation(ds, relation);
 
-			// Recalculate the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Subclass the relation.
+					MartBuilderUtils.subclassRelation(ds, relation);
 
-			// Update the explanation diagram so that it
-			// correctly reflects the changed relation.
-			this.recalculateExplanationDialog();
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the dataset diagram based on the modified
+							// dataset.
+							DataSetTabSet.this.recalculateDataSetDiagram(ds);
 
-			// Update the modified status.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
+							// Update the explanation diagram so that it
+							// correctly reflects any changed relation.
+							DataSetTabSet.this.recalculateExplanationDialog();
+
+							// Update the modified status for this tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				}
+			}
+		});
 	}
 
 	/**
@@ -1604,27 +1627,18 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param ds
 	 *            the dataset we are working with.
 	 * @param relation
-	 *            the relation to un-concat-only.
-	 * FIXME: Reinstate.
-	public void requestUnconcatOnlyRelation(final DataSet ds,
-			final Relation relation) {
-		try {
-			// Remove the concat-only flag.
-			MartBuilderUtils.unconcatOnlyRelation(ds, relation);
-
-			// Recalculate the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
-
-			// Update the explanation diagram so that it
-			// correctly reflects the changed relation.
-			this.recalculateExplanationDialog();
-
-			// Update the modified status.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
-	}*/
+	 *            the relation to un-concat-only. FIXME: Reinstate. public void
+	 *            requestUnconcatOnlyRelation(final DataSet ds, final Relation
+	 *            relation) { try { // Remove the concat-only flag.
+	 *            MartBuilderUtils.unconcatOnlyRelation(ds, relation);
+	 *  // Recalculate the dataset diagram based on the modified
+	 * dataset. this.recalculateDataSetDiagram(ds);
+	 *  // Update the explanation diagram so that it // correctly reflects the
+	 * changed relation. this.recalculateExplanationDialog();
+	 *  // Update the modified status.
+	 * this.martTab.getMartTabSet().setModifiedStatus(true); } catch (final
+	 * Throwable t) { StackTrace.showStackTrace(t); } }
+	 */
 
 	/**
 	 * Requests that a column be unmasked.
@@ -1635,22 +1649,80 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the column to unmask.
 	 */
 	public void requestUnmaskColumn(final DataSet ds, final DataSetColumn column) {
-		try {
-			// Unmask the column.
-			MartBuilderUtils.unmaskColumn(ds, column);
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Unmask the column.
+					MartBuilderUtils.unmaskColumn(ds, column);
 
-			// Recalculate the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the dataset diagram based on the modified
+							// dataset.
+							DataSetTabSet.this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it
-			// correctly reflects any changed relation.
-			this.recalculateExplanationDialog();
+							// Update the explanation diagram so that it
+							// correctly reflects any changed relation.
+							DataSetTabSet.this.recalculateExplanationDialog();
 
-			// Update the modification status for this tabset.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
+							// Update the modified status for this tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Requests that a column be un-non-inherited.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param column
+	 *            the column to un-non-inherit.
+	 */
+	public void requestUnNonInheritColumn(final DataSet ds,
+			final DataSetColumn column) {
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Unmask the column.
+					MartBuilderUtils.unNonInheritColumn(ds, column);
+
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the dataset diagram based on the modified
+							// dataset.
+							DataSetTabSet.this.recalculateDataSetDiagram(ds);
+
+							// Update the explanation diagram so that it
+							// correctly reflects any changed relation.
+							DataSetTabSet.this.recalculateExplanationDialog();
+
+							// Update the modified status for this tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				}
+			}
+		});
 	}
 
 	/**
@@ -1661,26 +1733,42 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param relation
 	 *            the schema relation to unforce.
 	 */
-	public void requestUnforceRelation(final DataSet ds, final DataSetTable dst, final Relation relation) {
-		try {
-			// Unmasks the relation.
-			if (dst!=null)
-				MartBuilderUtils.unforceRelation(dst, relation);
-			else
-				MartBuilderUtils.unforceRelation(ds, relation);
+	public void requestUnforceRelation(final DataSet ds,
+			final DataSetTable dst, final Relation relation) {
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Unmasks the relation.
+					if (dst != null)
+						MartBuilderUtils.unforceRelation(dst, relation);
+					else
+						MartBuilderUtils.unforceRelation(ds, relation);
 
-			// Recalculate the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the dataset diagram based on the modified
+							// dataset.
+							DataSetTabSet.this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it
-			// correctly reflects the changed relation.
-			this.recalculateExplanationDialog();
+							// Update the explanation diagram so that it
+							// correctly reflects any changed relation.
+							DataSetTabSet.this.recalculateExplanationDialog();
 
-			// Update the modified status.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
+							// Update the modified status for this tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				}
+			}
+		});
 	}
 
 	/**
@@ -1691,26 +1779,42 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param relation
 	 *            the schema relation to unmask.
 	 */
-	public void requestUnmaskRelation(final DataSet ds, final DataSetTable dst, final Relation relation) {
-		try {
-			// Unmasks the relation.
-			if (dst!=null)
-				MartBuilderUtils.unmaskRelation(dst, relation);
-			else
-				MartBuilderUtils.unmaskRelation(ds, relation);
+	public void requestUnmaskRelation(final DataSet ds, final DataSetTable dst,
+			final Relation relation) {
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Unmasks the relation.
+					if (dst != null)
+						MartBuilderUtils.unmaskRelation(dst, relation);
+					else
+						MartBuilderUtils.unmaskRelation(ds, relation);
 
-			// Recalculate the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the dataset diagram based on the modified
+							// dataset.
+							DataSetTabSet.this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it
-			// correctly reflects the changed relation.
-			this.recalculateExplanationDialog();
+							// Update the explanation diagram so that it
+							// correctly reflects any changed relation.
+							DataSetTabSet.this.recalculateExplanationDialog();
 
-			// Update the modified status.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
+							// Update the modified status for this tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				}
+			}
+		});
 	}
 
 	/**
@@ -1721,26 +1825,42 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param table
 	 *            the schema table to unmask all relations for.
 	 */
-	public void requestUnmaskTable(final DataSet ds, final DataSetTable dst, final Table table) {
-		try {
-			// Mask all the relations on the table.
-			if (dst!=null)
-				MartBuilderUtils.unmaskTable(dst, table);
-			else
-				MartBuilderUtils.unmaskTable(ds, table);
+	public void requestUnmaskTable(final DataSet ds, final DataSetTable dst,
+			final Table table) {
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Mask all the relations on the table.
+					if (dst != null)
+						MartBuilderUtils.unmaskTable(dst, table);
+					else
+						MartBuilderUtils.unmaskTable(ds, table);
 
-			// Recalculate the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the dataset diagram based on the modified
+							// dataset.
+							DataSetTabSet.this.recalculateDataSetDiagram(ds);
 
-			// Update the explanation diagram so that it
-			// correctly reflects the changed table.
-			this.recalculateExplanationDialog();
+							// Update the explanation diagram so that it
+							// correctly reflects any changed relation.
+							DataSetTabSet.this.recalculateExplanationDialog();
 
-			// Update the modified status.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
+							// Update the modified status for this tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				}
+			}
+		});
 	}
 
 	/**
@@ -1750,28 +1870,18 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset we are working with.
 	 * @param column
 	 *            the column to turn partioning off for.
-	 *
-	public void requestUnpartitionByColumn(final DataSet dataset,
-			final DataSetColumn column) {
-		try {
-			// Unpartition the column.
-			MartBuilderUtils.unpartitionByColumn(dataset, column);
-
-			// Repaint the dataset, as the partitioned column
-			// will have changed colour.
-			this.repaintDataSetDiagram(dataset);
-
-			// Update the explanation diagram so that it
-			// correctly reflects the changed objects.
-			this.repaintExplanationDialog();
-
-			// Update the modified status on this tabset.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
-	}
-	*/
+	 * 
+	 * public void requestUnpartitionByColumn(final DataSet dataset, final
+	 * DataSetColumn column) { try { // Unpartition the column.
+	 * MartBuilderUtils.unpartitionByColumn(dataset, column);
+	 *  // Repaint the dataset, as the partitioned column // will have changed
+	 * colour. this.repaintDataSetDiagram(dataset);
+	 *  // Update the explanation diagram so that it // correctly reflects the
+	 * changed objects. this.repaintExplanationDialog();
+	 *  // Update the modified status on this tabset.
+	 * this.martTab.getMartTabSet().setModifiedStatus(true); } catch (final
+	 * Throwable t) { StackTrace.showStackTrace(t); } }
+	 */
 
 	/**
 	 * Requests that the subclass flag be removed from a relation.
@@ -1783,22 +1893,36 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestUnsubclassRelation(final DataSet ds,
 			final Relation relation) {
-		try {
-			// Un-subclass the relation.
-			MartBuilderUtils.unsubclassRelation(ds, relation);
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Un-subclass the relation.
+					MartBuilderUtils.unsubclassRelation(ds, relation);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the dataset diagram based on the modified
+							// dataset.
+							DataSetTabSet.this.recalculateDataSetDiagram(ds);
 
-			// Recalculate the dataset diagram based on the modified dataset.
-			this.recalculateDataSetDiagram(ds);
+							// Update the explanation diagram so that it
+							// correctly reflects any changed relation.
+							DataSetTabSet.this.recalculateExplanationDialog();
 
-			// Update the explanation diagram so that it
-			// correctly reflects the changed relation.
-			this.recalculateExplanationDialog();
-
-			// Update the modified status.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
+							// Update the modified status for this tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				}
+			}
+		});
 	}
 
 	/**

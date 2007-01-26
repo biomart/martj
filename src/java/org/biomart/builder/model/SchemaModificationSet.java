@@ -74,8 +74,7 @@ public class SchemaModificationSet {
 		if (!this.maskedRelations.containsKey(tableName))
 			this.maskedRelations.put(tableName, new HashSet());
 		final Collection masks = (Collection)this.maskedRelations.get(tableName);
-		if (!masks.contains(relation))
-			masks.add(relation);
+		masks.add(relation);
 	}
 
 	public void unsetMaskedRelation(final Relation relation) {
@@ -119,8 +118,7 @@ public class SchemaModificationSet {
 	}
 	
 	public void setMergedRelation(final Relation rel) {
-		if (!this.mergedRelations.contains(rel))
-			this.mergedRelations.add(rel);
+		this.mergedRelations.add(rel);
 	}
 	
 	public void unsetMergedRelation(final Relation rel) {
@@ -150,8 +148,7 @@ public class SchemaModificationSet {
 		if (!this.forceIncludeRelations.containsKey(tableName))
 			this.forceIncludeRelations.put(tableName, new HashSet());
 		final Collection masks = (Collection)this.forceIncludeRelations.get(tableName);
-		if (!masks.contains(relation))
-			masks.add(relation);
+		masks.add(relation);
 	}
 
 	public void unsetForceIncludeRelation(final Relation relation) {

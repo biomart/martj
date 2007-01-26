@@ -63,6 +63,16 @@ public class ColumnComponent extends BoxShapedComponent {
 	public static Color INHERITED_COLOUR = Color.RED;
 
 	/**
+	 * Constant referring to uninherited column colour.
+	 */
+	public static Color NONINHERITED_FG_COLOUR = Color.MAGENTA;
+
+	/**
+	 * Constant referring to inherited column colour.
+	 */
+	public static Color NORMAL_FG_COLOUR = Color.BLACK;
+
+	/**
 	 * Normal font.
 	 */
 	public static Font NORMAL_FONT = Font.decode("SansSerif-PLAIN-10");

@@ -25,6 +25,8 @@ import java.sql.Connection;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -62,7 +64,7 @@ public class RegistryDataSource implements DataSource {
 	private int loginTimeout = 0;
 
 	// Our set of open connections.
-	private List openConnections = new ArrayList();
+	private Collection openConnections = new HashSet();
 
 	// Are we initialised?
 	private Registry registry;
@@ -146,7 +148,7 @@ public class RegistryDataSource implements DataSource {
 	 *         missing, but never <tt>null</tt>.
 	 */
 	public DriverPropertyInfo[] getMissingProperties() {
-		List missingProperties = new ArrayList();
+		Collection missingProperties = new HashSet();
 		if (this.registryURL == null) {
 			final DriverPropertyInfo missingProp = new DriverPropertyInfo(
 					"registryURL", null);

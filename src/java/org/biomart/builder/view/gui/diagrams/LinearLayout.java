@@ -26,7 +26,9 @@ import java.awt.LayoutManager;
 import java.awt.Rectangle;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +37,9 @@ import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
 
 /**
  * This is a layout manager that lays out components in two rows and runs
@@ -56,14 +61,16 @@ public class LinearLayout implements LayoutManager {
 	private static final double TABLE_PADDING = 10.0; // 72.0 = 1 inch
 
 	private final List bottomRow = new ArrayList();
-
+	
+	private final Map relationCounts = new HashMap();
+	
 	private double bottomRowHeight;
 
 	private int minHeight;
 
 	private int minWidth;
 
-	private final List relations = new ArrayList();
+	private final Collection relations = new HashSet();
 
 	private boolean sizeUnknown;
 
@@ -116,6 +123,26 @@ public class LinearLayout implements LayoutManager {
 				else
 					bothRows.add(comp);
 			}
+			
+			// Count the internal/external relations on each component.
+			for (final Iterator i = bothRows.iterator(); i.hasNext(); ) {
+				final Component comp = (Component) i.next();
+				final Collection rels = new HashSet();
+				if (comp instanceof TableComponent) {
+					for (final Iterator j = ((Table)((TableComponent)comp).getObject()).getRelations().iterator(); j.hasNext(); )  {
+						final Relation rel = (Relation)j.next();
+				 		if (!rel.isExternal())
+				 			rels.add(rel);
+					}
+				} else if (comp instanceof SchemaComponent) {
+					for (final Iterator j = ((Schema)((SchemaComponent)comp).getObject()).getRelations().iterator(); j.hasNext(); )  {
+						final Relation rel = (Relation)j.next();
+				 		if (rel.isExternal())
+				 			rels.add(rel);
+					}
+				}
+				this.relationCounts.put(comp, new Integer(rels.size()));
+			}
 
 			// Split the row into top and bottom halves if
 			// there are more than 4 objects.
@@ -139,14 +166,8 @@ public class LinearLayout implements LayoutManager {
 
 				// Work out how many visible relations lead off this component.
 				// If not a TableComponent or SchemaComponent, it's zero.
-				int relationCount = 0;
-				if (comp instanceof TableComponent)
-					relationCount = ((TableComponent) comp)
-							.countInternalRelations();
-				else if (comp instanceof SchemaComponent)
-					relationCount = ((SchemaComponent) comp)
-							.countExternalRelations();
-
+				final int relationCount = ((Integer)this.relationCounts.get(comp)).intValue();
+				
 				// How big is this component?
 				final Dimension compSize = comp.getPreferredSize();
 
@@ -170,13 +191,7 @@ public class LinearLayout implements LayoutManager {
 
 				// Work out how many relations lead off this component.
 				// If not a TableComponent or SchemaComponent, it's zero.
-				int relationCount = 0;
-				if (comp instanceof TableComponent)
-					relationCount = ((TableComponent) comp)
-							.countInternalRelations();
-				else if (comp instanceof SchemaComponent)
-					relationCount = ((SchemaComponent) comp)
-							.countExternalRelations();
+				final int relationCount = ((Integer)this.relationCounts.get(comp)).intValue();
 
 				// How big is this component?
 				final Dimension compSize = comp.getPreferredSize();
@@ -247,14 +262,8 @@ public class LinearLayout implements LayoutManager {
 				nextVerticalTrackX.put(comp, new Double(nextX));
 
 				// Work out how many relations lead off this component.
-				// If not a TableComponent or SchemaComponent, it's zero.
-				int relationCount = 0;
-				if (comp instanceof TableComponent)
-					relationCount = ((TableComponent) comp)
-							.countInternalRelations();
-				else if (comp instanceof SchemaComponent)
-					relationCount = ((SchemaComponent) comp)
-							.countExternalRelations();
+				// If not a TableComponent or SchemaComponent, it's zero.	
+				final int relationCount = ((Integer)this.relationCounts.get(comp)).intValue();
 
 				// Leave space for the vertical relations.
 				nextX += relationCount * LinearLayout.RELATION_SPACING;
@@ -292,13 +301,7 @@ public class LinearLayout implements LayoutManager {
 
 				// Work out how many relations lead off this component.
 				// If not a TableComponent or SchemaComponent, it's zero.
-				int relationCount = 0;
-				if (comp instanceof TableComponent)
-					relationCount = ((TableComponent) comp)
-							.countInternalRelations();
-				else if (comp instanceof SchemaComponent)
-					relationCount = ((SchemaComponent) comp)
-							.countExternalRelations();
+				final int relationCount = ((Integer)this.relationCounts.get(comp)).intValue();
 
 				// Leave space for the vertical relations.
 				nextX += relationCount * LinearLayout.RELATION_SPACING;

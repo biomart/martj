@@ -84,12 +84,14 @@ public class AllSchemasDiagram extends Diagram {
 					this);
 			this.addDiagramComponent(schemaComponent);
 			// Remember the external relations.
-			relations.addAll(schema.getExternalRelations());
+			relations.addAll(schema.getRelations());
 		}
 
 		// Add a RelationComponent for each external relation.
 		for (final Iterator i = relations.iterator(); i.hasNext();) {
 			final Relation relation = (Relation) i.next();
+			if (!relation.isExternal())
+				continue;
 			final RelationComponent relationComponent = new RelationComponent(
 					relation, this);
 			this.addDiagramComponent(relationComponent);

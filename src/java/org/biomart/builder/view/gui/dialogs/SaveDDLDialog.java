@@ -325,7 +325,7 @@ public class SaveDDLDialog extends JDialog {
 	 */
 	private void createDDL() {
 		// What datasets are we making DDL for?
-		final List selectedDataSets = Arrays.asList(this.datasetsList
+		final Collection selectedDataSets = Arrays.asList(this.datasetsList
 				.getSelectedValues());
 		// Make a stringbuffer in case we want screen output.
 		final StringBuffer sb = new StringBuffer();

@@ -22,11 +22,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.biomart.builder.exceptions.ConstructorException;
+import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
@@ -161,7 +163,7 @@ public interface MartConstructor {
 
 		private Helper helper;
 
-		private List martConstructorListeners;
+		private Collection martConstructorListeners;
 
 		private double percentComplete = 0.0;
 
@@ -230,9 +232,32 @@ public interface MartConstructor {
 					tablesToProcess.add(table);
 			}
 			// Now recursively expand the table list.
-			for (int i = 0; i < tablesToProcess.size(); i++)
-				for (final Iterator j = ((DataSetTable) tablesToProcess.get(i))
-						.getRelations().iterator(); j.hasNext();) {
+			for (int i = 0; i < tablesToProcess.size(); i++) {
+				final DataSetTable tbl = (DataSetTable) tablesToProcess.get(i);
+				// Check that, if it is subclassed, it has cols
+				// with all the same modified names as the parent table.
+				if (tbl.getType().equals(DataSetTableType.MAIN_SUBCLASS)) {
+					// Find parent table.
+					Relation parentRelation = null;
+					for (final Iterator j = tbl.getRelations().iterator(); parentRelation==null && j.hasNext(); ) {
+						final Relation rel = (Relation)j.next();
+						if (rel.getManyKey().getTable().equals(tbl))
+							parentRelation = rel;
+					}
+					final DataSetTable parentTable = (DataSetTable)parentRelation.getOneKey().getTable();
+					// Get the two sets of column names.
+					final Collection parentColNames = new HashSet();
+					for (final Iterator j = parentTable.getColumns().iterator(); j.hasNext(); )
+						parentColNames.add(((DataSetColumn)j.next()).getModifiedName());
+					final Collection ourColNames = new HashSet();
+					for (final Iterator j = tbl.getColumns().iterator(); j.hasNext(); )
+						ourColNames.add(((DataSetColumn)j.next()).getModifiedName());
+					// Make the check.
+					if (!ourColNames.containsAll(parentColNames))
+						throw new ValidationException(Resources.get("subclassMissingCols", new String[]{tbl.getModifiedName(), parentTable.getModifiedName()}));
+				}
+				// Expand the table 
+				for (final Iterator j = tbl.getRelations().iterator(); j.hasNext();) {
 					final Relation r = (Relation) j.next();
 					final DataSetTable dsTab = (DataSetTable) r.getManyKey()
 							.getTable();
@@ -241,7 +266,8 @@ public interface MartConstructor {
 									.isMaskedTable(dsTab))
 						tablesToProcess.add(dsTab);
 				}
-
+			}
+			
 			// Check not cancelled.
 			this.checkCancelled();
 
@@ -604,8 +630,8 @@ public interface MartConstructor {
 					final DataSet ds = (DataSet) i.next();
 					final Mart mart = ds.getMart();
 					if (!martDataSets.containsKey(mart))
-						martDataSets.put(mart, new ArrayList());
-					((List) martDataSets.get(mart)).add(ds);
+						martDataSets.put(mart, new HashSet());
+					((Collection) martDataSets.get(mart)).add(ds);
 				}
 
 				// Begin.
@@ -624,7 +650,7 @@ public interface MartConstructor {
 					try {
 						// Loop over all the datasets we want included from this
 						// mart. Build actions for each one.
-						for (final Iterator i = ((List) j.next()).iterator(); i
+						for (final Iterator i = ((Collection) j.next()).iterator(); i
 								.hasNext();) 
 							try {
 								this.issueListenerEvent(MartConstructorListener.DATASET_STARTED);
@@ -643,6 +669,9 @@ public interface MartConstructor {
 					}
 				}
 			} catch (final ConstructorException e) {
+				this.failure = e;
+			} catch (final ValidationException e) {
+				// This is so the users see a nice message straight away.
 				this.failure = e;
 			} catch (final Throwable t) {
 				this.failure = new ConstructorException(t);
@@ -685,7 +714,7 @@ public interface MartConstructor {
 		 * @throws SQLException
 		 *             in case of problems.
 		 */
-		public List listDistinctValues(Column col) throws SQLException;
+		public Collection listDistinctValues(Column col) throws SQLException;
 	}
 
 	/**

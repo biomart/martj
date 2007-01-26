@@ -101,13 +101,13 @@ public class Mart {
 
 		// Make a unique set to hold all the resulting datasets. It
 		// is initially empty.
-		final Set suggestedDataSets = new HashSet();
+		final Collection suggestedDataSets = new HashSet();
 		// Make a set to contain relations to subclass.
-		final Set subclassedRelations = new HashSet();
+		final Collection subclassedRelations = new HashSet();
 		// Make a map to hold tables included for each relation.
 		final Map relationTablesIncluded = new HashMap();
 		// Make a list to hold all tables included at this level.
-		final Set localTablesIncluded = new HashSet(tablesIncluded);
+		final Collection localTablesIncluded = new HashSet(tablesIncluded);
 
 		// Find all 1:M relations starting from the given table that point
 		// to another interesting table.
@@ -126,7 +126,7 @@ public class Mart {
 				if (includeTables.contains(target)
 						&& !localTablesIncluded.contains(target)) {
 					subclassedRelations.add(r);
-					final List newRelationTablesIncluded = new ArrayList(
+					final Collection newRelationTablesIncluded = new HashSet(
 							tablesIncluded);
 					relationTablesIncluded.put(r, newRelationTablesIncluded);
 					newRelationTablesIncluded.add(target);
@@ -168,7 +168,7 @@ public class Mart {
 						if (includeTables.contains(target)
 								&& !localTablesIncluded.contains(target)) {
 							subclassedRelations.add(firstRel);
-							final List newRelationTablesIncluded = new ArrayList(
+							final Collection newRelationTablesIncluded = new HashSet(
 									tablesIncluded);
 							relationTablesIncluded.put(firstRel,
 									newRelationTablesIncluded);
@@ -199,7 +199,7 @@ public class Mart {
 				throw new BioMartError(e);
 			}
 			suggestedDataSets.addAll(this.continueSubclassing(includeTables,
-					(List) relationTablesIncluded.get(r), suggestedDataSet, r
+					(Collection) relationTablesIncluded.get(r), suggestedDataSet, r
 							.getManyKey().getTable()));
 		}
 
@@ -318,9 +318,12 @@ public class Mart {
 			if (ds.getCentralTable().getSchema().equals(schema))
 				this.removeDataSet(ds);
 		}
-		for (final Iterator i = schema.getExternalRelations().iterator(); i
-				.hasNext();)
-			((Relation) i.next()).destroy();
+		for (final Iterator i = schema.getRelations().iterator(); i
+				.hasNext();) {
+			final Relation r = (Relation)i.next();
+			if (r.isExternal())
+				r.destroy();
+		}
 		this.schemas.remove(schema.getName());
 	}
 
@@ -407,7 +410,7 @@ public class Mart {
 		// 1:M:1 relation, so that any further tables past it will still
 		// be included.
 		Log.debug("Finding root tables");
-		final List rootTables = new ArrayList(includeTables);
+		final Collection rootTables = new HashSet(includeTables);
 		for (final Iterator i = includeTables.iterator(); i.hasNext();) {
 			final Table candidate = (Table) i.next();
 			for (final Iterator j = candidate.getRelations().iterator(); j
@@ -433,7 +436,7 @@ public class Mart {
 					.getName());
 			this.addDataSet(dataset);
 			// Process it.
-			final List tablesIncluded = new ArrayList();
+			final Collection tablesIncluded = new HashSet();
 			tablesIncluded.add(rootTable);
 			Log.debug("Attempting to find subclass datasets");
 			suggestedDataSets.addAll(this.continueSubclassing(includeTables,
@@ -457,7 +460,7 @@ public class Mart {
 			// A candidate is a perfect match if the set of tables
 			// covered by the subclass relations is the same as the
 			// original set of tables requested.
-			final Set scTables = new HashSet();
+			final Collection scTables = new HashSet();
 			for (final Iterator j = candidate.getSchemaModifications().getSubclassedRelations()
 					.iterator(); j.hasNext();) {
 				final Relation r = (Relation) j.next();
@@ -524,12 +527,12 @@ public class Mart {
 			final Collection columns) throws SQLException, DataModelException {
 		Log.debug("Suggesting invisible datasets for " + dataset
 				+ " columns " + columns);
-		final List invisibleDataSets = new ArrayList();
+		final Collection invisibleDataSets = new HashSet();
 		final Table sourceTable = ((Column) columns.iterator().next())
 				.getTable();
 		// Find all tables which mention the columns specified.
 		Log.debug("Finding candidate tables");
-		final List candidates = new ArrayList();
+		final Collection candidates = new HashSet();
 		for (final Iterator i = this.schemas.values().iterator(); i.hasNext();)
 			for (final Iterator j = ((Schema) i.next()).getTables().iterator(); j
 					.hasNext();) {

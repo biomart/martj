@@ -338,11 +338,13 @@ public class MartBuilderXML extends DefaultHandler {
 	 * @throws IOException
 	 *             if there was a problem writing to file.
 	 */
-	private void writeRelations(final Collection relations,
+	private void writeRelations(final Collection relations, final boolean writeExternal,
 			final Writer xmlWriter) throws IOException {
 		// Write out each relation in turn.
 		for (final Iterator i = relations.iterator(); i.hasNext();) {
 			final Relation r = (Relation) i.next();
+			if (writeExternal != r.isExternal())
+				continue;
 			Log.debug("Writing relation: " + r);
 
 			// Assign the relation an ID.
@@ -361,7 +363,6 @@ public class MartBuilderXML extends DefaultHandler {
 					(String) this.reverseMappedObjects.get(r.getSecondKey()),
 					xmlWriter);
 			this.writeAttribute("status", r.getStatus().toString(), xmlWriter);
-			this.writeAttribute("alt", r.toString(), xmlWriter);
 			this.closeElement("relation", xmlWriter);
 		}
 	}
@@ -531,7 +532,6 @@ public class MartBuilderXML extends DefaultHandler {
 						.toArray(new String[0]), xmlWriter);
 				this.writeAttribute("status", key.getStatus().getName(),
 						xmlWriter);
-				this.writeAttribute("alt", key.toString(), xmlWriter);
 				this.closeElement(elem, xmlWriter);
 			}
 
@@ -540,7 +540,7 @@ public class MartBuilderXML extends DefaultHandler {
 		}
 
 		// Write relations.
-		this.writeRelations(schema.getInternalRelations(), xmlWriter);
+		this.writeRelations(schema.getRelations(), false, xmlWriter);
 	}
 
 	/**
@@ -577,11 +577,11 @@ public class MartBuilderXML extends DefaultHandler {
 		for (final Iterator i = mart.getSchemas().iterator(); i.hasNext();) {
 			final Schema schema = (Schema) i.next();
 			this.writeSchema(schema, xmlWriter);
-			externalRelations.addAll(schema.getExternalRelations());
+			externalRelations.addAll(schema.getRelations());
 		}
 
 		// Write out relations.
-		this.writeRelations(externalRelations, xmlWriter);
+		this.writeRelations(externalRelations, true, xmlWriter);
 
 		// Write out datasets.
 		for (final Iterator dsi = mart.getDataSets().iterator(); dsi.hasNext();) {
@@ -592,8 +592,6 @@ public class MartBuilderXML extends DefaultHandler {
 			this.writeAttribute("centralTableId",
 					(String) this.reverseMappedObjects
 							.get(ds.getCentralTable()), xmlWriter);
-			this.writeAttribute("alt", ds.getCentralTable().toString(),
-					xmlWriter);
 			this.writeAttribute("optimiser", ds.getDataSetOptimiserType()
 					.getName(), xmlWriter);
 			this.writeAttribute("invisible", Boolean
@@ -611,7 +609,6 @@ public class MartBuilderXML extends DefaultHandler {
 				this.openElement("subclassRelation", xmlWriter);
 				this.writeAttribute("relationId",
 						(String) this.reverseMappedObjects.get(r), xmlWriter);
-				this.writeAttribute("alt", r.toString(), xmlWriter);
 				this.closeElement("subclassRelation", xmlWriter);
 			}
 			
@@ -632,6 +629,17 @@ public class MartBuilderXML extends DefaultHandler {
 					this.writeAttribute("colKey", (String)entry2.getKey(), xmlWriter);
 					this.writeAttribute("newName", (String)entry2.getValue(), xmlWriter);
 					this.closeElement("renamedColumn", xmlWriter);				
+				}
+			}
+			
+			// Write out non-inherited columns and tables.
+			for (final Iterator x = dsMods.getNonInheritedColumns().entrySet().iterator(); x.hasNext(); ) {
+				final Map.Entry entry = (Map.Entry)x.next();
+				for (final Iterator y = ((Collection)entry.getValue()).iterator(); y.hasNext(); ) {
+					this.openElement("nonInheritedColumn", xmlWriter);
+					this.writeAttribute("tableKey", (String)entry.getKey(), xmlWriter);
+					this.writeAttribute("colKey", (String)y.next(), xmlWriter);
+					this.closeElement("nonInheritedColumn", xmlWriter);
 				}
 			}
 			
@@ -906,8 +914,8 @@ public class MartBuilderXML extends DefaultHandler {
 					if (masked) {
 						final Map colMap = ((DataSet)tbl.getSchema()).getDataSetModifications().getMaskedColumns();
 						if (!colMap.containsKey(tbl.getName()))
-							colMap.put(tbl.getName(), new ArrayList());
-						((List)colMap.get(tbl.getName())).add(name);
+							colMap.put(tbl.getName(), new HashSet());
+						((Collection)colMap.get(tbl.getName())).add(name);
 					}
 					
 					// FIXME: Parse all this to comply with 0.6.
@@ -1277,6 +1285,30 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Subclass it.
 				w.getSchemaModifications().setSubclassedRelation(rel);
+			} catch (final Exception e) {
+				throw new SAXException(e);
+			}
+		}
+		
+		// Non-inherited Column (inside dataset).
+		else if ("nonInheritedColumn".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("nonInheritedColumnOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the relation.
+				final String tableKey = (String)attributes.get("tableKey");
+				final String colKey = (String)attributes.get("colKey");
+
+				// Subclass it.
+				final Map colMap = w.getDataSetModifications().getNonInheritedColumns();
+				if (!colMap.containsKey(tableKey))
+					colMap.put(tableKey, new HashSet());
+				((Collection)colMap.get(tableKey)).add(colKey);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}

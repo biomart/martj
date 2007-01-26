@@ -442,11 +442,11 @@ public class SchemaTabSet extends JTabbedPane {
 					// Synchronise it.
 					CommonUtils.synchroniseSchema(schema);
 
-					// If the schema has no internal relations, then maybe
+					// If the schema has no relations, then maybe
 					// we should turn keyguessing on. The user can always
 					// turn it off again later. We need to resynchronise the
 					// schema after turning it on.
-					if (schema.getInternalRelations().size() == 0)
+					if (schema.getRelations().size() == 0)
 						CommonUtils.enableKeyGuessing(schema);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
@@ -495,9 +495,9 @@ public class SchemaTabSet extends JTabbedPane {
 					// Change the status.
 					MartBuilderUtils.changeKeyStatus(SchemaTabSet.this.martTab
 							.getMart(), key, status);
-
+					
 					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
+						public void run() {							
 							// Recalculate the schema diagram this key appears
 							// in, as the table components will have changed
 							// size, and some relations may have disappeared.
@@ -1235,12 +1235,26 @@ public class SchemaTabSet extends JTabbedPane {
 		// changed size owing to the new name. The individual schema
 		// and dataset org.biomart.builder.view.gui.diagrams will also need
 		// to be recalculated.
-		this.recalculateOverviewDiagram();
-		this.recalculateSchemaDiagram(schema);
-		this.martTab.getDataSetTabSet().recalculateAllDataSetDiagrams();
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				// Recalculate the all-schemas diagram.
+				SchemaTabSet.this.recalculateOverviewDiagram();
+				
+				// Recalculate the all-schemas diagram.
+				SchemaTabSet.this.recalculateSchemaDiagram(schema);
+				
+				// Some datasets may have referred to the individual
+				// schema. As it no longer exists, they will
+				// have been dropped, so the dataset tabset needs to
+				// be recalculated.
+				SchemaTabSet.this.martTab.getDataSetTabSet()
+						.recalculateAllDataSetDiagrams();
 
-		// Set the dataset tabset status to modified.
-		this.martTab.getMartTabSet().setModifiedStatus(true);
+				// Set the dataset tabset status as modified.
+				SchemaTabSet.this.martTab.getMartTabSet()
+						.setModifiedStatus(true);
+			}
+		});
 	}
 
 	/**
@@ -1293,16 +1307,11 @@ public class SchemaTabSet extends JTabbedPane {
 			final int count) {
 		try {
 			// Get the rows.
-			final List rows = MartBuilderUtils.selectRows(table, offset, count);
+			final Collection rows = MartBuilderUtils.selectRows(table, offset, count);
 			// Convert to a nested vector.
 			final Vector data = new Vector();
-			for (final Iterator i = rows.iterator(); i.hasNext();) {
-				final List oldRow = (List) i.next();
-				final Vector newRow = new Vector();
-				for (final Iterator j = oldRow.iterator(); j.hasNext();)
-					newRow.add(j.next());
-				data.add(newRow);
-			}
+			for (final Iterator i = rows.iterator(); i.hasNext();) 
+				data.add(new Vector((List) i.next()));
 			// Get the column names.
 			final Vector colNames = new Vector();
 			for (final Iterator i = table.getColumns().iterator(); i.hasNext();)

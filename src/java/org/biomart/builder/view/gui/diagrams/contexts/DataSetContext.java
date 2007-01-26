@@ -169,6 +169,12 @@ public class DataSetContext extends SchemaContext {
 			// All others are normal.
 			else
 				component.setBackground(ColumnComponent.NORMAL_COLOUR);
+			
+			// Change foreground of non-inherited columns.
+			if (((DataSet)column.getTable().getSchema()).getDataSetModifications().isNonInheritedColumn(column))
+				component.setForeground(ColumnComponent.NONINHERITED_FG_COLOUR);
+			else
+				component.setForeground(ColumnComponent.NORMAL_FG_COLOUR);
 		}
 	}
 
@@ -448,20 +454,33 @@ public class DataSetContext extends SchemaContext {
 				contextMenu.add(removeDM);
 				removeDM.setEnabled(!isMerged);
 				removeDM.setSelected(isMasked && !isMerged);
+
+				// The dim table can be subclassed by using this option. This
+				// simply subclasses the relation that caused the dim to exist.
+				final JMenuItem subclass = new JMenuItem(
+						Resources.get("dimToSubclassTitle"));
+				subclass.setMnemonic(Resources.get("dimToSubclassMnemonic")
+						.charAt(0));
+				subclass.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestSubclassRelation(
+										DataSetContext.this.getDataSet(),
+										table.getFocusRelation());
+					}
+				});
+				if (isMerged || isMasked)
+					subclass.setEnabled(false);
+				contextMenu.add(subclass);
 			}
 
 			// Subclass tables have their own options too.
 			else if (tableType.equals(DataSetTableType.MAIN_SUBCLASS)) {
 
-				// FIXME: Reinstate.
-				/*
 				// The subclass table can be removed by using this option. This
 				// simply masks the relation that caused the subclass to exist.
 				final JMenuItem unsubclass = new JMenuItem(
-						Resources.get("removeSubclassTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("collapseAll.gif")));
+						Resources.get("removeSubclassTitle"));
 				unsubclass.setMnemonic(Resources.get("removeSubclassMnemonic")
 						.charAt(0));
 				unsubclass.addActionListener(new ActionListener() {
@@ -469,11 +488,10 @@ public class DataSetContext extends SchemaContext {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestUnsubclassRelation(
 										DataSetContext.this.getDataSet(),
-										table.getUnderlyingRelation());
+										table.getFocusRelation());
 					}
 				});
 				contextMenu.add(unsubclass);
-				*/
 			}
 
 			// Main tables have their own stuff as well.
@@ -532,6 +550,7 @@ public class DataSetContext extends SchemaContext {
 			contextMenu.addSeparator();
 			
 			// Mask the column.
+			final boolean isMasked = ((DataSet)column.getTable().getSchema()).getDataSetModifications().isMaskedColumn(column);
 			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
 					.get("maskColumnTitle"));
 			mask.setMnemonic(Resources.get("maskColumnMnemonic").charAt(0));
@@ -550,8 +569,30 @@ public class DataSetContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(mask);
-			mask.setSelected(((DataSet)column.getTable().getSchema()).getDataSetModifications().isMaskedColumn(column));
+			mask.setSelected(isMasked);
 
+			// Non-inherit inherited columns.
+			final boolean isNonInherited = ((DataSet)column.getTable().getSchema()).getDataSetModifications().isNonInheritedColumn(column);
+			final JCheckBoxMenuItem inherited = new JCheckBoxMenuItem(Resources
+					.get("nonInheritColumnTitle"));
+			inherited.setMnemonic(Resources.get("nonInheritColumnMnemonic").charAt(0));
+			inherited.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					if (inherited.isSelected())
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestNonInheritColumn(
+										DataSetContext.this.getDataSet(),
+										column);
+					else
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestUnNonInheritColumn(
+										DataSetContext.this.getDataSet(),
+										column);
+				}
+			});
+			contextMenu.add(inherited);
+			inherited.setSelected(isNonInherited);
+			inherited.setEnabled(isMasked || !((DataSetTable)column.getTable()).getType().equals(DataSetTableType.DIMENSION));
 
 			// FIXME: Reinstate.
 			/*

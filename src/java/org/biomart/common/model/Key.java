@@ -21,6 +21,7 @@ package org.biomart.common.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -175,8 +176,10 @@ public interface Key extends Comparable {
 	 */
 	public class GenericKey implements Key {
 		private final List columns = new ArrayList();
+		
+		private final List columnNames = new ArrayList();
 
-		private final List relations = new ArrayList();
+		private final Collection relations = new HashSet();
 
 		private ComponentStatus status;
 
@@ -256,13 +259,7 @@ public interface Key extends Comparable {
 		}
 
 		public List getColumnNames() {
-			final List names = new ArrayList();
-			if (this.columns != null)
-				for (final Iterator i = this.columns.iterator(); i.hasNext();) {
-					final Column c = (Column) i.next();
-					names.add(c.getName());
-				}
-			return names;
+			return this.columnNames;
 		}
 
 		public List getColumns() {
@@ -308,6 +305,7 @@ public interface Key extends Comparable {
 					+ " to " + columns);
 			// Remove all existing columns.
 			this.columns.clear();
+			this.columnNames.clear();
 
 			// Iterate over the new set of columns.
 			for (final Iterator i = columns.iterator(); i.hasNext();) {
@@ -319,6 +317,7 @@ public interface Key extends Comparable {
 
 				// Add the column.
 				this.columns.add(column);
+				this.columnNames.add(column.getName());
 			}
 
 			// Invalidate all relations associated with this key. This means

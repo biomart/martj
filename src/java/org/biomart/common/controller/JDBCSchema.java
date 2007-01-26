@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -215,7 +216,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// some previous run. Any relations that are left in this list by
 			// the end of the loop for this table no longer exist in the
 			// database, and will be dropped.
-			final List relationsToBeDropped = new ArrayList(pk.getRelations());
+			final Collection relationsToBeDropped = new HashSet(pk.getRelations());
 
 			// Identify all foreign keys in the database metadata that refer
 			// to the current primary key.
@@ -507,7 +508,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// some previous run. Any relations that are left in this list by
 			// the end of the loop for this table no longer exist in the
 			// database, and will be dropped.
-			final List relationsToBeDropped = new ArrayList(pk.getRelations());
+			final Collection relationsToBeDropped = new HashSet(pk.getRelations());
 
 			// Now we know that we can use this PK for certain, look for all
 			// other tables (other than the one the PK itself belongs to), for
@@ -736,7 +737,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		final JDBCDataLink partnerLink = (JDBCDataLink) partner;
 
 		// Work out the partner's catalogs and schemas.
-		final List partnerSchemas = new ArrayList();
+		final Collection partnerSchemas = new HashSet();
 		try {
 			final DatabaseMetaData dmd = partnerLink.getConnection()
 					.getMetaData();
@@ -970,7 +971,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		// this list all tables that still exist in the database. At the end of
 		// the method, the list contains only those tables which no longer
 		// exist, so they will be dropped.
-		final List tablesToBeDropped = new ArrayList(this.getTables());
+		final Collection tablesToBeDropped = new HashSet(this.getTables());
 
 		// Load tables and views from database, then loop over them.
 		Log.debug("Loading database table list");
@@ -1000,7 +1001,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 
 			// Make a list of all the columns in the table. Any columns
 			// remaining in this list by the end of the loop will be dropped.
-			final List colsToBeDropped = new ArrayList(dbTable.getColumns());
+			final Collection colsToBeDropped = new HashSet(dbTable.getColumns());
 
 			// Load the table columns from the database, then loop over them.
 			Log.debug("Loading table column list");
@@ -1066,7 +1067,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		// Get and create primary keys.
 		// Work out a list of all foreign keys currently existing.
 		// Any remaining in this list later will be dropped.
-		final List fksToBeDropped = new ArrayList();
+		final Collection fksToBeDropped = new HashSet();
 		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
 			final Table t = (Table) i.next();
 			fksToBeDropped.addAll(t.getForeignKeys());
