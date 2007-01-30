@@ -1412,7 +1412,7 @@ public class MartBuilderXML extends DefaultHandler {
 			try {
 				// Look up the values.
 				final String tableKey = (String)attributes.get("tableKey");
-				final String colKey = (String)attributes.get("columnKey");
+				final String colKey = (String)attributes.get("colKey");
 				final String newName = (String)attributes.get("newName");
 				final Map colMap = w.getDataSetModifications().getColumnRenames();
 				if (!colMap.containsKey(tableKey))
