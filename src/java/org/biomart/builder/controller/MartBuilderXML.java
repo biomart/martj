@@ -99,22 +99,17 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class MartBuilderXML extends DefaultHandler {
 
-	/**
-	 * Version number of MartBuilder XML DTD this class will read/write.
-	 */
-	public static final String DTD_VERSION = "0.5";
+	private static final String CURRENT_DTD_VERSION = "0.6";
+	
+	private static final String[] SUPPORTED_DTD_VERSIONS = new String[] {"0.6","0.5"};
 
-	/**
-	 * DTD Public ID for MartBuilder XML documents.
-	 */
-	public static final String DTD_PUBLIC_ID = "-//EBI//DTD MartBuilder "
-			+ MartBuilderXML.DTD_VERSION + "//EN";
+	private static final String DTD_PUBLIC_ID_START = "-//EBI//DTD MartBuilder ";
+	private static final String DTD_PUBLIC_ID_END = "//EN";
 
-	/**
-	 * DTD URL for MartBuilder XML documents.
-	 */
-	public static final String DTD_URL = "http://www.biomart.org/DTD/MartBuilder-"
-			+ MartBuilderXML.DTD_VERSION + ".dtd";
+	private static final String DTD_URL_START = "http://www.biomart.org/DTD/MartBuilder-";
+	private static final String DTD_URL_END = ".dtd";
+	
+	private static String currentReadingDTDVersion;
 
 	/**
 	 * The load method takes a {@link File} and loads up a {@link Mart} object
@@ -150,7 +145,7 @@ public class MartBuilderXML extends DefaultHandler {
 		// Check that we got something useful.
 		if (mart == null)
 			throw new DataModelException(Resources.get("fileNotSchemaVersion",
-					MartBuilderXML.DTD_VERSION));
+					MartBuilderXML.CURRENT_DTD_VERSION));
 		// Return.
 		Log.info(Resources.get("logDoneLoadingXMLFile"));
 		return mart;
@@ -542,8 +537,8 @@ public class MartBuilderXML extends DefaultHandler {
 		// Write the headers.
 		xmlWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 		xmlWriter.write("<!DOCTYPE mart PUBLIC \""
-				+ MartBuilderXML.DTD_PUBLIC_ID + "\" \""
-				+ MartBuilderXML.DTD_URL + "\">\n");
+				+ MartBuilderXML.DTD_PUBLIC_ID_START + MartBuilderXML.CURRENT_DTD_VERSION + MartBuilderXML.DTD_PUBLIC_ID_START + "\" \""
+				+ MartBuilderXML.DTD_URL_START + MartBuilderXML.CURRENT_DTD_VERSION + MartBuilderXML.DTD_URL_END + "\">\n");
 
 		// Initialise the ID counter.
 		this.reverseMappedObjects = new HashMap();
@@ -785,9 +780,16 @@ public class MartBuilderXML extends DefaultHandler {
 		Log.debug("Resolving XML entity " + publicId + " " + systemId);
 		// If the public ID is our own DTD version, then we can use our
 		// own copy of the DTD in our resources bundle.
-		if (MartBuilderXML.DTD_PUBLIC_ID.equals(publicId)
-				|| MartBuilderXML.DTD_URL.equals(systemId)) {
-			final String dtdDoc = "MartBuilder-" + MartBuilderXML.DTD_VERSION
+		MartBuilderXML.currentReadingDTDVersion = null;
+		for (int i = 0; i < MartBuilderXML.SUPPORTED_DTD_VERSIONS.length && MartBuilderXML.currentReadingDTDVersion==null; i++) {
+			final String currPub = MartBuilderXML.DTD_PUBLIC_ID_START + MartBuilderXML.SUPPORTED_DTD_VERSIONS[i] + MartBuilderXML.DTD_PUBLIC_ID_END;
+			final String currUrl = MartBuilderXML.DTD_URL_START + MartBuilderXML.SUPPORTED_DTD_VERSIONS[i] + MartBuilderXML.DTD_URL_END;
+			if (currPub.equals(publicId)
+					|| currUrl.equals(systemId)) 
+				MartBuilderXML.currentReadingDTDVersion = MartBuilderXML.SUPPORTED_DTD_VERSIONS[i];
+		}
+		if (MartBuilderXML.currentReadingDTDVersion!=null) {
+			final String dtdDoc = "MartBuilder-" + MartBuilderXML.currentReadingDTDVersion
 					+ ".dtd";
 			Log.debug("Resolved to " + dtdDoc);
 			return new InputSource(Resources.getResourceAsStream(dtdDoc));
@@ -911,7 +913,7 @@ public class MartBuilderXML extends DefaultHandler {
 				} catch (final Exception e) {
 					throw new SAXException(e);
 				}
-			else if (schema instanceof DataSet) {
+			else if (schema instanceof DataSet && MartBuilderXML.currentReadingDTDVersion.equals("0.5")) {
 				// In this case we don't care, because we need this
 				// for backward compatibility with 0.5. So, ignore it
 				// with no warning. We put a dummy DataSetTable on 
@@ -941,7 +943,7 @@ public class MartBuilderXML extends DefaultHandler {
 
 			try {
 				// DataSet table column?
-				if (tbl instanceof DataSetTable) {
+				if (tbl instanceof DataSetTable && MartBuilderXML.currentReadingDTDVersion.equals("0.5")) {
 					// Since 0.5 we don't bother reading this stuff.
 					
 					// FIXME: Parse all this to comply with 0.6.
@@ -987,7 +989,6 @@ public class MartBuilderXML extends DefaultHandler {
 								"unknownColumnType", type));
 					tbl.addColumn(column);
 					*/
-					return;
 				}
 
 				// Generic column?
@@ -1021,7 +1022,8 @@ public class MartBuilderXML extends DefaultHandler {
 				throw new SAXException("pkOutsideTable");
 			final Table tbl = (Table) this.objectStack.peek();
 			
-			// We don't create these for dataset tables since 0.5.
+			// We don't create these for dataset tables at all now as they
+			// get regenerated automatically.
 			if (tbl instanceof DataSetTable) 
 				return;
 			
@@ -1063,7 +1065,8 @@ public class MartBuilderXML extends DefaultHandler {
 				throw new SAXException(Resources.get("fkOutsideTable"));
 			final Table tbl = (Table) this.objectStack.peek();
 
-			// We don't create these for dataset tables since 0.5.
+			// We don't create these for dataset tables at all now as they
+			// get regenerated automatically.
 			if (tbl instanceof DataSetTable) 
 				return;
 
@@ -1113,8 +1116,9 @@ public class MartBuilderXML extends DefaultHandler {
 				final Key secondKey = (Key) this.mappedObjects.get(attributes
 						.get("secondKeyId"));
 
-				// We don't create these for dataset tables since 0.5.
-				// We can tell because the keys won't be found.
+				// We don't create these for dataset tables at all now as they
+				// get regenerated automatically. We can tell this is a
+				// dataset table because no keys will be found.
 				if (firstKey==null || secondKey==null)
 					return;
 				
@@ -1190,8 +1194,8 @@ public class MartBuilderXML extends DefaultHandler {
 				final Relation rel = (Relation) this.mappedObjects
 						.get(attributes.get("relationId"));
 				// For 0.5-compatibility, default the key to dataset-wide.
-				String tableKey = (String)attributes.get("tableKey");
-				if (tableKey==null) tableKey = SchemaModificationSet.DATASET;
+				final String tableKey = 
+					 MartBuilderXML.currentReadingDTDVersion.equals("0.5") ? SchemaModificationSet.DATASET : (String)attributes.get("tableKey");
 				
 				// Mask it.
 				final Map maskMap = w.getSchemaModifications().getMaskedRelations();
@@ -1481,9 +1485,8 @@ public class MartBuilderXML extends DefaultHandler {
 				final Table tbl = (Table) this.mappedObjects.get(attributes
 						.get("tableId")); 
 				// Default to dataset-wide restriction if 0.5 syntax used.
-				String tableKey = (String)attributes.get("tableKey");
-				if (tableKey==null)
-					tableKey = SchemaModificationSet.DATASET;
+				final String tableKey = 
+					 MartBuilderXML.currentReadingDTDVersion.equals("0.5") ? SchemaModificationSet.DATASET : (String)attributes.get("tableKey");
 
 				// Get the aliases to use for the first table.
 				final Map aliases = new HashMap();

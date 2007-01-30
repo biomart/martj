@@ -20,7 +20,6 @@ package org.biomart.builder.view.gui.dialogs;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -47,7 +46,6 @@ import org.biomart.builder.model.TransformationUnit.LeftJoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.builder.view.gui.SchemaTabSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
-import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainDataSetContext;

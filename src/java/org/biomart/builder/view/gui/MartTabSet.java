@@ -135,14 +135,10 @@ public class MartTabSet extends JTabbedPane {
 	 * @param martXMLFile
 	 *            the file the mart came from. May be <tt>null</tt> if the
 	 *            mart is new.
-	 * @param initialState
-	 *            <tt>true</tt> if the mart should start out modified,
-	 *            <tt>false</tt> if not.
 	 */
-	private void addMartTab(final Mart mart, final File martXMLFile,
-			final boolean initialState) {
+	private void addMartTab(final Mart mart, final File martXMLFile) {
 		this.martXMLFile.put(mart, martXMLFile);
-		this.martModifiedStatus.put(mart, Boolean.valueOf(initialState));
+		this.martModifiedStatus.put(mart, Boolean.FALSE);
 		final MartTab martTab = new MartTab(this, mart);
 		final String martTabName = this.suggestTabName(mart);
 		Log.info(Resources.get("logAddMartTab", martTabName));
@@ -381,8 +377,7 @@ public class MartTabSet extends JTabbedPane {
 								final Mart mart = MartBuilderXML.load(file);
 								SwingUtilities.invokeLater(new Runnable() {
 									public void run() {
-										MartTabSet.this.addMartTab(mart, file,
-												false);
+										MartTabSet.this.addMartTab(mart, file);
 									}
 								});
 							}
@@ -463,7 +458,7 @@ public class MartTabSet extends JTabbedPane {
 	 * Creates a new, empty mart and adds a tab for it.
 	 */
 	public void requestNewMart() {
-		this.addMartTab(new Mart(), null, true);
+		this.addMartTab(new Mart(), null);
 	}
 
 	/**
