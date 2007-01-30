@@ -91,7 +91,13 @@ public class DataSet extends GenericSchema {
 	//   ADDS A CONCAT TUNIT TO THE CHAIN WITH ONE CONCAT DS COLUMN
 	//   IN IT - COLUMN HAS DEFAULT NAME AND CAN BE RENAMED BY
 	//   USER AS PER ANY OTHER COLUMN - need synch() after this.
-	// Recursion.
+	// Recursion - infinite, use JDBC to flatten before transformation,
+	//    with some kind of expression column specifying how to flatten
+	//    each level of recursion and how to concatenate them.
+	//    defined on a combo of table and single relation.
+	// Recursion - finite, N times, apply RestrictedTable to each pass,
+	//    defined on a table and a number of separate multiplied relations
+	//    very similar to compound relations but only once at each pass.
 	private final SchemaModificationSet schemaMods;
 
 	// TODO DataSetModMaps for renames/masking.
@@ -498,11 +504,7 @@ public class DataSet extends GenericSchema {
 				.hasNext();) {
 			final Relation r = (Relation) i.next();
 
-			// Don't repeat relations.
-			// Note that it won't loop back up to parent, because 
-			// to do that would mean having two 1:1 relations,
-			// or a 1:M parent:child and separate M:1 child:parent, which 
-			// would be silly.
+			// Don't repeat relations or go back up relation just followed.
 			if (((Integer)relationCount.get(r)).intValue()<=0
 					|| r.equals(sourceRelation))
 				continue;

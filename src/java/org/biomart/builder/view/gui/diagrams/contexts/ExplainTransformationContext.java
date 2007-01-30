@@ -21,6 +21,7 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -74,13 +75,13 @@ public class ExplainTransformationContext extends DataSetContext {
 			// Fade out all MASKED columns.
 			else if (((DataSet)column.getTable().getSchema()).getDataSetModifications().isMaskedColumn(column))
 				component.setBackground(ColumnComponent.FADED_COLOUR);
+		
+			// Blue PARTITIONED columns.
+			else if (((DataSet)column.getTable().getSchema()).getDataSetModifications().isPartitionedColumn(column))
+				component.setBackground(ColumnComponent.PARTITIONED_COLOUR);
 
 			// FIXME: Reinstate.
 			/*
-
-			// Blue PARTITIONED columns.
-			else if (column.getPartitionType() != null)
-				component.setBackground(ColumnComponent.PARTITIONED_COLOUR);
 
 			// Magenta EXPRESSION columns.
 			else if (column instanceof ExpressionColumn)
@@ -121,6 +122,8 @@ public class ExplainTransformationContext extends DataSetContext {
 			contextMenu.addSeparator();
 
 			// Mask the column.
+			final boolean isMasked = ((DataSet)column.getTable().getSchema()).getDataSetModifications().isMaskedColumn(column);
+			final boolean isPartitioned = ((DataSet)column.getTable().getSchema()).getDataSetModifications().isPartitionedColumn(column);
 			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
 					.get("maskColumnTitle"));
 			mask.setMnemonic(Resources.get("maskColumnMnemonic").charAt(0));
@@ -139,15 +142,15 @@ public class ExplainTransformationContext extends DataSetContext {
 				}
 			});
 			contextMenu.add(mask);
-			mask.setSelected(((DataSet)column.getTable().getSchema()).getDataSetModifications().isMaskedColumn(column));
+			mask.setSelected(isMasked);
+			if (isPartitioned)
+				mask.setEnabled(false);
 
-			// FIXME: Reinstate.
-			/*
 			contextMenu.addSeparator();
 
 			// If it is partitioned, make a submenu to change the partition
 			// type.
-			if (column.getPartitionType() != null) {
+			if (isPartitioned) {
 
 				// The option to change the partition type.
 				final JMenuItem changepartition = new JMenuItem(
@@ -190,6 +193,8 @@ public class ExplainTransformationContext extends DataSetContext {
 					}
 				});
 				contextMenu.add(partition);
+				if (isMasked)
+					partition.setEnabled(false);
 			}
 
 			// The option to turn off partitioning.
@@ -206,9 +211,11 @@ public class ExplainTransformationContext extends DataSetContext {
 				}
 			});
 			contextMenu.add(unpartition);
-			if (column.getPartitionType() == null)
+			if (!isPartitioned)
 				unpartition.setEnabled(false);
 
+			// FIXME: Reinstate.
+			/*
 			// Else, if it's an expression column...
 			if (column instanceof ExpressionColumn) {
 

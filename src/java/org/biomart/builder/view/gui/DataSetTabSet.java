@@ -1172,14 +1172,22 @@ public class DataSetTabSet extends JTabbedPane {
 		try {
 			// Do the partitioning.
 			MartBuilderUtils.partitionByColumn(dataset, column, type);
-			// Repaint the dataset, as the partitioned column
-			// will have changed colour.
-			this.repaintDataSetDiagram(dataset);
-			// Update the explanation diagram so that it
-			// correctly reflects the changed objects.
-			this.recalculateExplanationDialog();
-			// Update the modified status on this tabset.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
+
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					// Repaint the dataset diagram based on the modified
+					// dataset.
+					DataSetTabSet.this.repaintDataSetDiagram(dataset);
+
+					// Update the explanation diagram so that it
+					// correctly reflects any changed relation.
+					DataSetTabSet.this.repaintExplanationDialog();
+
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
+				}
+			});
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		}
@@ -1958,14 +1966,22 @@ public class DataSetTabSet extends JTabbedPane {
 		try {
 			// Unpartition the column.
 			MartBuilderUtils.unpartitionByColumn(dataset, column);
-			// Repaint the dataset, as the partitioned column
-			// will have changed colour.
-			this.repaintDataSetDiagram(dataset);
-			// Update the explanation diagram so that it
-			// correctly reflects the changed objects.
-			this.repaintExplanationDialog();
-			// Update the modified status on this tabset.
-			this.martTab.getMartTabSet().setModifiedStatus(true);
+
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					// Repaint the dataset diagram based on the modified
+					// dataset.
+					DataSetTabSet.this.repaintDataSetDiagram(dataset);
+
+					// Update the explanation diagram so that it
+					// correctly reflects any changed relation.
+					DataSetTabSet.this.repaintExplanationDialog();
+
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
+				}
+			});
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		}

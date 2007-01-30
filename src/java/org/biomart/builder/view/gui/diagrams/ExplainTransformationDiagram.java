@@ -60,6 +60,8 @@ import org.biomart.common.resources.Resources;
  */
 public abstract class ExplainTransformationDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
+	
+	private List tableComponents = new ArrayList();
 
 	/**
 	 * Creates an empty diagram, using the single-parameter constructor from
@@ -76,6 +78,14 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	protected void updateAppearance() {
 		// Set the background.
 		this.setBackground(ExplainTransformationDiagram.BACKGROUND_COLOUR);
+	}
+	
+	/**
+	 * Find out what table components we have.
+	 * @return the list of components.
+	 */
+	public Collection getTableComponents() {
+		return this.tableComponents;
 	}
 
 	/**
@@ -119,7 +129,9 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			tempSourceSchema.addTable(tempSource);
 			for (Iterator i = this.stu.getNewColumnNameMap().values().iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
-			this.addDiagramComponent(new TableComponent(tempSource, this));
+			final TableComponent tc = new TableComponent(tempSource, this);
+			this.addDiagramComponent(tc);
+			this.getTableComponents().add(tc);
 			// Resize the diagram to fit.
 			this.resizeDiagram();
 		}
@@ -226,8 +238,12 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			}
 
 			// Add source and target tables.
-			this.addDiagramComponent(new TableComponent(tempSource, this));
-			this.addDiagramComponent(new TableComponent(tempTarget, this));
+			final TableComponent tc1 = new TableComponent(tempSource, this);
+			this.addDiagramComponent(tc1);
+			this.getTableComponents().add(tc1);
+			final TableComponent tc2 = new TableComponent(tempTarget, this);
+			this.addDiagramComponent(tc2);
+			this.getTableComponents().add(tc2);
 			// Add relation.
 			final RelationComponent relationComponent = new RelationComponent(
 					tempRelation, this);

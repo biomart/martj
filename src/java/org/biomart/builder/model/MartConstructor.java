@@ -367,7 +367,7 @@ public interface MartConstructor {
 					// Select-from?
 					else if (tu instanceof SelectFromTable)
 						this.doSelectFromTable(dataset, dsTable,
-								(LeftJoinTable) tu, previousTempTables,
+								(SelectFromTable) tu, previousTempTables,
 								partitionValue, tempTable);
 					else
 						throw new BioMartError();

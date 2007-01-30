@@ -25,12 +25,12 @@ package org.biomart.common.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.model.Key.ForeignKey;
@@ -203,8 +203,7 @@ public interface Table extends Comparable {
 	 * column and check for conflicts with existing columns.
 	 */
 	public class GenericTable implements Table {
-		// Use a TreeMap to keep columns in alphabetical order.
-		private final Map columns = new TreeMap();
+		private final Map columns = new HashMap();
 
 		// We must use a list as key hash codes can change.
 		private final List foreignKeys = new ArrayList();

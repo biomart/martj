@@ -26,12 +26,15 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.common.model.Column;
@@ -207,8 +210,17 @@ public class TableComponent extends BoxShapedComponent {
 		this.columnsListPanel.setLayout(columnsListPanelLayout);
 
 		// Add columns to the list one by one, as column sub-components.
+		// Do a bit of sorting to make them alphabetical first.
+		final Map sortedColMap = new TreeMap();
 		for (final Iterator i = this.getTable().getColumns().iterator(); i
 				.hasNext();) {
+			final Column col = (Column) i.next();
+			if (col instanceof DataSetColumn)
+				sortedColMap.put(((DataSetColumn) col).getModifiedName(), col);
+			else
+				sortedColMap.put(col.getName(), col);
+		}
+		for (final Iterator i = sortedColMap.values().iterator(); i.hasNext();) {
 			final Column col = (Column) i.next();
 			final ColumnComponent colComponent = new ColumnComponent(col, this
 					.getDiagram());

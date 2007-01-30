@@ -20,6 +20,7 @@ package org.biomart.builder.view.gui.dialogs;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -27,8 +28,10 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JDialog;
@@ -46,9 +49,11 @@ import org.biomart.builder.view.gui.SchemaTabSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram;
+import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainDataSetContext;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainTransformationContext;
 import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -106,6 +111,8 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 	private MartTab martTab;
 
 	private JPanel transformation;
+	
+	private List transformationTableComponents = new ArrayList();
 
 	private ExplainTransformationContext explainTransformationContext;
 
@@ -233,8 +240,17 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 	}
 
 	private void recalculateTransformation() {
+		// Keep a note of shown tables.
+		final Map shownTables = new HashMap();
+		for (final Iterator i = this.transformationTableComponents.iterator(); i.hasNext(); ) {
+			final TableComponent comp = (TableComponent)i.next();
+			shownTables.put(((Table)comp.getObject()).getName(),
+					comp.getState());
+		}
+
 		// Clear the transformation box.
 		this.transformation.removeAll();
+		this.transformationTableComponents.clear();
 
 		// Keep track of columns counted so far.
 		List columnsSoFar = new ArrayList();
@@ -249,14 +265,13 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			final TransformationUnit tu = (TransformationUnit) i.next();
 			// Holders for our stuff.
 			final JLabel label;
-			final Diagram diagram;
+			final ExplainTransformationDiagram diagram;
 			// Draw the unit.
 			if (tu instanceof LeftJoinTable) {
 				// Temp table to schema table join.
 				label = new JLabel(Resources.get("stepTableLabel",
 						new String[] { "" + stepNumber,
 								Resources.get("explainMergeLabel") }));
-
 				diagram = new ExplainTransformationDiagram.TempReal(
 						this.martTab, (LeftJoinTable) tu, columnsSoFar);
 			} else if (tu instanceof SelectFromTable) {
@@ -268,6 +283,8 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 						this.martTab, (SelectFromTable) tu);
 			} else
 				throw new BioMartError();
+			this.transformationTableComponents.addAll(diagram.getTableComponents());
+			// Display the diagram.
 			this.gridBag.setConstraints(label, this.labelConstraints);
 			this.transformation.add(label);
 			diagram.setDiagramContext(this.explainTransformationContext);
@@ -278,6 +295,16 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			// Add columns from this unit to the transformed table.
 			columnsSoFar.addAll(tu.getNewColumnNameMap().values());
 			stepNumber++;
+		}
+
+		// Reinstate shown/hidden columns.
+		for (final Iterator i = this.transformationTableComponents.iterator(); i.hasNext(); ) {
+			final TableComponent comp = (TableComponent) i.next();
+			final Object state = shownTables
+					.get(((Table) comp
+							.getObject()).getName());
+			if (state != null)
+				comp.setState(state);
 		}
 
 		// FIXME: Reinstate.
