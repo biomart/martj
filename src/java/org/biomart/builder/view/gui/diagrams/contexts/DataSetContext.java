@@ -155,12 +155,12 @@ public class DataSetContext extends SchemaContext {
 			else if (((DataSet)column.getTable().getSchema()).getDataSetModifications().isMaskedColumn(column))
 				component.setBackground(ColumnComponent.FADED_COLOUR);
 
+			// Blue PARTITIONED columns.
+			else if (((DataSet)column.getTable().getSchema()).getDataSetModifications().isPartitionedColumn(column))
+				component.setBackground(ColumnComponent.PARTITIONED_COLOUR);
+
 			// FIXME: Reinstate.
 			/*
-
-			// Blue PARTITIONED columns.
-			else if (column.getPartitionType() != null)
-				component.setBackground(ColumnComponent.PARTITIONED_COLOUR);
 
 			// Magenta EXPRESSION columns.
 			else if (column instanceof ExpressionColumn)
@@ -550,6 +550,7 @@ public class DataSetContext extends SchemaContext {
 			contextMenu.addSeparator();
 			
 			// Mask the column.
+			final boolean isPartitioned = ((DataSet)column.getTable().getSchema()).getDataSetModifications().isPartitionedColumn(column);
 			final boolean isMasked = ((DataSet)column.getTable().getSchema()).getDataSetModifications().isMaskedColumn(column);
 			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
 					.get("maskColumnTitle"));
@@ -570,6 +571,8 @@ public class DataSetContext extends SchemaContext {
 			});
 			contextMenu.add(mask);
 			mask.setSelected(isMasked);
+			if (isPartitioned)
+				mask.setEnabled(false);
 
 			// Non-inherit inherited columns.
 			final boolean isNonInherited = ((DataSet)column.getTable().getSchema()).getDataSetModifications().isNonInheritedColumn(column);
@@ -594,13 +597,11 @@ public class DataSetContext extends SchemaContext {
 			inherited.setSelected(isNonInherited);
 			inherited.setEnabled(isMasked || !((DataSetTable)column.getTable()).getType().equals(DataSetTableType.DIMENSION));
 
-			// FIXME: Reinstate.
-			/*
 			contextMenu.addSeparator();
 
 			// If it is partitioned, make a submenu to change the partition
 			// type.
-			if (column.getPartitionType() != null) {
+			if (isPartitioned) {
 
 				// The option to change the partition type.
 				final JMenuItem changepartition = new JMenuItem(
@@ -643,6 +644,8 @@ public class DataSetContext extends SchemaContext {
 					}
 				});
 				contextMenu.add(partition);
+				if (isMasked || !((DataSetTable)column.getTable()).getType().equals(DataSetTableType.DIMENSION))
+					partition.setEnabled(false);
 			}
 
 			// The option to turn off partitioning.
@@ -658,9 +661,11 @@ public class DataSetContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(unpartition);
-			if (column.getPartitionType() == null)
+			if (!isPartitioned)
 				unpartition.setEnabled(false);
-
+			
+			// FIXME: Reinstate
+			/*
 			// Else, if it's an expression column...
 			if (column instanceof ExpressionColumn) {
 

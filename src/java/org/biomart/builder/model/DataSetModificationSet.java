@@ -18,14 +18,17 @@
 package org.biomart.builder.model;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.common.model.Key;
 import org.biomart.common.resources.Resources;
@@ -49,6 +52,8 @@ public class DataSetModificationSet {
 	private Collection maskedTables = new HashSet();
 	
 	private Map maskedColumns = new HashMap();
+	
+	private Map partitionedColumns = new HashMap();
 	
 	private Map nonInheritedColumns = new HashMap();
 
@@ -206,6 +211,69 @@ public class DataSetModificationSet {
 	public Map getColumnRenames() {
 		return this.renamedColumns;
 	}
+		
+	public void setPartitionedColumn(final DataSetColumn column, final PartitionedColumn restriction) throws ValidationException {
+		// Skip already-masked relations.
+		if (this.isPartitionedColumn(column))
+			return;
+		final String tableKey = column.getTable().getName();
+		// Refuse to partition subclass tables.
+		if (!((DataSetTable) column.getTable()).getType().equals(
+				DataSetTableType.DIMENSION))
+			throw new ValidationException(Resources
+					.get("partitionOnlyDimensionTables"));
+		// Check to see if we already have a partitioned column in this
+		// table, that is not the same column as this one.
+		if (this.partitionedColumns.containsKey(tableKey))
+				throw new ValidationException(Resources
+						.get("cannotPartitionMultiColumns"));
+		// TODO Check type of column. - exclude expression+concat etc.
+		//if (partitionType != null)
+		//	throw new ValidationException(Resources
+		//			.get("cannotPartitionNonWrapSchColumns"));
+		// Do it.
+		this.partitionedColumns.put(tableKey, new HashMap());
+		final Map restrictions = (Map)this.partitionedColumns.get(tableKey);
+		restrictions.put(column.getName(), restriction);
+	}
+
+	public void unsetPartitionedColumn(final DataSetColumn column) {
+		// Skip already-unmasked relations.
+		if (!this.isPartitionedColumn(column))
+			return;
+		final String tableKey = column.getTable().getName();
+		this.partitionedColumns.remove(tableKey);
+	}
+	
+	public boolean isPartitionedTable(final DataSetTable table) {
+		return this.partitionedColumns.containsKey(table.getName());
+	}
+	
+	public boolean isPartitionedColumn(final DataSetColumn column) {
+		final String tableKey = column.getTable().getName();
+		final Map pcs = (Map)this.partitionedColumns.get(tableKey) ;
+		return pcs!=null && pcs.containsKey(column.getName());
+	}
+	
+	public String getPartitionedColumnName(final DataSetTable table) {
+		if (!this.isPartitionedTable(table))
+			return null;
+		final String tableKey = table.getName();
+		final Map pcs = (Map)this.partitionedColumns.get(tableKey) ;
+		return (String)(((Map.Entry)pcs.entrySet().iterator().next()).getKey());
+	}
+		
+	public PartitionedColumn getPartitionedColumn(final DataSetColumn column) {
+		if (!this.isPartitionedColumn(column))
+			return null;
+		final String tableKey = column.getTable().getName();
+		final Map pcs = (Map)this.partitionedColumns.get(tableKey) ;
+		return (PartitionedColumn)pcs.get(column.getName());
+	}
+	
+	public Map getPartitionedColumns() {
+		return this.partitionedColumns;
+	}
 
 	public void replicate(final DataSetModificationSet target) {
 		target.renamedTables.clear();
@@ -216,5 +284,146 @@ public class DataSetModificationSet {
 		target.maskedColumns.putAll(this.maskedColumns);
 		target.maskedTables.clear();
 		target.maskedTables.addAll(this.maskedTables);
+		target.nonInheritedColumns.clear();
+		target.nonInheritedColumns.putAll(this.nonInheritedColumns);
+		target.partitionedColumns.clear();
+		// We have to use an iterator because of nested maps.
+		for (final Iterator i = this.partitionedColumns.entrySet().iterator(); i.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)i.next();
+			target.partitionedColumns.put(entry.getKey(), new HashMap());
+			((Map)target.partitionedColumns.get(entry.getKey())).putAll((Map)entry.getValue());
+		}
+	}
+
+	/**
+	 * Represents a method of partitioning by column. There are no methods.
+	 * Actual logic to divide up by column is left to the mart constructor to
+	 * decide.
+	 */
+	public interface PartitionedColumn {
+		/**
+		 * Use this class to partition on a single value - ie. only rows
+		 * matching this value will be returned.
+		 */
+		public static class SingleValue extends ValueCollection {
+			private String value;
+	
+			/**
+			 * The constructor specifies the value to partition on.
+			 * 
+			 * @param value
+			 *            the value to partition on.
+			 * @param useNull
+			 *            if set to <tt>true</tt>, the value will be ignored,
+			 *            and null will be used instead.
+			 */
+			public SingleValue(final String value, final boolean useNull) {
+				super(Collections.singleton(value), useNull);
+				this.value = value;
+			}
+	
+			/**
+			 * Returns the value we will partition on.
+			 * 
+			 * @return the value we will partition on.
+			 */
+			public String getValue() {
+				return this.value;
+			}
+	
+			/**
+			 * {@inheritDoc}
+			 * <p>
+			 * This will return "SingleValue:" suffixed with the output of
+			 * {@link #getValue()}.
+			 */
+			public String toString() {
+				return "SingleValue:" + this.value;
+			}
+		}
+	
+		/**
+		 * Use this class to refer to a column partitioned by every unique
+		 * value.
+		 */
+		public static class UniqueValues implements PartitionedColumn {
+	
+			/**
+			 * {@inheritDoc}
+			 * <p>
+			 * This will return "UniqueValues".
+			 */
+			public String toString() {
+				return "UniqueValues";
+			}
+		}
+	
+		/**
+		 * Use this class to partition on a set of values - ie. only columns
+		 * with one of these values will be returned.
+		 */
+		public static class ValueCollection implements PartitionedColumn {
+			private boolean includeNull;
+	
+			private Set values = new HashSet();
+	
+			/**
+			 * The constructor specifies the values to partition on. Duplicate
+			 * values will be ignored.
+			 * 
+			 * @param values
+			 *            the set of unique values to partition on.
+			 * @param includeNull
+			 *            whether to include <tt>null</tt> as a partitionable
+			 *            value.
+			 */
+			public ValueCollection(final Collection values,
+					final boolean includeNull) {
+				this.values = new HashSet();
+				this.values.addAll(values);
+				this.includeNull = includeNull;
+			}
+	
+			public boolean equals(final Object o) {
+				if (o == null || !(o instanceof ValueCollection))
+					return false;
+				final ValueCollection vc = (ValueCollection) o;
+				return vc.getValues().equals(this.values)
+						&& vc.getIncludeNull() == this.includeNull;
+			}
+	
+			/**
+			 * Returns <tt>true</tt> or <tt>false</tt> depending on whether
+			 * <tt>null</tt> is considered a partitionable value or not.
+			 * 
+			 * @return <tt>true</tt> if <tt>null</tt> is included as a
+			 *         partitioned value.
+			 */
+			public boolean getIncludeNull() {
+				return this.includeNull;
+			}
+	
+			/**
+			 * Returns the set of values we will partition on. May be empty but
+			 * never null.
+			 * 
+			 * @return the values we will partition on.
+			 */
+			public Set getValues() {
+				return this.values;
+			}
+	
+			/**
+			 * {@inheritDoc}
+			 * <p>
+			 * This will return "ValueCollection:" suffixed with the output of
+			 * {@link #getValues()}.
+			 */
+			public String toString() {
+				return "ValueCollection:"
+						+ (this.values == null ? "<undef>" : this.values
+								.toString());
+			}
+		}
 	}
 }

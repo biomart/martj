@@ -508,7 +508,22 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				sb.append(',');
 		}
 		sb.append(" from " + fromTableSchema + "." + fromTableName
-				+ " as a");
+				+ " as a");		
+		if (action.getTableRestriction()!=null) {
+			sb.append(" where ");
+			sb.append(action.getTableRestriction().getSubstitutedExpression("a"));
+		}
+		if (action.getPartitionColumn()!=null) {
+			if (action.getTableRestriction()!=null)
+				sb.append(" and ");
+			else
+				sb.append(" where ");
+			sb.append(" a.");
+			sb.append(action.getPartitionColumn());
+			sb.append("='");
+			sb.append(action.getPartitionValue().replaceAll("'", "\\'"));
+			sb.append('\'');
+		}
 
 		statements.add(sb.toString());
 	}
@@ -567,6 +582,18 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			final String fkColName = (String) action
 					.getRightJoinColumns().get(i);
 			sb.append("a." + pkColName + "=b." + fkColName + "");
+		}	
+		if (action.getTableRestriction()!=null) {
+			sb.append(" and (");
+			sb.append(action.getTableRestriction().getSubstitutedExpression("b"));
+			sb.append(')');
+		}
+		if (action.getPartitionColumn()!=null) {
+			sb.append(" and b.");
+			sb.append(action.getPartitionColumn());
+			sb.append("='");
+			sb.append(action.getPartitionValue().replaceAll("'", "\\'"));
+			sb.append('\'');
 		}
 
 		statements.add(sb.toString());
@@ -575,7 +602,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 	public void doDropColumns(final DropColumns action, final List statements)
 			throws Exception {
 		final String schemaName = action.getDataSetSchemaName();
-		final String tableName = action.getDataSetTableName();
+		final String tableName = action.getTable();
 
 		statements.add("set search_path=" + schemaName + ",pg_catalog");
 

@@ -23,6 +23,7 @@ import java.awt.event.ActionListener;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -94,16 +95,12 @@ public class ExplainDataSetContext extends SchemaContext {
 	public void customiseAppearance(final JComponent component,
 			final Object object) {
 
-		// FIXME: Reinstate.
-		/*
 		// This bit adds a restricted outline to restricted tables.
 		if (object instanceof Table) {
 			final Table table = (Table) object;
 			final TableComponent tblcomp = (TableComponent) component;
-			tblcomp.setDotted(this.dataset.getRestrictedTables()
-					.contains(table));
+			tblcomp.setDotted(this.dataset.getSchemaModifications().isRestrictedTable(this.datasetTable, table));
 		}
-		*/
 		
 		// This section customises the appearance of relation lines within
 		// the schema diagram.
@@ -236,10 +233,8 @@ public class ExplainDataSetContext extends SchemaContext {
 
 			contextMenu.addSeparator();
 			
-			// FIXME: Reinstate.
-			/*
 			// If it's a restricted table...
-			if (this.dataset.getRestrictedTables().contains(table)) {
+			if (this.dataset.getSchemaModifications().isRestrictedTable(this.datasetTable, table)) {
 
 				// Option to modify restriction.
 				final JMenuItem modify = new JMenuItem(
@@ -255,9 +250,8 @@ public class ExplainDataSetContext extends SchemaContext {
 								.getDataSetTabSet()
 								.requestModifyTableRestriction(
 										ExplainDataSetContext.this.dataset,
-										table,
-										ExplainDataSetContext.this.dataset
-												.getRestrictedTableType(table));
+										ExplainDataSetContext.this.datasetTable,
+										table);
 					}
 				});
 				contextMenu.add(modify);
@@ -277,6 +271,7 @@ public class ExplainDataSetContext extends SchemaContext {
 						ExplainDataSetContext.this.getMartTab()
 								.getDataSetTabSet().requestAddTableRestriction(
 										ExplainDataSetContext.this.dataset,
+										ExplainDataSetContext.this.datasetTable,
 										table);
 					}
 				});
@@ -292,13 +287,12 @@ public class ExplainDataSetContext extends SchemaContext {
 				public void actionPerformed(final ActionEvent evt) {
 					ExplainDataSetContext.this.getMartTab().getDataSetTabSet()
 							.requestRemoveTableRestriction(
-									ExplainDataSetContext.this.dataset, table);
+									ExplainDataSetContext.this.dataset, ExplainDataSetContext.this.datasetTable, table);
 				}
 			});
 			contextMenu.add(remove);
-			if (!this.dataset.getRestrictedTables().contains(table))
+			if (!this.dataset.getSchemaModifications().isRestrictedTable(this.datasetTable, table))
 				remove.setEnabled(false);
-			 */
 		}
 
 		// This menu is attached to all the relation lines in the schema.

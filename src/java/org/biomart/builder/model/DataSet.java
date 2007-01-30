@@ -21,14 +21,12 @@ package org.biomart.builder.model;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
-import java.util.TreeMap;
 
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
@@ -85,7 +83,6 @@ public class DataSet extends GenericSchema {
 	private final Collection includedRelations;
 
 	// TODO SchemaModMaps for source schema changes.
-	// Restricted tables.
 	// Replicated relations - CREATE COMPOUND RELATION.
 	// Restricted relations - INDEX INTO COMPOUND RELATION.
 	// Concat-only relations with concat definitions incl. 
@@ -98,10 +95,9 @@ public class DataSet extends GenericSchema {
 	private final SchemaModificationSet schemaMods;
 
 	// TODO DataSetModMaps for renames/masking.
-	// Partition columns.
 	// Expression column definitions with nesting resolution.
-	//   ADDS AN EXPRESSION TUNIT(S) TO THE CHAIN WITH EACH NESTED
-	//   EXPRESSION CLUSTER OF DS COLUMNS - COLUMNS HAVE DEFAULT NAME
+	//   ADDS AN EXPRESSION TUNIT TO THE CHAIN WITH ALL NESTED
+	//   EXPRESSION CLUSTERS OF DS COLUMNS - COLUMNS HAVE DEFAULT NAME
 	//   AND CAN BE RENAMED BY USER - need synch() after this.
 	private final DataSetModificationSet dsMods;
 
@@ -713,7 +709,7 @@ public class DataSet extends GenericSchema {
 			final DataSet newDataSet = new DataSet(this.mart,
 					this.centralTable, newName);
 			this.getSchemaModifications().replicate(newDataSet.getSchemaModifications());
-			// FIXME: Copy dsmods too.
+			this.getDataSetModifications().replicate(newDataSet.getDataSetModifications());
 			this.mart.addDataSet(newDataSet);
 
 			// Synchronise it.
@@ -806,9 +802,6 @@ public class DataSet extends GenericSchema {
 	public static class DataSetColumn extends GenericColumn {
 		private boolean dependency;
 
-		// FIXME: Reinstate.
-		// private PartitionedColumnType partitionType;
-
 		/**
 		 * This constructor gives the column a name.
 		 * 
@@ -827,9 +820,6 @@ public class DataSet extends GenericSchema {
 
 			// Set up default mask/partition values.
 			this.dependency = false;
-			// FIXME: Reinstate
-			// this.masked = false;
-			// this.partitionType = null;
 		}
 
 		/**
@@ -868,41 +858,6 @@ public class DataSet extends GenericSchema {
 		}
 
 		/**
-		 * Partition/unpartition this column.
-		 * 
-		 * @param partitionType
-		 *            <tt>null</tt> if the column should not be partitioned,
-		 *            or a type if it should be.
-		 * @throws ValidationException
-		 *             if partitioning is not allowed on this column.
-		 * FIXME: Reinstate.
-		public void setPartitionType(PartitionedColumnType partitionType)
-				throws ValidationException {
-			Log.debug("Setting partition type on column " + this.getName());
-			if (partitionType != null) {
-				// Refuse to partition subclass tables.
-				if (((DataSetTable) this.getTable()).getType().equals(
-						DataSetTableType.MAIN_SUBCLASS))
-					throw new ValidationException(Resources
-							.get("cannotPartitionSubclassTables"));
-				// Check to see if we already have a partitioned column in this
-				// table, that is not the same column as this one.
-				for (final Iterator i = this.getTable().getColumns().iterator(); i
-						.hasNext();) {
-					final DataSetColumn testCol = (DataSetColumn) i.next();
-					if (!testCol.equals(this)
-							&& testCol.getPartitionType() != null)
-						throw new ValidationException(Resources
-								.get("cannotPartitionMultiColumns"));
-				}
-			}
-
-			// Do it.
-			this.partitionType = partitionType;
-		}
-		*/
-
-		/**
 		 * A column on a dataset table that indicates the concatenation of the
 		 * columns of a record in some table beyond a concat-only relation. They
 		 * take a reference to the concat-only relation.
@@ -933,19 +888,6 @@ public class DataSet extends GenericSchema {
 						.contains(concatRelation))
 					throw new ValidationException(Resources
 							.get("relationNotConcatRelation"));
-			}
-
-			public void setMasked(boolean masked) throws ValidationException {
-				if (masked)
-					((DataSet) this.getTable().getSchema()).maskRelation(this
-							.getUnderlyingRelation());
-			}
-
-			public void setPartitionType(PartitionedColumnType partitionType)
-					throws ValidationException {
-				if (partitionType != null)
-					throw new ValidationException(Resources
-							.get("cannotPartitionNonWrapSchColumns"));
 			}
 
 		}
@@ -1090,25 +1032,6 @@ public class DataSet extends GenericSchema {
 			public void setGroupBy(final boolean groupBy) {
 				this.groupBy = groupBy;
 			}
-
-			/*
-			 * FIXME: Reinstate.
-			public void setMasked(boolean masked) throws ValidationException {
-				if (masked)
-					((DataSetTable) this.getTable()).removeColumn(this);
-			}
-			*
-
-			/*
-			 * FIXME: Reinstate.
-			public void setPartitionType(PartitionedColumnType partitionType)
-					throws ValidationException {
-				if (partitionType != null)
-					throw new ValidationException(Resources
-							.get("cannotPartitionNonWrapSchColumns"));
-			}
-			*
-
 		}
 	    */
 
@@ -1154,16 +1077,6 @@ public class DataSet extends GenericSchema {
 				return this.dsColumn == null ? super.getModifiedName() : this.dsColumn
 						.getModifiedName();
 			}
-
-			/*
-			 * FIXME: Reinstate.
-			public void setPartitionType(PartitionedColumnType partitionType)
-					throws ValidationException {
-				if (partitionType != null)
-					throw new ValidationException(Resources
-							.get("cannotPartitionNonWrapSchColumns"));
-			}
-		    */
 		}
 
 		/**
@@ -1561,98 +1474,6 @@ public class DataSet extends GenericSchema {
 	}
 
 	/**
-	 * Defines the restriction on a table, ie. a where-clause.
-	 */
-	public static class DataSetTableRestriction {
-
-		private Map aliases;
-
-		private String expr;
-
-		/**
-		 * This constructor gives the restriction an initial expression and a
-		 * set of aliases. The expression may not be empty, and neither can the
-		 * alias map.
-		 * 
-		 * @param expr
-		 *            the expression to define for this restriction.
-		 * @param aliases
-		 *            the aliases to use for columns.
-		 */
-		public DataSetTableRestriction(final String expr, final Map aliases) {
-			// Test for good arguments.
-			if (expr == null || expr.trim().length() == 0)
-				throw new IllegalArgumentException(Resources
-						.get("tblRestrictMissingExpression"));
-			if (aliases == null || aliases.isEmpty())
-				throw new IllegalArgumentException(Resources
-						.get("tblRestrictMissingAliases"));
-
-			// Remember the settings.
-			this.aliases = new TreeMap();
-			this.aliases.putAll(aliases);
-			this.expr = expr;
-		}
-
-		/**
-		 * Retrieves the map used for setting up aliases.
-		 * 
-		 * @return the aliases map. Keys must be {@link Column} instances, and
-		 *         values are aliases used in the expression.
-		 */
-		public Map getAliases() {
-			return this.aliases;
-		}
-
-		/**
-		 * Returns the expression, <i>without</i> substitution. This value is
-		 * RDBMS-specific.
-		 * 
-		 * @return the unsubstituted expression.
-		 */
-		public String getExpression() {
-			return this.expr;
-		}
-
-		/**
-		 * Returns the expression, <i>with</i> substitution. This value is
-		 * RDBMS-specific. The prefix map must contain two entries. Each entry
-		 * relates to one of the keys of a relation. The key of the map is the
-		 * key of the relation, and the value is the prefix to use in the
-		 * substituion, eg. "a" if columns for the table for that key should be
-		 * prefixed as "a.mycolumn".
-		 * 
-		 * @param tablePrefix
-		 *            the prefix to use for the table in the expression.
-		 * @return the substituted expression.
-		 */
-		public String getSubstitutedExpression(final String tablePrefix) {
-			Log.debug("Calculating restricted table expression");
-			String sub = this.expr;
-			for (final Iterator i = this.aliases.entrySet().iterator(); i
-					.hasNext();) {
-				final Map.Entry entry = (Map.Entry) i.next();
-				final Column col = (Column) entry.getKey();
-				final String alias = ":" + (String) entry.getValue();
-				sub = sub.replaceAll(alias, tablePrefix + "." + col.getName());
-			}
-			Log.debug("Expression is: " + sub);
-			return sub;
-		}
-
-		/**
-		 * The actual expression. The values from the alias maps will be used to
-		 * refer to various columns. This value is RDBMS-specific.
-		 * 
-		 * @param expr
-		 *            the actual expression to use.
-		 */
-		public void setExpression(final String expr) {
-			this.expr = expr;
-		}
-	}
-
-	/**
 	 * This class defines the various different types of DataSetTable there are.
 	 */
 	public static class DataSetTableType implements Comparable {
@@ -1716,138 +1537,6 @@ public class DataSet extends GenericSchema {
 		 */
 		public String toString() {
 			return this.getName();
-		}
-	}
-
-	/**
-	 * Represents a method of partitioning by column. There are no methods.
-	 * Actual logic to divide up by column is left to the mart constructor to
-	 * decide.
-	 */
-	public interface PartitionedColumnType {
-		/**
-		 * Use this class to partition on a single value - ie. only rows
-		 * matching this value will be returned.
-		 */
-		public class SingleValue extends ValueCollection {
-			private String value;
-
-			/**
-			 * The constructor specifies the value to partition on.
-			 * 
-			 * @param value
-			 *            the value to partition on.
-			 * @param useNull
-			 *            if set to <tt>true</tt>, the value will be ignored,
-			 *            and null will be used instead.
-			 */
-			public SingleValue(final String value, final boolean useNull) {
-				super(Collections.singleton(value), useNull);
-				this.value = value;
-			}
-
-			/**
-			 * Returns the value we will partition on.
-			 * 
-			 * @return the value we will partition on.
-			 */
-			public String getValue() {
-				return this.value;
-			}
-
-			/**
-			 * {@inheritDoc}
-			 * <p>
-			 * This will return "SingleValue:" suffixed with the output of
-			 * {@link #getValue()}.
-			 */
-			public String toString() {
-				return "SingleValue:" + this.value;
-			}
-		}
-
-		/**
-		 * Use this class to refer to a column partitioned by every unique
-		 * value.
-		 */
-		public class UniqueValues implements PartitionedColumnType {
-
-			/**
-			 * {@inheritDoc}
-			 * <p>
-			 * This will return "UniqueValues".
-			 */
-			public String toString() {
-				return "UniqueValues";
-			}
-		}
-
-		/**
-		 * Use this class to partition on a set of values - ie. only columns
-		 * with one of these values will be returned.
-		 */
-		public class ValueCollection implements PartitionedColumnType {
-			private boolean includeNull;
-
-			private Set values = new HashSet();
-
-			/**
-			 * The constructor specifies the values to partition on. Duplicate
-			 * values will be ignored.
-			 * 
-			 * @param values
-			 *            the set of unique values to partition on.
-			 * @param includeNull
-			 *            whether to include <tt>null</tt> as a partitionable
-			 *            value.
-			 */
-			public ValueCollection(final Collection values,
-					final boolean includeNull) {
-				this.values = new HashSet();
-				this.values.addAll(values);
-				this.includeNull = includeNull;
-			}
-
-			public boolean equals(final Object o) {
-				if (o == null || !(o instanceof ValueCollection))
-					return false;
-				final ValueCollection vc = (ValueCollection) o;
-				return vc.getValues().equals(this.values)
-						&& vc.getIncludeNull() == this.includeNull;
-			}
-
-			/**
-			 * Returns <tt>true</tt> or <tt>false</tt> depending on whether
-			 * <tt>null</tt> is considered a partitionable value or not.
-			 * 
-			 * @return <tt>true</tt> if <tt>null</tt> is included as a
-			 *         partitioned value.
-			 */
-			public boolean getIncludeNull() {
-				return this.includeNull;
-			}
-
-			/**
-			 * Returns the set of values we will partition on. May be empty but
-			 * never null.
-			 * 
-			 * @return the values we will partition on.
-			 */
-			public Set getValues() {
-				return this.values;
-			}
-
-			/**
-			 * {@inheritDoc}
-			 * <p>
-			 * This will return "ValueCollection:" suffixed with the output of
-			 * {@link #getValues()}.
-			 */
-			public String toString() {
-				return "ValueCollection:"
-						+ (this.values == null ? "<undef>" : this.values
-								.toString());
-			}
 		}
 	}
 }

@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.biomart.builder.model.SchemaModificationSet.TableRestriction;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -256,6 +257,12 @@ public abstract class MartConstructorAction {
 		private Map selectColumns;
 
 		private String resultTable;
+		
+		private TableRestriction tableRestriction;
+		
+		private String partitionColumn;
+		
+		private String partitionValue;
 
 		/**
 		 * Creates a new LeftJoin action.
@@ -377,6 +384,48 @@ public abstract class MartConstructorAction {
 		public void setSelectColumns(Map selectColumns) {
 			this.selectColumns = selectColumns;
 		}
+
+		/**
+		 * @return the tableRestriction
+		 */
+		public TableRestriction getTableRestriction() {
+			return tableRestriction;
+		}
+
+		/**
+		 * @param tableRestriction the tableRestriction to set
+		 */
+		public void setTableRestriction(TableRestriction tableRestriction) {
+			this.tableRestriction = tableRestriction;
+		}
+
+		/**
+		 * @return the partitionColumn
+		 */
+		public String getPartitionColumn() {
+			return partitionColumn;
+		}
+
+		/**
+		 * @param partitionColumn the partitionColumn to set
+		 */
+		public void setPartitionColumn(String partitionColumn) {
+			this.partitionColumn = partitionColumn;
+		}
+
+		/**
+		 * @return the partitionValue
+		 */
+		public String getPartitionValue() {
+			return partitionValue;
+		}
+
+		/**
+		 * @param partitionValue the partitionValue to set
+		 */
+		public void setPartitionValue(String partitionValue) {
+			this.partitionValue = partitionValue;
+		}
 	}
 
 	/**
@@ -391,6 +440,12 @@ public abstract class MartConstructorAction {
 		private Map selectColumns;
 
 		private String resultTable;
+		
+		private TableRestriction tableRestriction;
+		
+		private String partitionColumn;
+		
+		private String partitionValue;
 
 		/**
 		 * Creates a new Select action.
@@ -467,6 +522,48 @@ public abstract class MartConstructorAction {
 		public void setTable(String table) {
 			this.table = table;
 		}
+
+		/**
+		 * @return the tableRestriction
+		 */
+		public TableRestriction getTableRestriction() {
+			return tableRestriction;
+		}
+
+		/**
+		 * @param tableRestriction the tableRestriction to set
+		 */
+		public void setTableRestriction(TableRestriction tableRestriction) {
+			this.tableRestriction = tableRestriction;
+		}
+
+		/**
+		 * @return the partitionColumn
+		 */
+		public String getPartitionColumn() {
+			return partitionColumn;
+		}
+
+		/**
+		 * @param partitionColumn the partitionColumn to set
+		 */
+		public void setPartitionColumn(String partitionColumn) {
+			this.partitionColumn = partitionColumn;
+		}
+
+		/**
+		 * @return the partitionValue
+		 */
+		public String getPartitionValue() {
+			return partitionValue;
+		}
+
+		/**
+		 * @param partitionValue the partitionValue to set
+		 */
+		public void setPartitionValue(String partitionValue) {
+			this.partitionValue = partitionValue;
+		}
 	}
 
 	/**
@@ -475,6 +572,8 @@ public abstract class MartConstructorAction {
 	public static class DropColumns extends MartConstructorAction {
 
 		private Collection columns;
+		
+		private String table;
 
 		/**
 		 * Creates a new DropColumns action.
@@ -504,6 +603,20 @@ public abstract class MartConstructorAction {
 		 */
 		public void setColumns(Collection columns) {
 			this.columns = columns;
+		}
+
+		/**
+		 * @return the table
+		 */
+		public String getTable() {
+			return table;
+		}
+
+		/**
+		 * @param table the table to set
+		 */
+		public void setTable(String table) {
+			this.table = table;
 		}
 	}
 

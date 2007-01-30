@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.biomart.builder.controller.dialects.DatabaseDialect;
 import org.biomart.builder.exceptions.ValidationException;
@@ -32,6 +33,8 @@ import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn;
+import org.biomart.builder.model.SchemaModificationSet.TableRestriction;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.ComponentStatus;
@@ -651,14 +654,13 @@ public class MartBuilderUtils {
 	 * @throws ValidationException
 	 *             if the column could not be used for partitioning, for
 	 *             whatever reason.
-	 * FIXME: Reinstate.
+	 */
 	public static void partitionByColumn(final DataSet dataset,
-			final DataSetColumn column, final PartitionedColumnType type)
+			final DataSetColumn column, final PartitionedColumn type)
 			throws ValidationException {
-		Log.info(Resources.get("logReqPartitionCol"));
-		column.setPartitionType(type);
+		Log.info(Resources.get("logReqPartitionCol"));		
+		dataset.getDataSetModifications().setPartitionedColumn(column,type);
 	}
-	*/
 
 	/**
 	 * Drops a dataset from a mart. Normally you'd expect this kind of routine
@@ -863,6 +865,30 @@ public class MartBuilderUtils {
 	}
 
 	/**
+	 * Flags a table as restricted within a dataset table. If already flagged, this
+	 * updates the existing settings.
+	 * 
+	 * @param datasetTable
+	 *            the dataset table to flag the relation in.
+	 * @param table
+	 *            the table to flag as restricted.
+	 * @param expression
+	 *            the expression to use for the restriction for the relation.
+	 * @param aliases
+	 *            the aliases to use for columns.
+	 * @throws ValidationException
+	 *             if this could not be done. 
+	 */
+	public static void restrictTable(final DataSetTable datasetTable, final Table table,
+			final String expression, final Map aliases)
+			throws ValidationException {
+		Log.info(Resources.get("logReqRestrictTable"));
+		final TableRestriction restriction = new TableRestriction(
+				expression, aliases);
+		((DataSet)datasetTable.getSchema()).getSchemaModifications().setRestrictedTable(datasetTable, table, restriction);
+	}
+
+	/**
 	 * Flags a table as restricted within a dataset. If already flagged, this
 	 * updates the existing settings.
 	 * 
@@ -875,17 +901,50 @@ public class MartBuilderUtils {
 	 * @param aliases
 	 *            the aliases to use for columns.
 	 * @throws ValidationException
-	 *             if this could not be done.
-	 * FIXME: Reinstate.
+	 *             if this could not be done. 
+	 * */
 	public static void restrictTable(final DataSet dataset, final Table table,
 			final String expression, final Map aliases)
 			throws ValidationException {
 		Log.info(Resources.get("logReqRestrictTable"));
-		final DataSetTableRestriction restriction = new DataSetTableRestriction(
+		final TableRestriction restriction = new TableRestriction(
 				expression, aliases);
-		dataset.flagRestrictedTable(table, restriction);
+		dataset.getSchemaModifications().setRestrictedTable(table, restriction);
 	}
-	*/
+
+	/**
+	 * UnFlags a table as restricted within a dataset table. If already flagged, this
+	 * updates the existing settings.
+	 * 
+	 * @param datasetTable
+	 *            the dataset table to unflag the relation in.
+	 * @param table
+	 *            the table to unflag as restricted.
+	 * @throws ValidationException
+	 *             if this could not be done. 
+	 */
+	public static void unrestrictTable(final DataSetTable datasetTable, final Table table)
+			throws ValidationException {
+		Log.info(Resources.get("logReqUnrestrictTable"));
+		((DataSet)datasetTable.getSchema()).getSchemaModifications().unsetRestrictedTable(datasetTable, table);
+	}
+
+	/**
+	 * UnFlags a table as restricted within a dataset. If already flagged, this
+	 * updates the existing settings.
+	 * 
+	 * @param dataset
+	 *            the dataset to unflag the relation in.
+	 * @param table
+	 *            the table to unflag as restricted.
+	 * @throws ValidationException
+	 *             if this could not be done.
+	 * */
+	public static void unrestrictTable(final DataSet dataset, final Table table)
+			throws ValidationException {
+		Log.info(Resources.get("logReqUnrestrictTable"));
+		dataset.getSchemaModifications().unsetRestrictedTable(table);
+	}
 
 	/**
 	 * This method returns the first few rows from a given offset in the given
@@ -1218,27 +1277,12 @@ public class MartBuilderUtils {
 	 * @throws ValidationException
 	 *             if the column could not be used for partitioning, for
 	 *             whatever reason.
-	 * FIXME: Reinstate.
+	 */
 	public static void unpartitionByColumn(final DataSet dataset,
 			final DataSetColumn column) throws ValidationException {
 		Log.info(Resources.get("logReqUnpartitionCol"));
-		column.setPartitionType(null);
+		dataset.getDataSetModifications().unsetPartitionedColumn(column);
 	}
-	*/
-
-	/**
-	 * Unflags a table as restricted within a dataset.
-	 * 
-	 * @param dataset
-	 *            the dataset to unflag the table within.
-	 * @param table
-	 *            the table to unflag.
-	 * FIXME: Reinstate.
-	public static void unrestrictTable(final DataSet dataset, final Table table) {
-		Log.info(Resources.get("logReqUnrestrictTable"));
-		dataset.unflagRestrictedTable(table);
-	}
-	*/
 
 	/**
 	 * Unflags a relation as subclassed, and regenerates the dataset.

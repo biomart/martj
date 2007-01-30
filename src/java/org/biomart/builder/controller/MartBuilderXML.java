@@ -23,6 +23,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,6 +44,11 @@ import org.biomart.builder.model.SchemaModificationSet;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn;
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn.SingleValue;
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn.UniqueValues;
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn.ValueCollection;
+import org.biomart.builder.model.SchemaModificationSet.TableRestriction;
 import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
@@ -443,35 +449,9 @@ public class MartBuilderXML extends DefaultHandler {
 	private void writeSchemaContents(final Schema schema, final Writer xmlWriter)
 			throws IOException, DataModelException {
 		Log.debug("Writing schema contents for " + schema);
-		// What tables to write? The order is important for datasets
-		// only. This is to allow inherited columns to reference
-		// earlier columns.
-		final List tables = new ArrayList();
-
-		// Dataset tables must be written in an ordered manner.
-		if (schema instanceof DataSet) {
-			// Add the main table first.
-			for (final Iterator i = schema.getTables().iterator(); i.hasNext();) {
-				final DataSetTable dsTab = (DataSetTable) i.next();
-				if (dsTab.getType().equals(DataSetTableType.MAIN))
-					tables.add(dsTab);
-			}
-			// Recursively add child tables.
-			for (int i = 0; i < tables.size(); i++) {
-				final DataSetTable dsTab = (DataSetTable) tables.get(i);
-				if (dsTab.getPrimaryKey() != null)
-					for (final Iterator j = dsTab.getPrimaryKey()
-							.getRelations().iterator(); j.hasNext();)
-						tables.add(((Relation) j.next()).getManyKey()
-								.getTable());
-			}
-		}
-		// Non dataset tables can be written in any order.
-		else
-			tables.addAll(schema.getTables());
 
 		// Write out tables inside each schema.
-		for (final Iterator ti = tables.iterator(); ti.hasNext();) {
+		for (final Iterator ti = schema.getTables().iterator(); ti.hasNext();) {
 			final Table table = (Table) ti.next();
 			Log.debug("Writing table: " + table);
 
@@ -654,6 +634,31 @@ public class MartBuilderXML extends DefaultHandler {
 				}
 			}
 			
+			// Write out partitioned columns.
+			for (final Iterator x = dsMods.getPartitionedColumns().entrySet().iterator(); x.hasNext(); ) {
+				final Map.Entry entry = (Map.Entry)x.next();
+				for (final Iterator y = ((Map)entry.getValue()).entrySet().iterator(); y.hasNext(); ) {
+					final Map.Entry entry2 = (Map.Entry)y.next();
+					final PartitionedColumn pc = (PartitionedColumn)entry2.getValue();
+					final String pcType = (pc instanceof SingleValue) 
+					? "singleValue" : ((pc instanceof ValueCollection) ? "valueCollection" : "uniqueValues");
+					this.openElement("partitionedColumn", xmlWriter);
+					this.writeAttribute("tableKey", (String)entry.getKey(), xmlWriter);
+					this.writeAttribute("colKey", (String)entry2.getKey(), xmlWriter);
+					this.writeAttribute("partitionType", pcType, xmlWriter);
+					if (pc instanceof SingleValue) {
+						this.writeAttribute("partitionUseNull", ""+((SingleValue)pc).getIncludeNull(), xmlWriter);
+						this.writeAttribute("partitionValue", ((SingleValue)pc).getValue(), xmlWriter);
+					} else if (pc instanceof ValueCollection) {
+						this.writeAttribute("partitionUseNull", ""+((ValueCollection)pc).getIncludeNull(), xmlWriter);
+						this.writeAttribute("partitionValues", (String[])((ValueCollection)pc).getValues().toArray(new String[0]), xmlWriter);
+					} else if (pc instanceof UniqueValues) {
+						// Nothing extra needed for unique values.
+					}					
+					this.closeElement("partitionedColumn", xmlWriter);
+				}
+			}
+			
 			// Write out masked relations inside dataset. Can go before or
 			// after.
 			for (final Iterator x = schemaMods
@@ -700,6 +705,35 @@ public class MartBuilderXML extends DefaultHandler {
 				this.writeAttribute("relationId",
 						(String) this.reverseMappedObjects.get(r), xmlWriter);
 				this.closeElement("forcedRelation", xmlWriter);
+				}
+			}
+			
+			// Write out restricted tables.
+			for (final Iterator x = schemaMods
+					.getRestrictedTables().entrySet().iterator(); x.hasNext();) {
+				final Map.Entry entry = (Map.Entry)x.next();
+				for (final Iterator y = ((Map)entry.getValue()).entrySet().iterator(); y.hasNext(); ) {
+				final Map.Entry entry2 = (Map.Entry) y.next();
+				final TableRestriction restrict = (TableRestriction)entry2.getValue();
+				this.openElement("restrictedTable", xmlWriter);
+				this.writeAttribute("tableKey", (String)entry.getKey(), xmlWriter);
+				this.writeAttribute("tableId",
+						(String) this.reverseMappedObjects.get(entry2.getKey()), xmlWriter);
+				final StringBuffer cols = new StringBuffer();
+				final StringBuffer names = new StringBuffer();
+				for (final Iterator z = restrict.getAliases().entrySet().iterator(); z.hasNext(); ) {
+					Map.Entry entry3 = (Map.Entry)z.next();
+					cols.append((String) this.reverseMappedObjects.get(entry3.getKey()));
+					names.append((String)entry3.getValue());
+					if (z.hasNext()) {
+						cols.append(',');
+						names.append(',');
+					}
+				}
+				this.writeAttribute("aliasColumnIds", cols.toString(), xmlWriter);
+				this.writeAttribute("aliasNames", names.toString(), xmlWriter);
+				this.writeAttribute("expression", restrict.getExpression(), xmlWriter);
+				this.closeElement("restrictedTable", xmlWriter);
 				}
 			}
 			
@@ -908,15 +942,7 @@ public class MartBuilderXML extends DefaultHandler {
 			try {
 				// DataSet table column?
 				if (tbl instanceof DataSetTable) {
-					// This is all 0.5 stuff.
-					final boolean masked = Boolean.valueOf(
-							(String) attributes.get("masked")).booleanValue();
-					if (masked) {
-						final Map colMap = ((DataSet)tbl.getSchema()).getDataSetModifications().getMaskedColumns();
-						if (!colMap.containsKey(tbl.getName()))
-							colMap.put(tbl.getName(), new HashSet());
-						((Collection)colMap.get(tbl.getName())).add(name);
-					}
+					// Since 0.5 we don't bother reading this stuff.
 					
 					// FIXME: Parse all this to comply with 0.6.
 					/*
@@ -960,47 +986,6 @@ public class MartBuilderXML extends DefaultHandler {
 						throw new SAXException(Resources.get(
 								"unknownColumnType", type));
 					tbl.addColumn(column);
-
-					// Partitioning.
-					final String partitionType = (String) attributes
-							.get("partitionType");
-					PartitionedColumnType resolvedPartitionType;
-					if (partitionType == null || "null".equals(partitionType))
-						resolvedPartitionType = null;
-					else if ("singleValue".equals(partitionType)) {
-						String value = null;
-						boolean useNull = Boolean.valueOf(
-								(String) attributes.get("partitionUseNull"))
-								.booleanValue();
-						if (!useNull)
-							value = (String) attributes.get("partitionValue");
-						resolvedPartitionType = new SingleValue(value, useNull);
-					} else if ("valueCollection".equals(partitionType)) {
-						// Values are comma-separated.
-						final List valueList = new ArrayList();
-						if (attributes.containsKey("partitionValues"))
-							valueList.addAll(Arrays
-									.asList(((String) attributes
-											.get("partitionValues"))
-											.split("\\s*,\\s*")));
-						final boolean includeNull = Boolean.valueOf(
-								(String) attributes.get("partitionUseNull"))
-								.booleanValue();
-						// Make the collection.
-						resolvedPartitionType = new ValueCollection(valueList,
-								includeNull);
-					} else if ("uniqueValues".equals(partitionType))
-						resolvedPartitionType = new UniqueValues();
-					else
-						throw new SAXException(Resources.get(
-								"unknownPartitionColumnType", partitionType));
-
-					// Flag the column as partitioned.
-					column.setPartitionType(resolvedPartitionType);
-
-					// Update remaining settings.
-					column.setOriginalName(originalName);
-					column.setDependency(dependency);
 					*/
 					return;
 				}
@@ -1314,6 +1299,63 @@ public class MartBuilderXML extends DefaultHandler {
 			}
 		}
 		
+		// Partitioned Column (inside dataset).
+		else if ("partitionedColumn".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("partitionedColumnOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the relation.
+				final String tableKey = (String)attributes.get("tableKey");
+				final String colKey = (String)attributes.get("colKey");
+
+				final String partitionType = (String) attributes
+						.get("partitionType");
+				PartitionedColumn resolvedPartitionType;
+				if (partitionType == null || "null".equals(partitionType))
+					resolvedPartitionType = null;
+				else if ("singleValue".equals(partitionType)) {
+					String value = null;
+					boolean useNull = Boolean.valueOf(
+							(String) attributes.get("partitionUseNull"))
+							.booleanValue();
+					if (!useNull)
+						value = (String) attributes.get("partitionValue");
+					resolvedPartitionType = new SingleValue(value, useNull);
+				} else if ("valueCollection".equals(partitionType)) {
+					// Values are comma-separated.
+					final List valueList = new ArrayList();
+					if (attributes.containsKey("partitionValues"))
+						valueList.addAll(Arrays
+								.asList(((String) attributes
+										.get("partitionValues"))
+										.split("\\s*,\\s*")));
+					final boolean includeNull = Boolean.valueOf(
+							(String) attributes.get("partitionUseNull"))
+							.booleanValue();
+					// Make the collection.
+					resolvedPartitionType = new ValueCollection(valueList,
+							includeNull);
+				} else if ("uniqueValues".equals(partitionType))
+					resolvedPartitionType = new UniqueValues();
+				else
+					throw new SAXException(Resources.get(
+							"unknownPartitionColumnType", partitionType));
+				
+				// Partition it.
+				final Map colMap = w.getDataSetModifications().getPartitionedColumns();
+				if (!colMap.containsKey(tableKey))
+					colMap.put(tableKey, new HashMap());
+				((Map)colMap.get(tableKey)).put(colKey, resolvedPartitionType);
+			} catch (final Exception e) {
+				throw new SAXException(e);
+			}
+		}
+		
 		// Masked Column (inside dataset).
 		else if ("maskedColumn".equals(eName)) {
 			// What dataset does it belong to? Throw a wobbly if none.
@@ -1423,6 +1465,7 @@ public class MartBuilderXML extends DefaultHandler {
 					throw new SAXException(e);
 			}
 		}
+		*/
 
 		// Restricted Table (inside dataset).
 		else if ("restrictedTable".equals(eName)) {
@@ -1430,16 +1473,17 @@ public class MartBuilderXML extends DefaultHandler {
 			if (this.objectStack.empty()
 					|| !(this.objectStack.peek() instanceof DataSet))
 				throw new SAXException(Resources
-						.get("restrictedRelationOutsideDataSet"));
+						.get("restrictedTableOutsideDataSet"));
 			final DataSet w = (DataSet) this.objectStack.peek();
 
 			try {
-				// Look up the relation.
+				// Look up the restriction.
 				final Table tbl = (Table) this.mappedObjects.get(attributes
-						.get("tableId"));
-
-				// Get the expression to use.
-				final String expr = (String) attributes.get("expression");
+						.get("tableId")); 
+				// Default to dataset-wide restriction if 0.5 syntax used.
+				String tableKey = (String)attributes.get("tableKey");
+				if (tableKey==null)
+					tableKey = SchemaModificationSet.DATASET;
 
 				// Get the aliases to use for the first table.
 				final Map aliases = new HashMap();
@@ -1452,12 +1496,17 @@ public class MartBuilderXML extends DefaultHandler {
 							.get(aliasColumnIds[i]);
 					aliases.put(wrapped, aliasNames[i]);
 				}
+				// Get the expression to use.
+				final String expr = (String) attributes.get("expression");
 
 				// Flag it as restricted
-				final DataSetTableRestriction restrict = new DataSetTableRestriction(
+				final TableRestriction restrict = new TableRestriction(
 						expr, aliases);
-				w.flagRestrictedTable(tbl, restrict);
-				element = tbl;
+				final Map restMap = w.getSchemaModifications().getRestrictedTables();
+				if (!restMap.containsKey(tableKey))
+					restMap.put(tableKey, new HashMap());
+				((Map)restMap.get(tableKey)).put(tbl, restrict);
+				element = restrict;
 			} catch (final Exception e) {
 				if (e instanceof SAXException)
 					throw (SAXException) e;
@@ -1465,7 +1514,6 @@ public class MartBuilderXML extends DefaultHandler {
 					throw new SAXException(e);
 			}
 		}
-		*/
 
 		// DataSet (anywhere).
 		else if ("dataset".equals(eName))

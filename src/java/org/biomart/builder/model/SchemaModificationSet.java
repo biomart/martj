@@ -22,9 +22,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.Map.Entry;
 
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Table;
@@ -54,6 +57,8 @@ public class SchemaModificationSet {
 	private final Map forceIncludeRelations = new HashMap();
 	
 	private Map compoundRelations = new HashMap();
+
+	private final Map restrictedTables = new HashMap();
 	
 	public SchemaModificationSet(final DataSet ds) {
 		this.ds = ds;
@@ -131,6 +136,79 @@ public class SchemaModificationSet {
 	
 	public Collection getMergedRelations() {
 		return this.mergedRelations;
+	}
+		
+	public void setRestrictedTable(final Table table, final TableRestriction restriction) {
+		this.setRestrictedTable(SchemaModificationSet.DATASET, table, restriction);
+	}
+	
+	public void setRestrictedTable(final DataSetTable dsTable, final Table table, final TableRestriction restriction) {
+		this.setRestrictedTable(dsTable.getName(), table, restriction);
+	}
+	
+	private void setRestrictedTable(final String dsTableName, final Table table, final TableRestriction restriction) {
+		// Skip already-masked relations.
+		if (this.isRestrictedTable(dsTableName, table))
+			return;
+		if (!this.restrictedTables.containsKey(dsTableName))
+			this.restrictedTables.put(dsTableName, new HashMap());
+		final Map restrictions = (Map)this.restrictedTables.get(dsTableName);
+		restrictions.put(table, restriction);
+	}
+
+	public void unsetRestrictedTable(final Table table) {
+		this.unsetRestrictedTable(SchemaModificationSet.DATASET, table);
+	}
+	
+	public void unsetRestrictedTable(final DataSetTable dsTable, final Table table) throws ValidationException {
+		// Complain if asked to unmask globally masked relation.
+		final Map globalRests = (Map)this.restrictedTables.get(SchemaModificationSet.DATASET);
+		if (globalRests!=null && globalRests.containsKey(table))
+			throw new ValidationException(Resources.get("tableRestrictedGlobally"));
+		this.unsetRestrictedTable(dsTable.getName(), table);
+	}
+	
+	private void unsetRestrictedTable(final String dsTableName, final Table table) {
+		// Skip already-unmasked relations.
+		if (!this.isRestrictedTable(dsTableName, table))
+			return;
+		if (this.restrictedTables.containsKey(dsTableName)) {
+			final Map rests = (Map)this.restrictedTables.get(dsTableName);
+			rests.remove(table);
+			if (rests.isEmpty())
+				this.restrictedTables.remove(dsTableName);
+		}
+	}
+	
+	public boolean isRestrictedTable(final DataSetTable dsTable, final Table table) {
+		return this.isRestrictedTable(dsTable==null ? SchemaModificationSet.DATASET : dsTable.getName(), table);
+	}
+	
+	private boolean isRestrictedTable(final String dsTableName, final Table table) {
+		final Map globalRests = (Map)this.restrictedTables.get(SchemaModificationSet.DATASET);
+		final Map rests = this.restrictedTables.containsKey(dsTableName) ? 
+				(Map)this.restrictedTables.get(dsTableName) 
+				: globalRests;
+		return (rests!=null && rests.containsKey(table)) || (globalRests!=null && globalRests.containsKey(table));
+	}
+	
+	public TableRestriction getRestrictedTable(final DataSetTable dsTable, final Table table) {
+		return this.getRestrictedTable(dsTable==null ? SchemaModificationSet.DATASET : dsTable.getName(), table);
+	}
+	
+	private TableRestriction getRestrictedTable(final String dsTableName, final Table table) {
+		if (!this.isRestrictedTable(dsTableName, table))
+			return null;
+		final Map globalRests = (Map)this.restrictedTables.get(SchemaModificationSet.DATASET);
+		final Map rests = this.restrictedTables.containsKey(dsTableName) ? 
+				(Map)this.restrictedTables.get(dsTableName) 
+				: globalRests;
+		return (rests!=null && rests.containsKey(table)) ? (TableRestriction)rests.get(table)
+				: (TableRestriction)globalRests.get(table);
+	}
+	
+	public Map getRestrictedTables() {
+		return this.restrictedTables;
 	}
 		
 	public void setForceIncludeRelation(final Relation relation) {
@@ -383,5 +461,104 @@ public class SchemaModificationSet {
 		target.mergedRelations.addAll(this.mergedRelations);
 		target.compoundRelations.clear();
 		target.compoundRelations.putAll(this.compoundRelations);
+		target.restrictedTables.clear();
+		// We have to use an iterator because of nested maps.
+		for (final Iterator i = this.restrictedTables.entrySet().iterator(); i.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)i.next();
+			target.restrictedTables.put(entry.getKey(), new HashMap());
+			((Map)target.restrictedTables.get(entry.getKey())).putAll((Map)entry.getValue());
+		}
+	}
+
+	/**
+	 * Defines the restriction on a table, ie. a where-clause.
+	 */
+	public static class TableRestriction {
+	
+		private Map aliases;
+	
+		private String expr;
+	
+		/**
+		 * This constructor gives the restriction an initial expression and a
+		 * set of aliases. The expression may not be empty, and neither can the
+		 * alias map.
+		 * 
+		 * @param expr
+		 *            the expression to define for this restriction.
+		 * @param aliases
+		 *            the aliases to use for columns.
+		 */
+		public TableRestriction(final String expr, final Map aliases) {
+			// Test for good arguments.
+			if (expr == null || expr.trim().length() == 0)
+				throw new IllegalArgumentException(Resources
+						.get("tblRestrictMissingExpression"));
+			if (aliases == null || aliases.isEmpty())
+				throw new IllegalArgumentException(Resources
+						.get("tblRestrictMissingAliases"));
+	
+			// Remember the settings.
+			this.aliases = new TreeMap();
+			this.aliases.putAll(aliases);
+			this.expr = expr;
+		}
+	
+		/**
+		 * Retrieves the map used for setting up aliases.
+		 * 
+		 * @return the aliases map. Keys must be {@link Column} instances, and
+		 *         values are aliases used in the expression.
+		 */
+		public Map getAliases() {
+			return this.aliases;
+		}
+	
+		/**
+		 * Returns the expression, <i>without</i> substitution. This value is
+		 * RDBMS-specific.
+		 * 
+		 * @return the unsubstituted expression.
+		 */
+		public String getExpression() {
+			return this.expr;
+		}
+	
+		/**
+		 * Returns the expression, <i>with</i> substitution. This value is
+		 * RDBMS-specific. The prefix map must contain two entries. Each entry
+		 * relates to one of the keys of a relation. The key of the map is the
+		 * key of the relation, and the value is the prefix to use in the
+		 * substituion, eg. "a" if columns for the table for that key should be
+		 * prefixed as "a.mycolumn".
+		 * 
+		 * @param tablePrefix
+		 *            the prefix to use for the table in the expression.
+		 * @return the substituted expression.
+		 */
+		public String getSubstitutedExpression(final String tablePrefix) {
+			Log.debug("Calculating restricted table expression");
+			String sub = this.expr;
+			for (final Iterator i = this.aliases.entrySet().iterator(); i
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) i.next();
+				final Column col = (Column) entry.getKey();
+				final String alias = ":" + (String) entry.getValue();
+				sub = sub.replaceAll(alias, tablePrefix + "." + col.getName());
+			}
+			Log.debug("Expression is: " + sub);
+			return sub;
+		}
+	
+		/**
+		 * The actual expression. The values from the alias maps will be used to
+		 * refer to various columns. This value is RDBMS-specific.
+		 * 
+		 * @param expr
+		 *            the actual expression to use.
+		 */
+		public void setExpression(final String expr) {
+			this.expr = expr;
+		}
 	}
 }
