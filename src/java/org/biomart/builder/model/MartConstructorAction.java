@@ -89,6 +89,119 @@ public abstract class MartConstructorAction {
 	public abstract String getStatusMessage();
 
 	/**
+	 * Copy optimiser table actions.
+	 */
+	public static class CopyOptimiser extends MartConstructorAction {
+
+		private String fromOptTableName;
+		private String toOptTableName;
+		private String optColumnName;
+		private List fromKeyColumns;
+		private List toKeyColumns;
+		private String viaTableName;
+		
+		/**
+		 * Creates a new CopyOptimiser action.
+		 * 
+		 * @param datasetSchemaName
+		 *            the dataset schema we are working in.
+		 * @param datasetTableName
+		 *            the dataset table we are working on.
+		 */
+		public CopyOptimiser(String datasetSchemaName, String datasetTableName) {
+			super(datasetSchemaName, datasetTableName);
+		}
+
+		public String getStatusMessage() {
+			return Resources.get("mcCopyOpt");
+		}
+
+		/**
+		 * @return the fromOptTableName
+		 */
+		public String getFromOptTableName() {
+			return fromOptTableName;
+		}
+
+		/**
+		 * @param fromOptTableName the fromOptTableName to set
+		 */
+		public void setFromOptTableName(String fromOptTableName) {
+			this.fromOptTableName = fromOptTableName;
+		}
+
+		/**
+		 * @return the optColumnName
+		 */
+		public String getOptColumnName() {
+			return optColumnName;
+		}
+
+		/**
+		 * @param optColumnName the optColumnName to set
+		 */
+		public void setOptColumnName(String optColumnName) {
+			this.optColumnName = optColumnName;
+		}
+
+		/**
+		 * @return the toOptTableName
+		 */
+		public String getToOptTableName() {
+			return toOptTableName;
+		}
+
+		/**
+		 * @param toOptTableName the toOptTableName to set
+		 */
+		public void setToOptTableName(String toOptTableName) {
+			this.toOptTableName = toOptTableName;
+		}
+
+		/**
+		 * @return the fromKeyColumns
+		 */
+		public List getFromKeyColumns() {
+			return fromKeyColumns;
+		}
+
+		/**
+		 * @param fromKeyColumns the fromKeyColumns to set
+		 */
+		public void setFromKeyColumns(List fromKeyColumns) {
+			this.fromKeyColumns = fromKeyColumns;
+		}
+
+		/**
+		 * @return the toKeyColumns
+		 */
+		public List getToKeyColumns() {
+			return toKeyColumns;
+		}
+
+		/**
+		 * @param toKeyColumns the toKeyColumns to set
+		 */
+		public void setToKeyColumns(List toKeyColumns) {
+			this.toKeyColumns = toKeyColumns;
+		}
+
+		/**
+		 * @return the viaTableName
+		 */
+		public String getViaTableName() {
+			return viaTableName;
+		}
+
+		/**
+		 * @param viaTableName the viaTableName to set
+		 */
+		public void setViaTableName(String viaTableName) {
+			this.viaTableName = viaTableName;
+		}
+	}
+
+	/**
 	 * Update optimiser table actions.
 	 */
 	public static class UpdateOptimiser extends MartConstructorAction {

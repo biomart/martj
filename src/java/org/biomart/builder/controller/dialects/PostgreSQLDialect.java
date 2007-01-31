@@ -32,6 +32,7 @@ import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
+import org.biomart.builder.model.MartConstructorAction.CopyOptimiser;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Drop;
 import org.biomart.builder.model.MartConstructorAction.DropColumns;
@@ -669,6 +670,47 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			sb.append("b.");
 			sb.append((String)i.next());
 			sb.append(" is not null");
+			if (i.hasNext())
+				sb.append(" and ");
+		}
+		sb.append(')');
+		statements.add(sb.toString());
+	}
+		
+	public void doCopyOptimiser(final CopyOptimiser action, final List statements) {
+		final String schemaName = action.getDataSetSchemaName();
+		final String toOptTableName = action.getToOptTableName();
+		final String fromOptTableName = action.getFromOptTableName();
+		final String viaTableName = action.getViaTableName();
+		final String optColName = action.getOptColumnName();
+
+		statements.add("set search_path=" + schemaName + ",pg_catalog");
+
+		statements.add("alter table "+schemaName+"."+toOptTableName+" add "+optColName+" integer default 0");
+		
+		final StringBuffer sb = new StringBuffer();
+		sb.append("update " + schemaName + "." + toOptTableName + " set "
+				+ optColName + "=(select max(b." + optColName + ") from " + schemaName
+				+ "." + fromOptTableName + " b inner join " + schemaName +"."+viaTableName+" c on ");
+		for (final Iterator i = action.getFromKeyColumns().iterator(); i.hasNext(); ) {
+			final String keyCol = (String)i.next();
+			sb.append("b.");
+			sb.append(keyCol);
+			sb.append("=c.");
+			sb.append(keyCol);
+			if (i.hasNext())
+				sb.append(" and ");
+		}
+		sb.append(" where ");
+		for (final Iterator i = action.getToKeyColumns().iterator(); i.hasNext(); ) {
+			final String keyCol = (String)i.next();
+			sb.append(schemaName);
+			sb.append('.');
+			sb.append(toOptTableName);
+			sb.append('.');
+			sb.append(keyCol);
+			sb.append("=c.");
+			sb.append(keyCol);
 			if (i.hasNext())
 				sb.append(" and ");
 		}

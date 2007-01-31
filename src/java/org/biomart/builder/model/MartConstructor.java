@@ -39,6 +39,7 @@ import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn.SingleValue;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn.UniqueValues;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn.ValueCollection;
+import org.biomart.builder.model.MartConstructorAction.CopyOptimiser;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Drop;
 import org.biomart.builder.model.MartConstructorAction.DropColumns;
@@ -447,24 +448,25 @@ public interface MartConstructor {
 				final DataSetOptimiserType oType = dataset
 						.getDataSetOptimiserType();
 				if (!oType.equals(DataSetOptimiserType.NONE))
-					this.doOptimiseTable(dataset, dsTable, oType);
+					this.doOptimiseTable(dataset, dsTable, oType, partitionValue);
 			}
 		}
 
 		private void doOptimiseTable(final DataSet dataset,
-				final DataSetTable dsTable, final DataSetOptimiserType oType)
+				final DataSetTable dsTable, final DataSetOptimiserType oType,
+				final String partitionValue)
 				throws Exception {
-			// Tables are same name, but use 'bool' or 'count'
-			// instead of 'main'
-			final String optTable = this.getOptimiserName(dsTable, oType);
 			if (!dsTable.getType().equals(DataSetTableType.DIMENSION)) {
+				// Tables are same name, but use 'bool' or 'count'
+				// instead of 'main'
+				final String optTable = this.getOptimiserTableName(dsTable, oType);
 				// If main/subclass table type, create table.
 				if (oType.equals(DataSetOptimiserType.TABLE)
 						|| oType.equals(DataSetOptimiserType.TABLE_BOOL)
 						|| oType.equals(DataSetOptimiserType.TABLE_INHERIT)
 						|| oType
 								.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT)) {
-					// The key cols are those from the parent table.
+					// The key cols are those from the primary key.
 					final List keyCols = new ArrayList();
 					for (final Iterator y = dsTable.getPrimaryKey()
 							.getColumns().iterator(); y.hasNext();)
@@ -478,68 +480,103 @@ public interface MartConstructor {
 					create.setKeyColumns(keyCols);
 					create.setOptTableName(optTable);
 					this.issueAction(create);
+					
+					// Index the pk on the new table.
+					final Index index = new Index(this.datasetSchemaName,
+							this.getFinalName(dsTable,
+									GenericConstructorRunnable.NO_PARTITION));
+					index.setTable(optTable);
+					index.setColumns(keyCols);
+					this.issueAction(index);
 				}
 			} else {
 				// Columns are dimension table names with '_bool' or
 				// '_count' appended.
-				final String optCol = dsTable.getModifiedName()
-						+ ((oType.equals(DataSetOptimiserType.COLUMN_BOOL)
+				final String optCol = this.getOptimiserColumnName(dsTable, partitionValue, oType);
+				// Work out the dimension parent.
+				final DataSetTable parent = (DataSetTable)((Relation) dsTable.getRelations().iterator()
+						.next()).getOneKey().getTable();
+				// Set up the column on the dimension parent.
+				final String optTable = this
+						.getOptimiserTableName(parent, oType);
+				// Key columns are primary key cols from parent.
+				// Do a left-join update. We're looking for rows
+				// where all child non-key cols are non-null.
+				final List keyCols = new ArrayList();
+				for (final Iterator y = parent.getPrimaryKey().getColumns()
+						.iterator(); y.hasNext();)
+					keyCols.add(((DataSetColumn) y.next())
+							.getModifiedName());
+				final List nonNullCols = new ArrayList();
+				for (final Iterator y = dsTable.getColumns().iterator(); y
+						.hasNext();) {
+					final DataSetColumn col = (DataSetColumn)y.next();
+					if (!dataset.getDataSetModifications().isMaskedColumn(col))
+						nonNullCols.add(col.getModifiedName());
+				}
+				nonNullCols.removeAll(keyCols);
+				
+				// Do the bool/count update.
+				final UpdateOptimiser update = new UpdateOptimiser(
+						this.datasetSchemaName, this.getFinalName(dsTable,
+								GenericConstructorRunnable.NO_PARTITION));
+				update.setKeyColumns(keyCols);
+				update.setNonNullColumns(nonNullCols);
+				update.setOptTableName(optTable);
+				update.setOptColumnName(optCol);
+				update
+						.setCountNotBool(oType
+								.equals(DataSetOptimiserType.COLUMN)
 								|| oType
-										.equals(DataSetOptimiserType.COLUMN_BOOL_INHERIT)
+										.equals(DataSetOptimiserType.COLUMN_INHERIT)
+								|| oType.equals(DataSetOptimiserType.TABLE)
 								|| oType
-										.equals(DataSetOptimiserType.TABLE_BOOL) || oType
-								.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT)) ? Resources
-								.get("boolColSuffix")
-								: Resources.get("countColSuffix"));
-				// Work out which parents are getting this column.
+										.equals(DataSetOptimiserType.TABLE_INHERIT));
+				this.issueAction(update);
+				
+				// Work out the inherited parents.
 				final List parents = new ArrayList();
-				parents.add(((Relation) dsTable.getRelations().iterator()
-						.next()).getOneKey().getTable());
+				parents.add(parent);
 				if (oType.equals(DataSetOptimiserType.COLUMN_BOOL_INHERIT)
 						|| oType
-								.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT))
-					for (int z = 0; z < parents.size(); z++)
-						parents.add(((Relation) ((Table) parents.get(z))
-								.getRelations().iterator().next()).getOneKey()
-								.getTable());
-				for (final Iterator z = parents.iterator(); z.hasNext();) {
-					final DataSetTable parent = (DataSetTable) z.next();
-					// For each parent, add a column to it or its
-					// table.
-					// Key columns are primary key cols from parent.
-					// Do a left-join update. We're looking for rows
-					// where all _child_
-					// non-key cols are non-null.
-					final List keyCols = new ArrayList();
-					for (final Iterator y = parent.getPrimaryKey().getColumns()
-							.iterator(); y.hasNext();)
-						keyCols.add(((DataSetColumn) y.next())
-								.getModifiedName());
-					final List nonNullCols = new ArrayList();
-					for (final Iterator y = dsTable.getColumns().iterator(); y
-							.hasNext();) {
-						final DataSetColumn col = (DataSetColumn) y.next();
-						if (!dsTable.getPrimaryKey().getColumns().contains(col))
-							nonNullCols.add(col.getModifiedName());
+								.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT)
+						|| oType
+								.equals(DataSetOptimiserType.COLUMN_INHERIT)
+						|| oType
+								.equals(DataSetOptimiserType.TABLE_INHERIT))
+					for (int z = 0; z < parents.size(); z++) {
+						final DataSetTable child = (DataSetTable)parents.get(z);
+						final Iterator fks = child.getForeignKeys().iterator();
+						if (fks.hasNext())
+							parents.add(((Relation)((Key)fks.next()).getRelations().iterator().next()).getOneKey().getTable());
 					}
-
-					// Do the bool/count update.
-					final UpdateOptimiser update = new UpdateOptimiser(
+				
+				// Copy the column to the inherited parents by following pairs.
+				for (int i = 0; i < parents.size() - 1; i++) {
+					final DataSetTable fromParent = (DataSetTable)parents.get(i);
+					final DataSetTable toParent = (DataSetTable)parents.get(i+1);
+					final List fromKeyCols = new ArrayList();
+					for (final Iterator y = fromParent.getPrimaryKey().getColumns()
+							.iterator(); y.hasNext();)
+						fromKeyCols.add(((DataSetColumn) y.next())
+								.getModifiedName());
+					final List toKeyCols = new ArrayList();
+					for (final Iterator y = toParent.getPrimaryKey().getColumns()
+							.iterator(); y.hasNext();)
+						toKeyCols.add(((DataSetColumn) y.next())
+								.getModifiedName());
+					final CopyOptimiser copy = new CopyOptimiser(
 							this.datasetSchemaName, this.getFinalName(dsTable,
 									GenericConstructorRunnable.NO_PARTITION));
-					update.setKeyColumns(keyCols);
-					update.setNonNullColumns(nonNullCols);
-					update.setOptTableName(optTable);
-					update.setOptColumnName(optCol);
-					update
-							.setCountNotBool(oType
-									.equals(DataSetOptimiserType.COLUMN)
-									|| oType
-											.equals(DataSetOptimiserType.COLUMN_INHERIT)
-									|| oType.equals(DataSetOptimiserType.TABLE)
-									|| oType
-											.equals(DataSetOptimiserType.TABLE_INHERIT));
-					this.issueAction(update);
+					copy.setFromOptTableName(this
+							.getOptimiserTableName(fromParent, oType));
+					copy.setFromKeyColumns(fromKeyCols);
+					copy.setViaTableName(this.getFinalName(fromParent, GenericConstructorRunnable.NO_PARTITION));
+					copy.setToKeyColumns(toKeyCols);
+					copy.setToOptTableName(this
+							.getOptimiserTableName(toParent, oType));
+					copy.setOptColumnName(optCol);
+					this.issueAction(copy);
 				}
 			}
 		}
@@ -695,28 +732,61 @@ public interface MartConstructor {
 					action);
 		}
 
-		private String getOptimiserName(final DataSetTable dsTable,
+		private String getOptimiserTableName(final DataSetTable dsTable,
 				final DataSetOptimiserType oType) {
 			final StringBuffer finalName = new StringBuffer();
 			finalName.append(dsTable.getSchema().getName());
 			finalName.append(Resources.get("tablenameSep"));
 			finalName.append(dsTable.getModifiedName());
-			finalName.append(Resources.get("tablenameSep"));
 			if (oType.equals(DataSetOptimiserType.TABLE)
-					|| oType.equals(DataSetOptimiserType.TABLE_INHERIT))
-				finalName.append(Resources.get("countTblSuffix"));
-			else if (oType.equals(DataSetOptimiserType.TABLE_BOOL)
-					|| oType.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT))
-				finalName.append(Resources.get("boolTblSuffix"));
-			else if (dsTable.getType().equals(DataSetTableType.MAIN))
-				finalName.append(Resources.get("mainSuffix"));
-			else if (dsTable.getType().equals(DataSetTableType.MAIN_SUBCLASS))
-				finalName.append(Resources.get("subclassSuffix"));
-			else if (dsTable.getType().equals(DataSetTableType.DIMENSION))
+					|| oType.equals(DataSetOptimiserType.TABLE_INHERIT)) {
+				finalName.append(Resources.get("tablenameSubSep"));
+				finalName.append(Resources.get("countTblPartition"));
+				finalName.append(Resources.get("tablenameSep"));
 				finalName.append(Resources.get("dimensionSuffix"));
-			else
+			} else if (oType.equals(DataSetOptimiserType.TABLE_BOOL)
+					|| oType.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT)) {
+				finalName.append(Resources.get("tablenameSubSep"));
+				finalName.append(Resources.get("boolTblPartition"));
+				finalName.append(Resources.get("tablenameSep"));
+				finalName.append(Resources.get("dimensionSuffix"));
+			} else if (dsTable.getType().equals(DataSetTableType.MAIN)) {
+				finalName.append(Resources.get("tablenameSep"));
+				finalName.append(Resources.get("mainSuffix"));
+			} else if (dsTable.getType().equals(DataSetTableType.MAIN_SUBCLASS)) {
+				finalName.append(Resources.get("tablenameSep"));
+				finalName.append(Resources.get("subclassSuffix"));
+			} else if (dsTable.getType().equals(DataSetTableType.DIMENSION)) {
+				finalName.append(Resources.get("tablenameSep"));
+				finalName.append(Resources.get("dimensionSuffix"));
+			} else
 				throw new BioMartError();
 			return finalName.toString().replaceAll("\\W", "");
+		}
+		
+		private String getOptimiserColumnName(final DataSetTable dsTable,
+				final String partitionValue, final DataSetOptimiserType oType) {
+			final StringBuffer sb = new StringBuffer();
+			sb.append(dsTable.getModifiedName());
+			sb.append(Resources.get("tablenameSubSep"));
+			if (!partitionValue.equals(GenericConstructorRunnable.NO_PARTITION)) {
+				sb.append(this.getSanitizedPartitionValue(partitionValue));
+				sb.append(Resources.get("tablenameSubSep"));
+			}
+			sb.append((oType.equals(DataSetOptimiserType.COLUMN_BOOL)
+							|| oType
+									.equals(DataSetOptimiserType.COLUMN_BOOL_INHERIT)
+							|| oType
+									.equals(DataSetOptimiserType.TABLE_BOOL) || oType
+							.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT)) ? Resources
+							.get("boolColSuffix")
+							: Resources.get("countColSuffix"));
+			return sb.toString();
+		}
+		
+		private String getSanitizedPartitionValue(final String partitionValue) {
+			return partitionValue.replaceAll("\\W+", "_")
+			.replaceAll("__+", "_");
 		}
 
 		private String getFinalName(final DataSetTable dsTable,
@@ -738,8 +808,7 @@ public interface MartConstructor {
 					// Substitute non-[char/number/underscore] symbols with
 					// underscores, and replace multiple underscores with
 					// single ones.
-					finalName.append(partitionValue.replaceAll("\\W+", "_")
-							.replaceAll("__+", "_"));
+					finalName.append(this.getSanitizedPartitionValue(partitionValue));
 				}
 				finalName.append(Resources.get("tablenameSep"));
 				finalName.append(Resources.get("dimensionSuffix"));
