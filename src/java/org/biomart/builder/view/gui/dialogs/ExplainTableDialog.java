@@ -42,14 +42,14 @@ import javax.swing.JScrollPane;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.TransformationUnit.LeftJoinTable;
+import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.builder.view.gui.SchemaTabSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
-import org.biomart.builder.view.gui.diagrams.contexts.ExplainDataSetContext;
-import org.biomart.builder.view.gui.diagrams.contexts.ExplainTransformationContext;
+import org.biomart.builder.view.gui.diagrams.contexts.ExplainContext;
+import org.biomart.builder.view.gui.diagrams.contexts.TransformationContext;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
@@ -112,7 +112,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 	
 	private List transformationTableComponents = new ArrayList();
 
-	private ExplainTransformationContext explainTransformationContext;
+	private TransformationContext transformationContext;
 
 	private ExplainTableDialog(final MartTab martTab, final DataSetTable dsTable) {
 		// Create the blank dialog, and give it an appropriate title.
@@ -129,7 +129,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		final JPanel displayArea = new JPanel(new CardLayout());
 
 		// Compute the overview diagram, and assign it the appropriate context.
-		final ExplainDataSetContext context = new ExplainDataSetContext(
+		final ExplainContext context = new ExplainContext(
 				martTab, dsTable);
 		this.schemaTabSet.setDiagramContext(context);
 		// Must be set visible as previous display location is invisible.
@@ -223,7 +223,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		content.setPreferredSize(size);
 
 		// Make a context for our sub-diagrams.
-		this.explainTransformationContext = new ExplainTransformationContext(
+		this.transformationContext = new TransformationContext(
 				this.martTab, (DataSet) dsTable.getSchema());
 
 		// Calculate the transform.
@@ -265,13 +265,13 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			final JLabel label;
 			final ExplainTransformationDiagram diagram;
 			// Draw the unit.
-			if (tu instanceof LeftJoinTable) {
+			if (tu instanceof JoinTable) {
 				// Temp table to schema table join.
 				label = new JLabel(Resources.get("stepTableLabel",
 						new String[] { "" + stepNumber,
 								Resources.get("explainMergeLabel") }));
 				diagram = new ExplainTransformationDiagram.TempReal(
-						this.martTab, (LeftJoinTable) tu, columnsSoFar);
+						this.martTab, (JoinTable) tu, columnsSoFar);
 			} else if (tu instanceof SelectFromTable) {
 				// Do a single-step select.
 				label = new JLabel(Resources.get("stepTableLabel",
@@ -285,7 +285,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			// Display the diagram.
 			this.gridBag.setConstraints(label, this.labelConstraints);
 			this.transformation.add(label);
-			diagram.setDiagramContext(this.explainTransformationContext);
+			diagram.setDiagramContext(this.transformationContext);
 			JPanel field = new JPanel();
 			field.add(diagram);
 			this.gridBag.setConstraints(field, this.fieldConstraints);

@@ -48,6 +48,7 @@ import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn.SingleValue;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn.UniqueValues;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn.ValueCollection;
+import org.biomart.builder.model.SchemaModificationSet.RelationRestriction;
 import org.biomart.builder.model.SchemaModificationSet.TableRestriction;
 import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.AssociationException;
@@ -747,7 +748,53 @@ public class MartBuilderXML extends DefaultHandler {
 				this.closeElement("compoundRelation", xmlWriter);
 				}
 			}
-			
+						
+			// Write out restricted relations.
+			for (final Iterator x = schemaMods
+					.getRestrictedRelations().entrySet().iterator(); x.hasNext();) {
+				final Map.Entry entry = (Map.Entry)x.next();
+				for (final Iterator y = ((Map)entry.getValue()).entrySet().iterator(); y.hasNext(); ) {
+				final Map.Entry entry2 = (Map.Entry) y.next();
+				for (final Iterator z = ((Map)entry2.getValue()).entrySet().iterator(); z.hasNext(); ) {
+					final Map.Entry entry3 = (Map.Entry) z.next();
+				this.openElement("restrictedRelation", xmlWriter);
+				this.writeAttribute("tableKey", (String)entry.getKey(), xmlWriter);
+				this.writeAttribute("relationId",
+						(String) this.reverseMappedObjects.get(entry2.getKey()), xmlWriter);
+				this.writeAttribute("index", ""+entry3.getKey(), xmlWriter);
+				final RelationRestriction restrict = (RelationRestriction)entry3.getValue();
+				final StringBuffer lcols = new StringBuffer();
+				final StringBuffer lnames = new StringBuffer();
+				for (final Iterator a = restrict.getLeftAliases().entrySet().iterator(); a.hasNext(); ) {
+					Map.Entry entry4 = (Map.Entry)a.next();
+					lcols.append((String) this.reverseMappedObjects.get(entry4.getKey()));
+					lnames.append((String)entry4.getValue());
+					if (z.hasNext()) {
+						lcols.append(',');
+						lnames.append(',');
+					}
+				}
+				this.writeAttribute("leftAliasColumnIds", lcols.toString(), xmlWriter);
+				this.writeAttribute("leftAliasNames", lnames.toString(), xmlWriter);
+				final StringBuffer rcols = new StringBuffer();
+				final StringBuffer rnames = new StringBuffer();
+				for (final Iterator a = restrict.getRightAliases().entrySet().iterator(); a.hasNext(); ) {
+					Map.Entry entry4 = (Map.Entry)a.next();
+					rcols.append((String) this.reverseMappedObjects.get(entry4.getKey()));
+					rnames.append((String)entry4.getValue());
+					if (z.hasNext()) {
+						rcols.append(',');
+						rnames.append(',');
+					}
+				}
+				this.writeAttribute("rightAliasColumnIds", rcols.toString(), xmlWriter);
+				this.writeAttribute("rightAliasNames", rnames.toString(), xmlWriter);
+				this.writeAttribute("expression", restrict.getExpression(), xmlWriter);
+				this.closeElement("restrictedRelation", xmlWriter);
+				}
+				}
+			}
+
 			// Finish dataset.
 			this.closeElement("dataset", xmlWriter);
 		}
@@ -1509,6 +1556,65 @@ public class MartBuilderXML extends DefaultHandler {
 				if (!restMap.containsKey(tableKey))
 					restMap.put(tableKey, new HashMap());
 				((Map)restMap.get(tableKey)).put(tbl, restrict);
+				element = restrict;
+			} catch (final Exception e) {
+				if (e instanceof SAXException)
+					throw (SAXException) e;
+				else
+					throw new SAXException(e);
+			}
+		}
+
+		// Restricted Relation (inside dataset).
+		else if ("restrictedRelation".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("restrictedRelationOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the restriction.
+				final Relation rel = (Relation) this.mappedObjects.get(attributes
+						.get("relationId")); 
+				final String tableKey = (String)attributes.get("tableKey");
+				final int index = Integer.parseInt((String)attributes.get("index"));
+				
+				// Get the aliases to use for the first table.
+				final Map laliases = new HashMap();
+				final String[] laliasColumnIds = ((String) attributes
+						.get("leftAliasColumnIds")).split(",");
+				final String[] laliasNames = ((String) attributes
+						.get("leftAliasNames")).split(",");
+				for (int i = 0; i < laliasColumnIds.length; i++) {
+					final Column wrapped = (Column) this.mappedObjects
+							.get(laliasColumnIds[i]);
+					laliases.put(wrapped, laliasNames[i]);
+				}
+				// and the second
+				final Map raliases = new HashMap();
+				final String[] raliasColumnIds = ((String) attributes
+						.get("rightAliasColumnIds")).split(",");
+				final String[] raliasNames = ((String) attributes
+						.get("rightAliasNames")).split(",");
+				for (int i = 0; i < raliasColumnIds.length; i++) {
+					final Column wrapped = (Column) this.mappedObjects
+							.get(raliasColumnIds[i]);
+					raliases.put(wrapped, raliasNames[i]);
+				}
+				// Get the expression to use.
+				final String expr = (String) attributes.get("expression");
+
+				// Flag it as restricted
+				final RelationRestriction restrict = new RelationRestriction(
+						expr, laliases, raliases);
+				final Map restMap = w.getSchemaModifications().getRestrictedRelations();
+				if (!restMap.containsKey(tableKey))
+					restMap.put(tableKey, new HashMap());
+				if (!((Map)restMap.get(tableKey)).containsKey(rel))
+				((Map)restMap.get(tableKey)).put(rel, new HashMap());
+				((Map)((Map)restMap.get(tableKey)).get(rel)).put(new Integer(index), restrict);
 				element = restrict;
 			} catch (final Exception e) {
 				if (e instanceof SAXException)

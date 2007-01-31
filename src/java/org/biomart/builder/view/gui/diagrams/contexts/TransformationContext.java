@@ -44,7 +44,7 @@ import org.biomart.common.resources.Resources;
  *          $Author$
  * @since 0.1
  */
-public class ExplainTransformationContext extends DataSetContext {
+public class TransformationContext extends DataSetContext {
 	/**
 	 * Creates a new context that will adapt objects according to the settings
 	 * in the specified dataset.
@@ -55,7 +55,7 @@ public class ExplainTransformationContext extends DataSetContext {
 	 *            the dataset this context will use for customising menus and
 	 *            colours.
 	 */
-	public ExplainTransformationContext(final MartTab martTab,
+	public TransformationContext(final MartTab martTab,
 			final DataSet dataset) {
 		super(martTab, dataset);
 	}
@@ -112,7 +112,7 @@ public class ExplainTransformationContext extends DataSetContext {
 			rename.setMnemonic(Resources.get("renameColumnMnemonic").charAt(0));
 			rename.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					ExplainTransformationContext.this.getMartTab()
+					TransformationContext.this.getMartTab()
 							.getDataSetTabSet().requestRenameDataSetColumn(
 									column);
 				}
@@ -130,14 +130,14 @@ public class ExplainTransformationContext extends DataSetContext {
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					if (mask.isSelected())
-						ExplainTransformationContext.this.getMartTab()
+						TransformationContext.this.getMartTab()
 								.getDataSetTabSet().requestMaskColumn(
-										ExplainTransformationContext.this
+										TransformationContext.this
 												.getDataSet(), column);
 					else
-						ExplainTransformationContext.this.getMartTab()
+						TransformationContext.this.getMartTab()
 								.getDataSetTabSet().requestUnmaskColumn(
-										ExplainTransformationContext.this
+										TransformationContext.this
 												.getDataSet(), column);
 				}
 			});
@@ -162,9 +162,9 @@ public class ExplainTransformationContext extends DataSetContext {
 						"changePartitionColumnMnemonic").charAt(0));
 				changepartition.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						ExplainTransformationContext.this.getMartTab()
+						TransformationContext.this.getMartTab()
 								.getDataSetTabSet().requestPartitionByColumn(
-										ExplainTransformationContext.this
+										TransformationContext.this
 												.getDataSet(), column);
 					}
 				});
@@ -186,9 +186,9 @@ public class ExplainTransformationContext extends DataSetContext {
 						.charAt(0));
 				partition.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
-						ExplainTransformationContext.this.getMartTab()
+						TransformationContext.this.getMartTab()
 								.getDataSetTabSet().requestPartitionByColumn(
-										ExplainTransformationContext.this
+										TransformationContext.this
 												.getDataSet(), column);
 					}
 				});
@@ -204,9 +204,9 @@ public class ExplainTransformationContext extends DataSetContext {
 					.charAt(0));
 			unpartition.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					ExplainTransformationContext.this.getMartTab()
+					TransformationContext.this.getMartTab()
 							.getDataSetTabSet().requestUnpartitionByColumn(
-									ExplainTransformationContext.this
+									TransformationContext.this
 											.getDataSet(), column);
 				}
 			});

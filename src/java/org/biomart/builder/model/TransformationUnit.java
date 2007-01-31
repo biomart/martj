@@ -84,20 +84,24 @@ public abstract class TransformationUnit {
 		}
 	}
 
-	public static class LeftJoinTable extends SelectFromTable {
+	public static class JoinTable extends SelectFromTable {
 		private List sourceDataSetColumns;
 
 		private Key schemaSourceKey;
 
 		private Relation schemaRelation;
+		
+		private int schemaRelationIteration;
 
-		public LeftJoinTable(final TransformationUnit previousUnit,
+		public JoinTable(final TransformationUnit previousUnit,
 				final Table table, final List sourceDataSetColumns,
-				final Key schemaSourceKey, final Relation schemaRelation) {
+				final Key schemaSourceKey, final Relation schemaRelation,
+				final int schemaRelationIteration) {
 			super(previousUnit, table);
 			this.sourceDataSetColumns = sourceDataSetColumns;
 			this.schemaSourceKey = schemaSourceKey;
 			this.schemaRelation = schemaRelation;
+			this.schemaRelationIteration = schemaRelationIteration;
 		}
 
 		public List getSourceDataSetColumns() {
@@ -110,6 +114,10 @@ public abstract class TransformationUnit {
 
 		public Relation getSchemaRelation() {
 			return this.schemaRelation;
+		}
+
+		public int getSchemaRelationIteration() {
+			return this.schemaRelationIteration;
 		}
 
 		public DataSetColumn getDataSetColumnFor(final String columnName) {

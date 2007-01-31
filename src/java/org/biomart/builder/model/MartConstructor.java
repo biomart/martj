@@ -44,11 +44,12 @@ import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Drop;
 import org.biomart.builder.model.MartConstructorAction.DropColumns;
 import org.biomart.builder.model.MartConstructorAction.Index;
+import org.biomart.builder.model.MartConstructorAction.Join;
 import org.biomart.builder.model.MartConstructorAction.LeftJoin;
 import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Select;
 import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
-import org.biomart.builder.model.TransformationUnit.LeftJoinTable;
+import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.BioMartError;
@@ -361,10 +362,9 @@ public interface MartConstructor {
 					// TODO : Concat column TUNITs.
 					// TODO : Expression column TUNITs.
 					// Left-join?
-					if (tu instanceof LeftJoinTable)
-						this.doLeftJoinTable(dataset, dsTable,
-								(LeftJoinTable) tu, previousTempTables,
-								partitionValue, tempTable);
+					if (tu instanceof JoinTable)
+						this.doJoinTable(dataset, dsTable, (JoinTable) tu,
+								previousTempTables, partitionValue, tempTable);
 					// Select-from?
 					else if (tu instanceof SelectFromTable)
 						this.doSelectFromTable(dataset, dsTable,
@@ -420,6 +420,64 @@ public interface MartConstructor {
 					this.issueAction(action);
 				}
 
+				// If was partitioned, do a final left join with the
+				// parent table in order to reinstate missing rows dropped
+				// by the inner join for the partition.
+				if (!partitionValue
+						.equals(GenericConstructorRunnable.NO_PARTITION)) {
+					// Work out a temp table name.
+					final String tempTable = tempName + tempNameCount++;
+					// Work out the parent table.
+					final DataSetTable parent = (DataSetTable) ((Relation) dsTable
+							.getRelations().iterator().next()).getOneKey()
+							.getTable();
+					// Work out what columns to take from each side.
+					final List leftJoinCols = new ArrayList();
+					final List leftSelectCols = leftJoinCols;
+					final List rightJoinCols = leftJoinCols;
+					final List rightSelectCols = new ArrayList();
+					for (final Iterator x = parent.getPrimaryKey().getColumns()
+							.iterator(); x.hasNext();)
+						leftJoinCols.add(((DataSetColumn) x.next())
+								.getModifiedName());
+					for (final Iterator x = dsTable.getColumns().iterator(); x
+							.hasNext();)
+						rightSelectCols.add(((DataSetColumn) x.next())
+								.getModifiedName());
+					rightSelectCols.removeAll(rightJoinCols);
+					// Index the right-hand side of the join.
+					final Index index = new Index(this.datasetSchemaName, this
+							.getFinalName(dsTable,
+									GenericConstructorRunnable.NO_PARTITION));
+					index.setTable((String) previousTempTables
+							.get(partitionValue));
+					index.setColumns(leftJoinCols);
+					this.issueAction(index);
+					// Make the join.
+					final LeftJoin action = new LeftJoin(
+							this.datasetSchemaName, this.getFinalName(dsTable,
+									GenericConstructorRunnable.NO_PARTITION));
+					action.setLeftTable(parent.getModifiedName());
+					action.setRightSchema(this.datasetSchemaName);
+					action.setRightTable((String) previousTempTables
+							.get(partitionValue));
+					action.setLeftJoinColumns(leftJoinCols);
+					action.setRightJoinColumns(rightJoinCols);
+					action.setLeftSelectColumns(leftSelectCols);
+					action.setRightSelectColumns(rightSelectCols);
+					action.setResultTable(tempTable);
+					this.issueAction(action);
+					// Drop the old one.
+					final Drop drop = new Drop(this.datasetSchemaName, this
+							.getFinalName(dsTable,
+									GenericConstructorRunnable.NO_PARTITION));
+					drop.setTable((String) previousTempTables
+							.get(partitionValue));
+					this.issueAction(drop);
+					// Update the previous temp table.
+					previousTempTables.put(partitionValue, tempTable);
+				}
+
 				// Add a rename action to produce the final table.
 				final Rename action = new Rename(this.datasetSchemaName,
 						finalCombinedName);
@@ -448,18 +506,19 @@ public interface MartConstructor {
 				final DataSetOptimiserType oType = dataset
 						.getDataSetOptimiserType();
 				if (!oType.equals(DataSetOptimiserType.NONE))
-					this.doOptimiseTable(dataset, dsTable, oType, partitionValue);
+					this.doOptimiseTable(dataset, dsTable, oType,
+							partitionValue);
 			}
 		}
 
 		private void doOptimiseTable(final DataSet dataset,
 				final DataSetTable dsTable, final DataSetOptimiserType oType,
-				final String partitionValue)
-				throws Exception {
+				final String partitionValue) throws Exception {
 			if (!dsTable.getType().equals(DataSetTableType.DIMENSION)) {
 				// Tables are same name, but use 'bool' or 'count'
 				// instead of 'main'
-				final String optTable = this.getOptimiserTableName(dsTable, oType);
+				final String optTable = this.getOptimiserTableName(dsTable,
+						oType);
 				// If main/subclass table type, create table.
 				if (oType.equals(DataSetOptimiserType.TABLE)
 						|| oType.equals(DataSetOptimiserType.TABLE_BOOL)
@@ -480,10 +539,10 @@ public interface MartConstructor {
 					create.setKeyColumns(keyCols);
 					create.setOptTableName(optTable);
 					this.issueAction(create);
-					
+
 					// Index the pk on the new table.
-					final Index index = new Index(this.datasetSchemaName,
-							this.getFinalName(dsTable,
+					final Index index = new Index(this.datasetSchemaName, this
+							.getFinalName(dsTable,
 									GenericConstructorRunnable.NO_PARTITION));
 					index.setTable(optTable);
 					index.setColumns(keyCols);
@@ -492,30 +551,31 @@ public interface MartConstructor {
 			} else {
 				// Columns are dimension table names with '_bool' or
 				// '_count' appended.
-				final String optCol = this.getOptimiserColumnName(dsTable, partitionValue, oType);
+				final String optCol = this.getOptimiserColumnName(dsTable,
+						partitionValue, oType);
 				// Work out the dimension parent.
-				final DataSetTable parent = (DataSetTable)((Relation) dsTable.getRelations().iterator()
-						.next()).getOneKey().getTable();
+				final DataSetTable parent = (DataSetTable) ((Relation) dsTable
+						.getRelations().iterator().next()).getOneKey()
+						.getTable();
 				// Set up the column on the dimension parent.
-				final String optTable = this
-						.getOptimiserTableName(parent, oType);
+				final String optTable = this.getOptimiserTableName(parent,
+						oType);
 				// Key columns are primary key cols from parent.
 				// Do a left-join update. We're looking for rows
 				// where all child non-key cols are non-null.
 				final List keyCols = new ArrayList();
 				for (final Iterator y = parent.getPrimaryKey().getColumns()
 						.iterator(); y.hasNext();)
-					keyCols.add(((DataSetColumn) y.next())
-							.getModifiedName());
+					keyCols.add(((DataSetColumn) y.next()).getModifiedName());
 				final List nonNullCols = new ArrayList();
 				for (final Iterator y = dsTable.getColumns().iterator(); y
 						.hasNext();) {
-					final DataSetColumn col = (DataSetColumn)y.next();
+					final DataSetColumn col = (DataSetColumn) y.next();
 					if (!dataset.getDataSetModifications().isMaskedColumn(col))
 						nonNullCols.add(col.getModifiedName());
 				}
 				nonNullCols.removeAll(keyCols);
-				
+
 				// Do the bool/count update.
 				final UpdateOptimiser update = new UpdateOptimiser(
 						this.datasetSchemaName, this.getFinalName(dsTable,
@@ -524,57 +584,58 @@ public interface MartConstructor {
 				update.setNonNullColumns(nonNullCols);
 				update.setOptTableName(optTable);
 				update.setOptColumnName(optCol);
-				update
-						.setCountNotBool(oType
-								.equals(DataSetOptimiserType.COLUMN)
-								|| oType
-										.equals(DataSetOptimiserType.COLUMN_INHERIT)
-								|| oType.equals(DataSetOptimiserType.TABLE)
-								|| oType
-										.equals(DataSetOptimiserType.TABLE_INHERIT));
+				update.setCountNotBool(oType
+						.equals(DataSetOptimiserType.COLUMN)
+						|| oType.equals(DataSetOptimiserType.COLUMN_INHERIT)
+						|| oType.equals(DataSetOptimiserType.TABLE)
+						|| oType.equals(DataSetOptimiserType.TABLE_INHERIT));
 				this.issueAction(update);
-				
+
 				// Work out the inherited parents.
 				final List parents = new ArrayList();
 				parents.add(parent);
 				if (oType.equals(DataSetOptimiserType.COLUMN_BOOL_INHERIT)
 						|| oType
 								.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT)
-						|| oType
-								.equals(DataSetOptimiserType.COLUMN_INHERIT)
-						|| oType
-								.equals(DataSetOptimiserType.TABLE_INHERIT))
+						|| oType.equals(DataSetOptimiserType.COLUMN_INHERIT)
+						|| oType.equals(DataSetOptimiserType.TABLE_INHERIT))
 					for (int z = 0; z < parents.size(); z++) {
-						final DataSetTable child = (DataSetTable)parents.get(z);
+						final DataSetTable child = (DataSetTable) parents
+								.get(z);
 						final Iterator fks = child.getForeignKeys().iterator();
 						if (fks.hasNext())
-							parents.add(((Relation)((Key)fks.next()).getRelations().iterator().next()).getOneKey().getTable());
+							parents.add(((Relation) ((Key) fks.next())
+									.getRelations().iterator().next())
+									.getOneKey().getTable());
 					}
-				
+
 				// Copy the column to the inherited parents by following pairs.
 				for (int i = 0; i < parents.size() - 1; i++) {
-					final DataSetTable fromParent = (DataSetTable)parents.get(i);
-					final DataSetTable toParent = (DataSetTable)parents.get(i+1);
+					final DataSetTable fromParent = (DataSetTable) parents
+							.get(i);
+					final DataSetTable toParent = (DataSetTable) parents
+							.get(i + 1);
 					final List fromKeyCols = new ArrayList();
-					for (final Iterator y = fromParent.getPrimaryKey().getColumns()
-							.iterator(); y.hasNext();)
+					for (final Iterator y = fromParent.getPrimaryKey()
+							.getColumns().iterator(); y.hasNext();)
 						fromKeyCols.add(((DataSetColumn) y.next())
 								.getModifiedName());
 					final List toKeyCols = new ArrayList();
-					for (final Iterator y = toParent.getPrimaryKey().getColumns()
-							.iterator(); y.hasNext();)
+					for (final Iterator y = toParent.getPrimaryKey()
+							.getColumns().iterator(); y.hasNext();)
 						toKeyCols.add(((DataSetColumn) y.next())
 								.getModifiedName());
 					final CopyOptimiser copy = new CopyOptimiser(
 							this.datasetSchemaName, this.getFinalName(dsTable,
 									GenericConstructorRunnable.NO_PARTITION));
-					copy.setFromOptTableName(this
-							.getOptimiserTableName(fromParent, oType));
+					copy.setFromOptTableName(this.getOptimiserTableName(
+							fromParent, oType));
 					copy.setFromKeyColumns(fromKeyCols);
-					copy.setViaTableName(this.getFinalName(fromParent, GenericConstructorRunnable.NO_PARTITION));
+					copy.setViaTableName(this.getFinalName(fromParent,
+							GenericConstructorRunnable.NO_PARTITION));
 					copy.setToKeyColumns(toKeyCols);
-					copy.setToOptTableName(this
-							.getOptimiserTableName(toParent, oType));
+					copy.setToOptTableName(this.getOptimiserTableName(toParent,
+							oType));
 					copy.setOptColumnName(optCol);
 					this.issueAction(copy);
 				}
@@ -637,8 +698,8 @@ public interface MartConstructor {
 			this.issueAction(action);
 		}
 
-		private void doLeftJoinTable(final DataSet dataset,
-				final DataSetTable dsTable, final LeftJoinTable ljtu,
+		private void doJoinTable(final DataSet dataset,
+				final DataSetTable dsTable, final JoinTable ljtu,
 				final Map previousTempTables, final String partitionValue,
 				final String tempTable) throws Exception {
 			final String rightSchema = ((JDBCSchema) ljtu.getTable()
@@ -669,7 +730,7 @@ public interface MartConstructor {
 			index.setColumns(leftJoinCols);
 			this.issueAction(index);
 			// Make the join.
-			final LeftJoin action = new LeftJoin(this.datasetSchemaName, this
+			final Join action = new Join(this.datasetSchemaName, this
 					.getFinalName(dsTable,
 							GenericConstructorRunnable.NO_PARTITION));
 			action
@@ -693,6 +754,12 @@ public interface MartConstructor {
 					ljtu.getTable()))
 				action.setTableRestriction(dataset.getSchemaModifications()
 						.getRestrictedTable(dsTable, ljtu.getTable()));
+			if (dataset.getSchemaModifications().isRestrictedRelation(dsTable,
+					ljtu.getSchemaRelation(), ljtu.getSchemaRelationIteration())) {
+				action.setRelationRestrictionLeftIsFirst(ljtu.getSchemaRelation().getFirstKey().equals(ljtu.getSchemaSourceKey()));
+				action.setRelationRestriction(dataset.getSchemaModifications()
+						.getRestrictedRelation(dsTable, ljtu.getSchemaRelation(), ljtu.getSchemaRelationIteration()));
+			}
 			this.issueAction(action);
 		}
 
@@ -763,7 +830,7 @@ public interface MartConstructor {
 				throw new BioMartError();
 			return finalName.toString().replaceAll("\\W", "");
 		}
-		
+
 		private String getOptimiserColumnName(final DataSetTable dsTable,
 				final String partitionValue, final DataSetOptimiserType oType) {
 			final StringBuffer sb = new StringBuffer();
@@ -773,20 +840,20 @@ public interface MartConstructor {
 				sb.append(this.getSanitizedPartitionValue(partitionValue));
 				sb.append(Resources.get("tablenameSubSep"));
 			}
-			sb.append((oType.equals(DataSetOptimiserType.COLUMN_BOOL)
+			sb
+					.append((oType.equals(DataSetOptimiserType.COLUMN_BOOL)
 							|| oType
 									.equals(DataSetOptimiserType.COLUMN_BOOL_INHERIT)
-							|| oType
-									.equals(DataSetOptimiserType.TABLE_BOOL) || oType
+							|| oType.equals(DataSetOptimiserType.TABLE_BOOL) || oType
 							.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT)) ? Resources
 							.get("boolColSuffix")
 							: Resources.get("countColSuffix"));
 			return sb.toString();
 		}
-		
+
 		private String getSanitizedPartitionValue(final String partitionValue) {
 			return partitionValue.replaceAll("\\W+", "_")
-			.replaceAll("__+", "_");
+					.replaceAll("__+", "_");
 		}
 
 		private String getFinalName(final DataSetTable dsTable,
@@ -808,7 +875,8 @@ public interface MartConstructor {
 					// Substitute non-[char/number/underscore] symbols with
 					// underscores, and replace multiple underscores with
 					// single ones.
-					finalName.append(this.getSanitizedPartitionValue(partitionValue));
+					finalName.append(this
+							.getSanitizedPartitionValue(partitionValue));
 				}
 				finalName.append(Resources.get("tablenameSep"));
 				finalName.append(Resources.get("dimensionSuffix"));

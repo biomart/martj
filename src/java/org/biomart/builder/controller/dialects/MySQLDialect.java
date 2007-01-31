@@ -37,6 +37,7 @@ import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Drop;
 import org.biomart.builder.model.MartConstructorAction.DropColumns;
 import org.biomart.builder.model.MartConstructorAction.Index;
+import org.biomart.builder.model.MartConstructorAction.Join;
 import org.biomart.builder.model.MartConstructorAction.LeftJoin;
 import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Select;
@@ -696,13 +697,16 @@ public class MySQLDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
-	public void doLeftJoin(final LeftJoin action, final List statements)
+	public void doJoin(final Join action, final List statements)
 			throws Exception {
 		final String srcSchemaName = action.getDataSetSchemaName();
 		final String srcTableName = action.getLeftTable();
 		final String trgtSchemaName = action.getRightSchema();
 		final String trgtTableName = action.getRightTable();
 		final String mergeTableName = action.getResultTable();
+		
+		final String joinType = action.getPartitionColumn()!=null
+		? "inner" : "left";
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + action.getDataSetSchemaName() + "." + mergeTableName
@@ -717,8 +721,12 @@ public class MySQLDialect extends DatabaseDialect {
 			}
 		}
 		sb.append(" from " + srcSchemaName + "." + srcTableName
-				+ " as a left join " + trgtSchemaName + "." + trgtTableName
+				+ " as a "+joinType+" join " + trgtSchemaName + "." + trgtTableName
 				+ " as b on ");
+		if (action.getRelationRestriction()!=null) 
+			sb.append(action.getRelationRestriction().getSubstitutedExpression(
+					action.isRelationRestrictionLeftIsFirst()?"a":"b", action.isRelationRestrictionLeftIsFirst()?"b":"a"));
+		 else 
 		for (int i = 0; i < action.getLeftJoinColumns().size(); i++) {
 			if (i > 0)
 				sb.append(" and ");
@@ -739,6 +747,46 @@ public class MySQLDialect extends DatabaseDialect {
 			sb.append("='");
 			sb.append(action.getPartitionValue().replaceAll("'", "\\'"));
 			sb.append('\'');
+		}
+
+		statements.add(sb.toString());
+	}
+
+	public void doLeftJoin(final LeftJoin action, final List statements)
+			throws Exception {
+		final String srcSchemaName = action.getDataSetSchemaName();
+		final String srcTableName = action.getLeftTable();
+		final String trgtSchemaName = action.getRightSchema();
+		final String trgtTableName = action.getRightTable();
+		final String mergeTableName = action.getResultTable();
+		
+		final StringBuffer sb = new StringBuffer();
+		sb.append("create table " + action.getDataSetSchemaName() + "." + mergeTableName
+				+ " as select ");
+		for (final Iterator i = action.getRightSelectColumns().iterator(); i.hasNext(); ) {
+			final String entry = (String)i.next();
+			sb.append("a.");
+			sb.append(entry);
+			sb.append(',');
+		}
+		for (final Iterator i = action.getRightSelectColumns().iterator(); i.hasNext(); ) {
+			final String entry = (String)i.next();
+			sb.append("b.");
+			sb.append(entry);
+			if (i.hasNext())
+				sb.append(',');
+		}
+		sb.append(" from " + srcSchemaName + "." + srcTableName
+				+ " as a left join " + trgtSchemaName + "." + trgtTableName
+				+ " as b on ");
+		for (int i = 0; i < action.getLeftJoinColumns().size(); i++) {
+			if (i > 0)
+				sb.append(" and ");
+			final String pkColName = (String) action
+					.getLeftJoinColumns().get(i);
+			final String fkColName = (String) action
+					.getRightJoinColumns().get(i);
+			sb.append("a." + pkColName + "=b." + fkColName + "");
 		}
 
 		statements.add(sb.toString());

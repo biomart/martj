@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.biomart.builder.model.SchemaModificationSet.RelationRestriction;
 import org.biomart.builder.model.SchemaModificationSet.TableRestriction;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -353,9 +354,159 @@ public abstract class MartConstructorAction {
 	}
 	
 	/**
-	 * Left-join actions.
+	 * LeftJoin actions.
 	 */
 	public static class LeftJoin extends MartConstructorAction {
+
+		private String leftTable;
+
+		private String rightSchema;
+
+		private String rightTable;
+
+		private List leftJoinColumns;
+
+		private List rightJoinColumns;
+
+		private List leftSelectColumns;
+
+		private List rightSelectColumns;
+
+		private String resultTable;
+
+		/**
+		 * Creates a new LeftJoin action.
+		 * 
+		 * @param datasetSchemaName
+		 *            the dataset schema we are working in.
+		 * @param datasetTableName
+		 *            the dataset table we are working on.
+		 */
+		public LeftJoin(String datasetSchemaName, String datasetTableName) {
+			super(datasetSchemaName, datasetTableName);
+		}
+
+		public String getStatusMessage() {
+			return Resources.get("mcMerge");
+		}
+
+		/**
+		 * @return the leftJoinColumns
+		 */
+		public List getLeftJoinColumns() {
+			return leftJoinColumns;
+		}
+
+		/**
+		 * @param leftJoinColumns the leftJoinColumns to set
+		 */
+		public void setLeftJoinColumns(List leftJoinColumns) {
+			this.leftJoinColumns = leftJoinColumns;
+		}
+
+		/**
+		 * @return the leftSelectColumns
+		 */
+		public List getLeftSelectColumns() {
+			return leftSelectColumns;
+		}
+
+		/**
+		 * @param leftSelectColumns the leftSelectColumns to set
+		 */
+		public void setLeftSelectColumns(List leftSelectColumns) {
+			this.leftSelectColumns = leftSelectColumns;
+		}
+
+		/**
+		 * @return the leftTable
+		 */
+		public String getLeftTable() {
+			return leftTable;
+		}
+
+		/**
+		 * @param leftTable the leftTable to set
+		 */
+		public void setLeftTable(String leftTable) {
+			this.leftTable = leftTable;
+		}
+
+		/**
+		 * @return the resultTable
+		 */
+		public String getResultTable() {
+			return resultTable;
+		}
+
+		/**
+		 * @param resultTable the resultTable to set
+		 */
+		public void setResultTable(String resultTable) {
+			this.resultTable = resultTable;
+		}
+
+		/**
+		 * @return the rightJoinColumns
+		 */
+		public List getRightJoinColumns() {
+			return rightJoinColumns;
+		}
+
+		/**
+		 * @param rightJoinColumns the rightJoinColumns to set
+		 */
+		public void setRightJoinColumns(List rightJoinColumns) {
+			this.rightJoinColumns = rightJoinColumns;
+		}
+
+		/**
+		 * @return the rightSchema
+		 */
+		public String getRightSchema() {
+			return rightSchema;
+		}
+
+		/**
+		 * @param rightSchema the rightSchema to set
+		 */
+		public void setRightSchema(String rightSchema) {
+			this.rightSchema = rightSchema;
+		}
+
+		/**
+		 * @return the rightSelectColumns
+		 */
+		public List getRightSelectColumns() {
+			return rightSelectColumns;
+		}
+
+		/**
+		 * @param rightSelectColumns the rightSelectColumns to set
+		 */
+		public void setRightSelectColumns(List rightSelectColumns) {
+			this.rightSelectColumns = rightSelectColumns;
+		}
+
+		/**
+		 * @return the rightTable
+		 */
+		public String getRightTable() {
+			return rightTable;
+		}
+
+		/**
+		 * @param rightTable the rightTable to set
+		 */
+		public void setRightTable(String rightTable) {
+			this.rightTable = rightTable;
+		}
+	}
+	
+	/**
+	 * Join actions.
+	 */
+	public static class Join extends MartConstructorAction {
 
 		private String leftTable;
 
@@ -373,6 +524,10 @@ public abstract class MartConstructorAction {
 		
 		private TableRestriction tableRestriction;
 		
+		private RelationRestriction relationRestriction;
+		
+		private boolean relationRestrictionLeftIsFirst;
+		
 		private String partitionColumn;
 		
 		private String partitionValue;
@@ -385,7 +540,7 @@ public abstract class MartConstructorAction {
 		 * @param datasetTableName
 		 *            the dataset table we are working on.
 		 */
-		public LeftJoin(String datasetSchemaName, String datasetTableName) {
+		public Join(String datasetSchemaName, String datasetTableName) {
 			super(datasetSchemaName, datasetTableName);
 		}
 
@@ -538,6 +693,35 @@ public abstract class MartConstructorAction {
 		 */
 		public void setPartitionValue(String partitionValue) {
 			this.partitionValue = partitionValue;
+		}
+
+		/**
+		 * @return the relationRestriction
+		 */
+		public RelationRestriction getRelationRestriction() {
+			return relationRestriction;
+		}
+
+		/**
+		 * @param relationRestriction the relationRestriction to set
+		 */
+		public void setRelationRestriction(RelationRestriction relationRestriction) {
+			this.relationRestriction = relationRestriction;
+		}
+
+		/**
+		 * @return the relationRestrictionLeftIsFirst
+		 */
+		public boolean isRelationRestrictionLeftIsFirst() {
+			return relationRestrictionLeftIsFirst;
+		}
+
+		/**
+		 * @param relationRestrictionLeftIsFirst the relationRestrictionLeftIsFirst to set
+		 */
+		public void setRelationRestrictionLeftIsFirst(
+				boolean relationRestrictionLeftIsFirst) {
+			this.relationRestrictionLeftIsFirst = relationRestrictionLeftIsFirst;
 		}
 	}
 

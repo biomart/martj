@@ -53,7 +53,7 @@ import org.biomart.common.resources.Resources;
  *          $Author$
  * @since 0.1
  */
-public class ExplainDataSetContext extends SchemaContext {
+public class ExplainContext extends SchemaContext {
 	private DataSet dataset;
 
 	private DataSetTable datasetTable;
@@ -69,7 +69,7 @@ public class ExplainDataSetContext extends SchemaContext {
 	 * @param datasetTable
 	 *            the dataset table we are attached to.
 	 */
-	public ExplainDataSetContext(final MartTab martTab, final DataSetTable datasetTable) {
+	public ExplainContext(final MartTab martTab, final DataSetTable datasetTable) {
 		super(martTab);
 		this.dataset = (DataSet)datasetTable.getSchema();
 		this.datasetTable = datasetTable;
@@ -86,7 +86,7 @@ public class ExplainDataSetContext extends SchemaContext {
 	 * @param dataset
 	 *            the dataset we are attached to.
 	 */
-	public ExplainDataSetContext(final MartTab martTab, final DataSet dataset) {
+	public ExplainContext(final MartTab martTab, final DataSet dataset) {
 		super(martTab);
 		this.dataset = dataset;
 		this.datasetTable = null;
@@ -108,7 +108,7 @@ public class ExplainDataSetContext extends SchemaContext {
 
 			// Work out what relation we are dealing with.
 			final Relation relation = (Relation) object;
-
+			
 			// Fade out all UNINCLUDED, INFERRED_INCORRECT and MASKED relations.
 			final boolean included = this.datasetTable==null?
 					this.dataset.getIncludedRelations().contains(relation)
@@ -193,7 +193,7 @@ public class ExplainDataSetContext extends SchemaContext {
 					.charAt(0));
 			showTen.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					ExplainDataSetContext.this.getMartTab().getSchemaTabSet()
+					ExplainContext.this.getMartTab().getSchemaTabSet()
 							.requestShowRows(table, 0, 10);
 				}
 			});
@@ -208,10 +208,10 @@ public class ExplainDataSetContext extends SchemaContext {
 			mask.setMnemonic(Resources.get("maskTableMnemonic").charAt(0));
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					ExplainDataSetContext.this.getMartTab().getDataSetTabSet()
+					ExplainContext.this.getMartTab().getDataSetTabSet()
 							.requestMaskTable(
-									ExplainDataSetContext.this.dataset, 
-									ExplainDataSetContext.this.datasetTable, table);
+									ExplainContext.this.dataset, 
+									ExplainContext.this.datasetTable, table);
 				}
 			});
 			contextMenu.add(mask);
@@ -223,10 +223,10 @@ public class ExplainDataSetContext extends SchemaContext {
 			unmask.setMnemonic(Resources.get("unmaskTableMnemonic").charAt(0));
 			unmask.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					ExplainDataSetContext.this.getMartTab().getDataSetTabSet()
+					ExplainContext.this.getMartTab().getDataSetTabSet()
 							.requestUnmaskTable(
-									ExplainDataSetContext.this.dataset,
-									ExplainDataSetContext.this.datasetTable, table);
+									ExplainContext.this.dataset,
+									ExplainContext.this.datasetTable, table);
 				}
 			});
 			contextMenu.add(unmask);
@@ -246,11 +246,11 @@ public class ExplainDataSetContext extends SchemaContext {
 						"modifyTableRestrictionMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						ExplainDataSetContext.this.getMartTab()
+						ExplainContext.this.getMartTab()
 								.getDataSetTabSet()
 								.requestModifyTableRestriction(
-										ExplainDataSetContext.this.dataset,
-										ExplainDataSetContext.this.datasetTable,
+										ExplainContext.this.dataset,
+										ExplainContext.this.datasetTable,
 										table);
 					}
 				});
@@ -268,10 +268,10 @@ public class ExplainDataSetContext extends SchemaContext {
 						"addTableRestrictionMnemonic").charAt(0));
 				restriction.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						ExplainDataSetContext.this.getMartTab()
-								.getDataSetTabSet().requestAddTableRestriction(
-										ExplainDataSetContext.this.dataset,
-										ExplainDataSetContext.this.datasetTable,
+						ExplainContext.this.getMartTab()
+								.getDataSetTabSet().requestModifyTableRestriction(
+										ExplainContext.this.dataset,
+										ExplainContext.this.datasetTable,
 										table);
 					}
 				});
@@ -285,9 +285,9 @@ public class ExplainDataSetContext extends SchemaContext {
 					.charAt(0));
 			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					ExplainDataSetContext.this.getMartTab().getDataSetTabSet()
+					ExplainContext.this.getMartTab().getDataSetTabSet()
 							.requestRemoveTableRestriction(
-									ExplainDataSetContext.this.dataset, ExplainDataSetContext.this.datasetTable, table);
+									ExplainContext.this.dataset, ExplainContext.this.datasetTable, table);
 				}
 			});
 			contextMenu.add(remove);
@@ -329,16 +329,16 @@ public class ExplainDataSetContext extends SchemaContext {
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					if (mask.isSelected())
-						ExplainDataSetContext.this.getMartTab()
+						ExplainContext.this.getMartTab()
 								.getDataSetTabSet().requestMaskRelation(
-										ExplainDataSetContext.this.dataset,
-										ExplainDataSetContext.this.datasetTable,
+										ExplainContext.this.dataset,
+										ExplainContext.this.datasetTable,
 										relation);
 					else
-						ExplainDataSetContext.this.getMartTab()
+						ExplainContext.this.getMartTab()
 								.getDataSetTabSet().requestUnmaskRelation(
-										ExplainDataSetContext.this.dataset,
-										ExplainDataSetContext.this.datasetTable,
+										ExplainContext.this.dataset,
+										ExplainContext.this.datasetTable,
 										relation);
 				}
 			});
@@ -356,16 +356,16 @@ public class ExplainDataSetContext extends SchemaContext {
 			force.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					if (force.isSelected())
-						ExplainDataSetContext.this.getMartTab()
+						ExplainContext.this.getMartTab()
 								.getDataSetTabSet().requestForceRelation(
-										ExplainDataSetContext.this.dataset,
-										ExplainDataSetContext.this.datasetTable,
+										ExplainContext.this.dataset,
+										ExplainContext.this.datasetTable,
 										relation);
 					else
-						ExplainDataSetContext.this.getMartTab()
+						ExplainContext.this.getMartTab()
 								.getDataSetTabSet().requestUnforceRelation(
-										ExplainDataSetContext.this.dataset,
-										ExplainDataSetContext.this.datasetTable,
+										ExplainContext.this.dataset,
+										ExplainContext.this.datasetTable,
 										relation);
 				}
 			});
@@ -381,13 +381,13 @@ public class ExplainDataSetContext extends SchemaContext {
 			compound.setMnemonic(Resources.get("compoundRelationMnemonic").charAt(0));
 			compound.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					ExplainDataSetContext.this.getMartTab()
+					ExplainContext.this.getMartTab()
 							.getDataSetTabSet().requestCompoundRelation(
-									ExplainDataSetContext.this.dataset,
-									ExplainDataSetContext.this.datasetTable,
+									ExplainContext.this.dataset,
+									ExplainContext.this.datasetTable,
 									relation);
-					compound.setSelected(ExplainDataSetContext.this.dataset
-							.getSchemaModifications().isCompoundRelation(ExplainDataSetContext.this.datasetTable, relation));
+					compound.setSelected(ExplainContext.this.dataset
+							.getSchemaModifications().isCompoundRelation(ExplainContext.this.datasetTable, relation));
 				}
 			});
 			contextMenu.add(compound);
@@ -406,14 +406,14 @@ public class ExplainDataSetContext extends SchemaContext {
 			subclass.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					if (subclass.isSelected())
-						ExplainDataSetContext.this.getMartTab()
+						ExplainContext.this.getMartTab()
 								.getDataSetTabSet().requestSubclassRelation(
-										ExplainDataSetContext.this.dataset,
+										ExplainContext.this.dataset,
 										relation);
 					else
-						ExplainDataSetContext.this.getMartTab()
+						ExplainContext.this.getMartTab()
 								.getDataSetTabSet().requestUnsubclassRelation(
-										ExplainDataSetContext.this.dataset,
+										ExplainContext.this.dataset,
 										relation);
 				}
 			});
@@ -426,6 +426,69 @@ public class ExplainDataSetContext extends SchemaContext {
 				subclass.setSelected(true);
 
 			contextMenu.addSeparator();
+			
+			// If it's a restricted relation...
+			if (this.dataset.getSchemaModifications().isRestrictedRelation(this.datasetTable, relation)) {
+
+				// Option to modify restriction.
+				final JMenuItem modify = new JMenuItem(
+						Resources.get("modifyRelationRestrictionTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("filter.gif")));
+				modify.setMnemonic(Resources.get(
+						"modifyRelationRestrictionMnemonic").charAt(0));
+				modify.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						ExplainContext.this.getMartTab()
+								.getDataSetTabSet()
+								.requestModifyRelationRestriction(
+										ExplainContext.this.dataset,
+										ExplainContext.this.datasetTable,
+										relation);
+					}
+				});
+				contextMenu.add(modify);
+				if (incorrect || relationMasked)
+					modify.setEnabled(false);
+				
+			} else {
+
+				// Add a relation restriction.
+				final JMenuItem restriction = new JMenuItem(
+						Resources.get("addRelationRestrictionTitle"),
+						new ImageIcon(
+								Resources
+										.getResourceAsURL("filter.gif")));
+				restriction.setMnemonic(Resources.get(
+						"addRelationRestrictionMnemonic").charAt(0));
+				restriction.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						ExplainContext.this.getMartTab()
+								.getDataSetTabSet().requestModifyRelationRestriction(
+										ExplainContext.this.dataset,
+										ExplainContext.this.datasetTable,
+										relation);
+					}
+				});
+				contextMenu.add(restriction);
+			}
+
+			// Option to remove restriction.
+			final JMenuItem remove = new JMenuItem(Resources
+					.get("removeRelationRestrictionTitle"));
+			remove.setMnemonic(Resources.get("removeRelationRestrictionMnemonic")
+					.charAt(0));
+			remove.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					ExplainContext.this.getMartTab().getDataSetTabSet()
+							.requestRemoveRelationRestriction(
+									ExplainContext.this.dataset, ExplainContext.this.datasetTable, relation);
+				}
+			});
+			contextMenu.add(remove);
+			if (!this.dataset.getSchemaModifications().isRestrictedRelation(this.datasetTable, relation))
+				remove.setEnabled(false);
 
 			// FIXME: Reinstate.
 			/*

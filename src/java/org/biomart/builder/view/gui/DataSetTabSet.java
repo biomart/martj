@@ -56,6 +56,7 @@ import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainTableDialog;
 import org.biomart.builder.view.gui.dialogs.PartitionColumnDialog;
+import org.biomart.builder.view.gui.dialogs.RestrictedRelationDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
@@ -479,56 +480,6 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 
 	/**
-	 * Asks for a table restriction to be added to the dataset.
-	 * 
-	 * @param dataset
-	 *            the dataset we are dealing with.
-	 * @param table
-	 *            the table to add a restriction to.
-	 */
-	public void requestAddTableRestriction(final DataSet dataset,
-			final DataSetTable dsTable, final Table table) {
-		final RestrictedTableDialog dialog = new RestrictedTableDialog(table,
-				null);
-		dialog.show();
-		// Cancelled?
-		if (dialog.getCancelled())
-			return; // Get the details.
-		final Map aliases = dialog.getColumnAliases();
-		final String expression = dialog.getExpression();
-		// Do this in the background.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try { // Add the restriction.
-					if (dsTable != null)
-						MartBuilderUtils.restrictTable(dsTable, table,
-								expression, aliases);
-					else
-						MartBuilderUtils.restrictTable(dataset, table,
-								expression, aliases);
-
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							// Update the explanation diagram so that it
-							// correctly reflects the changed objects.
-							DataSetTabSet.this.repaintExplanationDialog();
-							// Update the modified status for the tabset.
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.setModifiedStatus(true);
-						}
-					});
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							StackTrace.showStackTrace(t);
-						}
-					});
-				}
-			}
-		});
-	}
-
-	/**
 	 * Request that the optimiser type used post-construction of a dataset be
 	 * changed.
 	 * 
@@ -895,6 +846,142 @@ public class DataSetTabSet extends JTabbedPane {
 		});
 	}
 
+	private int askUserForCompoundRelationIndex(final DataSet dataset,
+			final DataSetTable dsTable, final Relation relation) {
+		// Is the relation compound? If not, return 0.
+		if (!dataset.getSchemaModifications().isCompoundRelation(dsTable,
+				relation))
+			return 0;
+
+		// Work out possible options.
+		int maxIndex = dataset.getSchemaModifications().getCompoundRelation(
+				dsTable, relation);
+		final Integer[] options = new Integer[maxIndex];
+		for (int i = 0; i < options.length; i++)
+			options[i] = new Integer(i + 1);
+
+		// Return -1 if cancelled.
+		Integer selIndex = (Integer) JOptionPane.showInputDialog(null,
+				Resources.get("compoundRelationIndex"), Resources
+						.get("questionTitle"), JOptionPane.QUESTION_MESSAGE,
+				null, options, options[0]);
+
+		// If they cancelled the request, return null.
+		if (selIndex == null)
+			return -1;
+		else
+			return selIndex.intValue() - 1;
+	}
+
+	/**
+	 * Asks that a relation be restricted.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param relation
+	 *            the schema relation to mask.
+	 */
+	public void requestModifyRelationRestriction(final DataSet dataset,
+			final DataSetTable dsTable, final Relation relation) {
+		// Get index offset into compound relation.
+		final int index = dataset.getSchemaModifications().isCompoundRelation(
+				dsTable, relation) ? this.askUserForCompoundRelationIndex(
+				dataset, dsTable, relation) : 0;
+
+		// Cancelled?
+		if (index == -1)
+			return;
+
+		final RestrictedRelationDialog dialog = new RestrictedRelationDialog(
+				relation, dataset.getSchemaModifications()
+						.getRestrictedRelation(dsTable, relation, index));
+		dialog.show();
+
+		// Cancelled?
+		if (dialog.getCancelled())
+			return;
+
+		// Get updated details from the user.
+		final Map aliasesLHS = dialog.getLHSColumnAliases();
+		final Map aliasesRHS = dialog.getRHSColumnAliases();
+		final String expression = dialog.getExpression();
+		// Do this in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Update the restriction.
+					if (dsTable != null)
+						MartBuilderUtils.restrictRelation(dsTable, relation,
+								index, expression, aliasesLHS, aliasesRHS);
+					else
+						MartBuilderUtils.restrictRelation(dataset, relation,
+								index, expression, aliasesLHS, aliasesRHS);
+					// Update the modified status for the tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Asks for a relation restriction to be removed.
+	 * 
+	 * @param dataset
+	 *            the dataset we are working with.
+	 * @param relation
+	 *            the relation to unrestrict.
+	 */
+	public void requestRemoveRelationRestriction(final DataSet dataset,
+			final DataSetTable dsTable, final Relation relation) {
+		// Get index offset into compound relation.
+		final int index = dataset.getSchemaModifications().isCompoundRelation(
+				dsTable, relation) ? this.askUserForCompoundRelationIndex(
+				dataset, dsTable, relation) : 0;
+
+		// Cancelled?
+		if (index == -1)
+			return;
+
+		// Do this in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Remove the restriction.
+					if (dsTable != null)
+						MartBuilderUtils.unrestrictRelation(dsTable, relation,
+								index);
+					else
+						MartBuilderUtils.unrestrictRelation(dataset, relation,
+								index);
+
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Update the explanation diagram so that it
+							// correctly reflects the changed objects.
+							DataSetTabSet.this.repaintExplanationDialog();
+							// Update the modified status for the tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
 	/**
 	 * Asks that a relation be masked.
 	 * 
@@ -1137,7 +1224,8 @@ public class DataSetTabSet extends JTabbedPane {
 		// If the column is already partitioned, open a dialog
 		// explaining this and asking the user to edit the settings.
 		if (dataset.getDataSetModifications().isPartitionedColumn(column)) {
-			final PartitionedColumn oldType = dataset.getDataSetModifications().getPartitionedColumn(column);
+			final PartitionedColumn oldType = dataset.getDataSetModifications()
+					.getPartitionedColumn(column);
 			type = PartitionColumnDialog.updatePartitionedColumn(oldType);
 			// Check they didn't cancel the request, or left the
 			// scheme unchanged.
@@ -1315,6 +1403,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * SwingUtilities.invokeLater(new Runnable() { public void run() {
 	 * StackTrace.showStackTrace(t); } }); } } }); }
 	 */
+
 	/**
 	 * Asks for a table restriction to be removed.
 	 * 

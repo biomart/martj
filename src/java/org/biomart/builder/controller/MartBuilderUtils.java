@@ -34,6 +34,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn;
+import org.biomart.builder.model.SchemaModificationSet.RelationRestriction;
 import org.biomart.builder.model.SchemaModificationSet.TableRestriction;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
@@ -73,19 +74,16 @@ public class MartBuilderUtils {
 	 * @param groupBy
 	 *            whether this column requires a group-by statement. If it does,
 	 *            the group-by columns required will be worked out
-	 *            automatically.
-	 * FIXME: Reinstate.
-	public static void addExpressionColumn(final DataSetTable table,
-			final String columnName, final Map columnAliases,
-			final String expression, final boolean groupBy) {
-		Log.info(Resources.get("logReqAddExprCol"));
-		final ExpressionColumn column = new ExpressionColumn(columnName, table);
-		column.getAliases().putAll(columnAliases);
-		column.setExpression(expression);
-		column.setGroupBy(groupBy);
-		table.addColumn(column);
-	}
-	*/
+	 *            automatically. FIXME: Reinstate. public static void
+	 *            addExpressionColumn(final DataSetTable table, final String
+	 *            columnName, final Map columnAliases, final String expression,
+	 *            final boolean groupBy) {
+	 *            Log.info(Resources.get("logReqAddExprCol")); final
+	 *            ExpressionColumn column = new ExpressionColumn(columnName,
+	 *            table); column.getAliases().putAll(columnAliases);
+	 *            column.setExpression(expression); column.setGroupBy(groupBy);
+	 *            table.addColumn(column); }
+	 */
 
 	/**
 	 * Adds a schema to a mart.
@@ -203,17 +201,16 @@ public class MartBuilderUtils {
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
-	 *             if the dataset could not be synchronised.
-	 * FIXME: Reinstate.
-	public static void concatOnlyRelation(final DataSet dataset,
-			final Relation relation, final DataSetConcatRelationType type)
-			throws SQLException, DataModelException, ValidationException {
-		Log.info(Resources.get("logReqConcatRel"));
-		dataset.flagConcatOnlyRelation(relation, type);
-		dataset.unflagSubclassRelation(relation);
-		dataset.synchronise();
-	}
-	*/
+	 *             if the dataset could not be synchronised. FIXME: Reinstate.
+	 *             public static void concatOnlyRelation(final DataSet dataset,
+	 *             final Relation relation, final DataSetConcatRelationType
+	 *             type) throws SQLException, DataModelException,
+	 *             ValidationException {
+	 *             Log.info(Resources.get("logReqConcatRel"));
+	 *             dataset.flagConcatOnlyRelation(relation, type);
+	 *             dataset.unflagSubclassRelation(relation);
+	 *             dataset.synchronise(); }
+	 */
 
 	/**
 	 * Attempts to establish a relation between two keys in a mart. The relation
@@ -277,7 +274,7 @@ public class MartBuilderUtils {
 		Log.info(Resources.get("logReqInvisibleDataset"));
 		dataset.setInvisible(true);
 	}
-	
+
 	/**
 	 * Masks a dataset table within a dataset.
 	 * 
@@ -290,14 +287,13 @@ public class MartBuilderUtils {
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void maskTable(final DataSet dataset,
-			final DataSetTable table) throws 
-			SQLException, DataModelException {
+	public static void maskTable(final DataSet dataset, final DataSetTable table)
+			throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqMaskTable"));
 		dataset.getDataSetModifications().setMaskedTable(table);
 		dataset.synchronise();
 	}
-	
+
 	/**
 	 * Unmasks a dataset table within a dataset.
 	 * 
@@ -311,8 +307,7 @@ public class MartBuilderUtils {
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void unmaskTable(final DataSet dataset,
-			final DataSetTable table) throws 
-			SQLException, DataModelException {
+			final DataSetTable table) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqUnmaskTable"));
 		dataset.getDataSetModifications().unsetMaskedTable(table);
 		dataset.synchronise();
@@ -353,8 +348,7 @@ public class MartBuilderUtils {
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void unNonInheritColumn(final DataSet dataset,
-			final DataSetColumn column) throws 
-			SQLException, DataModelException {
+			final DataSetColumn column) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqUnNonInheritColumn"));
 		dataset.getDataSetModifications().unsetNonInheritedColumn(column);
 		dataset.synchronise();
@@ -383,7 +377,8 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Masks a relation within a dataset table. The dataset is regenerated afterwards.
+	 * Masks a relation within a dataset table. The dataset is regenerated
+	 * afterwards.
 	 * 
 	 * @param datasetTable
 	 *            the dataset table to mask the relation in.
@@ -397,12 +392,14 @@ public class MartBuilderUtils {
 	public static void maskRelation(final DataSetTable datasetTable,
 			final Relation relation) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqMaskRelation"));
-		((DataSet)datasetTable.getSchema()).getSchemaModifications().setMaskedRelation(datasetTable, relation);
-		((DataSet)datasetTable.getSchema()).synchronise();
+		((DataSet) datasetTable.getSchema()).getSchemaModifications()
+				.setMaskedRelation(datasetTable, relation);
+		((DataSet) datasetTable.getSchema()).synchronise();
 	}
 
 	/**
-	 * Merges a relation within a dataset. The dataset is regenerated afterwards.
+	 * Merges a relation within a dataset. The dataset is regenerated
+	 * afterwards.
 	 * 
 	 * @param dataset
 	 *            the dataset to merge the relation in.
@@ -421,7 +418,8 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Unmerges a relation within a dataset. The dataset is regenerated afterwards.
+	 * Unmerges a relation within a dataset. The dataset is regenerated
+	 * afterwards.
 	 * 
 	 * @param dataset
 	 *            the dataset to unmerge the relation in.
@@ -440,7 +438,8 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Uncompounds a relation within a dataset. The dataset is regenerated afterwards.
+	 * Uncompounds a relation within a dataset. The dataset is regenerated
+	 * afterwards.
 	 * 
 	 * @param dataset
 	 *            the dataset to mask the relation in.
@@ -459,7 +458,8 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Uncompounds a relation within a dataset table. The dataset is regenerated afterwards.
+	 * Uncompounds a relation within a dataset table. The dataset is regenerated
+	 * afterwards.
 	 * 
 	 * @param datasetTable
 	 *            the dataset table to mask the relation in.
@@ -469,21 +469,26 @@ public class MartBuilderUtils {
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
-	 *             @throws ValidationException if it could not be uncompounded.
+	 * @throws ValidationException
+	 *             if it could not be uncompounded.
 	 */
 	public static void uncompoundRelation(final DataSetTable datasetTable,
-			final Relation relation) throws SQLException, DataModelException, ValidationException {
+			final Relation relation) throws SQLException, DataModelException,
+			ValidationException {
 		Log.info(Resources.get("logReqUncompoundRelation"));
-		((DataSet)datasetTable.getSchema()).getSchemaModifications().unsetCompoundRelation(datasetTable, relation);
-		((DataSet)datasetTable.getSchema()).synchronise();
+		((DataSet) datasetTable.getSchema()).getSchemaModifications()
+				.unsetCompoundRelation(datasetTable, relation);
+		((DataSet) datasetTable.getSchema()).synchronise();
 	}
 
 	/**
-	 * Compounds a relation within a dataset. The dataset is regenerated afterwards.
+	 * Compounds a relation within a dataset. The dataset is regenerated
+	 * afterwards.
 	 * 
 	 * @param dataset
 	 *            the dataset to mask the relation in.
-	 *            @param n the compound arity.
+	 * @param n
+	 *            the compound arity.
 	 * @param relation
 	 *            the relation to mask.
 	 * @throws SQLException
@@ -492,30 +497,35 @@ public class MartBuilderUtils {
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void compoundRelation(final DataSet dataset,
-			final Relation relation, final int n) throws SQLException, DataModelException {
+			final Relation relation, final int n) throws SQLException,
+			DataModelException {
 		Log.info(Resources.get("logReqCompoundRelation"));
 		dataset.getSchemaModifications().setCompoundRelation(relation, n);
 		dataset.synchronise();
 	}
 
 	/**
-	 * Compounds a relation within a dataset table. The dataset is regenerated afterwards.
+	 * Compounds a relation within a dataset table. The dataset is regenerated
+	 * afterwards.
 	 * 
 	 * @param datasetTable
 	 *            the dataset table to mask the relation in.
 	 * @param relation
 	 *            the relation to mask.
-	 *            @param n the compound arity.
+	 * @param n
+	 *            the compound arity.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void compoundRelation(final DataSetTable datasetTable,
-			final Relation relation, final int n) throws SQLException, DataModelException {
+			final Relation relation, final int n) throws SQLException,
+			DataModelException {
 		Log.info(Resources.get("logReqCompoundRelation"));
-		((DataSet)datasetTable.getSchema()).getSchemaModifications().setCompoundRelation(datasetTable, relation, n);
-		((DataSet)datasetTable.getSchema()).synchronise();
+		((DataSet) datasetTable.getSchema()).getSchemaModifications()
+				.setCompoundRelation(datasetTable, relation, n);
+		((DataSet) datasetTable.getSchema()).synchronise();
 	}
 
 	/**
@@ -538,7 +548,8 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Forces a relation within a dataset table. The dataset is regenerated afterwards.
+	 * Forces a relation within a dataset table. The dataset is regenerated
+	 * afterwards.
 	 * 
 	 * @param datasetTable
 	 *            the dataset table to force the relation in.
@@ -552,12 +563,14 @@ public class MartBuilderUtils {
 	public static void forceRelation(final DataSetTable datasetTable,
 			final Relation relation) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqForceRelation"));
-		((DataSet)datasetTable.getSchema()).getSchemaModifications().setForceIncludeRelation(datasetTable, relation);
-		((DataSet)datasetTable.getSchema()).synchronise();
+		((DataSet) datasetTable.getSchema()).getSchemaModifications()
+				.setForceIncludeRelation(datasetTable, relation);
+		((DataSet) datasetTable.getSchema()).synchronise();
 	}
 
 	/**
-	 * Forces a relation within a dataset. The dataset is regenerated afterwards.
+	 * Forces a relation within a dataset. The dataset is regenerated
+	 * afterwards.
 	 * 
 	 * @param dataset
 	 *            the dataset to mask the relation in.
@@ -588,12 +601,13 @@ public class MartBuilderUtils {
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void maskTable(final DataSetTable datasetTable, final Table table)
-			throws SQLException, DataModelException {
+	public static void maskTable(final DataSetTable datasetTable,
+			final Table table) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqMaskTable"));
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
-			((DataSet)datasetTable.getSchema()).getSchemaModifications().setMaskedRelation(datasetTable, (Relation) i.next());
-		((DataSet)datasetTable.getSchema()).synchronise();
+			((DataSet) datasetTable.getSchema()).getSchemaModifications()
+					.setMaskedRelation(datasetTable, (Relation) i.next());
+		((DataSet) datasetTable.getSchema()).synchronise();
 	}
 
 	/**
@@ -613,7 +627,8 @@ public class MartBuilderUtils {
 			throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqMaskTable"));
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
-			dataset.getSchemaModifications().setMaskedRelation((Relation) i.next());
+			dataset.getSchemaModifications().setMaskedRelation(
+					(Relation) i.next());
 		dataset.synchronise();
 	}
 
@@ -629,18 +644,14 @@ public class MartBuilderUtils {
 	 * @param groupBy
 	 *            whether this column requires a group-by statement. If it does,
 	 *            the group-by columns required will be worked out
-	 *            automatically.
-	 * FIXME: Reinstate.
-	public static void modifyExpressionColumn(final ExpressionColumn column,
-			final Map columnAliases, final String expression,
-			final boolean groupBy) {
-		Log.info(Resources.get("logReqChangeExprCol"));
-		column.getAliases().clear();
-		column.getAliases().putAll(columnAliases);
-		column.setExpression(expression);
-		column.setGroupBy(groupBy);
-	}
-	*/
+	 *            automatically. FIXME: Reinstate. public static void
+	 *            modifyExpressionColumn(final ExpressionColumn column, final
+	 *            Map columnAliases, final String expression, final boolean
+	 *            groupBy) { Log.info(Resources.get("logReqChangeExprCol"));
+	 *            column.getAliases().clear();
+	 *            column.getAliases().putAll(columnAliases);
+	 *            column.setExpression(expression); column.setGroupBy(groupBy); }
+	 */
 
 	/**
 	 * Asks a dataset to partition tables by the values in the specified column.
@@ -658,8 +669,8 @@ public class MartBuilderUtils {
 	public static void partitionByColumn(final DataSet dataset,
 			final DataSetColumn column, final PartitionedColumn type)
 			throws ValidationException {
-		Log.info(Resources.get("logReqPartitionCol"));		
-		dataset.getDataSetModifications().setPartitionedColumn(column,type);
+		Log.info(Resources.get("logReqPartitionCol"));
+		dataset.getDataSetModifications().setPartitionedColumn(column, type);
 	}
 
 	/**
@@ -682,13 +693,11 @@ public class MartBuilderUtils {
 	 * This method asks to remove a particular expression column.
 	 * 
 	 * @param column
-	 *            the expression column to remove.
-	 * FIXME: Reinstate.
-	public static void removeExpressionColumn(final ExpressionColumn column) {
-		Log.info(Resources.get("logReqRemoveExprCol"));
-		column.getTable().removeColumn(column);
-	}
-	*/
+	 *            the expression column to remove. FIXME: Reinstate. public
+	 *            static void removeExpressionColumn(final ExpressionColumn
+	 *            column) { Log.info(Resources.get("logReqRemoveExprCol"));
+	 *            column.getTable().removeColumn(column); }
+	 */
 
 	/**
 	 * Removes a key. All datasets will subsequently be synchronised.
@@ -762,13 +771,14 @@ public class MartBuilderUtils {
 	 * @param newName
 	 *            the new name to give it. If the name is the same as the
 	 *            existing one, no action is taken.
-	 * @throws ValidationException if the column is not allowed
-	 *            to be renamed.
+	 * @throws ValidationException
+	 *             if the column is not allowed to be renamed.
 	 */
 	public static void renameDataSetColumn(final DataSetColumn col,
 			final String newName) throws ValidationException {
 		Log.info(Resources.get("logReqRenameDSColumn"));
-		((DataSet)col.getTable().getSchema()).getDataSetModifications().setColumnRename(col,newName);
+		((DataSet) col.getTable().getSchema()).getDataSetModifications()
+				.setColumnRename(col, newName);
 	}
 
 	/**
@@ -783,7 +793,8 @@ public class MartBuilderUtils {
 	public static void renameDataSetTable(final DataSetTable tbl,
 			final String newName) {
 		Log.info(Resources.get("logReqRenameDSTable"));
-		((DataSet)tbl.getSchema()).getDataSetModifications().setTableRename(tbl,newName);
+		((DataSet) tbl.getSchema()).getDataSetModifications().setTableRename(
+				tbl, newName);
 	}
 
 	/**
@@ -865,8 +876,8 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Flags a table as restricted within a dataset table. If already flagged, this
-	 * updates the existing settings.
+	 * Flags a table as restricted within a dataset table. If already flagged,
+	 * this updates the existing settings.
 	 * 
 	 * @param datasetTable
 	 *            the dataset table to flag the relation in.
@@ -877,15 +888,16 @@ public class MartBuilderUtils {
 	 * @param aliases
 	 *            the aliases to use for columns.
 	 * @throws ValidationException
-	 *             if this could not be done. 
+	 *             if this could not be done.
 	 */
-	public static void restrictTable(final DataSetTable datasetTable, final Table table,
-			final String expression, final Map aliases)
+	public static void restrictTable(final DataSetTable datasetTable,
+			final Table table, final String expression, final Map aliases)
 			throws ValidationException {
 		Log.info(Resources.get("logReqRestrictTable"));
-		final TableRestriction restriction = new TableRestriction(
-				expression, aliases);
-		((DataSet)datasetTable.getSchema()).getSchemaModifications().setRestrictedTable(datasetTable, table, restriction);
+		final TableRestriction restriction = new TableRestriction(expression,
+				aliases);
+		((DataSet) datasetTable.getSchema()).getSchemaModifications()
+				.setRestrictedTable(datasetTable, table, restriction);
 	}
 
 	/**
@@ -901,32 +913,33 @@ public class MartBuilderUtils {
 	 * @param aliases
 	 *            the aliases to use for columns.
 	 * @throws ValidationException
-	 *             if this could not be done. 
-	 * */
+	 *             if this could not be done.
+	 */
 	public static void restrictTable(final DataSet dataset, final Table table,
 			final String expression, final Map aliases)
 			throws ValidationException {
 		Log.info(Resources.get("logReqRestrictTable"));
-		final TableRestriction restriction = new TableRestriction(
-				expression, aliases);
+		final TableRestriction restriction = new TableRestriction(expression,
+				aliases);
 		dataset.getSchemaModifications().setRestrictedTable(table, restriction);
 	}
 
 	/**
-	 * UnFlags a table as restricted within a dataset table. If already flagged, this
-	 * updates the existing settings.
+	 * UnFlags a table as restricted within a dataset table. If already flagged,
+	 * this updates the existing settings.
 	 * 
 	 * @param datasetTable
 	 *            the dataset table to unflag the relation in.
 	 * @param table
 	 *            the table to unflag as restricted.
 	 * @throws ValidationException
-	 *             if this could not be done. 
+	 *             if this could not be done.
 	 */
-	public static void unrestrictTable(final DataSetTable datasetTable, final Table table)
-			throws ValidationException {
+	public static void unrestrictTable(final DataSetTable datasetTable,
+			final Table table) throws ValidationException {
 		Log.info(Resources.get("logReqUnrestrictTable"));
-		((DataSet)datasetTable.getSchema()).getSchemaModifications().unsetRestrictedTable(datasetTable, table);
+		((DataSet) datasetTable.getSchema()).getSchemaModifications()
+				.unsetRestrictedTable(datasetTable, table);
 	}
 
 	/**
@@ -939,11 +952,102 @@ public class MartBuilderUtils {
 	 *            the table to unflag as restricted.
 	 * @throws ValidationException
 	 *             if this could not be done.
-	 * */
+	 */
 	public static void unrestrictTable(final DataSet dataset, final Table table)
 			throws ValidationException {
 		Log.info(Resources.get("logReqUnrestrictTable"));
 		dataset.getSchemaModifications().unsetRestrictedTable(table);
+	}
+
+	/**
+	 * Flags a table as restricted within a dataset table. If already flagged,
+	 * this updates the existing settings.
+	 * 
+	 * @param datasetTable
+	 *            the dataset table to flag the relation in.
+	 * @param table
+	 *            the table to flag as restricted.
+	 * @param expression
+	 *            the expression to use for the restriction for the relation.
+	 * @param aliases
+	 *            the aliases to use for columns.
+	 * @throws ValidationException
+	 *             if this could not be done.
+	 */
+	public static void restrictRelation(final DataSetTable datasetTable,
+			final Relation relation, final int index, final String expression,
+			final Map lhsAliases, final Map rhsAliases)
+			throws ValidationException {
+		Log.info(Resources.get("logReqRestrictRelation"));
+		final RelationRestriction restriction = new RelationRestriction(
+				expression, lhsAliases, rhsAliases);
+		((DataSet) datasetTable.getSchema()).getSchemaModifications()
+				.setRestrictedRelation(datasetTable, relation, index,
+						restriction);
+	}
+
+	/**
+	 * Flags a table as restricted within a dataset. If already flagged, this
+	 * updates the existing settings.
+	 * 
+	 * @param dataset
+	 *            the dataset to flag the relation in.
+	 * @param table
+	 *            the table to flag as restricted.
+	 * @param expression
+	 *            the expression to use for the restriction for the relation.
+	 * @param aliases
+	 *            the aliases to use for columns.
+	 * @throws ValidationException
+	 *             if this could not be done.
+	 */
+	public static void restrictRelation(final DataSet dataset,
+			final Relation relation, final int index, final String expression,
+			final Map lhsAliases, final Map rhsAliases)
+			throws ValidationException {
+		Log.info(Resources.get("logReqRestrictRelation"));
+		final RelationRestriction restriction = new RelationRestriction(
+				expression, lhsAliases, rhsAliases);
+		dataset.getSchemaModifications().setRestrictedRelation(
+				relation, index, restriction);
+	}
+
+	/**
+	 * UnFlags a table as restricted within a dataset table. If already flagged,
+	 * this updates the existing settings.
+	 * 
+	 * @param datasetTable
+	 *            the dataset table to unflag the relation in.
+	 * @param table
+	 *            the table to unflag as restricted.
+	 * @throws ValidationException
+	 *             if this could not be done.
+	 */
+	public static void unrestrictRelation(final DataSetTable datasetTable,
+			final Relation relation, final int index)
+			throws ValidationException {
+		Log.info(Resources.get("logReqUnrestrictRelation"));
+		((DataSet) datasetTable.getSchema()).getSchemaModifications()
+				.unsetRestrictedRelation(datasetTable, relation, index);
+	}
+
+	/**
+	 * UnFlags a table as restricted within a dataset. If already flagged, this
+	 * updates the existing settings.
+	 * 
+	 * @param dataset
+	 *            the dataset to unflag the relation in.
+	 * @param table
+	 *            the table to unflag as restricted.
+	 * @throws ValidationException
+	 *             if this could not be done.
+	 */
+	public static void unrestrictRelation(final DataSet dataset,
+			final Relation relation, final int index)
+			throws ValidationException {
+		Log.info(Resources.get("logReqUnrestrictRelation"));
+		dataset.getSchemaModifications().unsetRestrictedRelation(
+				relation, index);
 	}
 
 	/**
@@ -1109,15 +1213,14 @@ public class MartBuilderUtils {
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
-	 *             if the dataset could not be synchronised.
-	 * FIXME: Reinstate.
-	public static void unconcatOnlyRelation(final DataSet dataset,
-			final Relation relation) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqUnconcatRelation"));
-		dataset.unflagConcatOnlyRelation(relation);
-		dataset.synchronise();
-	}
-	*/
+	 *             if the dataset could not be synchronised. FIXME: Reinstate.
+	 *             public static void unconcatOnlyRelation(final DataSet
+	 *             dataset, final Relation relation) throws SQLException,
+	 *             DataModelException {
+	 *             Log.info(Resources.get("logReqUnconcatRelation"));
+	 *             dataset.unflagConcatOnlyRelation(relation);
+	 *             dataset.synchronise(); }
+	 */
 
 	/**
 	 * Unmasks a column within a dataset.
@@ -1132,8 +1235,7 @@ public class MartBuilderUtils {
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void unmaskColumn(final DataSet dataset,
-			final DataSetColumn column) throws 
-			SQLException, DataModelException {
+			final DataSetColumn column) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqUnmaskColumn"));
 		dataset.getDataSetModifications().unsetMaskedColumn(column);
 		dataset.synchronise();
@@ -1148,18 +1250,20 @@ public class MartBuilderUtils {
 	 * @param table
 	 *            the table to unmask all relations for.
 	 * @throws ValidationException
-	 * 			  if the table could not be unmasked.
+	 *             if the table could not be unmasked.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void unmaskTable(final DataSetTable datasetTable, final Table table)
-			throws ValidationException, SQLException, DataModelException {
+	public static void unmaskTable(final DataSetTable datasetTable,
+			final Table table) throws ValidationException, SQLException,
+			DataModelException {
 		Log.info(Resources.get("logReqUnmaskTable"));
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
-			((DataSet)datasetTable.getSchema()).getSchemaModifications().unsetMaskedRelation(datasetTable, (Relation) i.next());
-		((DataSet)datasetTable.getSchema()).synchronise();
+			((DataSet) datasetTable.getSchema()).getSchemaModifications()
+					.unsetMaskedRelation(datasetTable, (Relation) i.next());
+		((DataSet) datasetTable.getSchema()).synchronise();
 	}
 
 	/**
@@ -1179,7 +1283,8 @@ public class MartBuilderUtils {
 			throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqUnmaskTable"));
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
-			dataset.getSchemaModifications().unsetMaskedRelation((Relation) i.next());
+			dataset.getSchemaModifications().unsetMaskedRelation(
+					(Relation) i.next());
 		dataset.synchronise();
 	}
 
@@ -1192,17 +1297,19 @@ public class MartBuilderUtils {
 	 * @param relation
 	 *            the relation to unmask.
 	 * @throws ValidationException
-	 *            if the relation could not be unmasked.
+	 *             if the relation could not be unmasked.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void unmaskRelation(final DataSetTable datasetTable,
-			final Relation relation) throws ValidationException, SQLException, DataModelException {
+			final Relation relation) throws ValidationException, SQLException,
+			DataModelException {
 		Log.info(Resources.get("logReqUnmaskRelation"));
-		((DataSet)datasetTable.getSchema()).getSchemaModifications().unsetMaskedRelation(datasetTable, relation);
-		((DataSet)datasetTable.getSchema()).synchronise();
+		((DataSet) datasetTable.getSchema()).getSchemaModifications()
+				.unsetMaskedRelation(datasetTable, relation);
+		((DataSet) datasetTable.getSchema()).synchronise();
 	}
 
 	/**
@@ -1234,17 +1341,19 @@ public class MartBuilderUtils {
 	 * @param relation
 	 *            the relation to unforce.
 	 * @throws ValidationException
-	 *            if the relation could not be unforced.
+	 *             if the relation could not be unforced.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void unforceRelation(final DataSetTable datasetTable,
-			final Relation relation) throws ValidationException, SQLException, DataModelException {
+			final Relation relation) throws ValidationException, SQLException,
+			DataModelException {
 		Log.info(Resources.get("logReqUnforceRelation"));
-		((DataSet)datasetTable.getSchema()).getSchemaModifications().unsetForceIncludeRelation(datasetTable, relation);
-		((DataSet)datasetTable.getSchema()).synchronise();
+		((DataSet) datasetTable.getSchema()).getSchemaModifications()
+				.unsetForceIncludeRelation(datasetTable, relation);
+		((DataSet) datasetTable.getSchema()).synchronise();
 	}
 
 	/**

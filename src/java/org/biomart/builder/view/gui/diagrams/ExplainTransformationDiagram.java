@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.biomart.builder.model.TransformationUnit.LeftJoinTable;
+import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
@@ -144,7 +144,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	public static class TempReal extends ExplainTransformationDiagram {
 		private static final long serialVersionUID = 1;
 
-		private final LeftJoinTable ltu;
+		private final JoinTable ltu;
 		
 		private final Collection lIncludeCols;
 
@@ -159,7 +159,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 * @param lIncludeCols
 		 *            the columns to show in the temp table.
 		 */
-		public TempReal(final MartTab martTab, final LeftJoinTable ltu,
+		public TempReal(final MartTab martTab, final JoinTable ltu,
 				final List lIncludeCols) {
 			super(martTab);
 

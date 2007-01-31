@@ -30,7 +30,7 @@ import java.util.Set;
 
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
-import org.biomart.builder.model.TransformationUnit.LeftJoinTable;
+import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.exceptions.DataModelException;
@@ -83,7 +83,6 @@ public class DataSet extends GenericSchema {
 	private final Collection includedRelations;
 
 	// TODO SchemaModMaps for source schema changes.
-	// Restricted relations - INDEX INTO COMPOUND RELATION.
 	// Concat-only relations with concat definitions incl. 
 	//   expressions inside concat definition (DST only).
 	//   INDEX INTO COMPOUND RELATION.
@@ -186,7 +185,8 @@ public class DataSet extends GenericSchema {
 	 */
 	private void generateDataSetTable(final DataSetTableType type,
 			final DataSetTable parentDSTable, final Table realTable,
-			final List sourceDSCols, final Relation sourceRelation) {
+			final List sourceDSCols, final Relation sourceRelation,
+			final int relationIteration) {
 		Log.debug("Creating dataset table for " + realTable
 				+ " with parent relation " + sourceRelation + " as a " + type);
 		// Create the empty dataset table.
@@ -301,8 +301,8 @@ public class DataSet extends GenericSchema {
 			for (final Iterator i = parentDSTable.getTransformationUnits()
 					.iterator(); i.hasNext();) {
 				final TransformationUnit u = (TransformationUnit) i.next();
-				if (u instanceof LeftJoinTable)
-					relationCount.put(((LeftJoinTable) u)
+				if (u instanceof JoinTable)
+					relationCount.put(((JoinTable) u)
 							.getSchemaRelation(), new Integer(0));
 			}
 		
@@ -312,7 +312,7 @@ public class DataSet extends GenericSchema {
 		// a dimension ourselves.
 		this.processTable(null, dsTable, dsTablePKCols, realTable, normalQ,
 				subclassQ, dimensionQ, sourceDSCols, sourceRelation,
-				relationCount, !type.equals(DataSetTableType.DIMENSION));
+				relationCount, !type.equals(DataSetTableType.DIMENSION), relationIteration);
 
 		// Process the normal queue. This merges tables into the dataset
 		// table using the relation specified in each pair in the queue.
@@ -326,9 +326,10 @@ public class DataSet extends GenericSchema {
 			final Table mergeTable = (Table) triple[2];
 			final TransformationUnit previousUnit = (TransformationUnit)triple[3];
 			final boolean makeDimensions = ((Boolean) triple[4]).booleanValue();
+			final int iteration= ((Integer) triple[5]).intValue();
 			this.processTable(previousUnit, dsTable, dsTablePKCols, mergeTable, normalQ,
 				subclassQ, dimensionQ, newSourceDSCols,
-				mergeSourceRelation, relationCount, makeDimensions);
+				mergeSourceRelation, relationCount, makeDimensions, iteration);
 		}
 
 		// Create the primary key on this table, but only if it has one.
@@ -345,7 +346,7 @@ public class DataSet extends GenericSchema {
 			final Relation subclassRelation = (Relation) triple[1];
 			this.generateDataSetTable(DataSetTableType.MAIN_SUBCLASS, dsTable,
 					subclassRelation.getManyKey().getTable(), newSourceDSCols,
-					subclassRelation);
+					subclassRelation, 0);
 		}
 
 		// Process the dimension relations of this table. For 1:M it's easy.
@@ -355,10 +356,11 @@ public class DataSet extends GenericSchema {
 			final Object[] triple = (Object[]) dimensionQ.get(i);
 			final List newSourceDSCols = (List) triple[0];
 			final Relation dimensionRelation = (Relation) triple[1];
+			final int iteration= ((Integer) triple[2]).intValue();
 			if (dimensionRelation.isOneToMany())
 				this.generateDataSetTable(DataSetTableType.DIMENSION, dsTable,
 						dimensionRelation.getManyKey().getTable(),
-						newSourceDSCols, dimensionRelation);
+						newSourceDSCols, dimensionRelation, iteration);
 			else
 				this
 						.generateDataSetTable(DataSetTableType.DIMENSION,
@@ -368,7 +370,7 @@ public class DataSet extends GenericSchema {
 										.getSecondKey().getTable()
 										: dimensionRelation.getFirstKey()
 												.getTable(), newSourceDSCols,
-								dimensionRelation);
+								dimensionRelation, iteration);
 		}
 	}
 
@@ -411,7 +413,8 @@ public class DataSet extends GenericSchema {
 			final List dsTablePKCols, final Table mergeTable,
 			final List normalQ, final List subclassQ, final List dimensionQ,
 			final List sourceDataSetCols, final Relation sourceRelation,
-			final Map relationCount, final boolean makeDimensions) {
+			final Map relationCount, final boolean makeDimensions,
+			final int relationIteration) {
 		Log.debug("Processing table " + mergeTable);
 
 		// Don't ignore any keys by default.
@@ -436,8 +439,8 @@ public class DataSet extends GenericSchema {
 			// the DDL for this table.
 			// TODO Don't bother if this is a concat relation. Just add
 			// a concat unit instead.
-			tu = new LeftJoinTable(previousUnit, mergeTable, sourceDataSetCols,
-					mergeKey, sourceRelation);
+			tu = new JoinTable(previousUnit, mergeTable, sourceDataSetCols,
+					mergeKey, sourceRelation, relationIteration);
 
 			// Remember we've been here.
 			this.includedRelations.add(sourceRelation);
@@ -563,7 +566,15 @@ public class DataSet extends GenericSchema {
 							.iterator(); j.hasNext();)
 						newSourceDSCols.add(tu.getDataSetColumnFor((String)
 								j.next()));
-					dimensionQ.add(new Object[] { newSourceDSCols, r });
+					final int parentCompounded = sourceRelation==null ? 1 : (this.schemaMods.isCompoundRelation(dsTable, sourceRelation)
+							? this.schemaMods.getCompoundRelation(dsTable, sourceRelation)
+									: 1);
+					final int childCompounded = parentCompounded>1 ? 1 :
+						(this.schemaMods.isCompoundRelation(dsTable, r)
+						? this.schemaMods.getCompoundRelation(dsTable, r)
+								: 1);
+					for (int k = 0; k < childCompounded; k++)
+						dimensionQ.add(new Object[] { newSourceDSCols, r, new Integer(k) });
 					if (this.schemaMods.isMergedRelation(r))
 						forceFollowRelation = true;
 				}
@@ -620,7 +631,7 @@ public class DataSet extends GenericSchema {
 				for (int k = 0; k < childCompounded; k++)
 					normalQ.add(new Object[] { r, newSourceDSCols,
 						targetKey.getTable(), tu,
-						Boolean.valueOf(makeDimensions && (r.isOneToOne()) || forceFollowRelation) });
+						Boolean.valueOf(makeDimensions && (r.isOneToOne()) || forceFollowRelation) , new Integer(k)});
 			}
 		}
 	}
@@ -793,7 +804,7 @@ public class DataSet extends GenericSchema {
 
 		// Generate the main table. It will recursively generate all the others.
 		this.generateDataSetTable(DataSetTableType.MAIN, null, centralTable,
-				null, null);
+				null, null, 0);
 	}
 
 	/**

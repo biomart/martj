@@ -59,7 +59,7 @@
 <!ATTLIST foreignKey columnIds IDREFS #REQUIRED>
 <!ATTLIST foreignKey status (HANDMADE|INFERRED|INFERRED_INCORRECT) #REQUIRED>
 
-<!ELEMENT dataset (subclassRelation*,renamedTable*,renamedColumn*,nonInheritedColumn*,maskedColumn*,partitionedColumn*,maskedRelation*,maskedTable*,mergedRelation*,forcedRelation*,restrictedTable*)>
+<!ELEMENT dataset (compoundRelation*,subclassRelation*,renamedTable*,renamedColumn*,nonInheritedColumn*,maskedColumn*,partitionedColumn*,maskedRelation*,maskedTable*,mergedRelation*,forcedRelation*,restrictedTable*,restrictedRelation*)>
 <!ATTLIST dataset name CDATA #REQUIRED>
 <!ATTLIST dataset centralTableId IDREF #REQUIRED>
 <!ATTLIST dataset optimiser (COLUMN|COLUMN_INHERIT|COLUMN_BOOL|COLUMN_BOOL_INHERIT|TABLE|TABLE_INHERIT|TABLE_BOOL|TABLE_BOOL_INHERIT|NONE) #REQUIRED>
@@ -67,6 +67,11 @@
 
 <!ELEMENT subclassRelation EMPTY>
 <!ATTLIST subclassRelation relationId IDREF #REQUIRED>
+
+<!ELEMENT compoundRelation EMPTY>
+<!ATTLIST compoundRelation tableKey CDATA #REQUIRED>
+<!ATTLIST compoundRelation relationId IDREF #REQUIRED>
+<!ATTLIST compoundRelation n CDATA #REQUIRED>
 
 <!ELEMENT renamedTable EMPTY>
 <!ATTLIST renamedTable tableKey CDATA #REQUIRED>
@@ -113,3 +118,13 @@
 <!ATTLIST restrictedTable aliasColumnIds IDREFS #REQUIRED>
 <!ATTLIST restrictedTable aliasColumnNames CDATA #REQUIRED>
 <!ATTLIST restrictedTable expression CDATA #REQUIRED>
+
+<!ELEMENT restrictedRelation EMPTY>
+<!ATTLIST restrictedRelation tableKey CDATA #REQUIRED>
+<!ATTLIST restrictedRelation relationId IDREF #REQUIRED>
+<!ATTLIST restrictedRelation index CDATA #REQUIRED>
+<!ATTLIST restrictedRelation leftAliasColumnIds IDREFS #REQUIRED>
+<!ATTLIST restrictedRelation leftAliasColumnNames CDATA #REQUIRED>
+<!ATTLIST restrictedRelation rightAliasColumnIds IDREFS #REQUIRED>
+<!ATTLIST restrictedRelation rightAliasColumnNames CDATA #REQUIRED>
+<!ATTLIST restrictedRelation expression CDATA #REQUIRED>
