@@ -83,7 +83,6 @@ public class DataSet extends GenericSchema {
 	private final Collection includedRelations;
 
 	// TODO SchemaModMaps for source schema changes.
-	// Replicated relations - CREATE COMPOUND RELATION.
 	// Restricted relations - INDEX INTO COMPOUND RELATION.
 	// Concat-only relations with concat definitions incl. 
 	//   expressions inside concat definition (DST only).

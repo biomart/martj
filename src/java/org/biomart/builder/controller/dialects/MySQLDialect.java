@@ -801,14 +801,15 @@ public class MySQLDialect extends DatabaseDialect {
 			sb.append(keyCol);
 			sb.append(" and ");
 		}
+		sb.append("not (");
 		for (final Iterator i = action.getNonNullColumns().iterator(); i.hasNext(); ) {
 			sb.append("b.");
 			sb.append((String)i.next());
-			sb.append(" is not null");
+			sb.append(" is null");
 			if (i.hasNext())
 				sb.append(" and ");
 		}
-		sb.append(')');
+		sb.append("))");
 		statements.add(sb.toString());
 	}
 		
