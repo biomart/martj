@@ -797,8 +797,6 @@ public class MySQLDialect extends DatabaseDialect {
 		final String schemaName = action.getDataSetSchemaName();
 		final String tableName = action.getTable();
 
-		statements.add("set search_path=" + schemaName + ",pg_catalog");
-
 		for (final Iterator i = action.getColumns().iterator(); i.hasNext(); )
 			statements.add("alter table " + schemaName + "." + tableName + " drop column "+(String)i.next());
 	}

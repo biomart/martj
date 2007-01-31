@@ -457,7 +457,8 @@ public interface MartConstructor {
 					final LeftJoin action = new LeftJoin(
 							this.datasetSchemaName, this.getFinalName(dsTable,
 									GenericConstructorRunnable.NO_PARTITION));
-					action.setLeftTable(parent.getModifiedName());
+					action.setLeftTable(this.getFinalName(parent,
+							GenericConstructorRunnable.NO_PARTITION));
 					action.setRightSchema(this.datasetSchemaName);
 					action.setRightTable((String) previousTempTables
 							.get(partitionValue));
