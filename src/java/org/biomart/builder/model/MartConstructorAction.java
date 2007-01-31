@@ -211,6 +211,7 @@ public abstract class MartConstructorAction {
 		private String optTableName;
 		private Collection nonNullColumns;
 		private String optColumnName;
+		private String sourceTableName;
 		private boolean countNotBool;
 		
 		/**
@@ -297,6 +298,20 @@ public abstract class MartConstructorAction {
 		 */
 		public void setOptTableName(String optTableName) {
 			this.optTableName = optTableName;
+		}
+
+		/**
+		 * @return the sourceTableName
+		 */
+		public String getSourceTableName() {
+			return sourceTableName;
+		}
+
+		/**
+		 * @param sourceTableName the sourceTableName to set
+		 */
+		public void setSourceTableName(String sourceTableName) {
+			this.sourceTableName = sourceTableName;
 		}
 	}
 	

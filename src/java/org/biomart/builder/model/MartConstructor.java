@@ -583,6 +583,8 @@ public interface MartConstructor {
 								GenericConstructorRunnable.NO_PARTITION));
 				update.setKeyColumns(keyCols);
 				update.setNonNullColumns(nonNullCols);
+				update.setSourceTableName(this.getFinalName(dsTable,
+						partitionValue));
 				update.setOptTableName(optTable);
 				update.setOptColumnName(optCol);
 				update.setCountNotBool(oType

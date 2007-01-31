@@ -689,7 +689,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 	
 	public void doUpdateOptimiser(final UpdateOptimiser action, final List statements) {
 		final String schemaName = action.getDataSetSchemaName();
-		final String sourceTableName = action.getDataSetTableName();
+		final String sourceTableName = action.getSourceTableName();
 		final String optTableName = action.getOptTableName();
 		final String optColName = action.getOptColumnName();
 
