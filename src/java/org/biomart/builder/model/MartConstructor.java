@@ -402,24 +402,6 @@ public interface MartConstructor {
 				final String finalName = this.getFinalName(dsTable,
 						partitionValue);
 
-				// Drop masked dependencies.
-				final List dropCols = new ArrayList();
-				for (final Iterator x = dsTable.getColumns().iterator(); x
-						.hasNext();) {
-					final DataSetColumn col = (DataSetColumn) x.next();
-					if (!col.getDependency())
-						continue;
-					if (dataset.getDataSetModifications().isMaskedColumn(col))
-						dropCols.add(col.getModifiedName());
-				}
-				if (!dropCols.isEmpty()) {
-					final DropColumns action = new DropColumns(
-							this.datasetSchemaName, finalCombinedName);
-					action.setTable(finalName);
-					action.setColumns(dropCols);
-					this.issueAction(action);
-				}
-
 				// If was partitioned, do a final left join with the
 				// parent table in order to reinstate missing rows dropped
 				// by the inner join for the partition.
@@ -485,6 +467,24 @@ public interface MartConstructor {
 				action.setFrom((String) previousTempTables.get(partitionValue));
 				action.setTo(finalName);
 				this.issueAction(action);
+
+				// Drop masked dependencies.
+				final List dropCols = new ArrayList();
+				for (final Iterator x = dsTable.getColumns().iterator(); x
+						.hasNext();) {
+					final DataSetColumn col = (DataSetColumn) x.next();
+					if (!col.getDependency())
+						continue;
+					if (dataset.getDataSetModifications().isMaskedColumn(col))
+						dropCols.add(col.getModifiedName());
+				}
+				if (!dropCols.isEmpty()) {
+					final DropColumns dropcol = new DropColumns(
+							this.datasetSchemaName, finalCombinedName);
+					dropcol.setTable(finalName);
+					dropcol.setColumns(dropCols);
+					this.issueAction(dropcol);
+				}
 
 				// Create indexes on all keys on the final table.
 				for (final Iterator j = dsTable.getKeys().iterator(); j
