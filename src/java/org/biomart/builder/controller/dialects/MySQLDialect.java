@@ -763,7 +763,7 @@ public class MySQLDialect extends DatabaseDialect {
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + action.getDataSetSchemaName() + "." + mergeTableName
 				+ " as select ");
-		for (final Iterator i = action.getRightSelectColumns().iterator(); i.hasNext(); ) {
+		for (final Iterator i = action.getLeftSelectColumns().iterator(); i.hasNext(); ) {
 			final String entry = (String)i.next();
 			sb.append("a.");
 			sb.append(entry);
