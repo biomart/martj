@@ -38,6 +38,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
+import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
@@ -98,15 +99,17 @@ public class DataSetContext extends SchemaContext {
 					.getTable();
 
 			// Fade MASKED DIMENSION relations.
-			if (this.getDataSet().getDataSetModifications().isMaskedTable(target))
+			if (this.getDataSet().getDataSetModifications().isMaskedTable(
+					target))
 				component.setForeground(RelationComponent.MASKED_COLOUR);
-			
+
 			// Fade MERGED DIMENSION relations.
-			else if (this.getDataSet().getSchemaModifications().isMergedRelation(target.getFocusRelation())) 
+			else if (this.getDataSet().getSchemaModifications()
+					.isMergedRelation(target.getFocusRelation()))
 				component.setForeground(TableComponent.MASKED_COLOUR);
-			
+
 			// Highlight SUBCLASS relations.
-			 else if (target.getType().equals(DataSetTableType.MAIN_SUBCLASS))
+			else if (target.getType().equals(DataSetTableType.MAIN_SUBCLASS))
 				component.setForeground(RelationComponent.SUBCLASS_COLOUR);
 
 			// All the rest are normal.
@@ -122,13 +125,16 @@ public class DataSetContext extends SchemaContext {
 					.getType();
 
 			// Fade MASKED DIMENSION relations.
-			if (this.getDataSet().getDataSetModifications().isMaskedTable((DataSetTable)object))
+			if (this.getDataSet().getDataSetModifications().isMaskedTable(
+					(DataSetTable) object))
 				component.setForeground(TableComponent.MASKED_COLOUR);
-			
+
 			// Fade MERGED DIMENSION tables.
-			else if (this.getDataSet().getSchemaModifications().isMergedRelation(((DataSetTable)object).getFocusRelation())) 
+			else if (this.getDataSet().getSchemaModifications()
+					.isMergedRelation(
+							((DataSetTable) object).getFocusRelation()))
 				component.setForeground(TableComponent.MASKED_COLOUR);
-			
+
 			// Highlight SUBCLASS tables.
 			else if (tableType.equals(DataSetTableType.MAIN_SUBCLASS))
 				component.setForeground(TableComponent.SUBCLASS_COLOUR);
@@ -148,30 +154,27 @@ public class DataSetContext extends SchemaContext {
 			// Which column is it?
 			final DataSetColumn column = (DataSetColumn) object;
 
-			// Magenta EXPRESSION columns.
+			// Red INHERITED columns.
 			if (column instanceof InheritedColumn)
 				component.setBackground(ColumnComponent.INHERITED_COLOUR);
 			// Fade out all MASKED columns.
-			else if (((DataSet)column.getTable().getSchema()).getDataSetModifications().isMaskedColumn(column))
+			else if (((DataSet) column.getTable().getSchema())
+					.getDataSetModifications().isMaskedColumn(column))
 				component.setBackground(ColumnComponent.FADED_COLOUR);
-
 			// Blue PARTITIONED columns.
-			else if (((DataSet)column.getTable().getSchema()).getDataSetModifications().isPartitionedColumn(column))
+			else if (((DataSet) column.getTable().getSchema())
+					.getDataSetModifications().isPartitionedColumn(column))
 				component.setBackground(ColumnComponent.PARTITIONED_COLOUR);
-
-			// FIXME: Reinstate.
-			/*
-
 			// Magenta EXPRESSION columns.
 			else if (column instanceof ExpressionColumn)
 				component.setBackground(ColumnComponent.EXPRESSION_COLOUR);
-			 */
 			// All others are normal.
 			else
 				component.setBackground(ColumnComponent.NORMAL_COLOUR);
-			
+
 			// Change foreground of non-inherited columns.
-			if (((DataSet)column.getTable().getSchema()).getDataSetModifications().isNonInheritedColumn(column))
+			if (((DataSet) column.getTable().getSchema())
+					.getDataSetModifications().isNonInheritedColumn(column))
 				component.setForeground(ColumnComponent.NONINHERITED_FG_COLOUR);
 			else
 				component.setForeground(ColumnComponent.NORMAL_FG_COLOUR);
@@ -229,55 +232,63 @@ public class DataSetContext extends SchemaContext {
 			replicate.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestReplicateDataSet(DataSetContext.this.getDataSet());
+							.requestReplicateDataSet(
+									DataSetContext.this.getDataSet());
 				}
 			});
 			contextMenu.add(replicate);
 
 			contextMenu.addSeparator();
-			
+
 			// Make a submenu for the optimiser type.
 			final JMenu optSubmenu = new JMenu(Resources.get("optimiserTitle"));
-			optSubmenu.setMnemonic(Resources.get("optimiserMnemonic").charAt(0));
+			optSubmenu
+					.setMnemonic(Resources.get("optimiserMnemonic").charAt(0));
 			contextMenu.add(optSubmenu);
 
 			// Make a group for the different optimiser types.
 			final ButtonGroup optGroup = new ButtonGroup();
-			
+
 			// Set up a temporary map to store the optimiser types.
 			// Use LinkedHashMap to preserve the order they appear in here.
 			final Map optimiserTypes = new LinkedHashMap();
 			optimiserTypes.put("None", DataSetOptimiserType.NONE);
 			optimiserTypes.put("Column", DataSetOptimiserType.COLUMN);
-			optimiserTypes.put("ColumnInherit", DataSetOptimiserType.COLUMN_INHERIT);
+			optimiserTypes.put("ColumnInherit",
+					DataSetOptimiserType.COLUMN_INHERIT);
 			optimiserTypes.put("ColumnBool", DataSetOptimiserType.COLUMN_BOOL);
-			optimiserTypes.put("ColumnBoolInherit", DataSetOptimiserType.COLUMN_BOOL_INHERIT);
+			optimiserTypes.put("ColumnBoolInherit",
+					DataSetOptimiserType.COLUMN_BOOL_INHERIT);
 			optimiserTypes.put("Table", DataSetOptimiserType.TABLE);
-			optimiserTypes.put("TableInherit", DataSetOptimiserType.TABLE_INHERIT);
+			optimiserTypes.put("TableInherit",
+					DataSetOptimiserType.TABLE_INHERIT);
 			optimiserTypes.put("TableBool", DataSetOptimiserType.TABLE_BOOL);
-			optimiserTypes.put("TableBoolInherit", DataSetOptimiserType.TABLE_BOOL_INHERIT);
-			
+			optimiserTypes.put("TableBoolInherit",
+					DataSetOptimiserType.TABLE_BOOL_INHERIT);
+
 			// Loop through the map to create the submenu.
-			for (final Iterator i = optimiserTypes.entrySet().iterator(); i.hasNext(); ) {
-				final Map.Entry entry = (Map.Entry)i.next();	
-				final String name = (String)entry.getKey();
-				final DataSetOptimiserType value = (DataSetOptimiserType)entry.getValue();
+			for (final Iterator i = optimiserTypes.entrySet().iterator(); i
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) i.next();
+				final String name = (String) entry.getKey();
+				final DataSetOptimiserType value = (DataSetOptimiserType) entry
+						.getValue();
 				final JRadioButtonMenuItem opt = new JRadioButtonMenuItem(
-						Resources.get("optimiser"+name+"Title"));
-				opt.setMnemonic(Resources.get("optimiser"+name+"Mnemonic")
+						Resources.get("optimiser" + name + "Title"));
+				opt.setMnemonic(Resources.get("optimiser" + name + "Mnemonic")
 						.charAt(0));
 				opt.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this.getMartTab().getDataSetTabSet()
+						DataSetContext.this
+								.getMartTab()
+								.getDataSetTabSet()
 								.requestChangeOptimiserType(
-										DataSetContext.this.getDataSet(),
-										value);
+										DataSetContext.this.getDataSet(), value);
 					}
 				});
 				optGroup.add(opt);
 				optSubmenu.add(opt);
-				if (this.getDataSet().getDataSetOptimiserType().equals(
-						value))
+				if (this.getDataSet().getDataSetOptimiserType().equals(value))
 					opt.setSelected(true);
 			}
 
@@ -307,11 +318,9 @@ public class DataSetContext extends SchemaContext {
 			contextMenu.addSeparator();
 
 			// Option to explain how the dataset was constructed.
-			final JMenuItem explain = new JMenuItem(
-					Resources.get("explainDataSetTitle"),
-					new ImageIcon(
-							Resources
-									.getResourceAsURL("help.gif")));
+			final JMenuItem explain = new JMenuItem(Resources
+					.get("explainDataSetTitle"), new ImageIcon(Resources
+					.getResourceAsURL("help.gif")));
 			explain.setMnemonic(Resources.get("explainDataSetMnemonic").charAt(
 					0));
 			explain.addActionListener(new ActionListener() {
@@ -326,11 +335,9 @@ public class DataSetContext extends SchemaContext {
 			contextMenu.addSeparator();
 
 			// Option to create the DDL for the dataset.
-			final JMenuItem saveDDL = new JMenuItem(
-					Resources.get("saveDDLTitle"),
-					new ImageIcon(
-							Resources
-									.getResourceAsURL("saveText.gif")));
+			final JMenuItem saveDDL = new JMenuItem(Resources
+					.get("saveDDLTitle"), new ImageIcon(Resources
+					.getResourceAsURL("saveText.gif")));
 			saveDDL.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
 			saveDDL.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
@@ -353,11 +360,9 @@ public class DataSetContext extends SchemaContext {
 			final DataSetTableType tableType = table.getType();
 
 			// Option to explain how the table was constructed.
-			final JMenuItem explain = new JMenuItem(
-					Resources.get("explainTableTitle"),
-					new ImageIcon(
-							Resources
-									.getResourceAsURL("help.gif")));
+			final JMenuItem explain = new JMenuItem(Resources
+					.get("explainTableTitle"), new ImageIcon(Resources
+					.getResourceAsURL("help.gif")));
 			explain
 					.setMnemonic(Resources.get("explainTableMnemonic")
 							.charAt(0));
@@ -383,8 +388,6 @@ public class DataSetContext extends SchemaContext {
 			});
 			contextMenu.add(rename);
 
-			// FIXME: Reinstate.
-			/*
 			// Add an expression column.
 			final JMenuItem expression = new JMenuItem(Resources
 					.get("addExpressionColumnTitle"));
@@ -393,11 +396,10 @@ public class DataSetContext extends SchemaContext {
 			expression.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestAddExpressionColumn(table);
+							.requestModifyExpressionColumn(table, null);
 				}
 			});
 			contextMenu.add(expression);
-			*/
 
 			contextMenu.addSeparator();
 
@@ -406,7 +408,9 @@ public class DataSetContext extends SchemaContext {
 
 				// The dimension can be merged by using this option. This
 				// affects all dimensions based on this relation.
-				final boolean isMerged = this.getDataSet().getSchemaModifications().isMergedRelation(table.getFocusRelation());
+				final boolean isMerged = this.getDataSet()
+						.getSchemaModifications().isMergedRelation(
+								table.getFocusRelation());
 				final JCheckBoxMenuItem mergeDM = new JCheckBoxMenuItem(
 						Resources.get("mergeDimensionTitle"));
 				mergeDM.setMnemonic(Resources.get("mergeDimensionMnemonic")
@@ -414,17 +418,15 @@ public class DataSetContext extends SchemaContext {
 				mergeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
 						if (mergeDM.isSelected())
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestMergeDimension(
-										DataSetContext.this.getDataSet(),
-										table
-										);
+							DataSetContext.this.getMartTab().getDataSetTabSet()
+									.requestMergeDimension(
+											DataSetContext.this.getDataSet(),
+											table);
 						else
 							DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestUnmergeDimension(
-									DataSetContext.this.getDataSet(),
-									table
-									);
+									.requestUnmergeDimension(
+											DataSetContext.this.getDataSet(),
+											table);
 					}
 				});
 				contextMenu.add(mergeDM);
@@ -432,7 +434,8 @@ public class DataSetContext extends SchemaContext {
 
 				// The dimension can be removed by using this option. This
 				// simply masks the relation that caused the dimension to exist.
-				final boolean isMasked = this.getDataSet().getDataSetModifications().isMaskedTable(table);
+				final boolean isMasked = this.getDataSet()
+						.getDataSetModifications().isMaskedTable(table);
 				final JCheckBoxMenuItem removeDM = new JCheckBoxMenuItem(
 						Resources.get("maskDimensionTitle"));
 				removeDM.setMnemonic(Resources.get("maskDimensionMnemonic")
@@ -440,15 +443,15 @@ public class DataSetContext extends SchemaContext {
 				removeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
 						if (removeDM.isSelected())
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestMaskDimension(
-										DataSetContext.this.getDataSet(),
-										table);
+							DataSetContext.this.getMartTab().getDataSetTabSet()
+									.requestMaskDimension(
+											DataSetContext.this.getDataSet(),
+											table);
 						else
 							DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestUnmaskDimension(
-									DataSetContext.this.getDataSet(),
-									table);
+									.requestUnmaskDimension(
+											DataSetContext.this.getDataSet(),
+											table);
 					}
 				});
 				contextMenu.add(removeDM);
@@ -457,8 +460,8 @@ public class DataSetContext extends SchemaContext {
 
 				// The dim table can be subclassed by using this option. This
 				// simply subclasses the relation that caused the dim to exist.
-				final JMenuItem subclass = new JMenuItem(
-						Resources.get("dimToSubclassTitle"));
+				final JMenuItem subclass = new JMenuItem(Resources
+						.get("dimToSubclassTitle"));
 				subclass.setMnemonic(Resources.get("dimToSubclassMnemonic")
 						.charAt(0));
 				subclass.addActionListener(new ActionListener() {
@@ -479,8 +482,8 @@ public class DataSetContext extends SchemaContext {
 
 				// The subclass table can be removed by using this option. This
 				// simply masks the relation that caused the subclass to exist.
-				final JMenuItem unsubclass = new JMenuItem(
-						Resources.get("removeSubclassTitle"));
+				final JMenuItem unsubclass = new JMenuItem(Resources
+						.get("removeSubclassTitle"));
 				unsubclass.setMnemonic(Resources.get("removeSubclassMnemonic")
 						.charAt(0));
 				unsubclass.addActionListener(new ActionListener() {
@@ -548,10 +551,13 @@ public class DataSetContext extends SchemaContext {
 			contextMenu.add(rename);
 
 			contextMenu.addSeparator();
-			
+
 			// Mask the column.
-			final boolean isPartitioned = ((DataSet)column.getTable().getSchema()).getDataSetModifications().isPartitionedColumn(column);
-			final boolean isMasked = ((DataSet)column.getTable().getSchema()).getDataSetModifications().isMaskedColumn(column);
+			final boolean isPartitioned = ((DataSet) column.getTable()
+					.getSchema()).getDataSetModifications()
+					.isPartitionedColumn(column);
+			final boolean isMasked = ((DataSet) column.getTable().getSchema())
+					.getDataSetModifications().isMaskedColumn(column);
 			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
 					.get("maskColumnTitle"));
 			mask.setMnemonic(Resources.get("maskColumnMnemonic").charAt(0));
@@ -571,14 +577,17 @@ public class DataSetContext extends SchemaContext {
 			});
 			contextMenu.add(mask);
 			mask.setSelected(isMasked);
-			if (isPartitioned)
+			if (isPartitioned || column instanceof ExpressionColumn)
 				mask.setEnabled(false);
 
 			// Non-inherit inherited columns.
-			final boolean isNonInherited = ((DataSet)column.getTable().getSchema()).getDataSetModifications().isNonInheritedColumn(column);
+			final boolean isNonInherited = ((DataSet) column.getTable()
+					.getSchema()).getDataSetModifications()
+					.isNonInheritedColumn(column);
 			final JCheckBoxMenuItem inherited = new JCheckBoxMenuItem(Resources
 					.get("nonInheritColumnTitle"));
-			inherited.setMnemonic(Resources.get("nonInheritColumnMnemonic").charAt(0));
+			inherited.setMnemonic(Resources.get("nonInheritColumnMnemonic")
+					.charAt(0));
 			inherited.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					if (inherited.isSelected())
@@ -595,7 +604,9 @@ public class DataSetContext extends SchemaContext {
 			});
 			contextMenu.add(inherited);
 			inherited.setSelected(isNonInherited);
-			inherited.setEnabled(isMasked || !((DataSetTable)column.getTable()).getType().equals(DataSetTableType.DIMENSION));
+			inherited.setEnabled(isMasked
+					|| !((DataSetTable) column.getTable()).getType().equals(
+							DataSetTableType.DIMENSION));
 
 			contextMenu.addSeparator();
 
@@ -604,11 +615,9 @@ public class DataSetContext extends SchemaContext {
 			if (isPartitioned) {
 
 				// The option to change the partition type.
-				final JMenuItem changepartition = new JMenuItem(
-						Resources.get("changePartitionColumnTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("expandAll.gif")));
+				final JMenuItem changepartition = new JMenuItem(Resources
+						.get("changePartitionColumnTitle"), new ImageIcon(
+						Resources.getResourceAsURL("expandAll.gif")));
 				changepartition.setMnemonic(Resources.get(
 						"changePartitionColumnMnemonic").charAt(0));
 				changepartition.addActionListener(new ActionListener() {
@@ -628,11 +637,9 @@ public class DataSetContext extends SchemaContext {
 			else {
 
 				// Option to enable partitioning.
-				final JMenuItem partition = new JMenuItem(
-						Resources.get("partitionColumnTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("expandAll.gif")));
+				final JMenuItem partition = new JMenuItem(Resources
+						.get("partitionColumnTitle"), new ImageIcon(Resources
+						.getResourceAsURL("expandAll.gif")));
 				partition.setMnemonic(Resources.get("partitionColumnMnemonic")
 						.charAt(0));
 				partition.addActionListener(new ActionListener() {
@@ -644,7 +651,9 @@ public class DataSetContext extends SchemaContext {
 					}
 				});
 				contextMenu.add(partition);
-				if (isMasked || !((DataSetTable)column.getTable()).getType().equals(DataSetTableType.DIMENSION))
+				if (isMasked
+						|| !((DataSetTable) column.getTable()).getType()
+								.equals(DataSetTableType.DIMENSION))
 					partition.setEnabled(false);
 			}
 
@@ -663,9 +672,7 @@ public class DataSetContext extends SchemaContext {
 			contextMenu.add(unpartition);
 			if (!isPartitioned)
 				unpartition.setEnabled(false);
-			
-			// FIXME: Reinstate
-			/*
+
 			// Else, if it's an expression column...
 			if (column instanceof ExpressionColumn) {
 
@@ -680,6 +687,7 @@ public class DataSetContext extends SchemaContext {
 					public void actionPerformed(final ActionEvent evt) {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestModifyExpressionColumn(
+										(DataSetTable) column.getTable(),
 										(ExpressionColumn) column);
 					}
 				});
@@ -694,13 +702,13 @@ public class DataSetContext extends SchemaContext {
 					public void actionPerformed(final ActionEvent evt) {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestRemoveExpressionColumn(
+										(DataSetTable) column.getTable(),
 										(ExpressionColumn) column);
 					}
 				});
 				contextMenu.add(remove);
 
 			}
-			 */
 		}
 	}
 }

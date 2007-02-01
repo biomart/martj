@@ -32,6 +32,7 @@ import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
+import org.biomart.builder.model.MartConstructorAction.AddExpression;
 import org.biomart.builder.model.MartConstructorAction.CopyOptimiser;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Drop;
@@ -674,11 +675,54 @@ public class OracleDialect extends DatabaseDialect {
 				sb.append(" where ");
 			sb.append(" a.");
 			sb.append(action.getPartitionColumn());
+			if (action.getPartitionValue()==null)
+				sb.append(" is null");
+			else {
 			sb.append("='");
 			sb.append(action.getPartitionValue().replaceAll("'", "\\'"));
 			sb.append('\'');
+			}
 		}
 
+		statements.add(sb.toString());
+	}
+
+	public void doAddExpression(final AddExpression action,
+			final List statements) {
+		final String createTableSchema = action.getDataSetSchemaName();
+		final String createTableName = action.getResultTable();
+		final String fromTableSchema = action.getDataSetSchemaName();
+		final String fromTableName = action.getTable();
+
+		final StringBuffer sb = new StringBuffer();
+		sb.append("create table " + createTableSchema + "." + createTableName
+				+ " as select ");
+		for (final Iterator i = action.getSelectColumns().iterator(); i
+				.hasNext();) {
+			final String entry = (String) i.next();
+			sb.append(entry);
+			sb.append(',');
+		}
+		for (final Iterator i = action.getExpressionColumns().entrySet()
+				.iterator(); i.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			sb.append((String) entry.getValue());
+			sb.append(" as ");
+			sb.append((String) entry.getKey());
+			if (i.hasNext())
+				sb.append(',');
+		}
+		sb.append(" from " + fromTableSchema + "." + fromTableName);
+		if (action.getGroupByColumns() != null) {
+			sb.append(" group by ");
+			for (final Iterator i = action.getGroupByColumns().iterator(); i
+					.hasNext();) {
+				final String entry = (String) i.next();
+				sb.append(entry);
+				if (i.hasNext())
+					sb.append(',');
+			}
+		}
 		statements.add(sb.toString());
 	}
 
@@ -747,9 +791,13 @@ public class OracleDialect extends DatabaseDialect {
 		if (action.getPartitionColumn()!=null) {
 			sb.append(" and b.");
 			sb.append(action.getPartitionColumn());
+			if (action.getPartitionValue()==null)
+				sb.append(" is null");
+			else {
 			sb.append("='");
 			sb.append(action.getPartitionValue().replaceAll("'", "\\'"));
 			sb.append('\'');
+			}
 		}
 
 		statements.add(sb.toString());

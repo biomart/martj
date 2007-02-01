@@ -22,8 +22,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.biomart.builder.model.SchemaModificationSet.RelationRestriction;
-import org.biomart.builder.model.SchemaModificationSet.TableRestriction;
+import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
+import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -517,7 +517,7 @@ public abstract class MartConstructorAction {
 			this.rightTable = rightTable;
 		}
 	}
-	
+		
 	/**
 	 * Join actions.
 	 */
@@ -537,9 +537,9 @@ public abstract class MartConstructorAction {
 
 		private String resultTable;
 		
-		private TableRestriction tableRestriction;
+		private RestrictedTableDefinition restrictedTableDefinition;
 		
-		private RelationRestriction relationRestriction;
+		private RestrictedRelationDefinition restrictedRelationDefinition;
 		
 		private boolean relationRestrictionLeftIsFirst;
 		
@@ -671,15 +671,15 @@ public abstract class MartConstructorAction {
 		/**
 		 * @return the tableRestriction
 		 */
-		public TableRestriction getTableRestriction() {
-			return tableRestriction;
+		public RestrictedTableDefinition getTableRestriction() {
+			return restrictedTableDefinition;
 		}
 
 		/**
-		 * @param tableRestriction the tableRestriction to set
+		 * @param restrictedTableDefinition the tableRestriction to set
 		 */
-		public void setTableRestriction(TableRestriction tableRestriction) {
-			this.tableRestriction = tableRestriction;
+		public void setTableRestriction(RestrictedTableDefinition restrictedTableDefinition) {
+			this.restrictedTableDefinition = restrictedTableDefinition;
 		}
 
 		/**
@@ -713,15 +713,15 @@ public abstract class MartConstructorAction {
 		/**
 		 * @return the relationRestriction
 		 */
-		public RelationRestriction getRelationRestriction() {
-			return relationRestriction;
+		public RestrictedRelationDefinition getRelationRestriction() {
+			return restrictedRelationDefinition;
 		}
 
 		/**
-		 * @param relationRestriction the relationRestriction to set
+		 * @param restrictedRelationDefinition the relationRestriction to set
 		 */
-		public void setRelationRestriction(RelationRestriction relationRestriction) {
-			this.relationRestriction = relationRestriction;
+		public void setRelationRestriction(RestrictedRelationDefinition restrictedRelationDefinition) {
+			this.restrictedRelationDefinition = restrictedRelationDefinition;
 		}
 
 		/**
@@ -741,6 +741,108 @@ public abstract class MartConstructorAction {
 	}
 
 	/**
+	 * AddExpression actions.
+	 */
+	public static class AddExpression extends MartConstructorAction {
+
+		private String table;
+
+		private Collection selectColumns;
+
+		private Map expressionColumns;
+
+		private Collection groupByColumns;
+
+		private String resultTable;
+
+		/**
+		 * Creates a new Select action.
+		 * 
+		 * @param datasetSchemaName
+		 *            the dataset schema we are working in.
+		 * @param datasetTableName
+		 *            the dataset table we are working on.
+		 */
+		public AddExpression(String datasetSchemaName, String datasetTableName) {
+			super(datasetSchemaName, datasetTableName);
+		}
+
+		public String getStatusMessage() {
+			return Resources.get("mcExpressionAdd");
+		}
+
+		/**
+		 * @return the expressionColumns
+		 */
+		public Map getExpressionColumns() {
+			return expressionColumns;
+		}
+
+		/**
+		 * @param expressionColumns the expressionColumns to set
+		 */
+		public void setExpressionColumns(Map expressionColumns) {
+			this.expressionColumns = expressionColumns;
+		}
+
+		/**
+		 * @return the groupByColumns
+		 */
+		public Collection getGroupByColumns() {
+			return groupByColumns;
+		}
+
+		/**
+		 * @param groupByColumns the groupByColumns to set
+		 */
+		public void setGroupByColumns(Collection groupByColumns) {
+			this.groupByColumns = groupByColumns;
+		}
+
+		/**
+		 * @return the resultTable
+		 */
+		public String getResultTable() {
+			return resultTable;
+		}
+
+		/**
+		 * @param resultTable the resultTable to set
+		 */
+		public void setResultTable(String resultTable) {
+			this.resultTable = resultTable;
+		}
+
+		/**
+		 * @return the selectColumns
+		 */
+		public Collection getSelectColumns() {
+			return selectColumns;
+		}
+
+		/**
+		 * @param selectColumns the selectColumns to set
+		 */
+		public void setSelectColumns(Collection selectColumns) {
+			this.selectColumns = selectColumns;
+		}
+
+		/**
+		 * @return the table
+		 */
+		public String getTable() {
+			return table;
+		}
+
+		/**
+		 * @param table the table to set
+		 */
+		public void setTable(String table) {
+			this.table = table;
+		}
+	}
+
+	/**
 	 * Select actions.
 	 */
 	public static class Select extends MartConstructorAction {
@@ -753,7 +855,7 @@ public abstract class MartConstructorAction {
 
 		private String resultTable;
 		
-		private TableRestriction tableRestriction;
+		private RestrictedTableDefinition restrictedTableDefinition;
 		
 		private String partitionColumn;
 		
@@ -838,15 +940,15 @@ public abstract class MartConstructorAction {
 		/**
 		 * @return the tableRestriction
 		 */
-		public TableRestriction getTableRestriction() {
-			return tableRestriction;
+		public RestrictedTableDefinition getTableRestriction() {
+			return restrictedTableDefinition;
 		}
 
 		/**
-		 * @param tableRestriction the tableRestriction to set
+		 * @param restrictedTableDefinition the tableRestriction to set
 		 */
-		public void setTableRestriction(TableRestriction tableRestriction) {
-			this.tableRestriction = tableRestriction;
+		public void setTableRestriction(RestrictedTableDefinition restrictedTableDefinition) {
+			this.restrictedTableDefinition = restrictedTableDefinition;
 		}
 
 		/**

@@ -391,7 +391,7 @@ public class ExplainContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(compound);
-			if (incorrect || relationMasked || relationSubclassed)
+			if (incorrect || relationMasked)
 				compound.setEnabled(false);
 			if (relationCompounded)
 				compound.setSelected(true);
@@ -418,7 +418,7 @@ public class ExplainContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(subclass);
-			if (incorrect || relationCompounded || relationMasked || relation.isOneToOne() || this.datasetTable!=null)
+			if (incorrect || relationMasked || relation.isOneToOne() || this.datasetTable!=null)
 				// FIXME: Reinstate
 				//	|| relationConcated)
 				subclass.setEnabled(false);

@@ -17,11 +17,18 @@
  */
 package org.biomart.builder.model;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Table;
@@ -31,8 +38,8 @@ import org.biomart.common.utils.InverseMap;
  * This interface defines a unit of transformation for mart construction.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public abstract class TransformationUnit {
@@ -90,7 +97,7 @@ public abstract class TransformationUnit {
 		private Key schemaSourceKey;
 
 		private Relation schemaRelation;
-		
+
 		private int schemaRelationIteration;
 
 		public JoinTable(final TransformationUnit previousUnit,
@@ -137,6 +144,68 @@ public abstract class TransformationUnit {
 		}
 	}
 
+	public static class Expression extends TransformationUnit {
+
+		private DataSetTable dsTable;
+		
+		public Expression(final TransformationUnit previousUnit,
+				final DataSetTable dsTable) {
+			super(previousUnit);
+			this.dsTable = dsTable;
+		}
+
+		public DataSetColumn getDataSetColumnFor(final String columnName) {
+			return (DataSetColumn) this.getNewColumnNameMap().get(columnName);
+		}
+
+		public DataSetTable getDataSetTable() {
+			return this.dsTable;
+		}
+		
+		public Collection getOrderedExpressionGroups() {
+			final List groups = new ArrayList();
+			final Collection entries = new TreeSet(new Comparator() {
+				public int compare(Object a, Object b) {
+					final Map.Entry entryA = (Map.Entry) a;
+					final Map.Entry entryB = (Map.Entry) b;
+					final String colNameA = (String) entryA.getKey();
+					final String colNameB = (String) entryB.getKey();
+					final ExpressionColumnDefinition exprA = ((DataSet) Expression.this.dsTable.getSchema())
+					.getDataSetModifications().getExpressionColumn(
+							dsTable, colNameA);
+					final ExpressionColumnDefinition exprB = ((DataSet) Expression.this.dsTable.getSchema())
+					.getDataSetModifications().getExpressionColumn(
+							dsTable, colNameB);
+					return exprB.getAliases().keySet().contains(colNameA) ? -1 : ((exprA.isGroupBy() == exprB.isGroupBy()) ? 1 : -1);
+				}
+			});
+			entries.addAll(this.getNewColumnNameMap().entrySet());
+			// Iterator over entries and sort into groups.
+			Map.Entry previousEntry = null;
+			Map currentGroup = new HashMap();
+			groups.add(currentGroup);
+			for (final Iterator i = entries.iterator(); i.hasNext();) {
+				final Map.Entry entry = (Map.Entry) i.next();
+				if (previousEntry != null) {
+					final String colNameA = (String) entry.getKey();
+					final String colNameB = (String) previousEntry.getKey();
+					final ExpressionColumnDefinition exprA = ((DataSet) Expression.this.dsTable.getSchema())
+					.getDataSetModifications().getExpressionColumn(
+							dsTable, colNameA);
+					final ExpressionColumnDefinition exprB = ((DataSet) Expression.this.dsTable.getSchema())
+					.getDataSetModifications().getExpressionColumn(
+							dsTable, colNameB);
+					if (exprB.getAliases().keySet().contains(colNameA) || !(exprA.isGroupBy() == exprB.isGroupBy())) {
+						currentGroup = new HashMap();
+						groups.add(currentGroup);
+					}
+				}
+				currentGroup.put(entry.getKey(), entry.getValue());
+				previousEntry = entry;
+			}
+			return groups;
+		}
+	}
 	// FIXME: Reinstate.
 	/*
 	 * public static class ConcatSchemaTable extends LeftJoinSchemaTable {

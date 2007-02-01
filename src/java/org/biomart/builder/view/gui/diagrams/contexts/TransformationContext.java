@@ -29,6 +29,8 @@ import javax.swing.JPopupMenu;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
@@ -80,13 +82,9 @@ public class TransformationContext extends DataSetContext {
 			else if (((DataSet)column.getTable().getSchema()).getDataSetModifications().isPartitionedColumn(column))
 				component.setBackground(ColumnComponent.PARTITIONED_COLOUR);
 
-			// FIXME: Reinstate.
-			/*
-
 			// Magenta EXPRESSION columns.
 			else if (column instanceof ExpressionColumn)
 				component.setBackground(ColumnComponent.EXPRESSION_COLOUR);
-			*/
 
 			// All others are normal.
 			else
@@ -143,7 +141,7 @@ public class TransformationContext extends DataSetContext {
 			});
 			contextMenu.add(mask);
 			mask.setSelected(isMasked);
-			if (isPartitioned)
+			if (isPartitioned || column instanceof ExpressionColumn)
 				mask.setEnabled(false);
 
 			contextMenu.addSeparator();
@@ -214,8 +212,6 @@ public class TransformationContext extends DataSetContext {
 			if (!isPartitioned)
 				unpartition.setEnabled(false);
 
-			// FIXME: Reinstate.
-			/*
 			// Else, if it's an expression column...
 			if (column instanceof ExpressionColumn) {
 
@@ -228,9 +224,9 @@ public class TransformationContext extends DataSetContext {
 						"modifyExpressionColumnMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						ExplainTransformationContext.this.getMartTab()
+						TransformationContext.this.getMartTab()
 								.getDataSetTabSet()
-								.requestModifyExpressionColumn(
+								.requestModifyExpressionColumn((DataSetTable)column.getTable(),
 										(ExpressionColumn) column);
 					}
 				});
@@ -243,16 +239,15 @@ public class TransformationContext extends DataSetContext {
 						"removeExpressionColumnMnemonic").charAt(0));
 				remove.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						ExplainTransformationContext.this.getMartTab()
+						TransformationContext.this.getMartTab()
 								.getDataSetTabSet()
-								.requestRemoveExpressionColumn(
+								.requestRemoveExpressionColumn((DataSetTable)column.getTable(),
 										(ExpressionColumn) column);
 					}
 				});
 				contextMenu.add(remove);
 
 			}
-			*/
 		}
 	}
 }

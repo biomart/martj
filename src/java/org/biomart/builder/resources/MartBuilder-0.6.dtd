@@ -59,7 +59,7 @@
 <!ATTLIST foreignKey columnIds IDREFS #REQUIRED>
 <!ATTLIST foreignKey status (HANDMADE|INFERRED|INFERRED_INCORRECT) #REQUIRED>
 
-<!ELEMENT dataset (compoundRelation*,subclassRelation*,renamedTable*,renamedColumn*,nonInheritedColumn*,maskedColumn*,partitionedColumn*,maskedRelation*,maskedTable*,mergedRelation*,forcedRelation*,restrictedTable*,restrictedRelation*)>
+<!ELEMENT dataset (compoundRelation*,subclassRelation*,renamedTable*,renamedColumn*,nonInheritedColumn*,maskedColumn*,partitionedColumn*,maskedRelation*,maskedTable*,mergedRelation*,forcedRelation*,restrictedTable*,restrictedRelation*,expressionColumn*)>
 <!ATTLIST dataset name CDATA #REQUIRED>
 <!ATTLIST dataset centralTableId IDREF #REQUIRED>
 <!ATTLIST dataset optimiser (COLUMN|COLUMN_INHERIT|COLUMN_BOOL|COLUMN_BOOL_INHERIT|TABLE|TABLE_INHERIT|TABLE_BOOL|TABLE_BOOL_INHERIT|NONE) #REQUIRED>
@@ -116,7 +116,7 @@
 <!ATTLIST restrictedTable tableKey CDATA #REQUIRED>
 <!ATTLIST restrictedTable tableId IDREF #REQUIRED>
 <!ATTLIST restrictedTable aliasColumnIds IDREFS #REQUIRED>
-<!ATTLIST restrictedTable aliasColumnNames CDATA #REQUIRED>
+<!ATTLIST restrictedTable aliasNames CDATA #REQUIRED>
 <!ATTLIST restrictedTable expression CDATA #REQUIRED>
 
 <!ELEMENT restrictedRelation EMPTY>
@@ -124,7 +124,15 @@
 <!ATTLIST restrictedRelation relationId IDREF #REQUIRED>
 <!ATTLIST restrictedRelation index CDATA #REQUIRED>
 <!ATTLIST restrictedRelation leftAliasColumnIds IDREFS #REQUIRED>
-<!ATTLIST restrictedRelation leftAliasColumnNames CDATA #REQUIRED>
+<!ATTLIST restrictedRelation leftAliasNames CDATA #REQUIRED>
 <!ATTLIST restrictedRelation rightAliasColumnIds IDREFS #REQUIRED>
-<!ATTLIST restrictedRelation rightAliasColumnNames CDATA #REQUIRED>
+<!ATTLIST restrictedRelation rightAliasNames CDATA #REQUIRED>
 <!ATTLIST restrictedRelation expression CDATA #REQUIRED>
+
+<!ELEMENT expressionColumn EMPTY>
+<!ATTLIST expressionColumn tableKey CDATA #REQUIRED>
+<!ATTLIST expressionColumn colKey CDATA #REQUIRED>
+<!ATTLIST expressionColumn aliasColumnNames CDATA #REQUIRED>
+<!ATTLIST expressionColumn aliasNames CDATA #REQUIRED>
+<!ATTLIST expressionColumn expression CDATA #REQUIRED>
+<!ATTLIST expressionColumn groupBy  (true|false) #REQUIRED>

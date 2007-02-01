@@ -38,10 +38,10 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn.SingleValue;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn.UniqueValues;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn.ValueCollection;
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.SingleValue;
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.UniqueValues;
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueCollection;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.StackTrace;
@@ -66,7 +66,7 @@ public class PartitionColumnDialog extends JDialog {
 	 * @return the newly created partition type, or null if the dialog was
 	 *         cancelled.
 	 */
-	public static PartitionedColumn createPartitionedColumn() {
+	public static PartitionedColumnDefinition createPartitionedColumn() {
 		final PartitionColumnDialog dialog = new PartitionColumnDialog(
 				Resources.get("createPartitionButton"), null);
 		dialog.setLocationRelativeTo(null);
@@ -86,8 +86,8 @@ public class PartitionColumnDialog extends JDialog {
 	 * @return the replacement, updated, partition type, or null if the dialog
 	 *         was cancelled.
 	 */
-	public static PartitionedColumn updatePartitionedColumn(
-			final PartitionedColumn template) {
+	public static PartitionedColumnDefinition updatePartitionedColumn(
+			final PartitionedColumnDefinition template) {
 		final PartitionColumnDialog dialog = new PartitionColumnDialog(
 				Resources.get("updatePartitionButton"), template);
 		dialog.setLocationRelativeTo(null);
@@ -103,14 +103,14 @@ public class PartitionColumnDialog extends JDialog {
 
 	private JCheckBox nullable;
 
-	private PartitionedColumn partitionType;
+	private PartitionedColumnDefinition partitionType;
 
 	private JTextField singleValue;
 
 	private JComboBox type;
 
 	private PartitionColumnDialog(final String executeButtonText, 
-			final PartitionedColumn template) {
+			final PartitionedColumnDefinition template) {
 		// Creates the basic dialog.
 		super();
 		this.setTitle(Resources.get("partitionColumnDialogTitle"));
@@ -284,7 +284,7 @@ public class PartitionColumnDialog extends JDialog {
 		this.pack();
 	}
 
-	private PartitionedColumn createPartitionTypeFromSettings() {
+	private PartitionedColumnDefinition createPartitionTypeFromSettings() {
 		// If we can't validate it, we can't create it.
 		if (!this.validateFields())
 			return null;
@@ -326,7 +326,7 @@ public class PartitionColumnDialog extends JDialog {
 		return string == null || string.trim().length() == 0;
 	}
 
-	private void copySettingsFromPartitionType(final PartitionedColumn template) {
+	private void copySettingsFromPartitionType(final PartitionedColumnDefinition template) {
 		// If an existing single partition has been specified, populate
 		// its details into the box.
 		if (template instanceof SingleValue) {

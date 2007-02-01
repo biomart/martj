@@ -18,7 +18,44 @@
 
 package org.biomart.builder.view.gui.dialogs;
 
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import javax.swing.DefaultCellEditor;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.ListCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+
+import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
+import org.biomart.common.model.Key;
+import org.biomart.common.resources.Resources;
 
 /**
  * This dialog asks users to create or modify an expression column.
@@ -30,8 +67,6 @@ import javax.swing.JDialog;
  */
 public class ExpressionColumnDialog extends JDialog {
 	private static final long serialVersionUID = 1;
-	// FIXME: Reinstate.
-	/*
 
 	private JButton cancel;
 
@@ -40,8 +75,6 @@ public class ExpressionColumnDialog extends JDialog {
 	private ColumnAliasTableModel columnAliasModel;
 
 	private JTable columnAliasTable;
-
-	private JTextField columnName;
 
 	private JButton execute;
 
@@ -63,9 +96,9 @@ public class ExpressionColumnDialog extends JDialog {
 	 *            the table to source columns from.
 	 * @param template
 	 *            the column to use as a template, if any.
-	 *
+	 */
 	public ExpressionColumnDialog(final DataSetTable table,
-			final ExpressionColumn template) {
+			final ExpressionColumnDefinition template, final DataSetColumn skipIncludeCol) {
 		// Creates the basic dialog.
 		super();
 		this.setTitle(template == null ? Resources.get("addExpColDialogTitle")
@@ -103,7 +136,6 @@ public class ExpressionColumnDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Create the fields that will contain the user's table choices.
-		this.columnName = new JTextField(30); // Arbitrary size.
 		this.expression = new JTextArea(10, 40); // Arbitrary size.
 		this.columnAliasModel = new ColumnAliasTableModel(table, template);
 		this.columnAliasTable = new JTable(this.columnAliasModel);
@@ -120,12 +152,53 @@ public class ExpressionColumnDialog extends JDialog {
 		final TableColumn columnColumn = this.columnAliasTable.getColumnModel()
 				.getColumn(0);
 		final JComboBox columnEditor = new JComboBox();
+		final Map sortedCols = new TreeMap();
 		for (final Iterator i = this.table.getColumns().iterator(); i.hasNext();) {
 			final DataSetColumn col = (DataSetColumn) i.next();
-			if (!(col instanceof ExpressionColumn))
-				columnEditor.addItem(col);
+			if (skipIncludeCol == null || !col.equals(skipIncludeCol))
+				sortedCols.put(col.getModifiedName(), col);
 		}
+		for (final Iterator i = sortedCols.values().iterator(); i.hasNext(); )
+			columnEditor.addItem(i.next());
 		columnColumn.setCellEditor(new DefaultCellEditor(columnEditor));
+		columnEditor.setRenderer(new ListCellRenderer() {
+			public Component getListCellRendererComponent(final JList list,
+					final Object value, final int index,
+					final boolean isSelected, final boolean cellHasFocus) {
+				final DataSetColumn col = (DataSetColumn) value;
+				final JLabel label = new JLabel();
+				if (col!=null)
+					label.setText(col.getModifiedName());
+				label.setOpaque(true);
+				label.setFont(list.getFont());
+				if (isSelected) {
+					label.setBackground(list.getSelectionBackground());
+					label.setForeground(list.getSelectionForeground());
+				} else {
+					label.setBackground(list.getBackground());
+					label.setForeground(list.getForeground());
+				}
+				return label;
+			}
+		});
+		columnColumn.setCellRenderer(new TableCellRenderer() {
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+				final DataSetColumn col = (DataSetColumn) value;
+				final JLabel label = new JLabel();
+				if (col!=null)
+					label.setText(col.getModifiedName());
+				label.setOpaque(true);
+				label.setFont(table.getFont());
+				if (isSelected) {
+					label.setBackground(table.getSelectionBackground());
+					label.setForeground(table.getSelectionForeground());
+				} else {
+					label.setBackground(table.getBackground());
+					label.setForeground(table.getForeground());
+				}
+				return label;
+			}
+		});
 
 		// Size the table columns.
 		this.columnAliasTable.getColumnModel().getColumn(0).setPreferredWidth(
@@ -170,20 +243,11 @@ public class ExpressionColumnDialog extends JDialog {
 			}
 		});
 
-		// Add the name option.
-		JLabel label = new JLabel(Resources.get("nameLabel"));
+		// Add the column aliases table.
+		JLabel label = new JLabel(Resources.get("columnAliasLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		JPanel field = new JPanel();
-		field.add(this.columnName);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-
-		// Add the column aliases table.
-		label = new JLabel(Resources.get("columnAliasLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
-		field = new JPanel();
 		field.add(new JScrollPane(this.columnAliasTable));
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
@@ -254,9 +318,8 @@ public class ExpressionColumnDialog extends JDialog {
 
 		// Set some nice defaults.
 		if (template != null) {
-			this.columnName.setText(template.getName());
 			this.expression.setText(template.getExpression());
-			this.groupBy.setSelected(template.getGroupBy());
+			this.groupBy.setSelected(template.isGroupBy());
 			// Aliases were already copied in the JTable constructor above.
 		}
 	}
@@ -269,10 +332,6 @@ public class ExpressionColumnDialog extends JDialog {
 	private boolean validateFields() {
 		// A placeholder to hold the validation messages, if any.
 		final List messages = new ArrayList();
-
-		// We must have a name!
-		if (this.isEmpty(this.columnName.getText()))
-			messages.add(Resources.get("fieldIsEmpty", Resources.get("name")));
 
 		// We must have an expression!
 		if (this.isEmpty(this.expression.getText()))
@@ -316,7 +375,7 @@ public class ExpressionColumnDialog extends JDialog {
 	 * Return <tt>true</tt> if the user cancelled the box.
 	 * 
 	 * @return <tt>true</tt> if the box was cancelled.
-	 *
+	 */
 	public boolean getCancelled() {
 		return this.cancelled;
 	}
@@ -325,25 +384,16 @@ public class ExpressionColumnDialog extends JDialog {
 	 * Return the column aliases the user selected.
 	 * 
 	 * @return the aliases.
-	 *
+	 */
 	public Map getColumnAliases() {
 		return this.columnAliasModel.getColumnAliases();
-	}
-
-	/**
-	 * Return the name the user selected.
-	 * 
-	 * @return the selected name.
-	 *
-	public String getColumnName() {
-		return this.columnName.getText().trim();
 	}
 
 	/**
 	 * Return the expression the user selected.
 	 * 
 	 * @return the expression.
-	 *
+	 */
 	public String getExpression() {
 		return this.expression.getText().trim();
 	}
@@ -352,14 +402,14 @@ public class ExpressionColumnDialog extends JDialog {
 	 * Return <tt>true</tt> if the user selected the group-by box.
 	 * 
 	 * @return the group-by flag.
-	 *
+	 */
 	public boolean getGroupBy() {
 		return this.groupBy.isSelected();
 	}
 
 	/**
 	 * This internal class represents a map of dataset columns to aliases.
-	 *
+	 */
 	private static class ColumnAliasTableModel extends DefaultTableModel {
 		private static final Class[] colClasses = new Class[] {
 				DataSetColumn.class, String.class };
@@ -374,9 +424,9 @@ public class ExpressionColumnDialog extends JDialog {
 		 *            the table we are showing columns for.
 		 * @param template
 		 *            the existing alises to copy.
-		 *
+		 */
 		public ColumnAliasTableModel(final DataSetTable table,
-				final ExpressionColumn template) {
+				final ExpressionColumnDefinition template) {
 			super(new Object[] { Resources.get("columnAliasTableColHeader"),
 					Resources.get("columnAliasTableAliasHeader") }, 0);
 			// Populate columns, and aliases from template.
@@ -384,8 +434,9 @@ public class ExpressionColumnDialog extends JDialog {
 				for (final Iterator i = template.getAliases().entrySet()
 						.iterator(); i.hasNext();) {
 					final Map.Entry entry = (Map.Entry) i.next();
-					final DataSetColumn col = (DataSetColumn) entry.getKey();
-					this.insertRow(this.getRowCount(), new Object[] { col,
+					final String colName = (String) entry.getKey();
+					this.insertRow(this.getRowCount(), new Object[] {
+							table.getColumnByName(colName),
 							(String) entry.getValue() });
 				}
 		}
@@ -394,7 +445,7 @@ public class ExpressionColumnDialog extends JDialog {
 		 * Find out what aliases the user has defined.
 		 * 
 		 * @return a map where the keys are columns and the values are aliases.
-		 *
+		 */
 		public Map getColumnAliases() {
 			// Return the map of column to alias.
 			final HashMap aliases = new HashMap();
@@ -403,7 +454,7 @@ public class ExpressionColumnDialog extends JDialog {
 				final String alias = (String) this.getValueAt(i, 1);
 				if (col != null
 						&& !(alias == null || alias.trim().length() == 0))
-					aliases.put(col, alias);
+					aliases.put(col.getName(), alias);
 			}
 			return aliases;
 		}
@@ -412,5 +463,4 @@ public class ExpressionColumnDialog extends JDialog {
 			return ColumnAliasTableModel.colClasses[column];
 		}
 	}
-	*/
 }

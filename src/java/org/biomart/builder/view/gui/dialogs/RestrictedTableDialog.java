@@ -87,7 +87,7 @@ public class RestrictedTableDialog extends JDialog {
 	 *            the restriction to use as a template, if any.
 	 */
 	public RestrictedTableDialog(final Table table,
-			final SchemaModificationSet.TableRestriction template) {
+			final SchemaModificationSet.RestrictedTableDefinition template) {
 		// Creates the basic dialog.
 		super();
 		this.setTitle(template == null ? Resources
@@ -333,7 +333,7 @@ public class RestrictedTableDialog extends JDialog {
 		 *            the model to copy existing settings from.
 		 */
 		public ColumnAliasTableModel(
-				final SchemaModificationSet.TableRestriction template) {
+				final SchemaModificationSet.RestrictedTableDefinition template) {
 			super(new Object[] { Resources.get("columnAliasTableColHeader"),
 					Resources.get("columnAliasTableAliasHeader") }, 0);
 			// Populate columns, and aliases from template.

@@ -42,6 +42,7 @@ import javax.swing.JScrollPane;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.builder.view.gui.SchemaTabSet;
@@ -279,7 +280,15 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 								Resources.get("explainSelectLabel") }));
 				diagram = new ExplainTransformationDiagram.SingleTable(
 						this.martTab, (SelectFromTable) tu);
-			} else
+			} else if (tu instanceof Expression) {
+				// Do an expression column list.
+				label = new JLabel(Resources.get("stepTableLabel",
+						new String[] { "" + stepNumber,
+								Resources.get("explainExpressionLabel") }));
+				diagram = new ExplainTransformationDiagram.ExpressionTable(
+						this.martTab, (Expression) tu);
+			}
+			else
 				throw new BioMartError();
 			this.transformationTableComponents.addAll(diagram.getTableComponents());
 			// Display the diagram.

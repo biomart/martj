@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.Map.Entry;
 
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetTable;
@@ -77,9 +76,6 @@ public class SchemaModificationSet {
 
 	private void setMaskedRelation(final String tableName,
 			final Relation relation) {
-		// Skip already-masked relations.
-		if (this.isMaskedRelation(tableName, relation))
-			return;
 		if (!this.maskedRelations.containsKey(tableName))
 			this.maskedRelations.put(tableName, new HashSet());
 		final Collection masks = (Collection) this.maskedRelations
@@ -155,18 +151,18 @@ public class SchemaModificationSet {
 	}
 
 	public void setRestrictedTable(final Table table,
-			final TableRestriction restriction) {
+			final RestrictedTableDefinition restriction) {
 		this.setRestrictedTable(SchemaModificationSet.DATASET, table,
 				restriction);
 	}
 
 	public void setRestrictedTable(final DataSetTable dsTable,
-			final Table table, final TableRestriction restriction) {
+			final Table table, final RestrictedTableDefinition restriction) {
 		this.setRestrictedTable(dsTable.getName(), table, restriction);
 	}
 
 	private void setRestrictedTable(final String dsTableName,
-			final Table table, final TableRestriction restriction) {
+			final Table table, final RestrictedTableDefinition restriction) {
 		if (!this.restrictedTables.containsKey(dsTableName))
 			this.restrictedTables.put(dsTableName, new HashMap());
 		final Map restrictions = (Map) this.restrictedTables.get(dsTableName);
@@ -219,14 +215,14 @@ public class SchemaModificationSet {
 				|| (globalRests != null && globalRests.containsKey(table));
 	}
 
-	public TableRestriction getRestrictedTable(final DataSetTable dsTable,
+	public RestrictedTableDefinition getRestrictedTable(final DataSetTable dsTable,
 			final Table table) {
 		return this.getRestrictedTable(
 				dsTable == null ? SchemaModificationSet.DATASET : dsTable
 						.getName(), table);
 	}
 
-	private TableRestriction getRestrictedTable(final String dsTableName,
+	private RestrictedTableDefinition getRestrictedTable(final String dsTableName,
 			final Table table) {
 		if (!this.isRestrictedTable(dsTableName, table))
 			return null;
@@ -235,9 +231,9 @@ public class SchemaModificationSet {
 		final Map rests = this.restrictedTables.containsKey(dsTableName) ? (Map) this.restrictedTables
 				.get(dsTableName)
 				: globalRests;
-		return (rests != null && rests.containsKey(table)) ? (TableRestriction) rests
+		return (rests != null && rests.containsKey(table)) ? (RestrictedTableDefinition) rests
 				.get(table)
-				: (TableRestriction) globalRests.get(table);
+				: (RestrictedTableDefinition) globalRests.get(table);
 	}
 
 	public Map getRestrictedTables() {
@@ -245,21 +241,21 @@ public class SchemaModificationSet {
 	}
 
 	public void setRestrictedRelation(final Relation relation, final int index,
-			final RelationRestriction restriction) {
+			final RestrictedRelationDefinition restriction) {
 		this.setRestrictedRelation(SchemaModificationSet.DATASET, relation,
 				index, restriction);
 	}
 
 	public void setRestrictedRelation(final DataSetTable dsTable,
 			final Relation relation, final int index,
-			final RelationRestriction restriction) {
+			final RestrictedRelationDefinition restriction) {
 		this.setRestrictedRelation(dsTable.getName(), relation, index,
 				restriction);
 	}
 
 	private void setRestrictedRelation(final String dsTableName,
 			final Relation relation, final int index,
-			final RelationRestriction restriction) {
+			final RestrictedRelationDefinition restriction) {
 		if (!this.restrictedRelations.containsKey(dsTableName))
 			this.restrictedRelations.put(dsTableName, new HashMap());
 		final Map restrictions = (Map) this.restrictedRelations
@@ -341,14 +337,14 @@ public class SchemaModificationSet {
 						.get(relation)).containsKey(new Integer(index)));
 	}
 
-	public RelationRestriction getRestrictedRelation(
+	public RestrictedRelationDefinition getRestrictedRelation(
 			final DataSetTable dsTable, final Relation relation, final int index) {
 		return this.getRestrictedRelation(
 				dsTable == null ? SchemaModificationSet.DATASET : dsTable
 						.getName(), relation, index);
 	}
 
-	private RelationRestriction getRestrictedRelation(final String dsTableName,
+	private RestrictedRelationDefinition getRestrictedRelation(final String dsTableName,
 			final Relation relation, final int index) {
 		if (!this.isRestrictedRelation(dsTableName, relation, index))
 			return null;
@@ -358,9 +354,9 @@ public class SchemaModificationSet {
 				.get(dsTableName)
 				: globalRests;
 		return (rests != null && rests.containsKey(relation) && ((Map) rests
-				.get(relation)).containsKey(new Integer(index))) ? (RelationRestriction) ((Map) rests
+				.get(relation)).containsKey(new Integer(index))) ? (RestrictedRelationDefinition) ((Map) rests
 				.get(relation)).get(new Integer(index))
-				: (RelationRestriction) ((Map) globalRests.get(relation))
+				: (RestrictedRelationDefinition) ((Map) globalRests.get(relation))
 						.get(new Integer(index));
 	}
 
@@ -379,9 +375,6 @@ public class SchemaModificationSet {
 
 	private void setForceIncludeRelation(final String tableName,
 			final Relation relation) {
-		// Skip already-masked relations.
-		if (this.isForceIncludeRelation(tableName, relation))
-			return;
 		if (!this.forceIncludeRelations.containsKey(tableName))
 			this.forceIncludeRelations.put(tableName, new HashSet());
 		final Collection masks = (Collection) this.forceIncludeRelations
@@ -563,9 +556,6 @@ public class SchemaModificationSet {
 
 	private void setCompoundRelation(final String tableName,
 			final Relation relation, final int n) {
-		// Skip already-masked relations.
-		if (this.isCompoundRelation(tableName, relation))
-			return;
 		if (!this.compoundRelations.containsKey(tableName))
 			this.compoundRelations.put(tableName, new HashMap());
 		final Map masks = (Map) this.compoundRelations.get(tableName);
@@ -682,7 +672,7 @@ public class SchemaModificationSet {
 	/**
 	 * Defines the restriction on a table, ie. a where-clause.
 	 */
-	public static class TableRestriction {
+	public static class RestrictedTableDefinition {
 
 		private Map aliases;
 
@@ -698,7 +688,7 @@ public class SchemaModificationSet {
 		 * @param aliases
 		 *            the aliases to use for columns.
 		 */
-		public TableRestriction(final String expr, final Map aliases) {
+		public RestrictedTableDefinition(final String expr, final Map aliases) {
 			// Test for good arguments.
 			if (expr == null || expr.trim().length() == 0)
 				throw new IllegalArgumentException(Resources
@@ -774,7 +764,7 @@ public class SchemaModificationSet {
 	/**
 	 * Defines the restriction on a table, ie. a where-clause.
 	 */
-	public static class RelationRestriction {
+	public static class RestrictedRelationDefinition {
 
 		private Map leftAliases;
 
@@ -792,7 +782,7 @@ public class SchemaModificationSet {
 		 * @param aliases
 		 *            the aliases to use for columns.
 		 */
-		public RelationRestriction(final String expr, final Map leftAliases,
+		public RestrictedRelationDefinition(final String expr, final Map leftAliases,
 				final Map rightAliases) {
 			// Test for good arguments.
 			if (expr == null || expr.trim().length() == 0)

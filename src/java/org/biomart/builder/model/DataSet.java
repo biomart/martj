@@ -21,27 +21,29 @@ package org.biomart.builder.model;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.Set;
 
+import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
+import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.Column;
-import org.biomart.common.model.Column.GenericColumn;
 import org.biomart.common.model.ComponentStatus;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
-import org.biomart.common.model.Table.GenericTable;
+import org.biomart.common.model.Column.GenericColumn;
 import org.biomart.common.model.Key.ForeignKey;
 import org.biomart.common.model.Key.GenericForeignKey;
 import org.biomart.common.model.Key.GenericPrimaryKey;
@@ -49,6 +51,7 @@ import org.biomart.common.model.Key.PrimaryKey;
 import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.model.Relation.GenericRelation;
 import org.biomart.common.model.Schema.GenericSchema;
+import org.biomart.common.model.Table.GenericTable;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -79,30 +82,25 @@ public class DataSet extends GenericSchema {
 	private boolean invisible;
 
 	private final Mart mart;
-	
+
 	private final Collection includedRelations;
 
 	// TODO SchemaModMaps for source schema changes.
-	// Concat-only relations with concat definitions incl. 
-	//   expressions inside concat definition (DST only).
-	//   INDEX INTO COMPOUND RELATION.
-	//   ADDS A CONCAT TUNIT TO THE CHAIN WITH ONE CONCAT DS COLUMN
-	//   IN IT - COLUMN HAS DEFAULT NAME AND CAN BE RENAMED BY
-	//   USER AS PER ANY OTHER COLUMN - need synch() after this.
+	// Concat-only relations with concat definitions incl.
+	// expressions inside concat definition (DST only).
+	// INDEX INTO COMPOUND RELATION.
+	// ADDS A CONCAT TUNIT TO THE CHAIN WITH ONE CONCAT DS COLUMN
+	// IN IT - COLUMN HAS DEFAULT NAME AND CAN BE RENAMED BY
+	// USER AS PER ANY OTHER COLUMN - need synch() after this.
 	// Recursion - infinite, use JDBC to flatten before transformation,
-	//    with some kind of expression column specifying how to flatten
-	//    each level of recursion and how to concatenate them.
-	//    defined on a combo of table and single relation.
+	// with some kind of expression column specifying how to flatten
+	// each level of recursion and how to concatenate them.
+	// defined on a combo of table and single relation.
 	// Recursion - finite, N times, apply RestrictedTable to each pass,
-	//    defined on a table and a number of separate multiplied relations
-	//    very similar to compound relations but only once at each pass.
+	// defined on a table and a number of separate multiplied relations
+	// very similar to compound relations but only once at each pass.
 	private final SchemaModificationSet schemaMods;
 
-	// TODO DataSetModMaps for renames/masking.
-	// Expression column definitions with nesting resolution.
-	//   ADDS AN EXPRESSION TUNIT TO THE CHAIN WITH ALL NESTED
-	//   EXPRESSION CLUSTERS OF DS COLUMNS - COLUMNS HAVE DEFAULT NAME
-	//   AND CAN BE RENAMED BY USER - need synch() after this.
 	private final DataSetModificationSet dsMods;
 
 	private DataSetOptimiserType optimiser;
@@ -137,25 +135,28 @@ public class DataSet extends GenericSchema {
 		this.dsMods = new DataSetModificationSet();
 		this.includedRelations = new HashSet();
 	}
-	
+
 	/**
 	 * Obtain all relations used by this dataset.
+	 * 
 	 * @return all relations.
 	 */
 	public Collection getIncludedRelations() {
 		return this.includedRelations;
 	}
-	
+
 	/**
 	 * Obtain the set of schema modifiers for this dataset.
+	 * 
 	 * @return the set of modifiers.
 	 */
 	public SchemaModificationSet getSchemaModifications() {
 		return this.schemaMods;
 	}
-	
+
 	/**
 	 * Obtain the set of dataset modifiers for this dataset.
+	 * 
 	 * @return the set of modifiers.
 	 */
 	public DataSetModificationSet getDataSetModifications() {
@@ -213,8 +214,7 @@ public class DataSet extends GenericSchema {
 		// the PK with FK link, plus all the relations we followed to
 		// get these columns.
 		if (parentDSTable != null) {
-			final TransformationUnit tu = new SelectFromTable(
-					parentDSTable);
+			final TransformationUnit tu = new SelectFromTable(parentDSTable);
 			dsTable.addTransformationUnit(tu);
 
 			// Make a list to hold the child table's FK cols.
@@ -282,17 +282,17 @@ public class DataSet extends GenericSchema {
 		// How many times are allowed to iterate over each relation?
 		final Map relationCount = new HashMap();
 		final Set allRelations = new HashSet();
-		for (final Iterator i = this.getMart().getSchemas().iterator(); i.hasNext(); ) 
-			allRelations.addAll(((Schema)i.next()).getRelations());
+		for (final Iterator i = this.getMart().getSchemas().iterator(); i
+				.hasNext();)
+			allRelations.addAll(((Schema) i.next()).getRelations());
 		for (final Iterator i = allRelations.iterator(); i.hasNext();) {
-			final Relation rel = (Relation)i.next();
-			final int compounded = 
-				this.schemaMods.isCompoundRelation(dsTable, rel)
-				? this.schemaMods.getCompoundRelation(dsTable, rel)
-						: 1;
-			relationCount.put(rel, new Integer(compounded));		
+			final Relation rel = (Relation) i.next();
+			final int compounded = this.schemaMods.isCompoundRelation(dsTable,
+					rel) ? this.schemaMods.getCompoundRelation(dsTable, rel)
+					: 1;
+			relationCount.put(rel, new Integer(compounded));
 		}
-		
+
 		// Don't follow the source relation again.
 		relationCount.put(sourceRelation, new Integer(0));
 		// Don't follow the parent's relations again, if this is
@@ -302,17 +302,18 @@ public class DataSet extends GenericSchema {
 					.iterator(); i.hasNext();) {
 				final TransformationUnit u = (TransformationUnit) i.next();
 				if (u instanceof JoinTable)
-					relationCount.put(((JoinTable) u)
-							.getSchemaRelation(), new Integer(0));
+					relationCount.put(((JoinTable) u).getSchemaRelation(),
+							new Integer(0));
 			}
-		
+
 		// Process the table. This operation will populate the initial
 		// values in the normal, subclass and dimension queues. We only
 		// want dimensions constructed if we are not already constructing
 		// a dimension ourselves.
 		this.processTable(null, dsTable, dsTablePKCols, realTable, normalQ,
 				subclassQ, dimensionQ, sourceDSCols, sourceRelation,
-				relationCount, !type.equals(DataSetTableType.DIMENSION), relationIteration);
+				relationCount, !type.equals(DataSetTableType.DIMENSION),
+				relationIteration);
 
 		// Process the normal queue. This merges tables into the dataset
 		// table using the relation specified in each pair in the queue.
@@ -324,18 +325,19 @@ public class DataSet extends GenericSchema {
 			final Relation mergeSourceRelation = (Relation) triple[0];
 			final List newSourceDSCols = (List) triple[1];
 			final Table mergeTable = (Table) triple[2];
-			final TransformationUnit previousUnit = (TransformationUnit)triple[3];
+			final TransformationUnit previousUnit = (TransformationUnit) triple[3];
 			final boolean makeDimensions = ((Boolean) triple[4]).booleanValue();
-			final int iteration= ((Integer) triple[5]).intValue();
-			this.processTable(previousUnit, dsTable, dsTablePKCols, mergeTable, normalQ,
-				subclassQ, dimensionQ, newSourceDSCols,
-				mergeSourceRelation, relationCount, makeDimensions, iteration);
+			final int iteration = ((Integer) triple[5]).intValue();
+			this.processTable(previousUnit, dsTable, dsTablePKCols, mergeTable,
+					normalQ, subclassQ, dimensionQ, newSourceDSCols,
+					mergeSourceRelation, relationCount, makeDimensions,
+					iteration);
 		}
 
 		// Create the primary key on this table, but only if it has one.
 		// Don't bother for dimensions.
 		if (!dsTablePKCols.isEmpty()
-				&& !dsTable.getType().equals(DataSetTableType.DIMENSION)) 
+				&& !dsTable.getType().equals(DataSetTableType.DIMENSION))
 			// Create the key.
 			dsTable.setPrimaryKey(new GenericPrimaryKey(dsTablePKCols));
 
@@ -344,9 +346,10 @@ public class DataSet extends GenericSchema {
 			final Object[] triple = (Object[]) subclassQ.get(i);
 			final List newSourceDSCols = (List) triple[0];
 			final Relation subclassRelation = (Relation) triple[1];
+			final int iteration = ((Integer) triple[2]).intValue();
 			this.generateDataSetTable(DataSetTableType.MAIN_SUBCLASS, dsTable,
 					subclassRelation.getManyKey().getTable(), newSourceDSCols,
-					subclassRelation, 0);
+					subclassRelation, iteration + 1);
 		}
 
 		// Process the dimension relations of this table. For 1:M it's easy.
@@ -356,21 +359,46 @@ public class DataSet extends GenericSchema {
 			final Object[] triple = (Object[]) dimensionQ.get(i);
 			final List newSourceDSCols = (List) triple[0];
 			final Relation dimensionRelation = (Relation) triple[1];
-			final int iteration= ((Integer) triple[2]).intValue();
+			final int iteration = ((Integer) triple[2]).intValue();
 			if (dimensionRelation.isOneToMany())
 				this.generateDataSetTable(DataSetTableType.DIMENSION, dsTable,
 						dimensionRelation.getManyKey().getTable(),
 						newSourceDSCols, dimensionRelation, iteration);
 			else
-				this
-						.generateDataSetTable(DataSetTableType.DIMENSION,
-								dsTable,
-								dimensionRelation.getFirstKey().getTable()
-										.equals(realTable) ? dimensionRelation
-										.getSecondKey().getTable()
-										: dimensionRelation.getFirstKey()
-												.getTable(), newSourceDSCols,
-								dimensionRelation, iteration);
+				this.generateDataSetTable(DataSetTableType.DIMENSION, dsTable,
+						dimensionRelation.getFirstKey().getTable().equals(
+								realTable) ? dimensionRelation.getSecondKey()
+								.getTable() : dimensionRelation.getFirstKey()
+								.getTable(), newSourceDSCols,
+						dimensionRelation, iteration);
+		}
+
+		// Insert Expression Column Transformation Unit
+		// containing all expression columns defined on this table.
+		if (this.dsMods.hasExpressionColumn(dsTable)) {
+			final Collection aliases = new HashSet();
+			final Expression tu = new Expression((TransformationUnit) dsTable
+					.getTransformationUnits().get(
+							dsTable.getTransformationUnits().size() - 1), dsTable);
+			dsTable.addTransformationUnit(tu);
+			for (final Iterator i = ((Map) this.dsMods.getExpressionColumns()
+					.get(dsTable.getName())).entrySet().iterator(); i.hasNext();) {
+				final Map.Entry entry = (Map.Entry) i.next();
+				final String expColName = (String) entry.getKey();
+				final ExpressionColumn expCol = new ExpressionColumn(
+						expColName, dsTable);
+				dsTable.addColumn(expCol);
+				tu.getNewColumnNameMap().put(expColName, expCol);
+				// Save up the aliases to make dependents later.
+				final ExpressionColumnDefinition expr = (ExpressionColumnDefinition) entry
+				.getValue();
+				aliases.addAll(expr.getAliases().keySet());
+			}
+			// Mark all aliased columns as dependents
+			for (final Iterator j = aliases.iterator(); j
+					.hasNext();)
+				((DataSetColumn) dsTable.getColumnByName((String) j.next()))
+						.setDependency(true);
 		}
 	}
 
@@ -401,7 +429,7 @@ public class DataSet extends GenericSchema {
 	 * @param sourceRelation
 	 *            the real relation we followed to reach this table.
 	 * @param relationCount
-	 *            how many times we have left to follow each relation, so that 
+	 *            how many times we have left to follow each relation, so that
 	 *            we don't follow them too often.
 	 * @param makeDimensions
 	 *            <tt>true</tt> if we should add potential dimension tables to
@@ -409,12 +437,12 @@ public class DataSet extends GenericSchema {
 	 *            them. This is useful for preventing dimensions from gaining
 	 *            dimensions of their own.
 	 */
-	private void processTable(final TransformationUnit previousUnit, final DataSetTable dsTable,
-			final List dsTablePKCols, final Table mergeTable,
-			final List normalQ, final List subclassQ, final List dimensionQ,
-			final List sourceDataSetCols, final Relation sourceRelation,
-			final Map relationCount, final boolean makeDimensions,
-			final int relationIteration) {
+	private void processTable(final TransformationUnit previousUnit,
+			final DataSetTable dsTable, final List dsTablePKCols,
+			final Table mergeTable, final List normalQ, final List subclassQ,
+			final List dimensionQ, final List sourceDataSetCols,
+			final Relation sourceRelation, final Map relationCount,
+			final boolean makeDimensions, final int relationIteration) {
 		Log.debug("Processing table " + mergeTable);
 
 		// Don't ignore any keys by default.
@@ -480,7 +508,7 @@ public class DataSet extends GenericSchema {
 			// Rename all PK columns to have the '_key' suffix.
 			if (includeMergeTablePK && mergeTablePK.getColumns().contains(c)
 					&& !colName.endsWith(Resources.get("keySuffix")))
-						colName = colName + Resources.get("keySuffix");
+				colName = colName + Resources.get("keySuffix");
 			final WrappedColumn wc = new WrappedColumn(c, colName, dsTable,
 					sourceRelation);
 			tu.getNewColumnNameMap().put(c.getName(), wc);
@@ -507,14 +535,14 @@ public class DataSet extends GenericSchema {
 			final Relation r = (Relation) i.next();
 
 			// Don't repeat relations or go back up relation just followed.
-			if (((Integer)relationCount.get(r)).intValue()<=0
+			if (((Integer) relationCount.get(r)).intValue() <= 0
 					|| r.equals(sourceRelation))
 				continue;
 
 			// Don't follow masked relations.
 			if (this.schemaMods.isMaskedRelation(dsTable, r))
 				continue;
-			
+
 			// Don't follow incorrect relations, or relations
 			// between incorrect keys.
 			if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
@@ -524,10 +552,11 @@ public class DataSet extends GenericSchema {
 							ComponentStatus.INFERRED_INCORRECT)) {
 				continue;
 			}
-			
+
 			// Decrement the relation counter.
-			relationCount.put(r, new Integer(((Integer)relationCount.get(r)).intValue() - 1));
-			
+			relationCount.put(r, new Integer(((Integer) relationCount.get(r))
+					.intValue() - 1));
+
 			// Set up a holder to indicate whether or not to follow
 			// the relation.
 			boolean followRelation = false;
@@ -548,9 +577,10 @@ public class DataSet extends GenericSchema {
 					final List newSourceDSCols = new ArrayList();
 					for (final Iterator j = sourceKey.getColumnNames()
 							.iterator(); j.hasNext();)
-						newSourceDSCols.add(tu.getDataSetColumnFor((String)
-								j.next()));
-					subclassQ.add(new Object[] { newSourceDSCols, r });
+						newSourceDSCols.add(tu.getDataSetColumnFor((String) j
+								.next()));
+					subclassQ.add(new Object[] { newSourceDSCols, r,
+							new Integer(relationIteration) });
 				}
 
 				// Dimensionize dimension relations, which are all other 1:M
@@ -564,27 +594,30 @@ public class DataSet extends GenericSchema {
 					final List newSourceDSCols = new ArrayList();
 					for (final Iterator j = sourceKey.getColumnNames()
 							.iterator(); j.hasNext();)
-						newSourceDSCols.add(tu.getDataSetColumnFor((String)
-								j.next()));
-					final int parentCompounded = sourceRelation==null ? 1 : (this.schemaMods.isCompoundRelation(dsTable, sourceRelation)
-							? this.schemaMods.getCompoundRelation(dsTable, sourceRelation)
+						newSourceDSCols.add(tu.getDataSetColumnFor((String) j
+								.next()));
+					final int parentCompounded = sourceRelation == null ? 1
+							: (this.schemaMods.isCompoundRelation(dsTable,
+									sourceRelation) ? this.schemaMods
+									.getCompoundRelation(dsTable,
+											sourceRelation) : 1);
+					final int childCompounded = parentCompounded > 1 ? 1
+							: (this.schemaMods.isCompoundRelation(dsTable, r) ? this.schemaMods
+									.getCompoundRelation(dsTable, r)
 									: 1);
-					final int childCompounded = parentCompounded>1 ? 1 :
-						(this.schemaMods.isCompoundRelation(dsTable, r)
-						? this.schemaMods.getCompoundRelation(dsTable, r)
-								: 1);
 					for (int k = 0; k < childCompounded; k++)
-						dimensionQ.add(new Object[] { newSourceDSCols, r, new Integer(k) });
+						dimensionQ.add(new Object[] { newSourceDSCols, r,
+								new Integer(k) });
 					if (this.schemaMods.isMergedRelation(r))
 						forceFollowRelation = true;
 				}
-				
+
 				// TODO Forcibly follow concat relations.
-				//else if (this.schemaMods.isForceIncludeRelation(dsTable, r)) 
-				//	forceFollowRelation = true;
-				
+				// else if (this.schemaMods.isForceIncludeRelation(dsTable, r))
+				// forceFollowRelation = true;
+
 				// Forcibly follow forced relations.
-				else if (this.schemaMods.isForceIncludeRelation(dsTable, r)) 
+				else if (this.schemaMods.isForceIncludeRelation(dsTable, r))
 					forceFollowRelation = true;
 			}
 
@@ -597,9 +630,9 @@ public class DataSet extends GenericSchema {
 					&& r.getManyKey().getRelations().size() > 1) {
 				// Do nothing.
 			}
-			
+
 			// Follow all others.
-			else 
+			else
 				followRelation = true;
 
 			// If we follow a 1:1, and we are currently
@@ -612,26 +645,33 @@ public class DataSet extends GenericSchema {
 						mergeTable) ? r.getSecondKey() : r.getFirstKey();
 				final Key sourceKey = r.getOtherKey(targetKey);
 				final List newSourceDSCols = new ArrayList();
-				for (final Iterator j = sourceKey
-						.getColumnNames().iterator(); j.hasNext();) 
-					newSourceDSCols.add(tu.getDataSetColumnFor((String)j.next()));
+				for (final Iterator j = sourceKey.getColumnNames().iterator(); j
+						.hasNext();)
+					newSourceDSCols.add(tu.getDataSetColumnFor((String) j
+							.next()));
 				// Repeat queueing of relation N times if compounded.
 				// Note that we only spin off one child per parent if
 				// the parent was compounded. If the child compound value
 				// is less than the parent, this results in only some
 				// nested compounding. If it is greater, only the parent
 				// value number of compounds appears.
-				final int parentCompounded = sourceRelation==null ? 1 : (this.schemaMods.isCompoundRelation(dsTable, sourceRelation)
-				? this.schemaMods.getCompoundRelation(dsTable, sourceRelation)
-						: 1);
-				final int childCompounded = parentCompounded>1 ? 1 :
-					(this.schemaMods.isCompoundRelation(dsTable, r)
-					? this.schemaMods.getCompoundRelation(dsTable, r)
-							: 1);
+				final int parentCompounded = sourceRelation == null ? 1
+						: (this.schemaMods.isCompoundRelation(dsTable,
+								sourceRelation) ? this.schemaMods
+								.getCompoundRelation(dsTable, sourceRelation)
+								: 1);
+				final int childCompounded = parentCompounded > 1 ? 1
+						: (this.schemaMods.isCompoundRelation(dsTable, r) ? this.schemaMods
+								.getCompoundRelation(dsTable, r)
+								: 1);
 				for (int k = 0; k < childCompounded; k++)
-					normalQ.add(new Object[] { r, newSourceDSCols,
-						targetKey.getTable(), tu,
-						Boolean.valueOf(makeDimensions && (r.isOneToOne()) || forceFollowRelation) , new Integer(k)});
+					normalQ.add(new Object[] {
+							r,
+							newSourceDSCols,
+							targetKey.getTable(),
+							tu,
+							Boolean.valueOf(makeDimensions && (r.isOneToOne())
+									|| forceFollowRelation), new Integer(k) });
 			}
 		}
 	}
@@ -647,32 +687,22 @@ public class DataSet extends GenericSchema {
 	 *            the concat type to use for the relation.
 	 * @throws ValidationException
 	 *             if it is not possible to concat this relation.
-	 *
-	 * FIXME: Reinstate.
-	public void flagConcatOnlyRelation(final Relation relation,
-			final DataSetConcatRelationType type) throws ValidationException {
-		Log.debug("Flagging concat-only relation " + relation + " in "
-				+ this.getName());
-
-		// Sanity check.
-		if (!relation.isOneToMany())
-			throw new ValidationException(Resources
-					.get("cannotConcatNonOneMany"));
-		if (relation.getManyKey().getTable().getPrimaryKey() == null)
-			throw new ValidationException(Resources
-					.get("cannotConcatManyWithoutPK"));
-
-		// Do it.
-		final int index = this.concatOnlyRelations[0].indexOf(relation);
-		if (index >= 0) {
-			this.concatOnlyRelations[0].set(index, relation);
-			this.concatOnlyRelations[1].set(index, type);
-		} else {
-			this.concatOnlyRelations[0].add(relation);
-			this.concatOnlyRelations[1].add(type);
-		}
-	}
-	*/
+	 * 
+	 * FIXME: Reinstate. public void flagConcatOnlyRelation(final Relation
+	 * relation, final DataSetConcatRelationType type) throws
+	 * ValidationException { Log.debug("Flagging concat-only relation " +
+	 * relation + " in " + this.getName());
+	 *  // Sanity check. if (!relation.isOneToMany()) throw new
+	 * ValidationException(Resources .get("cannotConcatNonOneMany")); if
+	 * (relation.getManyKey().getTable().getPrimaryKey() == null) throw new
+	 * ValidationException(Resources .get("cannotConcatManyWithoutPK"));
+	 *  // Do it. final int index =
+	 * this.concatOnlyRelations[0].indexOf(relation); if (index >= 0) {
+	 * this.concatOnlyRelations[0].set(index, relation);
+	 * this.concatOnlyRelations[1].set(index, type); } else {
+	 * this.concatOnlyRelations[0].add(relation);
+	 * this.concatOnlyRelations[1].add(type); } }
+	 */
 
 	/**
 	 * Returns the central table of this dataset.
@@ -720,8 +750,10 @@ public class DataSet extends GenericSchema {
 			// Create the copy.
 			final DataSet newDataSet = new DataSet(this.mart,
 					this.centralTable, newName);
-			this.getSchemaModifications().replicate(newDataSet.getSchemaModifications());
-			this.getDataSetModifications().replicate(newDataSet.getDataSetModifications());
+			this.getSchemaModifications().replicate(
+					newDataSet.getSchemaModifications());
+			this.getDataSetModifications().replicate(
+					newDataSet.getDataSetModifications());
 			this.mart.addDataSet(newDataSet);
 
 			// Synchronise it.
@@ -843,15 +875,17 @@ public class DataSet extends GenericSchema {
 		public boolean getDependency() {
 			return this.dependency;
 		}
-		
+
 		/**
 		 * Return this modified name including any renames etc.
+		 * 
 		 * @return the modified name.
 		 */
-		public String getModifiedName() {		
-			final DataSetModificationSet mods = 
-			((DataSet)this.getTable().getSchema()).getDataSetModifications();
-			return mods.isColumnRename(this) ? mods.getColumnRename(this) : this.getName();
+		public String getModifiedName() {
+			final DataSetModificationSet mods = ((DataSet) this.getTable()
+					.getSchema()).getDataSetModifications();
+			return mods.isColumnRename(this) ? mods.getColumnRename(this)
+					: this.getName();
 		}
 
 		/**
@@ -859,8 +893,8 @@ public class DataSet extends GenericSchema {
 		 * 
 		 * @param dependency
 		 *            the new dependency flag. <tt>true</tt> indicates that
-		 *            this column is required for the fundamental structure
-		 *            of the dataset table to exist. The column will get selected
+		 *            this column is required for the fundamental structure of
+		 *            the dataset table to exist. The column will get selected
 		 *            regardless of it's masking flag. However, if it is masked,
 		 *            it will be removed again after the dependency is
 		 *            satisified.
@@ -872,38 +906,31 @@ public class DataSet extends GenericSchema {
 		/**
 		 * A column on a dataset table that indicates the concatenation of the
 		 * columns of a record in some table beyond a concat-only relation. They
-		 * take a reference to the concat-only relation.
-		 * FIXME: Reinstate.
-		public static class ConcatRelationColumn extends DataSetColumn {
-			/**
-			 * The constructor takes a name for this column-to-be, and the
-			 * dataset table on which it is to be constructed, and the relation
-			 * it represents.
-			 * 
-			 * @param name
-			 *            the name to give this column.
-			 * @param dsTable
-			 *            the dataset table to add the wrapped column to.
-			 * @param concatRelation
-			 *            the concat-only relation that provided this column.
-			 * @throws ValidationException
-			 *             if the relation is not a concat relation.
-			 *
-			public ConcatRelationColumn(final String name,
-					final DataSetTable dsTable, final Relation concatRelation)
-					throws ValidationException {
-				// Super first, which will do the alias generation for us.
-				super(name, dsTable, concatRelation);
-
-				// Make sure it really is a concat relation.
-				if (!((DataSet) dsTable.getSchema()).getConcatOnlyRelations()
-						.contains(concatRelation))
-					throw new ValidationException(Resources
-							.get("relationNotConcatRelation"));
-			}
-
-		}
-		*/
+		 * take a reference to the concat-only relation. FIXME: Reinstate.
+		 * public static class ConcatRelationColumn extends DataSetColumn { /**
+		 * The constructor takes a name for this column-to-be, and the dataset
+		 * table on which it is to be constructed, and the relation it
+		 * represents.
+		 * 
+		 * @param name
+		 *            the name to give this column.
+		 * @param dsTable
+		 *            the dataset table to add the wrapped column to.
+		 * @param concatRelation
+		 *            the concat-only relation that provided this column.
+		 * @throws ValidationException
+		 *             if the relation is not a concat relation.
+		 * 
+		 * public ConcatRelationColumn(final String name, final DataSetTable
+		 * dsTable, final Relation concatRelation) throws ValidationException { //
+		 * Super first, which will do the alias generation for us. super(name,
+		 * dsTable, concatRelation);
+		 *  // Make sure it really is a concat relation. if (!((DataSet)
+		 * dsTable.getSchema()).getConcatOnlyRelations()
+		 * .contains(concatRelation)) throw new ValidationException(Resources
+		 * .get("relationNotConcatRelation")); }
+		 *  }
+		 */
 
 		/**
 		 * A column on a dataset table that is an expression bringing together
@@ -913,14 +940,8 @@ public class DataSet extends GenericSchema {
 		 * dependent expression column has been added.
 		 * <p>
 		 * Note that all expression columns should be added in a single step.
-		 * FIXME: Reinstate.
+		 */
 		public static class ExpressionColumn extends DataSetColumn {
-
-			private Map aliases;
-
-			private String expr;
-
-			private boolean groupBy;
 
 			/**
 			 * This constructor gives the column a name. The underlying relation
@@ -930,122 +951,13 @@ public class DataSet extends GenericSchema {
 			 *            the name to give this column.
 			 * @param dsTable
 			 *            the dataset table to add the wrapped column to.
-			 *
+			 */
 			public ExpressionColumn(final String name,
 					final DataSetTable dsTable) {
 				// The super constructor will make the alias for us.
 				super(name, dsTable);
-
-				// Set some defaults.
-				this.aliases = new TreeMap();
-				this.expr = "";
-				this.groupBy = false;
-			}
-
-			/**
-			 * Drops all the unused aliases.
-			 *
-			public void dropUnusedAliases() {
-				Log.debug("Trimming unused aliases from " + this.getName());
-				final List usedColumns = new ArrayList();
-				for (final Iterator i = this.aliases.entrySet().iterator(); i
-						.hasNext();) {
-					final Map.Entry entry = (Map.Entry) i.next();
-					final DataSetColumn col = (DataSetColumn) entry.getKey();
-					final String alias = (String) entry.getValue();
-					if (this.expr.indexOf(":" + alias) >= 0)
-						usedColumns.add(col);
-				}
-				// Drop the unused aliases.
-				this.aliases.keySet().retainAll(usedColumns);
-			}
-
-			/**
-			 * Retrieves the map used for setting up aliases.
-			 * 
-			 * @return the aliases map. Keys must be {@link DataSetColumn}
-			 *         instances, and values are aliases used in the expression.
-			 *
-			public Map getAliases() {
-				return this.aliases;
-			}
-
-			/**
-			 * Returns the set of dependent columns.
-			 * 
-			 * @return the collection of dependent columns.
-			 *
-			public Collection getDependentColumns() {
-				return this.aliases.keySet();
-			}
-
-			/**
-			 * Returns the expression, <i>without</i> substitution. This value
-			 * is RDBMS-specific.
-			 * 
-			 * @return the unsubstituted expression.
-			 *
-			public String getExpression() {
-				return this.expr;
-			}
-
-			/**
-			 * Returns the group-by requirement for this column. See
-			 * {@link #setGroupBy(boolean)} for details.
-			 * 
-			 * @return the flag indicating the group-by requirement.
-			 *
-			public boolean getGroupBy() {
-				return this.groupBy;
-			}
-
-			/**
-			 * Returns the expression, <i>with</i> substitution. This value is
-			 * RDBMS-specific.
-			 * 
-			 * @return the substituted expression.
-			 *
-			public String getSubstitutedExpression() {
-				Log.debug("Constructing expression for " + this.getName());
-				String sub = this.expr;
-				for (final Iterator i = this.aliases.entrySet().iterator(); i
-						.hasNext();) {
-					final Map.Entry entry = (Map.Entry) i.next();
-					final DataSetColumn wrapped = (DataSetColumn) entry
-							.getKey();
-					final String alias = ":" + (String) entry.getValue();
-					sub = sub.replaceAll(alias, wrapped.getName());
-				}
-				Log.debug("Expression is: " + sub);
-				return sub;
-			}
-
-			/**
-			 * The actual expression. The values from the alias map will be used
-			 * to refer to various columns. This value is RDBMS-specific.
-			 * 
-			 * @param expr
-			 *            the actual expression to use.
-			 *
-			public void setExpression(final String expr) {
-				this.expr = expr;
-			}
-
-			/**
-			 * Sets the group-by requirement for this column. If set to
-			 * <tt>true</tt>, then the expression is an RDBMS call that
-			 * requires group-by to be set in the select statement. The group-by
-			 * should include all columns, except other expression columns and
-			 * those columns that any group-by expression column depends on.
-			 * 
-			 * @param groupBy
-			 *            the flag indicating the group-by requirement.
-			 *
-			public void setGroupBy(final boolean groupBy) {
-				this.groupBy = groupBy;
 			}
 		}
-	    */
 
 		/**
 		 * A column on a dataset table that is inherited from a parent dataset
@@ -1084,10 +996,10 @@ public class DataSet extends GenericSchema {
 				return this.dsColumn == null ? super.getName() : this.dsColumn
 						.getName();
 			}
-			
+
 			public String getModifiedName() {
-				return this.dsColumn == null ? super.getModifiedName() : this.dsColumn
-						.getModifiedName();
+				return this.dsColumn == null ? super.getModifiedName()
+						: this.dsColumn.getModifiedName();
 			}
 		}
 
@@ -1106,7 +1018,8 @@ public class DataSet extends GenericSchema {
 			 * 
 			 * @param column
 			 *            the column to wrap.
-			 *            @param colName the name to give the wrapped column.
+			 * @param colName
+			 *            the name to give the wrapped column.
 			 * @param dsTable
 			 *            the dataset table to add the wrapped column to.
 			 * @param underlyingRelation
@@ -1114,15 +1027,12 @@ public class DataSet extends GenericSchema {
 			 *            relation can be null in only one case - when the table
 			 *            is a {@link DataSetTableType#MAIN} table.
 			 */
-			public WrappedColumn(final Column column,
-					final String colName,
+			public WrappedColumn(final Column column, final String colName,
 					final DataSetTable dsTable,
 					final Relation underlyingRelation) {
 				// Call the parent which will use the alias generator for us.
-				super(
-						dsTable.getColumnByName(colName) != null ? colName
-								+ "_" + column.getTable().getName()
-								: colName, dsTable);
+				super(dsTable.getColumnByName(colName) != null ? colName + "_"
+						+ column.getTable().getName() : colName, dsTable);
 
 				// Remember the wrapped column.
 				this.column = column;
@@ -1142,62 +1052,47 @@ public class DataSet extends GenericSchema {
 	/**
 	 * Represents a method of concatenating values in a key referenced by a
 	 * concat-only {@link Relation}. It simply represents the separator to use
-	 * and the columns to include.
-	 * FIXME: Reinstate.
-	public static class DataSetConcatRelationType {
-		private final String columnSeparator;
-
-		private final List concatColumns;
-
-		private final String recordSeparator;
-
-		/**
-		 * The constructor takes parameters which define the columns this object
-		 * will concatenate, and the separator to use between values and records
-		 * that have been concatenated.
-		 * 
-		 * @param columnSeparator
-		 *            the separator for values in this concat type.
-		 * @param recordSeparator
-		 *            the separator for records in this concat type.
-		 * @param concatColumns
-		 *            the columns to concatenate.
-		 *
-		public DataSetConcatRelationType(final String columnSeparator,
-				final String recordSeparator, final List concatColumns) {
-			this.concatColumns = concatColumns;
-			this.columnSeparator = columnSeparator;
-			this.recordSeparator = recordSeparator;
-		}
-
-		/**
-		 * Displays the value separator for this concat type object.
-		 * 
-		 * @return the value separator for this concat type object.
-		 *
-		public String getColumnSeparator() {
-			return this.columnSeparator;
-		}
-
-		/**
-		 * Displays the columns concatenated by this concat type object.
-		 * 
-		 * @return the columns concatenated by this concat type object.
-		 *
-		public List getConcatColumns() {
-			return this.concatColumns;
-		}
-
-		/**
-		 * Displays the record separator for this concat type object.
-		 * 
-		 * @return the record separator for this concat type object.
-		 *
-		public String getRecordSeparator() {
-			return this.recordSeparator;
-		}
-	}
-    */
+	 * and the columns to include. FIXME: Reinstate. public static class
+	 * DataSetConcatRelationType { private final String columnSeparator;
+	 * 
+	 * private final List concatColumns;
+	 * 
+	 * private final String recordSeparator;
+	 * 
+	 * /** The constructor takes parameters which define the columns this object
+	 * will concatenate, and the separator to use between values and records
+	 * that have been concatenated.
+	 * 
+	 * @param columnSeparator
+	 *            the separator for values in this concat type.
+	 * @param recordSeparator
+	 *            the separator for records in this concat type.
+	 * @param concatColumns
+	 *            the columns to concatenate.
+	 * 
+	 * public DataSetConcatRelationType(final String columnSeparator, final
+	 * String recordSeparator, final List concatColumns) { this.concatColumns =
+	 * concatColumns; this.columnSeparator = columnSeparator;
+	 * this.recordSeparator = recordSeparator; }
+	 * 
+	 * /** Displays the value separator for this concat type object.
+	 * 
+	 * @return the value separator for this concat type object.
+	 * 
+	 * public String getColumnSeparator() { return this.columnSeparator; }
+	 * 
+	 * /** Displays the columns concatenated by this concat type object.
+	 * 
+	 * @return the columns concatenated by this concat type object.
+	 * 
+	 * public List getConcatColumns() { return this.concatColumns; }
+	 * 
+	 * /** Displays the record separator for this concat type object.
+	 * 
+	 * @return the record separator for this concat type object.
+	 * 
+	 * public String getRecordSeparator() { return this.recordSeparator; } }
+	 */
 
 	/**
 	 * This class defines the various different ways of optimising a dataset
@@ -1384,7 +1279,7 @@ public class DataSet extends GenericSchema {
 		private final Table focusTable;
 
 		private final Relation focusRelation;
-		
+
 		private final Collection includedRelations;
 
 		/**
@@ -1401,8 +1296,8 @@ public class DataSet extends GenericSchema {
 		 * @param focusTable
 		 *            the schema table this dataset table starts from.
 		 * @param focusRelation
-		 *            the schema relation used to reach the focus table.
-		 *            Can be <tt>null</tt>.
+		 *            the schema relation used to reach the focus table. Can be
+		 *            <tt>null</tt>.
 		 */
 		public DataSetTable(final String name, final DataSet ds,
 				final DataSetTableType type, final Table focusTable,
@@ -1419,37 +1314,42 @@ public class DataSet extends GenericSchema {
 			this.transformationUnits = new ArrayList();
 			this.includedRelations = new HashSet();
 		}
-		
+
 		/**
 		 * Obtain all relations used by this dataset table.
+		 * 
 		 * @return all relations.
 		 */
 		public Collection getIncludedRelations() {
 			return this.includedRelations;
 		}
-		
+
 		/**
 		 * Return this modified name including any renames etc.
+		 * 
 		 * @return the modified name.
 		 */
 		public String getModifiedName() {
-			final DataSetModificationSet mods = 
-				((DataSet)this.getSchema()).getDataSetModifications();
-			return mods.isTableRename(this) ? mods.getTableRename(this) : this.getName();
+			final DataSetModificationSet mods = ((DataSet) this.getSchema())
+					.getDataSetModifications();
+			return mods.isTableRename(this) ? mods.getTableRename(this) : this
+					.getName();
 		}
-		
+
 		/**
 		 * Obtain the focus relation for this dataset table. The focus relation
 		 * is the one which the transformation uses to reach the focus table.
+		 * 
 		 * @return the focus relation.
 		 */
 		public Relation getFocusRelation() {
 			return this.focusRelation;
 		}
-		
+
 		/**
-		 * Obtain the focus table for this dataset table. The focus table
-		 * is the one which the transformation starts from.
+		 * Obtain the focus table for this dataset table. The focus table is the
+		 * one which the transformation starts from.
+		 * 
 		 * @return the focus table.
 		 */
 		public Table getFocusTable() {

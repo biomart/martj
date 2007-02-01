@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
@@ -248,6 +249,50 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			final RelationComponent relationComponent = new RelationComponent(
 					tempRelation, this);
 			this.addDiagramComponent(relationComponent);
+			// Resize the diagram to fit.
+			this.resizeDiagram();
+		}
+	}
+	/**
+	 * This version of the class shows a single table.
+	 */
+	public static class ExpressionTable extends ExplainTransformationDiagram {
+		private static final long serialVersionUID = 1;
+		
+		private final Expression etu;
+
+		/**
+		 * Creates a diagram showing the given table.
+		 * 
+		 * @param martTab
+		 *            the mart tab to pass menu events onto.
+		 * @param stu
+		 *            the transformation unit to show.
+		 */
+		public ExpressionTable(final MartTab martTab, final Expression etu) {
+			super(martTab);
+
+			// Remember the params, and calculate the diagram.
+			this.etu = etu;
+			this.recalculateDiagram();
+		}
+
+		public void doRecalculateDiagram() {
+			// Removes all existing components.
+			this.removeAll();
+			// Replicate the table in an empty schema then add the columns
+			// requested.
+			final Schema tempSourceSchema = new GenericSchema(
+					Resources
+					.get("dummyTempSchemaName"));
+			final Table tempSource = new GenericTable(Resources
+					.get("dummyTempTableName"), tempSourceSchema);
+			tempSourceSchema.addTable(tempSource);
+			for (Iterator i = this.etu.getNewColumnNameMap().values().iterator(); i.hasNext();)
+				tempSource.addColumn((Column) i.next());
+			final TableComponent tc = new TableComponent(tempSource, this);
+			this.addDiagramComponent(tc);
+			this.getTableComponents().add(tc);
 			// Resize the diagram to fit.
 			this.resizeDiagram();
 		}

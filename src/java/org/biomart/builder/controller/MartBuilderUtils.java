@@ -33,9 +33,11 @@ import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumn;
-import org.biomart.builder.model.SchemaModificationSet.RelationRestriction;
-import org.biomart.builder.model.SchemaModificationSet.TableRestriction;
+import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
+import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
+import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
+import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.ComponentStatus;
@@ -59,31 +61,6 @@ import org.biomart.common.resources.Resources;
  * @since 0.1
  */
 public class MartBuilderUtils {
-
-	/**
-	 * This method asks to create a new expression column.
-	 * 
-	 * @param table
-	 *            the table to add the column to.
-	 * @param columnName
-	 *            the name to give the column.
-	 * @param columnAliases
-	 *            the map of columns on the table to labels in the expression.
-	 * @param expression
-	 *            the expression for the column.
-	 * @param groupBy
-	 *            whether this column requires a group-by statement. If it does,
-	 *            the group-by columns required will be worked out
-	 *            automatically. FIXME: Reinstate. public static void
-	 *            addExpressionColumn(final DataSetTable table, final String
-	 *            columnName, final Map columnAliases, final String expression,
-	 *            final boolean groupBy) {
-	 *            Log.info(Resources.get("logReqAddExprCol")); final
-	 *            ExpressionColumn column = new ExpressionColumn(columnName,
-	 *            table); column.getAliases().putAll(columnAliases);
-	 *            column.setExpression(expression); column.setGroupBy(groupBy);
-	 *            table.addColumn(column); }
-	 */
 
 	/**
 	 * Adds a schema to a mart.
@@ -644,14 +621,19 @@ public class MartBuilderUtils {
 	 * @param groupBy
 	 *            whether this column requires a group-by statement. If it does,
 	 *            the group-by columns required will be worked out
-	 *            automatically. FIXME: Reinstate. public static void
-	 *            modifyExpressionColumn(final ExpressionColumn column, final
-	 *            Map columnAliases, final String expression, final boolean
-	 *            groupBy) { Log.info(Resources.get("logReqChangeExprCol"));
-	 *            column.getAliases().clear();
-	 *            column.getAliases().putAll(columnAliases);
-	 *            column.setExpression(expression); column.setGroupBy(groupBy); }
+	 *            automatically.
 	 */
+	public static void setExpressionColumn(final DataSetTable dsTable, final String column,
+			final Map aliases, final String expression, final boolean groupBy)
+			throws SQLException, DataModelException {
+		Log.info(Resources.get("logReqChangeExprCol"));
+		final ExpressionColumnDefinition expr = new ExpressionColumnDefinition(expression, aliases,
+				groupBy);
+		((DataSet)dsTable.getSchema()).getDataSetModifications()
+				.setExpressionColumn(dsTable,
+						column, expr);
+		((DataSet)dsTable.getSchema()).synchronise();
+	}
 
 	/**
 	 * Asks a dataset to partition tables by the values in the specified column.
@@ -667,7 +649,7 @@ public class MartBuilderUtils {
 	 *             whatever reason.
 	 */
 	public static void partitionByColumn(final DataSet dataset,
-			final DataSetColumn column, final PartitionedColumn type)
+			final DataSetColumn column, final PartitionedColumnDefinition type)
 			throws ValidationException {
 		Log.info(Resources.get("logReqPartitionCol"));
 		dataset.getDataSetModifications().setPartitionedColumn(column, type);
@@ -693,11 +675,16 @@ public class MartBuilderUtils {
 	 * This method asks to remove a particular expression column.
 	 * 
 	 * @param column
-	 *            the expression column to remove. FIXME: Reinstate. public
-	 *            static void removeExpressionColumn(final ExpressionColumn
-	 *            column) { Log.info(Resources.get("logReqRemoveExprCol"));
-	 *            column.getTable().removeColumn(column); }
+	 *            the expression column to remove.
 	 */
+	public static void removeExpressionColumn(final DataSetTable dsTable, final String column)
+			throws SQLException, DataModelException {
+		Log.info(Resources.get("logReqRemoveExprCol"));
+		((DataSet)dsTable.getSchema()).getDataSetModifications()
+				.unsetExpressionColumn(dsTable,
+						column);
+		((DataSet)dsTable.getSchema()).synchronise();
+	}
 
 	/**
 	 * Removes a key. All datasets will subsequently be synchronised.
@@ -894,7 +881,7 @@ public class MartBuilderUtils {
 			final Table table, final String expression, final Map aliases)
 			throws ValidationException {
 		Log.info(Resources.get("logReqRestrictTable"));
-		final TableRestriction restriction = new TableRestriction(expression,
+		final RestrictedTableDefinition restriction = new RestrictedTableDefinition(expression,
 				aliases);
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.setRestrictedTable(datasetTable, table, restriction);
@@ -919,7 +906,7 @@ public class MartBuilderUtils {
 			final String expression, final Map aliases)
 			throws ValidationException {
 		Log.info(Resources.get("logReqRestrictTable"));
-		final TableRestriction restriction = new TableRestriction(expression,
+		final RestrictedTableDefinition restriction = new RestrictedTableDefinition(expression,
 				aliases);
 		dataset.getSchemaModifications().setRestrictedTable(table, restriction);
 	}
@@ -979,7 +966,7 @@ public class MartBuilderUtils {
 			final Map lhsAliases, final Map rhsAliases)
 			throws ValidationException {
 		Log.info(Resources.get("logReqRestrictRelation"));
-		final RelationRestriction restriction = new RelationRestriction(
+		final RestrictedRelationDefinition restriction = new RestrictedRelationDefinition(
 				expression, lhsAliases, rhsAliases);
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.setRestrictedRelation(datasetTable, relation, index,
@@ -1006,10 +993,10 @@ public class MartBuilderUtils {
 			final Map lhsAliases, final Map rhsAliases)
 			throws ValidationException {
 		Log.info(Resources.get("logReqRestrictRelation"));
-		final RelationRestriction restriction = new RelationRestriction(
+		final RestrictedRelationDefinition restriction = new RestrictedRelationDefinition(
 				expression, lhsAliases, rhsAliases);
-		dataset.getSchemaModifications().setRestrictedRelation(
-				relation, index, restriction);
+		dataset.getSchemaModifications().setRestrictedRelation(relation, index,
+				restriction);
 	}
 
 	/**
@@ -1046,8 +1033,8 @@ public class MartBuilderUtils {
 			final Relation relation, final int index)
 			throws ValidationException {
 		Log.info(Resources.get("logReqUnrestrictRelation"));
-		dataset.getSchemaModifications().unsetRestrictedRelation(
-				relation, index);
+		dataset.getSchemaModifications().unsetRestrictedRelation(relation,
+				index);
 	}
 
 	/**
